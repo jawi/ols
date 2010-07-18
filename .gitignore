@@ -1,0 +1,10 @@
+*/felix-cache/
+*/target/
+*/.DS_Store/
+**/.project
+**/.classpath
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+
