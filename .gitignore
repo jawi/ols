@@ -3,6 +3,8 @@
 */.DS_Store/
 **/.project
 **/.classpath
+**/.settings/
+.metadata/
 .DS_Store?
 ehthumbs.db
 Icon?
