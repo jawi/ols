@@ -107,7 +107,7 @@ public final class DisplayUtils
   public static String displayTime( final double aTime )
   {
     final String[] unitStrs =
-    { "s", "ms", "µs", "ns", "ps" };
+    { "s", "ms", "\u03BCs", "ns", "ps" }; // \u03BC == Greek mu character
     final double[] unitVals =
     { 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12 };
 

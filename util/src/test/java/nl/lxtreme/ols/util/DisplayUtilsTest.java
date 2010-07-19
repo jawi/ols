@@ -25,6 +25,8 @@ import static org.junit.Assert.*;
 
 import org.junit.*;
 
+import java.util.*;
+
 
 /**
  * 
@@ -32,6 +34,16 @@ import org.junit.*;
 public class DisplayUtilsTest
 {
   // METHODS
+
+  /**
+   * Sets up the tests.
+   */
+  @Before
+  public void setUp()
+  {
+    // To ensure formatting occurs deterministically...
+    Locale.setDefault(Locale.ENGLISH);
+  }
 
   /**
    * Test method for {@link nl.lxtreme.ols.util.DisplayUtils#displayFrequency(double)}.
@@ -60,7 +72,7 @@ public class DisplayUtilsTest
     assertEquals( "1000.000 s", DisplayUtils.displayTime( 1.0e3 ) );
     assertEquals( "1.000 s", DisplayUtils.displayTime( 1.0 ) );
     assertEquals( "1.000 ms", DisplayUtils.displayTime( 1.0e-3 ) );
-    assertEquals( "1.000 µs", DisplayUtils.displayTime( 1.0e-6 ) );
+    assertEquals( "1.000 \u03BCs", DisplayUtils.displayTime( 1.0e-6 ) );
     assertEquals( "1.000 ns", DisplayUtils.displayTime( 1.0e-9 ) );
     assertEquals( "1.000 ps", DisplayUtils.displayTime( 1.0e-12 ) );
     assertEquals( "0.010 ps", DisplayUtils.displayTime( 1.0e-14 ) );
