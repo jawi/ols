@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,9 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
   public DiagramScrollPane( final Project aProject )
   {
     super();
+
+    // We want to be painted fully (non transparent)...
+    setOpaque( true );
 
     this.diagram = new Diagram( this );
     setViewportView( this.diagram );
