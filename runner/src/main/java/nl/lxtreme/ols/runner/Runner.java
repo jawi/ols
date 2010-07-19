@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ public final class Runner
    */
   public Runner()
   {
-    final Map<String, Object> config = new HashMap<String, Object>();
+    final Map config = new HashMap();
 
     final String pluginDir = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
 
@@ -62,7 +62,7 @@ public final class Runner
     LOG.log( Level.ALL, "Using plugins from '{0}' ...", pluginDir );
 
     this.hostActivator = new HostActivator();
-    final List<BundleActivator> activators = new ArrayList<BundleActivator>();
+    final List activators = new ArrayList();
     activators.add( this.hostActivator );
 
     config.put( FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, activators );

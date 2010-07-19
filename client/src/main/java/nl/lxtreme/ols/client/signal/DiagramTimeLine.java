@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -45,8 +46,6 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
 
   // VARIABLES
 
-  private long              unitFactor;
-  private String            unitName;
   private int               rate;
   private long              absoluteLength;
   private boolean           hasTimingData;
@@ -169,8 +168,6 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
     this.hasTimingData = aCapturedData.hasTimingData();
     this.triggerPosition = aCapturedData.hasTriggerData() ? aCapturedData.triggerPosition : -1L;
     this.cursorPositions = aCapturedData.cursorPositions;
-
-    calculateUnits();
   }
 
   /**
@@ -203,30 +200,6 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   public void setScale( final double aScale )
   {
     this.scale = aScale;
-
-    calculateUnits();
-  }
-
-  /**
-   * Sets the unitFactor.
-   * 
-   * @param aUnitFactor
-   *          the unitFactor to set, cannot be <code>null</code>.
-   */
-  public void setUnitFactor( final long aUnitFactor )
-  {
-    this.unitFactor = aUnitFactor;
-  }
-
-  /**
-   * Sets the unit name.
-   * 
-   * @param aUnitName
-   *          the unitName to set, cannot be <code>null</code>.
-   */
-  public void setUnitName( final String aUnitName )
-  {
-    this.unitName = aUnitName;
   }
 
   /**
@@ -315,40 +288,6 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   }
 
   /**
-   * 
-   */
-  private void calculateUnits()
-  {
-    if ( this.hasTimingData )
-    {
-      final double step = ( 1000.0 / this.scale ) / this.rate;
-
-      this.unitFactor = 1;
-      this.unitName = "s";
-      if ( step < 0.000001 )
-      {
-        this.unitFactor = 1000000000;
-        this.unitName = "ns";
-      }
-      else if ( step < 0.001 )
-      {
-        this.unitFactor = 1000000;
-        this.unitName = "\u03BCs"; // \u03BC == Greek mu character
-      }
-      else if ( step < 1 )
-      {
-        this.unitFactor = 1000;
-        this.unitName = "ms";
-      }
-    }
-    else
-    {
-      this.unitFactor = 1;
-      this.unitName = "";
-    }
-  }
-
-  /**
    * Convert sample count to time string.
    * 
    * @param count
@@ -357,8 +296,11 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
    */
   private String indexToTime( final long count )
   {
-    final double time = ( ( count * ( double )this.unitFactor ) / this.rate );
-    return ( String.format( "%.3f %s", time, this.unitName ) );
+    if ( !this.hasTimingData )
+    {
+      return String.format("%d", count);
+    }
+    return DisplayUtils.displayScaledTime( count, this.rate );
   }
 
   /**
