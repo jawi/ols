@@ -333,7 +333,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
       else if ( step < 0.001 )
       {
         this.unitFactor = 1000000;
-        this.unitName = "µs";
+        this.unitName = "\u03BCs"; // \u03BC == Greek mu character
       }
       else if ( step < 1 )
       {
