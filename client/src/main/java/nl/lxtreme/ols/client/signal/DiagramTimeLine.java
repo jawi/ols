@@ -36,23 +36,23 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
 {
   // CONSTANTS
 
-  private static final long serialVersionUID   = 1L;
+  private static final long serialVersionUID = 1L;
   /** The tick increment (in pixels). */
-  public static final int   TIMELINE_INCREMENT = 20;
+  public static final int TIMELINE_INCREMENT = 20;
 
-  private static final int  TIMELINE_HEIGHT    = 30;
-  private static final int  SHORT_TICK_HEIGHT  = 4;
-  private static final int  PADDING_Y          = 1;
+  private static final int TIMELINE_HEIGHT = 30;
+  private static final int SHORT_TICK_HEIGHT = 4;
+  private static final int PADDING_Y = 1;
 
   // VARIABLES
 
-  private int               rate;
-  private long              absoluteLength;
-  private boolean           hasTimingData;
-  private long              triggerPosition;
-  private double            scale;
-  private DiagramSettings   diagramSettings;
-  private long[]            cursorPositions;
+  private int rate;
+  private long absoluteLength;
+  private boolean hasTimingData;
+  private long triggerPosition;
+  private double scale;
+  private DiagramSettings diagramSettings;
+  private long[] cursorPositions;
 
   // CONSTRUCTORS
 
@@ -218,6 +218,11 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
 
     // obtain portion of graphics that needs to be drawn
     final Rectangle clipArea = aGraphics.getClipBounds();
+    // for some reason, this component gets scrolled vertically although it has
+    // no reasons to do so. Resetting the Y-position & height of the clip-area
+    // seems to solve this problem...
+    clipArea.y = 0;
+    clipArea.height = TIMELINE_HEIGHT;
 
     // find index of first row that needs drawing
     final long firstRow = xToIndex( clipArea.x );

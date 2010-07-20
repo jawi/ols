@@ -209,13 +209,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
     this.actionProvider = aActionProvider;
 
-    setMinimumSize( new Dimension( 25, 1 ) );
-
-    final MouseListener mouseListener = new MouseListener();
-
-    addMouseListener( mouseListener );
-    addMouseMotionListener( mouseListener );
-
     this.contextMenu = new JPopupMenu();
     for ( int i = 0; i < 10; i++ )
     {
@@ -239,7 +232,15 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     this.timeLine = new DiagramTimeLine();
     this.timeLine.setDiagramSettings( this.settings );
 
+    setMinimumSize( new Dimension( 25, 1 ) );
+    setBackground( this.settings.getBackgroundColor() );
+
     addCursorChangeListener( this.timeLine );
+
+    final MouseListener mouseListener = new MouseListener();
+
+    addMouseListener( mouseListener );
+    addMouseMotionListener( mouseListener );
   }
 
   /**
@@ -360,6 +361,16 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     {
       return ( ( currentPosition / maxUnitIncrement ) + 1 ) * maxUnitIncrement - currentPosition;
     }
+  }
+
+  /**
+   * Returns the current diagram settings.
+   * 
+   * @return the diagram settings, never <code>null</code>.
+   */
+  public final DiagramSettingsDialog getSettings()
+  {
+    return this.settings;
   }
 
   /**
@@ -970,7 +981,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     aToIndex /= this.timeDivider;
 
     int bofs = 0;
-    drawGridLine( aGraphics, aClipArea, bofs++ );
+    // drawGridLine( aGraphics, aClipArea, bofs++ );
 
     for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
     {

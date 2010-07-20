@@ -52,8 +52,7 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
   {
     super();
 
-    // We want to be painted fully (non transparent)...
-    setOpaque( true );
+    setCorner( UPPER_LEFT_CORNER, new JLabel( " " ) );
 
     this.diagram = new Diagram( this );
     setViewportView( this.diagram );
@@ -126,6 +125,10 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
    */
   public void setCapturedData( final CapturedData aCapturedData )
   {
+    getViewport().setBackground( this.diagram.getBackground() );
+    setViewportBorder( BorderFactory.createLineBorder( this.diagram.getSettings().getGridColor(), 1 ) );
+    getCorner( UPPER_LEFT_CORNER ).setBackground( this.diagram.getBackground() );
+
     this.diagram.setCapturedData( aCapturedData );
   }
 

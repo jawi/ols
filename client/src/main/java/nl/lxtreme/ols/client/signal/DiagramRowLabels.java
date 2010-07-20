@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,15 +38,16 @@ public class DiagramRowLabels extends JComponent
 
   private static final long serialVersionUID = 1L;
 
-  private static final int  PADDING_X        = 2;
-  private static final int  PADDING_Y        = 2;
+  private static final int PADDING_X = 2;
+  private static final int PADDING_Y = 2;
+  private static final int MIN_WIDTH = 25;
 
   // VARIABLES
 
-  private String[]          labels;
-  private int               channels;
-  private int               enabled;
-  private DiagramSettings   settings;
+  private String[] labels;
+  private int channels;
+  private int enabled;
+  private DiagramSettings settings;
 
   // CONSTRUCTORS
 
@@ -83,6 +84,10 @@ public class DiagramRowLabels extends JComponent
   public void setDiagramLabels( final String[] aLabels )
   {
     this.labels = aLabels;
+    // Let this component update its preferred size to fit the new labels...
+    setPreferredSize( getPreferredSize() );
+    // Make sure any resizing is performed immediately...
+    revalidate();
   }
 
   /**
@@ -101,7 +106,8 @@ public class DiagramRowLabels extends JComponent
   {
     // Let us only scale in height, not width!
     final int minimalWidth = getMinimalWidth();
-    super.setPreferredSize( new Dimension( minimalWidth, aPreferredSize.height ) );
+    final Dimension newPreferredSize = new Dimension( minimalWidth, aPreferredSize.height );
+    super.setPreferredSize( newPreferredSize );
   }
 
   /**
@@ -204,7 +210,8 @@ public class DiagramRowLabels extends JComponent
   }
 
   /**
-   * Tries the resize this component to such a width that all labels will properly fit.
+   * Tries the resize this component to such a width that all labels will
+   * properly fit.
    */
   private int getMinimalWidth()
   {
@@ -227,13 +234,14 @@ public class DiagramRowLabels extends JComponent
       }
     }
 
-    if ( minWidth < 0 )
-    {
-      minWidth = 21;
-    }
-
     // Ensure there's room for some padding...
     minWidth += 2 * PADDING_X;
+
+    // And always ensure we've got at least a minimal width...
+    if ( minWidth < MIN_WIDTH )
+    {
+      minWidth = MIN_WIDTH;
+    }
 
     return minWidth;
   }
