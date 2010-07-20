@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,20 +40,17 @@ public class TestDeviceController implements DeviceController
 {
   // CONSTANTS
 
-  private static final String[]  DATA_FUNCTIONS = new String[]
-                                                { "Sawtooth", "All zeros", "Sine", "odd-even", "0x55-0xAA", "Random",
-      "I2C sample"                             };
-  private static final Integer[] CHANNELS       = new Integer[]
-                                                { 1, 4, 8, 16, 32 };
-  private static final Integer[] DATA_LENGTH    = new Integer[]
-                                                { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072 };
+  private static final String[] DATA_FUNCTIONS = new String[] { "Sawtooth", "All zeros", "Sine", "odd-even",
+    "0x55-0xAA", "Random", "I2C sample" };
+  private static final Integer[] CHANNELS = new Integer[] { 1, 4, 8, 16, 32 };
+  private static final Integer[] DATA_LENGTH = new Integer[] { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072 };
 
   // VARIABLES
 
-  private boolean                setupConfirmed = false;
-  private String                 dataFunction   = DATA_FUNCTIONS[0];
-  private int                    channels       = CHANNELS[2];
-  private int                    dataLength     = DATA_LENGTH[5];
+  private boolean setupConfirmed = false;
+  private String dataFunction = DATA_FUNCTIONS[0];
+  private int channels = CHANNELS[2];
+  private int dataLength = DATA_LENGTH[5];
 
   // METHODS
 
@@ -180,8 +177,6 @@ public class TestDeviceController implements DeviceController
    */
   private JPanel createContents()
   {
-    final JPanel result = new JPanel( new GridBagLayout() );
-
     final JComboBox dataFunctionCombo = new JComboBox( DATA_FUNCTIONS );
     dataFunctionCombo.setSelectedItem( this.dataFunction );
     dataFunctionCombo.addItemListener( new ItemListener()
@@ -215,20 +210,32 @@ public class TestDeviceController implements DeviceController
       }
     } );
 
-    result.add( new JLabel( "Data function" ), new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0,
-        GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets( 0, 0, 0, 0 ), 4, 4 ) );
-    result.add( dataFunctionCombo, new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST,
-        GridBagConstraints.HORIZONTAL, new Insets( 0, 0, 0, 0 ), 4, 4 ) );
+    final Insets labelInsets = new Insets( 4, 4, 4, 2 );
+    final Insets compInsets = new Insets( 4, 2, 4, 4 );
 
-    result.add( new JLabel( "Channels" ), new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0,
-        GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets( 0, 0, 0, 0 ), 4, 4 ) );
-    result.add( channelsCombo, new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST,
-        GridBagConstraints.HORIZONTAL, new Insets( 0, 0, 0, 0 ), 4, 4 ) );
+    final JPanel result = new JPanel( new GridBagLayout() );
+    result.setBorder( BorderFactory.createEmptyBorder( 4, 0, 4, 0 ) );
 
-    result.add( new JLabel( "Data length" ), new GridBagConstraints( 0, 2, 1, 1, 0.0, 0.0,
-        GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets( 0, 0, 0, 0 ), 4, 4 ) );
-    result.add( dataLengthCombo, new GridBagConstraints( 1, 2, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST,
-        GridBagConstraints.HORIZONTAL, new Insets( 0, 0, 0, 0 ), 4, 4 ) );
+    result.add( new JLabel( "Data function" ), //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, labelInsets, 0, 0 ) );
+    result.add( dataFunctionCombo, //
+        new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, compInsets, 0, 0 ) );
+
+    result.add( new JLabel( "Channels" ), //
+        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, labelInsets, 0, 0 ) );
+    result.add( channelsCombo, //
+        new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, compInsets, 0, 0 ) );
+
+    result.add( new JLabel( "Data length" ), //
+        new GridBagConstraints( 0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, labelInsets, 0, 0 ) );
+    result.add( dataLengthCombo, //
+        new GridBagConstraints( 1, 2, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, compInsets, 0, 0 ) );
 
     return result;
   }
@@ -238,11 +245,6 @@ public class TestDeviceController implements DeviceController
    */
   private JPanel createDialogButtonPanel( final JDialog aDialog )
   {
-    final JPanel buttonPane = new JPanel();
-    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
-
-    buttonPane.add( Box.createHorizontalGlue() );
-
     final JButton closeButton = new JButton( "Close" );
     closeButton.addActionListener( new ActionListener()
     {
@@ -253,9 +255,9 @@ public class TestDeviceController implements DeviceController
         aDialog.setVisible( false );
       }
     } );
-    buttonPane.add( closeButton );
 
     final JButton okButton = new JButton( "Ok" );
+    okButton.setPreferredSize( closeButton.getPreferredSize() );
     okButton.addActionListener( new ActionListener()
     {
       @Override
@@ -265,7 +267,16 @@ public class TestDeviceController implements DeviceController
         aDialog.setVisible( false );
       }
     } );
+
+    final JPanel buttonPane = new JPanel();
+    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
+    buttonPane.setBorder( BorderFactory.createEmptyBorder( 8, 4, 8, 4 ) );
+
+    buttonPane.add( Box.createHorizontalGlue() );
     buttonPane.add( okButton );
+    buttonPane.add( Box.createHorizontalStrut( 16 ) );
+    buttonPane.add( closeButton );
+
     return buttonPane;
   }
 }
