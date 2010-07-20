@@ -54,7 +54,7 @@ public final class Runner
    */
   public Runner()
   {
-    final Map config = new HashMap();
+    final Map<String, Object> config = new HashMap<String, Object>();
 
     final String pluginDir = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
 
@@ -62,7 +62,7 @@ public final class Runner
     LOG.log( Level.ALL, "Using plugins from '{0}' ...", pluginDir );
 
     this.hostActivator = new HostActivator();
-    final List activators = new ArrayList();
+    final List<BundleActivator> activators = new ArrayList<BundleActivator>();
     activators.add( this.hostActivator );
 
     config.put( FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, activators );
