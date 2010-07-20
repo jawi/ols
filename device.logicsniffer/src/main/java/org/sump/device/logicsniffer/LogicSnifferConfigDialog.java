@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,40 +39,41 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
 {
   // CONSTANTS
 
-  private static final long        serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  private static final String      NAME             = "OLS";
+  private static final String NAME = "OLS";
+
+  private static final Insets LABEL_INSETS = new Insets( 4, 4, 4, 2 );
+  private static final Insets COMP_INSETS = new Insets( 4, 2, 4, 4 );
 
   // VARIABLES
 
-  private final JComboBox          portSelect;
-  private final JComboBox          portRateSelect;
-  private final JComboBox          numberSchemeSelect;
-  private final JComboBox          sourceSelect;
-  private final JComboBox          speedSelect;
-  private final JComboBox          sizeSelect;
-  private final JCheckBox          filterEnable;
-  private final JCheckBox          rleEnable;
-  private final JCheckBox          triggerEnable;
-  private final JComboBox          triggerTypeSelect;
-  private final JTabbedPane        triggerStageTabs;
-  private final JComboBox[]        triggerLevel;
-  private final JTextField[]       triggerDelay;
-  private final JComboBox[]        triggerMode;
-  private final JComboBox[]        triggerChannel;
-  private final JCheckBox[]        triggerStart;
-  private final JCheckBox[][]      triggerMask;
-  private final JCheckBox[][]      triggerValue;
-  private final JCheckBox[]        channelGroup;
-  private final JButton            captureButton;
-  private JDialog                  dialog;
-  private final int                triggerStages;
+  private JComboBox portSelect;
+  private JComboBox portRateSelect;
+  private JComboBox numberSchemeSelect;
+  private JComboBox sourceSelect;
+  private JComboBox speedSelect;
+  private JComboBox sizeSelect;
+  private JCheckBox filterEnable;
+  private JCheckBox rleEnable;
+  private JCheckBox triggerEnable;
+  private JComboBox triggerTypeSelect;
+  private JTabbedPane triggerStageTabs;
+  private JComboBox[] triggerLevel;
+  private JTextField[] triggerDelay;
+  private JComboBox[] triggerMode;
+  private JComboBox[] triggerChannel;
+  private JCheckBox[] triggerStart;
+  private JCheckBox[][] triggerMask;
+  private JCheckBox[][] triggerValue;
+  private JCheckBox[] channelGroup;
+  private JButton captureButton;
+  private JDialog dialog;
+  private int triggerStages;
   private final LogicSnifferDevice device;
-  private boolean                  dialogResult;
-
-  private final JSlider            ratioSlider;
-
-  private final JLabel             ratioLabel;
+  private boolean dialogResult;
+  private JSlider ratioSlider;
+  private JLabel ratioLabel;
 
   // CONSTRUCTORS
 
@@ -83,214 +84,10 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   {
     super();
 
-    setLayout( new GridBagLayout() );
-    setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-
     this.device = aDevice;
 
-    // connection pane
-    final JPanel connectionPane = new JPanel();
-    connectionPane.setLayout( new GridLayout( 6, 2, 5, 5 ) );
-    connectionPane.setBorder( BorderFactory.createCompoundBorder( BorderFactory
-        .createTitledBorder( "Connection Settings" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-    final String[] ports = LogicSnifferDevice.getPorts();
-    this.portSelect = new JComboBox( ports );
-    connectionPane.add( new JLabel( "Analyzer Port:" ) );
-    connectionPane.add( this.portSelect );
-
-    final String[] portRates =
-    { "115200bps(LL)", "57600bps (LH)", "38400bps (HL)", "19200bps (HH)" };
-    this.portRateSelect = new JComboBox( portRates );
-    connectionPane.add( new JLabel( "Port Speed (SW1,SW0):" ) );
-    connectionPane.add( this.portRateSelect );
-
-    final String[] numberSchemes =
-    { "Inside", "Outside", "Test Mode" };
-    this.numberSchemeSelect = new JComboBox( numberSchemes );
-    connectionPane.add( new JLabel( "Number Scheme:" ) );
-    connectionPane.add( this.numberSchemeSelect );
-
-    connectionPane.add( new JLabel() );
-    connectionPane.add( new JLabel() );
-    connectionPane.add( new JLabel() );
-    connectionPane.add( new JLabel() );
-    connectionPane.add( new JLabel() );
-    connectionPane.add( new JLabel() );
-
-    add( connectionPane, createConstraints( 0, 0, 1, 1, 1.0, 0.5 ) );
-
-    // settings pane
-    final JPanel settingsPane = new JPanel();
-    settingsPane.setLayout( new GridLayout( 6, 2, 5, 5 ) );
-    settingsPane.setBorder( BorderFactory.createCompoundBorder(
-        BorderFactory.createTitledBorder( "Analyzer Settings" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-
-    final String[] sources =
-    { "Internal", "External / Rising", "External / Falling" };
-    this.sourceSelect = new JComboBox( sources );
-    this.sourceSelect.addActionListener( this );
-    settingsPane.add( new JLabel( "Sampling Clock:" ) );
-    settingsPane.add( this.sourceSelect );
-
-    final String[] speeds =
-    { "200MHz", "100MHz", "50MHz", "20MHz", "10MHz", "5MHz", "2MHz", "1MHz", "500kHz", "200kHz", "100kHz", "50kHz",
-        "20kHz", "10kHz", "1kHz", "500Hz", "200Hz", "100Hz", "50Hz", "20Hz", "10Hz" };
-    this.speedSelect = new JComboBox( speeds );
-    this.speedSelect.setSelectedIndex( 1 );
-    this.speedSelect.addActionListener( this );
-    settingsPane.add( new JLabel( "Sampling Rate:" ) );
-    settingsPane.add( this.speedSelect );
-
-    final Container groups = new Container();
-    groups.setLayout( new GridLayout( 1, 4 ) );
-    this.channelGroup = new JCheckBox[4];
-    for ( int i = 0; i < this.channelGroup.length; i++ )
-    {
-      this.channelGroup[i] = new JCheckBox( Integer.toString( i ) );
-      this.channelGroup[i].setSelected( true );
-      groups.add( this.channelGroup[i] );
-    }
-    settingsPane.add( new JLabel( "Channel Groups:" ) );
-    settingsPane.add( groups );
-
-    final String[] sizes =
-    { "24K", "12K", "6K", "2K", "1K", "512", "256", "128", "64" };
-    this.sizeSelect = new JComboBox( sizes );
-    this.sizeSelect.setSelectedIndex( 2 );
-    settingsPane.add( new JLabel( "Recording Size:" ) );
-    settingsPane.add( this.sizeSelect );
-
-    add( settingsPane, createConstraints( 1, 0, 1, 1, 1.0, 0.5 ) );
-
-    this.filterEnable = new JCheckBox( "Enable" );
-    this.filterEnable.setSelected( true );
-    this.filterEnable.setEnabled( false );
-    settingsPane.add( new JLabel( "Noise Filter: " ) );
-    settingsPane.add( this.filterEnable );
-
-    this.rleEnable = new JCheckBox( "Enable" );
-    this.rleEnable.setSelected( false );
-    this.rleEnable.setEnabled( true );
-    settingsPane.add( new JLabel( "RLE: " ) );
-    settingsPane.add( this.rleEnable );
-
-    // trigger pane
-    final JPanel triggerPane = new JPanel();
-    triggerPane.setLayout( new GridBagLayout() );
-    triggerPane.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Trigger Settings" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-    this.triggerEnable = new JCheckBox( "Enable" );
-    this.triggerEnable.addActionListener( this );
-    triggerPane.add( new JLabel( "Trigger: " ), createConstraints( 0, 0, 1, 1, 0.0, 1.0 ) );
-    triggerPane.add( this.triggerEnable, createConstraints( 1, 0, 1, 1, 0.0, 1.0 ) );
-    triggerPane.add( new JLabel(), createConstraints( 2, 0, 1, 1, 1.0, 1.0 ) );
-
-    this.ratioLabel = new JLabel( " 50/ 50" );
-    final JLabel ratioSliderLabel = new JLabel( "Before/After Ratio: " );
-
-    this.ratioSlider = new JSlider( SwingConstants.HORIZONTAL, 0, 100, 50 );
-    this.ratioSlider.setMajorTickSpacing( 10 );
-    this.ratioSlider.setMinorTickSpacing( 5 );
-    this.ratioSlider.setPaintLabels( true );
-    this.ratioSlider.setPaintTicks( true );
-    this.ratioSlider.addChangeListener( new ChangeListener()
-    {
-      private final JLabel label = LogicSnifferConfigDialog.this.ratioLabel;
-
-      @Override
-      public void stateChanged( final ChangeEvent aEvent )
-      {
-        final JSlider slider = ( JSlider )aEvent.getSource();
-
-        final int before = slider.getValue();
-        final int after = ( slider.getMaximum() - before );
-
-        final String ratioText = String.format( "% 3d/% 3d", before, after );
-        slider.setToolTipText( ratioText );
-        this.label.setText( ratioText );
-      }
-    } );
-
-    triggerPane.add( ratioSliderLabel, createConstraints( 0, 1, 1, 1, 0.5, 1.0 ) );
-    triggerPane.add( this.ratioSlider, createConstraints( 1, 1, 1, 1, 1.0, 1.0 ) );
-    triggerPane.add( this.ratioLabel, createConstraints( 2, 1, 1, 1, 0.5, 1.0 ) );
-
-    final String[] types =
-    { "Simple", "Complex" };
-    this.triggerTypeSelect = new JComboBox( types );
-    this.triggerTypeSelect.addActionListener( this );
-    triggerPane.add( new JLabel( "Type: " ), createConstraints( 0, 2, 1, 1, 0.5, 1.0 ) );
-    triggerPane.add( this.triggerTypeSelect, createConstraints( 1, 2, 1, 1, 0.5, 1.0 ) );
-
-    triggerPane.add( new JLabel( " " ), createConstraints( 0, 3, 1, 1, 1.0, 1.0 ) );
-
-    this.triggerStageTabs = new JTabbedPane();
-    this.triggerStages = this.device.getTriggerStageCount();
-    this.triggerMask = new JCheckBox[4][];
-    this.triggerValue = new JCheckBox[4][];
-    this.triggerLevel = new JComboBox[4];
-    this.triggerDelay = new JTextField[4];
-    this.triggerMode = new JComboBox[4];
-    this.triggerChannel = new JComboBox[4];
-    this.triggerStart = new JCheckBox[4];
-    for ( int i = 0; i < this.triggerStages; i++ )
-    {
-      final JPanel stagePane = new JPanel();
-      stagePane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-      stagePane.setLayout( new GridBagLayout() );
-
-      final String[] levels =
-      { "Immediatly", "On Level 1", "On Level 2", "On Level 3" };
-      this.triggerLevel[i] = new JComboBox( levels );
-      if ( i > 0 )
-      {
-        this.triggerLevel[i].setSelectedIndex( 3 );
-      }
-      stagePane.add( new JLabel( "Arm:" ), createConstraints( 0, 0, 1, 1, 1.0, 1.0 ) );
-      stagePane.add( this.triggerLevel[i], createConstraints( 1, 0, 1, 1, 0.5, 1.0 ) );
-      final String[] modes =
-      { "Parallel", "Serial" };
-      this.triggerMode[i] = new JComboBox( modes );
-      stagePane.add( new JLabel( "Mode:", SwingConstants.RIGHT ), createConstraints( 2, 0, 1, 1, 0.5, 1.0 ) );
-      stagePane.add( this.triggerMode[i], createConstraints( 3, 0, 1, 1, 0.5, 1.0 ) );
-      this.triggerMode[i].addActionListener( this );
-      final String[] channels =
-      { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
-          "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
-      this.triggerChannel[i] = new JComboBox( channels );
-      stagePane.add( new JLabel( "Channel:", JLabel.RIGHT ), createConstraints( 4, 0, 1, 1, 0.5, 1.0 ) );
-      stagePane.add( this.triggerChannel[i], createConstraints( 5, 0, 1, 1, 0.5, 1.0 ) );
-
-      stagePane.add( new JLabel( "31" ), createConstraints( 1, 1, 1, 1, 1.0, 1.0 ) );
-      stagePane.add( new JLabel( "0", JLabel.RIGHT ), createConstraints( 5, 1, 1, 1, 1.0, 1.0 ) );
-      stagePane.add( new JLabel( "Mask:" ), createConstraints( 0, 2, 1, 1, 1.0, 1.0 ) );
-      this.triggerMask[i] = createChannelList( stagePane, createConstraints( 1, 2, 5, 1, 1.0, 1.0 ) );
-      stagePane.add( new JLabel( "Value:" ), createConstraints( 0, 3, 1, 1, 1.0, 1.0 ) );
-      this.triggerValue[i] = createChannelList( stagePane, createConstraints( 1, 3, 5, 1, 1.0, 1.0 ) );
-
-      stagePane.add( new JLabel( "Action:" ), createConstraints( 0, 4, 1, 1, 1.0, 1.0 ) );
-      this.triggerStart[i] = new JCheckBox( "Start Capture    (otherwise trigger level will rise by one)" );
-      stagePane.add( this.triggerStart[i], createConstraints( 1, 4, 3, 1, 1.0, 1.0 ) );
-      stagePane.add( new JLabel( "Delay:", JLabel.RIGHT ), createConstraints( 4, 4, 1, 1, 0.5, 1.0 ) );
-      this.triggerDelay[i] = new JTextField( "0" );
-      stagePane.add( this.triggerDelay[i], createConstraints( 5, 4, 1, 1, 0.5, 1.0 ) );
-      this.triggerStageTabs.add( "Stage " + i, stagePane );
-    }
-    triggerPane.add( this.triggerStageTabs, createConstraints( 0, 4, 3, 1, 1.0, 1.0 ) );
-    add( triggerPane, createConstraints( 0, 2, 3, 2, 1.0, 0.5 ) );
-
-    add( new JLabel(), createConstraints( 0, 5, 1, 1, 0.5, 0 ) );
-
-    this.captureButton = new JButton( "Capture" );
-    this.captureButton.addActionListener( this );
-    add( this.captureButton, createConstraints( 1, 5, 1, 1, 0.5, 0 ) );
-
-    final JButton cancel = new JButton( "Close" );
-    cancel.addActionListener( this );
-    add( cancel, createConstraints( 2, 5, 1, 1, 0.5, 0 ) );
+    initDialog();
   }
-
-  // METHODS
 
   /**
    * @param x
@@ -305,7 +102,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       final double wx, final double wy )
   {
     final GridBagConstraints gbc = new GridBagConstraints();
-    gbc.fill = GridBagConstraints.BOTH;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.anchor = GridBagConstraints.BASELINE;
     gbc.insets = new Insets( 2, 2, 2, 2 );
     gbc.gridx = x;
     gbc.gridy = y;
@@ -435,6 +233,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     updateFields();
   }
 
+  // METHODS
+
   /**
    * @return
    */
@@ -455,9 +255,14 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     updateFields( true );
   }
 
+  /*
+   * (non-Javadoc)
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.util.Properties)
+   */
   public void writeProperties( final Properties properties )
   {
-    properties.setProperty( NAME + ".port", ( String )this.portSelect.getSelectedItem() );
+    final String selectedItem = ( String )this.portSelect.getSelectedItem();
+    properties.setProperty( NAME + ".port", selectedItem == null ? "" : selectedItem );
     properties.setProperty( NAME + ".portRate", ( String )this.portRateSelect.getSelectedItem() );
     properties.setProperty( NAME + ".source", ( String )this.sourceSelect.getSelectedItem() );
     properties.setProperty( NAME + ".speed", ( String )this.speedSelect.getSelectedItem() );
@@ -470,12 +275,12 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
       properties.setProperty( NAME + ".triggerStage" + stage + "Level", ( String )this.triggerLevel[stage]
-          .getSelectedItem() );
+                                                                                                    .getSelectedItem() );
       properties.setProperty( NAME + ".triggerStage" + stage + "Delay", this.triggerDelay[stage].getText() );
       properties.setProperty( NAME + ".triggerStage" + stage + "Mode", ( String )this.triggerMode[stage]
-          .getSelectedItem() );
+                                                                                                  .getSelectedItem() );
       properties.setProperty( NAME + ".triggerStage" + stage + "Channel", ( String )this.triggerChannel[stage]
-          .getSelectedItem() );
+                                                                                                        .getSelectedItem() );
 
       final StringBuffer mask = new StringBuffer();
       for ( int i = 0; i < 32; i++ )
@@ -504,13 +309,37 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   }
 
   /**
-   * Properly closes the dialog. This method makes sure timer and worker
-   * thread are stopped before the dialog is closed.
+   * Properly closes the dialog. This method makes sure timer and worker thread
+   * are stopped before the dialog is closed.
    */
   private void close()
   {
     this.device.stop();
     this.dialog.setVisible( false );
+  }
+
+  /**
+   * @return
+   */
+  private JPanel createButtonPane()
+  {
+    this.captureButton = new JButton( "Capture" );
+    this.captureButton.addActionListener( this );
+
+    final JButton cancel = new JButton( "Close" );
+    cancel.setPreferredSize( this.captureButton.getPreferredSize() );
+    cancel.addActionListener( this );
+
+    final JPanel buttonPane = new JPanel();
+    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
+    buttonPane.setBorder( BorderFactory.createEmptyBorder( 8, 4, 8, 4 ) );
+
+    buttonPane.add( Box.createHorizontalGlue() );
+    buttonPane.add( this.captureButton );
+    buttonPane.add( Box.createHorizontalStrut( 16 ) );
+    buttonPane.add( cancel );
+
+    return buttonPane;
   }
 
   /**
@@ -545,6 +374,280 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   }
 
   /**
+   * Creates the "connection settings" pane.
+   * 
+   * @return a connection settings panel, never <code>null</code>.
+   */
+  private JPanel createConnectionPane()
+  {
+    final String[] ports = LogicSnifferDevice.getPorts();
+    this.portSelect = new JComboBox( ports );
+
+    final String[] portRates = { "115200bps", "57600bps", "38400bps", "19200bps" };
+    this.portRateSelect = new JComboBox( portRates );
+
+    final String[] numberSchemes = { "Inside", "Outside", "Test Mode" };
+    this.numberSchemeSelect = new JComboBox( numberSchemes );
+
+    final JPanel connectionPane = new JPanel( new GridBagLayout() );
+    connectionPane.setBorder( BorderFactory.createCompoundBorder( BorderFactory
+        .createTitledBorder( "Connection Settings" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+
+    connectionPane.add( new JLabel( "Analyzer port:" ), //
+        new GridBagConstraints( 0, 0, 1, 1, 1.0, 0.1, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    connectionPane.add( this.portSelect, //
+        new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.1, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    connectionPane.add( new JLabel( "Port Speed:" ), //
+        new GridBagConstraints( 0, 1, 1, 1, 1.0, 0.1, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    connectionPane.add( this.portRateSelect, //
+        new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.1, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    connectionPane.add( new JLabel( "Number scheme:" ), //
+        new GridBagConstraints( 0, 2, 1, 1, 1.0, 0.1, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    connectionPane.add( this.numberSchemeSelect, //
+        new GridBagConstraints( 1, 2, 1, 1, 1.0, 0.1, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    connectionPane.add( new JLabel( " " ), //
+        new GridBagConstraints( 0, 3, 2, 1, 1.0, 10.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, COMP_INSETS,
+            0, 0 ) );
+
+    return connectionPane;
+  }
+
+  /**
+   * @return
+   */
+  private JPanel createSettingsPane()
+  {
+    final String[] sources = { "Internal", "External / Rising", "External / Falling" };
+    this.sourceSelect = new JComboBox( sources );
+    this.sourceSelect.addActionListener( this );
+
+    final String[] speeds = { "200MHz", "100MHz", "50MHz", "20MHz", "10MHz", "5MHz", "2MHz", "1MHz", "500kHz",
+        "200kHz", "100kHz", "50kHz", "20kHz", "10kHz", "1kHz", "500Hz", "200Hz", "100Hz", "50Hz", "20Hz", "10Hz" };
+    this.speedSelect = new JComboBox( speeds );
+    this.speedSelect.setSelectedIndex( 1 );
+    this.speedSelect.addActionListener( this );
+
+    final Container groups = new Container();
+    groups.setLayout( new GridLayout( 1, 4 ) );
+    this.channelGroup = new JCheckBox[4];
+    for ( int i = 0; i < this.channelGroup.length; i++ )
+    {
+      this.channelGroup[i] = new JCheckBox( Integer.toString( i ) );
+      this.channelGroup[i].setSelected( true );
+      groups.add( this.channelGroup[i] );
+    }
+
+    final String[] sizes = { "24K", "12K", "6K", "2K", "1K", "512", "256", "128", "64" };
+    this.sizeSelect = new JComboBox( sizes );
+    this.sizeSelect.setSelectedIndex( 2 );
+
+    this.filterEnable = new JCheckBox( "Enable" );
+    this.filterEnable.setSelected( true );
+    this.filterEnable.setEnabled( false );
+
+    this.rleEnable = new JCheckBox( "Enable" );
+    this.rleEnable.setSelected( false );
+    this.rleEnable.setEnabled( true );
+
+    final JPanel settingsPane = new JPanel( new GridBagLayout() );
+    settingsPane.setBorder( BorderFactory.createCompoundBorder(
+        BorderFactory.createTitledBorder( "Analyzer Settings" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+
+    settingsPane.add( new JLabel( "Sampling Clock:" ), //
+        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    settingsPane.add( this.sourceSelect, //
+        new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    settingsPane.add( new JLabel( "Sampling Rate:" ), //
+        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    settingsPane.add( this.speedSelect, //
+        new GridBagConstraints( 1, 1, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    settingsPane.add( new JLabel( "Channel Groups:" ), //
+        new GridBagConstraints( 0, 2, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    settingsPane.add( groups, //
+        new GridBagConstraints( 1, 2, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    settingsPane.add( new JLabel( "Recording Size:" ), //
+        new GridBagConstraints( 0, 3, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    settingsPane.add( this.sizeSelect, //
+        new GridBagConstraints( 1, 3, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    settingsPane.add( new JLabel( "Noise Filter: " ), //
+        new GridBagConstraints( 0, 4, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    settingsPane.add( this.filterEnable, //
+        new GridBagConstraints( 1, 4, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    settingsPane.add( new JLabel( "RLE: " ), //
+        new GridBagConstraints( 0, 5, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    settingsPane.add( this.rleEnable, //
+        new GridBagConstraints( 1, 5, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    return settingsPane;
+  }
+
+  /**
+   * @return
+   */
+  private JPanel createTriggerPane()
+  {
+    final JPanel triggerPane = new JPanel();
+    triggerPane.setLayout( new GridBagLayout() );
+    triggerPane.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Trigger Settings" ),
+        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    this.triggerEnable = new JCheckBox( "Enable" );
+    this.triggerEnable.addActionListener( this );
+    triggerPane.add( new JLabel( "Trigger: " ), createConstraints( 0, 0, 1, 1, 0.0, 1.0 ) );
+    triggerPane.add( this.triggerEnable, createConstraints( 1, 0, 1, 1, 0.0, 1.0 ) );
+    triggerPane.add( new JLabel(), createConstraints( 2, 0, 1, 1, 1.0, 1.0 ) );
+
+    this.ratioLabel = new JLabel( " 50/ 50" );
+    final JLabel ratioSliderLabel = new JLabel( "Before/After Ratio: " );
+
+    this.ratioSlider = new JSlider( SwingConstants.HORIZONTAL, 0, 100, 50 );
+    this.ratioSlider.setMajorTickSpacing( 10 );
+    this.ratioSlider.setMinorTickSpacing( 5 );
+    this.ratioSlider.setPaintLabels( true );
+    this.ratioSlider.setPaintTicks( true );
+    this.ratioSlider.addChangeListener( new ChangeListener()
+    {
+      private final JLabel label = LogicSnifferConfigDialog.this.ratioLabel;
+
+      @Override
+      public void stateChanged( final ChangeEvent aEvent )
+      {
+        final JSlider slider = ( JSlider )aEvent.getSource();
+
+        final int before = slider.getValue();
+        final int after = ( slider.getMaximum() - before );
+
+        final String ratioText = String.format( "% 3d/% 3d", before, after );
+        slider.setToolTipText( ratioText );
+        this.label.setText( ratioText );
+      }
+    } );
+
+    triggerPane.add( ratioSliderLabel, createConstraints( 0, 1, 1, 1, 0.5, 1.0 ) );
+    triggerPane.add( this.ratioSlider, createConstraints( 1, 1, 1, 1, 1.0, 1.0 ) );
+    triggerPane.add( this.ratioLabel, createConstraints( 2, 1, 1, 1, 0.5, 1.0 ) );
+
+    final String[] types = { "Simple", "Complex" };
+    this.triggerTypeSelect = new JComboBox( types );
+    this.triggerTypeSelect.addActionListener( this );
+    triggerPane.add( new JLabel( "Type: " ), createConstraints( 0, 2, 1, 1, 0.5, 1.0 ) );
+    triggerPane.add( this.triggerTypeSelect, createConstraints( 1, 2, 1, 1, 0.5, 1.0 ) );
+
+    triggerPane.add( new JLabel( " " ), createConstraints( 0, 3, 1, 1, 1.0, 1.0 ) );
+
+    this.triggerStageTabs = new JTabbedPane();
+    this.triggerStages = this.device.getTriggerStageCount();
+    this.triggerMask = new JCheckBox[4][];
+    this.triggerValue = new JCheckBox[4][];
+    this.triggerLevel = new JComboBox[4];
+    this.triggerDelay = new JTextField[4];
+    this.triggerMode = new JComboBox[4];
+    this.triggerChannel = new JComboBox[4];
+    this.triggerStart = new JCheckBox[4];
+    for ( int i = 0; i < this.triggerStages; i++ )
+    {
+      final JPanel stagePane = new JPanel();
+      stagePane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
+      stagePane.setLayout( new GridBagLayout() );
+
+      final String[] levels = { "Immediatly", "On Level 1", "On Level 2", "On Level 3" };
+      this.triggerLevel[i] = new JComboBox( levels );
+      if ( i > 0 )
+      {
+        this.triggerLevel[i].setSelectedIndex( 3 );
+      }
+      stagePane.add( new JLabel( "Arm:" ), createConstraints( 0, 0, 1, 1, 1.0, 1.0 ) );
+      stagePane.add( this.triggerLevel[i], createConstraints( 1, 0, 1, 1, 0.5, 1.0 ) );
+      final String[] modes = { "Parallel", "Serial" };
+      this.triggerMode[i] = new JComboBox( modes );
+      stagePane.add( new JLabel( "Mode:", SwingConstants.RIGHT ), createConstraints( 2, 0, 1, 1, 0.5, 1.0 ) );
+      stagePane.add( this.triggerMode[i], createConstraints( 3, 0, 1, 1, 0.5, 1.0 ) );
+      this.triggerMode[i].addActionListener( this );
+      final String[] channels = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
+          "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
+      this.triggerChannel[i] = new JComboBox( channels );
+      stagePane.add( new JLabel( "Channel:", SwingConstants.RIGHT ), createConstraints( 4, 0, 1, 1, 0.5, 1.0 ) );
+      stagePane.add( this.triggerChannel[i], createConstraints( 5, 0, 1, 1, 0.5, 1.0 ) );
+
+      stagePane.add( new JLabel( "31" ), createConstraints( 1, 1, 1, 1, 1.0, 1.0 ) );
+      stagePane.add( new JLabel( "0", SwingConstants.RIGHT ), createConstraints( 5, 1, 1, 1, 1.0, 1.0 ) );
+      stagePane.add( new JLabel( "Mask:" ), createConstraints( 0, 2, 1, 1, 1.0, 1.0 ) );
+      this.triggerMask[i] = createChannelList( stagePane, createConstraints( 1, 2, 5, 1, 1.0, 1.0 ) );
+      stagePane.add( new JLabel( "Value:" ), createConstraints( 0, 3, 1, 1, 1.0, 1.0 ) );
+      this.triggerValue[i] = createChannelList( stagePane, createConstraints( 1, 3, 5, 1, 1.0, 1.0 ) );
+
+      stagePane.add( new JLabel( "Action:" ), createConstraints( 0, 4, 1, 1, 1.0, 1.0 ) );
+      this.triggerStart[i] = new JCheckBox( "Start Capture    (otherwise trigger level will rise by one)" );
+      stagePane.add( this.triggerStart[i], createConstraints( 1, 4, 3, 1, 1.0, 1.0 ) );
+      stagePane.add( new JLabel( "Delay:", SwingConstants.RIGHT ), createConstraints( 4, 4, 1, 1, 0.5, 1.0 ) );
+      this.triggerDelay[i] = new JTextField( "0" );
+      stagePane.add( this.triggerDelay[i], createConstraints( 5, 4, 1, 1, 0.5, 1.0 ) );
+      this.triggerStageTabs.add( "Stage " + i, stagePane );
+    }
+    triggerPane.add( this.triggerStageTabs, createConstraints( 0, 4, 3, 1, 1.0, 1.0 ) );
+    return triggerPane;
+  }
+
+  /**
+   * Initializes this dialog by creating & adding all components to it.
+   */
+  private void initDialog()
+  {
+    SwingUtilities.invokeLater( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        setLayout( new GridBagLayout() );
+        setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
+
+        final Insets insets = new Insets( 2, 2, 2, 2 );
+
+        add( createConnectionPane(), //
+            new GridBagConstraints( 0, 0, 1, 1, 0.5, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0,
+                0 ) );
+
+        add( createSettingsPane(), //
+            new GridBagConstraints( 1, 0, 1, 1, 0.5, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0,
+                0 ) );
+
+        add( createTriggerPane(), //
+            new GridBagConstraints( 0, 1, 2, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, insets,
+                0, 0 ) );
+
+        add( createButtonPane(), //
+            new GridBagConstraints( 0, 2, 2, 1, 1.0, 1.0, GridBagConstraints.SOUTH, GridBagConstraints.BOTH, insets, 0,
+                0 ) );
+      }
+    } );
+  }
+
+  /**
    * Internal method that initializes a dialog and add this component to it.
    * 
    * @param frame
@@ -563,9 +666,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     {
       this.dialog = new JDialog( frame, "Capture" );
       this.dialog.getContentPane().add( this );
-      this.dialog.setResizable( false );
-      this.dialog.setSize( getPreferredSize() );
-      // dialog.pack();
+      this.dialog.pack();
     }
 
     // sync dialog status with device
@@ -622,7 +723,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    * select.
    * 
    * @param enable
-   *          <code>true</code> to enable trigger configuration fields, <code>false</code> to disable them
+   *          <code>true</code> to enable trigger configuration fields,
+   *          <code>false</code> to disable them
    */
   private void setTriggerEnabled( final boolean enable )
   {
