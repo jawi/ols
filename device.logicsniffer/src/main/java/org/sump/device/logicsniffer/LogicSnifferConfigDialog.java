@@ -37,6 +37,55 @@ import nl.lxtreme.ols.api.*;
  */
 public class LogicSnifferConfigDialog extends JComponent implements ActionListener, Configurable
 {
+  // INNER TYPES
+
+  /**
+   * Listens to the ratio slider and updates a label with the chosen ratio
+   * accordingly.
+   */
+  static final class TriggerRatioChangeListener implements ChangeListener
+  {
+    private final JLabel label;
+
+    /**
+     * @param aListeningLabel
+     */
+    public TriggerRatioChangeListener( final JLabel aListeningLabel )
+    {
+      this.label = aListeningLabel;
+      updateLabel( 50, 50 );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent
+     * )
+     */
+    @Override
+    public void stateChanged( final ChangeEvent aEvent )
+    {
+      final JSlider slider = ( JSlider )aEvent.getSource();
+
+      final int before = slider.getValue();
+      final int after = ( slider.getMaximum() - before );
+
+      slider.setToolTipText( updateLabel( before, after ) );
+    }
+
+    /**
+     * @param aBeforeRatio
+     * @param aAfterRatio
+     * @return
+     */
+    private String updateLabel( final int aBeforeRatio, final int aAfterRatio )
+    {
+      final String ratioText = String.format( "% 3d/% 3d", aBeforeRatio, aAfterRatio );
+      this.label.setText( ratioText );
+      return ratioText;
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -512,53 +561,21 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   private JPanel createTriggerPane()
   {
-    final JPanel triggerPane = new JPanel();
-    triggerPane.setLayout( new GridBagLayout() );
-    triggerPane.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Trigger Settings" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
     this.triggerEnable = new JCheckBox( "Enable" );
     this.triggerEnable.addActionListener( this );
-    triggerPane.add( new JLabel( "Trigger: " ), createConstraints( 0, 0, 1, 1, 0.0, 1.0 ) );
-    triggerPane.add( this.triggerEnable, createConstraints( 1, 0, 1, 1, 0.0, 1.0 ) );
-    triggerPane.add( new JLabel(), createConstraints( 2, 0, 1, 1, 1.0, 1.0 ) );
 
-    this.ratioLabel = new JLabel( " 50/ 50" );
-    final JLabel ratioSliderLabel = new JLabel( "Before/After Ratio: " );
+    this.ratioLabel = new JLabel( "" );
 
     this.ratioSlider = new JSlider( SwingConstants.HORIZONTAL, 0, 100, 50 );
     this.ratioSlider.setMajorTickSpacing( 10 );
     this.ratioSlider.setMinorTickSpacing( 5 );
     this.ratioSlider.setPaintLabels( true );
     this.ratioSlider.setPaintTicks( true );
-    this.ratioSlider.addChangeListener( new ChangeListener()
-    {
-      private final JLabel label = LogicSnifferConfigDialog.this.ratioLabel;
-
-      @Override
-      public void stateChanged( final ChangeEvent aEvent )
-      {
-        final JSlider slider = ( JSlider )aEvent.getSource();
-
-        final int before = slider.getValue();
-        final int after = ( slider.getMaximum() - before );
-
-        final String ratioText = String.format( "% 3d/% 3d", before, after );
-        slider.setToolTipText( ratioText );
-        this.label.setText( ratioText );
-      }
-    } );
-
-    triggerPane.add( ratioSliderLabel, createConstraints( 0, 1, 1, 1, 0.5, 1.0 ) );
-    triggerPane.add( this.ratioSlider, createConstraints( 1, 1, 1, 1, 1.0, 1.0 ) );
-    triggerPane.add( this.ratioLabel, createConstraints( 2, 1, 1, 1, 0.5, 1.0 ) );
+    this.ratioSlider.addChangeListener( new TriggerRatioChangeListener( this.ratioLabel ) );
 
     final String[] types = { "Simple", "Complex" };
     this.triggerTypeSelect = new JComboBox( types );
     this.triggerTypeSelect.addActionListener( this );
-    triggerPane.add( new JLabel( "Type: " ), createConstraints( 0, 2, 1, 1, 0.5, 1.0 ) );
-    triggerPane.add( this.triggerTypeSelect, createConstraints( 1, 2, 1, 1, 0.5, 1.0 ) );
-
-    triggerPane.add( new JLabel( " " ), createConstraints( 0, 3, 1, 1, 1.0, 1.0 ) );
 
     this.triggerStageTabs = new JTabbedPane();
     this.triggerStages = this.device.getTriggerStageCount();
@@ -575,41 +592,82 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       stagePane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
       stagePane.setLayout( new GridBagLayout() );
 
-      final String[] levels = { "Immediatly", "On Level 1", "On Level 2", "On Level 3" };
+      final String[] levels = { "Immediately", "On Level 1", "On Level 2", "On Level 3" };
       this.triggerLevel[i] = new JComboBox( levels );
-      if ( i > 0 )
-      {
-        this.triggerLevel[i].setSelectedIndex( 3 );
-      }
+      this.triggerLevel[i].setSelectedIndex( i );
+
       stagePane.add( new JLabel( "Arm:" ), createConstraints( 0, 0, 1, 1, 1.0, 1.0 ) );
       stagePane.add( this.triggerLevel[i], createConstraints( 1, 0, 1, 1, 0.5, 1.0 ) );
+
       final String[] modes = { "Parallel", "Serial" };
       this.triggerMode[i] = new JComboBox( modes );
+
       stagePane.add( new JLabel( "Mode:", SwingConstants.RIGHT ), createConstraints( 2, 0, 1, 1, 0.5, 1.0 ) );
       stagePane.add( this.triggerMode[i], createConstraints( 3, 0, 1, 1, 0.5, 1.0 ) );
+
       this.triggerMode[i].addActionListener( this );
       final String[] channels = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
           "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
       this.triggerChannel[i] = new JComboBox( channels );
+
       stagePane.add( new JLabel( "Channel:", SwingConstants.RIGHT ), createConstraints( 4, 0, 1, 1, 0.5, 1.0 ) );
       stagePane.add( this.triggerChannel[i], createConstraints( 5, 0, 1, 1, 0.5, 1.0 ) );
 
       stagePane.add( new JLabel( "31" ), createConstraints( 1, 1, 1, 1, 1.0, 1.0 ) );
       stagePane.add( new JLabel( "0", SwingConstants.RIGHT ), createConstraints( 5, 1, 1, 1, 1.0, 1.0 ) );
       stagePane.add( new JLabel( "Mask:" ), createConstraints( 0, 2, 1, 1, 1.0, 1.0 ) );
+
       this.triggerMask[i] = createChannelList( stagePane, createConstraints( 1, 2, 5, 1, 1.0, 1.0 ) );
+
       stagePane.add( new JLabel( "Value:" ), createConstraints( 0, 3, 1, 1, 1.0, 1.0 ) );
+
       this.triggerValue[i] = createChannelList( stagePane, createConstraints( 1, 3, 5, 1, 1.0, 1.0 ) );
 
       stagePane.add( new JLabel( "Action:" ), createConstraints( 0, 4, 1, 1, 1.0, 1.0 ) );
+
       this.triggerStart[i] = new JCheckBox( "Start Capture    (otherwise trigger level will rise by one)" );
       stagePane.add( this.triggerStart[i], createConstraints( 1, 4, 3, 1, 1.0, 1.0 ) );
+
       stagePane.add( new JLabel( "Delay:", SwingConstants.RIGHT ), createConstraints( 4, 4, 1, 1, 0.5, 1.0 ) );
       this.triggerDelay[i] = new JTextField( "0" );
       stagePane.add( this.triggerDelay[i], createConstraints( 5, 4, 1, 1, 0.5, 1.0 ) );
-      this.triggerStageTabs.add( "Stage " + i, stagePane );
+
+      this.triggerStageTabs.add( String.format( "Stage %d", i + 1 ), stagePane );
     }
-    triggerPane.add( this.triggerStageTabs, createConstraints( 0, 4, 3, 1, 1.0, 1.0 ) );
+
+    final JPanel triggerPane = new JPanel();
+    triggerPane.setLayout( new GridBagLayout() );
+    triggerPane.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Trigger Settings" ),
+        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+
+    triggerPane.add( new JLabel( "Trigger: " ), //
+        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    triggerPane.add( this.triggerEnable, //
+        new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    triggerPane.add( new JLabel( "Before/After ratio: " ), //
+        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+            LABEL_INSETS, 0, 0 ) );
+    triggerPane.add( this.ratioSlider, //
+        new GridBagConstraints( 1, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
+            COMP_INSETS, 0, 0 ) );
+    triggerPane.add( this.ratioLabel, //
+        new GridBagConstraints( 2, 1, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, COMP_INSETS, 0,
+            0 ) );
+
+    triggerPane.add( new JLabel( "Type: " ), //
+        new GridBagConstraints( 0, 2, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    triggerPane.add( this.triggerTypeSelect, //
+        new GridBagConstraints( 1, 2, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    triggerPane.add( this.triggerStageTabs, //
+        new GridBagConstraints( 0, 3, 3, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.BOTH,
+            COMP_INSETS, 0, 0 ) );
+
     return triggerPane;
   }
 
