@@ -33,6 +33,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
