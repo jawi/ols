@@ -30,6 +30,9 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.NumberUtils.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -217,7 +220,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   public int getPortBaudrate()
   {
-    return smartParseInt( ( String )this.portRateSelect.getSelectedItem() );
+    return NumberUtils.smartParseInt( ( String )this.portRateSelect.getSelectedItem() );
   }
 
   /**
@@ -230,22 +233,22 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
 
   public void readProperties( final Properties properties )
   {
-    selectByValue( this.portSelect, properties.getProperty( NAME + ".port" ) );
-    selectByValue( this.portRateSelect, properties.getProperty( NAME + ".portRate" ) );
-    selectByValue( this.sourceSelect, properties.getProperty( NAME + ".source" ) );
-    selectByValue( this.speedSelect, properties.getProperty( NAME + ".speed" ) );
-    selectByValue( this.sizeSelect, properties.getProperty( NAME + ".size" ) );
-    selectByValue( this.ratioSlider, properties.getProperty( NAME + ".ratio" ) );
+    this.portSelect.setSelectedItem( properties.getProperty( NAME + ".port" ) );
+    this.portRateSelect.setSelectedItem( properties.getProperty( NAME + ".portRate" ) );
+    this.sourceSelect.setSelectedItem( properties.getProperty( NAME + ".source" ) );
+    this.speedSelect.setSelectedItem( properties.getProperty( NAME + ".speed" ) );
+    this.sizeSelect.setSelectedItem( properties.getProperty( NAME + ".size" ) );
+    this.ratioSlider.setValue( NumberUtils.smartParseInt( properties.getProperty( NAME + ".ratio" ) ) );
     this.filterEnable.setSelected( "true".equals( properties.getProperty( NAME + ".filter" ) ) );
     this.triggerEnable.setSelected( "true".equals( properties.getProperty( NAME + ".trigger" ) ) );
-    selectByValue( this.triggerTypeSelect, properties.getProperty( NAME + ".triggerType" ) );
+    this.triggerTypeSelect.setSelectedItem( properties.getProperty( NAME + ".triggerType" ) );
 
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
-      selectByValue( this.triggerLevel[stage], properties.getProperty( NAME + ".triggerStage" + stage + "Level" ) );
+      this.triggerLevel[stage].setSelectedItem( properties.getProperty( NAME + ".triggerStage" + stage + "Level" ) );
       this.triggerDelay[stage].setText( properties.getProperty( NAME + ".triggerStage" + stage + "Delay" ) );
-      selectByValue( this.triggerMode[stage], properties.getProperty( NAME + ".triggerStage" + stage + "Mode" ) );
-      selectByValue( this.triggerChannel[stage], properties.getProperty( NAME + ".triggerStage" + stage + "Channel" ) );
+      this.triggerMode[stage].setSelectedItem( properties.getProperty( NAME + ".triggerStage" + stage + "Mode" ) );
+      this.triggerChannel[stage].setSelectedItem( properties.getProperty( NAME + ".triggerStage" + stage + "Channel" ) );
 
       final String mask = properties.getProperty( NAME + ".triggerStage" + stage + "Mask" );
       if ( mask != null )
@@ -392,37 +395,6 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   }
 
   /**
-   * Creates an array of check boxes, adds it to the device controller and
-   * returns it.
-   * 
-   * @param label
-   *          label to use on device controller component
-   * @return array of created check boxes
-   */
-  private JCheckBox[] createChannelList( final JPanel pane, final GridBagConstraints constraints )
-  {
-    final JCheckBox[] boxes = new JCheckBox[32];
-
-    final Container container = new Container();
-    container.setLayout( new GridLayout( 1, 32 ) );
-
-    for ( int col = 31; col >= 0; col-- )
-    {
-      final JCheckBox box = new JCheckBox();
-      box.setEnabled( false );
-      container.add( box );
-      if ( ( ( col % 8 ) == 0 ) && ( col > 0 ) )
-      {
-        container.add( new JLabel() );
-      }
-      boxes[col] = box;
-    }
-
-    pane.add( container, constraints );
-    return ( boxes );
-  }
-
-  /**
    * Creates the "connection settings" pane.
    * 
    * @return a connection settings panel, never <code>null</code>.
@@ -468,6 +440,63 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
             0, 0 ) );
 
     return connectionPane;
+  }
+
+  /**
+   * @param aStage
+   * @return
+   */
+  private JPanel createMaskValueEditor( final int aStage )
+  {
+    final JPanel maskValuePanel = new JPanel();
+    maskValuePanel.setLayout( new SpringLayout() );
+
+    maskValuePanel.add( new JLabel( " " ) );
+    for ( int j = 32; j > 0; j-- )
+    {
+      final String channel = ( ( j % 8 ) == 0 ) || ( ( j % 8 ) == 1 ) ? String.format( "% 2d", j - 1 ) : "  ";
+      maskValuePanel.add( new JLabel( channel ) );
+      if ( ( ( j - 1 ) % 8 == 0 ) && ( j > 1 ) )
+      {
+        maskValuePanel.add( new JLabel() );
+      }
+    }
+
+    maskValuePanel.add( new JLabel( "Mask: " ) );
+    this.triggerMask[aStage] = new JCheckBox[32];
+    for ( int j = 32; j > 0; j-- )
+    {
+      final JCheckBox triggerEnabled = new JCheckBox();
+      triggerEnabled.setEnabled( false );
+      this.triggerMask[aStage][j - 1] = triggerEnabled;
+      maskValuePanel.add( triggerEnabled );
+      if ( ( ( j - 1 ) % 8 == 0 ) && ( j > 1 ) )
+      {
+        maskValuePanel.add( new JLabel() );
+      }
+    }
+
+    maskValuePanel.add( new JLabel( "Value: " ) );
+
+    this.triggerValue[aStage] = new JCheckBox[32];
+    for ( int j = 32; j > 0; j-- )
+    {
+      final JCheckBox valueEnabled = new JCheckBox();
+      valueEnabled.setEnabled( false );
+      this.triggerValue[aStage][j - 1] = valueEnabled;
+      maskValuePanel.add( valueEnabled );
+      if ( ( ( j - 1 ) % 8 == 0 ) && ( j > 1 ) )
+      {
+        maskValuePanel.add( new JLabel() );
+      }
+    }
+
+    SpringLayoutUtils.makeCompactGrid( maskValuePanel, //
+        3, 36, //
+        0, 0, //
+        4, 4 );
+
+    return maskValuePanel;
   }
 
   /**
@@ -613,15 +642,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       stagePane.add( new JLabel( "Channel:", SwingConstants.RIGHT ), createConstraints( 4, 0, 1, 1, 0.5, 1.0 ) );
       stagePane.add( this.triggerChannel[i], createConstraints( 5, 0, 1, 1, 0.5, 1.0 ) );
 
-      stagePane.add( new JLabel( "31" ), createConstraints( 1, 1, 1, 1, 1.0, 1.0 ) );
-      stagePane.add( new JLabel( "0", SwingConstants.RIGHT ), createConstraints( 5, 1, 1, 1, 1.0, 1.0 ) );
-      stagePane.add( new JLabel( "Mask:" ), createConstraints( 0, 2, 1, 1, 1.0, 1.0 ) );
-
-      this.triggerMask[i] = createChannelList( stagePane, createConstraints( 1, 2, 5, 1, 1.0, 1.0 ) );
-
-      stagePane.add( new JLabel( "Value:" ), createConstraints( 0, 3, 1, 1, 1.0, 1.0 ) );
-
-      this.triggerValue[i] = createChannelList( stagePane, createConstraints( 1, 3, 5, 1, 1.0, 1.0 ) );
+      final JPanel maskValueEditor = createMaskValueEditor( i );
+      stagePane.add( maskValueEditor, createConstraints( 0, 1, 5, 1, 1.0, 1.0 ) );
 
       stagePane.add( new JLabel( "Action:" ), createConstraints( 0, 4, 1, 1, 1.0, 1.0 ) );
 
@@ -731,32 +753,6 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     updateFields();
   }
 
-  private void selectByValue( final JComboBox box, final String value )
-  {
-    if ( value != null )
-    {
-      for ( int i = 0; i < box.getItemCount(); i++ )
-      {
-        if ( value.equals( ( String )box.getItemAt( i ) ) )
-        {
-          box.setSelectedIndex( i );
-        }
-      }
-    }
-  }
-
-  private void selectByValue( final JSlider slider, final String value )
-  {
-    try
-    {
-      slider.setValue( Integer.valueOf( value ) );
-    }
-    catch ( NumberFormatException exception )
-    {
-      slider.setValue( 50 ); // XXX default value
-    }
-  }
-
   /**
    * Sets the enabled state of all configuration components of the dialog.
    * 
@@ -823,31 +819,6 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     }
   }
 
-  /**
-   * Extracts integers from strings regardless of trailing trash.
-   * 
-   * @param s
-   *          string to be parsed
-   * @return integer value, 0 if parsing fails
-   */
-  private int smartParseInt( final String s )
-  {
-    int val = 0;
-
-    try
-    {
-      for ( int i = 1; i <= s.length(); i++ )
-      {
-        val = Integer.parseInt( s.substring( 0, i ) );
-      }
-    }
-    catch ( final NumberFormatException E )
-    {
-    }
-
-    return ( val );
-  }
-
   /** writes the dialog settings to the device */
   private void updateDevice()
   {
@@ -873,24 +844,12 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
 
     // set sample rate
     value = ( String )this.speedSelect.getSelectedItem();
-    int f = smartParseInt( value );
-    if ( value.indexOf( "M" ) > 0 )
-    {
-      f *= 1000000;
-    }
-    else if ( value.indexOf( "k" ) > 0 )
-    {
-      f *= 1000;
-    }
+    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI );
     this.device.setRate( f );
 
     // set sample count
     value = ( String )this.sizeSelect.getSelectedItem();
-    int s = smartParseInt( value );
-    if ( value.indexOf( "K" ) > 0 )
-    {
-      s *= 1024;
-    }
+    int s = NumberUtils.smartParseInt( value, UnitDefinition.BINARY );
     this.device.setSize( s );
 
     // set before / after ratio
@@ -941,7 +900,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
           }
         }
         final int level = this.triggerLevel[stage].getSelectedIndex();
-        final int delay = smartParseInt( this.triggerDelay[stage].getText() );
+        final int delay = NumberUtils.smartParseInt( this.triggerDelay[stage].getText() );
         final int channel = this.triggerChannel[stage].getSelectedIndex();
         final boolean startCapture = this.triggerStart[stage].isSelected();
         if ( complex )
