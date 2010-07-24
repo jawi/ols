@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,14 +39,14 @@ public class RunAnalysisToolAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long     serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String    ID               = "RunTool";
+  public static final String ID = "RunTool";
 
   // VARIABLES
 
-  private final Host            host;
-  private final Tool<?>         tool;
+  private final Host host;
+  private final Tool tool;
   private final PropertyManager propertyManager;
 
   // CONSTRUCTORS
@@ -56,7 +56,7 @@ public class RunAnalysisToolAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public RunAnalysisToolAction( final Host aHost, final Tool<?> aTool, final PropertyManager aPropertyManager )
+  public RunAnalysisToolAction( final Host aHost, final Tool aTool, final PropertyManager aPropertyManager )
   {
     super( ID + aTool.getName(), aTool.getName(), "Run " + aTool.getName() );
 
@@ -78,8 +78,8 @@ public class RunAnalysisToolAction extends BaseAction
     // Make sure the tool is started from the EDT...
     SwingUtilities.invokeLater( new Runnable()
     {
-      private final Host            host            = RunAnalysisToolAction.this.host;
-      private final Tool<?>         tool            = RunAnalysisToolAction.this.tool;
+      private final Host host = RunAnalysisToolAction.this.host;
+      private final Tool tool = RunAnalysisToolAction.this.tool;
       private final PropertyManager propertyManager = RunAnalysisToolAction.this.propertyManager;
 
       /**

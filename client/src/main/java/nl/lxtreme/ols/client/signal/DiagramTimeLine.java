@@ -286,7 +286,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
 
         aGraphics.setColor( this.diagramSettings.getCursorColor( i ) );
         aGraphics.drawRect( cursorPos, TIMELINE_HEIGHT - 14, 8, TIMELINE_HEIGHT - 1 );
-        aGraphics.drawString( Integer.toString( i ), cursorPos + 1, TIMELINE_HEIGHT - 2 );
+        aGraphics.drawString( Integer.toString( i + 1 ), cursorPos + 1, TIMELINE_HEIGHT - 2 );
       }
     }
 

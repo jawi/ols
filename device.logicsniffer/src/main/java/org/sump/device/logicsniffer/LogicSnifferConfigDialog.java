@@ -184,19 +184,16 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     {
       updateDevice();
       updateFields();
-
     }
     else if ( o == this.sourceSelect )
     {
       updateDevice();
       updateFields();
-
     }
     else if ( o == this.speedSelect )
     {
       updateDevice();
       updateFields();
-
     }
     else if ( l.equals( "Capture" ) )
     {
@@ -449,17 +446,17 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   private JPanel createMaskValueEditor( final int aStage )
   {
     final JPanel maskValuePanel = new JPanel();
-    maskValuePanel.setLayout( new SpringLayout() );
+    final SpringLayout layoutMgr = new SpringLayout();
+    maskValuePanel.setLayout( layoutMgr );
+
+    final JLabel[] channelLabels = new JLabel[32];
 
     maskValuePanel.add( new JLabel( " " ) );
     for ( int j = 32; j > 0; j-- )
     {
-      final String channel = ( ( j % 8 ) == 0 ) || ( ( j % 8 ) == 1 ) ? String.format( "% 2d", j - 1 ) : "  ";
-      maskValuePanel.add( new JLabel( channel ) );
-      if ( ( ( j - 1 ) % 8 == 0 ) && ( j > 1 ) )
-      {
-        maskValuePanel.add( new JLabel() );
-      }
+      final String channel = ( ( j % 8 ) == 0 ) || ( ( j % 8 ) == 1 ) ? String.format( "% 3d", j - 1 ) : "";
+      channelLabels[j - 1] = new JLabel( channel );
+      maskValuePanel.add( channelLabels[j - 1] );
     }
 
     maskValuePanel.add( new JLabel( "Mask: " ) );
@@ -468,12 +465,9 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     {
       final JCheckBox triggerEnabled = new JCheckBox();
       triggerEnabled.setEnabled( false );
+
       this.triggerMask[aStage][j - 1] = triggerEnabled;
       maskValuePanel.add( triggerEnabled );
-      if ( ( ( j - 1 ) % 8 == 0 ) && ( j > 1 ) )
-      {
-        maskValuePanel.add( new JLabel() );
-      }
     }
 
     maskValuePanel.add( new JLabel( "Value: " ) );
@@ -483,18 +477,15 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     {
       final JCheckBox valueEnabled = new JCheckBox();
       valueEnabled.setEnabled( false );
+
       this.triggerValue[aStage][j - 1] = valueEnabled;
       maskValuePanel.add( valueEnabled );
-      if ( ( ( j - 1 ) % 8 == 0 ) && ( j > 1 ) )
-      {
-        maskValuePanel.add( new JLabel() );
-      }
     }
 
     SpringLayoutUtils.makeCompactGrid( maskValuePanel, //
-        3, 36, //
+        3, 33, //
         0, 0, //
-        4, 4 );
+        0, 0 );
 
     return maskValuePanel;
   }
@@ -521,6 +512,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     {
       this.channelGroup[i] = new JCheckBox( Integer.toString( i ) );
       this.channelGroup[i].setSelected( true );
+      this.channelGroup[i].addActionListener( this );
+      this.channelGroup[i].setActionCommand( "channel" );
       groups.add( this.channelGroup[i] );
     }
 
@@ -639,18 +632,18 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
           "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
       this.triggerChannel[i] = new JComboBox( channels );
 
-      stagePane.add( new JLabel( "Channel:", SwingConstants.RIGHT ), createConstraints( 4, 0, 1, 1, 0.5, 1.0 ) );
+      stagePane.add( new JLabel( "Channel: ", SwingConstants.RIGHT ), createConstraints( 4, 0, 1, 1, 0.5, 1.0 ) );
       stagePane.add( this.triggerChannel[i], createConstraints( 5, 0, 1, 1, 0.5, 1.0 ) );
 
       final JPanel maskValueEditor = createMaskValueEditor( i );
-      stagePane.add( maskValueEditor, createConstraints( 0, 1, 5, 1, 1.0, 1.0 ) );
+      stagePane.add( maskValueEditor, createConstraints( 0, 1, 6, 1, 1.0, 1.0 ) );
 
-      stagePane.add( new JLabel( "Action:" ), createConstraints( 0, 4, 1, 1, 1.0, 1.0 ) );
+      stagePane.add( new JLabel( "Action: " ), createConstraints( 0, 4, 1, 1, 1.0, 1.0 ) );
 
       this.triggerStart[i] = new JCheckBox( "Start Capture    (otherwise trigger level will rise by one)" );
       stagePane.add( this.triggerStart[i], createConstraints( 1, 4, 3, 1, 1.0, 1.0 ) );
 
-      stagePane.add( new JLabel( "Delay:", SwingConstants.RIGHT ), createConstraints( 4, 4, 1, 1, 0.5, 1.0 ) );
+      stagePane.add( new JLabel( "Delay: ", SwingConstants.RIGHT ), createConstraints( 4, 4, 1, 1, 0.5, 1.0 ) );
       this.triggerDelay[i] = new JTextField( "0" );
       stagePane.add( this.triggerDelay[i], createConstraints( 5, 4, 1, 1, 0.5, 1.0 ) );
 
@@ -953,11 +946,16 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   {
     this.triggerEnable.setSelected( this.device.isTriggerEnabled() );
     setTriggerEnabled( this.device.isTriggerEnabled() );
+
     this.filterEnable.setEnabled( this.device.isFilterAvailable() && enable );
+
+    final int availableChannelGroups = this.device.getAvailableChannelCount() / 8;
     for ( int i = 0; i < this.channelGroup.length; i++ )
     {
-      this.channelGroup[i].setEnabled( enable && ( i < this.device.getAvailableChannelCount() / 8 ) );
+      final boolean enabled = enable && ( i < availableChannelGroups );
+      this.channelGroup[i].setEnabled( enabled );
     }
+
     this.speedSelect.setEnabled( this.device.getClockSource() == LogicSnifferDevice.CLOCK_INTERNAL );
   }
 

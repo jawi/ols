@@ -18,25 +18,35 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client;
+package nl.lxtreme.ols.tool.measure;
 
 
-import java.util.*;
+import nl.lxtreme.ols.api.tools.*;
 
+import org.osgi.framework.*;
 
 /**
- * Denotes a manager for (user) properties.
+ *
  */
-public interface PropertyManager
+public class Activator implements BundleActivator
 {
   // METHODS
 
   /**
-   * Returns the current set of properties.
-   * 
-   * @return a current set of properties, never <code>null</code>.
+   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
    */
-  Properties getProperties();
-}
+  @Override
+  public void start( final BundleContext aContext ) throws Exception
+  {
+    aContext.registerService( Tool.class.getName(), new MeasurementTool(), null );
+  }
 
-/* EOF */
+  /**
+   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+   */
+  @Override
+  public void stop( final BundleContext aContext ) throws Exception
+  {
+    // NO-op
+  }
+}
