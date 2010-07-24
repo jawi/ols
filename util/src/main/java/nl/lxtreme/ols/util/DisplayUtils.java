@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -132,6 +132,25 @@ public final class DisplayUtils
     }
 
     return String.format( "%.3f %s", aTime / unitVals[i], unitStrs[i] );
+  }
+
+  /**
+   * Returns the ordinal representation (in English) of the given value.
+   * @param aValue the value to get the ordinal value for, >= 0 && < 40.
+   * @return a ordinal number representation of the given value, like "1st".
+   */
+  public static String getOrdinalNumber(final int aValue) {
+    String suffix = "";
+    if (( aValue == 1 ) || ( aValue == 21 ) || ( aValue == 31 )) {
+      suffix = "st";
+    } else if (( aValue == 2 ) || ( aValue == 22 )) {
+      suffix = "nd";
+    } else if (( aValue == 3 ) || ( aValue == 23 )) {
+      suffix = "rd";
+    } else if (( aValue >= 0 ) && ( aValue < 40 )) {
+      suffix = "th";
+    }
+    return String.format("%d%s", aValue, suffix);
   }
 
   /**

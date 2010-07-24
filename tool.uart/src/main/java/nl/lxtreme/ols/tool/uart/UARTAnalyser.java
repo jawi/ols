@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import nl.lxtreme.ols.api.tools.*;
 /**
  * 
  */
-public class UARTAnalyser implements Tool<UARTProtocolAnalysisDataSet>
+public class UARTAnalyser implements Tool
 {
   // VARIABLES
 

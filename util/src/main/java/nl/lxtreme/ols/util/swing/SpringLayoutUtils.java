@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project
+ * OpenBench LogicSniffer / SUMP project 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,37 +14,9 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
- * 
- * Original copyright message for contained code:
- * 
- * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- *   - Neither the name of Oracle or the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.util.swing;
 
@@ -72,6 +44,19 @@ public final class SpringLayoutUtils
   }
 
   // METHODS
+
+  /**
+   * @param aConstraints
+   * @param aEdgeName
+   * @param aConstant
+   */
+  public static void addToConstraint( final SpringLayout.Constraints aConstraints, final String aEdgeName,
+      final int aConstant )
+  {
+    aConstraints.setConstraint( aEdgeName, Spring.sum( aConstraints.getConstraint( aEdgeName ), Spring
+        .constant( aConstant ) ) );
+
+  }
 
   /**
    * Aligns the first <code>rows</code> * <code>cols</code> components of
@@ -113,11 +98,11 @@ public final class SpringLayoutUtils
       Spring width = Spring.constant( 0 );
       for ( int r = 0; r < aRows; r++ )
       {
-        width = Spring.max( width, getConstraintsForCell( r, c, aContainer, aCols ).getWidth() );
+        width = Spring.max( width, getConstraintsForCell( aContainer, aCols, r, c ).getWidth() );
       }
       for ( int r = 0; r < aRows; r++ )
       {
-        final SpringLayout.Constraints constraints = getConstraintsForCell( r, c, aContainer, aCols );
+        final SpringLayout.Constraints constraints = getConstraintsForCell( aContainer, aCols, r, c );
         constraints.setX( x );
         constraints.setWidth( width );
       }
@@ -131,11 +116,11 @@ public final class SpringLayoutUtils
       Spring height = Spring.constant( 0 );
       for ( int c = 0; c < aCols; c++ )
       {
-        height = Spring.max( height, getConstraintsForCell( r, c, aContainer, aCols ).getHeight() );
+        height = Spring.max( height, getConstraintsForCell( aContainer, aCols, r, c ).getHeight() );
       }
       for ( int c = 0; c < aCols; c++ )
       {
-        final SpringLayout.Constraints constraints = getConstraintsForCell( r, c, aContainer, aCols );
+        final SpringLayout.Constraints constraints = getConstraintsForCell( aContainer, aCols, r, c );
         constraints.setY( y );
         constraints.setHeight( height );
       }
@@ -245,17 +230,27 @@ public final class SpringLayoutUtils
   }
 
   /**
-   * Used by makeCompactGrid.
+   * Returns the SpringLayout constraints for a denoted cell.
    * 
-   * @param aRow
-   * @param aCol
    * @param aContainer
+   *          the container to get the cell constraints for. Must have a
+   *          SpringLayout as layout manager;
    * @param aCols
-   * @return
+   *          number of columns
+   * @param aRow
+   *          the row of the cell to return the constraints of;
+   * @param aCol
+   *          the column of the cell to return the constraints of.
+   * @return the SpringLayout constraints, never <code>null</code>.
    */
-  private static SpringLayout.Constraints getConstraintsForCell( final int aRow, final int aCol, final Container aContainer,
-      final int aCols )
+  private static SpringLayout.Constraints getConstraintsForCell( final Container aContainer, final int aCols, final int aRow,
+      final int aCol )
   {
+    if ( !( aContainer.getLayout() instanceof SpringLayout ) )
+    {
+      throw new IllegalArgumentException( "Container should have SpringLayout as layout manager!" );
+    }
+
     final SpringLayout layout = ( SpringLayout )aContainer.getLayout();
     final Component c = aContainer.getComponent( aRow * aCols + aCol );
     return layout.getConstraints( c );

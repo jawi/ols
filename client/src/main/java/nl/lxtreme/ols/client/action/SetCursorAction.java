@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.action;
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -50,7 +51,8 @@ public class SetCursorAction extends BaseAction
    */
   public SetCursorAction( final Diagram aDiagram, final int aCursorIdx )
   {
-    super( ID + aCursorIdx, "Set Cursor " + aCursorIdx, "Sets the " + aCursorIdx + "st cursor." );
+    super( ID + aCursorIdx, "Set Cursor " + ( aCursorIdx + 1 ), "Sets the "
+        + DisplayUtils.getOrdinalNumber( aCursorIdx + 1 ) + " cursor." );
     this.diagram = aDiagram;
     this.cursorIdx = aCursorIdx;
   }

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ public class ToolTracker extends ServiceTracker
   @Override
   public Object addingService( final ServiceReference aReference )
   {
-    final Tool<?> devCtrl = ( Tool<?> )this.context.getService( aReference );
+    final Tool devCtrl = ( Tool )this.context.getService( aReference );
 
     SwingUtilities.invokeLater( new Runnable()
     {
@@ -89,7 +89,7 @@ public class ToolTracker extends ServiceTracker
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )
   {
-    final Tool<?> devCtrl = ( Tool<?> )aService;
+    final Tool devCtrl = ( Tool )aService;
 
     SwingUtilities.invokeLater( new Runnable()
     {
@@ -103,7 +103,7 @@ public class ToolTracker extends ServiceTracker
   /**
    * @param aTool
    */
-  final void addMenuItem( final Tool<?> aTool )
+  final void addMenuItem( final Tool aTool )
   {
     // We're adding one, so, there's at least one device available...
     this.menu.remove( this.noItemItem );
@@ -118,7 +118,7 @@ public class ToolTracker extends ServiceTracker
   /**
    * @param aTool
    */
-  final void removeMenuItem( final Tool<?> aTool )
+  final void removeMenuItem( final Tool aTool )
   {
     final String name = aTool.getName();
 
@@ -145,7 +145,7 @@ public class ToolTracker extends ServiceTracker
    * @param aTool
    * @return
    */
-  private JMenuItem createMenuItem( final Tool<?> aTool )
+  private JMenuItem createMenuItem( final Tool aTool )
   {
     final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( this.host, aTool, this.host ) );
     menuItem.setName( aTool.getName() );
@@ -157,7 +157,7 @@ public class ToolTracker extends ServiceTracker
    * @param aMenuItem
    * @param aAdded
    */
-  private void updateMenuState( final Tool<?> aTool, final JMenuItem aMenuItem, final boolean aAdded )
+  private void updateMenuState( final Tool aTool, final JMenuItem aMenuItem, final boolean aAdded )
   {
     if ( !aAdded )
     {

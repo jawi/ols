@@ -456,13 +456,16 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   /**
    * Enable/Disable diagram cursors
    */
-  public void setCursorMode( final boolean enabled )
+  public void setCursorMode( final boolean aEnabled )
   {
     if ( hasCapturedData() )
     {
       // Update the cursor actions accordingly...
-      getAction( GotoCursor1Action.ID ).setEnabled( enabled );
-      getAction( GotoCursor2Action.ID ).setEnabled( enabled );
+      getAction( GotoCursor1Action.ID ).setEnabled( aEnabled );
+      getAction( GotoCursor2Action.ID ).setEnabled( aEnabled );
+
+      // Update the cursor state of the contained data...
+      this.capturedData.cursorEnabled = aEnabled;
     }
   }
 
@@ -471,7 +474,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   public void setCursorPosition( final int aCursorIdx )
   {
-    this.capturedData.setCursorPosition( aCursorIdx, xToIndex( this.newCursorPosition ) );
+    internalSetCursorPosition( aCursorIdx, this.newCursorPosition );
   }
 
   /**
@@ -706,17 +709,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       return;
     }
 
-    final long index = xToIndex( aMouseXpos );
-
-    // notify cursor change listeners
-    if ( ( index > 0 ) && ( index < ( this.capturedData.absoluteLength - 1 ) ) )
-    {
-      this.capturedData.setCursorPosition( aCursorIdx, index );
-
-      fireCursorChangedEvent( aCursorIdx, aMouseXpos );
-
-      repaint();
-    }
+    internalSetCursorPosition( aCursorIdx, aMouseXpos );
   }
 
   /**
@@ -1160,6 +1153,27 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       return -1L;
     }
     return this.capturedData.hasTriggerData() ? this.capturedData.triggerPosition : -1L;
+  }
+
+  /**
+   * Sets the actual cursor position.
+   * 
+   * @param aCursorIdx the index of the cursor to set;
+   * @param aMouseXpos the new X-position (of the mouse) representing the new cursor position.
+   */
+  private void internalSetCursorPosition( final int aCursorIdx, final int aMouseXpos )
+  {
+    final long index = xToIndex( aMouseXpos );
+
+    // notify cursor change listeners
+    if ( ( index > 0 ) && ( index < ( this.capturedData.absoluteLength - 1 ) ) )
+    {
+      this.capturedData.setCursorPosition( aCursorIdx, index );
+
+      fireCursorChangedEvent( aCursorIdx, aMouseXpos );
+
+      repaint();
+    }
   }
 
   /**

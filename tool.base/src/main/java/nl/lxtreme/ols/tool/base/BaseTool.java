@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ import nl.lxtreme.ols.api.tools.*;
 /**
  * Provides a base class for tools that want to do its processing in the background, or outside the EDT.
  */
-public abstract class BaseTool<RESULT_TYPE, WORKER extends BaseToolWorker<RESULT_TYPE>> implements Tool<RESULT_TYPE>,
-    Configurable
+public abstract class BaseTool<RESULT_TYPE, WORKER extends BaseToolWorker<RESULT_TYPE>> implements Tool,
+Configurable
 {
   // CONSTANTS
 
