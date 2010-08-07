@@ -68,7 +68,7 @@
       <dependency>
         <groupId>nl.lxtreme.ols</groupId>
         <artifactId>util</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.3-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>nl.lxtreme.ols</groupId>
