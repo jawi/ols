@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,5 +85,14 @@ public class NumberUtilsTest
     assertEquals( 4000000, NumberUtils.smartParseInt( "4M", UnitDefinition.SI ) );
     assertEquals( 4000000, NumberUtils.smartParseInt( "4  M", UnitDefinition.SI ) );
     assertEquals( 4000000, NumberUtils.smartParseInt( "4  MB", UnitDefinition.SI ) );
+  }
+
+  /**
+   * 
+   */
+  @Test
+  public void testSmartParseIntWithNullArgument()
+  {
+    assertEquals( 0, NumberUtils.smartParseInt( null ) );
   }
 }
