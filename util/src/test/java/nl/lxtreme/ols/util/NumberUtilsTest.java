@@ -55,6 +55,7 @@ public class NumberUtilsTest
   {
     assertEquals( 0, NumberUtils.smartParseInt( "test" ) );
     assertEquals( 0, NumberUtils.smartParseInt( "" ) );
+    assertEquals( 1, NumberUtils.smartParseInt( "", 1 ) );
   }
 
   /**
@@ -68,6 +69,7 @@ public class NumberUtilsTest
     assertEquals( 2, NumberUtils.smartParseInt( "2 " ) );
     assertEquals( 3, NumberUtils.smartParseInt( "3 4" ) );
     assertEquals( 4, NumberUtils.smartParseInt( "4,5" ) );
+    assertEquals( 4, NumberUtils.smartParseInt( "4Hz" ) );
     assertEquals( 4096, NumberUtils.smartParseInt( "4k" ) );
     assertEquals( 4096, NumberUtils.smartParseInt( "4K" ) );
     assertEquals( 4194304, NumberUtils.smartParseInt( "4M" ) );
@@ -94,5 +96,6 @@ public class NumberUtilsTest
   public void testSmartParseIntWithNullArgument()
   {
     assertEquals( 0, NumberUtils.smartParseInt( null ) );
+    assertEquals( -1, NumberUtils.smartParseInt( null, -1 ) );
   }
 }

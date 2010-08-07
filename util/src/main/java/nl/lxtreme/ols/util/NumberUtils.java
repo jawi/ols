@@ -58,7 +58,12 @@ public final class NumberUtils
   /**
    * Provides a "smart" integer parsing routine that allows (decimal) numbers in
    * string form with all kind of trailing characters to be parsed into an
-   * integer.
+   * integer. Some trailing characters are understood as being part of the
+   * number, like "k" to denote a value in thousands, or "m" to denote a value
+   * in millions.
+   * <p>
+   * Characters recognized are: "k" and "M" to denote units of 1024, 1024*1024.
+   * </p>
    * 
    * @param aText
    *          the text to parse into an integer value, cannot be
@@ -68,27 +73,80 @@ public final class NumberUtils
    */
   public static int smartParseInt( final String aText )
   {
-    return smartParseInt( aText, UnitDefinition.BINARY );
+    return smartParseInt( aText, 0 );
   }
 
   /**
    * Provides a "smart" integer parsing routine that allows (decimal) numbers in
    * string form with all kind of trailing characters to be parsed into an
-   * integer.
+   * integer. Some trailing characters are understood as being part of the
+   * number, like "k" to denote a value in thousands, or "m" to denote a value
+   * in millions.
+   * <p>
+   * Characters recognized are: "k" and "M" to denote units of 1024, 1024*1024.
+   * </p>
    * 
    * @param aText
    *          the text to parse into an integer value, cannot be
-   *          <code>null</code>.
+   *          <code>null</code>;
+   * @param aDefault
+   *          the default value to return in case the given text couldn't be
+   *          parsed into a valid number.
+   * @return the integer value part of the given text, or the given default
+   *         value if the text couldn't be parsed.
+   */
+  public static int smartParseInt( final String aText, final int aDefault )
+  {
+    return smartParseInt( aText, UnitDefinition.BINARY, aDefault );
+  }
+
+  /**
+   * Provides a "smart" integer parsing routine that allows (decimal) numbers in
+   * string form with all kind of trailing characters to be parsed into an
+   * integer. Some trailing characters are understood as being part of the
+   * number, like "k" to denote a value in thousands, or "m" to denote a value
+   * in millions.
+   * 
+   * @param aText
+   *          the text to parse into an integer value, cannot be
+   *          <code>null</code>;
+   * @param aUnitDefinition
+   *          the unit definition for "k" and "M" characters, should be either
+   *          SI (units of 1000) or BINARY (units of 1024).
    * @return the integer value part of the given text, or 0 if the text couldn't
    *         be parsed.
    */
   public static int smartParseInt( final String aText, final UnitDefinition aUnitDefinition )
   {
+    return smartParseInt( aText, aUnitDefinition, 0 );
+  }
+
+  /**
+   * Provides a "smart" integer parsing routine that allows (decimal) numbers in
+   * string form with all kind of trailing characters to be parsed into an
+   * integer. Some trailing characters are understood as being part of the
+   * number, like "k" to denote a value in thousands, or "m" to denote a value
+   * in millions.
+   * 
+   * @param aText
+   *          the text to parse into an integer value, cannot be
+   *          <code>null</code>;
+   * @param aUnitDefinition
+   *          the unit definition for "k" and "M" characters, should be either
+   *          SI (units of 1000) or BINARY (units of 1024);
+   * @param aDefault
+   *          the default value to return in case the given text couldn't be
+   *          parsed into a valid number.
+   * @return the integer value part of the given text, or the given default
+   *         value if the text couldn't be parsed.
+   */
+  public static int smartParseInt( final String aText, final UnitDefinition aUnitDefinition, final int aDefault )
+  {
     // Avoid NPEs when given a null argument; also when an empty
     // string is given, we can be fairly quick in our conclusion...
     if ( ( aText == null ) || aText.trim().isEmpty() )
     {
-      return 0;
+      return aDefault;
     }
 
     final Matcher matcher = SMART_INT_PATTERN.matcher( aText );
@@ -104,27 +162,31 @@ public final class NumberUtils
       }
       return result;
     }
-    return 0;
+    return aDefault;
   }
 
   /**
+   * Parses a given unit-character using the given unit-definition.
+   * 
    * @param aUnit
+   *          the unit character (k, M, G) to parse;
    * @param aUnitDefinition
-   * @return
+   *          the definition of the unit characters (units of 1000 or 1024).
+   * @return a multiplier for the given unit-character, defaults to 1.
    */
   private static long parseUnit( final String aUnit, final UnitDefinition aUnitDefinition )
   {
     if ( "k".equalsIgnoreCase( aUnit ) )
     {
-      return UnitDefinition.SI == aUnitDefinition ? 1000L : 1024L;
+      return ( UnitDefinition.SI == aUnitDefinition ) ? 1000L : 1024L;
     }
     else if ( "m".equalsIgnoreCase( aUnit ) )
     {
-      return UnitDefinition.SI == aUnitDefinition ? 1000000L : 1048576L;
+      return ( UnitDefinition.SI == aUnitDefinition ) ? 1000000L : 1048576L;
     }
     else if ( "g".equalsIgnoreCase( aUnit ) )
     {
-      return UnitDefinition.SI == aUnitDefinition ? 1000000000L : 1073741824L;
+      return ( UnitDefinition.SI == aUnitDefinition ) ? 1000000000L : 1073741824L;
     }
     return 1L;
   }
