@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,6 +84,13 @@ public final class NumberUtils
    */
   public static int smartParseInt( final String aText, final UnitDefinition aUnitDefinition )
   {
+    // Avoid NPEs when given a null argument; also when an empty
+    // string is given, we can be fairly quick in our conclusion...
+    if ( ( aText == null ) || aText.trim().isEmpty() )
+    {
+      return 0;
+    }
+
     final Matcher matcher = SMART_INT_PATTERN.matcher( aText );
     if ( matcher.matches() )
     {
