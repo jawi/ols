@@ -48,6 +48,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   static final class TriggerRatioChangeListener implements ChangeListener
   {
+    static final int DEFAULT_RATIO = 50;
+
     private final JLabel label;
 
     /**
@@ -56,14 +58,11 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     public TriggerRatioChangeListener( final JLabel aListeningLabel )
     {
       this.label = aListeningLabel;
-      updateLabel( 50, 50 );
+      updateLabel( DEFAULT_RATIO, DEFAULT_RATIO );
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent
-     * )
+    /**
+     * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
      */
     @Override
     public void stateChanged( final ChangeEvent aEvent )
@@ -228,26 +227,33 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     return ( String )this.portSelect.getSelectedItem();
   }
 
-  public void readProperties( final Properties properties )
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.util.Properties)
+   */
+  public void readProperties( final Properties aProperties )
   {
-    this.portSelect.setSelectedItem( properties.getProperty( NAME + ".port" ) );
-    this.portRateSelect.setSelectedItem( properties.getProperty( NAME + ".portRate" ) );
-    this.sourceSelect.setSelectedItem( properties.getProperty( NAME + ".source" ) );
-    this.speedSelect.setSelectedItem( properties.getProperty( NAME + ".speed" ) );
-    this.sizeSelect.setSelectedItem( properties.getProperty( NAME + ".size" ) );
-    this.ratioSlider.setValue( NumberUtils.smartParseInt( properties.getProperty( NAME + ".ratio" ) ) );
-    this.filterEnable.setSelected( "true".equals( properties.getProperty( NAME + ".filter" ) ) );
-    this.triggerEnable.setSelected( "true".equals( properties.getProperty( NAME + ".trigger" ) ) );
-    this.triggerTypeSelect.setSelectedItem( properties.getProperty( NAME + ".triggerType" ) );
+    SwingComponentUtils.setSelectedItem( this.portSelect, aProperties.getProperty( NAME + ".port" ) );
+    SwingComponentUtils.setSelectedItem( this.portRateSelect, aProperties.getProperty( NAME + ".portRate" ) );
+    SwingComponentUtils.setSelectedItem( this.sourceSelect, aProperties.getProperty( NAME + ".source" ) );
+    SwingComponentUtils.setSelectedItem( this.speedSelect, aProperties.getProperty( NAME + ".speed" ) );
+    SwingComponentUtils.setSelectedItem( this.sizeSelect, aProperties.getProperty( NAME + ".size" ) );
+    this.ratioSlider.setValue( NumberUtils.smartParseInt( aProperties.getProperty( NAME + ".ratio" ),
+        TriggerRatioChangeListener.DEFAULT_RATIO ) );
+    SwingComponentUtils.setSelected( this.filterEnable, aProperties.getProperty( NAME + ".filter" ) );
+    SwingComponentUtils.setSelected( this.triggerEnable, aProperties.getProperty( NAME + ".trigger" ) );
+    SwingComponentUtils.setSelectedItem( this.triggerTypeSelect, aProperties.getProperty( NAME + ".triggerType" ) );
 
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
-      this.triggerLevel[stage].setSelectedItem( properties.getProperty( NAME + ".triggerStage" + stage + "Level" ) );
-      this.triggerDelay[stage].setText( properties.getProperty( NAME + ".triggerStage" + stage + "Delay" ) );
-      this.triggerMode[stage].setSelectedItem( properties.getProperty( NAME + ".triggerStage" + stage + "Mode" ) );
-      this.triggerChannel[stage].setSelectedItem( properties.getProperty( NAME + ".triggerStage" + stage + "Channel" ) );
+      this.triggerDelay[stage].setText( aProperties.getProperty( NAME + ".triggerStage" + stage + "Delay" ) );
+      SwingComponentUtils.setSelectedItem( this.triggerLevel[stage], //
+          aProperties.getProperty( NAME + ".triggerStage" + stage + "Level" ) );
+      SwingComponentUtils.setSelectedItem( this.triggerMode[stage], //
+          aProperties.getProperty( NAME + ".triggerStage" + stage + "Mode" ) );
+      SwingComponentUtils.setSelectedItem( this.triggerChannel[stage], //
+          aProperties.getProperty( NAME + ".triggerStage" + stage + "Channel" ) );
 
-      final String mask = properties.getProperty( NAME + ".triggerStage" + stage + "Mask" );
+      final String mask = aProperties.getProperty( NAME + ".triggerStage" + stage + "Mask" );
       if ( mask != null )
       {
         for ( int i = 0; ( i < 32 ) && ( i < mask.length() ); i++ )
@@ -256,7 +262,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
         }
       }
 
-      final String value = properties.getProperty( NAME + ".triggerStage" + stage + "Value" );
+      final String value = aProperties.getProperty( NAME + ".triggerStage" + stage + "Value" );
       if ( value != null )
       {
         for ( int i = 0; ( i < 32 ) && ( i < value.length() ); i++ )
@@ -265,11 +271,11 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
         }
       }
 
-      this.triggerStart[stage].setSelected( "true".equals( properties.getProperty( NAME + ".triggerStage" + stage
-          + "StartCapture" ) ) );
+      SwingComponentUtils.setSelected( this.triggerStart[stage], aProperties.getProperty( NAME + ".triggerStage"
+          + stage + "StartCapture" ) );
     }
 
-    final String group = properties.getProperty( NAME + ".channelGroup" );
+    final String group = aProperties.getProperty( NAME + ".channelGroup" );
     if ( group != null )
     {
       for ( int i = 0; ( i < 4 ) && ( i < group.length() ); i++ )
@@ -401,11 +407,13 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     final String[] ports = LogicSnifferDevice.getPorts();
     this.portSelect = new JComboBox( ports );
 
-    final String[] portRates = { "115200bps", "57600bps", "38400bps", "19200bps" };
+    final String[] portRates = { "921600bps", "460800bps", "230400bps", "115200bps", "57600bps", "38400bps", "19200bps" };
     this.portRateSelect = new JComboBox( portRates );
+    this.portRateSelect.setSelectedIndex( 3 ); // 115k2
 
     final String[] numberSchemes = { "Inside", "Outside", "Test Mode" };
     this.numberSchemeSelect = new JComboBox( numberSchemes );
+    this.numberSchemeSelect.setSelectedIndex( 0 );
 
     final JPanel connectionPane = new JPanel( new GridBagLayout() );
     connectionPane.setBorder( BorderFactory.createCompoundBorder( BorderFactory
@@ -497,6 +505,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   {
     final String[] sources = { "Internal", "External / Rising", "External / Falling" };
     this.sourceSelect = new JComboBox( sources );
+    this.sourceSelect.setSelectedIndex( 0 );
     this.sourceSelect.addActionListener( this );
 
     final String[] speeds = { "200MHz", "100MHz", "50MHz", "20MHz", "10MHz", "5MHz", "2MHz", "1MHz", "500kHz",
@@ -597,6 +606,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
 
     final String[] types = { "Simple", "Complex" };
     this.triggerTypeSelect = new JComboBox( types );
+    this.triggerTypeSelect.setSelectedIndex( 0 ); // Select first item by default...
     this.triggerTypeSelect.addActionListener( this );
 
     this.triggerStageTabs = new JTabbedPane();
@@ -623,6 +633,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
 
       final String[] modes = { "Parallel", "Serial" };
       this.triggerMode[i] = new JComboBox( modes );
+      this.triggerMode[i].setSelectedIndex( 0 );
 
       stagePane.add( new JLabel( "Mode:", SwingConstants.RIGHT ), createConstraints( 2, 0, 1, 1, 0.5, 1.0 ) );
       stagePane.add( this.triggerMode[i], createConstraints( 3, 0, 1, 1, 0.5, 1.0 ) );
@@ -631,6 +642,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       final String[] channels = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
           "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
       this.triggerChannel[i] = new JComboBox( channels );
+      this.triggerChannel[i].setSelectedIndex( 0 );
 
       stagePane.add( new JLabel( "Channel: ", SwingConstants.RIGHT ), createConstraints( 4, 0, 1, 1, 0.5, 1.0 ) );
       stagePane.add( this.triggerChannel[i], createConstraints( 5, 0, 1, 1, 0.5, 1.0 ) );
@@ -819,13 +831,13 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
 
     // set clock source
     value = ( String )this.sourceSelect.getSelectedItem();
-    if ( value.equals( "Internal" ) )
+    if ( "Internal".equals( value ) )
     {
       this.device.setClockSource( LogicSnifferDevice.CLOCK_INTERNAL );
     }
     else
     {
-      if ( value.equals( "External / Rising" ) )
+      if ( "External / Rising".equals( value ) )
       {
         this.device.setClockSource( LogicSnifferDevice.CLOCK_EXTERNAL_RISING );
       }
@@ -835,9 +847,10 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       }
     }
 
-    // set sample rate
+    // set sample rate; use a default to ensure the internal state remains
+    // correct...
     value = ( String )this.speedSelect.getSelectedItem();
-    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI );
+    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, LogicSnifferDevice.CLOCK );
     this.device.setRate( f );
 
     // set sample count
@@ -855,17 +868,17 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
 
     // set number scheme
     value = ( String )this.numberSchemeSelect.getSelectedItem();
-    if ( value.equals( "Inside" ) )
+    if ( "Inside".equals( value ) )
     {
       this.device.setTestModeEnabled( false );
       this.device.setAltNumberSchemeEnabled( false );
     }
-    else if ( value.equals( "Outside" ) )
+    else if ( "Outside".equals( value ) )
     {
       this.device.setTestModeEnabled( false );
       this.device.setAltNumberSchemeEnabled( true );
     }
-    else if ( value.equals( "Test Mode" ) )
+    else if ( "Test Mode".equals( value ) )
     {
       this.device.setTestModeEnabled( true );
       this.device.setAltNumberSchemeEnabled( false );
