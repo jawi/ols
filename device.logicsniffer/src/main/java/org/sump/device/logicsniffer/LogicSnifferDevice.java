@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,9 +134,7 @@ public class LogicSnifferDevice implements Device
   // capture when
   // fired
 
-  private final static int    CLOCK                  = 100000000;                                             // device
-  // clock
-  // in Hz
+  final static int CLOCK = 100000000; // device clock in Hz
   private final static int    TRIGGER_STAGES         = 4;                                                     // number
   // of
   // trigger
@@ -740,20 +738,20 @@ public class LogicSnifferDevice implements Device
    * Set the sampling rate. All rates must be a divisor of 200.000.000. Other
    * rates will be adjusted to a matching divisor.
    * 
-   * @param rate
+   * @param aRate
    *          sampling rate in Hz
    */
-  public void setRate( final int rate )
+  public void setRate( final int aRate )
   {
-    if ( rate > CLOCK )
+    if ( aRate > CLOCK )
     {
       this.demux = true;
-      this.divider = ( 2 * CLOCK / rate ) - 1;
+      this.divider = ( 2 * CLOCK / aRate ) - 1;
     }
     else
     {
       this.demux = false;
-      this.divider = ( CLOCK / rate ) - 1;
+      this.divider = ( CLOCK / aRate ) - 1;
     }
   }
 
