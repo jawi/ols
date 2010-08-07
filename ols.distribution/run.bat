@@ -1,7 +1,7 @@
 @echo off
 
 rem Check whether the "magic" Java binary is available...
-java --version > NUL 2> NUL
+java -version > NUL 2> NUL
 if errorlevel 1 goto noJVM
 
 rem For now, use the "console enabled" java for Windows...
