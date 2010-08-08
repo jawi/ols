@@ -22,41 +22,81 @@ package nl.lxtreme.ols.tool.spi;
 
 
 import java.awt.*;
+import java.util.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * 
  */
-public class SPIAnalyser implements Tool
+public class SPIAnalyser extends BaseTool
 {
   // VARIABLES
 
-  private SPIProtocolAnalysisDialog spad;
+  private SPIProtocolAnalysisDialog dialog;
+
+  // CONSTRUCTORS
+
+  /**
+   * @param aName
+   */
+  public SPIAnalyser( )
+  {
+    super( "SPI analyser ..." );
+  }
 
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.tools.Tool#getName()
+   * @see nl.lxtreme.ols.tool.base.BaseTool#readProperties(java.lang.String, java.util.Properties)
    */
   @Override
-  public String getName()
+  public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    return "SPI analyser";
+    this.dialog.readProperties( aNamespace, aProperties );
   }
 
   /**
-   * @see nl.lxtreme.ols.api.tools.Tool#process(Frame, nl.lxtreme.ols.api.CapturedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext, nl.lxtreme.ols.api.tools.AnalysisCallback)
+   * @see nl.lxtreme.ols.tool.base.BaseTool#writeProperties(java.lang.String,
+   *      java.util.Properties)
    */
   @Override
-  public void process( final Frame aFrame, final CapturedData aData, final ToolContext aContext,
-      final AnalysisCallback aCallback )
+  public void writeProperties( final String aNamespace, final Properties aProperties )
   {
-    this.spad = new SPIProtocolAnalysisDialog( aFrame, getName() );
-    this.spad.showDialog( aData );
+    this.dialog.writeProperties( aNamespace, aProperties );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseTool#doProcess(nl.lxtreme.ols.api.data.AnnotatedData,
+   *      nl.lxtreme.ols.api.tools.ToolContext)
+   */
+  @Override
+  protected void doProcess( final AnnotatedData aData, final ToolContext aContext )
+  {
+    this.dialog.showDialog( aData );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseTool#setupTool(java.awt.Frame)
+   */
+  @Override
+  protected void setupTool( final Frame aFrame )
+  {
+    // check if dialog exists with different owner and dispose if so
+    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aFrame ) )
+    {
+      this.dialog.dispose();
+      this.dialog = null;
+    }
+
+    // if no valid dialog exists, create one
+    if ( this.dialog == null )
+    {
+      this.dialog = new SPIProtocolAnalysisDialog( aFrame, getName() );
+    }
   }
 }
 

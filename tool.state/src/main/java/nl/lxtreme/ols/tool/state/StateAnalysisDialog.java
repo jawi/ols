@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ import java.util.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.util.swing.*;
+
 
 final class StateAnalysisDialog extends JDialog implements ActionListener
 {
@@ -34,20 +36,20 @@ final class StateAnalysisDialog extends JDialog implements ActionListener
 
   private static final long serialVersionUID = 1L;
 
-  public final static int   CANCEL           = 0;
-  public final static int   OK               = 1;
-  public final static int   RISING           = 0;
-  public final static int   FALLING          = 1;
+  public final static int CANCEL = 0;
+  public final static int OK = 1;
+  public final static int RISING = 0;
+  public final static int FALLING = 1;
 
   // VARIABLES
 
-  public int                channel;
-  public int                edge;
-  private final JComboBox   edgeSelect;
-  private final JComboBox   channelSelect;
-  private final String[]    edges;
-  private final String[]    channels;
-  private int               result;
+  public int channel;
+  public int edge;
+  private final JComboBox edgeSelect;
+  private final JComboBox channelSelect;
+  private final String[] edges;
+  private final String[] channels;
+  private int result;
 
   // CONSTRUCTORS
 
@@ -67,8 +69,7 @@ final class StateAnalysisDialog extends JDialog implements ActionListener
     pane.add( new JLabel( "Clock Channel:" ) );
     pane.add( this.channelSelect );
 
-    String[] tmp =
-    { "Rising", "Falling" };
+    String[] tmp = { "Rising", "Falling" };
     this.edges = tmp;
     this.edgeSelect = new JComboBox( this.edges );
     pane.add( new JLabel( "Clock Edge:" ) );
@@ -112,10 +113,10 @@ final class StateAnalysisDialog extends JDialog implements ActionListener
     setVisible( false );
   }
 
-  public void readProperties( final Properties properties )
+  public void readProperties( final String aNamespace, final Properties properties )
   {
-    // selectByValue( this.edgeSelect, this.edges, properties.getProperty( "tools.StateAnalysis.edge" ) );
-    // selectByValue( this.channelSelect, this.channels, properties.getProperty( "tools.StateAnalysis.channel" ) );
+    SwingComponentUtils.setSelectedItem( this.edgeSelect, properties.getProperty( aNamespace + ".edge" ) );
+    SwingComponentUtils.setSelectedItem( this.channelSelect, properties.getProperty( aNamespace + ".channel" ) );
   }
 
   public int showDialog()
@@ -124,10 +125,10 @@ final class StateAnalysisDialog extends JDialog implements ActionListener
     return ( this.result );
   }
 
-  public void writeProperties( final Properties properties )
+  public void writeProperties( final String aNamespace, final Properties properties )
   {
-    properties.setProperty( "tools.StateAnalysis.channel", ( String )this.channelSelect.getSelectedItem() );
-    properties.setProperty( "tools.StateAnalysis.edge", ( String )this.edgeSelect.getSelectedItem() );
+    properties.setProperty( aNamespace + ".channel", ( String )this.channelSelect.getSelectedItem() );
+    properties.setProperty( aNamespace + ".edge", ( String )this.edgeSelect.getSelectedItem() );
   }
 }
 

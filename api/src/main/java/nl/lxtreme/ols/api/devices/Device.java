@@ -24,6 +24,7 @@ package nl.lxtreme.ols.api.devices;
 import java.io.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 
 
 /**

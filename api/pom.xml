@@ -19,7 +19,7 @@
       <extensions>true</extensions>
       <configuration>
         <instructions>
-          <Export-Package>nl.lxtreme.ols.api, nl.lxtreme.ols.api.devices, nl.lxtreme.ols.api.tools, nl.lxtreme.ols.api.ui</Export-Package>
+          <Export-Package>nl.lxtreme.ols.api, nl.lxtreme.ols.api.data, nl.lxtreme.ols.api.devices, nl.lxtreme.ols.api.tools, nl.lxtreme.ols.api.ui</Export-Package>
 					<Require-Bundle>org.rxtx;bundle-version="2.0.1";visibility:=reexport</Require-Bundle>
         </instructions>
       </configuration>

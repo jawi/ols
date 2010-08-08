@@ -22,14 +22,14 @@ package nl.lxtreme.ols.device.test;
 
 
 import java.awt.*;
-import java.awt.Dialog.*;
+import java.awt.Dialog.ModalityType;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 
 
@@ -103,7 +103,7 @@ public class TestDeviceController implements DeviceController
       }
 
     }
-    final CapturedData capturedData = new CapturedData( data, 26, rate, this.channels, Integer.MAX_VALUE );
+    final CapturedData capturedData = new CapturedDataImpl( data, 26, rate, this.channels, Integer.MAX_VALUE );
     aCallback.captureComplete( capturedData );
   }
 
@@ -126,10 +126,10 @@ public class TestDeviceController implements DeviceController
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(String, java.util.Properties)
    */
   @Override
-  public void readProperties( final Properties aProperties )
+  public void readProperties( String aNamespace, final Properties aProperties )
   {
     // TODO Auto-generated method stub
   }
@@ -164,10 +164,10 @@ public class TestDeviceController implements DeviceController
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String, java.util.Properties)
    */
   @Override
-  public void writeProperties( final Properties aProperties )
+  public void writeProperties( String aNamespace, final Properties aProperties )
   {
     // TODO Auto-generated method stub
   }

@@ -25,7 +25,7 @@ import java.awt.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -45,35 +45,25 @@ public class DiagramRowLabels extends JComponent
   // VARIABLES
 
   private String[] labels;
-  private int channels;
-  private int enabled;
   private DiagramSettings settings;
+
+  private final AnnotatedData annotatedData;
 
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public DiagramRowLabels()
+  public DiagramRowLabels( final AnnotatedData aData )
   {
     super();
 
-    setDoubleBuffered( false );
-    setPreferredSize( new Dimension( 25, 100 ) );
+    this.annotatedData = aData;
 
-    this.channels = -1;
+    setPreferredSize( new Dimension( 25, 100 ) );
   }
 
   // METHODS
-
-  /**
-   * @param aCapturedData
-   */
-  public void setCapturedData( final CapturedData aCapturedData )
-  {
-    this.channels = aCapturedData.channels;
-    this.enabled = aCapturedData.enabledChannels;
-  }
 
   /**
    * Sets the labels to the given value.
@@ -116,7 +106,7 @@ public class DiagramRowLabels extends JComponent
   @Override
   protected void paintComponent( final Graphics aGraphics )
   {
-    if ( this.channels < 0 )
+    if ( !this.annotatedData.hasCapturedData() )
     {
       return;
     }
@@ -130,16 +120,18 @@ public class DiagramRowLabels extends JComponent
     aGraphics.fillRect( clipArea.x, clipArea.y, clipArea.width, clipArea.height );
 
     final int channelHeight = this.settings.getChannelHeight();
+    final int scopeHeight = this.settings.getScopeHeight();
 
     final FontMetrics fm = aGraphics.getFontMetrics();
     final int textXpos = ( clipArea.width - fm.stringWidth( "88" ) - PADDING_X );
     final int textYpos = ( int )( ( channelHeight + fm.getHeight() ) / 2.0 ) - PADDING_Y;
 
-    final int scopeHeight = this.settings.getScopeHeight();
+    final int channels = this.annotatedData.getChannels();
+    final int enabledChannels = this.annotatedData.getEnabledChannels();
 
-    for ( int block = 0; ( block < this.channels / 8 ) && ( block < 4 ); block++ )
+    for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
     {
-      final boolean blockEnabled = ( ( this.enabled >> ( 8 * block ) ) & 0xff ) != 0;
+      final boolean blockEnabled = ( ( enabledChannels >> ( 8 * block ) ) & 0xff ) != 0;
       if ( !blockEnabled )
       {
         continue;

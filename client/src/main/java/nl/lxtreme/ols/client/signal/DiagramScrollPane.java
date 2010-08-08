@@ -27,6 +27,7 @@ import java.io.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 
 
@@ -41,7 +42,7 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
 
   // VARIABLES
 
-  private final Diagram     diagram;
+  private final Diagram diagram;
 
   // CONSTRUCTORS
 
@@ -69,13 +70,11 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
   // METHODS
 
   /**
-   * Returns the current captured data.
-   * 
-   * @return a captured data object, can be <code>null</code>.
+   * @return
    */
-  public CapturedData getCapturedData()
+  public AnnotatedData getAnnotatedData()
   {
-    return this.diagram.getCapturedData();
+    return this.diagram.getAnnotatedData();
   }
 
   /**
@@ -85,7 +84,7 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
   {
     if ( this.diagram.getCursorMode() )
     {
-      gotoPosition( this.diagram.getCapturedData().getCursorPosition( aCursorNo ) );
+      gotoPosition( getAnnotatedData().getCursorPosition( aCursorNo ) );
     }
   }
 
@@ -94,10 +93,10 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
    */
   public void gotoTriggerPosition()
   {
-    // do this only with data and trigger available
-    if ( this.diagram.hasCapturedData() && this.diagram.getCapturedData().hasTriggerData() )
+    final long triggerPosition = getAnnotatedData().getTriggerPosition();
+    if ( triggerPosition != CapturedData.NOT_AVAILABLE )
     {
-      gotoPosition( this.diagram.getCapturedData().triggerPosition );
+      gotoPosition( triggerPosition );
     }
   }
 
@@ -107,8 +106,19 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
    */
   public void loadData( final File aFile ) throws IOException
   {
-    this.diagram.setCapturedData( new CapturedData( aFile ) );
-    this.diagram.zoomFit();
+    final FileReader reader = new FileReader( aFile );
+
+    final AnnotatedData data = getAnnotatedData();
+    try
+    {
+      data.read( reader );
+    }
+    finally
+    {
+      reader.close();
+
+      this.diagram.zoomFit();
+    }
   }
 
   /**
@@ -117,19 +127,24 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
    */
   public void saveData( final File aFile ) throws IOException
   {
-    this.diagram.getCapturedData().writeToFile( aFile );
+    final FileWriter writer = new FileWriter( aFile );
+    try
+    {
+      getAnnotatedData().write( writer );
+    }
+    finally
+    {
+      writer.flush();
+      writer.close();
+    }
   }
 
   /**
    * @param aCapturedData
    */
-  public void setCapturedData( final CapturedData aCapturedData )
+  public void setCapturedData( final CapturedData aData )
   {
-    getViewport().setBackground( this.diagram.getBackground() );
-    setViewportBorder( BorderFactory.createLineBorder( this.diagram.getSettings().getGridColor(), 1 ) );
-    getCorner( UPPER_LEFT_CORNER ).setBackground( this.diagram.getBackground() );
-
-    this.diagram.setCapturedData( aCapturedData );
+    this.diagram.getAnnotatedData().setCapturedData( aData );
   }
 
   /**

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,67 +21,51 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 
-import javax.swing.*;
-
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.*;
 
 
 /**
- * 
+ * Provides a "repeat capture" action which simply repeats the capture with the
+ * current settings.
  */
-public class RepeatCaptureAction extends BaseAction
+public class RepeatCaptureAction extends CaptureAction
 {
   // CONSTANTS
 
-  private static final long  serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String ID               = "RepeatCapture";
-
-  // VARIABLES
-
-  private final Host         host;
+  public static final String ID = "RepeatCapture";
 
   // CONSTRUCTORS
 
   /**
+   * Creates a new RepeatCaptureAction instance.
    * 
+   * @param aHost
+   *          the host this action belongs to;
+   * @param aProject
+   *          the project to use.
    */
-  public RepeatCaptureAction( final Host aHost )
+  public RepeatCaptureAction( final Host aHost, final Project aProject )
   {
-    super( ID, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat the capture with current settings." );
-    this.host = aHost;
+    super( ID, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat the capture with current device settings.", aHost,
+        aProject );
   }
 
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * @see nl.lxtreme.ols.client.action.CaptureAction#doCaptureData(nl.lxtreme.ols.api.devices.DeviceController)
    */
   @Override
-  public void actionPerformed( final ActionEvent aEvent )
+  protected void doCaptureData( final DeviceController aController, final CaptureCallback aCallback )
+  throws IOException
   {
-    final DeviceController devCtrl = this.host.getCurrentDeviceController();
-    if ( devCtrl == null )
-    {
-      JOptionPane.showMessageDialog( ( Component )aEvent.getSource(), "No capturing device found!", "Capture error",
-          JOptionPane.ERROR_MESSAGE );
-      return;
-    }
-
-    try
-    {
-      devCtrl.captureData( this.host );
-    }
-    catch ( IOException exception )
-    {
-      // TODO Auto-generated catch block
-      exception.printStackTrace();
-    }
+    aController.captureData( aCallback );
   }
 }
 

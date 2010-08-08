@@ -29,6 +29,7 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 
 
@@ -496,7 +497,7 @@ public class LogicSnifferDevice implements Device
    *           if a read time out occurs after trigger match or stop() was
    *           called before trigger match
    */
-  public CapturedData run( final ProgressCallback aCallback ) throws IOException, InterruptedException
+  public CapturedDataImpl run( final ProgressCallback aCallback ) throws IOException, InterruptedException
   {
     this.running = true;
 
@@ -633,7 +634,7 @@ public class LogicSnifferDevice implements Device
       rate = this.demux ? 2 * CLOCK / ( this.divider + 1 ) : CLOCK / ( this.divider + 1 );
     }
 
-    return new CapturedData( buffer, pos, rate, channels, this.enabledChannels );
+    return new CapturedDataImpl( buffer, pos, rate, channels, this.enabledChannels );
   }
 
   /**

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -132,6 +132,27 @@ public final class HostUtils
       modifiers |= aMask;
     }
     return KeyStroke.getKeyStroke( aKeyStroke, modifiers );
+  }
+
+  /**
+   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
+   * given file.
+   * 
+   * @param aFile
+   *          the file to return the extension for, cannot be <code>null</code>.
+   * @return the file extension (always in lower case), never <code>null</code>
+   *         but can be empty if the given file has <em>no</em> file extension.
+   */
+  public static final String getFileExtension(final File aFile) {
+    String ext = "";
+
+    String filename = aFile.getName();
+    int idx = filename.lastIndexOf('.');
+
+    if (( idx > 0 ) &&  ( idx < filename.length() - 1 )) {
+      ext = filename.substring(idx+1).toLowerCase();
+    }
+    return ext;
   }
 
   /**
@@ -321,6 +342,21 @@ public final class HostUtils
     }
     // Unable to load any (valid) properties file, return null to indicate this...
     return null;
+  }
+
+  /**
+   * Sets the filename to end with the given file extension, if this is not already the case.
+   * @param aFile the file that should get the given file extension, cannot be <code>null</code>;
+   * @param aFileExtension the new file extension to add to the given file, cannot be <code>null</code>.
+   * @return a file with the given file extension, never <code>null</code>.
+   */
+  public static final File setFileExtension(final File aFile, final String aFileExtension) {
+    String filename = aFile.getName();
+    // If the filename already has the given file extension, than simply do nothing...
+    if (aFileExtension.trim().isEmpty() || filename.toLowerCase().endsWith( aFileExtension.toLowerCase() )) {
+      return aFile;
+    }
+    return new File( aFile.getPath(), filename + "." + aFileExtension );
   }
 
   /**
@@ -530,11 +566,15 @@ public final class HostUtils
    * Tries to write the properties from a file with a given name.
    * 
    * @param aName
-   *          the name of the properties file, excluding <tt>.properties</tt>, cannot be <code>null</code> or empty. By
-   *          convention, the name of a properties file should be in the "reverse package name", e.g., "com.foo.bar".
-   * @return the read properties (object), or <code>null</code> if no such property file exists.
+   *          the name of the properties file, excluding <tt>.properties</tt>,
+   *          cannot be <code>null</code> or empty. By convention, the name of a
+   *          properties file should be in the "reverse package name", e.g.,
+   *          "com.foo.bar".
+   * @return the read properties (object), or <code>null</code> if no such
+   *         property file exists.
    * @throws IllegalArgumentException
-   *           in case the given name was <code>null</code> or empty, or the given properties was <code>null</code>.
+   *           in case the given name was <code>null</code> or empty, or the
+   *           given properties was <code>null</code>.
    */
   public static final void writeProperties( final String aName, final Properties aProperties )
   {
@@ -627,7 +667,7 @@ public final class HostUtils
       if ( ( appClass != null ) && ( appAdapterClass != null ) )
       {
         final Object proxy = Proxy.newProxyInstance( classLoader, new Class<?>[]
-        { appAdapterClass }, new InvocationHandler()
+                                                                               { appAdapterClass }, new InvocationHandler()
         {
           @Override
           public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable

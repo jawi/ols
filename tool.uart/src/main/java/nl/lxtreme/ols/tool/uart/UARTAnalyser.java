@@ -23,40 +23,60 @@ package nl.lxtreme.ols.tool.uart;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * 
  */
-public class UARTAnalyser implements Tool
+public class UARTAnalyser extends BaseTool
 {
   // VARIABLES
 
-  private UARTProtocolAnalysisDialog spad;
+  private UARTProtocolAnalysisDialog dialog;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new UARTAnalyser instance.
+   */
+  public UARTAnalyser()
+  {
+    super( "UART analyser ..." );
+  }
 
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.tools.Tool#getName()
+   * @see nl.lxtreme.ols.tool.base.BaseTool#doProcess(nl.lxtreme.ols.api.data.AnnotatedData,
+   *      nl.lxtreme.ols.api.tools.ToolContext)
    */
   @Override
-  public String getName()
+  protected void doProcess( final AnnotatedData aData, final ToolContext aContext )
   {
-    return "UART analyser";
+    this.dialog.showDialog( aData );
   }
 
   /**
-   * @see nl.lxtreme.ols.api.tools.Tool#process(Frame, nl.lxtreme.ols.api.CapturedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext, nl.lxtreme.ols.api.tools.AnalysisCallback)
+   * @see nl.lxtreme.ols.tool.base.BaseTool#setupTool(java.awt.Frame)
    */
   @Override
-  public void process( final Frame aFrame, final CapturedData aData, final ToolContext aContext,
-      final AnalysisCallback aCallback )
+  protected void setupTool( final Frame aFrame )
   {
-    this.spad = new UARTProtocolAnalysisDialog( aFrame, getName() );
-    this.spad.showDialog( aData );
+    // check if dialog exists with different owner and dispose if so
+    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aFrame ) )
+    {
+      this.dialog.dispose();
+      this.dialog = null;
+    }
+
+    // if no valid dialog exists, create one
+    if ( this.dialog == null )
+    {
+      this.dialog = new UARTProtocolAnalysisDialog( aFrame, getName() );
+    }
   }
 }
 

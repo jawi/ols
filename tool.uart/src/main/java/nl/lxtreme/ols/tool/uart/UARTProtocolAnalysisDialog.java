@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,56 +29,56 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * The Dialog Class
  * 
- * @author Frank Kunz
- *         The dialog class draws the basic dialog with a grid layout. The dialog
- *         consists of three main parts. A settings panel, a table panel
- *         and three buttons.
+ * @author Frank Kunz The dialog class draws the basic dialog with a grid
+ *         layout. The dialog consists of three main parts. A settings panel, a
+ *         table panel and three buttons.
  */
 final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener, Runnable
 {
   // CONSTANTS
 
-  private static final long                         serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
   // VARIABLES
 
-  private final String[]                            parityarray;
-  private final String[]                            bitarray;
-  private final String[]                            stoparray;
-  private final JComboBox                           rxd;
-  private final JComboBox                           txd;
-  private final JComboBox                           cts;
-  private final JComboBox                           rts;
-  private final JComboBox                           dtr;
-  private final JComboBox                           dsr;
-  private final JComboBox                           dcd;
-  private final JComboBox                           ri;
-  private final JComboBox                           parity;
-  private final JComboBox                           bits;
-  private final JComboBox                           stop;
-  private final JCheckBox                           inv;
-  private final JButton                             btnConvert;
-  private final JButton                             btnExport;
-  private final JButton                             btnCancel;
-  private final JProgressBar                        progress;
-  private boolean                                   runFlag;
-  private Thread                                    thrWorker;
-  private CapturedData                              analysisData;
-  private final JEditorPane                         outText;
+  private final String[] parityarray;
+  private final String[] bitarray;
+  private final String[] stoparray;
+  private final JComboBox rxd;
+  private final JComboBox txd;
+  private final JComboBox cts;
+  private final JComboBox rts;
+  private final JComboBox dtr;
+  private final JComboBox dsr;
+  private final JComboBox dcd;
+  private final JComboBox ri;
+  private final JComboBox parity;
+  private final JComboBox bits;
+  private final JComboBox stop;
+  private final JCheckBox inv;
+  private final JButton btnConvert;
+  private final JButton btnExport;
+  private final JButton btnCancel;
+  private final JProgressBar progress;
+  private boolean runFlag;
+  private Thread thrWorker;
+  private AnnotatedData analysisData;
+  private final JEditorPane outText;
   private final Vector<UARTProtocolAnalysisDataSet> decodedData;
-  private final JFileChooser                        fileChooser;
-  private long                                      startOfDecode;
-  private long                                      endOfDecode;
-  private int                                       decodedSymbols;
-  private int                                       bitLength;
-  private int                                       detectedErrors;
+  private final JFileChooser fileChooser;
+  private long startOfDecode;
+  private long endOfDecode;
+  private int decodedSymbols;
+  private int bitLength;
+  private int detectedErrors;
 
   // CONSTRUCTORS
 
@@ -221,7 +221,8 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
 
     this.fileChooser = new JFileChooser();
     // this.fileChooser.addChoosableFileFilter( ( FileFilter )new CSVFilter() );
-    // this.fileChooser.addChoosableFileFilter( ( FileFilter )new HTMLFilter() );
+    // this.fileChooser.addChoosableFileFilter( ( FileFilter )new HTMLFilter()
+    // );
 
     setSize( 1000, 550 );
     setResizable( false );
@@ -280,19 +281,19 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
     }
   }
 
-  public void readProperties( final Properties properties )
+  public void readProperties( final String aNamespace, final Properties properties )
   {
-    // selectByIndex( this.rxd, properties.getProperty( "tools.UARTProtocolAnalysis.rxd" ) );
-    // selectByIndex( this.txd, properties.getProperty( "tools.UARTProtocolAnalysis.txd" ) );
-    // selectByIndex( this.cts, properties.getProperty( "tools.UARTProtocolAnalysis.cts" ) );
-    // selectByIndex( this.rts, properties.getProperty( "tools.UARTProtocolAnalysis.rts" ) );
-    // selectByIndex( this.dtr, properties.getProperty( "tools.UARTProtocolAnalysis.dtr" ) );
-    // selectByIndex( this.dsr, properties.getProperty( "tools.UARTProtocolAnalysis.dsr" ) );
-    // selectByIndex( this.dcd, properties.getProperty( "tools.UARTProtocolAnalysis.dcd" ) );
-    // selectByIndex( this.ri, properties.getProperty( "tools.UARTProtocolAnalysis.ri" ) );
-    // selectByValue( this.parity, this.parityarray, properties.getProperty( "tools.UARTProtocolAnalysis.parity" ) );
-    // selectByValue( this.bits, this.bitarray, properties.getProperty( "tools.UARTProtocolAnalysis.bits" ) );
-    // selectByValue( this.stop, this.stoparray, properties.getProperty( "tools.UARTProtocolAnalysis.stop" ) );
+    SwingComponentUtils.setSelectedItem( this.rxd, properties.getProperty( "tools.UARTProtocolAnalysis.rxd" ) );
+    SwingComponentUtils.setSelectedItem( this.txd, properties.getProperty( "tools.UARTProtocolAnalysis.txd" ) );
+    SwingComponentUtils.setSelectedItem( this.cts, properties.getProperty( "tools.UARTProtocolAnalysis.cts" ) );
+    SwingComponentUtils.setSelectedItem( this.rts, properties.getProperty( "tools.UARTProtocolAnalysis.rts" ) );
+    SwingComponentUtils.setSelectedItem( this.dtr, properties.getProperty( "tools.UARTProtocolAnalysis.dtr" ) );
+    SwingComponentUtils.setSelectedItem( this.dsr, properties.getProperty( "tools.UARTProtocolAnalysis.dsr" ) );
+    SwingComponentUtils.setSelectedItem( this.dcd, properties.getProperty( "tools.UARTProtocolAnalysis.dcd" ) );
+    SwingComponentUtils.setSelectedItem( this.ri, properties.getProperty( "tools.UARTProtocolAnalysis.ri" ) );
+    SwingComponentUtils.setSelectedItem( this.parity, properties.getProperty( "tools.UARTProtocolAnalysis.parity" ) );
+    SwingComponentUtils.setSelectedItem( this.bits, properties.getProperty( "tools.UARTProtocolAnalysis.bits" ) );
+    SwingComponentUtils.setSelectedItem( this.stop, properties.getProperty( "tools.UARTProtocolAnalysis.stop" ) );
     this.inv.setSelected( Boolean.parseBoolean( properties.getProperty( "tools.UARTProtocolAnalysis.inverted" ) ) );
   }
 
@@ -314,26 +315,26 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
    * @param data
    *          data to use for analysis
    */
-  public void showDialog( final CapturedData data )
+  public void showDialog( final AnnotatedData data )
   {
     this.analysisData = data;
     setVisible( true );
   }
 
-  public void writeProperties( final Properties properties )
+  public void writeProperties( final String aNamespace, final Properties properties )
   {
-    properties.setProperty( "tools.UARTProtocolAnalysis.rxd", Integer.toString( this.rxd.getSelectedIndex() ) );
-    properties.setProperty( "tools.UARTProtocolAnalysis.txd", Integer.toString( this.txd.getSelectedIndex() ) );
-    properties.setProperty( "tools.UARTProtocolAnalysis.cts", Integer.toString( this.cts.getSelectedIndex() ) );
-    properties.setProperty( "tools.UARTProtocolAnalysis.rts", Integer.toString( this.rts.getSelectedIndex() ) );
-    properties.setProperty( "tools.UARTProtocolAnalysis.dtr", Integer.toString( this.dtr.getSelectedIndex() ) );
-    properties.setProperty( "tools.UARTProtocolAnalysis.dsr", Integer.toString( this.dsr.getSelectedIndex() ) );
-    properties.setProperty( "tools.UARTProtocolAnalysis.dcd", Integer.toString( this.dcd.getSelectedIndex() ) );
-    properties.setProperty( "tools.UARTProtocolAnalysis.ri", Integer.toString( this.ri.getSelectedIndex() ) );
-    properties.setProperty( "tools.UARTProtocolAnalysis.parity", ( String )this.parity.getSelectedItem() );
-    properties.setProperty( "tools.UARTProtocolAnalysis.bits", ( String )this.bits.getSelectedItem() );
-    properties.setProperty( "tools.UARTProtocolAnalysis.stop", ( String )this.stop.getSelectedItem() );
-    properties.setProperty( "tools.UARTProtocolAnalysis.inverted", "" + this.inv.isSelected() );
+    properties.setProperty( aNamespace + ".rxd", Integer.toString( this.rxd.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".txd", Integer.toString( this.txd.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".cts", Integer.toString( this.cts.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".rts", Integer.toString( this.rts.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".dtr", Integer.toString( this.dtr.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".dsr", Integer.toString( this.dsr.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".dcd", Integer.toString( this.dcd.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".ri", Integer.toString( this.ri.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".parity", ( String )this.parity.getSelectedItem() );
+    properties.setProperty( aNamespace + ".bits", ( String )this.bits.getSelectedItem() );
+    properties.setProperty( aNamespace + ".stop", ( String )this.stop.getSelectedItem() );
+    properties.setProperty( aNamespace + ".inverted", "" + this.inv.isSelected() );
   }
 
   /**
@@ -345,23 +346,14 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
    */
   private long calculateTime( final long time )
   {
-    if ( this.analysisData.hasTriggerData() )
-    {
-      return time - this.analysisData.triggerPosition;
-    }
-    else
-    {
-      return time;
-    }
+    return this.analysisData.calculateTime( time );
   }
 
   /**
-   * This is the UART protocol decoder core
-   * The decoder scans for a decode start event like CS high to
-   * low edge or the trigger of the captured data. After this the
-   * decoder starts to decode the data by the selected mode, number
-   * of bits and bit order. The decoded data are put to a JTable
-   * object directly.
+   * This is the UART protocol decoder core The decoder scans for a decode start
+   * event like CS high to low edge or the trigger of the captured data. After
+   * this the decoder starts to decode the data by the selected mode, number of
+   * bits and bit order. The decoded data are put to a JTable object directly.
    */
   private void decode()
   {
@@ -372,8 +364,7 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
     this.decodedData.clear();
 
     /*
-     * Build bitmasks based on the RxD, TxD, CTS and RTS
-     * pins.
+     * Build bitmasks based on the RxD, TxD, CTS and RTS pins.
      */
 
     int rxdmask = 0;
@@ -434,19 +425,21 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
     System.out.println( "dtrmask = 0x" + Integer.toHexString( dtrmask ) );
 
     /*
-     * Start decode from trigger or if no trigger is available from the
-     * first falling edge.
-     * The decoder works with two independant decoder runs. First for
-     * RxD and then for TxD, after this CTS, RTS, etc. is detected if enabled.
-     * After decoding all the decoded data are unsortet before the data is
-     * displayed it must be sortet by time.
+     * Start decode from trigger or if no trigger is available from the first
+     * falling edge. The decoder works with two independant decoder runs. First
+     * for RxD and then for TxD, after this CTS, RTS, etc. is detected if
+     * enabled. After decoding all the decoded data are unsortet before the data
+     * is displayed it must be sortet by time.
      */
 
+    final long[] timestamps = this.analysisData.getTimestamps();
+    final int[] values = this.analysisData.getValues();
+
     /*
-     * set the start of decode to the trigger if avail or
-     * find first state change on the selected lines
+     * set the start of decode to the trigger if avail or find first state
+     * change on the selected lines
      */
-    if ( this.analysisData.cursorEnabled )
+    if ( this.analysisData.isCursorsEnabled() )
     {
       this.startOfDecode = this.analysisData.getCursorPosition( 1 );
       this.endOfDecode = this.analysisData.getCursorPosition( 2 );
@@ -455,8 +448,9 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
     {
       if ( this.analysisData.hasTriggerData() )
       {
-        this.startOfDecode = this.analysisData.triggerPosition;
-        // the trigger may be too late, a workaround is to go back some samples here
+        this.startOfDecode = this.analysisData.getTriggerPosition();
+        // the trigger may be too late, a workaround is to go back some samples
+        // here
         this.startOfDecode -= 10;
         if ( this.startOfDecode < 0 )
         {
@@ -466,25 +460,26 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
       else
       {
         int mask = rxdmask | rimask | ctsmask | txdmask | dcdmask | rimask | dsrmask | dtrmask;
-        a = this.analysisData.values[0] & mask;
-        for ( i = 0; i < this.analysisData.values.length; i++ )
+        a = values[0] & mask;
+        for ( i = 0; i < values.length; i++ )
         {
-          if ( a != ( this.analysisData.values[i] & mask ) )
+          if ( a != ( values[i] & mask ) )
           {
-            this.startOfDecode = this.analysisData.timestamps[i];
+            this.startOfDecode = timestamps[i];
             break;
           }
         }
       }
-      this.endOfDecode = this.analysisData.absoluteLength;
+      this.endOfDecode = this.analysisData.getAbsoluteLength();
     }
     this.decodedSymbols = 0;
     this.detectedErrors = 0;
 
     // decode RxD
+    final int sampleRate = this.analysisData.getSampleRate();
     if ( rxdmask != 0 )
     {
-      BaudRateAnalyzer baudrate = new BaudRateAnalyzer( this.analysisData.values, this.analysisData.timestamps, rxdmask );
+      BaudRateAnalyzer baudrate = new BaudRateAnalyzer( values, timestamps, rxdmask );
       System.out.println( baudrate.toString() );
       this.bitLength = baudrate.getBest();
       if ( this.bitLength == 0 )
@@ -493,15 +488,15 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
       }
       else
       {
-        System.out.println( "Samplerate=" + this.analysisData.rate + " Bitlength=" + this.bitLength + " Baudrate="
-            + this.analysisData.rate / this.bitLength );
+        System.out.println( "Samplerate=" + sampleRate + " Bitlength=" + this.bitLength + " Baudrate=" + sampleRate
+            / this.bitLength );
         this.decodedSymbols += decodeData( this.bitLength, rxdmask, UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA );
       }
     }
     // decode TxD
     if ( txdmask != 0 )
     {
-      BaudRateAnalyzer baudrate = new BaudRateAnalyzer( this.analysisData.values, this.analysisData.timestamps, txdmask );
+      BaudRateAnalyzer baudrate = new BaudRateAnalyzer( values, timestamps, txdmask );
       System.out.println( baudrate.toString() );
       this.bitLength = baudrate.getBest();
       if ( this.bitLength == 0 )
@@ -510,8 +505,8 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
       }
       else
       {
-        System.out.println( "Samplerate=" + this.analysisData.rate + " Bitlength=" + this.bitLength + " Baudrate="
-            + this.analysisData.rate / this.bitLength );
+        System.out.println( "Samplerate=" + sampleRate + " Bitlength=" + this.bitLength + " Baudrate=" + sampleRate
+            / this.bitLength );
         this.decodedSymbols += decodeData( this.bitLength, txdmask, UARTProtocolAnalysisDataSet.UART_TYPE_TXDATA );
       }
     }
@@ -544,7 +539,9 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
     {
       return;
     }
+
     System.out.println( "Decode " + name );
+
     long i;
     int a;
     a = this.analysisData.getDataAt( 0 ) & mask;
@@ -628,9 +625,8 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
     {
 
       /*
-       * find first falling edge this
-       * is the start of the startbit.
-       * If the inverted checkbox is set find the first rising edge.
+       * find first falling edge this is the start of the startbit. If the
+       * inverted checkbox is set find the first rising edge.
        */
       b = this.analysisData.getDataAt( a ) & mask;
       for ( i = a; i < this.endOfDecode; i++ )
@@ -671,9 +667,8 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
       }
 
       /*
-       * Sampling is done in the middle of each bit
-       * the start bit must be low
-       * If the inverted checkbox is set the startbit must be high
+       * Sampling is done in the middle of each bit the start bit must be low If
+       * the inverted checkbox is set the startbit must be high
        */
       a = c + baud / 2;
       if ( this.inv.isSelected() )
@@ -1133,7 +1128,7 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
     }
     if ( this.analysisData.hasTimingData() )
     {
-      return DisplayUtils.displayScaledTime( count, this.analysisData.rate );
+      return DisplayUtils.displayScaledTime( count, this.analysisData.getSampleRate() );
     }
     else
     {
@@ -1268,15 +1263,15 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
 
     // generate html page header
     String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-        + "<html>"
-        + "  <head>"
-        + "    <title></title>"
-        + "    <meta content=\"\">"
-        + "    <style>"
-        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-        + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
-        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-        + "       <br>";
+      + "<html>"
+      + "  <head>"
+      + "    <title></title>"
+      + "    <meta content=\"\">"
+      + "    <style>"
+      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+      + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
+      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+      + "       <br>";
 
     // generate the statistics table
     String stats = new String();
@@ -1291,18 +1286,18 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
         stats = stats.concat( "<table style=\"width:100%;\">" + "<TR><TD style=\"width:30%;\">Decoded Symbols</TD><TD>"
             + this.decodedSymbols + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Detected Bus Errors</TD><TD>"
             + this.detectedErrors + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Baudrate</TD><TD>"
-            + this.analysisData.rate / this.bitLength + "</TD></TR>" + "</table>" + "<br>" + "<br>" );
+            + this.analysisData.getSampleRate() / this.bitLength + "</TD></TR>" + "</table>" + "<br>" + "<br>" );
         if ( this.bitLength < 15 )
         {
           stats = stats
-              .concat( "<p style=\"color:red;\">The baudrate may be wrong, use a higher samplerate to avoid this !</p><br><br>" );
+          .concat( "<p style=\"color:red;\">The baudrate may be wrong, use a higher samplerate to avoid this !</p><br><br>" );
         }
       }
     }
 
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
-        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
+      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
     if ( empty )
     {
     }

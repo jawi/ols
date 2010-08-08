@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,14 +23,14 @@ package nl.lxtreme.ols.tool.i2c;
 
 import java.util.logging.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * 
  */
-public class I2CAnalyserWorker extends BaseToolWorker<I2CDataSet>
+public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
 {
   // CONSTANTS
 
@@ -57,7 +57,7 @@ public class I2CAnalyserWorker extends BaseToolWorker<I2CDataSet>
   /**
    * @param aData
    */
-  public I2CAnalyserWorker( final CapturedData aData, final I2CProtocolAnalysisDialog aDialog )
+  public I2CAnalyserWorker( final AnnotatedData aData, final I2CProtocolAnalysisDialog aDialog )
   {
     super( aData );
 
@@ -83,7 +83,8 @@ public class I2CAnalyserWorker extends BaseToolWorker<I2CDataSet>
   @Override
   protected I2CDataSet doInBackground() throws Exception
   {
-    final CapturedData analysisData = getData();
+    final int[] values = getValues();
+    final long[] timestamps = getTimestamps();
 
     // process the captured data and write to output
     int sampleIdx, oldSCL, oldSDA, bitCount;
@@ -95,7 +96,7 @@ public class I2CAnalyserWorker extends BaseToolWorker<I2CDataSet>
      * pins.
      */
     final int dataMask = this.lineAmask | this.lineBmask;
-    final int sampleCount = analysisData.values.length;
+    final int sampleCount = values.length;
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
@@ -109,7 +110,7 @@ public class I2CAnalyserWorker extends BaseToolWorker<I2CDataSet>
      */
     for ( sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++ )
     {
-      final int dataValue = analysisData.values[sampleIdx];
+      final int dataValue = values[sampleIdx];
 
       if ( ( dataValue & dataMask ) == dataMask )
       {
@@ -136,7 +137,7 @@ public class I2CAnalyserWorker extends BaseToolWorker<I2CDataSet>
     // a is now the start of idle, now find the first start condition
     for ( ; sampleIdx < sampleCount; sampleIdx++ )
     {
-      final int dataValue = analysisData.values[sampleIdx];
+      final int dataValue = values[sampleIdx];
 
       if ( ( ( dataValue & dataMask ) != dataMask ) && ( ( dataValue & dataMask ) != 0 ) )
       {
@@ -180,7 +181,7 @@ public class I2CAnalyserWorker extends BaseToolWorker<I2CDataSet>
     final long max = sampleCount - sampleIdx;
 
     // We've just found our start condition, start the report with that...
-    reportStartCondition( i2cDataSet, calculateTime( analysisData.timestamps[sampleIdx] ) );
+    reportStartCondition( i2cDataSet, calculateTime( timestamps[sampleIdx] ) );
 
     /*
      * Now decode the bytes, SDA may only change when SCL is low. Otherwise
@@ -189,15 +190,15 @@ public class I2CAnalyserWorker extends BaseToolWorker<I2CDataSet>
      * scan for SCL rises and for SDA changes during SCL is high.
      * Each byte is followed by a 9th bit (ACK/NACK).
      */
-    oldSCL = analysisData.values[sampleIdx] & sclMask;
-    oldSDA = analysisData.values[sampleIdx] & sdaMask;
+    oldSCL = values[sampleIdx] & sclMask;
+    oldSDA = values[sampleIdx] & sdaMask;
     bitCount = 8;
     byteValue = 0;
 
     for ( sampleIdx = i2cDataSet.getStartSampleIndex(); sampleIdx < i2cDataSet.getStopSampleIndex() - 1; sampleIdx++ )
     {
-      final long time = calculateTime( analysisData.timestamps[sampleIdx] );
-      final int dataValue = analysisData.values[sampleIdx];
+      final long time = calculateTime( timestamps[sampleIdx] );
+      final int dataValue = values[sampleIdx];
 
       final int sda = dataValue & sdaMask;
       final int scl = dataValue & sclMask;
@@ -282,25 +283,6 @@ public class I2CAnalyserWorker extends BaseToolWorker<I2CDataSet>
     }
 
     return i2cDataSet;
-  }
-
-  /**
-   * calculate the time offset
-   * 
-   * @param time
-   *          absolute sample number
-   * @return time relative to data
-   */
-  private long calculateTime( final long time )
-  {
-    if ( getData().hasTriggerData() )
-    {
-      return time - getData().triggerPosition;
-    }
-    else
-    {
-      return time;
-    }
   }
 
   /**

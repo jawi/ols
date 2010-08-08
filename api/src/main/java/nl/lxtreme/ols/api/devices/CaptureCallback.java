@@ -22,6 +22,7 @@ package nl.lxtreme.ols.api.devices;
 
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 
 
 /**

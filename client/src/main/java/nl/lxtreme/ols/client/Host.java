@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import java.util.logging.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.action.*;
@@ -35,7 +36,7 @@ import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.HostUtils.*;
+import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
 import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
@@ -44,7 +45,7 @@ import org.osgi.framework.*;
 /**
  * Denotes the UI-host.
  */
-public final class Host implements CaptureCallback, AnalysisCallback, PropertyManager, ApplicationCallback
+public final class Host implements CaptureCallback, AnalysisCallback, ApplicationCallback
 {
   // CONSTANT
 
@@ -103,7 +104,7 @@ public final class Host implements CaptureCallback, AnalysisCallback, PropertyMa
   }
 
   /**
-   * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisComplete(nl.lxtreme.ols.api.CapturedData)
+   * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisComplete(nl.lxtreme.ols.api.data.CapturedData)
    */
   @Override
   public void analysisComplete( final CapturedData aNewCapturedData )
@@ -129,7 +130,7 @@ public final class Host implements CaptureCallback, AnalysisCallback, PropertyMa
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureComplete(nl.lxtreme.ols.api.CapturedData)
+   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureComplete(nl.lxtreme.ols.api.data.CapturedData)
    */
   @Override
   public void captureComplete( final CapturedData aCapturedData )
@@ -149,7 +150,7 @@ public final class Host implements CaptureCallback, AnalysisCallback, PropertyMa
   public void exit()
   {
     // Write back the user properties for use next time...
-    HostUtils.writeProperties( PROPERTIES_NAME, getProperties() );
+    HostUtils.writeProperties( PROPERTIES_NAME, this.project.getProperties() );
 
     this.mainFrame.setVisible( false );
     try
@@ -166,9 +167,9 @@ public final class Host implements CaptureCallback, AnalysisCallback, PropertyMa
   /**
    * @return
    */
-  public CapturedData getCapturedData()
+  public AnnotatedData getAnnotatedData()
   {
-    return this.diagramScrollPane.getCapturedData();
+    return this.diagramScrollPane.getAnnotatedData();
   }
 
   /**
@@ -179,19 +180,6 @@ public final class Host implements CaptureCallback, AnalysisCallback, PropertyMa
   public DeviceController getCurrentDeviceController()
   {
     return this.currentDevCtrl;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.PropertyManager#getProperties()
-   */
-  @Override
-  public Properties getProperties()
-  {
-    if ( this.userProperties == null )
-    {
-      this.userProperties = new Properties();
-    }
-    return this.userProperties;
   }
 
   /**
@@ -264,8 +252,8 @@ public final class Host implements CaptureCallback, AnalysisCallback, PropertyMa
     this.actionManager.add( new SaveDataFileAction( this.diagramScrollPane ) );
     this.actionManager.add( new ExitAction( this ) );
 
-    this.actionManager.add( new CaptureAction( this, this ) );
-    this.actionManager.add( new RepeatCaptureAction( this ) );
+    this.actionManager.add( new CaptureAction( this, this.project ) );
+    this.actionManager.add( new RepeatCaptureAction( this, this.project ) );
 
     this.actionManager.add( new ZoomInAction( this.diagramScrollPane ) );
     this.actionManager.add( new ZoomOutAction( this.diagramScrollPane ) );
@@ -282,7 +270,7 @@ public final class Host implements CaptureCallback, AnalysisCallback, PropertyMa
 
     this.menuTracker = new MenuTracker( this.context, this.mainFrame.getJMenuBar() );
     this.deviceControllerTracker = new DeviceControllerTracker( this.context, this, this.deviceMenu );
-    this.toolTracker = new ToolTracker( this.context, this, this.toolsMenu );
+    this.toolTracker = new ToolTracker( this.context, this, this.project, this.toolsMenu );
   }
 
   /**

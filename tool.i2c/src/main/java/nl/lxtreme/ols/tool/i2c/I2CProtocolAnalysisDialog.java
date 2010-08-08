@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -39,10 +39,9 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * The Dialog Class
  * 
- * @author Frank Kunz
- *         The dialog class draws the basic dialog with a grid layout. The dialog
- *         consists of three main parts. A settings panel, a table panel
- *         and three buttons.
+ * @author Frank Kunz The dialog class draws the basic dialog with a grid
+ *         layout. The dialog consists of three main parts. A settings panel, a
+ *         table panel and three buttons.
  */
 final class I2CProtocolAnalysisDialog extends JDialog
 {
@@ -76,9 +75,7 @@ final class I2CProtocolAnalysisDialog extends JDialog
     @Override
     public void actionPerformed( final ActionEvent aEvent )
     {
-      I2CProtocolAnalysisDialog.this.analysisResult = null;
-      I2CProtocolAnalysisDialog.this.toolWorker.cancel( true /* mayInterruptIfRunning */);
-      setVisible( false );
+      close();
     }
   }
 
@@ -118,7 +115,8 @@ final class I2CProtocolAnalysisDialog extends JDialog
           LOG.info( "Writing analysis results to " + selectedFile.getPath() );
         }
 
-        if ( selectedFile.getName().endsWith( ".htm" ) || selectedFile.getName().endsWith( ".html" ) )
+        final String filename = selectedFile.getName();
+        if ( filename.endsWith( ".htm" ) || filename.endsWith( ".html" ) )
         {
           storeToHtmlFile( selectedFile, I2CProtocolAnalysisDialog.this.analysisResult );
         }
@@ -185,38 +183,32 @@ final class I2CProtocolAnalysisDialog extends JDialog
       putValue( NAME, "Analyze" );
       putValue( SHORT_DESCRIPTION, "Run analysis" );
     }
-
   }
 
   // CONSTANTS
 
-  private static final long       serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  private static final Logger     LOG              = Logger.getLogger( I2CAnalyserWorker.class.getName() );
+  private static final Logger LOG = Logger.getLogger( I2CAnalyserWorker.class.getName() );
 
   // VARIABLES
 
-  private final JComboBox         lineA;
-  private final JComboBox         lineB;
-  private CapturedData            analysisData;
-  private final JEditorPane       outText;
-  private final JLabel            busSetSCL;
-  private final JLabel            busSetSDA;
-  private final JCheckBox         detectSTART;
-  private final JCheckBox         detectSTOP;
-  private final JCheckBox         detectACK;
-  private final JCheckBox         detectNACK;
-
-  private transient I2CDataSet    analysisResult   = null;
-  private I2CAnalyserWorker       toolWorker       = null;
-
+  private final JComboBox lineA;
+  private final JComboBox lineB;
+  private final JEditorPane outText;
+  private final JLabel busSetSCL;
+  private final JLabel busSetSDA;
+  private final JCheckBox detectSTART;
+  private final JCheckBox detectSTOP;
+  private final JCheckBox detectACK;
+  private final JCheckBox detectNACK;
   private final RunAnalysisAction runAnalysisAction;
+  private final ExportAction exportAction;
+  private final CloseAction closeAction;
 
-  private final ExportAction      exportAction;
-
-  private final CloseAction       closeAction;
-
-  // CONSTRUCTORS
+  private transient CapturedData analysisData;
+  private transient I2CDataSet analysisResult = null;
+  private transient I2CAnalyserWorker toolWorker = null;
 
   /**
    * @param aFrame
@@ -315,7 +307,7 @@ final class I2CProtocolAnalysisDialog extends JDialog
     setResizable( false );
   }
 
-  // METHODS
+  // CONSTRUCTORS
 
   /**
    * create constraints for GridBagLayout
@@ -349,11 +341,12 @@ final class I2CProtocolAnalysisDialog extends JDialog
     return ( gbc );
   }
 
+  // METHODS
+
   /**
-   * This is the I2C protocol decoder core
-   * The decoder scans for a decode start event when one of the two
-   * lines is going low (start condition). After this the
-   * decoder starts to decode the data.
+   * This is the I2C protocol decoder core The decoder scans for a decode start
+   * event when one of the two lines is going low (start condition). After this
+   * the decoder starts to decode the data.
    */
   public void createReport( final I2CDataSet aAnalysisResult )
   {
@@ -416,10 +409,14 @@ final class I2CProtocolAnalysisDialog extends JDialog
     return this.detectSTOP.isSelected();
   }
 
-  public void readProperties( final Properties properties )
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
+   *      java.util.Properties)
+   */
+  public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    // selectByIndex( this.lineA, properties.getProperty( "tools.I2CProtocolAnalysis.lineA" ) );
-    // selectByIndex( this.lineB, properties.getProperty( "tools.I2CProtocolAnalysis.lineB" ) );
+    SwingComponentUtils.setSelectedItem( this.lineA, aProperties.getProperty( aNamespace + ".lineA" ) );
+    SwingComponentUtils.setSelectedItem( this.lineB, aProperties.getProperty( aNamespace + ".lineB" ) );
   }
 
   /**
@@ -474,24 +471,35 @@ final class I2CProtocolAnalysisDialog extends JDialog
   /**
    * shows the dialog and sets the data to use
    * 
-   * @param data
+   * @param aData
    *          data to use for analysis
    */
-  public void showDialog( final CapturedData data, final I2CAnalyserWorker aToolWorker )
+  public void showDialog( final AnnotatedData aData, final I2CAnalyserWorker aToolWorker )
   {
-    this.analysisData = data;
+    this.analysisData = aData;
     this.toolWorker = aToolWorker;
 
     setVisible( true );
   }
 
   /**
-   * @param properties
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
+   *      java.util.Properties)
    */
-  public void writeProperties( final Properties properties )
+  public void writeProperties( final String aNamespace, final Properties aProperties )
   {
-    properties.setProperty( "tools.I2CProtocolAnalysis.lineA", Integer.toString( this.lineA.getSelectedIndex() ) );
-    properties.setProperty( "tools.I2CProtocolAnalysis.lineB", Integer.toString( this.lineB.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".lineA", Integer.toString( this.lineA.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".lineB", Integer.toString( this.lineB.getSelectedIndex() ) );
+  }
+
+  /**
+   * Closes this dialog, cancelling any running workers if needed.
+   */
+  final void close()
+  {
+    this.analysisResult = null;
+    this.toolWorker.cancel( true /* mayInterruptIfRunning */);
+    setVisible( false );
   }
 
   private String getEmptyHtmlPage()
@@ -501,24 +509,24 @@ final class I2CProtocolAnalysisDialog extends JDialog
 
     // generate html page header
     String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-        + "<html>"
-        + "  <head>"
-        + "    <title></title>"
-        + "    <meta content=\"\">"
-        + "    <style>"
-        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-        + "       </style>" + "  </head>" + "   <body>" + "       <H2>I2C Analysis Results</H2>" + "       <hr>"
-        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-        + "       <br>";
+      + "<html>"
+      + "  <head>"
+      + "    <title></title>"
+      + "    <meta content=\"\">"
+      + "    <style>"
+      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+      + "       </style>" + "  </head>" + "   <body>" + "       <H2>I2C Analysis Results</H2>" + "       <hr>"
+      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+      + "       <br>";
 
     // generate the bus configuration table
     final StringBuilder busConfig = new StringBuilder();
     busConfig.append( "<table style=\"width:100%;\">" );
     busConfig.append( "<tr><td colspan=\"2\">Bus configuration</td></tr>" );
     busConfig.append( "<tr><td style=\"width:30%;\">" ).append( "SDA" ).append( "</td><td>" ).append(
-        "&lt;autodetect&gt;" ).append( "</td></tr>" );
+    "&lt;autodetect&gt;" ).append( "</td></tr>" );
     busConfig.append( "<tr><td style=\"width:30%;\">" ).append( "SCL" ).append( "</td><td>" ).append(
-        "&lt;autodetect&gt;" ).append( "</td></tr>" );
+    "&lt;autodetect&gt;" ).append( "</td></tr>" );
     busConfig.append( "</table><br><br>" );
 
     // generate the statistics table
@@ -529,7 +537,7 @@ final class I2CProtocolAnalysisDialog extends JDialog
 
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
-        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:20%;\">Hex</th><th style=\"width:20%;\">Bin</th><th style=\"width:20%;\">Dec</th><th style=\"width:10%;\">ASCII</th></tr>";
+      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:20%;\">Hex</th><th style=\"width:20%;\">Bin</th><th style=\"width:20%;\">Dec</th><th style=\"width:10%;\">ASCII</th></tr>";
     data = data.concat( "</table>" );
 
     // generate the footer table
@@ -550,7 +558,7 @@ final class I2CProtocolAnalysisDialog extends JDialog
     final long count = Math.max( 0, aCount - aDataSet.getStartSampleIndex() );
     if ( this.analysisData.hasTimingData() )
     {
-      return DisplayUtils.displayScaledTime( count, this.analysisData.rate );
+      return DisplayUtils.displayScaledTime( count, this.analysisData.getSampleRate() );
     }
     else
     {
@@ -671,10 +679,10 @@ final class I2CProtocolAnalysisDialog extends JDialog
     // generate the data table
     data.append( "<table class=\"data\" style=\"width:100%;\">" );
     data.append( "<tr>" ).append( "<th style=\"width:10%;\">" ).append( "Index" ).append( "</th>" ).append(
-        "<th style=\"width:20%;\">" ).append( "Time" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append(
-        "Hex" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append( "Bin" ).append( "</th>" ).append(
-        "<th style=\"width:20%;\">" ).append( "Dec" ).append( "</th>" ).append( "<th style=\"width:10%;\">" ).append(
-        "ASCII" ).append( "</th>" ).append( "</tr>" );
+    "<th style=\"width:20%;\">" ).append( "Time" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append(
+    "Hex" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append( "Bin" ).append( "</th>" ).append(
+    "<th style=\"width:20%;\">" ).append( "Dec" ).append( "</th>" ).append( "<th style=\"width:10%;\">" ).append(
+    "ASCII" ).append( "</th>" ).append( "</tr>" );
 
     final List<I2CData> dataSet = aAnalysisResult.getDecodedData();
 
@@ -709,16 +717,16 @@ final class I2CProtocolAnalysisDialog extends JDialog
         }
 
         data.append( "<tr style=\"background-color:" ).append( bgColor ).append( ";\"><td>" ).append( i ).append(
-            "</td><td>" ).append( indexToTime( aAnalysisResult, time ) ).append( "</td><td>" ).append( event ).append(
-            "</td><td></td><td></td><td></td></tr>" );
+        "</td><td>" ).append( indexToTime( aAnalysisResult, time ) ).append( "</td><td>" ).append( event ).append(
+        "</td><td></td><td></td><td></td></tr>" );
       }
       else
       {
         final int value = ds.getValue();
         data.append( "<tr><td>" ).append( i ).append( "</td><td>" ).append( indexToTime( aAnalysisResult, time ) )
-            .append( "</td><td>0x" ).append( DisplayUtils.integerToHexString( value, 2 ) ).append( "</td><td>0b" )
-            .append( DisplayUtils.integerToBinString( value, 8 ) ).append( "</td><td>" ).append( value ).append(
-                "</td><td>" );
+        .append( "</td><td>0x" ).append( DisplayUtils.integerToHexString( value, 2 ) ).append( "</td><td>0b" )
+        .append( DisplayUtils.integerToBinString( value, 8 ) ).append( "</td><td>" ).append( value ).append(
+        "</td><td>" );
         data.append( ( char )value );
         data.append( "</td></tr>" );
       }

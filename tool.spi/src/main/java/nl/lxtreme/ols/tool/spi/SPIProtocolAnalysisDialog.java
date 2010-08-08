@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,48 +29,48 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * The Dialog Class
  * 
- * @author Frank Kunz
- *         The dialog class draws the basic dialog with a grid layout. The dialog
- *         consists of three main parts. A settings panel, a table panel
- *         and three buttons.
+ * @author Frank Kunz The dialog class draws the basic dialog with a grid
+ *         layout. The dialog consists of three main parts. A settings panel, a
+ *         table panel and three buttons.
  */
 final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener, Runnable
 {
   // CONSTANTS
 
-  private static final long                        serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
   // VARIABLES
 
-  private final String[]                           modearray;
-  private final String[]                           bitarray;
-  private final String[]                           orderarray;
-  private final JComboBox                          sck;
-  private final JComboBox                          miso;
-  private final JComboBox                          mosi;
-  private final JComboBox                          cs;
-  private final JComboBox                          mode;
-  private final JComboBox                          bits;
-  private CapturedData                             analysisData;
-  private final JEditorPane                        outText;
-  private final JComboBox                          order;
+  private final String[] modearray;
+  private final String[] bitarray;
+  private final String[] orderarray;
+  private final JComboBox sck;
+  private final JComboBox miso;
+  private final JComboBox mosi;
+  private final JComboBox cs;
+  private final JComboBox mode;
+  private final JComboBox bits;
+  private AnnotatedData analysisData;
+  private final JEditorPane outText;
+  private final JComboBox order;
   private final Vector<SPIProtocolAnalysisDataSet> decodedData;
-  private final JFileChooser                       fileChooser;
-  private int                                      startOfDecode;
-  private int                                      endOfDecode;
-  private final JButton                            btnConvert;
-  private final JButton                            btnExport;
-  private final JButton                            btnCancel;
-  private final JProgressBar                       progress;
-  private boolean                                  runFlag;
-  private Thread                                   thrWorker;
+  private final JFileChooser fileChooser;
+  private int startOfDecode;
+  private int endOfDecode;
+  private final JButton btnConvert;
+  private final JButton btnExport;
+  private final JButton btnCancel;
+  private final JProgressBar progress;
+  private boolean runFlag;
+  private Thread thrWorker;
 
   // CONSTRUCTORS
 
@@ -182,7 +182,8 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
 
     this.fileChooser = new JFileChooser();
     // this.fileChooser.addChoosableFileFilter( ( FileFilter )new CSVFilter() );
-    // this.fileChooser.addChoosableFileFilter( ( FileFilter )new HTMLFilter() );
+    // this.fileChooser.addChoosableFileFilter( ( FileFilter )new HTMLFilter()
+    // );
 
     setSize( 1000, 500 );
     setResizable( false );
@@ -238,15 +239,15 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
     }
   }
 
-  public void readProperties( final Properties properties )
+  public void readProperties( final String aNamespace, final Properties properties )
   {
-    // selectByIndex(sck, properties.getProperty("tools.SPIProtocolAnalysis.sck"));
-    // selectByIndex(miso, properties.getProperty("tools.SPIProtocolAnalysis.miso"));
-    // selectByIndex(mosi, properties.getProperty("tools.SPIProtocolAnalysis.mosi"));
-    // selectByIndex(cs, properties.getProperty("tools.SPIProtocolAnalysis.cs"));
-    // selectByValue(mode, modearray, properties.getProperty("tools.SPIProtocolAnalysis.mode"));
-    // selectByValue(bits, bitarray, properties.getProperty("tools.SPIProtocolAnalysis.bits"));
-    // selectByValue(order, orderarray, properties.getProperty("tools.SPIProtocolAnalysis.order"));
+    SwingComponentUtils.setSelectedItem( this.sck, properties.getProperty( aNamespace + ".sck" ) );
+    SwingComponentUtils.setSelectedItem( this.miso, properties.getProperty( aNamespace + ".miso" ) );
+    SwingComponentUtils.setSelectedItem( this.mosi, properties.getProperty( aNamespace + ".mosi" ) );
+    SwingComponentUtils.setSelectedItem( this.cs, properties.getProperty( aNamespace + ".cs" ) );
+    SwingComponentUtils.setSelectedItem( this.mode, this.modearray, properties.getProperty( aNamespace + ".mode" ) );
+    SwingComponentUtils.setSelectedItem( this.bits, this.bitarray, properties.getProperty( aNamespace + ".bits" ) );
+    SwingComponentUtils.setSelectedItem( this.order, this.orderarray, properties.getProperty( aNamespace + ".order" ) );
   }
 
   /**
@@ -267,21 +268,25 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
    * @param data
    *          data to use for analysis
    */
-  public void showDialog( final CapturedData data )
+  public void showDialog( final AnnotatedData data )
   {
     this.analysisData = data;
     setVisible( true );
   }
 
-  public void writeProperties( final Properties properties )
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
+   *      java.util.Properties)
+   */
+  public void writeProperties( final String aNamespace, final Properties properties )
   {
-    properties.setProperty( "tools.SPIProtocolAnalysis.sck", Integer.toString( this.sck.getSelectedIndex() ) );
-    properties.setProperty( "tools.SPIProtocolAnalysis.miso", Integer.toString( this.miso.getSelectedIndex() ) );
-    properties.setProperty( "tools.SPIProtocolAnalysis.mosi", Integer.toString( this.mosi.getSelectedIndex() ) );
-    properties.setProperty( "tools.SPIProtocolAnalysis.cs", Integer.toString( this.cs.getSelectedIndex() ) );
-    properties.setProperty( "tools.SPIProtocolAnalysis.mode", ( String )this.mode.getSelectedItem() );
-    properties.setProperty( "tools.SPIProtocolAnalysis.bits", ( String )this.bits.getSelectedItem() );
-    properties.setProperty( "tools.SPIProtocolAnalysis.order", ( String )this.order.getSelectedItem() );
+    properties.setProperty( aNamespace + ".sck", Integer.toString( this.sck.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".miso", Integer.toString( this.miso.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".mosi", Integer.toString( this.mosi.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".cs", Integer.toString( this.cs.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".mode", ( String )this.mode.getSelectedItem() );
+    properties.setProperty( aNamespace + ".bits", ( String )this.bits.getSelectedItem() );
+    properties.setProperty( aNamespace + ".order", ( String )this.order.getSelectedItem() );
   }
 
   /**
@@ -293,23 +298,14 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
    */
   private long calculateTime( final long time )
   {
-    if ( this.analysisData.hasTriggerData() )
-    {
-      return time - this.analysisData.triggerPosition;
-    }
-    else
-    {
-      return time;
-    }
+    return this.analysisData.calculateTime( time );
   }
 
   /**
-   * This is the SPI protocol decoder core
-   * The decoder scans for a decode start event like CS high to
-   * low edge or the trigger of the captured data. After this the
-   * decoder starts to decode the data by the selected mode, number
-   * of bits and bit order. The decoded data are put to a JTable
-   * object directly.
+   * This is the SPI protocol decoder core The decoder scans for a decode start
+   * event like CS high to low edge or the trigger of the captured data. After
+   * this the decoder starts to decode the data by the selected mode, number of
+   * bits and bit order. The decoded data are put to a JTable object directly.
    */
   private void decode()
   {
@@ -321,8 +317,7 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
     this.decodedData.clear();
 
     /*
-     * Buid bitmasks based on the SCK, MISO, MOSI and CS
-     * pins.
+     * Buid bitmasks based on the SCK, MISO, MOSI and CS pins.
      */
     int csmask = ( 1 << this.cs.getSelectedIndex() );
     int sckmask = ( 1 << this.sck.getSelectedIndex() );
@@ -334,9 +329,12 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
     System.out.println( "misomask = 0x" + Integer.toHexString( misomask ) );
     System.out.println( "mosimask = 0x" + Integer.toHexString( mosimask ) );
 
+    final int[] values = this.analysisData.getValues();
+    final long[] timestamps = this.analysisData.getTimestamps();
+
     this.startOfDecode = 0;
-    this.endOfDecode = this.analysisData.values.length;
-    if ( this.analysisData.cursorEnabled )
+    this.endOfDecode = values.length;
+    if ( this.analysisData.isCursorsEnabled() )
     {
       this.startOfDecode = this.analysisData.getSampleIndex( this.analysisData.getCursorPosition( 1 ) );
       this.endOfDecode = this.analysisData.getSampleIndex( this.analysisData.getCursorPosition( 2 ) + 1 );
@@ -344,16 +342,15 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
     else
     {
       /*
-       * For analyze scan the CS line for a falling edge. If
-       * no edge could be found, the position of the trigger
-       * is used for start of analysis. If no trigger and no
-       * edge is found the analysis fails.
+       * For analyze scan the CS line for a falling edge. If no edge could be
+       * found, the position of the trigger is used for start of analysis. If no
+       * trigger and no edge is found the analysis fails.
        */
-      a = this.analysisData.values[0] & csmask;
+      a = values[0] & csmask;
       c = 0;
       for ( int i = this.startOfDecode; i < this.endOfDecode; i++ )
       {
-        if ( a > ( this.analysisData.values[i] & csmask ) )
+        if ( a > ( values[i] & csmask ) )
         {
           // cs to low found here
           this.startOfDecode = i;
@@ -361,21 +358,20 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
           System.out.println( "CS found at " + i );
           break;
         }
-        a = this.analysisData.values[i] & csmask;
+        a = values[i] & csmask;
 
         if ( this.runFlag == false )
         {
           return;
         }
-        this.progress
-            .setValue( ( int )( this.analysisData.timestamps[i] * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
+        this.progress.setValue( ( int )( timestamps[i] * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
       }
       if ( c == 0 )
       {
         // no CS edge found, look for trigger
         if ( this.analysisData.hasTriggerData() )
         {
-          this.startOfDecode = this.analysisData.getSampleIndex( this.analysisData.triggerPosition );
+          this.startOfDecode = this.analysisData.getSampleIndex( this.analysisData.getTriggerPosition() );
         }
       }
       // now the trigger is in b, add trigger event to table
@@ -383,45 +379,43 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
     }
 
     /*
-     * Use the mode parameter to determine which edges are
-     * to detect. Mode 0 and mode 3 are sampling on the
-     * rising clk edge, mode 2 and 4 are sampling on the
-     * falling edge.
-     * a is used for start of value, c is register for
-     * detect line changes.
+     * Use the mode parameter to determine which edges are to detect. Mode 0 and
+     * mode 3 are sampling on the rising clk edge, mode 2 and 4 are sampling on
+     * the falling edge. a is used for start of value, c is register for detect
+     * line changes.
      */
     if ( ( this.mode.getSelectedItem().equals( "0" ) ) || ( this.mode.getSelectedItem().equals( "2" ) ) )
     {
       // scanning for rising clk edges
-      c = this.analysisData.values[this.startOfDecode] & sckmask;
-      a = this.analysisData.values[this.startOfDecode] & csmask;
+      c = values[this.startOfDecode] & sckmask;
+      a = values[this.startOfDecode] & csmask;
       bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1;
       maxbits = bitCount;
       misovalue = 0;
       mosivalue = 0;
       for ( int i = this.startOfDecode; i < this.endOfDecode; i++ )
       {
-        if ( c < ( this.analysisData.values[i] & sckmask ) )
+        if ( c < ( values[i] & sckmask ) )
         {
           // sample here
           if ( this.order.getSelectedItem().equals( "MSB first" ) )
           {
-            if ( ( this.analysisData.values[i] & misomask ) == misomask )
+            if ( ( values[i] & misomask ) == misomask )
             {
               misovalue |= ( 1 << bitCount );
             }
-            if ( ( this.analysisData.values[i] & mosimask ) == mosimask )
+            if ( ( values[i] & mosimask ) == mosimask )
             {
               mosivalue |= ( 1 << bitCount );
             }
           }
           else
           {
-            if ( ( this.analysisData.values[i] & misomask ) == misomask )
+            if ( ( values[i] & misomask ) == misomask )
             {
               misovalue |= ( 1 << ( maxbits - bitCount ) );
             }
-            if ( ( this.analysisData.values[i] & mosimask ) == mosimask )
+            if ( ( values[i] & mosimask ) == mosimask )
             {
               mosivalue |= ( 1 << ( maxbits - bitCount ) );
             }
@@ -433,8 +427,8 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
           }
           else
           {
-            this.decodedData.addElement( new SPIProtocolAnalysisDataSet(
-                calculateTime( this.analysisData.timestamps[i] ), mosivalue, misovalue ) );
+            this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), mosivalue,
+                misovalue ) );
 
             // System.out.println("MISO = 0x" + Integer.toHexString(misovalue));
             // System.out.println("MOSI = 0x" + Integer.toHexString(mosivalue));
@@ -444,63 +438,60 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
 
           }
         }
-        c = this.analysisData.values[i] & sckmask;
+        c = values[i] & sckmask;
 
         /* CS edge detection */
-        if ( a > ( this.analysisData.values[i] & csmask ) )
+        if ( a > ( values[i] & csmask ) )
         {
           // falling edge
-          this.decodedData.addElement( new SPIProtocolAnalysisDataSet(
-              calculateTime( this.analysisData.timestamps[i] ), "CSLOW" ) );
+          this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), "CSLOW" ) );
         }
-        else if ( a < ( this.analysisData.values[i] & csmask ) )
+        else if ( a < ( values[i] & csmask ) )
         {
           // rising edge
-          this.decodedData.addElement( new SPIProtocolAnalysisDataSet(
-              calculateTime( this.analysisData.timestamps[i] ), "CSHIGH" ) );
+          this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), "CSHIGH" ) );
         }
-        a = this.analysisData.values[i] & csmask;
+        a = values[i] & csmask;
 
         if ( this.runFlag == false )
         {
           return;
         }
-        this.progress
-            .setValue( ( int )( this.analysisData.timestamps[i] * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
+        this.progress.setValue( ( int )( timestamps[i] * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
       }
     }
     else
     {
       // scanning for falling clk edges
-      c = this.analysisData.values[this.startOfDecode] & sckmask;
-      a = this.analysisData.values[this.startOfDecode] & csmask;
+      c = values[this.startOfDecode] & sckmask;
+      a = values[this.startOfDecode] & csmask;
       bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1;
       maxbits = bitCount;
       misovalue = 0;
       mosivalue = 0;
       for ( int i = this.startOfDecode; i < this.endOfDecode; i++ )
       {
-        if ( c > ( this.analysisData.values[i] & sckmask ) )
+        if ( c > ( values[i] & sckmask ) )
         {
           // sample here
           if ( this.order.getSelectedItem().equals( "MSB first" ) )
           {
-            if ( ( this.analysisData.values[i] & misomask ) == misomask )
+            if ( ( values[i] & misomask ) == misomask )
             {
               misovalue |= ( 1 << bitCount );
             }
-            if ( ( this.analysisData.values[i] & mosimask ) == mosimask )
+            if ( ( values[i] & mosimask ) == mosimask )
             {
               mosivalue |= ( 1 << bitCount );
             }
           }
           else
           {
-            if ( ( this.analysisData.values[i] & misomask ) == misomask )
+            if ( ( values[i] & misomask ) == misomask )
             {
               misovalue |= ( 1 << ( maxbits - bitCount ) );
             }
-            if ( ( this.analysisData.values[i] & mosimask ) == mosimask )
+            if ( ( values[i] & mosimask ) == mosimask )
             {
               mosivalue |= ( 1 << ( maxbits - bitCount ) );
             }
@@ -512,8 +503,8 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
           }
           else
           {
-            this.decodedData.addElement( new SPIProtocolAnalysisDataSet(
-                calculateTime( this.analysisData.timestamps[i] ), mosivalue, misovalue ) );
+            this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), mosivalue,
+                misovalue ) );
 
             // System.out.println("MISO = 0x" + Integer.toHexString(misovalue));
             // System.out.println("MOSI = 0x" + Integer.toHexString(mosivalue));
@@ -522,29 +513,26 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
             mosivalue = 0;
           }
         }
-        c = this.analysisData.values[i] & sckmask;
+        c = values[i] & sckmask;
 
         /* CS edge detection */
-        if ( a > ( this.analysisData.values[i] & csmask ) )
+        if ( a > ( values[i] & csmask ) )
         {
           // falling edge
-          this.decodedData.addElement( new SPIProtocolAnalysisDataSet(
-              calculateTime( this.analysisData.timestamps[i] ), "CSLOW" ) );
+          this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), "CSLOW" ) );
         }
-        else if ( a < ( this.analysisData.values[i] & csmask ) )
+        else if ( a < ( values[i] & csmask ) )
         {
           // rising edge
-          this.decodedData.addElement( new SPIProtocolAnalysisDataSet(
-              calculateTime( this.analysisData.timestamps[i] ), "CSHIGH" ) );
+          this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), "CSHIGH" ) );
         }
-        a = this.analysisData.values[i] & csmask;
+        a = values[i] & csmask;
 
         if ( this.runFlag == false )
         {
           return;
         }
-        this.progress
-            .setValue( ( int )( this.analysisData.timestamps[i] * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
+        this.progress.setValue( ( int )( timestamps[i] * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
       }
     }
 
@@ -566,9 +554,10 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
     {
       count = 0;
     }
+
     if ( this.analysisData.hasTimingData() )
     {
-      return DisplayUtils.displayScaledTime( count, this.analysisData.rate );
+      return DisplayUtils.displayScaledTime( count, this.analysisData.getSampleRate() );
     }
     else
     {
@@ -686,19 +675,19 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
 
     // generate html page header
     String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-        + "<html>"
-        + "  <head>"
-        + "    <title></title>"
-        + "    <meta content=\"\">"
-        + "    <style>"
-        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-        + "       </style>" + "  </head>" + "   <body>" + "       <H2>SPI Analysis Results</H2>" + "       <hr>"
-        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-        + "       <br>";
+      + "<html>"
+      + "  <head>"
+      + "    <title></title>"
+      + "    <meta content=\"\">"
+      + "    <style>"
+      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+      + "       </style>" + "  </head>" + "   <body>" + "       <H2>SPI Analysis Results</H2>" + "       <hr>"
+      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+      + "       <br>";
 
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
-        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
+      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
     if ( empty )
     {
     }

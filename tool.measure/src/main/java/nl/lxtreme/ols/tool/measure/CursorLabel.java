@@ -25,7 +25,7 @@ import java.awt.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -40,19 +40,19 @@ public class CursorLabel extends JLabel
 
   // VARIABLES
 
-  private final CapturedData data;
+  private final AnnotatedData data;
   private final int index;
 
   // CONSTRUCTORS
 
   /**
    * @param aData
-   *          the captured data to take the cursors from, cannot be
+   *          the (annotated) captured data to take the cursors from, cannot be
    *          <code>null</code>;
    * @param aCursorIndex
    *          the index of the cursor to get the time for, >= 0 && < 10.
    */
-  public CursorLabel( final CapturedData aData, final int aCursorIndex )
+  public CursorLabel( final AnnotatedData aData, final int aCursorIndex )
   {
     this.data = aData;
     this.index = aCursorIndex;
@@ -81,17 +81,12 @@ public class CursorLabel extends JLabel
    */
   private String getCursorTimeDisplayValue()
   {
-    String cursorLabel = "<not set>";
-    long cursorPos = this.data.getCursorPosition( this.index );
-    if ( cursorPos >= 0 )
+    double cursorTimeValue = this.data.getCursorTimeValue( this.index );
+    if ( cursorTimeValue >= 0.0 )
     {
-      if ( this.data.hasTriggerData() )
-      {
-        cursorPos -= this.data.triggerPosition;
-      }
-      cursorLabel = DisplayUtils.displayScaledTime( cursorPos, this.data.rate );
+      return DisplayUtils.displayTime( cursorTimeValue );
     }
-    return cursorLabel;
+    return "<not set>";
   }
 
 }

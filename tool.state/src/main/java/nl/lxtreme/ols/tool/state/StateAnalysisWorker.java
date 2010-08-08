@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,14 @@
 package nl.lxtreme.ols.tool.state;
 
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * 
  */
-public class StateAnalysisWorker extends BaseToolWorker<CapturedData>
+public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
 {
   // VARIABLES
 
@@ -40,7 +40,7 @@ public class StateAnalysisWorker extends BaseToolWorker<CapturedData>
   /**
    * @param aData
    */
-  public StateAnalysisWorker( final CapturedData aData )
+  public StateAnalysisWorker( final AnnotatedData aData )
   {
     super( aData );
   }
@@ -73,20 +73,18 @@ public class StateAnalysisWorker extends BaseToolWorker<CapturedData>
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
-  protected CapturedData doInBackground() throws Exception
+  protected CapturedDataImpl doInBackground() throws Exception
   {
-    final CapturedData data = getData();
-
     // obtain data from captured data
-    int[] values = data.values;
-    long triggerPosition = data.triggerPosition;
+    final int[] values = getValues();
+    final long triggerPosition = getTriggerPosition();
 
     // calculate new sample array size
     int last = values[0] & 1 << this.number;
     int size = 0;
-    for ( int value : values )
+    for ( final int value : values )
     {
-      int current = value & 1 << this.number;
+      final int current = value & 1 << this.number;
       if ( ( last == this.level ) && ( current != this.level ) )
       {
         size++;
@@ -98,10 +96,10 @@ public class StateAnalysisWorker extends BaseToolWorker<CapturedData>
     last = values[0] & 1 << this.number;
     int pos = 0;
     int newTrigger = -1;
-    int[] newValues = new int[size];
+    final int[] newValues = new int[size];
     for ( int i = 0; i < values.length; i++ )
     {
-      int current = values[i] & 1 << this.number;
+      final int current = values[i] & 1 << this.number;
       if ( ( last == this.level ) && ( current != this.level ) )
       {
         newValues[pos++] = values[i - 1];
@@ -113,6 +111,10 @@ public class StateAnalysisWorker extends BaseToolWorker<CapturedData>
       last = current;
     }
 
-    return new CapturedData( newValues, newTrigger, CapturedData.NOT_AVAILABLE, data.channels, data.enabledChannels );
+    final CapturedDataImpl newCapturedData = new CapturedDataImpl( newValues, newTrigger, CapturedData.NOT_AVAILABLE,
+        getChannels(), getEnabledChannels() );
+    setCapturedData( newCapturedData );
+
+    return newCapturedData;
   }
 }

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,12 +73,13 @@ public class SaveDataFileAction extends BaseAction
       final File file = HostUtils.showFileSaveDialog( owner, OpenDataFileAction.OLS_FILEFILTER );
       if ( file != null )
       {
+        final File actualFile = HostUtils.setFileExtension( file, OpenDataFileAction.OLS_FILEEXTENSION );
         if ( LOG.isLoggable( Level.INFO ) )
         {
-          LOG.info( "Saving OLS capture date to file: " + file );
+          LOG.info( "Saving OLS capture date to file: " + actualFile );
         }
 
-        this.diagramScrollPane.saveData( file );
+        this.diagramScrollPane.saveData( actualFile );
       }
     }
     catch ( IOException exception )
