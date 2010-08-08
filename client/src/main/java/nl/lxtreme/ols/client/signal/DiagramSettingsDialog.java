@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,6 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-
 
 /**
  * Stores diagram display settings and provides a dialog for changing them.
@@ -37,7 +35,7 @@ import nl.lxtreme.ols.api.*;
  * @version 0.6
  * @author Michael "Mr. Sump" Poppitz
  */
-public class DiagramSettingsDialog extends JComponent implements ActionListener, Configurable, DiagramSettings
+public class DiagramSettingsDialog extends JComponent implements ActionListener, DiagramSettings
 {
   // CONSTANTS
 
@@ -325,7 +323,7 @@ public class DiagramSettingsDialog extends JComponent implements ActionListener,
     return ( ( this.groupSettings[aGroup] & DiagramSettingsDialog.DISPLAY_SCOPE ) > 0 );
   }
 
-  public void readProperties( final Properties properties )
+  public void readProperties( final String aNamespace, final Properties properties )
   {
     String value;
 
@@ -370,7 +368,7 @@ public class DiagramSettingsDialog extends JComponent implements ActionListener,
     return ( this.result );
   }
 
-  public void writeProperties( final Properties properties )
+  public void writeProperties( final String aNamespace, final Properties properties )
   {
     for ( int i = 0; i < 4; i++ )
     {

@@ -23,7 +23,7 @@ package nl.lxtreme.ols.api.tools;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 
 
 /**
@@ -67,6 +67,6 @@ public interface Tool
    * @param aCallback
    *          the callback to report the status of the tool to.
    */
-  public void process( final Frame aParentFrame, final CapturedData aData, final ToolContext aContext,
+  public void process( final Frame aParentFrame, final AnnotatedData aData, final ToolContext aContext,
       final AnalysisCallback aCallback );
 }

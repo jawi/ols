@@ -27,6 +27,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
@@ -47,7 +48,7 @@ public class RunAnalysisToolAction extends BaseAction
 
   private final Host host;
   private final Tool tool;
-  private final PropertyManager propertyManager;
+  private final Project project;
 
   // CONSTRUCTORS
 
@@ -56,13 +57,13 @@ public class RunAnalysisToolAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public RunAnalysisToolAction( final Host aHost, final Tool aTool, final PropertyManager aPropertyManager )
+  public RunAnalysisToolAction( final Host aHost, final Tool aTool, final Project aProject )
   {
     super( ID + aTool.getName(), aTool.getName(), "Run " + aTool.getName() );
 
     this.host = aHost;
     this.tool = aTool;
-    this.propertyManager = aPropertyManager;
+    this.project = aProject;
   }
 
   // METHODS
@@ -75,12 +76,16 @@ public class RunAnalysisToolAction extends BaseAction
   {
     final Frame owner = ( Frame )HostUtils.getOwningWindow( aEvent );
 
+    if ( this.tool instanceof Configurable )
+    {
+      this.project.addConfigurable( ( Configurable )this.tool );
+    }
+
     // Make sure the tool is started from the EDT...
     SwingUtilities.invokeLater( new Runnable()
     {
       private final Host host = RunAnalysisToolAction.this.host;
       private final Tool tool = RunAnalysisToolAction.this.tool;
-      private final PropertyManager propertyManager = RunAnalysisToolAction.this.propertyManager;
 
       /**
        * @see java.lang.Runnable#run()
@@ -88,20 +93,10 @@ public class RunAnalysisToolAction extends BaseAction
       @Override
       public void run()
       {
-        final CapturedData capturedData = this.host.getCapturedData();
+        final AnnotatedData data = this.host.getAnnotatedData();
         final ToolContext toolContext = null;
 
-        if ( this.tool instanceof Configurable )
-        {
-          ( ( Configurable )this.tool ).readProperties( this.propertyManager.getProperties() );
-        }
-
-        this.tool.process( owner, capturedData, toolContext, this.host );
-
-        if ( this.tool instanceof Configurable )
-        {
-          ( ( Configurable )this.tool ).writeProperties( this.propertyManager.getProperties() );
-        }
+        this.tool.process( owner, data, toolContext, this.host );
       }
     } );
   }

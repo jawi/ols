@@ -29,7 +29,6 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -38,7 +37,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * 
  */
-public class LogicSnifferConfigDialog extends JComponent implements ActionListener, Configurable
+public class LogicSnifferConfigDialog extends JComponent implements ActionListener
 {
   // INNER TYPES
 
@@ -228,9 +227,9 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(String, java.util.Properties)
    */
-  public void readProperties( final Properties aProperties )
+  public void readProperties( final String aNamespace, final Properties aProperties )
   {
     SwingComponentUtils.setSelectedItem( this.portSelect, aProperties.getProperty( NAME + ".port" ) );
     SwingComponentUtils.setSelectedItem( this.portRateSelect, aProperties.getProperty( NAME + ".portRate" ) );
@@ -314,7 +313,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    * (non-Javadoc)
    * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.util.Properties)
    */
-  public void writeProperties( final Properties properties )
+  public void writeProperties( final String aNamespace, final Properties properties )
   {
     final String selectedItem = ( String )this.portSelect.getSelectedItem();
     properties.setProperty( NAME + ".port", selectedItem == null ? "" : selectedItem );

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,9 @@ package nl.lxtreme.ols.tool.i2c;
 
 import java.awt.*;
 import java.beans.*;
+import java.util.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
@@ -32,7 +33,7 @@ import nl.lxtreme.ols.tool.base.*;
 /**
  * 
  */
-public class I2CAnalyser extends BaseTool<I2CDataSet, I2CAnalyserWorker>
+public class I2CAnalyser extends BaseAsyncTool<I2CDataSet, I2CAnalyserWorker>
 {
   // VARIABLES
 
@@ -51,26 +52,44 @@ public class I2CAnalyser extends BaseTool<I2CDataSet, I2CAnalyserWorker>
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#createToolWorker(nl.lxtreme.ols.api.CapturedData)
+   * @see nl.lxtreme.ols.tool.base.BaseTool#readProperties(java.lang.String, java.util.Properties)
    */
   @Override
-  protected I2CAnalyserWorker createToolWorker( final CapturedData aData )
+  public void readProperties( final String aNamespace, final Properties aProperties )
+  {
+    this.dialog.readProperties( aNamespace, aProperties );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseTool#writeProperties(java.lang.String, java.util.Properties)
+   */
+  @Override
+  public void writeProperties( final String aNamespace, final Properties aProperties )
+  {
+    this.dialog.writeProperties( aNamespace, aProperties );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.AnnotatedData)
+   */
+  @Override
+  protected I2CAnalyserWorker createToolWorker( final AnnotatedData aData )
   {
     return new I2CAnalyserWorker( aData, this.dialog );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#doProcess(nl.lxtreme.ols.api.CapturedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext, nl.lxtreme.ols.tool.base.BaseToolWorker)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#doProcess(nl.lxtreme.ols.api.data.AnnotatedData,
+   *      nl.lxtreme.ols.api.tools.ToolContext)
    */
   @Override
-  protected void doProcess( final CapturedData aData, final ToolContext aContext )
+  protected void doProcess( final AnnotatedData aData, final ToolContext aContext )
   {
     this.dialog.showDialog( aData, getToolWorker() );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#propertyChange(java.beans.PropertyChangeEvent)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#propertyChange(java.beans.PropertyChangeEvent)
    */
   @Override
   protected void propertyChange( final PropertyChangeEvent aEvent )
@@ -89,16 +108,27 @@ public class I2CAnalyser extends BaseTool<I2CDataSet, I2CAnalyserWorker>
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#setupTool(java.awt.Frame)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#setupTool(java.awt.Frame)
    */
   @Override
   protected void setupTool( final Frame aFrame )
   {
-    this.dialog = new I2CProtocolAnalysisDialog( aFrame, getName() );
+    // check if dialog exists with different owner and dispose if so
+    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aFrame ) )
+    {
+      this.dialog.dispose();
+      this.dialog = null;
+    }
+
+    // if no valid dialog exists, create one
+    if ( this.dialog == null )
+    {
+      this.dialog = new I2CProtocolAnalysisDialog( aFrame, getName() );
+    }
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#toolWorkerDone(java.util.List)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#toolWorkerDone(java.util.List)
    */
   @Override
   protected void toolWorkerDone( final I2CDataSet aAnalysisResult )

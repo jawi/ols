@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,13 +30,15 @@ import java.util.logging.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 
 
 /**
  * GUI Component that allows the user to control the device and start captures.
  * <p>
- * Its modelled after JFileChooser and should allow for non-dialog implementations making it somewhat reusable.
+ * Its modelled after JFileChooser and should allow for non-dialog
+ * implementations making it somewhat reusable.
  * 
  * @version 0.7
  * @author Michael "Mr. Sump" Poppitz
@@ -52,14 +54,15 @@ public class LogicSnifferDeviceController implements DeviceController
   {
     // CONSTANTS
 
-    public static final String       PROP_CAPTURE_ABORTED = "captureAborted";
-    public static final String       PROP_CAPTURE_DONE    = "captureDone";
+    public static final String PROP_CAPTURE_ABORTED = "captureAborted";
+    public static final String PROP_CAPTURE_DONE = "captureDone";
+    public static final String PROP_CAPTURE_PROGRESS = "progress";
 
     // VARIABLES
 
     private final LogicSnifferDevice device;
-    private final String             portName;
-    private final int                baudrate;
+    private final String portName;
+    private final int baudrate;
 
     // CONSTRUCTORS
 
@@ -67,7 +70,8 @@ public class LogicSnifferDeviceController implements DeviceController
      * Creates a new CaptureWorker.
      * 
      * @param aDevice
-     *          the Logic Sniffer device to use for capturing data, cannot be <code>null</code>.
+     *          the Logic Sniffer device to use for capturing data, cannot be
+     *          <code>null</code>.
      */
     public CaptureWorker( final LogicSnifferDevice aDevice, final String aPortName, final int aBaudrate )
     {
@@ -158,16 +162,16 @@ public class LogicSnifferDeviceController implements DeviceController
 
   // CONSTANTS
 
-  private static final String            NAME = "OpenBench LogicSniffer";
+  private static final String NAME = "OpenBench LogicSniffer";
 
-  private static final Logger            LOG  = Logger.getLogger( LogicSnifferDeviceController.class.getName() );
+  private static final Logger LOG = Logger.getLogger( LogicSnifferDeviceController.class.getName() );
 
   // VARIABLES
 
-  private final LogicSnifferDevice       device;
+  private final LogicSnifferDevice device;
   private final LogicSnifferConfigDialog configDialog;
-  private CaptureWorker                  captureWorker;
-  private boolean                        setup;
+  private CaptureWorker captureWorker;
+  private boolean setup;
 
   // CONSTRUCTORS
 
@@ -207,7 +211,7 @@ public class LogicSnifferDeviceController implements DeviceController
         final Object value = aEvent.getNewValue();
         final String propertyName = aEvent.getPropertyName();
 
-        if ( "progress".equals( propertyName ) )
+        if ( CaptureWorker.PROP_CAPTURE_PROGRESS.equals( propertyName ) )
         {
           final Integer progress = ( Integer )value;
           if ( LOG.isLoggable( Level.FINE ) )
@@ -262,12 +266,12 @@ public class LogicSnifferDeviceController implements DeviceController
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(String, java.util.Properties)
    */
   @Override
-  public void readProperties( final Properties aProperties )
+  public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    this.configDialog.readProperties( aProperties );
+    this.configDialog.readProperties( aNamespace, aProperties );
   }
 
   /**
@@ -284,11 +288,11 @@ public class LogicSnifferDeviceController implements DeviceController
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String, java.util.Properties)
    */
   @Override
-  public void writeProperties( final Properties aProperties )
+  public void writeProperties( final String aNamespace, final Properties aProperties )
   {
-    this.configDialog.writeProperties( aProperties );
+    this.configDialog.writeProperties( aNamespace, aProperties );
   }
 }

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ import java.util.*;
  * @version 0.7
  * @author Michael "Mr. Sump" Poppitz
  */
-public class Project extends Object
+public class Project
 {
   // VARIABLES
 
@@ -59,12 +59,15 @@ public class Project extends Object
    * Adds a configurable object to the project. The given objects properties
    * will be read and written whenever load and store operations take place.
    * 
-   * @param configurable
+   * @param aConfigurable
    *          configurable object
    */
-  public void addConfigurable( final Configurable configurable )
+  public void addConfigurable( final Configurable aConfigurable )
   {
-    this.configurableObjectList.add( configurable );
+    if ( !this.configurableObjectList.contains( aConfigurable ) )
+    {
+      this.configurableObjectList.add( aConfigurable );
+    }
   }
 
   /**
@@ -85,7 +88,8 @@ public class Project extends Object
     final Iterator<Configurable> i = this.configurableObjectList.iterator();
     while ( i.hasNext() )
     {
-      ( i.next() ).writeProperties( this.properties );
+      final Configurable configurable = i.next();
+      configurable.writeProperties( configurable.getClass().getName(), this.properties );
     }
     return ( this.properties );
   }
@@ -106,7 +110,8 @@ public class Project extends Object
     final Iterator<Configurable> i = this.configurableObjectList.iterator();
     while ( i.hasNext() )
     {
-      ( i.next() ).readProperties( this.properties );
+      final Configurable configurable = i.next();
+      configurable.readProperties( configurable.getClass().getName(), this.properties );
     }
   }
 
@@ -139,7 +144,7 @@ public class Project extends Object
     final Iterator<Configurable> i = this.configurableObjectList.iterator();
     while ( i.hasNext() )
     {
-      ( i.next() ).writeProperties( this.properties );
+      ( i.next() ).writeProperties( null, this.properties );
     }
     final OutputStream stream = new FileOutputStream( file );
     this.properties.store( stream, "Sumps Logic Analyzer Project File" );

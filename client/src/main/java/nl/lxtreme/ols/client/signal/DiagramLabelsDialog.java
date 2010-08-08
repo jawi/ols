@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,6 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-
 
 /**
  * Stores the diagram labels and provides a dialog to change them.
@@ -37,7 +35,7 @@ import nl.lxtreme.ols.api.*;
  * @version 0.7
  * @author Frank Kunz
  */
-public class DiagramLabelsDialog extends JComponent implements ActionListener, Configurable, DiagramLabels
+public class DiagramLabelsDialog extends JComponent implements ActionListener, DiagramLabels
 {
   // CONSTANTS
 
@@ -152,11 +150,10 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, C
   /**
    * Reads user settings from given properties.
    * Uses the property prefix "DiagramLabels".
-   * 
    * @param properties
    *          properties to read settings from
    */
-  public void readProperties( final Properties properties )
+  public void readProperties( final String aNamespace, final Properties properties )
   {
     for ( int i = 0; i < 32; i++ )
     {
@@ -188,11 +185,10 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, C
   /**
    * Writes user settings to given properties.
    * Uses the property prefix "DiagramLabels".
-   * 
    * @param properties
    *          properties to write settings to
    */
-  public void writeProperties( final Properties properties )
+  public void writeProperties( final String aNamespace, final Properties properties )
   {
     for ( int i = 0; i < 32; i++ )
     {

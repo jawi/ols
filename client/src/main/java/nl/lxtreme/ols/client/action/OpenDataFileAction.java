@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,13 +40,15 @@ public class OpenDataFileAction extends BaseAction
 {
   // CONSTANTS
 
-  public static final FileFilter  OLS_FILEFILTER   = new FileNameExtensionFilter( "OpenLogic Sniffer data file", "ols" );
+  public static final String OLS_FILEEXTENSION = "ols";
+  public static final FileFilter OLS_FILEFILTER = //
+    new FileNameExtensionFilter( "OpenLogic Sniffer data file", OLS_FILEEXTENSION );
 
-  public static final String      ID               = "OpenDataFile";
+  public static final String ID = "OpenDataFile";
 
-  private static final Logger     LOG              = Logger.getLogger( OpenDataFileAction.class.getName() );
+  private static final Logger LOG = Logger.getLogger( OpenDataFileAction.class.getName() );
 
-  private static final long       serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
   // VARIABLES
 

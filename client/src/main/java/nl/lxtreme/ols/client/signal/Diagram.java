@@ -30,18 +30,21 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.util.*;
 
 
 /**
- * This component displays a diagram which is obtained from a {@link CapturedData} object.
- * The settings for the diagram are obtained from the embedded {@link DiagramSettingsDialog} and
- * {@link DiagramLabelsDialog} objects.
- * Look there for an overview of ways to display data.
+ * This component displays a diagram which is obtained from a
+ * {@link CapturedDataImpl} object. The settings for the diagram are obtained
+ * from the embedded {@link DiagramSettingsDialog} and
+ * {@link DiagramLabelsDialog} objects. Look there for an overview of ways to
+ * display data.
  * <p>
- * Component size changes with the size of the diagram. Therefore it should only be used from within a JScrollPane.
+ * Component size changes with the size of the diagram. Therefore it should only
+ * be used from within a JScrollPane.
  * 
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
@@ -58,7 +61,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     public final int[] x;
     public final int[] y1;
     public final int[] y2;
-    public final int   n;
+    public final int n;
 
     public ByteValuePolyline( final int aN )
     {
@@ -82,7 +85,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     // METHODS
 
     /**
-     * Handles mouse dragged events and produces status change "events" accordingly.
+     * Handles mouse dragged events and produces status change "events"
+     * accordingly.
      */
     @Override
     public void mouseDragged( final MouseEvent aEvent )
@@ -99,7 +103,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     }
 
     /**
-     * Handles mouse moved events and produces status change "events" accordingly.
+     * Handles mouse moved events and produces status change "events"
+     * accordingly.
      */
     @Override
     public void mouseMoved( final MouseEvent aEvent )
@@ -161,7 +166,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     public final int[] x;
     public final int[] y;
-    public final int   n;
+    public final int n;
 
     public SignalPolyline( final int aN )
     {
@@ -173,32 +178,32 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
   // CONSTANTS
 
-  private static final long           serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  private static final Logger         LOG              = Logger.getLogger( Diagram.class.getName() );
+  private static final Logger LOG = Logger.getLogger( Diagram.class.getName() );
 
-  static final double                 MAX_SCALE        = 10;
-  static final double                 CURSOR_HOVER     = 5.0;
-  static final int                    PADDING_Y        = 2;
+  static final double MAX_SCALE = 10;
+  static final double CURSOR_HOVER = 5.0;
+  static final int PADDING_Y = 2;
 
   // VARIABLES
 
-  private volatile CapturedData       capturedData;
+  private final AnnotatedData data;
 
-  private final DiagramTimeLine       timeLine;
-  private final DiagramRowLabels      rowLabels;
+  private final DiagramTimeLine timeLine;
+  private final DiagramRowLabels rowLabels;
   private final DiagramSettingsDialog settings;
-  private final DiagramLabelsDialog   labels;
-  private final ActionProvider        actionProvider;
-  private double                      scale;
-  private int                         timeDivider;
-  private int                         pageLen;
-  private final Cursor                cursorDefault;
-  private final Cursor                cursorDrag;
-  private final EventListenerList     evenListeners;
-  private final JPopupMenu            contextMenu;
+  private final DiagramLabelsDialog labels;
+  private final ActionProvider actionProvider;
+  private double scale;
+  private int timeDivider;
+  private int pageLen;
+  private final Cursor cursorDefault;
+  private final Cursor cursorDrag;
+  private final EventListenerList evenListeners;
+  private final JPopupMenu contextMenu;
 
-  private int                         newCursorPosition;
+  private int newCursorPosition;
 
   /**
    * Create a new empty diagram to be placed in a container.
@@ -215,7 +220,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       this.contextMenu.add( new JMenuItem( new SetCursorAction( this, i ) ) );
     }
 
-    this.capturedData = null;
+    this.data = new AnnotatedData();
     this.settings = new DiagramSettingsDialog();
     this.labels = new DiagramLabelsDialog();
 
@@ -226,10 +231,10 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     this.timeDivider = 1;
     this.pageLen = 0;
 
-    this.rowLabels = new DiagramRowLabels();
+    this.rowLabels = new DiagramRowLabels( this.data );
     this.rowLabels.setDiagramSettings( this.settings );
 
-    this.timeLine = new DiagramTimeLine();
+    this.timeLine = new DiagramTimeLine( this.data );
     this.timeLine.setDiagramSettings( this.settings );
 
     setMinimumSize( new Dimension( 25, 1 ) );
@@ -241,6 +246,25 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
     addMouseListener( mouseListener );
     addMouseMotionListener( mouseListener );
+  }
+
+  /**
+   * Convert x position to sample index.
+   * 
+   * @param aXpos
+   *          horizontal position (in pixels).
+   * @return sample index
+   */
+  static final long xToIndex( final AnnotatedData aData, final int aXpos, final double aScale )
+  {
+    long index = Math.max( 0, ( long )( aXpos / aScale ) );
+
+    if ( aData.hasCapturedData() && ( index >= aData.getAbsoluteLength() ) )
+    {
+      index = aData.getAbsoluteLength() - 1;
+    }
+
+    return index;
   }
 
   /**
@@ -266,11 +290,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   /**
    * Returns the captured data object currently displayed in the diagram.
    * 
-   * @return diagram's current captured data
+   * @return the diagram's current (annotated) captured data, can be
+   *         <code>null</code>.
    */
-  public CapturedData getCapturedData()
+  public final AnnotatedData getAnnotatedData()
   {
-    return ( this.capturedData );
+    return this.data;
   }
 
   /**
@@ -280,7 +305,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     if ( hasCapturedData() )
     {
-      return this.capturedData.cursorEnabled;
+      return this.data.isCursorsEnabled();
     }
     else
     {
@@ -298,7 +323,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * @see javax.swing.Scrollable#getScrollableBlockIncrement(java.awt.Rectangle, int, int)
+   * @see javax.swing.Scrollable#getScrollableBlockIncrement(java.awt.Rectangle,
+   *      int, int)
    */
   @Override
   public int getScrollableBlockIncrement( final Rectangle aVisibleRect, final int aOrientation, final int aDirection )
@@ -332,7 +358,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * @see javax.swing.Scrollable#getScrollableUnitIncrement(java.awt.Rectangle, int, int)
+   * @see javax.swing.Scrollable#getScrollableUnitIncrement(java.awt.Rectangle,
+   *      int, int)
    */
   @Override
   public int getScrollableUnitIncrement( final Rectangle aVisibleRect, final int aOrientation, final int aDirection )
@@ -374,7 +401,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * calulate the position within a window (pane) based on current page and zoom settings
+   * calulate the position within a window (pane) based on current page and zoom
+   * settings
    * 
    * @param width
    *          window width
@@ -394,20 +422,22 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   /**
    * Returns wheter or not the diagram has any data.
    * 
-   * @return <code>true</code> if captured data exists, <code>false</code> otherwise
+   * @return <code>true</code> if captured data exists, <code>false</code>
+   *         otherwise
    */
   public boolean hasCapturedData()
   {
-    return ( this.capturedData != null );
+    return ( this.data != null ) && this.data.hasCapturedData();
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(String, java.util.Properties)
    */
-  public void readProperties( final Properties properties )
+  @Override
+  public void readProperties( final String aNamespace, final Properties properties )
   {
-    this.settings.readProperties( properties );
-    this.labels.readProperties( properties );
+    this.settings.readProperties( aNamespace, properties );
+    this.labels.readProperties( aNamespace, properties );
     resize();
   }
 
@@ -432,28 +462,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Sets the captured data object to use for drawing the diagram.
-   * 
-   * @param capturedData
-   *          captured data to base diagram on
-   */
-  public void setCapturedData( final CapturedData capturedData )
-  {
-    this.capturedData = capturedData;
-    // Update row & labels...
-    this.timeLine.setCapturedData( capturedData );
-    this.rowLabels.setCapturedData( capturedData );
-
-    // reset zoom, etc.
-    setScale( MAX_SCALE );
-    this.timeDivider = 1;
-    this.pageLen = 0;
-
-    // show data
-    zoomDefault();
-  }
-
-  /**
    * Enable/Disable diagram cursors
    */
   public void setCursorMode( final boolean aEnabled )
@@ -465,7 +473,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       getAction( GotoCursor2Action.ID ).setEnabled( aEnabled );
 
       // Update the cursor state of the contained data...
-      this.capturedData.cursorEnabled = aEnabled;
+      this.data.setCursorEnabled( aEnabled );
     }
   }
 
@@ -490,8 +498,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Display the diagram labels dialog.
-   * Will block until the dialog is closed again.
+   * Display the diagram labels dialog. Will block until the dialog is closed
+   * again.
    */
   public void showLabelsDialog( final Window frame )
   {
@@ -504,8 +512,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Display the diagram settings dialog.
-   * Will block until the dialog is closed again.
+   * Display the diagram settings dialog. Will block until the dialog is closed
+   * again.
    */
   public void showSettingsDialog( final Window frame )
   {
@@ -519,12 +527,13 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String, java.util.Properties)
    */
-  public void writeProperties( final Properties properties )
+  @Override
+  public void writeProperties( final String aNamespace, final Properties properties )
   {
-    this.settings.writeProperties( properties );
-    this.labels.writeProperties( properties );
+    this.settings.writeProperties( null, properties );
+    this.labels.writeProperties( null, properties );
   }
 
   /**
@@ -546,14 +555,15 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final int width = Math.max( 1, ( owner.getWidth() - ( this.rowLabels.getWidth() + 20 ) ) );
 
     // avoid null pointer exception when no data available
-    if ( this.capturedData == null )
+    if ( !hasCapturedData() )
     {
       return;
     }
 
-    if ( this.capturedData.absoluteLength > 0 )
+    final long absoluteLength = this.data.getAbsoluteLength();
+    if ( absoluteLength != CapturedData.NOT_AVAILABLE )
     {
-      setScale( ( double )width / ( double )this.capturedData.absoluteLength );
+      setScale( width / ( double )absoluteLength );
     }
     else
     {
@@ -591,15 +601,15 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Update status information.
-   * Notifies {@link StatusChangeListener}.
+   * Update status information. Notifies {@link StatusChangeListener}.
    * 
    * @param aDragging
-   *          <code>true</code> indicates that dragging information should be added
+   *          <code>true</code> indicates that dragging information should be
+   *          added
    */
   final void updateStatus( final int aMouseXpos, final int aMouseYpos, final boolean aDragging, final int aStartDragXpos )
   {
-    if ( this.capturedData == null )
+    if ( !hasCapturedData() )
     {
       return;
     }
@@ -607,7 +617,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final StringBuffer sb = new StringBuffer( " " );
 
     final int row = aMouseYpos / this.settings.getChannelHeight();
-    if ( row <= this.capturedData.channels + ( this.capturedData.channels / 9 ) )
+    if ( row <= this.data.getChannels() + ( this.data.getChannels() / 9 ) )
     {
       if ( row % 9 == 8 )
       {
@@ -620,17 +630,17 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       sb.append( " | " );
     }
 
-    final int captureRate = this.capturedData.rate;
-    final long triggerPosition = this.capturedData.triggerPosition;
+    final int sampleRate = this.data.getSampleRate();
+    final long triggerPosition = this.data.getTriggerPosition();
 
-    if ( this.capturedData.cursorEnabled )
+    if ( this.data.isCursorsEnabled() )
     {
       // print cursor data to status line
-      final long absCursorPosA = this.capturedData.getCursorPosition( 1 ) - triggerPosition;
-      final long absCursorPosB = this.capturedData.getCursorPosition( 2 ) - triggerPosition;
-      final long relCursorPos = this.capturedData.getCursorPosition( 1 ) - this.capturedData.getCursorPosition( 2 );
+      final long absCursorPosA = this.data.getCursorPosition( 1 ) - triggerPosition;
+      final long absCursorPosB = this.data.getCursorPosition( 2 ) - triggerPosition;
+      final long relCursorPos = this.data.getCursorPosition( 1 ) - this.data.getCursorPosition( 2 );
 
-      if ( !this.capturedData.hasTimingData() )
+      if ( !this.data.hasTimingData() )
       {
         sb.append( "Sample@A=" ).append( absCursorPosA ).append( " | " );
         sb.append( "Sample@B=" ).append( absCursorPosB ).append( " | " );
@@ -638,13 +648,13 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       }
       else
       {
-        sb.append( "Time@A=" ).append( DisplayUtils.displayScaledTime( absCursorPosA, captureRate ) ).append( " | " );
-        sb.append( "Time@B=" ).append( DisplayUtils.displayScaledTime( absCursorPosB, captureRate ) );
-        sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( Math.abs( relCursorPos ), captureRate ) );
+        sb.append( "Time@A=" ).append( DisplayUtils.displayScaledTime( absCursorPosA, sampleRate ) ).append( " | " );
+        sb.append( "Time@B=" ).append( DisplayUtils.displayScaledTime( absCursorPosB, sampleRate ) );
+        sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( Math.abs( relCursorPos ), sampleRate ) );
         if ( relCursorPos != 0 )
         {
           sb.append( ", " ).append( "frequency " );
-          final double frequency = Math.abs( ( double )captureRate / ( double )relCursorPos );
+          final double frequency = Math.abs( ( double )sampleRate / ( double )relCursorPos );
           sb.append( DisplayUtils.displayFrequency( frequency ) );
         }
         sb.append( ")" );
@@ -661,30 +671,30 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         final long relDrag = idxMouseDragX - idxMouseX;
         final long absMouseDragX = idxMouseDragX - triggerPosition;
 
-        if ( !this.capturedData.hasTimingData() )
+        if ( !this.data.hasTimingData() )
         {
           sb.append( "Sample " ).append( absMouseDragX );
           sb.append( " (distance " ).append( relDrag ).append( ")" );
         }
         else
         {
-          final double frequency = Math.abs( ( double )captureRate / ( double )relDrag );
+          final double frequency = Math.abs( ( double )sampleRate / ( double )relDrag );
 
-          sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseDragX, captureRate ) );
-          sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( relDrag, captureRate ) ).append( ", " );
+          sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseDragX, sampleRate ) );
+          sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( relDrag, sampleRate ) ).append( ", " );
           sb.append( "Frequency " ).append( DisplayUtils.displayFrequency( frequency ) ).append( ")" );
         }
       }
       else
       {
         final long absMouseX = idxMouseX - triggerPosition;
-        if ( !this.capturedData.hasTimingData() )
+        if ( !this.data.hasTimingData() )
         {
           sb.append( "Sample " ).append( absMouseX );
         }
         else
         {
-          sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseX, captureRate ) );
+          sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
         }
       }
     }
@@ -704,7 +714,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   protected final void dragCursor( final int aCursorIdx, final int aMouseXpos )
   {
-    if ( ( this.capturedData == null ) || !this.capturedData.cursorEnabled )
+    if ( !hasCapturedData() || !this.data.isCursorsEnabled() )
     {
       return;
     }
@@ -722,20 +732,21 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Determines whether the given mouse X position is actually in the vicinity of a cursor.
+   * Determines whether the given mouse X position is actually in the vicinity
+   * of a cursor.
    * 
    * @param aMouseXpos
    *          the mouse X position to test.
-   * @return the index of the cursor the given mouse position is near, or -1 if there's no cursor set or nowhere near a
-   *         cursor.
+   * @return the index of the cursor the given mouse position is near, or -1 if
+   *         there's no cursor set or nowhere near a cursor.
    */
   protected int getCursorHover( final int aMouseXpos )
   {
     final long idx = xToIndex( aMouseXpos );
     final double threshold = CURSOR_HOVER / this.scale;
-    for ( int i = 0; i < this.capturedData.cursorPositions.length; i++ )
+    for ( int i = 0; i < AnnotatedData.MAX_CURSORS; i++ )
     {
-      final long cursorPosition = this.capturedData.getCursorPosition( i );
+      final long cursorPosition = this.data.getCursorPosition( i );
       if ( cursorPosition < 0 )
       {
         continue;
@@ -754,7 +765,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   @Override
   protected void paintComponent( final Graphics aGraphics )
   {
-    if ( this.capturedData == null )
+    if ( !hasCapturedData() )
     {
       return;
     }
@@ -786,7 +797,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     aGraphics.fillRect( cx, cy, cw, ch );
 
     // draw trigger if existing and visible
-    final long triggerPosition = getTriggerPosition();
+    final long triggerPosition = this.data.getTriggerPosition();
     if ( ( triggerPosition >= firstRow ) && ( triggerPosition <= lastRow ) )
     {
       aGraphics.setColor( this.settings.getTriggerColor() );
@@ -799,9 +810,9 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     // draw cursors if enabled
     if ( getCursorMode() )
     {
-      for ( int i = 0, size = this.capturedData.cursorPositions.length; i < size; i++ )
+      for ( int i = 0, size = AnnotatedData.MAX_CURSORS; i < size; i++ )
       {
-        final long cursorPosition = this.capturedData.cursorPositions[i];
+        final long cursorPosition = this.data.getCursorPosition( i );
         if ( ( cursorPosition >= firstRow ) && ( cursorPosition <= lastRow ) )
         {
           final int cursorPos = ( int )( cursorPosition * this.scale );
@@ -824,7 +835,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   protected final void showContextMenu( final Point aPosition )
   {
-    if ( this.capturedData != null )
+    if ( hasCapturedData() )
     {
       // Implicitly enable cursor mode, the user already had made its
       // intensions clear that he want to have this by opening up the
@@ -860,18 +871,18 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   private void calculatePages()
   {
-    if ( this.capturedData != null )
+    if ( hasCapturedData() )
     {
       final double maxAvailableWidth = Integer.MAX_VALUE - 100;
-      final double currentScaledSize = ( long )( this.scale * this.capturedData.absoluteLength );
+      final double currentScaledSize = ( long )( this.scale * this.data.getAbsoluteLength() );
       if ( currentScaledSize > maxAvailableWidth )
       {
         final int maxPages = ( int )Math.ceil( currentScaledSize / maxAvailableWidth );
-        this.pageLen = ( int )( this.scale * this.capturedData.absoluteLength / maxPages );
+        this.pageLen = ( int )( this.scale * this.data.getAbsoluteLength() / maxPages );
       }
       else
       {
-        this.pageLen = ( int )( this.scale * this.capturedData.absoluteLength );
+        this.pageLen = ( int )( this.scale * this.data.getAbsoluteLength() );
       }
     }
     else
@@ -882,9 +893,11 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * If this component is the <code>viewportView</code> of an enclosing <code>JScrollPane</code> (the usual situation),
-   * configure this <code>ScrollPane</code> by, amongst other things,
-   * installing the diagram's <code>timeline</code> as the <code>columnHeaderView</code> of the scroll pane.
+   * If this component is the <code>viewportView</code> of an enclosing
+   * <code>JScrollPane</code> (the usual situation), configure this
+   * <code>ScrollPane</code> by, amongst other things, installing the diagram's
+   * <code>timeline</code> as the <code>columnHeaderView</code> of the scroll
+   * pane.
    * 
    * @see #addNotify
    */
@@ -936,10 +949,10 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   private void drawSignals( final Graphics aGraphics, final Rectangle aClipArea, long aFromIndex, long aToIndex )
   {
-    final int channels = this.capturedData.channels;
-    final int enabled = this.capturedData.enabledChannels;
-    final long[] time = this.capturedData.timestamps;
-    final int[] data = this.capturedData.values;
+    final int channels = this.data.getChannels();
+    final int enabled = this.data.getEnabledChannels();
+    final long[] timestamps = this.data.getTimestamps();
+    final int[] values = this.data.getValues();
 
     final int channelHeight = this.settings.getChannelHeight();
     final int signalHeight = this.settings.getSignalHeight();
@@ -951,16 +964,17 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final FontMetrics fm = aGraphics.getFontMetrics();
     final int labelYpos = ( int )( channelHeight - ( fm.getHeight() / 2.0 ) + 1 );
 
-    final int n = 2 * time.length;
+    final int n = 2 * timestamps.length;
     final ByteValuePolyline bytePolyline = new ByteValuePolyline( n );
     final SignalPolyline scopePolyline = new SignalPolyline( n );
     final SignalPolyline polyline = new SignalPolyline( n );
 
-    // Search the first sample index the is right before the to-be-displayed from index...
+    // Search the first sample index the is right before the to-be-displayed
+    // from index...
     int dataStartIndex = 0;
     do
     {
-      if ( time[dataStartIndex] >= aFromIndex )
+      if ( timestamps[dataStartIndex] >= aFromIndex )
       {
         // Found it; use this as starting time-index...
         dataStartIndex = Math.max( 0, dataStartIndex - 1 );
@@ -968,7 +982,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       }
       dataStartIndex++;
     }
-    while ( dataStartIndex < time.length );
+    while ( dataStartIndex < timestamps.length );
 
     aFromIndex /= this.timeDivider;
     aToIndex /= this.timeDivider;
@@ -993,18 +1007,18 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           int pIdx = 0;
 
           int dataIndex = dataStartIndex;
-          while ( ( dataIndex < data.length ) && ( time[dataIndex] <= aToIndex ) )
+          while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
           {
             final long nextSample;
 
-            final int currentValue = ( data[dataIndex] >> 8 * block + bit ) & 0x01;
-            if ( dataIndex >= data.length - 1 )
+            final int currentValue = ( values[dataIndex] >> 8 * block + bit ) & 0x01;
+            if ( dataIndex >= values.length - 1 )
             {
               nextSample = aToIndex + 1;
             }
             else
             {
-              nextSample = time[dataIndex + 1] / this.timeDivider;
+              nextSample = timestamps[dataIndex + 1] / this.timeDivider;
             }
 
             // Calculate display coordinates...
@@ -1038,10 +1052,10 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         long pos = aFromIndex - 1;
         int dataIndex = dataStartIndex;
 
-        while ( ( dataIndex < data.length ) && ( time[dataIndex] <= aToIndex ) )
+        while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
         {
-          pos = time[dataIndex] / this.timeDivider;
-          val = ( int )( ( 0xff - ( ( data[dataIndex] >> ( 8 * block ) ) & 0xff ) ) / scopeScaleFactor );
+          pos = timestamps[dataIndex] / this.timeDivider;
+          val = ( int )( ( 0xff - ( ( values[dataIndex] >> ( 8 * block ) ) & 0xff ) ) / scopeScaleFactor );
 
           scopePolyline.x[pIdx] = calcTmpPos( pos );
           scopePolyline.y[pIdx] = bofs + val + PADDING_Y;
@@ -1071,18 +1085,18 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
         int dataIndex = dataStartIndex;
 
-        while ( ( dataIndex < data.length ) && ( time[dataIndex] <= aToIndex ) )
+        while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
         {
           final long nextSample;
 
-          final int currentValue = ( data[dataIndex] >> ( 8 * block ) ) & 0xff;
-          if ( dataIndex >= data.length - 1 )
+          final int currentValue = ( values[dataIndex] >> ( 8 * block ) ) & 0xff;
+          if ( dataIndex >= values.length - 1 )
           {
             nextSample = aToIndex + 1;
           }
           else
           {
-            nextSample = time[dataIndex + 1] / this.timeDivider;
+            nextSample = timestamps[dataIndex + 1] / this.timeDivider;
           }
 
           // Calculate display coordinates...
@@ -1141,34 +1155,22 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Returns the current trigger position, if available/applicable.
-   * 
-   * @return the current trigger position (index value), or -1L in case no captured data is available or no trigger is
-   *         set.
-   */
-  private long getTriggerPosition()
-  {
-    if ( this.capturedData == null )
-    {
-      return -1L;
-    }
-    return this.capturedData.hasTriggerData() ? this.capturedData.triggerPosition : -1L;
-  }
-
-  /**
    * Sets the actual cursor position.
    * 
-   * @param aCursorIdx the index of the cursor to set;
-   * @param aMouseXpos the new X-position (of the mouse) representing the new cursor position.
+   * @param aCursorIdx
+   *          the index of the cursor to set;
+   * @param aMouseXpos
+   *          the new X-position (of the mouse) representing the new cursor
+   *          position.
    */
   private void internalSetCursorPosition( final int aCursorIdx, final int aMouseXpos )
   {
     final long index = xToIndex( aMouseXpos );
 
     // notify cursor change listeners
-    if ( ( index > 0 ) && ( index < ( this.capturedData.absoluteLength - 1 ) ) )
+    if ( ( index > 0 ) && ( index < ( this.data.getAbsoluteLength() - 1 ) ) )
     {
-      this.capturedData.setCursorPosition( aCursorIdx, index );
+      this.data.setCursorPosition( aCursorIdx, index );
 
       fireCursorChangedEvent( aCursorIdx, aMouseXpos );
 
@@ -1181,18 +1183,21 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   private void resize()
   {
-    if ( this.capturedData == null )
+    if ( !hasCapturedData() )
     {
       return;
     }
+
+    final int channels = this.data.getChannels();
+    final int enabledChannels = this.data.getEnabledChannels();
 
     final int channelHeight = this.settings.getChannelHeight();
     final int scopeHeight = this.settings.getScopeHeight();
 
     int height = 0;
-    for ( int group = 0; ( group < this.capturedData.channels / 8 ) && ( group < 4 ); group++ )
+    for ( int group = 0; ( group < channels / 8 ) && ( group < 4 ); group++ )
     {
-      if ( ( ( this.capturedData.enabledChannels >> ( 8 * group ) ) & 0xff ) != 0 )
+      if ( ( ( enabledChannels >> ( 8 * group ) ) & 0xff ) != 0 )
       {
         if ( this.settings.isShowChannels( group ) )
         {
@@ -1209,7 +1214,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       }
     }
 
-    final int width = ( int )( this.scale * this.capturedData.absoluteLength );
+    final int width = ( int )( this.scale * this.data.getAbsoluteLength() );
 
     final Dimension newDiagramSize = new Dimension( width, height );
     if ( !getPreferredSize().equals( newDiagramSize ) )
@@ -1228,9 +1233,9 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Reverses the effect of <code>configureEnclosingScrollPane</code> by replacing the <code>columnHeaderView</code> of
-   * the enclosing
-   * scroll pane with <code>null</code>.
+   * Reverses the effect of <code>configureEnclosingScrollPane</code> by
+   * replacing the <code>columnHeaderView</code> of the enclosing scroll pane
+   * with <code>null</code>.
    * 
    * @see #removeNotify
    * @see #configureEnclosingScrollPane
@@ -1261,21 +1266,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   /**
    * Convert x position to sample index.
    * 
-   * @param x
+   * @param aXpos
    *          horizontal position in pixels
    * @return sample index
    */
-  private long xToIndex( final int x )
+  private long xToIndex( final int aXpos )
   {
-    long index = ( long )( x / this.scale );
-    if ( index < 0 )
-    {
-      index = 0;
-    }
-    if ( index >= this.capturedData.absoluteLength )
-    {
-      index = this.capturedData.absoluteLength - 1;
-    }
-    return ( index );
+    return Diagram.xToIndex( this.data, aXpos, this.scale );
   }
 }

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,36 +27,65 @@ import java.io.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.*;
 
 
 /**
- * 
+ * Provides a "capture" action in which the current device controller is asked
+ * to start a data capture.
  */
 public class CaptureAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long     serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String    ID               = "Capture";
+  public static final String ID = "Capture";
 
   // VARIABLES
 
-  private final Host            host;
-  private final PropertyManager propertyManager;
+  private final Host host;
+  private final Project project;
 
   // CONSTRUCTORS
 
   /**
+   * Creates a new CaptureAction instance.
    * 
+   * @param aHost
+   *          the host this action belongs to;
+   * @param aPropertyManager
+   *          the property manager to use.
    */
-  public CaptureAction( final Host aHost, final PropertyManager aPropertyManager )
+  public CaptureAction( final Host aHost, final Project aProject )
   {
-    super( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser" );
+    this( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser", aHost, aProject );
+  }
+
+  /**
+   * Creates a new CaptureAction instance.
+   * 
+   * @param aID
+   *          the ID of this action;
+   * @param aIconName
+   *          the name of the icon to use for this action;
+   * @param aName
+   *          the name of this action;
+   * @param aDescription
+   *          the description (tooltip) to use for this action;
+   * @param aHost
+   *          the host this action belongs to;
+   * @param aPropertyManager
+   *          the property manager to use.
+   */
+  protected CaptureAction( final String aID, final String aIconName, final String aName, final String aDescription,
+      final Host aHost, final Project aProject )
+  {
+    super( aID, aIconName, aName, aDescription );
     this.host = aHost;
-    this.propertyManager = aPropertyManager;
+    this.project = aProject;
   }
 
   // METHODS
@@ -65,7 +94,7 @@ public class CaptureAction extends BaseAction
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
   @Override
-  public void actionPerformed( final ActionEvent aEvent )
+  public final void actionPerformed( final ActionEvent aEvent )
   {
     final DeviceController devCtrl = this.host.getCurrentDeviceController();
     if ( devCtrl == null )
@@ -77,22 +106,51 @@ public class CaptureAction extends BaseAction
 
     try
     {
-      // Read back the properties of the device...
-      devCtrl.readProperties( this.propertyManager.getProperties() );
-
-      if ( devCtrl.setupCapture() )
-      {
-        devCtrl.captureData( this.host );
-      }
-
-      // Read back the properties of the device...
-      devCtrl.writeProperties( this.propertyManager.getProperties() );
+      captureData( devCtrl );
     }
     catch ( IOException exception )
     {
       this.host.captureAborted( "I/O problem: " + exception.getMessage() );
       exception.printStackTrace();
     }
+  }
+
+  /**
+   * Does the actual capturing of the data from the given device controller.
+   * 
+   * @param aController
+   *          the device controller to use for capturing the data, cannot be
+   *          <code>null</code>;
+   * @param aCallback
+   *          the callback to use for the capturing process, cannot be
+   *          <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems.
+   */
+  protected void doCaptureData( final DeviceController aController, final CaptureCallback aCallback )
+  throws IOException
+  {
+    if ( aController.setupCapture() )
+    {
+      aController.captureData( aCallback );
+    }
+  }
+
+  /**
+   * Captures the data from the given device controller.
+   * 
+   * @param aController
+   *          the device controller to use for capturing the data, cannot be
+   *          <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems.
+   */
+  private void captureData( final DeviceController aController ) throws IOException
+  {
+    // Read back the properties of the device...
+    this.project.addConfigurable( aController );
+
+    doCaptureData( aController, this.host );
   }
 }
 

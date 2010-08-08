@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,9 @@ package nl.lxtreme.ols.tool.state;
 
 
 import java.awt.*;
+import java.util.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
@@ -31,11 +32,11 @@ import nl.lxtreme.ols.tool.base.*;
 /**
  * 
  */
-public class StateAnalyser extends BaseTool<CapturedData, StateAnalysisWorker>
+public class StateAnalyser extends BaseAsyncTool<CapturedData, StateAnalysisWorker>
 {
   // INNER TYPES
 
-  private StateAnalysisDialog sad;
+  private StateAnalysisDialog dialog;
 
   // CONSTRUCTORS
 
@@ -50,40 +51,68 @@ public class StateAnalyser extends BaseTool<CapturedData, StateAnalysisWorker>
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#createToolWorker(nl.lxtreme.ols.api.CapturedData)
+   * @see nl.lxtreme.ols.tool.base.BaseTool#readProperties(java.lang.String, java.util.Properties)
    */
   @Override
-  protected StateAnalysisWorker createToolWorker( final CapturedData aData )
+  public void readProperties( final String aNamespace, final Properties aProperties )
+  {
+    this.dialog.readProperties( aNamespace, aProperties );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseTool#writeProperties(java.lang.String, java.util.Properties)
+   */
+  @Override
+  public void writeProperties( final String aNamespace, final Properties aProperties )
+  {
+    this.dialog.writeProperties( aNamespace, aProperties );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.AnnotatedData)
+   */
+  @Override
+  protected StateAnalysisWorker createToolWorker( final AnnotatedData aData )
   {
     return new StateAnalysisWorker( aData );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#doProcess(nl.lxtreme.ols.api.CapturedData,
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#doProcess(nl.lxtreme.ols.api.data.AnnotatedData,
    *      nl.lxtreme.ols.api.tools.ToolContext)
    */
   @Override
-  protected void doProcess( final CapturedData aData, final ToolContext aContext )
+  protected void doProcess( final AnnotatedData aData, final ToolContext aContext )
   {
-    if ( this.sad.showDialog() == StateAnalysisDialog.OK )
+    if ( this.dialog.showDialog() == StateAnalysisDialog.OK )
     {
       final StateAnalysisWorker toolWorker = getToolWorker();
 
-      toolWorker.setLevel( this.sad.channel );
-      toolWorker.setLevel( this.sad.edge == StateAnalysisDialog.RISING ? 0 : 1 );
+      toolWorker.setNumber( this.dialog.channel );
+      toolWorker.setLevel( this.dialog.edge == StateAnalysisDialog.RISING ? 0 : 1 );
       toolWorker.execute();
     }
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#setupTool(java.awt.Frame)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#setupTool(java.awt.Frame)
    */
   @Override
   protected void setupTool( final Frame aFrame )
   {
-    this.sad = new StateAnalysisDialog( aFrame, getName() );
-  }
+    // check if dialog exists with different owner and dispose if so
+    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aFrame ) )
+    {
+      this.dialog.dispose();
+      this.dialog = null;
+    }
 
+    // if no valid dialog exists, create one
+    if ( this.dialog == null )
+    {
+      this.dialog = new StateAnalysisDialog( aFrame, getName() );
+    }
+  }
 }
 
 /* EOF */
