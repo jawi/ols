@@ -66,15 +66,6 @@ public class SPIAnalyser extends BaseAsyncTool<SPIProtocolAnalysisDialog, SPIDat
   {
     return new SPIAnalyserWorker( aData );
   }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onToolWorkerDone(java.lang.Object)
-   */
-  @Override
-  protected void onToolWorkerDone( final SPIDataSet aAnalysisResult )
-  {
-    getDialog().createReport( aAnalysisResult );
-  }
 }
 
 /* EOF */

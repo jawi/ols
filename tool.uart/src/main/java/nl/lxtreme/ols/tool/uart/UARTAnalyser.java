@@ -66,15 +66,6 @@ public class UARTAnalyser extends BaseAsyncTool<UARTProtocolAnalysisDialog, UART
   {
     return new UARTAnalyserWorker( aData );
   }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onToolWorkerDone(java.lang.Object)
-   */
-  @Override
-  protected void onToolWorkerDone( final UARTDataSet aAnalysisResult )
-  {
-    getDialog().createReport( aAnalysisResult );
-  }
 }
 
 /* EOF */
