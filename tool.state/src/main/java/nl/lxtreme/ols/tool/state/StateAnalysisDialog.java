@@ -23,18 +23,21 @@ package nl.lxtreme.ols.tool.state;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
-final class StateAnalysisDialog extends JDialog implements BaseAsyncToolDialog<CapturedData, StateAnalysisWorker>,
-ActionListener, Configurable
+/**
+ * @author jawi
+ */
+public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData, StateAnalysisWorker> implements
+ActionListener
 {
   // CONSTANTS
 
@@ -63,7 +66,8 @@ ActionListener, Configurable
    */
   public StateAnalysisDialog( final Window aOwner, final String aName )
   {
-    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
+    super( aOwner, aName );
+
     Container pane = getContentPane();
     pane.setLayout( new GridLayout( 3, 2, 5, 5 ) );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
@@ -86,9 +90,11 @@ ActionListener, Configurable
     JButton convert = new JButton( "Convert" );
     convert.addActionListener( this );
     pane.add( convert );
+
     JButton cancel = new JButton( "Cancel" );
     cancel.addActionListener( this );
     pane.add( cancel );
+
     pack();
     setResizable( false );
     this.result = CANCEL;
@@ -134,20 +140,11 @@ ActionListener, Configurable
   @Override
   public void reset()
   {
-    // TODO Auto-generated method stub
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
-   */
-  @Override
-  public void setToolWorker( final StateAnalysisWorker aWorker )
-  {
     // NO-op
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
+   * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
    */
   @Override
   public boolean showDialog( final AnnotatedData aData )
@@ -164,6 +161,44 @@ ActionListener, Configurable
   {
     properties.setProperty( aNamespace + ".channel", ( String )this.channelSelect.getSelectedItem() );
     properties.setProperty( aNamespace + ".edge", ( String )this.edgeSelect.getSelectedItem() );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setControlsEnabled(boolean)
+   */
+  @Override
+  protected void setControlsEnabled( final boolean aEnabled )
+  {
+    // TODO Auto-generated method stub
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   */
+  @Override
+  protected void setupToolWorker( final StateAnalysisWorker aToolWorker )
+  {
+    // TODO Auto-generated method stub
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToCsvFile(java.io.File,
+   *      java.lang.Object)
+   */
+  @Override
+  protected void storeToCsvFile( final File aSelectedFile, final CapturedData aAnalysisResult )
+  {
+    // TODO Auto-generated method stub
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToHtmlFile(java.io.File,
+   *      java.lang.Object)
+   */
+  @Override
+  protected void storeToHtmlFile( final File aSelectedFile, final CapturedData aAnalysisResult )
+  {
+    // TODO Auto-generated method stub
   }
 }
 

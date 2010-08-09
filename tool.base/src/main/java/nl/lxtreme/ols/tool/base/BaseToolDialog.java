@@ -21,31 +21,105 @@
 package nl.lxtreme.ols.tool.base;
 
 
+import java.awt.*;
+import java.awt.event.*;
+
+import javax.swing.*;
+
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 
 
 /**
- * Provides a common interface for all tool dialogs.
+ * @author jawi
  */
-public interface BaseToolDialog
+public abstract class BaseToolDialog extends JDialog implements ToolDialog, Configurable
 {
+  // INNER TYPES
+
+  /**
+   * 
+   */
+  protected final class CloseAction extends AbstractAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * 
+     */
+    public CloseAction()
+    {
+      super( "Close" );
+      putValue( SHORT_DESCRIPTION, "Closes this dialog" );
+    }
+
+    // METHODS
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      close();
+    }
+  }
+
+  // CONSTANTS
+
+  private static final long serialVersionUID = 1L;
+
+  protected static final Insets LABEL_INSETS = new Insets( 4, 4, 4, 2 );
+  protected static final Insets COMP_INSETS = new Insets( 4, 2, 4, 4 );
+
+  // VARIABLES
+
+  private transient volatile AnnotatedData analysisData;
+
+  // CONSTRUCTORS
+
+  /**
+   * @param aOwner
+   * @param aName
+   */
+  protected BaseToolDialog( final Window aOwner, final String aName )
+  {
+    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
+  }
+
   // METHODS
 
   /**
-   * Resets the dialog, will be called if the dialog is shown at least once and
-   * should be redisplayed again. Use this method to reset the state of the
-   * dialog to its initial state.
+   * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
    */
-  public void reset();
+  @Override
+  public boolean showDialog( final AnnotatedData aData )
+  {
+    this.analysisData = aData;
+
+    setVisible( true );
+
+    // always return true...
+    return true;
+  }
 
   /**
-   * Shows the dialog with the given capture results.
-   * 
-   * @param aData
-   *          the capture results to use in the tool's dialog, cannot be
-   *          <code>null</code>.
-   * @return <code>true</code> if the dialog is closed successfully,
-   *         <code>false</code> if it is canceled.
+   * Closes this dialog.
    */
-  public boolean showDialog( final AnnotatedData aData );
+  protected void close()
+  {
+    setVisible( false );
+  }
+
+  /**
+   * @return the analysisData
+   */
+  protected final AnnotatedData getAnalysisData()
+  {
+    return this.analysisData;
+  }
 }

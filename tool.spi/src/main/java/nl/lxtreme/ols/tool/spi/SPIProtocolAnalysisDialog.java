@@ -27,11 +27,9 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
-import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
@@ -45,153 +43,11 @@ import nl.lxtreme.ols.util.swing.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-public final class SPIProtocolAnalysisDialog extends JDialog implements
-BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SPIDataSet>
+public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>
 {
   // INNER TYPES
 
-  /**
-   * 
-   */
-  final class CloseAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public CloseAction()
-    {
-      super( "Close" );
-      putValue( SHORT_DESCRIPTION, "Closes this dialog" );
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      close();
-    }
-  }
-
-  /**
-   * 
-   */
-  final class ExportAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public ExportAction()
-    {
-      super( "Export" );
-      putValue( SHORT_DESCRIPTION, "Exports the analysis results to file" );
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      final File selectedFile = SwingComponentUtils.showFileSaveDialog( getOwner(), StdFileFilter.CSV,
-          StdFileFilter.HTML );
-      if ( selectedFile != null )
-      {
-        if ( LOG.isLoggable( Level.INFO ) )
-        {
-          LOG.info( "Writing analysis results to " + selectedFile.getPath() );
-        }
-
-        final String filename = selectedFile.getName();
-        if ( filename.endsWith( ".htm" ) || filename.endsWith( ".html" ) )
-        {
-          storeToHtmlFile( selectedFile, SPIProtocolAnalysisDialog.this.analysisResult );
-        }
-        else
-        {
-          storeToCsvFile( selectedFile, SPIProtocolAnalysisDialog.this.analysisResult );
-        }
-      }
-    }
-  }
-
-  /**
-   * 
-   */
-  final class RunAnalysisAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public RunAnalysisAction()
-    {
-      super( "Analyze" );
-      restore();
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      final String name = ( String )getValue( NAME );
-
-      if ( "Abort".equals( name ) )
-      {
-        cancelToolWorker();
-
-        putValue( NAME, "Analyze" );
-      }
-      else
-      {
-        startToolWorker();
-
-        putValue( NAME, "Abort" );
-        putValue( SHORT_DESCRIPTION, "Aborts current analysis..." );
-      }
-    }
-
-    /**
-     * 
-     */
-    public void restore()
-    {
-      putValue( NAME, "Analyze" );
-      putValue( SHORT_DESCRIPTION, "Run analysis" );
-    }
-  }
-
-  // CONSTANTS
-
   private static final long serialVersionUID = 1L;
-
-  private static final Logger LOG = Logger.getLogger( SPIProtocolAnalysisDialog.class.getName() );
 
   // VARIABLES
 
@@ -212,9 +68,6 @@ BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SP
   private final ExportAction exportAction;
   private final CloseAction closeAction;
 
-  private transient volatile SPIAnalyserWorker toolWorker;
-  private transient volatile SPIDataSet analysisResult;
-
   // CONSTRUCTORS
 
   /**
@@ -223,7 +76,7 @@ BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SP
    */
   public SPIProtocolAnalysisDialog( final Window aOwner, final String aName )
   {
-    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
+    super( aOwner, aName );
 
     Container pane = getContentPane();
     pane.setLayout( new GridBagLayout() );
@@ -353,9 +206,10 @@ BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SP
    * this the decoder starts to decode the data by the selected mode, number of
    * bits and bit order. The decoded data are put to a JTable object directly.
    */
+  @Override
   public void createReport( final SPIDataSet aAnalysisResult )
   {
-    this.analysisResult = aAnalysisResult;
+    super.createReport( aAnalysisResult );
 
     this.outText.setText( toHtmlPage( aAnalysisResult ) );
     this.outText.setEditable( false );
@@ -363,8 +217,6 @@ BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SP
     this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
     this.runAnalysisAction.restore();
     this.runAnalysisAction.setEnabled( false );
-
-    setControlsEnabled( true );
   }
 
   /**
@@ -383,7 +235,7 @@ BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SP
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#reset()
+   * @see nl.lxtreme.ols.tool.base.ToolDialog#reset()
    */
   @Override
   public void reset()
@@ -400,17 +252,9 @@ BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SP
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
    */
   @Override
-  public void setToolWorker( final SPIAnalyserWorker aToolWorker )
-  {
-    this.toolWorker = aToolWorker;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
-   */
   public boolean showDialog( final AnnotatedData aData )
   {
     this.analysisData = aData;
@@ -436,49 +280,116 @@ BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SP
   }
 
   /**
-   * Cancels the tool worker.
+   * set the controls of the dialog enabled/disabled
+   * 
+   * @param aEnable
+   *          status of the controls
    */
-  final void cancelToolWorker()
+  @Override
+  protected void setControlsEnabled( final boolean aEnable )
   {
-    synchronized ( this.toolWorker )
+    this.sck.setEnabled( aEnable );
+    this.miso.setEnabled( aEnable );
+    this.mosi.setEnabled( aEnable );
+    this.cs.setEnabled( aEnable );
+    this.mode.setEnabled( aEnable );
+    this.bits.setEnabled( aEnable );
+    this.order.setEnabled( aEnable );
+
+    this.exportAction.setEnabled( aEnable );
+    this.closeAction.setEnabled( aEnable );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   */
+  @Override
+  protected void setupToolWorker( final SPIAnalyserWorker aToolWorker )
+  {
+    aToolWorker.setBitCount( Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1 );
+    aToolWorker.setCSMask( 1 << this.cs.getSelectedIndex() );
+    aToolWorker.setSCKMask( 1 << this.sck.getSelectedIndex() );
+    aToolWorker.setMisoMask( 1 << this.miso.getSelectedIndex() );
+    aToolWorker.setMosiMask( 1 << this.mosi.getSelectedIndex() );
+    aToolWorker.setOrder( "MSB first".equals( this.order.getSelectedItem() ) ? Endianness.MSB_FIRST
+        : Endianness.LSB_FIRST );
+    aToolWorker.setMode( SPIMode.parse( ( String )this.mode.getSelectedItem() ) );
+  }
+
+  /**
+   * exports the table data to a CSV file
+   * 
+   * @param aFile
+   *          File object
+   */
+  @Override
+  protected void storeToCsvFile( final File aFile, final SPIDataSet aDataSet )
+  {
+    if ( !aDataSet.isEmpty() )
     {
-      this.analysisResult = null;
-      this.toolWorker.cancel( true /* mayInterruptIfRunning */);
-      setControlsEnabled( true );
+      SPIData dSet;
+
+      System.out.println( "writing decoded data to " + aFile.getPath() );
+
+      try
+      {
+        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
+
+        bw.write( "\"" + "index" + "\",\"" + "time" + "\",\"" + "mosi data or event" + "\",\"" + "miso data or event"
+            + "\"" );
+        bw.newLine();
+
+        final List<SPIData> decodedData = aDataSet.getDecodedData();
+        for ( int i = 0; i < decodedData.size(); i++ )
+        {
+          dSet = decodedData.get( i );
+          if ( dSet.isEvent() )
+          {
+            bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getEvent()
+                + "\",\"" + dSet.getEvent() + "\"" );
+          }
+          else
+          {
+            bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getMoSiValue()
+                + "\",\"" + dSet.getMiSoValue() + "\"" );
+          }
+          bw.newLine();
+        }
+        bw.close();
+      }
+      catch ( Exception E )
+      {
+        E.printStackTrace( System.out );
+      }
     }
   }
 
   /**
-   * Closes this dialog, cancelling any running workers if needed.
+   * stores the data to a HTML file
+   * 
+   * @param aFile
+   *          file object
    */
-  final void close()
+  @Override
+  protected void storeToHtmlFile( final File aFile, final SPIDataSet aDataSet )
   {
-    synchronized ( this.toolWorker )
+    if ( !aDataSet.isEmpty() )
     {
-      cancelToolWorker();
-      setVisible( false );
-    }
-  }
+      System.out.println( "writing decoded data to " + aFile.getPath() );
 
-  /**
-   * Starts the tool worker.
-   */
-  final void startToolWorker()
-  {
-    synchronized ( this.toolWorker )
-    {
-      this.toolWorker.setBitCount( Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1 );
-      this.toolWorker.setCSMask( 1 << this.cs.getSelectedIndex() );
-      this.toolWorker.setSCKMask( 1 << this.sck.getSelectedIndex() );
-      this.toolWorker.setMisoMask( 1 << this.miso.getSelectedIndex() );
-      this.toolWorker.setMosiMask( 1 << this.mosi.getSelectedIndex() );
-      this.toolWorker.setOrder( "MSB first".equals( this.order.getSelectedItem() ) ? Endianness.MSB_FIRST
-          : Endianness.LSB_FIRST );
-      this.toolWorker.setMode( SPIMode.parse( ( String )this.mode.getSelectedItem() ) );
+      try
+      {
+        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
 
-      this.toolWorker.execute();
+        // write the complete displayed html page to file
+        bw.write( this.outText.getText() );
 
-      setControlsEnabled( false );
+        bw.close();
+      }
+      catch ( Exception E )
+      {
+        E.printStackTrace( System.out );
+      }
     }
   }
 
@@ -532,101 +443,6 @@ BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SP
     else
     {
       return ( "" + count );
-    }
-  }
-
-  /**
-   * set the controls of the dialog enabled/disabled
-   * 
-   * @param enable
-   *          status of the controls
-   */
-  private void setControlsEnabled( final boolean enable )
-  {
-    this.sck.setEnabled( enable );
-    this.miso.setEnabled( enable );
-    this.mosi.setEnabled( enable );
-    this.cs.setEnabled( enable );
-    this.mode.setEnabled( enable );
-    this.bits.setEnabled( enable );
-    this.order.setEnabled( enable );
-
-    this.exportAction.setEnabled( enable );
-    this.closeAction.setEnabled( enable );
-  }
-
-  /**
-   * exports the table data to a CSV file
-   * 
-   * @param aFile
-   *          File object
-   */
-  private void storeToCsvFile( final File aFile, final SPIDataSet aDataSet )
-  {
-    if ( !aDataSet.isEmpty() )
-    {
-      SPIData dSet;
-
-      System.out.println( "writing decoded data to " + aFile.getPath() );
-
-      try
-      {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
-
-        bw.write( "\"" + "index" + "\",\"" + "time" + "\",\"" + "mosi data or event" + "\",\"" + "miso data or event"
-            + "\"" );
-        bw.newLine();
-
-        final List<SPIData> decodedData = aDataSet.getDecodedData();
-        for ( int i = 0; i < decodedData.size(); i++ )
-        {
-          dSet = decodedData.get( i );
-          if ( dSet.isEvent() )
-          {
-            bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getEvent()
-                + "\",\"" + dSet.getEvent() + "\"" );
-          }
-          else
-          {
-            bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getMoSiValue()
-                + "\",\"" + dSet.getMiSoValue() + "\"" );
-          }
-          bw.newLine();
-        }
-        bw.close();
-      }
-      catch ( Exception E )
-      {
-        E.printStackTrace( System.out );
-      }
-    }
-  }
-
-  /**
-   * stores the data to a HTML file
-   * 
-   * @param aFile
-   *          file object
-   */
-  private void storeToHtmlFile( final File aFile, final SPIDataSet aDataSet )
-  {
-    if ( !aDataSet.isEmpty() )
-    {
-      System.out.println( "writing decoded data to " + aFile.getPath() );
-
-      try
-      {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
-
-        // write the complete displayed html page to file
-        bw.write( this.outText.getText() );
-
-        bw.close();
-      }
-      catch ( Exception E )
-      {
-        E.printStackTrace( System.out );
-      }
     }
   }
 
