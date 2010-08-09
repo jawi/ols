@@ -22,17 +22,13 @@ package nl.lxtreme.ols.tool.uart;
 
 
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
-import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -45,153 +41,11 @@ import nl.lxtreme.ols.util.swing.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-public final class UARTProtocolAnalysisDialog extends JDialog implements
-BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<UARTDataSet>
+public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>
 {
   // INNER TYPES
 
-  /**
-   * 
-   */
-  final class CloseAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public CloseAction()
-    {
-      super( "Close" );
-      putValue( SHORT_DESCRIPTION, "Closes this dialog" );
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      close();
-    }
-  }
-
-  /**
-   * 
-   */
-  final class ExportAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public ExportAction()
-    {
-      super( "Export" );
-      putValue( SHORT_DESCRIPTION, "Exports the analysis results to file" );
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      final File selectedFile = SwingComponentUtils.showFileSaveDialog( getOwner(), StdFileFilter.CSV,
-          StdFileFilter.HTML );
-      if ( selectedFile != null )
-      {
-        if ( LOG.isLoggable( Level.INFO ) )
-        {
-          LOG.info( "Writing analysis results to " + selectedFile.getPath() );
-        }
-
-        final String filename = selectedFile.getName();
-        if ( filename.endsWith( ".htm" ) || filename.endsWith( ".html" ) )
-        {
-          storeToHtmlFile( selectedFile, UARTProtocolAnalysisDialog.this.analysisResult );
-        }
-        else
-        {
-          storeToCsvFile( selectedFile, UARTProtocolAnalysisDialog.this.analysisResult );
-        }
-      }
-    }
-  }
-
-  /**
-   * 
-   */
-  final class RunAnalysisAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public RunAnalysisAction()
-    {
-      super( "Analyze" );
-      restore();
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      final String name = ( String )getValue( NAME );
-
-      if ( "Abort".equals( name ) )
-      {
-        cancelToolWorker();
-
-        putValue( NAME, "Analyze" );
-      }
-      else
-      {
-        startToolWorker();
-
-        putValue( NAME, "Abort" );
-        putValue( SHORT_DESCRIPTION, "Aborts current analysis..." );
-      }
-    }
-
-    /**
-     * 
-     */
-    public void restore()
-    {
-      putValue( NAME, "Analyze" );
-      putValue( SHORT_DESCRIPTION, "Run analysis" );
-    }
-  }
-
-  // CONSTANTS
-
   private static final long serialVersionUID = 1L;
-
-  private static final Logger LOG = Logger.getLogger( UARTProtocolAnalysisDialog.class.getName() );
 
   // VARIABLES
 
@@ -216,10 +70,6 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
   private final ExportAction exportAction;
   private final CloseAction closeAction;
 
-  private transient volatile AnnotatedData analysisData;
-  private transient volatile UARTAnalyserWorker toolWorker;
-  private transient volatile UARTDataSet analysisResult;
-
   // CONSTRUCTORS
 
   /**
@@ -228,7 +78,7 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
    */
   public UARTProtocolAnalysisDialog( final Window aOwner, final String aName )
   {
-    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
+    super( aOwner, aName );
 
     Container pane = getContentPane();
     pane.setLayout( new GridBagLayout() );
@@ -382,9 +232,10 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
    * this the decoder starts to decode the data by the selected mode, number of
    * bits and bit order. The decoded data are put to a JTable object directly.
    */
+  @Override
   public void createReport( final UARTDataSet aAnalysisResult )
   {
-    this.analysisResult = aAnalysisResult;
+    super.createReport( aAnalysisResult );
 
     this.outText.setText( toHtmlPage( aAnalysisResult ) );
     this.outText.setEditable( false );
@@ -417,7 +268,7 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#reset()
+   * @see nl.lxtreme.ols.tool.base.ToolDialog#reset()
    */
   @Override
   public void reset()
@@ -431,27 +282,6 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
     this.runAnalysisAction.setEnabled( true );
 
     setControlsEnabled( true );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
-   */
-  @Override
-  public void setToolWorker( final UARTAnalyserWorker aToolWorker )
-  {
-    this.toolWorker = aToolWorker;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
-   */
-  public boolean showDialog( final AnnotatedData aData )
-  {
-    this.analysisData = aData;
-
-    setVisible( true );
-
-    return true;
   }
 
   /**
@@ -475,169 +305,81 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
   }
 
   /**
-   * Cancels the tool worker.
-   */
-  final void cancelToolWorker()
-  {
-    synchronized ( this.toolWorker )
-    {
-      this.analysisResult = null;
-      this.toolWorker.cancel( true /* mayInterruptIfRunning */);
-      setControlsEnabled( true );
-    }
-  }
-
-  /**
-   * Closes this dialog, cancelling any running workers if needed.
-   */
-  final void close()
-  {
-    synchronized ( this.toolWorker )
-    {
-      cancelToolWorker();
-      setVisible( false );
-    }
-  }
-
-  /**
-   * Starts the tool worker.
-   */
-  final void startToolWorker()
-  {
-    synchronized ( this.toolWorker )
-    {
-      if ( !"unused".equals( this.rxd.getSelectedItem() ) )
-      {
-        this.toolWorker.setRxdMask( 1 << this.rxd.getSelectedIndex() );
-      }
-
-      if ( !"unused".equals( this.txd.getSelectedItem() ) )
-      {
-        this.toolWorker.setTxdMask( 1 << this.txd.getSelectedIndex() );
-      }
-
-      if ( !"unused".equals( this.cts.getSelectedItem() ) )
-      {
-        this.toolWorker.setCtsMask( 1 << this.cts.getSelectedIndex() );
-      }
-
-      if ( !"unused".equals( this.rts.getSelectedItem() ) )
-      {
-        this.toolWorker.setRtsMask( 1 << this.rts.getSelectedIndex() );
-      }
-
-      if ( !"unused".equals( this.dcd.getSelectedItem() ) )
-      {
-        this.toolWorker.setDcdMask( 1 << this.dcd.getSelectedIndex() );
-      }
-
-      if ( !"unused".equals( this.ri.getSelectedItem() ) )
-      {
-        this.toolWorker.setRiMask( 1 << this.ri.getSelectedIndex() );
-      }
-
-      if ( !"unused".equals( this.dsr.getSelectedItem() ) )
-      {
-        this.toolWorker.setDsrMask( 1 << this.dsr.getSelectedIndex() );
-      }
-
-      if ( !"unused".equals( this.dtr.getSelectedItem() ) )
-      {
-        this.toolWorker.setDtrMask( 1 << this.dtr.getSelectedIndex() );
-      }
-
-      // Other properties...
-      this.toolWorker.setInverted( this.inv.isSelected() );
-      this.toolWorker.setParity( UARTParity.parse( this.parity.getSelectedItem() ) );
-      this.toolWorker.setStopBits( UARTStopBits.parse( this.stop.getSelectedItem() ) );
-
-      this.toolWorker.execute();
-
-      setControlsEnabled( false );
-    }
-  }
-
-  /**
-   * generate a HTML page
-   * 
-   * @param empty
-   *          if this is true an empty output is generated
-   * @return String with HTML data
-   */
-  private String getEmptyHtmlPage()
-  {
-    Date now = new Date();
-    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG, Locale.US );
-
-    // generate html page header
-    String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-      + "<html>"
-      + "  <head>"
-      + "    <title></title>"
-      + "    <meta content=\"\">"
-      + "    <style>"
-      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-      + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
-      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-      + "       <br>";
-
-    // generate the statistics table
-    String stats = new String();
-
-    // generate the data table
-    String data = "<table style=\"font-family:monospace;width:100%;\">"
-      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
-    data = data.concat( "</table" );
-
-    // generate the footer table
-    String footer = "   </body>" + "</html>";
-
-    return ( header + stats + data + footer );
-  }
-
-  /**
-   * Convert sample count to time string.
-   * 
-   * @param aCount
-   *          sample count (or index)
-   * @return string containing time information
-   */
-  private String indexToTime( final UARTDataSet aDataSet, final long aCount )
-  {
-    final long count = Math.max( 0, aCount - aDataSet.getStartOfDecode() );
-    if ( this.analysisData.hasTimingData() )
-    {
-      return DisplayUtils.displayScaledTime( count, this.analysisData.getSampleRate() );
-    }
-    else
-    {
-      return ( "" + aCount );
-    }
-  }
-
-  /**
    * set the controls of the dialog enabled/disabled
    * 
-   * @param enable
+   * @param aEnable
    *          status of the controls
    */
-  private void setControlsEnabled( final boolean enable )
+  @Override
+  protected void setControlsEnabled( final boolean aEnable )
   {
-    this.rxd.setEnabled( enable );
-    this.txd.setEnabled( enable );
-    this.cts.setEnabled( enable );
-    this.rts.setEnabled( enable );
-    this.dtr.setEnabled( enable );
-    this.dsr.setEnabled( enable );
-    this.dcd.setEnabled( enable );
-    this.ri.setEnabled( enable );
-    this.parity.setEnabled( enable );
-    this.bits.setEnabled( enable );
-    this.stop.setEnabled( enable );
-    this.inv.setEnabled( enable );
+    this.rxd.setEnabled( aEnable );
+    this.txd.setEnabled( aEnable );
+    this.cts.setEnabled( aEnable );
+    this.rts.setEnabled( aEnable );
+    this.dtr.setEnabled( aEnable );
+    this.dsr.setEnabled( aEnable );
+    this.dcd.setEnabled( aEnable );
+    this.ri.setEnabled( aEnable );
+    this.parity.setEnabled( aEnable );
+    this.bits.setEnabled( aEnable );
+    this.stop.setEnabled( aEnable );
+    this.inv.setEnabled( aEnable );
 
-    this.exportAction.setEnabled( enable );
-    this.closeAction.setEnabled( enable );
+    this.exportAction.setEnabled( aEnable );
+    this.closeAction.setEnabled( aEnable );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   */
+  @Override
+  protected void setupToolWorker( final UARTAnalyserWorker aToolWorker )
+  {
+    if ( !"unused".equals( this.rxd.getSelectedItem() ) )
+    {
+      aToolWorker.setRxdMask( 1 << this.rxd.getSelectedIndex() );
+    }
+
+    if ( !"unused".equals( this.txd.getSelectedItem() ) )
+    {
+      aToolWorker.setTxdMask( 1 << this.txd.getSelectedIndex() );
+    }
+
+    if ( !"unused".equals( this.cts.getSelectedItem() ) )
+    {
+      aToolWorker.setCtsMask( 1 << this.cts.getSelectedIndex() );
+    }
+
+    if ( !"unused".equals( this.rts.getSelectedItem() ) )
+    {
+      aToolWorker.setRtsMask( 1 << this.rts.getSelectedIndex() );
+    }
+
+    if ( !"unused".equals( this.dcd.getSelectedItem() ) )
+    {
+      aToolWorker.setDcdMask( 1 << this.dcd.getSelectedIndex() );
+    }
+
+    if ( !"unused".equals( this.ri.getSelectedItem() ) )
+    {
+      aToolWorker.setRiMask( 1 << this.ri.getSelectedIndex() );
+    }
+
+    if ( !"unused".equals( this.dsr.getSelectedItem() ) )
+    {
+      aToolWorker.setDsrMask( 1 << this.dsr.getSelectedIndex() );
+    }
+
+    if ( !"unused".equals( this.dtr.getSelectedItem() ) )
+    {
+      aToolWorker.setDtrMask( 1 << this.dtr.getSelectedIndex() );
+    }
+
+    // Other properties...
+    aToolWorker.setInverted( this.inv.isSelected() );
+    aToolWorker.setParity( UARTParity.parse( this.parity.getSelectedItem() ) );
+    aToolWorker.setStopBits( UARTStopBits.parse( this.stop.getSelectedItem() ) );
   }
 
   /**
@@ -646,7 +388,8 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
    * @param aFile
    *          File object
    */
-  private void storeToCsvFile( final File aFile, final UARTDataSet aDataSet )
+  @Override
+  protected void storeToCsvFile( final File aFile, final UARTDataSet aDataSet )
   {
     if ( !aDataSet.isEmpty() )
     {
@@ -711,7 +454,7 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
    * @param aFile
    *          file object
    */
-  private void storeToHtmlFile( final File aFile, final UARTDataSet aDataSet )
+  protected void storeToHtmlFile( final File aFile, final UARTDataSet aDataSet )
   {
     if ( !aDataSet.isEmpty() )
     {
@@ -728,6 +471,64 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
       {
         E.printStackTrace( System.out );
       }
+    }
+  }
+
+  /**
+   * generate a HTML page
+   * 
+   * @param empty
+   *          if this is true an empty output is generated
+   * @return String with HTML data
+   */
+  private String getEmptyHtmlPage()
+  {
+    Date now = new Date();
+    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG, Locale.US );
+
+    // generate html page header
+    String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
+      + "<html>"
+      + "  <head>"
+      + "    <title></title>"
+      + "    <meta content=\"\">"
+      + "    <style>"
+      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+      + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
+      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+      + "       <br>";
+
+    // generate the statistics table
+    String stats = new String();
+
+    // generate the data table
+    String data = "<table style=\"font-family:monospace;width:100%;\">"
+      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
+    data = data.concat( "</table" );
+
+    // generate the footer table
+    String footer = "   </body>" + "</html>";
+
+    return ( header + stats + data + footer );
+  }
+
+  /**
+   * Convert sample count to time string.
+   * 
+   * @param aCount
+   *          sample count (or index)
+   * @return string containing time information
+   */
+  private String indexToTime( final UARTDataSet aDataSet, final long aCount )
+  {
+    final long count = Math.max( 0, aCount - aDataSet.getStartOfDecode() );
+    if ( getAnalysisData().hasTimingData() )
+    {
+      return DisplayUtils.displayScaledTime( count, getAnalysisData().getSampleRate() );
+    }
+    else
+    {
+      return ( "" + aCount );
     }
   }
 
@@ -774,7 +575,7 @@ BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<
       stats = stats.concat( "<table style=\"width:100%;\">" + "<TR><TD style=\"width:30%;\">Decoded Symbols</TD><TD>"
           + aDataSet.getDecodedSymbols() + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Detected Bus Errors</TD><TD>"
           + aDataSet.getDetectedErrors() + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Baudrate</TD><TD>"
-          + this.analysisData.getSampleRate() / aDataSet.getBitLength() + "</TD></TR>" + "</table>" + "<br>" + "<br>" );
+          + getAnalysisData().getSampleRate() / aDataSet.getBitLength() + "</TD></TR>" + "</table>" + "<br>" + "<br>" );
       if ( aDataSet.getBitLength() < 15 )
       {
         stats = stats

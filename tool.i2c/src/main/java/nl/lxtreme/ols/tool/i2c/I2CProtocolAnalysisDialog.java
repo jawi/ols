@@ -22,7 +22,6 @@ package nl.lxtreme.ols.tool.i2c;
 
 
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
@@ -31,8 +30,6 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -45,148 +42,8 @@ import nl.lxtreme.ols.util.swing.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-public final class I2CProtocolAnalysisDialog extends JDialog implements
-BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2CDataSet>
+public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>
 {
-  // INNER TYPES
-
-  /**
-   * 
-   */
-  final class CloseAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public CloseAction()
-    {
-      super( "Close" );
-      putValue( SHORT_DESCRIPTION, "Closes this dialog" );
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      close();
-    }
-  }
-
-  /**
-   * 
-   */
-  final class ExportAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public ExportAction()
-    {
-      super( "Export" );
-      putValue( SHORT_DESCRIPTION, "Exports the analysis results to file" );
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      final File selectedFile = SwingComponentUtils.showFileSaveDialog( getOwner(), StdFileFilter.CSV,
-          StdFileFilter.HTML );
-      if ( selectedFile != null )
-      {
-        if ( LOG.isLoggable( Level.INFO ) )
-        {
-          LOG.info( "Writing analysis results to " + selectedFile.getPath() );
-        }
-
-        final String filename = selectedFile.getName();
-        if ( filename.endsWith( ".htm" ) || filename.endsWith( ".html" ) )
-        {
-          storeToHtmlFile( selectedFile, I2CProtocolAnalysisDialog.this.analysisResult );
-        }
-        else
-        {
-          storeToCsvFile( selectedFile, I2CProtocolAnalysisDialog.this.analysisResult );
-        }
-      }
-    }
-  }
-
-  /**
-   * 
-   */
-  final class RunAnalysisAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public RunAnalysisAction()
-    {
-      super( "Analyze" );
-      restore();
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      final String name = ( String )getValue( NAME );
-
-      if ( "Abort".equals( name ) )
-      {
-        cancelToolWorker();
-
-        putValue( NAME, "Analyze" );
-      }
-      else
-      {
-        startToolWorker();
-
-        putValue( NAME, "Abort" );
-        putValue( SHORT_DESCRIPTION, "Aborts current analysis..." );
-      }
-    }
-
-    /**
-     * 
-     */
-    public void restore()
-    {
-      putValue( NAME, "Analyze" );
-      putValue( SHORT_DESCRIPTION, "Run analysis" );
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -208,9 +65,7 @@ BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2
   private final ExportAction exportAction;
   private final CloseAction closeAction;
 
-  private transient volatile CapturedData analysisData;
-  private transient volatile I2CDataSet analysisResult = null;
-  private transient volatile I2CAnalyserWorker toolWorker = null;
+  // CONSTRUCTORS
 
   /**
    * @param aFrame
@@ -218,7 +73,8 @@ BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2
    */
   public I2CProtocolAnalysisDialog( final Window aOwner, final String aName )
   {
-    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
+    super( aOwner, aName );
+
     setLayout( new GridBagLayout() );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
 
@@ -350,9 +206,10 @@ BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2
    * event when one of the two lines is going low (start condition). After this
    * the decoder starts to decode the data.
    */
+  @Override
   public void createReport( final I2CDataSet aAnalysisResult )
   {
-    this.analysisResult = aAnalysisResult;
+    super.createReport( aAnalysisResult );
 
     this.outText.setText( toHtmlPage( aAnalysisResult ) );
     this.outText.setEditable( false );
@@ -360,8 +217,6 @@ BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2
     this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
     this.runAnalysisAction.restore();
     this.runAnalysisAction.setEnabled( false );
-
-    setControlsEnabled( true );
   }
 
   /**
@@ -474,6 +329,7 @@ BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2
    * @param aEnabled
    *          status of the controls
    */
+  @Override
   public void setControlsEnabled( final boolean aEnabled )
   {
     this.lineA.setEnabled( aEnabled );
@@ -488,29 +344,6 @@ BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
-   */
-  @Override
-  public void setToolWorker( final I2CAnalyserWorker aWorker )
-  {
-    this.toolWorker = aWorker;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
-   */
-  @Override
-  public boolean showDialog( final AnnotatedData aData )
-  {
-    this.analysisData = aData;
-
-    setVisible( true );
-
-    // always return true...
-    return true;
-  }
-
-  /**
    * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
    *      java.util.Properties)
    */
@@ -521,47 +354,82 @@ BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2
   }
 
   /**
-   * Cancels the tool worker.
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
    */
-  final void cancelToolWorker()
+  @Override
+  protected void setupToolWorker( final I2CAnalyserWorker aToolWorker )
   {
-    synchronized ( this.toolWorker )
+    aToolWorker.setLineAmask( getLineAmask() );
+    aToolWorker.setLineBmask( getLineBmask() );
+    aToolWorker.setReportACK( isReportACK() );
+    aToolWorker.setReportNACK( isReportNACK() );
+    aToolWorker.setReportStart( isReportStart() );
+    aToolWorker.setReportStop( isReportStop() );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToCsvFile(java.io.File,
+   *      java.lang.Object)
+   */
+  @Override
+  protected void storeToCsvFile( final File aSelectedFile, final I2CDataSet aAnalysisResult )
+  {
+    try
     {
-      this.analysisResult = null;
-      this.toolWorker.cancel( true /* mayInterruptIfRunning */);
-      setControlsEnabled( true );
+      BufferedWriter bw = new BufferedWriter( new FileWriter( aSelectedFile ) );
+
+      bw.write( "\"index\",\"time\",\"data or event\"" );
+      bw.newLine();
+
+      final List<I2CData> dataSet = aAnalysisResult.getDecodedData();
+      for ( int i = 0; i < dataSet.size(); i++ )
+      {
+        I2CData data = dataSet.get( i );
+        if ( data.isEvent() )
+        {
+          bw.write( i + ",\"" + indexToTime( aAnalysisResult, data.getTime() ) + "\",\"" + data.getEvent() + "\"" );
+        }
+        else
+        {
+          bw.write( i + ",\"" + indexToTime( aAnalysisResult, data.getTime() ) + "\",\"" + ( char )data.getValue()
+              + "\"" );
+        }
+        bw.newLine();
+      }
+      bw.flush();
+      bw.close();
+    }
+    catch ( IOException exception )
+    {
+      if ( LOG.isLoggable( Level.WARNING ) )
+      {
+        LOG.log( Level.WARNING, "CSV export failed!", exception );
+      }
     }
   }
 
   /**
-   * Closes this dialog, cancelling any running workers if needed.
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToHtmlFile(java.io.File,
+   *      java.lang.Object)
    */
-  final void close()
+  @Override
+  protected void storeToHtmlFile( final File aSelectedFile, final I2CDataSet aAnalysisResult )
   {
-    synchronized ( this.toolWorker )
+    try
     {
-      cancelToolWorker();
-      setVisible( false );
+      BufferedWriter bw = new BufferedWriter( new FileWriter( aSelectedFile ) );
+
+      // write the complete displayed html page to file
+      bw.write( this.outText.getText() );
+      bw.flush();
+      bw.close();
     }
-  }
-
-  /**
-   * Starts the tool worker.
-   */
-  final void startToolWorker()
-  {
-    synchronized ( this.toolWorker )
+    catch ( IOException exception )
     {
-      this.toolWorker.setLineAmask( getLineAmask() );
-      this.toolWorker.setLineBmask( getLineBmask() );
-      this.toolWorker.setReportACK( isReportACK() );
-      this.toolWorker.setReportNACK( isReportNACK() );
-      this.toolWorker.setReportStart( isReportStart() );
-      this.toolWorker.setReportStop( isReportStop() );
-
-      this.toolWorker.execute();
-
-      setControlsEnabled( false );
+      if ( LOG.isLoggable( Level.WARNING ) )
+      {
+        LOG.log( Level.WARNING, "HTML export failed!", exception );
+      }
     }
   }
 
@@ -622,81 +490,13 @@ BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2
   private String indexToTime( final I2CDataSet aDataSet, final long aCount )
   {
     final long count = Math.max( 0, aCount - aDataSet.getStartSampleIndex() );
-    if ( this.analysisData.hasTimingData() )
+    if ( getAnalysisData().hasTimingData() )
     {
-      return DisplayUtils.displayScaledTime( count, this.analysisData.getSampleRate() );
+      return DisplayUtils.displayScaledTime( count, getAnalysisData().getSampleRate() );
     }
     else
     {
       return ( "" + count );
-    }
-  }
-
-  /**
-   * exports the table data to a CSV file
-   * 
-   * @param file
-   *          File object
-   */
-  private void storeToCsvFile( final File file, final I2CDataSet aAnalysisResult )
-  {
-    try
-    {
-      BufferedWriter bw = new BufferedWriter( new FileWriter( file ) );
-
-      bw.write( "\"index\",\"time\",\"data or event\"" );
-      bw.newLine();
-
-      final List<I2CData> dataSet = aAnalysisResult.getDecodedData();
-      for ( int i = 0; i < dataSet.size(); i++ )
-      {
-        I2CData data = dataSet.get( i );
-        if ( data.isEvent() )
-        {
-          bw.write( i + ",\"" + indexToTime( aAnalysisResult, data.getTime() ) + "\",\"" + data.getEvent() + "\"" );
-        }
-        else
-        {
-          bw.write( i + ",\"" + indexToTime( aAnalysisResult, data.getTime() ) + "\",\"" + ( char )data.getValue()
-              + "\"" );
-        }
-        bw.newLine();
-      }
-      bw.flush();
-      bw.close();
-    }
-    catch ( IOException exception )
-    {
-      if ( LOG.isLoggable( Level.WARNING ) )
-      {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
-      }
-    }
-  }
-
-  /**
-   * stores the data to a HTML file
-   * 
-   * @param file
-   *          file object
-   */
-  private void storeToHtmlFile( final File file, final I2CDataSet aAnalysisResult )
-  {
-    try
-    {
-      BufferedWriter bw = new BufferedWriter( new FileWriter( file ) );
-
-      // write the complete displayed html page to file
-      bw.write( this.outText.getText() );
-      bw.flush();
-      bw.close();
-    }
-    catch ( IOException exception )
-    {
-      if ( LOG.isLoggable( Level.WARNING ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
     }
   }
 

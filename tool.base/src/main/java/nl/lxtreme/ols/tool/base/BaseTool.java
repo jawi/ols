@@ -34,7 +34,7 @@ import nl.lxtreme.ols.api.tools.*;
 /**
  * Provides a base implementation for tools showing a dialog.
  */
-public abstract class BaseTool<DIALOG extends JDialog & BaseToolDialog> implements Tool, Configurable
+public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements Tool, Configurable
 {
   // VARIABLES
 

@@ -35,7 +35,7 @@ import nl.lxtreme.ols.api.tools.*;
  * Provides a base class for tools that want to do its processing in the
  * background, or outside the EDT.
  */
-public abstract class BaseAsyncTool<DIALOG extends JDialog & BaseToolDialog & BaseAsyncToolDialog<RESULT_TYPE, WORKER>, RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>>
+public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncToolDialog<RESULT_TYPE, WORKER>, RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>>
 extends BaseTool<DIALOG>
 {
   // CONSTANTS
