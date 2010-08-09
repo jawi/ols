@@ -20,22 +20,26 @@
  */
 package nl.lxtreme.ols.tool.base;
 
+
 import java.awt.*;
 import java.util.*;
+
+import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 
+
 /**
- * @author jawi
- *
+ * Provides a base implementation for tools showing a dialog.
  */
-public abstract class BaseTool implements Tool, Configurable
+public abstract class BaseTool<DIALOG extends JDialog & BaseToolDialog> implements Tool, Configurable
 {
   // VARIABLES
 
   private final String name;
+  private DIALOG dialog;
 
   // CONSTRUCTORS
 
@@ -50,6 +54,8 @@ public abstract class BaseTool implements Tool, Configurable
     this.name = aName;
   }
 
+  // METHODS
+
   /**
    * @see java.lang.Object#equals(java.lang.Object)
    */
@@ -60,12 +66,12 @@ public abstract class BaseTool implements Tool, Configurable
     {
       return true;
     }
-    if ( ( aObject == null ) || !(aObject instanceof BaseTool) )
+    if ( ( aObject == null ) || !( aObject instanceof BaseTool<?> ) )
     {
       return false;
     }
 
-    final BaseTool other = ( BaseTool )aObject;
+    final BaseTool<?> other = ( BaseTool<?> )aObject;
     if ( this.name == null )
     {
       if ( other.name != null )
@@ -109,54 +115,90 @@ public abstract class BaseTool implements Tool, Configurable
    *      nl.lxtreme.ols.api.tools.AnalysisCallback)
    */
   @Override
-  public void process( final Frame aParentFrame, final AnnotatedData aData, final ToolContext aContext, final AnalysisCallback aCallback )
+  public final void process( final Window aOwner, final AnnotatedData aData, final ToolContext aContext,
+      final AnalysisCallback aCallback )
   {
-    setupTool( aParentFrame );
+    // check if dialog exists with different owner and dispose if so
+    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aOwner ) )
+    {
+      this.dialog.dispose();
+      this.dialog = null;
+    }
 
-    doProcess( aData, aContext );
+    // if no valid dialog exists, create one
+    if ( this.dialog == null )
+    {
+      this.dialog = createDialog( aOwner, getName(), aData, aContext, aCallback );
+    }
+    else
+    {
+      // Reset the dialog to its initial state...
+      this.dialog.reset();
+    }
+
+    doProcess( aData, aContext, aCallback );
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(String, java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
+   *      java.util.Properties)
    */
   @Override
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    // NO-op
+    if ( this.dialog instanceof Configurable )
+    {
+      ( ( Configurable )this.dialog ).readProperties( aNamespace, aProperties );
+    }
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String, java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String,
+   *      java.util.Properties)
    */
   @Override
   public void writeProperties( final String aNamespace, final Properties aProperties )
   {
-    // NO-op
+    if ( this.dialog instanceof Configurable )
+    {
+      ( ( Configurable )this.dialog ).writeProperties( aNamespace, aProperties );
+    }
   }
 
   /**
-   * Does the actual processing of data.
-   * <p>
-   * By default, this method does <tt>getToolWorker().execute()</tt> to start
-   * the tool worker in the background. Override this method to do something
-   * different, for example, to wrap the tool worker in a UI-dialog.
-   * </p>
-   * 
+   * @param aOwner
+   * @param aName
    * @param aData
-   *          the captured data to process in this tool;
    * @param aContext
-   *          the tool context to use during the processing.
+   * @param aCallback
+   * @return
    */
-  protected abstract void doProcess( final AnnotatedData aData, final ToolContext aContext );
+  protected abstract DIALOG createDialog( final Window aOwner, final String aName, final AnnotatedData aData,
+      final ToolContext aContext, final AnalysisCallback aCallback );
 
   /**
-   * Sets up this tool, for example by creating a dialog.
+   * Does the actual processing of data.
    * 
-   * @param aFrame
-   *          the (parent) frame to use when creating a modal dialog.
+   * @param aData
+   *          the captured data to process in this tool, cannot be
+   *          <code>null</code>;
+   * @param aContext
+   *          the tool context to use during the processing, can be
+   *          <code>null</code>;
+   * @param aCallback
+   *          the callback to report the status of the tool to, cannot be
+   *          <code>null</code>.
    */
-  protected void setupTool( final Frame aFrame )
+  protected void doProcess( final AnnotatedData aData, final ToolContext aContext, final AnalysisCallback aCallback )
   {
-    // NO-op
+    this.dialog.showDialog( aData );
+  }
+
+  /**
+   * @return
+   */
+  protected final DIALOG getDialog()
+  {
+    return this.dialog;
   }
 }

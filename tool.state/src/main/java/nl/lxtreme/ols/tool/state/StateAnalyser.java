@@ -22,7 +22,6 @@ package nl.lxtreme.ols.tool.state;
 
 
 import java.awt.*;
-import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
@@ -32,40 +31,31 @@ import nl.lxtreme.ols.tool.base.*;
 /**
  * 
  */
-public class StateAnalyser extends BaseAsyncTool<CapturedData, StateAnalysisWorker>
+public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, CapturedData, StateAnalysisWorker>
 {
-  // INNER TYPES
-
-  private StateAnalysisDialog dialog;
-
   // CONSTRUCTORS
 
   /**
-   * 
+   * Creates a new StateAnalyser instance.
    */
   public StateAnalyser()
   {
-    super( "State analyser" );
+    super( "State analyser ..." );
   }
 
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#readProperties(java.lang.String, java.util.Properties)
+   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
+   *      java.lang.String, nl.lxtreme.ols.api.data.AnnotatedData,
+   *      nl.lxtreme.ols.api.tools.ToolContext,
+   *      nl.lxtreme.ols.api.tools.AnalysisCallback)
    */
   @Override
-  public void readProperties( final String aNamespace, final Properties aProperties )
+  protected StateAnalysisDialog createDialog( final Window aOwner, final String aName, final AnnotatedData aData,
+      final ToolContext aContext, final AnalysisCallback aCallback )
   {
-    this.dialog.readProperties( aNamespace, aProperties );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#writeProperties(java.lang.String, java.util.Properties)
-   */
-  @Override
-  public void writeProperties( final String aNamespace, final Properties aProperties )
-  {
-    this.dialog.writeProperties( aNamespace, aProperties );
+    return new StateAnalysisDialog( aOwner, getName() );
   }
 
   /**
@@ -78,40 +68,17 @@ public class StateAnalyser extends BaseAsyncTool<CapturedData, StateAnalysisWork
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#doProcess(nl.lxtreme.ols.api.data.AnnotatedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onCloseDialog()
    */
   @Override
-  protected void doProcess( final AnnotatedData aData, final ToolContext aContext )
+  protected void onCloseDialog()
   {
-    if ( this.dialog.showDialog() == StateAnalysisDialog.OK )
-    {
-      final StateAnalysisWorker toolWorker = getToolWorker();
+    final StateAnalysisDialog dialog = getDialog();
+    final StateAnalysisWorker toolWorker = getToolWorker();
 
-      toolWorker.setNumber( this.dialog.channel );
-      toolWorker.setLevel( this.dialog.edge == StateAnalysisDialog.RISING ? 0 : 1 );
-      toolWorker.execute();
-    }
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#setupTool(java.awt.Frame)
-   */
-  @Override
-  protected void setupTool( final Frame aFrame )
-  {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aFrame ) )
-    {
-      this.dialog.dispose();
-      this.dialog = null;
-    }
-
-    // if no valid dialog exists, create one
-    if ( this.dialog == null )
-    {
-      this.dialog = new StateAnalysisDialog( aFrame, getName() );
-    }
+    toolWorker.setNumber( dialog.channel );
+    toolWorker.setLevel( dialog.edge == StateAnalysisDialog.RISING ? 0 : 1 );
+    toolWorker.execute();
   }
 }
 

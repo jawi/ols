@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.signal.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -62,7 +62,7 @@ public class ShowDiagramLabelsAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Window owner = HostUtils.getOwningWindow( aEvent );
+    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
     this.diagramScrollPane.showLabelsDialog( owner );
   }

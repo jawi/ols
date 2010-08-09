@@ -34,49 +34,87 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
 {
   // CONSTANTS
 
-  public static final String  LINE_A                   = "LineA";
-  public static final String  LINE_B                   = "LineB";
+  public static final String LINE_A = "LineA";
+  public static final String LINE_B = "LineB";
 
-  public static final String  PROPERTY_AUTO_DETECT_SCL = "AutoDetectSCL";
-  public static final String  PROPERTY_AUTO_DETECT_SDA = "AutoDetectSDA";
+  public static final String PROPERTY_AUTO_DETECT_SCL = "AutoDetectSCL";
+  public static final String PROPERTY_AUTO_DETECT_SDA = "AutoDetectSDA";
 
-  private static final Logger LOG                      = Logger.getLogger( I2CAnalyserWorker.class.getName() );
+  private static final Logger LOG = Logger.getLogger( I2CAnalyserWorker.class.getName() );
 
   // VARIABLES
 
-  private final boolean       reportACK;
-  private final boolean       reportNACK;
-  private final boolean       reportStart;
-  private final boolean       reportStop;
-
-  private final int           lineAmask;
-  private final int           lineBmask;
+  private boolean reportACK;
+  private boolean reportNACK;
+  private boolean reportStart;
+  private boolean reportStop;
+  private int lineAmask;
+  private int lineBmask;
 
   // CONSTRUCTORS
 
   /**
    * @param aData
    */
-  public I2CAnalyserWorker( final AnnotatedData aData, final I2CProtocolAnalysisDialog aDialog )
+  public I2CAnalyserWorker( final AnnotatedData aData )
   {
     super( aData );
-
-    this.reportACK = aDialog.isReportACK();
-    this.reportNACK = aDialog.isReportNACK();
-    this.reportStart = aDialog.isReportStart();
-    this.reportStop = aDialog.isReportStop();
-
-    this.lineAmask = aDialog.getLineAmask();
-    this.lineBmask = aDialog.getLineBmask();
   }
 
   // METHODS
 
   /**
-   * This is the I2C protocol decoder core
-   * The decoder scans for a decode start event when one of the two
-   * lines is going low (start condition). After this the
-   * decoder starts to decode the data.
+   * @param aLineAmask
+   */
+  public void setLineAmask( final int aLineAmask )
+  {
+    this.lineAmask = aLineAmask;
+  }
+
+  /**
+   * @param aLineBmask
+   */
+  public void setLineBmask( final int aLineBmask )
+  {
+    this.lineBmask = aLineBmask;
+  }
+
+  /**
+   * @param aReportACK
+   */
+  public void setReportACK( final boolean aReportACK )
+  {
+    this.reportACK = aReportACK;
+  }
+
+  /**
+   * @param aReportNACK
+   */
+  public void setReportNACK( final boolean aReportNACK )
+  {
+    this.reportNACK = aReportNACK;
+  }
+
+  /**
+   * @param aReportStart
+   */
+  public void setReportStart( final boolean aReportStart )
+  {
+    this.reportStart = aReportStart;
+  }
+
+  /**
+   * @param aReportStop
+   */
+  public void setReportStop( final boolean aReportStop )
+  {
+    this.reportStop = aReportStop;
+  }
+
+  /**
+   * This is the I2C protocol decoder core The decoder scans for a decode start
+   * event when one of the two lines is going low (start condition). After this
+   * the decoder starts to decode the data.
    * 
    * @see javax.swing.SwingWorker#doInBackground()
    */
@@ -92,8 +130,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     int sdaMask, sclMask;
 
     /*
-     * Build bitmasks based on the lineA, lineB pins
-     * pins.
+     * Build bitmasks based on the lineA, lineB pins pins.
      */
     final int dataMask = this.lineAmask | this.lineBmask;
     final int sampleCount = values.length;
@@ -105,8 +142,8 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     }
 
     /*
-     * first of all scan both lines until they are high (IDLE), then
-     * the first line that goes low is the SDA line (START condition).
+     * first of all scan both lines until they are high (IDLE), then the first
+     * line that goes low is the SDA line (START condition).
      */
     for ( sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++ )
     {
@@ -184,11 +221,11 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     reportStartCondition( i2cDataSet, calculateTime( timestamps[sampleIdx] ) );
 
     /*
-     * Now decode the bytes, SDA may only change when SCL is low. Otherwise
-     * it may be a repeated start condition or stop condition. If the start/stop
-     * condition is not at a byte boundary a bus error is detected. So we have to
-     * scan for SCL rises and for SDA changes during SCL is high.
-     * Each byte is followed by a 9th bit (ACK/NACK).
+     * Now decode the bytes, SDA may only change when SCL is low. Otherwise it
+     * may be a repeated start condition or stop condition. If the start/stop
+     * condition is not at a byte boundary a bus error is detected. So we have
+     * to scan for SCL rises and for SDA changes during SCL is high. Each byte
+     * is followed by a 9th bit (ACK/NACK).
      */
     oldSCL = values[sampleIdx] & sclMask;
     oldSDA = values[sampleIdx] & sdaMask;

@@ -26,10 +26,14 @@ import java.awt.event.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
+import java.util.List;
+import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -41,11 +45,153 @@ import nl.lxtreme.ols.util.swing.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener, Runnable
+public final class UARTProtocolAnalysisDialog extends JDialog implements
+BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable
 {
+  // INNER TYPES
+
+  /**
+   * 
+   */
+  final class CloseAction extends AbstractAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * 
+     */
+    public CloseAction()
+    {
+      super( "Close" );
+      putValue( SHORT_DESCRIPTION, "Closes this dialog" );
+    }
+
+    // METHODS
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      close();
+    }
+  }
+
+  /**
+   * 
+   */
+  final class ExportAction extends AbstractAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * 
+     */
+    public ExportAction()
+    {
+      super( "Export" );
+      putValue( SHORT_DESCRIPTION, "Exports the analysis results to file" );
+    }
+
+    // METHODS
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      final File selectedFile = SwingComponentUtils.showFileSaveDialog( getOwner(), StdFileFilter.CSV,
+          StdFileFilter.HTML );
+      if ( selectedFile != null )
+      {
+        if ( LOG.isLoggable( Level.INFO ) )
+        {
+          LOG.info( "Writing analysis results to " + selectedFile.getPath() );
+        }
+
+        final String filename = selectedFile.getName();
+        if ( filename.endsWith( ".htm" ) || filename.endsWith( ".html" ) )
+        {
+          storeToHtmlFile( selectedFile, UARTProtocolAnalysisDialog.this.analysisResult );
+        }
+        else
+        {
+          storeToCsvFile( selectedFile, UARTProtocolAnalysisDialog.this.analysisResult );
+        }
+      }
+    }
+  }
+
+  /**
+   * 
+   */
+  final class RunAnalysisAction extends AbstractAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * 
+     */
+    public RunAnalysisAction()
+    {
+      super( "Analyze" );
+      restore();
+    }
+
+    // METHODS
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      final String name = ( String )getValue( NAME );
+
+      if ( "Abort".equals( name ) )
+      {
+        cancelToolWorker();
+
+        putValue( NAME, "Analyze" );
+      }
+      else
+      {
+        startToolWorker();
+
+        putValue( NAME, "Abort" );
+        putValue( SHORT_DESCRIPTION, "Aborts current analysis..." );
+      }
+    }
+
+    /**
+     * 
+     */
+    public void restore()
+    {
+      putValue( NAME, "Analyze" );
+      putValue( SHORT_DESCRIPTION, "Run analysis" );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
+
+  private static final Logger LOG = Logger.getLogger( UARTProtocolAnalysisDialog.class.getName() );
 
   // VARIABLES
 
@@ -64,36 +210,29 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
   private final JComboBox bits;
   private final JComboBox stop;
   private final JCheckBox inv;
-  private final JButton btnConvert;
-  private final JButton btnExport;
-  private final JButton btnCancel;
-  private final JProgressBar progress;
-  private boolean runFlag;
-  private Thread thrWorker;
-  private AnnotatedData analysisData;
   private final JEditorPane outText;
-  private final Vector<UARTProtocolAnalysisDataSet> decodedData;
-  private final JFileChooser fileChooser;
-  private long startOfDecode;
-  private long endOfDecode;
-  private int decodedSymbols;
-  private int bitLength;
-  private int detectedErrors;
+
+  private final RunAnalysisAction runAnalysisAction;
+  private final ExportAction exportAction;
+  private final CloseAction closeAction;
+
+  private transient volatile AnnotatedData analysisData;
+  private transient volatile UARTAnalyserWorker toolWorker;
+  private transient volatile UARTDataSet analysisResult;
 
   // CONSTRUCTORS
 
-  public UARTProtocolAnalysisDialog( final Frame frame, final String name )
+  /**
+   * @param aOwner
+   * @param aName
+   */
+  public UARTProtocolAnalysisDialog( final Window aOwner, final String aName )
   {
-    super( frame, name, true );
+    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
+
     Container pane = getContentPane();
     pane.setLayout( new GridBagLayout() );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-
-    this.decodedData = new Vector<UARTProtocolAnalysisDataSet>();
-    this.startOfDecode = -1;
-    this.decodedSymbols = 0;
-    this.bitLength = 0;
-    this.detectedErrors = 0;
 
     /*
      * add protocol settings elements
@@ -187,49 +326,41 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
     panTable.setLayout( new GridLayout( 1, 1, 5, 5 ) );
     panTable.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Results" ),
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-    this.outText = new JEditorPane( "text/html", toHtmlPage( true ) );
+    this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
     this.outText.setMargin( new Insets( 5, 5, 5, 5 ) );
     panTable.add( new JScrollPane( this.outText ) );
     add( panTable, createConstraints( 1, 0, 3, 3, 1.0, 1.0 ) );
 
     /*
-     * add progress bar
-     */
-    JPanel panProgress = new JPanel();
-    panProgress.setLayout( new BorderLayout() );
-    panProgress.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Progress" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-    this.progress = new JProgressBar( 0, 100 );
-    this.progress.setMinimum( 0 );
-    this.progress.setValue( 0 );
-    this.progress.setMaximum( 100 );
-    panProgress.add( this.progress, BorderLayout.CENTER );
-    add( panProgress, createConstraints( 0, 3, 3, 1, 1.0, 0 ) );
-
-    /*
      * add buttons
      */
-    this.btnConvert = new JButton( "Analyze" );
-    this.btnConvert.addActionListener( this );
-    add( this.btnConvert, createConstraints( 0, 4, 1, 1, 1.0, 0 ) );
-    this.btnExport = new JButton( "Export" );
-    this.btnExport.addActionListener( this );
-    add( this.btnExport, createConstraints( 1, 4, 1, 1, 1.0, 0 ) );
-    this.btnCancel = new JButton( "Close" );
-    this.btnCancel.addActionListener( this );
-    add( this.btnCancel, createConstraints( 2, 4, 1, 1, 1.0, 0 ) );
+    this.runAnalysisAction = new RunAnalysisAction();
+    JButton btnConvert = new JButton( this.runAnalysisAction );
+    add( btnConvert, createConstraints( 0, 3, 1, 1, 1.0, 0 ) );
 
-    this.fileChooser = new JFileChooser();
-    // this.fileChooser.addChoosableFileFilter( ( FileFilter )new CSVFilter() );
-    // this.fileChooser.addChoosableFileFilter( ( FileFilter )new HTMLFilter()
-    // );
+    this.exportAction = new ExportAction();
+    JButton btnExport = new JButton( this.exportAction );
+    add( btnExport, createConstraints( 1, 3, 1, 1, 1.0, 0 ) );
+
+    this.closeAction = new CloseAction();
+    JButton btnCancel = new JButton( this.closeAction );
+    add( btnCancel, createConstraints( 2, 3, 1, 1, 1.0, 0 ) );
 
     setSize( 1000, 550 );
     setResizable( false );
-    this.runFlag = false;
-    this.thrWorker = null;
   }
 
+  // METHODS
+
+  /**
+   * @param x
+   * @param y
+   * @param w
+   * @param h
+   * @param wx
+   * @param wy
+   * @return
+   */
   private static GridBagConstraints createConstraints( final int x, final int y, final int w, final int h,
       final double wx, final double wy )
   {
@@ -246,893 +377,241 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
   }
 
   /**
-   * Dialog Action handler
-   */
-  public void actionPerformed( final ActionEvent e )
-  {
-    if ( e.getActionCommand().equals( "Analyze" ) )
-    {
-      this.runFlag = true;
-      this.thrWorker = new Thread( this );
-      this.thrWorker.start();
-    }
-    else if ( e.getActionCommand().equals( "Close" ) )
-    {
-      setVisible( false );
-    }
-    else if ( e.getActionCommand().equals( "Export" ) )
-    {
-      if ( this.fileChooser.showSaveDialog( this ) == JFileChooser.APPROVE_OPTION )
-      {
-        File file = this.fileChooser.getSelectedFile();
-        if ( this.fileChooser.getFileFilter().getDescription().equals( "Website (*.html)" ) )
-        {
-          storeToHtmlFile( file );
-        }
-        else
-        {
-          storeToCsvFile( file );
-        }
-      }
-    }
-    else if ( e.getActionCommand().equals( "Abort" ) )
-    {
-      this.runFlag = false;
-    }
-  }
-
-  public void readProperties( final String aNamespace, final Properties properties )
-  {
-    SwingComponentUtils.setSelectedItem( this.rxd, properties.getProperty( "tools.UARTProtocolAnalysis.rxd" ) );
-    SwingComponentUtils.setSelectedItem( this.txd, properties.getProperty( "tools.UARTProtocolAnalysis.txd" ) );
-    SwingComponentUtils.setSelectedItem( this.cts, properties.getProperty( "tools.UARTProtocolAnalysis.cts" ) );
-    SwingComponentUtils.setSelectedItem( this.rts, properties.getProperty( "tools.UARTProtocolAnalysis.rts" ) );
-    SwingComponentUtils.setSelectedItem( this.dtr, properties.getProperty( "tools.UARTProtocolAnalysis.dtr" ) );
-    SwingComponentUtils.setSelectedItem( this.dsr, properties.getProperty( "tools.UARTProtocolAnalysis.dsr" ) );
-    SwingComponentUtils.setSelectedItem( this.dcd, properties.getProperty( "tools.UARTProtocolAnalysis.dcd" ) );
-    SwingComponentUtils.setSelectedItem( this.ri, properties.getProperty( "tools.UARTProtocolAnalysis.ri" ) );
-    SwingComponentUtils.setSelectedItem( this.parity, properties.getProperty( "tools.UARTProtocolAnalysis.parity" ) );
-    SwingComponentUtils.setSelectedItem( this.bits, properties.getProperty( "tools.UARTProtocolAnalysis.bits" ) );
-    SwingComponentUtils.setSelectedItem( this.stop, properties.getProperty( "tools.UARTProtocolAnalysis.stop" ) );
-    this.inv.setSelected( Boolean.parseBoolean( properties.getProperty( "tools.UARTProtocolAnalysis.inverted" ) ) );
-  }
-
-  /**
-   * runs the conversion when started
-   */
-  public void run()
-  {
-    setControlsEnabled( false );
-    this.btnConvert.setText( "Abort" );
-    decode();
-    setControlsEnabled( true );
-    this.btnConvert.setText( "Analyze" );
-  }
-
-  /**
-   * shows the dialog and sets the data to use
-   * 
-   * @param data
-   *          data to use for analysis
-   */
-  public void showDialog( final AnnotatedData data )
-  {
-    this.analysisData = data;
-    setVisible( true );
-  }
-
-  public void writeProperties( final String aNamespace, final Properties properties )
-  {
-    properties.setProperty( aNamespace + ".rxd", Integer.toString( this.rxd.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".txd", Integer.toString( this.txd.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".cts", Integer.toString( this.cts.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".rts", Integer.toString( this.rts.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".dtr", Integer.toString( this.dtr.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".dsr", Integer.toString( this.dsr.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".dcd", Integer.toString( this.dcd.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".ri", Integer.toString( this.ri.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".parity", ( String )this.parity.getSelectedItem() );
-    properties.setProperty( aNamespace + ".bits", ( String )this.bits.getSelectedItem() );
-    properties.setProperty( aNamespace + ".stop", ( String )this.stop.getSelectedItem() );
-    properties.setProperty( aNamespace + ".inverted", "" + this.inv.isSelected() );
-  }
-
-  /**
-   * calculate the time offset
-   * 
-   * @param time
-   *          absolute sample number
-   * @return time relative to data
-   */
-  private long calculateTime( final long time )
-  {
-    return this.analysisData.calculateTime( time );
-  }
-
-  /**
    * This is the UART protocol decoder core The decoder scans for a decode start
    * event like CS high to low edge or the trigger of the captured data. After
    * this the decoder starts to decode the data by the selected mode, number of
    * bits and bit order. The decoded data are put to a JTable object directly.
    */
-  private void decode()
+  public void createReport( final UARTDataSet aAnalysisResult )
   {
-    // process the captured data and write to output
-    int i, a;
+    this.analysisResult = aAnalysisResult;
 
-    // clear old data
-    this.decodedData.clear();
-
-    /*
-     * Build bitmasks based on the RxD, TxD, CTS and RTS pins.
-     */
-
-    int rxdmask = 0;
-    if ( !( ( String )this.rxd.getSelectedItem() ).equals( "unused" ) )
-    {
-      rxdmask = ( 1 << this.rxd.getSelectedIndex() );
-    }
-
-    int txdmask = 0;
-    if ( !( ( String )this.txd.getSelectedItem() ).equals( "unused" ) )
-    {
-      txdmask = ( 1 << this.txd.getSelectedIndex() );
-    }
-
-    int ctsmask = 0;
-    if ( !( ( String )this.cts.getSelectedItem() ).equals( "unused" ) )
-    {
-      ctsmask = ( 1 << this.cts.getSelectedIndex() );
-    }
-
-    int rtsmask = 0;
-    if ( !( ( String )this.rts.getSelectedItem() ).equals( "unused" ) )
-    {
-      rtsmask = ( 1 << this.rts.getSelectedIndex() );
-    }
-
-    int dcdmask = 0;
-    if ( !( ( String )this.dcd.getSelectedItem() ).equals( "unused" ) )
-    {
-      dcdmask = ( 1 << this.dcd.getSelectedIndex() );
-    }
-
-    int rimask = 0;
-    if ( !( ( String )this.ri.getSelectedItem() ).equals( "unused" ) )
-    {
-      rimask = ( 1 << this.ri.getSelectedIndex() );
-    }
-
-    int dsrmask = 0;
-    if ( !( ( String )this.dsr.getSelectedItem() ).equals( "unused" ) )
-    {
-      dsrmask = ( 1 << this.dsr.getSelectedIndex() );
-    }
-
-    int dtrmask = 0;
-    if ( !( ( String )this.dtr.getSelectedItem() ).equals( "unused" ) )
-    {
-      dtrmask = ( 1 << this.dtr.getSelectedIndex() );
-    }
-
-    System.out.println( "rxdmask = 0x" + Integer.toHexString( rxdmask ) );
-    System.out.println( "txdmask = 0x" + Integer.toHexString( txdmask ) );
-    System.out.println( "ctsmask = 0x" + Integer.toHexString( ctsmask ) );
-    System.out.println( "rtsmask = 0x" + Integer.toHexString( rtsmask ) );
-    System.out.println( "dcdmask = 0x" + Integer.toHexString( dcdmask ) );
-    System.out.println( "rimask  = 0x" + Integer.toHexString( rimask ) );
-    System.out.println( "dsrmask = 0x" + Integer.toHexString( dsrmask ) );
-    System.out.println( "dtrmask = 0x" + Integer.toHexString( dtrmask ) );
-
-    /*
-     * Start decode from trigger or if no trigger is available from the first
-     * falling edge. The decoder works with two independant decoder runs. First
-     * for RxD and then for TxD, after this CTS, RTS, etc. is detected if
-     * enabled. After decoding all the decoded data are unsortet before the data
-     * is displayed it must be sortet by time.
-     */
-
-    final long[] timestamps = this.analysisData.getTimestamps();
-    final int[] values = this.analysisData.getValues();
-
-    /*
-     * set the start of decode to the trigger if avail or find first state
-     * change on the selected lines
-     */
-    if ( this.analysisData.isCursorsEnabled() )
-    {
-      this.startOfDecode = this.analysisData.getCursorPosition( 1 );
-      this.endOfDecode = this.analysisData.getCursorPosition( 2 );
-    }
-    else
-    {
-      if ( this.analysisData.hasTriggerData() )
-      {
-        this.startOfDecode = this.analysisData.getTriggerPosition();
-        // the trigger may be too late, a workaround is to go back some samples
-        // here
-        this.startOfDecode -= 10;
-        if ( this.startOfDecode < 0 )
-        {
-          this.startOfDecode = 0;
-        }
-      }
-      else
-      {
-        int mask = rxdmask | rimask | ctsmask | txdmask | dcdmask | rimask | dsrmask | dtrmask;
-        a = values[0] & mask;
-        for ( i = 0; i < values.length; i++ )
-        {
-          if ( a != ( values[i] & mask ) )
-          {
-            this.startOfDecode = timestamps[i];
-            break;
-          }
-        }
-      }
-      this.endOfDecode = this.analysisData.getAbsoluteLength();
-    }
-    this.decodedSymbols = 0;
-    this.detectedErrors = 0;
-
-    // decode RxD
-    final int sampleRate = this.analysisData.getSampleRate();
-    if ( rxdmask != 0 )
-    {
-      BaudRateAnalyzer baudrate = new BaudRateAnalyzer( values, timestamps, rxdmask );
-      System.out.println( baudrate.toString() );
-      this.bitLength = baudrate.getBest();
-      if ( this.bitLength == 0 )
-      {
-        System.out.println( "No data for decode" );
-      }
-      else
-      {
-        System.out.println( "Samplerate=" + sampleRate + " Bitlength=" + this.bitLength + " Baudrate=" + sampleRate
-            / this.bitLength );
-        this.decodedSymbols += decodeData( this.bitLength, rxdmask, UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA );
-      }
-    }
-    // decode TxD
-    if ( txdmask != 0 )
-    {
-      BaudRateAnalyzer baudrate = new BaudRateAnalyzer( values, timestamps, txdmask );
-      System.out.println( baudrate.toString() );
-      this.bitLength = baudrate.getBest();
-      if ( this.bitLength == 0 )
-      {
-        System.out.println( "No data for decode" );
-      }
-      else
-      {
-        System.out.println( "Samplerate=" + sampleRate + " Bitlength=" + this.bitLength + " Baudrate=" + sampleRate
-            / this.bitLength );
-        this.decodedSymbols += decodeData( this.bitLength, txdmask, UARTProtocolAnalysisDataSet.UART_TYPE_TXDATA );
-      }
-    }
-    // decode control lines
-    decodeControl( ctsmask, "CTS" );
-    decodeControl( rtsmask, "RTS" );
-    decodeControl( dcdmask, "DCD" );
-    decodeControl( rimask, "RI" );
-    decodeControl( dsrmask, "DSR" );
-    decodeControl( dtrmask, "DTR" );
-
-    // sort the results by time
-    Collections.sort( this.decodedData );
-
-    this.outText.setText( toHtmlPage( false ) );
+    this.outText.setText( toHtmlPage( aAnalysisResult ) );
     this.outText.setEditable( false );
+
+    this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+    this.runAnalysisAction.restore();
+    this.runAnalysisAction.setEnabled( false );
+
+    setControlsEnabled( true );
   }
 
   /**
-   * decode a control line
-   * 
-   * @param mask
-   *          bitmask for the control line
-   * @param name
-   *          name string of the control line
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
+   *      java.util.Properties)
    */
-  private void decodeControl( final int mask, final String name )
+  public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    if ( mask == 0 )
-    {
-      return;
-    }
-
-    System.out.println( "Decode " + name );
-
-    long i;
-    int a;
-    a = this.analysisData.getDataAt( 0 ) & mask;
-    this.progress.setValue( 0 );
-    for ( i = this.startOfDecode; i < this.endOfDecode; i++ )
-    {
-      if ( a < ( this.analysisData.getDataAt( i ) & mask ) )
-      {
-        // rising edge
-        this.decodedData.add( new UARTProtocolAnalysisDataSet( i, name + "_HIGH" ) );
-      }
-      if ( a > ( this.analysisData.getDataAt( i ) & mask ) )
-      {
-        // falling edge
-        this.decodedData.add( new UARTProtocolAnalysisDataSet( i, name + "_LOW" ) );
-      }
-      a = this.analysisData.getDataAt( i ) & mask;
-
-      // update progress
-      this.progress.setValue( ( int )( i * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
-
-      // abort here
-      if ( !this.runFlag )
-      {
-        break;
-      }
-    }
-    this.progress.setValue( 100 );
+    SwingComponentUtils.setSelectedItem( this.rxd, aProperties.getProperty( "tools.UARTProtocolAnalysis.rxd" ) );
+    SwingComponentUtils.setSelectedItem( this.txd, aProperties.getProperty( "tools.UARTProtocolAnalysis.txd" ) );
+    SwingComponentUtils.setSelectedItem( this.cts, aProperties.getProperty( "tools.UARTProtocolAnalysis.cts" ) );
+    SwingComponentUtils.setSelectedItem( this.rts, aProperties.getProperty( "tools.UARTProtocolAnalysis.rts" ) );
+    SwingComponentUtils.setSelectedItem( this.dtr, aProperties.getProperty( "tools.UARTProtocolAnalysis.dtr" ) );
+    SwingComponentUtils.setSelectedItem( this.dsr, aProperties.getProperty( "tools.UARTProtocolAnalysis.dsr" ) );
+    SwingComponentUtils.setSelectedItem( this.dcd, aProperties.getProperty( "tools.UARTProtocolAnalysis.dcd" ) );
+    SwingComponentUtils.setSelectedItem( this.ri, aProperties.getProperty( "tools.UARTProtocolAnalysis.ri" ) );
+    SwingComponentUtils.setSelectedItem( this.parity, aProperties.getProperty( "tools.UARTProtocolAnalysis.parity" ) );
+    SwingComponentUtils.setSelectedItem( this.bits, aProperties.getProperty( "tools.UARTProtocolAnalysis.bits" ) );
+    SwingComponentUtils.setSelectedItem( this.stop, aProperties.getProperty( "tools.UARTProtocolAnalysis.stop" ) );
+    this.inv.setSelected( Boolean.parseBoolean( aProperties.getProperty( "tools.UARTProtocolAnalysis.inverted" ) ) );
   }
 
   /**
-   * decode a UART data line
-   * 
-   * @param baud
-   *          baudrate (counted samples per bit)
-   * @param mask
-   *          bitmask for the dataline
-   * @param type
-   *          type of the data (rx or tx)
+   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#reset()
    */
-  private int decodeData( final int baud, final int mask, final int type )
+  @Override
+  public void reset()
   {
-    if ( mask == 0 )
+    this.outText.setText( getEmptyHtmlPage() );
+    this.outText.setEditable( false );
+
+    this.exportAction.setEnabled( false );
+
+    this.runAnalysisAction.restore();
+    this.runAnalysisAction.setEnabled( true );
+
+    setControlsEnabled( true );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   */
+  @Override
+  public void setToolWorker( final UARTAnalyserWorker aToolWorker )
+  {
+    this.toolWorker = aToolWorker;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
+   */
+  public boolean showDialog( final AnnotatedData aData )
+  {
+    this.analysisData = aData;
+
+    setVisible( true );
+
+    return true;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
+   *      java.util.Properties)
+   */
+  public void writeProperties( final String aNamespace, final Properties aProperties )
+  {
+    aProperties.setProperty( aNamespace + ".rxd", Integer.toString( this.rxd.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".txd", Integer.toString( this.txd.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".cts", Integer.toString( this.cts.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".rts", Integer.toString( this.rts.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".dtr", Integer.toString( this.dtr.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".dsr", Integer.toString( this.dsr.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".dcd", Integer.toString( this.dcd.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".ri", Integer.toString( this.ri.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".parity", ( String )this.parity.getSelectedItem() );
+    aProperties.setProperty( aNamespace + ".bits", ( String )this.bits.getSelectedItem() );
+    aProperties.setProperty( aNamespace + ".stop", ( String )this.stop.getSelectedItem() );
+    aProperties.setProperty( aNamespace + ".inverted", "" + this.inv.isSelected() );
+  }
+
+  /**
+   * Cancels the tool worker.
+   */
+  final void cancelToolWorker()
+  {
+    synchronized ( this.toolWorker )
     {
-      return ( 0 );
+      this.analysisResult = null;
+      this.toolWorker.cancel( true /* mayInterruptIfRunning */);
+      setControlsEnabled( true );
     }
-    long a = 0;
-    int b = 0;
-    long c = 0;
-    long i = 0;
-    int value = 0;
-    int bitCount;
-    int stopCount;
-    int parityCount;
-    int count = 0;
+  }
 
-    bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
-    if ( ( ( String )this.parity.getSelectedItem() ).equals( "none" ) )
+  /**
+   * Closes this dialog, cancelling any running workers if needed.
+   */
+  final void close()
+  {
+    synchronized ( this.toolWorker )
     {
-      parityCount = 0;
+      cancelToolWorker();
+      setVisible( false );
     }
-    else
+  }
+
+  /**
+   * Starts the tool worker.
+   */
+  final void startToolWorker()
+  {
+    synchronized ( this.toolWorker )
     {
-      parityCount = 1;
+      if ( !"unused".equals( this.rxd.getSelectedItem() ) )
+      {
+        this.toolWorker.setRxdMask( 1 << this.rxd.getSelectedIndex() );
+      }
+
+      if ( !"unused".equals( this.txd.getSelectedItem() ) )
+      {
+        this.toolWorker.setTxdMask( 1 << this.txd.getSelectedIndex() );
+      }
+
+      if ( !"unused".equals( this.cts.getSelectedItem() ) )
+      {
+        this.toolWorker.setCtsMask( 1 << this.cts.getSelectedIndex() );
+      }
+
+      if ( !"unused".equals( this.rts.getSelectedItem() ) )
+      {
+        this.toolWorker.setRtsMask( 1 << this.rts.getSelectedIndex() );
+      }
+
+      if ( !"unused".equals( this.dcd.getSelectedItem() ) )
+      {
+        this.toolWorker.setDcdMask( 1 << this.dcd.getSelectedIndex() );
+      }
+
+      if ( !"unused".equals( this.ri.getSelectedItem() ) )
+      {
+        this.toolWorker.setRiMask( 1 << this.ri.getSelectedIndex() );
+      }
+
+      if ( !"unused".equals( this.dsr.getSelectedItem() ) )
+      {
+        this.toolWorker.setDsrMask( 1 << this.dsr.getSelectedIndex() );
+      }
+
+      if ( !"unused".equals( this.dtr.getSelectedItem() ) )
+      {
+        this.toolWorker.setDtrMask( 1 << this.dtr.getSelectedIndex() );
+      }
+
+      // Other properties...
+      this.toolWorker.setInverted( this.inv.isSelected() );
+      this.toolWorker.setParity( UARTParity.parse( this.parity.getSelectedItem() ) );
+      this.toolWorker.setStopBits( UARTStopBits.parse( this.stop.getSelectedItem() ) );
+
+      this.toolWorker.execute();
+
+      setControlsEnabled( false );
     }
-    if ( ( ( String )this.stop.getSelectedItem() ).equals( "1" ) )
-    {
-      stopCount = 1;
-    }
-    else
-    {
-      stopCount = 2;
-    }
+  }
 
-    if ( this.startOfDecode > 0 )
-    {
-      a = this.startOfDecode;
-    }
+  /**
+   * generate a HTML page
+   * 
+   * @param empty
+   *          if this is true an empty output is generated
+   * @return String with HTML data
+   */
+  private String getEmptyHtmlPage()
+  {
+    Date now = new Date();
+    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG, Locale.US );
 
-    while ( ( this.endOfDecode - a ) > ( ( bitCount + stopCount + parityCount ) * baud ) )
-    {
+    // generate html page header
+    String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
+      + "<html>"
+      + "  <head>"
+      + "    <title></title>"
+      + "    <meta content=\"\">"
+      + "    <style>"
+      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+      + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
+      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+      + "       <br>";
 
-      /*
-       * find first falling edge this is the start of the startbit. If the
-       * inverted checkbox is set find the first rising edge.
-       */
-      b = this.analysisData.getDataAt( a ) & mask;
-      for ( i = a; i < this.endOfDecode; i++ )
-      {
-        if ( this.inv.isSelected() )
-        {
-          if ( b < ( this.analysisData.getDataAt( i ) & mask ) )
-          {
-            c = i;
-            break;
-          }
-        }
-        else
-        {
-          if ( b > ( this.analysisData.getDataAt( i ) & mask ) )
-          {
-            c = i;
-            break;
-          }
-        }
-        b = this.analysisData.getDataAt( i ) & mask;
+    // generate the statistics table
+    String stats = new String();
 
-        // update progress
-        this.progress.setValue( ( int )( i * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
+    // generate the data table
+    String data = "<table style=\"font-family:monospace;width:100%;\">"
+      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
+    data = data.concat( "</table" );
 
-        // abort here
-        if ( !this.runFlag )
-        {
-          System.out.println( "Abort: count=" + count + " pos=" + i );
-          i = this.endOfDecode;
-          break;
-        }
-      }
-      if ( i >= this.endOfDecode )
-      {
-        System.out.println( "End decode" );
-        break;
-      }
+    // generate the footer table
+    String footer = "   </body>" + "</html>";
 
-      /*
-       * Sampling is done in the middle of each bit the start bit must be low If
-       * the inverted checkbox is set the startbit must be high
-       */
-      a = c + baud / 2;
-      if ( this.inv.isSelected() )
-      {
-        if ( ( this.analysisData.getDataAt( a ) & mask ) == 0 )
-        {
-          // this is not a start bit !
-          if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-          {
-            this.decodedData.add( new UARTProtocolAnalysisDataSet( calculateTime( a ), "START_ERR",
-                UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-          }
-          else
-          {
-            this.decodedData.add( new UARTProtocolAnalysisDataSet( calculateTime( a ), "START_ERR",
-                UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-          }
-          this.detectedErrors++;
-        }
-      }
-      else
-      {
-        if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-        {
-          // this is not a start bit !
-          if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-          {
-            this.decodedData.add( new UARTProtocolAnalysisDataSet( calculateTime( a ), "START_ERR",
-                UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-          }
-          else
-          {
-            this.decodedData.add( new UARTProtocolAnalysisDataSet( calculateTime( a ), "START_ERR",
-                UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-          }
-          this.detectedErrors++;
-        }
-      }
-
-      /*
-       * sample the databits in the middle of the bit position
-       */
-
-      value = 0;
-      for ( i = 0; i < bitCount; i++ )
-      {
-        a += baud;
-        if ( this.inv.isSelected() )
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) == 0 )
-          {
-            value |= ( 1 << i );
-          }
-        }
-        else
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-          {
-            value |= ( 1 << i );
-          }
-        }
-      }
-      this.decodedData.add( new UARTProtocolAnalysisDataSet( a, value, type ) );
-      count++;
-
-      /*
-       * sample parity bit if available
-       */
-      String parityText = ( String )this.parity.getSelectedItem();
-      if ( parityText.equals( "odd" ) )
-      {
-        a += baud;
-        if ( ( Integer.bitCount( value ) & 1 ) == 0 )
-        {
-          if ( this.inv.isSelected() )
-          {
-            // odd parity, bitcount is even --> parity bit must be 0 (inverted)
-            if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-            {
-              // parity error
-              if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-              }
-              else
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-              }
-              this.detectedErrors++;
-            }
-          }
-          else
-          {
-            // odd parity, bitcount is even --> parity bit must be 1
-            if ( ( this.analysisData.getDataAt( a ) & mask ) == 0 )
-            {
-              // parity error
-              if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-              }
-              else
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-              }
-              this.detectedErrors++;
-            }
-          }
-        }
-        else
-        {
-          if ( this.inv.isSelected() )
-          {
-            // odd parity, bitcount is odd --> parity bit must be 1 (Inverted)
-            if ( ( this.analysisData.getDataAt( a ) & mask ) == 0 )
-            {
-              // parity error
-              if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-              }
-              else
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-              }
-              this.detectedErrors++;
-            }
-          }
-          else
-          {
-            // odd parity, bitcount is odd --> parity bit must be 0
-            if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-            {
-              // parity error
-              if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-              }
-              else
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-              }
-              this.detectedErrors++;
-            }
-          }
-        }
-      }
-      if ( parityText.equals( "even" ) )
-      {
-        a += baud;
-        if ( ( Integer.bitCount( value ) & 1 ) == 0 )
-        {
-          if ( this.inv.isSelected() )
-          {
-            // even parity, bitcount is even --> parity bit must be 1 (inverted)
-            if ( ( this.analysisData.getDataAt( a ) & mask ) == 0 )
-            {
-              // parity error
-              if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-              }
-              else
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-              }
-              this.detectedErrors++;
-            }
-          }
-          else
-          {
-            // even parity, bitcount is even --> parity bit must be 0
-            if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-            {
-              // parity error
-              if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-              }
-              else
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-              }
-              this.detectedErrors++;
-            }
-          }
-        }
-        else
-        {
-          if ( this.inv.isSelected() )
-          {
-            // even parity, bitcount is odd --> parity bit must be 0 (inverted)
-            if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-            {
-              // parity error
-              if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-              }
-              else
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-              }
-              this.detectedErrors++;
-            }
-          }
-          else
-          {
-            // even parity, bitcount is odd --> parity bit must be 1
-            if ( ( this.analysisData.getDataAt( a ) & mask ) == 0 )
-            {
-              // parity error
-              if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-              }
-              else
-              {
-                this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "PARITY_ERR",
-                    UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-              }
-              this.detectedErrors++;
-            }
-          }
-        }
-      }
-
-      /*
-       * sample stopbit(s)
-       */
-      String stopText = ( String )this.stop.getSelectedItem();
-      a += baud;
-      if ( stopText.equals( "1" ) )
-      {
-        if ( this.inv.isSelected() )
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-        else
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) == 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-      }
-      else if ( stopText.equals( "1.5" ) )
-      {
-        if ( this.inv.isSelected() )
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-        else
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) == 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-        a += ( baud / 4 );
-        if ( this.inv.isSelected() )
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-        else
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-      }
-      else
-      {
-        if ( this.inv.isSelected() )
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-        else
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-        a += baud;
-        if ( this.inv.isSelected() )
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-        else
-        {
-          if ( ( this.analysisData.getDataAt( a ) & mask ) != 0 )
-          {
-            // framing error
-            if ( type == UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA )
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT ) );
-            }
-            else
-            {
-              this.decodedData.add( new UARTProtocolAnalysisDataSet( a, "FRAME_ERR",
-                  UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT ) );
-            }
-            this.detectedErrors++;
-          }
-        }
-      }
-    }
-    this.progress.setValue( 100 );
-    return ( count );
+    return ( header + stats + data + footer );
   }
 
   /**
    * Convert sample count to time string.
    * 
-   * @param count
+   * @param aCount
    *          sample count (or index)
    * @return string containing time information
    */
-  private String indexToTime( long count )
+  private String indexToTime( final UARTDataSet aDataSet, final long aCount )
   {
-    count -= this.startOfDecode;
-    if ( count < 0 )
-    {
-      count = 0;
-    }
+    final long count = Math.max( 0, aCount - aDataSet.getStartOfDecode() );
     if ( this.analysisData.hasTimingData() )
     {
       return DisplayUtils.displayScaledTime( count, this.analysisData.getSampleRate() );
     }
     else
     {
-      return ( "" + count );
+      return ( "" + aCount );
     }
   }
 
@@ -1156,51 +635,62 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
     this.bits.setEnabled( enable );
     this.stop.setEnabled( enable );
     this.inv.setEnabled( enable );
-    this.btnExport.setEnabled( enable );
-    this.btnCancel.setEnabled( enable );
+
+    this.exportAction.setEnabled( enable );
+    this.closeAction.setEnabled( enable );
   }
 
   /**
    * exports the data to a CSV file
    * 
-   * @param file
+   * @param aFile
    *          File object
    */
-  private void storeToCsvFile( final File file )
+  private void storeToCsvFile( final File aFile, final UARTDataSet aDataSet )
   {
-    if ( this.decodedData.size() > 0 )
+    if ( !aDataSet.isEmpty() )
     {
-      UARTProtocolAnalysisDataSet dSet;
-      System.out.println( "writing decoded data to " + file.getPath() );
+      UARTData dSet;
+
       try
       {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( file ) );
+        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
 
         bw.write( "\"" + "index" + "\",\"" + "time" + "\",\"" + "RxD data or event" + "\",\"" + "TxD data or event"
             + "\"" );
         bw.newLine();
 
-        for ( int i = 0; i < this.decodedData.size(); i++ )
+        final List<UARTData> decodedData = aDataSet.getDecodedData();
+        for ( int i = 0; i < decodedData.size(); i++ )
         {
-          dSet = this.decodedData.get( i );
-          switch ( dSet.type )
+          dSet = decodedData.get( i );
+          switch ( dSet.getType() )
           {
-            case UARTProtocolAnalysisDataSet.UART_TYPE_EVENT:
-              bw.write( "\"" + i + "\",\"" + indexToTime( dSet.time ) + "\",\"" + dSet.event + "\",\"" + dSet.event
-                  + "\"" );
+            case UARTData.UART_TYPE_EVENT:
+              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getEvent()
+                  + "\",\"" + dSet.getEvent() + "\"" );
               break;
-            case UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT:
-              bw.write( "\"" + i + "\",\"" + indexToTime( dSet.time ) + "\",\"" + dSet.event + "\",\"" + "\"" );
+
+            case UARTData.UART_TYPE_RXEVENT:
+              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getEvent()
+                  + "\",\"" + "\"" );
               break;
-            case UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT:
-              bw.write( "\"" + i + "\",\"" + indexToTime( dSet.time ) + "\",\"" + "\",\"" + dSet.event + "\"" );
+
+            case UARTData.UART_TYPE_TXEVENT:
+              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + "\",\""
+                  + dSet.getEvent() + "\"" );
               break;
-            case UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA:
-              bw.write( "\"" + i + "\",\"" + indexToTime( dSet.time ) + "\",\"" + dSet.data + "\",\"" + "\"" );
+
+            case UARTData.UART_TYPE_RXDATA:
+              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getData()
+                  + "\",\"" + "\"" );
               break;
-            case UARTProtocolAnalysisDataSet.UART_TYPE_TXDATA:
-              bw.write( "\"" + i + "\",\"" + indexToTime( dSet.time ) + "\",\"" + "\",\"" + dSet.data + "\"" );
+
+            case UARTData.UART_TYPE_TXDATA:
+              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + "\",\""
+                  + dSet.getData() + "\"" );
               break;
+
             default:
               break;
           }
@@ -1218,17 +708,16 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
   /**
    * stores the data to a HTML file
    * 
-   * @param file
+   * @param aFile
    *          file object
    */
-  private void storeToHtmlFile( final File file )
+  private void storeToHtmlFile( final File aFile, final UARTDataSet aDataSet )
   {
-    if ( this.decodedData.size() > 0 )
+    if ( !aDataSet.isEmpty() )
     {
-      System.out.println( "writing decoded data to " + file.getPath() );
       try
       {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( file ) );
+        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
 
         // write the complete displayed html page to file
         bw.write( this.outText.getText() );
@@ -1249,10 +738,11 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
    *          if this is true an empty output is generated
    * @return String with HTML data
    */
-  private String toHtmlPage( final boolean empty )
+  private String toHtmlPage( final UARTDataSet aDataSet )
   {
     Date now = new Date();
     DateFormat df = DateFormat.getDateInstance( DateFormat.LONG, Locale.US );
+
     int bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
     int bitAdder = 0;
 
@@ -1275,89 +765,87 @@ final class UARTProtocolAnalysisDialog extends JDialog implements ActionListener
 
     // generate the statistics table
     String stats = new String();
-    if ( !empty )
+    if ( aDataSet.getBitLength() == 0 )
     {
-      if ( this.bitLength == 0 )
+      stats = stats.concat( "<p style=\"color:red;\">Baudrate calculation failed !</p><br><br>" );
+    }
+    else
+    {
+      stats = stats.concat( "<table style=\"width:100%;\">" + "<TR><TD style=\"width:30%;\">Decoded Symbols</TD><TD>"
+          + aDataSet.getDecodedSymbols() + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Detected Bus Errors</TD><TD>"
+          + aDataSet.getDetectedErrors() + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Baudrate</TD><TD>"
+          + this.analysisData.getSampleRate() / aDataSet.getBitLength() + "</TD></TR>" + "</table>" + "<br>" + "<br>" );
+      if ( aDataSet.getBitLength() < 15 )
       {
-        stats = stats.concat( "<p style=\"color:red;\">Baudrate calculation failed !</p><br><br>" );
-      }
-      else
-      {
-        stats = stats.concat( "<table style=\"width:100%;\">" + "<TR><TD style=\"width:30%;\">Decoded Symbols</TD><TD>"
-            + this.decodedSymbols + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Detected Bus Errors</TD><TD>"
-            + this.detectedErrors + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Baudrate</TD><TD>"
-            + this.analysisData.getSampleRate() / this.bitLength + "</TD></TR>" + "</table>" + "<br>" + "<br>" );
-        if ( this.bitLength < 15 )
-        {
-          stats = stats
-          .concat( "<p style=\"color:red;\">The baudrate may be wrong, use a higher samplerate to avoid this !</p><br><br>" );
-        }
+        stats = stats
+        .concat( "<p style=\"color:red;\">The baudrate may be wrong, use a higher samplerate to avoid this !</p><br><br>" );
       }
     }
 
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
       + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
-    if ( empty )
+    final List<UARTData> decodedData = aDataSet.getDecodedData();
+
+    UARTData ds;
+    for ( int i = 0; i < decodedData.size(); i++ )
     {
-    }
-    else
-    {
-      UARTProtocolAnalysisDataSet ds;
-      for ( int i = 0; i < this.decodedData.size(); i++ )
+      ds = decodedData.get( i );
+      switch ( ds.getType() )
       {
-        ds = this.decodedData.get( i );
-        switch ( ds.type )
-        {
-          case UARTProtocolAnalysisDataSet.UART_TYPE_EVENT:
-            data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-                + indexToTime( ds.time ) + "</td><td>" + ds.event + "</td><td></td><td></td><td></td><td>" + ds.event
-                + "</td><td></td><td></td><td></td></tr>" );
-            break;
-          case UARTProtocolAnalysisDataSet.UART_TYPE_RXEVENT:
-            data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-                + indexToTime( ds.time ) + "</td><td>" + ds.event + "</td><td></td><td></td><td></td><td>"
-                + "</td><td></td><td></td><td></td></tr>" );
-            break;
-          case UARTProtocolAnalysisDataSet.UART_TYPE_TXEVENT:
-            data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-                + indexToTime( ds.time ) + "</td><td>" + "</td><td></td><td></td><td></td><td>" + ds.event
-                + "</td><td></td><td></td><td></td></tr>" );
-            break;
-          case UARTProtocolAnalysisDataSet.UART_TYPE_RXDATA:
-            data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
-                + indexToTime( ds.time ) + "</td><td>" + "0x"
-                + DisplayUtils.integerToHexString( ds.data, bitCount / 4 + bitAdder ) + "</td><td>" + "0b"
-                + DisplayUtils.integerToBinString( ds.data, bitCount ) + "</td><td>" + ds.data + "</td><td>" );
+        case UARTData.UART_TYPE_EVENT:
+          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
+              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + ds.getEvent()
+              + "</td><td></td><td></td><td></td><td>" + ds.getEvent() + "</td><td></td><td></td><td></td></tr>" );
+          break;
 
-            if ( ( ds.data >= 32 ) && ( bitCount == 8 ) )
-            {
-              data += ( char )ds.data;
-            }
-            data = data.concat( "</td><td>" + "</td><td>" + "</td><td>" + "</td><td>" );
-            data = data.concat( "</td></tr>" );
+        case UARTData.UART_TYPE_RXEVENT:
+          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
+              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + ds.getEvent()
+              + "</td><td></td><td></td><td></td><td>" + "</td><td></td><td></td><td></td></tr>" );
+          break;
 
-            break;
-          case UARTProtocolAnalysisDataSet.UART_TYPE_TXDATA:
-            data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
-                + indexToTime( ds.time ) + "</td><td>" + "</td><td>" + "</td><td>" + "</td><td>" );
+        case UARTData.UART_TYPE_TXEVENT:
+          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
+              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + "</td><td></td><td></td><td></td><td>"
+              + ds.getEvent() + "</td><td></td><td></td><td></td></tr>" );
+          break;
 
-            data = data.concat( "</td><td>" + "0x" + DisplayUtils.integerToHexString( ds.data, bitCount / 4 + bitAdder )
-                + "</td><td>" + "0b" + DisplayUtils.integerToBinString( ds.data, bitCount ) + "</td><td>" + ds.data
-                + "</td><td>" );
+        case UARTData.UART_TYPE_RXDATA:
+          final int rxdData = ds.getData();
+          data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
+              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + "0x"
+              + DisplayUtils.integerToHexString( rxdData, bitCount / 4 + bitAdder ) + "</td><td>" + "0b"
+              + DisplayUtils.integerToBinString( rxdData, bitCount ) + "</td><td>" + rxdData + "</td><td>" );
 
-            if ( ( ds.data >= 32 ) && ( bitCount == 8 ) )
-            {
-              data += ( char )ds.data;
-            }
-            data = data.concat( "</td></tr>" );
+          if ( ( rxdData >= 32 ) && ( bitCount == 8 ) )
+          {
+            data += ( char )rxdData;
+          }
+          data = data.concat( "</td><td>" + "</td><td>" + "</td><td>" + "</td><td>" );
+          data = data.concat( "</td></tr>" );
+          break;
 
-            break;
-          default:
-            break;
-        }
+        case UARTData.UART_TYPE_TXDATA:
+          final int txdData = ds.getData();
+          data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
+              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + "</td><td>" + "</td><td>" + "</td><td>" );
 
+          data = data.concat( "</td><td>" + "0x" + DisplayUtils.integerToHexString( txdData, bitCount / 4 + bitAdder )
+              + "</td><td>" + "0b" + DisplayUtils.integerToBinString( txdData, bitCount ) + "</td><td>" + txdData
+              + "</td><td>" );
+
+          if ( ( txdData >= 32 ) && ( bitCount == 8 ) )
+          {
+            data += ( char )txdData;
+          }
+          data = data.concat( "</td></tr>" );
+          break;
+
+        default:
+          break;
       }
+
     }
     data = data.concat( "</table" );
 

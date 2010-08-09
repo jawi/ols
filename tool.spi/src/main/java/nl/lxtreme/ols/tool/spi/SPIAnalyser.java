@@ -22,7 +22,6 @@ package nl.lxtreme.ols.tool.spi;
 
 
 import java.awt.*;
-import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
@@ -32,18 +31,14 @@ import nl.lxtreme.ols.tool.base.*;
 /**
  * 
  */
-public class SPIAnalyser extends BaseTool
+public class SPIAnalyser extends BaseAsyncTool<SPIProtocolAnalysisDialog, SPIDataSet, SPIAnalyserWorker>
 {
-  // VARIABLES
-
-  private SPIProtocolAnalysisDialog dialog;
-
   // CONSTRUCTORS
 
   /**
-   * @param aName
+   * Creates a new SPIAnalyser instance.
    */
-  public SPIAnalyser( )
+  public SPIAnalyser()
   {
     super( "SPI analyser ..." );
   }
@@ -51,52 +46,34 @@ public class SPIAnalyser extends BaseTool
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#readProperties(java.lang.String, java.util.Properties)
+   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
+   *      java.lang.String, nl.lxtreme.ols.api.data.AnnotatedData,
+   *      nl.lxtreme.ols.api.tools.ToolContext,
+   *      nl.lxtreme.ols.api.tools.AnalysisCallback)
    */
   @Override
-  public void readProperties( final String aNamespace, final Properties aProperties )
+  protected SPIProtocolAnalysisDialog createDialog( final Window aOwner, final String aName, final AnnotatedData aData,
+      final ToolContext aContext, final AnalysisCallback aCallback )
   {
-    this.dialog.readProperties( aNamespace, aProperties );
+    return new SPIProtocolAnalysisDialog( aOwner, aName );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#writeProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.AnnotatedData)
    */
   @Override
-  public void writeProperties( final String aNamespace, final Properties aProperties )
+  protected SPIAnalyserWorker createToolWorker( final AnnotatedData aData )
   {
-    this.dialog.writeProperties( aNamespace, aProperties );
+    return new SPIAnalyserWorker( aData );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#doProcess(nl.lxtreme.ols.api.data.AnnotatedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onToolWorkerDone(java.lang.Object)
    */
   @Override
-  protected void doProcess( final AnnotatedData aData, final ToolContext aContext )
+  protected void onToolWorkerDone( final SPIDataSet aAnalysisResult )
   {
-    this.dialog.showDialog( aData );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#setupTool(java.awt.Frame)
-   */
-  @Override
-  protected void setupTool( final Frame aFrame )
-  {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aFrame ) )
-    {
-      this.dialog.dispose();
-      this.dialog = null;
-    }
-
-    // if no valid dialog exists, create one
-    if ( this.dialog == null )
-    {
-      this.dialog = new SPIProtocolAnalysisDialog( aFrame, getName() );
-    }
+    getDialog().createReport( aAnalysisResult );
   }
 }
 

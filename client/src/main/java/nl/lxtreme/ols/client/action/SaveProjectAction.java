@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import java.io.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -37,15 +37,15 @@ public class SaveProjectAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long   serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG              = Logger.getLogger( SaveProjectAction.class.getName() );
+  private static final Logger LOG = Logger.getLogger( SaveProjectAction.class.getName() );
 
-  public static final String  ID               = "SaveProject";
+  public static final String ID = "SaveProject";
 
   // VARIABLES
 
-  private final Project       project;
+  private final Project project;
 
   // CONSTRUCTORS
 
@@ -66,11 +66,11 @@ public class SaveProjectAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Window owner = HostUtils.getOwningWindow( aEvent );
+    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
     try
     {
-      final File file = HostUtils.showFileSaveDialog( owner );
+      final File file = SwingComponentUtils.showFileSaveDialog( owner );
       if ( file != null )
       {
         if ( LOG.isLoggable( Level.INFO ) )

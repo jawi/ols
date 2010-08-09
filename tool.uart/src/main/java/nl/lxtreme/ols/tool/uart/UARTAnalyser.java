@@ -31,12 +31,8 @@ import nl.lxtreme.ols.tool.base.*;
 /**
  * 
  */
-public class UARTAnalyser extends BaseTool
+public class UARTAnalyser extends BaseAsyncTool<UARTProtocolAnalysisDialog, UARTDataSet, UARTAnalyserWorker>
 {
-  // VARIABLES
-
-  private UARTProtocolAnalysisDialog dialog;
-
   // CONSTRUCTORS
 
   /**
@@ -50,33 +46,34 @@ public class UARTAnalyser extends BaseTool
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#doProcess(nl.lxtreme.ols.api.data.AnnotatedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext)
+   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
+   *      java.lang.String, nl.lxtreme.ols.api.data.AnnotatedData,
+   *      nl.lxtreme.ols.api.tools.ToolContext,
+   *      nl.lxtreme.ols.api.tools.AnalysisCallback)
    */
   @Override
-  protected void doProcess( final AnnotatedData aData, final ToolContext aContext )
+  protected UARTProtocolAnalysisDialog createDialog( final Window aOwner, final String aName,
+      final AnnotatedData aData, final ToolContext aContext, final AnalysisCallback aCallback )
   {
-    this.dialog.showDialog( aData );
+    return new UARTProtocolAnalysisDialog( aOwner, getName() );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#setupTool(java.awt.Frame)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.AnnotatedData)
    */
   @Override
-  protected void setupTool( final Frame aFrame )
+  protected UARTAnalyserWorker createToolWorker( final AnnotatedData aData )
   {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aFrame ) )
-    {
-      this.dialog.dispose();
-      this.dialog = null;
-    }
+    return new UARTAnalyserWorker( aData );
+  }
 
-    // if no valid dialog exists, create one
-    if ( this.dialog == null )
-    {
-      this.dialog = new UARTProtocolAnalysisDialog( aFrame, getName() );
-    }
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onToolWorkerDone(java.lang.Object)
+   */
+  @Override
+  protected void onToolWorkerDone( final UARTDataSet aAnalysisResult )
+  {
+    getDialog().createReport( aAnalysisResult );
   }
 }
 
