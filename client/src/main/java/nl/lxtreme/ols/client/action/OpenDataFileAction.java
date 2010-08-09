@@ -30,7 +30,7 @@ import javax.swing.filechooser.*;
 import javax.swing.filechooser.FileFilter;
 
 import nl.lxtreme.ols.client.signal.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -73,11 +73,11 @@ public class OpenDataFileAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Window owner = HostUtils.getOwningWindow( aEvent );
+    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
     try
     {
-      final File file = HostUtils.showFileOpenDialog( owner, OLS_FILEFILTER );
+      final File file = SwingComponentUtils.showFileOpenDialog( owner, OLS_FILEFILTER );
       if ( ( file != null ) && file.isFile() )
       {
         if ( LOG.isLoggable( Level.INFO ) )

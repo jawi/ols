@@ -27,10 +27,14 @@ import java.util.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
-final class StateAnalysisDialog extends JDialog implements ActionListener
+final class StateAnalysisDialog extends JDialog implements BaseAsyncToolDialog<CapturedData, StateAnalysisWorker>,
+ActionListener, Configurable
 {
   // CONSTANTS
 
@@ -53,9 +57,13 @@ final class StateAnalysisDialog extends JDialog implements ActionListener
 
   // CONSTRUCTORS
 
-  public StateAnalysisDialog( final Frame frame, final String name )
+  /**
+   * @param aOwner
+   * @param aName
+   */
+  public StateAnalysisDialog( final Window aOwner, final String aName )
   {
-    super( frame, name, true );
+    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
     Container pane = getContentPane();
     pane.setLayout( new GridLayout( 3, 2, 5, 5 ) );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
@@ -113,18 +121,45 @@ final class StateAnalysisDialog extends JDialog implements ActionListener
     setVisible( false );
   }
 
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
+   *      java.util.Properties)
+   */
   public void readProperties( final String aNamespace, final Properties properties )
   {
     SwingComponentUtils.setSelectedItem( this.edgeSelect, properties.getProperty( aNamespace + ".edge" ) );
     SwingComponentUtils.setSelectedItem( this.channelSelect, properties.getProperty( aNamespace + ".channel" ) );
   }
 
-  public int showDialog()
+  @Override
+  public void reset()
   {
-    setVisible( true );
-    return ( this.result );
+    // TODO Auto-generated method stub
   }
 
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   */
+  @Override
+  public void setToolWorker( final StateAnalysisWorker aWorker )
+  {
+    // NO-op
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
+   */
+  @Override
+  public boolean showDialog( final AnnotatedData aData )
+  {
+    setVisible( true );
+    return ( this.result == StateAnalysisDialog.OK );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
+   *      java.util.Properties)
+   */
   public void writeProperties( final String aNamespace, final Properties properties )
   {
     properties.setProperty( aNamespace + ".channel", ( String )this.channelSelect.getSelectedItem() );

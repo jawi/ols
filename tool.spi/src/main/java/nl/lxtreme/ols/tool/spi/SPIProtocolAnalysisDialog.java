@@ -26,10 +26,14 @@ import java.awt.event.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
+import java.util.List;
+import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -41,11 +45,153 @@ import nl.lxtreme.ols.util.swing.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener, Runnable
+final class SPIProtocolAnalysisDialog extends JDialog implements BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>,
+Configurable
 {
+  // INNER TYPES
+
+  /**
+   * 
+   */
+  final class CloseAction extends AbstractAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * 
+     */
+    public CloseAction()
+    {
+      super( "Close" );
+      putValue( SHORT_DESCRIPTION, "Closes this dialog" );
+    }
+
+    // METHODS
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      close();
+    }
+  }
+
+  /**
+   * 
+   */
+  final class ExportAction extends AbstractAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * 
+     */
+    public ExportAction()
+    {
+      super( "Export" );
+      putValue( SHORT_DESCRIPTION, "Exports the analysis results to file" );
+    }
+
+    // METHODS
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      final File selectedFile = SwingComponentUtils.showFileSaveDialog( getOwner(), StdFileFilter.CSV,
+          StdFileFilter.HTML );
+      if ( selectedFile != null )
+      {
+        if ( LOG.isLoggable( Level.INFO ) )
+        {
+          LOG.info( "Writing analysis results to " + selectedFile.getPath() );
+        }
+
+        final String filename = selectedFile.getName();
+        if ( filename.endsWith( ".htm" ) || filename.endsWith( ".html" ) )
+        {
+          storeToHtmlFile( selectedFile, SPIProtocolAnalysisDialog.this.analysisResult );
+        }
+        else
+        {
+          storeToCsvFile( selectedFile, SPIProtocolAnalysisDialog.this.analysisResult );
+        }
+      }
+    }
+  }
+
+  /**
+   * 
+   */
+  final class RunAnalysisAction extends AbstractAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * 
+     */
+    public RunAnalysisAction()
+    {
+      super( "Analyze" );
+      restore();
+    }
+
+    // METHODS
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      final String name = ( String )getValue( NAME );
+
+      if ( "Abort".equals( name ) )
+      {
+        cancelToolWorker();
+
+        putValue( NAME, "Analyze" );
+      }
+      else
+      {
+        startToolWorker();
+
+        putValue( NAME, "Abort" );
+        putValue( SHORT_DESCRIPTION, "Aborts current analysis..." );
+      }
+    }
+
+    /**
+     * 
+     */
+    public void restore()
+    {
+      putValue( NAME, "Analyze" );
+      putValue( SHORT_DESCRIPTION, "Run analysis" );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
+
+  private static final Logger LOG = Logger.getLogger( SPIProtocolAnalysisDialog.class.getName() );
 
   // VARIABLES
 
@@ -61,28 +207,27 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
   private AnnotatedData analysisData;
   private final JEditorPane outText;
   private final JComboBox order;
-  private final Vector<SPIProtocolAnalysisDataSet> decodedData;
-  private final JFileChooser fileChooser;
-  private int startOfDecode;
-  private int endOfDecode;
-  private final JButton btnConvert;
-  private final JButton btnExport;
-  private final JButton btnCancel;
-  private final JProgressBar progress;
-  private boolean runFlag;
-  private Thread thrWorker;
+
+  private final RunAnalysisAction runAnalysisAction;
+  private final ExportAction exportAction;
+  private final CloseAction closeAction;
+
+  private transient volatile SPIAnalyserWorker toolWorker;
+  private transient volatile SPIDataSet analysisResult;
 
   // CONSTRUCTORS
 
-  public SPIProtocolAnalysisDialog( final Frame frame, final String name )
+  /**
+   * @param aOwner
+   * @param aName
+   */
+  public SPIProtocolAnalysisDialog( final Window aOwner, final String aName )
   {
-    super( frame, name, true );
+    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
+
     Container pane = getContentPane();
     pane.setLayout( new GridBagLayout() );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-
-    this.decodedData = new Vector<SPIProtocolAnalysisDataSet>();
-    this.startOfDecode = 0;
 
     /*
      * add protocol settings elements
@@ -148,49 +293,41 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
     panTable.setLayout( new GridLayout( 1, 1, 5, 5 ) );
     panTable.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Results" ),
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-    this.outText = new JEditorPane( "text/html", toHtmlPage( true ) );
+    this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
     this.outText.setMargin( new Insets( 5, 5, 5, 5 ) );
     panTable.add( new JScrollPane( this.outText ) );
     add( panTable, createConstraints( 1, 0, 3, 3, 1.0, 1.0 ) );
 
     /*
-     * add progress bar
-     */
-    JPanel panProgress = new JPanel();
-    panProgress.setLayout( new BorderLayout() );
-    panProgress.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Progress" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-    this.progress = new JProgressBar( 0, 100 );
-    this.progress.setMinimum( 0 );
-    this.progress.setValue( 0 );
-    this.progress.setMaximum( 100 );
-    panProgress.add( this.progress, BorderLayout.CENTER );
-    add( panProgress, createConstraints( 0, 3, 4, 1, 1.0, 0 ) );
-
-    /*
      * add buttons
      */
-    this.btnConvert = new JButton( "Analyze" );
-    this.btnConvert.addActionListener( this );
-    add( this.btnConvert, createConstraints( 0, 4, 1, 1, 0.5, 0 ) );
-    this.btnExport = new JButton( "Export" );
-    this.btnExport.addActionListener( this );
-    add( this.btnExport, createConstraints( 1, 4, 1, 1, 0.5, 0 ) );
-    this.btnCancel = new JButton( "Close" );
-    this.btnCancel.addActionListener( this );
-    add( this.btnCancel, createConstraints( 2, 4, 1, 1, 0.5, 0 ) );
+    this.runAnalysisAction = new RunAnalysisAction();
+    JButton btnConvert = new JButton( this.runAnalysisAction );
+    add( btnConvert, createConstraints( 0, 3, 1, 1, 0.5, 0 ) );
 
-    this.fileChooser = new JFileChooser();
-    // this.fileChooser.addChoosableFileFilter( ( FileFilter )new CSVFilter() );
-    // this.fileChooser.addChoosableFileFilter( ( FileFilter )new HTMLFilter()
-    // );
+    this.exportAction = new ExportAction();
+    JButton btnExport = new JButton( this.exportAction );
+    add( btnExport, createConstraints( 1, 3, 1, 1, 0.5, 0 ) );
+
+    this.closeAction = new CloseAction();
+    JButton btnCancel = new JButton( this.closeAction );
+    add( btnCancel, createConstraints( 2, 3, 1, 1, 0.5, 0 ) );
 
     setSize( 1000, 500 );
     setResizable( false );
-    this.thrWorker = null;
-    this.runFlag = false;
   }
 
+  // METHODS
+
+  /**
+   * @param x
+   * @param y
+   * @param w
+   * @param h
+   * @param wx
+   * @param wy
+   * @return
+   */
   private static GridBagConstraints createConstraints( final int x, final int y, final int w, final int h,
       final double wx, final double wy )
   {
@@ -208,97 +345,6 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
 
   public void actionPerformed( final ActionEvent e )
   {
-    if ( e.getActionCommand().equals( "Analyze" ) )
-    {
-      this.runFlag = true;
-      this.thrWorker = new Thread( this );
-      this.thrWorker.start();
-    }
-    else if ( e.getActionCommand().equals( "Close" ) )
-    {
-      setVisible( false );
-    }
-    else if ( e.getActionCommand().equals( "Export" ) )
-    {
-      if ( this.fileChooser.showSaveDialog( this ) == JFileChooser.APPROVE_OPTION )
-      {
-        File file = this.fileChooser.getSelectedFile();
-        if ( this.fileChooser.getFileFilter().getDescription().equals( "Website (*.html)" ) )
-        {
-          storeToHtmlFile( file );
-        }
-        else
-        {
-          storeToCsvFile( file );
-        }
-      }
-    }
-    else if ( e.getActionCommand().equals( "Abort" ) )
-    {
-      this.runFlag = false;
-    }
-  }
-
-  public void readProperties( final String aNamespace, final Properties properties )
-  {
-    SwingComponentUtils.setSelectedItem( this.sck, properties.getProperty( aNamespace + ".sck" ) );
-    SwingComponentUtils.setSelectedItem( this.miso, properties.getProperty( aNamespace + ".miso" ) );
-    SwingComponentUtils.setSelectedItem( this.mosi, properties.getProperty( aNamespace + ".mosi" ) );
-    SwingComponentUtils.setSelectedItem( this.cs, properties.getProperty( aNamespace + ".cs" ) );
-    SwingComponentUtils.setSelectedItem( this.mode, this.modearray, properties.getProperty( aNamespace + ".mode" ) );
-    SwingComponentUtils.setSelectedItem( this.bits, this.bitarray, properties.getProperty( aNamespace + ".bits" ) );
-    SwingComponentUtils.setSelectedItem( this.order, this.orderarray, properties.getProperty( aNamespace + ".order" ) );
-  }
-
-  /**
-   * runs the conversion when started
-   */
-  public void run()
-  {
-    setControlsEnabled( false );
-    this.btnConvert.setText( "Abort" );
-    decode();
-    setControlsEnabled( true );
-    this.btnConvert.setText( "Analyze" );
-  }
-
-  /**
-   * shows the dialog and sets the data to use
-   * 
-   * @param data
-   *          data to use for analysis
-   */
-  public void showDialog( final AnnotatedData data )
-  {
-    this.analysisData = data;
-    setVisible( true );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
-   *      java.util.Properties)
-   */
-  public void writeProperties( final String aNamespace, final Properties properties )
-  {
-    properties.setProperty( aNamespace + ".sck", Integer.toString( this.sck.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".miso", Integer.toString( this.miso.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".mosi", Integer.toString( this.mosi.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".cs", Integer.toString( this.cs.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".mode", ( String )this.mode.getSelectedItem() );
-    properties.setProperty( aNamespace + ".bits", ( String )this.bits.getSelectedItem() );
-    properties.setProperty( aNamespace + ".order", ( String )this.order.getSelectedItem() );
-  }
-
-  /**
-   * calculate the time offset
-   * 
-   * @param time
-   *          absolute sample number
-   * @return time relative to data
-   */
-  private long calculateTime( final long time )
-  {
-    return this.analysisData.calculateTime( time );
   }
 
   /**
@@ -307,237 +353,166 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
    * this the decoder starts to decode the data by the selected mode, number of
    * bits and bit order. The decoded data are put to a JTable object directly.
    */
-  private void decode()
+  public void createReport( final SPIDataSet aAnalysisResult )
   {
-    // process the captured data and write to output
-    int a, c;
-    int bitCount, mosivalue, misovalue, maxbits;
+    this.analysisResult = aAnalysisResult;
 
-    // clear old data
-    this.decodedData.clear();
-
-    /*
-     * Buid bitmasks based on the SCK, MISO, MOSI and CS pins.
-     */
-    int csmask = ( 1 << this.cs.getSelectedIndex() );
-    int sckmask = ( 1 << this.sck.getSelectedIndex() );
-    int misomask = ( 1 << this.miso.getSelectedIndex() );
-    int mosimask = ( 1 << this.mosi.getSelectedIndex() );
-
-    System.out.println( "csmask   = 0x" + Integer.toHexString( csmask ) );
-    System.out.println( "sckmask  = 0x" + Integer.toHexString( sckmask ) );
-    System.out.println( "misomask = 0x" + Integer.toHexString( misomask ) );
-    System.out.println( "mosimask = 0x" + Integer.toHexString( mosimask ) );
-
-    final int[] values = this.analysisData.getValues();
-    final long[] timestamps = this.analysisData.getTimestamps();
-
-    this.startOfDecode = 0;
-    this.endOfDecode = values.length;
-    if ( this.analysisData.isCursorsEnabled() )
-    {
-      this.startOfDecode = this.analysisData.getSampleIndex( this.analysisData.getCursorPosition( 1 ) );
-      this.endOfDecode = this.analysisData.getSampleIndex( this.analysisData.getCursorPosition( 2 ) + 1 );
-    }
-    else
-    {
-      /*
-       * For analyze scan the CS line for a falling edge. If no edge could be
-       * found, the position of the trigger is used for start of analysis. If no
-       * trigger and no edge is found the analysis fails.
-       */
-      a = values[0] & csmask;
-      c = 0;
-      for ( int i = this.startOfDecode; i < this.endOfDecode; i++ )
-      {
-        if ( a > ( values[i] & csmask ) )
-        {
-          // cs to low found here
-          this.startOfDecode = i;
-          c = 1;
-          System.out.println( "CS found at " + i );
-          break;
-        }
-        a = values[i] & csmask;
-
-        if ( this.runFlag == false )
-        {
-          return;
-        }
-        this.progress.setValue( ( int )( timestamps[i] * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
-      }
-      if ( c == 0 )
-      {
-        // no CS edge found, look for trigger
-        if ( this.analysisData.hasTriggerData() )
-        {
-          this.startOfDecode = this.analysisData.getSampleIndex( this.analysisData.getTriggerPosition() );
-        }
-      }
-      // now the trigger is in b, add trigger event to table
-      this.decodedData.addElement( new SPIProtocolAnalysisDataSet( this.startOfDecode, "CSLOW" ) );
-    }
-
-    /*
-     * Use the mode parameter to determine which edges are to detect. Mode 0 and
-     * mode 3 are sampling on the rising clk edge, mode 2 and 4 are sampling on
-     * the falling edge. a is used for start of value, c is register for detect
-     * line changes.
-     */
-    if ( ( this.mode.getSelectedItem().equals( "0" ) ) || ( this.mode.getSelectedItem().equals( "2" ) ) )
-    {
-      // scanning for rising clk edges
-      c = values[this.startOfDecode] & sckmask;
-      a = values[this.startOfDecode] & csmask;
-      bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1;
-      maxbits = bitCount;
-      misovalue = 0;
-      mosivalue = 0;
-      for ( int i = this.startOfDecode; i < this.endOfDecode; i++ )
-      {
-        if ( c < ( values[i] & sckmask ) )
-        {
-          // sample here
-          if ( this.order.getSelectedItem().equals( "MSB first" ) )
-          {
-            if ( ( values[i] & misomask ) == misomask )
-            {
-              misovalue |= ( 1 << bitCount );
-            }
-            if ( ( values[i] & mosimask ) == mosimask )
-            {
-              mosivalue |= ( 1 << bitCount );
-            }
-          }
-          else
-          {
-            if ( ( values[i] & misomask ) == misomask )
-            {
-              misovalue |= ( 1 << ( maxbits - bitCount ) );
-            }
-            if ( ( values[i] & mosimask ) == mosimask )
-            {
-              mosivalue |= ( 1 << ( maxbits - bitCount ) );
-            }
-          }
-
-          if ( bitCount > 0 )
-          {
-            bitCount--;
-          }
-          else
-          {
-            this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), mosivalue,
-                misovalue ) );
-
-            // System.out.println("MISO = 0x" + Integer.toHexString(misovalue));
-            // System.out.println("MOSI = 0x" + Integer.toHexString(mosivalue));
-            bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1;
-            misovalue = 0;
-            mosivalue = 0;
-
-          }
-        }
-        c = values[i] & sckmask;
-
-        /* CS edge detection */
-        if ( a > ( values[i] & csmask ) )
-        {
-          // falling edge
-          this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), "CSLOW" ) );
-        }
-        else if ( a < ( values[i] & csmask ) )
-        {
-          // rising edge
-          this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), "CSHIGH" ) );
-        }
-        a = values[i] & csmask;
-
-        if ( this.runFlag == false )
-        {
-          return;
-        }
-        this.progress.setValue( ( int )( timestamps[i] * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
-      }
-    }
-    else
-    {
-      // scanning for falling clk edges
-      c = values[this.startOfDecode] & sckmask;
-      a = values[this.startOfDecode] & csmask;
-      bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1;
-      maxbits = bitCount;
-      misovalue = 0;
-      mosivalue = 0;
-      for ( int i = this.startOfDecode; i < this.endOfDecode; i++ )
-      {
-        if ( c > ( values[i] & sckmask ) )
-        {
-          // sample here
-          if ( this.order.getSelectedItem().equals( "MSB first" ) )
-          {
-            if ( ( values[i] & misomask ) == misomask )
-            {
-              misovalue |= ( 1 << bitCount );
-            }
-            if ( ( values[i] & mosimask ) == mosimask )
-            {
-              mosivalue |= ( 1 << bitCount );
-            }
-          }
-          else
-          {
-            if ( ( values[i] & misomask ) == misomask )
-            {
-              misovalue |= ( 1 << ( maxbits - bitCount ) );
-            }
-            if ( ( values[i] & mosimask ) == mosimask )
-            {
-              mosivalue |= ( 1 << ( maxbits - bitCount ) );
-            }
-          }
-
-          if ( bitCount > 0 )
-          {
-            bitCount--;
-          }
-          else
-          {
-            this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), mosivalue,
-                misovalue ) );
-
-            // System.out.println("MISO = 0x" + Integer.toHexString(misovalue));
-            // System.out.println("MOSI = 0x" + Integer.toHexString(mosivalue));
-            bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1;
-            misovalue = 0;
-            mosivalue = 0;
-          }
-        }
-        c = values[i] & sckmask;
-
-        /* CS edge detection */
-        if ( a > ( values[i] & csmask ) )
-        {
-          // falling edge
-          this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), "CSLOW" ) );
-        }
-        else if ( a < ( values[i] & csmask ) )
-        {
-          // rising edge
-          this.decodedData.addElement( new SPIProtocolAnalysisDataSet( calculateTime( timestamps[i] ), "CSHIGH" ) );
-        }
-        a = values[i] & csmask;
-
-        if ( this.runFlag == false )
-        {
-          return;
-        }
-        this.progress.setValue( ( int )( timestamps[i] * 100 / ( this.endOfDecode - this.startOfDecode ) ) );
-      }
-    }
-
-    this.outText.setText( toHtmlPage( false ) );
+    this.outText.setText( toHtmlPage( aAnalysisResult ) );
     this.outText.setEditable( false );
+
+    this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+    this.runAnalysisAction.restore();
+    this.runAnalysisAction.setEnabled( false );
+
+    setControlsEnabled( true );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
+   *      java.util.Properties)
+   */
+  public void readProperties( final String aNamespace, final Properties aProperties )
+  {
+    SwingComponentUtils.setSelectedItem( this.sck, aProperties.getProperty( aNamespace + ".sck" ) );
+    SwingComponentUtils.setSelectedItem( this.miso, aProperties.getProperty( aNamespace + ".miso" ) );
+    SwingComponentUtils.setSelectedItem( this.mosi, aProperties.getProperty( aNamespace + ".mosi" ) );
+    SwingComponentUtils.setSelectedItem( this.cs, aProperties.getProperty( aNamespace + ".cs" ) );
+    SwingComponentUtils.setSelectedItem( this.mode, this.modearray, aProperties.getProperty( aNamespace + ".mode" ) );
+    SwingComponentUtils.setSelectedItem( this.bits, this.bitarray, aProperties.getProperty( aNamespace + ".bits" ) );
+    SwingComponentUtils.setSelectedItem( this.order, this.orderarray, aProperties.getProperty( aNamespace + ".order" ) );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#reset()
+   */
+  @Override
+  public void reset()
+  {
+    this.outText.setText( getEmptyHtmlPage() );
+    this.outText.setEditable( false );
+
+    this.exportAction.setEnabled( false );
+
+    this.runAnalysisAction.restore();
+    this.runAnalysisAction.setEnabled( true );
+
+    setControlsEnabled( true );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   */
+  @Override
+  public void setToolWorker( final SPIAnalyserWorker aToolWorker )
+  {
+    this.toolWorker = aToolWorker;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
+   */
+  public boolean showDialog( final AnnotatedData aData )
+  {
+    this.analysisData = aData;
+
+    setVisible( true );
+
+    return true;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
+   *      java.util.Properties)
+   */
+  public void writeProperties( final String aNamespace, final Properties aProperties )
+  {
+    aProperties.setProperty( aNamespace + ".sck", Integer.toString( this.sck.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".miso", Integer.toString( this.miso.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".mosi", Integer.toString( this.mosi.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".cs", Integer.toString( this.cs.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".mode", ( String )this.mode.getSelectedItem() );
+    aProperties.setProperty( aNamespace + ".bits", ( String )this.bits.getSelectedItem() );
+    aProperties.setProperty( aNamespace + ".order", ( String )this.order.getSelectedItem() );
+  }
+
+  /**
+   * Cancels the tool worker.
+   */
+  final void cancelToolWorker()
+  {
+    synchronized ( this.toolWorker )
+    {
+      this.analysisResult = null;
+      this.toolWorker.cancel( true /* mayInterruptIfRunning */);
+      setControlsEnabled( true );
+    }
+  }
+
+  /**
+   * Closes this dialog, cancelling any running workers if needed.
+   */
+  final void close()
+  {
+    synchronized ( this.toolWorker )
+    {
+      cancelToolWorker();
+      setVisible( false );
+    }
+  }
+
+  /**
+   * Starts the tool worker.
+   */
+  final void startToolWorker()
+  {
+    synchronized ( this.toolWorker )
+    {
+      this.toolWorker.setBitCount( Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1 );
+      this.toolWorker.setCSMask( 1 << this.cs.getSelectedIndex() );
+      this.toolWorker.setSCKMask( 1 << this.sck.getSelectedIndex() );
+      this.toolWorker.setMisoMask( 1 << this.miso.getSelectedIndex() );
+      this.toolWorker.setMosiMask( 1 << this.mosi.getSelectedIndex() );
+      this.toolWorker.setOrder( "MSB first".equals( this.order.getSelectedItem() ) ? Endianness.MSB_FIRST
+          : Endianness.LSB_FIRST );
+      this.toolWorker.setMode( SPIMode.parse( ( String )this.mode.getSelectedItem() ) );
+
+      this.toolWorker.execute();
+
+      setControlsEnabled( false );
+    }
+  }
+
+  /**
+   * Generates an empty HTML page.
+   * 
+   * @return String with HTML data.
+   */
+  private String getEmptyHtmlPage()
+  {
+    Date now = new Date();
+    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
+
+    // generate html page header
+    String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
+      + "<html>"
+      + "  <head>"
+      + "    <title></title>"
+      + "    <meta content=\"\">"
+      + "    <style>"
+      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+      + "       </style>" + "  </head>" + "   <body>" + "       <H2>SPI Analysis Results</H2>" + "       <hr>"
+      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+      + "       <br>";
+
+    // generate the data table
+    String data = "<table style=\"font-family:monospace;width:100%;\">"
+      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
+    data = data.concat( "</table" );
+
+    // generate the footer table
+    String footer = "   </body>" + "</html>";
+
+    return ( header + data + footer );
   }
 
   /**
@@ -547,14 +522,9 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
    *          sample count (or index)
    * @return string containing time information
    */
-  private String indexToTime( long count )
+  private String indexToTime( final SPIDataSet aDataSet, final long aCount )
   {
-    count -= this.startOfDecode;
-    if ( count < 0 )
-    {
-      count = 0;
-    }
-
+    final long count = Math.max( 0, aCount - aDataSet.getStartOfDecode() );
     if ( this.analysisData.hasTimingData() )
     {
       return DisplayUtils.displayScaledTime( count, this.analysisData.getSampleRate() );
@@ -580,41 +550,46 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
     this.mode.setEnabled( enable );
     this.bits.setEnabled( enable );
     this.order.setEnabled( enable );
-    this.btnExport.setEnabled( enable );
-    this.btnCancel.setEnabled( enable );
+
+    this.exportAction.setEnabled( enable );
+    this.closeAction.setEnabled( enable );
   }
 
   /**
    * exports the table data to a CSV file
    * 
-   * @param file
+   * @param aFile
    *          File object
    */
-  private void storeToCsvFile( final File file )
+  private void storeToCsvFile( final File aFile, final SPIDataSet aDataSet )
   {
-    if ( this.decodedData.size() > 0 )
+    if ( !aDataSet.isEmpty() )
     {
-      SPIProtocolAnalysisDataSet dSet;
-      System.out.println( "writing decoded data to " + file.getPath() );
+      SPIData dSet;
+
+      System.out.println( "writing decoded data to " + aFile.getPath() );
+
       try
       {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( file ) );
+        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
 
         bw.write( "\"" + "index" + "\",\"" + "time" + "\",\"" + "mosi data or event" + "\",\"" + "miso data or event"
             + "\"" );
         bw.newLine();
 
-        for ( int i = 0; i < this.decodedData.size(); i++ )
+        final List<SPIData> decodedData = aDataSet.getDecodedData();
+        for ( int i = 0; i < decodedData.size(); i++ )
         {
-          dSet = this.decodedData.get( i );
+          dSet = decodedData.get( i );
           if ( dSet.isEvent() )
           {
-            bw.write( "\"" + i + "\",\"" + indexToTime( dSet.time ) + "\",\"" + dSet.event + "\",\"" + dSet.event
-                + "\"" );
+            bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getEvent()
+                + "\",\"" + dSet.getEvent() + "\"" );
           }
           else
           {
-            bw.write( "\"" + i + "\",\"" + indexToTime( dSet.time ) + "\",\"" + dSet.mosi + "\",\"" + dSet.miso + "\"" );
+            bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getMoSiValue()
+                + "\",\"" + dSet.getMiSoValue() + "\"" );
           }
           bw.newLine();
         }
@@ -630,17 +605,18 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
   /**
    * stores the data to a HTML file
    * 
-   * @param file
+   * @param aFile
    *          file object
    */
-  private void storeToHtmlFile( final File file )
+  private void storeToHtmlFile( final File aFile, final SPIDataSet aDataSet )
   {
-    if ( this.decodedData.size() > 0 )
+    if ( !aDataSet.isEmpty() )
     {
-      System.out.println( "writing decoded data to " + file.getPath() );
+      System.out.println( "writing decoded data to " + aFile.getPath() );
+
       try
       {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( file ) );
+        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
 
         // write the complete displayed html page to file
         bw.write( this.outText.getText() );
@@ -657,14 +633,16 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
   /**
    * generate a HTML page
    * 
-   * @param empty
-   *          if this is true an empty output is generated
+   * @param aDataSet
+   *          the data set to create the HTML page for, cannot be
+   *          <code>null</code>.
    * @return String with HTML data
    */
-  private String toHtmlPage( final boolean empty )
+  private String toHtmlPage( final SPIDataSet aDataSet )
   {
     Date now = new Date();
     DateFormat df = DateFormat.getDateInstance( DateFormat.LONG, Locale.US );
+
     int bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
     int bitAdder = 0;
 
@@ -688,58 +666,59 @@ final class SPIProtocolAnalysisDialog extends JDialog implements ActionListener,
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
       + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
-    if ( empty )
+    final List<SPIData> decodedData = aDataSet.getDecodedData();
+    for ( int i = 0; i < decodedData.size(); i++ )
     {
-    }
-    else
-    {
-      SPIProtocolAnalysisDataSet ds;
-      for ( int i = 0; i < this.decodedData.size(); i++ )
+      SPIData ds = decodedData.get( i );
+      if ( ds.isEvent() )
       {
-        ds = this.decodedData.get( i );
-        if ( ds.isEvent() )
+        // this is an event
+        if ( SPIDataSet.SPI_CS_LOW.equals( ds.getEvent() ) )
         {
-          // this is an event
-          if ( ds.event.equals( "CSLOW" ) )
-          {
-            // start condition
-            data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-                + indexToTime( ds.time )
-                + "</td><td>CSLOW</td><td></td><td></td><td></td><td>CSLOW</td><td></td><td></td><td></td></tr>" );
-          }
-          else if ( ds.event.equals( "CSHIGH" ) )
-          {
-            // stop condition
-            data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-                + indexToTime( ds.time )
-                + "</td><td>CSHIGH</td><td></td><td></td><td></td><td>CSHIGH</td><td></td><td></td><td></td></tr>" );
-          }
-          else
-          {
-            // unknown event
-            data = data.concat( "<tr style=\"background-color:#FF8000;\"><td>" + i + "</td><td>"
-                + indexToTime( ds.time )
-                + "</td><td>UNKNOWN</td><td></td><td></td><td></td><td>UNKNOWN</td><td></td><td></td><td></td></tr>" );
-          }
+          // start condition
+          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
+              + indexToTime( aDataSet, ds.getTime() )
+              + "</td><td>CSLOW</td><td></td><td></td><td></td><td>CSLOW</td><td></td><td></td><td></td></tr>" );
+        }
+        else if ( SPIDataSet.SPI_CS_HIGH.equals( ds.getEvent() ) )
+        {
+          // stop condition
+          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
+              + indexToTime( aDataSet, ds.getTime() )
+              + "</td><td>CSHIGH</td><td></td><td></td><td></td><td>CSHIGH</td><td></td><td></td><td></td></tr>" );
         }
         else
         {
-          data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>" + indexToTime( ds.time )
-              + "</td><td>" + "0x" + DisplayUtils.integerToHexString( ds.mosi, bitCount / 4 + bitAdder ) + "</td><td>"
-              + "0b" + DisplayUtils.integerToBinString( ds.mosi, bitCount ) + "</td><td>" + ds.mosi + "</td><td>" );
-          if ( ( ds.mosi >= 32 ) && ( bitCount == 8 ) )
-          {
-            data += ( char )ds.mosi;
-          }
-          data = data.concat( "</td><td>" + "0x" + DisplayUtils.integerToHexString( ds.miso, bitCount / 4 + bitAdder )
-              + "</td><td>" + "0b" + DisplayUtils.integerToBinString( ds.miso, bitCount ) + "</td><td>" + ds.miso
-              + "</td><td>" );
-          if ( ( ds.miso >= 32 ) && ( bitCount == 8 ) )
-          {
-            data += ( char )ds.miso;
-          }
-          data = data.concat( "</td></tr>" );
+          // unknown event
+          data = data.concat( "<tr style=\"background-color:#FF8000;\"><td>" + i + "</td><td>"
+              + indexToTime( aDataSet, ds.getTime() )
+              + "</td><td>UNKNOWN</td><td></td><td></td><td></td><td>UNKNOWN</td><td></td><td></td><td></td></tr>" );
         }
+      }
+      else
+      {
+        final int mosiValue = ds.getMoSiValue();
+        final int misoValue = ds.getMiSoValue();
+
+        data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
+            + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + "0x"
+            + DisplayUtils.integerToHexString( mosiValue, bitCount / 4 + bitAdder ) + "</td><td>" + "0b"
+            + DisplayUtils.integerToBinString( mosiValue, bitCount ) + "</td><td>" + mosiValue + "</td><td>" );
+
+        if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )mosiValue ) )
+        {
+          data += ( char )mosiValue;
+        }
+
+        data = data.concat( "</td><td>" + "0x" + DisplayUtils.integerToHexString( misoValue, bitCount / 4 + bitAdder )
+            + "</td><td>" + "0b" + DisplayUtils.integerToBinString( misoValue, bitCount ) + "</td><td>" + misoValue
+            + "</td><td>" );
+        if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )misoValue ) )
+        {
+          data += ( char )misoValue;
+        }
+
+        data = data.concat( "</td></tr>" );
       }
     }
     data = data.concat( "</table" );

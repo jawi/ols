@@ -30,7 +30,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -74,7 +74,7 @@ public class RunAnalysisToolAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Frame owner = ( Frame )HostUtils.getOwningWindow( aEvent );
+    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
     if ( this.tool instanceof Configurable )
     {

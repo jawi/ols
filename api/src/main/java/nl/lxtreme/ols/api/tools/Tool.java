@@ -29,8 +29,8 @@ import nl.lxtreme.ols.api.data.*;
 /**
  * Interface for pluggable tools.
  * <p>
- * All tools implementing this interface that are added to the tools class list will be automatically added to the tools
- * menu in the client.
+ * All tools implementing this interface that are added to the tools class list
+ * will be automatically added to the tools menu in the client.
  * </p>
  * 
  * @author Michael "Mr. Sump" Poppitz
@@ -43,7 +43,8 @@ public interface Tool
   /**
    * Is called to get the name for the menu entry.
    * <p>
-   * The name must be unique among all tools. Should end in "..." if it opens a dialog window.
+   * The name must be unique among all tools. Should end in "..." if it opens a
+   * dialog window.
    * </p>
    * 
    * @return name for this tool
@@ -51,22 +52,27 @@ public interface Tool
   public String getName();
 
   /**
-   * This method is invoked when the tool is selected from the Tools menu.
-   * It should request any missing information using a dialog and perform the tool's actual task.
+   * This method is invoked when the tool is selected from the Tools menu. It
+   * should request any missing information using a dialog and perform the
+   * tool's actual task.
    * <p>
-   * This method is to be called from the Event Dispatch Thread! It should be able to make use of normal Swing
-   * components without having to take care about which Thread it is called from.
+   * This method is to be called from the Event Dispatch Thread! It should be
+   * able to make use of normal Swing components without having to take care
+   * about which Thread it is called from.
    * </p>
    * 
-   * @param aParentFrame
-   *          the parent frame to use when showing dialogs;
+   * @param aOwner
+   *          the "owner" window that can be used when showing dialogs, can be
+   *          <code>null</code>;
    * @param aData
-   *          currently displayed captured data;
+   *          currently displayed capture results, cannot be <code>null</code>;
    * @param aContext
-   *          the tool context;
+   *          the tool context, can be <code>null</code> if no context is
+   *          available;
    * @param aCallback
-   *          the callback to report the status of the tool to.
+   *          the callback to report the status of the tool to, cannot be
+   *          <code>null</code>.
    */
-  public void process( final Frame aParentFrame, final AnnotatedData aData, final ToolContext aContext,
+  public void process( final Window aOwner, final AnnotatedData aData, final ToolContext aContext,
       final AnalysisCallback aCallback );
 }

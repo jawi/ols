@@ -18,54 +18,17 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.action;
-
-
-import java.awt.event.*;
-
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+package nl.lxtreme.ols.tool.base;
 
 
 /**
- * 
+ * @author jajans
  */
-public class ExitAction extends BaseAction
+public interface BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends
+BaseToolDialog
 {
-  // CONSTANTS
-
-  private static final long  serialVersionUID = 1L;
-
-  public static final String ID               = "Exit";
-
-  // VARIABLES
-
-  private final Host         host;
-
-  // CONSTRUCTORS
-
   /**
-   * Creates a new ExitAction instance.
+   * @param aWorker
    */
-  public ExitAction( final Host aHost )
-  {
-    super( ID, "Quit", "Quit LogicSniffer Client" );
-    this.host = aHost;
-
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_Q ) );
-  }
-
-  // METHODS
-
-  /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-   */
-  @Override
-  public void actionPerformed( final ActionEvent aEvent )
-  {
-    this.host.exit();
-  }
-
+  public void setToolWorker( final WORKER aWorker );
 }
-
-/* EOF */

@@ -18,54 +18,34 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.action;
+package nl.lxtreme.ols.tool.base;
 
 
-import java.awt.event.*;
-
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.api.data.*;
 
 
 /**
- * 
+ * Provides a common interface for all tool dialogs.
  */
-public class ExitAction extends BaseAction
+public interface BaseToolDialog
 {
-  // CONSTANTS
-
-  private static final long  serialVersionUID = 1L;
-
-  public static final String ID               = "Exit";
-
-  // VARIABLES
-
-  private final Host         host;
-
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new ExitAction instance.
-   */
-  public ExitAction( final Host aHost )
-  {
-    super( ID, "Quit", "Quit LogicSniffer Client" );
-    this.host = aHost;
-
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_Q ) );
-  }
-
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * Resets the dialog, will be called if the dialog is shown at least once and
+   * should be redisplayed again. Use this method to reset the state of the
+   * dialog to its initial state.
    */
-  @Override
-  public void actionPerformed( final ActionEvent aEvent )
-  {
-    this.host.exit();
-  }
+  public void reset();
 
+  /**
+   * Shows the dialog with the given capture results.
+   * 
+   * @param aData
+   *          the capture results to use in the tool's dialog, cannot be
+   *          <code>null</code>.
+   * @return <code>true</code> if the dialog is closed successfully,
+   *         <code>false</code> if it is canceled.
+   */
+  public boolean showDialog( final AnnotatedData aData );
 }
-
-/* EOF */

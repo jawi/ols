@@ -31,7 +31,9 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -43,7 +45,8 @@ import nl.lxtreme.ols.util.swing.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-final class I2CProtocolAnalysisDialog extends JDialog
+final class I2CProtocolAnalysisDialog extends JDialog implements BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>,
+Configurable
 {
   // INNER TYPES
 
@@ -107,7 +110,8 @@ final class I2CProtocolAnalysisDialog extends JDialog
     @Override
     public void actionPerformed( final ActionEvent aEvent )
     {
-      final File selectedFile = HostUtils.showFileSaveDialog( getOwner(), StdFileFilter.CSV, StdFileFilter.HTML );
+      final File selectedFile = SwingComponentUtils.showFileSaveDialog( getOwner(), StdFileFilter.CSV,
+          StdFileFilter.HTML );
       if ( selectedFile != null )
       {
         if ( LOG.isLoggable( Level.INFO ) )
@@ -160,16 +164,14 @@ final class I2CProtocolAnalysisDialog extends JDialog
 
       if ( "Abort".equals( name ) )
       {
-        I2CProtocolAnalysisDialog.this.toolWorker.cancel( true /* mayInterruptIfRunning */);
+        cancelToolWorker();
 
-        setControlsEnabled( true );
         putValue( NAME, "Analyze" );
       }
       else
       {
-        I2CProtocolAnalysisDialog.this.toolWorker.execute();
+        startToolWorker();
 
-        setControlsEnabled( false );
         putValue( NAME, "Abort" );
         putValue( SHORT_DESCRIPTION, "Aborts current analysis..." );
       }
@@ -206,17 +208,17 @@ final class I2CProtocolAnalysisDialog extends JDialog
   private final ExportAction exportAction;
   private final CloseAction closeAction;
 
-  private transient CapturedData analysisData;
-  private transient I2CDataSet analysisResult = null;
-  private transient I2CAnalyserWorker toolWorker = null;
+  private transient volatile CapturedData analysisData;
+  private transient volatile I2CDataSet analysisResult = null;
+  private transient volatile I2CAnalyserWorker toolWorker = null;
 
   /**
    * @param aFrame
    * @param aName
    */
-  public I2CProtocolAnalysisDialog( final Frame aFrame, final String aName )
+  public I2CProtocolAnalysisDialog( final Window aOwner, final String aName )
   {
-    super( aFrame, aName, true );
+    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
     setLayout( new GridBagLayout() );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
 
@@ -357,6 +359,7 @@ final class I2CProtocolAnalysisDialog extends JDialog
 
     this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
     this.runAnalysisAction.restore();
+    this.runAnalysisAction.setEnabled( false );
 
     setControlsEnabled( true );
   }
@@ -420,6 +423,22 @@ final class I2CProtocolAnalysisDialog extends JDialog
   }
 
   /**
+   * Resets this dialog.
+   */
+  public void reset()
+  {
+    this.outText.setText( getEmptyHtmlPage() );
+    this.outText.setEditable( false );
+
+    this.exportAction.setEnabled( false );
+
+    this.runAnalysisAction.restore();
+    this.runAnalysisAction.setEnabled( true );
+
+    setControlsEnabled( true );
+  }
+
+  /**
    * @param aSCLValue
    */
   public void setAutoDetectSCL( final String aSCLValue )
@@ -469,17 +488,26 @@ final class I2CProtocolAnalysisDialog extends JDialog
   }
 
   /**
-   * shows the dialog and sets the data to use
-   * 
-   * @param aData
-   *          data to use for analysis
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
    */
-  public void showDialog( final AnnotatedData aData, final I2CAnalyserWorker aToolWorker )
+  @Override
+  public void setToolWorker( final I2CAnalyserWorker aWorker )
+  {
+    this.toolWorker = aWorker;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
+   */
+  @Override
+  public boolean showDialog( final AnnotatedData aData )
   {
     this.analysisData = aData;
-    this.toolWorker = aToolWorker;
 
     setVisible( true );
+
+    // always return true...
+    return true;
   }
 
   /**
@@ -493,15 +521,53 @@ final class I2CProtocolAnalysisDialog extends JDialog
   }
 
   /**
+   * Cancels the tool worker.
+   */
+  final void cancelToolWorker()
+  {
+    synchronized ( this.toolWorker )
+    {
+      this.analysisResult = null;
+      this.toolWorker.cancel( true /* mayInterruptIfRunning */);
+      setControlsEnabled( true );
+    }
+  }
+
+  /**
    * Closes this dialog, cancelling any running workers if needed.
    */
   final void close()
   {
-    this.analysisResult = null;
-    this.toolWorker.cancel( true /* mayInterruptIfRunning */);
-    setVisible( false );
+    synchronized ( this.toolWorker )
+    {
+      cancelToolWorker();
+      setVisible( false );
+    }
   }
 
+  /**
+   * Starts the tool worker.
+   */
+  final void startToolWorker()
+  {
+    synchronized ( this.toolWorker )
+    {
+      this.toolWorker.setLineAmask( getLineAmask() );
+      this.toolWorker.setLineBmask( getLineBmask() );
+      this.toolWorker.setReportACK( isReportACK() );
+      this.toolWorker.setReportNACK( isReportNACK() );
+      this.toolWorker.setReportStart( isReportStart() );
+      this.toolWorker.setReportStop( isReportStop() );
+
+      this.toolWorker.execute();
+
+      setControlsEnabled( false );
+    }
+  }
+
+  /**
+   * @return
+   */
   private String getEmptyHtmlPage()
   {
     Date now = new Date();

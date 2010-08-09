@@ -18,35 +18,13 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.measure;
+package nl.lxtreme.ols.tool.spi;
 
-
-import nl.lxtreme.ols.api.tools.*;
-
-import org.osgi.framework.*;
 
 /**
- *
+ * @author jajans
  */
-public class Activator implements BundleActivator
+public enum Endianness
 {
-  // METHODS
-
-  /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
-   */
-  @Override
-  public void start( final BundleContext aContext ) throws Exception
-  {
-    aContext.registerService( Tool.class.getName(), new MeasurementTool(), null );
-  }
-
-  /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-   */
-  @Override
-  public void stop( final BundleContext aContext ) throws Exception
-  {
-    // NO-op
-  }
+  LSB_FIRST, MSB_FIRST;
 }

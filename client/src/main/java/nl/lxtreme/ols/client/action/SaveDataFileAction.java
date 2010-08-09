@@ -28,6 +28,7 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -37,11 +38,11 @@ public class SaveDataFileAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long       serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  private static final Logger     LOG              = Logger.getLogger( SaveDataFileAction.class.getName() );
+  private static final Logger LOG = Logger.getLogger( SaveDataFileAction.class.getName() );
 
-  public static final String      ID               = "SaveDataFile";
+  public static final String ID = "SaveDataFile";
 
   // VARIABLES
 
@@ -66,11 +67,11 @@ public class SaveDataFileAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Window owner = HostUtils.getOwningWindow( aEvent );
+    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
     try
     {
-      final File file = HostUtils.showFileSaveDialog( owner, OpenDataFileAction.OLS_FILEFILTER );
+      final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenDataFileAction.OLS_FILEFILTER );
       if ( file != null )
       {
         final File actualFile = HostUtils.setFileExtension( file, OpenDataFileAction.OLS_FILEEXTENSION );

@@ -21,11 +21,11 @@
 package nl.lxtreme.ols.tool.base;
 
 
-import java.awt.*;
 import java.beans.*;
 import java.util.concurrent.*;
 
-import javax.swing.SwingWorker.StateValue;
+import javax.swing.*;
+import javax.swing.SwingWorker.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
@@ -35,12 +35,13 @@ import nl.lxtreme.ols.api.tools.*;
  * Provides a base class for tools that want to do its processing in the
  * background, or outside the EDT.
  */
-public abstract class BaseAsyncTool<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends BaseTool
+public abstract class BaseAsyncTool<DIALOG extends JDialog & BaseToolDialog & BaseAsyncToolDialog<RESULT_TYPE, WORKER>, RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>>
+extends BaseTool<DIALOG>
 {
   // CONSTANTS
 
-  private static final String PROPERTY_PROGRESS = "progress";
-  private static final String PROPERTY_STATE = "state";
+  protected static final String PROPERTY_PROGRESS = "progress";
+  protected static final String PROPERTY_STATE = "state";
 
   // VARIABLES
 
@@ -62,17 +63,30 @@ public abstract class BaseAsyncTool<RESULT_TYPE, WORKER extends BaseAsyncToolWor
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.tools.Tool#process(java.awt.Frame,
-   *      nl.lxtreme.ols.api.data.AnnotatedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext,
-   *      nl.lxtreme.ols.api.tools.AnalysisCallback)
+   * Factory method for creating a tool worker.
+   * 
+   * @return a new instance of the intended tool worker, cannot be
+   *         <code>null</code>.
+   */
+  protected abstract WORKER createToolWorker( final AnnotatedData aData );
+
+  /**
+   * Does the actual processing of data.
+   * <p>
+   * By default, this method does <tt>getToolWorker().execute()</tt> to start
+   * the tool worker in the background. Override this method to do something
+   * different, for example, to wrap the tool worker in a UI-dialog.
+   * </p>
+   * 
+   * @param aData
+   *          the captured data to process in this tool;
+   * @param aContext
+   *          the tool context to use during the processing.
    */
   @Override
-  public void process( final Frame aParentFrame, final AnnotatedData aData, final ToolContext aContext,
+  protected final void doProcess( final AnnotatedData aData, final ToolContext aContext,
       final AnalysisCallback aCallback )
   {
-    setupTool( aParentFrame );
-
     this.toolWorker = createToolWorker( aData );
 
     this.toolWorker.addPropertyChangeListener( new PropertyChangeListener()
@@ -138,44 +152,23 @@ public abstract class BaseAsyncTool<RESULT_TYPE, WORKER extends BaseAsyncToolWor
 
               aCallback.analysisComplete( newData );
 
-              toolWorkerDone( analysisResults );
+              onToolWorkerDone( analysisResults );
             }
           }
         }
 
         // Pass through our local event handling method...
-        BaseAsyncTool.this.propertyChange( aEvent );
+        BaseAsyncTool.this.onPropertyChange( aEvent );
       }
     } );
 
-    doProcess( aData, aContext );
-  }
-
-  /**
-   * Factory method for creating a tool worker.
-   * 
-   * @return a new instance of the intended tool worker, never <code>null</code>
-   *         .
-   */
-  protected abstract WORKER createToolWorker( final AnnotatedData aData );
-
-  /**
-   * Does the actual processing of data.
-   * <p>
-   * By default, this method does <tt>getToolWorker().execute()</tt> to start
-   * the tool worker in the background. Override this method to do something
-   * different, for example, to wrap the tool worker in a UI-dialog.
-   * </p>
-   * 
-   * @param aData
-   *          the captured data to process in this tool;
-   * @param aContext
-   *          the tool context to use during the processing.
-   */
-  @Override
-  protected void doProcess( final AnnotatedData aData, final ToolContext aContext )
-  {
-    getToolWorker().execute();
+    // Update the tool worker to the new one...
+    getDialog().setToolWorker( this.toolWorker );
+    // Show the actual dialog...
+    if ( getDialog().showDialog( aData ) )
+    {
+      onCloseDialog();
+    }
   }
 
   /**
@@ -189,12 +182,20 @@ public abstract class BaseAsyncTool<RESULT_TYPE, WORKER extends BaseAsyncToolWor
   }
 
   /**
+   * Called upon succesful closing of the dialog.
+   */
+  protected void onCloseDialog()
+  {
+    // NO-op
+  }
+
+  /**
    * Allows for custom property change events.
    * 
    * @param aEvent
    *          the property change event, never <code>null</code>.
    */
-  protected void propertyChange( final PropertyChangeEvent aEvent )
+  protected void onPropertyChange( final PropertyChangeEvent aEvent )
   {
     // NO-op
   }
@@ -205,7 +206,7 @@ public abstract class BaseAsyncTool<RESULT_TYPE, WORKER extends BaseAsyncToolWor
    * @param aAnalysisResult
    *          the analysis result of the tool worker, never <code>null</code>.
    */
-  protected void toolWorkerDone( final RESULT_TYPE aAnalysisResult )
+  protected void onToolWorkerDone( final RESULT_TYPE aAnalysisResult )
   {
     // NO-op
   }

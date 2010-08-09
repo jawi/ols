@@ -21,15 +21,12 @@
 package nl.lxtreme.ols.util;
 
 
-import java.awt.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.logging.*;
 
 import javax.swing.*;
-
-import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -40,37 +37,43 @@ public final class HostUtils
   // INNER TYPES
 
   /**
-   * 
+   * Denotes a callback for some "main events" in an application.
+   * <p>
+   * This interface is merely used for retrieving the proper system events on
+   * Mac OSX. On other operating systems, this interface has no real value.
+   * </p>
    */
   public interface ApplicationCallback
   {
     /**
      * Called upon receiving a "about" event from the host operating system.
      * 
-     * @return <code>true</code> if the event is being handled, <code>false</code> (the default) if this event is
-     *         ignored.
+     * @return <code>true</code> if the event is being handled,
+     *         <code>false</code> (the default) if this event is ignored.
      */
     public boolean handleAbout();
 
     /**
-     * Called upon receiving a "set preferenes" event from the host operating system.
+     * Called upon receiving a "set preferenes" event from the host operating
+     * system.
      * 
-     * @return <code>true</code> if the event is being handled, <code>false</code> (the default) if this event is
-     *         ignored.
+     * @return <code>true</code> if the event is being handled,
+     *         <code>false</code> (the default) if this event is ignored.
      */
     public boolean handlePreferences();
 
     /**
      * Called upon receiving a quit event from the host operating system.
      * 
-     * @return <code>true</code> if the event is being handled, <code>false</code> (the default) if this event is
-     *         ignored.
+     * @return <code>true</code> if the event is being handled,
+     *         <code>false</code> (the default) if this event is ignored.
      */
     public boolean handleQuit();
   }
 
   /**
-   * Provides a hack to ensure the system class loader is used at all times when loading UI classes/resources/...
+   * Provides a hack to ensure the system class loader is used at all times when
+   * loading UI classes/resources/...
    */
   static final class CLValue implements UIDefaults.ActiveValue
   {
@@ -97,44 +100,6 @@ public final class HostUtils
   // METHODS
 
   /**
-   * Convenience method to create a key mask.
-   * 
-   * @param aKeyStroke
-   *          the key stroke to create a key mask for;
-   * @param aMasks
-   *          the (optional) mask modifiers to use.
-   * @return a keystroke instance.
-   */
-  public static final KeyStroke createKeyMask( final int aKeyStroke, final int... aMasks )
-  {
-    int modifiers = 0;
-    for ( int aMask : aMasks )
-    {
-      modifiers |= aMask;
-    }
-    return KeyStroke.getKeyStroke( aKeyStroke, modifiers );
-  }
-
-  /**
-   * Convenience method to create a key mask for menu's.
-   * 
-   * @param aKeyStroke
-   *          the key stroke to create a menu key mask for;
-   * @param aMasks
-   *          the (optional) mask modifiers to use.
-   * @return a keystroke instance.
-   */
-  public static final KeyStroke createMenuKeyMask( final int aKeyStroke, final int... aMasks )
-  {
-    int modifiers = getMenuShortcutKeyMask();
-    for ( int aMask : aMasks )
-    {
-      modifiers |= aMask;
-    }
-    return KeyStroke.getKeyStroke( aKeyStroke, modifiers );
-  }
-
-  /**
    * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
    * given file.
    * 
@@ -143,52 +108,27 @@ public final class HostUtils
    * @return the file extension (always in lower case), never <code>null</code>
    *         but can be empty if the given file has <em>no</em> file extension.
    */
-  public static final String getFileExtension(final File aFile) {
+  public static final String getFileExtension( final File aFile )
+  {
     String ext = "";
 
     String filename = aFile.getName();
-    int idx = filename.lastIndexOf('.');
+    int idx = filename.lastIndexOf( '.' );
 
-    if (( idx > 0 ) &&  ( idx < filename.length() - 1 )) {
-      ext = filename.substring(idx+1).toLowerCase();
+    if ( ( idx > 0 ) && ( idx < filename.length() - 1 ) )
+    {
+      ext = filename.substring( idx + 1 ).toLowerCase();
     }
     return ext;
   }
 
   /**
-   * Returns the key mask of the menu shortcut key.
-   * 
-   * @return a key mask, >= 0.
-   */
-  public static final int getMenuShortcutKeyMask()
-  {
-    return Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
-  }
-
-  /**
-   * Tries to find the owning window for the AWT-event's source.
-   * 
-   * @param aEvent
-   *          the AWT event to find the owning window for, may be <code>null</code>.
-   * @return the owning window, or <code>null</code> if no such window could be found, or a <code>null</code> event was
-   *         given.
-   */
-  public static final Window getOwningWindow( final AWTEvent aEvent )
-  {
-    Window owner = null;
-    if ( ( aEvent != null ) && ( aEvent.getSource() instanceof Component ) )
-    {
-      owner = SwingUtilities.getWindowAncestor( ( Component )aEvent.getSource() );
-    }
-    return owner;
-  }
-
-  /**
-   * Allows the logging properties of the JVM to be set at any moment in time providing the logging configuration in an
-   * input-stream.
+   * Allows the logging properties of the JVM to be set at any moment in time
+   * providing the logging configuration in an input-stream.
    * 
    * @param aInputStream
-   *          the input stream providing the logging properties, cannot be <code>null</code>.
+   *          the input stream providing the logging properties, cannot be
+   *          <code>null</code>.
    */
   public static final void initLogging( final InputStream aInputStream )
   {
@@ -213,10 +153,11 @@ public final class HostUtils
    * Initializes the OS-specific stuff.
    * 
    * @param aApplicationName
-   *          the name of the application (when this needs to be passed to the guest OS);
+   *          the name of the application (when this needs to be passed to the
+   *          guest OS);
    * @param aApplicationCallback
-   *          the application callback used to report application events on some platforms (Mac OS), may be
-   *          <code>null</code>.
+   *          the application callback used to report application events on some
+   *          platforms (Mac OS), may be <code>null</code>.
    */
   public static final void initOSSpecifics( final String aApplicationName,
       final ApplicationCallback aApplicationCallback )
@@ -265,7 +206,8 @@ public final class HostUtils
   /**
    * Returns whether the current host's operating system is Mac OS X.
    * 
-   * @return <code>true</code> if running on Mac OS X, <code>false</code> otherwise.
+   * @return <code>true</code> if running on Mac OS X, <code>false</code>
+   *         otherwise.
    */
   public static final boolean isMacOSX()
   {
@@ -274,9 +216,11 @@ public final class HostUtils
   }
 
   /**
-   * Returns whether the current host's operating system is Linux or any other UNIX-like operating system.
+   * Returns whether the current host's operating system is Linux or any other
+   * UNIX-like operating system.
    * 
-   * @return <code>true</code> if running on Linux or any other UNIX system, <code>false</code> otherwise.
+   * @return <code>true</code> if running on Linux or any other UNIX system,
+   *         <code>false</code> otherwise.
    */
   public static boolean isUnix()
   {
@@ -288,7 +232,8 @@ public final class HostUtils
   /**
    * Returns whether the current host's operating system is Windows.
    * 
-   * @return <code>true</code> if running on Windows, <code>false</code> otherwise.
+   * @return <code>true</code> if running on Windows, <code>false</code>
+   *         otherwise.
    */
   public static boolean isWindows()
   {
@@ -299,11 +244,13 @@ public final class HostUtils
   /**
    * Returns whether the host OS needs an explicit exit menu item or not.
    * <p>
-   * For example, on Mac OS, you don't need an explicit exit menu, since it is by default provided. On Linux or Windows
-   * machines, you do need an explicit exit function.
+   * For example, on Mac OS, you don't need an explicit exit menu, since it is
+   * by default provided. On Linux or Windows machines, you do need an explicit
+   * exit function.
    * </p>
    * 
-   * @return <code>true</code> if this host needs an explicit exit menu item, <code>false</code> otherwise.
+   * @return <code>true</code> if this host needs an explicit exit menu item,
+   *         <code>false</code> otherwise.
    */
   public static final boolean needsExitMenuItem()
   {
@@ -314,9 +261,12 @@ public final class HostUtils
    * Tries to read the properties from a file with a given name.
    * 
    * @param aName
-   *          the name of the properties file, excluding <tt>.properties</tt>, cannot be <code>null</code> or empty. By
-   *          convention, the name of a properties file should be in the "reverse package name", e.g., "com.foo.bar".
-   * @return the read properties (object), or <code>null</code> if no such property file exists.
+   *          the name of the properties file, excluding <tt>.properties</tt>,
+   *          cannot be <code>null</code> or empty. By convention, the name of a
+   *          properties file should be in the "reverse package name", e.g.,
+   *          "com.foo.bar".
+   * @return the read properties (object), or <code>null</code> if no such
+   *         property file exists.
    * @throws IllegalArgumentException
    *           in case the given name was <code>null</code> or empty.
    */
@@ -340,226 +290,33 @@ public final class HostUtils
     {
       Logger.getAnonymousLogger().log( Level.FINE, "Reading properties from '" + propFile + "' failed!", exception );
     }
-    // Unable to load any (valid) properties file, return null to indicate this...
+    // Unable to load any (valid) properties file, return null to indicate
+    // this...
     return null;
   }
 
   /**
-   * Sets the filename to end with the given file extension, if this is not already the case.
-   * @param aFile the file that should get the given file extension, cannot be <code>null</code>;
-   * @param aFileExtension the new file extension to add to the given file, cannot be <code>null</code>.
+   * Sets the filename to end with the given file extension, if this is not
+   * already the case.
+   * 
+   * @param aFile
+   *          the file that should get the given file extension, cannot be
+   *          <code>null</code>;
+   * @param aFileExtension
+   *          the new file extension to add to the given file, cannot be
+   *          <code>null</code>.
    * @return a file with the given file extension, never <code>null</code>.
    */
-  public static final File setFileExtension(final File aFile, final String aFileExtension) {
+  public static final File setFileExtension( final File aFile, final String aFileExtension )
+  {
     String filename = aFile.getName();
-    // If the filename already has the given file extension, than simply do nothing...
-    if (aFileExtension.trim().isEmpty() || filename.toLowerCase().endsWith( aFileExtension.toLowerCase() )) {
+    // If the filename already has the given file extension, than simply do
+    // nothing...
+    if ( aFileExtension.trim().isEmpty() || filename.toLowerCase().endsWith( aFileExtension.toLowerCase() ) )
+    {
       return aFile;
     }
     return new File( aFile.getPath(), filename + "." + aFileExtension );
-  }
-
-  /**
-   * Shows a file-open selection dialog for the current working directory.
-   * 
-   * @param aOwner
-   *          the owning window to show the dialog in.
-   * @return the selected file, or <code>null</code> if the user aborted the dialog.
-   */
-  public static final File showFileOpenDialog( final Window aOwner,
-      final javax.swing.filechooser.FileFilter... aFileFilters )
-  {
-    return showFileOpenDialog( aOwner, null, aFileFilters );
-  }
-
-  /**
-   * Shows a file-open selection dialog for the current working directory.
-   * 
-   * @param aOwner
-   *          the owning window to show the dialog in;
-   * @param aCurrentDirectory
-   *          the working directory to start the dialog in, can be <code>null</code>.
-   * @return the selected file, or <code>null</code> if the user aborted the dialog.
-   */
-  public static final File showFileOpenDialog( final Window aOwner, final String aCurrentDirectory,
-      final javax.swing.filechooser.FileFilter... aFileFilters )
-  {
-    if ( isMacOSX() )
-    {
-      final FileDialog dialog;
-      if ( aOwner instanceof Dialog )
-      {
-        dialog = new FileDialog( ( Dialog )aOwner, "Open file", FileDialog.LOAD );
-      }
-      else
-      {
-        dialog = new FileDialog( ( Frame )aOwner, "Open file", FileDialog.LOAD );
-      }
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setDirectory( aCurrentDirectory );
-      }
-
-      dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
-
-      dialog.setVisible( true );
-      final String selectedFile = dialog.getFile();
-      return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
-    }
-    else
-    {
-      final JFileChooser dialog = new JFileChooser();
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setCurrentDirectory( new File( aCurrentDirectory ) );
-      }
-
-      for ( javax.swing.filechooser.FileFilter filter : aFileFilters )
-      {
-        dialog.addChoosableFileFilter( filter );
-      }
-
-      if ( dialog.showOpenDialog( aOwner ) == JFileChooser.APPROVE_OPTION )
-      {
-        return dialog.getSelectedFile();
-      }
-
-      return null;
-    }
-  }
-
-  /**
-   * Shows a file-save selection dialog for the current working directory.
-   * 
-   * @param aOwner
-   *          the owning window to show the dialog in.
-   * @return the selected file, or <code>null</code> if the user aborted the dialog.
-   */
-  public static final File showFileSaveDialog( final Window aOwner,
-      final javax.swing.filechooser.FileFilter... aFileFilters )
-  {
-    return showFileSaveDialog( aOwner, null, aFileFilters );
-  }
-
-  /**
-   * Shows a file-save selection dialog for the current working directory.
-   * 
-   * @param aOwner
-   *          the owning window to show the dialog in;
-   * @param aCurrentDirectory
-   *          the working directory to start the dialog in, can be <code>null</code>.
-   * @return the selected file, or <code>null</code> if the user aborted the dialog.
-   */
-  public static final File showFileSaveDialog( final Window aOwner, final String aCurrentDirectory,
-      final javax.swing.filechooser.FileFilter... aFileFilters )
-  {
-    if ( isMacOSX() )
-    {
-      final FileDialog dialog;
-      if ( aOwner instanceof Dialog )
-      {
-        dialog = new FileDialog( ( Dialog )aOwner, "Save file", FileDialog.SAVE );
-      }
-      else
-      {
-        dialog = new FileDialog( ( Frame )aOwner, "Save file", FileDialog.SAVE );
-      }
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setDirectory( aCurrentDirectory );
-      }
-
-      dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
-
-      dialog.setVisible( true );
-      final String selectedFile = dialog.getFile();
-      return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
-    }
-    else
-    {
-      final JFileChooser dialog = new JFileChooser();
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setCurrentDirectory( new File( aCurrentDirectory ) );
-      }
-
-      for ( javax.swing.filechooser.FileFilter filter : aFileFilters )
-      {
-        dialog.addChoosableFileFilter( filter );
-      }
-
-      if ( dialog.showSaveDialog( aOwner ) == JFileChooser.APPROVE_OPTION )
-      {
-        return dialog.getSelectedFile();
-      }
-
-      return null;
-    }
-  }
-
-  /**
-   * Shows a file selection dialog for the current working directory.
-   * 
-   * @param aOwner
-   *          the owning window to show the dialog in.
-   * @return the selected file, or <code>null</code> if the user aborted the dialog.
-   */
-  public static final File showFileSelectionDialog( final Window aOwner,
-      final javax.swing.filechooser.FileFilter... aFileFilters )
-  {
-    return showFileSelectionDialog( aOwner, null, aFileFilters );
-  }
-
-  /**
-   * Shows a file selection dialog for the current working directory.
-   * 
-   * @param aOwner
-   *          the owning window to show the dialog in;
-   * @param aCurrentDirectory
-   *          the working directory to start the dialog in, can be <code>null</code>.
-   * @return the selected file, or <code>null</code> if the user aborted the dialog.
-   */
-  public static final File showFileSelectionDialog( final Window aOwner, final String aCurrentDirectory,
-      final javax.swing.filechooser.FileFilter... aFileFilters )
-  {
-    if ( isMacOSX() )
-    {
-      final FileDialog dialog;
-      if ( aOwner instanceof Dialog )
-      {
-        dialog = new FileDialog( ( Dialog )aOwner );
-      }
-      else
-      {
-        dialog = new FileDialog( ( Frame )aOwner );
-      }
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setDirectory( aCurrentDirectory );
-      }
-
-      dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
-
-      dialog.setVisible( true );
-      final String selectedFile = dialog.getFile();
-      return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
-    }
-    else
-    {
-      final JFileChooser dialog = new JFileChooser();
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setCurrentDirectory( new File( aCurrentDirectory ) );
-      }
-
-      for ( javax.swing.filechooser.FileFilter filter : aFileFilters )
-      {
-        dialog.addChoosableFileFilter( filter );
-      }
-
-      dialog.setVisible( true );
-      return dialog.getSelectedFile();
-    }
   }
 
   /**
@@ -604,9 +361,12 @@ public final class HostUtils
    * Creates an OS-specific properties file location.
    * 
    * @param aName
-   *          the name of the properties file, excluding <tt>.properties</tt>, cannot be <code>null</code> or empty. By
-   *          convention, the name of a properties file should be in the "reverse package name", e.g., "com.foo.bar".
-   * @return the file pointing to the OS-specific properties file location, never <code>null</code>.
+   *          the name of the properties file, excluding <tt>.properties</tt>,
+   *          cannot be <code>null</code> or empty. By convention, the name of a
+   *          properties file should be in the "reverse package name", e.g.,
+   *          "com.foo.bar".
+   * @return the file pointing to the OS-specific properties file location,
+   *         never <code>null</code>.
    */
   private static final File createPropertiesFile( final String aName )
   {
@@ -666,28 +426,28 @@ public final class HostUtils
 
       if ( ( appClass != null ) && ( appAdapterClass != null ) )
       {
-        final Object proxy = Proxy.newProxyInstance( classLoader, new Class<?>[]
-                                                                               { appAdapterClass }, new InvocationHandler()
+        final Object proxy = Proxy.newProxyInstance( classLoader, new Class<?>[] { appAdapterClass },
+            new InvocationHandler()
         {
           @Override
           public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
           {
             final String name = aMethod.getName();
-            if ( name.equals( "handleQuit" ) )
+            if ( "handleQuit".equals( name ) )
             {
               if ( aApplicationCallback.handleQuit() )
               {
                 handleEventParameter( aArgs );
               }
             }
-            else if ( name.equals( "handleAbout" ) )
+            else if ( "handleAbout".equals( name ) )
             {
               if ( aApplicationCallback.handleAbout() )
               {
                 handleEventParameter( aArgs );
               }
             }
-            else if ( name.equals( "handlePreferences" ) )
+            else if ( "handlePreferences".equals( name ) )
             {
               if ( aApplicationCallback.handlePreferences() )
               {
@@ -741,7 +501,10 @@ public final class HostUtils
 
         // Call Application#setEnabledPreferencesMenu(true) ...
         final Method setEnabledPrefsMenuMethod = appClass.getMethod( "setEnabledPreferencesMenu", Boolean.TYPE );
-        setEnabledPrefsMenuMethod.invoke( app, Boolean.FALSE ); // XXX set to true to enable preferences!!!
+        setEnabledPrefsMenuMethod.invoke( app, Boolean.FALSE ); // XXX set to
+        // true to
+        // enable
+        // preferences!!!
 
         // Call Application#addApplicationListener(...) ...
         final Method addAppListenerMethod = appClass.getMethod( "addApplicationListener", appAdapterClass );
