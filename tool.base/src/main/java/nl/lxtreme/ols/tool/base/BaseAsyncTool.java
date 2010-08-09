@@ -206,9 +206,14 @@ extends BaseTool<DIALOG>
    * @param aAnalysisResult
    *          the analysis result of the tool worker, never <code>null</code>.
    */
+  @SuppressWarnings( "unchecked" )
   protected void onToolWorkerDone( final RESULT_TYPE aAnalysisResult )
   {
-    // NO-op
+    final DIALOG dialog = getDialog();
+    if ( dialog instanceof ExportAware<?> )
+    {
+      ( ( ExportAware<RESULT_TYPE> )dialog ).createReport( aAnalysisResult );
+    }
   }
 }
 

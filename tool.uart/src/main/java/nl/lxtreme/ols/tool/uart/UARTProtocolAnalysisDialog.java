@@ -46,7 +46,7 @@ import nl.lxtreme.ols.util.swing.*;
  *         table panel and three buttons.
  */
 public final class UARTProtocolAnalysisDialog extends JDialog implements
-BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable
+BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>, Configurable, ExportAware<UARTDataSet>
 {
   // INNER TYPES
 

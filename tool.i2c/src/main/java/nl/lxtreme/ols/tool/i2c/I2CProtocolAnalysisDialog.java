@@ -45,8 +45,8 @@ import nl.lxtreme.ols.util.swing.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-final class I2CProtocolAnalysisDialog extends JDialog implements BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>,
-Configurable
+public final class I2CProtocolAnalysisDialog extends JDialog implements
+BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>, Configurable, ExportAware<I2CDataSet>
 {
   // INNER TYPES
 

@@ -86,15 +86,6 @@ public class I2CAnalyser extends BaseAsyncTool<I2CProtocolAnalysisDialog, I2CDat
       getDialog().setAutoDetectSDA( ( String )value );
     }
   }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onToolWorkerDone(java.lang.Object)
-   */
-  @Override
-  protected void onToolWorkerDone( final I2CDataSet aAnalysisResult )
-  {
-    getDialog().createReport( aAnalysisResult );
-  }
 }
 
 /* EOF */

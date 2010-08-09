@@ -45,8 +45,8 @@ import nl.lxtreme.ols.util.swing.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-final class SPIProtocolAnalysisDialog extends JDialog implements BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>,
-Configurable
+public final class SPIProtocolAnalysisDialog extends JDialog implements
+BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>, Configurable, ExportAware<SPIDataSet>
 {
   // INNER TYPES
 
