@@ -21,12 +21,15 @@
 package nl.lxtreme.ols.tool.uart;
 
 
+import nl.lxtreme.ols.tool.base.*;
+
+
 /**
  * Class for UART dataset
  * 
  * @author Frank Kunz
  */
-public final class UARTData implements Comparable<UARTData>
+public final class UARTData extends BaseData<UARTData>
 {
   // CONSTANTS
 
@@ -38,7 +41,6 @@ public final class UARTData implements Comparable<UARTData>
 
   // VARIABLES
 
-  private final long time;
   private final int data;
   private final int type;
   private final String event;
@@ -48,47 +50,41 @@ public final class UARTData implements Comparable<UARTData>
   /*
    * data
    */
-  public UARTData( final long time, final int data, final int type )
+  public UARTData( final long aTime, final int aData, final int aType, final String aTimeDisplayValue )
   {
-    this.time = time;
-    this.data = data;
-    this.type = type;
+    super( aTime, aTimeDisplayValue );
+    this.data = aData;
+    this.type = aType;
     this.event = null;
-  }
-
-  /*
-   * generic event
-   */
-  public UARTData( final long time, final String ev )
-  {
-    this.time = time;
-    this.data = 0;
-    this.type = UART_TYPE_EVENT;
-    this.event = new String( ev );
   }
 
   /*
    * type specific event
    */
-  public UARTData( final long time, final String ev, final int type )
+  public UARTData( final long aTime, final String aEvent, final int aType, final String aTimeDisplayValue )
   {
-    this.time = time;
+    super( aTime, aTimeDisplayValue );
     this.data = 0;
-    this.type = type;
-    this.event = new String( ev );
+    this.type = aType;
+    this.event = aEvent;
+  }
+
+  /*
+   * generic event
+   */
+  public UARTData( final long aTime, final String aEvent, final String aTimeDisplayValue )
+  {
+    super( aTime, aTimeDisplayValue );
+    this.data = 0;
+    this.type = UART_TYPE_EVENT;
+    this.event = aEvent;
   }
 
   // METHODS
 
-  /*
-   * for result sort algo (non-Javadoc)
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
    */
-  public int compareTo( final UARTData cmp )
-  {
-    return ( int )( this.time - cmp.time );
-  }
-
   @Override
   public boolean equals( final Object aObject )
   {
@@ -96,12 +92,17 @@ public final class UARTData implements Comparable<UARTData>
     {
       return true;
     }
-    if ( ( aObject == null ) || !( aObject instanceof UARTData ) )
+    if ( !super.equals( aObject ) || !( aObject instanceof UARTData ) )
     {
       return false;
     }
 
     final UARTData other = ( UARTData )aObject;
+    if ( this.type != other.type )
+    {
+      return false;
+    }
+
     if ( this.data != other.data )
     {
       return false;
@@ -115,16 +116,6 @@ public final class UARTData implements Comparable<UARTData>
       }
     }
     else if ( !this.event.equals( other.event ) )
-    {
-      return false;
-    }
-
-    if ( this.time != other.time )
-    {
-      return false;
-    }
-
-    if ( this.type != other.type )
     {
       return false;
     }
@@ -151,27 +142,21 @@ public final class UARTData implements Comparable<UARTData>
   /**
    * @return
    */
-  public long getTime()
-  {
-    return this.time;
-  }
-
-  /**
-   * @return
-   */
   public int getType()
   {
     return this.type;
   }
 
+  /**
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode()
   {
     final int prime = 31;
-    int result = 1;
+    int result = super.hashCode();
     result = prime * result + this.data;
     result = prime * result + ( ( this.event == null ) ? 0 : this.event.hashCode() );
-    result = prime * result + ( int )( this.time ^ ( this.time >>> 32 ) );
     result = prime * result + this.type;
     return result;
   }

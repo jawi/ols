@@ -207,9 +207,9 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    * bits and bit order. The decoded data are put to a JTable object directly.
    */
   @Override
-  public void createReport( final SPIDataSet aAnalysisResult )
+  public void onToolWorkerReady( final SPIDataSet aAnalysisResult )
   {
-    super.createReport( aAnalysisResult );
+    super.onToolWorkerReady( aAnalysisResult );
 
     this.outText.setText( toHtmlPage( aAnalysisResult ) );
     this.outText.setEditable( false );
@@ -255,13 +255,11 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
    */
   @Override
-  public boolean showDialog( final AnnotatedData aData )
+  public void showDialog( final AnnotatedData aData )
   {
     this.analysisData = aData;
 
     setVisible( true );
-
-    return true;
   }
 
   /**
@@ -339,7 +337,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
             + "\"" );
         bw.newLine();
 
-        final List<SPIData> decodedData = aDataSet.getDecodedData();
+        final List<SPIData> decodedData = aDataSet.getData();
         for ( int i = 0; i < decodedData.size(); i++ )
         {
           dSet = decodedData.get( i );
@@ -405,19 +403,19 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
     // generate html page header
     String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-      + "<html>"
-      + "  <head>"
-      + "    <title></title>"
-      + "    <meta content=\"\">"
-      + "    <style>"
-      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-      + "       </style>" + "  </head>" + "   <body>" + "       <H2>SPI Analysis Results</H2>" + "       <hr>"
-      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-      + "       <br>";
+        + "<html>"
+        + "  <head>"
+        + "    <title></title>"
+        + "    <meta content=\"\">"
+        + "    <style>"
+        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+        + "       </style>" + "  </head>" + "   <body>" + "       <H2>SPI Analysis Results</H2>" + "       <hr>"
+        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+        + "       <br>";
 
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
-      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
+        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
     data = data.concat( "</table" );
 
     // generate the footer table
@@ -469,20 +467,20 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
     // generate html page header
     String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-      + "<html>"
-      + "  <head>"
-      + "    <title></title>"
-      + "    <meta content=\"\">"
-      + "    <style>"
-      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-      + "       </style>" + "  </head>" + "   <body>" + "       <H2>SPI Analysis Results</H2>" + "       <hr>"
-      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-      + "       <br>";
+        + "<html>"
+        + "  <head>"
+        + "    <title></title>"
+        + "    <meta content=\"\">"
+        + "    <style>"
+        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+        + "       </style>" + "  </head>" + "   <body>" + "       <H2>SPI Analysis Results</H2>" + "       <hr>"
+        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+        + "       <br>";
 
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
-      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
-    final List<SPIData> decodedData = aDataSet.getDecodedData();
+        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
+    final List<SPIData> decodedData = aDataSet.getData();
     for ( int i = 0; i < decodedData.size(); i++ )
     {
       SPIData ds = decodedData.get( i );

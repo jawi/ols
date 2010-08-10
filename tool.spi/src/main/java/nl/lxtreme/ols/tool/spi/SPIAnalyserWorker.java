@@ -187,7 +187,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       }
     }
 
-    final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode );
+    final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode, this );
     // now the trigger is in b, add trigger event to table
     decodedData.reportCSLow( startOfDecode );
 

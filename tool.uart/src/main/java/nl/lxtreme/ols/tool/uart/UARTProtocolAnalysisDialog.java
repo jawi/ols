@@ -233,9 +233,9 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    * bits and bit order. The decoded data are put to a JTable object directly.
    */
   @Override
-  public void createReport( final UARTDataSet aAnalysisResult )
+  public void onToolWorkerReady( final UARTDataSet aAnalysisResult )
   {
-    super.createReport( aAnalysisResult );
+    super.onToolWorkerReady( aAnalysisResult );
 
     this.outText.setText( toHtmlPage( aAnalysisResult ) );
     this.outText.setEditable( false );
@@ -403,35 +403,31 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
             + "\"" );
         bw.newLine();
 
-        final List<UARTData> decodedData = aDataSet.getDecodedData();
+        final List<UARTData> decodedData = aDataSet.getData();
         for ( int i = 0; i < decodedData.size(); i++ )
         {
           dSet = decodedData.get( i );
           switch ( dSet.getType() )
           {
             case UARTData.UART_TYPE_EVENT:
-              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getEvent()
-                  + "\",\"" + dSet.getEvent() + "\"" );
-              break;
-
-            case UARTData.UART_TYPE_RXEVENT:
-              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getEvent()
-                  + "\",\"" + "\"" );
-              break;
-
-            case UARTData.UART_TYPE_TXEVENT:
-              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + "\",\""
+              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + dSet.getEvent() + "\",\""
                   + dSet.getEvent() + "\"" );
               break;
 
+            case UARTData.UART_TYPE_RXEVENT:
+              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + dSet.getEvent() + "\",\"" + "\"" );
+              break;
+
+            case UARTData.UART_TYPE_TXEVENT:
+              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + "\",\"" + dSet.getEvent() + "\"" );
+              break;
+
             case UARTData.UART_TYPE_RXDATA:
-              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getData()
-                  + "\",\"" + "\"" );
+              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + dSet.getData() + "\",\"" + "\"" );
               break;
 
             case UARTData.UART_TYPE_TXDATA:
-              bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + "\",\""
-                  + dSet.getData() + "\"" );
+              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + "\",\"" + dSet.getData() + "\"" );
               break;
 
             default:
@@ -454,6 +450,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    * @param aFile
    *          file object
    */
+  @Override
   protected void storeToHtmlFile( final File aFile, final UARTDataSet aDataSet )
   {
     if ( !aDataSet.isEmpty() )
@@ -513,26 +510,6 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   }
 
   /**
-   * Convert sample count to time string.
-   * 
-   * @param aCount
-   *          sample count (or index)
-   * @return string containing time information
-   */
-  private String indexToTime( final UARTDataSet aDataSet, final long aCount )
-  {
-    final long count = Math.max( 0, aCount - aDataSet.getStartOfDecode() );
-    if ( getAnalysisData().hasTimingData() )
-    {
-      return DisplayUtils.displayScaledTime( count, getAnalysisData().getSampleRate() );
-    }
-    else
-    {
-      return ( "" + aCount );
-    }
-  }
-
-  /**
    * generate a HTML page
    * 
    * @param empty
@@ -542,7 +519,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   private String toHtmlPage( final UARTDataSet aDataSet )
   {
     Date now = new Date();
-    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG, Locale.US );
+    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
 
     int bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
     int bitAdder = 0;
@@ -575,7 +552,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
       stats = stats.concat( "<table style=\"width:100%;\">" + "<TR><TD style=\"width:30%;\">Decoded Symbols</TD><TD>"
           + aDataSet.getDecodedSymbols() + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Detected Bus Errors</TD><TD>"
           + aDataSet.getDetectedErrors() + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Baudrate</TD><TD>"
-          + getAnalysisData().getSampleRate() / aDataSet.getBitLength() + "</TD></TR>" + "</table>" + "<br>" + "<br>" );
+          + aDataSet.getSampleRate() / aDataSet.getBitLength() + "</TD></TR>" + "</table>" + "<br>" + "<br>" );
       if ( aDataSet.getBitLength() < 15 )
       {
         stats = stats
@@ -586,7 +563,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
       + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
-    final List<UARTData> decodedData = aDataSet.getDecodedData();
+    final List<UARTData> decodedData = aDataSet.getData();
 
     UARTData ds;
     for ( int i = 0; i < decodedData.size(); i++ )
@@ -596,26 +573,26 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
       {
         case UARTData.UART_TYPE_EVENT:
           data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + ds.getEvent()
-              + "</td><td></td><td></td><td></td><td>" + ds.getEvent() + "</td><td></td><td></td><td></td></tr>" );
+              + ds.getTimeDisplayValue() + "</td><td>" + ds.getEvent() + "</td><td></td><td></td><td></td><td>"
+              + ds.getEvent() + "</td><td></td><td></td><td></td></tr>" );
           break;
 
         case UARTData.UART_TYPE_RXEVENT:
           data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + ds.getEvent()
-              + "</td><td></td><td></td><td></td><td>" + "</td><td></td><td></td><td></td></tr>" );
+              + ds.getTimeDisplayValue() + "</td><td>" + ds.getEvent() + "</td><td></td><td></td><td></td><td>"
+              + "</td><td></td><td></td><td></td></tr>" );
           break;
 
         case UARTData.UART_TYPE_TXEVENT:
           data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + "</td><td></td><td></td><td></td><td>"
-              + ds.getEvent() + "</td><td></td><td></td><td></td></tr>" );
+              + ds.getTimeDisplayValue() + "</td><td>" + "</td><td></td><td></td><td></td><td>" + ds.getEvent()
+              + "</td><td></td><td></td><td></td></tr>" );
           break;
 
         case UARTData.UART_TYPE_RXDATA:
           final int rxdData = ds.getData();
           data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
-              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + "0x"
+              + ds.getTimeDisplayValue() + "</td><td>" + "0x"
               + DisplayUtils.integerToHexString( rxdData, bitCount / 4 + bitAdder ) + "</td><td>" + "0b"
               + DisplayUtils.integerToBinString( rxdData, bitCount ) + "</td><td>" + rxdData + "</td><td>" );
 
@@ -630,7 +607,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
         case UARTData.UART_TYPE_TXDATA:
           final int txdData = ds.getData();
           data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
-              + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + "</td><td>" + "</td><td>" + "</td><td>" );
+              + ds.getTimeDisplayValue() + "</td><td>" + "</td><td>" + "</td><td>" + "</td><td>" );
 
           data = data.concat( "</td><td>" + "0x" + DisplayUtils.integerToHexString( txdData, bitCount / 4 + bitAdder )
               + "</td><td>" + "0b" + DisplayUtils.integerToBinString( txdData, bitCount ) + "</td><td>" + txdData

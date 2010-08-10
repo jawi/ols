@@ -36,8 +36,100 @@ import nl.lxtreme.ols.api.tools.*;
  * background, or outside the EDT.
  */
 public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncToolDialog<RESULT_TYPE, WORKER>, RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>>
-extends BaseTool<DIALOG>
+    extends BaseTool<DIALOG>
 {
+  // INNER TYPES
+
+  /**
+   * @author jawi
+   */
+  final class ToolWorkerPropertyChangeListener implements PropertyChangeListener
+  {
+    // VARIABLES
+
+    private final AnalysisCallback callback;
+
+    // CONSTRUCTORS
+
+    /**
+     * @param aCallback
+     */
+    public ToolWorkerPropertyChangeListener( final AnalysisCallback aCallback )
+    {
+      this.callback = aCallback;
+    }
+
+    // METHODS
+
+    /**
+     * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+     */
+    @Override
+    public void propertyChange( final PropertyChangeEvent aEvent )
+    {
+      final String name = aEvent.getPropertyName();
+      final Object value = aEvent.getNewValue();
+
+      if ( PROPERTY_PROGRESS.equals( name ) )
+      {
+        // Progress update...
+        final Integer percentage = ( Integer )value;
+        this.callback.updateProgress( percentage );
+      }
+      else if ( PROPERTY_STATE.equals( name ) )
+      {
+        // State change...
+        final StateValue state = ( StateValue )value;
+        if ( StateValue.DONE.equals( state ) )
+        {
+          final WORKER worker = getToolWorker();
+
+          RESULT_TYPE analysisResults = null;
+          String abortReason = null;
+
+          try
+          {
+            analysisResults = worker.get();
+          }
+          catch ( CancellationException exception )
+          {
+            abortReason = "Cancelled by user.";
+          }
+          catch ( ExecutionException exception )
+          {
+            abortReason = exception.getCause().getMessage();
+          }
+          catch ( InterruptedException exception )
+          {
+            abortReason = exception.getMessage();
+          }
+
+          if ( worker.isCancelled() || ( abortReason != null ) )
+          {
+            if ( abortReason == null )
+            {
+              abortReason = "";
+            }
+            this.callback.analysisAborted( abortReason );
+          }
+          else
+          {
+            CapturedData newData = null;
+            if ( analysisResults instanceof CapturedData )
+            {
+              newData = ( CapturedData )analysisResults;
+            }
+
+            this.callback.analysisComplete( newData );
+          }
+        }
+      }
+
+      // Pass through our local event handling method...
+      BaseAsyncTool.this.onPropertyChange( aEvent );
+    }
+  }
+
   // CONSTANTS
 
   protected static final String PROPERTY_PROGRESS = "progress";
@@ -89,86 +181,14 @@ extends BaseTool<DIALOG>
   {
     this.toolWorker = createToolWorker( aData );
 
-    this.toolWorker.addPropertyChangeListener( new PropertyChangeListener()
-    {
-      /**
-       * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-       */
-      @Override
-      public void propertyChange( final PropertyChangeEvent aEvent )
-      {
-        final String name = aEvent.getPropertyName();
-        final Object value = aEvent.getNewValue();
+    this.toolWorker.addPropertyChangeListener( new ToolWorkerPropertyChangeListener( aCallback ) );
 
-        if ( PROPERTY_PROGRESS.equals( name ) )
-        {
-          // Progress update...
-          final Integer percentage = ( Integer )value;
-          aCallback.updateProgress( percentage );
-        }
-        else if ( PROPERTY_STATE.equals( name ) )
-        {
-          // State change...
-          final StateValue state = ( StateValue )value;
-          if ( StateValue.DONE.equals( state ) )
-          {
-            final WORKER worker = getToolWorker();
-
-            RESULT_TYPE analysisResults = null;
-            String abortReason = null;
-
-            try
-            {
-              analysisResults = worker.get();
-            }
-            catch ( CancellationException exception )
-            {
-              abortReason = "Cancelled by user.";
-            }
-            catch ( ExecutionException exception )
-            {
-              abortReason = exception.getCause().getMessage();
-            }
-            catch ( InterruptedException exception )
-            {
-              abortReason = exception.getMessage();
-            }
-
-            if ( worker.isCancelled() || ( abortReason != null ) )
-            {
-              if ( abortReason == null )
-              {
-                abortReason = "";
-              }
-              aCallback.analysisAborted( abortReason );
-            }
-            else
-            {
-              CapturedData newData = null;
-              if ( analysisResults instanceof CapturedData )
-              {
-                newData = ( CapturedData )analysisResults;
-              }
-
-              aCallback.analysisComplete( newData );
-
-              onToolWorkerDone( analysisResults );
-            }
-          }
-        }
-
-        // Pass through our local event handling method...
-        BaseAsyncTool.this.onPropertyChange( aEvent );
-      }
-    } );
+    final DIALOG dialog = getDialog();
 
     // Update the tool worker to the new one...
-    getDialog().setToolWorker( this.toolWorker );
+    dialog.setToolWorker( this.toolWorker );
     // Show the actual dialog...
-    if ( getDialog().showDialog( aData ) )
-    {
-      onCloseDialog();
-    }
+    dialog.showDialog( aData );
   }
 
   /**
@@ -182,14 +202,6 @@ extends BaseTool<DIALOG>
   }
 
   /**
-   * Called upon succesful closing of the dialog.
-   */
-  protected void onCloseDialog()
-  {
-    // NO-op
-  }
-
-  /**
    * Allows for custom property change events.
    * 
    * @param aEvent
@@ -198,22 +210,6 @@ extends BaseTool<DIALOG>
   protected void onPropertyChange( final PropertyChangeEvent aEvent )
   {
     // NO-op
-  }
-
-  /**
-   * Called when the tool worker is done processing its data.
-   * 
-   * @param aAnalysisResult
-   *          the analysis result of the tool worker, never <code>null</code>.
-   */
-  @SuppressWarnings( "unchecked" )
-  protected void onToolWorkerDone( final RESULT_TYPE aAnalysisResult )
-  {
-    final DIALOG dialog = getDialog();
-    if ( dialog instanceof ExportAware<?> )
-    {
-      ( ( ExportAware<RESULT_TYPE> )dialog ).createReport( aAnalysisResult );
-    }
   }
 }
 

@@ -251,7 +251,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
       endOfDecode = getAbsoluteLength();
     }
 
-    final UARTDataSet decodedData = new UARTDataSet( startOfDecode, endOfDecode );
+    final UARTDataSet decodedData = new UARTDataSet( startOfDecode, endOfDecode, this );
 
     int bitLength;
 
@@ -760,7 +760,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
         }
       }
       else
-      /* if ( this.stopBits == UARTStopBits.STOP_2 ) */
+        /* if ( this.stopBits == UARTStopBits.STOP_2 ) */
       {
         if ( isInverted() )
         {

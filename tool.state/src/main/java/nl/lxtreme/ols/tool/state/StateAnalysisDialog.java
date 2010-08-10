@@ -22,8 +22,6 @@ package nl.lxtreme.ols.tool.state;
 
 
 import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
 import java.util.*;
 
 import javax.swing.*;
@@ -36,17 +34,11 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * @author jawi
  */
-public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData, StateAnalysisWorker> implements
-ActionListener
+public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData, StateAnalysisWorker>
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
-
-  public final static int CANCEL = 0;
-  public final static int OK = 1;
-  public final static int RISING = 0;
-  public final static int FALLING = 1;
 
   // VARIABLES
 
@@ -56,7 +48,9 @@ ActionListener
   private final JComboBox channelSelect;
   private final String[] edges;
   private final String[] channels;
-  private int result;
+
+  private final RunAnalysisAction runAction;
+  private final CloseAction closeAction;
 
   // CONSTRUCTORS
 
@@ -68,7 +62,7 @@ ActionListener
   {
     super( aOwner, aName );
 
-    Container pane = getContentPane();
+    final Container pane = getContentPane();
     pane.setLayout( new GridLayout( 3, 2, 5, 5 ) );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
 
@@ -81,51 +75,26 @@ ActionListener
     pane.add( new JLabel( "Clock Channel:" ) );
     pane.add( this.channelSelect );
 
-    String[] tmp = { "Rising", "Falling" };
+    final String[] tmp = { "Rising", "Falling" };
+
     this.edges = tmp;
     this.edgeSelect = new JComboBox( this.edges );
     pane.add( new JLabel( "Clock Edge:" ) );
     pane.add( this.edgeSelect );
 
-    JButton convert = new JButton( "Convert" );
-    convert.addActionListener( this );
+    this.runAction = new RunAnalysisAction();
+    final JButton convert = new JButton( this.runAction );
     pane.add( convert );
 
-    JButton cancel = new JButton( "Cancel" );
-    cancel.addActionListener( this );
+    this.closeAction = new CloseAction();
+    final JButton cancel = new JButton( this.closeAction );
     pane.add( cancel );
 
     pack();
     setResizable( false );
-    this.result = CANCEL;
   }
 
   // METHODS
-
-  public void actionPerformed( final ActionEvent e )
-  {
-    this.channel = Integer.parseInt( ( String )this.channelSelect.getSelectedItem() );
-
-    if ( ( ( String )this.edgeSelect.getSelectedItem() ).equals( "Rising" ) )
-    {
-      this.edge = RISING;
-    }
-    else
-    {
-      this.edge = FALLING;
-    }
-
-    if ( e.getActionCommand().equals( "Convert" ) )
-    {
-      this.result = OK;
-    }
-    else
-    {
-      this.result = CANCEL;
-    }
-
-    setVisible( false );
-  }
 
   /**
    * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
@@ -137,20 +106,13 @@ ActionListener
     SwingComponentUtils.setSelectedItem( this.channelSelect, properties.getProperty( aNamespace + ".channel" ) );
   }
 
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#reset()
+   */
   @Override
   public void reset()
   {
-    // NO-op
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
-   */
-  @Override
-  public boolean showDialog( final AnnotatedData aData )
-  {
-    setVisible( true );
-    return ( this.result == StateAnalysisDialog.OK );
+    this.runAction.restore();
   }
 
   /**
@@ -164,12 +126,21 @@ ActionListener
   }
 
   /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#onToolWorkerStarted()
+   */
+  @Override
+  protected void onToolWorkerStarted()
+  {
+    setVisible( false );
+  }
+
+  /**
    * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setControlsEnabled(boolean)
    */
   @Override
   protected void setControlsEnabled( final boolean aEnabled )
   {
-    // TODO Auto-generated method stub
+    this.runAction.setEnabled( aEnabled );
   }
 
   /**
@@ -178,27 +149,16 @@ ActionListener
   @Override
   protected void setupToolWorker( final StateAnalysisWorker aToolWorker )
   {
-    // TODO Auto-generated method stub
-  }
+    aToolWorker.setNumber( this.channelSelect.getSelectedIndex() );
 
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToCsvFile(java.io.File,
-   *      java.lang.Object)
-   */
-  @Override
-  protected void storeToCsvFile( final File aSelectedFile, final CapturedData aAnalysisResult )
-  {
-    // TODO Auto-generated method stub
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToHtmlFile(java.io.File,
-   *      java.lang.Object)
-   */
-  @Override
-  protected void storeToHtmlFile( final File aSelectedFile, final CapturedData aAnalysisResult )
-  {
-    // TODO Auto-generated method stub
+    if ( "Rising".equals( this.edgeSelect.getSelectedItem() ) )
+    {
+      aToolWorker.setLevel( 0 );
+    }
+    else
+    {
+      aToolWorker.setLevel( 1 );
+    }
   }
 }
 

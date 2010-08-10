@@ -70,6 +70,9 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
   }
 
   /**
+   * Convert captured data from timing data to state data using the given
+   * channel as clock.
+   * 
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
@@ -79,12 +82,15 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
     final int[] values = getValues();
     final long triggerPosition = getTriggerPosition();
 
+    final int maskValue = 1 << this.number;
+
+    int size = 1; // ensure at least one value...
+    int last = ( values[0] & maskValue ) >> this.number;
+
     // calculate new sample array size
-    int last = values[0] & 1 << this.number;
-    int size = 0;
     for ( final int value : values )
     {
-      final int current = value & 1 << this.number;
+      final int current = ( value & maskValue ) >> this.number;
       if ( ( last == this.level ) && ( current != this.level ) )
       {
         size++;
@@ -93,13 +99,14 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
     }
 
     // convert captured data
-    last = values[0] & 1 << this.number;
+    last = values[0] & maskValue;
     int pos = 0;
     int newTrigger = -1;
+
     final int[] newValues = new int[size];
     for ( int i = 0; i < values.length; i++ )
     {
-      final int current = values[i] & 1 << this.number;
+      final int current = ( values[i] & maskValue ) >> this.number;
       if ( ( last == this.level ) && ( current != this.level ) )
       {
         newValues[pos++] = values[i - 1];

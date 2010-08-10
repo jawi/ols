@@ -125,7 +125,8 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     final long[] timestamps = getTimestamps();
 
     // process the captured data and write to output
-    int sampleIdx, oldSCL, oldSDA, bitCount;
+    int sampleIdx;
+    int oldSCL, oldSDA, bitCount;
     int byteValue;
     int sdaMask, sclMask;
 
@@ -214,7 +215,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
       return null;
     }
 
-    final I2CDataSet i2cDataSet = new I2CDataSet( sampleIdx, sampleCount );
+    final I2CDataSet i2cDataSet = new I2CDataSet( sampleIdx, sampleCount, this );
     final long max = sampleCount - sampleIdx;
 
     // We've just found our start condition, start the report with that...
@@ -232,10 +233,10 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     bitCount = 8;
     byteValue = 0;
 
-    for ( sampleIdx = i2cDataSet.getStartSampleIndex(); sampleIdx < i2cDataSet.getStopSampleIndex() - 1; sampleIdx++ )
+    for ( int idx = ( int )i2cDataSet.getStartOfDecode(); idx < i2cDataSet.getEndOfDecode() - 1; idx++ )
     {
-      final long time = calculateTime( timestamps[sampleIdx] );
-      final int dataValue = values[sampleIdx];
+      final long time = calculateTime( timestamps[idx] );
+      final int dataValue = values[idx];
 
       final int sda = dataValue & sdaMask;
       final int scl = dataValue & sclMask;
@@ -315,8 +316,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
       oldSCL = scl;
       oldSDA = sda;
 
-      setProgress( ( int )Math.max( 0.0, Math.min( 100.0, ( sampleIdx - i2cDataSet.getStartSampleIndex() ) * 100.0
-          / max ) ) );
+      setProgress( ( int )Math.max( 0.0, Math.min( 100.0, ( idx - i2cDataSet.getStartOfDecode() ) * 100.0 / max ) ) );
     }
 
     return i2cDataSet;

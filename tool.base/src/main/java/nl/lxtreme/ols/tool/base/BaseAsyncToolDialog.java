@@ -23,10 +23,13 @@ package nl.lxtreme.ols.tool.base;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.io.*;
+import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.swing.*;
+import javax.swing.SwingWorker.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -36,9 +39,70 @@ import nl.lxtreme.ols.util.swing.*;
  * @author jawi
  */
 public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends
-BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, ExportAware<RESULT_TYPE>, Configurable
+BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, Configurable
 {
   // INNER TYPES
+
+  /**
+   * @author jawi
+   */
+  final class ToolWorkerPropertyChangeListener implements PropertyChangeListener
+  {
+    /**
+     * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+     */
+    @Override
+    @SuppressWarnings( "unchecked" )
+    public void propertyChange( final PropertyChangeEvent aEvent )
+    {
+      final String name = aEvent.getPropertyName();
+      final Object value = aEvent.getNewValue();
+
+      if ( BaseAsyncTool.PROPERTY_STATE.equals( name ) )
+      {
+        // State change...
+        final StateValue state = ( StateValue )value;
+        if ( StateValue.STARTED.equals( state ) )
+        {
+          // Set the "wait" cursor...
+          setCursor( new Cursor( Cursor.WAIT_CURSOR ) );
+
+          onToolWorkerStarted();
+        }
+        else if ( StateValue.DONE.equals( state ) )
+        {
+          // Restore the original cursor...
+          setCursor( new Cursor( Cursor.DEFAULT_CURSOR ) );
+
+          final WORKER worker = ( WORKER )aEvent.getSource();
+
+          try
+          {
+            final RESULT_TYPE analysisResults = worker.get();
+
+            setAnalysisResult( analysisResults );
+
+            onToolWorkerReady( analysisResults );
+          }
+          catch ( CancellationException exception )
+          {
+            LOG.log( Level.WARNING, "Dialog exception!", exception );
+            onToolWorkerCancelled();
+          }
+          catch ( ExecutionException exception )
+          {
+            LOG.log( Level.WARNING, "Dialog exception!", exception );
+            onToolWorkerCancelled();
+          }
+          catch ( InterruptedException exception )
+          {
+            LOG.log( Level.WARNING, "Dialog exception!", exception );
+            onToolWorkerCancelled();
+          }
+        }
+      }
+    }
+  }
 
   /**
    * 
@@ -158,6 +222,8 @@ BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, ExportAware<RESU
   private transient volatile WORKER toolWorker;
   private transient volatile RESULT_TYPE analysisResult;
 
+  private PropertyChangeListener toolWorkerPropertyListener = null;
+
   // CONSTRUCTORS
 
   /**
@@ -172,19 +238,18 @@ BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, ExportAware<RESU
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.ExportAware#createReport(java.lang.Object)
+   * @see nl.lxtreme.ols.tool.base.ToolDialog#reset()
    */
-  public void createReport( final RESULT_TYPE aAnalysisResult )
+  @Override
+  public void reset()
   {
-    this.analysisResult = aAnalysisResult;
-
-    setControlsEnabled( true );
+    // NO-op
   }
 
   /**
    * @see nl.lxtreme.ols.tool.base.AsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
    */
-  public void setToolWorker( final WORKER aToolWorker )
+  public final void setToolWorker( final WORKER aToolWorker )
   {
     this.toolWorker = aToolWorker;
   }
@@ -197,9 +262,23 @@ BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, ExportAware<RESU
     synchronized ( this.toolWorker )
     {
       this.analysisResult = null;
+
       this.toolWorker.cancel( true /* mayInterruptIfRunning */);
+      if ( this.toolWorkerPropertyListener != null )
+      {
+        this.toolWorker.removePropertyChangeListener( this.toolWorkerPropertyListener );
+      }
+
       setControlsEnabled( true );
     }
+  }
+
+  /**
+   * @param aResult
+   */
+  final void setAnalysisResult( final RESULT_TYPE aResult )
+  {
+    this.analysisResult = aResult;
   }
 
   /**
@@ -211,6 +290,13 @@ BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, ExportAware<RESU
     {
       setupToolWorker( this.toolWorker );
 
+      if ( this.toolWorkerPropertyListener == null )
+      {
+        this.toolWorkerPropertyListener = new ToolWorkerPropertyChangeListener();
+      }
+
+      this.toolWorker.addPropertyChangeListener( this.toolWorkerPropertyListener );
+
       this.toolWorker.execute();
 
       setControlsEnabled( false );
@@ -218,10 +304,11 @@ BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, ExportAware<RESU
   }
 
   /**
-   * Closes this dialog, cancels any running tool workers if they are still running.
+   * Closes this dialog, cancels any running tool workers if they are still
+   * running.
    */
   @Override
-  protected void close()
+  protected final void close()
   {
     synchronized ( this.toolWorker )
     {
@@ -239,25 +326,63 @@ BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, ExportAware<RESU
   }
 
   /**
+   * 
+   */
+  protected void onToolWorkerCancelled()
+  {
+    // NO-op
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.ExportAware#createReport(java.lang.Object)
+   */
+  protected void onToolWorkerReady( final RESULT_TYPE aAnalysisResult )
+  {
+    this.analysisResult = aAnalysisResult;
+
+    setControlsEnabled( true );
+  }
+
+  /**
+   * 
+   */
+  protected void onToolWorkerStarted()
+  {
+    // NO-op
+  }
+
+  /**
    * @param aB
    */
-  protected abstract void setControlsEnabled( final boolean aEnabled );
+  protected void setControlsEnabled( final boolean aEnabled )
+  {
+    // NO-op
+  }
 
   /**
    * @param aToolWorker
    */
-  protected abstract void setupToolWorker( final WORKER aToolWorker );
+  protected void setupToolWorker( final WORKER aToolWorker )
+  {
+    // NO-op
+  }
 
   /**
    * @param aSelectedFile
    * @param aAnalysisResult
    */
-  protected abstract void storeToCsvFile( final File aSelectedFile, final RESULT_TYPE aAnalysisResult );
+  protected void storeToCsvFile( final File aSelectedFile, final RESULT_TYPE aAnalysisResult )
+  {
+    // NO-op
+  }
 
   /**
    * @param aSelectedFile
    * @param aAnalysisResult
    */
-  protected abstract void storeToHtmlFile( final File aSelectedFile, final RESULT_TYPE aAnalysisResult );
+  protected void storeToHtmlFile( final File aSelectedFile, final RESULT_TYPE aAnalysisResult )
+  {
+    // NO-op
+  }
 
 }
