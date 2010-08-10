@@ -29,7 +29,6 @@ import org.junit.*;
 
 /**
  * @author jawi
- *
  */
 public class NumberUtilsTest
 {

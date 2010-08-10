@@ -33,9 +33,9 @@ public class GotoCursor2Action extends BaseCursorAction
 {
   // CONSTANTS
 
-  private static final long  serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String ID               = "GotoCursor2";
+  public static final String ID = "GotoCursor2";
 
   // CONSTRUCTORS
 

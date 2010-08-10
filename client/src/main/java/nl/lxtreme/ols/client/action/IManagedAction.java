@@ -25,7 +25,8 @@ import javax.swing.*;
 
 
 /**
- * Denotes an Swing {@link Action} that is managed by a framework as it is named uniquely.
+ * Denotes an Swing {@link Action} that is managed by a framework as it is named
+ * uniquely.
  */
 public interface IManagedAction extends Action
 {

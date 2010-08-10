@@ -78,7 +78,8 @@ public class MenuTracker extends ServiceTracker
   }
 
   /**
-   * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
+   * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference,
+   *      java.lang.Object)
    */
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )

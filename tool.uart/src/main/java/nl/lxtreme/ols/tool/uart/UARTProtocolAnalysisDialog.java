@@ -485,22 +485,22 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
     // generate html page header
     String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-      + "<html>"
-      + "  <head>"
-      + "    <title></title>"
-      + "    <meta content=\"\">"
-      + "    <style>"
-      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-      + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
-      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-      + "       <br>";
+        + "<html>"
+        + "  <head>"
+        + "    <title></title>"
+        + "    <meta content=\"\">"
+        + "    <style>"
+        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+        + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
+        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+        + "       <br>";
 
     // generate the statistics table
     String stats = new String();
 
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
-      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
+        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
     data = data.concat( "</table" );
 
     // generate the footer table
@@ -531,15 +531,15 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
     // generate html page header
     String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-      + "<html>"
-      + "  <head>"
-      + "    <title></title>"
-      + "    <meta content=\"\">"
-      + "    <style>"
-      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-      + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
-      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-      + "       <br>";
+        + "<html>"
+        + "  <head>"
+        + "    <title></title>"
+        + "    <meta content=\"\">"
+        + "    <style>"
+        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+        + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
+        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+        + "       <br>";
 
     // generate the statistics table
     String stats = new String();
@@ -556,13 +556,13 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
       if ( aDataSet.getBitLength() < 15 )
       {
         stats = stats
-        .concat( "<p style=\"color:red;\">The baudrate may be wrong, use a higher samplerate to avoid this !</p><br><br>" );
+            .concat( "<p style=\"color:red;\">The baudrate may be wrong, use a higher samplerate to avoid this !</p><br><br>" );
       }
     }
 
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
-      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
+        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
     final List<UARTData> decodedData = aDataSet.getData();
 
     UARTData ds;

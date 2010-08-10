@@ -39,19 +39,19 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
 {
   // CONSTANTS
 
-  private static final long  serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
   /** the user cancelled the dialog - all changes were discarded */
-  public final static int    CANCEL           = 0;
+  public final static int CANCEL = 0;
   /** the user clicked ok - all changes were written to the settings */
-  public final static int    OK               = 1;
+  public final static int OK = 1;
 
   // VARIABLES
 
-  private final String[]     diagramLabels;
-  private JDialog            dialog;
+  private final String[] diagramLabels;
+  private JDialog dialog;
   private final JTextField[] labelFields;
-  private int                result;
+  private int result;
 
   // CONSTRUCTORS
 
@@ -148,8 +148,9 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
   }
 
   /**
-   * Reads user settings from given properties.
-   * Uses the property prefix "DiagramLabels".
+   * Reads user settings from given properties. Uses the property prefix
+   * "DiagramLabels".
+   * 
    * @param properties
    *          properties to read settings from
    */
@@ -165,13 +166,14 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
   }
 
   /**
-   * Display the settings dialog.
-   * If the user clicks ok, all changes are reflected in the properties of this object.
-   * Otherwise changes are discarded.
+   * Display the settings dialog. If the user clicks ok, all changes are
+   * reflected in the properties of this object. Otherwise changes are
+   * discarded.
    * 
    * @param frame
    *          parent frame (needed for creating a modal dialog)
-   * @return <code>OK</code> when user accepted changes, <code>CANCEL</code> otherwise
+   * @return <code>OK</code> when user accepted changes, <code>CANCEL</code>
+   *         otherwise
    */
   public int showDialog( final Window frame )
   {
@@ -183,8 +185,9 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
   }
 
   /**
-   * Writes user settings to given properties.
-   * Uses the property prefix "DiagramLabels".
+   * Writes user settings to given properties. Uses the property prefix
+   * "DiagramLabels".
+   * 
    * @param properties
    *          properties to write settings to
    */

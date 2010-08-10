@@ -27,8 +27,8 @@ import javax.swing.filechooser.FileFilter;
 
 
 /**
- * Provides a filename filter adapter that accepts a list of {@link FileFilter}s to make it easy to use one API for both
- * Swing and AWT.
+ * Provides a filename filter adapter that accepts a list of {@link FileFilter}s
+ * to make it easy to use one API for both Swing and AWT.
  */
 public class FilenameFilterAdapter implements FilenameFilter
 {

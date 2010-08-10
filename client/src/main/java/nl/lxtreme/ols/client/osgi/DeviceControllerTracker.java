@@ -38,9 +38,9 @@ public class DeviceControllerTracker extends ServiceTracker
 {
   // VARIABLES
 
-  private final Host        host;
-  private final JMenu       menu;
-  private final JMenuItem   noItemItem;
+  private final Host host;
+  private final JMenu menu;
+  private final JMenuItem noItemItem;
   private final ButtonGroup deviceGroup;
 
   // CONSTRUCTORS
@@ -86,7 +86,8 @@ public class DeviceControllerTracker extends ServiceTracker
   }
 
   /**
-   * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
+   * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference,
+   *      java.lang.Object)
    */
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )

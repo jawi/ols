@@ -22,7 +22,8 @@ package nl.lxtreme.ols.api;
 
 
 /**
- * Provides a callback interface for reporting back the progress of any process (capture, tool analysis).
+ * Provides a callback interface for reporting back the progress of any process
+ * (capture, tool analysis).
  */
 public interface ProgressCallback
 {

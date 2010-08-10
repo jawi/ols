@@ -42,7 +42,7 @@ public class OpenDataFileAction extends BaseAction
 
   public static final String OLS_FILEEXTENSION = "ols";
   public static final FileFilter OLS_FILEFILTER = //
-    new FileNameExtensionFilter( "OpenLogic Sniffer data file", OLS_FILEEXTENSION );
+  new FileNameExtensionFilter( "OpenLogic Sniffer data file", OLS_FILEEXTENSION );
 
   public static final String ID = "OpenDataFile";
 

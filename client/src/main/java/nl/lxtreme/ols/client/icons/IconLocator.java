@@ -28,23 +28,23 @@ public interface IconLocator
 {
   // CONSTANTS
 
-  static final String ICON_NEW_PROJECT    = "Gnome-Folder-New-32.png";
-  static final String ICON_OPEN_PROJECT   = "Gnome-Document-Open-32.png";
-  static final String ICON_SAVE_PROJECT   = "Gnome-Document-Save-32.png";
+  static final String ICON_NEW_PROJECT = "Gnome-Folder-New-32.png";
+  static final String ICON_OPEN_PROJECT = "Gnome-Document-Open-32.png";
+  static final String ICON_SAVE_PROJECT = "Gnome-Document-Save-32.png";
 
-  static final String ICON_OPEN_DATAFILE  = "Gnome-Document-Open-32.png";
-  static final String ICON_SAVE_DATAFILE  = "Gnome-Document-Save-32.png";
+  static final String ICON_OPEN_DATAFILE = "Gnome-Document-Open-32.png";
+  static final String ICON_SAVE_DATAFILE = "Gnome-Document-Save-32.png";
 
-  static final String ICON_ZOOM_DEFAULT   = "Gnome-Zoom-Original-32.png";
-  static final String ICON_ZOOM_FIT_BEST  = "Gnome-Zoom-Fit-Best-32.png";
-  static final String ICON_ZOOM_IN        = "Gnome-Zoom-In-32.png";
-  static final String ICON_ZOOM_OUT       = "Gnome-Zoom-Out-32.png";
+  static final String ICON_ZOOM_DEFAULT = "Gnome-Zoom-Original-32.png";
+  static final String ICON_ZOOM_FIT_BEST = "Gnome-Zoom-Fit-Best-32.png";
+  static final String ICON_ZOOM_IN = "Gnome-Zoom-In-32.png";
+  static final String ICON_ZOOM_OUT = "Gnome-Zoom-Out-32.png";
 
-  static final String ICON_GOTO_TRIGGER   = "Gnome-Go-Home-32.png";
-  static final String ICON_GOTO_CURSOR1   = "Gnome-Go-Next-32.png";
-  static final String ICON_GOTO_CURSOR2   = "Gnome-Go-Next-32.png";
+  static final String ICON_GOTO_TRIGGER = "Gnome-Go-Home-32.png";
+  static final String ICON_GOTO_CURSOR1 = "Gnome-Go-Next-32.png";
+  static final String ICON_GOTO_CURSOR2 = "Gnome-Go-Next-32.png";
 
-  static final String ICON_CAPTURE_DATA   = "Gnome-Emblem-Downloads-32.png";
+  static final String ICON_CAPTURE_DATA = "Gnome-Emblem-Downloads-32.png";
   static final String ICON_RECAPTURE_DATA = "Gnome-View-Refresh-32.png";
 }
 

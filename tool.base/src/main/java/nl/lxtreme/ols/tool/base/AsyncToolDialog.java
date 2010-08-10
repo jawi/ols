@@ -24,8 +24,7 @@ package nl.lxtreme.ols.tool.base;
 /**
  * @author jajans
  */
-public interface AsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends
-ToolDialog
+public interface AsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends ToolDialog
 {
   /**
    * @param aWorker

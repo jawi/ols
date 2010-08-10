@@ -33,9 +33,9 @@ public class GotoTriggerAction extends BaseCursorAction
 {
   // CONSTANTS
 
-  private static final long  serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String ID               = "GotoTrigger";
+  public static final String ID = "GotoTrigger";
 
   // CONSTRUCTORS
 

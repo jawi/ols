@@ -428,64 +428,64 @@ public final class HostUtils
       {
         final Object proxy = Proxy.newProxyInstance( classLoader, new Class<?>[] { appAdapterClass },
             new InvocationHandler()
-        {
-          @Override
-          public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
-          {
-            final String name = aMethod.getName();
-            if ( "handleQuit".equals( name ) )
             {
-              if ( aApplicationCallback.handleQuit() )
+              @Override
+              public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
               {
-                handleEventParameter( aArgs );
+                final String name = aMethod.getName();
+                if ( "handleQuit".equals( name ) )
+                {
+                  if ( aApplicationCallback.handleQuit() )
+                  {
+                    handleEventParameter( aArgs );
+                  }
+                }
+                else if ( "handleAbout".equals( name ) )
+                {
+                  if ( aApplicationCallback.handleAbout() )
+                  {
+                    handleEventParameter( aArgs );
+                  }
+                }
+                else if ( "handlePreferences".equals( name ) )
+                {
+                  if ( aApplicationCallback.handlePreferences() )
+                  {
+                    handleEventParameter( aArgs );
+                  }
+                }
+                return null;
               }
-            }
-            else if ( "handleAbout".equals( name ) )
-            {
-              if ( aApplicationCallback.handleAbout() )
+
+              /**
+               * @param aArgs
+               */
+              private void handleEventParameter( final Object[] aArgs )
               {
-                handleEventParameter( aArgs );
+                if ( ( aArgs == null ) || ( aArgs.length == 0 ) )
+                {
+                  return;
+                }
+
+                final Object event = aArgs[0];
+
+                final Class<?> eventClass = event.getClass();
+                if ( !"com.apple.eawt.ApplicationEvent".equals( eventClass.getName() ) )
+                {
+                  return;
+                }
+
+                try
+                {
+                  final Method setHandledMethod = eventClass.getMethod( "setHandled", Boolean.TYPE );
+                  setHandledMethod.invoke( event, Boolean.TRUE );
+                }
+                catch ( Exception exception )
+                {
+                  Logger.getAnonymousLogger().log( Level.ALL, "Event handling in callback failed!", exception );
+                }
               }
-            }
-            else if ( "handlePreferences".equals( name ) )
-            {
-              if ( aApplicationCallback.handlePreferences() )
-              {
-                handleEventParameter( aArgs );
-              }
-            }
-            return null;
-          }
-
-          /**
-           * @param aArgs
-           */
-          private void handleEventParameter( final Object[] aArgs )
-          {
-            if ( ( aArgs == null ) || ( aArgs.length == 0 ) )
-            {
-              return;
-            }
-
-            final Object event = aArgs[0];
-
-            final Class<?> eventClass = event.getClass();
-            if ( !"com.apple.eawt.ApplicationEvent".equals( eventClass.getName() ) )
-            {
-              return;
-            }
-
-            try
-            {
-              final Method setHandledMethod = eventClass.getMethod( "setHandled", Boolean.TYPE );
-              setHandledMethod.invoke( event, Boolean.TRUE );
-            }
-            catch ( Exception exception )
-            {
-              Logger.getAnonymousLogger().log( Level.ALL, "Event handling in callback failed!", exception );
-            }
-          }
-        } );
+            } );
 
         // Call Application#getApplication() ...
         final Method getAppMethod = appClass.getMethod( "getApplication" );

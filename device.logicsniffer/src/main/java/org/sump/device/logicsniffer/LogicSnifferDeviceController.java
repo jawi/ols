@@ -266,7 +266,8 @@ public class LogicSnifferDeviceController implements DeviceController
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(String, java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
+   *      java.util.Properties)
    */
   @Override
   public void readProperties( final String aNamespace, final Properties aProperties )
@@ -288,7 +289,8 @@ public class LogicSnifferDeviceController implements DeviceController
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String, java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String,
+   *      java.util.Properties)
    */
   @Override
   public void writeProperties( final String aNamespace, final Properties aProperties )

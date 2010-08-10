@@ -26,7 +26,8 @@ import nl.lxtreme.ols.api.data.*;
 
 
 /**
- * Denotes a callback for receiving captured data and keeping notified of the capture progress.
+ * Denotes a callback for receiving captured data and keeping notified of the
+ * capture progress.
  */
 public interface CaptureCallback extends ProgressCallback
 {
@@ -36,8 +37,9 @@ public interface CaptureCallback extends ProgressCallback
    * Called when the capture was aborted.
    * 
    * @param aReason
-   *          a reason why this run might be aborted, can be any kind of string message, such as an exception message,
-   *          user message, etc. Can be <code>null</code>.
+   *          a reason why this run might be aborted, can be any kind of string
+   *          message, such as an exception message, user message, etc. Can be
+   *          <code>null</code>.
    */
   public void captureAborted( final String aReason );
 

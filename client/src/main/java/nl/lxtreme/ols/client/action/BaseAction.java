@@ -39,7 +39,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
 
   // VARIABLES
 
-  private final String      id;
+  private final String id;
 
   // CONSTRUCTORS
 

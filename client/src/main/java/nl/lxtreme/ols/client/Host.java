@@ -49,31 +49,31 @@ public final class Host implements CaptureCallback, AnalysisCallback, Applicatio
 {
   // CONSTANT
 
-  private static final Logger       LOG             = Logger.getLogger( Host.class.getName() );
+  private static final Logger LOG = Logger.getLogger( Host.class.getName() );
 
-  private static final String       PROPERTIES_NAME = "nl.lxtreme.ols.client";
+  private static final String PROPERTIES_NAME = "nl.lxtreme.ols.client";
 
   // VARIABLES
 
-  private final IActionManager      actionManager;
-  private final BundleContext       context;
-  private final Project             project;
+  private final IActionManager actionManager;
+  private final BundleContext context;
+  private final Project project;
 
   private volatile DeviceController currentDevCtrl;
 
-  private JFrame                    mainFrame;
-  private JMenu                     deviceMenu;
-  private JMenu                     toolsMenu;
-  private DiagramScrollPane         diagramScrollPane;
-  private JTextStatusBar            status;
+  private JFrame mainFrame;
+  private JMenu deviceMenu;
+  private JMenu toolsMenu;
+  private DiagramScrollPane diagramScrollPane;
+  private JTextStatusBar status;
 
-  private MenuTracker               menuTracker;
-  private DeviceControllerTracker   deviceControllerTracker;
-  private ToolTracker               toolTracker;
+  private MenuTracker menuTracker;
+  private DeviceControllerTracker deviceControllerTracker;
+  private ToolTracker toolTracker;
 
   // CONSTRUCTORS
 
-  private Properties                userProperties;
+  private Properties userProperties;
 
   // METHODS
 

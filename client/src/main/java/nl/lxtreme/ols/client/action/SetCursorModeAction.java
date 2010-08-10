@@ -35,9 +35,9 @@ public class SetCursorModeAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long       serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String      ID               = "SetCursorMode";
+  public static final String ID = "SetCursorMode";
 
   // VARIABLES
 

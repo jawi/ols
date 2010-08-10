@@ -38,16 +38,19 @@ public interface Device
    * Attaches the given (serial) port to the device object. The method will try
    * to open the port.
    * <p>
-   * A return value of <code>true</code> does not guarantee that a logic analyzer is actually attached to the port.
+   * A return value of <code>true</code> does not guarantee that a logic
+   * analyzer is actually attached to the port.
    * <p>
-   * If the device is already attached to a port this port will be detached automatically. It is therefore not necessary
-   * to manually call <code>detach()</code> before reattaching.
+   * If the device is already attached to a port this port will be detached
+   * automatically. It is therefore not necessary to manually call
+   * <code>detach()</code> before reattaching.
    * 
    * @param aPortName
    *          the name of the port to open
    * @param aPortRate
    *          transfer rate to use (bps)
-   * @return <code>true</code> when the port has been assigned successfully; <code>false</code> otherwise.
+   * @return <code>true</code> when the port has been assigned successfully;
+   *         <code>false</code> otherwise.
    */
   public boolean attach( final String aPortName, final int aPortRate );
 

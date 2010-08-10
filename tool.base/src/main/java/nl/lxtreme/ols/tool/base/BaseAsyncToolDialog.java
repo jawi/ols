@@ -39,7 +39,7 @@ import nl.lxtreme.ols.util.swing.*;
  * @author jawi
  */
 public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends
-BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, Configurable
+    BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, Configurable
 {
   // INNER TYPES
 

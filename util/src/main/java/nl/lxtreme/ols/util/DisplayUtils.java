@@ -36,7 +36,7 @@ public final class DisplayUtils
    */
   private static final double ZERO_TIME_THRESHOLD = 1.0e-16;
 
-  private static final Logger LOG                 = Logger.getLogger( DisplayUtils.class.getName() );
+  private static final Logger LOG = Logger.getLogger( DisplayUtils.class.getName() );
 
   // CONSTRUCTORS
 
@@ -51,18 +51,18 @@ public final class DisplayUtils
   // METHODS
 
   /**
-   * Converts a given frequency (in Hertz, Hz) to something more readable for the user, like "10.0 kHz".
+   * Converts a given frequency (in Hertz, Hz) to something more readable for
+   * the user, like "10.0 kHz".
    * 
    * @param aFrequency
    *          the frequency (in Hz) to convert to a display value.
-   * @return the display representation of the given frequency, never <code>null</code>.
+   * @return the display representation of the given frequency, never
+   *         <code>null</code>.
    */
   public static String displayFrequency( final double aFrequency )
   {
-    final String[] unitStrs =
-    { "Hz", "kHz", "MHz", "GHz", "THz" };
-    final double[] unitVals =
-    { 1.0, 1.0e3, 1.0e6, 1.0e9, 1.0e12 };
+    final String[] unitStrs = { "Hz", "kHz", "MHz", "GHz", "THz" };
+    final double[] unitVals = { 1.0, 1.0e3, 1.0e6, 1.0e9, 1.0e12 };
 
     int i = unitVals.length - 1;
     for ( ; i >= 0; i-- )
@@ -83,14 +83,16 @@ public final class DisplayUtils
   }
 
   /**
-   * Converts a given time first by scaling it down with a given scale, and returns it as something readable for the
-   * user.
+   * Converts a given time first by scaling it down with a given scale, and
+   * returns it as something readable for the user.
    * 
    * @param aTime
    *          the time to convert to a given display value.
    * @param aScale
-   *          the scale factor to apply before converting the given time to a display representation.
-   * @return the display representation of the given (scaled) time, never <code>null</code>.
+   *          the scale factor to apply before converting the given time to a
+   *          display representation.
+   * @return the display representation of the given (scaled) time, never
+   *         <code>null</code>.
    */
   public static String displayScaledTime( final double aTime, final double aScale )
   {
@@ -98,18 +100,20 @@ public final class DisplayUtils
   }
 
   /**
-   * Converts a given time (in seconds) to something more readable for the user, like "1.000 ms".
+   * Converts a given time (in seconds) to something more readable for the user,
+   * like "1.000 ms".
    * 
    * @param aTime
    *          the time (in seconds) to convert to a given display value.
-   * @return the display representation of the given time, never <code>null</code>.
+   * @return the display representation of the given time, never
+   *         <code>null</code>.
    */
   public static String displayTime( final double aTime )
   {
-    final String[] unitStrs =
-    { "s", "ms", "\u03BCs", "ns", "ps" }; // \u03BC == Greek mu character
-    final double[] unitVals =
-    { 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12 };
+    final String[] unitStrs = { "s", "ms", "\u03BCs", "ns", "ps" }; // \u03BC ==
+                                                                    // Greek mu
+                                                                    // character
+    final double[] unitVals = { 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12 };
 
     double absTime = Math.abs( aTime );
 
@@ -136,21 +140,31 @@ public final class DisplayUtils
 
   /**
    * Returns the ordinal representation (in English) of the given value.
-   * @param aValue the value to get the ordinal value for, >= 0 && < 40.
+   * 
+   * @param aValue
+   *          the value to get the ordinal value for, >= 0 && < 40.
    * @return a ordinal number representation of the given value, like "1st".
    */
-  public static String getOrdinalNumber(final int aValue) {
+  public static String getOrdinalNumber( final int aValue )
+  {
     String suffix = "";
-    if (( aValue == 1 ) || ( aValue == 21 ) || ( aValue == 31 )) {
+    if ( ( aValue == 1 ) || ( aValue == 21 ) || ( aValue == 31 ) )
+    {
       suffix = "st";
-    } else if (( aValue == 2 ) || ( aValue == 22 )) {
+    }
+    else if ( ( aValue == 2 ) || ( aValue == 22 ) )
+    {
       suffix = "nd";
-    } else if (( aValue == 3 ) || ( aValue == 23 )) {
+    }
+    else if ( ( aValue == 3 ) || ( aValue == 23 ) )
+    {
       suffix = "rd";
-    } else if (( aValue >= 0 ) && ( aValue < 40 )) {
+    }
+    else if ( ( aValue >= 0 ) && ( aValue < 40 ) )
+    {
       suffix = "th";
     }
-    return String.format("%d%s", aValue, suffix);
+    return String.format( "%d%s", aValue, suffix );
   }
 
   /**
@@ -221,11 +235,14 @@ public final class DisplayUtils
   }
 
   /**
-   * Returns whether the given string is actually empty, meaning <code>null</code> or an empty string.
+   * Returns whether the given string is actually empty, meaning
+   * <code>null</code> or an empty string.
    * 
    * @param aValue
-   *          the string value to check for "emptyness", can be <code>null</code>.
-   * @return <code>true</code> if the given string is empty, <code>false</code> otherwise.
+   *          the string value to check for "emptyness", can be
+   *          <code>null</code>.
+   * @return <code>true</code> if the given string is empty, <code>false</code>
+   *         otherwise.
    */
   public static boolean isEmpty( final String aValue )
   {

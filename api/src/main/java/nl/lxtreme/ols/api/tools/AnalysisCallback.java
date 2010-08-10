@@ -36,7 +36,8 @@ public interface AnalysisCallback extends ProgressCallback
    * Called upon abnormal termination of the analysis.
    * 
    * @param aReason
-   *          an optional reason why the analysis might be aborted, can be <code>null</code> or empty.
+   *          an optional reason why the analysis might be aborted, can be
+   *          <code>null</code> or empty.
    */
   void analysisAborted( final String aReason );
 

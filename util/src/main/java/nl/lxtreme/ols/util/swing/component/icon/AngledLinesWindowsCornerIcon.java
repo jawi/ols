@@ -27,21 +27,19 @@ import javax.swing.*;
 
 
 /**
- * Created by IntelliJ IDEA.
- * User: Jonathan Simon
- * Date: Oct 5, 2004
- * Time: 6:03:57 PM
+ * Created by IntelliJ IDEA. User: Jonathan Simon Date: Oct 5, 2004 Time:
+ * 6:03:57 PM
  */
 public class AngledLinesWindowsCornerIcon implements Icon
 {
 
   // RGB values discovered using ZoomIn
   private static final Color WHITE_LINE_COLOR = new Color( 255, 255, 255 );
-  private static final Color GRAY_LINE_COLOR  = new Color( 172, 168, 153 );
+  private static final Color GRAY_LINE_COLOR = new Color( 172, 168, 153 );
 
   // Dimensions
-  private static final int   WIDTH            = 13;
-  private static final int   HEIGHT           = 13;
+  private static final int WIDTH = 13;
+  private static final int HEIGHT = 13;
 
   public int getIconHeight()
   {

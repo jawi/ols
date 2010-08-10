@@ -31,7 +31,7 @@ public abstract class BaseCursorAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long       serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
   // VARIABLES
 

@@ -32,20 +32,21 @@ import org.osgi.framework.*;
 
 
 /**
- * Provides a main entry point for starting the OLS client from the command line.
+ * Provides a main entry point for starting the OLS client from the command
+ * line.
  */
 public final class Runner
 {
   // CONSTANTS
 
-  private static final Logger LOG     = Logger.getAnonymousLogger();
+  private static final Logger LOG = Logger.getAnonymousLogger();
 
   private static final String VERSION = "0.7.0";
 
   // VARIABLES
 
   private final HostActivator hostActivator;
-  private Felix               framework;
+  private Felix framework;
 
   // CONSTRUCTORS
 
@@ -98,7 +99,8 @@ public final class Runner
    * MAIN ENTRY POINT
    * 
    * @param aArgs
-   *          the (optional) command line arguments, can be empty but never <code>null</code>.
+   *          the (optional) command line arguments, can be empty but never
+   *          <code>null</code>.
    */
   public static void main( final String[] aArgs ) throws Exception
   {
