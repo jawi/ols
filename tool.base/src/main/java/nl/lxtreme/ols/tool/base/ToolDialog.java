@@ -44,8 +44,6 @@ public interface ToolDialog
    * @param aData
    *          the capture results to use in the tool's dialog, cannot be
    *          <code>null</code>.
-   * @return <code>true</code> if the dialog is closed successfully,
-   *         <code>false</code> if it is canceled.
    */
-  public boolean showDialog( final AnnotatedData aData );
+  public void showDialog( final AnnotatedData aData );
 }

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,10 @@
 package nl.lxtreme.ols.tool.i2c;
 
 
+import nl.lxtreme.ols.tool.base.*;
+
+
+
 /**
  * Class for I2C dataset
  * 
@@ -28,28 +32,35 @@ package nl.lxtreme.ols.tool.i2c;
  *         An I2C dataset consists of a timestamp, a value, or it can have
  *         an I2C event. This class is used to store the decoded I2C data in a Vector.
  */
-final class I2CData
+public final class I2CData extends BaseData<I2CData>
 {
   // VARIABLES
 
-  private final long   time;
   private final int    value;
   private final String event;
 
   // CONSTRUCTORS
 
-  public I2CData( final long tm, final int val )
+  /**
+   * @param aTime
+   * @param aValue
+   */
+  public I2CData( final long aTime, final int aValue, final String aTimeDisplayValue )
   {
-    this.time = tm;
-    this.value = val;
+    super( aTime, aTimeDisplayValue );
+    this.value = aValue;
     this.event = null;
   }
 
-  public I2CData( final long tm, final String ev )
+  /**
+   * @param aTime
+   * @param aEvent
+   */
+  public I2CData( final long aTime, final String aEvent, final String aTimeDisplayValue )
   {
-    this.time = tm;
+    super( aTime, aTimeDisplayValue );
     this.value = 0;
-    this.event = new String( ev );
+    this.event = aEvent;
   }
 
   // METHODS
@@ -64,12 +75,17 @@ final class I2CData
     {
       return true;
     }
-    if ( ( aObject == null ) || ( getClass() != aObject.getClass() ) )
+    if ( !super.equals( aObject ) || !( aObject instanceof I2CData ) )
     {
       return false;
     }
 
     final I2CData other = ( I2CData )aObject;
+    if ( this.value != other.value )
+    {
+      return false;
+    }
+
     if ( this.event == null )
     {
       if ( other.event != null )
@@ -78,16 +94,6 @@ final class I2CData
       }
     }
     else if ( !this.event.equals( other.event ) )
-    {
-      return false;
-    }
-
-    if ( this.time != other.time )
-    {
-      return false;
-    }
-
-    if ( this.value != other.value )
     {
       return false;
     }
@@ -103,16 +109,6 @@ final class I2CData
   public String getEvent()
   {
     return this.event;
-  }
-
-  /**
-   * Returns the time.
-   * 
-   * @return the time, never <code>null</code>.
-   */
-  public long getTime()
-  {
-    return this.time;
   }
 
   /**
@@ -132,9 +128,8 @@ final class I2CData
   public int hashCode()
   {
     final int prime = 31;
-    int result = 1;
+    int result = super.hashCode();
     result = prime * result + ( ( this.event == null ) ? 0 : this.event.hashCode() );
-    result = prime * result + ( int )( this.time ^ ( this.time >>> 32 ) );
     result = prime * result + this.value;
     return result;
   }

@@ -21,6 +21,9 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import nl.lxtreme.ols.tool.base.*;
+
+
 /**
  * Class for SPI dataset
  * 
@@ -28,11 +31,10 @@ package nl.lxtreme.ols.tool.spi;
  *         values, or it can have an SPI event. This class is used to store the
  *         decoded SPI data in a Vector.
  */
-public class SPIData
+public final class SPIData extends BaseData<SPIData>
 {
   // VARIABLES
 
-  private final long time;
   private final int miso;
   private final int mosi;
   private final String event;
@@ -40,32 +42,35 @@ public class SPIData
   // CONSTRUCTORS
 
   /**
-   * @param tm
-   * @param mo
-   * @param mi
+   * @param aTime
+   * @param aMoSi
+   * @param aMiSo
    */
-  public SPIData( final long tm, final int mo, final int mi )
+  public SPIData( final long aTime, final int aMoSi, final int aMiSo, final String aTimeDisplayValue )
   {
-    this.time = tm;
-    this.miso = mi;
-    this.mosi = mo;
+    super( aTime, aTimeDisplayValue );
+    this.miso = aMiSo;
+    this.mosi = aMoSi;
     this.event = null;
   }
 
   /**
-   * @param tm
-   * @param ev
+   * @param aTime
+   * @param aEvent
    */
-  public SPIData( final long tm, final String ev )
+  public SPIData( final long aTime, final String aEvent, final String aTimeDisplayValue )
   {
-    this.time = tm;
+    super( aTime, aTimeDisplayValue );
     this.miso = 0;
     this.mosi = 0;
-    this.event = new String( ev );
+    this.event = aEvent;
   }
 
   // METHODS
 
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals( final Object aObject )
   {
@@ -73,12 +78,15 @@ public class SPIData
     {
       return true;
     }
-    if ( ( aObject == null ) || !( aObject instanceof SPIData ) )
+    if ( !super.equals( aObject ) )
     {
       return false;
     }
-
-    final SPIData other = ( SPIData )aObject;
+    if ( !( aObject instanceof SPIData ) )
+    {
+      return false;
+    }
+    SPIData other = ( SPIData )aObject;
     if ( this.event == null )
     {
       if ( other.event != null )
@@ -90,22 +98,14 @@ public class SPIData
     {
       return false;
     }
-
     if ( this.miso != other.miso )
     {
       return false;
     }
-
     if ( this.mosi != other.mosi )
     {
       return false;
     }
-
-    if ( this.time != other.time )
-    {
-      return false;
-    }
-
     return true;
   }
 
@@ -134,22 +134,16 @@ public class SPIData
   }
 
   /**
-   * @return
+   * @see java.lang.Object#hashCode()
    */
-  public long getTime()
-  {
-    return this.time;
-  }
-
   @Override
   public int hashCode()
   {
     final int prime = 31;
-    int result = 1;
+    int result = super.hashCode();
     result = prime * result + ( ( this.event == null ) ? 0 : this.event.hashCode() );
     result = prime * result + this.miso;
     result = prime * result + this.mosi;
-    result = prime * result + ( int )( this.time ^ ( this.time >>> 32 ) );
     return result;
   }
 

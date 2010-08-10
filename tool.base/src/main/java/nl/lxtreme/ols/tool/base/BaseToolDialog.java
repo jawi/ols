@@ -76,10 +76,6 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   protected static final Insets LABEL_INSETS = new Insets( 4, 4, 4, 2 );
   protected static final Insets COMP_INSETS = new Insets( 4, 2, 4, 4 );
 
-  // VARIABLES
-
-  private transient volatile AnnotatedData analysisData;
-
   // CONSTRUCTORS
 
   /**
@@ -97,14 +93,9 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
    * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
    */
   @Override
-  public boolean showDialog( final AnnotatedData aData )
+  public void showDialog( final AnnotatedData aData )
   {
-    this.analysisData = aData;
-
     setVisible( true );
-
-    // always return true...
-    return true;
   }
 
   /**
@@ -113,13 +104,5 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   protected void close()
   {
     setVisible( false );
-  }
-
-  /**
-   * @return the analysisData
-   */
-  protected final AnnotatedData getAnalysisData()
-  {
-    return this.analysisData;
   }
 }

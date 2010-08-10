@@ -21,19 +21,17 @@
 package nl.lxtreme.ols.tool.uart;
 
 
-import java.util.*;
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * @author jajans
  */
-public final class UARTDataSet
+public final class UARTDataSet extends BaseDataSet<UARTData>
 {
   // VARIABLES
 
-  private final long startOfDecode;
-  private final long endOfDecode;
-  private final List<UARTData> data;
   private int decodedSymbols;
   private int bitLength;
   private int detectedErrors;
@@ -41,14 +39,11 @@ public final class UARTDataSet
   // CONSTRUCTORS
 
   /**
-   * 
+   * Creates a new UARTDataSet instance.
    */
-  public UARTDataSet( final long aStartOfDecode, final long aEndOfDecode )
+  public UARTDataSet( final long aStartSampleIdx, final long aStopSampleIdx, final CapturedData aData )
   {
-    this.startOfDecode = aStartOfDecode;
-    this.endOfDecode = aEndOfDecode;
-
-    this.data = new ArrayList<UARTData>();
+    super( aStartSampleIdx, aStopSampleIdx, aData );
 
     this.decodedSymbols = 0;
     this.detectedErrors = 0;
@@ -56,6 +51,9 @@ public final class UARTDataSet
 
   // METHODS
 
+  /**
+   * @return
+   */
   public int getBitLength()
   {
     return this.bitLength;
@@ -64,61 +62,35 @@ public final class UARTDataSet
   /**
    * @return
    */
-  public List<UARTData> getDecodedData()
-  {
-    return this.data;
-  }
-
   public int getDecodedSymbols()
   {
     return this.decodedSymbols;
   }
 
+  /**
+   * @return
+   */
   public int getDetectedErrors()
   {
     return this.detectedErrors;
   }
 
   /**
-   * @return
-   */
-  public long getEndOfDecode()
-  {
-    return this.endOfDecode;
-  }
-
-  /**
-   * @return
-   */
-  public long getStartOfDecode()
-  {
-    return this.startOfDecode;
-  }
-
-  /**
-   * @return
-   */
-  public boolean isEmpty()
-  {
-    return this.data.isEmpty();
-  }
-
-  /**
-   * @param aIndex
+   * @param aTime
    * @param aName
    */
-  public void reportControlHigh( final long aIndex, final String aName )
+  public void reportControlHigh( final long aTime, final String aName )
   {
-    this.data.add( new UARTData( aIndex, aName.toUpperCase() + "_HIGH" ) );
+    addData( new UARTData( aTime, aName.toUpperCase() + "_HIGH", indexToTime( aTime ) ) );
   }
 
   /**
-   * @param aIndex
+   * @param aTime
    * @param aName
    */
-  public void reportControlLow( final long aIndex, final String aName )
+  public void reportControlLow( final long aTime, final String aName )
   {
-    this.data.add( new UARTData( aIndex, aName.toUpperCase() + "_LOW" ) );
+    addData( new UARTData( aTime, aName.toUpperCase() + "_LOW", indexToTime( aTime ) ) );
   }
 
   /**
@@ -128,7 +100,7 @@ public final class UARTDataSet
    */
   public void reportData( final long aTime, final int aValue, final int aEventType )
   {
-    this.data.add( new UARTData( aTime, aValue, aEventType ) );
+    addData( new UARTData( aTime, aValue, aEventType, indexToTime( aTime ) ) );
   }
 
   /**
@@ -137,7 +109,7 @@ public final class UARTDataSet
    */
   public void reportFrameError( final long aTime, final int aEventType )
   {
-    this.data.add( new UARTData( aTime, "FRAME_ERR", aEventType ) );
+    addData( new UARTData( aTime, "FRAME_ERR", aEventType, indexToTime( aTime ) ) );
     this.detectedErrors++;
   }
 
@@ -147,7 +119,7 @@ public final class UARTDataSet
    */
   public void reportParityError( final long aTime, final int aEventType )
   {
-    this.data.add( new UARTData( aTime, "PARITY_ERR", aEventType ) );
+    addData( new UARTData( aTime, "PARITY_ERR", aEventType, indexToTime( aTime ) ) );
     this.detectedErrors++;
   }
 
@@ -157,7 +129,7 @@ public final class UARTDataSet
    */
   public void reportStartError( final long aTime, final int aEventType )
   {
-    this.data.add( new UARTData( aTime, "START_ERR", aEventType ) );
+    addData( new UARTData( aTime, "START_ERR", aEventType, indexToTime( aTime ) ) );
     this.detectedErrors++;
   }
 
@@ -170,10 +142,11 @@ public final class UARTDataSet
   }
 
   /**
-   * 
+   * @see nl.lxtreme.ols.tool.base.BaseDataSet#sort()
    */
+  @Override
   public void sort()
   {
-    Collections.sort( this.data );
+    super.sort();
   }
 }

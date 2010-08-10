@@ -207,9 +207,9 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    * the decoder starts to decode the data.
    */
   @Override
-  public void createReport( final I2CDataSet aAnalysisResult )
+  public void onToolWorkerReady( final I2CDataSet aAnalysisResult )
   {
-    super.createReport( aAnalysisResult );
+    super.onToolWorkerReady( aAnalysisResult );
 
     this.outText.setText( toHtmlPage( aAnalysisResult ) );
     this.outText.setEditable( false );
@@ -381,18 +381,17 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
       bw.write( "\"index\",\"time\",\"data or event\"" );
       bw.newLine();
 
-      final List<I2CData> dataSet = aAnalysisResult.getDecodedData();
+      final List<I2CData> dataSet = aAnalysisResult.getData();
       for ( int i = 0; i < dataSet.size(); i++ )
       {
         I2CData data = dataSet.get( i );
         if ( data.isEvent() )
         {
-          bw.write( i + ",\"" + indexToTime( aAnalysisResult, data.getTime() ) + "\",\"" + data.getEvent() + "\"" );
+          bw.write( i + ",\"" + data.getTimeDisplayValue() + "\",\"" + data.getEvent() + "\"" );
         }
         else
         {
-          bw.write( i + ",\"" + indexToTime( aAnalysisResult, data.getTime() ) + "\",\"" + ( char )data.getValue()
-              + "\"" );
+          bw.write( i + ",\"" + data.getTimeDisplayValue() + "\",\"" + ( char )data.getValue() + "\"" );
         }
         bw.newLine();
       }
@@ -481,26 +480,6 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
-   * Convert sample count to time string.
-   * 
-   * @param aCount
-   *          sample count (or index)
-   * @return string containing time information
-   */
-  private String indexToTime( final I2CDataSet aDataSet, final long aCount )
-  {
-    final long count = Math.max( 0, aCount - aDataSet.getStartSampleIndex() );
-    if ( getAnalysisData().hasTimingData() )
-    {
-      return DisplayUtils.displayScaledTime( count, getAnalysisData().getSampleRate() );
-    }
-    else
-    {
-      return ( "" + count );
-    }
-  }
-
-  /**
    * generate a HTML page
    * 
    * @param aEmpty
@@ -509,59 +488,57 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    */
   private String toHtmlPage( final I2CDataSet aAnalysisResult )
   {
-    final StringBuilder data = new StringBuilder();
+    final StringBuilder result = new StringBuilder();
 
     final Date now = new Date();
     final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
 
     // generate html page header
-    data.append( "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">" );
-    data.append( "<html><head><title>I2C Analysis Results</title>" );
-    data.append( "<style>" );
-    data.append( " th { text-align:left; font-style:italic; font-weight:bold; background-color:#C0C0FF; }" );
-    data.append( " .data { font-family: monospace; }" );
-    data.append( " .date { text-align:right; font-size: x-small; }" );
-    data.append( "</style>" );
-    data.append( "</head><body><h1>I2C Analysis Results</h1><hr>" );
-    data.append( "<div class=\"date\">" ).append( df.format( now ) ).append( "</div>" );
+    result.append( "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">" );
+    result.append( "<html><head><title>I2C Analysis Results</title>" );
+    result.append( "<style>" );
+    result.append( " th { text-align:left; font-style:italic; font-weight:bold; background-color:#C0C0FF; }" );
+    result.append( " .data { font-family: monospace; }" );
+    result.append( " .date { text-align:right; font-size: x-small; }" );
+    result.append( "</style>" );
+    result.append( "</head><body><h1>I2C Analysis Results</h1><hr>" );
+    result.append( "<div class=\"date\">" ).append( df.format( now ) ).append( "</div>" );
 
     // generate the bus configuration table
-    data.append( "<table style=\"width:100%;\">" );
-    data.append( "<tr><td colspan=\"2\">Bus configuration</td></tr>" );
-    data.append( "<tr><td style=\"width:30%;\">" ).append( "SDA" ).append( "</td><td>" ).append(
+    result.append( "<table style=\"width:100%;\">" );
+    result.append( "<tr><td colspan=\"2\">Bus configuration</td></tr>" );
+    result.append( "<tr><td style=\"width:30%;\">" ).append( "SDA" ).append( "</td><td>" ).append(
         this.busSetSDA.getText() ).append( "</td></tr>" );
-    data.append( "<tr><td style=\"width:30%;\">" ).append( "SCL" ).append( "</td><td>" ).append(
+    result.append( "<tr><td style=\"width:30%;\">" ).append( "SCL" ).append( "</td><td>" ).append(
         this.busSetSCL.getText() ).append( "</td></tr>" );
-    data.append( "</table><br><br>" );
+    result.append( "</table><br><br>" );
 
     // generate the statistics table
-    data.append( "<table style=\"width:100%;\">" );
-    data.append( "<tr><td style=\"width:30%;\">" ).append( "Decoded Bytes" ).append( "</td><td>" ).append(
+    result.append( "<table style=\"width:100%;\">" );
+    result.append( "<tr><td style=\"width:30%;\">" ).append( "Decoded Bytes" ).append( "</td><td>" ).append(
         aAnalysisResult.getDecodedByteCount() ).append( "</td></tr>" );
-    data.append( "<tr><td style=\"width:30%;\">" ).append( "Detected Bus Errors" ).append( "</td><td>" ).append(
+    result.append( "<tr><td style=\"width:30%;\">" ).append( "Detected Bus Errors" ).append( "</td><td>" ).append(
         aAnalysisResult.getBusErrorCount() ).append( "</td></tr>" );
-    data.append( "</table><br><br>" );
+    result.append( "</table><br><br>" );
 
     // generate the data table
-    data.append( "<table class=\"data\" style=\"width:100%;\">" );
-    data.append( "<tr>" ).append( "<th style=\"width:10%;\">" ).append( "Index" ).append( "</th>" ).append(
+    result.append( "<table class=\"data\" style=\"width:100%;\">" );
+    result.append( "<tr>" ).append( "<th style=\"width:10%;\">" ).append( "Index" ).append( "</th>" ).append(
     "<th style=\"width:20%;\">" ).append( "Time" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append(
     "Hex" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append( "Bin" ).append( "</th>" ).append(
     "<th style=\"width:20%;\">" ).append( "Dec" ).append( "</th>" ).append( "<th style=\"width:10%;\">" ).append(
     "ASCII" ).append( "</th>" ).append( "</tr>" );
 
-    final List<I2CData> dataSet = aAnalysisResult.getDecodedData();
+    final List<I2CData> dataSet = aAnalysisResult.getData();
 
-    I2CData ds;
     for ( int i = 0; i < dataSet.size(); i++ )
     {
-      ds = dataSet.get( i );
+      final I2CData data = dataSet.get( i );
 
-      final long time = ds.getTime();
-      if ( ds.isEvent() )
+      if ( data.isEvent() )
       {
         // this is an event
-        final String event = ds.getEvent();
+        final String event = data.getEvent();
 
         String bgColor;
         if ( I2CDataSet.I2C_START.equals( event ) || I2CDataSet.I2C_STOP.equals( event ) )
@@ -582,23 +559,22 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
           bgColor = "#ff8000";
         }
 
-        data.append( "<tr style=\"background-color:" ).append( bgColor ).append( ";\"><td>" ).append( i ).append(
-        "</td><td>" ).append( indexToTime( aAnalysisResult, time ) ).append( "</td><td>" ).append( event ).append(
+        result.append( "<tr style=\"background-color:" ).append( bgColor ).append( ";\"><td>" ).append( i ).append(
+        "</td><td>" ).append( data.getTimeDisplayValue() ).append( "</td><td>" ).append( event ).append(
         "</td><td></td><td></td><td></td></tr>" );
       }
       else
       {
-        final int value = ds.getValue();
-        data.append( "<tr><td>" ).append( i ).append( "</td><td>" ).append( indexToTime( aAnalysisResult, time ) )
-        .append( "</td><td>0x" ).append( DisplayUtils.integerToHexString( value, 2 ) ).append( "</td><td>0b" )
-        .append( DisplayUtils.integerToBinString( value, 8 ) ).append( "</td><td>" ).append( value ).append(
-        "</td><td>" );
-        data.append( ( char )value );
-        data.append( "</td></tr>" );
+        final int value = data.getValue();
+        result.append( "<tr><td>" ).append( i ).append( "</td><td>" ).append( data.getTimeDisplayValue() ).append(
+        "</td><td>0x" ).append( DisplayUtils.integerToHexString( value, 2 ) ).append( "</td><td>0b" ).append(
+            DisplayUtils.integerToBinString( value, 8 ) ).append( "</td><td>" ).append( value ).append( "</td><td>" );
+        result.append( ( char )value );
+        result.append( "</td></tr>" );
       }
     }
-    data.append( "</table></body></html>" );
+    result.append( "</table></body></html>" );
 
-    return data.toString();
+    return result.toString();
   }
 }

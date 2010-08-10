@@ -66,20 +66,6 @@ public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, CapturedDa
   {
     return new StateAnalysisWorker( aData );
   }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onCloseDialog()
-   */
-  @Override
-  protected void onCloseDialog()
-  {
-    final StateAnalysisDialog dialog = getDialog();
-    final StateAnalysisWorker toolWorker = getToolWorker();
-
-    toolWorker.setNumber( dialog.channel );
-    toolWorker.setLevel( dialog.edge == StateAnalysisDialog.RISING ? 0 : 1 );
-    toolWorker.execute();
-  }
 }
 
 /* EOF */

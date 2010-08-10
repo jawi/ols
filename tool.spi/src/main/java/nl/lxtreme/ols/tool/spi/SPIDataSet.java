@@ -21,79 +21,39 @@
 package nl.lxtreme.ols.tool.spi;
 
 
-import java.util.*;
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * @author jajans
  *
  */
-public class SPIDataSet
+public final class SPIDataSet extends BaseDataSet<SPIData>
 {
   // CONSTANTS
 
   public static final String SPI_CS_LOW = "CSLOW";
   public static final String SPI_CS_HIGH = "CSHIGH";
 
-  // VARIABLES
-
-  private final int startOfDecode;
-  private final int endOfDecode;
-  private final List<SPIData> data;
-
   // CONSTRUCTORS
 
   /**
    * Creates a new SPIDataSet instance.
    */
-  public SPIDataSet( final int aStartOfDecode, final int aEndOfDecode )
+  public SPIDataSet( final int aStartOfDecode, final int aEndOfDecode, final CapturedData aData )
   {
-    this.startOfDecode = aStartOfDecode;
-    this.endOfDecode = aEndOfDecode;
-
-    this.data = new ArrayList<SPIData>();
+    super( aStartOfDecode, aEndOfDecode, aData );
   }
 
   // METHODS
-
-  /**
-   * @return
-   */
-  public List<SPIData> getDecodedData()
-  {
-    return this.data;
-  }
-
-  /**
-   * @return
-   */
-  public int getEndOfDecode()
-  {
-    return this.endOfDecode;
-  }
-
-  /**
-   * @return
-   */
-  public int getStartOfDecode()
-  {
-    return this.startOfDecode;
-  }
-
-  /**
-   * @return
-   */
-  public boolean isEmpty()
-  {
-    return this.data.isEmpty();
-  }
 
   /**
    * @param aTimeValue
    */
   public void reportCSHigh( final long aTimeValue )
   {
-    this.data.add( new SPIData( aTimeValue, SPI_CS_HIGH ) );
+    addData( new SPIData( aTimeValue, SPI_CS_HIGH, indexToTime( aTimeValue ) ) );
   }
 
   /**
@@ -101,7 +61,7 @@ public class SPIDataSet
    */
   public void reportCSLow( final long aTimeValue )
   {
-    this.data.add( new SPIData( aTimeValue, SPI_CS_LOW ) );
+    addData( new SPIData( aTimeValue, SPI_CS_LOW, indexToTime( aTimeValue ) ) );
   }
 
   /**
@@ -109,6 +69,6 @@ public class SPIDataSet
    */
   public void reportData( final long aTimeValue, final int aMiSoValue, final int aMoSiValue )
   {
-    this.data.add( new SPIData( aTimeValue, aMoSiValue, aMiSoValue ) );
+    addData( new SPIData( aTimeValue, aMoSiValue, aMiSoValue, indexToTime( aTimeValue ) ) );
   }
 }
