@@ -442,24 +442,24 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
     // generate html page header
     String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-      + "<html>"
-      + "  <head>"
-      + "    <title></title>"
-      + "    <meta content=\"\">"
-      + "    <style>"
-      + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-      + "       </style>" + "  </head>" + "   <body>" + "       <H2>I2C Analysis Results</H2>" + "       <hr>"
-      + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-      + "       <br>";
+        + "<html>"
+        + "  <head>"
+        + "    <title></title>"
+        + "    <meta content=\"\">"
+        + "    <style>"
+        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
+        + "       </style>" + "  </head>" + "   <body>" + "       <H2>I2C Analysis Results</H2>" + "       <hr>"
+        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
+        + "       <br>";
 
     // generate the bus configuration table
     final StringBuilder busConfig = new StringBuilder();
     busConfig.append( "<table style=\"width:100%;\">" );
     busConfig.append( "<tr><td colspan=\"2\">Bus configuration</td></tr>" );
     busConfig.append( "<tr><td style=\"width:30%;\">" ).append( "SDA" ).append( "</td><td>" ).append(
-    "&lt;autodetect&gt;" ).append( "</td></tr>" );
+        "&lt;autodetect&gt;" ).append( "</td></tr>" );
     busConfig.append( "<tr><td style=\"width:30%;\">" ).append( "SCL" ).append( "</td><td>" ).append(
-    "&lt;autodetect&gt;" ).append( "</td></tr>" );
+        "&lt;autodetect&gt;" ).append( "</td></tr>" );
     busConfig.append( "</table><br><br>" );
 
     // generate the statistics table
@@ -470,7 +470,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
     // generate the data table
     String data = "<table style=\"font-family:monospace;width:100%;\">"
-      + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:20%;\">Hex</th><th style=\"width:20%;\">Bin</th><th style=\"width:20%;\">Dec</th><th style=\"width:10%;\">ASCII</th></tr>";
+        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:20%;\">Hex</th><th style=\"width:20%;\">Bin</th><th style=\"width:20%;\">Dec</th><th style=\"width:10%;\">ASCII</th></tr>";
     data = data.concat( "</table>" );
 
     // generate the footer table
@@ -524,10 +524,10 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     // generate the data table
     result.append( "<table class=\"data\" style=\"width:100%;\">" );
     result.append( "<tr>" ).append( "<th style=\"width:10%;\">" ).append( "Index" ).append( "</th>" ).append(
-    "<th style=\"width:20%;\">" ).append( "Time" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append(
-    "Hex" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append( "Bin" ).append( "</th>" ).append(
-    "<th style=\"width:20%;\">" ).append( "Dec" ).append( "</th>" ).append( "<th style=\"width:10%;\">" ).append(
-    "ASCII" ).append( "</th>" ).append( "</tr>" );
+        "<th style=\"width:20%;\">" ).append( "Time" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append(
+        "Hex" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append( "Bin" ).append( "</th>" ).append(
+        "<th style=\"width:20%;\">" ).append( "Dec" ).append( "</th>" ).append( "<th style=\"width:10%;\">" ).append(
+        "ASCII" ).append( "</th>" ).append( "</tr>" );
 
     final List<I2CData> dataSet = aAnalysisResult.getData();
 
@@ -560,14 +560,14 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
         }
 
         result.append( "<tr style=\"background-color:" ).append( bgColor ).append( ";\"><td>" ).append( i ).append(
-        "</td><td>" ).append( data.getTimeDisplayValue() ).append( "</td><td>" ).append( event ).append(
-        "</td><td></td><td></td><td></td></tr>" );
+            "</td><td>" ).append( data.getTimeDisplayValue() ).append( "</td><td>" ).append( event ).append(
+            "</td><td></td><td></td><td></td></tr>" );
       }
       else
       {
         final int value = data.getValue();
         result.append( "<tr><td>" ).append( i ).append( "</td><td>" ).append( data.getTimeDisplayValue() ).append(
-        "</td><td>0x" ).append( DisplayUtils.integerToHexString( value, 2 ) ).append( "</td><td>0b" ).append(
+            "</td><td>0x" ).append( DisplayUtils.integerToHexString( value, 2 ) ).append( "</td><td>0b" ).append(
             DisplayUtils.integerToBinString( value, 8 ) ).append( "</td><td>" ).append( value ).append( "</td><td>" );
         result.append( ( char )value );
         result.append( "</td></tr>" );

@@ -25,7 +25,8 @@ import javax.swing.*;
 
 
 /**
- * Service interface which provides an added function when the component is used.
+ * Service interface which provides an added function when the component is
+ * used.
  */
 public interface ComponentProvider
 {
@@ -37,29 +38,33 @@ public interface ComponentProvider
   public static final String COMPONENT_ID_KEY = "component.id";
 
   /** Constant to provide a menu component. */
-  public static final String MENU_COMPONENT   = "MenuComponent";
+  public static final String MENU_COMPONENT = "MenuComponent";
 
   // METHODS
 
   /**
-   * This function should always be called from the EDT. The implementor may assume that this function is called once
-   * and before {@link #addedToContainer()}
+   * This function should always be called from the EDT. The implementor may
+   * assume that this function is called once and before
+   * {@link #addedToContainer()}
    * 
    * @return the implementors (Swing) component which it provides.
    */
   public JComponent getComponent();
 
   /**
-   * Triggered when the component is added to a container. The implementation can validate some stuff. This function
-   * must be called on the EDT.<br/>
-   * Implementors may assume this function is called after {@link #getComponent()}.
+   * Triggered when the component is added to a container. The implementation
+   * can validate some stuff. This function must be called on the EDT.<br/>
+   * Implementors may assume this function is called after
+   * {@link #getComponent()}.
    */
   public void addedToContainer();
 
   /**
-   * Triggered when the component is removed from a container. The implementation can validate some stuff. This function
-   * must be called on the EDT.<br/>
-   * Implementors may assume this function is called after {@link #getComponent()}.
+   * Triggered when the component is removed from a container. The
+   * implementation can validate some stuff. This function must be called on the
+   * EDT.<br/>
+   * Implementors may assume this function is called after
+   * {@link #getComponent()}.
    */
   public void removedFromContainer();
 }

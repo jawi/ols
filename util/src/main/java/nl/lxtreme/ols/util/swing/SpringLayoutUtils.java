@@ -81,8 +81,8 @@ public final class SpringLayoutUtils
    * @param aYpad
    *          y padding between cells
    */
-  public static void makeCompactGrid( final Container aContainer, final int aRows, final int aCols, final int aInitialX,
-      final int aInitialY, final int aXpad, final int aYpad )
+  public static void makeCompactGrid( final Container aContainer, final int aRows, final int aCols,
+      final int aInitialX, final int aInitialY, final int aXpad, final int aYpad )
   {
     if ( !( aContainer.getLayout() instanceof SpringLayout ) )
     {
@@ -243,8 +243,8 @@ public final class SpringLayoutUtils
    *          the column of the cell to return the constraints of.
    * @return the SpringLayout constraints, never <code>null</code>.
    */
-  private static SpringLayout.Constraints getConstraintsForCell( final Container aContainer, final int aCols, final int aRow,
-      final int aCol )
+  private static SpringLayout.Constraints getConstraintsForCell( final Container aContainer, final int aCols,
+      final int aRow, final int aCol )
   {
     if ( !( aContainer.getLayout() instanceof SpringLayout ) )
     {

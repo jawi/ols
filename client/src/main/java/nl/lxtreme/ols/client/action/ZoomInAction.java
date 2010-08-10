@@ -33,9 +33,9 @@ public class ZoomInAction extends BaseZoomAction
 {
   // CONSTANTS
 
-  private static final long  serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String ID               = "ZoomIn";
+  public static final String ID = "ZoomIn";
 
   // CONSTRUCTORS
 

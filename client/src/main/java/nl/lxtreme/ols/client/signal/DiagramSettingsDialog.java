@@ -39,40 +39,49 @@ public class DiagramSettingsDialog extends JComponent implements ActionListener,
 {
   // CONSTANTS
 
-  private static final long   serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
   /** the user cancelled the dialog - all changes were discarded */
-  public final static int     CANCEL           = 0;
+  public final static int CANCEL = 0;
   /** the user clicked ok - all changes were written to the settings */
-  public final static int     OK               = 1;
-  /** display a group in 8 channel logic level view (used in <code>groupSettings</code>) */
-  public final static int     DISPLAY_CHANNELS = 1;
-  /** display a group in a 8bit resolution scope view (used in <code>groupSettings</code>) */
-  public final static int     DISPLAY_SCOPE    = 2;
-  /** display a group in a 8bit hex value view (used in <code>groupSettings</code>) */
-  public final static int     DISPLAY_BYTE     = 4;
+  public final static int OK = 1;
+  /**
+   * display a group in 8 channel logic level view (used in
+   * <code>groupSettings</code>)
+   */
+  public final static int DISPLAY_CHANNELS = 1;
+  /**
+   * display a group in a 8bit resolution scope view (used in
+   * <code>groupSettings</code>)
+   */
+  public final static int DISPLAY_SCOPE = 2;
+  /**
+   * display a group in a 8bit hex value view (used in
+   * <code>groupSettings</code>)
+   */
+  public final static int DISPLAY_BYTE = 4;
 
   // VARIABLES
 
   /**
-   * Display settings for each group.
-   * Can be any combinations (ored) of the defined MODE_* values.
+   * Display settings for each group. Can be any combinations (ored) of the
+   * defined MODE_* values.
    */
-  public int[]                groupSettings;
-  private JDialog             dialog;
+  public int[] groupSettings;
+  private JDialog dialog;
   private final JCheckBox[][] groupSettingBoxes;
-  private int                 result;
-  private final Color         signalColor;
-  private final Color         triggerColor;
-  private final Color         gridColor;
-  private final Color         textColor;
-  private final Color         timeColor;
-  private final Color         groupBackgroundColor;
-  private final Color         backgroundColor;
-  private final Color         labelColor;
-  private final Color[]       cursorColors;
-  private final int           channelHeight;
-  private final int           scopeHeight;
+  private int result;
+  private final Color signalColor;
+  private final Color triggerColor;
+  private final Color gridColor;
+  private final Color textColor;
+  private final Color timeColor;
+  private final Color groupBackgroundColor;
+  private final Color backgroundColor;
+  private final Color labelColor;
+  private final Color[] cursorColors;
+  private final int channelHeight;
+  private final int scopeHeight;
 
   // CONSTRUCTORS
 
@@ -351,13 +360,14 @@ public class DiagramSettingsDialog extends JComponent implements ActionListener,
   }
 
   /**
-   * Display the settings dialog.
-   * If the user clicks ok, all changes are reflected in the properties of this object.
-   * Otherwise changes are discarded.
+   * Display the settings dialog. If the user clicks ok, all changes are
+   * reflected in the properties of this object. Otherwise changes are
+   * discarded.
    * 
    * @param frame
    *          parent frame (needed for creating a modal dialog)
-   * @return <code>OK</code> when user accepted changes, <code>CANCEL</code> otherwise
+   * @return <code>OK</code> when user accepted changes, <code>CANCEL</code>
+   *         otherwise
    */
   public int showDialog( final Window frame )
   {

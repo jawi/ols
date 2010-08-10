@@ -31,9 +31,11 @@ import org.osgi.service.log.*;
 /**
  * Forwards all JDK logging statements to the OSGi LogService.
  * <p>
- * Based on <tt>Logging OSGi Applications - The Simple and Robust way</tt> by Valery Abu-Eid.
+ * Based on <tt>Logging OSGi Applications - The Simple and Robust way</tt> by
+ * Valery Abu-Eid.
  * 
- * @see http://www.dynamicjava.org/articles/osgi-matters/logging-osgi-the-simple-way
+ * @see http
+ *      ://www.dynamicjava.org/articles/osgi-matters/logging-osgi-the-simple-way
  */
 public final class JdkLogForwarder
 {
@@ -178,16 +180,16 @@ public final class JdkLogForwarder
 
   // CONSTANTS
 
-  protected static final String LOG_SERVICE_CLASS_NAME    = LogService.class.getName();
+  protected static final String LOG_SERVICE_CLASS_NAME = LogService.class.getName();
 
   // VARIABLES
 
-  private final BundleContext   bundleContext;
-  private final List<String>    loggerNames;
-  private final Handler         defaultHandler;
+  private final BundleContext bundleContext;
+  private final List<String> loggerNames;
+  private final Handler defaultHandler;
   private final ServiceListener logServiceServiceListener = new LogServiceServiceListener();
-  private ServiceReference      lastUsedLogServiceRef;
-  private Handler               lastUsedHandler;
+  private ServiceReference lastUsedLogServiceRef;
+  private Handler lastUsedHandler;
 
   // CONSTRUCTORS
 

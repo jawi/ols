@@ -227,7 +227,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(String, java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
+   *      java.util.Properties)
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
@@ -329,12 +330,12 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
       properties.setProperty( NAME + ".triggerStage" + stage + "Level", ( String )this.triggerLevel[stage]
-                                                                                                    .getSelectedItem() );
+          .getSelectedItem() );
       properties.setProperty( NAME + ".triggerStage" + stage + "Delay", this.triggerDelay[stage].getText() );
       properties.setProperty( NAME + ".triggerStage" + stage + "Mode", ( String )this.triggerMode[stage]
-                                                                                                  .getSelectedItem() );
+          .getSelectedItem() );
       properties.setProperty( NAME + ".triggerStage" + stage + "Channel", ( String )this.triggerChannel[stage]
-                                                                                                        .getSelectedItem() );
+          .getSelectedItem() );
 
       final StringBuffer mask = new StringBuffer();
       for ( int i = 0; i < 32; i++ )
@@ -605,7 +606,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
 
     final String[] types = { "Simple", "Complex" };
     this.triggerTypeSelect = new JComboBox( types );
-    this.triggerTypeSelect.setSelectedIndex( 0 ); // Select first item by default...
+    this.triggerTypeSelect.setSelectedIndex( 0 ); // Select first item by
+                                                  // default...
     this.triggerTypeSelect.addActionListener( this );
 
     this.triggerStageTabs = new JTabbedPane();

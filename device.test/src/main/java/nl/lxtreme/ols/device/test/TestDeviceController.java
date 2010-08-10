@@ -41,7 +41,7 @@ public class TestDeviceController implements DeviceController
   // CONSTANTS
 
   private static final String[] DATA_FUNCTIONS = new String[] { "Sawtooth", "All zeros", "Sine", "odd-even",
-    "0x55-0xAA", "Random", "I2C sample" };
+      "0x55-0xAA", "Random", "I2C sample" };
   private static final Integer[] CHANNELS = new Integer[] { 1, 4, 8, 16, 32 };
   private static final Integer[] DATA_LENGTH = new Integer[] { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072 };
 
@@ -126,7 +126,8 @@ public class TestDeviceController implements DeviceController
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(String, java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
+   *      java.util.Properties)
    */
   @Override
   public void readProperties( String aNamespace, final Properties aProperties )
@@ -164,7 +165,8 @@ public class TestDeviceController implements DeviceController
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String, java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String,
+   *      java.util.Properties)
    */
   @Override
   public void writeProperties( String aNamespace, final Properties aProperties )

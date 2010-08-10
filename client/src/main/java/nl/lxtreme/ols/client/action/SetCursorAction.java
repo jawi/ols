@@ -34,14 +34,14 @@ public class SetCursorAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long  serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String ID               = "SetCursor";
+  public static final String ID = "SetCursor";
 
   // VARIABLES
 
-  private final Diagram      diagram;
-  private final int          cursorIdx;
+  private final Diagram diagram;
+  private final int cursorIdx;
 
   // CONSTRUCTORS
 

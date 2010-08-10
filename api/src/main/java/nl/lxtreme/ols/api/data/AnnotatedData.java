@@ -135,11 +135,17 @@ public final class AnnotatedData implements CapturedData
   }
 
   /**
-   * Returns the (absolute) time value for the cursor indicated by the given index.
-   * @param aCursorIdx the index of the cursor to return as time, should be >= 0 and < 10.
-   * @return the time value (in seconds), or -1.0 if the cursor is not available.
+   * Returns the (absolute) time value for the cursor indicated by the given
+   * index.
+   * 
+   * @param aCursorIdx
+   *          the index of the cursor to return as time, should be >= 0 and <
+   *          10.
+   * @return the time value (in seconds), or -1.0 if the cursor is not
+   *         available.
    */
-  public double getCursorTimeValue(final int aCursorIdx) {
+  public double getCursorTimeValue( final int aCursorIdx )
+  {
     double cursorPos = getCursorPosition( aCursorIdx );
     if ( cursorPos != CapturedData.NOT_AVAILABLE )
     {
@@ -199,10 +205,13 @@ public final class AnnotatedData implements CapturedData
 
   /**
    * Returns the trigger position, if it is available.
+   * 
    * @return the available trigger position, or -1 if it is not available.
    */
-  public long getTriggerPosition() {
-    return hasCapturedData() && this.capturedData.hasTriggerData() ? this.capturedData.getTriggerPosition() : CapturedData.NOT_AVAILABLE;
+  public long getTriggerPosition()
+  {
+    return hasCapturedData() && this.capturedData.hasTriggerData() ? this.capturedData.getTriggerPosition()
+        : CapturedData.NOT_AVAILABLE;
   }
 
   /**
@@ -352,7 +361,7 @@ public final class AnnotatedData implements CapturedData
         for ( int i = 0; ( i < values.length ) && ( line != null ); i++ )
         {
           values[i] = Integer.parseInt( line.substring( 0, 4 ), 16 ) << 16
-          | Integer.parseInt( line.substring( 4, 8 ), 16 );
+              | Integer.parseInt( line.substring( 4, 8 ), 16 );
           timestamps[i] = Long.parseLong( line.substring( 9 ) );
           line = br.readLine();
         }
@@ -381,7 +390,7 @@ public final class AnnotatedData implements CapturedData
           if ( channels > 16 )
           {
             tmpValues[i] = Integer.parseInt( line.substring( 0, 4 ), 16 ) << 16
-            | Integer.parseInt( line.substring( 4, 8 ), 16 );
+                | Integer.parseInt( line.substring( 4, 8 ), 16 );
           }
           else
           {

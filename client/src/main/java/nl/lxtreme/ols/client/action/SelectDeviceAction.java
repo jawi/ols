@@ -36,13 +36,13 @@ public class SelectDeviceAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long      serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String     ID               = "SelectDevice";
+  public static final String ID = "SelectDevice";
 
   // VARIABLES
 
-  private final Host             host;
+  private final Host host;
   private final DeviceController deviceController;
 
   // CONSTRUCTORS

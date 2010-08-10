@@ -43,8 +43,8 @@ public class JStatusBar extends JPanel
 
     // VARIABLES
 
-    private final Color       leftColor;
-    private final Color       rightColor;
+    private final Color leftColor;
+    private final Color rightColor;
 
     // CONSTRUCTORS
 
@@ -77,13 +77,13 @@ public class JStatusBar extends JPanel
 
   // CONSTANTS
 
-  private static final long     serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  protected static final int    HEIGHT           = 23;
-  protected static final Insets INSETS           = new Insets( 0, 2, 0, 2 );
+  protected static final int HEIGHT = 23;
+  protected static final Insets INSETS = new Insets( 0, 2, 0, 2 );
 
-  private final JPanel          contentPanel;
-  private JComponent            mainLeftComponent;
+  private final JPanel contentPanel;
+  private JComponent mainLeftComponent;
 
   // CONSTRUCTORS
 
@@ -183,7 +183,8 @@ public class JStatusBar extends JPanel
   /**
    * Returns whether the current host's operating system is Mac OS X.
    * 
-   * @return <code>true</code> if running on Mac OS X, <code>false</code> otherwise.
+   * @return <code>true</code> if running on Mac OS X, <code>false</code>
+   *         otherwise.
    */
   private boolean isMacOSX()
   {

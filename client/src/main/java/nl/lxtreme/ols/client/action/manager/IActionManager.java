@@ -20,6 +20,7 @@
  */
 package nl.lxtreme.ols.client.action.manager;
 
+
 import nl.lxtreme.ols.client.action.*;
 
 
@@ -34,10 +35,12 @@ public interface IActionManager
    * Adds a given action to this manager.
    * 
    * @param aAction
-   *          the action to manage, cannot be <code>null</code> and should not already be registered.
+   *          the action to manage, cannot be <code>null</code> and should not
+   *          already be registered.
    * @return the added action, never <code>null</code>.
    * @throws IllegalArgumentException
-   *           in case the given action was <code>null</code> or already managed by this manager.
+   *           in case the given action was <code>null</code> or already managed
+   *           by this manager.
    */
   public IManagedAction add( final IManagedAction aAction ) throws IllegalArgumentException;
 
@@ -45,10 +48,12 @@ public interface IActionManager
    * Returns a managed action by its ID.
    * 
    * @param aId
-   *          the ID of the managed action to retrieve, cannot be <code>null</code>.
+   *          the ID of the managed action to retrieve, cannot be
+   *          <code>null</code>.
    * @return the managed action with the given ID, never <code>null</code>.
    * @throws IllegalArgumentException
-   *           in case the given ID did not lead to a valid action, or in case the given ID was <code>null</code>.
+   *           in case the given ID did not lead to a valid action, or in case
+   *           the given ID was <code>null</code>.
    */
   public IManagedAction getAction( final String aId ) throws IllegalArgumentException;
 
@@ -56,9 +61,11 @@ public interface IActionManager
    * Removes a given action from this manager.
    * 
    * @param aAction
-   *          the action to remove, cannot be <code>null</code> and should be registered.
+   *          the action to remove, cannot be <code>null</code> and should be
+   *          registered.
    * @throws IllegalArgumentException
-   *           in case the given action was <code>null</code> or not managed by this manager.
+   *           in case the given action was <code>null</code> or not managed by
+   *           this manager.
    */
   public void remove( final IManagedAction aAction ) throws IllegalArgumentException;
 }

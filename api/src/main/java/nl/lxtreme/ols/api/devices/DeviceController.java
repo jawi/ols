@@ -27,8 +27,8 @@ import nl.lxtreme.ols.api.*;
 
 
 /**
- * Interface for implementing device controllers. Each device controller must implement
- * at least this interface, and possibly {@link Device} as well.
+ * Interface for implementing device controllers. Each device controller must
+ * implement at least this interface, and possibly {@link Device} as well.
  */
 public interface DeviceController extends Configurable
 {
@@ -38,7 +38,8 @@ public interface DeviceController extends Configurable
    * Reads the captured device data.
    * 
    * @param aCallback
-   *          the callback to use for publishing the captured data or <code>null</code> if no data available.
+   *          the callback to use for publishing the captured data or
+   *          <code>null</code> if no data available.
    * @throws IOException
    *           in case of I/O problems during the capturing of data.
    */
@@ -54,15 +55,18 @@ public interface DeviceController extends Configurable
   /**
    * Returns whether this device is already set up or not.
    * 
-   * @return <code>true</code> if there is a "valid" setup for this device, <code>false</code> otherwise.
+   * @return <code>true</code> if there is a "valid" setup for this device,
+   *         <code>false</code> otherwise.
    */
   public boolean isSetup();
 
   /**
-   * Allows this device controller to set up the device by means of presenting an UI.
+   * Allows this device controller to set up the device by means of presenting
+   * an UI.
    * 
-   * @return <code>true</code> if the setup is successfully completed (the user acknowledged the setup),
-   *         <code>false</code> if the setup is aborted by the user.
+   * @return <code>true</code> if the setup is successfully completed (the user
+   *         acknowledged the setup), <code>false</code> if the setup is aborted
+   *         by the user.
    * @throws IOException
    *           in case of I/O problems.
    */

@@ -20,12 +20,12 @@
  */
 package nl.lxtreme.ols.client.signal;
 
+
 import java.util.*;
 
 
 /**
- * @author Frank Kunz
- *         Diagram cursor change listener interface
+ * @author Frank Kunz Diagram cursor change listener interface
  */
 public interface DiagramCursorChangeListener extends EventListener
 {

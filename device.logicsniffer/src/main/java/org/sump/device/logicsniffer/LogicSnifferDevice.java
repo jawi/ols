@@ -43,128 +43,128 @@ public class LogicSnifferDevice implements Device
   // CONSTANTS
 
   /** Old SLA version, v0 - no longer supported. */
-  private static final int    SLA_V0                 = 0x534c4130;
+  private static final int SLA_V0 = 0x534c4130;
   /** Current SLA version, v1 - supported. */
-  private static final int    SLA_V1                 = 0x534c4131;
+  private static final int SLA_V1 = 0x534c4131;
 
   /** use internal clock */
-  public final static int     CLOCK_INTERNAL         = 0;
+  public final static int CLOCK_INTERNAL = 0;
   /** use external clock rising edge */
-  public final static int     CLOCK_EXTERNAL_RISING  = 1;
+  public final static int CLOCK_EXTERNAL_RISING = 1;
   /** use external clock falling edge */
-  public final static int     CLOCK_EXTERNAL_FALLING = 2;
+  public final static int CLOCK_EXTERNAL_FALLING = 2;
 
   /** set trigger mask */
-  private final static int    SETTRIGMASK            = 0xc0;
+  private final static int SETTRIGMASK = 0xc0;
   /** set trigger value */
-  private final static int    SETTRIGVAL             = 0xc1;
+  private final static int SETTRIGVAL = 0xc1;
   /** set trigger configuration */
-  private final static int    SETTRIGCFG             = 0xc2;
+  private final static int SETTRIGCFG = 0xc2;
   /** set clock divider */
-  private final static int    SETDIVIDER             = 0x80;
+  private final static int SETDIVIDER = 0x80;
   /** set sample counters */
-  private final static int    SETSIZE                = 0x81;
+  private final static int SETSIZE = 0x81;
   /** set flags */
-  private final static int    SETFLAGS               = 0x82;
+  private final static int SETFLAGS = 0x82;
 
   /** reset analyzer */
-  private final static int    RESET                  = 0x00;
+  private final static int RESET = 0x00;
   /** arm trigger / run device */
-  private final static int    RUN                    = 0x01;
+  private final static int RUN = 0x01;
   /** ask for device id */
-  private final static int    ID                     = 0x02;
+  private final static int ID = 0x02;
   /** continue data transmission to host */
   @SuppressWarnings( "unused" )
-  private final static int    XON                    = 0x11;
+  private final static int XON = 0x11;
   /** pause data transmission to host */
   @SuppressWarnings( "unused" )
-  private final static int    XOFF                   = 0x13;
+  private final static int XOFF = 0x13;
 
-  private final static int    FLAG_DEMUX             = 0x00000001;                                            // demultiplex
-  private final static int    FLAG_FILTER            = 0x00000002;                                            // noise
+  private final static int FLAG_DEMUX = 0x00000001; // demultiplex
+  private final static int FLAG_FILTER = 0x00000002; // noise
   // filter
-  private final static int    FLAG_DISABLE_G0        = 0x00000004;                                            // disable
+  private final static int FLAG_DISABLE_G0 = 0x00000004; // disable
   // channel
   // group 0
   @SuppressWarnings( "unused" )
-  private final static int    FLAG_DISABLE_G1        = 0x00000008;                                            // disable
+  private final static int FLAG_DISABLE_G1 = 0x00000008; // disable
   // channel
   // group 1
-  private final static int    FLAG_DISABLE_G2        = 0x00000010;                                            // disable
+  private final static int FLAG_DISABLE_G2 = 0x00000010; // disable
   // channel
   // group 2
   @SuppressWarnings( "unused" )
-  private final static int    FLAG_DISABLE_G3        = 0x00000020;                                            // disable
+  private final static int FLAG_DISABLE_G3 = 0x00000020; // disable
   // channel
   // group 3
-  private final static int    FLAG_EXTERNAL          = 0x00000040;                                            // disable
+  private final static int FLAG_EXTERNAL = 0x00000040; // disable
   // channel
   // group 3
-  private final static int    FLAG_INVERTED          = 0x00000080;                                            // disable
+  private final static int FLAG_INVERTED = 0x00000080; // disable
   // channel
   // group 3
 
-  private final static int    FLAG_RLE               = 0x00000100;                                            // run
+  private final static int FLAG_RLE = 0x00000100; // run
   // length
   // encoding
 
-  private final static int    FLAG_NUMBER_SCHEME     = 0x00000200;                                            // Number
+  private final static int FLAG_NUMBER_SCHEME = 0x00000200; // Number
   // Scheme
-  private final static int    FLAG_TEST_MODE         = 0x00000400;                                            // Number
+  private final static int FLAG_TEST_MODE = 0x00000400; // Number
   // Scheme
 
-  private final static int    TRIGGER_DELAYMASK      = 0x0000ffff;                                            // mask
+  private final static int TRIGGER_DELAYMASK = 0x0000ffff; // mask
   // for
   // delay
   // value
-  private final static int    TRIGGER_LEVELMASK      = 0x00030000;                                            // mask
+  private final static int TRIGGER_LEVELMASK = 0x00030000; // mask
   // for
   // level
   // value
-  private final static int    TRIGGER_CHANNELMASK    = 0x01f00000;                                            // mask
+  private final static int TRIGGER_CHANNELMASK = 0x01f00000; // mask
   // for
   // level
   // value
-  private final static int    TRIGGER_SERIAL         = 0x04000000;                                            // trigger
+  private final static int TRIGGER_SERIAL = 0x04000000; // trigger
   // operates
   // in
   // serial mode
-  private final static int    TRIGGER_CAPTURE        = 0x08000000;                                            // trigger
+  private final static int TRIGGER_CAPTURE = 0x08000000; // trigger
   // will
   // start
   // capture when
   // fired
 
   final static int CLOCK = 100000000; // device clock in Hz
-  private final static int    TRIGGER_STAGES         = 4;                                                     // number
+  private final static int TRIGGER_STAGES = 4; // number
   // of
   // trigger
   // stages
 
-  private static final Logger LOG                    = Logger.getLogger( LogicSnifferDevice.class.getName() );
+  private static final Logger LOG = Logger.getLogger( LogicSnifferDevice.class.getName() );
 
   // VARIABLES
 
-  private SerialPort          port;
-  private InputStream         inputStream;
-  private OutputStream        outputStream;
-  private volatile boolean    running;
+  private SerialPort port;
+  private InputStream inputStream;
+  private OutputStream outputStream;
+  private volatile boolean running;
   // private int percentageDone;
-  private int                 clockSource;
-  private boolean             demux;
-  private boolean             filterEnabled;
-  private boolean             triggerEnabled;
-  private boolean             rleEnabled;
-  private boolean             altNumberSchemeEnabled;
-  private boolean             testModeEnabled;
-  private final int           triggerMask[];
-  private final int           triggerValue[];
-  private final int           triggerConfig[];
-  private int                 enabledChannels;
-  private final boolean       enabledGroups[];
-  private int                 divider;
-  private int                 size;
-  private double              ratio;
+  private int clockSource;
+  private boolean demux;
+  private boolean filterEnabled;
+  private boolean triggerEnabled;
+  private boolean rleEnabled;
+  private boolean altNumberSchemeEnabled;
+  private boolean testModeEnabled;
+  private final int triggerMask[];
+  private final int triggerValue[];
+  private final int triggerConfig[];
+  private int enabledChannels;
+  private final boolean enabledGroups[];
+  private int divider;
+  private int size;
+  private double ratio;
 
   // CONSTRUCTORS
 
@@ -224,19 +224,22 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * Attaches the given serial port to the device object. The method will try
-   * to open the port.
+   * Attaches the given serial port to the device object. The method will try to
+   * open the port.
    * <p>
-   * A return value of <code>true</code> does not guarantee that a logic analyzer is actually attached to the port.
+   * A return value of <code>true</code> does not guarantee that a logic
+   * analyzer is actually attached to the port.
    * <p>
-   * If the device is already attached to a port this port will be detached automatically. It is therefore not necessary
-   * to manually call <code>detach()</code> before reattaching.
+   * If the device is already attached to a port this port will be detached
+   * automatically. It is therefore not necessary to manually call
+   * <code>detach()</code> before reattaching.
    * 
    * @param aPortName
    *          the name of the port to open
    * @param aPortRate
    *          transfer rate to use (bps)
-   * @return <code>true</code> when the port has been assigned successfully; <code>false</code> otherwise.
+   * @return <code>true</code> when the port has been assigned successfully;
+   *         <code>false</code> otherwise.
    */
   @SuppressWarnings( "unchecked" )
   public boolean attach( final String aPortName, final int aPortRate )
@@ -350,8 +353,7 @@ public class LogicSnifferDevice implements Device
   /**
    * Returns the current clock source.
    * 
-   * @return the clock source currently used as defined by the CLOCK_
-   *         properties
+   * @return the clock source currently used as defined by the CLOCK_ properties
    */
   public int getClockSource()
   {
@@ -426,7 +428,8 @@ public class LogicSnifferDevice implements Device
    * Returns wether or not the noise filter can be used in the current
    * configuration.
    * 
-   * @return <code>true</code> when noise filter is available, <code>false</code> otherwise
+   * @return <code>true</code> when noise filter is available,
+   *         <code>false</code> otherwise
    */
   public boolean isFilterAvailable()
   {
@@ -436,7 +439,8 @@ public class LogicSnifferDevice implements Device
   /**
    * Returns wether or not the noise filter is enabled.
    * 
-   * @return <code>true</code> when noise filter is enabled, <code>false</code> otherwise
+   * @return <code>true</code> when noise filter is enabled, <code>false</code>
+   *         otherwise
    */
   public boolean isFilterEnabled()
   {
@@ -446,7 +450,8 @@ public class LogicSnifferDevice implements Device
   /**
    * Returns wether or not the run length encoding is enabled.
    * 
-   * @return <code>true</code> when run length encoding is enabled, <code>false</code> otherwise
+   * @return <code>true</code> when run length encoding is enabled,
+   *         <code>false</code> otherwise
    */
   public boolean isRleEnabled()
   {
@@ -454,9 +459,9 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * Returns wether or not the device is currently running. It is running,
-   * when another thread is inside the run() method reading data from the
-   * serial port.
+   * Returns wether or not the device is currently running. It is running, when
+   * another thread is inside the run() method reading data from the serial
+   * port.
    * 
    * @return <code>true</code> when running, <code>false</code> otherwise
    */
@@ -468,7 +473,8 @@ public class LogicSnifferDevice implements Device
   /**
    * Returns wether or not the run length encoding is enabled.
    * 
-   * @return <code>true</code> when run length encoding is enabled, <code>false</code> otherwise
+   * @return <code>true</code> when run length encoding is enabled,
+   *         <code>false</code> otherwise
    */
   public boolean isTestModeEnabled()
   {
@@ -478,7 +484,8 @@ public class LogicSnifferDevice implements Device
   /**
    * Returns wether or not the trigger is enabled.
    * 
-   * @return <code>true</code> when trigger is enabled, <code>false</code> otherwise
+   * @return <code>true</code> when trigger is enabled, <code>false</code>
+   *         otherwise
    */
   public boolean isTriggerEnabled()
   {
@@ -679,7 +686,8 @@ public class LogicSnifferDevice implements Device
    * Sets wheter or not to enable the noise filter.
    * 
    * @param enable
-   *          <code>true</code> enables the noise filter, <code>false</code> disables it.
+   *          <code>true</code> enables the noise filter, <code>false</code>
+   *          disables it.
    */
   public void setFilterEnabled( final boolean enable )
   {
@@ -690,10 +698,11 @@ public class LogicSnifferDevice implements Device
    * Configures the given trigger stage in parallel mode. Currenty the trigger
    * has four stages (0-3).
    * <p>
-   * In mask and value each bit of the integer parameters represents one channel. The LSB represents channel 0, the MSB
-   * channel 31.
+   * In mask and value each bit of the integer parameters represents one
+   * channel. The LSB represents channel 0, the MSB channel 31.
    * <p>
-   * When a trigger fires, the trigger level will rise by one. Initially the trigger level is 0.
+   * When a trigger fires, the trigger level will rise by one. Initially the
+   * trigger level is 0.
    * 
    * @param stage
    *          trigger stage to write mask und value to
@@ -702,13 +711,12 @@ public class LogicSnifferDevice implements Device
    * @param value
    *          bit map defining what value to wait for on watched channels
    * @param level
-   *          trigger level at which the trigger will be armed (0 =
-   *          immediatly)
+   *          trigger level at which the trigger will be armed (0 = immediatly)
    * @param delay
    *          delay in samples to wait in between match and fire
    * @param startCapture
-   *          if <code>true</code> that capture when trigger fires,
-   *          otherwise only triggel level will increase
+   *          if <code>true</code> that capture when trigger fires, otherwise
+   *          only triggel level will increase
    */
   public void setParallelTrigger( final int stage, final int mask, final int value, final int level, final int delay,
       final boolean startCapture )
@@ -771,8 +779,7 @@ public class LogicSnifferDevice implements Device
    * Sets wheter or not to enable the run length encoding.
    * 
    * @param enable
-   *          <code>true</code> enables the RLE, <code>false</code> disables
-   *          it.
+   *          <code>true</code> enables the RLE, <code>false</code> disables it.
    */
   public void setRleEnabled( final boolean enable )
   {
@@ -780,14 +787,16 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * Configures the given trigger stage in serial mode. Currenty the trigger
-   * has four stages (0-3).
+   * Configures the given trigger stage in serial mode. Currenty the trigger has
+   * four stages (0-3).
    * <p>
-   * In mask and value each bit of the integer parameters represents one sample. The LSB represents the oldest sample
-   * not yet shifted out, the MSB the most recent. (The trigger compares to a 32bit shift register that is shifted by
+   * In mask and value each bit of the integer parameters represents one sample.
+   * The LSB represents the oldest sample not yet shifted out, the MSB the most
+   * recent. (The trigger compares to a 32bit shift register that is shifted by
    * one for each sample.)
    * <p>
-   * When a trigger fires, the trigger level will rise by one. Initially the trigger level is 0.
+   * When a trigger fires, the trigger level will rise by one. Initially the
+   * trigger level is 0.
    * 
    * @param stage
    *          trigger stage to write mask und value to
@@ -798,13 +807,12 @@ public class LogicSnifferDevice implements Device
    * @param value
    *          bit map defining what value to wait for on watched channels
    * @param level
-   *          trigger level at which the trigger will be armed (0 =
-   *          immediatly)
+   *          trigger level at which the trigger will be armed (0 = immediatly)
    * @param delay
    *          delay in samples to wait in between match and fire
    * @param startCapture
-   *          if <code>true</code> that capture when trigger fires,
-   *          otherwise only triggel level will increase
+   *          if <code>true</code> that capture when trigger fires, otherwise
+   *          only triggel level will increase
    */
   public void setSerialTrigger( final int stage, final int channel, final int mask, final int value, final int level,
       final int delay, final boolean startCapture )
@@ -848,8 +856,7 @@ public class LogicSnifferDevice implements Device
    * Sets wheter or not to enable the run length encoding.
    * 
    * @param enable
-   *          <code>true</code> enables the RLE, <code>false</code> disables
-   *          it.
+   *          <code>true</code> enables the RLE, <code>false</code> disables it.
    */
   public void setTestModeEnabled( final boolean enable )
   {
@@ -860,7 +867,8 @@ public class LogicSnifferDevice implements Device
    * Sets wheter or not to enable the trigger.
    * 
    * @param enable
-   *          <code>true</code> enables the trigger, <code>false</code> disables it.
+   *          <code>true</code> enables the trigger, <code>false</code> disables
+   *          it.
    */
   public void setTriggerEnabled( final boolean enable )
   {
@@ -973,7 +981,8 @@ public class LogicSnifferDevice implements Device
    * Tries to detect the LogicSniffer device.
    * 
    * @throws IOException
-   *           in case the device could not be found, or in case of any other I/O problem.
+   *           in case the device could not be found, or in case of any other
+   *           I/O problem.
    */
   final void detectDevice() throws IOException
   {
@@ -1106,8 +1115,8 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * Reads <code>channels</code> / 8 bytes from stream and compiles them into
-   * a single integer.
+   * Reads <code>channels</code> / 8 bytes from stream and compiles them into a
+   * single integer.
    * 
    * @param channels
    *          number of channels to read (must be multiple of 8)
@@ -1141,9 +1150,9 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * Sends a short command to the given stream.
-   * This method is intended to be used for short commands, but can also be
-   * called with long command opcodes if the data portion is to be set to 0.
+   * Sends a short command to the given stream. This method is intended to be
+   * used for short commands, but can also be called with long command opcodes
+   * if the data portion is to be set to 0.
    * 
    * @param opcode
    *          one byte operation code

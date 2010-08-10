@@ -38,7 +38,7 @@ public class Project
 {
   // VARIABLES
 
-  private Properties               properties;
+  private Properties properties;
   private final List<Configurable> configurableObjectList;
 
   // CONSTRUCTORS
@@ -116,8 +116,9 @@ public class Project
   }
 
   /**
-   * Removes a configurable object from the project. The given objects properties
-   * will be read and written whenever load and store operations take place.
+   * Removes a configurable object from the project. The given objects
+   * properties will be read and written whenever load and store operations take
+   * place.
    * 
    * @param configurable
    *          configurable object

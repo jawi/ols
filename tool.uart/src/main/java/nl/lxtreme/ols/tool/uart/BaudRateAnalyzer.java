@@ -32,18 +32,17 @@ final class BaudRateAnalyzer
   // VARIABLES
 
   /*
-   * Store as linked list with 2 int sized arrays as elements.
-   * Each array element stores at index 0 the bitlength and at
-   * index 1 the number of occurrences.
+   * Store as linked list with 2 int sized arrays as elements. Each array
+   * element stores at index 0 the bitlength and at index 1 the number of
+   * occurrences.
    */
   private final LinkedList<int[]> statData;
 
   // CONSTRUCTORS
 
   /*
-   * create a histogram that allows to evaluate each
-   * detected bitlength. The bitlength with the highest
-   * occurrence is used for baudrate calculation.
+   * create a histogram that allows to evaluate each detected bitlength. The
+   * bitlength with the highest occurrence is used for baudrate calculation.
    */
   public BaudRateAnalyzer( final int[] data, final long[] time, final int mask )
   {

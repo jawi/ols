@@ -42,11 +42,12 @@ public class DisplayUtilsTest
   public void setUp()
   {
     // To ensure formatting occurs deterministically...
-    Locale.setDefault(Locale.ENGLISH);
+    Locale.setDefault( Locale.ENGLISH );
   }
 
   /**
-   * Test method for {@link nl.lxtreme.ols.util.DisplayUtils#displayFrequency(double)}.
+   * Test method for
+   * {@link nl.lxtreme.ols.util.DisplayUtils#displayFrequency(double)}.
    */
   @Test
   public void testDisplayFrequency()
@@ -64,7 +65,8 @@ public class DisplayUtilsTest
   }
 
   /**
-   * Test method for {@link nl.lxtreme.ols.util.DisplayUtils#displayTime(double)}.
+   * Test method for
+   * {@link nl.lxtreme.ols.util.DisplayUtils#displayTime(double)}.
    */
   @Test
   public void testDisplayTime()

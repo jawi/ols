@@ -24,19 +24,18 @@ package nl.lxtreme.ols.tool.i2c;
 import nl.lxtreme.ols.tool.base.*;
 
 
-
 /**
  * Class for I2C dataset
  * 
- * @author Frank Kunz
- *         An I2C dataset consists of a timestamp, a value, or it can have
- *         an I2C event. This class is used to store the decoded I2C data in a Vector.
+ * @author Frank Kunz An I2C dataset consists of a timestamp, a value, or it can
+ *         have an I2C event. This class is used to store the decoded I2C data
+ *         in a Vector.
  */
 public final class I2CData extends BaseData<I2CData>
 {
   // VARIABLES
 
-  private final int    value;
+  private final int value;
   private final String event;
 
   // CONSTRUCTORS

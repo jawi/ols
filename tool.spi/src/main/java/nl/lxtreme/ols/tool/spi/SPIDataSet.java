@@ -27,7 +27,6 @@ import nl.lxtreme.ols.tool.base.*;
 
 /**
  * @author jajans
- *
  */
 public final class SPIDataSet extends BaseDataSet<SPIData>
 {

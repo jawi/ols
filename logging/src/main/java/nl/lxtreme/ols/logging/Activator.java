@@ -39,9 +39,9 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
 
   // VARIABLES
 
-  private BundleContext       context;
-  private JdkLogForwarder     jdkLogForwarder;
-  private ServiceTracker      logReaderTracker;
+  private BundleContext context;
+  private JdkLogForwarder jdkLogForwarder;
+  private ServiceTracker logReaderTracker;
 
   // METHODS
 

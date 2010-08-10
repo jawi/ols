@@ -63,7 +63,7 @@ public class RepeatCaptureAction extends CaptureAction
    */
   @Override
   protected void doCaptureData( final DeviceController aController, final CaptureCallback aCallback )
-  throws IOException
+      throws IOException
   {
     aController.captureData( aCallback );
   }

@@ -36,9 +36,9 @@ final class I2CGenerator
 
   // VARIABLES
 
-  private int              clockSpeed;
-  private int              idx;
-  private boolean          tick;
+  private int clockSpeed;
+  private int idx;
+  private boolean tick;
 
   // METHODS
 
@@ -141,7 +141,8 @@ final class I2CGenerator
   }
 
   /**
-   * Data transfer is initiated with the START bit when SDA is pulled low while SCL stays high.
+   * Data transfer is initiated with the START bit when SDA is pulled low while
+   * SCL stays high.
    * 
    * @param aData
    */
@@ -155,8 +156,8 @@ final class I2CGenerator
   }
 
   /**
-   * When the transfer is complete, a STOP bit (P) is sent by releasing the data line to allow it to be pulled up while
-   * SCL is constantly high.
+   * When the transfer is complete, a STOP bit (P) is sent by releasing the data
+   * line to allow it to be pulled up while SCL is constantly high.
    * 
    * @param aData
    */

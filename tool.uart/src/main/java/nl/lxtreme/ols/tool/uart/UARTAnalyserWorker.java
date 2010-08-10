@@ -237,7 +237,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
       else
       {
         int mask = this.rxdMask | this.riMask | this.ctsMask | this.txdMask | this.dcdMask | this.riMask | this.dsrMask
-        | this.dtrMask;
+            | this.dtrMask;
         a = values[0] & mask;
         for ( i = 0; i < values.length; i++ )
         {
@@ -760,7 +760,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
         }
       }
       else
-        /* if ( this.stopBits == UARTStopBits.STOP_2 ) */
+      /* if ( this.stopBits == UARTStopBits.STOP_2 ) */
       {
         if ( isInverted() )
         {

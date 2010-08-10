@@ -33,13 +33,13 @@ public class NewProjectAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long  serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String ID               = "NewProject";
+  public static final String ID = "NewProject";
 
   // VARIABLES
 
-  private final Project      project;
+  private final Project project;
 
   // CONSTRUCTORS
 

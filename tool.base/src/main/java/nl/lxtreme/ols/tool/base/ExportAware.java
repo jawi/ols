@@ -21,7 +21,6 @@
 package nl.lxtreme.ols.tool.base;
 
 
-
 /**
  * Interface for denoting dialogs as "export" aware, that allows dialogs to show
  * a report of the analysis results.

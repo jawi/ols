@@ -34,13 +34,13 @@ public class ExitAction extends BaseAction
 {
   // CONSTANTS
 
-  private static final long  serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  public static final String ID               = "Exit";
+  public static final String ID = "Exit";
 
   // VARIABLES
 
-  private final Host         host;
+  private final Host host;
 
   // CONSTRUCTORS
 

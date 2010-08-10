@@ -33,11 +33,11 @@ public class JTextStatusBar extends JStatusBar
 {
   // CONSTANTS
 
-  private static final long  serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
   // VARIABLES
 
-  private final JLabel       statusText;
+  private final JLabel statusText;
 
   private final JProgressBar progressBar;
 

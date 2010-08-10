@@ -39,9 +39,9 @@ public class ToolTracker extends ServiceTracker
 {
   // VARIABLES
 
-  private final Host      host;
+  private final Host host;
   private final Project project;
-  private final JMenu     menu;
+  private final JMenu menu;
   private final JMenuItem noItemItem;
 
   // CONSTRUCTORS
@@ -87,7 +87,8 @@ public class ToolTracker extends ServiceTracker
   }
 
   /**
-   * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
+   * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference,
+   *      java.lang.Object)
    */
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )

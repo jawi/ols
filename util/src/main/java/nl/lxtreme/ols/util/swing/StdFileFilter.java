@@ -32,8 +32,8 @@ public final class StdFileFilter
   // CONSTANTS
 
   public static final FileFilter HTML = new FileNameExtensionFilter( "HTML files", "htm", "html" );
-  public static final FileFilter CSV  = new FileNameExtensionFilter( "CSV files", "csv" );
-  public static final FileFilter XML  = new FileNameExtensionFilter( "XML files", "xml" );
+  public static final FileFilter CSV = new FileNameExtensionFilter( "CSV files", "csv" );
+  public static final FileFilter XML = new FileNameExtensionFilter( "XML files", "xml" );
 
   // CONSTRUCTORS
 

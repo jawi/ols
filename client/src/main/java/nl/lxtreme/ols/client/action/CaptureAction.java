@@ -128,7 +128,7 @@ public class CaptureAction extends BaseAction
    *           in case of I/O problems.
    */
   protected void doCaptureData( final DeviceController aController, final CaptureCallback aCallback )
-  throws IOException
+      throws IOException
   {
     if ( aController.setupCapture() )
     {

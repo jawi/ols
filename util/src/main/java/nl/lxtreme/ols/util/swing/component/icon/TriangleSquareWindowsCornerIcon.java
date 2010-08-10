@@ -27,24 +27,21 @@ import javax.swing.*;
 
 
 /**
- * Created by IntelliJ IDEA.
- * User: Jonathan Simon
- * Date: Oct 5, 2004
- * Time: 6:03:57 PM
- * To change this template use File | Settings | File Templates.
+ * Created by IntelliJ IDEA. User: Jonathan Simon Date: Oct 5, 2004 Time:
+ * 6:03:57 PM To change this template use File | Settings | File Templates.
  */
 public class TriangleSquareWindowsCornerIcon implements Icon
 {
 
   // RGB values discovered using ZoomIn
-  private static final Color THREE_D_EFFECT_COLOR      = new Color( 255, 255, 255 );
-  private static final Color SQUARE_COLOR_LEFT         = new Color( 184, 180, 163 );
-  private static final Color SQUARE_COLOR_TOP_RIGHT    = new Color( 184, 180, 161 );
+  private static final Color THREE_D_EFFECT_COLOR = new Color( 255, 255, 255 );
+  private static final Color SQUARE_COLOR_LEFT = new Color( 184, 180, 163 );
+  private static final Color SQUARE_COLOR_TOP_RIGHT = new Color( 184, 180, 161 );
   private static final Color SQUARE_COLOR_BOTTOM_RIGHT = new Color( 184, 181, 161 );
 
   // Dimensions
-  private static final int   WIDTH                     = 12;
-  private static final int   HEIGHT                    = 12;
+  private static final int WIDTH = 12;
+  private static final int HEIGHT = 12;
 
   public int getIconHeight()
   {
