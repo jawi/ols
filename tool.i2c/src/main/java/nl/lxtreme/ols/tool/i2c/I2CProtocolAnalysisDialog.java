@@ -32,6 +32,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.ExportUtils.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -48,7 +49,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
   private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG = Logger.getLogger( I2CAnalyserWorker.class.getName() );
+  private static final Logger LOG = Logger.getLogger( I2CProtocolAnalysisDialog.class.getName() );
 
   // VARIABLES
 
@@ -202,24 +203,6 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   // METHODS
 
   /**
-   * This is the I2C protocol decoder core The decoder scans for a decode start
-   * event when one of the two lines is going low (start condition). After this
-   * the decoder starts to decode the data.
-   */
-  @Override
-  public void onToolWorkerReady( final I2CDataSet aAnalysisResult )
-  {
-    super.onToolWorkerReady( aAnalysisResult );
-
-    this.outText.setText( toHtmlPage( aAnalysisResult ) );
-    this.outText.setEditable( false );
-
-    this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-    this.runAnalysisAction.restore();
-    this.runAnalysisAction.setEnabled( false );
-  }
-
-  /**
    * @return
    */
   public int getLineAmask()
@@ -268,6 +251,24 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
+   * This is the I2C protocol decoder core The decoder scans for a decode start
+   * event when one of the two lines is going low (start condition). After this
+   * the decoder starts to decode the data.
+   */
+  @Override
+  public void onToolWorkerReady( final I2CDataSet aAnalysisResult )
+  {
+    super.onToolWorkerReady( aAnalysisResult );
+
+    this.outText.setText( toHtmlPage( aAnalysisResult ) );
+    this.outText.setEditable( false );
+
+    this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+    this.runAnalysisAction.restore();
+    this.runAnalysisAction.setEnabled( false );
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
    *      java.util.Properties)
    */
@@ -280,6 +281,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   /**
    * Resets this dialog.
    */
+  @Override
   public void reset()
   {
     this.outText.setText( getEmptyHtmlPage() );
@@ -376,27 +378,19 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   {
     try
     {
-      BufferedWriter bw = new BufferedWriter( new FileWriter( aSelectedFile ) );
+      final CsvExporter exporter = ExportUtils.createCsvExporter( aSelectedFile );
 
-      bw.write( "\"index\",\"time\",\"data or event\"" );
-      bw.newLine();
+      exporter.setHeaders( "index", "time", "event?", "event-type", "data" );
 
       final List<I2CData> dataSet = aAnalysisResult.getData();
       for ( int i = 0; i < dataSet.size(); i++ )
       {
-        I2CData data = dataSet.get( i );
-        if ( data.isEvent() )
-        {
-          bw.write( i + ",\"" + data.getTimeDisplayValue() + "\",\"" + data.getEvent() + "\"" );
-        }
-        else
-        {
-          bw.write( i + ",\"" + data.getTimeDisplayValue() + "\",\"" + ( char )data.getValue() + "\"" );
-        }
-        bw.newLine();
+        final I2CData ds = dataSet.get( i );
+
+        exporter.addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), ds.getEvent(), ( char )ds.getValue() );
       }
-      bw.flush();
-      bw.close();
+
+      exporter.close();
     }
     catch ( IOException exception )
     {

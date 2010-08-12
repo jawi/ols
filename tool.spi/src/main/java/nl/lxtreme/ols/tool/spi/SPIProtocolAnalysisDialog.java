@@ -27,12 +27,13 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
+import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.ExportUtils.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -45,9 +46,11 @@ import nl.lxtreme.ols.util.swing.*;
  */
 public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>
 {
-  // INNER TYPES
+  // CONSTANTS
 
   private static final long serialVersionUID = 1L;
+
+  private static final Logger LOG = Logger.getLogger( SPIProtocolAnalysisDialog.class.getName() );
 
   // VARIABLES
 
@@ -60,7 +63,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   private final JComboBox cs;
   private final JComboBox mode;
   private final JComboBox bits;
-  private AnnotatedData analysisData;
   private final JEditorPane outText;
   private final JComboBox order;
 
@@ -252,17 +254,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
-   */
-  @Override
-  public void showDialog( final AnnotatedData aData )
-  {
-    this.analysisData = aData;
-
-    setVisible( true );
-  }
-
-  /**
    * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
    *      java.util.Properties)
    */
@@ -323,41 +314,28 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   @Override
   protected void storeToCsvFile( final File aFile, final SPIDataSet aDataSet )
   {
-    if ( !aDataSet.isEmpty() )
+    try
     {
-      SPIData dSet;
+      final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
 
-      System.out.println( "writing decoded data to " + aFile.getPath() );
+      exporter.setHeaders( "index", "time", "event?", "event-type", "MOSI data", "MISO data" );
 
-      try
+      final List<SPIData> decodedData = aDataSet.getData();
+      for ( int i = 0; i < decodedData.size(); i++ )
       {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
+        final SPIData ds = decodedData.get( i );
 
-        bw.write( "\"" + "index" + "\",\"" + "time" + "\",\"" + "mosi data or event" + "\",\"" + "miso data or event"
-            + "\"" );
-        bw.newLine();
-
-        final List<SPIData> decodedData = aDataSet.getData();
-        for ( int i = 0; i < decodedData.size(); i++ )
-        {
-          dSet = decodedData.get( i );
-          if ( dSet.isEvent() )
-          {
-            bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getEvent()
-                + "\",\"" + dSet.getEvent() + "\"" );
-          }
-          else
-          {
-            bw.write( "\"" + i + "\",\"" + indexToTime( aDataSet, dSet.getTime() ) + "\",\"" + dSet.getMoSiValue()
-                + "\",\"" + dSet.getMiSoValue() + "\"" );
-          }
-          bw.newLine();
-        }
-        bw.close();
+        exporter.addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), ds.getEvent(), ds.getMoSiValue(), ds
+            .getMiSoValue() );
       }
-      catch ( Exception E )
+
+      exporter.close();
+    }
+    catch ( IOException exception )
+    {
+      if ( LOG.isLoggable( Level.WARNING ) )
       {
-        E.printStackTrace( System.out );
+        LOG.log( Level.WARNING, "CSV export failed!", exception );
       }
     }
   }
@@ -425,26 +403,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
-   * Convert sample count to time string.
-   * 
-   * @param count
-   *          sample count (or index)
-   * @return string containing time information
-   */
-  private String indexToTime( final SPIDataSet aDataSet, final long aCount )
-  {
-    final long count = Math.max( 0, aCount - aDataSet.getStartOfDecode() );
-    if ( this.analysisData.hasTimingData() )
-    {
-      return DisplayUtils.displayScaledTime( count, this.analysisData.getSampleRate() );
-    }
-    else
-    {
-      return ( "" + count );
-    }
-  }
-
-  /**
    * generate a HTML page
    * 
    * @param aDataSet
@@ -491,21 +449,21 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
         {
           // start condition
           data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + indexToTime( aDataSet, ds.getTime() )
+              + ds.getTimeDisplayValue()
               + "</td><td>CSLOW</td><td></td><td></td><td></td><td>CSLOW</td><td></td><td></td><td></td></tr>" );
         }
         else if ( SPIDataSet.SPI_CS_HIGH.equals( ds.getEvent() ) )
         {
           // stop condition
           data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + indexToTime( aDataSet, ds.getTime() )
+              + ds.getTimeDisplayValue()
               + "</td><td>CSHIGH</td><td></td><td></td><td></td><td>CSHIGH</td><td></td><td></td><td></td></tr>" );
         }
         else
         {
           // unknown event
           data = data.concat( "<tr style=\"background-color:#FF8000;\"><td>" + i + "</td><td>"
-              + indexToTime( aDataSet, ds.getTime() )
+              + ds.getTimeDisplayValue()
               + "</td><td>UNKNOWN</td><td></td><td></td><td></td><td>UNKNOWN</td><td></td><td></td><td></td></tr>" );
         }
       }
@@ -514,10 +472,9 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
         final int mosiValue = ds.getMoSiValue();
         final int misoValue = ds.getMiSoValue();
 
-        data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
-            + indexToTime( aDataSet, ds.getTime() ) + "</td><td>" + "0x"
-            + DisplayUtils.integerToHexString( mosiValue, bitCount / 4 + bitAdder ) + "</td><td>" + "0b"
-            + DisplayUtils.integerToBinString( mosiValue, bitCount ) + "</td><td>" + mosiValue + "</td><td>" );
+        data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>" + ds.getTimeDisplayValue()
+            + "</td><td>" + "0x" + DisplayUtils.integerToHexString( mosiValue, bitCount / 4 + bitAdder ) + "</td><td>"
+            + "0b" + DisplayUtils.integerToBinString( mosiValue, bitCount ) + "</td><td>" + mosiValue + "</td><td>" );
 
         if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )mosiValue ) )
         {

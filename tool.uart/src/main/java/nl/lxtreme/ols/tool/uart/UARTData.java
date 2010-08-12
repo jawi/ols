@@ -160,4 +160,12 @@ public final class UARTData extends BaseData<UARTData>
     result = prime * result + this.type;
     return result;
   }
+
+  /**
+   * @return
+   */
+  public boolean isEvent()
+  {
+    return ( this.type == UART_TYPE_EVENT ) || ( this.type == UART_TYPE_RXEVENT ) || ( this.type == UART_TYPE_TXEVENT );
+  }
 }
