@@ -26,11 +26,13 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
+import java.util.logging.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.ExportUtils.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -43,9 +45,11 @@ import nl.lxtreme.ols.util.swing.*;
  */
 public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>
 {
-  // INNER TYPES
+  // CONSTANTS
 
   private static final long serialVersionUID = 1L;
+
+  private static final Logger LOG = Logger.getLogger( UARTProtocolAnalysisDialog.class.getName() );
 
   // VARIABLES
 
@@ -391,55 +395,60 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   @Override
   protected void storeToCsvFile( final File aFile, final UARTDataSet aDataSet )
   {
-    if ( !aDataSet.isEmpty() )
+    try
     {
-      UARTData dSet;
+      final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
 
-      try
+      exporter.setHeaders( "index", "time", "event?", "event-type", "RxD event", "TxD event", "RxD data", "TxD data" );
+
+      final List<UARTData> decodedData = aDataSet.getData();
+      for ( int i = 0; i < decodedData.size(); i++ )
       {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
+        final UARTData ds = decodedData.get( i );
 
-        bw.write( "\"" + "index" + "\",\"" + "time" + "\",\"" + "RxD data or event" + "\",\"" + "TxD data or event"
-            + "\"" );
-        bw.newLine();
+        String eventType = null;
+        String rxdEvent = null;
+        String txdEvent = null;
+        String rxdData = null;
+        String txdData = null;
 
-        final List<UARTData> decodedData = aDataSet.getData();
-        for ( int i = 0; i < decodedData.size(); i++ )
+        switch ( ds.getType() )
         {
-          dSet = decodedData.get( i );
-          switch ( dSet.getType() )
-          {
-            case UARTData.UART_TYPE_EVENT:
-              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + dSet.getEvent() + "\",\""
-                  + dSet.getEvent() + "\"" );
-              break;
+          case UARTData.UART_TYPE_EVENT:
+            eventType = ds.getEvent();
+            break;
 
-            case UARTData.UART_TYPE_RXEVENT:
-              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + dSet.getEvent() + "\",\"" + "\"" );
-              break;
+          case UARTData.UART_TYPE_RXEVENT:
+            rxdEvent = ds.getEvent();
+            break;
 
-            case UARTData.UART_TYPE_TXEVENT:
-              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + "\",\"" + dSet.getEvent() + "\"" );
-              break;
+          case UARTData.UART_TYPE_TXEVENT:
+            txdEvent = ds.getEvent();
+            break;
 
-            case UARTData.UART_TYPE_RXDATA:
-              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + dSet.getData() + "\",\"" + "\"" );
-              break;
+          case UARTData.UART_TYPE_RXDATA:
+            rxdData = ds.getEvent();
+            break;
 
-            case UARTData.UART_TYPE_TXDATA:
-              bw.write( "\"" + i + "\",\"" + dSet.getTimeDisplayValue() + "\",\"" + "\",\"" + dSet.getData() + "\"" );
-              break;
+          case UARTData.UART_TYPE_TXDATA:
+            txdData = ds.getEvent();
+            break;
 
-            default:
-              break;
-          }
-          bw.newLine();
+          default:
+            break;
         }
-        bw.close();
+
+        exporter
+            .addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), eventType, rxdEvent, txdEvent, rxdData, txdData );
       }
-      catch ( Exception E )
+
+      exporter.close();
+    }
+    catch ( IOException exception )
+    {
+      if ( LOG.isLoggable( Level.WARNING ) )
       {
-        E.printStackTrace( System.out );
+        LOG.log( Level.WARNING, "CSV export failed!", exception );
       }
     }
   }
