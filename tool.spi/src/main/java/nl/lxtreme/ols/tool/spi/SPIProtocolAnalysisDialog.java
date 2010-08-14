@@ -82,8 +82,9 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   {
     super( aOwner, aName );
 
-    Container pane = getContentPane();
-    pane.setLayout( new GridBagLayout() );
+    setMinimumSize( new Dimension( 640, 480 ) );
+
+    setLayout( new GridBagLayout() );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
 
     /*
@@ -141,37 +142,45 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     this.orderarray[1] = new String( "LSB first" );
     this.order = new JComboBox( this.orderarray );
     panSettings.add( this.order );
-    pane.add( panSettings, createConstraints( 0, 0, 1, 1, 0, 0 ) );
+
+    add( panSettings, createConstraints( 0, 0, 1, 1, 0, 0 ) );
 
     /*
      * add an empty output view
      */
-    JPanel panTable = new JPanel();
-    panTable.setLayout( new GridLayout( 1, 1, 5, 5 ) );
-    panTable.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Results" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    JPanel panTable = new JPanel( new GridLayout( 1, 1, 5, 5 ) );
     this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
     this.outText.setMargin( new Insets( 5, 5, 5, 5 ) );
     panTable.add( new JScrollPane( this.outText ) );
-    add( panTable, createConstraints( 1, 0, 3, 3, 1.0, 1.0 ) );
+    add( panTable, createConstraints( 1, 0, 1, 1, 1.0, 1.0 ) );
 
     /*
      * add buttons
      */
     this.runAnalysisAction = new RunAnalysisAction();
     JButton btnConvert = new JButton( this.runAnalysisAction );
-    add( btnConvert, createConstraints( 0, 3, 1, 1, 0.5, 0 ) );
 
     this.exportAction = new ExportAction();
+    this.exportAction.setEnabled( false );
     JButton btnExport = new JButton( this.exportAction );
-    add( btnExport, createConstraints( 1, 3, 1, 1, 0.5, 0 ) );
 
     this.closeAction = new CloseAction();
     JButton btnCancel = new JButton( this.closeAction );
-    add( btnCancel, createConstraints( 2, 3, 1, 1, 0.5, 0 ) );
 
-    setSize( 1000, 500 );
-    setResizable( false );
+    final JPanel buttons = new JPanel();
+    final BoxLayout layoutMgr = new BoxLayout( buttons, BoxLayout.LINE_AXIS );
+    buttons.setLayout( layoutMgr );
+    buttons.add( Box.createHorizontalGlue() );
+    buttons.add( btnConvert );
+    buttons.add( btnExport );
+    buttons.add( Box.createHorizontalStrut( 16 ) );
+    buttons.add( btnCancel );
+
+    add( buttons, //
+        new GridBagConstraints( 0, 1, 2, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL,
+            COMP_INSETS, 0, 0 ) );
+
+    pack();
   }
 
   // METHODS
@@ -221,6 +230,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
       this.outText.setEditable( false );
 
       this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+
       this.runAnalysisAction.restore();
       this.runAnalysisAction.setEnabled( false );
     }
@@ -279,6 +289,15 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#onToolWorkerSet(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   */
+  @Override
+  protected void onToolWorkerSet( final SPIAnalyserWorker aToolWorker )
+  {
+    this.runAnalysisAction.setEnabled( aToolWorker.hasCapturedData() );
+  }
+
+  /**
    * set the controls of the dialog enabled/disabled
    * 
    * @param aEnable
@@ -295,7 +314,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     this.bits.setEnabled( aEnable );
     this.order.setEnabled( aEnable );
 
-    this.exportAction.setEnabled( aEnable );
     this.closeAction.setEnabled( aEnable );
   }
 
@@ -381,38 +399,46 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    */
   private HtmlExporter createHtmlTemplate( final HtmlExporter aExporter )
   {
-    aExporter.addCssStyle( "th { text-align: left; font-style: italic; font-weight: bold; "
-        + "font-size: medium; font-family: sans-serif; background-color: #C0C0FF; } " );
-    aExporter.addCssStyle( "tbody { margin-top: 1.5em; } " );
-    aExporter.addCssStyle( ".date { text-align: right; font-size: x-small; } " );
+    aExporter.addCssStyle( "body { font-family: sans-serif; } " );
+    aExporter.addCssStyle( "table { border-width: 1px; border-spacing: 0px; border-color: gray;"
+        + " border-collapse: collapse; border-style: solid; margin-bottom: 15px; } " );
+    aExporter.addCssStyle( "table th { border-width: 1px; padding: 2px; border-style: solid; border-color: gray;"
+        + " background-color: #C0C0FF; text-align: left; font-weight: bold; font-family: sans-serif; } " );
+    aExporter.addCssStyle( "table td { border-width: 1px; padding: 2px; border-style: solid; border-color: gray;"
+        + " font-family: monospace; } " );
+    aExporter.addCssStyle( ".date { text-align: right; font-size: x-small; margin-bottom: 15px; } " );
     aExporter.addCssStyle( ".w100 { width: 100%; } " );
+    aExporter.addCssStyle( ".w35 { width: 35%; } " );
     aExporter.addCssStyle( ".w30 { width: 30%; } " );
     aExporter.addCssStyle( ".w15 { width: 15%; } " );
     aExporter.addCssStyle( ".w10 { width: 10%; } " );
     aExporter.addCssStyle( ".w8 { width: 8%; } " );
     aExporter.addCssStyle( ".w7 { width: 7%; } " );
-    aExporter.addCssStyle( ".mono { width: 100%; font-family: monospace; }" );
 
     final Element body = aExporter.getBody();
     body.addChild( H1 ).addContent( "SPI Analysis results" );
     body.addChild( HR );
-    body.addChild( DIV ).addAttribute( "class", "date" ).addContent( "{date-now}" );
+    body.addChild( DIV ).addAttribute( "class", "date" ).addContent( "Generated: ", "{date-now}" );
 
     Element table, tr, thead, tbody;
 
-    table = body.addChild( TABLE ).addAttribute( "class", "mono" );
+    table = body.addChild( TABLE ).addAttribute( "class", "w100" );
     thead = table.addChild( THEAD );
+    tr = thead.addChild( TR );
+    tr.addChild( TH ).addAttribute( "class", "w30" ).addAttribute( "colspan", "2" );
+    tr.addChild( TH ).addAttribute( "class", "w35" ).addAttribute( "colspan", "4" ).addContent( "MOSI" );
+    tr.addChild( TH ).addAttribute( "class", "w35" ).addAttribute( "colspan", "4" ).addContent( "MISO" );
     tr = thead.addChild( TR );
     tr.addChild( TH ).addAttribute( "class", "w15" ).addContent( "Index" );
     tr.addChild( TH ).addAttribute( "class", "w15" ).addContent( "Time" );
-    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "MOSI Hex" );
-    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "MOSI Bin" );
-    tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "MOSI Dec" );
-    tr.addChild( TH ).addAttribute( "class", "w7" ).addContent( "MOSI ASCII" );
-    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "MISO Hex" );
-    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "MISO Bin" );
-    tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "MISO Dec" );
-    tr.addChild( TH ).addAttribute( "class", "w7" ).addContent( "MISO ASCII" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "Hex" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "Bin" );
+    tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "Dec" );
+    tr.addChild( TH ).addAttribute( "class", "w7" ).addContent( "ASCII" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "Hex" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "Bin" );
+    tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "Dec" );
+    tr.addChild( TH ).addAttribute( "class", "w7" ).addContent( "ASCII" );
     tbody = table.addChild( TBODY );
     tbody.addContent( "{decoded-data}" );
 
@@ -427,7 +453,19 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   private String getEmptyHtmlPage()
   {
     final HtmlExporter exporter = createHtmlTemplate( ExportUtils.createHtmlExporter() );
-    return exporter.toString();
+    return exporter.toString( new MacroResolver()
+    {
+      @Override
+      public Object resolve( final String aMacro, final Element aParent )
+      {
+        if ( "date-now".equals( aMacro ) )
+        {
+          final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
+          return df.format( new Date() );
+        }
+        return null;
+      }
+    } );
   }
 
   /**

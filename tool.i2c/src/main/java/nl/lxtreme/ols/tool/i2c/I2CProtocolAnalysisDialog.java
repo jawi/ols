@@ -39,11 +39,10 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * The Dialog Class
+ * Provides a main dialog for the I2C analyser.
  * 
- * @author Frank Kunz The dialog class draws the basic dialog with a grid
- *         layout. The dialog consists of three main parts. A settings panel, a
- *         table panel and three buttons.
+ * @author Frank Kunz
+ * @author J.W. Janssen
  */
 public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>
 {
@@ -64,6 +63,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   private final JCheckBox detectSTOP;
   private final JCheckBox detectACK;
   private final JCheckBox detectNACK;
+
   private final RunAnalysisAction runAnalysisAction;
   private final ExportAction exportAction;
   private final CloseAction closeAction;
@@ -78,21 +78,23 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   {
     super( aOwner, aName );
 
+    setMinimumSize( new Dimension( 640, 480 ) );
+
     setLayout( new GridBagLayout() );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
 
     /*
      * add protocol settings elements
      */
-    JPanel panSettings = new JPanel();
+    final JPanel panSettings = new JPanel();
     panSettings.setLayout( new GridLayout( 6, 2, 5, 5 ) );
     panSettings.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Settings" ),
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
-    String channels[] = new String[32];
+    final String channels[] = new String[32];
     for ( int i = 0; i < 32; i++ )
     {
-      channels[i] = new String( "Channel " + i );
+      channels[i] = "Channel " + i;
     }
 
     panSettings.add( new JLabel( "Line A" ) );
@@ -105,22 +107,25 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     panSettings.add( this.lineB );
     this.detectSTART = new JCheckBox( "Show START", true );
     panSettings.add( this.detectSTART );
-    panSettings.add( new JLabel( "" ) );
+    panSettings.add( new JLabel( " " ) );
     this.detectSTOP = new JCheckBox( "Show STOP", true );
     panSettings.add( this.detectSTOP );
-    panSettings.add( new JLabel( "" ) );
+    panSettings.add( new JLabel( " " ) );
     this.detectACK = new JCheckBox( "Show ACK", true );
     panSettings.add( this.detectACK );
-    panSettings.add( new JLabel( "" ) );
+    panSettings.add( new JLabel( " " ) );
     this.detectNACK = new JCheckBox( "Show NACK", true );
     panSettings.add( this.detectNACK );
-    panSettings.add( new JLabel( "" ) );
-    add( panSettings, createConstraints( 0, 0, 1, 1, 0, 0 ) );
+    panSettings.add( new JLabel( " " ) );
+
+    add( panSettings, //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
+            COMP_INSETS, 0, 0 ) );
 
     /*
      * add bus configuration panel
      */
-    JPanel panBusConfig = new JPanel();
+    final JPanel panBusConfig = new JPanel();
     panBusConfig.setLayout( new GridLayout( 2, 2, 5, 5 ) );
     panBusConfig.setBorder( BorderFactory.createCompoundBorder(
         BorderFactory.createTitledBorder( "Bus Configuration" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
@@ -130,127 +135,53 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     panBusConfig.add( new JLabel( "SDA :" ) );
     this.busSetSDA = new JLabel( "<autodetect>" );
     panBusConfig.add( this.busSetSDA );
-    add( panBusConfig, createConstraints( 0, 1, 1, 1, 0, 0 ) );
+
+    add( panBusConfig, //
+        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
+            COMP_INSETS, 0, 0 ) );
 
     /*
      * add an empty output view
      */
-    JPanel panTable = new JPanel();
-    panTable.setLayout( new GridLayout( 1, 1, 5, 5 ) );
-    panTable.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Results" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    final JPanel output = new JPanel( new GridLayout( 1, 1, 5, 5 ) );
     this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
     this.outText.setMargin( new Insets( 5, 5, 5, 5 ) );
-    panTable.add( new JScrollPane( this.outText ) );
-    add( panTable, createConstraints( 1, 0, 3, 3, 1.0, 1.0 ) );
+    output.add( new JScrollPane( this.outText ) );
+
+    add( output, //
+        new GridBagConstraints( 1, 0, 1, 2, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.BOTH, COMP_INSETS, 0,
+            0 ) );
 
     /*
      * add buttons
      */
-    JPanel panButton = new JPanel();
     this.runAnalysisAction = new RunAnalysisAction();
-    JButton btnConvert = new JButton( this.runAnalysisAction );
-    panButton.add( btnConvert );
+    final JButton btnConvert = new JButton( this.runAnalysisAction );
 
     this.exportAction = new ExportAction();
     this.exportAction.setEnabled( false );
-    JButton btnExport = new JButton( this.exportAction );
-    panButton.add( btnExport );
+    final JButton btnExport = new JButton( this.exportAction );
 
     this.closeAction = new CloseAction();
-    JButton btnClose = new JButton( this.closeAction );
-    panButton.add( btnClose );
+    final JButton btnCancel = new JButton( this.closeAction );
 
-    add( panButton, createConstraints( 3, 4, 1, 1, 0, 0 ) );
+    final JPanel buttons = new JPanel();
+    final BoxLayout layoutMgr = new BoxLayout( buttons, BoxLayout.LINE_AXIS );
+    buttons.setLayout( layoutMgr );
+    buttons.add( Box.createHorizontalGlue() );
+    buttons.add( btnConvert );
+    buttons.add( btnExport );
+    buttons.add( Box.createHorizontalStrut( 16 ) );
+    buttons.add( btnCancel );
 
-    // pack();
-    setSize( 900, 500 );
-    setResizable( false );
+    add( buttons, //
+        new GridBagConstraints( 0, 2, 2, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL,
+            COMP_INSETS, 0, 0 ) );
+
+    pack();
   }
 
   // CONSTRUCTORS
-
-  /**
-   * create constraints for GridBagLayout
-   * 
-   * @param x
-   *          x grid position
-   * @param y
-   *          y grid position
-   * @param w
-   *          grid width
-   * @param h
-   *          grid height
-   * @param wx
-   *          weighting for extra horizontal space
-   * @param wy
-   *          weighting for extra vertical space
-   * @return constraints object
-   */
-  private static GridBagConstraints createConstraints( final int x, final int y, final int w, final int h,
-      final double wx, final double wy )
-  {
-    GridBagConstraints gbc = new GridBagConstraints();
-    gbc.fill = GridBagConstraints.BOTH;
-    gbc.insets = new Insets( 4, 4, 4, 4 );
-    gbc.gridx = x;
-    gbc.gridy = y;
-    gbc.gridwidth = w;
-    gbc.gridheight = h;
-    gbc.weightx = wx;
-    gbc.weighty = wy;
-    return ( gbc );
-  }
-
-  // METHODS
-
-  /**
-   * @return
-   */
-  public int getLineAmask()
-  {
-    return ( 1 << this.lineA.getSelectedIndex() );
-  }
-
-  /**
-   * @return
-   */
-  public int getLineBmask()
-  {
-    return ( 1 << this.lineB.getSelectedIndex() );
-  }
-
-  /**
-   * @return
-   */
-  public boolean isReportACK()
-  {
-    return this.detectACK.isSelected();
-  }
-
-  /**
-   * @return
-   */
-  public boolean isReportNACK()
-  {
-    return this.detectNACK.isSelected();
-  }
-
-  /**
-   * @return
-   */
-  public boolean isReportStart()
-  {
-    return this.detectSTART.isSelected();
-  }
-
-  /**
-   * @return
-   */
-  public boolean isReportStop()
-  {
-    return this.detectSTOP.isSelected();
-  }
 
   /**
    * This is the I2C protocol decoder core The decoder scans for a decode start
@@ -268,10 +199,11 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
       this.outText.setEditable( false );
 
       this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+
       this.runAnalysisAction.restore();
       this.runAnalysisAction.setEnabled( false );
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       // This should not happen for the no-file exports!
       throw new RuntimeException( exception );
@@ -352,7 +284,6 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     this.detectACK.setEnabled( aEnabled );
     this.detectNACK.setEnabled( aEnabled );
 
-    this.exportAction.setEnabled( aEnabled );
     this.closeAction.setEnabled( aEnabled );
   }
 
@@ -367,17 +298,27 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#onToolWorkerSet(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   */
+  @Override
+  protected void onToolWorkerSet( final I2CAnalyserWorker aToolWorker )
+  {
+    this.runAnalysisAction.setEnabled( aToolWorker.hasCapturedData() );
+  }
+
+  /**
    * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
    */
   @Override
   protected void setupToolWorker( final I2CAnalyserWorker aToolWorker )
   {
-    aToolWorker.setLineAmask( getLineAmask() );
-    aToolWorker.setLineBmask( getLineBmask() );
-    aToolWorker.setReportACK( isReportACK() );
-    aToolWorker.setReportNACK( isReportNACK() );
-    aToolWorker.setReportStart( isReportStart() );
-    aToolWorker.setReportStop( isReportStop() );
+    aToolWorker.setLineAmask( 1 << this.lineA.getSelectedIndex() );
+    aToolWorker.setLineBmask( 1 << this.lineB.getSelectedIndex() );
+
+    aToolWorker.setReportACK( this.detectACK.isSelected() );
+    aToolWorker.setReportNACK( this.detectNACK.isSelected() );
+    aToolWorker.setReportStart( this.detectSTART.isSelected() );
+    aToolWorker.setReportStop( this.detectSTOP.isSelected() );
   }
 
   /**
@@ -403,7 +344,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
       exporter.close();
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       if ( LOG.isLoggable( Level.WARNING ) )
       {
@@ -423,7 +364,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     {
       toHtmlPage( aSelectedFile, aAnalysisResult );
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       if ( LOG.isLoggable( Level.WARNING ) )
       {
@@ -441,16 +382,19 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    */
   private HtmlExporter createHtmlTemplate( final HtmlExporter aExporter )
   {
-    aExporter.addCssStyle( "th { text-align: left; font-style: italic; font-weight: bold; "
-        + "font-size: medium; font-family: sans-serif; background-color: #C0C0FF; } " );
-    aExporter.addCssStyle( "tbody { margin-top: 1.5em; } " );
-    aExporter.addCssStyle( ".date { text-align: right; font-size: x-small; } " );
+    aExporter.addCssStyle( "body { font-family: sans-serif; } " );
+    aExporter.addCssStyle( "table { border-width: 1px; border-spacing: 0px; border-color: gray;"
+        + " border-collapse: collapse; border-style: solid; margin-bottom: 15px; } " );
+    aExporter.addCssStyle( "table th { border-width: 1px; padding: 2px; border-style: solid; border-color: gray;"
+        + " background-color: #C0C0FF; text-align: left; font-weight: bold; font-family: sans-serif; } " );
+    aExporter.addCssStyle( "table td { border-width: 1px; padding: 2px; border-style: solid; border-color: gray;"
+        + " font-family: monospace; } " );
+    aExporter.addCssStyle( ".date { text-align: right; font-size: x-small; margin-bottom: 15px; } " );
     aExporter.addCssStyle( ".w100 { width: 100%; } " );
     aExporter.addCssStyle( ".w30 { width: 30%; } " );
     aExporter.addCssStyle( ".w20 { width: 20%; } " );
     aExporter.addCssStyle( ".w15 { width: 15%; } " );
     aExporter.addCssStyle( ".w10 { width: 10%; } " );
-    aExporter.addCssStyle( ".mono { width: 100%; font-family: monospace; }" );
 
     final Element body = aExporter.getBody();
     body.addChild( H1 ).addContent( "I<sup>2</sup>C Analysis results" );
@@ -480,7 +424,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "Detected bus errors" );
     tr.addChild( TD ).addContent( "{detected-bus-errors}" );
 
-    table = body.addChild( TABLE ).addAttribute( "class", "mono" );
+    table = body.addChild( TABLE ).addAttribute( "class", "w100" );
     thead = table.addChild( THEAD );
     tr = thead.addChild( TR );
     tr.addChild( TH ).addAttribute( "class", "w30" ).addContent( "Index" );
@@ -519,7 +463,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
         }
         else if ( "decoded-bytes".equals( aMacro ) || "detected-bus-errors".equals( aMacro ) )
         {
-          return "&mdash;";
+          return "-";
         }
         return null;
       }

@@ -31,14 +31,14 @@ import nl.lxtreme.ols.api.data.*;
 
 
 /**
- * @author jawi
+ * Provides a base tool dialog.
  */
 public abstract class BaseToolDialog extends JDialog implements ToolDialog, Configurable
 {
   // INNER TYPES
 
   /**
-   * 
+   * Provides a generic close dialog action.
    */
   protected final class CloseAction extends AbstractAction
   {
@@ -79,12 +79,31 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   // CONSTRUCTORS
 
   /**
+   * Creates a new BaseToolDialog instance that is document modal.
+   * 
    * @param aOwner
+   *          the owning window of this dialog;
    * @param aName
+   *          the name of this dialog.
    */
-  protected BaseToolDialog( final Window aOwner, final String aName )
+  protected BaseToolDialog( final Window aOwner, final String aTitle )
   {
-    super( aOwner, aName, Dialog.ModalityType.DOCUMENT_MODAL );
+    this( aOwner, aTitle, Dialog.ModalityType.DOCUMENT_MODAL );
+  }
+
+  /**
+   * Creates a new BaseToolDialog instance that is document modal.
+   * 
+   * @param aOwner
+   *          the owning window of this dialog;
+   * @param aName
+   *          the name of this dialog;
+   * @param aModalityType
+   *          the modality type.
+   */
+  protected BaseToolDialog( final Window aOwner, final String aTitle, final ModalityType aModalityType )
+  {
+    super( aOwner, aTitle, aModalityType );
   }
 
   // METHODS
