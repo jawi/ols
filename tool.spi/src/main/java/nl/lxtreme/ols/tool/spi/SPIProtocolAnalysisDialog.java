@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -213,12 +215,20 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   {
     super.onToolWorkerReady( aAnalysisResult );
 
-    this.outText.setText( toHtmlPage( aAnalysisResult ) );
-    this.outText.setEditable( false );
+    try
+    {
+      this.outText.setText( toHtmlPage( null /* aFile */, aAnalysisResult ) );
+      this.outText.setEditable( false );
 
-    this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-    this.runAnalysisAction.restore();
-    this.runAnalysisAction.setEnabled( false );
+      this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+      this.runAnalysisAction.restore();
+      this.runAnalysisAction.setEnabled( false );
+    }
+    catch ( IOException exception )
+    {
+      // Should not happen in this situation!
+      throw new RuntimeException( exception );
+    }
   }
 
   /**
@@ -325,8 +335,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
       {
         final SPIData ds = decodedData.get( i );
 
-        exporter.addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), ds.getEvent(), ds.getMoSiValue(), ds
-            .getMiSoValue() );
+        exporter
+            .addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), ds.getEvent(), ds.getMoSiValue(), ds.getMiSoValue() );
       }
 
       exporter.close();
@@ -349,24 +359,64 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   @Override
   protected void storeToHtmlFile( final File aFile, final SPIDataSet aDataSet )
   {
-    if ( !aDataSet.isEmpty() )
+    try
     {
-      System.out.println( "writing decoded data to " + aFile.getPath() );
-
-      try
+      toHtmlPage( aFile, aDataSet );
+    }
+    catch ( IOException exception )
+    {
+      if ( LOG.isLoggable( Level.WARNING ) )
       {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
-
-        // write the complete displayed html page to file
-        bw.write( this.outText.getText() );
-
-        bw.close();
-      }
-      catch ( Exception E )
-      {
-        E.printStackTrace( System.out );
+        LOG.log( Level.WARNING, "HTML export failed!", exception );
       }
     }
+  }
+
+  /**
+   * Creates the HTML template for exports to HTML.
+   * 
+   * @param aExporter
+   *          the HTML exporter instance to use, cannot be <code>null</code>.
+   * @return a HTML exporter filled with the template, never <code>null</code>.
+   */
+  private HtmlExporter createHtmlTemplate( final HtmlExporter aExporter )
+  {
+    aExporter.addCssStyle( "th { text-align: left; font-style: italic; font-weight: bold; "
+        + "font-size: medium; font-family: sans-serif; background-color: #C0C0FF; } " );
+    aExporter.addCssStyle( "tbody { margin-top: 1.5em; } " );
+    aExporter.addCssStyle( ".date { text-align: right; font-size: x-small; } " );
+    aExporter.addCssStyle( ".w100 { width: 100%; } " );
+    aExporter.addCssStyle( ".w30 { width: 30%; } " );
+    aExporter.addCssStyle( ".w15 { width: 15%; } " );
+    aExporter.addCssStyle( ".w10 { width: 10%; } " );
+    aExporter.addCssStyle( ".w8 { width: 8%; } " );
+    aExporter.addCssStyle( ".w7 { width: 7%; } " );
+    aExporter.addCssStyle( ".mono { width: 100%; font-family: monospace; }" );
+
+    final Element body = aExporter.getBody();
+    body.addChild( H1 ).addContent( "SPI Analysis results" );
+    body.addChild( HR );
+    body.addChild( DIV ).addAttribute( "class", "date" ).addContent( "{date-now}" );
+
+    Element table, tr, thead, tbody;
+
+    table = body.addChild( TABLE ).addAttribute( "class", "mono" );
+    thead = table.addChild( THEAD );
+    tr = thead.addChild( TR );
+    tr.addChild( TH ).addAttribute( "class", "w15" ).addContent( "Index" );
+    tr.addChild( TH ).addAttribute( "class", "w15" ).addContent( "Time" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "MOSI Hex" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "MOSI Bin" );
+    tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "MOSI Dec" );
+    tr.addChild( TH ).addAttribute( "class", "w7" ).addContent( "MOSI ASCII" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "MISO Hex" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "MISO Bin" );
+    tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "MISO Dec" );
+    tr.addChild( TH ).addAttribute( "class", "w7" ).addContent( "MISO ASCII" );
+    tbody = table.addChild( TBODY );
+    tbody.addContent( "{decoded-data}" );
+
+    return aExporter;
   }
 
   /**
@@ -376,30 +426,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    */
   private String getEmptyHtmlPage()
   {
-    Date now = new Date();
-    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
-
-    // generate html page header
-    String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-        + "<html>"
-        + "  <head>"
-        + "    <title></title>"
-        + "    <meta content=\"\">"
-        + "    <style>"
-        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-        + "       </style>" + "  </head>" + "   <body>" + "       <H2>SPI Analysis Results</H2>" + "       <hr>"
-        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-        + "       <br>";
-
-    // generate the data table
-    String data = "<table style=\"font-family:monospace;width:100%;\">"
-        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
-    data = data.concat( "</table" );
-
-    // generate the footer table
-    String footer = "   </body>" + "</html>";
-
-    return ( header + data + footer );
+    final HtmlExporter exporter = createHtmlTemplate( ExportUtils.createHtmlExporter() );
+    return exporter.toString();
   }
 
   /**
@@ -410,93 +438,130 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    *          <code>null</code>.
    * @return String with HTML data
    */
-  private String toHtmlPage( final SPIDataSet aDataSet )
+  private String toHtmlPage( final File aFile, final SPIDataSet aDataSet ) throws IOException
   {
-    Date now = new Date();
-    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG, Locale.US );
+    final int bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
+    final int bitAdder = ( bitCount % 4 != 0 ) ? 1 : 0;
 
-    int bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
-    int bitAdder = 0;
-
-    if ( bitCount % 4 != 0 )
+    final MacroResolver macroResolver = new MacroResolver()
     {
-      bitAdder = 1;
+      @Override
+      public Object resolve( final String aMacro, final Element aParent )
+      {
+        if ( "date-now".equals( aMacro ) )
+        {
+          final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
+          return df.format( new Date() );
+        }
+        else if ( "decoded-data".equals( aMacro ) )
+        {
+          final List<SPIData> decodedData = aDataSet.getData();
+          Element tr;
+
+          for ( int i = 0; i < decodedData.size(); i++ )
+          {
+            final SPIData ds = decodedData.get( i );
+
+            if ( ds.isEvent() )
+            {
+              String event;
+              String bgColor;
+
+              // this is an event
+              if ( SPIDataSet.SPI_CS_LOW.equals( ds.getEvent() ) )
+              {
+                // start condition
+                event = ds.getEvent();
+                bgColor = "#c0ffc0";
+              }
+              else if ( SPIDataSet.SPI_CS_HIGH.equals( ds.getEvent() ) )
+              {
+                // stop condition
+                event = ds.getEvent();
+                bgColor = "#e0e0e0";
+              }
+              else
+              {
+                // unknown event
+                event = "UNKNOWN";
+                bgColor = "#ff8000";
+              }
+
+              tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
+              tr.addChild( TD ).addContent( String.valueOf( i ) );
+              tr.addChild( TD ).addContent( ds.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( event );
+              tr.addChild( TD );
+              tr.addChild( TD );
+              tr.addChild( TD );
+              tr.addChild( TD ).addContent( event );
+              tr.addChild( TD );
+              tr.addChild( TD );
+              tr.addChild( TD );
+            }
+            else
+            {
+              tr = aParent.addChild( TR );
+              tr.addChild( TD ).addContent( String.valueOf( i ) );
+              tr.addChild( TD ).addContent( ds.getTimeDisplayValue() );
+
+              final int mosiValue = ds.getMoSiValue();
+              final String mosiDataHex = DisplayUtils.integerToHexString( mosiValue, bitCount / 4 + bitAdder );
+              final String mosiDataBin = DisplayUtils.integerToBinString( mosiValue, bitCount );
+              final String mosiDataDec = String.valueOf( mosiValue );
+              final String mosiDataASCII;
+              if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )mosiValue ) )
+              {
+                mosiDataASCII = String.valueOf( ( char )mosiValue );
+              }
+              else
+              {
+                mosiDataASCII = "";
+              }
+
+              tr.addChild( TD ).addContent( "0x", mosiDataHex );
+              tr.addChild( TD ).addContent( "0b", mosiDataBin );
+              tr.addChild( TD ).addContent( mosiDataDec );
+              tr.addChild( TD ).addContent( mosiDataASCII );
+
+              final int misoValue = ds.getMiSoValue();
+              String misoDataHex = DisplayUtils.integerToHexString( misoValue, bitCount / 4 + bitAdder );
+              String misoDataBin = DisplayUtils.integerToBinString( misoValue, bitCount );
+              String misoDataDec = String.valueOf( misoValue );
+              String misoDataASCII;
+              if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )misoValue ) )
+              {
+                misoDataASCII = String.valueOf( ( char )misoValue );
+              }
+              else
+              {
+                misoDataASCII = "";
+              }
+
+              tr.addChild( TD ).addContent( "0x", misoDataHex );
+              tr.addChild( TD ).addContent( "0b", misoDataBin );
+              tr.addChild( TD ).addContent( misoDataDec );
+              tr.addChild( TD ).addContent( misoDataASCII );
+            }
+          }
+        }
+
+        return null;
+      }
+    };
+
+    if ( aFile == null )
+    {
+      final HtmlExporter exporter = createHtmlTemplate( ExportUtils.createHtmlExporter() );
+      return exporter.toString( macroResolver );
+    }
+    else
+    {
+      final HtmlFileExporter exporter = ( HtmlFileExporter )createHtmlTemplate( ExportUtils.createHtmlExporter( aFile ) );
+      exporter.write( macroResolver );
+      exporter.close();
     }
 
-    // generate html page header
-    String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-        + "<html>"
-        + "  <head>"
-        + "    <title></title>"
-        + "    <meta content=\"\">"
-        + "    <style>"
-        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-        + "       </style>" + "  </head>" + "   <body>" + "       <H2>SPI Analysis Results</H2>" + "       <hr>"
-        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-        + "       <br>";
-
-    // generate the data table
-    String data = "<table style=\"font-family:monospace;width:100%;\">"
-        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">MOSI Hex</th><th style=\"width:10%;\">MOSI Bin</th><th style=\"width:8%;\">MOSI Dec</th><th style=\"width:7%;\">MOSI ASCII</th><th style=\"width:10%;\">MISO Hex</th><th style=\"width:10%;\">MISO Bin</th><th style=\"width:8%;\">MISO Dec</th><th style=\"width:7%;\">MISO ASCII</th></tr>";
-    final List<SPIData> decodedData = aDataSet.getData();
-    for ( int i = 0; i < decodedData.size(); i++ )
-    {
-      SPIData ds = decodedData.get( i );
-      if ( ds.isEvent() )
-      {
-        // this is an event
-        if ( SPIDataSet.SPI_CS_LOW.equals( ds.getEvent() ) )
-        {
-          // start condition
-          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + ds.getTimeDisplayValue()
-              + "</td><td>CSLOW</td><td></td><td></td><td></td><td>CSLOW</td><td></td><td></td><td></td></tr>" );
-        }
-        else if ( SPIDataSet.SPI_CS_HIGH.equals( ds.getEvent() ) )
-        {
-          // stop condition
-          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + ds.getTimeDisplayValue()
-              + "</td><td>CSHIGH</td><td></td><td></td><td></td><td>CSHIGH</td><td></td><td></td><td></td></tr>" );
-        }
-        else
-        {
-          // unknown event
-          data = data.concat( "<tr style=\"background-color:#FF8000;\"><td>" + i + "</td><td>"
-              + ds.getTimeDisplayValue()
-              + "</td><td>UNKNOWN</td><td></td><td></td><td></td><td>UNKNOWN</td><td></td><td></td><td></td></tr>" );
-        }
-      }
-      else
-      {
-        final int mosiValue = ds.getMoSiValue();
-        final int misoValue = ds.getMiSoValue();
-
-        data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>" + ds.getTimeDisplayValue()
-            + "</td><td>" + "0x" + DisplayUtils.integerToHexString( mosiValue, bitCount / 4 + bitAdder ) + "</td><td>"
-            + "0b" + DisplayUtils.integerToBinString( mosiValue, bitCount ) + "</td><td>" + mosiValue + "</td><td>" );
-
-        if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )mosiValue ) )
-        {
-          data += ( char )mosiValue;
-        }
-
-        data = data.concat( "</td><td>" + "0x" + DisplayUtils.integerToHexString( misoValue, bitCount / 4 + bitAdder )
-            + "</td><td>" + "0b" + DisplayUtils.integerToBinString( misoValue, bitCount ) + "</td><td>" + misoValue
-            + "</td><td>" );
-        if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )misoValue ) )
-        {
-          data += ( char )misoValue;
-        }
-
-        data = data.concat( "</td></tr>" );
-      }
-    }
-    data = data.concat( "</table" );
-
-    // generate the footer table
-    String footer = "   </body>" + "</html>";
-
-    return ( header + data + footer );
+    return null;
   }
 }

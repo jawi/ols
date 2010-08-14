@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.tool.i2c;
 
 
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+
 import java.awt.*;
 import java.io.*;
 import java.text.*;
@@ -260,12 +262,20 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   {
     super.onToolWorkerReady( aAnalysisResult );
 
-    this.outText.setText( toHtmlPage( aAnalysisResult ) );
-    this.outText.setEditable( false );
+    try
+    {
+      this.outText.setText( toHtmlPage( null /* aFile */, aAnalysisResult ) );
+      this.outText.setEditable( false );
 
-    this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-    this.runAnalysisAction.restore();
-    this.runAnalysisAction.setEnabled( false );
+      this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+      this.runAnalysisAction.restore();
+      this.runAnalysisAction.setEnabled( false );
+    }
+    catch ( IOException exception )
+    {
+      // This should not happen for the no-file exports!
+      throw new RuntimeException( exception );
+    }
   }
 
   /**
@@ -284,7 +294,8 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   @Override
   public void reset()
   {
-    this.outText.setText( getEmptyHtmlPage() );
+    final String emptyHtmlPage = getEmptyHtmlPage();
+    this.outText.setText( emptyHtmlPage );
     this.outText.setEditable( false );
 
     this.exportAction.setEnabled( false );
@@ -410,12 +421,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   {
     try
     {
-      BufferedWriter bw = new BufferedWriter( new FileWriter( aSelectedFile ) );
-
-      // write the complete displayed html page to file
-      bw.write( this.outText.getText() );
-      bw.flush();
-      bw.close();
+      toHtmlPage( aSelectedFile, aAnalysisResult );
     }
     catch ( IOException exception )
     {
@@ -427,50 +433,97 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
-   * @return
+   * Creates the HTML template for exports to HTML.
+   * 
+   * @param aExporter
+   *          the HTML exporter instance to use, cannot be <code>null</code>.
+   * @return a HTML exporter filled with the template, never <code>null</code>.
+   */
+  private HtmlExporter createHtmlTemplate( final HtmlExporter aExporter )
+  {
+    aExporter.addCssStyle( "th { text-align: left; font-style: italic; font-weight: bold; "
+        + "font-size: medium; font-family: sans-serif; background-color: #C0C0FF; } " );
+    aExporter.addCssStyle( "tbody { margin-top: 1.5em; } " );
+    aExporter.addCssStyle( ".date { text-align: right; font-size: x-small; } " );
+    aExporter.addCssStyle( ".w100 { width: 100%; } " );
+    aExporter.addCssStyle( ".w30 { width: 30%; } " );
+    aExporter.addCssStyle( ".w20 { width: 20%; } " );
+    aExporter.addCssStyle( ".w15 { width: 15%; } " );
+    aExporter.addCssStyle( ".w10 { width: 10%; } " );
+    aExporter.addCssStyle( ".mono { width: 100%; font-family: monospace; }" );
+
+    final Element body = aExporter.getBody();
+    body.addChild( H1 ).addContent( "I<sup>2</sup>C Analysis results" );
+    body.addChild( HR );
+    body.addChild( DIV ).addAttribute( "class", "date" ).addContent( "{date-now}" );
+
+    Element table, tr, thead, tbody;
+
+    table = body.addChild( TABLE ).addAttribute( "class", "w100" );
+    tbody = table.addChild( TBODY );
+    tr = tbody.addChild( TR );
+    tr.addChild( TH ).addAttribute( "colspan", "2" ).addContent( "Bus configuration" );
+    tr = tbody.addChild( TR );
+    tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "SDA" );
+    tr.addChild( TD ).addContent( "{sda-bus-config}" );
+    tr = tbody.addChild( TR );
+    tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "SCL" );
+    tr.addChild( TD ).addContent( "{scl-bus-config}" );
+
+    tbody = table.addChild( TBODY );
+    tr = tbody.addChild( TR );
+    tr.addChild( TH ).addAttribute( "colspan", "2" ).addContent( "Statistics" );
+    tr = tbody.addChild( TR );
+    tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "Decoded bytes" );
+    tr.addChild( TD ).addContent( "{decoded-bytes}" );
+    tr = tbody.addChild( TR );
+    tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "Detected bus errors" );
+    tr.addChild( TD ).addContent( "{detected-bus-errors}" );
+
+    table = body.addChild( TABLE ).addAttribute( "class", "mono" );
+    thead = table.addChild( THEAD );
+    tr = thead.addChild( TR );
+    tr.addChild( TH ).addAttribute( "class", "w30" ).addContent( "Index" );
+    tr.addChild( TH ).addAttribute( "class", "w15" ).addContent( "Time" );
+    tr.addChild( TH ).addAttribute( "class", "w20" ).addContent( "Hex" );
+    tr.addChild( TH ).addAttribute( "class", "w20" ).addContent( "Bin" );
+    tr.addChild( TH ).addAttribute( "class", "w20" ).addContent( "Dec" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "ASCII" );
+    tbody = table.addChild( TBODY );
+    tbody.addContent( "{decoded-data}" );
+
+    return aExporter;
+  }
+
+  /**
+   * Returns an "empty" HTML page.
+   * 
+   * @return an empty HTML page string, never <code>null</code>.
    */
   private String getEmptyHtmlPage()
   {
-    Date now = new Date();
-    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
-
-    // generate html page header
-    String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-        + "<html>"
-        + "  <head>"
-        + "    <title></title>"
-        + "    <meta content=\"\">"
-        + "    <style>"
-        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-        + "       </style>" + "  </head>" + "   <body>" + "       <H2>I2C Analysis Results</H2>" + "       <hr>"
-        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-        + "       <br>";
-
-    // generate the bus configuration table
-    final StringBuilder busConfig = new StringBuilder();
-    busConfig.append( "<table style=\"width:100%;\">" );
-    busConfig.append( "<tr><td colspan=\"2\">Bus configuration</td></tr>" );
-    busConfig.append( "<tr><td style=\"width:30%;\">" ).append( "SDA" ).append( "</td><td>" ).append(
-        "&lt;autodetect&gt;" ).append( "</td></tr>" );
-    busConfig.append( "<tr><td style=\"width:30%;\">" ).append( "SCL" ).append( "</td><td>" ).append(
-        "&lt;autodetect&gt;" ).append( "</td></tr>" );
-    busConfig.append( "</table><br><br>" );
-
-    // generate the statistics table
-    String stats = "<table style=\"width:100%;\">";
-    stats = stats.concat( "<tr><td style=\"width:30%;\">Decoded Bytes</td><TD>-</td></tr>"
-        + "<tr><td style=\"width:30%;\">Detected Bus Errors</td><TD>-</td></tr>" );
-    stats = stats.concat( "</table>" + "<br>" + "<br>" );
-
-    // generate the data table
-    String data = "<table style=\"font-family:monospace;width:100%;\">"
-        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:20%;\">Hex</th><th style=\"width:20%;\">Bin</th><th style=\"width:20%;\">Dec</th><th style=\"width:10%;\">ASCII</th></tr>";
-    data = data.concat( "</table>" );
-
-    // generate the footer table
-    String footer = "   </body>" + "</html>";
-
-    return ( header + busConfig + stats + data + footer );
+    final HtmlExporter exporter = createHtmlTemplate( ExportUtils.createHtmlExporter() );
+    return exporter.toString( new MacroResolver()
+    {
+      @Override
+      public Object resolve( final String aMacro, final Element aParent )
+      {
+        if ( "date-now".equals( aMacro ) )
+        {
+          final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
+          return df.format( new Date() );
+        }
+        else if ( "sda-bus-config".equals( aMacro ) || "scl-bus-config".equals( aMacro ) )
+        {
+          return "&lt;auto detect&gt;";
+        }
+        else if ( "decoded-bytes".equals( aMacro ) || "detected-bus-errors".equals( aMacro ) )
+        {
+          return "&mdash;";
+        }
+        return null;
+      }
+    } );
   }
 
   /**
@@ -480,95 +533,106 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    *          if this is true an empty output is generated
    * @return String with HTML data
    */
-  private String toHtmlPage( final I2CDataSet aAnalysisResult )
+  private String toHtmlPage( final File aFile, final I2CDataSet aAnalysisResult ) throws IOException
   {
-    final StringBuilder result = new StringBuilder();
-
-    final Date now = new Date();
-    final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
-
-    // generate html page header
-    result.append( "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">" );
-    result.append( "<html><head><title>I2C Analysis Results</title>" );
-    result.append( "<style>" );
-    result.append( " th { text-align:left; font-style:italic; font-weight:bold; background-color:#C0C0FF; }" );
-    result.append( " .data { font-family: monospace; }" );
-    result.append( " .date { text-align:right; font-size: x-small; }" );
-    result.append( "</style>" );
-    result.append( "</head><body><h1>I2C Analysis Results</h1><hr>" );
-    result.append( "<div class=\"date\">" ).append( df.format( now ) ).append( "</div>" );
-
-    // generate the bus configuration table
-    result.append( "<table style=\"width:100%;\">" );
-    result.append( "<tr><td colspan=\"2\">Bus configuration</td></tr>" );
-    result.append( "<tr><td style=\"width:30%;\">" ).append( "SDA" ).append( "</td><td>" ).append(
-        this.busSetSDA.getText() ).append( "</td></tr>" );
-    result.append( "<tr><td style=\"width:30%;\">" ).append( "SCL" ).append( "</td><td>" ).append(
-        this.busSetSCL.getText() ).append( "</td></tr>" );
-    result.append( "</table><br><br>" );
-
-    // generate the statistics table
-    result.append( "<table style=\"width:100%;\">" );
-    result.append( "<tr><td style=\"width:30%;\">" ).append( "Decoded Bytes" ).append( "</td><td>" ).append(
-        aAnalysisResult.getDecodedByteCount() ).append( "</td></tr>" );
-    result.append( "<tr><td style=\"width:30%;\">" ).append( "Detected Bus Errors" ).append( "</td><td>" ).append(
-        aAnalysisResult.getBusErrorCount() ).append( "</td></tr>" );
-    result.append( "</table><br><br>" );
-
-    // generate the data table
-    result.append( "<table class=\"data\" style=\"width:100%;\">" );
-    result.append( "<tr>" ).append( "<th style=\"width:10%;\">" ).append( "Index" ).append( "</th>" ).append(
-        "<th style=\"width:20%;\">" ).append( "Time" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append(
-        "Hex" ).append( "</th>" ).append( "<th style=\"width:20%;\">" ).append( "Bin" ).append( "</th>" ).append(
-        "<th style=\"width:20%;\">" ).append( "Dec" ).append( "</th>" ).append( "<th style=\"width:10%;\">" ).append(
-        "ASCII" ).append( "</th>" ).append( "</tr>" );
-
-    final List<I2CData> dataSet = aAnalysisResult.getData();
-
-    for ( int i = 0; i < dataSet.size(); i++ )
+    final MacroResolver macroResolver = new MacroResolver()
     {
-      final I2CData data = dataSet.get( i );
-
-      if ( data.isEvent() )
+      @Override
+      public Object resolve( final String aMacro, final Element aParent )
       {
-        // this is an event
-        final String event = data.getEvent();
+        if ( "date-now".equals( aMacro ) )
+        {
+          final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
+          return df.format( new Date() );
+        }
+        else if ( "sda-bus-config".equals( aMacro ) )
+        {
+          return I2CProtocolAnalysisDialog.this.busSetSDA.getText();
+        }
+        else if ( "scl-bus-config".equals( aMacro ) )
+        {
+          return I2CProtocolAnalysisDialog.this.busSetSCL.getText();
+        }
+        else if ( "decoded-bytes".equals( aMacro ) )
+        {
+          return aAnalysisResult.getDecodedByteCount();
+        }
+        else if ( "detected-bus-errors".equals( aMacro ) )
+        {
+          return aAnalysisResult.getBusErrorCount();
+        }
+        else if ( "decoded-data".equals( aMacro ) )
+        {
+          final List<I2CData> dataSet = aAnalysisResult.getData();
+          Element tr;
 
-        String bgColor;
-        if ( I2CDataSet.I2C_START.equals( event ) || I2CDataSet.I2C_STOP.equals( event ) )
-        {
-          bgColor = "#e0e0e0";
-        }
-        else if ( I2CDataSet.I2C_ACK.equals( event ) )
-        {
-          bgColor = "#c0ffc0";
-        }
-        else if ( I2CDataSet.I2C_NACK.equals( event ) )
-        {
-          bgColor = "#ffc0c0";
-        }
-        else
-        {
-          // unknown event
-          bgColor = "#ff8000";
+          for ( int i = 0; i < dataSet.size(); i++ )
+          {
+            final I2CData data = dataSet.get( i );
+
+            if ( data.isEvent() )
+            {
+              // this is an event
+              final String event = data.getEvent();
+
+              String bgColor;
+              if ( I2CDataSet.I2C_START.equals( event ) || I2CDataSet.I2C_STOP.equals( event ) )
+              {
+                bgColor = "#e0e0e0";
+              }
+              else if ( I2CDataSet.I2C_ACK.equals( event ) )
+              {
+                bgColor = "#c0ffc0";
+              }
+              else if ( I2CDataSet.I2C_NACK.equals( event ) )
+              {
+                bgColor = "#ffc0c0";
+              }
+              else
+              {
+                // unknown event
+                bgColor = "#ff8000";
+              }
+
+              tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
+              tr.addChild( TD ).addContent( String.valueOf( i ) );
+              tr.addChild( TD ).addContent( data.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( event );
+              tr.addChild( TD );
+              tr.addChild( TD );
+              tr.addChild( TD );
+            }
+            else
+            {
+              final int value = data.getValue();
+
+              tr = aParent.addChild( TR );
+              tr.addChild( TD ).addContent( String.valueOf( i ) );
+              tr.addChild( TD ).addContent( data.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( "0x" + DisplayUtils.integerToHexString( value, 2 ) );
+              tr.addChild( TD ).addContent( "0b" + DisplayUtils.integerToBinString( value, 8 ) );
+              tr.addChild( TD ).addContent( String.valueOf( value ) );
+              tr.addChild( TD ).addContent( String.valueOf( ( char )value ) );
+            }
+          }
         }
 
-        result.append( "<tr style=\"background-color:" ).append( bgColor ).append( ";\"><td>" ).append( i ).append(
-            "</td><td>" ).append( data.getTimeDisplayValue() ).append( "</td><td>" ).append( event ).append(
-            "</td><td></td><td></td><td></td></tr>" );
+        return null;
       }
-      else
-      {
-        final int value = data.getValue();
-        result.append( "<tr><td>" ).append( i ).append( "</td><td>" ).append( data.getTimeDisplayValue() ).append(
-            "</td><td>0x" ).append( DisplayUtils.integerToHexString( value, 2 ) ).append( "</td><td>0b" ).append(
-            DisplayUtils.integerToBinString( value, 8 ) ).append( "</td><td>" ).append( value ).append( "</td><td>" );
-        result.append( ( char )value );
-        result.append( "</td></tr>" );
-      }
+    };
+
+    if ( aFile == null )
+    {
+      final HtmlExporter exporter = createHtmlTemplate( ExportUtils.createHtmlExporter() );
+      return exporter.toString( macroResolver );
     }
-    result.append( "</table></body></html>" );
+    else
+    {
+      final HtmlFileExporter exporter = ( HtmlFileExporter )createHtmlTemplate( ExportUtils.createHtmlExporter( aFile ) );
+      exporter.write( macroResolver );
+      exporter.close();
+    }
 
-    return result.toString();
+    return null;
   }
 }

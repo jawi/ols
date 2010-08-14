@@ -9,7 +9,7 @@
   <groupId>nl.lxtreme.ols</groupId>
   <artifactId>util</artifactId>
   <packaging>bundle</packaging>
-  <version>1.0.3-SNAPSHOT</version>
+  <version>1.0.4-SNAPSHOT</version>
   <name>OLS Utilities</name>
   <dependencies>
     <dependency>
@@ -27,6 +27,7 @@
       <configuration>
         <instructions>
           <Export-Package>nl.lxtreme.ols.util, nl.lxtreme.ols.util.swing, nl.lxtreme.ols.util.swing.component, nl.lxtreme.ols.util.swing.component.icon</Export-Package>
+          <Private-Package>nl.lxtreme.ols.util.export</Private-Package>
         </instructions>
       </configuration>
     </plugin>
