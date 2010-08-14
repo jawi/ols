@@ -44,9 +44,7 @@ public class DiagramRowLabels extends JComponent
 
   // VARIABLES
 
-  private String[] labels;
   private DiagramSettings settings;
-
   private final AnnotatedData annotatedData;
 
   // CONSTRUCTORS
@@ -66,21 +64,6 @@ public class DiagramRowLabels extends JComponent
   // METHODS
 
   /**
-   * Sets the labels to the given value.
-   * 
-   * @param aLabels
-   *          the labels to set, cannot be <code>null</code>.
-   */
-  public void setDiagramLabels( final String[] aLabels )
-  {
-    this.labels = aLabels;
-    // Let this component update its preferred size to fit the new labels...
-    setPreferredSize( getPreferredSize() );
-    // Make sure any resizing is performed immediately...
-    revalidate();
-  }
-
-  /**
    * @param aDiagramSettings
    */
   public void setDiagramSettings( final DiagramSettings aDiagramSettings )
@@ -98,6 +81,17 @@ public class DiagramRowLabels extends JComponent
     final int minimalWidth = getMinimalWidth();
     final Dimension newPreferredSize = new Dimension( minimalWidth, aPreferredSize.height );
     super.setPreferredSize( newPreferredSize );
+  }
+
+  /**
+   * Call when the diagram labels are edited and should be updated.
+   */
+  public void updateDiagramLabels()
+  {
+    // Let this component update its preferred size to fit the new labels...
+    setPreferredSize( getPreferredSize() );
+    // Make sure any resizing is performed immediately...
+    revalidate();
   }
 
   /**
@@ -137,7 +131,6 @@ public class DiagramRowLabels extends JComponent
         continue;
       }
 
-      // draw channel separators
       if ( this.settings.isShowChannels( block ) )
       {
         for ( int bit = 0; bit < 8; bit++ )
@@ -146,28 +139,25 @@ public class DiagramRowLabels extends JComponent
 
           final int y1 = channelHeight * bit + yofs;
 
-          final int labelYpos = y1 + textYpos;
-          final int labelXpos;
-
           aGraphics.setColor( this.settings.getGridColor() );
           aGraphics.drawLine( clipArea.x, y1, clipArea.x + clipArea.width, y1 );
           aGraphics.drawLine( clipArea.x, y1 + channelHeight, clipArea.x + clipArea.width, y1 + channelHeight );
 
-          if ( ( this.labels != null ) && !DisplayUtils.isEmpty( this.labels[labelIdx] ) )
+          String label = this.annotatedData.getChannelLabel( labelIdx );
+          if ( !DisplayUtils.isEmpty( label ) )
           {
-            labelXpos = PADDING_X;
-
             aGraphics.setColor( this.settings.getLabelColor() );
-            aGraphics.drawString( this.labels[labelIdx], labelXpos, labelYpos );
           }
           else
           {
-            final String label = Integer.toString( labelIdx );
-            labelXpos = ( clipArea.width - fm.stringWidth( label ) - PADDING_X );
-
+            label = Integer.toString( labelIdx );
             aGraphics.setColor( this.settings.getTextColor() );
-            aGraphics.drawString( label, labelXpos, labelYpos );
           }
+
+          final int labelYpos = y1 + textYpos;
+          final int labelXpos = ( clipArea.width - fm.stringWidth( label ) - PADDING_X );
+
+          aGraphics.drawString( label, labelXpos, labelYpos );
         }
 
         yofs += channelHeight * 8;
@@ -213,16 +203,14 @@ public class DiagramRowLabels extends JComponent
     if ( font != null )
     {
       final FontMetrics fm = getFontMetrics( getFont() );
-      if ( this.labels != null )
+      for ( int i = 0; i < AnnotatedData.MAX_CHANNELS; i++ )
       {
-        for ( String label : this.labels )
+        String label = this.annotatedData.getChannelLabel( i );
+        if ( DisplayUtils.isEmpty( label ) )
         {
-          minWidth = Math.max( minWidth, fm.stringWidth( label ) );
+          label = "W88";
         }
-      }
-      else
-      {
-        minWidth = fm.stringWidth( "W88" );
+        minWidth = Math.max( minWidth, fm.stringWidth( label ) );
       }
     }
 
