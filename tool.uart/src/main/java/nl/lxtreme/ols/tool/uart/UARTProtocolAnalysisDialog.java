@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.tool.uart;
 
 
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+
 import java.awt.*;
 import java.io.*;
 import java.text.*;
@@ -241,14 +243,20 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   {
     super.onToolWorkerReady( aAnalysisResult );
 
-    this.outText.setText( toHtmlPage( aAnalysisResult ) );
-    this.outText.setEditable( false );
+    try
+    {
+      this.outText.setText( toHtmlPage( null /* aFile */, aAnalysisResult ) );
+      this.outText.setEditable( false );
 
-    this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-    this.runAnalysisAction.restore();
-    this.runAnalysisAction.setEnabled( false );
-
-    setControlsEnabled( true );
+      this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+      this.runAnalysisAction.restore();
+      this.runAnalysisAction.setEnabled( false );
+    }
+    catch ( IOException exception )
+    {
+      // Should not happen in this situation!
+      throw new RuntimeException( exception );
+    }
   }
 
   /**
@@ -438,8 +446,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
             break;
         }
 
-        exporter
-            .addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), eventType, rxdEvent, txdEvent, rxdData, txdData );
+        exporter.addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), eventType, rxdEvent, txdEvent, rxdData, txdData );
       }
 
       exporter.close();
@@ -462,22 +469,79 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   @Override
   protected void storeToHtmlFile( final File aFile, final UARTDataSet aDataSet )
   {
-    if ( !aDataSet.isEmpty() )
+    try
     {
-      try
+      toHtmlPage( aFile, aDataSet );
+    }
+    catch ( IOException exception )
+    {
+      if ( LOG.isLoggable( Level.WARNING ) )
       {
-        BufferedWriter bw = new BufferedWriter( new FileWriter( aFile ) );
-
-        // write the complete displayed html page to file
-        bw.write( this.outText.getText() );
-
-        bw.close();
-      }
-      catch ( Exception E )
-      {
-        E.printStackTrace( System.out );
+        LOG.log( Level.WARNING, "HTML export failed!", exception );
       }
     }
+  }
+
+  /**
+   * Creates the HTML template for exports to HTML.
+   * 
+   * @param aExporter
+   *          the HTML exporter instance to use, cannot be <code>null</code>.
+   * @return a HTML exporter filled with the template, never <code>null</code>.
+   */
+  private HtmlExporter createHtmlTemplate( final HtmlExporter aExporter )
+  {
+    aExporter.addCssStyle( "th { text-align: left; font-style: italic; font-weight: bold; "
+        + "font-size: medium; font-family: sans-serif; background-color: #C0C0FF; } " );
+    aExporter.addCssStyle( "tbody { margin-top: 1.5em; } " );
+    aExporter.addCssStyle( ".date { text-align: right; font-size: x-small; } " );
+    aExporter.addCssStyle( ".w100 { width: 100%; } " );
+    aExporter.addCssStyle( ".w30 { width: 30%; } " );
+    aExporter.addCssStyle( ".w15 { width: 15%; } " );
+    aExporter.addCssStyle( ".w10 { width: 10%; } " );
+    aExporter.addCssStyle( ".w8 { width: 8%; } " );
+    aExporter.addCssStyle( ".w7 { width: 7%; } " );
+    aExporter.addCssStyle( ".mono { width: 100%; font-family: monospace; }" );
+
+    final Element body = aExporter.getBody();
+    body.addChild( H1 ).addContent( "UART Analysis results" );
+    body.addChild( HR );
+    body.addChild( DIV ).addAttribute( "class", "date" ).addContent( "{date-now}" );
+
+    Element table, tr, thead, tbody;
+
+    table = body.addChild( TABLE ).addAttribute( "class", "w100" );
+
+    tbody = table.addChild( TBODY );
+    tr = tbody.addChild( TR );
+    tr.addChild( TH ).addAttribute( "colspan", "2" ).addContent( "Statistics" );
+    tr = tbody.addChild( TR );
+    tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "Decoded bytes" );
+    tr.addChild( TD ).addContent( "{decoded-bytes}" );
+    tr = tbody.addChild( TR );
+    tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "Detected bus errors" );
+    tr.addChild( TD ).addContent( "{detected-bus-errors}" );
+    tr = tbody.addChild( TR );
+    tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "Baudrate" );
+    tr.addChild( TD ).addContent( "{baudrate}" );
+
+    table = body.addChild( TABLE ).addAttribute( "class", "mono" );
+    thead = table.addChild( THEAD );
+    tr = thead.addChild( TR );
+    tr.addChild( TH ).addAttribute( "class", "w15" ).addContent( "Index" );
+    tr.addChild( TH ).addAttribute( "class", "w15" ).addContent( "Time" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "RxD Hex" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "RxD Bin" );
+    tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "RxD Dec" );
+    tr.addChild( TH ).addAttribute( "class", "w7" ).addContent( "RxD ASCII" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "TxD Hex" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "TxD Bin" );
+    tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "TxD Dec" );
+    tr.addChild( TH ).addAttribute( "class", "w7" ).addContent( "TxD ASCII" );
+    tbody = table.addChild( TBODY );
+    tbody.addContent( "{decoded-data}" );
+
+    return aExporter;
   }
 
   /**
@@ -489,33 +553,29 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    */
   private String getEmptyHtmlPage()
   {
-    Date now = new Date();
-    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG, Locale.US );
-
-    // generate html page header
-    String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-        + "<html>"
-        + "  <head>"
-        + "    <title></title>"
-        + "    <meta content=\"\">"
-        + "    <style>"
-        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-        + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
-        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-        + "       <br>";
-
-    // generate the statistics table
-    String stats = new String();
-
-    // generate the data table
-    String data = "<table style=\"font-family:monospace;width:100%;\">"
-        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
-    data = data.concat( "</table" );
-
-    // generate the footer table
-    String footer = "   </body>" + "</html>";
-
-    return ( header + stats + data + footer );
+    final HtmlExporter exporter = createHtmlTemplate( ExportUtils.createHtmlExporter() );
+    return exporter.toString( new MacroResolver()
+    {
+      @Override
+      public Object resolve( final String aMacro, final Element aParent )
+      {
+        if ( "date-now".equals( aMacro ) )
+        {
+          final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
+          return df.format( new Date() );
+        }
+        else if ( "decoded-bytes".equals( aMacro ) || "detected-bus-errors".equals( aMacro )
+            || "baudrate".equals( aMacro ) )
+        {
+          return "&mdash;";
+        }
+        else if ( "decoded-data".equals( aMacro ) )
+        {
+          return null;
+        }
+        return null;
+      }
+    } );
   }
 
   /**
@@ -525,120 +585,160 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    *          if this is true an empty output is generated
    * @return String with HTML data
    */
-  private String toHtmlPage( final UARTDataSet aDataSet )
+  private String toHtmlPage( final File aFile, final UARTDataSet aDataSet ) throws IOException
   {
-    Date now = new Date();
-    DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
+    final int bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
+    final int bitAdder = ( bitCount % 4 != 0 ) ? 1 : 0;
 
-    int bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
-    int bitAdder = 0;
-
-    if ( bitCount % 4 != 0 )
+    final MacroResolver macroResolver = new MacroResolver()
     {
-      bitAdder = 1;
-    }
+      @Override
+      public Object resolve( final String aMacro, final Element aParent )
+      {
+        if ( "date-now".equals( aMacro ) )
+        {
+          final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
+          return df.format( new Date() );
+        }
+        else if ( "decoded-bytes".equals( aMacro ) )
+        {
+          return aDataSet.getDecodedSymbols();
+        }
+        else if ( "detected-bus-errors".equals( aMacro ) )
+        {
+          return aDataSet.getDetectedErrors();
+        }
+        else if ( "baudrate".equals( aMacro ) )
+        {
+          if ( aDataSet.getBitLength() <= 0 )
+          {
+            aParent.addAttribute( "style", "color:red;" );
+            return "Baudrate calculation failed!";
+          }
+          else
+          {
+            final int baudrate = aDataSet.getSampleRate() / aDataSet.getBitLength();
+            if ( aDataSet.getBitLength() < 15 )
+            {
+              aParent.addAttribute( "style", "color:orange;" );
+              return "The baudrate may be wrong, use a higher samplerate to avoid this!";
+            }
+            else
+            {
+              return baudrate;
+            }
+          }
+        }
+        else if ( "decoded-data".equals( aMacro ) )
+        {
+          final List<UARTData> decodedData = aDataSet.getData();
+          Element tr;
 
-    // generate html page header
-    String header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-        + "<html>"
-        + "  <head>"
-        + "    <title></title>"
-        + "    <meta content=\"\">"
-        + "    <style>"
-        + "           th { text-align:left;font-style:italic;font-weight:bold;font-size:medium;font-family:sans-serif;background-color:#C0C0FF; }"
-        + "       </style>" + "  </head>" + "   <body>" + "       <H2>UART Analysis Results</H2>" + "       <hr>"
-        + "           <div style=\"text-align:right;font-size:x-small;\">" + df.format( now ) + "           </div>"
-        + "       <br>";
+          for ( int i = 0; i < decodedData.size(); i++ )
+          {
+            final UARTData ds = decodedData.get( i );
 
-    // generate the statistics table
-    String stats = new String();
-    if ( aDataSet.getBitLength() == 0 )
+            if ( ds.isEvent() )
+            {
+              String rxEventData = "";
+              String txEventData = "";
+
+              String bgColor;
+              if ( UARTData.UART_TYPE_EVENT == ds.getType() )
+              {
+                rxEventData = txEventData = ds.getEvent();
+                bgColor = "#ffc0c0";
+              }
+              else if ( UARTData.UART_TYPE_RXEVENT == ds.getType() )
+              {
+                rxEventData = ds.getEvent();
+                bgColor = "#c0ffc0";
+              }
+              else if ( UARTData.UART_TYPE_TXEVENT == ds.getType() )
+              {
+                txEventData = ds.getEvent();
+                bgColor = "#c0ffc0";
+              }
+              else
+              {
+                // unknown event
+                bgColor = "#ff8000";
+              }
+
+              tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
+              tr.addChild( TD ).addContent( String.valueOf( i ) );
+              tr.addChild( TD ).addContent( ds.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( rxEventData );
+              tr.addChild( TD );
+              tr.addChild( TD );
+              tr.addChild( TD );
+              tr.addChild( TD ).addContent( txEventData );
+              tr.addChild( TD );
+              tr.addChild( TD );
+              tr.addChild( TD );
+            }
+            else
+            {
+              String rxDataHex = "", rxDataBin = "", rxDataDec = "", rxDataASCII = "";
+              String txDataHex = "", txDataBin = "", txDataDec = "", txDataASCII = "";
+
+              // Normal data...
+              if ( UARTData.UART_TYPE_RXDATA == ds.getType() )
+              {
+                int rxData = ds.getData();
+
+                rxDataHex = "0x" + DisplayUtils.integerToHexString( rxData, bitCount / 4 + bitAdder );
+                rxDataBin = "0b" + DisplayUtils.integerToBinString( rxData, bitCount );
+                rxDataDec = String.valueOf( rxData );
+                if ( ( rxData >= 32 ) && ( bitCount == 8 ) )
+                {
+                  rxDataASCII = String.valueOf( ( char )rxData );
+                }
+              }
+              else
+              /* if ( UARTData.UART_TYPE_TXDATA == ds.getType() ) */
+              {
+                int txData = ds.getData();
+
+                txDataHex = "0x" + DisplayUtils.integerToHexString( txData, bitCount / 4 + bitAdder );
+                txDataBin = "0b" + DisplayUtils.integerToBinString( txData, bitCount );
+                txDataDec = String.valueOf( txData );
+                if ( ( txData >= 32 ) && ( bitCount == 8 ) )
+                {
+                  txDataASCII = String.valueOf( ( char )txData );
+                }
+              }
+
+              tr = aParent.addChild( TR );
+              tr.addChild( TD ).addContent( String.valueOf( i ) );
+              tr.addChild( TD ).addContent( ds.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( rxDataHex );
+              tr.addChild( TD ).addContent( rxDataBin );
+              tr.addChild( TD ).addContent( rxDataDec );
+              tr.addChild( TD ).addContent( rxDataASCII );
+              tr.addChild( TD ).addContent( txDataHex );
+              tr.addChild( TD ).addContent( txDataBin );
+              tr.addChild( TD ).addContent( txDataDec );
+              tr.addChild( TD ).addContent( txDataASCII );
+            }
+          }
+        }
+        return null;
+      }
+    };
+
+    if ( aFile == null )
     {
-      stats = stats.concat( "<p style=\"color:red;\">Baudrate calculation failed !</p><br><br>" );
+      final HtmlExporter exporter = createHtmlTemplate( ExportUtils.createHtmlExporter() );
+      return exporter.toString( macroResolver );
     }
     else
     {
-      stats = stats.concat( "<table style=\"width:100%;\">" + "<TR><TD style=\"width:30%;\">Decoded Symbols</TD><TD>"
-          + aDataSet.getDecodedSymbols() + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Detected Bus Errors</TD><TD>"
-          + aDataSet.getDetectedErrors() + "</TD></TR>" + "<TR><TD style=\"width:30%;\">Baudrate</TD><TD>"
-          + aDataSet.getSampleRate() / aDataSet.getBitLength() + "</TD></TR>" + "</table>" + "<br>" + "<br>" );
-      if ( aDataSet.getBitLength() < 15 )
-      {
-        stats = stats
-            .concat( "<p style=\"color:red;\">The baudrate may be wrong, use a higher samplerate to avoid this !</p><br><br>" );
-      }
+      final HtmlFileExporter exporter = ( HtmlFileExporter )createHtmlTemplate( ExportUtils.createHtmlExporter( aFile ) );
+      exporter.write( macroResolver );
+      exporter.close();
     }
 
-    // generate the data table
-    String data = "<table style=\"font-family:monospace;width:100%;\">"
-        + "<tr><th style=\"width:15%;\">Index</th><th style=\"width:15%;\">Time</th><th style=\"width:10%;\">RxD Hex</th><th style=\"width:10%;\">RxD Bin</th><th style=\"width:8%;\">RxD Dec</th><th style=\"width:7%;\">RxD ASCII</th><th style=\"width:10%;\">TxD Hex</th><th style=\"width:10%;\">TxD Bin</th><th style=\"width:8%;\">TxD Dec</th><th style=\"width:7%;\">TxD ASCII</th></tr>";
-    final List<UARTData> decodedData = aDataSet.getData();
-
-    UARTData ds;
-    for ( int i = 0; i < decodedData.size(); i++ )
-    {
-      ds = decodedData.get( i );
-      switch ( ds.getType() )
-      {
-        case UARTData.UART_TYPE_EVENT:
-          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + ds.getTimeDisplayValue() + "</td><td>" + ds.getEvent() + "</td><td></td><td></td><td></td><td>"
-              + ds.getEvent() + "</td><td></td><td></td><td></td></tr>" );
-          break;
-
-        case UARTData.UART_TYPE_RXEVENT:
-          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + ds.getTimeDisplayValue() + "</td><td>" + ds.getEvent() + "</td><td></td><td></td><td></td><td>"
-              + "</td><td></td><td></td><td></td></tr>" );
-          break;
-
-        case UARTData.UART_TYPE_TXEVENT:
-          data = data.concat( "<tr style=\"background-color:#E0E0E0;\"><td>" + i + "</td><td>"
-              + ds.getTimeDisplayValue() + "</td><td>" + "</td><td></td><td></td><td></td><td>" + ds.getEvent()
-              + "</td><td></td><td></td><td></td></tr>" );
-          break;
-
-        case UARTData.UART_TYPE_RXDATA:
-          final int rxdData = ds.getData();
-          data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
-              + ds.getTimeDisplayValue() + "</td><td>" + "0x"
-              + DisplayUtils.integerToHexString( rxdData, bitCount / 4 + bitAdder ) + "</td><td>" + "0b"
-              + DisplayUtils.integerToBinString( rxdData, bitCount ) + "</td><td>" + rxdData + "</td><td>" );
-
-          if ( ( rxdData >= 32 ) && ( bitCount == 8 ) )
-          {
-            data += ( char )rxdData;
-          }
-          data = data.concat( "</td><td>" + "</td><td>" + "</td><td>" + "</td><td>" );
-          data = data.concat( "</td></tr>" );
-          break;
-
-        case UARTData.UART_TYPE_TXDATA:
-          final int txdData = ds.getData();
-          data = data.concat( "<tr style=\"background-color:#FFFFFF;\"><td>" + i + "</td><td>"
-              + ds.getTimeDisplayValue() + "</td><td>" + "</td><td>" + "</td><td>" + "</td><td>" );
-
-          data = data.concat( "</td><td>" + "0x" + DisplayUtils.integerToHexString( txdData, bitCount / 4 + bitAdder )
-              + "</td><td>" + "0b" + DisplayUtils.integerToBinString( txdData, bitCount ) + "</td><td>" + txdData
-              + "</td><td>" );
-
-          if ( ( txdData >= 32 ) && ( bitCount == 8 ) )
-          {
-            data += ( char )txdData;
-          }
-          data = data.concat( "</td></tr>" );
-          break;
-
-        default:
-          break;
-      }
-
-    }
-    data = data.concat( "</table" );
-
-    // generate the footer table
-    String footer = "   </body>" + "</html>";
-
-    return ( header + stats + data + footer );
+    return null;
   }
 }
