@@ -151,6 +151,17 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
+   * Returns whether there is captured data to process.
+   * 
+   * @return <code>true</code> if there is captured data to process,
+   *         <code>false</code> otherwise.
+   */
+  public final boolean hasCapturedData()
+  {
+    return this.data.hasCapturedData();
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.data.CapturedData#hasTimingData()
    */
   @Override

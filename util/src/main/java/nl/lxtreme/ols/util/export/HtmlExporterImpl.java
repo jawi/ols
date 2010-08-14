@@ -133,9 +133,9 @@ public class HtmlExporterImpl implements HtmlExporter
     }
     sb.append( this.root.toString( aResolver ) );
 
-    if ( LOG.isLoggable( Level.INFO ) )
+    if ( LOG.isLoggable( Level.FINE ) )
     {
-      LOG.info( "+++\n" + sb + "\n---\n" );
+      LOG.fine( "+++\n" + sb + "\n---\n" );
     }
 
     return sb.toString();

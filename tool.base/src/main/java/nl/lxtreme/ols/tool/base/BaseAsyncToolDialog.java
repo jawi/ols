@@ -36,7 +36,8 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * @author jawi
+ * Provides a base class for asynchronous tools wishing to show their results in
+ * a dialog.
  */
 public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends
     BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, Configurable
@@ -44,7 +45,8 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   // INNER TYPES
 
   /**
-   * @author jawi
+   * Tool worker property change lister used to determine the state of the tool
+   * worker and report this back to methods of this dialog.
    */
   final class ToolWorkerPropertyChangeListener implements PropertyChangeListener
   {
@@ -105,7 +107,8 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * 
+   * Provides an export action, that is capable of exporting the analysis
+   * results to either CSV or HTML.
    */
   protected final class ExportAction extends AbstractAction
   {
@@ -157,7 +160,8 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * 
+   * Provides an "run" action that is actually starting the (asynchronous) tool
+   * worker.
    */
   protected final class RunAnalysisAction extends AbstractAction
   {
@@ -227,12 +231,31 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   // CONSTRUCTORS
 
   /**
+   * Creates a new modal BaseAsyncToolDialog instance.
+   * 
    * @param aOwner
+   *          the owning window;
    * @param aName
+   *          the title/name of this dialog.
    */
   protected BaseAsyncToolDialog( final Window aOwner, final String aName )
   {
     super( aOwner, aName );
+  }
+
+  /**
+   * Creates a new BaseAsyncToolDialog instance.
+   * 
+   * @param aOwner
+   *          the owning window;
+   * @param aName
+   *          the title/name of this dialog;
+   * @param aModality
+   *          the modality of this dialog.
+   */
+  protected BaseAsyncToolDialog( final Window aOwner, final String aName, final ModalityType aModality )
+  {
+    super( aOwner, aName, aModality );
   }
 
   // METHODS
@@ -252,6 +275,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   public final void setToolWorker( final WORKER aToolWorker )
   {
     this.toolWorker = aToolWorker;
+    onToolWorkerSet( aToolWorker );
   }
 
   /**
@@ -274,11 +298,17 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
+   * Sets the analysis results.
+   * 
    * @param aResult
+   *          the analysis result to set, can be <code>null</code>.
    */
   final void setAnalysisResult( final RESULT_TYPE aResult )
   {
-    this.analysisResult = aResult;
+    synchronized ( this.toolWorker )
+    {
+      this.analysisResult = aResult;
+    }
   }
 
   /**
@@ -288,18 +318,17 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   {
     synchronized ( this.toolWorker )
     {
+      setControlsEnabled( false );
+
       setupToolWorker( this.toolWorker );
 
       if ( this.toolWorkerPropertyListener == null )
       {
         this.toolWorkerPropertyListener = new ToolWorkerPropertyChangeListener();
       }
-
       this.toolWorker.addPropertyChangeListener( this.toolWorkerPropertyListener );
 
       this.toolWorker.execute();
-
-      setControlsEnabled( false );
     }
   }
 
@@ -318,7 +347,10 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * @return
+   * Returns the analysis result, after the tool worker is finished with its
+   * job.
+   * 
+   * @return an analysis result, can be <code>null</code>.
    */
   protected final RESULT_TYPE getAnalysisResult()
   {
@@ -326,7 +358,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * 
+   * Called upon canceling the tool worker.
    */
   protected void onToolWorkerCancelled()
   {
@@ -334,7 +366,11 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.ExportAware#createReport(java.lang.Object)
+   * Called right after the tool worker has indicated that it is finished its
+   * tasks.
+   * 
+   * @param aAnalysisResult
+   *          the analysis results of the tool worker, can be <code>null</code>.
    */
   protected void onToolWorkerReady( final RESULT_TYPE aAnalysisResult )
   {
@@ -344,7 +380,19 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
+   * Called right after the tool worker is set.
    * 
+   * @param aToolWorker
+   *          the set tool worker, never <code>null</code>.
+   * @see #setToolWorker(BaseAsyncToolWorker)
+   */
+  protected void onToolWorkerSet( final WORKER aToolWorker )
+  {
+    // NO-op
+  }
+
+  /**
+   * Called when the tool worker is started (in the background).
    */
   protected void onToolWorkerStarted()
   {
@@ -352,7 +400,11 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * @param aB
+   * Called to enable/disable the various UI-controls.
+   * 
+   * @param aEnabled
+   *          <code>true</code> to enable the controls, <code>false</code> to
+   *          disable them.
    */
   protected void setControlsEnabled( final boolean aEnabled )
   {
@@ -360,7 +412,13 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
+   * Called right before the tool worker is started.
+   * <p>
+   * Can be used to parameterize the toolworker with UI-options.
+   * </p>
+   * 
    * @param aToolWorker
+   *          the tool worker to setup, cannot be <code>null</code>.
    */
   protected void setupToolWorker( final WORKER aToolWorker )
   {
@@ -368,8 +426,12 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
+   * Called when the user has chosen to export the analysis results as CSV.
+   * 
    * @param aSelectedFile
+   *          the file to write the CSV-data to;
    * @param aAnalysisResult
+   *          the analysis results to write to CSV.
    */
   protected void storeToCsvFile( final File aSelectedFile, final RESULT_TYPE aAnalysisResult )
   {
@@ -377,8 +439,12 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
+   * Called when the user has chosen to export the analysis results as HTML.
+   * 
    * @param aSelectedFile
+   *          the file to write the CSV-data to;
    * @param aAnalysisResult
+   *          the analysis results to write to CSV.
    */
   protected void storeToHtmlFile( final File aSelectedFile, final RESULT_TYPE aAnalysisResult )
   {

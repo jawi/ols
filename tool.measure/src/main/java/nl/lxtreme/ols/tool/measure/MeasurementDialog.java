@@ -53,7 +53,8 @@ public class MeasurementDialog extends BaseToolDialog
     @Override
     public void windowGainedFocus( final WindowEvent aEvent )
     {
-      aEvent.getWindow().repaint();
+      final MeasurementDialog dialog = ( MeasurementDialog )aEvent.getWindow();
+      dialog.updateMeasurement();
     }
   }
 
@@ -61,7 +62,7 @@ public class MeasurementDialog extends BaseToolDialog
    * ItemListener used to update the frequency & distance labels when one of the
    * cursor comboboxes is modified.
    */
-  final class PointItemListener implements ItemListener
+  final class MeasurementController implements ItemListener
   {
     // VARIABLES
 
@@ -78,7 +79,7 @@ public class MeasurementDialog extends BaseToolDialog
      * @param aFrequencyLabel
      * @param aDistanceLabel
      */
-    public PointItemListener( final AnnotatedData aData, final JComboBox aCursorA, final JComboBox aCursorB,
+    public MeasurementController( final AnnotatedData aData, final JComboBox aCursorA, final JComboBox aCursorB,
         final JLabel aFrequencyLabel, final JLabel aDistanceLabel )
     {
       this.data = aData;
@@ -96,13 +97,20 @@ public class MeasurementDialog extends BaseToolDialog
     @Override
     public void itemStateChanged( final ItemEvent aEvent )
     {
-      MeasurementDialog.this.selectedCursorA = this.cursorA.getSelectedIndex();
-      MeasurementDialog.this.selectedCursorB = this.cursorB.getSelectedIndex();
+      updateMeasurement();
+    }
 
+    /**
+     * 
+     */
+    public void updateMeasurement()
+    {
       final double rate = this.data.getSampleRate();
 
-      final long cursorApos = this.data.getCursorPosition( MeasurementDialog.this.selectedCursorA );
-      final long cursorBpos = this.data.getCursorPosition( MeasurementDialog.this.selectedCursorB );
+      final long cursorApos = this.data.getCursorPosition( MeasurementDialog.this.selectedCursorA = this.cursorA
+          .getSelectedIndex() );
+      final long cursorBpos = this.data.getCursorPosition( MeasurementDialog.this.selectedCursorB = this.cursorB
+          .getSelectedIndex() );
 
       String distanceText = "<???>";
       String frequencyText = "<???>";
@@ -131,16 +139,26 @@ public class MeasurementDialog extends BaseToolDialog
   transient int selectedCursorA = 0;
   transient int selectedCursorB = 1;
 
+  private MeasurementController controller;
+
   // CONSTRUCTORS
 
   /**
+   * Creates a new MeasurementDialog instance (non modal).
+   * 
    * @param aOwner
+   *          the owning window;
    * @param aTitle
+   *          the title of this dialog;
+   * @param aData
+   *          the data to show in this dialog;
+   * @param aContext
+   *          the tool context.
    */
   public MeasurementDialog( final Window aOwner, final String aTitle, final AnnotatedData aData,
       final ToolContext aContext )
   {
-    super( aOwner, aTitle );
+    super( aOwner, aTitle, Dialog.ModalityType.MODELESS );
 
     addWindowFocusListener( new DialogListener() );
 
@@ -180,6 +198,15 @@ public class MeasurementDialog extends BaseToolDialog
   {
     aProperties.put( aNamespace + ".selectedCursorA", String.valueOf( this.selectedCursorA ) );
     aProperties.put( aNamespace + ".selectedCursorB", String.valueOf( this.selectedCursorB ) );
+  }
+
+  /**
+   * Updates the measurement.
+   */
+  final void updateMeasurement()
+  {
+    this.controller.updateMeasurement();
+    repaint( 50l );
   }
 
   /**
@@ -261,10 +288,9 @@ public class MeasurementDialog extends BaseToolDialog
     final JComboBox pointB = new JComboBox( cursorNames );
     pointB.setSelectedIndex( this.selectedCursorB );
 
-    final ItemListener listener = new PointItemListener( aData, pointA, pointB, frequency, distance );
-
-    pointA.addItemListener( listener );
-    pointB.addItemListener( listener );
+    this.controller = new MeasurementController( aData, pointA, pointB, frequency, distance );
+    pointA.addItemListener( this.controller );
+    pointB.addItemListener( this.controller );
 
     result.add( new JLabel( "Cursor A:" ), //
         new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
