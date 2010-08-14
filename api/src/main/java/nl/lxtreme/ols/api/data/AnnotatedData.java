@@ -45,6 +45,8 @@ public final class AnnotatedData implements CapturedData
 
   /** The maximum number of cursors that can be set. */
   public static final int MAX_CURSORS = 10;
+  /** The maximum number of channels. */
+  public static final int MAX_CHANNELS = 32;
 
   private static final Logger LOG = Logger.getLogger( AnnotatedData.class.getName() );
 
@@ -55,6 +57,9 @@ public final class AnnotatedData implements CapturedData
 
   /** position of cursors */
   private final long[] cursorPositions;
+
+  /** The labels of each channel. */
+  private final String[] channelLabels;
 
   /** cursors enabled status */
   private volatile boolean cursorEnabled;
@@ -67,6 +72,7 @@ public final class AnnotatedData implements CapturedData
   public AnnotatedData()
   {
     this.cursorPositions = new long[MAX_CURSORS];
+    this.channelLabels = new String[MAX_CHANNELS];
     Arrays.fill( this.cursorPositions, CapturedData.NOT_AVAILABLE );
   }
 
@@ -96,6 +102,23 @@ public final class AnnotatedData implements CapturedData
   public long getAbsoluteLength()
   {
     return hasCapturedData() ? this.capturedData.getAbsoluteLength() : NOT_AVAILABLE;
+  }
+
+  /**
+   * Returns the channel label.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to retrieve the label for, >= 0 && < 32.
+   * @return the channel's label, can be <code>null</code>.
+   */
+  public String getChannelLabel( final int aChannelIdx )
+  {
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
+          + this.channelLabels.length );
+    }
+    return this.channelLabels[aChannelIdx];
   }
 
   /**
@@ -455,6 +478,24 @@ public final class AnnotatedData implements CapturedData
   public void setCapturedData( final CapturedData aCapturedData )
   {
     this.capturedData = aCapturedData;
+  }
+
+  /**
+   * Sets the channel label.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to set the label for, >= 0 && < 32;
+   * @param aLabel
+   *          the label to set, may be <code>null</code>.
+   */
+  public void setChannelLabel( final int aChannelIdx, final String aLabel )
+  {
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
+          + this.channelLabels.length );
+    }
+    this.channelLabels[aChannelIdx] = aLabel;
   }
 
   /**

@@ -24,9 +24,9 @@ package nl.lxtreme.ols.client.signal;
 import java.awt.*;
 import java.awt.Dialog.*;
 import java.awt.event.*;
-import java.util.*;
-
 import javax.swing.*;
+
+import nl.lxtreme.ols.api.data.*;
 
 
 /**
@@ -35,7 +35,7 @@ import javax.swing.*;
  * @version 0.7
  * @author Frank Kunz
  */
-public class DiagramLabelsDialog extends JComponent implements ActionListener, DiagramLabels
+public class DiagramLabelsDialog extends JComponent implements ActionListener
 {
   // CONSTANTS
 
@@ -48,7 +48,7 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
 
   // VARIABLES
 
-  private final String[] diagramLabels;
+  private final AnnotatedData annotatedData;
   private JDialog dialog;
   private final JTextField[] labelFields;
   private int result;
@@ -58,9 +58,12 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
   /**
    * Constructs diagram labels component.
    */
-  public DiagramLabelsDialog()
+  public DiagramLabelsDialog( final AnnotatedData aAnnotatedData )
   {
     super();
+
+    this.annotatedData = aAnnotatedData;
+
     setLayout( new GridBagLayout() );
     setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
 
@@ -70,7 +73,6 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
     this.labelFields = new JTextField[32];
-    this.diagramLabels = new String[32];
     for ( int col = 0; col < 2; col++ )
     {
       for ( int row = 0; row < 16; row++ )
@@ -79,7 +81,6 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
         modePane.add( new JLabel( "Channel " + num + ": " ), createConstraints( 2 * col, row, 1, 1, 0, 0 ) );
         this.labelFields[num] = new JTextField( 20 );
         modePane.add( this.labelFields[num], createConstraints( 2 * col + 1, row, 1, 1, 0, 0 ) );
-        this.diagramLabels[num] = new String();
       }
     }
     add( modePane, createConstraints( 0, 0, 5, 1, 0, 0 ) );
@@ -121,7 +122,7 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
     {
       for ( int i = 0; i < 32; i++ )
       {
-        this.diagramLabels[i] = new String( this.labelFields[i].getText() );
+        this.annotatedData.setChannelLabel( i, this.labelFields[i].getText() );
       }
       this.result = OK;
       this.dialog.setVisible( false );
@@ -136,32 +137,6 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
     else
     {
       this.dialog.setVisible( false );
-    }
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramLabels#getDiagramLabels()
-   */
-  public String[] getDiagramLabels()
-  {
-    return this.diagramLabels;
-  }
-
-  /**
-   * Reads user settings from given properties. Uses the property prefix
-   * "DiagramLabels".
-   * 
-   * @param properties
-   *          properties to read settings from
-   */
-  public void readProperties( final String aNamespace, final Properties properties )
-  {
-    for ( int i = 0; i < 32; i++ )
-    {
-      if ( properties.containsKey( "DiagramLabels.channel" + i ) )
-      {
-        this.diagramLabels[i] = properties.getProperty( "DiagramLabels.channel" + i );
-      }
     }
   }
 
@@ -182,21 +157,6 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
     this.result = CANCEL;
     this.dialog.setVisible( true );
     return ( this.result );
-  }
-
-  /**
-   * Writes user settings to given properties. Uses the property prefix
-   * "DiagramLabels".
-   * 
-   * @param properties
-   *          properties to write settings to
-   */
-  public void writeProperties( final String aNamespace, final Properties properties )
-  {
-    for ( int i = 0; i < 32; i++ )
-    {
-      properties.setProperty( "DiagramLabels.channel" + i, this.diagramLabels[i] );
-    }
   }
 
   /**
@@ -223,11 +183,14 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener, D
     }
   }
 
+  /**
+   * 
+   */
   private void updateFields()
   {
     for ( int i = 0; i < 32; i++ )
     {
-      this.labelFields[i].setText( this.diagramLabels[i] );
+      this.labelFields[i].setText( this.annotatedData.getChannelLabel( i ) );
     }
   }
 }

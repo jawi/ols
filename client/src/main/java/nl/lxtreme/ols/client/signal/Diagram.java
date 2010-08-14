@@ -221,8 +221,9 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     }
 
     this.data = new AnnotatedData();
+
     this.settings = new DiagramSettingsDialog();
-    this.labels = new DiagramLabelsDialog();
+    this.labels = new DiagramLabelsDialog( this.data );
 
     this.cursorDefault = getCursor();
     this.cursorDrag = new Cursor( Cursor.MOVE_CURSOR );
@@ -438,7 +439,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   public void readProperties( final String aNamespace, final Properties properties )
   {
     this.settings.readProperties( aNamespace, properties );
-    this.labels.readProperties( aNamespace, properties );
     resize();
   }
 
@@ -506,7 +506,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     if ( this.labels.showDialog( frame ) == DiagramLabelsDialog.OK )
     {
-      this.rowLabels.setDiagramLabels( this.labels.getDiagramLabels() );
+      this.rowLabels.updateDiagramLabels();
 
       resize();
     }
@@ -534,8 +534,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   @Override
   public void writeProperties( final String aNamespace, final Properties properties )
   {
-    this.settings.writeProperties( null, properties );
-    this.labels.writeProperties( null, properties );
+    this.settings.writeProperties( aNamespace, properties );
   }
 
   /**
