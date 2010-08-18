@@ -312,8 +312,8 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   @Override
   protected void setupToolWorker( final I2CAnalyserWorker aToolWorker )
   {
-    aToolWorker.setLineAmask( 1 << this.lineA.getSelectedIndex() );
-    aToolWorker.setLineBmask( 1 << this.lineB.getSelectedIndex() );
+    aToolWorker.setLineAIndex( this.lineA.getSelectedIndex() );
+    aToolWorker.setLineBIndex( this.lineB.getSelectedIndex() );
 
     aToolWorker.setReportACK( this.detectACK.isSelected() );
     aToolWorker.setReportNACK( this.detectNACK.isSelected() );

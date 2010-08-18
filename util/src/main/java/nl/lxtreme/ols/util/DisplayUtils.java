@@ -111,8 +111,8 @@ public final class DisplayUtils
   public static String displayTime( final double aTime )
   {
     final String[] unitStrs = { "s", "ms", "\u03BCs", "ns", "ps" }; // \u03BC ==
-                                                                    // Greek mu
-                                                                    // character
+    // Greek mu
+    // character
     final double[] unitVals = { 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12 };
 
     double absTime = Math.abs( aTime );
@@ -193,9 +193,12 @@ public final class DisplayUtils
       numberOfLeadingZeros = aFieldWidth;
     }
 
-    while ( numberOfLeadingZeros-- >= 0 )
+    if ( numberOfLeadingZeros > 0 )
     {
-      sb.insert( 0, '0' );
+      for ( ; numberOfLeadingZeros > 0; numberOfLeadingZeros-- )
+      {
+        sb.insert( 0, '0' );
+      }
     }
 
     return sb.toString();

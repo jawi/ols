@@ -49,7 +49,9 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   private boolean reportStart;
   private boolean reportStop;
   private int lineAmask;
+  private int lineAidx;
   private int lineBmask;
+  private int lineBidx;
 
   // CONSTRUCTORS
 
@@ -66,17 +68,19 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   /**
    * @param aLineAmask
    */
-  public void setLineAmask( final int aLineAmask )
+  public void setLineAIndex( final int aLineAidx )
   {
-    this.lineAmask = aLineAmask;
+    this.lineAidx = aLineAidx;
+    this.lineAmask = 1 << aLineAidx;
   }
 
   /**
    * @param aLineBmask
    */
-  public void setLineBmask( final int aLineBmask )
+  public void setLineBIndex( final int aLineBidx )
   {
-    this.lineBmask = aLineBmask;
+    this.lineBidx = aLineBidx;
+    this.lineBmask = 1 << aLineBidx;
   }
 
   /**
@@ -128,7 +132,6 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     int sampleIdx;
     int oldSCL, oldSDA, bitCount;
     int byteValue;
-    int sdaMask, sclMask;
 
     /*
      * Build bitmasks based on the lineA, lineB pins pins.
@@ -162,15 +165,12 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     if ( sampleIdx == sampleCount )
     {
       // no idle state could be found
-      if ( LOG.isLoggable( Level.FINE ) )
-      {
-        LOG.fine( "No IDLE state found in data; aborting analysis..." );
-      }
+      LOG.log( Level.WARNING, "No IDLE state found in data; aborting analysis..." );
       return null;
     }
 
-    sdaMask = 0;
-    sclMask = 0;
+    int sdaIdx = 0;
+    int sclIdx = 0;
 
     // a is now the start of idle, now find the first start condition
     for ( ; sampleIdx < sampleCount; sampleIdx++ )
@@ -183,20 +183,26 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
         if ( ( dataValue & this.lineAmask ) == 0 )
         {
           // lineA is low and lineB is high here: lineA = SDA, lineB = SCL
-          sdaMask = this.lineAmask;
-          sclMask = this.lineBmask;
+          sdaIdx = this.lineAidx;
+          sclIdx = this.lineBidx;
 
           firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, LINE_B );
           firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, LINE_A );
+
+          setChannelLabel( sclIdx, "SCL" );
+          setChannelLabel( sdaIdx, "SDA" );
         }
         else
         {
           // lineB is low and lineA is high here: lineA = SCL, lineB = SDA
-          sdaMask = this.lineBmask;
-          sclMask = this.lineAmask;
+          sdaIdx = this.lineBidx;
+          sclIdx = this.lineAidx;
 
           firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, LINE_A );
           firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, LINE_B );
+
+          setChannelLabel( sclIdx, "SCL" );
+          setChannelLabel( sdaIdx, "SDA" );
         }
 
         break;
@@ -208,18 +214,19 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     if ( sampleIdx == sampleCount )
     {
       // no start condition could be found
-      if ( LOG.isLoggable( Level.FINE ) )
-      {
-        LOG.fine( "No START condition found! Analysis aborted..." );
-      }
+      LOG.log( Level.WARNING, "No START condition found! Analysis aborted..." );
       return null;
     }
 
+    final int sdaMask = ( 1 << sdaIdx );
+    final int sclMask = ( 1 << sclIdx );
+
     final I2CDataSet i2cDataSet = new I2CDataSet( sampleIdx, sampleCount, this );
-    final long max = sampleCount - sampleIdx;
+    final int max = sampleCount - sampleIdx;
 
     // We've just found our start condition, start the report with that...
     reportStartCondition( i2cDataSet, calculateTime( timestamps[sampleIdx] ) );
+    addChannelAnnotation( sdaIdx, sampleIdx, sampleIdx, "START" );
 
     /*
      * Now decode the bytes, SDA may only change when SCL is low. Otherwise it
@@ -230,8 +237,11 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
      */
     oldSCL = values[sampleIdx] & sclMask;
     oldSDA = values[sampleIdx] & sdaMask;
+
     bitCount = 8;
     byteValue = 0;
+
+    long prevIdx = -1;
 
     for ( int idx = ( int )i2cDataSet.getStartOfDecode(); idx < i2cDataSet.getEndOfDecode() - 1; idx++ )
     {
@@ -241,8 +251,24 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
       final int sda = dataValue & sdaMask;
       final int scl = dataValue & sclMask;
 
-      // detect SCL rise
-      if ( scl > oldSCL )
+      // detect SCL fall/rise
+      if ( oldSCL > scl )
+      {
+        // SCL falls
+        if ( ( prevIdx < 0 ) || ( bitCount == 8 ) )
+        {
+          prevIdx = idx;
+        }
+
+        if ( ( scl == 0 ) && ( bitCount == 0 ) )
+        {
+          // TEST TODO XXX
+          addChannelAnnotation( sdaIdx, prevIdx, idx, String.format( "0x%X (%c)", byteValue, byteValue ) );
+
+          byteValue = 0;
+        }
+      }
+      else if ( scl > oldSCL )
       {
         // SCL rises
         if ( sda != oldSDA )
@@ -259,11 +285,15 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
             {
               // NACK
               reportNACK( i2cDataSet, time );
+
+              addChannelAnnotation( sdaIdx, idx - 1, idx + 1, "NACK" );
             }
             else
             {
               // ACK
               reportACK( i2cDataSet, time );
+
+              addChannelAnnotation( sdaIdx, idx - 1, idx + 1, "ACK" );
             }
 
             // next byte
@@ -281,7 +311,6 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
             {
               // store decoded byte
               reportData( i2cDataSet, time, byteValue );
-              byteValue = 0;
             }
           }
         }
