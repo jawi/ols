@@ -237,9 +237,9 @@ public class MeasurementDialog extends BaseToolDialog
   private Component createCursorListPane( final AnnotatedData aData )
   {
     final JPanel result = new JPanel( new GridLayout( 10, 2, 4, 4 ) );
-    for ( int i = 0; i < 10; i++ )
+    for ( int i = 0; i < AnnotatedData.MAX_CURSORS; i++ )
     {
-      result.add( new JLabel( String.format( "Channel %d", i + 1 ) ) );
+      result.add( new JLabel( String.format( "Cursor %d", i + 1 ) ) );
       result.add( new CursorLabel( aData, i ) );
     }
     return result;

@@ -51,12 +51,16 @@ final class I2CGenerator
    */
   public int writeBitStream( final int[] aData, final String aString )
   {
-    this.clockSpeed = 100000; // 100kHz
+    this.clockSpeed = 1000000; // 1MHz
 
     Arrays.fill( aData, SCL );
     this.idx = 0;
 
     writeStartBit( aData );
+
+    writeByte( aData, ( byte )0xAA ); // write to address 0x55
+    writeBit( aData, 0 ); // ack
+
     for ( byte b : aString.getBytes() )
     {
       writeByte( aData, b );

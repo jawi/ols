@@ -186,6 +186,9 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   static final double CURSOR_HOVER = 5.0;
   static final int PADDING_Y = 2;
 
+  private static final Stroke SOLID_NORMAL = new BasicStroke( 0.0f );
+  private static final Stroke SOLID_THICK = new BasicStroke( 2.0f );
+
   // VARIABLES
 
   private final AnnotatedData data;
@@ -963,7 +966,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final int center = ( int )( correctedScale / 2.0 );
 
     final FontMetrics fm = aGraphics.getFontMetrics();
-    final int labelYpos = ( int )( channelHeight - ( fm.getHeight() / 2.0 ) + 1 );
+    final int labelYpos = ( int )( channelHeight - ( ( fm.getAscent() + fm.getDescent() ) / 2.0 ) + 1 );
 
     final int n = 2 * timestamps.length;
     final ByteValuePolyline bytePolyline = new ByteValuePolyline( n );
@@ -989,7 +992,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     aToIndex /= this.timeDivider;
 
     int bofs = 0;
-    // drawGridLine( aGraphics, aClipArea, bofs++ );
 
     for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
     {
@@ -1004,6 +1006,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         // draw actual data
         for ( int bit = 0; bit < 8; bit++ )
         {
+          final int channelIdx = 8 * block + bit;
           long currentSample = aFromIndex - 1;
           int pIdx = 0;
 
@@ -1012,7 +1015,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           {
             final long nextSample;
 
-            final int currentValue = ( values[dataIndex] >> 8 * block + bit ) & 0x01;
+            final int currentValue = ( values[dataIndex] >> channelIdx ) & 0x01;
             if ( dataIndex >= values.length - 1 )
             {
               nextSample = aToIndex + 1;
@@ -1040,6 +1043,52 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
           aGraphics.setColor( this.settings.getSignalColor() );
           aGraphics.drawPolyline( polyline.x, polyline.y, pIdx );
+
+          // XXX XXX
+          ( ( Graphics2D )aGraphics ).setStroke( SOLID_THICK );
+          ( ( Graphics2D )aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING,
+              RenderingHints.VALUE_ANTIALIAS_ON );
+
+          final ChannelAnnotations annotations = this.data.getChannelAnnotations( channelIdx );
+          if ( annotations != null )
+          {
+            for ( ChannelAnnotation annotation : annotations.getAnnotations() )
+            {
+              long startIdx = timestamps[( int )annotation.getStartIndex()] / this.timeDivider;
+              long endIdx = timestamps[( int )annotation.getEndIndex()] / this.timeDivider;
+
+              final int x1 = ( int )( ( correctedScale * startIdx ) );
+              final int x2 = ( int )( ( correctedScale * endIdx ) );
+
+              final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
+
+              final int textXoffset = ( int )( ( ( x2 - x1 ) - fm.stringWidth( data ) ) / 2.0 );
+
+              final Color oldColor = aGraphics.getColor();
+              aGraphics.setColor( new Color( 0xc9, 0xc9, 0xc9, 50 ) );
+
+              aGraphics.fillRoundRect( x1, bofs + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2,
+                  signalHeight / 2 );
+
+              aGraphics.setColor( new Color( 0x40, 0x2c, 0x29 ) );
+
+              aGraphics.drawRoundRect( x1, bofs + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2,
+                  signalHeight / 2 );
+
+              aGraphics.setColor( oldColor );
+
+              if ( textXoffset > 0 )
+              {
+                aGraphics.drawString( data, x1 + textXoffset, bofs + labelYpos - 4 );
+              }
+            }
+          }
+
+          ( ( Graphics2D )aGraphics ).setStroke( SOLID_NORMAL );
+          ( ( Graphics2D )aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING,
+              RenderingHints.VALUE_ANTIALIAS_DEFAULT );
+          // XXX XXX
+
           drawGridLine( aGraphics, aClipArea, channelHeight * bit + bofs + ( channelHeight - 1 ) );
         }
         bofs += ( channelHeight * 8 );

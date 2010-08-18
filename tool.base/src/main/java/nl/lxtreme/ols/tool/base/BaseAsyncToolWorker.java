@@ -58,6 +58,15 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   // METHODS
 
   /**
+   * @see nl.lxtreme.ols.api.data.AnnotatedData#addChannelAnnotation(int, long,
+   *      long, Object)
+   */
+  public void addChannelAnnotation( final int aChannelIdx, final long aStartIdx, final long aEndIdx, final Object aData )
+  {
+    this.data.addChannelAnnotation( aChannelIdx, aStartIdx, aEndIdx, aData );
+  }
+
+  /**
    * calculate the time offset
    * 
    * @param aTime
@@ -177,6 +186,19 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   public boolean hasTriggerData()
   {
     return this.data.hasTriggerData();
+  }
+
+  /**
+   * Sets the channel label.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to set the label for, >= 0 && < 32;
+   * @param aLabel
+   *          the label to set, may be <code>null</code>.
+   */
+  public void setChannelLabel( final int aChannelIdx, final String aLabel )
+  {
+    this.data.setChannelLabel( aChannelIdx, aLabel );
   }
 
   /**

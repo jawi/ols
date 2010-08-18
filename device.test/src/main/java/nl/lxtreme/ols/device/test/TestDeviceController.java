@@ -48,7 +48,7 @@ public class TestDeviceController implements DeviceController
   // VARIABLES
 
   private boolean setupConfirmed = false;
-  private String dataFunction = DATA_FUNCTIONS[0];
+  private String dataFunction = DATA_FUNCTIONS[6];
   private int channels = CHANNELS[2];
   private int dataLength = DATA_LENGTH[5];
 
@@ -67,7 +67,7 @@ public class TestDeviceController implements DeviceController
 
     if ( DATA_FUNCTIONS[6].equals( this.dataFunction ) )
     {
-      data = new int[3260];
+      data = new int[3460];
       rate = new I2CGenerator().writeBitStream( data, "Hello World; this is a sample I2C bit stream!" );
     }
     else
@@ -103,7 +103,7 @@ public class TestDeviceController implements DeviceController
       }
 
     }
-    final CapturedData capturedData = new CapturedDataImpl( data, 26, rate, this.channels, Integer.MAX_VALUE );
+    final CapturedData capturedData = new CapturedDataImpl( data, 0, rate, this.channels, Integer.MAX_VALUE );
     aCallback.captureComplete( capturedData );
   }
 
@@ -130,7 +130,7 @@ public class TestDeviceController implements DeviceController
    *      java.util.Properties)
    */
   @Override
-  public void readProperties( String aNamespace, final Properties aProperties )
+  public void readProperties( final String aNamespace, final Properties aProperties )
   {
     // TODO Auto-generated method stub
   }
@@ -169,7 +169,7 @@ public class TestDeviceController implements DeviceController
    *      java.util.Properties)
    */
   @Override
-  public void writeProperties( String aNamespace, final Properties aProperties )
+  public void writeProperties( final String aNamespace, final Properties aProperties )
   {
     // TODO Auto-generated method stub
   }

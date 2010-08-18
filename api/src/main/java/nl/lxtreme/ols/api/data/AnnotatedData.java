@@ -57,9 +57,10 @@ public final class AnnotatedData implements CapturedData
 
   /** position of cursors */
   private final long[] cursorPositions;
-
   /** The labels of each channel. */
   private final String[] channelLabels;
+  /** The individual annotations. */
+  private final Map<Integer, ChannelAnnotations> annotations;
 
   /** cursors enabled status */
   private volatile boolean cursorEnabled;
@@ -72,11 +73,37 @@ public final class AnnotatedData implements CapturedData
   public AnnotatedData()
   {
     this.cursorPositions = new long[MAX_CURSORS];
-    this.channelLabels = new String[MAX_CHANNELS];
     Arrays.fill( this.cursorPositions, CapturedData.NOT_AVAILABLE );
+
+    this.channelLabels = new String[MAX_CHANNELS];
+    Arrays.fill( this.channelLabels, "" );
+
+    this.annotations = new HashMap<Integer, ChannelAnnotations>();
   }
 
   // METHODS
+
+  /**
+   * @param aChannelIdx
+   * @param aStartIdx
+   * @param aEndIdx
+   * @param aData
+   */
+  public void addChannelAnnotation( final int aChannelIdx, final long aStartIdx, final long aEndIdx, final Object aData )
+  {
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
+          + this.channelLabels.length );
+    }
+    ChannelAnnotations annotations = this.annotations.get( Integer.valueOf( aChannelIdx ) );
+    if ( annotations == null )
+    {
+      annotations = new ChannelAnnotations( aChannelIdx );
+      this.annotations.put( Integer.valueOf( aChannelIdx ), annotations );
+    }
+    annotations.addAnnotation( aStartIdx, aEndIdx, aData );
+  }
 
   /**
    * Calculates the time offset
@@ -102,6 +129,24 @@ public final class AnnotatedData implements CapturedData
   public long getAbsoluteLength()
   {
     return hasCapturedData() ? this.capturedData.getAbsoluteLength() : NOT_AVAILABLE;
+  }
+
+  /**
+   * Returns the channel annotations.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to retrieve the annotations for, >= 0 &&
+   *          < 32.
+   * @return the channel annotations, can be <code>null</code>.
+   */
+  public ChannelAnnotations getChannelAnnotations( final int aChannelIdx )
+  {
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
+          + this.channelLabels.length );
+    }
+    return this.annotations.get( Integer.valueOf( aChannelIdx ) );
   }
 
   /**
@@ -478,6 +523,22 @@ public final class AnnotatedData implements CapturedData
   public void setCapturedData( final CapturedData aCapturedData )
   {
     this.capturedData = aCapturedData;
+    this.annotations.clear();
+  }
+
+  /**
+   * @param aChannelIdx
+   *          the index of the channel to set the label for, >= 0 && < 32;
+   * @param aAnnotations
+   */
+  public void setChannelAnnotations( final int aChannelIdx, final ChannelAnnotations aAnnotations )
+  {
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
+          + this.channelLabels.length );
+    }
+    this.annotations.put( Integer.valueOf( aChannelIdx ), aAnnotations );
   }
 
   /**

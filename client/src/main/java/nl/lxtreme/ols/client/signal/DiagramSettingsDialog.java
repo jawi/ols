@@ -106,7 +106,7 @@ public class DiagramSettingsDialog extends JComponent implements ActionListener,
     this.labelColor = new Color( 0x82, 0x87, 0x8f );
     this.cursorColors = makeColorPalette();
 
-    this.channelHeight = 20;
+    this.channelHeight = 30;
     this.scopeHeight = 133;
 
     setLayout( new GridBagLayout() );
