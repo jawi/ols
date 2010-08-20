@@ -55,6 +55,6 @@ public class MeasurementTool extends BaseTool<MeasurementDialog>
   protected MeasurementDialog createDialog( final Window aOwner, final String aName, final AnnotatedData aData,
       final ToolContext aContext, final AnalysisCallback aCallback )
   {
-    return new MeasurementDialog( aOwner, aName, aData, aContext );
+    return new MeasurementDialog( aOwner, aName );
   }
 }

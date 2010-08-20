@@ -73,7 +73,7 @@ public final class AnnotatedData implements CapturedData
   public AnnotatedData()
   {
     this.cursorPositions = new long[MAX_CURSORS];
-    Arrays.fill( this.cursorPositions, CapturedData.NOT_AVAILABLE );
+    Arrays.fill( this.cursorPositions, Long.MIN_VALUE );
 
     this.channelLabels = new String[MAX_CHANNELS];
     Arrays.fill( this.channelLabels, "" );
@@ -180,7 +180,7 @@ public final class AnnotatedData implements CapturedData
    * 
    * @param aCursorIdx
    *          the index of the cursor to set, should be >= 0 and < 10.
-   * @return sample position
+   * @return a cursor position, or Long.MIN_VALUE if not set.
    * @throws IllegalArgumentException
    *           in case an invalid cursor index was given.
    */
@@ -212,18 +212,14 @@ public final class AnnotatedData implements CapturedData
    * @return the time value (in seconds), or -1.0 if the cursor is not
    *         available.
    */
-  public double getCursorTimeValue( final int aCursorIdx )
+  public Double getCursorTimeValue( final int aCursorIdx )
   {
-    double cursorPos = getCursorPosition( aCursorIdx );
-    if ( cursorPos != CapturedData.NOT_AVAILABLE )
+    long cursorPos = getCursorPosition( aCursorIdx );
+    if ( cursorPos > Long.MIN_VALUE )
     {
-      if ( this.capturedData.hasTriggerData() )
-      {
-        cursorPos -= this.capturedData.getTriggerPosition();
-      }
-      return cursorPos / this.capturedData.getSampleRate();
+      return calculateTime( cursorPos ) / ( double )this.capturedData.getSampleRate();
     }
-    return -1.0;
+    return null;
   }
 
   /**
@@ -345,7 +341,7 @@ public final class AnnotatedData implements CapturedData
     long t = -1;
 
     long[] cursorPositions = new long[10];
-    Arrays.fill( cursorPositions, -1L );
+    Arrays.fill( cursorPositions, Long.MIN_VALUE );
 
     boolean cursors = false;
     boolean compressed = false;
