@@ -34,6 +34,7 @@ import javax.swing.SwingWorker.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureWorker.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -70,14 +71,7 @@ public class MeasurementDialog extends BaseToolDialog
     @Override
     public void actionPerformed( final ActionEvent aEvent )
     {
-      if ( this.worker == null )
-      {
-        this.worker = new ClockFrequencyMeasureWorker( MeasurementDialog.this.data, this.channel );
-        this.worker.addPropertyChangeListener( this );
-
-        this.worker.execute();
-      }
-      else
+      if ( this.worker != null )
       {
         if ( !this.worker.isDone() )
         {
@@ -86,8 +80,20 @@ public class MeasurementDialog extends BaseToolDialog
         this.worker.removePropertyChangeListener( this );
         this.worker = null;
       }
+
+      if ( this.worker == null )
+      {
+        this.worker = new ClockFrequencyMeasureWorker( MeasurementDialog.this.data, this.channel,
+            MeasurementDialog.this.cursorA.getSelectedIndex(), MeasurementDialog.this.cursorB.getSelectedIndex() );
+        this.worker.addPropertyChangeListener( this );
+
+        this.worker.execute();
+      }
     }
 
+    /**
+     * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+     */
     @Override
     public void propertyChange( final PropertyChangeEvent aEvent )
     {
@@ -102,18 +108,22 @@ public class MeasurementDialog extends BaseToolDialog
         {
           // Set the "wait" cursor...
           setCursor( new Cursor( Cursor.WAIT_CURSOR ) );
+          setEnabled( false );
         }
         else if ( StateValue.DONE.equals( state ) )
         {
           // Restore the original cursor...
           setCursor( new Cursor( Cursor.DEFAULT_CURSOR ) );
+          setEnabled( true );
 
           final ClockFrequencyMeasureWorker worker = ( ClockFrequencyMeasureWorker )aEvent.getSource();
 
           try
           {
-            final String analysisResults = worker.get();
-            MeasurementDialog.this.clockFrequencyLabel.setText( analysisResults );
+            final ClockStats stats = worker.get();
+
+            MeasurementDialog.this.clockFrequencyLabel.setText( stats.getFrequencyDisplayText() );
+            MeasurementDialog.this.clockDutyCycleLabel.setText( stats.getDutyCycleDisplayText() );
           }
           catch ( CancellationException exception )
           {
@@ -182,6 +192,7 @@ public class MeasurementDialog extends BaseToolDialog
   private JLabel frequencyLabel;
   private JLabel distanceLabel;
   private JLabel clockFrequencyLabel;
+  private JLabel clockDutyCycleLabel;
 
   // CONSTRUCTORS
 
@@ -422,8 +433,8 @@ public class MeasurementDialog extends BaseToolDialog
     this.distanceLabel = new JLabel( "<???>         " );
 
     final JPanel basicMeasurements = new JPanel( new GridBagLayout() );
-    basicMeasurements.setBorder( BorderFactory.createCompoundBorder(
-        BorderFactory.createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    basicMeasurements.setBorder( BorderFactory.createCompoundBorder( BorderFactory
+        .createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
     basicMeasurements.add( new JLabel( "Distance:" ), //
         new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
@@ -458,26 +469,33 @@ public class MeasurementDialog extends BaseToolDialog
     } );
 
     this.clockFrequencyLabel = new JLabel( "" );
+    this.clockDutyCycleLabel = new JLabel( "" );
     final JButton measureClockFrequency = new JButton( measureAction );
 
     final JPanel measureClock = new JPanel( new GridBagLayout() );
     measureClock.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Measure clock" ),
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
-    measureClock.add( new JLabel( "Clock:" ), //
+    measureClock.add( new JLabel( "Frequency:" ), //
         new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
             GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
     measureClock.add( this.clockFrequencyLabel, //
         new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
             GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-    measureClock.add( new JLabel( "Channel:" ), //
+    measureClock.add( new JLabel( "Duty cycle:" ), //
         new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
             GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    measureClock.add( channelChooser, //
+    measureClock.add( this.clockDutyCycleLabel, //
         new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
             GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+    measureClock.add( new JLabel( "Channel:" ), //
+        new GridBagConstraints( 0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    measureClock.add( channelChooser, //
+        new GridBagConstraints( 1, 2, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
     measureClock.add( measureClockFrequency, //
-        new GridBagConstraints( 0, 2, 2, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+        new GridBagConstraints( 0, 3, 2, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING,
             GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
 
     final JPanel result = new JPanel( new GridBagLayout() );
