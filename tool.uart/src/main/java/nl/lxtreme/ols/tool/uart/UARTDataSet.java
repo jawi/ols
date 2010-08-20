@@ -52,7 +52,24 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   // METHODS
 
   /**
-   * @return
+   * Returns the (calculated) baudrate.
+   * 
+   * @return a baudrate, >= 0.
+   */
+  public int getBaudRate()
+  {
+    if ( this.bitLength == 0 )
+    {
+      // Avoid division by zero...
+      return 0;
+    }
+    return getSampleRate() / this.bitLength;
+  }
+
+  /**
+   * Returns the "average" bit length found in the data.
+   * 
+   * @return an average bit length, >= 0.
    */
   public int getBitLength()
   {
@@ -60,7 +77,9 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   }
 
   /**
-   * @return
+   * Returns the number of decoded (data) symbols.
+   * 
+   * @return a number of decoded (data) symbols, >= 0.
    */
   public int getDecodedSymbols()
   {
@@ -68,7 +87,9 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   }
 
   /**
-   * @return
+   * Returns the number of errors.
+   * 
+   * @return an error count, >= 0.
    */
   public int getDetectedErrors()
   {
@@ -101,6 +122,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   public void reportData( final long aTime, final int aValue, final int aEventType )
   {
     addData( new UARTData( aTime, aValue, aEventType, indexToTime( aTime ) ) );
+    this.decodedSymbols++;
   }
 
   /**
@@ -134,11 +156,18 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   }
 
   /**
-   * 
+   * @param aBitLength
    */
-  public void reportSymbol()
+  public void setSampledBitLength( final int aBitLength )
   {
-    this.decodedSymbols++;
+    final int diff = Math.abs( aBitLength - this.bitLength );
+    if ( ( this.bitLength > 0 ) && ( diff > 0 ) && ( diff < 50 ) )
+    {
+      // Take the average as the current and the given bitlength are "close" to
+      // each other
+      this.bitLength = ( int )( diff / 2.0 );
+    }
+    this.bitLength = aBitLength;
   }
 
   /**

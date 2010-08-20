@@ -409,6 +409,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     aToolWorker.setInverted( this.inv.isSelected() );
     aToolWorker.setParity( UARTParity.parse( this.parity.getSelectedItem() ) );
     aToolWorker.setStopBits( UARTStopBits.parse( this.stop.getSelectedItem() ) );
+    aToolWorker.setBitCount( NumberUtils.smartParseInt( ( String )this.bits.getSelectedItem(), 8 ) );
   }
 
   /**
@@ -515,6 +516,8 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
         + " background-color: #C0C0FF; text-align: left; font-weight: bold; font-family: sans-serif; } " );
     aExporter.addCssStyle( "table td { border-width: 1px; padding: 2px; border-style: solid; border-color: gray;"
         + " font-family: monospace; } " );
+    aExporter.addCssStyle( ".error { color: red; } " );
+    aExporter.addCssStyle( ".warning { color: orange; } " );
     aExporter.addCssStyle( ".date { text-align: right; font-size: x-small; margin-bottom: 15px; } " );
     aExporter.addCssStyle( ".w100 { width: 100%; } " );
     aExporter.addCssStyle( ".w35 { width: 35%; } " );
@@ -635,22 +638,21 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
         }
         else if ( "baudrate".equals( aMacro ) )
         {
+          final String baudrate;
           if ( aDataSet.getBitLength() <= 0 )
           {
-            return "<span style='color:red;'>Baudrate calculation failed!</span>";
+            baudrate = "<span class='error'>Baudrate calculation failed!</span>";
           }
           else
           {
-            final int baudrate = aDataSet.getSampleRate() / aDataSet.getBitLength();
+            baudrate = String.format( "%d", aDataSet.getBaudRate() );
             if ( aDataSet.getBitLength() < 15 )
             {
               return baudrate
-                  + " <span style='color:orange;'>The baudrate may be wrong, use a higher samplerate to avoid this!</span>";
+                  .concat( " <span class='warning'>The baudrate may be wrong, use a higher samplerate to avoid this!</span>" );
             }
-            else
-            {
-              return baudrate;
-            }
+
+            return baudrate;
           }
         }
         else if ( "decoded-data".equals( aMacro ) )

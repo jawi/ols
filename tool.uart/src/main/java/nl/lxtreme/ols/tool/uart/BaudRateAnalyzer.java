@@ -44,19 +44,23 @@ final class BaudRateAnalyzer
    * create a histogram that allows to evaluate each detected bitlength. The
    * bitlength with the highest occurrence is used for baudrate calculation.
    */
-  public BaudRateAnalyzer( final int[] data, final long[] time, final int mask )
+  public BaudRateAnalyzer( final int[] aValues, final long[] aTimestamps, final int aMask )
   {
-    int a, b, c;
-    int[] valuePair;
-    long last = 0;
-    b = data[0] & mask;
-    a = 0;
     this.statData = new LinkedList<int[]>();
-    for ( int i = 0; i < data.length; i++ )
+
+    int a, lastBitValue, c;
+    int[] valuePair;
+    long lastTransition = 0;
+    lastBitValue = aValues[0] & aMask;
+    a = 0;
+
+    for ( int i = 0; i < aValues.length; i++ )
     {
-      if ( b != ( data[i] & mask ) )
+      final int bitValue = aValues[i] & aMask;
+
+      if ( lastBitValue != bitValue )
       {
-        a = ( int )( time[i] - last );
+        a = ( int )( aTimestamps[i] - lastTransition );
         c = findValue( a );
         if ( c < 0 )
         {
@@ -69,9 +73,11 @@ final class BaudRateAnalyzer
         {
           this.statData.get( c )[1]++;
         }
-        last = time[i];
+
+        lastTransition = aTimestamps[i];
       }
-      b = data[i] & mask;
+
+      lastBitValue = aValues[i] & aMask;
     }
   }
 
