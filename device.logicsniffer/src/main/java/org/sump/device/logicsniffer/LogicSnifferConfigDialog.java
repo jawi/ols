@@ -28,6 +28,7 @@ import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.plaf.basic.*;
 
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.*;
@@ -87,20 +88,47 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     }
   }
 
+  private static final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      final Integer size = ( Integer )aValue;
+      final String value = DisplayUtils.displaySize( size.doubleValue() );
+      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  private static final String NAME = "OLS";
-
   private static final Insets LABEL_INSETS = new Insets( 4, 4, 4, 2 );
   private static final Insets COMP_INSETS = new Insets( 4, 2, 4, 4 );
+
+  /** The serial port baudrates that can be chosen. */
+  private static final String[] BAUDRATES = { "921600bps", "460800bps", "230400bps", "115200bps", "57600bps",
+      "38400bps", "19200bps" };
+  /** The capture speeds supported by the OLS. */
+  private static final String[] CAPTURE_SPEEDS = { "200MHz", "100MHz", "50MHz", "20MHz", "10MHz", "5MHz", "2MHz",
+      "1MHz", "500kHz", "200kHz", "100kHz", "50kHz", "20kHz", "10kHz", "1kHz", "500Hz", "200Hz", "100Hz", "50Hz",
+      "20Hz", "10Hz" };
+  /** The capture sizes supported by the OLS. */
+  private static final Integer[] CAPTURE_SIZES = { 24576, 12288, 6144, 3072, 2048, 1024, 512, 256, 128, 64 };
+  /** The trigger-sources supported by the OLS. */
+  private static final String[] CAPTURE_SOURCES = { "Internal", "External / Rising", "External / Falling" };
+  /** The numbering schemes supported by the OLS. */
+  private static final String[] NUMBER_SCHEMES = { "Inside", "Outside", "Test Mode" };
 
   // VARIABLES
 
   private JComboBox portSelect;
   private JComboBox portRateSelect;
   private JComboBox numberSchemeSelect;
+  private JCheckBox maxSampleSize;
   private JComboBox sourceSelect;
   private JComboBox speedSelect;
   private JComboBox sizeSelect;
@@ -167,10 +195,10 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   /**
    * Handles all action events for this component.
    */
-  public void actionPerformed( final ActionEvent event )
+  public void actionPerformed( final ActionEvent aEvent )
   {
-    final Object o = event.getSource();
-    final String l = event.getActionCommand();
+    final Object o = aEvent.getSource();
+    final String l = aEvent.getActionCommand();
 
     // ignore all events when dialog is not displayed
     if ( ( this.dialog == null ) || !this.dialog.isVisible() )
@@ -195,13 +223,17 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     }
     else if ( l.equals( "Capture" ) )
     {
-      this.dialogResult = true;
-      updateDevice();
-      close();
+      this.dialogResult = updateDevice();
+
+      if ( this.dialogResult )
+      {
+        close();
+      }
     }
     else if ( l.equals( "Close" ) )
     {
       this.dialogResult = false;
+
       close();
     }
     else
@@ -232,28 +264,31 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    SwingComponentUtils.setSelectedItem( this.portSelect, aProperties.getProperty( NAME + ".port" ) );
-    SwingComponentUtils.setSelectedItem( this.portRateSelect, aProperties.getProperty( NAME + ".portRate" ) );
-    SwingComponentUtils.setSelectedItem( this.sourceSelect, aProperties.getProperty( NAME + ".source" ) );
-    SwingComponentUtils.setSelectedItem( this.speedSelect, aProperties.getProperty( NAME + ".speed" ) );
-    SwingComponentUtils.setSelectedItem( this.sizeSelect, aProperties.getProperty( NAME + ".size" ) );
-    this.ratioSlider.setValue( NumberUtils.smartParseInt( aProperties.getProperty( NAME + ".ratio" ),
+    SwingComponentUtils.setSelectedItem( this.portSelect, aProperties.getProperty( aNamespace + ".port" ) );
+    SwingComponentUtils.setSelectedItem( this.portRateSelect, aProperties.getProperty( aNamespace + ".portRate" ) );
+    SwingComponentUtils.setSelectedItem( this.sourceSelect, aProperties.getProperty( aNamespace + ".source" ) );
+    SwingComponentUtils.setSelectedItem( this.speedSelect, aProperties.getProperty( aNamespace + ".speed" ) );
+    SwingComponentUtils.setSelectedItem( this.sizeSelect, NumberUtils.smartParseInt( aProperties
+        .getProperty( aNamespace + ".size" ) ) );
+    SwingComponentUtils.setSelected( this.maxSampleSize, aProperties.getProperty( aNamespace + ".autosize" ) );
+    this.ratioSlider.setValue( NumberUtils.smartParseInt( aProperties.getProperty( aNamespace + ".ratio" ),
         TriggerRatioChangeListener.DEFAULT_RATIO ) );
-    SwingComponentUtils.setSelected( this.filterEnable, aProperties.getProperty( NAME + ".filter" ) );
-    SwingComponentUtils.setSelected( this.triggerEnable, aProperties.getProperty( NAME + ".trigger" ) );
-    SwingComponentUtils.setSelectedItem( this.triggerTypeSelect, aProperties.getProperty( NAME + ".triggerType" ) );
+    SwingComponentUtils.setSelected( this.filterEnable, aProperties.getProperty( aNamespace + ".filter" ) );
+    SwingComponentUtils.setSelected( this.triggerEnable, aProperties.getProperty( aNamespace + ".trigger" ) );
+    SwingComponentUtils
+        .setSelectedItem( this.triggerTypeSelect, aProperties.getProperty( aNamespace + ".triggerType" ) );
 
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
-      this.triggerDelay[stage].setText( aProperties.getProperty( NAME + ".triggerStage" + stage + "Delay" ) );
+      this.triggerDelay[stage].setText( aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Delay" ) );
       SwingComponentUtils.setSelectedItem( this.triggerLevel[stage], //
-          aProperties.getProperty( NAME + ".triggerStage" + stage + "Level" ) );
+          aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Level" ) );
       SwingComponentUtils.setSelectedItem( this.triggerMode[stage], //
-          aProperties.getProperty( NAME + ".triggerStage" + stage + "Mode" ) );
+          aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Mode" ) );
       SwingComponentUtils.setSelectedItem( this.triggerChannel[stage], //
-          aProperties.getProperty( NAME + ".triggerStage" + stage + "Channel" ) );
+          aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Channel" ) );
 
-      final String mask = aProperties.getProperty( NAME + ".triggerStage" + stage + "Mask" );
+      final String mask = aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Mask" );
       if ( mask != null )
       {
         for ( int i = 0; ( i < 32 ) && ( i < mask.length() ); i++ )
@@ -262,7 +297,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
         }
       }
 
-      final String value = aProperties.getProperty( NAME + ".triggerStage" + stage + "Value" );
+      final String value = aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Value" );
       if ( value != null )
       {
         for ( int i = 0; ( i < 32 ) && ( i < value.length() ); i++ )
@@ -271,11 +306,11 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
         }
       }
 
-      SwingComponentUtils.setSelected( this.triggerStart[stage], aProperties.getProperty( NAME + ".triggerStage"
+      SwingComponentUtils.setSelected( this.triggerStart[stage], aProperties.getProperty( aNamespace + ".triggerStage"
           + stage + "StartCapture" ) );
     }
 
-    final String group = aProperties.getProperty( NAME + ".channelGroup" );
+    final String group = aProperties.getProperty( aNamespace + ".channelGroup" );
     if ( group != null )
     {
       for ( int i = 0; ( i < 4 ) && ( i < group.length() ); i++ )
@@ -296,7 +331,6 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   public boolean showDialog()
   {
     initDialog( ( Window )null );
-    setDialogEnabled( true );
 
     this.dialog.setModalityType( ModalityType.APPLICATION_MODAL );
     this.dialog.setVisible( true );
@@ -317,24 +351,25 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   public void writeProperties( final String aNamespace, final Properties properties )
   {
     final String selectedItem = ( String )this.portSelect.getSelectedItem();
-    properties.setProperty( NAME + ".port", selectedItem == null ? "" : selectedItem );
-    properties.setProperty( NAME + ".portRate", ( String )this.portRateSelect.getSelectedItem() );
-    properties.setProperty( NAME + ".source", ( String )this.sourceSelect.getSelectedItem() );
-    properties.setProperty( NAME + ".speed", ( String )this.speedSelect.getSelectedItem() );
-    properties.setProperty( NAME + ".size", ( String )this.sizeSelect.getSelectedItem() );
-    properties.setProperty( NAME + ".ratio", String.valueOf( this.ratioSlider.getValue() ) );
-    properties.setProperty( NAME + ".filter", this.filterEnable.isSelected() ? "true" : "false" );
-    properties.setProperty( NAME + ".trigger", this.triggerEnable.isSelected() ? "true" : "false" );
-    properties.setProperty( NAME + ".triggerType", ( String )this.triggerTypeSelect.getSelectedItem() );
+    properties.setProperty( aNamespace + ".port", selectedItem == null ? "" : selectedItem );
+    properties.setProperty( aNamespace + ".portRate", ( String )this.portRateSelect.getSelectedItem() );
+    properties.setProperty( aNamespace + ".source", ( String )this.sourceSelect.getSelectedItem() );
+    properties.setProperty( aNamespace + ".speed", ( String )this.speedSelect.getSelectedItem() );
+    properties.setProperty( aNamespace + ".autosize", this.maxSampleSize.isSelected() ? "true" : "false" );
+    properties.setProperty( aNamespace + ".size", String.valueOf( this.sizeSelect.getSelectedItem() ) );
+    properties.setProperty( aNamespace + ".ratio", String.valueOf( this.ratioSlider.getValue() ) );
+    properties.setProperty( aNamespace + ".filter", this.filterEnable.isSelected() ? "true" : "false" );
+    properties.setProperty( aNamespace + ".trigger", this.triggerEnable.isSelected() ? "true" : "false" );
+    properties.setProperty( aNamespace + ".triggerType", ( String )this.triggerTypeSelect.getSelectedItem() );
 
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
-      properties.setProperty( NAME + ".triggerStage" + stage + "Level", ( String )this.triggerLevel[stage]
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Level", ( String )this.triggerLevel[stage]
           .getSelectedItem() );
-      properties.setProperty( NAME + ".triggerStage" + stage + "Delay", this.triggerDelay[stage].getText() );
-      properties.setProperty( NAME + ".triggerStage" + stage + "Mode", ( String )this.triggerMode[stage]
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Delay", this.triggerDelay[stage].getText() );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Mode", ( String )this.triggerMode[stage]
           .getSelectedItem() );
-      properties.setProperty( NAME + ".triggerStage" + stage + "Channel", ( String )this.triggerChannel[stage]
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Channel", ( String )this.triggerChannel[stage]
           .getSelectedItem() );
 
       final StringBuffer mask = new StringBuffer();
@@ -342,17 +377,17 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       {
         mask.append( this.triggerMask[stage][i].isSelected() ? "1" : "0" );
       }
-      properties.setProperty( NAME + ".triggerStage" + stage + "Mask", mask.toString() );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Mask", mask.toString() );
 
       final StringBuffer value = new StringBuffer();
       for ( int i = 0; i < 32; i++ )
       {
         value.append( this.triggerValue[stage][i].isSelected() ? "1" : "0" );
       }
-      properties.setProperty( NAME + ".triggerStage" + stage + "Value", value.toString() );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Value", value.toString() );
 
-      properties.setProperty( NAME + ".triggerStage" + stage + "StartCapture",
-          this.triggerStart[stage].isSelected() ? "true" : "false" );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "StartCapture", this.triggerStart[stage]
+          .isSelected() ? "true" : "false" );
     }
 
     final StringBuffer group = new StringBuffer();
@@ -360,7 +395,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     {
       group.append( this.channelGroup[i].isSelected() ? "1" : "0" );
     }
-    properties.setProperty( NAME + ".channelGroup", group.toString() );
+    properties.setProperty( aNamespace + ".channelGroup", group.toString() );
   }
 
   /**
@@ -407,12 +442,10 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     final String[] ports = LogicSnifferDevice.getPorts();
     this.portSelect = new JComboBox( ports );
 
-    final String[] portRates = { "921600bps", "460800bps", "230400bps", "115200bps", "57600bps", "38400bps", "19200bps" };
-    this.portRateSelect = new JComboBox( portRates );
+    this.portRateSelect = new JComboBox( BAUDRATES );
     this.portRateSelect.setSelectedIndex( 3 ); // 115k2
 
-    final String[] numberSchemes = { "Inside", "Outside", "Test Mode" };
-    this.numberSchemeSelect = new JComboBox( numberSchemes );
+    this.numberSchemeSelect = new JComboBox( NUMBER_SCHEMES );
     this.numberSchemeSelect.setSelectedIndex( 0 );
 
     final JPanel connectionPane = new JPanel( new GridBagLayout() );
@@ -503,14 +536,11 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   private JPanel createSettingsPane()
   {
-    final String[] sources = { "Internal", "External / Rising", "External / Falling" };
-    this.sourceSelect = new JComboBox( sources );
+    this.sourceSelect = new JComboBox( CAPTURE_SOURCES );
     this.sourceSelect.setSelectedIndex( 0 );
     this.sourceSelect.addActionListener( this );
 
-    final String[] speeds = { "200MHz", "100MHz", "50MHz", "20MHz", "10MHz", "5MHz", "2MHz", "1MHz", "500kHz",
-        "200kHz", "100kHz", "50kHz", "20kHz", "10kHz", "1kHz", "500Hz", "200Hz", "100Hz", "50Hz", "20Hz", "10Hz" };
-    this.speedSelect = new JComboBox( speeds );
+    this.speedSelect = new JComboBox( CAPTURE_SPEEDS );
     this.speedSelect.setSelectedIndex( 1 );
     this.speedSelect.addActionListener( this );
 
@@ -526,9 +556,23 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       groups.add( this.channelGroup[i] );
     }
 
-    final String[] sizes = { "24K", "12K", "6K", "2K", "1K", "512", "256", "128", "64" };
-    this.sizeSelect = new JComboBox( sizes );
+    this.sizeSelect = new JComboBox( CAPTURE_SIZES );
+    this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer() );
     this.sizeSelect.setSelectedIndex( 2 );
+
+    this.maxSampleSize = new JCheckBox( "Automatic (maximum)" );
+    this.maxSampleSize.setSelected( false );
+    this.maxSampleSize.addItemListener( new ItemListener()
+    {
+      @Override
+      public void itemStateChanged( final ItemEvent aEvent )
+      {
+        final JCheckBox checkbox = ( JCheckBox )aEvent.getSource();
+
+        LogicSnifferConfigDialog.this.sizeSelect.setEnabled( !checkbox.isSelected() );
+        LogicSnifferConfigDialog.this.sizeSelect.setSelectedItem( Integer.valueOf( determineMaxSampleCount() ) );
+      }
+    } );
 
     this.filterEnable = new JCheckBox( "Enable" );
     this.filterEnable.setSelected( true );
@@ -566,22 +610,26 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     settingsPane.add( new JLabel( "Recording Size:" ), //
         new GridBagConstraints( 0, 3, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
             GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    settingsPane.add( this.sizeSelect, //
-        new GridBagConstraints( 1, 3, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-
-    settingsPane.add( new JLabel( "Noise Filter: " ), //
-        new GridBagConstraints( 0, 4, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+    settingsPane.add( this.maxSampleSize, // 
+        new GridBagConstraints( 1, 3, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
             GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    settingsPane.add( this.filterEnable, //
+
+    settingsPane.add( this.sizeSelect, //
         new GridBagConstraints( 1, 4, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
             GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
 
-    settingsPane.add( new JLabel( "RLE: " ), //
+    settingsPane.add( new JLabel( "Noise Filter: " ), //
         new GridBagConstraints( 0, 5, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
             GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    settingsPane.add( this.rleEnable, //
+    settingsPane.add( this.filterEnable, //
         new GridBagConstraints( 1, 5, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    settingsPane.add( new JLabel( "RLE: " ), //
+        new GridBagConstraints( 0, 6, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    settingsPane.add( this.rleEnable, //
+        new GridBagConstraints( 1, 6, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
             GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
 
     return settingsPane;
@@ -607,7 +655,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     final String[] types = { "Simple", "Complex" };
     this.triggerTypeSelect = new JComboBox( types );
     this.triggerTypeSelect.setSelectedIndex( 0 ); // Select first item by
-                                                  // default...
+    // default...
     this.triggerTypeSelect.addActionListener( this );
 
     this.triggerStageTabs = new JTabbedPane();
@@ -700,6 +748,39 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   }
 
   /**
+   * Determines the maximum sample count that is supported by the OLS for a
+   * given number of channel groups.
+   * 
+   * @return a maximum sample count, or -1 if no maximum could be determined.
+   */
+  private int determineMaxSampleCount()
+  {
+    int enabledChannelGroups = 0;
+    for ( JCheckBox element : this.channelGroup )
+    {
+      if ( element.isSelected() )
+      {
+        enabledChannelGroups++;
+      }
+    }
+
+    if ( enabledChannelGroups == 1 )
+    {
+      return 24576;
+    }
+    else if ( enabledChannelGroups == 2 )
+    {
+      return 12288;
+    }
+    else if ( ( enabledChannelGroups == 3 ) || ( enabledChannelGroups == 4 ) )
+    {
+      return 6144;
+    }
+
+    return -1;
+  }
+
+  /**
    * Initializes this dialog by creating & adding all components to it.
    */
   private void initDialog()
@@ -760,25 +841,6 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   }
 
   /**
-   * Sets the enabled state of all configuration components of the dialog.
-   * 
-   * @param enable
-   *          <code>true</code> to enable components, <code>false</code> to
-   *          disable them
-   */
-  private void setDialogEnabled( final boolean enable )
-  {
-    this.triggerEnable.setEnabled( enable );
-    this.captureButton.setEnabled( enable );
-    this.portSelect.setEnabled( enable );
-    this.portRateSelect.setEnabled( enable );
-    this.numberSchemeSelect.setEnabled( enable );
-    this.speedSelect.setEnabled( enable );
-    this.sizeSelect.setEnabled( enable );
-    updateFields( enable );
-  }
-
-  /**
    * Sets the enabled state of all available trigger check boxes and the ratio
    * select.
    * 
@@ -826,9 +888,10 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   }
 
   /** writes the dialog settings to the device */
-  private void updateDevice()
+  private boolean updateDevice()
   {
     String value;
+    boolean result = true;
 
     // set clock source
     value = ( String )this.sourceSelect.getSelectedItem();
@@ -848,6 +911,23 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       }
     }
 
+    // set enabled channel groups
+    int enabledChannels = 0;
+    int enabledChannelGroups = 0;
+    for ( int i = 0; i < this.channelGroup.length; i++ )
+    {
+      if ( this.channelGroup[i].isSelected() )
+      {
+        enabledChannels |= 0xff << ( 8 * i );
+        enabledChannelGroups++;
+      }
+    }
+    this.device.setEnabledChannels( enabledChannels );
+
+    // The OLS is capable of "auto" selecting the maximum capture size itself,
+    // and does this based on the number of enabled channel groups...
+    final int maxSampleCount = determineMaxSampleCount();
+
     // set sample rate; use a default to ensure the internal state remains
     // correct...
     value = ( String )this.speedSelect.getSelectedItem();
@@ -855,9 +935,13 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     this.device.setRate( f );
 
     // set sample count
-    value = ( String )this.sizeSelect.getSelectedItem();
-    int s = NumberUtils.smartParseInt( value, UnitDefinition.BINARY );
-    this.device.setSize( s );
+    int sampleCount = ( ( Integer )this.sizeSelect.getSelectedItem() ).intValue();
+    if ( this.maxSampleSize.isSelected() )
+    {
+      sampleCount = maxSampleCount;
+      this.sizeSelect.setSelectedItem( Integer.valueOf( maxSampleCount ) );
+    }
+    this.device.setSize( sampleCount );
 
     // set before / after ratio
     double r = 1.0 - ( this.ratioSlider.getValue() / ( double )this.ratioSlider.getMaximum() );
@@ -943,16 +1027,23 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       }
     }
 
-    // set enabled channel groups
-    int enabledChannels = 0;
-    for ( int i = 0; i < this.channelGroup.length; i++ )
+    // Determine whether the chosen sample count is larger than the OLS can
+    // provide us in the chosen channel group-selection...
+    if ( result && ( maxSampleCount >= 0 ) && ( sampleCount > maxSampleCount ) )
     {
-      if ( this.channelGroup[i].isSelected() )
-      {
-        enabledChannels |= 0xff << ( 8 * i );
-      }
+      result = ( JOptionPane.showConfirmDialog( this, //
+          "Sample count too large for chosen channel groups! Continue capture?", //
+          "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE ) == JOptionPane.YES_OPTION );
     }
-    this.device.setEnabledChannels( enabledChannels );
+    // When no channel groups are enabled, the capture won't be very useful...
+    if ( result && ( enabledChannelGroups == 0 ) )
+    {
+      result = ( JOptionPane.showConfirmDialog( this, //
+          "No channel groups are enabled! Continue capture?", //
+          "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE ) == JOptionPane.YES_OPTION );
+    }
+
+    return result;
   }
 
   /** activates / deactivates dialog options according to device status */
