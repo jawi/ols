@@ -23,14 +23,19 @@ package nl.lxtreme.ols.tool.measure;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.*;
 
 import javax.swing.*;
+import javax.swing.Timer;
+import javax.swing.SwingWorker.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -41,92 +46,122 @@ public class MeasurementDialog extends BaseToolDialog
   // INNER TYPES
 
   /**
-   * Updates the cursors when the dialog retrieves the focus again.
+   * Action for measuring the clock frequency between two cursors.
    */
-  final class DialogListener extends WindowAdapter
+  final class MeasureClockFrequencyAction extends AbstractAction implements PropertyChangeListener
   {
-    // METHODS
+    private static final long serialVersionUID = 1L;
 
-    /**
-     * @see java.awt.event.WindowAdapter#windowGainedFocus(java.awt.event.WindowEvent)
-     */
-    @Override
-    public void windowGainedFocus( final WindowEvent aEvent )
-    {
-      final MeasurementDialog dialog = ( MeasurementDialog )aEvent.getWindow();
-      dialog.updateMeasurement();
-    }
-  }
-
-  /**
-   * ItemListener used to update the frequency & distance labels when one of the
-   * cursor comboboxes is modified.
-   */
-  final class MeasurementController implements ItemListener
-  {
-    // VARIABLES
-
-    private final AnnotatedData data;
-    private final JComboBox cursorA;
-    private final JComboBox cursorB;
-    private final JLabel frequencyLabel;
-    private final JLabel distanceLabel;
-
-    // CONSTRUCTORS
-
-    /**
-     * @param aData
-     * @param aFrequencyLabel
-     * @param aDistanceLabel
-     */
-    public MeasurementController( final AnnotatedData aData, final JComboBox aCursorA, final JComboBox aCursorB,
-        final JLabel aFrequencyLabel, final JLabel aDistanceLabel )
-    {
-      this.data = aData;
-      this.cursorA = aCursorA;
-      this.cursorB = aCursorB;
-      this.frequencyLabel = aFrequencyLabel;
-      this.distanceLabel = aDistanceLabel;
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ItemListener#itemStateChanged(java.awt.event.ItemEvent)
-     */
-    @Override
-    public void itemStateChanged( final ItemEvent aEvent )
-    {
-      updateMeasurement();
-    }
+    private int channel = 0;
+    private ClockFrequencyMeasureWorker worker = null;
 
     /**
      * 
      */
-    public void updateMeasurement()
+    public MeasureClockFrequencyAction()
     {
-      final double rate = this.data.getSampleRate();
+      super( "Measure ..." );
+      putValue( SHORT_DESCRIPTION, "Try to determine the (clock-)frequency of the selected channel." );
+    }
 
-      final long cursorApos = this.data.getCursorPosition( MeasurementDialog.this.selectedCursorA = this.cursorA
-          .getSelectedIndex() );
-      final long cursorBpos = this.data.getCursorPosition( MeasurementDialog.this.selectedCursorB = this.cursorB
-          .getSelectedIndex() );
-
-      String distanceText = "<???>";
-      String frequencyText = "<???>";
-
-      if ( ( cursorApos >= 0 ) && ( cursorBpos >= 0 ) && ( cursorApos != cursorBpos ) )
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      if ( this.worker == null )
       {
-        final long distance = cursorApos - cursorBpos;
+        this.worker = new ClockFrequencyMeasureWorker( MeasurementDialog.this.data, this.channel );
+        this.worker.addPropertyChangeListener( this );
 
-        distanceText = DisplayUtils.displayScaledTime( Math.abs( distance ), rate );
-
-        final double frequency = Math.abs( rate / distance );
-        frequencyText = DisplayUtils.displayFrequency( frequency );
+        this.worker.execute();
       }
+      else
+      {
+        if ( !this.worker.isDone() )
+        {
+          this.worker.cancel( true /* mayInterruptIfRunning */);
+        }
+        this.worker.removePropertyChangeListener( this );
+        this.worker = null;
+      }
+    }
 
-      this.distanceLabel.setText( distanceText );
-      this.frequencyLabel.setText( frequencyText );
+    @Override
+    public void propertyChange( final PropertyChangeEvent aEvent )
+    {
+      final String name = aEvent.getPropertyName();
+      final Object value = aEvent.getNewValue();
+
+      if ( "state".equals( name ) )
+      {
+        // State change...
+        final StateValue state = ( StateValue )value;
+        if ( StateValue.STARTED.equals( state ) )
+        {
+          // Set the "wait" cursor...
+          setCursor( new Cursor( Cursor.WAIT_CURSOR ) );
+        }
+        else if ( StateValue.DONE.equals( state ) )
+        {
+          // Restore the original cursor...
+          setCursor( new Cursor( Cursor.DEFAULT_CURSOR ) );
+
+          final ClockFrequencyMeasureWorker worker = ( ClockFrequencyMeasureWorker )aEvent.getSource();
+
+          try
+          {
+            final String analysisResults = worker.get();
+            MeasurementDialog.this.clockFrequencyLabel.setText( analysisResults );
+          }
+          catch ( CancellationException exception )
+          {
+            LOG.log( Level.WARNING, "Dialog exception!", exception );
+          }
+          catch ( ExecutionException exception )
+          {
+            LOG.log( Level.WARNING, "Dialog exception!", exception );
+          }
+          catch ( InterruptedException exception )
+          {
+            LOG.log( Level.WARNING, "Dialog exception!", exception );
+          }
+        }
+      }
+    }
+
+    /**
+     * Sets the channel on which the clock-frequency should be determined.
+     * 
+     * @param aChannel
+     */
+    public void setChannel( final int aChannel )
+    {
+      this.channel = aChannel;
+    }
+  }
+
+  /**
+   * Provides an action listener which updates the measurements in this dialog
+   * on regular intervals.
+   */
+  final class TimerActionListener implements ActionListener
+  {
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      if ( SwingComponentUtils.isActivelyShown( MeasurementDialog.this ) )
+      {
+        if ( LOG.isLoggable( Level.FINE ) )
+        {
+          LOG.fine( "Updating measurement ..." );
+        }
+        MeasurementDialog.this.updateMeasurement();
+      }
     }
   }
 
@@ -134,12 +169,19 @@ public class MeasurementDialog extends BaseToolDialog
 
   private static final long serialVersionUID = 1L;
 
+  private static final Logger LOG = Logger.getLogger( MeasurementDialog.class.getName() );
+
   // VARIABLES
 
-  transient int selectedCursorA = 0;
-  transient int selectedCursorB = 1;
+  private final Timer updateTimer;
+  private volatile AnnotatedData data;
 
-  private MeasurementController controller;
+  private JLabel[] cursorValueLabels;
+  private JComboBox cursorB;
+  private JComboBox cursorA;
+  private JLabel frequencyLabel;
+  private JLabel distanceLabel;
+  private JLabel clockFrequencyLabel;
 
   // CONSTRUCTORS
 
@@ -155,16 +197,17 @@ public class MeasurementDialog extends BaseToolDialog
    * @param aContext
    *          the tool context.
    */
-  public MeasurementDialog( final Window aOwner, final String aTitle, final AnnotatedData aData,
-      final ToolContext aContext )
+  public MeasurementDialog( final Window aOwner, final String aTitle )
   {
     super( aOwner, aTitle, Dialog.ModalityType.MODELESS );
 
-    addWindowFocusListener( new DialogListener() );
-
     final JComponent contentPane = ( JComponent )getContentPane();
     contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-    contentPane.add( createDialogContent( aData, aContext ) );
+    contentPane.add( createDialogContent() );
+
+    this.updateTimer = new Timer( 500, new TimerActionListener() );
+    this.updateTimer.setRepeats( true );
+    this.updateTimer.start();
 
     pack();
   }
@@ -177,8 +220,10 @@ public class MeasurementDialog extends BaseToolDialog
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    this.selectedCursorA = NumberUtils.smartParseInt( aProperties.getProperty( aNamespace + ".selectedCursorA" ), 0 );
-    this.selectedCursorB = NumberUtils.smartParseInt( aProperties.getProperty( aNamespace + ".selectedCursorB" ), 1 );
+    this.cursorA.setSelectedIndex( NumberUtils.smartParseInt(
+        aProperties.getProperty( aNamespace + ".selectedCursorA" ), 0 ) );
+    this.cursorB.setSelectedIndex( NumberUtils.smartParseInt(
+        aProperties.getProperty( aNamespace + ".selectedCursorB" ), 1 ) );
   }
 
   /**
@@ -187,7 +232,20 @@ public class MeasurementDialog extends BaseToolDialog
   @Override
   public void reset()
   {
-    // NO-op
+    if ( !this.updateTimer.isRunning() )
+    {
+      this.updateTimer.start();
+    }
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
+   */
+  @Override
+  public void showDialog( final AnnotatedData aData )
+  {
+    this.data = aData;
+    super.showDialog( aData );
   }
 
   /**
@@ -196,8 +254,8 @@ public class MeasurementDialog extends BaseToolDialog
    */
   public void writeProperties( final String aNamespace, final Properties aProperties )
   {
-    aProperties.put( aNamespace + ".selectedCursorA", String.valueOf( this.selectedCursorA ) );
-    aProperties.put( aNamespace + ".selectedCursorB", String.valueOf( this.selectedCursorB ) );
+    aProperties.put( aNamespace + ".selectedCursorA", String.valueOf( this.cursorA.getSelectedIndex() ) );
+    aProperties.put( aNamespace + ".selectedCursorB", String.valueOf( this.cursorB.getSelectedIndex() ) );
   }
 
   /**
@@ -205,8 +263,45 @@ public class MeasurementDialog extends BaseToolDialog
    */
   final void updateMeasurement()
   {
-    this.controller.updateMeasurement();
-    repaint( 50l );
+    for ( int i = 0; i < AnnotatedData.MAX_CURSORS; i++ )
+    {
+      final String text = getCursorTimeDisplayValue( i );
+      this.cursorValueLabels[i].setText( text );
+    }
+
+    final double rate = this.data.getSampleRate();
+
+    final long cursorApos = this.data.getCursorPosition( this.cursorA.getSelectedIndex() );
+    final long cursorBpos = this.data.getCursorPosition( this.cursorB.getSelectedIndex() );
+
+    String distanceText = "<???>";
+    String frequencyText = "<???>";
+
+    if ( ( cursorApos >= 0 ) && ( cursorBpos >= 0 ) && ( cursorApos != cursorBpos ) )
+    {
+      final long diff = cursorApos - cursorBpos;
+
+      final double distance = Math.abs( diff / rate );
+      distanceText = DisplayUtils.displayTime( distance );
+
+      final double frequency = Math.abs( rate / diff );
+      frequencyText = DisplayUtils.displayFrequency( frequency );
+    }
+
+    this.distanceLabel.setText( distanceText );
+    this.frequencyLabel.setText( frequencyText );
+
+    // repaint();
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#close()
+   */
+  @Override
+  protected void close()
+  {
+    this.updateTimer.stop();
+    super.close();
   }
 
   /**
@@ -214,34 +309,82 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private Component createButtonPane()
   {
-    final JButton cancel = new JButton( new CloseAction() );
+    final JButton close = new JButton( new CloseAction() );
 
     final JPanel buttonPane = new JPanel();
     buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
     buttonPane.setBorder( BorderFactory.createEmptyBorder( 8, 4, 8, 4 ) );
 
     buttonPane.add( Box.createHorizontalGlue() );
-    buttonPane.add( cancel );
+    buttonPane.add( close );
 
     return buttonPane;
   }
 
   /**
-   * Creates the cursor listing pane.
-   * 
    * @param aData
-   *          the captured data to take the cursors from, cannot be
-   *          <code>null</code>.
-   * @return a panel containing the cursor listing, never <code>null</code>.
+   * @return
    */
-  private Component createCursorListPane( final AnnotatedData aData )
+  private Component createCursorsPane()
   {
-    final JPanel result = new JPanel( new GridLayout( 10, 2, 4, 4 ) );
+    final String[] cursorNames = new String[AnnotatedData.MAX_CURSORS];
+    for ( int i = 0; i < cursorNames.length; i++ )
+    {
+      cursorNames[i] = String.format( "Cursor %d", ( i + 1 ) );
+    }
+
+    final JPanel referenceCursors = new JPanel( new GridBagLayout() );
+    referenceCursors.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Reference" ),
+        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+
+    this.cursorA = new JComboBox( cursorNames );
+    this.cursorA.setSelectedIndex( 0 );
+
+    this.cursorB = new JComboBox( cursorNames );
+    this.cursorB.setSelectedIndex( 1 );
+
+    referenceCursors.add( new JLabel( "Cursor A:" ), //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    referenceCursors.add( this.cursorA, //
+        new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    referenceCursors.add( new JLabel( "Cursor B:" ), //
+        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    referenceCursors.add( this.cursorB, //
+        new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    final JPanel cursorListing = new JPanel( new GridBagLayout() );
+    cursorListing.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Current cursors" ),
+        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+
+    int yIdx = 0;
+    this.cursorValueLabels = new JLabel[AnnotatedData.MAX_CURSORS];
     for ( int i = 0; i < AnnotatedData.MAX_CURSORS; i++ )
     {
-      result.add( new JLabel( String.format( "Cursor %d", i + 1 ) ) );
-      result.add( new CursorLabel( aData, i ) );
+      cursorListing.add( new JLabel( cursorNames[i] ), //
+          new GridBagConstraints( 0, yIdx, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+              GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+
+      this.cursorValueLabels[i] = new JLabel( getCursorTimeDisplayValue( i ) );
+      cursorListing.add( this.cursorValueLabels[i], //
+          new GridBagConstraints( 1, yIdx, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+              GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+      yIdx++;
     }
+
+    final JPanel result = new JPanel( new GridBagLayout() );
+    result.add( referenceCursors, //
+        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
+            LABEL_INSETS, 0, 0 ) );
+
+    result.add( cursorListing, //
+        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
+            LABEL_INSETS, 0, 0 ) );
+
     return result;
   }
 
@@ -253,14 +396,14 @@ public class MeasurementDialog extends BaseToolDialog
    * 
    * @return a dialog panel, never <code>null</code>.
    */
-  private Component createDialogContent( final AnnotatedData aData, final ToolContext aContext )
+  private Component createDialogContent()
   {
     final JPanel result = new JPanel( new GridBagLayout() );
-    result.add( createMeasurePane( aData ), //
-        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL,
+    result.add( createCursorsPane(), //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL,
             COMP_INSETS, 0, 0 ) );
-    result.add( createCursorListPane( aData ), //
-        new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL,
+    result.add( createMeasurePane(), //
+        new GridBagConstraints( 1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL,
             COMP_INSETS, 0, 0 ) );
     result.add( createButtonPane(), //
         new GridBagConstraints( 0, 1, 2, 1, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL,
@@ -269,61 +412,110 @@ public class MeasurementDialog extends BaseToolDialog
   }
 
   /**
-   * @param aData
-   * @return
+   * Creates the pane on which the measurement results are shown.
+   * 
+   * @return a measurement panel, never <code>null</code>.
    */
-  private Component createMeasurePane( final AnnotatedData aData )
+  private Component createMeasurePane()
   {
-    final String[] cursorNames = { "Cursor 1", "Cursor 2", "Cursor 3", "Cursor 4", "Cursor 5", "Cursor 6", "Cursor 7",
-        "Cursor 8", "Cursor 9", "Cursor 10" };
+    this.frequencyLabel = new JLabel( "<???>        " );
+    this.distanceLabel = new JLabel( "<???>         " );
+
+    final JPanel basicMeasurements = new JPanel( new GridBagLayout() );
+    basicMeasurements.setBorder( BorderFactory.createCompoundBorder(
+        BorderFactory.createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+
+    basicMeasurements.add( new JLabel( "Distance:" ), //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    basicMeasurements.add( this.distanceLabel, //
+        new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    basicMeasurements.add( new JLabel( "Frequency:" ), //
+        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    basicMeasurements.add( this.frequencyLabel, //
+        new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+
+    final MeasureClockFrequencyAction measureAction = new MeasureClockFrequencyAction();
+
+    final String[] channelNames = new String[AnnotatedData.MAX_CHANNELS];
+    for ( int i = 0; i < channelNames.length; i++ )
+    {
+      channelNames[i] = String.format( "Channel %d", ( i + 1 ) );
+    }
+    final JComboBox channelChooser = new JComboBox( channelNames );
+    channelChooser.addItemListener( new ItemListener()
+    {
+      @Override
+      public void itemStateChanged( final ItemEvent aEvent )
+      {
+        final JComboBox combobox = ( JComboBox )aEvent.getSource();
+        measureAction.setChannel( combobox.getSelectedIndex() );
+      }
+    } );
+
+    this.clockFrequencyLabel = new JLabel( "" );
+    final JButton measureClockFrequency = new JButton( measureAction );
+
+    final JPanel measureClock = new JPanel( new GridBagLayout() );
+    measureClock.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Measure clock" ),
+        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+
+    measureClock.add( new JLabel( "Clock:" ), //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    measureClock.add( this.clockFrequencyLabel, //
+        new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+    measureClock.add( new JLabel( "Channel:" ), //
+        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    measureClock.add( channelChooser, //
+        new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+    measureClock.add( measureClockFrequency, //
+        new GridBagConstraints( 0, 2, 2, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
 
     final JPanel result = new JPanel( new GridBagLayout() );
 
-    final JLabel frequency = new JLabel( "" );
-    final JLabel distance = new JLabel( "" );
+    result.add( basicMeasurements, //
+        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.HORIZONTAL,
+            LABEL_INSETS, 0, 0 ) );
 
-    final JComboBox pointA = new JComboBox( cursorNames );
-    pointA.setSelectedIndex( this.selectedCursorA );
+    result.add( measureClock, //
+        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.HORIZONTAL,
+            LABEL_INSETS, 0, 0 ) );
 
-    final JComboBox pointB = new JComboBox( cursorNames );
-    pointB.setSelectedIndex( this.selectedCursorB );
-
-    this.controller = new MeasurementController( aData, pointA, pointB, frequency, distance );
-    pointA.addItemListener( this.controller );
-    pointB.addItemListener( this.controller );
-
-    result.add( new JLabel( "Cursor A:" ), //
-        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    result.add( pointA, //
-        new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-
-    result.add( new JLabel( "Cursor B:" ), //
-        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    result.add( pointB, //
-        new GridBagConstraints( 1, 1, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-
-    result.add( new JLabel( "Distance:" ), //
-        new GridBagConstraints( 0, 2, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    result.add( distance, //
-        new GridBagConstraints( 1, 2, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-
-    result.add( new JLabel( "Frequency:" ), //
-        new GridBagConstraints( 0, 3, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    result.add( frequency, //
-        new GridBagConstraints( 1, 3, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-
-    result.add( new JLabel(), //
-        new GridBagConstraints( 0, 4, 2, 1, 10.0, 10.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+    // Spacer
+    result.add( Box.createVerticalGlue(), //
+        new GridBagConstraints( 0, 2, 2, 1, 10.0, 10.0, GridBagConstraints.NORTHEAST, GridBagConstraints.HORIZONTAL,
             LABEL_INSETS, 0, 0 ) );
 
     return result;
+  }
+
+  /**
+   * Returns the time of a cursor with a given index as display value.
+   * 
+   * @param aIndex
+   *          the cursor index to get the time for, >= 0 && < 10.
+   * @return a display value for the cursor time, can be "not set" if the cursor
+   *         is not set.
+   */
+  private String getCursorTimeDisplayValue( final int aIndex )
+  {
+    if ( this.data != null )
+    {
+      final Double cursorTimeValue = this.data.getCursorTimeValue( aIndex );
+      if ( cursorTimeValue != null )
+      {
+        return DisplayUtils.displayTime( cursorTimeValue );
+      }
+    }
+    return "<not set>";
   }
 }

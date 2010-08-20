@@ -143,6 +143,25 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Returns whether the given component is "actively" shown in screen, that is,
+   * it or any of its ancestors is focused.
+   * 
+   * @param aComponent
+   *          the component to determine whether it is actively shown on screen,
+   *          may be <code>null</code>.
+   * @return <code>true</code> if the given component is actively shown,
+   *         <code>false</code> otherwise.
+   */
+  public static final boolean isActivelyShown( final Component aComponent )
+  {
+    final KeyboardFocusManager kbdFocusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+    final Window owner = kbdFocusManager.getFocusedWindow();
+
+    return ( ( aComponent != null ) && ( owner != null ) && ( ( owner == aComponent ) || owner
+        .isAncestorOf( aComponent ) ) );
+  }
+
+  /**
    * Sets the selected item of the given checkbox to the value given, unless
    * this value is <code>null</code>.
    * 
