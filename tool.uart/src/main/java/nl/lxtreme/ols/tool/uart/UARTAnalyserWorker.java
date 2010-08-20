@@ -253,8 +253,6 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
 
     final UARTDataSet decodedData = new UARTDataSet( startOfDecode, endOfDecode, this );
 
-    int bitLength;
-
     // decode RxD
     final int sampleRate = getSampleRate();
     if ( this.rxdMask != 0 )
@@ -266,14 +264,22 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
         LOG.fine( baudrate.toString() );
       }
 
-      bitLength = baudrate.getBest();
+      final int bitLength = baudrate.getBest();
       if ( bitLength == 0 )
       {
-        LOG.fine( "No data for decode" );
+        LOG.info( "No (usable) RxD-data found for determining bitlength/baudrate ..." );
       }
       else
       {
-        LOG.fine( "Samplerate=" + sampleRate + " Bitlength=" + bitLength + " Baudrate=" + sampleRate / bitLength );
+        // We know the avg. bitlength, so we can use it for calculating the
+        // baudrate...
+        decodedData.setSampledBitLength( bitLength );
+
+        if ( LOG.isLoggable( Level.FINE ) )
+        {
+          LOG.fine( "Samplerate: " + sampleRate + ", bitlength: " + bitLength + ", baudrate = "
+              + decodedData.getBaudRate() );
+        }
 
         decodeData( decodedData, bitLength, this.rxdMask, UARTData.UART_TYPE_RXDATA );
       }
@@ -289,14 +295,22 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
         LOG.fine( baudrate.toString() );
       }
 
-      bitLength = baudrate.getBest();
+      final int bitLength = baudrate.getBest();
       if ( bitLength == 0 )
       {
-        LOG.fine( "No data for decode" );
+        LOG.info( "No (usable) TxD-data found for determining bitlength/baudrate ..." );
       }
       else
       {
-        LOG.fine( "Samplerate=" + sampleRate + " Bitlength=" + bitLength + " Baudrate=" + sampleRate / bitLength );
+        // We know the avg. bitlength, so we can use it for calculating the
+        // baudrate...
+        decodedData.setSampledBitLength( bitLength );
+
+        if ( LOG.isLoggable( Level.FINE ) )
+        {
+          LOG.fine( "Samplerate: " + sampleRate + ", bitlength: " + bitLength + ", baudrate = "
+              + decodedData.getBaudRate() );
+        }
 
         decodeData( decodedData, bitLength, this.txdMask, UARTData.UART_TYPE_TXDATA );
       }
@@ -398,14 +412,10 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
     final long endOfDecode = aDataSet.getEndOfDecode();
     final double length = endOfDecode - startOfDecode;
 
-    if ( startOfDecode > 0 )
-    {
-      a = startOfDecode;
-    }
+    a = Math.max( 0, startOfDecode );
 
     while ( ( endOfDecode - a ) > ( ( this.bitCount + stopCount + parityCount ) * aBaud ) )
     {
-
       /*
        * find first falling edge this is the start of the startbit. If the
        * inverted checkbox is set find the first rising edge.
@@ -432,7 +442,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
         b = getDataAt( i ) & aMask;
 
         // update progress
-        setProgress( ( int )( i * 100.0 / length ) );
+        setProgress( ( int )( ( i - a ) * 100.0 / length ) );
       }
 
       if ( i >= endOfDecode )
