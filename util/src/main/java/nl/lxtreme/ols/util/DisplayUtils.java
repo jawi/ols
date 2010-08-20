@@ -100,6 +100,39 @@ public final class DisplayUtils
   }
 
   /**
+   * Converts a given size (in bytes) to something more readable for the user,
+   * like "10K". The unit conversion is <em>always</em> done in binary (units of
+   * 1024).
+   * 
+   * @param aSize
+   *          the size (in bytes) to convert to a display value.
+   * @return the display representation of the given size, never
+   *         <code>null</code>.
+   */
+  public static String displaySize( final double aSize )
+  {
+    final String[] unitStrs = { "", "k", "M", "G", "T" };
+    final double[] unitVals = { 1.0, 1024.0, 1048576.0, 1073741824.0, 1099511627776.0 };
+
+    int i = unitVals.length - 1;
+    for ( ; i >= 0; i-- )
+    {
+      if ( aSize >= unitVals[i] )
+      {
+        break;
+      }
+    }
+    i = Math.max( i, 0 );
+
+    if ( LOG.isLoggable( Level.FINE ) )
+    {
+      LOG.fine( "aFreq = " + aSize + " -> " + unitVals[i] + " " + unitStrs[i] );
+    }
+
+    return String.format( "%d%s", ( int )( aSize / unitVals[i] ), unitStrs[i] );
+  }
+
+  /**
    * Converts a given time (in seconds) to something more readable for the user,
    * like "1.000 ms".
    * 
