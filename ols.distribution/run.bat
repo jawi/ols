@@ -4,8 +4,14 @@ rem Check whether the "magic" Java binary is available...
 java -version > NUL 2> NUL
 if errorlevel 1 goto noJVM
 
+rem determine the location this script is run in...
+set BASEDIR=%~dp0
+rem all paths are used relatively from the base dir...
+set PLUGINDIR=%BASEDIR%\plugins
+set CLASSPATH=%BASEDIR%\bin\*
+
 rem For now, use the "console enabled" java for Windows...
-java -Dnl.lxtreme.ols.bundle.dir=plugins/ -cp "bin/*" nl.lxtreme.ols.runner.Runner
+java -Dnl.lxtreme.ols.bundle.dir="%PLUGINDIR%" -cp "%CLASSPATH%" nl.lxtreme.ols.runner.Runner
 goto end
 
 :noJVM
