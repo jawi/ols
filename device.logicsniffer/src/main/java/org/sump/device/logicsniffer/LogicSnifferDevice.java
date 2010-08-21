@@ -248,10 +248,7 @@ public class LogicSnifferDevice implements Device
     CommPortIdentifier portId = null;
     boolean found = false;
 
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      LOG.info( "Attaching to " + aPortName + " @ " + aPortRate + "bps" );
-    }
+    LOG.log( Level.INFO, "Attaching to {0} @ {1}bps", new Object[] { aPortName, aPortRate } );
 
     try
     {
@@ -580,27 +577,38 @@ public class LogicSnifferDevice implements Device
     int rleTrigPos = 0;
     if ( this.rleEnabled )
     {
-      if ( LOG.isLoggable( Level.FINE ) )
-      {
-        LOG.fine( "Run Length decode, samples: " + Integer.toString( samples ) );
-      }
+      LOG.log( Level.FINE, "Decoding Run Length Encoded data, sample count: {0}", samples );
 
       final List<Integer> decodedBuffer = new ArrayList<Integer>( buffer.length );
 
+      int old = buffer[0];
       for ( int i = 0; i < samples; i++ )
       {
+        if ( LOG.isLoggable( Level.FINE ) )
+        {
+          LOG.log( Level.FINE, "RLE decoding: 0x{0}", Integer.toHexString( buffer[i] ) );
+        }
+
         if ( ( buffer[i] & 0x80000000 ) != 0 )
         {
           // This is a "count"
-          if ( i == 0 )
+          if ( ( old & 0x80000000 ) != 0 )
           {
-            // If the first sample is count, skip it.
+            // Skip the first part of the stream if it is composed from
+            // repeated repeat-counts.
+            old = buffer[i];
             continue;
           }
+
+          if ( ( buffer[i - 1] & 0x80000000 ) != 0 )
+          {
+            LOG.fine( "Duplicate count!" );
+          }
+
           final int count = 0x7FFFFFFF & buffer[i];
           for ( int j = 0; j < count; j++ )
           {
-            decodedBuffer.add( buffer[i - 1] );
+            decodedBuffer.add( old );
           }
         }
         else
@@ -610,8 +618,10 @@ public class LogicSnifferDevice implements Device
             rleTrigPos = decodedBuffer.size();
           }
           decodedBuffer.add( buffer[i] );
+          old = buffer[i];
         }
       }
+
       // Copy decoded data to buffer.
       // TODO: Optimize this so it is done in place...
       buffer = new int[decodedBuffer.size()];
@@ -1007,20 +1017,17 @@ public class LogicSnifferDevice implements Device
       {
         id = readInteger();
 
-        if ( LOG.isLoggable( Level.INFO ) )
+        if ( id == SLA_V0 )
         {
-          if ( id == SLA_V0 )
-          {
-            LOG.info( "Found Sump Logic Analyzer (0x" + Integer.toHexString( id ) + ") ..." );
-          }
-          else if ( id == SLA_V1 )
-          {
-            LOG.info( "Found Sump Logic Analyzer/LogicSniffer (0x" + Integer.toHexString( id ) + ") ..." );
-          }
-          else
-          {
-            LOG.info( "Found unknown device (0x" + Integer.toHexString( id ) + ") ..." );
-          }
+          LOG.log( Level.INFO, "Found Sump Logic Analyzer (0x{0}) ...", Integer.toHexString( id ) );
+        }
+        else if ( id == SLA_V1 )
+        {
+          LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer (0x{0}) ...", Integer.toHexString( id ) );
+        }
+        else
+        {
+          LOG.log( Level.INFO, "Found unknown device (0x{0}) ...", Integer.toHexString( id ) );
         }
       }
       catch ( final IOException exception )
@@ -1028,20 +1035,14 @@ public class LogicSnifferDevice implements Device
         /* don't care */
         id = -1;
 
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.log( Level.FINE, "I/O exception", exception );
-        }
+        LOG.log( Level.FINE, "I/O exception", exception );
       }
       catch ( final InterruptedException exception )
       {
         /* don't care */
         id = -1;
 
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.log( Level.FINE, "Port timeout!", exception );
-        }
+        LOG.log( Level.FINE, "Port timeout!", exception );
       }
     }
 
