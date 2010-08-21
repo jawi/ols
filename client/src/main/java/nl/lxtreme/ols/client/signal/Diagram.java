@@ -99,7 +99,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         dragCursor( this.currentCursor, mouseXpos );
       }
 
-      updateStatus( mouseXpos, mouseYpos, true /* aDragging */, this.startDragXpos );
+      updateStatus( mouseXpos, mouseYpos, true /* aDragging */, this.startDragXpos, null );
     }
 
     /**
@@ -111,6 +111,9 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     {
       final int mouseXpos = aEvent.getX();
       final int mouseYpos = aEvent.getY();
+
+      final int channel = ( mouseYpos / Diagram.this.settings.getChannelHeight() );
+      final ChannelAnnotation annotation = getAnnotationHover( channel, mouseXpos );
 
       final int cursorIdx = getCursorHover( mouseXpos );
       if ( cursorIdx >= 0 )
@@ -126,7 +129,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         Diagram.this.setCursor( Diagram.this.cursorDefault );
       }
 
-      updateStatus( mouseXpos, mouseYpos, false /* aDragging */, this.startDragXpos );
+      updateStatus( mouseXpos, mouseYpos, false /* aDragging */, this.startDragXpos, annotation );
     }
 
     /**
@@ -611,7 +614,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    *          <code>true</code> indicates that dragging information should be
    *          added
    */
-  final void updateStatus( final int aMouseXpos, final int aMouseYpos, final boolean aDragging, final int aStartDragXpos )
+  final void updateStatus( final int aMouseXpos, final int aMouseYpos, final boolean aDragging,
+      final int aStartDragXpos, final ChannelAnnotation aAnnotation )
   {
     if ( !hasCapturedData() )
     {
@@ -634,71 +638,78 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       sb.append( " | " );
     }
 
-    final int sampleRate = this.data.getSampleRate();
-    final long triggerPosition = this.data.getTriggerPosition();
-
-    if ( this.data.isCursorsEnabled() )
+    if ( aAnnotation != null )
     {
-      // print cursor data to status line
-      final long absCursorPosA = this.data.getCursorPosition( 1 ) - triggerPosition;
-      final long absCursorPosB = this.data.getCursorPosition( 2 ) - triggerPosition;
-      final long relCursorPos = this.data.getCursorPosition( 1 ) - this.data.getCursorPosition( 2 );
-
-      if ( !this.data.hasTimingData() )
-      {
-        sb.append( "Sample@A=" ).append( absCursorPosA ).append( " | " );
-        sb.append( "Sample@B=" ).append( absCursorPosB ).append( " | " );
-        sb.append( "Distance(A,B)=" ).append( relCursorPos );
-      }
-      else
-      {
-        sb.append( "Time@A=" ).append( DisplayUtils.displayScaledTime( absCursorPosA, sampleRate ) ).append( " | " );
-        sb.append( "Time@B=" ).append( DisplayUtils.displayScaledTime( absCursorPosB, sampleRate ) );
-        sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( Math.abs( relCursorPos ), sampleRate ) );
-        if ( relCursorPos != 0 )
-        {
-          sb.append( ", " ).append( "frequency " );
-          final double frequency = Math.abs( ( double )sampleRate / ( double )relCursorPos );
-          sb.append( DisplayUtils.displayFrequency( frequency ) );
-        }
-        sb.append( ")" );
-      }
+      sb.append( aAnnotation.getData() );
     }
     else
     {
-      // print origin status when no cursors used
-      final long idxMouseDragX = xToIndex( aStartDragXpos );
-      final long idxMouseX = xToIndex( aMouseXpos );
+      final int sampleRate = this.data.getSampleRate();
+      final long triggerPosition = this.data.getTriggerPosition();
 
-      if ( aDragging && ( idxMouseDragX != idxMouseX ) )
+      if ( this.data.isCursorsEnabled() )
       {
-        final long relDrag = idxMouseDragX - idxMouseX;
-        final long absMouseDragX = idxMouseDragX - triggerPosition;
+        // print cursor data to status line
+        final long absCursorPosA = this.data.getCursorPosition( 1 ) - triggerPosition;
+        final long absCursorPosB = this.data.getCursorPosition( 2 ) - triggerPosition;
+        final long relCursorPos = this.data.getCursorPosition( 1 ) - this.data.getCursorPosition( 2 );
 
         if ( !this.data.hasTimingData() )
         {
-          sb.append( "Sample " ).append( absMouseDragX );
-          sb.append( " (distance " ).append( relDrag ).append( ")" );
+          sb.append( "Sample@A=" ).append( absCursorPosA ).append( " | " );
+          sb.append( "Sample@B=" ).append( absCursorPosB ).append( " | " );
+          sb.append( "Distance(A,B)=" ).append( relCursorPos );
         }
         else
         {
-          final double frequency = Math.abs( ( double )sampleRate / ( double )relDrag );
-
-          sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseDragX, sampleRate ) );
-          sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( relDrag, sampleRate ) ).append( ", " );
-          sb.append( "Frequency " ).append( DisplayUtils.displayFrequency( frequency ) ).append( ")" );
+          sb.append( "Time@A=" ).append( DisplayUtils.displayScaledTime( absCursorPosA, sampleRate ) ).append( " | " );
+          sb.append( "Time@B=" ).append( DisplayUtils.displayScaledTime( absCursorPosB, sampleRate ) );
+          sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( Math.abs( relCursorPos ), sampleRate ) );
+          if ( relCursorPos != 0 )
+          {
+            sb.append( ", " ).append( "frequency " );
+            final double frequency = Math.abs( ( double )sampleRate / ( double )relCursorPos );
+            sb.append( DisplayUtils.displayFrequency( frequency ) );
+          }
+          sb.append( ")" );
         }
       }
       else
       {
-        final long absMouseX = idxMouseX - triggerPosition;
-        if ( !this.data.hasTimingData() )
+        // print origin status when no cursors used
+        final long idxMouseDragX = xToIndex( aStartDragXpos );
+        final long idxMouseX = xToIndex( aMouseXpos );
+
+        if ( aDragging && ( idxMouseDragX != idxMouseX ) )
         {
-          sb.append( "Sample " ).append( absMouseX );
+          final long relDrag = idxMouseDragX - idxMouseX;
+          final long absMouseDragX = idxMouseDragX - triggerPosition;
+
+          if ( !this.data.hasTimingData() )
+          {
+            sb.append( "Sample " ).append( absMouseDragX );
+            sb.append( " (distance " ).append( relDrag ).append( ")" );
+          }
+          else
+          {
+            final double frequency = Math.abs( ( double )sampleRate / ( double )relDrag );
+
+            sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseDragX, sampleRate ) );
+            sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( relDrag, sampleRate ) ).append( ", " );
+            sb.append( "Frequency " ).append( DisplayUtils.displayFrequency( frequency ) ).append( ")" );
+          }
         }
         else
         {
-          sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
+          final long absMouseX = idxMouseX - triggerPosition;
+          if ( !this.data.hasTimingData() )
+          {
+            sb.append( "Sample " ).append( absMouseX );
+          }
+          else
+          {
+            sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
+          }
         }
       }
     }
@@ -733,6 +744,17 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   protected final Action getAction( final String aID )
   {
     return this.actionProvider.getAction( aID );
+  }
+
+  /**
+   * @param aChannelIdx
+   * @param aMouseXpos
+   * @return
+   */
+  protected ChannelAnnotation getAnnotationHover( final int aChannelIdx, final int aMouseXpos )
+  {
+    final long idx = xToIndex( aMouseXpos );
+    return this.data.getChannelAnnotation( aChannelIdx, idx );
   }
 
   /**
@@ -1049,38 +1071,37 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           ( ( Graphics2D )aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING,
               RenderingHints.VALUE_ANTIALIAS_ON );
 
-          final ChannelAnnotations annotations = this.data.getChannelAnnotations( channelIdx );
-          if ( annotations != null )
+          final Iterator<ChannelAnnotation> annotations = this.data.getChannelAnnotations( channelIdx );
+          while ( annotations.hasNext() )
           {
-            for ( ChannelAnnotation annotation : annotations.getAnnotations() )
+            final ChannelAnnotation annotation = annotations.next();
+
+            long startIdx = annotation.getStartIndex() / this.timeDivider;
+            long endIdx = annotation.getEndIndex() / this.timeDivider;
+
+            final int x1 = ( int )( ( correctedScale * startIdx ) );
+            final int x2 = ( int )( ( correctedScale * endIdx ) );
+
+            final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
+
+            final int textXoffset = ( int )( ( ( x2 - x1 ) - fm.stringWidth( data ) ) / 2.0 );
+
+            final Color oldColor = aGraphics.getColor();
+            aGraphics.setColor( new Color( 0xc9, 0xc9, 0xc9, 50 ) );
+
+            aGraphics.fillRoundRect( x1, bofs + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2,
+                signalHeight / 2 );
+
+            aGraphics.setColor( new Color( 0x40, 0x2c, 0x29 ) );
+
+            aGraphics.drawRoundRect( x1, bofs + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2,
+                signalHeight / 2 );
+
+            aGraphics.setColor( oldColor );
+
+            if ( textXoffset > 0 )
             {
-              long startIdx = timestamps[( int )annotation.getStartIndex()] / this.timeDivider;
-              long endIdx = timestamps[( int )annotation.getEndIndex()] / this.timeDivider;
-
-              final int x1 = ( int )( ( correctedScale * startIdx ) );
-              final int x2 = ( int )( ( correctedScale * endIdx ) );
-
-              final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
-
-              final int textXoffset = ( int )( ( ( x2 - x1 ) - fm.stringWidth( data ) ) / 2.0 );
-
-              final Color oldColor = aGraphics.getColor();
-              aGraphics.setColor( new Color( 0xc9, 0xc9, 0xc9, 50 ) );
-
-              aGraphics.fillRoundRect( x1, bofs + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2,
-                  signalHeight / 2 );
-
-              aGraphics.setColor( new Color( 0x40, 0x2c, 0x29 ) );
-
-              aGraphics.drawRoundRect( x1, bofs + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2,
-                  signalHeight / 2 );
-
-              aGraphics.setColor( oldColor );
-
-              if ( textXoffset > 0 )
-              {
-                aGraphics.drawString( data, x1 + textXoffset, bofs + labelYpos - 4 );
-              }
+              aGraphics.drawString( data, x1 + textXoffset, bofs + labelYpos - 4 );
             }
           }
 
