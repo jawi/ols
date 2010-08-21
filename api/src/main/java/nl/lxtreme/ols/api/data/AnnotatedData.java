@@ -139,14 +139,44 @@ public final class AnnotatedData implements CapturedData
    *          < 32.
    * @return the channel annotations, can be <code>null</code>.
    */
-  public ChannelAnnotations getChannelAnnotations( final int aChannelIdx )
+  public ChannelAnnotation getChannelAnnotation( final int aChannelIdx, final long aTimeIndex )
   {
     if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + this.channelLabels.length );
     }
-    return this.annotations.get( Integer.valueOf( aChannelIdx ) );
+
+    final ChannelAnnotations channelAnnotations = this.annotations.get( Integer.valueOf( aChannelIdx ) );
+    if ( channelAnnotations == null )
+    {
+      return null;
+    }
+    return channelAnnotations.getAnnotation( aTimeIndex );
+  }
+
+  /**
+   * Returns the channel annotations.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to retrieve the annotations for, >= 0 &&
+   *          < 32.
+   * @return the channel annotations, can be <code>null</code>.
+   */
+  public Iterator<ChannelAnnotation> getChannelAnnotations( final int aChannelIdx )
+  {
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
+          + this.channelLabels.length );
+    }
+
+    final ChannelAnnotations channelAnnotations = this.annotations.get( Integer.valueOf( aChannelIdx ) );
+    if ( channelAnnotations == null )
+    {
+      return Collections.<ChannelAnnotation> emptyList().iterator();
+    }
+    return channelAnnotations.getIterator();
   }
 
   /**

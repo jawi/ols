@@ -32,7 +32,7 @@ public class ChannelAnnotations
   // VARIABLES
 
   private final int channel;
-  private final Collection<ChannelAnnotation> annotations;
+  private final List<ChannelAnnotation> annotations;
 
   // CONSTRUCTORS
 
@@ -82,6 +82,22 @@ public class ChannelAnnotations
   }
 
   /**
+   * @param aTimeIndex
+   * @return
+   */
+  public ChannelAnnotation getAnnotation( final long aTimeIndex )
+  {
+    for ( ChannelAnnotation annotation : this.annotations )
+    {
+      if ( ( annotation.getStartIndex() <= aTimeIndex ) && ( annotation.getEndIndex() >= aTimeIndex ) )
+      {
+        return annotation;
+      }
+    }
+    return null;
+  }
+
+  /**
    * @return the annotations
    */
   public Collection<ChannelAnnotation> getAnnotations()
@@ -95,6 +111,17 @@ public class ChannelAnnotations
   public int getChannel()
   {
     return this.channel;
+  }
+
+  /**
+   * @param aStartIdx
+   * @param aEndIdx
+   * @return
+   */
+  public Iterator<ChannelAnnotation> getIterator()
+  {
+    // Craft an iterator that walks between the determined boundries...
+    return this.annotations.iterator();
   }
 
   /**
