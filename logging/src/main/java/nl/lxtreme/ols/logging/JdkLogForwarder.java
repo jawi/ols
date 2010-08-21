@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.logging;
 
 
+import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -34,7 +35,7 @@ import org.osgi.service.log.*;
  * Based on <tt>Logging OSGi Applications - The Simple and Robust way</tt> by
  * Valery Abu-Eid.
  * 
- * @see http
+ * @see http 
  *      ://www.dynamicjava.org/articles/osgi-matters/logging-osgi-the-simple-way
  */
 public final class JdkLogForwarder
@@ -137,11 +138,11 @@ public final class JdkLogForwarder
       }
       if ( aRecord.getThrown() != null )
       {
-        getLogService().log( getToOsgiLogLevel( aRecord.getLevel() ), aRecord.getMessage(), aRecord.getThrown() );
+        getLogService().log( getToOsgiLogLevel( aRecord.getLevel() ), getMessage( aRecord ), aRecord.getThrown() );
       }
       else
       {
-        getLogService().log( getToOsgiLogLevel( aRecord.getLevel() ), aRecord.getMessage() );
+        getLogService().log( getToOsgiLogLevel( aRecord.getLevel() ), getMessage( aRecord ) );
       }
     }
 
@@ -175,6 +176,21 @@ public final class JdkLogForwarder
       {
         return LogService.LOG_DEBUG;
       }
+    }
+
+    /**
+     * @param aRecord
+     * @return
+     */
+    private String getMessage( final LogRecord aRecord )
+    {
+      final Object[] params = aRecord.getParameters();
+      if ( ( params != null ) && ( params.length > 0 ) )
+      {
+        final String rawMsg = aRecord.getMessage();
+        return MessageFormat.format( rawMsg, params );
+      }
+      return aRecord.getMessage();
     }
   }
 
