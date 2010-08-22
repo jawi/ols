@@ -25,14 +25,14 @@ import java.util.*;
 
 
 /**
- * @author jawi
+ * Denotes a set of channel annotations for a single channel.
  */
 public class ChannelAnnotations
 {
   // VARIABLES
 
   private final int channel;
-  private final List<ChannelAnnotation> annotations;
+  private final SortedSet<ChannelAnnotation> annotations;
 
   // CONSTRUCTORS
 
@@ -42,7 +42,7 @@ public class ChannelAnnotations
   public ChannelAnnotations( final int aChannel )
   {
     this.channel = aChannel;
-    this.annotations = new ArrayList<ChannelAnnotation>();
+    this.annotations = new TreeSet<ChannelAnnotation>();
   }
 
   // METHODS
@@ -89,7 +89,7 @@ public class ChannelAnnotations
   {
     for ( ChannelAnnotation annotation : this.annotations )
     {
-      if ( ( annotation.getStartIndex() <= aTimeIndex ) && ( annotation.getEndIndex() >= aTimeIndex ) )
+      if ( annotation.isInRange( aTimeIndex ) )
       {
         return annotation;
       }
@@ -106,22 +106,39 @@ public class ChannelAnnotations
   }
 
   /**
+   * Returns all annotations that are "visible" in the range of the given start
+   * and end index.
+   * 
+   * @param aStartIdx
+   *          the start index of the "visible" range, >= 0;
+   * @param aEndIdx
+   *          the end index of the "visible" range, >= 0.
+   * @return an iterator of all "visible" channel annotations, never
+   *         <code>null</code>.
+   */
+  public Iterator<ChannelAnnotation> getAnnotations( final long aStartIdx, final long aEndIdx )
+  {
+    // Try to find the exact starting & ending index in our own
+    // administration...
+    final List<ChannelAnnotation> result = new ArrayList<ChannelAnnotation>();
+    for ( ChannelAnnotation ann : this.annotations )
+    {
+      if ( ann.isInRange( aStartIdx, aEndIdx ) )
+      {
+        result.add( ann );
+      }
+    }
+
+    // Craft an iterator that walks between the determined boundries...
+    return result.iterator();
+  }
+
+  /**
    * @return the channel
    */
   public int getChannel()
   {
     return this.channel;
-  }
-
-  /**
-   * @param aStartIdx
-   * @param aEndIdx
-   * @return
-   */
-  public Iterator<ChannelAnnotation> getIterator()
-  {
-    // Craft an iterator that walks between the determined boundries...
-    return this.annotations.iterator();
   }
 
   /**

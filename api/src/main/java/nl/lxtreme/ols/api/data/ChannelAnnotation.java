@@ -22,15 +22,14 @@ package nl.lxtreme.ols.api.data;
 
 
 /**
- * Provides an annotation for one channel.
+ * Provides an annotation for a single channel.
  */
-public final class ChannelAnnotation
+public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
 {
   // VARIABLES
 
   private final long startIndex;
   private final long endIndex;
-
   private final Object data;
 
   // CONSTRUCTORS
@@ -43,6 +42,22 @@ public final class ChannelAnnotation
     this.startIndex = aStartIndex;
     this.endIndex = aEndIndex;
     this.data = aData;
+  }
+
+  // METHODS
+
+  /**
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+  @Override
+  public int compareTo( final ChannelAnnotation aAnnotation )
+  {
+    int result = this.startIndex < aAnnotation.startIndex ? -1 : ( this.startIndex == aAnnotation.startIndex ? 0 : 1 );
+    if ( result == 0 )
+    {
+      result = this.endIndex < aAnnotation.endIndex ? -1 : ( this.endIndex == aAnnotation.endIndex ? 0 : 1 );
+    }
+    return result;
   }
 
   /**
@@ -119,6 +134,36 @@ public final class ChannelAnnotation
     result = prime * result + ( int )( this.endIndex ^ ( this.endIndex >>> 32 ) );
     result = prime * result + ( int )( this.startIndex ^ ( this.startIndex >>> 32 ) );
     return result;
+  }
+
+  /**
+   * Returns whether this annotation starts before the given index and ends
+   * after the given index.
+   * 
+   * @param aIndex
+   *          the index.
+   * @return <code>true</code> if this annotation is valid at the given index
+   *         (see above), <code>false</code> otherwise.
+   */
+  public boolean isInRange( final long aIndex )
+  {
+    return ( getStartIndex() <= aIndex ) && ( getEndIndex() >= aIndex );
+  }
+
+  /**
+   * Returns whether this annotation's start index is before the given end index
+   * and its end index is after the given start index.
+   * 
+   * @param aStartIndex
+   *          the starting index;
+   * @param aEndIndex
+   *          the ending index.
+   * @return <code>true</code> if this annotation is valid between the given
+   *         range (see above), <code>false</code> otherwise.
+   */
+  public boolean isInRange( final long aStartIndex, final long aEndIndex )
+  {
+    return ( getStartIndex() <= aEndIndex ) && ( getEndIndex() >= aStartIndex );
   }
 
   /**

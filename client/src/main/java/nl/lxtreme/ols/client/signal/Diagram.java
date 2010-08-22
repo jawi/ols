@@ -1071,18 +1071,18 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           ( ( Graphics2D )aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING,
               RenderingHints.VALUE_ANTIALIAS_ON );
 
-          final Iterator<ChannelAnnotation> annotations = this.data.getChannelAnnotations( channelIdx );
+          final Iterator<ChannelAnnotation> annotations = this.data.getChannelAnnotations( channelIdx, aFromIndex,
+              aToIndex );
           while ( annotations.hasNext() )
           {
             final ChannelAnnotation annotation = annotations.next();
 
             long startIdx = annotation.getStartIndex() / this.timeDivider;
             long endIdx = annotation.getEndIndex() / this.timeDivider;
+            final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
 
             final int x1 = ( int )( ( correctedScale * startIdx ) );
             final int x2 = ( int )( ( correctedScale * endIdx ) );
-
-            final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
 
             final int textXoffset = ( int )( ( ( x2 - x1 ) - fm.stringWidth( data ) ) / 2.0 );
 

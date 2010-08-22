@@ -163,7 +163,8 @@ public final class AnnotatedData implements CapturedData
    *          < 32.
    * @return the channel annotations, can be <code>null</code>.
    */
-  public Iterator<ChannelAnnotation> getChannelAnnotations( final int aChannelIdx )
+  public Iterator<ChannelAnnotation> getChannelAnnotations( final int aChannelIdx, final long aStartIdx,
+      final long aEndIdx )
   {
     if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
     {
@@ -176,7 +177,7 @@ public final class AnnotatedData implements CapturedData
     {
       return Collections.<ChannelAnnotation> emptyList().iterator();
     }
-    return channelAnnotations.getIterator();
+    return channelAnnotations.getAnnotations( aStartIdx, aEndIdx );
   }
 
   /**
