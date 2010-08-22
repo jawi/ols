@@ -40,6 +40,9 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   public static final String PROPERTY_AUTO_DETECT_SCL = "AutoDetectSCL";
   public static final String PROPERTY_AUTO_DETECT_SDA = "AutoDetectSDA";
 
+  private static final String CHANNEL_SCL_NAME = "SCL";
+  private static final String CHANNEL_SDA_NAME = "SDA";
+
   private static final Logger LOG = Logger.getLogger( I2CAnalyserWorker.class.getName() );
 
   // VARIABLES
@@ -141,8 +144,8 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
-      LOG.fine( "Line A mask = 0x" + Integer.toHexString( this.lineAmask ) );
-      LOG.fine( "Line B mask = 0x" + Integer.toHexString( this.lineBmask ) );
+      LOG.log( Level.FINE, "Line A mask = 0x{0}", Integer.toHexString( this.lineAmask ) );
+      LOG.log( Level.FINE, "Line B mask = 0x{0}", Integer.toHexString( this.lineBmask ) );
     }
 
     /*
@@ -159,7 +162,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
         break;
       }
 
-      setProgress( ( sampleIdx * 100 / sampleCount ) );
+      setProgress( ( int )( sampleIdx * 100.0 / sampleCount ) );
     }
 
     if ( sampleIdx == sampleCount )
@@ -189,8 +192,8 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
           firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, LINE_B );
           firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, LINE_A );
 
-          setChannelLabel( sclIdx, "SCL" );
-          setChannelLabel( sdaIdx, "SDA" );
+          setChannelLabel( sclIdx, CHANNEL_SCL_NAME );
+          setChannelLabel( sdaIdx, CHANNEL_SDA_NAME );
         }
         else
         {
@@ -201,14 +204,14 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
           firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, LINE_A );
           firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, LINE_B );
 
-          setChannelLabel( sclIdx, "SCL" );
-          setChannelLabel( sdaIdx, "SDA" );
+          setChannelLabel( sclIdx, CHANNEL_SCL_NAME );
+          setChannelLabel( sdaIdx, CHANNEL_SDA_NAME );
         }
 
         break;
       }
 
-      setProgress( ( sampleIdx * 100 / sampleCount ) );
+      setProgress( ( int )( sampleIdx * 100.0 / sampleCount ) );
     }
 
     if ( sampleIdx == sampleCount )
@@ -226,7 +229,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
 
     // We've just found our start condition, start the report with that...
     reportStartCondition( i2cDataSet, calculateTime( timestamps[sampleIdx] ) );
-    addChannelAnnotation( sdaIdx, sampleIdx, sampleIdx, "START" );
+    addChannelAnnotation( sdaIdx, timestamps[sampleIdx - 1], timestamps[sampleIdx], "START" );
 
     /*
      * Now decode the bytes, SDA may only change when SCL is low. Otherwise it
@@ -241,9 +244,15 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     bitCount = 8;
     byteValue = 0;
 
-    long prevIdx = -1;
+    int idx = ( int )i2cDataSet.getStartOfDecode();
+    int prevIdx = -1;
 
-    for ( int idx = ( int )i2cDataSet.getStartOfDecode(); idx < i2cDataSet.getEndOfDecode() - 1; idx++ )
+    boolean startCondFound = true;
+    boolean tenBitAddress = false;
+    int slaveAddress = 0x00;
+    int direction = -1;
+
+    for ( ; idx < i2cDataSet.getEndOfDecode() - 1; idx++ )
     {
       final long time = calculateTime( timestamps[idx] );
       final int dataValue = values[idx];
@@ -260,10 +269,50 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
           prevIdx = idx;
         }
 
-        if ( ( scl == 0 ) && ( bitCount == 0 ) )
+        if ( bitCount == 0 )
         {
+          // store decoded byte
+          reportData( i2cDataSet, time, byteValue );
+
+          final String annotation;
+          if ( startCondFound )
+          {
+            // This is the (7- or 10-bit) address part...
+            direction = byteValue & 0x01;
+
+            if ( ( byteValue & 0xf8 ) == 0xf0 )
+            {
+              // 10-bit address part...
+              slaveAddress = ( byteValue & 0x06 ) << 6;
+              tenBitAddress = true;
+
+              annotation = String.format( "Setup %s 10-bit slave", ( direction == 1 ) ? "read from" : "write to" );
+            }
+            else
+            {
+              if ( tenBitAddress )
+              {
+                slaveAddress |= ( byteValue & 0xFF );
+                tenBitAddress = false;
+              }
+              else
+              {
+                slaveAddress |= ( ( byteValue >> 1 ) & 0xFF );
+              }
+              startCondFound = false;
+
+              annotation = String.format( "Setup %s slave: 0x%X", ( direction == 1 ) ? "read from" : "write to",
+                  slaveAddress );
+            }
+          }
+          else
+          {
+            annotation = String.format( "%s data: 0x%X (%c)", ( direction == 1 ) ? "Read" : "Write", byteValue,
+                byteValue );
+          }
+
           // TEST TODO XXX
-          addChannelAnnotation( sdaIdx, prevIdx, idx, String.format( "0x%X (%c)", byteValue, byteValue ) );
+          addChannelAnnotation( sdaIdx, timestamps[prevIdx], timestamps[idx], annotation );
 
           byteValue = 0;
         }
@@ -278,7 +327,15 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
         else
         {
           // read SDA
-          if ( bitCount == 0 )
+          if ( bitCount != 0 )
+          {
+            bitCount--;
+            if ( sda != 0 )
+            {
+              byteValue |= ( 1 << bitCount );
+            }
+          }
+          else
           {
             // read the confirmation of the slave...
             if ( sda != 0 )
@@ -286,32 +343,18 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
               // NACK
               reportNACK( i2cDataSet, time );
 
-              addChannelAnnotation( sdaIdx, idx - 1, idx + 1, "NACK" );
+              addChannelAnnotation( sdaIdx, timestamps[idx - 1], timestamps[idx + 1], "NACK" );
             }
             else
             {
               // ACK
               reportACK( i2cDataSet, time );
 
-              addChannelAnnotation( sdaIdx, idx - 1, idx + 1, "ACK" );
+              addChannelAnnotation( sdaIdx, timestamps[idx - 1], timestamps[idx + 1], "ACK" );
             }
 
             // next byte
             bitCount = 8;
-          }
-          else
-          {
-            bitCount--;
-            if ( sda != 0 )
-            {
-              byteValue |= ( 1 << bitCount );
-            }
-
-            if ( bitCount == 0 )
-            {
-              // store decoded byte
-              reportData( i2cDataSet, time, byteValue );
-            }
           }
         }
       }
@@ -331,11 +374,20 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
           {
             // SDA rises, this is a stop condition
             reportStopCondition( i2cDataSet, time );
+
+            addChannelAnnotation( sdaIdx, timestamps[idx - 1], timestamps[idx], "STOP" );
+
+            slaveAddress = 0x00;
+            direction = -1;
           }
           else
           {
             // SDA falls, this is a start condition
             reportStartCondition( i2cDataSet, time );
+
+            addChannelAnnotation( sdaIdx, timestamps[idx - 1], timestamps[idx], "START" );
+
+            startCondFound = true;
           }
           // new byte
           bitCount = 8;
