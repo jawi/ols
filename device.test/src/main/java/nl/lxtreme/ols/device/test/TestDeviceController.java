@@ -67,8 +67,10 @@ public class TestDeviceController implements DeviceController
 
     if ( DATA_FUNCTIONS[6].equals( this.dataFunction ) )
     {
-      data = new int[3460];
-      rate = new I2CGenerator().writeBitStream( data, "Hello World; this is a sample I2C bit stream!" );
+      final I2CGenerator generator = new I2CGenerator();
+      generator.writeBitStream( "Hello World; this is a sample I2C bit stream!" );
+      data = generator.getData();
+      rate = generator.getRate();
     }
     else
     {
@@ -103,7 +105,7 @@ public class TestDeviceController implements DeviceController
       }
 
     }
-    final CapturedData capturedData = new CapturedDataImpl( data, 0, rate, this.channels, Integer.MAX_VALUE );
+    final CapturedData capturedData = new CapturedDataImpl( data, 23, rate, this.channels, Integer.MAX_VALUE );
     aCallback.captureComplete( capturedData );
   }
 

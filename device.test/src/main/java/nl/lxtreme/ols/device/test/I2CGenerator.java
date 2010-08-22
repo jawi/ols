@@ -34,13 +34,55 @@ final class I2CGenerator
   private static final int SDA = 0x01;
   private static final int SCL = 0x02;
 
+  private static final int ACK = 0x00;
+  private static final int NACK = 0x01;
+
   // VARIABLES
 
-  private int clockSpeed;
+  private final int sampleRate;
+  private final int busSpeed;
+  private final int tickSize;
+  private final List<Integer> data;
   private int idx;
-  private boolean tick;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new I2CGenerator instance.
+   */
+  public I2CGenerator()
+  {
+    this.data = new ArrayList<Integer>();
+
+    this.busSpeed = 1000000; // 1 MHz
+    this.sampleRate = 4000000; // 4 MHz
+
+    this.tickSize = ( int )( Math.rint( this.sampleRate / ( double )this.busSpeed ) );
+  }
 
   // METHODS
+
+  /**
+   * @return
+   */
+  public int[] getData()
+  {
+    final int size = this.data.size();
+    final int[] result = new int[size];
+    for ( int i = 0; i < size; i++ )
+    {
+      result[i] = this.data.get( i ).intValue();
+    }
+    return result;
+  }
+
+  /**
+   * @return
+   */
+  public int getRate()
+  {
+    return this.sampleRate;
+  }
 
   /**
    * Writes a given string as bit-stream to the given data array.
@@ -49,32 +91,42 @@ final class I2CGenerator
    * @param aString
    * @return the I2C clock speed.
    */
-  public int writeBitStream( final int[] aData, final String aString )
+  public void writeBitStream( final String aString )
   {
-    this.clockSpeed = 1000000; // 1MHz
-
-    Arrays.fill( aData, SCL );
     this.idx = 0;
 
-    writeStartBit( aData );
+    writeStartBit();
 
-    writeByte( aData, ( byte )0xAA ); // write to address 0x55
-    writeBit( aData, 0 ); // ack
+    writeByte( ( byte )0xf6 ); // write to address 0x1ff (10-bit)
+    writeBit( ACK ); // ack
+
+    writeByte( ( byte )0xff );
+    writeBit( ACK ); // ack
 
     for ( byte b : aString.getBytes() )
     {
-      writeByte( aData, b );
+      writeByte( b );
       // ack
-      writeBit( aData, Math.random() > 0.8 ? 1 : 0 );
+      writeBit( Math.random() > 0.8 ? NACK : ACK );
     }
-    writeStopBit( aData );
+    writeStopBit();
 
-    while ( this.idx < aData.length )
+    writeStartBit();
+
+    writeByte( ( byte )0x55 ); // read from address 0x2a
+    writeBit( ACK ); // ack
+
+    writeByte( ( byte )'!' );
+    // ack
+    writeBit( Math.random() > 0.8 ? NACK : ACK );
+
+    writeStopBit();
+
+    int i = 20;
+    while ( i-- >= 0 )
     {
-      aData[this.idx++] |= SDA | SCL;
+      this.data.add( 0 );
     }
-
-    return this.clockSpeed;
   }
 
   /**
@@ -82,49 +134,47 @@ final class I2CGenerator
    */
   private int getClock()
   {
-    int result = this.tick ? 0 : 1;
-    if ( this.idx % 4 == 0 )
-    {
-      this.tick = !this.tick;
-    }
-    return result;
+    final double nextTickMultiple = this.tickSize * Math.floor( this.idx / this.tickSize );
+    final double tickIdx = ( nextTickMultiple == 0.0 ) ? this.idx : Math.ceil( this.idx / nextTickMultiple );
+    return ( ( tickIdx % 2 ) == 0 ) ? 1 : 0;
   }
 
   /**
    * @param aData
    * @param aBit
    */
-  private void writeBit( final int[] aData, final int aBit )
+  private void writeBit( final int aBit )
   {
-    int val = aData[this.idx];
+    int val = this.data.get( this.idx );
+
+    // While SCL should be high, let it also keep SDA stable...
     while ( getClock() == 1 )
     {
-      aData[this.idx] |= val | SCL;
+      this.data.add( val | SCL );
       this.idx++;
     }
 
-    aData[this.idx] &= ~SCL;
+    // Clear SCL...
+    val &= ~SCL;
+    this.data.remove( this.idx );
+    this.data.add( val );
+
+    // One tick later, update SDA...
     if ( aBit == 0 )
     {
-      aData[this.idx] &= ~SDA;
+      val &= ~SDA;
     }
-    else
+    else if ( aBit >= 1 )
     {
-      aData[this.idx] |= SDA;
+      val |= SDA;
     }
-    val = aData[this.idx];
+    this.data.add( val );
     this.idx++;
 
+    // As long as SCL remains low, keep SDA stable...
     while ( getClock() == 0 )
     {
-      aData[this.idx] |= val;
-      aData[this.idx] &= ~SCL;
-      this.idx++;
-    }
-
-    while ( getClock() == 1 )
-    {
-      aData[this.idx] |= val | SCL;
+      this.data.add( val );
       this.idx++;
     }
   }
@@ -133,13 +183,13 @@ final class I2CGenerator
    * @param aData
    * @param aValue
    */
-  private void writeByte( final int[] aData, byte aValue )
+  private void writeByte( byte aValue )
   {
     int bit;
 
     for ( bit = 0; bit < 8; bit++ )
     {
-      writeBit( aData, aValue & 0x80 );
+      writeBit( aValue & 0x80 );
       aValue <<= 1;
     }
   }
@@ -147,39 +197,44 @@ final class I2CGenerator
   /**
    * Data transfer is initiated with the START bit when SDA is pulled low while
    * SCL stays high.
-   * 
-   * @param aData
    */
-  private void writeStartBit( final int[] aData )
+  private void writeStartBit()
   {
-    aData[this.idx++] |= SDA | SCL;
-    aData[this.idx++] |= SDA | SCL;
-    aData[this.idx++] |= SDA | SCL;
-    aData[this.idx++] |= SCL;
-    aData[this.idx++] |= SCL;
+    int i = this.tickSize - 1;
+    while ( i-- > 0 )
+    {
+      this.data.add( SDA | SCL );
+    }
+    this.data.add( SCL );
+
+    i = this.tickSize;
+    while ( i-- > 0 )
+    {
+      this.data.add( SCL );
+    }
+
+    this.idx = this.data.size() - 1;
   }
 
   /**
    * When the transfer is complete, a STOP bit (P) is sent by releasing the data
    * line to allow it to be pulled up while SCL is constantly high.
-   * 
-   * @param aData
    */
-  private void writeStopBit( final int[] aData )
+  private void writeStopBit()
   {
-    int val = aData[this.idx];
-    while ( getClock() == 0 )
+    writeBit( -1 ); // stuff
+
+    // SCL should become high now...
+    this.data.add( SCL );
+
+    // One tick later also make SDA high...
+    int i = this.tickSize - 1;
+    while ( i-- > 0 )
     {
-      aData[this.idx] |= val;
-      aData[this.idx] &= ~SCL;
-      this.idx++;
+      this.data.add( SDA | SCL );
     }
 
-    aData[this.idx++] |= SCL;
-    aData[this.idx++] |= SCL;
-    aData[this.idx++] |= SDA | SCL;
-    aData[this.idx++] |= SDA | SCL;
-    aData[this.idx++] |= SDA | SCL;
+    this.idx = this.data.size() - 1;
   }
 
 }
