@@ -174,7 +174,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         }
         a = values[i] & this.csMask;
 
-        setProgress( ( int )( i * 100.0 / length ) );
+        setProgress( ( int )( ( i - startOfDecode ) * 100.0 / length ) );
       }
 
       if ( c == 0 )
@@ -295,7 +295,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       }
       a = values[i] & this.csMask;
 
-      setProgress( ( int )( i * 100.0 / length ) );
+      setProgress( ( int )( ( i - aStartOfDecode ) * 100.0 / length ) );
     }
   }
 
@@ -384,7 +384,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       }
       a = values[i] & this.csMask;
 
-      setProgress( ( int )( i * 100.0 / length ) );
+      setProgress( ( int )( ( i - aStartOfDecode ) * 100.0 / length ) );
     }
   }
 

@@ -671,7 +671,6 @@ public final class AnnotatedData implements CapturedData
     finally
     {
       bw.flush();
-      bw.close();
     }
   }
 }

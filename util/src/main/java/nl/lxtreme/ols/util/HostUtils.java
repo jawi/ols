@@ -115,7 +115,7 @@ public final class HostUtils
     String filename = aFile.getName();
     int idx = filename.lastIndexOf( '.' );
 
-    if ( ( idx > 0 ) && ( idx < filename.length() - 1 ) )
+    if ( ( idx >= 0 ) && ( idx < filename.length() - 1 ) )
     {
       ext = filename.substring( idx + 1 ).toLowerCase();
     }
@@ -309,14 +309,36 @@ public final class HostUtils
    */
   public static final File setFileExtension( final File aFile, final String aFileExtension )
   {
-    String filename = aFile.getName();
+    // Take care of any given periods in the extension...
+    String extension = aFileExtension.trim();
+    if ( extension.startsWith( "." ) )
+    {
+      extension = extension.substring( 1 );
+    }
+
     // If the filename already has the given file extension, than simply do
     // nothing...
-    if ( aFileExtension.trim().isEmpty() || filename.toLowerCase().endsWith( aFileExtension.toLowerCase() ) )
+    if ( extension.isEmpty() )
     {
       return aFile;
     }
-    return new File( aFile.getPath(), filename + "." + aFileExtension );
+
+    File directory = aFile;
+    String filename = "";
+    boolean endsWithExtension = aFile.getName().toLowerCase().endsWith( extension.toLowerCase() );
+
+    if ( !aFile.isDirectory() || endsWithExtension )
+    {
+      filename = aFile.getName();
+      directory = aFile.getParentFile();
+    }
+
+    if ( !endsWithExtension )
+    {
+      filename = filename.concat( "." ).concat( aFileExtension );
+    }
+
+    return new File( directory, filename );
   }
 
   /**
