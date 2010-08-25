@@ -36,7 +36,8 @@ import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
+import nl.lxtreme.ols.util.HostUtils.*;
+import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
@@ -45,7 +46,7 @@ import org.osgi.framework.*;
 /**
  * Denotes the UI-host.
  */
-public final class Host implements CaptureCallback, AnalysisCallback, ApplicationCallback
+public final class Host implements ActionProvider, CaptureCallback, AnalysisCallback, ApplicationCallback
 {
   // CONSTANT
 
@@ -165,6 +166,15 @@ public final class Host implements CaptureCallback, AnalysisCallback, Applicatio
   }
 
   /**
+   * @see nl.lxtreme.ols.client.ActionProvider#getAction(java.lang.String)
+   */
+  @Override
+  public final Action getAction( final String aID )
+  {
+    return this.actionManager.getAction( aID );
+  }
+
+  /**
    * @return
    */
   public AnnotatedData getAnnotatedData()
@@ -183,6 +193,16 @@ public final class Host implements CaptureCallback, AnalysisCallback, Applicatio
   }
 
   /**
+   * Returns a symbolic name for this host.
+   * 
+   * @return a symbolic name, never <code>null</code>.
+   */
+  public final String getName()
+  {
+    return "LogicSniffer";
+  }
+
+  /**
    * @see nl.lxtreme.ols.util.HostUtils.ApplicationCallback#handleAbout()
    */
   @Override
@@ -192,7 +212,7 @@ public final class Host implements CaptureCallback, AnalysisCallback, Applicatio
         + "Copyright 2006-2010 Michael Poppitz\n" //
         + "Copyright 2010 J.W. Janssen\n\n" //
         + "This software is released under the GNU GPL.\n\n" //
-        + "Version: 0.7.0\n\n" //
+        + "Version: 0.8.3\n\n" //
         + "For more information see:\n" //
         + "  <http://www.lxtreme.nl/ols/>\n" //
         + "  <http://dangerousprototypes.com/open-logic-sniffer/>\n" //
@@ -208,7 +228,6 @@ public final class Host implements CaptureCallback, AnalysisCallback, Applicatio
   @Override
   public boolean handlePreferences()
   {
-    // TODO Auto-generated method stub
     return false;
   }
 
@@ -223,26 +242,26 @@ public final class Host implements CaptureCallback, AnalysisCallback, Applicatio
   }
 
   /**
+   * @see nl.lxtreme.ols.util.HostUtils.ApplicationCallback#hasPreferences()
+   */
+  @Override
+  public boolean hasPreferences()
+  {
+    return false;
+  }
+
+  /**
    * Initializes this host application.
    */
   public void initialize() throws Exception
   {
-    HostUtils.initOSSpecifics( "LogicSniffer", this );
-
-    this.mainFrame = new JFrame( "LogicSniffer - Logic Analyzer Client" );
-    this.diagramScrollPane = new DiagramScrollPane( this.project )
+    if ( Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) ) )
     {
-      private static final long serialVersionUID = 1L;
+      ThreadViolationDetectionRepaintManager.install();
+    }
 
-      /**
-       * @see nl.lxtreme.ols.client.ActionProvider#getAction(java.lang.String)
-       */
-      @Override
-      public Action getAction( final String aID )
-      {
-        return Host.this.getAction( aID );
-      }
-    };
+    this.mainFrame = new JFrame( getName().concat( " - Logic Analyzer Client" ) );
+    this.diagramScrollPane = new DiagramScrollPane( this.project, this );
     this.status = new JTextStatusBar();
 
     this.actionManager.add( new NewProjectAction( this.project ) );
@@ -329,15 +348,6 @@ public final class Host implements CaptureCallback, AnalysisCallback, Applicatio
   public void updateProgress( final int aPercentage )
   {
     this.status.setProgress( aPercentage );
-  }
-
-  /**
-   * @param aID
-   * @return
-   */
-  protected final Action getAction( final String aID )
-  {
-    return this.actionManager.getAction( aID );
   }
 
   /**
