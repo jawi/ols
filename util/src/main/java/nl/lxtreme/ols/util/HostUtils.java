@@ -21,12 +21,15 @@
 package nl.lxtreme.ols.util;
 
 
+import java.awt.event.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.logging.*;
 
 import javax.swing.*;
+
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -77,6 +80,21 @@ public final class HostUtils
      *         <code>false</code> otherwise.
      */
     public boolean hasPreferences();
+  }
+
+  static final class CloseOptionPaneAction extends AbstractAction
+  {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      final JOptionPane optionPane = ( JOptionPane )aEvent.getSource();
+      optionPane.setValue( new Integer( JOptionPane.CLOSED_OPTION ) );
+    }
   }
 
   /**
@@ -181,6 +199,18 @@ public final class HostUtils
       System.setProperty( "com.apple.mrj.application.growbox.intrudes", "false" );
       System.setProperty( "com.apple.mrj.application.live-resize", "false" );
       System.setProperty( "com.apple.macos.smallTabs", "true" );
+
+      // Install an additional accelerator (Cmd+W) for closing option panes...
+      ActionMap map = ( ActionMap )UIManager.get( "OptionPane.actionMap" );
+      if ( map == null )
+      {
+        map = new ActionMap();
+        UIManager.put( "OptionPane.actionMap", map );
+      }
+      map.put( "close", new CloseOptionPaneAction() );
+
+      UIManager.put( "OptionPane.windowBindings", //
+          new Object[] { SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ), "close", "ESCAPE", "close" } );
 
       if ( aApplicationCallback != null )
       {

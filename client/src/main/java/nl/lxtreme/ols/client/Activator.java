@@ -55,7 +55,7 @@ public class Activator implements BundleActivator
 
     // This has to be done *before* any other Swing related code is executed
     // so this also means the #invokeLater call done below...
-    HostUtils.initOSSpecifics( this.host.getName(), this.host );
+    HostUtils.initOSSpecifics( this.host.getShortName(), this.host );
 
     final Runnable task = new Runnable()
     {

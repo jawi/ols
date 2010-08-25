@@ -216,8 +216,13 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    SwingComponentUtils.setSelectedItem( this.lineA, aProperties.getProperty( aNamespace + ".lineA" ) );
-    SwingComponentUtils.setSelectedItem( this.lineB, aProperties.getProperty( aNamespace + ".lineB" ) );
+    SwingComponentUtils.setSelectedIndex( this.lineA, aProperties.getProperty( aNamespace + ".lineA" ) );
+    SwingComponentUtils.setSelectedIndex( this.lineB, aProperties.getProperty( aNamespace + ".lineB" ) );
+
+    SwingComponentUtils.setSelected( this.detectSTART, aProperties.getProperty( aNamespace + ".detectStart" ) );
+    SwingComponentUtils.setSelected( this.detectSTOP, aProperties.getProperty( aNamespace + ".detectStop" ) );
+    SwingComponentUtils.setSelected( this.detectNACK, aProperties.getProperty( aNamespace + ".detectNack" ) );
+    SwingComponentUtils.setSelected( this.detectACK, aProperties.getProperty( aNamespace + ".detectAck" ) );
   }
 
   /**
@@ -295,6 +300,11 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   {
     aProperties.setProperty( aNamespace + ".lineA", Integer.toString( this.lineA.getSelectedIndex() ) );
     aProperties.setProperty( aNamespace + ".lineB", Integer.toString( this.lineB.getSelectedIndex() ) );
+
+    aProperties.setProperty( aNamespace + ".detectStart", Boolean.toString( this.detectSTART.isSelected() ) );
+    aProperties.setProperty( aNamespace + ".detectStop", Boolean.toString( this.detectSTOP.isSelected() ) );
+    aProperties.setProperty( aNamespace + ".detectNack", Boolean.toString( this.detectNACK.isSelected() ) );
+    aProperties.setProperty( aNamespace + ".detectAck", Boolean.toString( this.detectACK.isSelected() ) );
   }
 
   /**

@@ -23,7 +23,6 @@ package nl.lxtreme.ols.client.action;
 
 import java.io.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.*;
 
@@ -50,10 +49,9 @@ public class RepeatCaptureAction extends CaptureAction
    * @param aProject
    *          the project to use.
    */
-  public RepeatCaptureAction( final Host aHost, final Project aProject )
+  public RepeatCaptureAction( final Host aHost )
   {
-    super( ID, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat the capture with current device settings.", aHost,
-        aProject );
+    super( ID, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat the capture with current device settings.", aHost );
   }
 
   // METHODS

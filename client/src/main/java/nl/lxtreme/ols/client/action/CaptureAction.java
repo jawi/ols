@@ -27,7 +27,6 @@ import java.io.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.*;
 
@@ -47,7 +46,6 @@ public class CaptureAction extends BaseAction
   // VARIABLES
 
   private final Host host;
-  private final Project project;
 
   // CONSTRUCTORS
 
@@ -55,13 +53,11 @@ public class CaptureAction extends BaseAction
    * Creates a new CaptureAction instance.
    * 
    * @param aHost
-   *          the host this action belongs to;
-   * @param aPropertyManager
-   *          the property manager to use.
+   *          the host this action belongs to.
    */
-  public CaptureAction( final Host aHost, final Project aProject )
+  public CaptureAction( final Host aHost )
   {
-    this( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser", aHost, aProject );
+    this( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser", aHost );
   }
 
   /**
@@ -76,16 +72,13 @@ public class CaptureAction extends BaseAction
    * @param aDescription
    *          the description (tooltip) to use for this action;
    * @param aHost
-   *          the host this action belongs to;
-   * @param aPropertyManager
-   *          the property manager to use.
+   *          the host this action belongs to.
    */
   protected CaptureAction( final String aID, final String aIconName, final String aName, final String aDescription,
-      final Host aHost, final Project aProject )
+      final Host aHost )
   {
     super( aID, aIconName, aName, aDescription );
     this.host = aHost;
-    this.project = aProject;
   }
 
   // METHODS
@@ -147,9 +140,6 @@ public class CaptureAction extends BaseAction
    */
   private void captureData( final DeviceController aController ) throws IOException
   {
-    // Read back the properties of the device...
-    this.project.addConfigurable( aController );
-
     doCaptureData( aController, this.host );
   }
 }

@@ -272,7 +272,7 @@ public class LogicSnifferDeviceController implements DeviceController
   @Override
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    this.configDialog.readProperties( aNamespace, aProperties );
+    // NO-op
   }
 
   /**
@@ -295,6 +295,6 @@ public class LogicSnifferDeviceController implements DeviceController
   @Override
   public void writeProperties( final String aNamespace, final Properties aProperties )
   {
-    this.configDialog.writeProperties( aNamespace, aProperties );
+    // NO-op
   }
 }

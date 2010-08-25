@@ -28,6 +28,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -55,6 +56,8 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
     {
       super( "Close" );
       putValue( SHORT_DESCRIPTION, "Closes this dialog" );
+
+      putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ) );
     }
 
     // METHODS
@@ -123,5 +126,6 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   protected void close()
   {
     setVisible( false );
+    dispose();
   }
 }

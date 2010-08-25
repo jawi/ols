@@ -22,15 +22,14 @@ package nl.lxtreme.ols.device.test;
 
 
 import java.awt.*;
-import java.awt.Dialog.ModalityType;
-import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 
-import javax.swing.*;
-
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.util.swing.*;
+
+import static nl.lxtreme.ols.device.test.TestDeviceDialog.*;
 
 
 /**
@@ -38,19 +37,19 @@ import nl.lxtreme.ols.api.devices.*;
  */
 public class TestDeviceController implements DeviceController
 {
-  // CONSTANTS
-
-  private static final String[] DATA_FUNCTIONS = new String[] { "Sawtooth", "All zeros", "Sine", "odd-even",
-      "0x55-0xAA", "Random", "I2C sample" };
-  private static final Integer[] CHANNELS = new Integer[] { 1, 4, 8, 16, 32 };
-  private static final Integer[] DATA_LENGTH = new Integer[] { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072 };
-
   // VARIABLES
 
-  private boolean setupConfirmed = false;
-  private String dataFunction = DATA_FUNCTIONS[6];
-  private int channels = CHANNELS[2];
-  private int dataLength = DATA_LENGTH[5];
+  private TestDeviceDialog dialog;
+
+  // CONSTRUCTORS
+
+  /**
+   * 
+   */
+  public TestDeviceController()
+  {
+    super();
+  }
 
   // METHODS
 
@@ -60,12 +59,14 @@ public class TestDeviceController implements DeviceController
   @Override
   public void captureData( final CaptureCallback aCallback ) throws IOException
   {
-    final Random rnd = new Random();
+    final String dataFunction = this.dialog.getDataFunction();
+    final int dataLength = this.dialog.getDataLength();
+    final int channels = this.dialog.getChannels();
 
     final int[] data;
     int rate = 1000000000;
 
-    if ( DATA_FUNCTIONS[6].equals( this.dataFunction ) )
+    if ( DATA_FUNCTIONS[6].equals( dataFunction ) )
     {
       final I2CGenerator generator = new I2CGenerator();
       generator.writeBitStream( "Hello World; this is a sample I2C bit stream!" );
@@ -74,38 +75,40 @@ public class TestDeviceController implements DeviceController
     }
     else
     {
-      data = new int[this.dataLength];
+      final Random rnd = new Random();
+
+      data = new int[dataLength];
       for ( int i = 0; i < data.length; i++ )
       {
-        if ( DATA_FUNCTIONS[0].equals( this.dataFunction ) )
+        if ( DATA_FUNCTIONS[0].equals( dataFunction ) )
         {
           final int v = ( i / 8 ) & 0xff;
           data[i] = ( 255 - v ) | ( v << 8 ) | ( ( 255 - v ) << 16 ) | ( v << 24 );
         }
-        else if ( DATA_FUNCTIONS[1].equals( this.dataFunction ) )
+        else if ( DATA_FUNCTIONS[1].equals( dataFunction ) )
         {
           data[i] = 0x00;
         }
-        else if ( DATA_FUNCTIONS[2].equals( this.dataFunction ) )
+        else if ( DATA_FUNCTIONS[2].equals( dataFunction ) )
         {
           data[i] = ( int )( 128 + 128.0 * Math.sin( i / ( data.length / 8.0 ) ) );
         }
-        else if ( DATA_FUNCTIONS[3].equals( this.dataFunction ) )
+        else if ( DATA_FUNCTIONS[3].equals( dataFunction ) )
         {
           data[i] = ( i % 2 == 0 ) ? 0x55 : 0xAA;
         }
-        else if ( DATA_FUNCTIONS[4].equals( this.dataFunction ) )
+        else if ( DATA_FUNCTIONS[4].equals( dataFunction ) )
         {
           data[i] = ( i % 4 == 0 ) ? 0x55 : 0xAA;
         }
-        else if ( DATA_FUNCTIONS[5].equals( this.dataFunction ) )
+        else if ( DATA_FUNCTIONS[5].equals( dataFunction ) )
         {
           data[i] = rnd.nextInt();
         }
       }
-
     }
-    final CapturedData capturedData = new CapturedDataImpl( data, 23, rate, this.channels, Integer.MAX_VALUE );
+
+    final CapturedData capturedData = new CapturedDataImpl( data, 23, rate, channels, Integer.MAX_VALUE );
     aCallback.captureComplete( capturedData );
   }
 
@@ -134,7 +137,7 @@ public class TestDeviceController implements DeviceController
   @Override
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    // TODO Auto-generated method stub
+    // NO-op
   }
 
   /**
@@ -143,27 +146,10 @@ public class TestDeviceController implements DeviceController
   @Override
   public boolean setupCapture() throws IOException
   {
-    this.setupConfirmed = false;
+    final Window owner = SwingComponentUtils.getCurrentWindow();
 
-    final JDialog dialog = new JDialog();
-    dialog.setModalityType( ModalityType.APPLICATION_MODAL );
-    dialog.setTitle( "Set up test capture" );
-    dialog.setLayout( new BorderLayout() );
-
-    final JPanel contentPane = new JPanel( new BorderLayout() );
-    contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-    dialog.setContentPane( contentPane );
-
-    final JPanel contents = createContents();
-    contentPane.add( contents, BorderLayout.CENTER );
-
-    final JPanel buttonPane = createDialogButtonPanel( dialog );
-    contentPane.add( buttonPane, BorderLayout.PAGE_END );
-
-    dialog.pack();
-    dialog.setVisible( true );
-
-    return this.setupConfirmed;
+    this.dialog = new TestDeviceDialog( owner );
+    return this.dialog.showDialog();
   }
 
   /**
@@ -173,115 +159,7 @@ public class TestDeviceController implements DeviceController
   @Override
   public void writeProperties( final String aNamespace, final Properties aProperties )
   {
-    // TODO Auto-generated method stub
-  }
-
-  /**
-   * @return
-   */
-  private JPanel createContents()
-  {
-    final JComboBox dataFunctionCombo = new JComboBox( DATA_FUNCTIONS );
-    dataFunctionCombo.setSelectedItem( this.dataFunction );
-    dataFunctionCombo.addItemListener( new ItemListener()
-    {
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        TestDeviceController.this.dataFunction = ( String )aEvent.getItem();
-      }
-    } );
-
-    final JComboBox channelsCombo = new JComboBox( CHANNELS );
-    channelsCombo.setSelectedItem( this.channels );
-    channelsCombo.addItemListener( new ItemListener()
-    {
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        TestDeviceController.this.channels = ( Integer )aEvent.getItem();
-      }
-    } );
-
-    final JComboBox dataLengthCombo = new JComboBox( DATA_LENGTH );
-    dataLengthCombo.setSelectedItem( this.dataLength );
-    dataLengthCombo.addItemListener( new ItemListener()
-    {
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        TestDeviceController.this.dataLength = ( Integer )aEvent.getItem();
-      }
-    } );
-
-    final Insets labelInsets = new Insets( 4, 4, 4, 2 );
-    final Insets compInsets = new Insets( 4, 2, 4, 4 );
-
-    final JPanel result = new JPanel( new GridBagLayout() );
-    result.setBorder( BorderFactory.createEmptyBorder( 4, 0, 4, 0 ) );
-
-    result.add( new JLabel( "Data function" ), //
-        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, labelInsets, 0, 0 ) );
-    result.add( dataFunctionCombo, //
-        new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, compInsets, 0, 0 ) );
-
-    result.add( new JLabel( "Channels" ), //
-        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, labelInsets, 0, 0 ) );
-    result.add( channelsCombo, //
-        new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, compInsets, 0, 0 ) );
-
-    result.add( new JLabel( "Data length" ), //
-        new GridBagConstraints( 0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, labelInsets, 0, 0 ) );
-    result.add( dataLengthCombo, //
-        new GridBagConstraints( 1, 2, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, compInsets, 0, 0 ) );
-
-    return result;
-  }
-
-  /**
-   * @return
-   */
-  private JPanel createDialogButtonPanel( final JDialog aDialog )
-  {
-    final JButton closeButton = new JButton( "Close" );
-    closeButton.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        TestDeviceController.this.setupConfirmed = false;
-        aDialog.setVisible( false );
-      }
-    } );
-
-    final JButton okButton = new JButton( "Ok" );
-    okButton.setPreferredSize( closeButton.getPreferredSize() );
-    okButton.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        TestDeviceController.this.setupConfirmed = true;
-        aDialog.setVisible( false );
-      }
-    } );
-
-    final JPanel buttonPane = new JPanel();
-    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
-    buttonPane.setBorder( BorderFactory.createEmptyBorder( 8, 4, 8, 4 ) );
-
-    buttonPane.add( Box.createHorizontalGlue() );
-    buttonPane.add( okButton );
-    buttonPane.add( Box.createHorizontalStrut( 16 ) );
-    buttonPane.add( closeButton );
-
-    return buttonPane;
+    // NO-op
   }
 }
 

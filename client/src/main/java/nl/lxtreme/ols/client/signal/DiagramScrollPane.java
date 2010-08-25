@@ -26,7 +26,6 @@ import java.io.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 
@@ -49,7 +48,7 @@ public class DiagramScrollPane extends JScrollPane
   /**
    * 
    */
-  public DiagramScrollPane( final Project aProject, final ActionProvider aProvider )
+  public DiagramScrollPane( final ActionProvider aProvider )
   {
     super();
 
@@ -60,11 +59,6 @@ public class DiagramScrollPane extends JScrollPane
 
     // Presumably the fastest way of rendering...
     getViewport().setScrollMode( JViewport.BLIT_SCROLL_MODE );
-
-    if ( aProject != null )
-    {
-      aProject.addConfigurable( this.diagram );
-    }
   }
 
   // METHODS
@@ -240,7 +234,7 @@ public class DiagramScrollPane extends JScrollPane
       return;
     }
 
-    final int pos = Math.max( 0, this.diagram.getTargetPosition( dim.width, aSamplePos ) - 20 );
+    final int pos = Math.max( 0, this.diagram.getTargetPosition( aSamplePos ) - 20 );
     vp.setViewPosition( new Point( pos, 0 ) );
   }
 

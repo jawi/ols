@@ -23,6 +23,7 @@ package nl.lxtreme.ols.util.swing;
 
 import java.awt.*;
 import java.io.*;
+import java.util.*;
 
 import javax.swing.*;
 
@@ -85,6 +86,24 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Tries to find the current focused window.
+   * 
+   * @return the current focused window, or <code>null</code> if no such window
+   *         could be found.
+   */
+  public static final Window getCurrentWindow()
+  {
+    Window owner;
+    final KeyboardFocusManager kbdFocusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+    owner = kbdFocusManager.getFocusedWindow();
+    if ( owner == null )
+    {
+      owner = kbdFocusManager.getActiveWindow();
+    }
+    return owner;
+  }
+
+  /**
    * Returns the key mask of the menu shortcut key.
    * 
    * @return a key mask, >= 0.
@@ -132,12 +151,7 @@ public final class SwingComponentUtils
     Window owner = SwingUtilities.getWindowAncestor( aComponent );
     if ( owner == null )
     {
-      final KeyboardFocusManager kbdFocusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-      owner = kbdFocusManager.getFocusedWindow();
-      if ( owner == null )
-      {
-        owner = kbdFocusManager.getActiveWindow();
-      }
+      owner = getCurrentWindow();
     }
     return owner;
   }
@@ -162,6 +176,67 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Tries to load/restore the window state of the given window.
+   * 
+   * @param aNamespace
+   *          the namespace to use for the window state;
+   * @param aProperties
+   *          the properties to read from;
+   * @param aWindow
+   *          the window to load the state for.
+   */
+  public static void loadWindowState( final String aNamespace, final Properties aProperties, final Window aWindow )
+  {
+    try
+    {
+      final String xPos = aProperties.getProperty( aNamespace + ".xPos" );
+      final String yPos = aProperties.getProperty( aNamespace + ".yPos" );
+      if ( ( xPos != null ) && ( yPos != null ) )
+      {
+        aWindow.setLocation( Integer.valueOf( xPos ), Integer.valueOf( yPos ) );
+      }
+    }
+    catch ( NumberFormatException exception )
+    {
+      // Ignore...
+    }
+
+    try
+    {
+      final String width = aProperties.getProperty( aNamespace + ".width" );
+      final String height = aProperties.getProperty( aNamespace + ".height" );
+      if ( ( width != null ) && ( height != null ) )
+      {
+        aWindow.setSize( Integer.valueOf( width ), Integer.valueOf( height ) );
+      }
+    }
+    catch ( NumberFormatException exception )
+    {
+      // Ignore...
+    }
+  }
+
+  /**
+   * Saves the window state to the given properties map.
+   * 
+   * @param aNamespace
+   *          the namespace to use for the window state;
+   * @param aProperties
+   *          the properties to fill;
+   * @param aWindow
+   *          the window to save the state for.
+   */
+  public static void saveWindowState( final String aNamespace, final Properties aProperties, final Window aWindow )
+  {
+    final Point location = aWindow.getLocation();
+    aProperties.put( aNamespace + ".xPos", Integer.toString( location.x ) );
+    aProperties.put( aNamespace + ".yPos", Integer.toString( location.y ) );
+    final Dimension dims = aWindow.getSize();
+    aProperties.put( aNamespace + ".width", Integer.toString( dims.width ) );
+    aProperties.put( aNamespace + ".height", Integer.toString( dims.height ) );
+  }
+
+  /**
    * Sets the selected item of the given checkbox to the value given, unless
    * this value is <code>null</code>.
    * 
@@ -179,7 +254,39 @@ public final class SwingComponentUtils
 
     if ( aValue != null )
     {
-      aCheckBox.setSelected( "true".equalsIgnoreCase( String.valueOf( aValue ) ) );
+      boolean value = false;
+      if ( aValue instanceof Boolean )
+      {
+        value = ( ( Boolean )aValue ).booleanValue();
+      }
+      else
+      {
+        value = "true".equalsIgnoreCase( String.valueOf( aValue ) );
+      }
+      aCheckBox.setSelected( value );
+    }
+  }
+
+  /**
+   * Sets the selected item of the given combobox to the value given, unless
+   * this index is <code>null</code>.
+   * 
+   * @param aComboBox
+   *          the combobox to set, cannot be <code>null</code>;
+   * @param aIndex
+   *          the index to set, may be <code>null</code>.
+   */
+  public static void setSelectedIndex( final JComboBox aComboBox, final Object aIndex )
+  {
+    if ( aComboBox == null )
+    {
+      throw new IllegalArgumentException( "Combobox cannot be null!" );
+    }
+
+    if ( aIndex != null )
+    {
+      final int idx = NumberUtils.smartParseInt( String.valueOf( aIndex ) );
+      aComboBox.setSelectedIndex( idx );
     }
   }
 

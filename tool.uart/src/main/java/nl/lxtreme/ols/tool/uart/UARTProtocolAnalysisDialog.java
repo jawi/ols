@@ -55,9 +55,6 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   // VARIABLES
 
-  private final String[] parityarray;
-  private final String[] bitarray;
-  private final String[] stoparray;
   private final JComboBox rxd;
   private final JComboBox txd;
   private final JComboBox cts;
@@ -94,12 +91,12 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     /*
      * add protocol settings elements
      */
-    JPanel panSettings = new JPanel();
+    final JPanel panSettings = new JPanel();
     panSettings.setLayout( new GridLayout( 12, 2, 5, 5 ) );
     panSettings.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Settings" ),
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
-    String channels[] = new String[33];
+    final String channels[] = new String[33];
     for ( int i = 0; i < 32; i++ )
     {
       channels[i] = new String( "Channel " + i );
@@ -145,29 +142,23 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     panSettings.add( this.ri );
 
     panSettings.add( new JLabel( "Parity" ) );
-    this.parityarray = new String[3];
-    this.parityarray[0] = new String( "none" );
-    this.parityarray[1] = new String( "odd" );
-    this.parityarray[2] = new String( "even" );
-    this.parity = new JComboBox( this.parityarray );
+    final String[] parityarray = new String[] { "None", "Odd", "Even" };
+    this.parity = new JComboBox( parityarray );
     panSettings.add( this.parity );
 
     panSettings.add( new JLabel( "Bits" ) );
-    this.bitarray = new String[4];
-    for ( int i = 0; i < this.bitarray.length; i++ )
+    final String[] bitarray = new String[4];
+    for ( int i = 0; i < bitarray.length; i++ )
     {
-      this.bitarray[i] = new String( "" + ( i + 5 ) );
+      bitarray[i] = new String( "" + ( i + 5 ) );
     }
-    this.bits = new JComboBox( this.bitarray );
+    this.bits = new JComboBox( bitarray );
     this.bits.setSelectedItem( "8" );
     panSettings.add( this.bits );
 
     panSettings.add( new JLabel( "Stopbit" ) );
-    this.stoparray = new String[3];
-    this.stoparray[0] = new String( "1" );
-    this.stoparray[1] = new String( "1.5" );
-    this.stoparray[2] = new String( "2" );
-    this.stop = new JComboBox( this.stoparray );
+    final String[] stoparray = new String[] { "1", "1.5", "2" };
+    this.stop = new JComboBox( stoparray );
     panSettings.add( this.stop );
 
     this.inv = new JCheckBox();
@@ -179,7 +170,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     /*
      * add an empty output view
      */
-    JPanel panTable = new JPanel( new GridLayout( 1, 1, 5, 5 ) );
+    final JPanel panTable = new JPanel( new GridLayout( 1, 1, 5, 5 ) );
     this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
     this.outText.setMargin( new Insets( 5, 5, 5, 5 ) );
     panTable.add( new JScrollPane( this.outText ) );
@@ -189,14 +180,14 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
      * add buttons
      */
     this.runAnalysisAction = new RunAnalysisAction();
-    JButton btnConvert = new JButton( this.runAnalysisAction );
+    final JButton btnConvert = new JButton( this.runAnalysisAction );
 
     this.exportAction = new ExportAction();
     this.exportAction.setEnabled( false );
-    JButton btnExport = new JButton( this.exportAction );
+    final JButton btnExport = new JButton( this.exportAction );
 
     this.closeAction = new CloseAction();
-    JButton btnCancel = new JButton( this.closeAction );
+    final JButton btnCancel = new JButton( this.closeAction );
 
     final JPanel buttons = new JPanel();
     final BoxLayout layoutMgr = new BoxLayout( buttons, BoxLayout.LINE_AXIS );
@@ -228,7 +219,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   private static GridBagConstraints createConstraints( final int x, final int y, final int w, final int h,
       final double wx, final double wy )
   {
-    GridBagConstraints gbc = new GridBagConstraints();
+    final GridBagConstraints gbc = new GridBagConstraints();
     gbc.fill = GridBagConstraints.BOTH;
     gbc.insets = new Insets( 4, 4, 4, 4 );
     gbc.gridx = x;
@@ -261,7 +252,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
       this.runAnalysisAction.restore();
       this.runAnalysisAction.setEnabled( false );
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       // Should not happen in this situation!
       throw new RuntimeException( exception );
@@ -274,18 +265,18 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    SwingComponentUtils.setSelectedItem( this.rxd, aProperties.getProperty( "tools.UARTProtocolAnalysis.rxd" ) );
-    SwingComponentUtils.setSelectedItem( this.txd, aProperties.getProperty( "tools.UARTProtocolAnalysis.txd" ) );
-    SwingComponentUtils.setSelectedItem( this.cts, aProperties.getProperty( "tools.UARTProtocolAnalysis.cts" ) );
-    SwingComponentUtils.setSelectedItem( this.rts, aProperties.getProperty( "tools.UARTProtocolAnalysis.rts" ) );
-    SwingComponentUtils.setSelectedItem( this.dtr, aProperties.getProperty( "tools.UARTProtocolAnalysis.dtr" ) );
-    SwingComponentUtils.setSelectedItem( this.dsr, aProperties.getProperty( "tools.UARTProtocolAnalysis.dsr" ) );
-    SwingComponentUtils.setSelectedItem( this.dcd, aProperties.getProperty( "tools.UARTProtocolAnalysis.dcd" ) );
-    SwingComponentUtils.setSelectedItem( this.ri, aProperties.getProperty( "tools.UARTProtocolAnalysis.ri" ) );
-    SwingComponentUtils.setSelectedItem( this.parity, aProperties.getProperty( "tools.UARTProtocolAnalysis.parity" ) );
-    SwingComponentUtils.setSelectedItem( this.bits, aProperties.getProperty( "tools.UARTProtocolAnalysis.bits" ) );
-    SwingComponentUtils.setSelectedItem( this.stop, aProperties.getProperty( "tools.UARTProtocolAnalysis.stop" ) );
-    this.inv.setSelected( Boolean.parseBoolean( aProperties.getProperty( "tools.UARTProtocolAnalysis.inverted" ) ) );
+    SwingComponentUtils.setSelectedIndex( this.rxd, aProperties.getProperty( "tools.UARTProtocolAnalysis.rxd" ) );
+    SwingComponentUtils.setSelectedIndex( this.txd, aProperties.getProperty( "tools.UARTProtocolAnalysis.txd" ) );
+    SwingComponentUtils.setSelectedIndex( this.cts, aProperties.getProperty( "tools.UARTProtocolAnalysis.cts" ) );
+    SwingComponentUtils.setSelectedIndex( this.rts, aProperties.getProperty( "tools.UARTProtocolAnalysis.rts" ) );
+    SwingComponentUtils.setSelectedIndex( this.dtr, aProperties.getProperty( "tools.UARTProtocolAnalysis.dtr" ) );
+    SwingComponentUtils.setSelectedIndex( this.dsr, aProperties.getProperty( "tools.UARTProtocolAnalysis.dsr" ) );
+    SwingComponentUtils.setSelectedIndex( this.dcd, aProperties.getProperty( "tools.UARTProtocolAnalysis.dcd" ) );
+    SwingComponentUtils.setSelectedIndex( this.ri, aProperties.getProperty( "tools.UARTProtocolAnalysis.ri" ) );
+    SwingComponentUtils.setSelectedIndex( this.parity, aProperties.getProperty( "tools.UARTProtocolAnalysis.parity" ) );
+    SwingComponentUtils.setSelectedIndex( this.bits, aProperties.getProperty( "tools.UARTProtocolAnalysis.bits" ) );
+    SwingComponentUtils.setSelectedIndex( this.stop, aProperties.getProperty( "tools.UARTProtocolAnalysis.stop" ) );
+    SwingComponentUtils.setSelected( this.inv, aProperties.getProperty( "tools.UARTProtocolAnalysis.inverted" ) );
   }
 
   /**
@@ -319,10 +310,10 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     aProperties.setProperty( aNamespace + ".dsr", Integer.toString( this.dsr.getSelectedIndex() ) );
     aProperties.setProperty( aNamespace + ".dcd", Integer.toString( this.dcd.getSelectedIndex() ) );
     aProperties.setProperty( aNamespace + ".ri", Integer.toString( this.ri.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".parity", ( String )this.parity.getSelectedItem() );
-    aProperties.setProperty( aNamespace + ".bits", ( String )this.bits.getSelectedItem() );
-    aProperties.setProperty( aNamespace + ".stop", ( String )this.stop.getSelectedItem() );
-    aProperties.setProperty( aNamespace + ".inverted", "" + this.inv.isSelected() );
+    aProperties.setProperty( aNamespace + ".parity", Integer.toString( this.parity.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".bits", Integer.toString( this.bits.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".stop", Integer.toString( this.stop.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".inverted", Boolean.toString( this.inv.isSelected() ) );
   }
 
   /**
@@ -469,7 +460,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
       exporter.close();
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       if ( LOG.isLoggable( Level.WARNING ) )
       {
@@ -491,7 +482,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     {
       toHtmlPage( aFile, aDataSet );
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       if ( LOG.isLoggable( Level.WARNING ) )
       {
@@ -716,7 +707,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
               // Normal data...
               if ( UARTData.UART_TYPE_RXDATA == ds.getType() )
               {
-                int rxData = ds.getData();
+                final int rxData = ds.getData();
 
                 rxDataHex = "0x" + DisplayUtils.integerToHexString( rxData, bitCount / 4 + bitAdder );
                 rxDataBin = "0b" + DisplayUtils.integerToBinString( rxData, bitCount );
@@ -729,7 +720,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
               else
               /* if ( UARTData.UART_TYPE_TXDATA == ds.getType() ) */
               {
-                int txData = ds.getData();
+                final int txData = ds.getData();
 
                 txDataHex = "0x" + DisplayUtils.integerToHexString( txData, bitCount / 4 + bitAdder );
                 txDataBin = "0b" + DisplayUtils.integerToBinString( txData, bitCount );

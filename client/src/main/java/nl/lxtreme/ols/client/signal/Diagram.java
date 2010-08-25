@@ -185,12 +185,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
   private static final Logger LOG = Logger.getLogger( Diagram.class.getName() );
 
-  static final double MAX_SCALE = 10;
+  static final double MAX_SCALE = 15;
   static final double CURSOR_HOVER = 5.0;
   static final int PADDING_Y = 2;
 
   private static final Stroke SOLID_NORMAL = new BasicStroke( 0.0f );
-  private static final Stroke SOLID_THICK = new BasicStroke( 2.0f );
+  private static final Stroke SOLID_THICK = new BasicStroke( 1.5f );
 
   // VARIABLES
 
@@ -202,8 +202,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   private final DiagramLabelsDialog labels;
   private final ActionProvider actionProvider;
   private double scale;
-  private int timeDivider;
-  private int pageLen;
   private final Cursor cursorDefault;
   private final Cursor cursorDrag;
   private final EventListenerList evenListeners;
@@ -234,9 +232,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     this.cursorDefault = getCursor();
     this.cursorDrag = new Cursor( Cursor.MOVE_CURSOR );
     this.evenListeners = new EventListenerList();
-
-    this.timeDivider = 1;
-    this.pageLen = 0;
 
     this.rowLabels = new DiagramRowLabels( this.data );
     this.rowLabels.setDiagramSettings( this.settings );
@@ -413,17 +408,13 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    * 
    * @param width
    *          window width
-   * @param pos
+   * @param aPosition
    *          sample position
    * @return current position within window
    */
-  public int getTargetPosition( final int width, long pos )
+  public int getTargetPosition( final long aPosition )
   {
-    if ( pos < 0 )
-    {
-      pos = 0;
-    }
-    return ( int )( ( double )pos * ( double )width * this.scale / this.pageLen );
+    return ( int )( Math.max( 0.0, aPosition ) * this.scale );
   }
 
   /**
@@ -493,18 +484,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Sets the scale to the given value.
-   * 
-   * @param aScale
-   *          the scale to set, cannot be <code>null</code>.
-   */
-  public void setScale( final double aScale )
-  {
-    this.scale = aScale;
-    this.timeLine.setScale( aScale );
-  }
-
-  /**
    * Display the diagram labels dialog. Will block until the dialog is closed
    * again.
    */
@@ -549,7 +528,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   public void zoomDefault()
   {
     setScale( MAX_SCALE );
-    calculatePages();
     resize();
   }
 
@@ -577,7 +555,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       setScale( MAX_SCALE );
     }
 
-    calculatePages();
     resize();
   }
 
@@ -591,7 +568,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     {
       newScale = Math.min( MAX_SCALE, newScale * 2.0 );
       setScale( newScale );
-      calculatePages();
       resize();
     }
   }
@@ -603,7 +579,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     final double newScale = this.scale / 2.0;
     setScale( newScale );
-    calculatePages();
     resize();
   }
 
@@ -809,14 +784,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     // find index of first & last row that needs drawing
     final long firstRow = xToIndex( cx );
     final long lastRow = xToIndex( cw ) + 1;
-    final long visibleSamples = lastRow - firstRow;
-
-    // calculate time divider for samplecount > 2^31-1
-    this.timeDivider = 1;
-    while ( ( visibleSamples / this.timeDivider ) >= Integer.MAX_VALUE )
-    {
-      this.timeDivider++;
-    }
 
     // paint portion of background that needs drawing
     aGraphics.setColor( this.settings.getBackgroundColor() );
@@ -849,10 +816,10 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       }
     }
 
-    final long end = System.currentTimeMillis();
-    if ( LOG.isLoggable( Level.FINE ) )
+    if ( Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) ) )
     {
-      LOG.fine( "Render time = " + ( end - start ) + " ms." );
+      final long end = System.currentTimeMillis();
+      LOG.log( Level.INFO, "Render time = {0}ms.", ( end - start ) );
     }
   }
 
@@ -880,7 +847,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   private int calcTmpPos( final long pos )
   {
-    long lval = ( long )( pos * this.timeDivider * this.scale );
+    long lval = ( long )( pos * this.scale );
     if ( lval >= Integer.MAX_VALUE )
     {
       lval = Integer.MAX_VALUE - 100;
@@ -890,32 +857,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       lval = 0;
     }
     return ( int )lval;
-  }
-
-  /**
-   * calculate number and size of pages for various zoom levels.
-   */
-  private void calculatePages()
-  {
-    if ( hasCapturedData() )
-    {
-      final double maxAvailableWidth = Integer.MAX_VALUE - 100;
-      final double currentScaledSize = ( long )( this.scale * this.data.getAbsoluteLength() );
-      if ( currentScaledSize > maxAvailableWidth )
-      {
-        final int maxPages = ( int )Math.ceil( currentScaledSize / maxAvailableWidth );
-        this.pageLen = ( int )( this.scale * this.data.getAbsoluteLength() / maxPages );
-      }
-      else
-      {
-        this.pageLen = ( int )( this.scale * this.data.getAbsoluteLength() );
-      }
-    }
-    else
-    {
-      this.pageLen = 0;
-    }
-    // System.out.println( "pageLen=" + this.pageLen );
   }
 
   /**
@@ -973,7 +914,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    * @param aToIndex
    *          the last sample to paint.
    */
-  private void drawSignals( final Graphics aGraphics, final Rectangle aClipArea, long aFromIndex, long aToIndex )
+  private void drawSignals( final Graphics aGraphics, final Rectangle aClipArea, final long aFromIndex,
+      final long aToIndex )
   {
     final int channels = this.data.getChannels();
     final int enabled = this.data.getEnabledChannels();
@@ -983,17 +925,14 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final int channelHeight = this.settings.getChannelHeight();
     final int signalHeight = this.settings.getSignalHeight();
     final int scopeHeight = this.settings.getScopeHeight();
+
     final double scopeScaleFactor = ( 256.0 / ( scopeHeight - 2 * PADDING_Y ) );
-    final double correctedScale = this.scale * this.timeDivider;
-    final int center = ( int )( correctedScale / 2.0 );
+    final int center = ( int )( this.scale / 2.0 );
 
     final FontMetrics fm = aGraphics.getFontMetrics();
-    final int labelYpos = ( int )( channelHeight - ( ( fm.getAscent() + fm.getDescent() ) / 2.0 ) + 1 );
+    final int labelYpos = ( int )( channelHeight - ( fm.getHeight() / 2.0 ) + 1 );
 
     final int n = 2 * timestamps.length;
-    final ByteValuePolyline bytePolyline = new ByteValuePolyline( n );
-    final SignalPolyline scopePolyline = new SignalPolyline( n );
-    final SignalPolyline polyline = new SignalPolyline( n );
 
     // Search the first sample index the is right before the to-be-displayed
     // from index...
@@ -1010,9 +949,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     }
     while ( dataStartIndex < timestamps.length );
 
-    aFromIndex /= this.timeDivider;
-    aToIndex /= this.timeDivider;
-
     int bofs = 0;
 
     for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
@@ -1025,6 +961,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
       if ( this.settings.isShowChannels( block ) )
       {
+        final SignalPolyline polyline = new SignalPolyline( n );
+
         // draw actual data
         for ( int bit = 0; bit < 8; bit++ )
         {
@@ -1044,12 +982,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
             }
             else
             {
-              nextSample = timestamps[dataIndex + 1] / this.timeDivider;
+              nextSample = timestamps[dataIndex + 1];
             }
 
             // Calculate display coordinates...
-            final int x1 = ( int )( ( correctedScale * currentSample ) - center );
-            final int x2 = ( int )( ( correctedScale * ( nextSample - 1 ) ) + center );
+            final int x1 = ( int )( ( this.scale * currentSample ) - center );
+            final int x2 = ( int )( ( this.scale * ( nextSample - 1 ) ) + center );
             final int y1 = bofs + channelHeight * bit + signalHeight * ( 1 - currentValue ) + 1;
 
             polyline.x[pIdx] = x1;
@@ -1077,12 +1015,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           {
             final ChannelAnnotation annotation = annotations.next();
 
-            long startIdx = annotation.getStartIndex() / this.timeDivider;
-            long endIdx = annotation.getEndIndex() / this.timeDivider;
+            long startIdx = annotation.getStartIndex();
+            long endIdx = annotation.getEndIndex();
             final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
 
-            final int x1 = ( int )( ( correctedScale * startIdx ) );
-            final int x2 = ( int )( ( correctedScale * endIdx ) );
+            final int x1 = ( int )( ( this.scale * startIdx ) );
+            final int x2 = ( int )( ( this.scale * endIdx ) );
 
             final int textXoffset = ( int )( ( ( x2 - x1 ) - fm.stringWidth( data ) ) / 2.0 );
 
@@ -1117,6 +1055,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
       if ( this.settings.isShowScope( block ) )
       {
+        final SignalPolyline scopePolyline = new SignalPolyline( n );
+
         int pIdx = 0;
 
         int val = bofs;
@@ -1125,7 +1065,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
         while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
         {
-          pos = timestamps[dataIndex] / this.timeDivider;
+          pos = timestamps[dataIndex];
           val = ( int )( ( 0xff - ( ( values[dataIndex] >> ( 8 * block ) ) & 0xff ) ) / scopeScaleFactor );
 
           scopePolyline.x[pIdx] = calcTmpPos( pos );
@@ -1149,6 +1089,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
       if ( this.settings.isShowByte( block ) )
       {
+        final ByteValuePolyline bytePolyline = new ByteValuePolyline( n );
+
         long currentSample = aFromIndex - 1;
         int pIdx = 0;
 
@@ -1167,12 +1109,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           }
           else
           {
-            nextSample = timestamps[dataIndex + 1] / this.timeDivider;
+            nextSample = timestamps[dataIndex + 1];
           }
 
           // Calculate display coordinates...
-          final int x1 = ( int )( correctedScale * currentSample - center );
-          final int x2 = ( int )( correctedScale * ( nextSample - 1 ) + center );
+          final int x1 = ( int )( this.scale * currentSample - center );
+          final int x2 = ( int )( this.scale * ( nextSample - 1 ) + center );
 
           final int bit = ( dataIndex % 2 );
           final int y1 = bofs + signalHeight * ( 1 - bit );
@@ -1301,6 +1243,18 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     }
 
     repaint();
+  }
+
+  /**
+   * Sets the scale to the given value.
+   * 
+   * @param aScale
+   *          the scale to set, cannot be <code>null</code>.
+   */
+  private void setScale( final double aScale )
+  {
+    this.scale = aScale;
+    this.timeLine.setScale( aScale );
   }
 
   /**
