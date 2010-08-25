@@ -128,8 +128,5 @@ public class HostUtilsTest
 
     f = new File( ".", "" );
     assertEquals( new File( ".", ".txt" ), HostUtils.setFileExtension( f, "txt" ) );
-
-    f = new File( "c:\\", "" );
-    assertEquals( new File( "c:\\", ".txt" ), HostUtils.setFileExtension( f, "txt" ) );
   }
 }

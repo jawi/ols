@@ -24,8 +24,6 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
-import javax.swing.*;
-
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
@@ -81,24 +79,10 @@ public class RunAnalysisToolAction extends BaseAction
       this.project.addConfigurable( ( Configurable )this.tool );
     }
 
-    // Make sure the tool is started from the EDT...
-    SwingUtilities.invokeLater( new Runnable()
-    {
-      private final Host host = RunAnalysisToolAction.this.host;
-      private final Tool tool = RunAnalysisToolAction.this.tool;
+    final AnnotatedData data = this.host.getAnnotatedData();
+    final ToolContext toolContext = null;
 
-      /**
-       * @see java.lang.Runnable#run()
-       */
-      @Override
-      public void run()
-      {
-        final AnnotatedData data = this.host.getAnnotatedData();
-        final ToolContext toolContext = null;
-
-        this.tool.process( owner, data, toolContext, this.host );
-      }
-    } );
+    this.tool.process( owner, data, toolContext, this.host );
   }
 }
 

@@ -21,6 +21,12 @@
 package nl.lxtreme.ols.client;
 
 
+import java.util.logging.*;
+
+import javax.swing.*;
+
+import nl.lxtreme.ols.util.*;
+
 import org.osgi.framework.*;
 
 
@@ -29,6 +35,10 @@ import org.osgi.framework.*;
  */
 public class Activator implements BundleActivator
 {
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( Activator.class.getName() );
+
   // VARIABLES
 
   private Host host = null;
@@ -39,12 +49,31 @@ public class Activator implements BundleActivator
    * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
    */
   @Override
-  public void start( final BundleContext aContext ) throws Exception
+  public void start( final BundleContext aContext )
   {
     this.host = new Host( aContext );
 
-    this.host.initialize();
-    this.host.start();
+    // This has to be done *before* any other Swing related code is executed
+    // so this also means the #invokeLater call done below...
+    HostUtils.initOSSpecifics( this.host.getName(), this.host );
+
+    final Runnable task = new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        try
+        {
+          Activator.this.host.initialize();
+          Activator.this.host.start();
+        }
+        catch ( Exception exception )
+        {
+          LOG.log( Level.ALL, "Failed to initialize/start client!", exception );
+        }
+      }
+    };
+    SwingUtilities.invokeLater( task );
   }
 
   /**
@@ -53,8 +82,26 @@ public class Activator implements BundleActivator
   @Override
   public void stop( final BundleContext aContext ) throws Exception
   {
-    this.host.stop();
-    this.host = null;
+    final Runnable task = new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        try
+        {
+          Activator.this.host.stop();
+        }
+        catch ( Exception exception )
+        {
+          LOG.log( Level.ALL, "Failed to stop client!", exception );
+        }
+        finally
+        {
+          Activator.this.host = null;
+        }
+      }
+    };
+    SwingUtilities.invokeLater( task );
   }
 
 }

@@ -34,7 +34,7 @@ import nl.lxtreme.ols.client.*;
 /**
  * 
  */
-public abstract class DiagramScrollPane extends JScrollPane implements ActionProvider
+public class DiagramScrollPane extends JScrollPane
 {
   // CONSTANTS
 
@@ -49,13 +49,13 @@ public abstract class DiagramScrollPane extends JScrollPane implements ActionPro
   /**
    * 
    */
-  public DiagramScrollPane( final Project aProject )
+  public DiagramScrollPane( final Project aProject, final ActionProvider aProvider )
   {
     super();
 
     setCorner( UPPER_LEFT_CORNER, new JLabel( " " ) );
 
-    this.diagram = new Diagram( this );
+    this.diagram = new Diagram( aProvider );
     setViewportView( this.diagram );
 
     // Presumably the fastest way of rendering...

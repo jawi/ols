@@ -22,8 +22,6 @@ package nl.lxtreme.ols.runner;
 
 
 import java.util.*;
-import java.util.logging.*;
-import java.util.logging.Logger;
 
 import org.apache.felix.framework.*;
 import org.apache.felix.framework.util.*;
@@ -37,12 +35,6 @@ import org.osgi.framework.*;
  */
 public final class Runner
 {
-  // CONSTANTS
-
-  private static final Logger LOG = Logger.getAnonymousLogger();
-
-  private static final String VERSION = "0.7.0";
-
   // VARIABLES
 
   private final HostActivator hostActivator;
@@ -58,9 +50,6 @@ public final class Runner
     final Map<String, Object> config = new HashMap<String, Object>();
 
     final String pluginDir = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
-
-    LOG.log( Level.ALL, "OpenBench LogicSniffer v{0}", VERSION );
-    LOG.log( Level.ALL, "Using plugins from '{0}' ...", pluginDir );
 
     this.hostActivator = new HostActivator();
     final List<BundleActivator> activators = new ArrayList<BundleActivator>();

@@ -69,6 +69,14 @@ public final class HostUtils
      *         <code>false</code> (the default) if this event is ignored.
      */
     public boolean handleQuit();
+
+    /**
+     * Returns whether the are preferences to configure.
+     * 
+     * @return <code>true</code> if there are preferences to configure,
+     *         <code>false</code> otherwise.
+     */
+    public boolean hasPreferences();
   }
 
   /**
@@ -523,10 +531,7 @@ public final class HostUtils
 
         // Call Application#setEnabledPreferencesMenu(true) ...
         final Method setEnabledPrefsMenuMethod = appClass.getMethod( "setEnabledPreferencesMenu", Boolean.TYPE );
-        setEnabledPrefsMenuMethod.invoke( app, Boolean.FALSE ); // XXX set to
-        // true to
-        // enable
-        // preferences!!!
+        setEnabledPrefsMenuMethod.invoke( app, Boolean.valueOf( aApplicationCallback.hasPreferences() ) );
 
         // Call Application#addApplicationListener(...) ...
         final Method addAppListenerMethod = appClass.getMethod( "addApplicationListener", appAdapterClass );
