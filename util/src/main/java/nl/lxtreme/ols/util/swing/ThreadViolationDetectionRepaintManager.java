@@ -29,6 +29,10 @@ import javax.swing.*;
  * ThreadViolationDetectionRepaintManager provides a custom repaint manager that
  * can be used to determine whether all Swing components are correctly created
  * on the EDT.
+ * <p>
+ * Code originates from the SwingHelper project, for more information see:
+ * {@link https://swinghelper.dev.java.net/}.
+ * </p>
  */
 public final class ThreadViolationDetectionRepaintManager extends RepaintManager
 {

@@ -247,13 +247,13 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    SwingComponentUtils.setSelectedItem( this.sck, aProperties.getProperty( aNamespace + ".sck" ) );
-    SwingComponentUtils.setSelectedItem( this.miso, aProperties.getProperty( aNamespace + ".miso" ) );
-    SwingComponentUtils.setSelectedItem( this.mosi, aProperties.getProperty( aNamespace + ".mosi" ) );
-    SwingComponentUtils.setSelectedItem( this.cs, aProperties.getProperty( aNamespace + ".cs" ) );
-    SwingComponentUtils.setSelectedItem( this.mode, this.modearray, aProperties.getProperty( aNamespace + ".mode" ) );
-    SwingComponentUtils.setSelectedItem( this.bits, this.bitarray, aProperties.getProperty( aNamespace + ".bits" ) );
-    SwingComponentUtils.setSelectedItem( this.order, this.orderarray, aProperties.getProperty( aNamespace + ".order" ) );
+    SwingComponentUtils.setSelectedIndex( this.sck, aProperties.getProperty( aNamespace + ".sck" ) );
+    SwingComponentUtils.setSelectedIndex( this.miso, aProperties.getProperty( aNamespace + ".miso" ) );
+    SwingComponentUtils.setSelectedIndex( this.mosi, aProperties.getProperty( aNamespace + ".mosi" ) );
+    SwingComponentUtils.setSelectedIndex( this.cs, aProperties.getProperty( aNamespace + ".cs" ) );
+    SwingComponentUtils.setSelectedIndex( this.mode, aProperties.getProperty( aNamespace + ".mode" ) );
+    SwingComponentUtils.setSelectedIndex( this.bits, aProperties.getProperty( aNamespace + ".bits" ) );
+    SwingComponentUtils.setSelectedIndex( this.order, aProperties.getProperty( aNamespace + ".order" ) );
   }
 
   /**
@@ -283,9 +283,9 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     aProperties.setProperty( aNamespace + ".miso", Integer.toString( this.miso.getSelectedIndex() ) );
     aProperties.setProperty( aNamespace + ".mosi", Integer.toString( this.mosi.getSelectedIndex() ) );
     aProperties.setProperty( aNamespace + ".cs", Integer.toString( this.cs.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".mode", ( String )this.mode.getSelectedItem() );
-    aProperties.setProperty( aNamespace + ".bits", ( String )this.bits.getSelectedItem() );
-    aProperties.setProperty( aNamespace + ".order", ( String )this.order.getSelectedItem() );
+    aProperties.setProperty( aNamespace + ".mode", Integer.toString( this.mode.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".bits", Integer.toString( this.bits.getSelectedIndex() ) );
+    aProperties.setProperty( aNamespace + ".order", Integer.toString( this.order.getSelectedIndex() ) );
   }
 
   /**

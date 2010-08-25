@@ -24,7 +24,6 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.*;
@@ -46,7 +45,6 @@ public class RunAnalysisToolAction extends BaseAction
 
   private final Host host;
   private final Tool tool;
-  private final Project project;
 
   // CONSTRUCTORS
 
@@ -55,13 +53,12 @@ public class RunAnalysisToolAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public RunAnalysisToolAction( final Host aHost, final Tool aTool, final Project aProject )
+  public RunAnalysisToolAction( final Host aHost, final Tool aTool )
   {
     super( ID + aTool.getName(), aTool.getName(), "Run " + aTool.getName() );
 
     this.host = aHost;
     this.tool = aTool;
-    this.project = aProject;
   }
 
   // METHODS
@@ -73,11 +70,6 @@ public class RunAnalysisToolAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-
-    if ( this.tool instanceof Configurable )
-    {
-      this.project.addConfigurable( ( Configurable )this.tool );
-    }
 
     final AnnotatedData data = this.host.getAnnotatedData();
     final ToolContext toolContext = null;

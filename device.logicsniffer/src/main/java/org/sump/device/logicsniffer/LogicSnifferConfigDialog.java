@@ -30,6 +30,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -38,7 +39,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * 
  */
-public class LogicSnifferConfigDialog extends JComponent implements ActionListener
+public class LogicSnifferConfigDialog extends JComponent implements ActionListener, Configurable
 {
   // INNER TYPES
 
@@ -264,28 +265,27 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    SwingComponentUtils.setSelectedItem( this.portSelect, aProperties.getProperty( aNamespace + ".port" ) );
-    SwingComponentUtils.setSelectedItem( this.portRateSelect, aProperties.getProperty( aNamespace + ".portRate" ) );
-    SwingComponentUtils.setSelectedItem( this.sourceSelect, aProperties.getProperty( aNamespace + ".source" ) );
-    SwingComponentUtils.setSelectedItem( this.speedSelect, aProperties.getProperty( aNamespace + ".speed" ) );
-    SwingComponentUtils.setSelectedItem( this.sizeSelect, NumberUtils.smartParseInt( aProperties
-        .getProperty( aNamespace + ".size" ) ) );
+    SwingComponentUtils.setSelectedIndex( this.portSelect, aProperties.getProperty( aNamespace + ".port" ) );
+    SwingComponentUtils.setSelectedIndex( this.portRateSelect, aProperties.getProperty( aNamespace + ".portRate" ) );
+    SwingComponentUtils.setSelectedIndex( this.sourceSelect, aProperties.getProperty( aNamespace + ".source" ) );
+    SwingComponentUtils.setSelectedIndex( this.speedSelect, aProperties.getProperty( aNamespace + ".speed" ) );
+    SwingComponentUtils.setSelectedIndex( this.sizeSelect, aProperties.getProperty( aNamespace + ".size" ) );
     SwingComponentUtils.setSelected( this.maxSampleSize, aProperties.getProperty( aNamespace + ".autosize" ) );
     this.ratioSlider.setValue( NumberUtils.smartParseInt( aProperties.getProperty( aNamespace + ".ratio" ),
         TriggerRatioChangeListener.DEFAULT_RATIO ) );
     SwingComponentUtils.setSelected( this.filterEnable, aProperties.getProperty( aNamespace + ".filter" ) );
     SwingComponentUtils.setSelected( this.triggerEnable, aProperties.getProperty( aNamespace + ".trigger" ) );
     SwingComponentUtils
-        .setSelectedItem( this.triggerTypeSelect, aProperties.getProperty( aNamespace + ".triggerType" ) );
+        .setSelectedIndex( this.triggerTypeSelect, aProperties.getProperty( aNamespace + ".triggerType" ) );
 
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
       this.triggerDelay[stage].setText( aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Delay" ) );
-      SwingComponentUtils.setSelectedItem( this.triggerLevel[stage], //
+      SwingComponentUtils.setSelectedIndex( this.triggerLevel[stage], //
           aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Level" ) );
-      SwingComponentUtils.setSelectedItem( this.triggerMode[stage], //
+      SwingComponentUtils.setSelectedIndex( this.triggerMode[stage], //
           aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Mode" ) );
-      SwingComponentUtils.setSelectedItem( this.triggerChannel[stage], //
+      SwingComponentUtils.setSelectedIndex( this.triggerChannel[stage], //
           aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Channel" ) );
 
       final String mask = aProperties.getProperty( aNamespace + ".triggerStage" + stage + "Mask" );
@@ -293,7 +293,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       {
         for ( int i = 0; ( i < 32 ) && ( i < mask.length() ); i++ )
         {
-          this.triggerMask[stage][i].setSelected( mask.charAt( i ) == '1' );
+          SwingComponentUtils.setSelected( this.triggerMask[stage][i], mask.charAt( i ) == '1' );
         }
       }
 
@@ -302,7 +302,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       {
         for ( int i = 0; ( i < 32 ) && ( i < value.length() ); i++ )
         {
-          this.triggerValue[stage][i].setSelected( value.charAt( i ) == '1' );
+          SwingComponentUtils.setSelected( this.triggerValue[stage][i], value.charAt( i ) == '1' );
         }
       }
 
@@ -315,7 +315,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     {
       for ( int i = 0; ( i < 4 ) && ( i < group.length() ); i++ )
       {
-        this.channelGroup[i].setSelected( group.charAt( i ) == '1' );
+        SwingComponentUtils.setSelected( this.channelGroup[i], group.charAt( i ) == '1' );
       }
     }
 
@@ -330,7 +330,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   public boolean showDialog()
   {
-    initDialog( ( Window )null );
+    initDialog( SwingComponentUtils.getCurrentWindow() );
 
     this.dialog.setModalityType( ModalityType.APPLICATION_MODAL );
     this.dialog.setVisible( true );
@@ -344,33 +344,31 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     updateFields( true );
   }
 
-  /*
-   * (non-Javadoc)
+  /**
    * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.util.Properties)
    */
   public void writeProperties( final String aNamespace, final Properties properties )
   {
-    final String selectedItem = ( String )this.portSelect.getSelectedItem();
-    properties.setProperty( aNamespace + ".port", selectedItem == null ? "" : selectedItem );
-    properties.setProperty( aNamespace + ".portRate", ( String )this.portRateSelect.getSelectedItem() );
-    properties.setProperty( aNamespace + ".source", ( String )this.sourceSelect.getSelectedItem() );
-    properties.setProperty( aNamespace + ".speed", ( String )this.speedSelect.getSelectedItem() );
-    properties.setProperty( aNamespace + ".autosize", this.maxSampleSize.isSelected() ? "true" : "false" );
-    properties.setProperty( aNamespace + ".size", String.valueOf( this.sizeSelect.getSelectedItem() ) );
-    properties.setProperty( aNamespace + ".ratio", String.valueOf( this.ratioSlider.getValue() ) );
-    properties.setProperty( aNamespace + ".filter", this.filterEnable.isSelected() ? "true" : "false" );
-    properties.setProperty( aNamespace + ".trigger", this.triggerEnable.isSelected() ? "true" : "false" );
-    properties.setProperty( aNamespace + ".triggerType", ( String )this.triggerTypeSelect.getSelectedItem() );
+    properties.setProperty( aNamespace + ".port", Integer.toString( this.portSelect.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".portRate", Integer.toString( this.portRateSelect.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".source", Integer.toString( this.sourceSelect.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".speed", Integer.toString( this.speedSelect.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".autosize", Boolean.toString( this.maxSampleSize.isSelected() ) );
+    properties.setProperty( aNamespace + ".size", Integer.toString( this.sizeSelect.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".ratio", Integer.toString( this.ratioSlider.getValue() ) );
+    properties.setProperty( aNamespace + ".filter", Boolean.toString( this.filterEnable.isSelected() ) );
+    properties.setProperty( aNamespace + ".trigger", Boolean.toString( this.triggerEnable.isSelected() ) );
+    properties.setProperty( aNamespace + ".triggerType", Integer.toString( this.triggerTypeSelect.getSelectedIndex() ) );
 
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
-      properties.setProperty( aNamespace + ".triggerStage" + stage + "Level", ( String )this.triggerLevel[stage]
-          .getSelectedItem() );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Level", Integer
+          .toString( this.triggerLevel[stage].getSelectedIndex() ) );
       properties.setProperty( aNamespace + ".triggerStage" + stage + "Delay", this.triggerDelay[stage].getText() );
-      properties.setProperty( aNamespace + ".triggerStage" + stage + "Mode", ( String )this.triggerMode[stage]
-          .getSelectedItem() );
-      properties.setProperty( aNamespace + ".triggerStage" + stage + "Channel", ( String )this.triggerChannel[stage]
-          .getSelectedItem() );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Mode", Integer.toString( this.triggerMode[stage]
+          .getSelectedIndex() ) );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Channel", Integer
+          .toString( this.triggerChannel[stage].getSelectedIndex() ) );
 
       final StringBuffer mask = new StringBuffer();
       for ( int i = 0; i < 32; i++ )
@@ -386,8 +384,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       }
       properties.setProperty( aNamespace + ".triggerStage" + stage + "Value", value.toString() );
 
-      properties.setProperty( aNamespace + ".triggerStage" + stage + "StartCapture", this.triggerStart[stage]
-          .isSelected() ? "true" : "false" );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "StartCapture", Boolean
+          .toString( this.triggerStart[stage].isSelected() ) );
     }
 
     final StringBuffer group = new StringBuffer();
@@ -406,6 +404,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   {
     this.device.stop();
     this.dialog.setVisible( false );
+
+    this.dialog.dispose();
   }
 
   /**
@@ -817,13 +817,13 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   /**
    * Internal method that initializes a dialog and add this component to it.
    * 
-   * @param frame
+   * @param aFrame
    *          owner of the dialog
    */
-  private void initDialog( final Window frame )
+  private void initDialog( final Window aFrame )
   {
     // check if dialog exists with different owner and dispose if so
-    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != frame ) )
+    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aFrame ) )
     {
       this.dialog.dispose();
       this.dialog = null;
@@ -831,7 +831,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     // if no valid dialog exists, create one
     if ( this.dialog == null )
     {
-      this.dialog = new JDialog( frame, "Capture" );
+      this.dialog = new JDialog( aFrame, "Capture" );
       this.dialog.getContentPane().add( this );
       this.dialog.pack();
     }

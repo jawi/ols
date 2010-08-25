@@ -194,6 +194,8 @@ public class MeasurementDialog extends BaseToolDialog
   private JLabel clockFrequencyLabel;
   private JLabel clockDutyCycleLabel;
 
+  private JComboBox clockChannelChooser;
+
   // CONSTRUCTORS
 
   /**
@@ -231,10 +233,10 @@ public class MeasurementDialog extends BaseToolDialog
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    this.cursorA.setSelectedIndex( NumberUtils.smartParseInt(
-        aProperties.getProperty( aNamespace + ".selectedCursorA" ), 0 ) );
-    this.cursorB.setSelectedIndex( NumberUtils.smartParseInt(
-        aProperties.getProperty( aNamespace + ".selectedCursorB" ), 1 ) );
+    SwingComponentUtils.setSelectedIndex( this.cursorA, aProperties.getProperty( aNamespace + ".selectedCursorA" ) );
+    SwingComponentUtils.setSelectedIndex( this.cursorB, aProperties.getProperty( aNamespace + ".selectedCursorB" ) );
+    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser, aProperties.getProperty( aNamespace
+        + ".selectedClockChannel" ) );
   }
 
   /**
@@ -267,6 +269,8 @@ public class MeasurementDialog extends BaseToolDialog
   {
     aProperties.put( aNamespace + ".selectedCursorA", String.valueOf( this.cursorA.getSelectedIndex() ) );
     aProperties.put( aNamespace + ".selectedCursorB", String.valueOf( this.cursorB.getSelectedIndex() ) );
+    aProperties
+        .put( aNamespace + ".selectedClockChannel", String.valueOf( this.clockChannelChooser.getSelectedIndex() ) );
   }
 
   /**
@@ -457,8 +461,8 @@ public class MeasurementDialog extends BaseToolDialog
     {
       channelNames[i] = String.format( "Channel %d", ( i + 1 ) );
     }
-    final JComboBox channelChooser = new JComboBox( channelNames );
-    channelChooser.addItemListener( new ItemListener()
+    this.clockChannelChooser = new JComboBox( channelNames );
+    this.clockChannelChooser.addItemListener( new ItemListener()
     {
       @Override
       public void itemStateChanged( final ItemEvent aEvent )
@@ -491,7 +495,7 @@ public class MeasurementDialog extends BaseToolDialog
     measureClock.add( new JLabel( "Channel:" ), //
         new GridBagConstraints( 0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
             GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    measureClock.add( channelChooser, //
+    measureClock.add( this.clockChannelChooser, //
         new GridBagConstraints( 1, 2, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
             GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
     measureClock.add( measureClockFrequency, //

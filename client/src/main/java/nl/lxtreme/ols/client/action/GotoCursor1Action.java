@@ -55,7 +55,7 @@ public class GotoCursor1Action extends BaseCursorAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagramScrollPane().gotoCursorPosition( 1 );
+    getDiagramScrollPane().gotoCursorPosition( 0 );
   }
 }
 

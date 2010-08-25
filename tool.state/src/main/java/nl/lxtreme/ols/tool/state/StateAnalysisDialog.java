@@ -42,13 +42,8 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
 
   // VARIABLES
 
-  public int channel;
-  public int edge;
   private final JComboBox edgeSelect;
   private final JComboBox channelSelect;
-  private final String[] edges;
-  private final String[] channels;
-
   private final RunAnalysisAction runAction;
   private final CloseAction closeAction;
 
@@ -66,19 +61,18 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
     pane.setLayout( new GridLayout( 3, 2, 5, 5 ) );
     getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
 
-    this.channels = new String[32];
-    for ( int i = 0; i < this.channels.length; i++ )
+    String[] channels = new String[32];
+    for ( int i = 0; i < channels.length; i++ )
     {
-      this.channels[i] = Integer.toString( i );
+      channels[i] = Integer.toString( i );
     }
-    this.channelSelect = new JComboBox( this.channels );
+    this.channelSelect = new JComboBox( channels );
     pane.add( new JLabel( "Clock Channel:" ) );
     pane.add( this.channelSelect );
 
-    final String[] tmp = { "Rising", "Falling" };
+    final String[] edges = { "Rising", "Falling" };
 
-    this.edges = tmp;
-    this.edgeSelect = new JComboBox( this.edges );
+    this.edgeSelect = new JComboBox( edges );
     pane.add( new JLabel( "Clock Edge:" ) );
     pane.add( this.edgeSelect );
 
@@ -102,8 +96,8 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
    */
   public void readProperties( final String aNamespace, final Properties properties )
   {
-    SwingComponentUtils.setSelectedItem( this.edgeSelect, properties.getProperty( aNamespace + ".edge" ) );
-    SwingComponentUtils.setSelectedItem( this.channelSelect, properties.getProperty( aNamespace + ".channel" ) );
+    SwingComponentUtils.setSelectedIndex( this.edgeSelect, properties.getProperty( aNamespace + ".edge" ) );
+    SwingComponentUtils.setSelectedIndex( this.channelSelect, properties.getProperty( aNamespace + ".channel" ) );
   }
 
   /**
@@ -121,8 +115,8 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
    */
   public void writeProperties( final String aNamespace, final Properties properties )
   {
-    properties.setProperty( aNamespace + ".channel", ( String )this.channelSelect.getSelectedItem() );
-    properties.setProperty( aNamespace + ".edge", ( String )this.edgeSelect.getSelectedItem() );
+    properties.setProperty( aNamespace + ".channel", Integer.toString( this.channelSelect.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".edge", Integer.toString( this.edgeSelect.getSelectedIndex() ) );
   }
 
   /**
