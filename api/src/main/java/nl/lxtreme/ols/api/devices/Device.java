@@ -51,8 +51,10 @@ public interface Device
    *          transfer rate to use (bps)
    * @return <code>true</code> when the port has been assigned successfully;
    *         <code>false</code> otherwise.
+   * @throws IOException
+   *           in case of I/O problems during attaching or setup of the port.
    */
-  public boolean attach( final String aPortName, final int aPortRate );
+  public boolean attach( final String aPortName, final int aPortRate ) throws IOException;
 
   /**
    * Detaches the currently attached port, if one exists. This will close the

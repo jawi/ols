@@ -28,7 +28,8 @@ import java.io.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.Host.MainFrame;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -45,19 +46,19 @@ public class CaptureAction extends BaseAction
 
   // VARIABLES
 
-  private final Host host;
+  private final MainFrame mainFrame;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new CaptureAction instance.
    * 
-   * @param aHost
-   *          the host this action belongs to.
+   * @param aFrame
+   *          the frame this action belongs to.
    */
-  public CaptureAction( final Host aHost )
+  public CaptureAction( final MainFrame aFrame )
   {
-    this( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser", aHost );
+    this( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser", aFrame );
   }
 
   /**
@@ -71,14 +72,14 @@ public class CaptureAction extends BaseAction
    *          the name of this action;
    * @param aDescription
    *          the description (tooltip) to use for this action;
-   * @param aHost
-   *          the host this action belongs to.
+   * @param aFrame
+   *          the frame this action belongs to.
    */
   protected CaptureAction( final String aID, final String aIconName, final String aName, final String aDescription,
-      final Host aHost )
+      final MainFrame aFrame )
   {
     super( aID, aIconName, aName, aDescription );
-    this.host = aHost;
+    this.mainFrame = aFrame;
   }
 
   // METHODS
@@ -89,7 +90,9 @@ public class CaptureAction extends BaseAction
   @Override
   public final void actionPerformed( final ActionEvent aEvent )
   {
-    final DeviceController devCtrl = this.host.getCurrentDeviceController();
+    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+
+    final DeviceController devCtrl = this.mainFrame.getCurrentDeviceController();
     if ( devCtrl == null )
     {
       JOptionPane.showMessageDialog( ( Component )aEvent.getSource(), "No capturing device found!", "Capture error",
@@ -99,11 +102,11 @@ public class CaptureAction extends BaseAction
 
     try
     {
-      captureData( devCtrl );
+      captureData( owner, devCtrl );
     }
     catch ( IOException exception )
     {
-      this.host.captureAborted( "I/O problem: " + exception.getMessage() );
+      this.mainFrame.captureAborted( "I/O problem: " + exception.getMessage() );
       exception.printStackTrace();
     }
   }
@@ -111,6 +114,8 @@ public class CaptureAction extends BaseAction
   /**
    * Does the actual capturing of the data from the given device controller.
    * 
+   * @param aOwner
+   *          the owning window;
    * @param aController
    *          the device controller to use for capturing the data, cannot be
    *          <code>null</code>;
@@ -120,10 +125,10 @@ public class CaptureAction extends BaseAction
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void doCaptureData( final DeviceController aController, final CaptureCallback aCallback )
+  protected void doCaptureData( final Window aOwner, final DeviceController aController, final CaptureCallback aCallback )
       throws IOException
   {
-    if ( aController.setupCapture() )
+    if ( aController.setupCapture( aOwner ) )
     {
       aController.captureData( aCallback );
     }
@@ -132,15 +137,17 @@ public class CaptureAction extends BaseAction
   /**
    * Captures the data from the given device controller.
    * 
+   * @param aOwner
+   *          the owning window;
    * @param aController
    *          the device controller to use for capturing the data, cannot be
    *          <code>null</code>.
    * @throws IOException
    *           in case of I/O problems.
    */
-  private void captureData( final DeviceController aController ) throws IOException
+  private void captureData( final Window aOwner, final DeviceController aController ) throws IOException
   {
-    doCaptureData( aController, this.host );
+    doCaptureData( aOwner, aController, this.mainFrame );
   }
 }
 

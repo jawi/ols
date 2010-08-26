@@ -32,6 +32,10 @@ import org.osgi.service.log.*;
  */
 public final class SimpleLogReader implements LogListener
 {
+  // CONSTANTS
+
+  private static final int LOGGER_NAME_WIDTH = 35;
+
   // VARIABLES
 
   private final DateFormat formatter;
@@ -62,22 +66,49 @@ public final class SimpleLogReader implements LogListener
     if ( aLogEntry.getMessage() != null )
     {
       final StringBuilder sb = new StringBuilder();
+
+      String loggerName = aLogEntry.getBundle().getSymbolicName();
+      String msg = aLogEntry.getMessage();
+      if ( ( msg != null ) && msg.startsWith( "[[" ) )
+      {
+        final int idx = msg.indexOf( "]]" );
+        loggerName = msg.substring( 2, idx );
+        msg = msg.substring( idx + 2 );
+      }
+
+      if ( loggerName != null )
+      {
+        final int length = loggerName.length();
+        if ( length > LOGGER_NAME_WIDTH )
+        {
+          final int offset = length - LOGGER_NAME_WIDTH;
+          final int lastDot = Math.min( length, Math.max( offset, loggerName.indexOf( '.', offset ) + 1 ) );
+          loggerName = loggerName.substring( lastDot, length );
+        }
+        loggerName = String.format( "%30s", loggerName );
+      }
+
       sb.append( '[' );
       sb.append( this.formatter.format( new Date( aLogEntry.getTime() ) ) );
       sb.append( " - " );
       sb.append( getLevel( aLogEntry.getLevel() ) );
       sb.append( " - " );
-      sb.append( aLogEntry.getBundle().getSymbolicName() );
+      sb.append( loggerName );
       sb.append( "]: " );
-      sb.append( aLogEntry.getMessage() );
+      if ( msg != null )
+      {
+        sb.append( msg );
+      }
 
       if ( aLogEntry.getException() != null )
       {
-        System.err.println( sb.toString() );
-        aLogEntry.getException().printStackTrace();
+        System.out.println( sb.toString() );
+        aLogEntry.getException().printStackTrace( System.out );
       }
-
-      System.out.println( sb.toString() );
+      else
+      {
+        System.out.println( sb.toString() );
+      }
     }
   }
 

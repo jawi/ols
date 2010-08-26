@@ -49,31 +49,35 @@ public class Activator implements BundleActivator
    * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
    */
   @Override
-  public void start( final BundleContext aContext )
+  public void start( final BundleContext aContext ) throws Exception
   {
     this.host = new Host( aContext );
 
     // This has to be done *before* any other Swing related code is executed
     // so this also means the #invokeLater call done below...
-    HostUtils.initOSSpecifics( this.host.getShortName(), this.host );
+    HostUtils.initOSSpecifics( Host.getShortName(), this.host );
 
-    final Runnable task = new Runnable()
+    final Runnable initTask = new Runnable()
     {
       @Override
       public void run()
       {
-        try
-        {
-          Activator.this.host.initialize();
-          Activator.this.host.start();
-        }
-        catch ( Exception exception )
-        {
-          LOG.log( Level.ALL, "Failed to initialize/start client!", exception );
-        }
+        LOG.fine( "Initializing client ..." );
+        Activator.this.host.initialize();
       }
     };
-    SwingUtilities.invokeLater( task );
+    SwingUtilities.invokeAndWait( initTask );
+
+    final Runnable startTask = new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        LOG.info( "Starting client ..." );
+        Activator.this.host.start();
+      }
+    };
+    SwingUtilities.invokeLater( startTask );
   }
 
   /**
@@ -82,26 +86,27 @@ public class Activator implements BundleActivator
   @Override
   public void stop( final BundleContext aContext ) throws Exception
   {
-    final Runnable task = new Runnable()
+    final Runnable stopTask = new Runnable()
     {
       @Override
       public void run()
       {
-        try
-        {
-          Activator.this.host.stop();
-        }
-        catch ( Exception exception )
-        {
-          LOG.log( Level.ALL, "Failed to stop client!", exception );
-        }
-        finally
-        {
-          Activator.this.host = null;
-        }
+        LOG.info( "Stopping client ..." );
+        Activator.this.host.stop();
       }
     };
-    SwingUtilities.invokeLater( task );
+    SwingUtilities.invokeAndWait( stopTask );
+
+    final Runnable shutdownTask = new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        LOG.fine( "Shutting down client ..." );
+        Activator.this.host.shutdown();
+      }
+    };
+    SwingUtilities.invokeAndWait( shutdownTask );
   }
 
 }

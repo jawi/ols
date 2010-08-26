@@ -21,16 +21,15 @@
 package nl.lxtreme.ols.api.devices;
 
 
+import java.awt.*;
 import java.io.*;
-
-import nl.lxtreme.ols.api.*;
 
 
 /**
  * Interface for implementing device controllers. Each device controller must
  * implement at least this interface, and possibly {@link Device} as well.
  */
-public interface DeviceController extends Configurable
+public interface DeviceController
 {
   // METHODS
 
@@ -64,11 +63,14 @@ public interface DeviceController extends Configurable
    * Allows this device controller to set up the device by means of presenting
    * an UI.
    * 
+   * @param aParent
+   *          the parent window that can be used to display (modal) dialogs, can
+   *          be <code>null</code>.
    * @return <code>true</code> if the setup is successfully completed (the user
    *         acknowledged the setup), <code>false</code> if the setup is aborted
    *         by the user.
    * @throws IOException
    *           in case of I/O problems.
    */
-  public boolean setupCapture() throws IOException;
+  public boolean setupCapture( final Window aParent ) throws IOException;
 }

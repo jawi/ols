@@ -150,6 +150,17 @@ public class TestDeviceDialog extends JDialog implements Configurable
   }
 
   /**
+   * 
+   */
+  private void closeDialog( final boolean aResult )
+  {
+    this.setupConfirmed = aResult;
+
+    setVisible( false );
+    dispose();
+  }
+
+  /**
    * @return
    */
   private JPanel createContents()
@@ -228,10 +239,7 @@ public class TestDeviceDialog extends JDialog implements Configurable
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
-        TestDeviceDialog.this.setupConfirmed = false;
-        setVisible( false );
-
-        dispose();
+        closeDialog( false );
       }
     } );
 
@@ -242,10 +250,7 @@ public class TestDeviceDialog extends JDialog implements Configurable
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
-        TestDeviceDialog.this.setupConfirmed = true;
-        setVisible( false );
-
-        dispose();
+        closeDialog( true );
       }
     } );
 

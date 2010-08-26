@@ -46,11 +46,327 @@ import org.osgi.framework.*;
 
 
 /**
- * Denotes the UI-host.
+ * Denotes the client host.
  */
-public final class Host implements ActionProvider, CaptureCallback, AnalysisCallback, ApplicationCallback
+public final class Host implements ApplicationCallback
 {
   // INNER TYPES
+
+  /**
+   * Denotes the main UI.
+   */
+  public static final class MainFrame extends JFrame implements ActionProvider, CaptureCallback, AnalysisCallback
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // VARIABLES
+
+    private final IActionManager actionManager;
+    private final DiagramScrollPane diagramScrollPane;
+    private final JTextStatusBar status;
+
+    private JMenu deviceMenu;
+    private JMenu toolsMenu;
+
+    private volatile DeviceController currentDevCtrl;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new MainFrame instance.
+     * 
+     * @param aCaption
+     *          the caption of this frame.
+     */
+    public MainFrame( final Host aHost )
+    {
+      super( FULL_NAME );
+
+      this.actionManager = new ActionManager();
+
+      this.diagramScrollPane = new DiagramScrollPane( this );
+      this.status = new JTextStatusBar();
+
+      this.actionManager.add( new NewProjectAction( aHost.project ) );
+      this.actionManager.add( new OpenProjectAction( aHost.project ) );
+      this.actionManager.add( new SaveProjectAction( aHost.project ) );
+      this.actionManager.add( new OpenDataFileAction( this.diagramScrollPane ) );
+      this.actionManager.add( new SaveDataFileAction( this.diagramScrollPane ) );
+      this.actionManager.add( new ExitAction( aHost ) );
+
+      this.actionManager.add( new CaptureAction( this ) );
+      this.actionManager.add( new RepeatCaptureAction( this ) );
+
+      this.actionManager.add( new ZoomInAction( this.diagramScrollPane ) ).setEnabled( false );
+      this.actionManager.add( new ZoomOutAction( this.diagramScrollPane ) ).setEnabled( false );
+      this.actionManager.add( new ZoomDefaultAction( this.diagramScrollPane ) ).setEnabled( false );
+      this.actionManager.add( new ZoomFitAction( this.diagramScrollPane ) ).setEnabled( false );
+      this.actionManager.add( new GotoTriggerAction( this.diagramScrollPane ) ).setEnabled( false );
+      this.actionManager.add( new GotoCursor1Action( this.diagramScrollPane ) ).setEnabled( false );
+      this.actionManager.add( new GotoCursor2Action( this.diagramScrollPane ) ).setEnabled( false );
+      this.actionManager.add( new SetCursorModeAction( this.diagramScrollPane ) ).setEnabled( false );
+      this.actionManager.add( new ShowDiagramSettingsAction( this.diagramScrollPane ) );
+      this.actionManager.add( new ShowDiagramLabelsAction( this.diagramScrollPane ) );
+
+      setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
+      setSize( 1200, 600 );
+
+      final Container contentPane = getContentPane();
+      contentPane.setLayout( new BorderLayout() );
+      contentPane.add( this.diagramScrollPane, BorderLayout.CENTER );
+
+      final JToolBar tools = createMenuBars();
+      contentPane.add( tools, BorderLayout.PAGE_START );
+
+      contentPane.add( this.status, BorderLayout.PAGE_END );
+    }
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisAborted(java.lang.String)
+     */
+    @Override
+    public void analysisAborted( final String aReason )
+    {
+      setStatus( "Analysis aborted! " + aReason );
+    }
+
+    /**
+     * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisComplete(nl.lxtreme.ols.api.data.CapturedData)
+     */
+    @Override
+    public void analysisComplete( final CapturedData aNewCapturedData )
+    {
+      setCapturedData( aNewCapturedData, true /* aEnable */);
+    }
+
+    /**
+     * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureAborted(java.lang.String)
+     */
+    @Override
+    public void captureAborted( final String aReason )
+    {
+      setStatus( "Capture aborted! " + aReason );
+    }
+
+    /**
+     * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureComplete(nl.lxtreme.ols.api.data.CapturedData)
+     */
+    @Override
+    public void captureComplete( final CapturedData aCapturedData )
+    {
+      final boolean actionsEnabled = aCapturedData != null;
+      setCapturedData( aCapturedData, actionsEnabled );
+
+      updateActions();
+    }
+
+    /**
+     * @see nl.lxtreme.ols.client.ActionProvider#getAction(java.lang.String)
+     */
+    public Action getAction( final String aID )
+    {
+      return this.actionManager.getAction( aID );
+    }
+
+    /**
+     * Returns the current annotated data.
+     * 
+     * @return the annotated data, never <code>null</code>.
+     */
+    public AnnotatedData getAnnotatedData()
+    {
+      return this.diagramScrollPane.getAnnotatedData();
+    }
+
+    /**
+     * Returns the current device controller.
+     * 
+     * @return the current device controller, can be <code>null</code>.
+     */
+    public DeviceController getCurrentDeviceController()
+    {
+      return this.currentDevCtrl;
+    }
+
+    /**
+     * Sets the current device controller to the given value.
+     * 
+     * @param aCurrentDevCtrl
+     *          the device controller to set, cannot be <code>null</code>.
+     */
+    public void setCurrentDeviceController( final DeviceController aCurrentDevCtrl )
+    {
+      if ( LOG.isLoggable( Level.INFO ) )
+      {
+        final String name = ( aCurrentDevCtrl == null ) ? "no device" : aCurrentDevCtrl.getName();
+        LOG.log( Level.INFO, "Setting current device controller to: \"{0}\" ...", name );
+      }
+
+      this.currentDevCtrl = aCurrentDevCtrl;
+
+      updateActions();
+    }
+
+    /**
+     * Shows the main about box.
+     * 
+     * @param aVersion
+     *          the version to display in this about box.
+     */
+    public void showAboutBox( final String aVersion )
+    {
+      final String message = FULL_NAME + "\n\n" //
+          + "Copyright 2006-2010 Michael Poppitz\n" //
+          + "Copyright 2010 J.W. Janssen\n\n" //
+          + "This software is released under the GNU GPL.\n\n" //
+          + "Version: {0}\n\n" //
+          + "For more information see:\n" //
+          + "  <http://www.lxtreme.nl/ols/>\n" //
+          + "  <http://dangerousprototypes.com/open-logic-sniffer/>\n" //
+          + "  <http://www.gadgetfactory.net/gf/project/butterflylogic/>\n" //
+          + "  <http://www.sump.org/projects/analyzer/>";
+
+      final JOptionPane aboutDialogFactory = new JOptionPane( String.format( message, aVersion ), //
+          JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION );
+
+      final JDialog aboutDialog = aboutDialogFactory.createDialog( this, "About ..." );
+      aboutDialog.setVisible( true );
+    }
+
+    /**
+     * @see nl.lxtreme.ols.api.ProgressCallback#updateProgress(int)
+     */
+    public void updateProgress( final int aPercentage )
+    {
+      this.status.setProgress( aPercentage );
+    }
+
+    /**
+     * Creates the menu bar with all menu's and the accompanying toolbar.
+     * 
+     * @return the toolbar, never <code>null</code>.
+     */
+    private JToolBar createMenuBars()
+    {
+      final JMenuBar bar = new JMenuBar();
+      setJMenuBar( bar );
+
+      final JMenu file = new JMenu( "File" );
+      bar.add( file );
+
+      file.add( getAction( NewProjectAction.ID ) );
+      file.add( getAction( OpenProjectAction.ID ) );
+      file.add( getAction( SaveProjectAction.ID ) );
+      file.addSeparator();
+      file.add( getAction( OpenDataFileAction.ID ) );
+      file.add( getAction( SaveDataFileAction.ID ) );
+
+      if ( HostUtils.needsExitMenuItem() )
+      {
+        file.add( new JSeparator() );
+        file.add( getAction( ExitAction.ID ) );
+      }
+
+      this.deviceMenu = bar.add( new JMenu( "Device" ) );
+      this.toolsMenu = bar.add( new JMenu( "Tools" ) );
+
+      final JMenu diagramMenu = bar.add( new JMenu( "Diagram" ) );
+
+      diagramMenu.add( getAction( ZoomInAction.ID ) );
+      diagramMenu.add( getAction( ZoomOutAction.ID ) );
+      diagramMenu.add( getAction( ZoomDefaultAction.ID ) );
+      diagramMenu.add( getAction( ZoomFitAction.ID ) );
+      diagramMenu.addSeparator();
+      diagramMenu.add( getAction( GotoTriggerAction.ID ) );
+      diagramMenu.add( getAction( GotoCursor1Action.ID ) );
+      diagramMenu.add( getAction( GotoCursor2Action.ID ) );
+      diagramMenu.addSeparator();
+      diagramMenu.add( new JCheckBoxMenuItem( getAction( SetCursorModeAction.ID ) ) );
+      diagramMenu.add( getAction( ShowDiagramSettingsAction.ID ) );
+      diagramMenu.add( getAction( ShowDiagramLabelsAction.ID ) );
+
+      // final JMenu windowMenu = new JMenu( "Window" );
+      // bar.add( windowMenu );
+
+      final JToolBar toolbar = new JToolBar();
+      toolbar.setRollover( true );
+
+      toolbar.add( getAction( OpenDataFileAction.ID ) );
+      toolbar.add( getAction( SaveDataFileAction.ID ) );
+      toolbar.addSeparator();
+
+      toolbar.add( getAction( CaptureAction.ID ) );
+      toolbar.add( getAction( RepeatCaptureAction.ID ) );
+      toolbar.addSeparator();
+
+      toolbar.add( getAction( ZoomInAction.ID ) );
+      toolbar.add( getAction( ZoomOutAction.ID ) );
+      toolbar.add( getAction( ZoomDefaultAction.ID ) );
+      toolbar.add( getAction( ZoomFitAction.ID ) );
+      toolbar.addSeparator();
+
+      toolbar.add( getAction( GotoTriggerAction.ID ) );
+      toolbar.add( getAction( GotoCursor1Action.ID ) );
+      toolbar.add( getAction( GotoCursor2Action.ID ) );
+      // toolbar.addSeparator();
+
+      return toolbar;
+    }
+
+    /**
+     * @param aCapturedData
+     * @param aEnableActions
+     */
+    private void setCapturedData( final CapturedData aCapturedData, final boolean aEnableActions )
+    {
+      getAction( ZoomInAction.ID ).setEnabled( aEnableActions );
+      getAction( ZoomOutAction.ID ).setEnabled( aEnableActions );
+      getAction( ZoomDefaultAction.ID ).setEnabled( aEnableActions );
+      getAction( ZoomFitAction.ID ).setEnabled( aEnableActions );
+      getAction( GotoTriggerAction.ID ).setEnabled(
+          aEnableActions && ( ( aCapturedData != null ) && aCapturedData.hasTriggerData() ) );
+      getAction( GotoCursor1Action.ID ).setEnabled( aEnableActions );
+      getAction( GotoCursor2Action.ID ).setEnabled( aEnableActions );
+      getAction( SetCursorModeAction.ID ).setEnabled( aEnableActions );
+
+      if ( aCapturedData != null )
+      {
+        this.diagramScrollPane.setCapturedData( aCapturedData );
+        this.diagramScrollPane.zoomToFit();
+      }
+      else
+      {
+        this.diagramScrollPane.repaint();
+      }
+
+      setStatus( "" );
+    }
+
+    /**
+     * @param aText
+     */
+    private void setStatus( final String aText )
+    {
+      this.status.showProgressBar( false );
+      this.status.setText( aText );
+    }
+
+    /**
+     * Synchronizes the state of the actions to the current state of this host.
+     */
+    private void updateActions()
+    {
+      final DeviceController currentDeviceController = getCurrentDeviceController();
+      final boolean deviceControllerSet = currentDeviceController != null;
+
+      getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
+      getAction( RepeatCaptureAction.ID ).setEnabled( deviceControllerSet && currentDeviceController.isSetup() );
+    }
+  }
 
   /**
    * Defines a (global) AWT event listener for storing/retrieving the window
@@ -58,7 +374,15 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
    */
   static final class FrameStateListener implements AWTEventListener
   {
+    // CONSTANTS
+
+    private static final Logger LOG = Logger.getLogger( FrameStateListener.class.getName() );
+
+    // VARIABLES
+
     private final Properties properties;
+
+    // CONSTRUCTORS
 
     /**
      * Creates a new FrameStateListener instance.
@@ -71,6 +395,8 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
       this.properties = aProperties;
     }
 
+    // METHODS
+
     /**
      * @see java.awt.event.AWTEventListener#eventDispatched(java.awt.AWTEvent)
      */
@@ -78,73 +404,54 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
     public void eventDispatched( final AWTEvent aEvent )
     {
       final int id = aEvent.getID();
-      if ( aEvent instanceof ComponentEvent )
+      if ( ( id == WindowEvent.WINDOW_OPENED ) && ( aEvent instanceof ComponentEvent ) )
       {
         final ComponentEvent event = ( ComponentEvent )aEvent;
         final Component component = event.getComponent();
 
-        // TODO this is a mere hack!
-        Configurable configurable = null;
-        if ( component instanceof Configurable )
+        try
         {
-          configurable = ( Configurable )component;
-        }
-        else if ( component instanceof JDialog )
-        {
-          JDialog window = ( JDialog )component;
-          if ( window.getContentPane() instanceof Configurable )
+          final String namespace = component.getClass().getName();
+          if ( component instanceof Configurable )
           {
-            configurable = ( Configurable )window.getContentPane();
+            LOG.log( Level.FINE, "Reading dialog-specific properties for '{0}' ...", namespace );
+            ( ( Configurable )component ).readProperties( namespace, this.properties );
           }
-        }
-        else if ( component instanceof JFrame )
-        {
-          JFrame window = ( JFrame )component;
-          if ( window.getContentPane() instanceof Configurable )
+
+          if ( component instanceof Window )
           {
-            configurable = ( Configurable )window.getContentPane();
+            LOG.log( Level.FINE, "Reading window-properties for '{0}' ...", namespace );
+            SwingComponentUtils.loadWindowState( namespace, this.properties, ( Window )component );
           }
         }
-
-        if ( configurable != null )
+        catch ( RuntimeException exception )
         {
-          final String namespace = configurable.getClass().getName();
-          if ( id == WindowEvent.WINDOW_OPENED )
-          {
-            try
-            {
-              System.out.println( "Reading properties for " + namespace );
-              configurable.readProperties( namespace, this.properties );
-            }
-            catch ( Exception exception )
-            {
-              Logger.getLogger( getClass().getName() ).log( Level.WARNING, "Reading dialog properties failed!",
-                  exception );
-            }
+          LOG.log( Level.WARNING, "Reading dialog properties failed!", exception );
+        }
+      }
+      else if ( ( id == WindowEvent.WINDOW_CLOSED ) && ( aEvent instanceof ComponentEvent ) )
+      {
+        final ComponentEvent event = ( ComponentEvent )aEvent;
+        final Component component = event.getComponent();
 
-            if ( component instanceof Window )
-            {
-              SwingComponentUtils.loadWindowState( namespace, this.properties, ( Window )component );
-            }
-          }
-          else if ( id == WindowEvent.WINDOW_CLOSED )
+        try
+        {
+          final String namespace = component.getClass().getName();
+          if ( component instanceof Configurable )
           {
-            try
-            {
-              System.out.println( "Writing properties for " + namespace );
-              configurable.writeProperties( namespace, this.properties );
-            }
-            catch ( Exception exception )
-            {
-              Logger.getLogger( getClass().getName() ).log( Level.WARNING, "Writing dialog properties failed!",
-                  exception );
-            }
-
-            if ( component instanceof Window )
-            {
-              SwingComponentUtils.saveWindowState( namespace, this.properties, ( Window )component );
-            }
+            LOG.log( Level.FINE, "Writing dialog-specific properties for '{0}' ...", namespace );
+            ( ( Configurable )component ).writeProperties( namespace, this.properties );
           }
+
+          if ( component instanceof Window )
+          {
+            LOG.log( Level.FINE, "Writing window-properties for '{0}' ...", namespace );
+            SwingComponentUtils.saveWindowState( namespace, this.properties, ( Window )component );
+          }
+        }
+        catch ( RuntimeException exception )
+        {
+          LOG.log( Level.WARNING, "Writing dialog properties failed!", exception );
         }
       }
     }
@@ -155,33 +462,27 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
   private static final Logger LOG = Logger.getLogger( Host.class.getName() );
 
   private static final String PROPERTIES_NAME = "nl.lxtreme.ols.client";
+  private static final String SHORT_NAME = "LogicSniffer";
+  private static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
 
   // VARIABLES
 
-  private final IActionManager actionManager;
   private final BundleContext context;
   private final Project project;
 
-  private volatile DeviceController currentDevCtrl;
-
-  private JFrame mainFrame;
-  private JMenu deviceMenu;
-  private JMenu toolsMenu;
-  private DiagramScrollPane diagramScrollPane;
-  private JTextStatusBar status;
-
+  private MainFrame mainFrame;
   private MenuTracker menuTracker;
   private DeviceControllerTracker deviceControllerTracker;
   private ToolTracker toolTracker;
+  private Properties userProperties;
 
   // CONSTRUCTORS
 
-  private Properties userProperties;
-
-  // METHODS
-
   /**
    * Creates a new Host instance.
+   * 
+   * @param aBundleContext
+   *          the bundle context to use.
    */
   public Host( final BundleContext aBundleContext )
   {
@@ -192,90 +493,30 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
     this.context = aBundleContext;
 
     this.project = new Project();
-    this.actionManager = new ActionManager();
   }
 
+  // METHODS
+
   /**
-   * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisAborted(java.lang.String)
+   * Returns a symbolic name for this host.
+   * 
+   * @return a symbolic name, never <code>null</code>.
    */
-  @Override
-  public void analysisAborted( final String aReason )
+  public static final String getShortName()
   {
-    this.status.showProgressBar( false );
-
-    this.status.setText( "Analysis aborted! " + aReason );
+    return SHORT_NAME;
   }
 
   /**
-   * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisComplete(nl.lxtreme.ols.api.data.CapturedData)
-   */
-  @Override
-  public void analysisComplete( final CapturedData aNewCapturedData )
-  {
-    this.status.showProgressBar( false );
-
-    if ( aNewCapturedData != null )
-    {
-      this.diagramScrollPane.setCapturedData( aNewCapturedData );
-      this.diagramScrollPane.zoomToFit();
-    }
-    else
-    {
-      // Simply repaint the scroll pane...
-      this.diagramScrollPane.repaint();
-    }
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureAborted(java.lang.String)
-   */
-  @Override
-  public void captureAborted( final String aReason )
-  {
-    this.status.showProgressBar( false );
-
-    this.status.setText( "Capture aborted! " + aReason );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureComplete(nl.lxtreme.ols.api.data.CapturedData)
-   */
-  @Override
-  public void captureComplete( final CapturedData aCapturedData )
-  {
-    final boolean actionsEnabled = aCapturedData != null;
-    final boolean hasTriggerPoint = actionsEnabled && aCapturedData.hasTriggerData();
-
-    getAction( ZoomInAction.ID ).setEnabled( actionsEnabled );
-    getAction( ZoomOutAction.ID ).setEnabled( actionsEnabled );
-    getAction( ZoomDefaultAction.ID ).setEnabled( actionsEnabled );
-    getAction( ZoomFitAction.ID ).setEnabled( actionsEnabled );
-    getAction( GotoTriggerAction.ID ).setEnabled( hasTriggerPoint );
-    getAction( GotoCursor1Action.ID ).setEnabled( actionsEnabled );
-    getAction( GotoCursor2Action.ID ).setEnabled( actionsEnabled );
-    getAction( SetCursorModeAction.ID ).setEnabled( actionsEnabled );
-
-    if ( aCapturedData != null )
-    {
-      this.diagramScrollPane.setCapturedData( aCapturedData );
-      this.diagramScrollPane.zoomToFit();
-    }
-
-    this.status.showProgressBar( false );
-  }
-
-  /**
-   * Exits this host.
+   * Exits this host by stopping the framework bundle.
    */
   public void exit()
   {
-    //
-    stop();
-
     try
     {
+      // Stop the framework bundle; which should stop all other bundles as
+      // well...
       this.context.getBundle( 0 ).stop();
-      System.exit( 0 );
     }
     catch ( BundleException be )
     {
@@ -284,51 +525,11 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
   }
 
   /**
-   * @see nl.lxtreme.ols.client.ActionProvider#getAction(java.lang.String)
-   */
-  @Override
-  public final Action getAction( final String aID )
-  {
-    return this.actionManager.getAction( aID );
-  }
-
-  /**
    * @return
    */
   public AnnotatedData getAnnotatedData()
   {
-    return this.diagramScrollPane.getAnnotatedData();
-  }
-
-  /**
-   * Returns the current device controller.
-   * 
-   * @return the current device controller, never <code>null</code>.
-   */
-  public DeviceController getCurrentDeviceController()
-  {
-    return this.currentDevCtrl;
-  }
-
-  /**
-   * Returns the full name for this host.
-   * 
-   * @return a full name, never <code>null</code>.
-   * @see #getShortName()
-   */
-  public final String getFullName()
-  {
-    return getShortName().concat( " - Logic Analyzer Client" );
-  }
-
-  /**
-   * Returns a symbolic name for this host.
-   * 
-   * @return a symbolic name, never <code>null</code>.
-   */
-  public final String getShortName()
-  {
-    return "LogicSniffer";
+    return this.mainFrame.getAnnotatedData();
   }
 
   /**
@@ -337,23 +538,7 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
   @Override
   public boolean handleAbout()
   {
-    final String message = getFullName() + "\n\n" //
-        + "Copyright 2006-2010 Michael Poppitz\n" //
-        + "Copyright 2010 J.W. Janssen\n\n" //
-        + "This software is released under the GNU GPL.\n\n" //
-        + "Version: {0}\n\n" //
-        + "For more information see:\n" //
-        + "  <http://www.lxtreme.nl/ols/>\n" //
-        + "  <http://dangerousprototypes.com/open-logic-sniffer/>\n" //
-        + "  <http://www.gadgetfactory.net/gf/project/butterflylogic/>\n" //
-        + "  <http://www.sump.org/projects/analyzer/>";
-
-    final JOptionPane aboutDialogFactory = new JOptionPane( String.format( message, "0.8.3" ), //
-        JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION );
-
-    final JDialog aboutDialog = aboutDialogFactory.createDialog( this.mainFrame, "About ..." );
-    aboutDialog.setVisible( true );
-
+    this.mainFrame.showAboutBox( "0.8.3" );
     return true;
   }
 
@@ -389,8 +574,15 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
    * Initializes this host application. May <em>not</em> be called from outside
    * the EDT.
    */
-  public void initialize() throws Exception
+  public void initialize()
   {
+    // Read back the user preferences from last time...
+    this.userProperties = HostUtils.readProperties( PROPERTIES_NAME );
+    if ( this.userProperties == null )
+    {
+      this.userProperties = new Properties();
+    }
+
     if ( Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) ) )
     {
       // Install a custom repaint manager that detects whether Swing components
@@ -399,69 +591,33 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
       ThreadViolationDetectionRepaintManager.install();
     }
 
-    // Read back the user preferences from last time...
-    this.userProperties = HostUtils.readProperties( PROPERTIES_NAME );
-    if ( this.userProperties == null )
-    {
-      this.userProperties = new Properties();
-    }
-
     // Install a global window state listener...
     Toolkit.getDefaultToolkit().addAWTEventListener( new FrameStateListener( this.userProperties ),
         AWTEvent.WINDOW_EVENT_MASK );
 
-    this.mainFrame = new JFrame( getShortName().concat( " - Logic Analyzer Client" ) );
-    this.diagramScrollPane = new DiagramScrollPane( this );
-    this.status = new JTextStatusBar();
-
-    this.actionManager.add( new NewProjectAction( this.project ) );
-    this.actionManager.add( new OpenProjectAction( this.project ) );
-    this.actionManager.add( new SaveProjectAction( this.project ) );
-    this.actionManager.add( new OpenDataFileAction( this.diagramScrollPane ) );
-    this.actionManager.add( new SaveDataFileAction( this.diagramScrollPane ) );
-    this.actionManager.add( new ExitAction( this ) );
-
-    this.actionManager.add( new CaptureAction( this ) );
-    this.actionManager.add( new RepeatCaptureAction( this ) );
-
-    this.actionManager.add( new ZoomInAction( this.diagramScrollPane ) ).setEnabled( false );
-    this.actionManager.add( new ZoomOutAction( this.diagramScrollPane ) ).setEnabled( false );
-    this.actionManager.add( new ZoomDefaultAction( this.diagramScrollPane ) ).setEnabled( false );
-    this.actionManager.add( new ZoomFitAction( this.diagramScrollPane ) ).setEnabled( false );
-    this.actionManager.add( new GotoTriggerAction( this.diagramScrollPane ) ).setEnabled( false );
-    this.actionManager.add( new GotoCursor1Action( this.diagramScrollPane ) ).setEnabled( false );
-    this.actionManager.add( new GotoCursor2Action( this.diagramScrollPane ) ).setEnabled( false );
-    this.actionManager.add( new SetCursorModeAction( this.diagramScrollPane ) ).setEnabled( false );
-    this.actionManager.add( new ShowDiagramSettingsAction( this.diagramScrollPane ) );
-    this.actionManager.add( new ShowDiagramLabelsAction( this.diagramScrollPane ) );
-
-    setContent();
+    this.mainFrame = new MainFrame( this );
 
     this.menuTracker = new MenuTracker( this.context, this.mainFrame.getJMenuBar() );
-    this.deviceControllerTracker = new DeviceControllerTracker( this.context, this, this.deviceMenu );
-    this.toolTracker = new ToolTracker( this.context, this, this.toolsMenu );
+    this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.mainFrame, this.mainFrame.deviceMenu );
+    this.toolTracker = new ToolTracker( this.context, this.mainFrame, this.mainFrame.toolsMenu );
   }
 
   /**
-   * Sets the current device controller to the given value.
-   * 
-   * @param aCurrentDevCtrl
-   *          the device controller to set, cannot be <code>null</code>.
+   * Shutdown hook, called after {@link #stop()} is called and can be used to
+   * write down preferences and such. This method may <em>not</em> be called
+   * from outside the EDT.
    */
-  public void setCurrentDeviceController( final DeviceController aCurrentDevCtrl )
+  public void shutdown()
   {
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      final String name = aCurrentDevCtrl == null ? "<no device>" : aCurrentDevCtrl.getName();
-      LOG.info( "Setting current device controller to: " + name );
-    }
-    this.currentDevCtrl = aCurrentDevCtrl;
+    // Write back the user properties for use next time...
+    HostUtils.writeProperties( PROPERTIES_NAME, this.userProperties );
   }
 
   /**
-   * Starts this UI-host, may <em>not</em> be called from outside the EDT.
+   * Starts this host by making the main frame visible, may <em>not</em> be
+   * called from outside the EDT.
    */
-  public void start() throws Exception
+  public void start()
   {
     this.deviceControllerTracker.open();
     this.toolTracker.open();
@@ -471,126 +627,20 @@ public final class Host implements ActionProvider, CaptureCallback, AnalysisCall
   }
 
   /**
-   * Stops this UI-host, may <em>not</em> be called from outside the EDT.
+   * Stops this host by making the main frame invisible, may <em>not</em> be
+   * called from outside the EDT.
    */
   public void stop()
   {
-    // Write back the user properties for use next time...
-    HostUtils.writeProperties( PROPERTIES_NAME, this.userProperties );
-
-    this.deviceControllerTracker.close();
-    this.toolTracker.close();
-    this.menuTracker.close();
-
     if ( this.mainFrame != null )
     {
       this.mainFrame.dispose();
       this.mainFrame = null;
     }
-  }
 
-  /**
-   * @see nl.lxtreme.ols.api.ProgressCallback#updateProgress(int)
-   */
-  @Override
-  public void updateProgress( final int aPercentage )
-  {
-    this.status.setProgress( aPercentage );
-  }
-
-  /**
-   * @param aProject
-   * @param aMainFrame
-   * @param aDiagram
-   * @return
-   */
-  private JToolBar createMenuBars( final Project aProject, final JFrame aMainFrame, final DiagramScrollPane aDiagram )
-  {
-    final JMenuBar bar = new JMenuBar();
-    aMainFrame.setJMenuBar( bar );
-
-    final JMenu file = new JMenu( "File" );
-    bar.add( file );
-
-    file.add( getAction( NewProjectAction.ID ) );
-    file.add( getAction( OpenProjectAction.ID ) );
-    file.add( getAction( SaveProjectAction.ID ) );
-    file.addSeparator();
-    file.add( getAction( OpenDataFileAction.ID ) );
-    file.add( getAction( SaveDataFileAction.ID ) );
-
-    if ( HostUtils.needsExitMenuItem() )
-    {
-      file.add( new JSeparator() );
-      file.add( getAction( ExitAction.ID ) );
-    }
-
-    this.deviceMenu = new JMenu( "Device" );
-    bar.add( this.deviceMenu );
-
-    this.toolsMenu = new JMenu( "Tools" );
-    bar.add( this.toolsMenu );
-
-    final JMenu diagramMenu = new JMenu( "Diagram" );
-    bar.add( diagramMenu );
-
-    diagramMenu.add( getAction( ZoomInAction.ID ) );
-    diagramMenu.add( getAction( ZoomOutAction.ID ) );
-    diagramMenu.add( getAction( ZoomDefaultAction.ID ) );
-    diagramMenu.add( getAction( ZoomFitAction.ID ) );
-    diagramMenu.addSeparator();
-    diagramMenu.add( getAction( GotoTriggerAction.ID ) );
-    diagramMenu.add( getAction( GotoCursor1Action.ID ) );
-    diagramMenu.add( getAction( GotoCursor2Action.ID ) );
-    diagramMenu.addSeparator();
-    diagramMenu.add( new JCheckBoxMenuItem( getAction( SetCursorModeAction.ID ) ) );
-    diagramMenu.add( getAction( ShowDiagramSettingsAction.ID ) );
-    diagramMenu.add( getAction( ShowDiagramLabelsAction.ID ) );
-
-    // final JMenu windowMenu = new JMenu( "Window" );
-    // bar.add( windowMenu );
-
-    final JToolBar toolbar = new JToolBar();
-    toolbar.setRollover( true );
-
-    toolbar.add( getAction( OpenDataFileAction.ID ) );
-    toolbar.add( getAction( SaveDataFileAction.ID ) );
-    toolbar.addSeparator();
-
-    toolbar.add( getAction( CaptureAction.ID ) );
-    toolbar.add( getAction( RepeatCaptureAction.ID ) );
-    toolbar.addSeparator();
-
-    toolbar.add( getAction( ZoomInAction.ID ) );
-    toolbar.add( getAction( ZoomOutAction.ID ) );
-    toolbar.add( getAction( ZoomDefaultAction.ID ) );
-    toolbar.add( getAction( ZoomFitAction.ID ) );
-    toolbar.addSeparator();
-
-    toolbar.add( getAction( GotoTriggerAction.ID ) );
-    toolbar.add( getAction( GotoCursor1Action.ID ) );
-    toolbar.add( getAction( GotoCursor2Action.ID ) );
-    // toolbar.addSeparator();
-
-    return toolbar;
-  }
-
-  /**
-   * Sets up the contents of the main frame.
-   */
-  private void setContent() throws TooManyListenersException
-  {
-    this.mainFrame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-    this.mainFrame.setSize( 1200, 600 );
-
-    final Container contentPane = this.mainFrame.getContentPane();
-    contentPane.setLayout( new BorderLayout() );
-    contentPane.add( this.diagramScrollPane, BorderLayout.CENTER );
-
-    final JToolBar tools = createMenuBars( this.project, this.mainFrame, this.diagramScrollPane );
-    contentPane.add( tools, BorderLayout.PAGE_START );
-
-    contentPane.add( this.status, BorderLayout.PAGE_END );
+    this.deviceControllerTracker.close();
+    this.toolTracker.close();
+    this.menuTracker.close();
   }
 }
 
