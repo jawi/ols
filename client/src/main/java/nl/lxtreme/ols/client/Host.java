@@ -23,6 +23,8 @@ package nl.lxtreme.ols.client;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
+import java.net.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -122,10 +124,6 @@ public final class Host implements ApplicationCallback
       contentPane.add( tools, BorderLayout.PAGE_START );
 
       contentPane.add( this.status, BorderLayout.PAGE_END );
-
-      // Install a global window state listener...
-      Toolkit.getDefaultToolkit().addAWTEventListener( new AWTWindowTracker( this.windowMenu ),
-          AWTEvent.WINDOW_EVENT_MASK );
     }
 
     // METHODS
@@ -228,7 +226,7 @@ public final class Host implements ApplicationCallback
           + "Copyright 2006-2010 Michael Poppitz\n" //
           + "Copyright 2010 J.W. Janssen\n\n" //
           + "This software is released under the GNU GPL.\n\n" //
-          + "Version: {0}\n\n" //
+          + "Version: %s\n\n" //
           + "For more information see:\n" //
           + "  <http://www.lxtreme.nl/ols/>\n" //
           + "  <http://dangerousprototypes.com/open-logic-sniffer/>\n" //
@@ -377,46 +375,6 @@ public final class Host implements ApplicationCallback
   }
 
   /**
-   * Tracks the number of open/closed AWT windows.
-   */
-  static final class AWTWindowTracker implements AWTEventListener
-  {
-    private final JMenu windowMenu;
-
-    /**
-     * @param aWindowMenu
-     */
-    public AWTWindowTracker( final JMenu aWindowMenu )
-    {
-      this.windowMenu = aWindowMenu;
-    }
-
-    /**
-     * @see java.awt.event.AWTEventListener#eventDispatched(java.awt.AWTEvent)
-     */
-    @Override
-    public void eventDispatched( final AWTEvent aEvent )
-    {
-      final int id = aEvent.getID();
-      if ( ( id == WindowEvent.WINDOW_ACTIVATED ) && ( aEvent instanceof ComponentEvent ) )
-      {
-        final ComponentEvent event = ( ComponentEvent )aEvent;
-        final Component component = event.getComponent();
-
-        System.out.println( "Window opened: " + component );
-      }
-      else if ( ( id == WindowEvent.WINDOW_CLOSED ) && ( aEvent instanceof ComponentEvent ) )
-      {
-        final ComponentEvent event = ( ComponentEvent )aEvent;
-        final Component component = event.getComponent();
-
-        System.out.println( "Window closed: " + component );
-      }
-    }
-
-  }
-
-  /**
    * Defines a (global) AWT event listener for storing/retrieving the window
    * state.
    */
@@ -510,12 +468,14 @@ public final class Host implements ApplicationCallback
   private static final Logger LOG = Logger.getLogger( Host.class.getName() );
 
   private static final String PROPERTIES_NAME = "nl.lxtreme.ols.client";
+
   private static final String SHORT_NAME = "LogicSniffer";
   private static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
 
   // VARIABLES
 
   private final BundleContext context;
+  private final Properties clientProperties;
   private final Project project;
 
   private MainFrame mainFrame;
@@ -532,7 +492,7 @@ public final class Host implements ApplicationCallback
    * @param aBundleContext
    *          the bundle context to use.
    */
-  public Host( final BundleContext aBundleContext )
+  public Host( final BundleContext aBundleContext ) throws IOException
   {
     if ( aBundleContext == null )
     {
@@ -541,6 +501,29 @@ public final class Host implements ApplicationCallback
     this.context = aBundleContext;
 
     this.project = new Project();
+    this.clientProperties = new Properties();
+
+    // Try to load the embedded properties...
+    URL resource = aBundleContext.getBundle().getResource( "/client.properties" );
+    if ( resource != null )
+    {
+      InputStream is = null;
+
+      try
+      {
+        is = resource.openStream();
+
+        this.clientProperties.load( is );
+      }
+      finally
+      {
+        if ( is != null )
+        {
+          is.close();
+        }
+        resource = null;
+      }
+    }
   }
 
   // METHODS
@@ -581,12 +564,22 @@ public final class Host implements ApplicationCallback
   }
 
   /**
+   * Returns this client's version.
+   * 
+   * @return a version String, never <code>null</code>.
+   */
+  public final String getVersion()
+  {
+    return String.valueOf( this.clientProperties.get( "client.version" ) );
+  }
+
+  /**
    * @see nl.lxtreme.ols.util.HostUtils.ApplicationCallback#handleAbout()
    */
   @Override
   public boolean handleAbout()
   {
-    this.mainFrame.showAboutBox( "0.8.3" );
+    this.mainFrame.showAboutBox( getVersion() );
     return true;
   }
 
@@ -648,6 +641,8 @@ public final class Host implements ApplicationCallback
     this.menuTracker = new MenuTracker( this.context, this.mainFrame.getJMenuBar() );
     this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.mainFrame, this.mainFrame.deviceMenu );
     this.toolTracker = new ToolTracker( this.context, this.mainFrame, this.mainFrame.toolsMenu );
+
+    LOG.log( Level.FINE, "{0} initialized ...", SHORT_NAME );
   }
 
   /**
@@ -659,6 +654,8 @@ public final class Host implements ApplicationCallback
   {
     // Write back the user properties for use next time...
     HostUtils.writeProperties( PROPERTIES_NAME, this.userProperties );
+
+    LOG.log( Level.FINE, "{0} shutting down ...", SHORT_NAME );
   }
 
   /**
@@ -672,6 +669,8 @@ public final class Host implements ApplicationCallback
     this.menuTracker.open();
 
     this.mainFrame.setVisible( true );
+
+    LOG.log( Level.INFO, "{0} v{1} started ...", new Object[] { SHORT_NAME, getVersion() } );
   }
 
   /**
@@ -689,6 +688,8 @@ public final class Host implements ApplicationCallback
     this.deviceControllerTracker.close();
     this.toolTracker.close();
     this.menuTracker.close();
+
+    LOG.log( Level.INFO, "{0} stopped ...", SHORT_NAME );
   }
 }
 
