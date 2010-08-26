@@ -21,8 +21,6 @@
 package nl.lxtreme.ols.client;
 
 
-import java.util.logging.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.*;
@@ -35,10 +33,6 @@ import org.osgi.framework.*;
  */
 public class Activator implements BundleActivator
 {
-  // CONSTANTS
-
-  private static final Logger LOG = Logger.getLogger( Activator.class.getName() );
-
   // VARIABLES
 
   private Host host = null;
@@ -62,7 +56,6 @@ public class Activator implements BundleActivator
       @Override
       public void run()
       {
-        LOG.fine( "Initializing client ..." );
         Activator.this.host.initialize();
       }
     };
@@ -73,7 +66,6 @@ public class Activator implements BundleActivator
       @Override
       public void run()
       {
-        LOG.info( "Starting client ..." );
         Activator.this.host.start();
       }
     };
@@ -91,7 +83,6 @@ public class Activator implements BundleActivator
       @Override
       public void run()
       {
-        LOG.info( "Stopping client ..." );
         Activator.this.host.stop();
       }
     };
@@ -102,7 +93,6 @@ public class Activator implements BundleActivator
       @Override
       public void run()
       {
-        LOG.fine( "Shutting down client ..." );
         Activator.this.host.shutdown();
       }
     };

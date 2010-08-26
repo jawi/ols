@@ -10,10 +10,7 @@
   <artifactId>ols.distribution</artifactId>
   <packaging>pom</packaging>
   <name>OLS Main Distribution</name>
-  <version>0.8.2</version>
-  <properties>
-  	<ols.version>${pom.version}</ols.version>
-  </properties>
+  <version>${ols.version}</version>
   <build>
   <plugins>
 		<plugin>
