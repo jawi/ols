@@ -228,6 +228,22 @@ public class MeasurementDialog extends BaseToolDialog
   // METHODS
 
   /**
+   * @see java.awt.Window#dispose()
+   */
+  @Override
+  public void dispose()
+  {
+    // Make sure that if this dialog is disposed without our explicit
+    // knowledge, the timer is stopped. Otherwise, this dialog would be kept
+    // in memory and AWT cannot be shutdown normally...
+    if ( ( this.updateTimer != null ) && this.updateTimer.isRunning() )
+    {
+      this.updateTimer.stop();
+    }
+    super.dispose();
+  }
+
+  /**
    * @see nl.lxtreme.ols.tool.base.BaseTool#readProperties(String,
    *      java.util.Properties)
    */
@@ -235,8 +251,8 @@ public class MeasurementDialog extends BaseToolDialog
   {
     SwingComponentUtils.setSelectedIndex( this.cursorA, aProperties.getProperty( aNamespace + ".selectedCursorA" ) );
     SwingComponentUtils.setSelectedIndex( this.cursorB, aProperties.getProperty( aNamespace + ".selectedCursorB" ) );
-    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser, aProperties.getProperty( aNamespace
-        + ".selectedClockChannel" ) );
+    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser,
+        aProperties.getProperty( aNamespace + ".selectedClockChannel" ) );
   }
 
   /**
@@ -305,18 +321,6 @@ public class MeasurementDialog extends BaseToolDialog
 
     this.distanceLabel.setText( distanceText );
     this.frequencyLabel.setText( frequencyText );
-
-    // repaint();
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#close()
-   */
-  @Override
-  protected void close()
-  {
-    this.updateTimer.stop();
-    super.close();
   }
 
   /**
@@ -437,8 +441,8 @@ public class MeasurementDialog extends BaseToolDialog
     this.distanceLabel = new JLabel( "<???>         " );
 
     final JPanel basicMeasurements = new JPanel( new GridBagLayout() );
-    basicMeasurements.setBorder( BorderFactory.createCompoundBorder( BorderFactory
-        .createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    basicMeasurements.setBorder( BorderFactory.createCompoundBorder(
+        BorderFactory.createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
     basicMeasurements.add( new JLabel( "Distance:" ), //
         new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,

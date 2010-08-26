@@ -138,10 +138,9 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   /**
    * Sorts the data according to the {@link Comparable} implementation of DATA.
    */
-  @SuppressWarnings( "unchecked" )
+  @SuppressWarnings( { "unchecked", "rawtypes" } )
   protected void sort()
   {
     Collections.sort( ( List<? extends Comparable> )this.data );
   }
-
 }

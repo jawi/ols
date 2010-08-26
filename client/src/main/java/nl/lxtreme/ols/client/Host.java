@@ -69,6 +69,7 @@ public final class Host implements ApplicationCallback
 
     private JMenu deviceMenu;
     private JMenu toolsMenu;
+    private JMenu windowMenu;
 
     private volatile DeviceController currentDevCtrl;
 
@@ -121,6 +122,10 @@ public final class Host implements ApplicationCallback
       contentPane.add( tools, BorderLayout.PAGE_START );
 
       contentPane.add( this.status, BorderLayout.PAGE_END );
+
+      // Install a global window state listener...
+      Toolkit.getDefaultToolkit().addAWTEventListener( new AWTWindowTracker( this.windowMenu ),
+          AWTEvent.WINDOW_EVENT_MASK );
     }
 
     // METHODS
@@ -289,8 +294,11 @@ public final class Host implements ApplicationCallback
       diagramMenu.add( getAction( ShowDiagramSettingsAction.ID ) );
       diagramMenu.add( getAction( ShowDiagramLabelsAction.ID ) );
 
-      // final JMenu windowMenu = new JMenu( "Window" );
-      // bar.add( windowMenu );
+      this.windowMenu = bar.add( new JMenu( "Window" ) );
+      for ( Window window : Window.getWindows() )
+      {
+        this.windowMenu.add( new JMenuItem( new FocusWindowAction( window ) ) );
+      }
 
       final JToolBar toolbar = new JToolBar();
       toolbar.setRollover( true );
@@ -369,14 +377,54 @@ public final class Host implements ApplicationCallback
   }
 
   /**
+   * Tracks the number of open/closed AWT windows.
+   */
+  static final class AWTWindowTracker implements AWTEventListener
+  {
+    private final JMenu windowMenu;
+
+    /**
+     * @param aWindowMenu
+     */
+    public AWTWindowTracker( final JMenu aWindowMenu )
+    {
+      this.windowMenu = aWindowMenu;
+    }
+
+    /**
+     * @see java.awt.event.AWTEventListener#eventDispatched(java.awt.AWTEvent)
+     */
+    @Override
+    public void eventDispatched( final AWTEvent aEvent )
+    {
+      final int id = aEvent.getID();
+      if ( ( id == WindowEvent.WINDOW_ACTIVATED ) && ( aEvent instanceof ComponentEvent ) )
+      {
+        final ComponentEvent event = ( ComponentEvent )aEvent;
+        final Component component = event.getComponent();
+
+        System.out.println( "Window opened: " + component );
+      }
+      else if ( ( id == WindowEvent.WINDOW_CLOSED ) && ( aEvent instanceof ComponentEvent ) )
+      {
+        final ComponentEvent event = ( ComponentEvent )aEvent;
+        final Component component = event.getComponent();
+
+        System.out.println( "Window closed: " + component );
+      }
+    }
+
+  }
+
+  /**
    * Defines a (global) AWT event listener for storing/retrieving the window
    * state.
    */
-  static final class FrameStateListener implements AWTEventListener
+  static final class WindowStateListener implements AWTEventListener
   {
     // CONSTANTS
 
-    private static final Logger LOG = Logger.getLogger( FrameStateListener.class.getName() );
+    private static final Logger LOG = Logger.getLogger( WindowStateListener.class.getName() );
 
     // VARIABLES
 
@@ -390,7 +438,7 @@ public final class Host implements ApplicationCallback
      * @param aProperties
      *          the properties to pass to the individual opened windows.
      */
-    public FrameStateListener( final Properties aProperties )
+    public WindowStateListener( final Properties aProperties )
     {
       this.properties = aProperties;
     }
@@ -592,7 +640,7 @@ public final class Host implements ApplicationCallback
     }
 
     // Install a global window state listener...
-    Toolkit.getDefaultToolkit().addAWTEventListener( new FrameStateListener( this.userProperties ),
+    Toolkit.getDefaultToolkit().addAWTEventListener( new WindowStateListener( this.userProperties ),
         AWTEvent.WINDOW_EVENT_MASK );
 
     this.mainFrame = new MainFrame( this );
