@@ -21,9 +21,9 @@
 package org.sump.device.logicsniffer;
 
 
+import java.awt.*;
 import java.beans.*;
 import java.io.*;
-import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
@@ -88,10 +88,7 @@ public class LogicSnifferDeviceController implements DeviceController
     @Override
     protected CapturedData doInBackground() throws Exception
     {
-      if ( LOG.isLoggable( Level.INFO ) )
-      {
-        LOG.info( "Run started" );
-      }
+      LOG.info( "Starting capture ..." );
 
       if ( !this.device.attach( this.portName, this.baudrate ) )
       {
@@ -169,7 +166,7 @@ public class LogicSnifferDeviceController implements DeviceController
   // VARIABLES
 
   private final LogicSnifferDevice device;
-  private final LogicSnifferConfigDialog configDialog;
+  private LogicSnifferConfigDialog configDialog;
   private CaptureWorker captureWorker;
   private boolean setup;
 
@@ -181,7 +178,6 @@ public class LogicSnifferDeviceController implements DeviceController
   public LogicSnifferDeviceController()
   {
     this.device = new LogicSnifferDevice();
-    this.configDialog = new LogicSnifferConfigDialog( this.device );
 
     this.setup = false;
   }
@@ -214,30 +210,24 @@ public class LogicSnifferDeviceController implements DeviceController
         if ( CaptureWorker.PROP_CAPTURE_PROGRESS.equals( propertyName ) )
         {
           final Integer progress = ( Integer )value;
-          if ( LOG.isLoggable( Level.FINE ) )
-          {
-            LOG.fine( "Progress: " + progress );
-          }
+
+          LOG.log( Level.FINE, "Progress {0}%", progress );
 
           aCallback.updateProgress( progress );
         }
         else if ( CaptureWorker.PROP_CAPTURE_ABORTED.equals( propertyName ) )
         {
           final String abortReason = ( String )value;
-          if ( LOG.isLoggable( Level.INFO ) )
-          {
-            LOG.info( "Run aborted: " + abortReason );
-          }
+
+          LOG.log( Level.WARNING, "Capture aborted: {0}.", abortReason );
 
           aCallback.captureAborted( abortReason );
         }
         else if ( CaptureWorker.PROP_CAPTURE_DONE.equals( propertyName ) )
         {
           final CapturedData data = ( CapturedData )value;
-          if ( LOG.isLoggable( Level.INFO ) )
-          {
-            LOG.info( "Run completed: " + ( data == null ? "<no data!>" : "<with data>" ) );
-          }
+
+          LOG.log( Level.INFO, "Capture completed {0}.", ( data == null ? "WITHOUT data" : "with data" ) );
 
           aCallback.captureComplete( data );
         }
@@ -266,35 +256,27 @@ public class LogicSnifferDeviceController implements DeviceController
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
-   *      java.util.Properties)
-   */
-  @Override
-  public void readProperties( final String aNamespace, final Properties aProperties )
-  {
-    // NO-op
-  }
-
-  /**
    * Displays the device controller dialog with enabled configuration portion
    * and waits for user input.
    * 
    * @see nl.lxtreme.ols.api.devices.DeviceController#setupCapture()
    */
   @Override
-  public boolean setupCapture()
+  public boolean setupCapture( final Window aOwner )
   {
+    // check if dialog exists with different owner and dispose if so
+    if ( ( this.configDialog != null ) && ( this.configDialog.getOwner() != aOwner ) )
+    {
+      this.configDialog.dispose();
+      this.configDialog = null;
+    }
+    // if no valid dialog exists, create one
+    if ( this.configDialog == null )
+    {
+      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.device );
+    }
+
     this.setup = this.configDialog.showDialog();
     return this.setup;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String,
-   *      java.util.Properties)
-   */
-  @Override
-  public void writeProperties( final String aNamespace, final Properties aProperties )
-  {
-    // NO-op
   }
 }

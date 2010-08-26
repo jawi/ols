@@ -113,6 +113,8 @@ public final class HostUtils
     }
   }
 
+  private static final Logger LOG = Logger.getLogger( HostUtils.class.getName() );
+
   // CONSTRUCTORS
 
   /**
@@ -320,13 +322,16 @@ public final class HostUtils
     try
     {
       final FileReader propFileReader = new FileReader( propFile );
+
+      LOG.log( Level.ALL, "Reading properties from '{0}' ...", propFile );
+
       final Properties props = new Properties();
       props.load( propFileReader );
       return props;
     }
     catch ( IOException exception )
     {
-      Logger.getAnonymousLogger().log( Level.FINE, "Reading properties from '" + propFile + "' failed!", exception );
+      LOG.log( Level.FINE, "Reading properties from '" + propFile + "' failed!", exception );
     }
     // Unable to load any (valid) properties file, return null to indicate
     // this...
@@ -409,11 +414,14 @@ public final class HostUtils
     try
     {
       final FileWriter propFileWriter = new FileWriter( propFile );
+
+      LOG.log( Level.ALL, "Writing properties to '{0}' ...", propFile );
+
       aProperties.store( propFileWriter, "Written on " + new Date() );
     }
     catch ( IOException exception )
     {
-      Logger.getAnonymousLogger().log( Level.FINE, "Reading properties from '" + propFile + "' failed!", exception );
+      LOG.log( Level.FINE, "Writing properties to '" + propFile + "' failed!", exception );
     }
   }
 

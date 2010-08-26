@@ -21,10 +21,11 @@
 package nl.lxtreme.ols.client.action;
 
 
+import java.awt.*;
 import java.io.*;
 
 import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.Host.*;
 
 
 /**
@@ -44,14 +45,12 @@ public class RepeatCaptureAction extends CaptureAction
   /**
    * Creates a new RepeatCaptureAction instance.
    * 
-   * @param aHost
-   *          the host this action belongs to;
-   * @param aProject
-   *          the project to use.
+   * @param aFrame
+   *          the frame this action belongs to.
    */
-  public RepeatCaptureAction( final Host aHost )
+  public RepeatCaptureAction( final MainFrame aFrame )
   {
-    super( ID, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat the capture with current device settings.", aHost );
+    super( ID, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat the capture with current device settings.", aFrame );
   }
 
   // METHODS
@@ -60,7 +59,7 @@ public class RepeatCaptureAction extends CaptureAction
    * @see nl.lxtreme.ols.client.action.CaptureAction#doCaptureData(nl.lxtreme.ols.api.devices.DeviceController)
    */
   @Override
-  protected void doCaptureData( final DeviceController aController, final CaptureCallback aCallback )
+  protected void doCaptureData( final Window aOwner, final DeviceController aController, final CaptureCallback aCallback )
       throws IOException
   {
     aController.captureData( aCallback );

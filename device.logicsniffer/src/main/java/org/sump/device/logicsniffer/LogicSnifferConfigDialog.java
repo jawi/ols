@@ -22,7 +22,6 @@ package org.sump.device.logicsniffer;
 
 
 import java.awt.*;
-import java.awt.Dialog.*;
 import java.awt.event.*;
 import java.util.*;
 
@@ -39,7 +38,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * 
  */
-public class LogicSnifferConfigDialog extends JComponent implements ActionListener, Configurable
+public class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable
 {
   // INNER TYPES
 
@@ -147,7 +146,6 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   private JCheckBox[][] triggerValue;
   private JCheckBox[] channelGroup;
   private JButton captureButton;
-  private JDialog dialog;
   private int triggerStages;
   private final LogicSnifferDevice device;
   private boolean dialogResult;
@@ -157,15 +155,25 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   // CONSTRUCTORS
 
   /**
+   * Creates a new LogicSnifferConfigDialog instance.
    * 
+   * @param aParent
+   *          the parent window of this dialog;
+   * @param aDevice
+   *          the logic sniffer device to configure.
    */
-  public LogicSnifferConfigDialog( final LogicSnifferDevice aDevice )
+  public LogicSnifferConfigDialog( final Window aParent, final LogicSnifferDevice aDevice )
   {
-    super();
+    super( aParent, "Capture", ModalityType.DOCUMENT_MODAL );
 
     this.device = aDevice;
 
     initDialog();
+
+    // sync dialog status with device
+    updateFields();
+
+    pack();
   }
 
   /**
@@ -202,7 +210,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     final String l = aEvent.getActionCommand();
 
     // ignore all events when dialog is not displayed
-    if ( ( this.dialog == null ) || !this.dialog.isVisible() )
+    if ( !isVisible() )
     {
       return;
     }
@@ -265,7 +273,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    SwingComponentUtils.setSelectedIndex( this.portSelect, aProperties.getProperty( aNamespace + ".port" ) );
+    SwingComponentUtils.setSelectedItem( this.portSelect, aProperties.getProperty( aNamespace + ".port" ) );
     SwingComponentUtils.setSelectedIndex( this.portRateSelect, aProperties.getProperty( aNamespace + ".portRate" ) );
     SwingComponentUtils.setSelectedIndex( this.sourceSelect, aProperties.getProperty( aNamespace + ".source" ) );
     SwingComponentUtils.setSelectedIndex( this.speedSelect, aProperties.getProperty( aNamespace + ".speed" ) );
@@ -306,8 +314,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
         }
       }
 
-      SwingComponentUtils.setSelected( this.triggerStart[stage], aProperties.getProperty( aNamespace + ".triggerStage"
-          + stage + "StartCapture" ) );
+      SwingComponentUtils.setSelected( this.triggerStart[stage],
+          aProperties.getProperty( aNamespace + ".triggerStage" + stage + "StartCapture" ) );
     }
 
     final String group = aProperties.getProperty( aNamespace + ".channelGroup" );
@@ -330,11 +338,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   public boolean showDialog()
   {
-    initDialog( SwingComponentUtils.getCurrentWindow() );
-
-    this.dialog.setModalityType( ModalityType.APPLICATION_MODAL );
-    this.dialog.setVisible( true );
-
+    setVisible( true );
     return this.dialogResult;
   }
 
@@ -349,7 +353,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   public void writeProperties( final String aNamespace, final Properties properties )
   {
-    properties.setProperty( aNamespace + ".port", Integer.toString( this.portSelect.getSelectedIndex() ) );
+    properties.setProperty( aNamespace + ".port", String.valueOf( this.portSelect.getSelectedItem() ) );
     properties.setProperty( aNamespace + ".portRate", Integer.toString( this.portRateSelect.getSelectedIndex() ) );
     properties.setProperty( aNamespace + ".source", Integer.toString( this.sourceSelect.getSelectedIndex() ) );
     properties.setProperty( aNamespace + ".speed", Integer.toString( this.speedSelect.getSelectedIndex() ) );
@@ -362,13 +366,13 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
 
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
-      properties.setProperty( aNamespace + ".triggerStage" + stage + "Level", Integer
-          .toString( this.triggerLevel[stage].getSelectedIndex() ) );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Level",
+          Integer.toString( this.triggerLevel[stage].getSelectedIndex() ) );
       properties.setProperty( aNamespace + ".triggerStage" + stage + "Delay", this.triggerDelay[stage].getText() );
-      properties.setProperty( aNamespace + ".triggerStage" + stage + "Mode", Integer.toString( this.triggerMode[stage]
-          .getSelectedIndex() ) );
-      properties.setProperty( aNamespace + ".triggerStage" + stage + "Channel", Integer
-          .toString( this.triggerChannel[stage].getSelectedIndex() ) );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Mode",
+          Integer.toString( this.triggerMode[stage].getSelectedIndex() ) );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "Channel",
+          Integer.toString( this.triggerChannel[stage].getSelectedIndex() ) );
 
       final StringBuffer mask = new StringBuffer();
       for ( int i = 0; i < 32; i++ )
@@ -384,8 +388,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
       }
       properties.setProperty( aNamespace + ".triggerStage" + stage + "Value", value.toString() );
 
-      properties.setProperty( aNamespace + ".triggerStage" + stage + "StartCapture", Boolean
-          .toString( this.triggerStart[stage].isSelected() ) );
+      properties.setProperty( aNamespace + ".triggerStage" + stage + "StartCapture",
+          Boolean.toString( this.triggerStart[stage].isSelected() ) );
     }
 
     final StringBuffer group = new StringBuffer();
@@ -403,9 +407,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   private void close()
   {
     this.device.stop();
-    this.dialog.setVisible( false );
-
-    this.dialog.dispose();
+    setVisible( false );
+    dispose();
   }
 
   /**
@@ -441,6 +444,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
   {
     final String[] ports = LogicSnifferDevice.getPorts();
     this.portSelect = new JComboBox( ports );
+    this.portSelect.setEditable( true ); // allow people to put their own port
+                                         // name into it...
 
     this.portRateSelect = new JComboBox( BAUDRATES );
     this.portRateSelect.setSelectedIndex( 3 ); // 115k2
@@ -449,8 +454,8 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     this.numberSchemeSelect.setSelectedIndex( 0 );
 
     final JPanel connectionPane = new JPanel( new GridBagLayout() );
-    connectionPane.setBorder( BorderFactory.createCompoundBorder( BorderFactory
-        .createTitledBorder( "Connection Settings" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    connectionPane.setBorder( BorderFactory.createCompoundBorder(
+        BorderFactory.createTitledBorder( "Connection Settings" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
     connectionPane.add( new JLabel( "Analyzer port:" ), //
         new GridBagConstraints( 0, 0, 1, 1, 1.0, 0.1, GridBagConstraints.BASELINE_LEADING,
@@ -610,7 +615,7 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
     settingsPane.add( new JLabel( "Recording Size:" ), //
         new GridBagConstraints( 0, 3, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
             GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    settingsPane.add( this.maxSampleSize, // 
+    settingsPane.add( this.maxSampleSize, //
         new GridBagConstraints( 1, 3, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
             GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
 
@@ -785,59 +790,35 @@ public class LogicSnifferConfigDialog extends JComponent implements ActionListen
    */
   private void initDialog()
   {
-    SwingUtilities.invokeLater( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        setLayout( new GridBagLayout() );
-        setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
+    final JPanel contentPane = new JPanel( new GridBagLayout() );
+    contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
+    setContentPane( contentPane );
 
-        final Insets insets = new Insets( 2, 2, 2, 2 );
+    final Insets insets = new Insets( 2, 2, 2, 2 );
 
-        add( createConnectionPane(), //
+    contentPane
+        .add(
+            createConnectionPane(), //
             new GridBagConstraints( 0, 0, 1, 1, 0.5, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0,
                 0 ) );
 
-        add( createSettingsPane(), //
+    contentPane
+        .add(
+            createSettingsPane(), //
             new GridBagConstraints( 1, 0, 1, 1, 0.5, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0,
                 0 ) );
 
-        add( createTriggerPane(), //
+    contentPane
+        .add(
+            createTriggerPane(), //
             new GridBagConstraints( 0, 1, 2, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, insets,
                 0, 0 ) );
 
-        add( createButtonPane(), //
+    contentPane
+        .add(
+            createButtonPane(), //
             new GridBagConstraints( 0, 2, 2, 1, 1.0, 1.0, GridBagConstraints.SOUTH, GridBagConstraints.BOTH, insets, 0,
                 0 ) );
-      }
-    } );
-  }
-
-  /**
-   * Internal method that initializes a dialog and add this component to it.
-   * 
-   * @param aFrame
-   *          owner of the dialog
-   */
-  private void initDialog( final Window aFrame )
-  {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aFrame ) )
-    {
-      this.dialog.dispose();
-      this.dialog = null;
-    }
-    // if no valid dialog exists, create one
-    if ( this.dialog == null )
-    {
-      this.dialog = new JDialog( aFrame, "Capture" );
-      this.dialog.getContentPane().add( this );
-      this.dialog.pack();
-    }
-
-    // sync dialog status with device
-    updateFields();
   }
 
   /**

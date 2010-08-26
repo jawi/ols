@@ -224,68 +224,41 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * Attaches the given serial port to the device object. The method will try to
-   * open the port.
-   * <p>
-   * A return value of <code>true</code> does not guarantee that a logic
-   * analyzer is actually attached to the port.
-   * <p>
-   * If the device is already attached to a port this port will be detached
-   * automatically. It is therefore not necessary to manually call
-   * <code>detach()</code> before reattaching.
-   * 
-   * @param aPortName
-   *          the name of the port to open
-   * @param aPortRate
-   *          transfer rate to use (bps)
-   * @return <code>true</code> when the port has been assigned successfully;
-   *         <code>false</code> otherwise.
+   * @see nl.lxtreme.ols.api.devices.Device#attach(java.lang.String, int)
    */
-  @SuppressWarnings( "unchecked" )
-  public boolean attach( final String aPortName, final int aPortRate )
+  public boolean attach( final String aPortName, final int aPortRate ) throws IOException
   {
-    final Enumeration<CommPortIdentifier> portList = CommPortIdentifier.getPortIdentifiers();
-    CommPortIdentifier portId = null;
-    boolean found = false;
-
-    LOG.log( Level.INFO, "Attaching to {0} @ {1}bps", new Object[] { aPortName, aPortRate } );
-
     try
     {
+      final CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier( aPortName );
+
+      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { aPortName, aPortRate } );
+
       detach();
 
-      while ( !found && portList.hasMoreElements() )
-      {
-        portId = portList.nextElement();
+      this.port = ( SerialPort )portId.open( "Logic Analyzer Client", 1000 );
 
-        if ( portId.getPortType() == CommPortIdentifier.PORT_SERIAL )
-        {
-          if ( portId.getName().equals( aPortName ) )
-          {
-            found = true;
-          }
-        }
-      }
+      this.port.setSerialPortParams( aPortRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE );
+      this.port.setFlowControlMode( SerialPort.FLOWCONTROL_XONXOFF_IN );
+      this.port.disableReceiveFraming();
+      this.port.enableReceiveTimeout( 250 );
 
-      if ( found )
-      {
-        this.port = ( SerialPort )portId.open( "Logic Analyzer Client", 1000 );
+      this.outputStream = this.port.getOutputStream();
+      this.inputStream = this.port.getInputStream();
 
-        this.port.setSerialPortParams( aPortRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE );
-        this.port.setFlowControlMode( SerialPort.FLOWCONTROL_XONXOFF_IN );
-        this.port.disableReceiveFraming();
-        this.port.enableReceiveTimeout( 250 );
-
-        this.outputStream = this.port.getOutputStream();
-        this.inputStream = this.port.getInputStream();
-      }
+      return true;
+    }
+    catch ( final NoSuchPortException exception )
+    {
+      LOG.log( Level.WARNING, "Failed to attach to {0}: no such port!", aPortName );
+      throw new IOException( "Failed to attach to " + aPortName + ": no such port!" );
     }
     catch ( final Exception exception )
     {
-      LOG.log( Level.ALL, "Failed to attach to " + aPortName, exception );
-      return false;
+      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
+          new Object[] { aPortName, exception.getMessage() } );
+      throw new IOException( "Failed to open/use " + aPortName + "! Possible reason: " + exception.getMessage() );
     }
-    return found;
   }
 
   /**
@@ -298,8 +271,7 @@ public class LogicSnifferDevice implements Device
     {
       try
       {
-        // try to make sure device is reset (see run() for loop
-        // explanation)
+        // try to make sure device is reset (see run() for loop explanation)
         if ( this.outputStream != null )
         {
           for ( int i = 0; i < 5; i++ )
@@ -316,11 +288,8 @@ public class LogicSnifferDevice implements Device
         }
       }
       catch ( final IOException exception )
-      { /* don't care */
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.log( Level.FINE, "Detaching failed!", exception );
-        }
+      {
+        LOG.log( Level.FINE, "Detaching failed!", exception );
       }
       finally
       {

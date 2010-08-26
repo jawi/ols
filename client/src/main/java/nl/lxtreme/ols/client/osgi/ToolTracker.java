@@ -24,7 +24,7 @@ package nl.lxtreme.ols.client.osgi;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.Host.MainFrame;
 import nl.lxtreme.ols.client.action.*;
 
 import org.osgi.framework.*;
@@ -38,7 +38,7 @@ public class ToolTracker extends ServiceTracker
 {
   // VARIABLES
 
-  private final Host host;
+  private final MainFrame frame;
   private final JMenu menu;
   private final JMenuItem noItemItem;
 
@@ -49,11 +49,11 @@ public class ToolTracker extends ServiceTracker
    * @param aReference
    * @param aCustomizer
    */
-  public ToolTracker( final BundleContext aContext, final Host aHost, final JMenu aMenu )
+  public ToolTracker( final BundleContext aContext, final MainFrame aFrame, final JMenu aMenu )
   {
     super( aContext, Tool.class.getName(), null );
 
-    this.host = aHost;
+    this.frame = aFrame;
     this.menu = aMenu;
 
     this.noItemItem = new JMenuItem( "No tools found" );
@@ -148,7 +148,7 @@ public class ToolTracker extends ServiceTracker
    */
   private JMenuItem createMenuItem( final Tool aTool )
   {
-    final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( this.host, aTool ) );
+    final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( this.frame, aTool ) );
     menuItem.setName( aTool.getName() );
     return menuItem;
   }

@@ -26,7 +26,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.Host.MainFrame;
 
 
 /**
@@ -42,7 +42,7 @@ public class SelectDeviceAction extends BaseAction
 
   // VARIABLES
 
-  private final Host host;
+  private final MainFrame frame;
   private final DeviceController deviceController;
 
   // CONSTRUCTORS
@@ -50,12 +50,12 @@ public class SelectDeviceAction extends BaseAction
   /**
    * 
    */
-  public SelectDeviceAction( final Host aHost, final DeviceController aDeviceController )
+  public SelectDeviceAction( final MainFrame aFrame, final DeviceController aDeviceController )
   {
     super( ID + aDeviceController.getName(), aDeviceController.getName(), "Selects " + aDeviceController.getName()
         + " as current capturing device." );
     this.deviceController = aDeviceController;
-    this.host = aHost;
+    this.frame = aFrame;
   }
 
   // METHODS
@@ -67,7 +67,7 @@ public class SelectDeviceAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JMenuItem menuItem = ( JMenuItem )aEvent.getSource();
-    this.host.setCurrentDeviceController( menuItem.isSelected() ? this.deviceController : null );
+    this.frame.setCurrentDeviceController( menuItem.isSelected() ? this.deviceController : null );
   }
 
 }

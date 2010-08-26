@@ -27,8 +27,6 @@ import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.util.swing.*;
-
 import static nl.lxtreme.ols.device.test.TestDeviceDialog.*;
 
 
@@ -39,7 +37,8 @@ public class TestDeviceController implements DeviceController
 {
   // VARIABLES
 
-  private TestDeviceDialog dialog;
+  private TestDeviceDialog configDialog;
+  private boolean setup = false;
 
   // CONSTRUCTORS
 
@@ -59,9 +58,9 @@ public class TestDeviceController implements DeviceController
   @Override
   public void captureData( final CaptureCallback aCallback ) throws IOException
   {
-    final String dataFunction = this.dialog.getDataFunction();
-    final int dataLength = this.dialog.getDataLength();
-    final int channels = this.dialog.getChannels();
+    final String dataFunction = this.configDialog.getDataFunction();
+    final int dataLength = this.configDialog.getDataLength();
+    final int channels = this.configDialog.getChannels();
 
     final int[] data;
     int rate = 1000000000;
@@ -127,39 +126,28 @@ public class TestDeviceController implements DeviceController
   @Override
   public boolean isSetup()
   {
-    return true;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
-   *      java.util.Properties)
-   */
-  @Override
-  public void readProperties( final String aNamespace, final Properties aProperties )
-  {
-    // NO-op
+    return this.setup;
   }
 
   /**
    * @see nl.lxtreme.ols.api.devices.DeviceController#setupCapture()
    */
   @Override
-  public boolean setupCapture() throws IOException
+  public boolean setupCapture( final Window aOwner ) throws IOException
   {
-    final Window owner = SwingComponentUtils.getCurrentWindow();
+    // check if dialog exists with different owner and dispose if so
+    if ( ( this.configDialog != null ) && ( this.configDialog.getOwner() != aOwner ) )
+    {
+      this.configDialog.dispose();
+      this.configDialog = null;
+    }
+    // if no valid dialog exists, create one
+    if ( this.configDialog == null )
+    {
+      this.configDialog = new TestDeviceDialog( aOwner );
+    }
 
-    this.dialog = new TestDeviceDialog( owner );
-    return this.dialog.showDialog();
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String,
-   *      java.util.Properties)
-   */
-  @Override
-  public void writeProperties( final String aNamespace, final Properties aProperties )
-  {
-    // NO-op
+    return ( this.setup = this.configDialog.showDialog() );
   }
 }
 

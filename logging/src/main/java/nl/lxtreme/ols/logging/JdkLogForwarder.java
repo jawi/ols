@@ -136,13 +136,14 @@ public final class JdkLogForwarder
       {
         return;
       }
+
       if ( aRecord.getThrown() != null )
       {
-        getLogService().log( getToOsgiLogLevel( aRecord.getLevel() ), getMessage( aRecord ), aRecord.getThrown() );
+        getLogService().log( toOSGiLogLevel( aRecord.getLevel() ), getMessage( aRecord ), aRecord.getThrown() );
       }
       else
       {
-        getLogService().log( getToOsgiLogLevel( aRecord.getLevel() ), getMessage( aRecord ) );
+        getLogService().log( toOSGiLogLevel( aRecord.getLevel() ), getMessage( aRecord ) );
       }
     }
 
@@ -158,17 +159,18 @@ public final class JdkLogForwarder
      * @param aLevel
      * @return
      */
-    protected int getToOsgiLogLevel( final Level aLevel )
+    protected int toOSGiLogLevel( final Level aLevel )
     {
-      if ( aLevel == Level.SEVERE )
+      final boolean all = aLevel == Level.ALL;
+      if ( all || ( aLevel == Level.SEVERE ) )
       {
         return LogService.LOG_ERROR;
       }
-      else if ( aLevel == Level.WARNING )
+      else if ( all || ( aLevel == Level.WARNING ) )
       {
         return LogService.LOG_WARNING;
       }
-      else if ( ( aLevel == Level.INFO ) || ( aLevel == Level.CONFIG ) || ( aLevel == Level.FINE ) )
+      else if ( all || ( aLevel == Level.INFO ) || ( aLevel == Level.CONFIG ) )
       {
         return LogService.LOG_INFO;
       }
@@ -184,13 +186,14 @@ public final class JdkLogForwarder
      */
     private String getMessage( final LogRecord aRecord )
     {
+      String result = "[[".concat( aRecord.getLoggerName() ).concat( "]]" ).concat( aRecord.getMessage() );
+
       final Object[] params = aRecord.getParameters();
       if ( ( params != null ) && ( params.length > 0 ) )
       {
-        final String rawMsg = aRecord.getMessage();
-        return MessageFormat.format( rawMsg, params );
+        return MessageFormat.format( result, params );
       }
-      return aRecord.getMessage();
+      return result;
     }
   }
 

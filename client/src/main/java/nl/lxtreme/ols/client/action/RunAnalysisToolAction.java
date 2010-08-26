@@ -26,7 +26,7 @@ import java.awt.event.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.Host.MainFrame;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -43,7 +43,7 @@ public class RunAnalysisToolAction extends BaseAction
 
   // VARIABLES
 
-  private final Host host;
+  private final MainFrame frame;
   private final Tool tool;
 
   // CONSTRUCTORS
@@ -53,11 +53,11 @@ public class RunAnalysisToolAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public RunAnalysisToolAction( final Host aHost, final Tool aTool )
+  public RunAnalysisToolAction( final MainFrame aFrame, final Tool aTool )
   {
     super( ID + aTool.getName(), aTool.getName(), "Run " + aTool.getName() );
 
-    this.host = aHost;
+    this.frame = aFrame;
     this.tool = aTool;
   }
 
@@ -71,10 +71,10 @@ public class RunAnalysisToolAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final AnnotatedData data = this.host.getAnnotatedData();
+    final AnnotatedData data = this.frame.getAnnotatedData();
     final ToolContext toolContext = null;
 
-    this.tool.process( owner, data, toolContext, this.host );
+    this.tool.process( owner, data, toolContext, this.frame );
   }
 }
 
