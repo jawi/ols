@@ -85,9 +85,7 @@ public final class ActionManager implements IActionManager
       throw new IllegalArgumentException( "Managed action ID cannot be null or empty!" );
     }
 
-    IManagedAction result = null;
-
-    result = this.registry.get( aId );
+    final IManagedAction result = this.registry.get( aId );
     if ( result == null )
     {
       throw new IllegalArgumentException( "No such managed action: " + aId );

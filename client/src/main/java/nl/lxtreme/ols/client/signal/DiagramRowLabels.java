@@ -75,7 +75,7 @@ public class DiagramRowLabels extends JComponent
    * @see javax.swing.JComponent#setPreferredSize(java.awt.Dimension)
    */
   @Override
-  public void setPreferredSize( final Dimension aPreferredSize )
+  public final void setPreferredSize( final Dimension aPreferredSize )
   {
     // Let us only scale in height, not width!
     final int minimalWidth = getMinimalWidth();
@@ -144,14 +144,14 @@ public class DiagramRowLabels extends JComponent
           aGraphics.drawLine( clipArea.x, y1 + channelHeight, clipArea.x + clipArea.width, y1 + channelHeight );
 
           String label = this.annotatedData.getChannelLabel( labelIdx );
-          if ( !DisplayUtils.isEmpty( label ) )
-          {
-            aGraphics.setColor( this.settings.getLabelColor() );
-          }
-          else
+          if ( DisplayUtils.isEmpty( label ) )
           {
             label = Integer.toString( labelIdx );
             aGraphics.setColor( this.settings.getTextColor() );
+          }
+          else
+          {
+            aGraphics.setColor( this.settings.getLabelColor() );
           }
 
           final int labelYpos = y1 + textYpos;

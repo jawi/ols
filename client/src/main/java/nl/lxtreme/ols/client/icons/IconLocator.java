@@ -46,6 +46,8 @@ public interface IconLocator
 
   static final String ICON_CAPTURE_DATA = "Gnome-Emblem-Downloads-32.png";
   static final String ICON_RECAPTURE_DATA = "Gnome-View-Refresh-32.png";
+
+  static final String ICON_DIAGRAM_SETTINGS = "system-run.png";
 }
 
 /* EOF */

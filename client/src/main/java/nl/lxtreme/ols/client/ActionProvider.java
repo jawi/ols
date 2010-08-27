@@ -25,17 +25,21 @@ import javax.swing.*;
 
 
 /**
- * 
+ * Denotes that the implementing class can provide an action by its ID.
  */
 public interface ActionProvider
 {
   // METHODS
 
   /**
+   * Returns the action for the given ID.
+   * 
    * @param aID
-   * @return
+   *          the ID of the action to retrieve, cannot be <code>null</code>.
+   * @return the action with the given ID, or <code>null</code> if no such
+   *         action exists.
    */
-  public Action getAction( final String aID );
+  Action getAction( final String aID );
 }
 
 /* EOF */
