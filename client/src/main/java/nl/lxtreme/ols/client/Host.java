@@ -424,7 +424,9 @@ public final class Host implements ApplicationCallback
             ( ( Configurable )component ).readProperties( namespace, this.properties );
           }
 
-          if ( component instanceof Window )
+          // Only store settings of "real" frames and dialogs, not
+          // popups/dropdowns, etc...
+          if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
           {
             LOG.log( Level.FINE, "Reading window-properties for '{0}' ...", namespace );
             SwingComponentUtils.loadWindowState( namespace, this.properties, ( Window )component );
@@ -449,7 +451,9 @@ public final class Host implements ApplicationCallback
             ( ( Configurable )component ).writeProperties( namespace, this.properties );
           }
 
-          if ( component instanceof Window )
+          // Only store settings of "real" frames and dialogs, not
+          // popups/dropdowns, etc...
+          if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
           {
             LOG.log( Level.FINE, "Writing window-properties for '{0}' ...", namespace );
             SwingComponentUtils.saveWindowState( namespace, this.properties, ( Window )component );
