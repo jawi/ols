@@ -175,7 +175,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
    * @see javax.swing.JComponent#setPreferredSize(java.awt.Dimension)
    */
   @Override
-  public void setPreferredSize( final Dimension aPreferredSize )
+  public final void setPreferredSize( final Dimension aPreferredSize )
   {
     // Let us only scale in width, not height!
     super.setPreferredSize( new Dimension( aPreferredSize.width, TIMELINE_HEIGHT ) );

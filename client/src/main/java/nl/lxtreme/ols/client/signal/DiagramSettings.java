@@ -23,14 +23,27 @@ package nl.lxtreme.ols.client.signal;
 
 import java.awt.*;
 
-import javax.swing.*;
-
 
 /**
- * 
+ * Denotes the various settings used in the diagram.
  */
 public interface DiagramSettings
 {
+  // CONSTANTS
+
+  /**
+   * Display a group in 8 channel logic level view.
+   */
+  static final int DISPLAY_CHANNELS = 1;
+  /**
+   * Display a group in a 8bit resolution scope view.
+   */
+  static final int DISPLAY_SCOPE = 2;
+  /**
+   * Display a group in a 8bit hex value view.
+   */
+  static final int DISPLAY_BYTE = 4;
+
   // METHODS
 
   /**
@@ -38,7 +51,7 @@ public interface DiagramSettings
    * 
    * @return the background, never <code>null</code>.
    */
-  public abstract Color getBackgroundColor();
+  Color getBackgroundColor();
 
   /**
    * Returns the height of the channels indicator.
@@ -46,7 +59,7 @@ public interface DiagramSettings
    * @return a channel height, in pixels.
    * @see #getSignalHeight()
    */
-  public abstract int getChannelHeight();
+  int getChannelHeight();
 
   /**
    * Returns the cursor color for the cursor with a given index.
@@ -55,83 +68,106 @@ public interface DiagramSettings
    *          the cursor index of the cursor to get the color for, >= 0 && < 10.
    * @return the cursor color, never <code>null</code>.
    */
-  public abstract Color getCursorColor( final int aCursorIdx );
+  Color getCursorColor( final int aCursorIdx );
 
   /**
    * Returns the grid color.
    * 
    * @return the grid, never <code>null</code>.
    */
-  public abstract Color getGridColor();
+  Color getGridColor();
 
   /**
    * Returns the group background color.
    * 
    * @return the groupBackground, never <code>null</code>.
    */
-  public abstract Color getGroupBackgroundColor();
-
-  /**
-   * Returns the groupSettingBoxes.
-   * 
-   * @return the groupSettingBoxes, never <code>null</code>.
-   */
-  public abstract JCheckBox[][] getGroupSettingBoxes();
+  Color getGroupBackgroundColor();
 
   /**
    * Returns the label color.
    * 
    * @return the label, never <code>null</code>.
    */
-  public abstract Color getLabelColor();
+  Color getLabelColor();
 
   /**
    * Returns the height of the scope indicator.
    * 
    * @return a scope height, in pixels.
    */
-  public abstract int getScopeHeight();
+  int getScopeHeight();
 
   /**
    * Returns the signal color.
    * 
    * @return the signal, never <code>null</code>.
    */
-  public abstract Color getSignalColor();
+  Color getSignalColor();
 
   /**
    * Returns the height of the signal indicator.
    * 
    * @return a signal height, in pixels.
    */
-  public abstract int getSignalHeight();
+  int getSignalHeight();
 
   /**
    * Returns the text color.
    * 
    * @return the text, never <code>null</code>.
    */
-  public abstract Color getTextColor();
+  Color getTextColor();
 
   /**
    * Returns the time color.
    * 
    * @return the time, never <code>null</code>.
    */
-  public abstract Color getTimeColor();
+  Color getTimeColor();
 
   /**
    * Returns the trigger color.
    * 
    * @return the trigger, never <code>null</code>.
    */
-  public abstract Color getTriggerColor();
+  Color getTriggerColor();
 
-  public abstract boolean isShowByte( final int aGroup );
+  /**
+   * @param aGroup
+   * @return
+   */
+  boolean isShowByte( final int aGroup );
 
-  public abstract boolean isShowChannels( final int aGroup );
+  /**
+   * @param aGroup
+   * @return
+   */
+  boolean isShowChannels( final int aGroup );
 
-  public abstract boolean isShowScope( final int aGroup );
+  /**
+   * @param aGroup
+   * @return
+   */
+  boolean isShowScope( final int aGroup );
+
+  /**
+   * @param aGroup
+   * @return
+   */
+  void setShowByte( final int aGroup, final boolean aShow );
+
+  /**
+   * @param aGroup
+   * @return
+   */
+  void setShowChannels( final int aGroup, final boolean aShow );
+
+  /**
+   * @param aGroup
+   * @return
+   */
+  void setShowScope( final int aGroup, final boolean aShow );
 
 }
 

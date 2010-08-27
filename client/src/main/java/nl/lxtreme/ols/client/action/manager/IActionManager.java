@@ -42,7 +42,7 @@ public interface IActionManager
    *           in case the given action was <code>null</code> or already managed
    *           by this manager.
    */
-  public IManagedAction add( final IManagedAction aAction ) throws IllegalArgumentException;
+  IManagedAction add( final IManagedAction aAction ) throws IllegalArgumentException;
 
   /**
    * Returns a managed action by its ID.
@@ -55,7 +55,7 @@ public interface IActionManager
    *           in case the given ID did not lead to a valid action, or in case
    *           the given ID was <code>null</code>.
    */
-  public IManagedAction getAction( final String aId ) throws IllegalArgumentException;
+  IManagedAction getAction( final String aId ) throws IllegalArgumentException;
 
   /**
    * Removes a given action from this manager.
@@ -67,7 +67,7 @@ public interface IActionManager
    *           in case the given action was <code>null</code> or not managed by
    *           this manager.
    */
-  public void remove( final IManagedAction aAction ) throws IllegalArgumentException;
+  void remove( final IManagedAction aAction ) throws IllegalArgumentException;
 }
 
 /* EOF */

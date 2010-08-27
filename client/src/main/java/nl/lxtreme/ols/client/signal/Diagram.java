@@ -49,7 +49,7 @@ import nl.lxtreme.ols.util.*;
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
-public final class Diagram extends JComponent implements Configurable, Scrollable
+public final class Diagram extends JComponent implements Configurable, Scrollable, DiagramSettings
 {
   // INNER TYPES
 
@@ -112,7 +112,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       final int mouseXpos = aEvent.getX();
       final int mouseYpos = aEvent.getY();
 
-      final int channel = ( mouseYpos / Diagram.this.settings.getChannelHeight() );
+      final int channel = ( mouseYpos / getChannelHeight() );
       final ChannelAnnotation annotation = getAnnotationHover( channel, mouseXpos );
 
       final int cursorIdx = getCursorHover( mouseXpos );
@@ -198,16 +198,30 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
   private final DiagramTimeLine timeLine;
   private final DiagramRowLabels rowLabels;
-  private final DiagramSettingsDialog settings;
-  private final DiagramLabelsDialog labels;
   private final ActionProvider actionProvider;
   private double scale;
   private final Cursor cursorDefault;
   private final Cursor cursorDrag;
   private final EventListenerList evenListeners;
   private final JPopupMenu contextMenu;
-
   private int newCursorPosition;
+
+  /**
+   * Display settings for each group. Can be any combinations (OR-ed) of the
+   * defined MODE_* values.
+   */
+  private final int[] groupSettings;
+  private final Color signalColor;
+  private final Color triggerColor;
+  private final Color gridColor;
+  private final Color textColor;
+  private final Color timeColor;
+  private final Color groupBackgroundColor;
+  private final Color backgroundColor;
+  private final Color labelColor;
+  private final Color[] cursorColors;
+  private final int channelHeight;
+  private final int scopeHeight;
 
   /**
    * Create a new empty diagram to be placed in a container.
@@ -215,6 +229,29 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   public Diagram( final ActionProvider aActionProvider )
   {
     super();
+
+    // Based on color scheme "sleepyhollow";
+    // <http://www.colorschemer.com/schemes/viewscheme.php?id=8379>
+
+    // Not used: new Color( 0x40, 0x2c, 0x29 )
+    this.backgroundColor = Color.WHITE;
+    this.signalColor = new Color( 0x30, 0x4b, 0x75 );
+    this.triggerColor = new Color( 0x82, 0x87, 0x8f );
+    this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
+    this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
+    this.textColor = new Color( 0x25, 0x25, 0x25 );
+    this.timeColor = new Color( 0x25, 0x25, 0x25 );
+    this.labelColor = new Color( 0x82, 0x87, 0x8f );
+    this.cursorColors = makeColorPalette();
+
+    this.channelHeight = 30;
+    this.scopeHeight = 133;
+
+    this.groupSettings = new int[4];
+    for ( int i = 0; i < this.groupSettings.length; i++ )
+    {
+      this.groupSettings[i] = DISPLAY_CHANNELS | DISPLAY_BYTE;
+    }
 
     this.actionProvider = aActionProvider;
 
@@ -226,21 +263,18 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
     this.data = new AnnotatedData();
 
-    this.settings = new DiagramSettingsDialog();
-    this.labels = new DiagramLabelsDialog( this.data );
-
     this.cursorDefault = getCursor();
     this.cursorDrag = new Cursor( Cursor.MOVE_CURSOR );
     this.evenListeners = new EventListenerList();
 
     this.rowLabels = new DiagramRowLabels( this.data );
-    this.rowLabels.setDiagramSettings( this.settings );
+    this.rowLabels.setDiagramSettings( this );
 
     this.timeLine = new DiagramTimeLine( this.data );
-    this.timeLine.setDiagramSettings( this.settings );
+    this.timeLine.setDiagramSettings( this );
 
     setMinimumSize( new Dimension( 25, 1 ) );
-    setBackground( this.settings.getBackgroundColor() );
+    setBackground( getBackgroundColor() );
 
     addCursorChangeListener( this.timeLine );
 
@@ -301,6 +335,32 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getBackgroundColor()
+   */
+  public final Color getBackgroundColor()
+  {
+    return this.backgroundColor;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getChannelHeight()
+   */
+  @Override
+  public final int getChannelHeight()
+  {
+    return this.channelHeight;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getCursorColor(int)
+   */
+  @Override
+  public final Color getCursorColor( final int aCursorIdx )
+  {
+    return this.cursorColors[aCursorIdx];
+  }
+
+  /**
    * get current cursor mode
    */
   public boolean getCursorMode()
@@ -316,12 +376,45 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getGridColor()
+   */
+  public final Color getGridColor()
+  {
+    return this.gridColor;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getGroupBackgroundColor()
+   */
+  public final Color getGroupBackgroundColor()
+  {
+    return this.groupBackgroundColor;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getLabelColor()
+   */
+  public final Color getLabelColor()
+  {
+    return this.labelColor;
+  }
+
+  /**
    * @see javax.swing.Scrollable#getPreferredScrollableViewportSize()
    */
   @Override
   public Dimension getPreferredScrollableViewportSize()
   {
     return getPreferredSize();
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getScopeHeight()
+   */
+  @Override
+  public final int getScopeHeight()
+  {
+    return this.scopeHeight;
   }
 
   /**
@@ -337,7 +430,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     }
     else
     {
-      return aVisibleRect.height - this.settings.getChannelHeight();
+      return aVisibleRect.height - getChannelHeight();
     }
   }
 
@@ -376,7 +469,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     else
     {
       currentPosition = aVisibleRect.y;
-      maxUnitIncrement = this.settings.getChannelHeight();
+      maxUnitIncrement = getChannelHeight();
     }
 
     // Return the number of pixels between currentPosition
@@ -397,9 +490,26 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    * 
    * @return the diagram settings, never <code>null</code>.
    */
-  public final DiagramSettingsDialog getSettings()
+  public final DiagramSettings getSettings()
   {
-    return this.settings;
+    return this;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getSignalColor()
+   */
+  public final Color getSignalColor()
+  {
+    return this.signalColor;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getSignalHeight()
+   */
+  @Override
+  public final int getSignalHeight()
+  {
+    return getChannelHeight() - 4;
   }
 
   /**
@@ -418,6 +528,30 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getTextColor()
+   */
+  public final Color getTextColor()
+  {
+    return this.textColor;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getTimeColor()
+   */
+  public final Color getTimeColor()
+  {
+    return this.timeColor;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getTriggerColor()
+   */
+  public final Color getTriggerColor()
+  {
+    return this.triggerColor;
+  }
+
+  /**
    * Returns wheter or not the diagram has any data.
    * 
    * @return <code>true</code> if captured data exists, <code>false</code>
@@ -429,13 +563,37 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#isShowByte(int)
+   */
+  public final boolean isShowByte( final int aGroup )
+  {
+    return ( ( this.groupSettings[aGroup] & DISPLAY_BYTE ) > 0 );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#isShowChannels(int)
+   */
+  public final boolean isShowChannels( final int aGroup )
+  {
+    return ( ( this.groupSettings[aGroup] & DISPLAY_CHANNELS ) > 0 );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#isShowScope(int)
+   */
+  public final boolean isShowScope( final int aGroup )
+  {
+    return ( ( this.groupSettings[aGroup] & DISPLAY_SCOPE ) > 0 );
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
    *      java.util.Properties)
    */
   @Override
   public void readProperties( final String aNamespace, final Properties properties )
   {
-    this.settings.readProperties( aNamespace, properties );
+    readProperties( aNamespace, properties );
     resize();
   }
 
@@ -484,32 +642,85 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#setShowByte(int, boolean)
+   */
+  @Override
+  public final void setShowByte( final int aGroup, final boolean aShow )
+  {
+    if ( aShow )
+    {
+      this.groupSettings[aGroup] |= DISPLAY_BYTE;
+    }
+    else
+    {
+      this.groupSettings[aGroup] &= ~DISPLAY_BYTE;
+    }
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#setShowChannels(int,
+   *      boolean)
+   */
+  @Override
+  public final void setShowChannels( final int aGroup, final boolean aShow )
+  {
+    if ( aShow )
+    {
+      this.groupSettings[aGroup] |= DISPLAY_CHANNELS;
+    }
+    else
+    {
+      this.groupSettings[aGroup] &= ~DISPLAY_CHANNELS;
+    }
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#setShowScope(int,
+   *      boolean)
+   */
+  @Override
+  public final void setShowScope( final int aGroup, final boolean aShow )
+  {
+    if ( aShow )
+    {
+      this.groupSettings[aGroup] |= DISPLAY_SCOPE;
+    }
+    else
+    {
+      this.groupSettings[aGroup] &= ~DISPLAY_SCOPE;
+    }
+  }
+
+  /**
    * Display the diagram labels dialog. Will block until the dialog is closed
    * again.
    */
-  public void showLabelsDialog( final Window frame )
+  public void showLabelsDialog( final Window aParent )
   {
-    if ( this.labels.showDialog( frame ) == DiagramLabelsDialog.OK )
+    DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, getAnnotatedData() );
+    if ( dialog.showDialog() )
     {
       this.rowLabels.updateDiagramLabels();
 
       resize();
     }
+    dialog.dispose();
+    dialog = null;
   }
 
   /**
    * Display the diagram settings dialog. Will block until the dialog is closed
    * again.
    */
-  public void showSettingsDialog( final Window frame )
+  public void showSettingsDialog( final Window aParent )
   {
-    if ( this.settings.showDialog( frame ) == DiagramSettingsDialog.OK )
+    DiagramSettingsDialog dialog = new DiagramSettingsDialog( aParent, getSettings() );
+    if ( dialog.showDialog() )
     {
-      this.rowLabels.setDiagramSettings( this.settings );
-      this.timeLine.setDiagramSettings( this.settings );
-
       resize();
     }
+    dialog.dispose();
+    dialog = null;
   }
 
   /**
@@ -519,7 +730,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   @Override
   public void writeProperties( final String aNamespace, final Properties properties )
   {
-    this.settings.writeProperties( aNamespace, properties );
+    writeProperties( aNamespace, properties );
   }
 
   /**
@@ -599,7 +810,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
     final StringBuffer sb = new StringBuffer( " " );
 
-    final int row = aMouseYpos / this.settings.getChannelHeight();
+    final int row = aMouseYpos / getChannelHeight();
     if ( row <= this.data.getChannels() + ( this.data.getChannels() / 9 ) )
     {
       if ( row % 9 == 8 )
@@ -786,14 +997,14 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final long lastRow = xToIndex( cw ) + 1;
 
     // paint portion of background that needs drawing
-    aGraphics.setColor( this.settings.getBackgroundColor() );
+    aGraphics.setColor( getBackgroundColor() );
     aGraphics.fillRect( cx, cy, cw, ch );
 
     // draw trigger if existing and visible
     final long triggerPosition = this.data.getTriggerPosition();
     if ( ( triggerPosition >= firstRow ) && ( triggerPosition <= lastRow ) )
     {
-      aGraphics.setColor( this.settings.getTriggerColor() );
+      aGraphics.setColor( getTriggerColor() );
       aGraphics.fillRect( ( int )( triggerPosition * this.scale ) - 1, cy, ( int )( this.scale + 2 ), ch );
     }
 
@@ -810,8 +1021,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         {
           final int cursorPos = ( int )( cursorPosition * this.scale );
 
-          aGraphics.setColor( this.settings.getCursorColor( i ) );
-          aGraphics.drawLine( cursorPos, 0, cursorPos, 36 * this.settings.getChannelHeight() );
+          aGraphics.setColor( getCursorColor( i ) );
+          aGraphics.drawLine( cursorPos, 0, cursorPos, 36 * getChannelHeight() );
         }
       }
     }
@@ -898,7 +1109,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   private void drawGridLine( final Graphics g, final Rectangle clipArea, final int y )
   {
-    g.setColor( this.settings.getGridColor() );
+    g.setColor( getGridColor() );
     g.drawLine( clipArea.x, y, clipArea.x + clipArea.width, y );
   }
 
@@ -922,9 +1133,9 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final long[] timestamps = this.data.getTimestamps();
     final int[] values = this.data.getValues();
 
-    final int channelHeight = this.settings.getChannelHeight();
-    final int signalHeight = this.settings.getSignalHeight();
-    final int scopeHeight = this.settings.getScopeHeight();
+    final int channelHeight = getChannelHeight();
+    final int signalHeight = getSignalHeight();
+    final int scopeHeight = getScopeHeight();
 
     final double scopeScaleFactor = ( 256.0 / ( scopeHeight - 2 * PADDING_Y ) );
     final int center = ( int )( this.scale / 2.0 );
@@ -959,7 +1170,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         continue;
       }
 
-      if ( this.settings.isShowChannels( block ) )
+      if ( isShowChannels( block ) )
       {
         final SignalPolyline polyline = new SignalPolyline( n );
 
@@ -1001,7 +1212,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
             currentSample = nextSample;
           }
 
-          aGraphics.setColor( this.settings.getSignalColor() );
+          aGraphics.setColor( getSignalColor() );
           aGraphics.drawPolyline( polyline.x, polyline.y, pIdx );
 
           // XXX XXX
@@ -1053,7 +1264,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         bofs += ( channelHeight * 8 );
       }
 
-      if ( this.settings.isShowScope( block ) )
+      if ( isShowScope( block ) )
       {
         final SignalPolyline scopePolyline = new SignalPolyline( n );
 
@@ -1080,21 +1291,21 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         pIdx++;
 
         // draw actual data
-        aGraphics.setColor( this.settings.getSignalColor() );
+        aGraphics.setColor( getSignalColor() );
         aGraphics.drawPolyline( scopePolyline.x, scopePolyline.y, pIdx );
         bofs += scopeHeight;
         // draw bottom grid line
         drawGridLine( aGraphics, aClipArea, bofs );
       }
 
-      if ( this.settings.isShowByte( block ) )
+      if ( isShowByte( block ) )
       {
         final ByteValuePolyline bytePolyline = new ByteValuePolyline( n );
 
         long currentSample = aFromIndex - 1;
         int pIdx = 0;
 
-        aGraphics.setColor( this.settings.getSignalColor() );
+        aGraphics.setColor( getSignalColor() );
 
         int dataIndex = dataStartIndex;
 
@@ -1144,7 +1355,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           currentSample = nextSample;
         }
 
-        aGraphics.setColor( this.settings.getSignalColor() );
+        aGraphics.setColor( getSignalColor() );
         aGraphics.drawPolyline( bytePolyline.x, bytePolyline.y1, pIdx );
         aGraphics.drawPolyline( bytePolyline.x, bytePolyline.y2, pIdx );
         bofs += channelHeight;
@@ -1192,6 +1403,40 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * @param aI
+   * @param aFreq1
+   * @param aFreq2
+   * @param aFreq3
+   * @param aPhase1
+   * @param aPhase2
+   * @param aPhase3
+   * @return
+   */
+  private Color makeColorGradient( final int aI, final double aFreq1, final double aFreq2, final double aFreq3,
+      final double aPhase1, final double aPhase2, final double aPhase3 )
+  {
+    final int width = 127;
+    final int center = 128;
+    final int red = ( int )( Math.sin( aFreq1 * aI + aPhase1 ) * width + center );
+    final int grn = ( int )( Math.sin( aFreq2 * aI + aPhase2 ) * width + center );
+    final int blu = ( int )( Math.sin( aFreq3 * aI + aPhase3 ) * width + center );
+    return new Color( red, grn, blu );
+  }
+
+  /**
+   * @return
+   */
+  private Color[] makeColorPalette()
+  {
+    final Color[] result = new Color[10];
+    for ( int i = 0; i < result.length; i++ )
+    {
+      result[i] = makeColorGradient( i, 0.3, 0.3, 0.3, 0.0, 2.0, 4.0 );
+    }
+    return result;
+  }
+
+  /**
    * Resizes the diagram as required by available data and scaling factor.
    */
   private void resize()
@@ -1204,23 +1449,23 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final int channels = this.data.getChannels();
     final int enabledChannels = this.data.getEnabledChannels();
 
-    final int channelHeight = this.settings.getChannelHeight();
-    final int scopeHeight = this.settings.getScopeHeight();
+    final int channelHeight = getChannelHeight();
+    final int scopeHeight = getScopeHeight();
 
     int height = 0;
     for ( int group = 0; ( group < channels / 8 ) && ( group < 4 ); group++ )
     {
       if ( ( ( enabledChannels >> ( 8 * group ) ) & 0xff ) != 0 )
       {
-        if ( this.settings.isShowChannels( group ) )
+        if ( isShowChannels( group ) )
         {
           height += channelHeight * 8;
         }
-        if ( this.settings.isShowScope( group ) )
+        if ( isShowScope( group ) )
         {
           height += scopeHeight;
         }
-        if ( this.settings.isShowByte( group ) )
+        if ( isShowByte( group ) )
         {
           height += channelHeight;
         }

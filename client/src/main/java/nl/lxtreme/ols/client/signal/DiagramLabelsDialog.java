@@ -22,8 +22,8 @@ package nl.lxtreme.ols.client.signal;
 
 
 import java.awt.*;
-import java.awt.Dialog.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -35,109 +35,108 @@ import nl.lxtreme.ols.api.data.*;
  * @version 0.7
  * @author Frank Kunz
  */
-public class DiagramLabelsDialog extends JComponent implements ActionListener
+public class DiagramLabelsDialog extends JDialog
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  /** the user cancelled the dialog - all changes were discarded */
-  public final static int CANCEL = 0;
-  /** the user clicked ok - all changes were written to the settings */
-  public final static int OK = 1;
+  private static final Insets LABEL_INSETS = new Insets( 4, 4, 4, 2 );
+  private static final Insets COMP_INSETS = new Insets( 4, 2, 4, 4 );
 
   // VARIABLES
 
   private final AnnotatedData annotatedData;
-  private JDialog dialog;
   private final JTextField[] labelFields;
-  private int result;
+  private boolean result;
 
   // CONSTRUCTORS
 
   /**
    * Constructs diagram labels component.
    */
-  public DiagramLabelsDialog( final AnnotatedData aAnnotatedData )
+  public DiagramLabelsDialog( final Window aParent, final AnnotatedData aAnnotatedData )
   {
-    super();
+    super( aParent, "Diagram Labels", ModalityType.DOCUMENT_MODAL );
 
     this.annotatedData = aAnnotatedData;
 
-    setLayout( new GridBagLayout() );
-    setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
+    final JPanel contentPane = new JPanel( new GridBagLayout() );
+    contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
+    setContentPane( contentPane );
 
-    JPanel modePane = new JPanel();
-    modePane.setLayout( new GridBagLayout() );
-    modePane.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Diagram Labels" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    final JPanel modePane = new JPanel( new GridBagLayout() );
+    modePane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
 
     this.labelFields = new JTextField[32];
     for ( int col = 0; col < 2; col++ )
     {
       for ( int row = 0; row < 16; row++ )
       {
-        int num = 16 * col + row;
-        modePane.add( new JLabel( "Channel " + num + ": " ), createConstraints( 2 * col, row, 1, 1, 0, 0 ) );
-        this.labelFields[num] = new JTextField( 20 );
-        modePane.add( this.labelFields[num], createConstraints( 2 * col + 1, row, 1, 1, 0, 0 ) );
+        final int index = 16 * col + row;
+
+        this.labelFields[index] = new JTextField( 20 );
+        this.labelFields[index].setText( this.annotatedData.getChannelLabel( index ) );
+
+        modePane.add( new JLabel( String.format( "Channel % 2d:", index ) ), //
+            new GridBagConstraints( 2 * col, row, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+                GridBagConstraints.NONE, LABEL_INSETS, 0, 0 ) );
+        modePane.add( this.labelFields[index], //
+            new GridBagConstraints( 2 * col + 1, row, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+                GridBagConstraints.NONE, COMP_INSETS, 0, 0 ) );
       }
     }
-    add( modePane, createConstraints( 0, 0, 5, 1, 0, 0 ) );
+    add( modePane, //
+        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, LABEL_INSETS,
+            0, 0 ) );
 
-    JButton ok = new JButton( "Ok" );
-    ok.addActionListener( this );
-    add( ok, createConstraints( 0, 1, 1, 1, 0.34, 0 ) );
-    JButton cancel = new JButton( "Cancel" );
-    cancel.addActionListener( this );
-    add( cancel, createConstraints( 1, 1, 1, 1, 0.33, 0 ) );
-    JButton clear = new JButton( "Clear" );
-    clear.addActionListener( this );
-    add( clear, createConstraints( 2, 1, 1, 1, 0.33, 0 ) );
-  }
-
-  // METHODS
-
-  private static GridBagConstraints createConstraints( final int x, final int y, final int w, final int h,
-      final double wx, final double wy )
-  {
-    GridBagConstraints gbc = new GridBagConstraints();
-    gbc.fill = GridBagConstraints.BOTH;
-    gbc.insets = new Insets( 4, 4, 4, 4 );
-    gbc.gridx = x;
-    gbc.gridy = y;
-    gbc.gridwidth = w;
-    gbc.gridheight = h;
-    gbc.weightx = wx;
-    gbc.weighty = wy;
-    return ( gbc );
-  }
-
-  /**
-   * Handles all action events for this component.
-   */
-  public void actionPerformed( final ActionEvent e )
-  {
-    if ( e.getActionCommand().equals( "Ok" ) )
+    final JButton clear = new JButton( "Clear" );
+    clear.addActionListener( new ActionListener()
     {
-      for ( int i = 0; i < 32; i++ )
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
       {
-        this.annotatedData.setChannelLabel( i, this.labelFields[i].getText() );
+        clearAllLabels();
       }
-      this.result = OK;
-      this.dialog.setVisible( false );
-    }
-    else if ( e.getActionCommand().equals( "Clear" ) )
+    } );
+    final JButton cancel = new JButton( "Cancel" );
+    cancel.addActionListener( new ActionListener()
     {
-      for ( int i = 0; i < 32; i++ )
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
       {
-        this.labelFields[i].setText( "" );
+        close( false );
       }
-    }
-    else
+    } );
+    final JButton ok = new JButton( "Ok" );
+    ok.addActionListener( new ActionListener()
     {
-      this.dialog.setVisible( false );
-    }
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        publishAllLabels();
+        close( true );
+      }
+    } );
+    // Make all buttons the same size...
+    ok.setPreferredSize( cancel.getPreferredSize() );
+    clear.setPreferredSize( cancel.getPreferredSize() );
+
+    final JPanel buttonPane = new JPanel();
+    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
+
+    buttonPane.add( Box.createHorizontalGlue() );
+    buttonPane.add( clear );
+    buttonPane.add( Box.createHorizontalStrut( 16 ) );
+    buttonPane.add( ok );
+    buttonPane.add( Box.createHorizontalStrut( 8 ) );
+    buttonPane.add( cancel );
+
+    add( buttonPane, //
+        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL,
+            LABEL_INSETS, 0, 0 ) );
+
+    pack();
   }
 
   /**
@@ -145,52 +144,55 @@ public class DiagramLabelsDialog extends JComponent implements ActionListener
    * reflected in the properties of this object. Otherwise changes are
    * discarded.
    * 
-   * @param frame
-   *          parent frame (needed for creating a modal dialog)
    * @return <code>OK</code> when user accepted changes, <code>CANCEL</code>
    *         otherwise
    */
-  public int showDialog( final Window frame )
+  public boolean showDialog()
   {
-    initDialog( frame );
-    updateFields();
-    this.result = CANCEL;
-    this.dialog.setVisible( true );
+    setVisible( true );
     return ( this.result );
   }
 
+  // METHODS
+
   /**
-   * Internal method that initializes a dialog and add this component to it.
-   * 
-   * @param frame
-   *          owner of the dialog
+   * Clears all labels.
    */
-  private void initDialog( final Window frame )
+  final void clearAllLabels()
   {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != frame ) )
+    for ( int i = 0; i < AnnotatedData.MAX_CHANNELS; i++ )
     {
-      this.dialog.dispose();
-      this.dialog = null;
-    }
-    // if no valid dialog exists, create one
-    if ( this.dialog == null )
-    {
-      this.dialog = new JDialog( frame, "Diagram Labels", ModalityType.APPLICATION_MODAL );
-      this.dialog.getContentPane().add( this );
-      this.dialog.pack();
-      this.dialog.setResizable( false );
+      this.labelFields[i].setText( "" );
     }
   }
 
   /**
-   * 
+   * @param aDialogResult
    */
-  private void updateFields()
+  final void close( final boolean aDialogResult )
   {
-    for ( int i = 0; i < 32; i++ )
+    this.result = aDialogResult;
+    setVisible( false );
+  }
+
+  /**
+   * Publishes all labels into the annotated data.
+   */
+  final void publishAllLabels()
+  {
+    for ( int i = 0; i < AnnotatedData.MAX_CHANNELS; i++ )
     {
-      this.labelFields[i].setText( this.annotatedData.getChannelLabel( i ) );
+      this.annotatedData.setChannelLabel( i, this.labelFields[i].getText() );
     }
+  }
+
+  /**
+   * @param aChannelIdx
+   * @param aText
+   */
+  final void setLabel( final int aChannelIdx, final String aText )
+  {
+    System.out.println( "Setting label " + aChannelIdx + " to '" + aText + "'" );
+    this.annotatedData.setChannelLabel( aChannelIdx, aText );
   }
 }
