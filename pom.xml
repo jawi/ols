@@ -50,6 +50,12 @@
   </resources>
   <plugins>
     <plugin>
+      <!-- solves a bug in the Eclipse setup -->
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-eclipse-plugin</artifactId>
+      <version>2.6</version>
+    </plugin>
+    <plugin>
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-eclipse-plugin</artifactId>
       <configuration>
