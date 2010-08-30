@@ -57,6 +57,12 @@ project. It provides the only "main" method in all projects and this main should
 the OSGi container with some predefined configuration and let the OSGi container do the
 remainder of the work. Currently, Felix 3.0 is used as OSGi container.
 
+=== Logging ===
+
+Provides a logging "bridge" for Java's native logging functionality and OSGi Logging 
+service. It allows classes to log using Java's native logging functionality 
+(java.util.logging) which will be redirected to a OSGi log service under water. 
+ 
 === Util ===
 
 Provides some common utilities that are shared among all other projects. 
@@ -64,14 +70,20 @@ Provides some common utilities that are shared among all other projects.
 
 == To do ==
 
-# support for <tt>CMD+W</tt> on OSX;
 # <strike>sometimes when a dropdown list is opened, the options don't come on the right places (somewhere else then beneath the dropdown menu);</strike>
-# add annotations to other analysis tools;
-# make distinction between analysis tools and other tools;
-# make the order of tools in the menu predictable;
-# add a preference pane for the "general" client configuration;
-# make the annotated data configurable regarding the displayed text and colors;
+# <strike>move more (time-)calculation routines from Diagram to AnnotatedData;</strike>
+# add removal of cursors;
+# rename AnnotatedData to DataContainer;
+# clear Annotations when new captured data is set;
+# clear Annotations for a channel when tool wants to;
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;
+# add annotations to other analysis tools;
+# make the annotated data configurable regarding the displayed text and colors;
+# add a preference pane for the "general" client configuration;
+# make it configurable whether state-transitions are straight or diagonal;
+# make the order of tools in the menu predictable;
+# support for <tt>CMD+W</tt> on OSX;
+# make distinction between analysis tools and other tools;
 # provide easier access to analysis tools;
 # analysis protocol results synopsis (client: <bla bla>, master: <bla bla>, client ...);
 # support reordering of channels with DnD;
