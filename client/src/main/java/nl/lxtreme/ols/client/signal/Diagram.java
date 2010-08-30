@@ -1232,25 +1232,24 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
             final int x1 = ( int )( ( this.scale * startIdx ) );
             final int x2 = ( int )( ( this.scale * endIdx ) );
+            final int y1 = bofs + channelHeight * channelIdx;
 
             final int textXoffset = ( int )( ( ( x2 - x1 ) - fm.stringWidth( data ) ) / 2.0 );
 
             final Color oldColor = aGraphics.getColor();
             aGraphics.setColor( new Color( 0xc9, 0xc9, 0xc9, 50 ) );
 
-            aGraphics.fillRoundRect( x1, bofs + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2,
-                signalHeight / 2 );
+            aGraphics.fillRoundRect( x1, y1 + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2, signalHeight / 2 );
 
             aGraphics.setColor( new Color( 0x40, 0x2c, 0x29 ) );
 
-            aGraphics.drawRoundRect( x1, bofs + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2,
-                signalHeight / 2 );
+            aGraphics.drawRoundRect( x1, y1 + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2, signalHeight / 2 );
 
             aGraphics.setColor( oldColor );
 
             if ( textXoffset > 0 )
             {
-              aGraphics.drawString( data, x1 + textXoffset, bofs + labelYpos - 4 );
+              aGraphics.drawString( data, x1 + textXoffset, y1 + labelYpos - 4 );
             }
           }
 
