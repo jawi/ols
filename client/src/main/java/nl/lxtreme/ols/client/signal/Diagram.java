@@ -189,7 +189,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   static final double CURSOR_HOVER = 5.0;
   static final int PADDING_Y = 2;
 
-  private static final Stroke SOLID_NORMAL = new BasicStroke( 0.0f );
   private static final Stroke SOLID_THICK = new BasicStroke( 1.5f );
 
   // VARIABLES
@@ -234,21 +233,25 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     super();
 
-    // Based on color scheme "sleepyhollow";
-    // <http://www.colorschemer.com/schemes/viewscheme.php?id=8379>
-
-    // Not used: new Color( 0x40, 0x2c, 0x29 )
-    this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
+    // this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
+    // this.signalColor = new Color( 0x30, 0x4b, 0x75 );
+    // this.triggerColor = new Color( 0x82, 0x87, 0x8f );
+    // this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
+    // this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
+    // this.textColor = Color.WHITE;
+    // this.timeColor = Color.WHITE;
+    // this.labelColor = new Color( 0x82, 0x87, 0x8f );
+    this.backgroundColor = Color.WHITE;
     this.signalColor = new Color( 0x30, 0x4b, 0x75 );
     this.triggerColor = new Color( 0x82, 0x87, 0x8f );
     this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
     this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
-    this.textColor = Color.WHITE;
-    this.timeColor = Color.WHITE;
+    this.textColor = new Color( 0x25, 0x25, 0x25 );
+    this.timeColor = new Color( 0x25, 0x25, 0x25 );
     this.labelColor = new Color( 0x82, 0x87, 0x8f );
 
     this.cursorColors = makeColorPalette( AnnotatedData.MAX_CURSORS, AnnotatedData.MAX_CURSORS );
-    this.channelColors = makeColorPalette( AnnotatedData.MAX_CHANNELS, 8 );
+    this.channelColors = makeMonochromaticColorPalette( AnnotatedData.MAX_CHANNELS );
 
     this.channelHeight = 30;
     this.scopeHeight = 133;
@@ -1229,7 +1232,10 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           // XXX XXX
           final Color oldColor = aGraphics.getColor();
           final Paint oldPaint = aGraphics.getPaint();
+          final Stroke oldStroke = aGraphics.getStroke();
           final Composite oldComposite = aGraphics.getComposite();
+          final Object oldHint = aGraphics.getRenderingHint( RenderingHints.KEY_ANTIALIASING );
+          aGraphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 
           final Iterator<ChannelAnnotation> annotations = this.data.getChannelAnnotations( channelIdx, aFromIndex,
               aToIndex );
@@ -1237,8 +1243,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           {
             final ChannelAnnotation annotation = annotations.next();
 
-            long startIdx = annotation.getStartIndex();
-            long endIdx = annotation.getEndIndex();
+            final long startIdx = annotation.getStartIndex();
+            final long endIdx = annotation.getEndIndex();
             final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
 
             final int x1 = ( int )( this.scale * startIdx );
@@ -1248,26 +1254,37 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
             final int textXoffset = ( int )( ( x2 - x1 - fm.stringWidth( data ) ) / 2.0 );
 
             final Color newColor = getSignalColor( channelIdx );
+            final Color newBrighterColor = newColor.brighter();
+            final Color newDarkerColor = newColor.darker().darker();
+            final GradientPaint newPaint = new GradientPaint( x1, y1 - 5, newBrighterColor, x1, y1
+                + ( signalHeight / 2 ), newDarkerColor );
 
-            aGraphics.setPaint( new GradientPaint( x1, y1 - 5, newColor.brighter(), x2, y1 + signalHeight, newColor
-                .darker() ) );
+            final int annotationWidth = ( x2 - x1 );
+            final int annotationHeight = ( signalHeight - 6 );
+            final int arc = ( int )( annotationHeight / 2.0 );
+
             aGraphics.setComposite( AlphaComposite.SrcOver.derive( 0.75f ) );
+            aGraphics.setStroke( SOLID_THICK );
 
-            aGraphics.fillRoundRect( x1, y1 + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2, signalHeight / 2 );
+            aGraphics.setPaint( newPaint );
+            aGraphics.fillRoundRect( x1, y1 + 4, annotationWidth, annotationHeight, arc, arc );
 
-            aGraphics.setColor( newColor.brighter() );
-            aGraphics.drawRoundRect( x1, y1 + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2, signalHeight / 2 );
+            aGraphics.setColor( newBrighterColor );
+            aGraphics.drawRoundRect( x1, y1 + 4, annotationWidth, annotationHeight, arc, arc );
 
             if ( textXoffset > 0 )
             {
               aGraphics.setColor( Color.WHITE );
               aGraphics.setComposite( oldComposite );
+
               aGraphics.drawString( data, x1 + textXoffset, y1 + labelYpos - 4 );
             }
           }
 
+          aGraphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, oldHint );
           aGraphics.setPaint( oldPaint );
           aGraphics.setComposite( oldComposite );
+          aGraphics.setStroke( oldStroke );
           aGraphics.setColor( oldColor );
           // XXX XXX
 
@@ -1459,6 +1476,16 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     {
       result[i] = makeColorGradient( i, freq, freq, freq, 0.0, 2.0, 4.0 );
     }
+    return result;
+  }
+
+  /**
+   * @return
+   */
+  private Color[] makeMonochromaticColorPalette( final int aLength )
+  {
+    final Color[] result = new Color[aLength];
+    Arrays.fill( result, this.signalColor );
     return result;
   }
 
