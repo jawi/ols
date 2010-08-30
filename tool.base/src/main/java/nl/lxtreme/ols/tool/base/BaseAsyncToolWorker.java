@@ -58,10 +58,10 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.data.AnnotatedData#addChannelAnnotation(int, long,
-   *      long, Object)
+   * @see AnnotatedData#addChannelAnnotation(int, long, long, Object)
    */
-  public void addChannelAnnotation( final int aChannelIdx, final long aStartIdx, final long aEndIdx, final Object aData )
+  public final void addChannelAnnotation( final int aChannelIdx, final long aStartIdx, final long aEndIdx,
+      final Object aData )
   {
     this.data.addChannelAnnotation( aChannelIdx, aStartIdx, aEndIdx, aData );
   }
@@ -76,6 +76,14 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   public final long calculateTime( final long aTime )
   {
     return this.data.calculateTime( aTime );
+  }
+
+  /**
+   * @see AnnotatedData#clearChannelAnnotations(int)
+   */
+  public void clearChannelAnnotations( final int aChannelIdx )
+  {
+    this.data.clearChannelAnnotations( aChannelIdx );
   }
 
   /**
@@ -94,6 +102,14 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   public int getChannels()
   {
     return this.data.getChannels();
+  }
+
+  /**
+   * @see AnnotatedData#getCursorPosition(int)
+   */
+  public long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
+  {
+    return this.data.getCursorPosition( aCursorIdx );
   }
 
   /**
@@ -186,6 +202,14 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   public boolean hasTriggerData()
   {
     return this.data.hasTriggerData();
+  }
+
+  /**
+   * @see AnnotatedData#isCursorsEnabled()
+   */
+  public final boolean isCursorsEnabled()
+  {
+    return this.data.isCursorsEnabled();
   }
 
   /**

@@ -84,10 +84,16 @@ public final class AnnotatedData implements CapturedData
   // METHODS
 
   /**
+   * Adds a channel annotation for the channel with the given index.
+   * 
    * @param aChannelIdx
+   *          the index of channel to remove all annotations for, >=0 && < 32.
    * @param aStartIdx
+   *          the start index;
    * @param aEndIdx
+   *          the end index;
    * @param aData
+   *          the data.
    */
   public void addChannelAnnotation( final int aChannelIdx, final long aStartIdx, final long aEndIdx, final Object aData )
   {
@@ -120,6 +126,23 @@ public final class AnnotatedData implements CapturedData
     }
 
     return aTime;
+  }
+
+  /**
+   * Clears <em>all</em> channel annotations for the channel with the given
+   * index.
+   * 
+   * @param aChannelIdx
+   *          the index of channel to remove all annotations for, >=0 && < 32.
+   */
+  public void clearChannelAnnotations( final int aChannelIdx )
+  {
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
+          + this.channelLabels.length );
+    }
+    this.annotations.remove( Integer.valueOf( aChannelIdx ) );
   }
 
   /**

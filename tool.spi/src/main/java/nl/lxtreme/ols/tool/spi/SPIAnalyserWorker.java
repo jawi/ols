@@ -172,13 +172,28 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       startOfDecode = getSampleIndex( getTriggerPosition() );
     }
 
-    // XXX tool context???
-    // if ( isCursorsEnabled() )
-    // {
-    // startOfDecode = getSampleIndex( getCursorPosition( 1 ) );
-    // endOfDecode = getSampleIndex( getCursorPosition( 2 ) + 1 );
-    // }
-    // else
+    /**
+     * <pre>
+     * At CPOL=0 the base value of the clock is zero:
+     * * For CPHA=0, data are captured on the clock's rising edge (low->high
+     *   transition) and data are propagated on a falling edge (high->low clock
+     *   transition);
+     * * For CPHA=1, data are captured on the clock's falling edge and data are
+     *   propagated on a rising edge.
+     * At CPOL=1 the base value of the clock is one (inversion of CPOL=0):
+     * * For CPHA=0, data are captured on clock's falling edge and data are 
+     *   propagated on a rising edge;
+     * * For CPHA=1, data are captured on clock's rising edge and data are 
+     *   propagated on a falling edge.
+     * </pre>
+     */
+
+    if ( isCursorsEnabled() )
+    {
+      startOfDecode = getSampleIndex( getCursorPosition( 1 ) );
+      endOfDecode = getSampleIndex( getCursorPosition( 2 ) + 1 );
+    }
+    else
     {
       /*
        * For analyze scan the CS line for a falling edge. If no edge could be
@@ -335,10 +350,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
           aDecodedData.reportData( time, mosivalue, misovalue );
 
-          addChannelAnnotation( mosiChannelIdx, timestamps[lastIdx], timestamps[idx],
-              String.format( "MOSI: 0x%X (%c)", mosivalue, mosivalue ) );
-          addChannelAnnotation( misoChannelIdx, timestamps[lastIdx], timestamps[idx],
-              String.format( "MISO: 0x%X (%c)", misovalue, misovalue ) );
+          addChannelAnnotation( mosiChannelIdx, timestamps[lastIdx], timestamps[idx], String.format( "MOSI: 0x%X (%c)",
+              mosivalue, mosivalue ) );
+          addChannelAnnotation( misoChannelIdx, timestamps[lastIdx], timestamps[idx], String.format( "MISO: 0x%X (%c)",
+              misovalue, misovalue ) );
 
           bitIdx = this.bitCount;
           misovalue = 0;
