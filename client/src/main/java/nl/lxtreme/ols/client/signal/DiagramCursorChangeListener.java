@@ -38,4 +38,9 @@ public interface DiagramCursorChangeListener extends EventListener
    *          current mouse position on (virtual) diagram screen
    */
   public void cursorChanged( final int aCursorIdx, final int aMousePos );
+
+  /**
+   * Cursor removed event
+   */
+  public void cursorRemoved( final int aCursorIdx );
 }

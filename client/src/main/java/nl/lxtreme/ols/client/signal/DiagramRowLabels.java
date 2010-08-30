@@ -32,7 +32,7 @@ import nl.lxtreme.ols.util.*;
 /**
  * Provides a component that displays the row headers/labels.
  */
-public class DiagramRowLabels extends JComponent
+public class DiagramRowLabels extends JComponent implements Scrollable
 {
   // CONSTANTS
 
@@ -40,7 +40,9 @@ public class DiagramRowLabels extends JComponent
 
   private static final int PADDING_X = 2;
   private static final int PADDING_Y = 2;
-  private static final int MIN_WIDTH = 25;
+  private static final int MIN_WIDTH = 30;
+  /** The tick increment (in pixels). */
+  public static final int ROW_INCREMENT = 20;
 
   // VARIABLES
 
@@ -58,10 +60,80 @@ public class DiagramRowLabels extends JComponent
 
     this.annotatedData = aData;
 
-    setPreferredSize( new Dimension( 25, 100 ) );
+    setPreferredSize( new Dimension( MIN_WIDTH, 100 ) );
   }
 
   // METHODS
+
+  /**
+   * @see javax.swing.Scrollable#getPreferredScrollableViewportSize()
+   */
+  @Override
+  public Dimension getPreferredScrollableViewportSize()
+  {
+    return getPreferredSize();
+  }
+
+  /**
+   * @see javax.swing.Scrollable#getScrollableBlockIncrement(java.awt.Rectangle,
+   *      int, int)
+   */
+  @Override
+  public int getScrollableBlockIncrement( final Rectangle aVisibleRect, final int aOrientation, final int aDirection )
+  {
+    if ( aOrientation == SwingConstants.HORIZONTAL )
+    {
+      return 0;
+    }
+
+    return aVisibleRect.height - ROW_INCREMENT;
+  }
+
+  /**
+   * @see javax.swing.Scrollable#getScrollableTracksViewportHeight()
+   */
+  @Override
+  public boolean getScrollableTracksViewportHeight()
+  {
+    return false;
+  }
+
+  /**
+   * @see javax.swing.Scrollable#getScrollableTracksViewportWidth()
+   */
+  @Override
+  public boolean getScrollableTracksViewportWidth()
+  {
+    return true;
+  }
+
+  /**
+   * @see javax.swing.Scrollable#getScrollableUnitIncrement(java.awt.Rectangle,
+   *      int, int)
+   */
+  @Override
+  public int getScrollableUnitIncrement( final Rectangle aVisibleRect, final int aOrientation, final int aDirection )
+  {
+    if ( aOrientation == SwingConstants.HORIZONTAL )
+    {
+      return 0;
+    }
+
+    int currentPosition = aVisibleRect.y;
+    int maxUnitIncrement = ROW_INCREMENT;
+
+    // Return the number of pixels between currentPosition
+    // and the nearest tick mark in the indicated direction.
+    if ( aDirection < 0 )
+    {
+      int newPosition = currentPosition - ( currentPosition / maxUnitIncrement ) * maxUnitIncrement;
+      return ( newPosition == 0 ) ? maxUnitIncrement : newPosition;
+    }
+    else
+    {
+      return ( ( currentPosition / maxUnitIncrement ) + 1 ) * maxUnitIncrement - currentPosition;
+    }
+  }
 
   /**
    * @param aDiagramSettings
@@ -79,19 +151,7 @@ public class DiagramRowLabels extends JComponent
   {
     // Let us only scale in height, not width!
     final int minimalWidth = getMinimalWidth();
-    final Dimension newPreferredSize = new Dimension( minimalWidth, aPreferredSize.height );
-    super.setPreferredSize( newPreferredSize );
-  }
-
-  /**
-   * Call when the diagram labels are edited and should be updated.
-   */
-  public void updateDiagramLabels()
-  {
-    // Let this component update its preferred size to fit the new labels...
-    setPreferredSize( getPreferredSize() );
-    // Make sure any resizing is performed immediately...
-    revalidate();
+    super.setPreferredSize( new Dimension( minimalWidth, aPreferredSize.height ) );
   }
 
   /**
@@ -107,6 +167,11 @@ public class DiagramRowLabels extends JComponent
 
     // obtain portion of graphics that needs to be drawn
     final Rectangle clipArea = aGraphics.getClipBounds();
+    // for some reason, this component gets scrolled horizontally although it
+    // has no reasons to do so. Resetting the X-position & width of the clip-
+    // area seems to solve this problem...
+    clipArea.x = 0;
+    clipArea.width = getWidth();
 
     int yofs = 0;
 

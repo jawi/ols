@@ -81,6 +81,15 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   }
 
   /**
+   * @see nl.lxtreme.ols.client.signal.DiagramCursorChangeListener#cursorRemoved(int)
+   */
+  @Override
+  public void cursorRemoved( final int aCursorIdx )
+  {
+    repaint();
+  }
+
+  /**
    * @see javax.swing.Scrollable#getPreferredScrollableViewportSize()
    */
   @Override
@@ -111,7 +120,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
       return 0;
     }
 
-    return aVisibleRect.width - DiagramTimeLine.TIMELINE_INCREMENT;
+    return aVisibleRect.width - TIMELINE_INCREMENT;
   }
 
   /**

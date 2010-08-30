@@ -220,8 +220,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   private final Color backgroundColor;
   private final Color labelColor;
   private final Color[] cursorColors;
+  private final Color[] channelColors;
   private final int channelHeight;
   private final int scopeHeight;
+
+  private static final boolean DEBUG = Boolean.parseBoolean( System
+      .getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
 
   /**
    * Create a new empty diagram to be placed in a container.
@@ -234,15 +238,17 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     // <http://www.colorschemer.com/schemes/viewscheme.php?id=8379>
 
     // Not used: new Color( 0x40, 0x2c, 0x29 )
-    this.backgroundColor = Color.WHITE;
+    this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
     this.signalColor = new Color( 0x30, 0x4b, 0x75 );
     this.triggerColor = new Color( 0x82, 0x87, 0x8f );
     this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
     this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
-    this.textColor = new Color( 0x25, 0x25, 0x25 );
-    this.timeColor = new Color( 0x25, 0x25, 0x25 );
+    this.textColor = Color.WHITE;
+    this.timeColor = Color.WHITE;
     this.labelColor = new Color( 0x82, 0x87, 0x8f );
-    this.cursorColors = makeColorPalette();
+
+    this.cursorColors = makeColorPalette( AnnotatedData.MAX_CURSORS, AnnotatedData.MAX_CURSORS );
+    this.channelColors = makeColorPalette( AnnotatedData.MAX_CHANNELS, 8 );
 
     this.channelHeight = 30;
     this.scopeHeight = 133;
@@ -258,7 +264,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     this.contextMenu = new JPopupMenu();
     for ( int i = 0; i < 10; i++ )
     {
-      this.contextMenu.add( new JMenuItem( new SetCursorAction( this, i ) ) );
+      this.contextMenu.add( new JCheckBoxMenuItem( new SetCursorAction( this, i ) ) );
     }
 
     this.data = new AnnotatedData();
@@ -496,11 +502,11 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getSignalColor()
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getSignalColor(int)
    */
-  public final Color getSignalColor()
+  public final Color getSignalColor( final int aChannelIdx )
   {
-    return this.signalColor;
+    return this.channelColors[aChannelIdx];
   }
 
   /**
@@ -593,8 +599,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   @Override
   public void readProperties( final String aNamespace, final Properties properties )
   {
-    readProperties( aNamespace, properties );
-    resize();
+    // NO-op
   }
 
   /**
@@ -603,6 +608,17 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   public void removeCursorChangeListener( final DiagramCursorChangeListener aListener )
   {
     this.evenListeners.remove( DiagramCursorChangeListener.class, aListener );
+  }
+
+  /**
+   * Removes the cursor at the given position.
+   * 
+   * @param aCursorIdx
+   *          the cursor index to remove.
+   */
+  public void removeCursorPosition( final int aCursorIdx )
+  {
+    internalSetCursorPosition( aCursorIdx, -1 );
   }
 
   /**
@@ -700,10 +716,10 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, getAnnotatedData() );
     if ( dialog.showDialog() )
     {
-      this.rowLabels.updateDiagramLabels();
-
+      this.rowLabels.repaint();
       resize();
     }
+
     dialog.dispose();
     dialog = null;
   }
@@ -719,6 +735,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     {
       resize();
     }
+
     dialog.dispose();
     dialog = null;
   }
@@ -730,7 +747,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   @Override
   public void writeProperties( final String aNamespace, final Properties properties )
   {
-    writeProperties( aNamespace, properties );
+    // NO-op
   }
 
   /**
@@ -983,6 +1000,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     }
 
     final long start = System.currentTimeMillis();
+    final Graphics2D g2d = ( Graphics2D )aGraphics;
 
     // obtain portion of graphics that needs to be drawn
     final Rectangle clipArea = aGraphics.getClipBounds();
@@ -997,37 +1015,24 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final long lastRow = xToIndex( cw ) + 1;
 
     // paint portion of background that needs drawing
-    aGraphics.setColor( getBackgroundColor() );
-    aGraphics.fillRect( cx, cy, cw, ch );
+    g2d.setColor( getBackgroundColor() );
+    g2d.fillRect( cx, cy, cw, ch );
 
     // draw trigger if existing and visible
     final long triggerPosition = this.data.getTriggerPosition();
     if ( ( triggerPosition >= firstRow ) && ( triggerPosition <= lastRow ) )
     {
-      aGraphics.setColor( getTriggerColor() );
-      aGraphics.fillRect( ( int )( triggerPosition * this.scale ) - 1, cy, ( int )( this.scale + 2 ), ch );
+      g2d.setColor( getTriggerColor() );
+      g2d.fillRect( ( int )( triggerPosition * this.scale ) - 1, cy, ( int )( this.scale + 2 ), ch );
     }
 
     // draw all signal groups...
-    drawSignals( aGraphics, clipArea, firstRow, lastRow );
+    drawSignals( g2d, clipArea, firstRow, lastRow );
 
-    // draw cursors if enabled
-    if ( getCursorMode() )
-    {
-      for ( int i = 0, size = AnnotatedData.MAX_CURSORS; i < size; i++ )
-      {
-        final long cursorPosition = this.data.getCursorPosition( i );
-        if ( ( cursorPosition >= firstRow ) && ( cursorPosition <= lastRow ) )
-        {
-          final int cursorPos = ( int )( cursorPosition * this.scale );
+    // draw cursors if enabled...
+    drawCursors( g2d, firstRow, lastRow );
 
-          aGraphics.setColor( getCursorColor( i ) );
-          aGraphics.drawLine( cursorPos, 0, cursorPos, 36 * getChannelHeight() );
-        }
-      }
-    }
-
-    if ( Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) ) )
+    if ( DEBUG )
     {
       final long end = System.currentTimeMillis();
       LOG.log( Level.INFO, "Render time = {0}ms.", ( end - start ) );
@@ -1050,24 +1055,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
       this.contextMenu.show( this, aPosition.x, aPosition.y );
     }
-  }
-
-  /**
-   * @param pos
-   * @return
-   */
-  private int calcTmpPos( final long pos )
-  {
-    long lval = ( long )( pos * this.scale );
-    if ( lval >= Integer.MAX_VALUE )
-    {
-      lval = Integer.MAX_VALUE - 100;
-    }
-    if ( lval < 0 )
-    {
-      lval = 0;
-    }
-    return ( int )lval;
   }
 
   /**
@@ -1103,6 +1090,29 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * @param g2d
+   * @param aFirstRow
+   * @param aLastRow
+   */
+  private void drawCursors( final Graphics2D g2d, final long aFirstRow, final long aLastRow )
+  {
+    if ( getCursorMode() )
+    {
+      for ( int i = 0, size = AnnotatedData.MAX_CURSORS; i < size; i++ )
+      {
+        final long cursorPosition = this.data.getCursorPosition( i );
+        if ( ( cursorPosition >= aFirstRow ) && ( cursorPosition <= aLastRow ) )
+        {
+          final int cursorPos = ( int )( cursorPosition * this.scale );
+
+          g2d.setColor( getCursorColor( i ) );
+          g2d.drawLine( cursorPos, 0, cursorPos, 36 * getChannelHeight() );
+        }
+      }
+    }
+  }
+
+  /**
    * @param g
    * @param clipArea
    * @param y
@@ -1125,7 +1135,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    * @param aToIndex
    *          the last sample to paint.
    */
-  private void drawSignals( final Graphics aGraphics, final Rectangle aClipArea, final long aFromIndex,
+  private void drawSignals( final Graphics2D aGraphics, final Rectangle aClipArea, final long aFromIndex,
       final long aToIndex )
   {
     final int channels = this.data.getChannels();
@@ -1138,6 +1148,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final int scopeHeight = getScopeHeight();
 
     final double scopeScaleFactor = ( 256.0 / ( scopeHeight - 2 * PADDING_Y ) );
+
     final int center = ( int )( this.scale / 2.0 );
 
     final FontMetrics fm = aGraphics.getFontMetrics();
@@ -1212,13 +1223,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
             currentSample = nextSample;
           }
 
-          aGraphics.setColor( getSignalColor() );
+          aGraphics.setColor( getSignalColor( channelIdx ) );
           aGraphics.drawPolyline( polyline.x, polyline.y, pIdx );
 
           // XXX XXX
-          ( ( Graphics2D )aGraphics ).setStroke( SOLID_THICK );
-          ( ( Graphics2D )aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING,
-              RenderingHints.VALUE_ANTIALIAS_ON );
+          ( aGraphics ).setStroke( SOLID_THICK );
+          ( aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 
           final Iterator<ChannelAnnotation> annotations = this.data.getChannelAnnotations( channelIdx, aFromIndex,
               aToIndex );
@@ -1230,10 +1240,10 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
             long endIdx = annotation.getEndIndex();
             final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
 
-            final int x1 = ( int )( ( this.scale * startIdx ) );
-            final int x2 = ( int )( ( this.scale * endIdx ) );
+            final int x1 = ( int )( this.scale * startIdx );
+            final int x2 = ( int )( this.scale * endIdx );
 
-            final int textXoffset = ( int )( ( ( x2 - x1 ) - fm.stringWidth( data ) ) / 2.0 );
+            final int textXoffset = ( int )( ( x2 - x1 - fm.stringWidth( data ) ) / 2.0 );
 
             final Color oldColor = aGraphics.getColor();
             aGraphics.setColor( new Color( 0xc9, 0xc9, 0xc9, 50 ) );
@@ -1254,9 +1264,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
             }
           }
 
-          ( ( Graphics2D )aGraphics ).setStroke( SOLID_NORMAL );
-          ( ( Graphics2D )aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING,
-              RenderingHints.VALUE_ANTIALIAS_DEFAULT );
+          ( aGraphics ).setStroke( SOLID_NORMAL );
+          ( aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT );
           // XXX XXX
 
           drawGridLine( aGraphics, aClipArea, channelHeight * bit + bofs + ( channelHeight - 1 ) );
@@ -1271,27 +1280,25 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         int pIdx = 0;
 
         int val = bofs;
-        long pos = aFromIndex - 1;
         int dataIndex = dataStartIndex;
 
         while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
         {
-          pos = timestamps[dataIndex];
           val = ( int )( ( 0xff - ( ( values[dataIndex] >> ( 8 * block ) ) & 0xff ) ) / scopeScaleFactor );
 
-          scopePolyline.x[pIdx] = calcTmpPos( pos );
+          scopePolyline.x[pIdx] = ( int )( timestamps[dataIndex] * this.scale );
           scopePolyline.y[pIdx] = bofs + val + PADDING_Y;
           pIdx++;
 
           dataIndex++;
         }
 
-        scopePolyline.x[pIdx] = calcTmpPos( aToIndex );
+        scopePolyline.x[pIdx] = ( int )( aToIndex * this.scale );
         scopePolyline.y[pIdx] = bofs + val + PADDING_Y;
         pIdx++;
 
         // draw actual data
-        aGraphics.setColor( getSignalColor() );
+        aGraphics.setColor( this.signalColor ); // XXX
         aGraphics.drawPolyline( scopePolyline.x, scopePolyline.y, pIdx );
         bofs += scopeHeight;
         // draw bottom grid line
@@ -1304,8 +1311,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
         long currentSample = aFromIndex - 1;
         int pIdx = 0;
-
-        aGraphics.setColor( getSignalColor() );
 
         int dataIndex = dataStartIndex;
 
@@ -1355,7 +1360,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           currentSample = nextSample;
         }
 
-        aGraphics.setColor( getSignalColor() );
+        aGraphics.setColor( this.signalColor ); // XXX
         aGraphics.drawPolyline( bytePolyline.x, bytePolyline.y1, pIdx );
         aGraphics.drawPolyline( bytePolyline.x, bytePolyline.y2, pIdx );
         bofs += channelHeight;
@@ -1374,7 +1379,14 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final DiagramCursorChangeListener[] listeners = this.evenListeners.getListeners( DiagramCursorChangeListener.class );
     for ( final DiagramCursorChangeListener listener : listeners )
     {
-      listener.cursorChanged( aCursorIdx, aMouseXpos );
+      if ( aMouseXpos >= 0 )
+      {
+        listener.cursorChanged( aCursorIdx, aMouseXpos );
+      }
+      else
+      {
+        listener.cursorRemoved( aCursorIdx );
+      }
     }
   }
 
@@ -1385,21 +1397,31 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    *          the index of the cursor to set;
    * @param aMouseXpos
    *          the new X-position (of the mouse) representing the new cursor
-   *          position.
+   *          position, if < 0 then the cursor will be removed.
    */
   private void internalSetCursorPosition( final int aCursorIdx, final int aMouseXpos )
   {
-    final long index = xToIndex( aMouseXpos );
-
-    // notify cursor change listeners
-    if ( ( index > 0 ) && ( index < ( this.data.getAbsoluteLength() - 1 ) ) )
+    if ( aMouseXpos < 0 )
     {
-      this.data.setCursorPosition( aCursorIdx, index );
+      // Remove the cursor...
+      this.data.setCursorPosition( aCursorIdx, Long.MIN_VALUE );
 
       fireCursorChangedEvent( aCursorIdx, aMouseXpos );
-
-      repaint();
     }
+    else
+    {
+      final long index = xToIndex( aMouseXpos );
+
+      // notify cursor change listeners
+      if ( ( index > 0 ) && ( index < ( this.data.getAbsoluteLength() - 1 ) ) )
+      {
+        this.data.setCursorPosition( aCursorIdx, index );
+
+        fireCursorChangedEvent( aCursorIdx, aMouseXpos );
+      }
+    }
+
+    repaint();
   }
 
   /**
@@ -1426,12 +1448,13 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   /**
    * @return
    */
-  private Color[] makeColorPalette()
+  private Color[] makeColorPalette( final int aLength, final int aSteps )
   {
-    final Color[] result = new Color[10];
+    final Color[] result = new Color[aLength];
+    final double freq = 2 * Math.PI / aSteps;
     for ( int i = 0; i < result.length; i++ )
     {
-      result[i] = makeColorGradient( i, 0.3, 0.3, 0.3, 0.0, 2.0, 4.0 );
+      result[i] = makeColorGradient( i, freq, freq, freq, 0.0, 2.0, 4.0 );
     }
     return result;
   }
@@ -1475,17 +1498,15 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final int width = ( int )( this.scale * this.data.getAbsoluteLength() );
 
     final Dimension newDiagramSize = new Dimension( width, height );
-    if ( !getPreferredSize().equals( newDiagramSize ) )
-    {
-      this.timeLine.setPreferredSize( newDiagramSize );
-      this.timeLine.revalidate();
 
-      this.rowLabels.setPreferredSize( newDiagramSize );
-      this.rowLabels.revalidate();
+    this.timeLine.setPreferredSize( newDiagramSize );
+    this.timeLine.revalidate();
 
-      setPreferredSize( newDiagramSize );
-      revalidate();
-    }
+    this.rowLabels.setPreferredSize( newDiagramSize );
+    this.rowLabels.revalidate();
+
+    setPreferredSize( newDiagramSize );
+    revalidate();
 
     repaint();
   }
