@@ -125,9 +125,13 @@ public final class SwingComponentUtils
   public static final Window getOwningWindow( final AWTEvent aEvent )
   {
     Window owner = null;
-    if ( ( aEvent != null ) && ( aEvent.getSource() instanceof Component ) )
+    if ( aEvent != null )
     {
-      owner = getOwningWindow( ( Component )aEvent.getSource() );
+      final Object source = aEvent.getSource();
+      if ( source instanceof Component )
+      {
+        owner = getOwningWindow( ( Component )source );
+      }
     }
     return owner;
   }
