@@ -72,7 +72,7 @@ Provides some common utilities that are shared among all other projects.
 
 # <strike>sometimes when a dropdown list is opened, the options don't come on the right places (somewhere else then beneath the dropdown menu);</strike>
 # <strike>move more (time-)calculation routines from Diagram to AnnotatedData;</strike>
-# add removal of cursors;
+# <strike>add removal of cursors;</strike>
 # rename AnnotatedData to DataContainer;
 # clear Annotations when new captured data is set;
 # clear Annotations for a channel when tool wants to;
