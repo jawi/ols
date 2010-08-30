@@ -248,6 +248,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     final int startOfDecode = ( int )aDecodedData.getStartOfDecode();
     final int endOfDecode = ( int )aDecodedData.getEndOfDecode();
 
+    final int misoChannelIdx = ( int )( Math.log( this.misoMask ) / Math.log( 2 ) );
+    final int mosiChannelIdx = ( int )( Math.log( this.mosiMask ) / Math.log( 2 ) );
+
     // scanning for falling/rising clk edges
     int oldSckValue = values[startOfDecode] & this.sckMask;
     int oldCsValue = values[startOfDecode] & this.csMask;
@@ -258,16 +261,17 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
     // We've already found the
     boolean slaveSelected = true;
+    int lastIdx = startOfDecode;
 
     final double length = endOfDecode - startOfDecode;
-    for ( int i = startOfDecode; i < endOfDecode; i++ )
+    for ( int idx = startOfDecode; idx < endOfDecode; idx++ )
     {
-      final long time = calculateTime( timestamps[i] );
+      final long time = calculateTime( timestamps[idx] );
 
       /* CLK edge detection */
-      final int sckValue = values[i] & this.sckMask;
+      final int sckValue = values[idx] & this.sckMask;
       /* CS edge detection */
-      final int csValue = values[i] & this.csMask;
+      final int csValue = values[idx] & this.csMask;
 
       if ( oldCsValue > csValue )
       {
@@ -285,6 +289,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
       if ( this.honourCS && !slaveSelected )
       {
+        // We should honour the slave-select, but the slave isn't
+        // currently selected...
         continue;
       }
 
@@ -301,13 +307,18 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
       if ( edgeSeen )
       {
+        if ( bitIdx == this.bitCount )
+        {
+          lastIdx = idx - 1;
+        }
+
         // sample MiSo here; always MSB first, perform conversion later on...
-        if ( ( values[i] & this.misoMask ) == this.misoMask )
+        if ( ( values[idx] & this.misoMask ) == this.misoMask )
         {
           misovalue |= ( 1 << bitIdx );
         }
         // sample MoSi here; always MSB first, perform conversion later on...
-        if ( ( values[i] & this.mosiMask ) == this.mosiMask )
+        if ( ( values[idx] & this.mosiMask ) == this.mosiMask )
         {
           mosivalue |= ( 1 << bitIdx );
         }
@@ -324,13 +335,18 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
           aDecodedData.reportData( time, mosivalue, misovalue );
 
+          addChannelAnnotation( mosiChannelIdx, timestamps[lastIdx], timestamps[idx],
+              String.format( "MOSI: 0x%X (%c)", mosivalue, mosivalue ) );
+          addChannelAnnotation( misoChannelIdx, timestamps[lastIdx], timestamps[idx],
+              String.format( "MISO: 0x%X (%c)", misovalue, misovalue ) );
+
           bitIdx = this.bitCount;
           misovalue = 0;
           mosivalue = 0;
         }
       }
 
-      setProgress( ( int )( ( i - startOfDecode ) * 100.0 / length ) );
+      setProgress( ( int )( ( idx - startOfDecode ) * 100.0 / length ) );
     }
   }
 
