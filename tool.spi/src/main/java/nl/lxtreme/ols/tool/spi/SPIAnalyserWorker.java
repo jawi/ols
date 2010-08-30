@@ -25,6 +25,8 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.NumberUtils.BitOrder;
 
 
 /**
@@ -32,6 +34,16 @@ import nl.lxtreme.ols.tool.base.*;
  */
 public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 {
+  // INNER TYPES
+
+  /**
+   * Denotes either a rising, or falling edge.
+   */
+  public enum Edge
+  {
+    RISING, FALLING;
+  }
+
   // CONSTANTS
 
   private static final Logger LOG = Logger.getLogger( SPIAnalyserWorker.class.getName() );
@@ -44,7 +56,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   private int mosiMask;
   private SPIMode mode;
   private int bitCount;
-  private Endianness order;
+  private BitOrder bitOrder;
+  private boolean reportCS;
+  private boolean honourCS;
 
   // CONSTRUCTORS
 
@@ -74,6 +88,11 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     this.csMask = aCsMask;
   }
 
+  public void setHonourCS( final boolean aHonourCS )
+  {
+    this.honourCS = aHonourCS;
+  }
+
   /**
    * @param aMisoMask
    */
@@ -101,9 +120,18 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   /**
    * @param aOrder
    */
-  public void setOrder( final Endianness aOrder )
+  public void setOrder( final BitOrder aOrder )
   {
-    this.order = aOrder;
+    this.bitOrder = aOrder;
+  }
+
+  /**
+   * @param aReportCS
+   */
+  public void setReportCS( final boolean aReportCS )
+  {
+    this.reportCS = aReportCS;
+
   }
 
   /**
@@ -125,9 +153,6 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   @Override
   protected SPIDataSet doInBackground() throws Exception
   {
-    // process the captured data and write to output
-    int a, c;
-
     if ( LOG.isLoggable( Level.FINE ) )
     {
       LOG.fine( "csmask   = 0x" + Integer.toHexString( this.csMask ) );
@@ -138,8 +163,15 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
     final int[] values = getValues();
 
-    int startOfDecode = 0;
+    int startOfDecode = -1;
     int endOfDecode = values.length;
+    boolean csFound = false;
+
+    if ( hasTriggerData() )
+    {
+      startOfDecode = getSampleIndex( getTriggerPosition() );
+    }
+
     // XXX tool context???
     // if ( isCursorsEnabled() )
     // {
@@ -153,17 +185,16 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
        * found, the position of the trigger is used for start of analysis. If no
        * trigger and no edge is found the analysis fails.
        */
-      a = values[0] & this.csMask;
-      c = 0;
+      int oldCsValue = values[0] & this.csMask;
 
-      final double length = endOfDecode - startOfDecode;
-      for ( int i = startOfDecode; i < endOfDecode; i++ )
+      for ( int i = 0; i < values.length; i++ )
       {
-        if ( a > ( values[i] & this.csMask ) )
+        final int csValue = values[i] & this.csMask;
+        if ( oldCsValue > csValue )
         {
-          // cs to low found here
+          // found first falling edge; start decoding from here...
           startOfDecode = i;
-          c = 1;
+          csFound = true;
 
           if ( LOG.isLoggable( Level.FINE ) )
           {
@@ -172,24 +203,23 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
           break;
         }
-        a = values[i] & this.csMask;
-
-        setProgress( ( int )( ( i - startOfDecode ) * 100.0 / length ) );
-      }
-
-      if ( c == 0 )
-      {
-        // no CS edge found, look for trigger
-        if ( hasTriggerData() )
-        {
-          startOfDecode = getSampleIndex( getTriggerPosition() );
-        }
+        oldCsValue = csValue;
       }
     }
 
+    if ( !csFound || ( startOfDecode < 0 ) )
+    {
+      // no CS edge found, look for trigger
+      LOG.log( Level.WARNING, "No CS start-condition found! Analysis aborted..." );
+      return null;
+    }
+
     final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode, this );
-    // now the trigger is in b, add trigger event to table
-    decodedData.reportCSLow( startOfDecode );
+    if ( csFound )
+    {
+      // now the trigger is in b, add trigger event to table
+      reportCsLow( decodedData, startOfDecode );
+    }
 
     /*
      * Use the mode parameter to determine which edges are to detect. Mode 0 and
@@ -197,71 +227,89 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
      * the falling edge. a is used for start of value, c is register for detect
      * line changes.
      */
-    if ( ( this.mode == SPIMode.MODE_0 ) || ( this.mode == SPIMode.MODE_3 ) )
-    {
-      clockDataOnRisingEdge( decodedData, startOfDecode, endOfDecode );
-    }
-    else
-    {
-      clockDataOnFallingEdge( decodedData, startOfDecode, endOfDecode );
-    }
+    clockDataOnEdge( decodedData, getSampleEdge() );
 
     return decodedData;
   }
 
   /**
+   * Decodes the SPI-data on a given clock edge.
+   * 
    * @param aDecodedData
-   * @param aStartOfDecode
-   * @param aEndOfDecode
+   *          the decoded data to fill;
+   * @param aEdge
+   *          the edge on which to sample.
    */
-  private void clockDataOnFallingEdge( final SPIDataSet aDecodedData, final int aStartOfDecode, final int aEndOfDecode )
+  private void clockDataOnEdge( final SPIDataSet aDecodedData, final Edge aEdge )
   {
     final int[] values = getValues();
     final long[] timestamps = getTimestamps();
 
-    int a;
-    int c;
-    int bitIdx;
-    int mosivalue;
-    int misovalue;
-    int maxbits;
+    final int startOfDecode = ( int )aDecodedData.getStartOfDecode();
+    final int endOfDecode = ( int )aDecodedData.getEndOfDecode();
 
-    // scanning for falling clk edges
-    c = values[aStartOfDecode] & this.sckMask;
-    a = values[aStartOfDecode] & this.csMask;
-    bitIdx = this.bitCount;
+    // scanning for falling/rising clk edges
+    int oldSckValue = values[startOfDecode] & this.sckMask;
+    int oldCsValue = values[startOfDecode] & this.csMask;
+    int bitIdx = this.bitCount;
 
-    maxbits = bitIdx;
-    misovalue = 0;
-    mosivalue = 0;
+    int misovalue = 0;
+    int mosivalue = 0;
 
-    final double length = aEndOfDecode - aStartOfDecode;
-    for ( int i = aStartOfDecode; i < aEndOfDecode; i++ )
+    // We've already found the
+    boolean slaveSelected = true;
+
+    final double length = endOfDecode - startOfDecode;
+    for ( int i = startOfDecode; i < endOfDecode; i++ )
     {
-      if ( c > ( values[i] & this.sckMask ) )
+      final long time = calculateTime( timestamps[i] );
+
+      /* CLK edge detection */
+      final int sckValue = values[i] & this.sckMask;
+      /* CS edge detection */
+      final int csValue = values[i] & this.csMask;
+
+      if ( oldCsValue > csValue )
       {
-        // sample here
-        if ( this.order == Endianness.MSB_FIRST )
+        // falling edge
+        reportCsLow( aDecodedData, time );
+        slaveSelected = true;
+      }
+      else if ( oldCsValue < csValue )
+      {
+        // rising edge
+        reportCsHigh( aDecodedData, time );
+        slaveSelected = false;
+      }
+      oldCsValue = csValue;
+
+      if ( this.honourCS && !slaveSelected )
+      {
+        continue;
+      }
+
+      final boolean edgeSeen;
+      if ( aEdge == Edge.RISING )
+      {
+        edgeSeen = ( oldSckValue < sckValue );
+      }
+      else
+      {
+        edgeSeen = ( oldSckValue > sckValue );
+      }
+      oldSckValue = sckValue;
+
+      if ( edgeSeen )
+      {
+        // sample MiSo here; always MSB first, perform conversion later on...
+        if ( ( values[i] & this.misoMask ) == this.misoMask )
         {
-          if ( ( values[i] & this.misoMask ) == this.misoMask )
-          {
-            misovalue |= ( 1 << bitIdx );
-          }
-          if ( ( values[i] & this.mosiMask ) == this.mosiMask )
-          {
-            mosivalue |= ( 1 << bitIdx );
-          }
+          misovalue |= ( 1 << bitIdx );
         }
-        else
+        // sample MoSi here; always MSB first, perform conversion later on...
+        if ( ( values[i] & this.mosiMask ) == this.mosiMask )
         {
-          if ( ( values[i] & this.misoMask ) == this.misoMask )
-          {
-            misovalue |= ( 1 << ( maxbits - bitIdx ) );
-          }
-          if ( ( values[i] & this.mosiMask ) == this.mosiMask )
-          {
-            mosivalue |= ( 1 << ( maxbits - bitIdx ) );
-          }
+          mosivalue |= ( 1 << bitIdx );
         }
 
         if ( bitIdx > 0 )
@@ -270,122 +318,56 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         }
         else
         {
-          aDecodedData.reportData( calculateTime( timestamps[i] ), mosivalue, misovalue );
+          // Perform bit-order conversion on the full byte...
+          mosivalue = NumberUtils.convertByteOrder( mosivalue, this.bitOrder );
+          misovalue = NumberUtils.convertByteOrder( misovalue, this.bitOrder );
 
-          // System.out.println("MISO = 0x" + Integer.toHexString(misovalue));
-          // System.out.println("MOSI = 0x" + Integer.toHexString(mosivalue));
+          aDecodedData.reportData( time, mosivalue, misovalue );
 
           bitIdx = this.bitCount;
           misovalue = 0;
           mosivalue = 0;
         }
       }
-      c = values[i] & this.sckMask;
 
-      /* CS edge detection */
-      if ( a > ( values[i] & this.csMask ) )
-      {
-        // falling edge
-        aDecodedData.reportCSLow( calculateTime( timestamps[i] ) );
-      }
-      else if ( a < ( values[i] & this.csMask ) )
-      {
-        // rising edge
-        aDecodedData.reportCSHigh( calculateTime( timestamps[i] ) );
-      }
-      a = values[i] & this.csMask;
+      setProgress( ( int )( ( i - startOfDecode ) * 100.0 / length ) );
+    }
+  }
 
-      setProgress( ( int )( ( i - aStartOfDecode ) * 100.0 / length ) );
+  /**
+   * Use the mode parameter to determine which edges are to detect. Mode 0 and
+   * mode 3 are sampling on the rising clk edge, mode 1 and 2 are sampling on
+   * the falling edge. a is used for start of value, c is register for detect
+   * line changes.
+   * 
+   * @return the sample clock edge.
+   */
+  private Edge getSampleEdge()
+  {
+    return ( ( this.mode == SPIMode.MODE_0 ) || ( this.mode == SPIMode.MODE_3 ) ) ? Edge.RISING : Edge.FALLING;
+  }
+
+  /**
+   * @param aDecodedData
+   * @param aTimestamp
+   */
+  private void reportCsHigh( final SPIDataSet aDecodedData, final long aTimestamp )
+  {
+    if ( this.reportCS )
+    {
+      aDecodedData.reportCSHigh( aTimestamp );
     }
   }
 
   /**
    * @param aDecodedData
-   * @param aStartOfDecode
-   * @param aEndOfDecode
+   * @param aTimestamp
    */
-  private void clockDataOnRisingEdge( final SPIDataSet aDecodedData, final int aStartOfDecode, final int aEndOfDecode )
+  private void reportCsLow( final SPIDataSet aDecodedData, final long aTimestamp )
   {
-    final int[] values = getValues();
-    final long[] timestamps = getTimestamps();
-
-    int a;
-    int c;
-    int bitIdx;
-    int mosivalue;
-    int misovalue;
-    int maxbits;
-
-    // scanning for rising clk edges
-    c = values[aStartOfDecode] & this.sckMask;
-    a = values[aStartOfDecode] & this.csMask;
-    bitIdx = this.bitCount;
-    maxbits = bitIdx;
-    misovalue = 0;
-    mosivalue = 0;
-
-    final double length = aEndOfDecode - aStartOfDecode;
-    for ( int i = aStartOfDecode; i < aEndOfDecode; i++ )
+    if ( this.reportCS )
     {
-      if ( c < ( values[i] & this.sckMask ) )
-      {
-        // sample here
-        if ( this.order == Endianness.MSB_FIRST )
-        {
-          if ( ( values[i] & this.misoMask ) == this.misoMask )
-          {
-            misovalue |= ( 1 << bitIdx );
-          }
-          if ( ( values[i] & this.mosiMask ) == this.mosiMask )
-          {
-            mosivalue |= ( 1 << bitIdx );
-          }
-        }
-        else
-        {
-          if ( ( values[i] & this.misoMask ) == this.misoMask )
-          {
-            misovalue |= ( 1 << ( maxbits - bitIdx ) );
-          }
-          if ( ( values[i] & this.mosiMask ) == this.mosiMask )
-          {
-            mosivalue |= ( 1 << ( maxbits - bitIdx ) );
-          }
-        }
-
-        if ( bitIdx > 0 )
-        {
-          bitIdx--;
-        }
-        else
-        {
-          aDecodedData.reportData( calculateTime( timestamps[i] ), mosivalue, misovalue );
-
-          // System.out.println("MISO = 0x" + Integer.toHexString(misovalue));
-          // System.out.println("MOSI = 0x" + Integer.toHexString(mosivalue));
-
-          bitIdx = this.bitCount;
-          misovalue = 0;
-          mosivalue = 0;
-        }
-      }
-      c = values[i] & this.sckMask;
-
-      /* CS edge detection */
-      if ( a > ( values[i] & this.csMask ) )
-      {
-        // falling edge
-        aDecodedData.reportCSLow( calculateTime( timestamps[i] ) );
-      }
-      else if ( a < ( values[i] & this.csMask ) )
-      {
-        // rising edge
-        aDecodedData.reportCSHigh( calculateTime( timestamps[i] ) );
-      }
-      a = values[i] & this.csMask;
-
-      setProgress( ( int )( ( i - aStartOfDecode ) * 100.0 / length ) );
+      aDecodedData.reportCSLow( aTimestamp );
     }
   }
-
 }
