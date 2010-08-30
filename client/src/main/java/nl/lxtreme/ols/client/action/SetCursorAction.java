@@ -23,6 +23,8 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
 
@@ -65,7 +67,15 @@ public class SetCursorAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    this.diagram.setCursorPosition( this.cursorIdx );
+    final JCheckBoxMenuItem menuitem = ( JCheckBoxMenuItem )aEvent.getSource();
+    if ( menuitem.isSelected() )
+    {
+      this.diagram.setCursorPosition( this.cursorIdx );
+    }
+    else
+    {
+      this.diagram.removeCursorPosition( this.cursorIdx );
+    }
   }
 }
 

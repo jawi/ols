@@ -65,7 +65,7 @@ public interface DiagramSettings
    * Returns the cursor color for the cursor with a given index.
    * 
    * @param aCursorIdx
-   *          the cursor index of the cursor to get the color for, >= 0 && < 10.
+   *          the index of the cursor to get the color for, >= 0 && < 10.
    * @return the cursor color, never <code>null</code>.
    */
   Color getCursorColor( final int aCursorIdx );
@@ -101,9 +101,11 @@ public interface DiagramSettings
   /**
    * Returns the signal color.
    * 
+   * @param aChannelIdx
+   *          the index of the channel to get the color for, >= 0 && < 32.
    * @return the signal, never <code>null</code>.
    */
-  Color getSignalColor();
+  Color getSignalColor( int aChannelIdx );
 
   /**
    * Returns the height of the signal indicator.

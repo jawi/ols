@@ -141,7 +141,7 @@ public class DiagramScrollPane extends JScrollPane
     super();
 
     this.contextButton = new JButton( new ScrollPaneContextAction( aProvider ) );
-    this.contextButton.setBorder( BorderFactory.createLineBorder( Color.GRAY ) );
+    this.contextButton.setBorderPainted( false );
     this.contextButton.setBackground( Color.WHITE );
     this.contextButton.setVisible( false );
 
