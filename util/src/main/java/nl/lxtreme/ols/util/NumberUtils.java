@@ -32,6 +32,23 @@ public final class NumberUtils
   // ENUMERATIONS
 
   /**
+   * Denotes in which order bits are to be interpreted in a byte.
+   */
+  public enum BitOrder
+  {
+    /**
+     * Denotes the least significant bit is to be read first and the most
+     * significant bit last (assuming you read from left to right).
+     */
+    LSB_FIRST,
+    /**
+     * Denotes the most significant bit is to be read first and the least
+     * significant bit last (assuming you read from left to right).
+     */
+    MSB_FIRST;
+  }
+
+  /**
    * Denotes how "k", "M" units should be interpreted.
    */
   public enum UnitDefinition
@@ -54,6 +71,89 @@ public final class NumberUtils
   }
 
   // METHODS
+
+  /**
+   * Converts the bits of a byte into a desired order.
+   * 
+   * @param aValue
+   *          the byte value to convert;
+   * @param aBitOrder
+   *          the bit order of the given value.
+   * @return the converted value, always most significant byte first (assuming
+   *         you are reading from left to right).
+   */
+  public static int convertByteOrder( final int aValue, final BitOrder aBitOrder )
+  {
+    int v = aValue;
+    if ( aBitOrder == BitOrder.LSB_FIRST )
+    {
+      // Reverse the bits in a byte with 3 operations (64-bit multiply and
+      // modulus division), taken from:
+      // http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64BitsDiv
+      v = ( int )( ( v * 0x0202020202L & 0x010884422010L ) % 1023 );
+    }
+    return v;
+  }
+
+  /**
+   * Converts the bits of a long-word (32-bit) into a desired order.
+   * 
+   * @param aValue
+   *          the 32-bit value to convert;
+   * @param aBitOrder
+   *          the bit order of the given value.
+   * @return the converted 32-bit value, always most significant byte first
+   *         (assuming you are reading from left to right).
+   */
+  public static int convertLongWordOrder( final int aValue, final BitOrder aBitOrder )
+  {
+    // Taken from:
+    // http://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
+    long v = aValue;
+    if ( aBitOrder == BitOrder.LSB_FIRST )
+    {
+      // swap odd and even bits
+      v = ( ( v >> 1 ) & 0x55555555L ) | ( ( v & 0x55555555L ) << 1 );
+      // swap consecutive pairs
+      v = ( ( v >> 2 ) & 0x33333333L ) | ( ( v & 0x33333333L ) << 2 );
+      // swap nibbles ...
+      v = ( ( v >> 4 ) & 0x0F0F0F0FL ) | ( ( v & 0x0F0F0F0FL ) << 4 );
+      // swap bytes
+      v = ( ( v >> 8 ) & 0x00FF00FFL ) | ( ( v & 0x00FF00FFL ) << 8 );
+      // swap 2-byte long pairs
+      v = ( v >> 16 ) | ( v << 16 );
+    }
+    return ( int )( v );
+  }
+
+  /**
+   * Converts the bits of a word value into a desired order.
+   * 
+   * @param aValue
+   *          the 16-bit value to convert;
+   * @param aBitOrder
+   *          the bit order of the given value.
+   * @return the converted 16-bit value, always most significant byte first
+   *         (assuming you are reading from left to right).
+   */
+  public static int convertWordOrder( final int aValue, final BitOrder aBitOrder )
+  {
+    // Taken from:
+    // http://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
+    long v = aValue;
+    if ( aBitOrder == BitOrder.LSB_FIRST )
+    {
+      // swap odd and even bits
+      v = ( ( v >> 1 ) & 0x55555555L ) | ( ( v & 0x55555555L ) << 1 );
+      // swap consecutive pairs
+      v = ( ( v >> 2 ) & 0x33333333L ) | ( ( v & 0x33333333L ) << 2 );
+      // swap nibbles ...
+      v = ( ( v >> 4 ) & 0x0F0F0F0FL ) | ( ( v & 0x0F0F0F0FL ) << 4 );
+      // swap bytes
+      v = ( ( v >> 8 ) & 0x00FF00FFL ) | ( ( v & 0x00FF00FFL ) << 8 );
+    }
+    return ( int )( v & 65535 );
+  }
 
   /**
    * Provides a "smart" integer parsing routine that allows (decimal) numbers in
