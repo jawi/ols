@@ -24,7 +24,6 @@ package nl.lxtreme.ols.tool.spi;
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
@@ -35,7 +34,12 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.ExportUtils.*;
+import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
+import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
+import nl.lxtreme.ols.util.NumberUtils.BitOrder;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -65,8 +69,10 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   private final JComboBox cs;
   private final JComboBox mode;
   private final JComboBox bits;
-  private final JEditorPane outText;
   private final JComboBox order;
+  private final JEditorPane outText;
+  private final JCheckBox reportCS;
+  private final JCheckBox honourCS;
 
   private final RunAnalysisAction runAnalysisAction;
   private final ExportAction exportAction;
@@ -91,7 +97,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
      * add protocol settings elements
      */
     JPanel panSettings = new JPanel();
-    panSettings.setLayout( new GridLayout( 7, 2, 5, 5 ) );
+    panSettings.setLayout( new GridLayout( 10, 2, 5, 5 ) );
     panSettings.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Settings" ),
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
@@ -143,6 +149,21 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     this.order = new JComboBox( this.orderarray );
     panSettings.add( this.order );
 
+    panSettings.add( new JLabel( "Show /CS?" ) );
+    this.reportCS = new JCheckBox();
+    this.reportCS.setToolTipText( "Whether or not to show /CS transitions in analysis results?" );
+    this.reportCS.setSelected( true );
+    panSettings.add( this.reportCS );
+
+    panSettings.add( new JLabel( "Honour /CS?" ) );
+    this.honourCS = new JCheckBox();
+    this.honourCS.setToolTipText( "Whether or not to use /CS in analysis results?" );
+    this.honourCS.setSelected( false );
+    panSettings.add( this.honourCS );
+
+    panSettings.add( new JLabel() );
+    panSettings.add( Box.createVerticalGlue() );
+
     add( panSettings, createConstraints( 0, 0, 1, 1, 0, 0 ) );
 
     /*
@@ -168,10 +189,10 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     JButton btnCancel = new JButton( this.closeAction );
 
     final JPanel buttons = new JPanel();
-    final BoxLayout layoutMgr = new BoxLayout( buttons, BoxLayout.LINE_AXIS );
-    buttons.setLayout( layoutMgr );
+    buttons.setLayout( new BoxLayout( buttons, BoxLayout.LINE_AXIS ) );
     buttons.add( Box.createHorizontalGlue() );
     buttons.add( btnConvert );
+    buttons.add( Box.createHorizontalStrut( 8 ) );
     buttons.add( btnExport );
     buttons.add( Box.createHorizontalStrut( 16 ) );
     buttons.add( btnCancel );
@@ -209,10 +230,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     return ( gbc );
   }
 
-  public void actionPerformed( final ActionEvent e )
-  {
-  }
-
   /**
    * This is the SPI protocol decoder core The decoder scans for a decode start
    * event like CS high to low edge or the trigger of the captured data. After
@@ -247,6 +264,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
+    SwingComponentUtils.setSelected( this.reportCS, aProperties.getProperty( aNamespace + ".reportCS" ) );
+    SwingComponentUtils.setSelected( this.honourCS, aProperties.getProperty( aNamespace + ".honourCS" ) );
     SwingComponentUtils.setSelectedIndex( this.sck, aProperties.getProperty( aNamespace + ".sck" ) );
     SwingComponentUtils.setSelectedIndex( this.miso, aProperties.getProperty( aNamespace + ".miso" ) );
     SwingComponentUtils.setSelectedIndex( this.mosi, aProperties.getProperty( aNamespace + ".mosi" ) );
@@ -279,6 +298,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    */
   public void writeProperties( final String aNamespace, final Properties aProperties )
   {
+    aProperties.setProperty( aNamespace + ".reportCS", Boolean.toString( this.reportCS.isSelected() ) );
+    aProperties.setProperty( aNamespace + ".honourCS", Boolean.toString( this.honourCS.isSelected() ) );
     aProperties.setProperty( aNamespace + ".sck", Integer.toString( this.sck.getSelectedIndex() ) );
     aProperties.setProperty( aNamespace + ".miso", Integer.toString( this.miso.getSelectedIndex() ) );
     aProperties.setProperty( aNamespace + ".mosi", Integer.toString( this.mosi.getSelectedIndex() ) );
@@ -306,6 +327,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   @Override
   protected void setControlsEnabled( final boolean aEnable )
   {
+    this.reportCS.setEnabled( aEnable );
+    this.honourCS.setEnabled( aEnable );
     this.sck.setEnabled( aEnable );
     this.miso.setEnabled( aEnable );
     this.mosi.setEnabled( aEnable );
@@ -328,9 +351,10 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     aToolWorker.setSCKMask( 1 << this.sck.getSelectedIndex() );
     aToolWorker.setMisoMask( 1 << this.miso.getSelectedIndex() );
     aToolWorker.setMosiMask( 1 << this.mosi.getSelectedIndex() );
-    aToolWorker.setOrder( "MSB first".equals( this.order.getSelectedItem() ) ? Endianness.MSB_FIRST
-        : Endianness.LSB_FIRST );
+    aToolWorker.setOrder( "MSB first".equals( this.order.getSelectedItem() ) ? BitOrder.MSB_FIRST : BitOrder.LSB_FIRST );
     aToolWorker.setMode( SPIMode.parse( ( String )this.mode.getSelectedItem() ) );
+    aToolWorker.setReportCS( this.reportCS.isSelected() );
+    aToolWorker.setHonourCS( this.honourCS.isSelected() );
   }
 
   /**
