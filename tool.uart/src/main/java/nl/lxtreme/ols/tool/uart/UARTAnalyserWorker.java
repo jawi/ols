@@ -215,13 +215,12 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
      * set the start of decode to the trigger if avail or find first state
      * change on the selected lines
      */
-    // XXX
-    // if ( isCursorsEnabled() )
-    // {
-    // startOfDecode = getCursorPosition( 1 );
-    // endOfDecode = getCursorPosition( 2 );
-    // }
-    // else
+    if ( isCursorsEnabled() )
+    {
+      startOfDecode = getCursorPosition( 1 );
+      endOfDecode = getCursorPosition( 2 ) + 1;
+    }
+    else
     {
       if ( hasTriggerData() )
       {
