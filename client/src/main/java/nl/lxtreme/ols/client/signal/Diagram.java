@@ -1227,8 +1227,9 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           aGraphics.drawPolyline( polyline.x, polyline.y, pIdx );
 
           // XXX XXX
-          ( aGraphics ).setStroke( SOLID_THICK );
-          ( aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+          final Color oldColor = aGraphics.getColor();
+          final Paint oldPaint = aGraphics.getPaint();
+          final Composite oldComposite = aGraphics.getComposite();
 
           final Iterator<ChannelAnnotation> annotations = this.data.getChannelAnnotations( channelIdx, aFromIndex,
               aToIndex );
@@ -1246,25 +1247,28 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
             final int textXoffset = ( int )( ( x2 - x1 - fm.stringWidth( data ) ) / 2.0 );
 
-            final Color oldColor = aGraphics.getColor();
-            aGraphics.setColor( new Color( 0xc9, 0xc9, 0xc9, 50 ) );
+            final Color newColor = getSignalColor( channelIdx );
+
+            aGraphics.setPaint( new GradientPaint( x1, y1 - 5, newColor.brighter(), x2, y1 + signalHeight, newColor
+                .darker() ) );
+            aGraphics.setComposite( AlphaComposite.SrcOver.derive( 0.75f ) );
 
             aGraphics.fillRoundRect( x1, y1 + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2, signalHeight / 2 );
 
-            aGraphics.setColor( new Color( 0x40, 0x2c, 0x29 ) );
-
+            aGraphics.setColor( newColor.brighter() );
             aGraphics.drawRoundRect( x1, y1 + 4, ( x2 - x1 ), ( signalHeight - 6 ), signalHeight / 2, signalHeight / 2 );
-
-            aGraphics.setColor( oldColor );
 
             if ( textXoffset > 0 )
             {
+              aGraphics.setColor( Color.WHITE );
+              aGraphics.setComposite( oldComposite );
               aGraphics.drawString( data, x1 + textXoffset, y1 + labelYpos - 4 );
             }
           }
 
-          ( aGraphics ).setStroke( SOLID_NORMAL );
-          ( aGraphics ).setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT );
+          aGraphics.setPaint( oldPaint );
+          aGraphics.setComposite( oldComposite );
+          aGraphics.setColor( oldColor );
           // XXX XXX
 
           drawGridLine( aGraphics, aClipArea, channelHeight * bit + bofs + ( channelHeight - 1 ) );
