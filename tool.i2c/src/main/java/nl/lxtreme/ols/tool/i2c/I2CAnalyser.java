@@ -25,7 +25,6 @@ import java.awt.*;
 import java.beans.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
@@ -48,22 +47,19 @@ public class I2CAnalyser extends BaseAsyncTool<I2CProtocolAnalysisDialog, I2CDat
 
   /**
    * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String, nl.lxtreme.ols.api.data.AnnotatedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext,
-   *      nl.lxtreme.ols.api.tools.AnalysisCallback)
+   *      java.lang.String)
    */
   @Override
-  protected I2CProtocolAnalysisDialog createDialog( final Window aOwner, final String aName, final AnnotatedData aData,
-      final ToolContext aContext, final AnalysisCallback aCallback )
+  protected I2CProtocolAnalysisDialog createDialog( final Window aOwner, final String aName )
   {
     return new I2CProtocolAnalysisDialog( aOwner, getName() );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.AnnotatedData)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer)
    */
   @Override
-  protected I2CAnalyserWorker createToolWorker( final AnnotatedData aData )
+  protected I2CAnalyserWorker createToolWorker( final DataContainer aData )
   {
     return new I2CAnalyserWorker( aData );
   }

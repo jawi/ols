@@ -49,7 +49,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   private double scale;
   private DiagramSettings diagramSettings;
 
-  private final AnnotatedData annotatedData;
+  private final DataContainer annotatedData;
 
   // CONSTRUCTORS
 
@@ -59,7 +59,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
    * @param aData
    *          the annotated data to use for this timeline.
    */
-  public DiagramTimeLine( final AnnotatedData aData )
+  public DiagramTimeLine( final DataContainer aData )
   {
     super();
 
@@ -273,7 +273,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
     }
 
     // draw cursor B first (lower priority)
-    for ( int i = 0, size = AnnotatedData.MAX_CURSORS; i < size; i++ )
+    for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
     {
       final long cursorPosition = this.annotatedData.getCursorPosition( i );
       if ( ( cursorPosition >= firstRow ) && ( cursorPosition <= lastRow ) )

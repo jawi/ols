@@ -24,12 +24,11 @@ package nl.lxtreme.ols.tool.state;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
 /**
- * 
+ * Provides a state analysis tool (??? not sure what it does though ???).
  */
 public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, CapturedData, StateAnalysisWorker>
 {
@@ -47,22 +46,19 @@ public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, CapturedDa
 
   /**
    * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String, nl.lxtreme.ols.api.data.AnnotatedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext,
-   *      nl.lxtreme.ols.api.tools.AnalysisCallback)
+   *      java.lang.String)
    */
   @Override
-  protected StateAnalysisDialog createDialog( final Window aOwner, final String aName, final AnnotatedData aData,
-      final ToolContext aContext, final AnalysisCallback aCallback )
+  protected StateAnalysisDialog createDialog( final Window aOwner, final String aName )
   {
     return new StateAnalysisDialog( aOwner, getName() );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.AnnotatedData)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer)
    */
   @Override
-  protected StateAnalysisWorker createToolWorker( final AnnotatedData aData )
+  protected StateAnalysisWorker createToolWorker( final DataContainer aData )
   {
     return new StateAnalysisWorker( aData );
   }

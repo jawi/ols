@@ -65,7 +65,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   /**
    * @param aData
    */
-  public SPIAnalyserWorker( final AnnotatedData aData )
+  public SPIAnalyserWorker( final DataContainer aData )
   {
     super( aData );
   }

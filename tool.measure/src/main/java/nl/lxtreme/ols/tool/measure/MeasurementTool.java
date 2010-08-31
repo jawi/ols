@@ -23,13 +23,11 @@ package nl.lxtreme.ols.tool.measure;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
 /**
- * @author jawi
+ * Provides a tool for measuring frequency, time(period)s, and so on.
  */
 public class MeasurementTool extends BaseTool<MeasurementDialog>
 {
@@ -47,13 +45,10 @@ public class MeasurementTool extends BaseTool<MeasurementDialog>
 
   /**
    * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String, nl.lxtreme.ols.api.data.AnnotatedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext,
-   *      nl.lxtreme.ols.api.tools.AnalysisCallback)
+   *      java.lang.String)
    */
   @Override
-  protected MeasurementDialog createDialog( final Window aOwner, final String aName, final AnnotatedData aData,
-      final ToolContext aContext, final AnalysisCallback aCallback )
+  protected MeasurementDialog createDialog( final Window aOwner, final String aName )
   {
     return new MeasurementDialog( aOwner, aName );
   }

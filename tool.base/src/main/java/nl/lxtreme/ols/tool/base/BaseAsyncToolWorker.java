@@ -40,7 +40,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
 {
   // VARIABLES
 
-  private final AnnotatedData data;
+  private final DataContainer data;
 
   // CONSTRUCTORS
 
@@ -50,7 +50,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
    * @param aData
    *          the captured data to process, can be <code>null</code>.
    */
-  public BaseAsyncToolWorker( final AnnotatedData aData )
+  public BaseAsyncToolWorker( final DataContainer aData )
   {
     this.data = aData;
   }
@@ -58,7 +58,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   // METHODS
 
   /**
-   * @see AnnotatedData#addChannelAnnotation(int, long, long, Object)
+   * @see DataContainer#addChannelAnnotation(int, long, long, Object)
    */
   public final void addChannelAnnotation( final int aChannelIdx, final long aStartIdx, final long aEndIdx,
       final Object aData )
@@ -79,7 +79,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see AnnotatedData#clearChannelAnnotations(int)
+   * @see DataContainer#clearChannelAnnotations(int)
    */
   public void clearChannelAnnotations( final int aChannelIdx )
   {
@@ -105,7 +105,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see AnnotatedData#getCursorPosition(int)
+   * @see DataContainer#getCursorPosition(int)
    */
   public long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
   {
@@ -205,7 +205,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see AnnotatedData#isCursorsEnabled()
+   * @see DataContainer#isCursorsEnabled()
    */
   public final boolean isCursorsEnabled()
   {

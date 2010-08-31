@@ -110,12 +110,12 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
 
   /**
    * @see nl.lxtreme.ols.api.tools.Tool#process(java.awt.Frame,
-   *      nl.lxtreme.ols.api.data.AnnotatedData,
+   *      nl.lxtreme.ols.api.data.DataContainer,
    *      nl.lxtreme.ols.api.tools.ToolContext,
    *      nl.lxtreme.ols.api.tools.AnalysisCallback)
    */
   @Override
-  public final void process( final Window aOwner, final AnnotatedData aData, final ToolContext aContext,
+  public final void process( final Window aOwner, final DataContainer aData, final ToolContext aContext,
       final AnalysisCallback aCallback )
   {
     // check if dialog exists with different owner and dispose if so
@@ -128,7 +128,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
     // if no valid dialog exists, create one
     if ( this.dialog == null )
     {
-      this.dialog = createDialog( aOwner, getName(), aData, aContext, aCallback );
+      this.dialog = createDialog( aOwner, getName() );
     }
     else
     {
@@ -168,13 +168,9 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   /**
    * @param aOwner
    * @param aName
-   * @param aData
-   * @param aContext
-   * @param aCallback
    * @return
    */
-  protected abstract DIALOG createDialog( final Window aOwner, final String aName, final AnnotatedData aData,
-      final ToolContext aContext, final AnalysisCallback aCallback );
+  protected abstract DIALOG createDialog( final Window aOwner, final String aName );
 
   /**
    * Does the actual processing of data.
@@ -189,7 +185,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
    *          the callback to report the status of the tool to, cannot be
    *          <code>null</code>.
    */
-  protected void doProcess( final AnnotatedData aData, final ToolContext aContext, final AnalysisCallback aCallback )
+  protected void doProcess( final DataContainer aData, final ToolContext aContext, final AnalysisCallback aCallback )
   {
     this.dialog.showDialog( aData );
   }

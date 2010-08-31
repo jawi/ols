@@ -109,7 +109,7 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
    * @param aEndIndex
    *          the ending index (cursor B).
    */
-  public ClockFrequencyMeasureWorker( final AnnotatedData aData, final int aChannel, final int aStartIndex,
+  public ClockFrequencyMeasureWorker( final DataContainer aData, final int aChannel, final int aStartIndex,
       final int aEndIndex )
   {
     super( aData );

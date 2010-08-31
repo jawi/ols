@@ -47,14 +47,14 @@ public class DiagramRowLabels extends JComponent implements Scrollable
   // VARIABLES
 
   private DiagramSettings settings;
-  private final AnnotatedData annotatedData;
+  private final DataContainer annotatedData;
 
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public DiagramRowLabels( final AnnotatedData aData )
+  public DiagramRowLabels( final DataContainer aData )
   {
     super();
 
@@ -268,7 +268,7 @@ public class DiagramRowLabels extends JComponent implements Scrollable
     if ( font != null )
     {
       final FontMetrics fm = getFontMetrics( getFont() );
-      for ( int i = 0; i < AnnotatedData.MAX_CHANNELS; i++ )
+      for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
       {
         String label = this.annotatedData.getChannelLabel( i );
         if ( DisplayUtils.isEmpty( label ) )

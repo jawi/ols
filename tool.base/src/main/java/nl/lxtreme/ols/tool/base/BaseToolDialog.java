@@ -112,10 +112,10 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
+   * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.DataContainer)
    */
   @Override
-  public void showDialog( final AnnotatedData aData )
+  public void showDialog( final DataContainer aData )
   {
     setVisible( true );
   }

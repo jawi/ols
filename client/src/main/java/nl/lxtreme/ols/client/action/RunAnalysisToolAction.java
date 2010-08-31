@@ -26,7 +26,7 @@ import java.awt.event.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.client.Host.MainFrame;
+import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -43,8 +43,9 @@ public class RunAnalysisToolAction extends BaseAction
 
   // VARIABLES
 
-  private final MainFrame frame;
   private final Tool tool;
+  private final DiagramScrollPane scrollPane;
+  private final AnalysisCallback callback;
 
   // CONSTRUCTORS
 
@@ -53,12 +54,13 @@ public class RunAnalysisToolAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public RunAnalysisToolAction( final MainFrame aFrame, final Tool aTool )
+  public RunAnalysisToolAction( final Tool aTool, final DiagramScrollPane aScrollPane, final AnalysisCallback aCallback )
   {
     super( ID + aTool.getName(), aTool.getName(), "Run " + aTool.getName() );
 
-    this.frame = aFrame;
     this.tool = aTool;
+    this.scrollPane = aScrollPane;
+    this.callback = aCallback;
   }
 
   // METHODS
@@ -71,10 +73,10 @@ public class RunAnalysisToolAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final AnnotatedData data = this.frame.getAnnotatedData();
+    final DataContainer data = this.scrollPane.getDataContainer();
     final ToolContext toolContext = null;
 
-    this.tool.process( owner, data, toolContext, this.frame );
+    this.tool.process( owner, data, toolContext, this.callback );
   }
 }
 

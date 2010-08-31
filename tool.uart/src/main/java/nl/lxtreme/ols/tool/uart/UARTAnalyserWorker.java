@@ -56,7 +56,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   /**
    * @param aData
    */
-  public UARTAnalyserWorker( final AnnotatedData aData )
+  public UARTAnalyserWorker( final DataContainer aData )
   {
     super( aData );
 
