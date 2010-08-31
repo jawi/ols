@@ -184,7 +184,7 @@ public class MeasurementDialog extends BaseToolDialog
   // VARIABLES
 
   private final Timer updateTimer;
-  private volatile AnnotatedData data;
+  private volatile DataContainer data;
 
   private JLabel[] cursorValueLabels;
   private JComboBox cursorB;
@@ -268,10 +268,10 @@ public class MeasurementDialog extends BaseToolDialog
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.AnnotatedData)
+   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.DataContainer)
    */
   @Override
-  public void showDialog( final AnnotatedData aData )
+  public void showDialog( final DataContainer aData )
   {
     this.data = aData;
     super.showDialog( aData );
@@ -294,7 +294,7 @@ public class MeasurementDialog extends BaseToolDialog
    */
   final void updateMeasurement()
   {
-    for ( int i = 0; i < AnnotatedData.MAX_CURSORS; i++ )
+    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
     {
       final String text = getCursorTimeDisplayValue( i );
       this.cursorValueLabels[i].setText( text );
@@ -346,7 +346,7 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private Component createCursorsPane()
   {
-    final String[] cursorNames = new String[AnnotatedData.MAX_CURSORS];
+    final String[] cursorNames = new String[DataContainer.MAX_CURSORS];
     for ( int i = 0; i < cursorNames.length; i++ )
     {
       cursorNames[i] = String.format( "Cursor %d", ( i + 1 ) );
@@ -381,8 +381,8 @@ public class MeasurementDialog extends BaseToolDialog
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
     int yIdx = 0;
-    this.cursorValueLabels = new JLabel[AnnotatedData.MAX_CURSORS];
-    for ( int i = 0; i < AnnotatedData.MAX_CURSORS; i++ )
+    this.cursorValueLabels = new JLabel[DataContainer.MAX_CURSORS];
+    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
     {
       cursorListing.add( new JLabel( cursorNames[i] ), //
           new GridBagConstraints( 0, yIdx, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
@@ -460,7 +460,7 @@ public class MeasurementDialog extends BaseToolDialog
 
     final MeasureClockFrequencyAction measureAction = new MeasureClockFrequencyAction();
 
-    final String[] channelNames = new String[AnnotatedData.MAX_CHANNELS];
+    final String[] channelNames = new String[DataContainer.MAX_CHANNELS];
     for ( int i = 0; i < channelNames.length; i++ )
     {
       channelNames[i] = String.format( "Channel %d", ( i + 1 ) );

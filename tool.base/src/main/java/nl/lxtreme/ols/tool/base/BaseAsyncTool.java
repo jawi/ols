@@ -160,7 +160,7 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
    * @return a new instance of the intended tool worker, cannot be
    *         <code>null</code>.
    */
-  protected abstract WORKER createToolWorker( final AnnotatedData aData );
+  protected abstract WORKER createToolWorker( final DataContainer aData );
 
   /**
    * Does the actual processing of data.
@@ -176,7 +176,7 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
    *          the tool context to use during the processing.
    */
   @Override
-  protected final void doProcess( final AnnotatedData aData, final ToolContext aContext,
+  protected final void doProcess( final DataContainer aData, final ToolContext aContext,
       final AnalysisCallback aCallback )
   {
     this.toolWorker = createToolWorker( aData );

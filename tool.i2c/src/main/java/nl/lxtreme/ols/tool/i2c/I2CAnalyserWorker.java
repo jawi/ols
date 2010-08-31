@@ -61,7 +61,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   /**
    * @param aData
    */
-  public I2CAnalyserWorker( final AnnotatedData aData )
+  public I2CAnalyserWorker( final DataContainer aData )
   {
     super( aData );
   }

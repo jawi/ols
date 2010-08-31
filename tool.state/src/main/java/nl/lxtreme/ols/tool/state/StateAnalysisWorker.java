@@ -40,7 +40,7 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
   /**
    * @param aData
    */
-  public StateAnalysisWorker( final AnnotatedData aData )
+  public StateAnalysisWorker( final DataContainer aData )
   {
     super( aData );
   }

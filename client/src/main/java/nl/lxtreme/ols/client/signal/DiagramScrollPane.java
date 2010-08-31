@@ -159,9 +159,9 @@ public class DiagramScrollPane extends JScrollPane
   /**
    * @return
    */
-  public AnnotatedData getAnnotatedData()
+  public DataContainer getDataContainer()
   {
-    return this.diagram.getAnnotatedData();
+    return this.diagram.getDataContainer();
   }
 
   /**
@@ -171,7 +171,7 @@ public class DiagramScrollPane extends JScrollPane
   {
     if ( this.diagram.getCursorMode() )
     {
-      gotoPosition( getAnnotatedData().getCursorPosition( aCursorNo ) );
+      gotoPosition( getCursorPosition( aCursorNo ) );
     }
   }
 
@@ -180,7 +180,7 @@ public class DiagramScrollPane extends JScrollPane
    */
   public void gotoTriggerPosition()
   {
-    final long triggerPosition = getAnnotatedData().getTriggerPosition();
+    final long triggerPosition = this.diagram.getTriggerPosition();
     if ( triggerPosition != CapturedData.NOT_AVAILABLE )
     {
       gotoPosition( triggerPosition );
@@ -193,19 +193,7 @@ public class DiagramScrollPane extends JScrollPane
    */
   public void loadData( final File aFile ) throws IOException
   {
-    final FileReader reader = new FileReader( aFile );
-
-    final AnnotatedData data = getAnnotatedData();
-    try
-    {
-      data.read( reader );
-    }
-    finally
-    {
-      reader.close();
-
-      this.diagram.zoomFit();
-    }
+    this.diagram.loadData( aFile );
   }
 
   /**
@@ -214,16 +202,7 @@ public class DiagramScrollPane extends JScrollPane
    */
   public void saveData( final File aFile ) throws IOException
   {
-    final FileWriter writer = new FileWriter( aFile );
-    try
-    {
-      getAnnotatedData().write( writer );
-    }
-    finally
-    {
-      writer.flush();
-      writer.close();
-    }
+    this.diagram.saveData( aFile );
   }
 
   /**
@@ -232,7 +211,7 @@ public class DiagramScrollPane extends JScrollPane
   public void setCapturedData( final CapturedData aData )
   {
     this.contextButton.setVisible( aData != null );
-    this.diagram.getAnnotatedData().setCapturedData( aData );
+    this.diagram.setCapturedData( aData );
   }
 
   /**
@@ -309,6 +288,15 @@ public class DiagramScrollPane extends JScrollPane
   public void zoomToFit()
   {
     this.diagram.zoomFit();
+  }
+
+  /**
+   * @param aCursorNo
+   * @return
+   */
+  private long getCursorPosition( final int aCursorNo )
+  {
+    return this.diagram.getCursorPosition( aCursorNo );
   }
 
   /**

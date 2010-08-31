@@ -45,5 +45,5 @@ public interface ToolDialog
    *          the capture results to use in the tool's dialog, cannot be
    *          <code>null</code>.
    */
-  public void showDialog( final AnnotatedData aData );
+  public void showDialog( final DataContainer aData );
 }

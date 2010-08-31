@@ -73,6 +73,6 @@ public interface Tool
    *          the callback to report the status of the tool to, cannot be
    *          <code>null</code>.
    */
-  public void process( final Window aOwner, final AnnotatedData aData, final ToolContext aContext,
+  public void process( final Window aOwner, final DataContainer aData, final ToolContext aContext,
       final AnalysisCallback aCallback );
 }

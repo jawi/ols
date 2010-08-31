@@ -73,6 +73,10 @@ public final class Host implements ApplicationCallback
     private JMenu toolsMenu;
     private JMenu windowMenu;
 
+    private final JMenuItem noDevicesItem;
+    private final JMenuItem noToolsItem;
+    private final ButtonGroup deviceGroup;
+
     private volatile DeviceController currentDevCtrl;
 
     // CONSTRUCTORS
@@ -83,24 +87,32 @@ public final class Host implements ApplicationCallback
      * @param aCaption
      *          the caption of this frame.
      */
-    public MainFrame( final Host aHost )
+    public MainFrame( final Host aHost, final Project aProject )
     {
       super( FULL_NAME );
+
+      this.noDevicesItem = new JMenuItem( "No Devices." );
+      this.noDevicesItem.setEnabled( false );
+
+      this.noToolsItem = new JMenuItem( "No Tools." );
+      this.noToolsItem.setEnabled( false );
+
+      this.deviceGroup = new ButtonGroup();
 
       this.actionManager = new ActionManager();
 
       this.diagramScrollPane = new DiagramScrollPane( this );
       this.status = new JTextStatusBar();
 
-      this.actionManager.add( new NewProjectAction( aHost.project ) );
-      this.actionManager.add( new OpenProjectAction( aHost.project ) );
-      this.actionManager.add( new SaveProjectAction( aHost.project ) );
+      this.actionManager.add( new NewProjectAction( aProject ) );
+      this.actionManager.add( new OpenProjectAction( aProject ) );
+      this.actionManager.add( new SaveProjectAction( aProject ) );
       this.actionManager.add( new OpenDataFileAction( this.diagramScrollPane ) );
       this.actionManager.add( new SaveDataFileAction( this.diagramScrollPane ) );
       this.actionManager.add( new ExitAction( aHost ) );
 
       this.actionManager.add( new CaptureAction( this ) );
-      this.actionManager.add( new RepeatCaptureAction( this ) );
+      this.actionManager.add( new RepeatCaptureAction( this ) ).setEnabled( false );
 
       this.actionManager.add( new ZoomInAction( this.diagramScrollPane ) ).setEnabled( false );
       this.actionManager.add( new ZoomOutAction( this.diagramScrollPane ) ).setEnabled( false );
@@ -116,17 +128,55 @@ public final class Host implements ApplicationCallback
       setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
       setSize( 1200, 600 );
 
+      final JToolBar tools = createMenuBars();
+
+      // !!! Always add these after the toolbar/menubar is created !!!
+      this.deviceMenu.add( this.noDevicesItem );
+      this.toolsMenu.add( this.noToolsItem );
+
       final Container contentPane = getContentPane();
       contentPane.setLayout( new BorderLayout() );
-      contentPane.add( this.diagramScrollPane, BorderLayout.CENTER );
 
-      final JToolBar tools = createMenuBars();
       contentPane.add( tools, BorderLayout.PAGE_START );
-
+      contentPane.add( this.diagramScrollPane, BorderLayout.CENTER );
       contentPane.add( this.status, BorderLayout.PAGE_END );
     }
 
     // METHODS
+
+    /**
+     * @param aDevController
+     */
+    public final void addDeviceMenuItem( final DeviceController aDevController )
+    {
+      // We're adding one, so, there's at least one device available...
+      this.deviceMenu.remove( this.noDevicesItem );
+
+      final JMenuItem menuItem = createMenuItem( aDevController );
+      // Determine where in the menu we should add the menu item, this way, we
+      // can make the menu appear consistent...
+      final int idx = determineDeviceMenuItemIndex( menuItem );
+
+      this.deviceGroup.add( menuItem );
+      this.deviceMenu.add( menuItem, idx );
+
+      updateDeviceMenuState( aDevController, menuItem, true /* aAdded */);
+    }
+
+    /**
+     * @param aTool
+     */
+    public final void addToolMenuItem( final Tool aTool )
+    {
+      // We're adding one, so, there's at least one device available...
+      this.toolsMenu.remove( this.noToolsItem );
+
+      final JMenuItem menuItem = createMenuItem( aTool );
+
+      this.toolsMenu.add( menuItem );
+
+      updateToolMenuState( aTool, menuItem, true /* aAdded */);
+    }
 
     /**
      * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisAborted(java.lang.String)
@@ -176,16 +226,6 @@ public final class Host implements ApplicationCallback
     }
 
     /**
-     * Returns the current annotated data.
-     * 
-     * @return the annotated data, never <code>null</code>.
-     */
-    public AnnotatedData getAnnotatedData()
-    {
-      return this.diagramScrollPane.getAnnotatedData();
-    }
-
-    /**
      * Returns the current device controller.
      * 
      * @return the current device controller, can be <code>null</code>.
@@ -193,6 +233,59 @@ public final class Host implements ApplicationCallback
     public DeviceController getCurrentDeviceController()
     {
       return this.currentDevCtrl;
+    }
+
+    /**
+     * @param aDevController
+     */
+    public final void removeDeviceMenuItem( final DeviceController aDevController )
+    {
+      final String name = aDevController.getName();
+
+      JMenuItem menuItem = null;
+      for ( int i = 0; i < this.deviceMenu.getItemCount(); i++ )
+      {
+        final JMenuItem comp = this.deviceMenu.getItem( i );
+        if ( name.equals( comp.getName() ) )
+        {
+          menuItem = comp;
+          break;
+        }
+      }
+
+      if ( menuItem != null )
+      {
+        this.deviceGroup.remove( menuItem );
+        this.deviceMenu.remove( menuItem );
+      }
+
+      updateDeviceMenuState( aDevController, menuItem, false /* aAdded */);
+    }
+
+    /**
+     * @param aTool
+     */
+    public final void removeToolMenuItem( final Tool aTool )
+    {
+      final String name = aTool.getName();
+
+      JMenuItem menuItem = null;
+      for ( int i = 0; i < this.toolsMenu.getItemCount(); i++ )
+      {
+        final JMenuItem comp = this.toolsMenu.getItem( i );
+        if ( name.equals( comp.getName() ) )
+        {
+          menuItem = comp;
+          break;
+        }
+      }
+
+      if ( menuItem != null )
+      {
+        this.toolsMenu.remove( menuItem );
+      }
+
+      updateToolMenuState( aTool, menuItem, false /* aAdded */);
     }
 
     /**
@@ -324,21 +417,57 @@ public final class Host implements ApplicationCallback
     }
 
     /**
+     * @param aDevController
+     * @return
+     */
+    private JRadioButtonMenuItem createMenuItem( final DeviceController aDevController )
+    {
+      final JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem( new SelectDeviceAction( this, aDevController ) );
+      menuItem.setName( aDevController.getName() );
+      return menuItem;
+    }
+
+    /**
+     * @param aTool
+     * @return
+     */
+    private JMenuItem createMenuItem( final Tool aTool )
+    {
+      final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( aTool, this.diagramScrollPane, this ) );
+      menuItem.setName( aTool.getName() );
+      return menuItem;
+    }
+
+    /**
+     * Determines the index in the menu where the given menu item should be
+     * inserted.
+     * 
+     * @param aMenuItem
+     *          the menu item to add, cannot be <code>null</code>.
+     * @return the position in the menu to add the given menu item, -1 if the
+     *         menu item should be added as last item.
+     */
+    private int determineDeviceMenuItemIndex( final JMenuItem aMenuItem )
+    {
+      int idx = -1;
+      for ( int i = 0; ( idx < 0 ) && ( i < this.deviceMenu.getItemCount() ); i++ )
+      {
+        final String nameA = this.deviceMenu.getItem( i ).getText();
+        final int comparison = aMenuItem.getText().compareTo( nameA );
+        if ( comparison < 0 )
+        {
+          idx = i;
+        }
+      }
+      return idx;
+    }
+
+    /**
      * @param aCapturedData
      * @param aEnableActions
      */
     private void setCapturedData( final CapturedData aCapturedData, final boolean aEnableActions )
     {
-      getAction( ZoomInAction.ID ).setEnabled( aEnableActions );
-      getAction( ZoomOutAction.ID ).setEnabled( aEnableActions );
-      getAction( ZoomDefaultAction.ID ).setEnabled( aEnableActions );
-      getAction( ZoomFitAction.ID ).setEnabled( aEnableActions );
-      getAction( GotoTriggerAction.ID ).setEnabled(
-          aEnableActions && ( ( aCapturedData != null ) && aCapturedData.hasTriggerData() ) );
-      getAction( GotoCursor1Action.ID ).setEnabled( aEnableActions );
-      getAction( GotoCursor2Action.ID ).setEnabled( aEnableActions );
-      getAction( SetCursorModeAction.ID ).setEnabled( aEnableActions );
-
       if ( aCapturedData != null )
       {
         this.diagramScrollPane.setCapturedData( aCapturedData );
@@ -371,6 +500,62 @@ public final class Host implements ApplicationCallback
 
       getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
       getAction( RepeatCaptureAction.ID ).setEnabled( deviceControllerSet && currentDeviceController.isSetup() );
+    }
+
+    /**
+     * @param aDevController
+     * @param aMenuItem
+     * @param aAdded
+     */
+    private void updateDeviceMenuState( final DeviceController aDevController, final JMenuItem aMenuItem,
+        final boolean aAdded )
+    {
+      if ( aAdded )
+      {
+        // Always select the first added device...
+        if ( this.deviceMenu.getItemCount() == 1 )
+        {
+          aMenuItem.setSelected( true );
+
+          setCurrentDeviceController( aDevController );
+        }
+      }
+      else
+      {
+        if ( this.deviceMenu.getItemCount() == 0 )
+        {
+          // We've removed the last one...
+          this.deviceMenu.add( this.noDevicesItem );
+        }
+
+        if ( getCurrentDeviceController() == aDevController )
+        {
+          setCurrentDeviceController( null );
+        }
+      }
+
+      this.deviceMenu.revalidate();
+      this.deviceMenu.repaint();
+    }
+
+    /**
+     * @param aTool
+     * @param aMenuItem
+     * @param aAdded
+     */
+    private void updateToolMenuState( final Tool aTool, final JMenuItem aMenuItem, final boolean aAdded )
+    {
+      if ( !aAdded )
+      {
+        if ( this.toolsMenu.getItemCount() == 0 )
+        {
+          // We've removed the last one...
+          this.toolsMenu.add( this.noToolsItem );
+        }
+      }
+
+      this.toolsMenu.revalidate();
+      this.toolsMenu.repaint();
     }
   }
 
@@ -560,14 +745,6 @@ public final class Host implements ApplicationCallback
   }
 
   /**
-   * @return
-   */
-  public AnnotatedData getAnnotatedData()
-  {
-    return this.mainFrame.getAnnotatedData();
-  }
-
-  /**
    * Returns this client's version.
    * 
    * @return a version String, never <code>null</code>.
@@ -640,11 +817,11 @@ public final class Host implements ApplicationCallback
     Toolkit.getDefaultToolkit().addAWTEventListener( new WindowStateListener( this.userProperties ),
         AWTEvent.WINDOW_EVENT_MASK );
 
-    this.mainFrame = new MainFrame( this );
+    this.mainFrame = new MainFrame( this, this.project );
 
     this.menuTracker = new MenuTracker( this.context, this.mainFrame.getJMenuBar() );
-    this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.mainFrame, this.mainFrame.deviceMenu );
-    this.toolTracker = new ToolTracker( this.context, this.mainFrame, this.mainFrame.toolsMenu );
+    this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.mainFrame );
+    this.toolTracker = new ToolTracker( this.context, this.mainFrame );
 
     LOG.log( Level.FINE, "{0} initialized ...", SHORT_NAME );
   }

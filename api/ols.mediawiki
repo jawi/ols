@@ -73,8 +73,8 @@ Provides some common utilities that are shared among all other projects.
 # <strike>sometimes when a dropdown list is opened, the options don't come on the right places (somewhere else then beneath the dropdown menu);</strike>
 # <strike>move more (time-)calculation routines from Diagram to AnnotatedData;</strike>
 # <strike>add removal of cursors;</strike>
-# rename AnnotatedData to DataContainer;
-# clear Annotations when new captured data is set;
+# <strike>rename AnnotatedData to DataContainer;</strike>
+# <strike>clear Annotations when new captured data is set;</strike>
 # clear Annotations for a channel when tool wants to;
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;
 # add annotations to other analysis tools;

@@ -46,7 +46,7 @@ public class DiagramLabelsDialog extends JDialog
 
   // VARIABLES
 
-  private final AnnotatedData annotatedData;
+  private final DataContainer annotatedData;
   private final JTextField[] labelFields;
   private boolean result;
 
@@ -55,7 +55,7 @@ public class DiagramLabelsDialog extends JDialog
   /**
    * Constructs diagram labels component.
    */
-  public DiagramLabelsDialog( final Window aParent, final AnnotatedData aAnnotatedData )
+  public DiagramLabelsDialog( final Window aParent, final DataContainer aAnnotatedData )
   {
     super( aParent, "Diagram Labels", ModalityType.DOCUMENT_MODAL );
 
@@ -160,7 +160,7 @@ public class DiagramLabelsDialog extends JDialog
    */
   final void clearAllLabels()
   {
-    for ( int i = 0; i < AnnotatedData.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
     {
       this.labelFields[i].setText( "" );
     }
@@ -180,7 +180,7 @@ public class DiagramLabelsDialog extends JDialog
    */
   final void publishAllLabels()
   {
-    for ( int i = 0; i < AnnotatedData.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
     {
       this.annotatedData.setChannelLabel( i, this.labelFields[i].getText() );
     }

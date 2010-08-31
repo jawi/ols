@@ -25,8 +25,6 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.Host.MainFrame;
-import nl.lxtreme.ols.client.action.*;
-
 import org.osgi.framework.*;
 import org.osgi.util.tracker.*;
 
@@ -38,9 +36,7 @@ public class ToolTracker extends ServiceTracker
 {
   // VARIABLES
 
-  private final MainFrame frame;
-  private final JMenu menu;
-  private final JMenuItem noItemItem;
+  private final MainFrame mainFrame;
 
   // CONSTRUCTORS
 
@@ -49,17 +45,11 @@ public class ToolTracker extends ServiceTracker
    * @param aReference
    * @param aCustomizer
    */
-  public ToolTracker( final BundleContext aContext, final MainFrame aFrame, final JMenu aMenu )
+  public ToolTracker( final BundleContext aContext, final MainFrame aFrame )
   {
     super( aContext, Tool.class.getName(), null );
 
-    this.frame = aFrame;
-    this.menu = aMenu;
-
-    this.noItemItem = new JMenuItem( "No tools found" );
-    this.noItemItem.setEnabled( false );
-
-    this.menu.add( this.noItemItem );
+    this.mainFrame = aFrame;
   }
 
   // METHODS
@@ -76,7 +66,7 @@ public class ToolTracker extends ServiceTracker
     {
       public void run()
       {
-        addMenuItem( devCtrl );
+        ToolTracker.this.mainFrame.addToolMenuItem( devCtrl );
       }
     } );
 
@@ -96,81 +86,9 @@ public class ToolTracker extends ServiceTracker
     {
       public void run()
       {
-        removeMenuItem( devCtrl );
+        ToolTracker.this.mainFrame.removeToolMenuItem( devCtrl );
       }
     } );
-  }
-
-  /**
-   * @param aTool
-   */
-  final void addMenuItem( final Tool aTool )
-  {
-    // We're adding one, so, there's at least one device available...
-    this.menu.remove( this.noItemItem );
-
-    final JMenuItem menuItem = createMenuItem( aTool );
-
-    this.menu.add( menuItem );
-
-    updateMenuState( aTool, menuItem, true /* aAdded */);
-  }
-
-  /**
-   * @param aTool
-   */
-  final void removeMenuItem( final Tool aTool )
-  {
-    final String name = aTool.getName();
-
-    JMenuItem menuItem = null;
-    for ( int i = 0; i < this.menu.getItemCount(); i++ )
-    {
-      final JMenuItem comp = this.menu.getItem( i );
-      if ( name.equals( comp.getName() ) )
-      {
-        menuItem = comp;
-        break;
-      }
-    }
-
-    if ( menuItem != null )
-    {
-      this.menu.remove( menuItem );
-    }
-
-    updateMenuState( aTool, menuItem, false /* aAdded */);
-  }
-
-  /**
-   * @param aTool
-   * @return
-   */
-  private JMenuItem createMenuItem( final Tool aTool )
-  {
-    final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( this.frame, aTool ) );
-    menuItem.setName( aTool.getName() );
-    return menuItem;
-  }
-
-  /**
-   * @param aTool
-   * @param aMenuItem
-   * @param aAdded
-   */
-  private void updateMenuState( final Tool aTool, final JMenuItem aMenuItem, final boolean aAdded )
-  {
-    if ( !aAdded )
-    {
-      if ( this.menu.getItemCount() == 0 )
-      {
-        // We've removed the last one...
-        this.menu.add( this.noItemItem );
-      }
-    }
-
-    this.menu.revalidate();
-    this.menu.repaint();
   }
 
 }

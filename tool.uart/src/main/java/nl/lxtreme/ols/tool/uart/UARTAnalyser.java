@@ -24,12 +24,11 @@ package nl.lxtreme.ols.tool.uart;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
 /**
- * 
+ * Provides an UART/RS-232 analysis tool.
  */
 public class UARTAnalyser extends BaseAsyncTool<UARTProtocolAnalysisDialog, UARTDataSet, UARTAnalyserWorker>
 {
@@ -47,22 +46,19 @@ public class UARTAnalyser extends BaseAsyncTool<UARTProtocolAnalysisDialog, UART
 
   /**
    * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String, nl.lxtreme.ols.api.data.AnnotatedData,
-   *      nl.lxtreme.ols.api.tools.ToolContext,
-   *      nl.lxtreme.ols.api.tools.AnalysisCallback)
+   *      java.lang.String)
    */
   @Override
-  protected UARTProtocolAnalysisDialog createDialog( final Window aOwner, final String aName,
-      final AnnotatedData aData, final ToolContext aContext, final AnalysisCallback aCallback )
+  protected UARTProtocolAnalysisDialog createDialog( final Window aOwner, final String aName )
   {
     return new UARTProtocolAnalysisDialog( aOwner, getName() );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.AnnotatedData)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer)
    */
   @Override
-  protected UARTAnalyserWorker createToolWorker( final AnnotatedData aData )
+  protected UARTAnalyserWorker createToolWorker( final DataContainer aData )
   {
     return new UARTAnalyserWorker( aData );
   }

@@ -27,9 +27,9 @@ import java.util.logging.*;
 
 
 /**
- * Provides a wrapper for captured data in which the data can be annotated with
- * "any" kind of information, such as cursors, protocol decoding information,
- * and so on.
+ * Provides a container for captured data in which the data can be annotated
+ * with "any" kind of information, such as cursors, protocol decoding
+ * information, and so on.
  * <p>
  * Data files will start with a header containing meta data marked by lines
  * starting with ";". The actual readout values will follow after the header. A
@@ -39,7 +39,7 @@ import java.util.logging.*;
  * the class is the same. A value is 32bits long. The value is encoded in hex
  * and each value is followed by a new line.
  */
-public final class AnnotatedData implements CapturedData
+public final class DataContainer implements CapturedData
 {
   // CONSTANTS
 
@@ -48,7 +48,7 @@ public final class AnnotatedData implements CapturedData
   /** The maximum number of channels. */
   public static final int MAX_CHANNELS = 32;
 
-  private static final Logger LOG = Logger.getLogger( AnnotatedData.class.getName() );
+  private static final Logger LOG = Logger.getLogger( DataContainer.class.getName() );
 
   // VARIABLES
 
@@ -68,9 +68,9 @@ public final class AnnotatedData implements CapturedData
   // CONSTRUCTORS
 
   /**
-   * Creates a new AnnotatedData instance.
+   * Creates a new DataContainer instance.
    */
-  public AnnotatedData()
+  public DataContainer()
   {
     this.cursorPositions = new long[MAX_CURSORS];
     Arrays.fill( this.cursorPositions, Long.MIN_VALUE );
@@ -408,160 +408,167 @@ public final class AnnotatedData implements CapturedData
       LOG.info( "Parsing OLS captured data from stream..." );
     }
 
-    do
+    try
     {
-      line = br.readLine();
-      if ( line == null )
+      do
       {
-        throw new IOException( "File appears to be corrupt." );
-      }
-      else if ( line.startsWith( ";Size: " ) )
-      {
-        size = Integer.parseInt( line.substring( 7 ) );
-      }
-      else if ( line.startsWith( ";Rate: " ) )
-      {
-        r = Integer.parseInt( line.substring( 7 ) );
-      }
-      else if ( line.startsWith( ";Channels: " ) )
-      {
-        channels = Integer.parseInt( line.substring( 11 ) );
-      }
-      else if ( line.startsWith( ";TriggerPosition: " ) )
-      {
-        t = Long.parseLong( line.substring( 18 ) );
-      }
-      else if ( line.startsWith( ";EnabledChannels: " ) )
-      {
-        enabledChannels = Integer.parseInt( line.substring( 18 ) );
-      }
-      else if ( line.startsWith( ";CursorA: " ) )
-      {
-        cursorPositions[0] = Long.parseLong( line.substring( 10 ) );
-      }
-      else if ( line.startsWith( ";CursorB: " ) )
-      {
-        cursorPositions[1] = Long.parseLong( line.substring( 10 ) );
-      }
-      else if ( line.matches( ";Cursor(\\d+): (\\d+)" ) )
-      {
-        final int idx = Integer.parseInt( line.substring( 7, 8 ) );
-        final long pos = Long.parseLong( line.substring( 10 ) );
-        cursorPositions[idx] = pos;
-      }
-      else if ( line.startsWith( ";CursorEnabled: " ) )
-      {
-        cursors = Boolean.parseBoolean( line.substring( 16 ) );
-      }
-      else if ( line.startsWith( ";Compressed: " ) )
-      {
-        compressed = Boolean.parseBoolean( line.substring( 13 ) );
-      }
-      else if ( line.startsWith( ";AbsoluteLength: " ) )
-      {
-        absLen = Long.parseLong( line.substring( 17 ) );
-      }
-    }
-    while ( line.startsWith( ";" ) );
-
-    long absoluteLength;
-    int[] values;
-    long[] timestamps;
-
-    if ( compressed )
-    {
-      // new compressed file format
-      absoluteLength = absLen;
-      values = new int[size];
-      timestamps = new long[size];
-      try
-      {
-        for ( int i = 0; ( i < values.length ) && ( line != null ); i++ )
+        line = br.readLine();
+        if ( line == null )
         {
-          values[i] = Integer.parseInt( line.substring( 0, 4 ), 16 ) << 16
-              | Integer.parseInt( line.substring( 4, 8 ), 16 );
-          timestamps[i] = Long.parseLong( line.substring( 9 ) );
-          line = br.readLine();
+          throw new IOException( "File appears to be corrupt." );
+        }
+        else if ( line.startsWith( ";Size: " ) )
+        {
+          size = Integer.parseInt( line.substring( 7 ) );
+        }
+        else if ( line.startsWith( ";Rate: " ) )
+        {
+          r = Integer.parseInt( line.substring( 7 ) );
+        }
+        else if ( line.startsWith( ";Channels: " ) )
+        {
+          channels = Integer.parseInt( line.substring( 11 ) );
+        }
+        else if ( line.startsWith( ";TriggerPosition: " ) )
+        {
+          t = Long.parseLong( line.substring( 18 ) );
+        }
+        else if ( line.startsWith( ";EnabledChannels: " ) )
+        {
+          enabledChannels = Integer.parseInt( line.substring( 18 ) );
+        }
+        else if ( line.startsWith( ";CursorA: " ) )
+        {
+          cursorPositions[0] = Long.parseLong( line.substring( 10 ) );
+        }
+        else if ( line.startsWith( ";CursorB: " ) )
+        {
+          cursorPositions[1] = Long.parseLong( line.substring( 10 ) );
+        }
+        else if ( line.matches( ";Cursor(\\d+): (\\d+)" ) )
+        {
+          final int idx = Integer.parseInt( line.substring( 7, 8 ) );
+          final long pos = Long.parseLong( line.substring( 10 ) );
+          cursorPositions[idx] = pos;
+        }
+        else if ( line.startsWith( ";CursorEnabled: " ) )
+        {
+          cursors = Boolean.parseBoolean( line.substring( 16 ) );
+        }
+        else if ( line.startsWith( ";Compressed: " ) )
+        {
+          compressed = Boolean.parseBoolean( line.substring( 13 ) );
+        }
+        else if ( line.startsWith( ";AbsoluteLength: " ) )
+        {
+          absLen = Long.parseLong( line.substring( 17 ) );
         }
       }
-      catch ( final NumberFormatException E )
-      {
-        throw new IOException( "Invalid data encountered." );
-      }
-    }
-    else
-    {
-      // old sample based file format
-      if ( ( size <= 0 ) || ( size > 1024 * 256 ) )
-      {
-        throw new IOException( "Invalid size encountered." );
-      }
+      while ( line.startsWith( ";" ) );
 
-      absoluteLength = size;
-      final int[] tmpValues = new int[size];
-      try
+      long absoluteLength;
+      int[] values;
+      long[] timestamps;
+
+      if ( compressed )
       {
-        // read all values
-        for ( int i = 0; ( i < tmpValues.length ) && ( line != null ); i++ )
+        // new compressed file format
+        absoluteLength = absLen;
+        values = new int[size];
+        timestamps = new long[size];
+        try
         {
-          // TODO: modify to work with all channel counts up to 32
-          if ( channels > 16 )
+          for ( int i = 0; ( i < values.length ) && ( line != null ); i++ )
           {
-            tmpValues[i] = Integer.parseInt( line.substring( 0, 4 ), 16 ) << 16
+            values[i] = Integer.parseInt( line.substring( 0, 4 ), 16 ) << 16
                 | Integer.parseInt( line.substring( 4, 8 ), 16 );
+            timestamps[i] = Long.parseLong( line.substring( 9 ) );
+            line = br.readLine();
           }
-          else
+        }
+        catch ( final NumberFormatException E )
+        {
+          throw new IOException( "Invalid data encountered." );
+        }
+      }
+      else
+      {
+        // old sample based file format
+        if ( ( size <= 0 ) || ( size > 1024 * 256 ) )
+        {
+          throw new IOException( "Invalid size encountered." );
+        }
+
+        absoluteLength = size;
+        final int[] tmpValues = new int[size];
+        try
+        {
+          // read all values
+          for ( int i = 0; ( i < tmpValues.length ) && ( line != null ); i++ )
           {
-            tmpValues[i] = Integer.parseInt( line.substring( 0, 4 ), 16 );
+            // TODO: modify to work with all channel counts up to 32
+            if ( channels > 16 )
+            {
+              tmpValues[i] = Integer.parseInt( line.substring( 0, 4 ), 16 ) << 16
+                  | Integer.parseInt( line.substring( 4, 8 ), 16 );
+            }
+            else
+            {
+              tmpValues[i] = Integer.parseInt( line.substring( 0, 4 ), 16 );
+            }
+            line = br.readLine();
           }
-          line = br.readLine();
         }
-      }
-      catch ( final NumberFormatException E )
-      {
-        throw new IOException( "Invalid data encountered." );
-      }
-
-      int count = 0;
-      int tmp = tmpValues[0];
-
-      // calculate transitions
-      for ( final int tmpValue : tmpValues )
-      {
-        if ( tmp != tmpValue )
+        catch ( final NumberFormatException E )
         {
-          count++;
+          throw new IOException( "Invalid data encountered." );
         }
-        tmp = tmpValue;
-      }
-      count++;
 
-      // compress
-      values = new int[count];
-      timestamps = new long[count];
-      timestamps[0] = 0;
-      values[0] = tmpValues[0];
-      tmp = tmpValues[0];
-      count = 1;
-      for ( int i = 0; i < tmpValues.length; i++ )
-      {
-        if ( tmp != tmpValues[i] )
+        int count = 0;
+        int tmp = tmpValues[0];
+
+        // calculate transitions
+        for ( final int tmpValue : tmpValues )
         {
-          // store only transitions
-          timestamps[count] = i;
-          values[count] = tmpValues[i];
-          count++;
+          if ( tmp != tmpValue )
+          {
+            count++;
+          }
+          tmp = tmpValue;
         }
-        tmp = tmpValues[i];
+        count++;
+
+        // compress
+        values = new int[count];
+        timestamps = new long[count];
+        timestamps[0] = 0;
+        values[0] = tmpValues[0];
+        tmp = tmpValues[0];
+        count = 1;
+        for ( int i = 0; i < tmpValues.length; i++ )
+        {
+          if ( tmp != tmpValues[i] )
+          {
+            // store only transitions
+            timestamps[count] = i;
+            values[count] = tmpValues[i];
+            count++;
+          }
+          tmp = tmpValues[i];
+        }
       }
+
+      // Create a copy of all read cursor positions...
+      System.arraycopy( cursorPositions, 0, this.cursorPositions, 0, cursorPositions.length );
+      this.cursorEnabled = cursors;
+
+      // Finally set the captured data, and notify all event listeners...
+      setCapturedData( new CapturedDataImpl( values, timestamps, t, r, channels, enabledChannels, absoluteLength ) );
     }
-
-    this.capturedData = new CapturedDataImpl( values, timestamps, t, r, channels, enabledChannels, absoluteLength );
-
-    System.arraycopy( cursorPositions, 0, this.cursorPositions, 0, cursorPositions.length );
-    this.cursorEnabled = cursors;
-
-    br.close();
+    finally
+    {
+      br.close();
+    }
   }
 
   /**
