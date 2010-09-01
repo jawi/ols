@@ -221,6 +221,50 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Registers the keystroke of the given action as "command" of the given
+   * component.
+   * <p>
+   * This code is based on the Sulky-tools, found at
+   * &lt;http://github.com/huxi/sulky&gt;.
+   * </p>
+   * 
+   * @param aComponent
+   *          the component that should react on the keystroke, cannot be
+   *          <code>null</code>;
+   * @param aAction
+   *          the action of the keystroke, cannot be <code>null</code>;
+   * @param aCommandName
+   *          the name of the command to register the keystore under.
+   */
+  public static void registerKeystroke( final JComponent aComponent, final Action aAction, final String aCommandName )
+  {
+    final KeyStroke keyStroke = ( KeyStroke )aAction.getValue( Action.ACCELERATOR_KEY );
+    if ( keyStroke == null )
+    {
+      return;
+    }
+
+    InputMap inputMap = aComponent.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW );
+    ActionMap actionMap = aComponent.getActionMap();
+    inputMap.put( keyStroke, aCommandName );
+    actionMap.put( aCommandName, aAction );
+
+    inputMap = aComponent.getInputMap( JComponent.WHEN_FOCUSED );
+    Object value = inputMap.get( keyStroke );
+    if ( value != null )
+    {
+      inputMap.put( keyStroke, aCommandName );
+    }
+
+    inputMap = aComponent.getInputMap( JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT );
+    value = inputMap.get( keyStroke );
+    if ( value != null )
+    {
+      inputMap.put( keyStroke, aCommandName );
+    }
+  }
+
+  /**
    * Saves the window state to the given properties map.
    * 
    * @param aNamespace

@@ -328,14 +328,12 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private Component createButtonPane()
   {
-    final JButton close = new JButton( new CloseAction() );
-
     final JPanel buttonPane = new JPanel();
     buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
     buttonPane.setBorder( BorderFactory.createEmptyBorder( 8, 4, 8, 4 ) );
 
     buttonPane.add( Box.createHorizontalGlue() );
-    buttonPane.add( close );
+    buttonPane.add( createCloseButton() );
 
     return buttonPane;
   }

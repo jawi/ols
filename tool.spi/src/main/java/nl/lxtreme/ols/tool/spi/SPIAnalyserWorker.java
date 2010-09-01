@@ -350,10 +350,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
           aDecodedData.reportData( time, mosivalue, misovalue );
 
-          addChannelAnnotation( mosiChannelIdx, timestamps[lastIdx], timestamps[idx], String.format( "MOSI: 0x%X (%c)",
-              mosivalue, mosivalue ) );
-          addChannelAnnotation( misoChannelIdx, timestamps[lastIdx], timestamps[idx], String.format( "MISO: 0x%X (%c)",
-              misovalue, misovalue ) );
+          addChannelAnnotation( mosiChannelIdx, timestamps[lastIdx], timestamps[idx],
+              String.format( "MOSI: 0x%X (%c)", mosivalue, mosivalue ) );
+          addChannelAnnotation( misoChannelIdx, timestamps[lastIdx], timestamps[idx],
+              String.format( "MISO: 0x%X (%c)", misovalue, misovalue ) );
 
           bitIdx = this.bitCount;
           misovalue = 0;

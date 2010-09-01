@@ -128,4 +128,18 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
     setVisible( false );
     dispose();
   }
+
+  /**
+   * Convenience method to create a close button that closes this dialog.
+   * 
+   * @return a button with a {@link CloseAction} instance, never
+   *         <code>null</code>.
+   */
+  protected final JButton createCloseButton()
+  {
+    final CloseAction action = new CloseAction();
+    final JButton closeButton = new JButton( action );
+    SwingComponentUtils.registerKeystroke( closeButton, action, "CLOSE-DIALOG" );
+    return closeButton;
+  }
 }

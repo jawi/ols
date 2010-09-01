@@ -34,7 +34,11 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.ExportUtils.*;
+import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
+import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -64,9 +68,9 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   private final JCheckBox detectACK;
   private final JCheckBox detectNACK;
 
-  private final RunAnalysisAction runAnalysisAction;
-  private final ExportAction exportAction;
-  private final CloseAction closeAction;
+  private final RestorableAction runAnalysisAction;
+  private final Action exportAction;
+  private final Action closeAction;
 
   // CONSTRUCTORS
 
@@ -155,24 +159,25 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     /*
      * add buttons
      */
-    this.runAnalysisAction = new RunAnalysisAction();
-    final JButton btnConvert = new JButton( this.runAnalysisAction );
+    final JButton runAnalysisButton = createRunAnalysisButton();
+    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    this.exportAction = new ExportAction();
+    final JButton exportButton = createExportButton();
+    this.exportAction = exportButton.getAction();
     this.exportAction.setEnabled( false );
-    final JButton btnExport = new JButton( this.exportAction );
 
-    this.closeAction = new CloseAction();
-    final JButton btnCancel = new JButton( this.closeAction );
+    final JButton closeButton = createCloseButton();
+    this.closeAction = closeButton.getAction();
 
     final JPanel buttons = new JPanel();
     final BoxLayout layoutMgr = new BoxLayout( buttons, BoxLayout.LINE_AXIS );
     buttons.setLayout( layoutMgr );
     buttons.add( Box.createHorizontalGlue() );
-    buttons.add( btnConvert );
-    buttons.add( btnExport );
+    buttons.add( runAnalysisButton );
+    buttons.add( Box.createHorizontalStrut( 8 ) );
+    buttons.add( exportButton );
     buttons.add( Box.createHorizontalStrut( 16 ) );
-    buttons.add( btnCancel );
+    buttons.add( closeButton );
 
     add( buttons, //
         new GridBagConstraints( 0, 2, 2, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL,
@@ -199,7 +204,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
       if ( aAnalysisResult != null )
       {
         htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
-        this.exportAction.setEnabled( true );
+        this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
       }
       else
       {
