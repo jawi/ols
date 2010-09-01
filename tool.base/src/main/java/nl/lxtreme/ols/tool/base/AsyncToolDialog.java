@@ -21,13 +21,20 @@
 package nl.lxtreme.ols.tool.base;
 
 
+import nl.lxtreme.ols.tool.base.BaseAsyncTool.*;
+
+
 /**
  * @author jajans
  */
 public interface AsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends ToolDialog
 {
   /**
-   * @param aWorker
+   * Sets the tool worker factory to use for creating a new tool worker.
+   * 
+   * @param aToolWorkerFactory
+   *          the tool worker factory to use to create tool workers, cannot be
+   *          <code>null</code>.
    */
-  public void setToolWorker( final WORKER aWorker );
+  public void setToolWorkerFactory( final ToolWorkerFactory<RESULT_TYPE, WORKER> aToolWorkerFactory );
 }

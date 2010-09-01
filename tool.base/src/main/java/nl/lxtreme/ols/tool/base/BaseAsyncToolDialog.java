@@ -32,6 +32,7 @@ import javax.swing.*;
 import javax.swing.SwingWorker.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.tool.base.BaseAsyncTool.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -223,10 +224,9 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
 
   // VARIABLES
 
-  private transient volatile WORKER toolWorker;
+  private transient volatile ToolWorkerFactory<RESULT_TYPE, WORKER> toolWorkerFactory;
   private transient volatile RESULT_TYPE analysisResult;
-
-  private PropertyChangeListener toolWorkerPropertyListener = null;
+  private transient volatile WORKER worker;
 
   // CONSTRUCTORS
 
@@ -270,12 +270,18 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.AsyncToolDialog#setToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   * @see nl.lxtreme.ols.tool.base.AsyncToolDialog#setToolWorkerFactory(nl.lxtreme.ols.tool.base.BaseAsyncTool.ToolWorkerFactory)
    */
-  public final void setToolWorker( final WORKER aToolWorker )
+  @Override
+  public synchronized void setToolWorkerFactory( final ToolWorkerFactory<RESULT_TYPE, WORKER> aToolWorkerFactory )
   {
-    this.toolWorker = aToolWorker;
-    onToolWorkerSet( aToolWorker );
+    if ( this.toolWorkerFactory != null )
+    {
+      // Make sure any existing tool workers are cancelled!
+      cancelToolWorker();
+    }
+
+    this.toolWorkerFactory = aToolWorkerFactory;
   }
 
   /**
@@ -283,15 +289,15 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
    */
   final void cancelToolWorker()
   {
-    synchronized ( this.toolWorker )
+    synchronized ( this.toolWorkerFactory )
     {
-      this.analysisResult = null;
-
-      this.toolWorker.cancel( true /* mayInterruptIfRunning */);
-      if ( this.toolWorkerPropertyListener != null )
+      if ( this.worker != null )
       {
-        this.toolWorker.removePropertyChangeListener( this.toolWorkerPropertyListener );
+        this.worker.cancel( true /* mayInterruptIfRunning */);
+        this.worker = null;
       }
+
+      this.analysisResult = null;
 
       setControlsEnabled( true );
     }
@@ -305,7 +311,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
    */
   final void setAnalysisResult( final RESULT_TYPE aResult )
   {
-    synchronized ( this.toolWorker )
+    synchronized ( this.toolWorkerFactory )
     {
       this.analysisResult = aResult;
     }
@@ -316,19 +322,15 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
    */
   final void startToolWorker()
   {
-    synchronized ( this.toolWorker )
+    synchronized ( this.toolWorkerFactory )
     {
+      this.worker = this.toolWorkerFactory.createToolWorker();
+
       setControlsEnabled( false );
+      setupToolWorker( this.worker );
 
-      setupToolWorker( this.toolWorker );
-
-      if ( this.toolWorkerPropertyListener == null )
-      {
-        this.toolWorkerPropertyListener = new ToolWorkerPropertyChangeListener();
-      }
-      this.toolWorker.addPropertyChangeListener( this.toolWorkerPropertyListener );
-
-      this.toolWorker.execute();
+      this.worker.addPropertyChangeListener( new ToolWorkerPropertyChangeListener() );
+      this.worker.execute();
     }
   }
 
@@ -339,7 +341,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   @Override
   protected final void close()
   {
-    synchronized ( this.toolWorker )
+    synchronized ( this.toolWorkerFactory )
     {
       cancelToolWorker();
       super.close();
@@ -377,18 +379,6 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
     this.analysisResult = aAnalysisResult;
 
     setControlsEnabled( true );
-  }
-
-  /**
-   * Called right after the tool worker is set.
-   * 
-   * @param aToolWorker
-   *          the set tool worker, never <code>null</code>.
-   * @see #setToolWorker(BaseAsyncToolWorker)
-   */
-  protected void onToolWorkerSet( final WORKER aToolWorker )
-  {
-    // NO-op
   }
 
   /**
@@ -450,5 +440,4 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   {
     // NO-op
   }
-
 }
