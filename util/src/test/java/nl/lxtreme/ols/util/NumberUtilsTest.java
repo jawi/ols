@@ -90,6 +90,30 @@ public class NumberUtilsTest
    * 
    */
   @Test
+  public void testGetBitIndexOk()
+  {
+    assertEquals( 8, getBitIndex( 256 ) );
+    assertEquals( 7, getBitIndex( 128 ) );
+    assertEquals( 6, getBitIndex( 64 ) );
+    assertEquals( 5, getBitIndex( 32 ) );
+    assertEquals( 4, getBitIndex( 16 ) );
+    assertEquals( 3, getBitIndex( 8 ) );
+    assertEquals( 2, getBitIndex( 4 ) );
+    assertEquals( 1, getBitIndex( 2 ) );
+    assertEquals( 0, getBitIndex( 1 ) );
+
+    // special cases...
+    assertEquals( 1, getBitIndex( 3 ) );
+    assertEquals( 2, getBitIndex( 5 ) );
+    assertEquals( 2, getBitIndex( 6 ) );
+    assertEquals( 2, getBitIndex( 7 ) );
+    assertEquals( 3, getBitIndex( 9 ) );
+  }
+
+  /**
+   * 
+   */
+  @Test
   public void testSmartParseIntBinaryUnitOk()
   {
     assertEquals( 4096, smartParseInt( "4k" ) );
