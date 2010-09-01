@@ -85,9 +85,6 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
         }
         else if ( StateValue.DONE.equals( state ) )
         {
-          // Restore the original cursor...
-          setCursor( new Cursor( Cursor.DEFAULT_CURSOR ) );
-
           final WORKER worker = ( WORKER )aEvent.getSource();
 
           try
@@ -100,18 +97,23 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
           }
           catch ( CancellationException exception )
           {
-            LOG.log( Level.WARNING, "Dialog exception!", exception );
+            LOG.log( Level.WARNING, "Cancellation exception! Message: {0}", exception.getCause().getMessage() );
             onToolWorkerCancelled();
           }
           catch ( ExecutionException exception )
           {
-            LOG.log( Level.WARNING, "Dialog exception!", exception );
+            LOG.log( Level.WARNING, "Execution exception! Message: {0}", exception.getCause().getMessage() );
             onToolWorkerCancelled();
           }
           catch ( InterruptedException exception )
           {
-            LOG.log( Level.WARNING, "Dialog exception!", exception );
+            LOG.log( Level.WARNING, "Interrupted exception! Message: {0}", exception.getCause().getMessage() );
             onToolWorkerCancelled();
+          }
+          finally
+          {
+            // Restore the original cursor...
+            setCursor( new Cursor( Cursor.DEFAULT_CURSOR ) );
           }
         }
       }
@@ -400,7 +402,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
    */
   protected void onToolWorkerCancelled()
   {
-    // NO-op
+    close();
   }
 
   /**
