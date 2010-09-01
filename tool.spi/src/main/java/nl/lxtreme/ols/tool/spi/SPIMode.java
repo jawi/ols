@@ -39,7 +39,29 @@ package nl.lxtreme.ols.tool.spi;
  */
 public enum SPIMode
 {
-  MODE_0, MODE_1, MODE_2, MODE_3;
+  /**
+   * CPOL = 0, CPHA = 0; data is to be captured on the clock's rising edge
+   * (low->high transition) and data are propagated on a falling edge (high->low
+   * clock transition).
+   */
+  MODE_0, //
+  /**
+   * CPOL = 0, CPHA = 1; data is to be captured on the clock's falling edge and
+   * data are propagated on a rising edge.
+   */
+  MODE_1, //
+  /**
+   * CPOL = 1, CPHA = 0; data is to be captured on clock's falling edge and data
+   * are propagated on a rising edge.
+   */
+  MODE_2, //
+  /**
+   * CPOL = 1, CPHA = 1; data is to be captured on clock's rising edge and data
+   * are propagated on a falling edge.
+   */
+  MODE_3;
+
+  // METHODS
 
   /**
    * @param aModeValue
@@ -64,5 +86,18 @@ public enum SPIMode
       return MODE_3;
     }
     throw new IllegalArgumentException( "Unknown mode value: " + aModeValue );
+  }
+
+  public final boolean isCPhaHigh()
+  {
+    return ( this == MODE_1 ) || ( this == MODE_3 );
+  }
+
+  /**
+   * @return
+   */
+  public final boolean isCPolHigh()
+  {
+    return ( this == MODE_2 ) || ( this == MODE_3 );
   }
 }

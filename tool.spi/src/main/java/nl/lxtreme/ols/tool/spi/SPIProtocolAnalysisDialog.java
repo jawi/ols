@@ -74,9 +74,9 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   private final JCheckBox reportCS;
   private final JCheckBox honourCS;
 
-  private final RunAnalysisAction runAnalysisAction;
-  private final ExportAction exportAction;
-  private final CloseAction closeAction;
+  private final RestorableAction runAnalysisAction;
+  private final Action exportAction;
+  private final Action closeAction;
 
   // CONSTRUCTORS
 
@@ -178,24 +178,25 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     /*
      * add buttons
      */
-    this.runAnalysisAction = new RunAnalysisAction();
-    JButton btnConvert = new JButton( this.runAnalysisAction );
+    final JButton runAnalysisButton = createRunAnalysisButton();
+    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    this.exportAction = new ExportAction();
+    final JButton exportButton = createExportButton();
+    this.exportAction = exportButton.getAction();
     this.exportAction.setEnabled( false );
-    JButton btnExport = new JButton( this.exportAction );
 
-    this.closeAction = new CloseAction();
-    JButton btnCancel = new JButton( this.closeAction );
+    final JButton closeButton = createCloseButton();
+    this.closeAction = closeButton.getAction();
 
     final JPanel buttons = new JPanel();
-    buttons.setLayout( new BoxLayout( buttons, BoxLayout.LINE_AXIS ) );
+    final BoxLayout layoutMgr = new BoxLayout( buttons, BoxLayout.LINE_AXIS );
+    buttons.setLayout( layoutMgr );
     buttons.add( Box.createHorizontalGlue() );
-    buttons.add( btnConvert );
+    buttons.add( runAnalysisButton );
     buttons.add( Box.createHorizontalStrut( 8 ) );
-    buttons.add( btnExport );
+    buttons.add( exportButton );
     buttons.add( Box.createHorizontalStrut( 16 ) );
-    buttons.add( btnCancel );
+    buttons.add( closeButton );
 
     add( buttons, //
         new GridBagConstraints( 0, 1, 2, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL,
@@ -247,7 +248,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
       if ( aAnalysisResult != null )
       {
         htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
-        this.exportAction.setEnabled( true );
+        this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
       }
       else
       {

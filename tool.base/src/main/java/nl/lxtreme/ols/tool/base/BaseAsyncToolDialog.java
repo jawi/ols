@@ -46,6 +46,17 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   // INNER TYPES
 
   /**
+   * Provides an action that can be restored to a particular (initial) state.
+   */
+  public static interface RestorableAction extends Action
+  {
+    /**
+     * Restores the state of the action to its initial state.
+     */
+    void restore();
+  }
+
+  /**
    * Tool worker property change lister used to determine the state of the tool
    * worker and report this back to methods of this dialog.
    */
@@ -164,7 +175,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
    * Provides an "run" action that is actually starting the (asynchronous) tool
    * worker.
    */
-  protected final class RunAnalysisAction extends AbstractAction
+  protected final class RunAnalysisAction extends AbstractAction implements RestorableAction
   {
     // CONSTANTS
 
@@ -346,6 +357,28 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
       cancelToolWorker();
       super.close();
     }
+  }
+
+  /**
+   * @return
+   */
+  protected final JButton createExportButton()
+  {
+    final ExportAction action = new ExportAction();
+    final JButton exportButton = new JButton( action );
+    SwingComponentUtils.registerKeystroke( exportButton, action, "EXPORT" );
+    return exportButton;
+  }
+
+  /**
+   * @return
+   */
+  protected final JButton createRunAnalysisButton()
+  {
+    final RunAnalysisAction action = new RunAnalysisAction();
+    final JButton runButton = new JButton( action );
+    SwingComponentUtils.registerKeystroke( runButton, action, "RUN-ANALYSIS" );
+    return runButton;
   }
 
   /**
