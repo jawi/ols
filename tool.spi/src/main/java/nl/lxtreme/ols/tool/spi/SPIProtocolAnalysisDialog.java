@@ -243,13 +243,22 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
     try
     {
-      this.outText.setText( toHtmlPage( null /* aFile */, aAnalysisResult ) );
+      final String htmlPage;
+      if ( aAnalysisResult != null )
+      {
+        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
+        this.exportAction.setEnabled( true );
+      }
+      else
+      {
+        htmlPage = getEmptyHtmlPage();
+        this.exportAction.setEnabled( false );
+      }
+
+      this.outText.setText( htmlPage );
       this.outText.setEditable( false );
 
-      this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-
       this.runAnalysisAction.restore();
-      this.runAnalysisAction.setEnabled( false );
     }
     catch ( IOException exception )
     {
@@ -287,7 +296,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     this.exportAction.setEnabled( false );
 
     this.runAnalysisAction.restore();
-    this.runAnalysisAction.setEnabled( true );
 
     setControlsEnabled( true );
   }
@@ -307,15 +315,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     aProperties.setProperty( aNamespace + ".mode", Integer.toString( this.mode.getSelectedIndex() ) );
     aProperties.setProperty( aNamespace + ".bits", Integer.toString( this.bits.getSelectedIndex() ) );
     aProperties.setProperty( aNamespace + ".order", Integer.toString( this.order.getSelectedIndex() ) );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#onToolWorkerSet(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
-   */
-  @Override
-  protected void onToolWorkerSet( final SPIAnalyserWorker aToolWorker )
-  {
-    this.runAnalysisAction.setEnabled( aToolWorker.hasCapturedData() );
   }
 
   /**

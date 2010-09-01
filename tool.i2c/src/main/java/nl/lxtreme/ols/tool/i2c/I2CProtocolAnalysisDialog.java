@@ -195,13 +195,22 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
     try
     {
-      this.outText.setText( toHtmlPage( null /* aFile */, aAnalysisResult ) );
+      final String htmlPage;
+      if ( aAnalysisResult != null )
+      {
+        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
+        this.exportAction.setEnabled( true );
+      }
+      else
+      {
+        htmlPage = getEmptyHtmlPage();
+        this.exportAction.setEnabled( false );
+      }
+
+      this.outText.setText( htmlPage );
       this.outText.setEditable( false );
 
-      this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-
       this.runAnalysisAction.restore();
-      this.runAnalysisAction.setEnabled( false );
     }
     catch ( final IOException exception )
     {
@@ -238,7 +247,6 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     this.exportAction.setEnabled( false );
 
     this.runAnalysisAction.restore();
-    this.runAnalysisAction.setEnabled( true );
 
     setControlsEnabled( true );
   }
@@ -305,15 +313,6 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     aProperties.setProperty( aNamespace + ".detectStop", Boolean.toString( this.detectSTOP.isSelected() ) );
     aProperties.setProperty( aNamespace + ".detectNack", Boolean.toString( this.detectNACK.isSelected() ) );
     aProperties.setProperty( aNamespace + ".detectAck", Boolean.toString( this.detectACK.isSelected() ) );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#onToolWorkerSet(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
-   */
-  @Override
-  protected void onToolWorkerSet( final I2CAnalyserWorker aToolWorker )
-  {
-    this.runAnalysisAction.setEnabled( aToolWorker.hasCapturedData() );
   }
 
   /**

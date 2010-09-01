@@ -41,12 +41,61 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
   // INNER TYPES
 
   /**
-   * @author jawi
+   * Provides an interface to create a tool worker on the fly.
+   * 
+   * @param <RESULT_TYPE>
+   *          the result type of the tool worker;
+   * @param <WORKER>
+   *          the actual type of the tool worker.
+   */
+  static interface ToolWorkerFactory<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>>
+  {
+    /**
+     * Factory method for creating a tool worker.
+     */
+    WORKER createToolWorker();
+  }
+
+  /**
+   * Provides a default implementation of a tool worker factory, using the
+   * defined {@link BaseAsyncTool#createToolWorker(DataContainer)} method for
+   * the actual creation of the tool worker itself.
+   */
+  final class ToolWorkerFactoryImpl implements ToolWorkerFactory<RESULT_TYPE, WORKER>
+  {
+    private final AnalysisCallback callback;
+    private final DataContainer data;
+
+    /**
+     * 
+     */
+    public ToolWorkerFactoryImpl( final DataContainer aData, final AnalysisCallback aCallback )
+    {
+      this.data = aData;
+      this.callback = aCallback;
+    }
+
+    /**
+     * @see nl.lxtreme.ols.tool.base.BaseAsyncTool.ToolWorkerFactory#createToolWorker()
+     */
+    @Override
+    public WORKER createToolWorker()
+    {
+      final WORKER toolWorker = BaseAsyncTool.this.createToolWorker( this.data );
+      toolWorker.addPropertyChangeListener( new ToolWorkerPropertyChangeListener( toolWorker, this.callback ) );
+      return toolWorker;
+    }
+  }
+
+  /**
+   * Provides a tool worker property change listener that reports back the state
+   * of the tool worker to this class and the analysis callback.
    */
   final class ToolWorkerPropertyChangeListener implements PropertyChangeListener
   {
     // VARIABLES
 
+    private final WORKER toolWorker;
     private final AnalysisCallback callback;
 
     // CONSTRUCTORS
@@ -54,8 +103,9 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
     /**
      * @param aCallback
      */
-    public ToolWorkerPropertyChangeListener( final AnalysisCallback aCallback )
+    public ToolWorkerPropertyChangeListener( final WORKER aToolWorker, final AnalysisCallback aCallback )
     {
+      this.toolWorker = aToolWorker;
       this.callback = aCallback;
     }
 
@@ -82,14 +132,12 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
         final StateValue state = ( StateValue )value;
         if ( StateValue.DONE.equals( state ) )
         {
-          final WORKER worker = getToolWorker();
-
           RESULT_TYPE analysisResults = null;
           String abortReason = null;
 
           try
           {
-            analysisResults = worker.get();
+            analysisResults = this.toolWorker.get();
           }
           catch ( CancellationException exception )
           {
@@ -104,7 +152,7 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
             abortReason = exception.getMessage();
           }
 
-          if ( worker.isCancelled() || ( abortReason != null ) )
+          if ( this.toolWorker.isCancelled() || ( abortReason != null ) )
           {
             if ( abortReason == null )
             {
@@ -134,10 +182,6 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
 
   protected static final String PROPERTY_PROGRESS = "progress";
   protected static final String PROPERTY_STATE = "state";
-
-  // VARIABLES
-
-  private WORKER toolWorker;
 
   // CONSTRUCTORS
 
@@ -179,26 +223,12 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
   protected final void doProcess( final DataContainer aData, final ToolContext aContext,
       final AnalysisCallback aCallback )
   {
-    this.toolWorker = createToolWorker( aData );
-
-    this.toolWorker.addPropertyChangeListener( new ToolWorkerPropertyChangeListener( aCallback ) );
-
     final DIALOG dialog = getDialog();
 
     // Update the tool worker to the new one...
-    dialog.setToolWorker( this.toolWorker );
+    dialog.setToolWorkerFactory( new ToolWorkerFactoryImpl( aData, aCallback ) );
     // Show the actual dialog...
     dialog.showDialog( aData );
-  }
-
-  /**
-   * Returns the current tool worker.
-   * 
-   * @return the tool worker, never <code>null</code>.
-   */
-  protected final WORKER getToolWorker()
-  {
-    return this.toolWorker;
   }
 
   /**
