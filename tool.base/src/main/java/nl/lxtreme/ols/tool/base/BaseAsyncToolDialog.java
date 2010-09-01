@@ -137,6 +137,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
     {
       super( "Export" );
       putValue( SHORT_DESCRIPTION, "Exports the analysis results to file" );
+      putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_E ) );
     }
 
     // METHODS
@@ -214,6 +215,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
 
         putValue( NAME, "Abort" );
         putValue( SHORT_DESCRIPTION, "Aborts current analysis..." );
+        putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_ESCAPE ) );
       }
     }
 
@@ -224,6 +226,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
     {
       putValue( NAME, "Analyze" );
       putValue( SHORT_DESCRIPTION, "Run analysis" );
+      putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_ENTER ) );
     }
   }
 
