@@ -207,9 +207,11 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       endOfDecode = values.length;
       // Search for a CS-low forwards until the end...
       startOfDecode = searchSlaveSelected( 0, endOfDecode );
+
+      slaveSelected = ( startOfDecode > 0 );
     }
 
-    if ( !slaveSelected || ( startOfDecode < 0 ) )
+    if ( !slaveSelected )
     {
       // no CS edge found, look for trigger
       LOG.log( Level.WARNING, "No CS start-condition found! Analysis aborted..." );
