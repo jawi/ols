@@ -156,6 +156,23 @@ public final class NumberUtils
   }
 
   /**
+   * Returns the largest bit-value that is set to '1' of a given mask value.
+   * <p>
+   * E.g., for a mask value of 128, the result will be 7, while for a mask value
+   * of 3, the value will be 1.
+   * </p>
+   * 
+   * @param aMaskValue
+   *          the mask value to return the bit-index of.
+   * @return the largest bit-value that is set to '1' of a given mask value,
+   *         zero-based.
+   */
+  public static int getBitIndex( final int aMaskValue )
+  {
+    return ( int )Math.floor( Math.log( aMaskValue ) / Math.log( 2 ) );
+  }
+
+  /**
    * Provides a "smart" integer parsing routine that allows (decimal) numbers in
    * string form with all kind of trailing characters to be parsed into an
    * integer. Some trailing characters are understood as being part of the
