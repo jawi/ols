@@ -215,7 +215,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     {
       // no CS edge found, look for trigger
       LOG.log( Level.WARNING, "No CS start-condition found! Analysis aborted..." );
-      return null;
+      throw new IllegalStateException( "No CS start-condition found!" );
     }
 
     final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode, this );
