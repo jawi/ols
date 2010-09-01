@@ -780,7 +780,11 @@ public final class Host implements ApplicationCallback
   public boolean handleQuit()
   {
     exit();
-    return true;
+    // On MacOSX, it appears that if we acknowledge this event, the system
+    // shuts down our application for us, thereby not calling our stop/shutdown
+    // hooks... By returning false, we're not acknowledging the quit action to
+    // the system, but instead do it all on our own...
+    return false;
   }
 
   /**
