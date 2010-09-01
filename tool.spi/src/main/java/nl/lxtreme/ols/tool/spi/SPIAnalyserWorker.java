@@ -182,48 +182,34 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
     final int[] values = getValues();
 
-    int startOfDecode = -1;
-    int endOfDecode = values.length;
-    boolean csFound = false;
-
-    if ( hasTriggerData() )
-    {
-      startOfDecode = getSampleIndex( getTriggerPosition() );
-    }
+    int startOfDecode;
+    int endOfDecode;
+    boolean slaveSelected = false;
 
     if ( isCursorsEnabled() )
     {
-      startOfDecode = getSampleIndex( getCursorPosition( 0 ) );
       endOfDecode = getSampleIndex( getCursorPosition( 1 ) + 1 );
+      startOfDecode = getSampleIndex( getCursorPosition( 0 ) );
+
+      // Search for a CS-low backwards from the first cursor...
+      slaveSelected = searchSlaveSelected( startOfDecode, 0 ) >= 0;
     }
-
-    /*
-     * For analyze scan the CS line for a falling edge. If no edge could be
-     * found, the position of the trigger is used for start of analysis. If no
-     * trigger and no edge is found the analysis fails.
-     */
-    int oldCsValue = values[0] & this.csMask;
-
-    for ( int i = 0; i < endOfDecode; i++ )
+    else if ( hasTriggerData() )
     {
-      final int csValue = values[i] & this.csMask;
-      if ( oldCsValue > csValue )
-      {
-        // found first falling edge; start decoding from here...
-        startOfDecode = i;
-        csFound = true;
+      endOfDecode = values.length;
+      startOfDecode = getSampleIndex( getTriggerPosition() );
 
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.fine( "CS found at " + i );
-        }
-
-        break;
-      }
-      oldCsValue = csValue;
+      // Search for a CS-low backwards from the trigger position...
+      slaveSelected = searchSlaveSelected( startOfDecode, 0 ) >= 0;
+    }
+    else
+    {
+      endOfDecode = values.length;
+      // Search for a CS-low forwards until the end...
+      startOfDecode = searchSlaveSelected( 0, endOfDecode );
     }
 
-    if ( !csFound || ( startOfDecode < 0 ) )
+    if ( !slaveSelected || ( startOfDecode < 0 ) )
     {
       // no CS edge found, look for trigger
       LOG.log( Level.WARNING, "No CS start-condition found! Analysis aborted..." );
@@ -231,7 +217,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     }
 
     final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode, this );
-    if ( csFound )
+    if ( slaveSelected )
     {
       // now the trigger is in b, add trigger event to table
       reportCsLow( decodedData, startOfDecode );
@@ -365,7 +351,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
           mosivalue = NumberUtils.convertByteOrder( mosivalue, this.bitOrder );
           misovalue = NumberUtils.convertByteOrder( misovalue, this.bitOrder );
 
-          aDecodedData.reportData( time, mosivalue, misovalue );
+          aDecodedData.reportData( time, misovalue, mosivalue );
 
           addChannelAnnotation( this.mosiIdx, timestamps[lastIdx], timestamps[idx],
               String.format( "MOSI: 0x%X (%c)", mosivalue, mosivalue ) );
@@ -455,5 +441,63 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     {
       aDecodedData.reportCSLow( aTimestamp );
     }
+  }
+
+  /**
+   * @param aSampleIndex
+   * @param aI
+   * @return
+   */
+  private int searchSlaveSelected( final int aStartIndex, final int aEndIndex )
+  {
+    final int[] values = getValues();
+
+    /*
+     * For analyze scan the CS line for a falling edge. If no edge could be
+     * found, the position of the trigger is used for start of analysis. If no
+     * trigger and no edge is found the analysis fails.
+     */
+    if ( aStartIndex > aEndIndex )
+    {
+      // Walk backwards...
+      int oldCsValue = values[aStartIndex] & this.csMask;
+      for ( int i = aStartIndex; i >= aEndIndex; i-- )
+      {
+        final int csValue = values[i] & this.csMask;
+        if ( oldCsValue < csValue )
+        {
+          // found first falling edge; start decoding from here...
+          if ( LOG.isLoggable( Level.FINE ) )
+          {
+            LOG.fine( "CS found at " + i );
+          }
+
+          return i;
+        }
+        oldCsValue = csValue;
+      }
+    }
+    else
+    {
+      // Walk forwards...
+      int oldCsValue = values[aStartIndex] & this.csMask;
+      for ( int i = aStartIndex; i < aEndIndex; i++ )
+      {
+        final int csValue = values[i] & this.csMask;
+        if ( oldCsValue > csValue )
+        {
+          // found first falling edge; start decoding from here...
+          if ( LOG.isLoggable( Level.FINE ) )
+          {
+            LOG.fine( "CS found at " + i );
+          }
+
+          return i;
+        }
+        oldCsValue = csValue;
+      }
+    }
+
+    return -1;
   }
 }
