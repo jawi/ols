@@ -349,8 +349,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     aToolWorker.setBitCount( Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1 );
     aToolWorker.setCSMask( 1 << this.cs.getSelectedIndex() );
     aToolWorker.setSCKMask( 1 << this.sck.getSelectedIndex() );
-    aToolWorker.setMisoMask( 1 << this.miso.getSelectedIndex() );
-    aToolWorker.setMosiMask( 1 << this.mosi.getSelectedIndex() );
+    aToolWorker.setMisoIndex( this.miso.getSelectedIndex() );
+    aToolWorker.setMosiIndex( this.mosi.getSelectedIndex() );
     aToolWorker.setOrder( "MSB first".equals( this.order.getSelectedItem() ) ? BitOrder.MSB_FIRST : BitOrder.LSB_FIRST );
     aToolWorker.setMode( SPIMode.parse( ( String )this.mode.getSelectedItem() ) );
     aToolWorker.setReportCS( this.reportCS.isSelected() );

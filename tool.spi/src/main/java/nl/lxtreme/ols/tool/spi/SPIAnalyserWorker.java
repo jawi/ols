@@ -41,7 +41,26 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
    */
   public enum Edge
   {
-    RISING, FALLING;
+    NONE, RISING, FALLING;
+
+    /**
+     * Returns the inverse of this edge, so for rising it returns falling, and
+     * so on.
+     * 
+     * @return the inverse of this edge.
+     */
+    public Edge invert()
+    {
+      if ( this == RISING )
+      {
+        return FALLING;
+      }
+      if ( this == FALLING )
+      {
+        return RISING;
+      }
+      return NONE;
+    }
   }
 
   // CONSTANTS
@@ -52,13 +71,13 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
   private int csMask;
   private int sckMask;
-  private int misoMask;
-  private int mosiMask;
   private SPIMode mode;
   private int bitCount;
   private BitOrder bitOrder;
   private boolean reportCS;
   private boolean honourCS;
+  private int mosiIdx;
+  private int misoIdx;
 
   // CONSTRUCTORS
 
@@ -96,9 +115,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   /**
    * @param aMisoMask
    */
-  public void setMisoMask( final int aMisoMask )
+  public void setMisoIndex( final int aMisoIndex )
   {
-    this.misoMask = aMisoMask;
+    this.misoIdx = aMisoIndex;
   }
 
   /**
@@ -112,9 +131,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   /**
    * @param aMosiMask
    */
-  public void setMosiMask( final int aMosiMask )
+  public void setMosiIndex( final int aMosiIndex )
   {
-    this.mosiMask = aMosiMask;
+    this.mosiIdx = aMosiIndex;
   }
 
   /**
@@ -157,8 +176,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     {
       LOG.fine( "csmask   = 0x" + Integer.toHexString( this.csMask ) );
       LOG.fine( "sckmask  = 0x" + Integer.toHexString( this.sckMask ) );
-      LOG.fine( "misomask = 0x" + Integer.toHexString( this.misoMask ) );
-      LOG.fine( "mosimask = 0x" + Integer.toHexString( this.mosiMask ) );
+      LOG.fine( "misomask = 0x" + Integer.toHexString( 1 << this.misoIdx ) );
+      LOG.fine( "mosimask = 0x" + Integer.toHexString( 1 << this.mosiIdx ) );
     }
 
     final int[] values = getValues();
@@ -172,54 +191,36 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       startOfDecode = getSampleIndex( getTriggerPosition() );
     }
 
-    /**
-     * <pre>
-     * At CPOL=0 the base value of the clock is zero:
-     * * For CPHA=0, data are captured on the clock's rising edge (low->high
-     *   transition) and data are propagated on a falling edge (high->low clock
-     *   transition);
-     * * For CPHA=1, data are captured on the clock's falling edge and data are
-     *   propagated on a rising edge.
-     * At CPOL=1 the base value of the clock is one (inversion of CPOL=0):
-     * * For CPHA=0, data are captured on clock's falling edge and data are 
-     *   propagated on a rising edge;
-     * * For CPHA=1, data are captured on clock's rising edge and data are 
-     *   propagated on a falling edge.
-     * </pre>
-     */
-
     if ( isCursorsEnabled() )
     {
-      startOfDecode = getSampleIndex( getCursorPosition( 1 ) );
-      endOfDecode = getSampleIndex( getCursorPosition( 2 ) + 1 );
+      startOfDecode = getSampleIndex( getCursorPosition( 0 ) );
+      endOfDecode = getSampleIndex( getCursorPosition( 1 ) + 1 );
     }
-    else
+
+    /*
+     * For analyze scan the CS line for a falling edge. If no edge could be
+     * found, the position of the trigger is used for start of analysis. If no
+     * trigger and no edge is found the analysis fails.
+     */
+    int oldCsValue = values[0] & this.csMask;
+
+    for ( int i = 0; i < endOfDecode; i++ )
     {
-      /*
-       * For analyze scan the CS line for a falling edge. If no edge could be
-       * found, the position of the trigger is used for start of analysis. If no
-       * trigger and no edge is found the analysis fails.
-       */
-      int oldCsValue = values[0] & this.csMask;
-
-      for ( int i = 0; i < values.length; i++ )
+      final int csValue = values[i] & this.csMask;
+      if ( oldCsValue > csValue )
       {
-        final int csValue = values[i] & this.csMask;
-        if ( oldCsValue > csValue )
+        // found first falling edge; start decoding from here...
+        startOfDecode = i;
+        csFound = true;
+
+        if ( LOG.isLoggable( Level.FINE ) )
         {
-          // found first falling edge; start decoding from here...
-          startOfDecode = i;
-          csFound = true;
-
-          if ( LOG.isLoggable( Level.FINE ) )
-          {
-            LOG.fine( "CS found at " + i );
-          }
-
-          break;
+          LOG.fine( "CS found at " + i );
         }
-        oldCsValue = csValue;
+
+        break;
       }
+      oldCsValue = csValue;
     }
 
     if ( !csFound || ( startOfDecode < 0 ) )
@@ -242,7 +243,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
      * the falling edge. a is used for start of value, c is register for detect
      * line changes.
      */
-    clockDataOnEdge( decodedData, getSampleEdge() );
+    clockDataOnEdge( decodedData, this.mode );
 
     return decodedData;
   }
@@ -255,7 +256,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
    * @param aEdge
    *          the edge on which to sample.
    */
-  private void clockDataOnEdge( final SPIDataSet aDecodedData, final Edge aEdge )
+  private void clockDataOnEdge( final SPIDataSet aDecodedData, final SPIMode aMode )
   {
     final int[] values = getValues();
     final long[] timestamps = getTimestamps();
@@ -263,23 +264,31 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     final int startOfDecode = ( int )aDecodedData.getStartOfDecode();
     final int endOfDecode = ( int )aDecodedData.getEndOfDecode();
 
-    final int misoChannelIdx = ( int )( Math.log( this.misoMask ) / Math.log( 2 ) );
-    final int mosiChannelIdx = ( int )( Math.log( this.mosiMask ) / Math.log( 2 ) );
+    final Edge sampleEdge = getSampleEdge( aMode );
+    final Edge dataChangeEdge = getDataChangeEdge( aMode );
+
+    final int misoMask = 1 << this.misoIdx;
+    final int mosiMask = 1 << this.mosiIdx;
+
+    // clear any existing annotations
+    clearChannelAnnotations( this.misoIdx );
+    clearChannelAnnotations( this.mosiIdx );
 
     // scanning for falling/rising clk edges
-    int oldSckValue = values[startOfDecode] & this.sckMask;
-    int oldCsValue = values[startOfDecode] & this.csMask;
+    int oldSckValue = ( values[startOfDecode] & this.sckMask );
+    int oldCsValue = ( values[startOfDecode] & this.csMask );
+
+    // We've already found the
+    boolean slaveSelected = true;
+    boolean dataEdgeSeen = false;
+    int lastIdx = startOfDecode;
     int bitIdx = this.bitCount;
 
     int misovalue = 0;
     int mosivalue = 0;
 
-    // We've already found the
-    boolean slaveSelected = true;
-    int lastIdx = startOfDecode;
-
     final double length = endOfDecode - startOfDecode;
-    for ( int idx = startOfDecode; idx < endOfDecode; idx++ )
+    for ( int idx = startOfDecode + 1; idx < endOfDecode; idx++ )
     {
       final long time = calculateTime( timestamps[idx] );
 
@@ -288,19 +297,22 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       /* CS edge detection */
       final int csValue = values[idx] & this.csMask;
 
-      if ( oldCsValue > csValue )
+      final Edge slaveSelectEdge = determineEdge( oldCsValue, csValue );
+      oldCsValue = csValue;
+
+      if ( slaveSelectEdge == Edge.FALLING )
       {
-        // falling edge
         reportCsLow( aDecodedData, time );
+
         slaveSelected = true;
+        dataEdgeSeen = false;
       }
-      else if ( oldCsValue < csValue )
+      else if ( slaveSelectEdge == Edge.RISING )
       {
-        // rising edge
         reportCsHigh( aDecodedData, time );
+
         slaveSelected = false;
       }
-      oldCsValue = csValue;
 
       if ( this.honourCS && !slaveSelected )
       {
@@ -309,31 +321,36 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         continue;
       }
 
-      final boolean edgeSeen;
-      if ( aEdge == Edge.RISING )
-      {
-        edgeSeen = ( oldSckValue < sckValue );
-      }
-      else
-      {
-        edgeSeen = ( oldSckValue > sckValue );
-      }
+      final Edge clockEdge = determineEdge( oldSckValue, sckValue );
       oldSckValue = sckValue;
 
-      if ( edgeSeen )
+      // In case the clock is phase-shifted with respect to the data line,
+      // we should wait until the first inverse edge is seen. To put it
+      // otherwise, we should simply ignore the first seen clock edge and
+      // wait for the second one...
+      if ( dataChangeEdge == clockEdge )
+      {
+        dataEdgeSeen = true;
+      }
+      // Keep track where we saw the first clocked bit of a byte-value...
+      if ( dataEdgeSeen )
       {
         if ( bitIdx == this.bitCount )
         {
           lastIdx = idx - 1;
         }
+      }
 
+      final boolean sampleEdgeSeen = dataEdgeSeen && ( sampleEdge == clockEdge );
+      if ( sampleEdgeSeen )
+      {
         // sample MiSo here; always MSB first, perform conversion later on...
-        if ( ( values[idx] & this.misoMask ) == this.misoMask )
+        if ( ( values[idx] & misoMask ) == misoMask )
         {
           misovalue |= ( 1 << bitIdx );
         }
         // sample MoSi here; always MSB first, perform conversion later on...
-        if ( ( values[idx] & this.mosiMask ) == this.mosiMask )
+        if ( ( values[idx] & mosiMask ) == mosiMask )
         {
           mosivalue |= ( 1 << bitIdx );
         }
@@ -342,7 +359,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         {
           bitIdx--;
         }
-        else
+        else if ( bitIdx == 0 )
         {
           // Perform bit-order conversion on the full byte...
           mosivalue = NumberUtils.convertByteOrder( mosivalue, this.bitOrder );
@@ -350,9 +367,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
           aDecodedData.reportData( time, mosivalue, misovalue );
 
-          addChannelAnnotation( mosiChannelIdx, timestamps[lastIdx], timestamps[idx],
+          addChannelAnnotation( this.mosiIdx, timestamps[lastIdx], timestamps[idx],
               String.format( "MOSI: 0x%X (%c)", mosivalue, mosivalue ) );
-          addChannelAnnotation( misoChannelIdx, timestamps[lastIdx], timestamps[idx],
+          addChannelAnnotation( this.misoIdx, timestamps[lastIdx], timestamps[idx],
               String.format( "MISO: 0x%X (%c)", misovalue, misovalue ) );
 
           bitIdx = this.bitCount;
@@ -366,16 +383,54 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
-   * Use the mode parameter to determine which edges are to detect. Mode 0 and
-   * mode 3 are sampling on the rising clk edge, mode 1 and 2 are sampling on
-   * the falling edge. a is used for start of value, c is register for detect
-   * line changes.
+   * Determines the clock value edge.
    * 
+   * @param aOldClockValue
+   *          the previous clock value;
+   * @param aNewClockValue
+   *          the next clock value.
+   * @return the edge between the given clock values, cannot be
+   *         <code>null</code>.
+   */
+  private Edge determineEdge( final int aOldClockValue, final int aNewClockValue )
+  {
+    if ( aOldClockValue < aNewClockValue )
+    {
+      return Edge.RISING;
+    }
+    else if ( aOldClockValue > aNewClockValue )
+    {
+      return Edge.FALLING;
+    }
+    return Edge.NONE;
+  }
+
+  /**
+   * Returns the data change edge, on which the MISO/MOSI lines are allowed to
+   * change.
+   * 
+   * @param aMode
+   *          the SPI mode to return the data change edge for, cannot be
+   *          <code>null</code>.
+   * @return the data change edge.
+   */
+  private Edge getDataChangeEdge( final SPIMode aMode )
+  {
+    return getSampleEdge( aMode ).invert();
+  }
+
+  /**
+   * Returns the data sample edge, on which the MISO/MOSI lines are to be
+   * sampled.
+   * 
+   * @param aMode
+   *          the SPI mode to return the sample edge for, cannot be
+   *          <code>null</code>.
    * @return the sample clock edge.
    */
-  private Edge getSampleEdge()
+  private Edge getSampleEdge( final SPIMode aMode )
   {
-    return ( ( this.mode == SPIMode.MODE_0 ) || ( this.mode == SPIMode.MODE_3 ) ) ? Edge.RISING : Edge.FALLING;
+    return ( ( aMode == SPIMode.MODE_0 ) || ( aMode == SPIMode.MODE_3 ) ) ? Edge.RISING : Edge.FALLING;
   }
 
   /**
