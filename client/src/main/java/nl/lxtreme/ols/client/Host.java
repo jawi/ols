@@ -66,7 +66,7 @@ public final class Host implements ApplicationCallback
     // VARIABLES
 
     private final IActionManager actionManager;
-    private final DiagramScrollPane diagramScrollPane;
+    private final Diagram diagram;
     private final JTextStatusBar status;
 
     private JMenu deviceMenu;
@@ -78,6 +78,8 @@ public final class Host implements ApplicationCallback
     private final ButtonGroup deviceGroup;
 
     private volatile DeviceController currentDevCtrl;
+
+    private final JButton contextButton;
 
     // CONSTRUCTORS
 
@@ -101,29 +103,31 @@ public final class Host implements ApplicationCallback
 
       this.actionManager = new ActionManager();
 
-      this.diagramScrollPane = new DiagramScrollPane( this );
+      this.diagram = new Diagram( this );
       this.status = new JTextStatusBar();
 
       this.actionManager.add( new NewProjectAction( aProject ) );
       this.actionManager.add( new OpenProjectAction( aProject ) );
       this.actionManager.add( new SaveProjectAction( aProject ) );
-      this.actionManager.add( new OpenDataFileAction( this.diagramScrollPane ) );
-      this.actionManager.add( new SaveDataFileAction( this.diagramScrollPane ) );
+      this.actionManager.add( new OpenDataFileAction( this.diagram ) );
+      this.actionManager.add( new SaveDataFileAction( this.diagram ) );
       this.actionManager.add( new ExitAction( aHost ) );
 
       this.actionManager.add( new CaptureAction( this ) );
       this.actionManager.add( new RepeatCaptureAction( this ) ).setEnabled( false );
 
-      this.actionManager.add( new ZoomInAction( this.diagramScrollPane ) ).setEnabled( false );
-      this.actionManager.add( new ZoomOutAction( this.diagramScrollPane ) ).setEnabled( false );
-      this.actionManager.add( new ZoomDefaultAction( this.diagramScrollPane ) ).setEnabled( false );
-      this.actionManager.add( new ZoomFitAction( this.diagramScrollPane ) ).setEnabled( false );
-      this.actionManager.add( new GotoTriggerAction( this.diagramScrollPane ) ).setEnabled( false );
-      this.actionManager.add( new GotoCursor1Action( this.diagramScrollPane ) ).setEnabled( false );
-      this.actionManager.add( new GotoCursor2Action( this.diagramScrollPane ) ).setEnabled( false );
-      this.actionManager.add( new SetCursorModeAction( this.diagramScrollPane ) ).setEnabled( false );
-      this.actionManager.add( new ShowDiagramSettingsAction( this.diagramScrollPane ) );
-      this.actionManager.add( new ShowDiagramLabelsAction( this.diagramScrollPane ) );
+      this.actionManager.add( new ZoomInAction( this.diagram ) ).setEnabled( false );
+      this.actionManager.add( new ZoomOutAction( this.diagram ) ).setEnabled( false );
+      this.actionManager.add( new ZoomDefaultAction( this.diagram ) ).setEnabled( false );
+      this.actionManager.add( new ZoomFitAction( this.diagram ) ).setEnabled( false );
+      this.actionManager.add( new GotoTriggerAction( this.diagram ) ).setEnabled( false );
+      this.actionManager.add( new GotoCursor1Action( this.diagram ) ).setEnabled( false );
+      this.actionManager.add( new GotoCursor2Action( this.diagram ) ).setEnabled( false );
+      this.actionManager.add( new SetCursorModeAction( this.diagram ) ).setEnabled( false );
+      this.actionManager.add( new ShowDiagramSettingsAction( this.diagram ) );
+      this.actionManager.add( new ShowDiagramLabelsAction( this.diagram ) );
+
+      this.actionManager.add( new ScrollPaneContextAction( this ) );
 
       setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
       setSize( 1200, 600 );
@@ -134,15 +138,19 @@ public final class Host implements ApplicationCallback
       this.deviceMenu.add( this.noDevicesItem );
       this.toolsMenu.add( this.noToolsItem );
 
+      // Create a scrollpane for the diagram...
+      final JScrollPane scrollPane = new JScrollPane( this.diagram );
+      this.contextButton = createScrollPaneContextButton();
+
+      scrollPane.setCorner( ScrollPaneConstants.UPPER_LEFT_CORNER, this.contextButton );
+
       final Container contentPane = getContentPane();
       contentPane.setLayout( new BorderLayout() );
 
       contentPane.add( tools, BorderLayout.PAGE_START );
-      contentPane.add( this.diagramScrollPane, BorderLayout.CENTER );
+      contentPane.add( scrollPane, BorderLayout.CENTER );
       contentPane.add( this.status, BorderLayout.PAGE_END );
     }
-
-    // METHODS
 
     /**
      * @param aDevController
@@ -162,6 +170,8 @@ public final class Host implements ApplicationCallback
 
       updateDeviceMenuState( aDevController, menuItem, true /* aAdded */);
     }
+
+    // METHODS
 
     /**
      * @param aTool
@@ -433,9 +443,21 @@ public final class Host implements ApplicationCallback
      */
     private JMenuItem createMenuItem( final Tool aTool )
     {
-      final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( aTool, this.diagramScrollPane, this ) );
+      final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( aTool, this.diagram, this ) );
       menuItem.setName( aTool.getName() );
       return menuItem;
+    }
+
+    /**
+     * 
+     */
+    private JButton createScrollPaneContextButton()
+    {
+      JButton contextButton = new JButton( getAction( ScrollPaneContextAction.ID ) );
+      contextButton.setBackground( Color.WHITE );
+      contextButton.setBorderPainted( false );
+      contextButton.setVisible( false );
+      return contextButton;
     }
 
     /**
@@ -470,15 +492,16 @@ public final class Host implements ApplicationCallback
     {
       if ( aCapturedData != null )
       {
-        this.diagramScrollPane.setCapturedData( aCapturedData );
-        this.diagramScrollPane.zoomToFit();
+        this.diagram.setCapturedData( aCapturedData );
+        this.diagram.zoomToFit();
       }
       else
       {
-        this.diagramScrollPane.repaint();
+        this.diagram.repaint();
       }
 
       setStatus( "" );
+      this.contextButton.setVisible( aCapturedData != null );
     }
 
     /**

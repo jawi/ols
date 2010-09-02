@@ -42,9 +42,9 @@ public class GotoCursor2Action extends BaseCursorAction
   /**
    * @param aDiagramScrollPane
    */
-  public GotoCursor2Action( final DiagramScrollPane aDiagramScrollPane )
+  public GotoCursor2Action( final Diagram aDiagram )
   {
-    super( ID, aDiagramScrollPane, ICON_GOTO_CURSOR2, "Go to Cursor 2", "Go to second cursor in diagram." );
+    super( ID, aDiagram, ICON_GOTO_CURSOR2, "Go to Cursor 2", "Go to second cursor in diagram." );
   }
 
   // METHODS
@@ -55,7 +55,7 @@ public class GotoCursor2Action extends BaseCursorAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagramScrollPane().gotoCursorPosition( 1 );
+    getDiagram().gotoCursorPosition( 1 );
   }
 }
 

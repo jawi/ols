@@ -371,6 +371,44 @@ public final class DataContainer implements CapturedData
   }
 
   /**
+   * Returns whether a channel label is set or not.
+   * 
+   * @param aChannelIdx
+   *          the channel index to check whether its label is set, >= 0 && < 32.
+   * @return <code>true</code> if there a non-empty label set for the given
+   *         channel index, <code>false</code> otherwise.
+   */
+  public boolean isChannelLabelSet( final int aChannelIdx )
+  {
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
+          + this.channelLabels.length );
+    }
+    final String label = this.channelLabels[aChannelIdx];
+    return ( label != null ) && !label.trim().isEmpty();
+  }
+
+  /**
+   * Returns whether or not the cursor with the given index is set.
+   * 
+   * @param aCursorIdx
+   *          the index of the cursor to check, should be >= 0 and < 10.
+   * @return a cursor position, or Long.MIN_VALUE if not set.
+   * @return <code>true</code> if the cursor with the given index is set,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isCursorPositionSet( final int aCursorIdx )
+  {
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursorPositions.length - 1 ) )
+    {
+      throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
+          + this.cursorPositions.length );
+    }
+    return this.cursorPositions[aCursorIdx] > Long.MIN_VALUE;
+  }
+
+  /**
    * Returns whether or not the cursor data is enabled.
    * 
    * @return <code>true</code> if the cursors are enabled, <code>false</code>

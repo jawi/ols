@@ -69,8 +69,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
   // VARIABLES
 
-  private int csMask;
-  private int sckMask;
+  private int csIdx;
+  private int sckIdx;
   private SPIMode mode;
   private int bitCount;
   private BitOrder bitOrder;
@@ -92,7 +92,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   // METHODS
 
   /**
+   * Sets the number of bits an SPI datagram should consist of.
+   * 
    * @param aBitCount
+   *          the number of bits in a SPI datagram, >= 8.
    */
   public void setBitCount( final int aBitCount )
   {
@@ -100,20 +103,33 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
+   * Sets the chip-select channel index.
+   * 
    * @param aCsMask
+   *          the index of the chip-select channel.
    */
-  public void setCSMask( final int aCsMask )
+  public void setCSIndex( final int aCsIndex )
   {
-    this.csMask = aCsMask;
+    this.csIdx = aCsIndex;
   }
 
+  /**
+   * Sets whether or not chip-select should be honoured in the analysis.
+   * 
+   * @param aHonourCS
+   *          <code>true</code> to only decode data when the chip-select line is
+   *          low, <code>false</code> to decode all data.
+   */
   public void setHonourCS( final boolean aHonourCS )
   {
     this.honourCS = aHonourCS;
   }
 
   /**
+   * Sets the "master-in slave-out" channel index.
+   * 
    * @param aMisoMask
+   *          the index of the "master-in slave-out" channel.
    */
   public void setMisoIndex( final int aMisoIndex )
   {
@@ -121,7 +137,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
+   * Sets which SPI mode should be used for the analysis process.
+   * 
    * @param aMode
+   *          the SPI mode to set, cannot be <code>null</code>.
    */
   public void setMode( final SPIMode aMode )
   {
@@ -129,7 +148,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
+   * Sets the "master-out slave-in" channel index.
+   * 
    * @param aMosiMask
+   *          the index of the "master-out slave-in" channel.
    */
   public void setMosiIndex( final int aMosiIndex )
   {
@@ -137,7 +159,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
+   * Sets the order in which bits in a SPI datagram are transmitted.
+   * 
    * @param aOrder
+   *          the bit order to use, cannot be <code>null</code>.
    */
   public void setOrder( final BitOrder aOrder )
   {
@@ -145,7 +170,11 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
+   * Sets whether or not chip-select events should be reported.
+   * 
    * @param aReportCS
+   *          <code>true</code> to include chip-select events in the analysis
+   *          result, <code>false</code> to exclude them.
    */
   public void setReportCS( final boolean aReportCS )
   {
@@ -154,11 +183,14 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
-   * @param aSckMask
+   * Sets the serial-clock channel index.
+   * 
+   * @param aSckIndex
+   *          the index of the "serial-clock" channel.
    */
-  public void setSCKMask( final int aSckMask )
+  public void setSCKIndex( final int aSckIndex )
   {
-    this.sckMask = aSckMask;
+    this.sckIdx = aSckIndex;
   }
 
   /**
@@ -174,8 +206,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   {
     if ( LOG.isLoggable( Level.FINE ) )
     {
-      LOG.fine( "csmask   = 0x" + Integer.toHexString( this.csMask ) );
-      LOG.fine( "sckmask  = 0x" + Integer.toHexString( this.sckMask ) );
+      LOG.fine( "csmask   = 0x" + Integer.toHexString( 1 << this.csIdx ) );
+      LOG.fine( "sckmask  = 0x" + Integer.toHexString( 1 << this.sckIdx ) );
       LOG.fine( "misomask = 0x" + Integer.toHexString( 1 << this.misoIdx ) );
       LOG.fine( "mosimask = 0x" + Integer.toHexString( 1 << this.mosiIdx ) );
     }
@@ -186,26 +218,36 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     int endOfDecode;
     boolean slaveSelected = false;
 
-    if ( isCursorsEnabled() )
+    if ( isCursorsEnabled() && isCursorPositionSet( 0 ) && isCursorPositionSet( 1 ) )
     {
-      endOfDecode = getSampleIndex( getCursorPosition( 1 ) + 1 );
       startOfDecode = getSampleIndex( getCursorPosition( 0 ) );
+      endOfDecode = getSampleIndex( getCursorPosition( 1 ) + 1 );
 
       // Search for a CS-low backwards from the first cursor...
       slaveSelected = searchSlaveSelected( startOfDecode, 0 ) >= 0;
+      if ( !slaveSelected )
+      {
+        // Search for a CS-low forwards from the first cursor...
+        slaveSelected = searchSlaveSelected( startOfDecode, endOfDecode ) >= 0;
+      }
     }
     else if ( hasTriggerData() )
     {
-      endOfDecode = values.length;
       startOfDecode = getSampleIndex( getTriggerPosition() );
+      endOfDecode = values.length;
 
       // Search for a CS-low backwards from the trigger position...
       slaveSelected = searchSlaveSelected( startOfDecode, 0 ) >= 0;
+      if ( !slaveSelected )
+      {
+        // Search for a CS-low forwards from the first cursor...
+        slaveSelected = searchSlaveSelected( startOfDecode, endOfDecode ) >= 0;
+      }
     }
     else
     {
-      endOfDecode = values.length;
       // Search for a CS-low forwards until the end...
+      endOfDecode = values.length;
       startOfDecode = searchSlaveSelected( 0, endOfDecode );
 
       slaveSelected = ( startOfDecode > 0 );
@@ -224,6 +266,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       // now the trigger is in b, add trigger event to table
       reportCsLow( decodedData, startOfDecode );
     }
+
+    // clear any existing annotations
+    clearChannelAnnotations( this.misoIdx );
+    clearChannelAnnotations( this.mosiIdx );
 
     /*
      * Use the mode parameter to determine which edges are to detect. Mode 0 and
@@ -257,14 +303,18 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
     final int misoMask = 1 << this.misoIdx;
     final int mosiMask = 1 << this.mosiIdx;
+    final int sckMask = 1 << this.sckIdx;
+    final int csMask = 1 << this.csIdx;
 
-    // clear any existing annotations
-    clearChannelAnnotations( this.misoIdx );
-    clearChannelAnnotations( this.mosiIdx );
+    final String mosiLabel = getChannelLabel( this.mosiIdx, "MOSI" );
+    setChannelLabel( this.mosiIdx, mosiLabel );
+
+    final String misoLabel = getChannelLabel( this.misoIdx, "MISO" );
+    setChannelLabel( this.misoIdx, misoLabel );
 
     // scanning for falling/rising clk edges
-    int oldSckValue = ( values[startOfDecode] & this.sckMask );
-    int oldCsValue = ( values[startOfDecode] & this.csMask );
+    int oldSckValue = ( values[startOfDecode] & sckMask );
+    int oldCsValue = ( values[startOfDecode] & csMask );
 
     // We've already found the
     boolean slaveSelected = true;
@@ -281,9 +331,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       final long time = calculateTime( timestamps[idx] );
 
       /* CLK edge detection */
-      final int sckValue = values[idx] & this.sckMask;
+      final int sckValue = values[idx] & sckMask;
       /* CS edge detection */
-      final int csValue = values[idx] & this.csMask;
+      final int csValue = values[idx] & csMask;
 
       final Edge slaveSelectEdge = determineEdge( oldCsValue, csValue );
       oldCsValue = csValue;
@@ -349,16 +399,13 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         }
         else if ( bitIdx == 0 )
         {
-          // Perform bit-order conversion on the full byte...
-          mosivalue = NumberUtils.convertByteOrder( mosivalue, this.bitOrder );
-          misovalue = NumberUtils.convertByteOrder( misovalue, this.bitOrder );
-
-          aDecodedData.reportData( time, misovalue, mosivalue );
+          // Full datagram decoded...
+          reportData( aDecodedData, time, mosivalue, misovalue );
 
           addChannelAnnotation( this.mosiIdx, timestamps[lastIdx], timestamps[idx],
-              String.format( "MOSI: 0x%X (%c)", mosivalue, mosivalue ) );
+              String.format( "%s: 0x%X (%c)", mosiLabel, mosivalue, mosivalue ) );
           addChannelAnnotation( this.misoIdx, timestamps[lastIdx], timestamps[idx],
-              String.format( "MISO: 0x%X (%c)", misovalue, misovalue ) );
+              String.format( "%s: 0x%X (%c)", misoLabel, misovalue, misovalue ) );
 
           bitIdx = this.bitCount;
           misovalue = 0;
@@ -446,6 +493,22 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
+   * @param aDecodedData
+   * @param aTimestamp
+   * @param aMosiValue
+   * @param aMisoValue
+   */
+  private void reportData( final SPIDataSet aDecodedData, final long aTimestamp, final int aMosiValue,
+      final int aMisoValue )
+  {
+    // Perform bit-order conversion on the full byte...
+    final int mosivalue = NumberUtils.convertByteOrder( aMosiValue, this.bitOrder );
+    final int misovalue = NumberUtils.convertByteOrder( aMisoValue, this.bitOrder );
+
+    aDecodedData.reportData( aTimestamp, misovalue, mosivalue );
+  }
+
+  /**
    * @param aSampleIndex
    * @param aI
    * @return
@@ -453,6 +516,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   private int searchSlaveSelected( final int aStartIndex, final int aEndIndex )
   {
     final int[] values = getValues();
+
+    final int csMask = 1 << this.csIdx;
 
     /*
      * For analyze scan the CS line for a falling edge. If no edge could be
@@ -462,10 +527,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     if ( aStartIndex > aEndIndex )
     {
       // Walk backwards...
-      int oldCsValue = values[aStartIndex] & this.csMask;
+      int oldCsValue = values[aStartIndex] & csMask;
       for ( int i = aStartIndex; i >= aEndIndex; i-- )
       {
-        final int csValue = values[i] & this.csMask;
+        final int csValue = values[i] & csMask;
         if ( oldCsValue < csValue )
         {
           // found first falling edge; start decoding from here...
@@ -482,10 +547,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     else
     {
       // Walk forwards...
-      int oldCsValue = values[aStartIndex] & this.csMask;
-      for ( int i = aStartIndex; i < aEndIndex; i++ )
+      int oldCsValue = values[aStartIndex] & csMask;
+      for ( int i = aStartIndex + 1; i < aEndIndex; i++ )
       {
-        final int csValue = values[i] & this.csMask;
+        final int csValue = values[i] & csMask;
         if ( oldCsValue > csValue )
         {
           // found first falling edge; start decoding from here...

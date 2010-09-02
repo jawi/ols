@@ -52,17 +52,17 @@ public class OpenDataFileAction extends BaseAction
 
   // VARIABLES
 
-  private final DiagramScrollPane diagramScrollPane;
+  private final Diagram diagram;
 
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public OpenDataFileAction( final DiagramScrollPane aDiagramScrollPane )
+  public OpenDataFileAction( final Diagram aDiagram )
   {
     super( ID, ICON_OPEN_DATAFILE, "Open ...", "Open an existing data file" );
-    this.diagramScrollPane = aDiagramScrollPane;
+    this.diagram = aDiagram;
   }
 
   // METHODS
@@ -85,7 +85,7 @@ public class OpenDataFileAction extends BaseAction
           LOG.info( "Loading OLS capture date from file: " + file );
         }
 
-        this.diagramScrollPane.loadData( file );
+        this.diagram.loadData( file );
       }
     }
     catch ( IOException exception )

@@ -42,9 +42,9 @@ public class ZoomFitAction extends BaseZoomAction
   /**
    * @param aDiagramScrollPane
    */
-  public ZoomFitAction( final DiagramScrollPane aDiagramScrollPane )
+  public ZoomFitAction( final Diagram aDiagram )
   {
-    super( ID, aDiagramScrollPane, ICON_ZOOM_FIT_BEST, "Zoom to fit", "Zoom to best fit" );
+    super( ID, aDiagram, ICON_ZOOM_FIT_BEST, "Zoom to fit", "Zoom to best fit" );
   }
 
   // METHODS
@@ -55,9 +55,8 @@ public class ZoomFitAction extends BaseZoomAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagramScrollPane().zoomToFit();
+    getDiagram().zoomToFit();
   }
-
 }
 
 /* EOF */

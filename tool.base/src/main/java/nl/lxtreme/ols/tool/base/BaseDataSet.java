@@ -119,28 +119,31 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   }
 
   /**
-   * @param aCount
-   * @return
+   * Determines the time (display) value for a given sample index.
+   * 
+   * @param aIndex
+   *          the sample index to convert to a time (display) value.
+   * @return the time display value of the given sample index, never
+   *         <code>null</code>.
    */
-  protected final String indexToTime( final long aCount )
+  protected final String indexToTime( final long aIndex )
   {
-    final long count = Math.max( 0, aCount - this.startOfDecode );
+    final long index = ( aIndex - this.startOfDecode );
     if ( this.timingDataPresent )
     {
-      return DisplayUtils.displayScaledTime( count, this.sampleRate );
+      return DisplayUtils.displayScaledTime( index, this.sampleRate );
     }
     else
     {
-      return ( "" + count );
+      return Long.toString( index );
     }
   }
 
   /**
    * Sorts the data according to the {@link Comparable} implementation of DATA.
    */
-  @SuppressWarnings( { "unchecked", "rawtypes" } )
   protected void sort()
   {
-    Collections.sort( ( List<? extends Comparable> )this.data );
+    Collections.sort( this.data );
   }
 }

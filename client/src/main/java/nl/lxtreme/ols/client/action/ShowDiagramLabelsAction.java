@@ -41,17 +41,17 @@ public class ShowDiagramLabelsAction extends BaseAction
 
   // VARIABLES
 
-  private final DiagramScrollPane diagramScrollPane;
+  private final Diagram diagram;
 
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public ShowDiagramLabelsAction( final DiagramScrollPane aDiagramScrollPane )
+  public ShowDiagramLabelsAction( final Diagram aDiagram )
   {
     super( ID, "Diagram labels", "Show the diagram labels dialog." );
-    this.diagramScrollPane = aDiagramScrollPane;
+    this.diagram = aDiagram;
   }
 
   // METHODS
@@ -64,7 +64,7 @@ public class ShowDiagramLabelsAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    this.diagramScrollPane.showLabelsDialog( owner );
+    this.diagram.showLabelsDialog( owner );
   }
 }
 
