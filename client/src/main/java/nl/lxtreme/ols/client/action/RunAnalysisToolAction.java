@@ -44,7 +44,7 @@ public class RunAnalysisToolAction extends BaseAction
   // VARIABLES
 
   private final Tool tool;
-  private final DiagramScrollPane scrollPane;
+  private final Diagram diagram;
   private final AnalysisCallback callback;
 
   // CONSTRUCTORS
@@ -54,12 +54,12 @@ public class RunAnalysisToolAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public RunAnalysisToolAction( final Tool aTool, final DiagramScrollPane aScrollPane, final AnalysisCallback aCallback )
+  public RunAnalysisToolAction( final Tool aTool, final Diagram aDiagram, final AnalysisCallback aCallback )
   {
     super( ID + aTool.getName(), aTool.getName(), "Run " + aTool.getName() );
 
     this.tool = aTool;
-    this.scrollPane = aScrollPane;
+    this.diagram = aDiagram;
     this.callback = aCallback;
   }
 
@@ -73,7 +73,7 @@ public class RunAnalysisToolAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final DataContainer data = this.scrollPane.getDataContainer();
+    final DataContainer data = this.diagram.getDataContainer();
     final ToolContext toolContext = null;
 
     this.tool.process( owner, data, toolContext, this.callback );

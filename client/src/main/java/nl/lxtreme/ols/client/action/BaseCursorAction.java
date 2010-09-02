@@ -35,7 +35,7 @@ public abstract class BaseCursorAction extends BaseAction
 
   // VARIABLES
 
-  private final DiagramScrollPane diagramScrollPane;
+  private final Diagram diagram;
 
   // CONSTRUCTORS
 
@@ -43,11 +43,10 @@ public abstract class BaseCursorAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public BaseCursorAction( final String aID, final DiagramScrollPane aDiagramScrollPane, final String aName,
-      final String aDescription )
+  public BaseCursorAction( final String aID, final Diagram aDiagram, final String aName, final String aDescription )
   {
     super( aID, aName, aDescription );
-    this.diagramScrollPane = aDiagramScrollPane;
+    this.diagram = aDiagram;
   }
 
   /**
@@ -55,11 +54,11 @@ public abstract class BaseCursorAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public BaseCursorAction( final String aID, final DiagramScrollPane aDiagramScrollPane, final String aIconName,
-      final String aName, final String aDescription )
+  public BaseCursorAction( final String aID, final Diagram aDiagram, final String aIconName, final String aName,
+      final String aDescription )
   {
     super( aID, aIconName, aName, aDescription );
-    this.diagramScrollPane = aDiagramScrollPane;
+    this.diagram = aDiagram;
   }
 
   // METHODS
@@ -67,9 +66,9 @@ public abstract class BaseCursorAction extends BaseAction
   /**
    * @return
    */
-  protected final DiagramScrollPane getDiagramScrollPane()
+  protected final Diagram getDiagram()
   {
-    return this.diagramScrollPane;
+    return this.diagram;
   }
 
 }

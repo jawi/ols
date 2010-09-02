@@ -42,9 +42,9 @@ public class ZoomDefaultAction extends BaseZoomAction
   /**
    * @param aDiagramScrollPane
    */
-  public ZoomDefaultAction( final DiagramScrollPane aDiagramScrollPane )
+  public ZoomDefaultAction( final Diagram aDiagram )
   {
-    super( ID, aDiagramScrollPane, ICON_ZOOM_DEFAULT, "Zoom original", "Zoom to original level." );
+    super( ID, aDiagram, ICON_ZOOM_DEFAULT, "Zoom original", "Zoom to original level." );
   }
 
   // METHODS
@@ -55,9 +55,8 @@ public class ZoomDefaultAction extends BaseZoomAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagramScrollPane().zoomDefault();
+    getDiagram().zoomDefault();
   }
-
 }
 
 /* EOF */

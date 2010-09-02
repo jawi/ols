@@ -41,17 +41,17 @@ public class SetCursorModeAction extends BaseAction
 
   // VARIABLES
 
-  private final DiagramScrollPane diagramScrollPane;
+  private final Diagram diagram;
 
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public SetCursorModeAction( final DiagramScrollPane aDiagramScrollPane )
+  public SetCursorModeAction( final Diagram aDiagramScrollPane )
   {
     super( ID, "Enable cursors", "Enables the cursors in the diagram." );
-    this.diagramScrollPane = aDiagramScrollPane;
+    this.diagram = aDiagramScrollPane;
   }
 
   // METHODS
@@ -63,7 +63,7 @@ public class SetCursorModeAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
-    this.diagramScrollPane.setCursorMode( menuItem.getState() );
+    this.diagram.setCursorMode( menuItem.getState() );
 
     putValue( NAME, menuItem.getState() ? "Disable cursors" : "Enable cursors" );
     putValue( SHORT_DESCRIPTION, menuItem.getState() ? "Disables the diagram cursors" : "Enables the diagram cursors" );

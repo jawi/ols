@@ -46,17 +46,17 @@ public class SaveDataFileAction extends BaseAction
 
   // VARIABLES
 
-  private final DiagramScrollPane diagramScrollPane;
+  private final Diagram diagram;
 
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public SaveDataFileAction( final DiagramScrollPane aDiagram )
+  public SaveDataFileAction( final Diagram aDiagram )
   {
     super( ID, ICON_SAVE_DATAFILE, "Save ...", "Save data file." );
-    this.diagramScrollPane = aDiagram;
+    this.diagram = aDiagram;
   }
 
   // METHODS
@@ -80,7 +80,7 @@ public class SaveDataFileAction extends BaseAction
           LOG.info( "Saving OLS capture date to file: " + actualFile );
         }
 
-        this.diagramScrollPane.saveData( actualFile );
+        this.diagram.saveData( actualFile );
       }
     }
     catch ( IOException exception )

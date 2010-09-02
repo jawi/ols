@@ -48,7 +48,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
    * Creates a new BaseToolWorker instance.
    * 
    * @param aData
-   *          the captured data to process, can be <code>null</code>.
+   *          the data container to work with, could be <code>null</code>.
    */
   public BaseAsyncToolWorker( final DataContainer aData )
   {
@@ -67,11 +67,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * calculate the time offset
-   * 
-   * @param aTime
-   *          absolute sample number
-   * @return time relative to data
+   * @see DataContainer#calculateTime(long)
    */
   public final long calculateTime( final long aTime )
   {
@@ -81,13 +77,13 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   /**
    * @see DataContainer#clearChannelAnnotations(int)
    */
-  public void clearChannelAnnotations( final int aChannelIdx )
+  public final void clearChannelAnnotations( final int aChannelIdx )
   {
     this.data.clearChannelAnnotations( aChannelIdx );
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getAbsoluteLength()
+   * @see DataContainer#getAbsoluteLength()
    */
   @Override
   public final long getAbsoluteLength()
@@ -96,10 +92,38 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getChannels()
+   * @see DataContainer#getChannelLabel(int)
+   */
+  public final String getChannelLabel( final int aChannelIdx )
+  {
+    return this.data.getChannelLabel( aChannelIdx );
+  }
+
+  /**
+   * Returns the channel label for a channel with the given index, using the
+   * given default label if the channel's label is not set.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to return the label for, >= 0 && < 32;
+   * @param aDefault
+   *          the default label to use in case the channel label is not set.
+   * @see DataContainer#getChannelLabel(int)
+   */
+  public final String getChannelLabel( final int aChannelIdx, final String aDefault )
+  {
+    String result = this.data.getChannelLabel( aChannelIdx );
+    if ( ( result == null ) || result.trim().isEmpty() )
+    {
+      result = aDefault;
+    }
+    return result;
+  }
+
+  /**
+   * @see DataContainer#getChannels()
    */
   @Override
-  public int getChannels()
+  public final int getChannels()
   {
     return this.data.getChannels();
   }
@@ -107,79 +131,76 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   /**
    * @see DataContainer#getCursorPosition(int)
    */
-  public long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
+  public final long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
   {
     return this.data.getCursorPosition( aCursorIdx );
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getDataAt(long)
+   * @see DataContainer#getDataAt(long)
    */
   @Override
-  public int getDataAt( final long aAbs )
+  public final int getDataAt( final long aAbs )
   {
     return this.data.getDataAt( aAbs );
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getEnabledChannels()
+   * @see DataContainer#getEnabledChannels()
    */
   @Override
-  public int getEnabledChannels()
+  public final int getEnabledChannels()
   {
     return this.data.getEnabledChannels();
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getSampleIndex(long)
+   * @see DataContainer#getSampleIndex(long)
    */
   @Override
-  public int getSampleIndex( final long aAbs )
+  public final int getSampleIndex( final long aAbs )
   {
     return this.data.getSampleIndex( aAbs );
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getSampleRate()
+   * @see DataContainer#getSampleRate()
    */
   @Override
-  public int getSampleRate()
+  public final int getSampleRate()
   {
     return this.data.getSampleRate();
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getTimestamps()
+   * @see DataContainer#getTimestamps()
    */
   @Override
-  public long[] getTimestamps()
+  public final long[] getTimestamps()
   {
     return this.data.getTimestamps();
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerPosition()
+   * @see DataContainer#getTriggerPosition()
    */
   @Override
-  public long getTriggerPosition()
+  public final long getTriggerPosition()
   {
     return this.data.getTriggerPosition();
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getValues()
+   * @see DataContainer#getValues()
    */
   @Override
-  public int[] getValues()
+  public final int[] getValues()
   {
     return this.data.getValues();
   }
 
   /**
-   * Returns whether there is captured data to process.
-   * 
-   * @return <code>true</code> if there is captured data to process,
-   *         <code>false</code> otherwise.
+   * @see DataContainer#hasCapturedData()
    */
   public final boolean hasCapturedData()
   {
@@ -187,21 +208,37 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#hasTimingData()
+   * @see DataContainer#hasTimingData()
    */
   @Override
-  public boolean hasTimingData()
+  public final boolean hasTimingData()
   {
     return this.data.hasTimingData();
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#hasTriggerData()
+   * @see DataContainer#hasTriggerData()
    */
   @Override
-  public boolean hasTriggerData()
+  public final boolean hasTriggerData()
   {
     return this.data.hasTriggerData();
+  }
+
+  /**
+   * @see DataContainer#isChannelLabelSet(int)
+   */
+  public final boolean isChannelLabelSet( final int aChannelIdx )
+  {
+    return this.data.isChannelLabelSet( aChannelIdx );
+  }
+
+  /**
+   * @see DataContainer#isCursorPositionSet(int)
+   */
+  public final boolean isCursorPositionSet( final int aCursorIdx )
+  {
+    return this.data.isCursorPositionSet( aCursorIdx );
   }
 
   /**
@@ -213,24 +250,15 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * Sets the channel label.
-   * 
-   * @param aChannelIdx
-   *          the index of the channel to set the label for, >= 0 && < 32;
-   * @param aLabel
-   *          the label to set, may be <code>null</code>.
+   * @see DataContainer#setChannelLabel(int, String)
    */
-  public void setChannelLabel( final int aChannelIdx, final String aLabel )
+  public final void setChannelLabel( final int aChannelIdx, final String aLabel )
   {
     this.data.setChannelLabel( aChannelIdx, aLabel );
   }
 
   /**
-   * Updates the captured data.
-   * 
-   * @param aCapturedData
-   *          the captured data to update, cannot be <code>null</code> nor be
-   *          "this".
+   * @see DataContainer#setCapturedData(CapturedData)
    */
   protected final void setCapturedData( final CapturedData aCapturedData )
   {
@@ -240,7 +268,6 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
     }
     this.data.setCapturedData( aCapturedData );
   }
-
 }
 
 /* EOF */

@@ -42,9 +42,9 @@ public class ZoomInAction extends BaseZoomAction
   /**
    * @param aDiagram
    */
-  public ZoomInAction( final DiagramScrollPane aDiagramScrollPane )
+  public ZoomInAction( final Diagram aDiagram )
   {
-    super( ID, aDiagramScrollPane, ICON_ZOOM_IN, "Zoom in", "Zooms in." );
+    super( ID, aDiagram, ICON_ZOOM_IN, "Zoom in", "Zooms in." );
   }
 
   // METHODS
@@ -55,7 +55,7 @@ public class ZoomInAction extends BaseZoomAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagramScrollPane().zoomIn();
+    getDiagram().zoomIn();
   }
 }
 

@@ -35,7 +35,7 @@ abstract class BaseZoomAction extends BaseAction
 
   // VARIABLES
 
-  private final DiagramScrollPane diagramScrollPane;
+  private final Diagram diagram;
 
   // CONSTRUCTORS
 
@@ -43,11 +43,11 @@ abstract class BaseZoomAction extends BaseAction
    * @param aDiagram
    *          the diagram to zoom in/out/...
    */
-  protected BaseZoomAction( final String aID, final DiagramScrollPane aDiagramScrollPane, final String aIconName,
-      final String aName, final String aDescription )
+  protected BaseZoomAction( final String aID, final Diagram aDiagram, final String aIconName, final String aName,
+      final String aDescription )
   {
     super( aID, aIconName, aName, aDescription );
-    this.diagramScrollPane = aDiagramScrollPane;
+    this.diagram = aDiagram;
   }
 
   // METHODS
@@ -55,11 +55,10 @@ abstract class BaseZoomAction extends BaseAction
   /**
    * @return the diagram to zoom in/out/...
    */
-  protected final DiagramScrollPane getDiagramScrollPane()
+  protected final Diagram getDiagram()
   {
-    return this.diagramScrollPane;
+    return this.diagram;
   }
-
 }
 
 /* EOF */

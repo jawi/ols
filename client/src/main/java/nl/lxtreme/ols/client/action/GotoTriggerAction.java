@@ -42,9 +42,9 @@ public class GotoTriggerAction extends BaseCursorAction
   /**
    * @param aDiagramScrollPane
    */
-  public GotoTriggerAction( final DiagramScrollPane aDiagramScrollPane )
+  public GotoTriggerAction( final Diagram aDiagram )
   {
-    super( ID, aDiagramScrollPane, ICON_GOTO_TRIGGER, "Go to Trigger", "Go to trigger moment in diagram." );
+    super( ID, aDiagram, ICON_GOTO_TRIGGER, "Go to Trigger", "Go to trigger moment in diagram." );
   }
 
   // METHODS
@@ -55,7 +55,7 @@ public class GotoTriggerAction extends BaseCursorAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagramScrollPane().gotoTriggerPosition();
+    getDiagram().gotoTriggerPosition();
   }
 }
 

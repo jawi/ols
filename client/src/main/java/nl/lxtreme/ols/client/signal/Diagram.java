@@ -86,6 +86,27 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     // METHODS
 
     /**
+     * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
+     */
+    @Override
+    public void mouseClicked( final MouseEvent aEvent )
+    {
+      if ( aEvent.getClickCount() == 2 )
+      {
+        if ( aEvent.isAltDown() || aEvent.isShiftDown() )
+        {
+          // Zoom out...
+          zoomOut();
+        }
+        else
+        {
+          // Zoom in...
+          zoomIn();
+        }
+      }
+    }
+
+    /**
      * Handles mouse dragged events and produces status change "events"
      * accordingly.
      */
@@ -192,6 +213,9 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
   private static final Stroke SOLID_THICK = new BasicStroke( 1.5f );
 
+  private static final boolean DEBUG = Boolean.parseBoolean( System
+      .getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+
   // VARIABLES
 
   private final DataContainer dataContainer;
@@ -223,9 +247,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   private final Color[] channelColors;
   private final int channelHeight;
   private final int scopeHeight;
-
-  private static final boolean DEBUG = Boolean.parseBoolean( System
-      .getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
 
   /**
    * Create a new empty diagram to be placed in a container.
@@ -303,7 +324,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   static final long xToIndex( final DataContainer aData, final int aXpos, final double aScale )
   {
-    long index = Math.max( 0, ( long )( aXpos / aScale ) );
+    long index = ( long )Math.max( 0.0, ( aXpos / aScale ) );
 
     if ( aData.hasCapturedData() && ( index >= aData.getAbsoluteLength() ) )
     {
@@ -579,6 +600,29 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * @param aCursorNo
+   */
+  public void gotoCursorPosition( final int aCursorNo )
+  {
+    if ( getCursorMode() )
+    {
+      gotoPosition( getCursorPosition( aCursorNo ) );
+    }
+  }
+
+  /**
+   * 
+   */
+  public void gotoTriggerPosition()
+  {
+    final long triggerPosition = getTriggerPosition();
+    if ( triggerPosition != CapturedData.NOT_AVAILABLE )
+    {
+      gotoPosition( triggerPosition );
+    }
+  }
+
+  /**
    * Returns wheter or not the diagram has any data.
    * 
    * @return <code>true</code> if captured data exists, <code>false</code>
@@ -631,7 +675,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     {
       reader.close();
 
-      zoomFit();
+      zoomToFit();
     }
   }
 
@@ -692,6 +736,15 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       writer.flush();
       writer.close();
     }
+  }
+
+  /**
+   * @param aCapturedData
+   */
+  public final void setCapturedData( final CapturedData aData )
+  {
+    this.dataContainer.setCapturedData( aData );
+    updateActions();
   }
 
   /**
@@ -821,63 +874,54 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Zooms to fitting the view on Display.
-   */
-  public void zoomFit()
-  {
-    final Window owner = SwingUtilities.getWindowAncestor( this );
-    final int width = Math.max( 1, ( owner.getWidth() - ( this.rowLabels.getWidth() + 20 ) ) );
-
-    // avoid null pointer exception when no data available
-    if ( !hasCapturedData() )
-    {
-      return;
-    }
-
-    final long absoluteLength = this.dataContainer.getAbsoluteLength();
-    if ( absoluteLength != CapturedData.NOT_AVAILABLE )
-    {
-      setScale( width / ( double )absoluteLength );
-    }
-    else
-    {
-      setScale( MAX_SCALE );
-    }
-
-    resize();
-  }
-
-  /**
    * Zooms in by factor 2 and resizes the component accordingly.
+   * 
+   * @return <code>true</code> if the zoom action succeeded, <code>false</code>
+   *         otherwise.
    */
   public void zoomIn()
   {
     double newScale = this.scale;
     if ( newScale < MAX_SCALE )
     {
-      newScale = Math.min( MAX_SCALE, newScale * 2.0 );
-      setScale( newScale );
+      setScale( newScale * 2.0 );
       resize();
     }
   }
 
   /**
    * Zooms out by factor 2 and resizes the component accordingly.
+   * 
+   * @return <code>true</code> if the zoom action succeeded, <code>false</code>
+   *         otherwise.
    */
   public void zoomOut()
   {
-    final double newScale = this.scale / 2.0;
-    setScale( newScale );
-    resize();
+    final double fitScaleFactor = getZoomToFitScale();
+
+    double newScale = this.scale;
+    if ( newScale > fitScaleFactor )
+    {
+      setScale( newScale / 2.0 );
+      resize();
+    }
   }
 
   /**
-   * @param aCapturedData
+   * Zooms to fitting the view on Display.
    */
-  final void setCapturedData( final CapturedData aData )
+  public void zoomToFit()
   {
-    getDataContainer().setCapturedData( aData );
-    updateActions();
+    // avoid null pointer exception when no data available
+    if ( !hasCapturedData() )
+    {
+      return;
+    }
+
+    final double fitScaleFactor = getZoomToFitScale();
+
+    setScale( fitScaleFactor );
+    resize();
   }
 
   /**
@@ -938,34 +982,41 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       final int sampleRate = this.dataContainer.getSampleRate();
       final long triggerPosition = this.dataContainer.getTriggerPosition();
 
-      if ( this.dataContainer.isCursorsEnabled() )
-      {
-        // print cursor data to status line
-        final long absCursorPosA = this.dataContainer.getCursorPosition( 1 ) - triggerPosition;
-        final long absCursorPosB = this.dataContainer.getCursorPosition( 2 ) - triggerPosition;
-        final long relCursorPos = this.dataContainer.getCursorPosition( 1 ) - this.dataContainer.getCursorPosition( 2 );
-
-        if ( !this.dataContainer.hasTimingData() )
-        {
-          sb.append( "Sample@A=" ).append( absCursorPosA ).append( " | " );
-          sb.append( "Sample@B=" ).append( absCursorPosB ).append( " | " );
-          sb.append( "Distance(A,B)=" ).append( relCursorPos );
-        }
-        else
-        {
-          sb.append( "Time@A=" ).append( DisplayUtils.displayScaledTime( absCursorPosA, sampleRate ) ).append( " | " );
-          sb.append( "Time@B=" ).append( DisplayUtils.displayScaledTime( absCursorPosB, sampleRate ) );
-          sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( Math.abs( relCursorPos ), sampleRate ) );
-          if ( relCursorPos != 0 )
-          {
-            sb.append( ", " ).append( "frequency " );
-            final double frequency = Math.abs( ( double )sampleRate / ( double )relCursorPos );
-            sb.append( DisplayUtils.displayFrequency( frequency ) );
-          }
-          sb.append( ")" );
-        }
-      }
-      else
+      // if ( this.dataContainer.isCursorsEnabled() )
+      // {
+      // // print cursor data to status line
+      // final long absCursorPosA = this.dataContainer.getCursorPosition( 0 ) -
+      // triggerPosition;
+      // final long absCursorPosB = this.dataContainer.getCursorPosition( 1 ) -
+      // triggerPosition;
+      // final long relCursorPos = this.dataContainer.getCursorPosition( 0 ) -
+      // this.dataContainer.getCursorPosition( 1 );
+      //
+      // if ( !this.dataContainer.hasTimingData() )
+      // {
+      // sb.append( "Sample@1=" ).append( absCursorPosA ).append( " | " );
+      // sb.append( "Sample@2=" ).append( absCursorPosB ).append( " | " );
+      // sb.append( "Distance(1,2)=" ).append( relCursorPos );
+      // }
+      // else
+      // {
+      // sb.append( "Time@1=" ).append( DisplayUtils.displayScaledTime(
+      // absCursorPosA, sampleRate ) ).append( " | " );
+      // sb.append( "Time@2=" ).append( DisplayUtils.displayScaledTime(
+      // absCursorPosB, sampleRate ) );
+      // sb.append( " (duration " ).append( DisplayUtils.displayScaledTime(
+      // Math.abs( relCursorPos ), sampleRate ) );
+      // if ( relCursorPos != 0 )
+      // {
+      // sb.append( ", " ).append( "frequency " );
+      // final double frequency = Math.abs( ( double )sampleRate / ( double
+      // )relCursorPos );
+      // sb.append( DisplayUtils.displayFrequency( frequency ) );
+      // }
+      // sb.append( ")" );
+      // }
+      // }
+      // else
       {
         // print origin status when no cursors used
         final long idxMouseDragX = xToIndex( aStartDragXpos );
@@ -1496,6 +1547,59 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * Calculates the scale that should be set to make this diagram fit entirely
+   * in the current view.
+   * 
+   * @return a zoom-to-fit scale, > 0.
+   */
+  private double getZoomToFitScale()
+  {
+    int visibleWidth;
+
+    final JScrollPane scrollPane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, this );
+    if ( scrollPane != null )
+    {
+      visibleWidth = scrollPane.getViewport().getWidth() - 5;
+    }
+    else
+    {
+      visibleWidth = SwingUtilities.getWindowAncestor( this ).getWidth() - this.rowLabels.getWidth() - 20;
+    }
+
+    final int width = Math.max( 1, visibleWidth );
+    final double fitScaleFactor = width / ( double )this.dataContainer.getAbsoluteLength();
+    return fitScaleFactor;
+  }
+
+  /**
+   * Sets this Diagram's viewport position
+   * 
+   * @param aSamplePos
+   *          sample position
+   */
+  private void gotoPosition( final long aSamplePos )
+  {
+    final JScrollPane pane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, this );
+    if ( pane == null )
+    {
+      return;
+    }
+
+    final JViewport vp = pane.getViewport();
+    final Dimension dim = getPreferredSize();
+
+    // do nothing if the zoom factor is nearly the viewport size
+    final int width = vp.getWidth();
+    if ( dim.width < width * 2 )
+    {
+      return;
+    }
+
+    final int pos = Math.max( 0, getTargetPosition( aSamplePos ) - ( width / 2 ) );
+    vp.setViewPosition( new Point( pos, 0 ) );
+  }
+
+  /**
    * Sets the actual cursor position.
    * 
    * @param aCursorIdx
@@ -1584,35 +1688,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       return;
     }
 
-    final int channels = this.dataContainer.getChannels();
-    final int enabledChannels = this.dataContainer.getEnabledChannels();
-
-    final int channelHeight = getChannelHeight();
-    final int scopeHeight = getScopeHeight();
-
-    int height = 0;
-    for ( int group = 0; ( group < channels / 8 ) && ( group < 4 ); group++ )
-    {
-      if ( ( ( enabledChannels >> ( 8 * group ) ) & 0xff ) != 0 )
-      {
-        if ( isShowChannels( group ) )
-        {
-          height += channelHeight * 8;
-        }
-        if ( isShowScope( group ) )
-        {
-          height += scopeHeight;
-        }
-        if ( isShowByte( group ) )
-        {
-          height += channelHeight;
-        }
-      }
-    }
-
-    final int width = ( int )( this.scale * this.dataContainer.getAbsoluteLength() );
-
-    final Dimension newDiagramSize = new Dimension( width, height );
+    final Dimension newDiagramSize = updatePreferredSize();
 
     this.timeLine.setPreferredSize( newDiagramSize );
     this.timeLine.revalidate();
@@ -1620,10 +1696,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     this.rowLabels.setPreferredSize( newDiagramSize );
     this.rowLabels.revalidate();
 
-    setPreferredSize( newDiagramSize );
     revalidate();
-
-    repaint();
   }
 
   /**
@@ -1667,6 +1740,47 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         scrollPane.setRowHeaderView( null );
       }
     }
+  }
+
+  /**
+   * Calculates the preferred width and height of this component.
+   * 
+   * @return a preferred size, never <code>null</code>.
+   */
+  private Dimension updatePreferredSize()
+  {
+    final int channels = this.dataContainer.getChannels();
+    final int enabledChannels = this.dataContainer.getEnabledChannels();
+
+    final int channelHeight = getChannelHeight();
+    final int scopeHeight = getScopeHeight();
+
+    int height = 0;
+    for ( int group = 0; ( group < channels / 8 ) && ( group < 4 ); group++ )
+    {
+      if ( ( ( enabledChannels >> ( 8 * group ) ) & 0xff ) != 0 )
+      {
+        if ( isShowChannels( group ) )
+        {
+          height += channelHeight * 8;
+        }
+        if ( isShowScope( group ) )
+        {
+          height += scopeHeight;
+        }
+        if ( isShowByte( group ) )
+        {
+          height += channelHeight;
+        }
+      }
+    }
+
+    final int width = ( int )( this.scale * this.dataContainer.getAbsoluteLength() );
+
+    final Dimension newDiagramSize = new Dimension( width, height );
+    setPreferredSize( newDiagramSize );
+
+    return newDiagramSize;
   }
 
   /**

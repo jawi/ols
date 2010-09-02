@@ -42,9 +42,9 @@ public class ZoomOutAction extends BaseZoomAction
   /**
    * @param aDiagram
    */
-  public ZoomOutAction( final DiagramScrollPane aDiagramScrollPane )
+  public ZoomOutAction( final Diagram aDiagram )
   {
-    super( ID, aDiagramScrollPane, ICON_ZOOM_OUT, "Zoom out", "Zooms out" );
+    super( ID, aDiagram, ICON_ZOOM_OUT, "Zoom out", "Zooms out" );
   }
 
   // METHODS
@@ -55,7 +55,7 @@ public class ZoomOutAction extends BaseZoomAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagramScrollPane().zoomOut();
+    getDiagram().zoomOut();
   }
 }
 
