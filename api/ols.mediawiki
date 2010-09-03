@@ -80,7 +80,7 @@ Provides some common utilities that are shared among all other projects.
 # closing the window through the [X] on Windows doesn't exit the program (thanks to Andre);
 # the OLS before/after trigger ratio slider has some cosmetic twitches (thanks to Andre);
 # remember the last save/load location for open/save data-files & exports;
-# clear Annotations for a channel when tool wants to;
+# <strike>clear Annotations for a channel when tool wants to;</strike>
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;
 # add annotations to other analysis tools;
 # make the annotated data configurable regarding the displayed text and colors;

@@ -170,7 +170,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     {
       // no idle state could be found
       LOG.log( Level.WARNING, "No IDLE state found in data; aborting analysis..." );
-      return null;
+      throw new IllegalStateException( "No IDLE state found!" );
     }
 
     this.sdaIdx = 0;
@@ -219,7 +219,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     {
       // no start condition could be found
       LOG.log( Level.WARNING, "No START condition found! Analysis aborted..." );
-      return null;
+      throw new IllegalStateException( "No START condition found!" );
     }
 
     final int sdaMask = ( 1 << this.sdaIdx );

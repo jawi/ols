@@ -234,7 +234,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       slaveSelected = ( startOfDecode > 0 );
     }
 
-    if ( !slaveSelected )
+    if ( !slaveSelected || ( startOfDecode >= endOfDecode ) )
     {
       // no CS edge found, look for trigger
       LOG.log( Level.WARNING, "No CS start-condition found! Analysis aborted..." );

@@ -261,6 +261,13 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
       }
     }
 
+    // Make sure we've got a valid range to decode..
+    if ( startOfDecode >= endOfDecode )
+    {
+      LOG.log( Level.WARNING, "No valid data range found for UART analysis! Analysis aborted..." );
+      throw new IllegalStateException( "No valid data range found for UART analysis!" );
+    }
+
     final UARTDataSet decodedData = new UARTDataSet( startOfDecode, endOfDecode, this );
 
     // decode RxD
