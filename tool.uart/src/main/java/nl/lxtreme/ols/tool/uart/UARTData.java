@@ -43,41 +43,36 @@ public final class UARTData extends BaseData<UARTData>
 
   private final int data;
   private final int type;
-  private final String event;
 
   // CONSTRUCTORS
 
   /*
    * data
    */
-  public UARTData( final long aTime, final int aData, final int aType, final String aTimeDisplayValue )
+  public UARTData( final int aIndex, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
+      final int aData, final int aType )
   {
-    super( aTime, aTimeDisplayValue );
+    super( aIndex, aChannelIdx, aStartSampleIdx, aEndSampleIdx );
     this.data = aData;
     this.type = aType;
-    this.event = null;
-  }
-
-  /*
-   * type specific event
-   */
-  public UARTData( final long aTime, final String aEvent, final int aType, final String aTimeDisplayValue )
-  {
-    super( aTime, aTimeDisplayValue );
-    this.data = 0;
-    this.type = aType;
-    this.event = aEvent;
   }
 
   /*
    * generic event
    */
-  public UARTData( final long aTime, final String aEvent, final String aTimeDisplayValue )
+  public UARTData( final int aIndex, final int aChannelIdx, final int aSampleIdx, final String aEvent )
   {
-    super( aTime, aTimeDisplayValue );
+    this( aIndex, aChannelIdx, aSampleIdx, aEvent, UART_TYPE_EVENT );
+  }
+
+  /*
+   * type specific event
+   */
+  public UARTData( final int aIndex, final int aChannelIdx, final int aSampleIdx, final String aEvent, final int aType )
+  {
+    super( aIndex, aChannelIdx, aSampleIdx, aEvent );
     this.data = 0;
-    this.type = UART_TYPE_EVENT;
-    this.event = aEvent;
+    this.type = aType;
   }
 
   // METHODS
@@ -98,28 +93,14 @@ public final class UARTData extends BaseData<UARTData>
     }
 
     final UARTData other = ( UARTData )aObject;
-    if ( this.type != other.type )
-    {
-      return false;
-    }
-
     if ( this.data != other.data )
     {
       return false;
     }
-
-    if ( this.event == null )
-    {
-      if ( other.event != null )
-      {
-        return false;
-      }
-    }
-    else if ( !this.event.equals( other.event ) )
+    if ( this.type != other.type )
     {
       return false;
     }
-
     return true;
   }
 
@@ -129,14 +110,6 @@ public final class UARTData extends BaseData<UARTData>
   public int getData()
   {
     return this.data;
-  }
-
-  /**
-   * @return
-   */
-  public String getEvent()
-  {
-    return this.event;
   }
 
   /**
@@ -156,7 +129,6 @@ public final class UARTData extends BaseData<UARTData>
     final int prime = 31;
     int result = super.hashCode();
     result = prime * result + this.data;
-    result = prime * result + ( ( this.event == null ) ? 0 : this.event.hashCode() );
     result = prime * result + this.type;
     return result;
   }
@@ -164,6 +136,7 @@ public final class UARTData extends BaseData<UARTData>
   /**
    * @return
    */
+  @Override
   public boolean isEvent()
   {
     return ( this.type == UART_TYPE_EVENT ) || ( this.type == UART_TYPE_RXEVENT ) || ( this.type == UART_TYPE_TXEVENT );

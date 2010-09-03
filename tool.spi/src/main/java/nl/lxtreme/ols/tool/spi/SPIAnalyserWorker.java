@@ -34,35 +34,6 @@ import nl.lxtreme.ols.util.NumberUtils.BitOrder;
  */
 public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 {
-  // INNER TYPES
-
-  /**
-   * Denotes either a rising, or falling edge.
-   */
-  public enum Edge
-  {
-    NONE, RISING, FALLING;
-
-    /**
-     * Returns the inverse of this edge, so for rising it returns falling, and
-     * so on.
-     * 
-     * @return the inverse of this edge.
-     */
-    public Edge invert()
-    {
-      if ( this == RISING )
-      {
-        return FALLING;
-      }
-      if ( this == FALLING )
-      {
-        return RISING;
-      }
-      return NONE;
-    }
-  }
-
   // CONSTANTS
 
   private static final Logger LOG = Logger.getLogger( SPIAnalyserWorker.class.getName() );
@@ -78,6 +49,10 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   private boolean honourCS;
   private int mosiIdx;
   private int misoIdx;
+
+  private String mosiLabel;
+
+  private String misoLabel;
 
   // CONSTRUCTORS
 
@@ -214,6 +189,12 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
     final int[] values = getValues();
 
+    this.mosiLabel = getChannelLabel( this.mosiIdx, "MOSI" );
+    setChannelLabel( this.mosiIdx, this.mosiLabel );
+
+    this.misoLabel = getChannelLabel( this.misoIdx, "MISO" );
+    setChannelLabel( this.misoIdx, this.misoLabel );
+
     int startOfDecode;
     int endOfDecode;
     boolean slaveSelected = false;
@@ -233,7 +214,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     }
     else if ( hasTriggerData() )
     {
-      startOfDecode = getSampleIndex( getTriggerPosition() );
+      startOfDecode = getTriggerIndex();
       endOfDecode = values.length;
 
       // Search for a CS-low backwards from the trigger position...
@@ -285,32 +266,26 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   /**
    * Decodes the SPI-data on a given clock edge.
    * 
-   * @param aDecodedData
+   * @param aDataSet
    *          the decoded data to fill;
-   * @param aEdge
-   *          the edge on which to sample.
+   * @param aMode
+   *          the SPI mode defining the edges on which data can be sampled and
+   *          on which edges data can change.
    */
-  private void clockDataOnEdge( final SPIDataSet aDecodedData, final SPIMode aMode )
+  private void clockDataOnEdge( final SPIDataSet aDataSet, final SPIMode aMode )
   {
     final int[] values = getValues();
-    final long[] timestamps = getTimestamps();
 
-    final int startOfDecode = ( int )aDecodedData.getStartOfDecode();
-    final int endOfDecode = ( int )aDecodedData.getEndOfDecode();
+    final int startOfDecode = aDataSet.getStartOfDecode();
+    final int endOfDecode = aDataSet.getEndOfDecode();
 
-    final Edge sampleEdge = getSampleEdge( aMode );
-    final Edge dataChangeEdge = getDataChangeEdge( aMode );
+    final Edge sampleEdge = aMode.getSampleEdge();
+    final Edge dataChangeEdge = aMode.getDataChangeEdge();
 
     final int misoMask = 1 << this.misoIdx;
     final int mosiMask = 1 << this.mosiIdx;
     final int sckMask = 1 << this.sckIdx;
     final int csMask = 1 << this.csIdx;
-
-    final String mosiLabel = getChannelLabel( this.mosiIdx, "MOSI" );
-    setChannelLabel( this.mosiIdx, mosiLabel );
-
-    final String misoLabel = getChannelLabel( this.misoIdx, "MISO" );
-    setChannelLabel( this.misoIdx, misoLabel );
 
     // scanning for falling/rising clk edges
     int oldSckValue = ( values[startOfDecode] & sckMask );
@@ -328,26 +303,24 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     final double length = endOfDecode - startOfDecode;
     for ( int idx = startOfDecode + 1; idx < endOfDecode; idx++ )
     {
-      final long time = calculateTime( timestamps[idx] );
-
       /* CLK edge detection */
       final int sckValue = values[idx] & sckMask;
       /* CS edge detection */
       final int csValue = values[idx] & csMask;
 
-      final Edge slaveSelectEdge = determineEdge( oldCsValue, csValue );
+      final Edge slaveSelectEdge = Edge.toEdge( oldCsValue, csValue );
       oldCsValue = csValue;
 
-      if ( slaveSelectEdge == Edge.FALLING )
+      if ( slaveSelectEdge.isFalling() )
       {
-        reportCsLow( aDecodedData, time );
+        reportCsLow( aDataSet, idx );
 
         slaveSelected = true;
         dataEdgeSeen = false;
       }
-      else if ( slaveSelectEdge == Edge.RISING )
+      else if ( slaveSelectEdge.isRising() )
       {
-        reportCsHigh( aDecodedData, time );
+        reportCsHigh( aDataSet, idx );
 
         slaveSelected = false;
       }
@@ -359,7 +332,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         continue;
       }
 
-      final Edge clockEdge = determineEdge( oldSckValue, sckValue );
+      final Edge clockEdge = Edge.toEdge( oldSckValue, sckValue );
       oldSckValue = sckValue;
 
       // In case the clock is phase-shifted with respect to the data line,
@@ -400,12 +373,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         else if ( bitIdx == 0 )
         {
           // Full datagram decoded...
-          reportData( aDecodedData, time, mosivalue, misovalue );
-
-          addChannelAnnotation( this.mosiIdx, timestamps[lastIdx], timestamps[idx],
-              String.format( "%s: 0x%X (%c)", mosiLabel, mosivalue, mosivalue ) );
-          addChannelAnnotation( this.misoIdx, timestamps[lastIdx], timestamps[idx],
-              String.format( "%s: 0x%X (%c)", misoLabel, misovalue, misovalue ) );
+          reportData( aDataSet, lastIdx, idx, mosivalue, misovalue );
 
           bitIdx = this.bitCount;
           misovalue = 0;
@@ -418,94 +386,65 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
-   * Determines the clock value edge.
+   * Reports a slave-select low->high transition, effectively causing the slave
+   * to be no longer selected.
    * 
-   * @param aOldClockValue
-   *          the previous clock value;
-   * @param aNewClockValue
-   *          the next clock value.
-   * @return the edge between the given clock values, cannot be
-   *         <code>null</code>.
-   */
-  private Edge determineEdge( final int aOldClockValue, final int aNewClockValue )
-  {
-    if ( aOldClockValue < aNewClockValue )
-    {
-      return Edge.RISING;
-    }
-    else if ( aOldClockValue > aNewClockValue )
-    {
-      return Edge.FALLING;
-    }
-    return Edge.NONE;
-  }
-
-  /**
-   * Returns the data change edge, on which the MISO/MOSI lines are allowed to
-   * change.
-   * 
-   * @param aMode
-   *          the SPI mode to return the data change edge for, cannot be
-   *          <code>null</code>.
-   * @return the data change edge.
-   */
-  private Edge getDataChangeEdge( final SPIMode aMode )
-  {
-    return getSampleEdge( aMode ).invert();
-  }
-
-  /**
-   * Returns the data sample edge, on which the MISO/MOSI lines are to be
-   * sampled.
-   * 
-   * @param aMode
-   *          the SPI mode to return the sample edge for, cannot be
-   *          <code>null</code>.
-   * @return the sample clock edge.
-   */
-  private Edge getSampleEdge( final SPIMode aMode )
-  {
-    return ( ( aMode == SPIMode.MODE_0 ) || ( aMode == SPIMode.MODE_3 ) ) ? Edge.RISING : Edge.FALLING;
-  }
-
-  /**
    * @param aDecodedData
-   * @param aTimestamp
+   *          the data set to add the event to;
+   * @param aIndex
+   *          the sample index on which the event occurred.
    */
-  private void reportCsHigh( final SPIDataSet aDecodedData, final long aTimestamp )
+  private void reportCsHigh( final SPIDataSet aDecodedData, final int aIndex )
   {
     if ( this.reportCS )
     {
-      aDecodedData.reportCSHigh( aTimestamp );
+      aDecodedData.reportCSHigh( this.csIdx, aIndex );
     }
   }
 
   /**
+   * Reports a slave-select high->low transition, effectively causing the slave
+   * to be selected.
+   * 
    * @param aDecodedData
-   * @param aTimestamp
+   *          the data set to add the event to;
+   * @param aIndex
+   *          the sample index on which the event occurred.
    */
-  private void reportCsLow( final SPIDataSet aDecodedData, final long aTimestamp )
+  private void reportCsLow( final SPIDataSet aDecodedData, final int aIndex )
   {
     if ( this.reportCS )
     {
-      aDecodedData.reportCSLow( aTimestamp );
+      aDecodedData.reportCSLow( this.csIdx, aIndex );
     }
   }
 
   /**
+   * Reports a set of data-bytes (both MISO and MOSI).
+   * 
    * @param aDecodedData
-   * @param aTimestamp
+   *          the data set to add the data event(s) to;
+   * @param aStartIdx
+   *          the starting sample index on which the data started;
+   * @param aEndIdx
+   *          the ending sample index on which the data ended;
    * @param aMosiValue
+   *          the MOSI data value;
    * @param aMisoValue
+   *          the MISO data value.
    */
-  private void reportData( final SPIDataSet aDecodedData, final long aTimestamp, final int aMosiValue,
+  private void reportData( final SPIDataSet aDecodedData, final int aStartIdx, final int aEndIdx, final int aMosiValue,
       final int aMisoValue )
   {
     // Perform bit-order conversion on the full byte...
     final int mosivalue = NumberUtils.convertByteOrder( aMosiValue, this.bitOrder );
     final int misovalue = NumberUtils.convertByteOrder( aMisoValue, this.bitOrder );
 
-    aDecodedData.reportData( aTimestamp, misovalue, mosivalue );
+    addChannelAnnotation( this.mosiIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", mosivalue, mosivalue ) );
+    aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
+
+    addChannelAnnotation( this.misoIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", misovalue, misovalue ) );
+    aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
   }
 
   /**

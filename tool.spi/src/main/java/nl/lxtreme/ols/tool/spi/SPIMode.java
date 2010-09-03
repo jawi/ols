@@ -21,6 +21,9 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import nl.lxtreme.ols.api.data.*;
+
+
 /**
  * Mode Numbers
  * <p>
@@ -88,16 +91,31 @@ public enum SPIMode
     throw new IllegalArgumentException( "Unknown mode value: " + aModeValue );
   }
 
-  public final boolean isCPhaHigh()
+  /**
+   * Returns the data change edge, on which the MISO/MOSI lines are allowed to
+   * change.
+   * 
+   * @param aMode
+   *          the SPI mode to return the data change edge for, cannot be
+   *          <code>null</code>.
+   * @return the data change edge.
+   */
+  public Edge getDataChangeEdge()
   {
-    return ( this == MODE_1 ) || ( this == MODE_3 );
+    return getSampleEdge().invert();
   }
 
   /**
-   * @return
+   * Returns the data sample edge, on which the MISO/MOSI lines are to be
+   * sampled.
+   * 
+   * @param aMode
+   *          the SPI mode to return the sample edge for, cannot be
+   *          <code>null</code>.
+   * @return the sample clock edge.
    */
-  public final boolean isCPolHigh()
+  public Edge getSampleEdge()
   {
-    return ( this == MODE_2 ) || ( this == MODE_3 );
+    return ( ( this == SPIMode.MODE_0 ) || ( this == SPIMode.MODE_3 ) ) ? Edge.RISING : Edge.FALLING;
   }
 }

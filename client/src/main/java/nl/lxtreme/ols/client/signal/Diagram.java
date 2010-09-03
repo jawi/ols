@@ -593,14 +593,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * @return
-   */
-  public long getTriggerPosition()
-  {
-    return this.dataContainer.getTriggerPosition();
-  }
-
-  /**
    * @param aCursorNo
    */
   public void gotoCursorPosition( final int aCursorNo )
@@ -616,7 +608,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   public void gotoTriggerPosition()
   {
-    final long triggerPosition = getTriggerPosition();
+    final long triggerPosition = this.dataContainer.getTriggerTimePosition();
     if ( triggerPosition != CapturedData.NOT_AVAILABLE )
     {
       gotoPosition( triggerPosition );
@@ -968,7 +960,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     else
     {
       final int sampleRate = this.dataContainer.getSampleRate();
-      final long triggerPosition = this.dataContainer.getTriggerPosition();
+      final long triggerPosition = this.dataContainer.getTriggerTimePosition();
 
       // if ( this.dataContainer.isCursorsEnabled() )
       // {
@@ -1117,8 +1109,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   protected ChannelAnnotation getAnnotationHover( final int aChannelIdx, final int aMouseXpos )
   {
-    final long idx = xToIndex( aMouseXpos );
-    return this.dataContainer.getChannelAnnotation( aChannelIdx, idx );
+    final int sampleIdx = this.dataContainer.getSampleIndex( xToIndex( aMouseXpos ) );
+    return this.dataContainer.getChannelAnnotation( aChannelIdx, sampleIdx );
   }
 
   /**
@@ -1180,7 +1172,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     g2d.fillRect( cx, cy, cw, ch );
 
     // draw trigger if existing and visible
-    final long triggerPosition = this.dataContainer.getTriggerPosition();
+    final long triggerPosition = this.dataContainer.getTriggerTimePosition();
     if ( ( triggerPosition >= firstRow ) && ( triggerPosition <= lastRow ) )
     {
       g2d.setColor( getTriggerColor() );
@@ -1396,13 +1388,13 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
           aGraphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 
           final Iterator<ChannelAnnotation> annotations = this.dataContainer.getChannelAnnotations( channelIdx,
-              aFromIndex, aToIndex );
+              dataStartIndex, timestamps.length );
           while ( annotations.hasNext() )
           {
             final ChannelAnnotation annotation = annotations.next();
 
-            final long startIdx = annotation.getStartIndex();
-            final long endIdx = annotation.getEndIndex();
+            final long startIdx = timestamps[annotation.getStartIndex()];
+            final long endIdx = timestamps[annotation.getEndIndex()];
             final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
 
             final int x1 = ( int )( this.scale * startIdx );
@@ -1773,6 +1765,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     {
       final int vpWidth = vp.getWidth();
       final int zoomDir = aScaleFactor >= 1.0 ? -1 : aScaleFactor == 0.0 ? 0 : +1;
+
+      /*
+       * Idea taken from:
+       * <http://stackoverflow.com/questions/115103/how-do-you-implement
+       * -position-sensitive-zooming-inside-a-jscrollpane>
+       */
 
       final Point location = getLocation();
 

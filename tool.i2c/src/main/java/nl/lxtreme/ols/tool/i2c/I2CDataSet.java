@@ -81,52 +81,59 @@ public final class I2CDataSet extends BaseDataSet<I2CData>
   /**
    * @param aTime
    */
-  public void reportACK( final long aTime )
+  public void reportACK( final int aChannelIdx, final int aSampleIdx )
   {
-    addData( new I2CData( aTime, I2C_ACK, indexToTime( aTime ) ) );
+    final int idx = size();
+    addData( new I2CData( idx, aChannelIdx, aSampleIdx, I2C_ACK ) );
   }
 
   /**
    * @param aTime
    */
-  public void reportBusError( final long aTime )
+  public void reportBusError( final int aChannelIdx, final int aSampleIdx )
   {
-    addData( new I2CData( aTime, I2C_BUS_ERROR, indexToTime( aTime ) ) );
+    final int idx = size();
     this.busErrors++;
+    addData( new I2CData( idx, aChannelIdx, aSampleIdx, I2C_BUS_ERROR ) );
   }
 
   /**
    * @param aTime
    * @param aByteValue
    */
-  public void reportData( final long aTime, final int aByteValue )
+  public void reportData( final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
+      final int aByteValue )
   {
-    addData( new I2CData( aTime, aByteValue, indexToTime( aTime ) ) );
+    final int idx = size();
     this.decodedBytes++;
+    addData( new I2CData( idx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, aByteValue ) );
   }
 
   /**
    * @param aTime
    */
-  public void reportNACK( final long aTime )
+  public void reportNACK( final int aChannelIdx, final int aSampleIdx )
   {
-    addData( new I2CData( aTime, I2C_NACK, indexToTime( aTime ) ) );
+    final int idx = size();
+    addData( new I2CData( idx, aChannelIdx, aSampleIdx, I2C_NACK ) );
   }
 
   /**
    * @param aTime
    */
-  public void reportStartCondition( final long aTime )
+  public void reportStartCondition( final int aChannelIdx, final int aSampleIdx )
   {
-    addData( new I2CData( aTime, I2C_START, indexToTime( aTime ) ) );
+    final int idx = size();
+    addData( new I2CData( idx, aChannelIdx, aSampleIdx, I2C_START ) );
   }
 
   /**
    * @param aTime
    */
-  public void reportStopCondition( final long aTime )
+  public void reportStopCondition( final int aChannelIdx, final int aSampleIdx )
   {
-    addData( new I2CData( aTime, I2C_STOP, indexToTime( aTime ) ) );
+    final int idx = size();
+    addData( new I2CData( idx, aChannelIdx, aSampleIdx, I2C_STOP ) );
   }
 }
 

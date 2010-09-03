@@ -26,44 +26,45 @@ import nl.lxtreme.ols.tool.base.*;
 
 /**
  * Class for SPI dataset
+ * <p>
+ * A SPI dataset consists of sample indexes, MISO/MOSI values, or it can have an
+ * SPI event.
+ * </p>
  * 
- * @author Frank Kunz A SPI dataset consists of a timestamp, MISO and MOSI
- *         values, or it can have an SPI event. This class is used to store the
- *         decoded SPI data in a Vector.
+ * @author Frank Kunz
+ * @author J.W. Janssen
  */
 public final class SPIData extends BaseData<SPIData>
 {
   // VARIABLES
 
-  private final int miso;
-  private final int mosi;
-  private final String event;
+  private final int dataValue;
+  private final String dataName;
 
   // CONSTRUCTORS
 
   /**
    * @param aTime
-   * @param aMoSi
-   * @param aMiSo
+   * @param aEvent
    */
-  public SPIData( final long aTime, final int aMoSi, final int aMiSo, final String aTimeDisplayValue )
+  public SPIData( final int aIdx, final int aChannelIdx, final String aEvent, final int aSampleIdx )
   {
-    super( aTime, aTimeDisplayValue );
-    this.miso = aMiSo;
-    this.mosi = aMoSi;
-    this.event = null;
+    super( aIdx, aChannelIdx, aSampleIdx, aEvent );
+    this.dataValue = 0;
+    this.dataName = null;
   }
 
   /**
    * @param aTime
-   * @param aEvent
+   * @param aMoSiValue
+   * @param aMiSoValue
    */
-  public SPIData( final long aTime, final String aEvent, final String aTimeDisplayValue )
+  public SPIData( final int aIdx, final int aChannelIdx, final String aDataName, final int aDataValue,
+      final int aStartSampleIdx, final int aEndSampleIdx )
   {
-    super( aTime, aTimeDisplayValue );
-    this.miso = 0;
-    this.mosi = 0;
-    this.event = aEvent;
+    super( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx );
+    this.dataName = aDataName;
+    this.dataValue = aDataValue;
   }
 
   // METHODS
@@ -78,59 +79,36 @@ public final class SPIData extends BaseData<SPIData>
     {
       return true;
     }
-    if ( !super.equals( aObject ) )
+    if ( !super.equals( aObject ) || !( aObject instanceof SPIData ) )
     {
       return false;
     }
-    if ( !( aObject instanceof SPIData ) )
+
+    final SPIData other = ( SPIData )aObject;
+    if ( this.dataValue != other.dataValue )
     {
       return false;
     }
-    SPIData other = ( SPIData )aObject;
-    if ( this.event == null )
-    {
-      if ( other.event != null )
-      {
-        return false;
-      }
-    }
-    else if ( !this.event.equals( other.event ) )
-    {
-      return false;
-    }
-    if ( this.miso != other.miso )
-    {
-      return false;
-    }
-    if ( this.mosi != other.mosi )
-    {
-      return false;
-    }
+
     return true;
   }
 
   /**
-   * @return
+   * Returns whether this data is representing MOSI-data, or MISO-data.
+   * 
+   * @return the data name, can be <code>null</code>.
    */
-  public String getEvent()
+  public String getDataName()
   {
-    return this.event;
+    return this.dataName;
   }
 
   /**
-   * @return
+   * @return the MISO/MOSI data value.
    */
-  public int getMiSoValue()
+  public final int getDataValue()
   {
-    return this.miso;
-  }
-
-  /**
-   * @return
-   */
-  public int getMoSiValue()
-  {
-    return this.mosi;
+    return this.dataValue;
   }
 
   /**
@@ -141,17 +119,31 @@ public final class SPIData extends BaseData<SPIData>
   {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ( ( this.event == null ) ? 0 : this.event.hashCode() );
-    result = prime * result + this.miso;
-    result = prime * result + this.mosi;
+    result = prime * result + this.dataValue;
     return result;
   }
 
   /**
    * @return
    */
-  public boolean isEvent()
+  public boolean isData()
   {
-    return ( this.event != null );
+    return ( this.dataName != null ) && !this.dataName.trim().isEmpty();
+  }
+
+  /**
+   * @return
+   */
+  public final boolean isMisoData()
+  {
+    return SPIDataSet.SPI_MISO.equals( this.dataName );
+  }
+
+  /**
+   * @return
+   */
+  public final boolean isMosiData()
+  {
+    return SPIDataSet.SPI_MOSI.equals( this.dataName );
   }
 }

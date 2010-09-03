@@ -38,14 +38,14 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
 
   // VARIABLES
 
-  private int rxdMask;
-  private int txdMask;
-  private int ctsMask;
-  private int rtsMask;
-  private int dcdMask;
-  private int riMask;
-  private int dsrMask;
-  private int dtrMask;
+  private int rxdIndex;
+  private int txdIndex;
+  private int ctsIndex;
+  private int rtsIndex;
+  private int dcdIndex;
+  private int riIndex;
+  private int dsrIndex;
+  private int dtrIndex;
   private boolean inverted;
   private UARTStopBits stopBits;
   private UARTParity parity;
@@ -60,17 +60,28 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   {
     super( aData );
 
-    this.rxdMask = 0;
-    this.txdMask = 0;
-    this.ctsMask = 0;
-    this.rtsMask = 0;
-    this.dcdMask = 0;
-    this.riMask = 0;
-    this.dsrMask = 0;
-    this.dtrMask = 0;
+    this.rxdIndex = -1;
+    this.txdIndex = -1;
+    this.ctsIndex = -1;
+    this.rtsIndex = -1;
+    this.dcdIndex = -1;
+    this.riIndex = -1;
+    this.dsrIndex = -1;
+    this.dtrIndex = -1;
   }
 
   // METHODS
+
+  /**
+   * Returns whether the entire signal is inverted.
+   * 
+   * @return <code>true</code> if the signal is to be considered inverted,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isInverted()
+  {
+    return this.inverted;
+  }
 
   /**
    * @param aBitCount
@@ -81,39 +92,39 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   }
 
   /**
-   * @param aCtsMask
+   * @param aCtsIndex
    *          the ctsMask to set
    */
-  public void setCtsMask( final int aCtsMask )
+  public void setCtsIndex( final int aCtsIndex )
   {
-    this.ctsMask = aCtsMask;
+    this.ctsIndex = aCtsIndex;
   }
 
   /**
    * @param aDcdMask
    *          the dcdMask to set
    */
-  public void setDcdMask( final int aDcdMask )
+  public void setDcdIndex( final int aDcdIndex )
   {
-    this.dcdMask = aDcdMask;
+    this.dcdIndex = aDcdIndex;
   }
 
   /**
    * @param aDsrMask
    *          the dsrMask to set
    */
-  public void setDsrMask( final int aDsrMask )
+  public void setDsrIndex( final int aDsrIndex )
   {
-    this.dsrMask = aDsrMask;
+    this.dsrIndex = aDsrIndex;
   }
 
   /**
    * @param aDtrMask
    *          the dtrMask to set
    */
-  public void setDtrMask( final int aDtrMask )
+  public void setDtrIndex( final int aDtrIndex )
   {
-    this.dtrMask = aDtrMask;
+    this.dtrIndex = aDtrIndex;
   }
 
   /**
@@ -136,27 +147,27 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
    * @param aRiMask
    *          the riMask to set
    */
-  public void setRiMask( final int aRiMask )
+  public void setRiIndex( final int aRiIndex )
   {
-    this.riMask = aRiMask;
+    this.riIndex = aRiIndex;
   }
 
   /**
    * @param aRtsMask
    *          the rtsMask to set
    */
-  public void setRtsMask( final int aRtsMask )
+  public void setRtsIndex( final int aRtsIndex )
   {
-    this.rtsMask = aRtsMask;
+    this.rtsIndex = aRtsIndex;
   }
 
   /**
    * @param aRxdMask
    *          the rxdMask to set
    */
-  public void setRxdMask( final int aRxdMask )
+  public void setRxdIndex( final int aRxdIndex )
   {
-    this.rxdMask = aRxdMask;
+    this.rxdIndex = aRxdIndex;
   }
 
   /**
@@ -171,9 +182,9 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
    * @param aTxdMask
    *          the txdMask to set
    */
-  public void setTxdMask( final int aTxdMask )
+  public void setTxdIndex( final int aTxdIndex )
   {
-    this.txdMask = aTxdMask;
+    this.txdIndex = aTxdIndex;
   }
 
   /**
@@ -183,18 +194,25 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   protected UARTDataSet doInBackground() throws Exception
   {
     // process the captured data and write to output
-    int i, a;
+    final int rxdMask = 1 << this.rxdIndex;
+    final int txdMask = 1 << this.txdIndex;
+    final int ctsMask = 1 << this.ctsIndex;
+    final int rtsMask = 1 << this.rtsIndex;
+    final int dcdMask = 1 << this.dcdIndex;
+    final int riMask = 1 << this.riIndex;
+    final int dsrMask = 1 << this.dsrIndex;
+    final int dtrMask = 1 << this.dtrIndex;
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
-      LOG.fine( "rxdmask = 0x" + Integer.toHexString( this.rxdMask ) );
-      LOG.fine( "txdmask = 0x" + Integer.toHexString( this.txdMask ) );
-      LOG.fine( "ctsmask = 0x" + Integer.toHexString( this.ctsMask ) );
-      LOG.fine( "rtsmask = 0x" + Integer.toHexString( this.rtsMask ) );
-      LOG.fine( "dcdmask = 0x" + Integer.toHexString( this.dcdMask ) );
-      LOG.fine( "rimask  = 0x" + Integer.toHexString( this.riMask ) );
-      LOG.fine( "dsrmask = 0x" + Integer.toHexString( this.dsrMask ) );
-      LOG.fine( "dtrmask = 0x" + Integer.toHexString( this.dtrMask ) );
+      LOG.fine( "rxdmask = 0x" + Integer.toHexString( rxdMask ) );
+      LOG.fine( "txdmask = 0x" + Integer.toHexString( txdMask ) );
+      LOG.fine( "ctsmask = 0x" + Integer.toHexString( ctsMask ) );
+      LOG.fine( "rtsmask = 0x" + Integer.toHexString( rtsMask ) );
+      LOG.fine( "dcdmask = 0x" + Integer.toHexString( dcdMask ) );
+      LOG.fine( "rimask  = 0x" + Integer.toHexString( riMask ) );
+      LOG.fine( "dsrmask = 0x" + Integer.toHexString( dsrMask ) );
+      LOG.fine( "dtrmask = 0x" + Integer.toHexString( dtrMask ) );
     }
 
     /*
@@ -205,123 +223,83 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
      * is displayed it must be sortet by time.
      */
 
-    final long[] timestamps = getTimestamps();
     final int[] values = getValues();
 
-    long startOfDecode = 0; // XXX
-    long endOfDecode;
+    int startOfDecode = 0;
+    int endOfDecode;
 
     /*
      * set the start of decode to the trigger if avail or find first state
      * change on the selected lines
      */
-    if ( isCursorsEnabled() )
+    if ( isCursorsEnabled() && isCursorPositionSet( 0 ) && isCursorPositionSet( 1 ) )
     {
-      startOfDecode = getCursorPosition( 1 );
-      endOfDecode = getCursorPosition( 2 ) + 1;
+      startOfDecode = getSampleIndex( getCursorPosition( 0 ) );
+      endOfDecode = getSampleIndex( getCursorPosition( 1 ) + 1 );
+    }
+    else if ( hasTriggerData() )
+    {
+      // the trigger may be too late, a workaround is to go back some samples
+      // here
+      startOfDecode = Math.max( 0, getTriggerIndex() - 10 );
+      endOfDecode = values.length - 1;
     }
     else
     {
-      if ( hasTriggerData() )
+      final int mask = rxdMask | riMask | ctsMask | txdMask | dcdMask | riMask | dsrMask | dtrMask;
+
+      endOfDecode = values.length - 1;
+
+      final int value = values[0] & mask;
+      for ( int i = 1; i < endOfDecode; i++ )
       {
-        startOfDecode = getTriggerPosition();
-        // the trigger may be too late, a workaround is to go back some samples
-        // here
-        startOfDecode -= 10;
-        if ( startOfDecode < 0 )
+        if ( value != ( values[i] & mask ) )
         {
-          startOfDecode = 0;
+          startOfDecode = i;
+          break;
         }
       }
-      else
-      {
-        int mask = this.rxdMask | this.riMask | this.ctsMask | this.txdMask | this.dcdMask | this.riMask | this.dsrMask
-            | this.dtrMask;
-        a = values[0] & mask;
-        for ( i = 0; i < values.length; i++ )
-        {
-          if ( a != ( values[i] & mask ) )
-          {
-            startOfDecode = timestamps[i];
-            break;
-          }
-        }
-      }
-      endOfDecode = getAbsoluteLength();
     }
 
     final UARTDataSet decodedData = new UARTDataSet( startOfDecode, endOfDecode, this );
 
     // decode RxD
-    final int sampleRate = getSampleRate();
-    if ( this.rxdMask != 0 )
+    if ( this.rxdIndex >= 0 )
     {
-      final BaudRateAnalyzer baudrate = new BaudRateAnalyzer( values, timestamps, this.rxdMask );
-
-      if ( LOG.isLoggable( Level.FINE ) )
-      {
-        LOG.fine( baudrate.toString() );
-      }
-
-      final int bitLength = baudrate.getBest();
-      if ( bitLength == 0 )
-      {
-        LOG.info( "No (usable) RxD-data found for determining bitlength/baudrate ..." );
-      }
-      else
-      {
-        // We know the avg. bitlength, so we can use it for calculating the
-        // baudrate...
-        decodedData.setSampledBitLength( bitLength );
-
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.fine( "Samplerate: " + sampleRate + ", bitlength: " + bitLength + ", baudrate = "
-              + decodedData.getBaudRate() );
-        }
-
-        decodeData( decodedData, bitLength, this.rxdMask, UARTData.UART_TYPE_RXDATA );
-      }
+      decodeData( decodedData, this.rxdIndex, UARTData.UART_TYPE_RXDATA );
     }
 
     // decode TxD
-    if ( this.txdMask != 0 )
+    if ( this.txdIndex >= 0 )
     {
-      final BaudRateAnalyzer baudrate = new BaudRateAnalyzer( values, timestamps, this.txdMask );
-
-      if ( LOG.isLoggable( Level.FINE ) )
-      {
-        LOG.fine( baudrate.toString() );
-      }
-
-      final int bitLength = baudrate.getBest();
-      if ( bitLength == 0 )
-      {
-        LOG.info( "No (usable) TxD-data found for determining bitlength/baudrate ..." );
-      }
-      else
-      {
-        // We know the avg. bitlength, so we can use it for calculating the
-        // baudrate...
-        decodedData.setSampledBitLength( bitLength );
-
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.fine( "Samplerate: " + sampleRate + ", bitlength: " + bitLength + ", baudrate = "
-              + decodedData.getBaudRate() );
-        }
-
-        decodeData( decodedData, bitLength, this.txdMask, UARTData.UART_TYPE_TXDATA );
-      }
+      decodeData( decodedData, this.txdIndex, UARTData.UART_TYPE_TXDATA );
     }
 
     // decode control lines
-    decodeControl( decodedData, this.ctsMask, "CTS" );
-    decodeControl( decodedData, this.rtsMask, "RTS" );
-    decodeControl( decodedData, this.dcdMask, "DCD" );
-    decodeControl( decodedData, this.riMask, "RI" );
-    decodeControl( decodedData, this.dsrMask, "DSR" );
-    decodeControl( decodedData, this.dtrMask, "DTR" );
+    if ( this.ctsIndex >= 0 )
+    {
+      decodeControl( decodedData, this.ctsIndex, "CTS" );
+    }
+    if ( this.rtsIndex >= 0 )
+    {
+      decodeControl( decodedData, this.rtsIndex, "RTS" );
+    }
+    if ( this.dcdIndex >= 0 )
+    {
+      decodeControl( decodedData, this.dcdIndex, "DCD" );
+    }
+    if ( this.riIndex >= 0 )
+    {
+      decodeControl( decodedData, this.riIndex, "RI" );
+    }
+    if ( this.dsrIndex >= 0 )
+    {
+      decodeControl( decodedData, this.dsrIndex, "DSR" );
+    }
+    if ( this.dtrIndex >= 0 )
+    {
+      decodeControl( decodedData, this.dtrIndex, "DTR" );
+    }
 
     // sort the results by time
     decodedData.sort();
@@ -330,520 +308,259 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   }
 
   /**
-   * decode a control line
+   * Decodes a control line.
    * 
    * @param aDataSet
-   *          TODO
-   * @param aMask
-   *          bitmask for the control line
+   *          the data set to add the decoded data to;
+   * @param aChannelIndex
+   *          the channel index of the control-line to decode;
    * @param aName
-   *          name string of the control line
+   *          the name of the control line to decode.
    */
-  private void decodeControl( final UARTDataSet aDataSet, final int aMask, final String aName )
+  private void decodeControl( final UARTDataSet aDataSet, final int aChannelIndex, final String aName )
   {
-    if ( aMask == 0 )
-    {
-      return;
-    }
-
     if ( LOG.isLoggable( Level.FINE ) )
     {
       LOG.fine( "Decode " + aName );
     }
 
-    long i;
-    int a = getDataAt( 0 ) & aMask;
+    final int mask = ( 1 << aChannelIndex );
 
+    final int startSampleIdx = aDataSet.getStartOfDecode();
+    final int endSampleIdx = aDataSet.getEndOfDecode();
+    final double length = endSampleIdx - startSampleIdx;
+
+    final int[] values = getValues();
     setProgress( 0 );
 
-    final double length = aDataSet.getEndOfDecode() - aDataSet.getStartOfDecode();
-
-    for ( i = aDataSet.getStartOfDecode(); i < aDataSet.getEndOfDecode(); i++ )
+    int oldValue = values[startSampleIdx] & mask;
+    for ( int i = startSampleIdx + 1; i < endSampleIdx; i++ )
     {
-      if ( a < ( getDataAt( i ) & aMask ) )
+      final int value = values[i] & mask;
+
+      final Edge edge = Edge.toEdge( oldValue, value );
+      if ( edge.isRising() )
       {
-        // rising edge
-        aDataSet.reportControlHigh( i, aName );
+        aDataSet.reportControlHigh( aChannelIndex, i, aName );
       }
-      if ( a > ( getDataAt( i ) & aMask ) )
+      if ( edge.isFalling() )
       {
-        // falling edge
-        aDataSet.reportControlLow( i, aName );
+        aDataSet.reportControlLow( aChannelIndex, i, aName );
       }
-      a = getDataAt( i ) & aMask;
+      oldValue = value;
 
       // update progress
-      setProgress( ( int )( i * 100.0 / length ) );
+      setProgress( ( int )( ( i - startSampleIdx ) * 100.0 / length ) );
+    }
+  }
+
+  /**
+   * @param aDataSet
+   *          the data set to add the decoded data to;
+   * @param aChannelIndex
+   *          the channel index to decode;
+   * @param aType
+   *          type of the data (rx or tx)
+   */
+  private void decodeData( final UARTDataSet aDataSet, final int aChannelIndex, final int aEventType )
+  {
+    final int mask = ( 1 << aChannelIndex );
+    final BaudRateAnalyzer baudrate = new BaudRateAnalyzer( getValues(), getTimestamps(), mask );
+
+    if ( LOG.isLoggable( Level.FINE ) )
+    {
+      LOG.fine( baudrate.toString() );
     }
 
-    setProgress( 100 );
+    final int bitLength = baudrate.getBest();
+    if ( bitLength == 0 )
+    {
+      LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",
+          aChannelIndex == this.rxdIndex ? "RxD" : "TxD" );
+    }
+    else
+    {
+      // We know the avg. bitlength, so we can use it for calculating the
+      // baudrate...
+      aDataSet.setSampledBitLength( bitLength );
+
+      if ( LOG.isLoggable( Level.FINE ) )
+      {
+        LOG.fine( "Samplerate: " + getSampleRate() + ", bitlength: " + bitLength + ", baudrate = "
+            + aDataSet.getBaudRate() );
+      }
+
+      // clear any existing annotations...
+      clearChannelAnnotations( aChannelIndex );
+
+      decodeDataLine( aDataSet, aChannelIndex, bitLength, aEventType );
+    }
   }
 
   /**
    * decode a UART data line
    * 
    * @param aDataSet
-   *          TODO
-   * @param aBaud
-   *          baudrate (counted samples per bit)
-   * @param aMask
-   *          bitmask for the dataline
+   *          the data set to add the decoded data to;
+   * @param aChannelIndex
+   *          the channel index to decode;
+   * @param aBitLength
+   *          the length of a single bit (counted samples per bit)
    * @param aType
    *          type of the data (rx or tx)
+   * @return the number of decoded symbols, >= 0.
    */
-  private int decodeData( final UARTDataSet aDataSet, final int aBaud, final int aMask, final int aType )
+  private int decodeDataLine( final UARTDataSet aDataSet, final int aChannelIndex, final int aBitLength, final int aType )
   {
-    if ( aMask == 0 )
-    {
-      return ( 0 );
-    }
+    final int mask = ( 1 << aChannelIndex );
+    final int stopCount = ( int )Math.ceil( this.stopBits.getValue() );
+    final int parityCount = this.parity.isNone() ? 0 : 1;
+    final int frameSize = ( this.bitCount + stopCount + parityCount ) * aBitLength;
 
-    long a = 0;
-    int b = 0;
-    long c = 0;
-    long i = 0;
-    int value = 0;
-    int stopCount = ( int )Math.ceil( this.stopBits.getValue() );
-    int parityCount = this.parity.isNone() ? 0 : 1;
-    int count = 0;
+    final int bitCenter = aBitLength / 2;
 
-    final long startOfDecode = aDataSet.getStartOfDecode();
-    final long endOfDecode = aDataSet.getEndOfDecode();
+    final long[] timestamps = getTimestamps();
+
+    final long startOfDecode = timestamps[aDataSet.getStartOfDecode()];
+    final long endOfDecode = timestamps[aDataSet.getEndOfDecode()];
     final double length = endOfDecode - startOfDecode;
 
-    a = Math.max( 0, startOfDecode );
+    long time = Math.max( 0, startOfDecode );
+    setProgress( 0 );
 
-    while ( ( endOfDecode - a ) > ( ( this.bitCount + stopCount + parityCount ) * aBaud ) )
+    int symbolCount = 0;
+    while ( ( endOfDecode - time ) > frameSize )
     {
       /*
        * find first falling edge this is the start of the startbit. If the
-       * inverted checkbox is set find the first rising edge.
+       * signal is inverted, find the first rising edge.
        */
-      b = getDataAt( a ) & aMask;
-      for ( i = a; i < endOfDecode; i++ )
+      time = findStartBit( time, endOfDecode, mask );
+      if ( time < 0 )
       {
-        if ( isInverted() )
-        {
-          if ( b < ( getDataAt( i ) & aMask ) )
-          {
-            c = i;
-            break;
-          }
-        }
-        else
-        {
-          if ( b > ( getDataAt( i ) & aMask ) )
-          {
-            c = i;
-            break;
-          }
-        }
-        b = getDataAt( i ) & aMask;
-
-        // update progress
-        setProgress( ( int )( ( i - a ) * 100.0 / length ) );
-      }
-
-      if ( i >= endOfDecode )
-      {
-        LOG.fine( "End decode" );
+        LOG.info( "Decoding ended; no start bit found..." );
         break;
       }
 
       /*
-       * Sampling is done in the middle of each bit the start bit must be low If
-       * the inverted checkbox is set the startbit must be high
+       * Sampling is done in the middle of each bit the start bit must be low.
+       * If the signal is inverted, the startbit must be high.
        */
-      a = c + aBaud / 2;
-      if ( isInverted() )
+      time += bitCenter;
+      if ( !isSpace( time, mask ) )
       {
-        if ( ( getDataAt( a ) & aMask ) == 0 )
-        {
-          // this is not a start bit !
-          if ( aType == UARTData.UART_TYPE_RXDATA )
-          {
-            aDataSet.reportStartError( calculateTime( a ), UARTData.UART_TYPE_RXEVENT );
-          }
-          else
-          {
-            aDataSet.reportStartError( calculateTime( a ), UARTData.UART_TYPE_TXEVENT );
-          }
-        }
-      }
-      else
-      {
-        if ( ( getDataAt( a ) & aMask ) != 0 )
-        {
-          // this is not a start bit !
-          if ( aType == UARTData.UART_TYPE_RXDATA )
-          {
-            aDataSet.reportStartError( calculateTime( a ), UARTData.UART_TYPE_RXEVENT );
-          }
-          else
-          {
-            aDataSet.reportStartError( calculateTime( a ), UARTData.UART_TYPE_TXEVENT );
-          }
-        }
+        // this is not a start bit !
+        reportStartError( aDataSet, time, aType );
       }
 
       /*
        * sample the databits in the middle of the bit position
        */
+      int value = 0;
 
-      value = 0;
-      for ( i = 0; i < this.bitCount; i++ )
+      final long startTime = time + aBitLength;
+      for ( int bitIdx = 0; bitIdx < this.bitCount; bitIdx++ )
       {
-        a += aBaud;
-        if ( isInverted() )
+        time += aBitLength;
+        if ( isMark( time, mask ) )
         {
-          if ( ( getDataAt( a ) & aMask ) == 0 )
-          {
-            value |= ( 1 << i );
-          }
-        }
-        else
-        {
-          if ( ( getDataAt( a ) & aMask ) != 0 )
-          {
-            value |= ( 1 << i );
-          }
+          value |= ( 1 << bitIdx );
         }
       }
-      aDataSet.reportData( a, value, aType );
-      count++;
+      // fully decoded a single symbol...
+      reportData( aDataSet, aChannelIndex, startTime, time, value, aType );
+      symbolCount++;
 
       /*
-       * sample parity bit if available
+       * Sample parity bit (if available/desired).
        */
-      if ( isOddParity() )
+      if ( isOddParity() || isEvenParity() )
       {
-        a += aBaud;
-        if ( ( Integer.bitCount( value ) & 1 ) == 0 )
-        {
-          if ( isInverted() )
-          {
-            // odd parity, bitcount is even --> parity bit must be 0 (inverted)
-            if ( ( getDataAt( a ) & aMask ) != 0 )
-            {
-              // parity error
-              if ( aType == UARTData.UART_TYPE_RXDATA )
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_RXEVENT );
-              }
-              else
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_TXEVENT );
-              }
-            }
-          }
-          else
-          {
-            // odd parity, bitcount is even --> parity bit must be 1
-            if ( ( getDataAt( a ) & aMask ) == 0 )
-            {
-              // parity error
-              if ( aType == UARTData.UART_TYPE_RXDATA )
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_RXEVENT );
-              }
-              else
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_TXEVENT );
-              }
-            }
-          }
-        }
-        else
-        {
-          if ( isInverted() )
-          {
-            // odd parity, bitcount is odd --> parity bit must be 1 (Inverted)
-            if ( ( getDataAt( a ) & aMask ) == 0 )
-            {
-              // parity error
-              if ( aType == UARTData.UART_TYPE_RXDATA )
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_RXEVENT );
-              }
-              else
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_TXEVENT );
-              }
-            }
-          }
-          else
-          {
-            // odd parity, bitcount is odd --> parity bit must be 0
-            if ( ( getDataAt( a ) & aMask ) != 0 )
-            {
-              // parity error
-              if ( aType == UARTData.UART_TYPE_RXDATA )
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_RXEVENT );
-              }
-              else
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_TXEVENT );
-              }
-            }
-          }
-        }
-      }
+        time += aBitLength;
 
-      if ( isEvenParity() )
-      {
-        a += aBaud;
-        if ( ( Integer.bitCount( value ) & 1 ) == 0 )
+        final boolean evenBitCount = ( Integer.bitCount( value ) & 1 ) == 0;
+        // determine which parity bit we should expect...
+        final int expectedValue;
+        if ( isOddParity() )
         {
-          if ( isInverted() )
-          {
-            // even parity, bitcount is even --> parity bit must be 1 (inverted)
-            if ( ( getDataAt( a ) & aMask ) == 0 )
-            {
-              // parity error
-              if ( aType == UARTData.UART_TYPE_RXDATA )
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_RXEVENT );
-              }
-              else
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_TXEVENT );
-              }
-            }
-          }
-          else
-          {
-            // even parity, bitcount is even --> parity bit must be 0
-            if ( ( getDataAt( a ) & aMask ) != 0 )
-            {
-              // parity error
-              if ( aType == UARTData.UART_TYPE_RXDATA )
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_RXEVENT );
-              }
-              else
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_TXEVENT );
-              }
-            }
-          }
+          expectedValue = evenBitCount ? mask : 0;
         }
         else
         {
-          if ( isInverted() )
-          {
-            // even parity, bitcount is odd --> parity bit must be 0 (inverted)
-            if ( ( getDataAt( a ) & aMask ) != 0 )
-            {
-              // parity error
-              if ( aType == UARTData.UART_TYPE_RXDATA )
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_RXEVENT );
-              }
-              else
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_TXEVENT );
-              }
-            }
-          }
-          else
-          {
-            // even parity, bitcount is odd --> parity bit must be 1
-            if ( ( getDataAt( a ) & aMask ) == 0 )
-            {
-              // parity error
-              if ( aType == UARTData.UART_TYPE_RXDATA )
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_RXEVENT );
-              }
-              else
-              {
-                aDataSet.reportParityError( a, UARTData.UART_TYPE_TXEVENT );
-              }
-            }
-          }
+          expectedValue = evenBitCount ? 0 : mask;
+        }
+
+        if ( !isExpectedLevel( time, mask, expectedValue ) )
+        {
+          reportParityError( aDataSet, time, aType );
         }
       }
 
       /*
        * sample stopbit(s)
        */
-      a += aBaud;
-      if ( this.stopBits == UARTStopBits.STOP_1 )
+      time += aBitLength;
+
+      double stopBitCount = this.stopBits.getValue();
+      while ( stopBitCount > 0.0 )
       {
-        if ( isInverted() )
+        if ( !isMark( time, mask ) )
         {
-          if ( ( getDataAt( a ) & aMask ) != 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
+          reportFrameError( aDataSet, time, aType );
         }
-        else
-        {
-          if ( ( getDataAt( a ) & aMask ) == 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
-        }
+        stopBitCount -= 1.0;
+
+        time += stopBitCount * aBitLength;
       }
-      else if ( this.stopBits == UARTStopBits.STOP_15 )
-      {
-        if ( isInverted() )
-        {
-          if ( ( getDataAt( a ) & aMask ) != 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
-        }
-        else
-        {
-          if ( ( getDataAt( a ) & aMask ) == 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
-        }
 
-        a += ( aBaud / 4 );
-
-        if ( isInverted() )
-        {
-          if ( ( getDataAt( a ) & aMask ) != 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
-        }
-        else
-        {
-          if ( ( getDataAt( a ) & aMask ) != 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
-        }
-      }
-      else
-      /* if ( this.stopBits == UARTStopBits.STOP_2 ) */
-      {
-        if ( isInverted() )
-        {
-          if ( ( getDataAt( a ) & aMask ) != 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
-        }
-        else
-        {
-          if ( ( getDataAt( a ) & aMask ) != 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
-        }
-
-        a += aBaud;
-
-        if ( isInverted() )
-        {
-          if ( ( getDataAt( a ) & aMask ) != 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
-        }
-        else
-        {
-          if ( ( getDataAt( a ) & aMask ) != 0 )
-          {
-            // framing error
-            if ( aType == UARTData.UART_TYPE_RXDATA )
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_RXEVENT );
-            }
-            else
-            {
-              aDataSet.reportFrameError( a, UARTData.UART_TYPE_TXEVENT );
-            }
-          }
-        }
-      }
+      setProgress( ( int )( ( time - startOfDecode ) * 100.0 / length ) );
     }
 
     setProgress( 100 );
 
-    return ( count );
+    return symbolCount;
   }
 
   /**
-   * @return
+   * Find first falling edge this is the start of the start bit. If the signal
+   * is inverted, find the first rising edge.
+   * 
+   * @param aStartOfDecode
+   *          the timestamp to start searching;
+   * @param aEndOfDecode
+   *          the timestamp to end the search;
+   * @param aMask
+   *          the bit-value mask to apply for finding the start bit.
+   * @return the time at which the start bit was found, -1 if it is not found.
+   */
+  private long findStartBit( final long aStartOfDecode, final long aEndOfDecode, final int aMask )
+  {
+    final Edge sampleEdge = isInverted() ? Edge.RISING : Edge.FALLING;
+
+    long result = -1;
+
+    int oldBitValue = getDataAt( aStartOfDecode ) & aMask;
+    for ( long timeCursor = aStartOfDecode + 1; ( result < 0 ) && ( timeCursor < aEndOfDecode ); timeCursor++ )
+    {
+      final int bitValue = getDataAt( timeCursor ) & aMask;
+
+      final Edge edge = Edge.toEdge( oldBitValue, bitValue );
+      if ( sampleEdge == edge )
+      {
+        result = timeCursor;
+      }
+
+      oldBitValue = bitValue;
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns whether an EVEN parity is chosen.
+   * 
+   * @return <code>true</code> if an even parity is chosen, <code>false</code>
+   *         otherwise.
    */
   private boolean isEvenParity()
   {
@@ -851,18 +568,142 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   }
 
   /**
-   * @return
+   * Returns whether the bit-value (denoted by the given mask) is the given
+   * expected mask.
+   * <p>
+   * In case the signal is inverted, this method will inverse the check.
+   * </p>
+   * 
+   * @param aTimestamp
+   *          the timestamp to sample the data at;
+   * @param aMask
+   *          the bit-value mask;
+   * @param aExpectedMask
+   *          the expected bit-value mask.
+   * @return <code>true</code> if the given bit-value meets the expected mask,
+   *         <code>false</code> otherwise.
+   * @see #isInverted()
    */
-  private boolean isInverted()
+  private boolean isExpectedLevel( final long aTimestamp, final int aMask, final int aExpectedMask )
   {
-    return this.inverted;
+    final int value = getDataAt( aTimestamp ) & aMask;
+    if ( isInverted() )
+    {
+      return value != aExpectedMask;
+    }
+    return value == aExpectedMask;
   }
 
   /**
-   * @return
+   * Returns whether the (data-)value at the given timestamp is at a 'mark'
+   * (active high, or -when inverted- active low).
+   * 
+   * @param aTimestamp
+   *          the timestamp to sample the data at;
+   * @param aMask
+   *          the mask of the bit-value.
+   * @return <code>true</code> if the bit-value is at the expected value,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isMark( final long aTimestamp, final int aMask )
+  {
+    return isExpectedLevel( aTimestamp, aMask, aMask );
+  }
+
+  /**
+   * Returns whether an ODD parity is chosen.
+   * 
+   * @return <code>true</code> if an odd parity is chosen, <code>false</code>
+   *         otherwise.
    */
   private boolean isOddParity()
   {
     return this.parity == UARTParity.ODD;
+  }
+
+  /**
+   * Returns whether the (data-)value at the given timestamp is at a 'space'
+   * (active low, or -when inverted- active high).
+   * 
+   * @param aTimestamp
+   *          the timestamp to sample the data at;
+   * @param aMask
+   *          the mask of the bit-value.
+   * @return <code>true</code> if the bit-value is at the expected value,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isSpace( final long aTimestamp, final int aMask )
+  {
+    return isExpectedLevel( aTimestamp, aMask, 0x00 );
+  }
+
+  /**
+   * @param aDataSet
+   * @param aChannelIndex
+   * @param aByteValue
+   * @param aType
+   * @param aTimestamp
+   */
+  private void reportData( final UARTDataSet aDataSet, final int aChannelIndex, final long aStartTimestamp,
+      final long aEndTimestamp, final int aByteValue, final int aType )
+  {
+    final int startSampleIdx = getSampleIndex( aStartTimestamp );
+    final int endSampleIdx = getSampleIndex( aEndTimestamp ) + 1;
+
+    aDataSet.reportData( aChannelIndex, startSampleIdx, endSampleIdx, aByteValue, aType );
+
+    addChannelAnnotation( aChannelIndex, startSampleIdx, endSampleIdx,
+        String.format( "0x%X (%c)", aByteValue, aByteValue ) );
+  }
+
+  /**
+   * @param aDataSet
+   * @param aTimestamp
+   * @param aType
+   */
+  private void reportFrameError( final UARTDataSet aDataSet, final long aTimestamp, final int aType )
+  {
+    if ( aType == UARTData.UART_TYPE_RXDATA )
+    {
+      aDataSet.reportFrameError( this.rxdIndex, getSampleIndex( aTimestamp ), UARTData.UART_TYPE_RXEVENT );
+    }
+    else
+    {
+      aDataSet.reportFrameError( this.txdIndex, getSampleIndex( aTimestamp ), UARTData.UART_TYPE_TXEVENT );
+    }
+  }
+
+  /**
+   * @param aDataSet
+   * @param aTimestamp
+   * @param aType
+   */
+  private void reportParityError( final UARTDataSet aDataSet, final long aTimestamp, final int aType )
+  {
+    if ( aType == UARTData.UART_TYPE_RXDATA )
+    {
+      aDataSet.reportParityError( this.rxdIndex, getSampleIndex( aTimestamp ), UARTData.UART_TYPE_RXEVENT );
+    }
+    else
+    {
+      aDataSet.reportParityError( this.txdIndex, getSampleIndex( aTimestamp ), UARTData.UART_TYPE_TXEVENT );
+    }
+  }
+
+  /**
+   * @param aDataSet
+   * @param aTimestamp
+   * @param aType
+   */
+  private void reportStartError( final UARTDataSet aDataSet, final long aTimestamp, final int aType )
+  {
+    if ( aType == UARTData.UART_TYPE_RXDATA )
+    {
+      aDataSet.reportStartError( this.rxdIndex, getSampleIndex( aTimestamp ), UARTData.UART_TYPE_RXEVENT );
+    }
+    else
+    {
+      aDataSet.reportStartError( this.txdIndex, getSampleIndex( aTimestamp ), UARTData.UART_TYPE_TXEVENT );
+    }
   }
 }

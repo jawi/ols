@@ -55,6 +55,8 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   private int lineAidx;
   private int lineBmask;
   private int lineBidx;
+  private int sdaIdx;
+  private int sclIdx;
 
   // CONSTRUCTORS
 
@@ -129,7 +131,6 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   protected I2CDataSet doInBackground() throws Exception
   {
     final int[] values = getValues();
-    final long[] timestamps = getTimestamps();
 
     // process the captured data and write to output
     int sampleIdx;
@@ -172,8 +173,8 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
       return null;
     }
 
-    int sdaIdx = 0;
-    int sclIdx = 0;
+    this.sdaIdx = 0;
+    this.sclIdx = 0;
 
     // a is now the start of idle, now find the first start condition
     for ( ; sampleIdx < sampleCount; sampleIdx++ )
@@ -186,26 +187,26 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
         if ( ( dataValue & this.lineAmask ) == 0 )
         {
           // lineA is low and lineB is high here: lineA = SDA, lineB = SCL
-          sdaIdx = this.lineAidx;
-          sclIdx = this.lineBidx;
+          this.sdaIdx = this.lineAidx;
+          this.sclIdx = this.lineBidx;
 
           firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, LINE_B );
           firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, LINE_A );
 
-          setChannelLabel( sclIdx, CHANNEL_SCL_NAME );
-          setChannelLabel( sdaIdx, CHANNEL_SDA_NAME );
+          setChannelLabel( this.sclIdx, CHANNEL_SCL_NAME );
+          setChannelLabel( this.sdaIdx, CHANNEL_SDA_NAME );
         }
         else
         {
           // lineB is low and lineA is high here: lineA = SCL, lineB = SDA
-          sdaIdx = this.lineBidx;
-          sclIdx = this.lineAidx;
+          this.sdaIdx = this.lineBidx;
+          this.sclIdx = this.lineAidx;
 
           firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, LINE_A );
           firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, LINE_B );
 
-          setChannelLabel( sclIdx, CHANNEL_SCL_NAME );
-          setChannelLabel( sdaIdx, CHANNEL_SDA_NAME );
+          setChannelLabel( this.sclIdx, CHANNEL_SCL_NAME );
+          setChannelLabel( this.sdaIdx, CHANNEL_SDA_NAME );
         }
 
         break;
@@ -221,15 +222,15 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
       return null;
     }
 
-    final int sdaMask = ( 1 << sdaIdx );
-    final int sclMask = ( 1 << sclIdx );
+    final int sdaMask = ( 1 << this.sdaIdx );
+    final int sclMask = ( 1 << this.sclIdx );
 
     final I2CDataSet i2cDataSet = new I2CDataSet( sampleIdx, sampleCount, this );
     final int max = sampleCount - sampleIdx;
 
     // We've just found our start condition, start the report with that...
-    reportStartCondition( i2cDataSet, calculateTime( timestamps[sampleIdx] ) );
-    addChannelAnnotation( sdaIdx, timestamps[sampleIdx - 1], timestamps[sampleIdx], "START" );
+    reportStartCondition( i2cDataSet, sampleIdx );
+    addChannelAnnotation( this.sdaIdx, sampleIdx, sampleIdx, "START" );
 
     /*
      * Now decode the bytes, SDA may only change when SCL is low. Otherwise it
@@ -244,7 +245,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     bitCount = 8;
     byteValue = 0;
 
-    int idx = ( int )i2cDataSet.getStartOfDecode();
+    int idx = i2cDataSet.getStartOfDecode();
     int prevIdx = -1;
 
     boolean startCondFound = true;
@@ -254,7 +255,6 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
 
     for ( ; idx < i2cDataSet.getEndOfDecode() - 1; idx++ )
     {
-      final long time = calculateTime( timestamps[idx] );
       final int dataValue = values[idx];
 
       final int sda = dataValue & sdaMask;
@@ -272,7 +272,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
         if ( bitCount == 0 )
         {
           // store decoded byte
-          reportData( i2cDataSet, time, byteValue );
+          reportData( i2cDataSet, prevIdx, idx, byteValue );
 
           final String annotation;
           if ( startCondFound )
@@ -312,7 +312,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
           }
 
           // TEST TODO XXX
-          addChannelAnnotation( sdaIdx, timestamps[prevIdx], timestamps[idx], annotation );
+          addChannelAnnotation( this.sdaIdx, prevIdx, idx, annotation );
 
           byteValue = 0;
         }
@@ -322,7 +322,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
         // SCL rises
         if ( sda != oldSDA )
         {
-          reportBusError( i2cDataSet, time );
+          reportBusError( i2cDataSet, idx );
         }
         else
         {
@@ -341,16 +341,16 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
             if ( sda != 0 )
             {
               // NACK
-              reportNACK( i2cDataSet, time );
+              reportNACK( i2cDataSet, idx );
 
-              addChannelAnnotation( sdaIdx, timestamps[idx - 1], timestamps[idx + 1], "NACK" );
+              addChannelAnnotation( this.sdaIdx, idx, idx, "NACK" );
             }
             else
             {
               // ACK
-              reportACK( i2cDataSet, time );
+              reportACK( i2cDataSet, idx );
 
-              addChannelAnnotation( sdaIdx, timestamps[idx - 1], timestamps[idx + 1], "ACK" );
+              addChannelAnnotation( this.sdaIdx, idx, idx, "ACK" );
             }
 
             // next byte
@@ -366,16 +366,16 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
         if ( bitCount < 7 )
         {
           // bus error, no complete byte detected
-          reportBusError( i2cDataSet, time );
+          reportBusError( i2cDataSet, idx );
         }
         else
         {
           if ( sda > oldSDA )
           {
             // SDA rises, this is a stop condition
-            reportStopCondition( i2cDataSet, time );
+            reportStopCondition( i2cDataSet, idx );
 
-            addChannelAnnotation( sdaIdx, timestamps[idx - 1], timestamps[idx], "STOP" );
+            addChannelAnnotation( this.sdaIdx, idx, idx, "STOP" );
 
             slaveAddress = 0x00;
             direction = -1;
@@ -383,9 +383,9 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
           else
           {
             // SDA falls, this is a start condition
-            reportStartCondition( i2cDataSet, time );
+            reportStartCondition( i2cDataSet, idx );
 
-            addChannelAnnotation( sdaIdx, timestamps[idx - 1], timestamps[idx], "START" );
+            addChannelAnnotation( this.sdaIdx, idx, idx, "START" );
 
             startCondFound = true;
           }
@@ -406,65 +406,65 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   /**
    * @param aTime
    */
-  private void reportACK( final I2CDataSet aDataSet, final long aTime )
+  private void reportACK( final I2CDataSet aDataSet, final int aSampleIdx )
   {
     if ( this.reportACK )
     {
-      aDataSet.reportACK( aTime );
+      aDataSet.reportACK( this.sdaIdx, aSampleIdx );
     }
   }
 
   /**
    * @param aTime
    */
-  private void reportBusError( final I2CDataSet aDataSet, final long aTime )
+  private void reportBusError( final I2CDataSet aDataSet, final int aSampleIdx )
   {
-    aDataSet.reportBusError( aTime );
+    aDataSet.reportBusError( this.sdaIdx, aSampleIdx );
   }
 
   /**
    * @param aTime
    * @param aByteValue
    */
-  private void reportData( final I2CDataSet aDataSet, final long aTime, final int aByteValue )
+  private void reportData( final I2CDataSet aDataSet, final int aStartSampleIdx, final int aEndSampleIdx,
+      final int aByteValue )
   {
-    aDataSet.reportData( aTime, aByteValue );
+    aDataSet.reportData( this.sdaIdx, aStartSampleIdx, aEndSampleIdx, aByteValue );
   }
 
   /**
    * @param aDataSet
    * @param aTime
    */
-  private void reportNACK( final I2CDataSet aDataSet, final long aTime )
+  private void reportNACK( final I2CDataSet aDataSet, final int aSampleIdx )
   {
     if ( this.reportNACK )
     {
-      aDataSet.reportNACK( aTime );
+      aDataSet.reportNACK( this.sdaIdx, aSampleIdx );
     }
   }
 
   /**
    * @param aTime
    */
-  private void reportStartCondition( final I2CDataSet aDataSet, final long aTime )
+  private void reportStartCondition( final I2CDataSet aDataSet, final int aSampleIdx )
   {
     if ( this.reportStart )
     {
-      aDataSet.reportStartCondition( aTime );
+      aDataSet.reportStartCondition( this.sdaIdx, aSampleIdx );
     }
   }
 
   /**
    * @param aTime
    */
-  private void reportStopCondition( final I2CDataSet aDataSet, final long aTime )
+  private void reportStopCondition( final I2CDataSet aDataSet, final int aSampleIdx )
   {
     if ( this.reportStop )
     {
-      aDataSet.reportStopCondition( aTime );
+      aDataSet.reportStopCondition( this.sdaIdx, aSampleIdx );
     }
   }
-
 }
 
 /* EOF */

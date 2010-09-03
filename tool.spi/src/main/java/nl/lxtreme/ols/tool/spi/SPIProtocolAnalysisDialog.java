@@ -96,12 +96,12 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     /*
      * add protocol settings elements
      */
-    JPanel panSettings = new JPanel();
+    final JPanel panSettings = new JPanel();
     panSettings.setLayout( new GridLayout( 10, 2, 5, 5 ) );
     panSettings.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Settings" ),
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
-    String channels[] = new String[32];
+    final String channels[] = new String[32];
     for ( int i = 0; i < 32; i++ )
     {
       channels[i] = new String( "Channel " + i );
@@ -169,7 +169,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     /*
      * add an empty output view
      */
-    JPanel panTable = new JPanel( new GridLayout( 1, 1, 5, 5 ) );
+    final JPanel panTable = new JPanel( new GridLayout( 1, 1, 5, 5 ) );
     this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
     this.outText.setMargin( new Insets( 5, 5, 5, 5 ) );
     panTable.add( new JScrollPane( this.outText ) );
@@ -219,7 +219,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   private static GridBagConstraints createConstraints( final int x, final int y, final int w, final int h,
       final double wx, final double wy )
   {
-    GridBagConstraints gbc = new GridBagConstraints();
+    final GridBagConstraints gbc = new GridBagConstraints();
     gbc.fill = GridBagConstraints.BOTH;
     gbc.insets = new Insets( 4, 4, 4, 4 );
     gbc.gridx = x;
@@ -261,7 +261,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
       this.runAnalysisAction.restore();
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       // Should not happen in this situation!
       throw new RuntimeException( exception );
@@ -370,20 +370,24 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     {
       final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
 
-      exporter.setHeaders( "index", "time", "event?", "event-type", "MOSI data", "MISO data" );
+      exporter.setHeaders( "index", "start-time", "end-time", "event?", "event-type", "MOSI data", "MISO data" );
 
       final List<SPIData> decodedData = aDataSet.getData();
       for ( int i = 0; i < decodedData.size(); i++ )
       {
         final SPIData ds = decodedData.get( i );
 
-        exporter
-            .addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), ds.getEvent(), ds.getMoSiValue(), ds.getMiSoValue() );
+        final String startTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
+        final String endTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
+        final String mosiDataValue = ds.isMosiData() ? Integer.toString( ds.getDataValue() ) : null;
+        final String misoDataValue = ds.isMisoData() ? Integer.toString( ds.getDataValue() ) : null;
+
+        exporter.addRow( i, startTime, endTime, ds.isEvent(), ds.getEventName(), mosiDataValue, misoDataValue );
       }
 
       exporter.close();
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       if ( LOG.isLoggable( Level.WARNING ) )
       {
@@ -405,7 +409,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     {
       toHtmlPage( aFile, aDataSet );
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       if ( LOG.isLoggable( Level.WARNING ) )
       {
@@ -530,16 +534,16 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
               String bgColor;
 
               // this is an event
-              if ( SPIDataSet.SPI_CS_LOW.equals( ds.getEvent() ) )
+              if ( SPIDataSet.SPI_CS_LOW.equals( ds.getEventName() ) )
               {
                 // start condition
-                event = ds.getEvent();
+                event = ds.getEventName();
                 bgColor = "#c0ffc0";
               }
-              else if ( SPIDataSet.SPI_CS_HIGH.equals( ds.getEvent() ) )
+              else if ( SPIDataSet.SPI_CS_HIGH.equals( ds.getEventName() ) )
               {
                 // stop condition
-                event = ds.getEvent();
+                event = ds.getEventName();
                 bgColor = "#e0e0e0";
               }
               else
@@ -551,7 +555,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( ds.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( aDataSet.getDisplayTime( ds.getStartSampleIndex() ) );
               tr.addChild( TD ).addContent( event );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -561,54 +565,65 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
               tr.addChild( TD );
               tr.addChild( TD );
             }
-            else
+            else if ( ds.isData() )
             {
+              final int sampleIdx = ds.getStartSampleIndex();
+
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( ds.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( aDataSet.getDisplayTime( sampleIdx ) );
 
-              final int mosiValue = ds.getMoSiValue();
-              final String mosiDataHex = DisplayUtils.integerToHexString( mosiValue, bitCount / 4 + bitAdder );
-              final String mosiDataBin = DisplayUtils.integerToBinString( mosiValue, bitCount );
-              final String mosiDataDec = String.valueOf( mosiValue );
-              final String mosiDataASCII;
-              if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )mosiValue ) )
-              {
-                mosiDataASCII = String.valueOf( ( char )mosiValue );
-              }
-              else
-              {
-                mosiDataASCII = "";
-              }
+              int mosiValue = ds.isMosiData() ? ds.getDataValue() : 0;
+              int misoValue = ds.isMisoData() ? ds.getDataValue() : 0;
 
-              tr.addChild( TD ).addContent( "0x", mosiDataHex );
-              tr.addChild( TD ).addContent( "0b", mosiDataBin );
-              tr.addChild( TD ).addContent( mosiDataDec );
-              tr.addChild( TD ).addContent( mosiDataASCII );
-
-              final int misoValue = ds.getMiSoValue();
-              String misoDataHex = DisplayUtils.integerToHexString( misoValue, bitCount / 4 + bitAdder );
-              String misoDataBin = DisplayUtils.integerToBinString( misoValue, bitCount );
-              String misoDataDec = String.valueOf( misoValue );
-              String misoDataASCII;
-              if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )misoValue ) )
+              // Try to coalesce equal timestamps...
+              if ( ( i + 1 ) < decodedData.size() )
               {
-                misoDataASCII = String.valueOf( ( char )misoValue );
-              }
-              else
-              {
-                misoDataASCII = "";
+                final SPIData nextDS = decodedData.get( i + 1 );
+                if ( nextDS.getStartSampleIndex() == sampleIdx )
+                {
+                  mosiValue = nextDS.isMosiData() ? nextDS.getDataValue() : 0;
+                  misoValue = nextDS.isMisoData() ? nextDS.getDataValue() : 0;
+                  // Make sure to skip this DS in the next iteration...
+                  i++;
+                }
               }
 
-              tr.addChild( TD ).addContent( "0x", misoDataHex );
-              tr.addChild( TD ).addContent( "0b", misoDataBin );
-              tr.addChild( TD ).addContent( misoDataDec );
-              tr.addChild( TD ).addContent( misoDataASCII );
+              // MOSI value first, MISO value next...
+              addDataValues( tr, i, sampleIdx, mosiValue );
+              addDataValues( tr, i, sampleIdx, misoValue );
             }
           }
         }
 
         return null;
+      }
+
+      /**
+       * @param aTableRow
+       * @param aIdx
+       * @param aSampleIdx
+       * @param aValue
+       */
+      private void addDataValues( final Element aTableRow, final int aIdx, final int aSampleIdx, final int aValue )
+      {
+        final String mosiDataHex = DisplayUtils.integerToHexString( aValue, bitCount / 4 + bitAdder );
+        final String mosiDataBin = DisplayUtils.integerToBinString( aValue, bitCount );
+        final String mosiDataDec = String.valueOf( aValue );
+        final String mosiDataASCII;
+        if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )aValue ) )
+        {
+          mosiDataASCII = String.valueOf( ( char )aValue );
+        }
+        else
+        {
+          mosiDataASCII = "";
+        }
+
+        aTableRow.addChild( TD ).addContent( "0x", mosiDataHex );
+        aTableRow.addChild( TD ).addContent( "0b", mosiDataBin );
+        aTableRow.addChild( TD ).addContent( mosiDataDec );
+        aTableRow.addChild( TD ).addContent( mosiDataASCII );
       }
     };
 

@@ -28,18 +28,41 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
 {
   // VARIABLES
 
-  private final long time;
-  private final String timeDisplayValue;
+  private final int idx;
+  private final int channelIdx;
+  private final int startSampleIdx;
+  private final int endSampleIdx;
+  private final String eventName;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new BaseData instance.
    */
-  public BaseData( final long aTime, final String aTimeDisplayValue )
+  protected BaseData( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx )
   {
-    this.time = aTime;
-    this.timeDisplayValue = aTimeDisplayValue;
+    this( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, null );
+  }
+
+  /**
+   * Creates a new BaseData instance.
+   */
+  protected BaseData( final int aIdx, final int aChannelIdx, final int aSampleIdx, final String aEventName )
+  {
+    this( aIdx, aChannelIdx, aSampleIdx, aSampleIdx, aEventName );
+  }
+
+  /**
+   * Creates a new BaseData instance.
+   */
+  private BaseData( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
+      final String aEventName )
+  {
+    this.idx = aIdx;
+    this.channelIdx = aChannelIdx;
+    this.startSampleIdx = aStartSampleIdx;
+    this.endSampleIdx = aEndSampleIdx;
+    this.eventName = aEventName;
   }
 
   // METHODS
@@ -49,7 +72,7 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
    */
   public int compareTo( final TYPE aComparable )
   {
-    return ( int )( this.time - ( ( BaseData<?> )aComparable ).getTime() );
+    return ( this.idx - ( ( BaseData<?> )aComparable ).getIndex() );
   }
 
   /**
@@ -62,17 +85,25 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
     {
       return true;
     }
-    if ( aObject == null )
-    {
-      return false;
-    }
-    if ( !( aObject instanceof BaseData<?> ) )
+    if ( ( aObject == null ) || !( aObject instanceof BaseData<?> ) )
     {
       return false;
     }
 
-    BaseData<?> other = ( BaseData<?> )aObject;
-    if ( this.time != other.time )
+    final BaseData<?> other = ( BaseData<?> )aObject;
+    if ( this.idx != other.idx )
+    {
+      return false;
+    }
+    if ( this.channelIdx != other.channelIdx )
+    {
+      return false;
+    }
+    if ( this.startSampleIdx != other.startSampleIdx )
+    {
+      return false;
+    }
+    if ( this.endSampleIdx != other.endSampleIdx )
     {
       return false;
     }
@@ -81,20 +112,57 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
   }
 
   /**
-   * @return the time
+   * Returns the channel index this data belongs to.
+   * 
+   * @return a channel index, >= 0 && < 32.
    */
-  public final long getTime()
+  public final int getChannelIdx()
   {
-    return this.time;
+    return this.channelIdx;
   }
 
   /**
-   * @return the timeDisplayValue
+   * Returns the start sample (array) index on which this data/event ended.
+   * 
+   * @return an array index, >= 0.
+   * @see #getStartSampleIndex()
    */
-  public final String getTimeDisplayValue()
+  public final int getEndSampleIndex()
   {
-    return this.timeDisplayValue;
-  };
+    return this.endSampleIdx;
+  }
+
+  /**
+   * Returns the event name, in case this data represents an event.
+   * 
+   * @return the event name, can be <code>null</code>.
+   * @see #isEvent()
+   */
+  public final String getEventName()
+  {
+    return this.eventName;
+  }
+
+  /**
+   * Returns the index of this data event/value.
+   * 
+   * @return the index, zero-based.
+   */
+  public final int getIndex()
+  {
+    return this.idx;
+  }
+
+  /**
+   * Returns the start sample (array) index on which this data/event started.
+   * 
+   * @return an array index, >= 0.
+   * @see #getEndSampleIndex()
+   */
+  public final int getStartSampleIndex()
+  {
+    return this.startSampleIdx;
+  }
 
   /**
    * @see java.lang.Object#hashCode()
@@ -104,7 +172,23 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
   {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ( int )( this.time ^ ( this.time >>> 32 ) );
+    result = prime * result + this.idx;
+    result = prime * result + this.startSampleIdx;
+    result = prime * result + this.endSampleIdx;
     return result;
+  }
+
+  /**
+   * Returns whether this data represents an event.
+   * <p>
+   * By default, an event is characterized by having a defined event name.
+   * </p>
+   * 
+   * @return <code>true</code> if this data represents an event,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isEvent()
+  {
+    return ( this.eventName != null ) && !this.eventName.trim().isEmpty();
   }
 }
