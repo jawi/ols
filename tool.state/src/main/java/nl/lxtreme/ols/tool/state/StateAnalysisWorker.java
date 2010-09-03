@@ -80,7 +80,7 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
   {
     // obtain data from captured data
     final int[] values = getValues();
-    final long triggerPosition = getTriggerPosition();
+    final long triggerPosition = getTriggerTimePosition();
 
     final int maskValue = 1 << this.number;
 

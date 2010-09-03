@@ -52,7 +52,7 @@ public class ChannelAnnotations
    * @param aEndIdx
    * @param aData
    */
-  public void addAnnotation( final long aStartIdx, final long aEndIdx, final Object aData )
+  public void addAnnotation( final int aStartIdx, final int aEndIdx, final Object aData )
   {
     this.annotations.add( new ChannelAnnotation( aStartIdx, aEndIdx, aData ) );
   }
@@ -85,7 +85,7 @@ public class ChannelAnnotations
    * @param aTimeIndex
    * @return
    */
-  public ChannelAnnotation getAnnotation( final long aTimeIndex )
+  public ChannelAnnotation getAnnotation( final int aTimeIndex )
   {
     for ( ChannelAnnotation annotation : this.annotations )
     {
@@ -116,7 +116,7 @@ public class ChannelAnnotations
    * @return an iterator of all "visible" channel annotations, never
    *         <code>null</code>.
    */
-  public Iterator<ChannelAnnotation> getAnnotations( final long aStartIdx, final long aEndIdx )
+  public Iterator<ChannelAnnotation> getAnnotations( final int aStartIdx, final int aEndIdx )
   {
     // Try to find the exact starting & ending index in our own
     // administration...

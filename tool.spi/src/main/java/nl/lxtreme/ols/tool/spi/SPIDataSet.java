@@ -32,8 +32,10 @@ public final class SPIDataSet extends BaseDataSet<SPIData>
 {
   // CONSTANTS
 
-  public static final String SPI_CS_LOW = "CSLOW";
-  public static final String SPI_CS_HIGH = "CSHIGH";
+  public static final String SPI_CS_LOW = "CS_LOW";
+  public static final String SPI_CS_HIGH = "CS_HIGH";
+  public static final String SPI_MOSI = "MOSI";
+  public static final String SPI_MISO = "MISO";
 
   // CONSTRUCTORS
 
@@ -50,24 +52,36 @@ public final class SPIDataSet extends BaseDataSet<SPIData>
   /**
    * @param aTimeValue
    */
-  public void reportCSHigh( final long aTimeValue )
+  public void reportCSHigh( final int aChannelIdx, final int aSampleIdx )
   {
-    addData( new SPIData( aTimeValue, SPI_CS_HIGH, indexToTime( aTimeValue ) ) );
+    final int idx = size();
+    addData( new SPIData( idx, aChannelIdx, SPI_CS_HIGH, aSampleIdx ) );
   }
 
   /**
    * @param aTimeValue
    */
-  public void reportCSLow( final long aTimeValue )
+  public void reportCSLow( final int aChannelIdx, final int aSampleIdx )
   {
-    addData( new SPIData( aTimeValue, SPI_CS_LOW, indexToTime( aTimeValue ) ) );
+    final int idx = size();
+    addData( new SPIData( idx, aChannelIdx, SPI_CS_LOW, aSampleIdx ) );
   }
 
   /**
    * @param aTimeValue
    */
-  public void reportData( final long aTimeValue, final int aMiSoValue, final int aMoSiValue )
+  public void reportMisoData( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final int aDataValue )
   {
-    addData( new SPIData( aTimeValue, aMoSiValue, aMiSoValue, indexToTime( aTimeValue ) ) );
+    final int idx = size();
+    addData( new SPIData( idx, aChannelIdx, SPI_MISO, aDataValue, aStartIdx, aEndIdx ) );
+  }
+
+  /**
+   * @param aTimeValue
+   */
+  public void reportMosiData( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final int aDataValue )
+  {
+    final int idx = size();
+    addData( new SPIData( idx, aChannelIdx, SPI_MOSI, aDataValue, aStartIdx, aEndIdx ) );
   }
 }

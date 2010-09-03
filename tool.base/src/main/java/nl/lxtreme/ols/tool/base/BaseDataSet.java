@@ -35,10 +35,13 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   // VARIABLES
 
   private final List<DATA> data;
-  private final long startOfDecode;
-  private final long endOfDecode;
+  private final int startOfDecode;
+  private final int endOfDecode;
   private final boolean timingDataPresent;
   private final int sampleRate;
+  private final boolean triggerDataPresent;
+  private final int triggerIndex;
+  private final long[] timestamps;
 
   // CONSTRUCTORS
 
@@ -49,15 +52,20 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
    * @param aEndOfDecode
    * @param aData
    */
-  public BaseDataSet( final long aStartOfDecode, final long aEndOfDecode, final CapturedData aData )
+  public BaseDataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final CapturedData aData )
   {
     this.data = new ArrayList<DATA>();
 
-    this.startOfDecode = aStartOfDecode;
-    this.endOfDecode = aEndOfDecode;
+    this.startOfDecode = aStartOfDecodeIdx;
+    this.endOfDecode = aEndOfDecodeIdx;
 
     this.timingDataPresent = aData.hasTimingData();
     this.sampleRate = aData.getSampleRate();
+
+    this.triggerDataPresent = aData.hasTriggerData();
+    this.triggerIndex = aData.getTriggerIndex();
+
+    this.timestamps = aData.getTimestamps();
   }
 
   // METHODS
@@ -73,9 +81,22 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   }
 
   /**
+   * @param aSampleIdx
    * @return
    */
-  public final long getEndOfDecode()
+  public final String getDisplayTime( final int aSampleIdx )
+  {
+    long time = calculateTime( this.timestamps[aSampleIdx] );
+    time -= calculateTime( this.timestamps[this.startOfDecode] );
+    return indexToTime( time );
+  }
+
+  /**
+   * Returns the sample (array) index on which the decoding is stopped.
+   * 
+   * @return a sample (array) index, >= 0.
+   */
+  public final int getEndOfDecode()
   {
     return this.endOfDecode;
   }
@@ -89,9 +110,11 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   }
 
   /**
-   * @return
+   * Returns the sample (array) index on which the decoding is started.
+   * 
+   * @return a sample (array) index, >= 0.
    */
-  public final long getStartOfDecode()
+  public final int getStartOfDecode()
   {
     return this.startOfDecode;
   }
@@ -119,24 +142,13 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   }
 
   /**
-   * Determines the time (display) value for a given sample index.
+   * Returns the current size of this data set.
    * 
-   * @param aIndex
-   *          the sample index to convert to a time (display) value.
-   * @return the time display value of the given sample index, never
-   *         <code>null</code>.
+   * @return a data set size, >= 0.
    */
-  protected final String indexToTime( final long aIndex )
+  protected final int size()
   {
-    final long index = ( aIndex - this.startOfDecode );
-    if ( this.timingDataPresent )
-    {
-      return DisplayUtils.displayScaledTime( index, this.sampleRate );
-    }
-    else
-    {
-      return Long.toString( index );
-    }
+    return this.data.size();
   }
 
   /**
@@ -145,5 +157,42 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   protected void sort()
   {
     Collections.sort( this.data );
+  }
+
+  /**
+   * Calculates the time offset
+   * 
+   * @param time
+   *          absolute sample number
+   * @return time relative to data
+   */
+  private long calculateTime( final long aTime )
+  {
+    if ( this.triggerDataPresent )
+    {
+      return aTime - this.timestamps[this.triggerIndex];
+    }
+
+    return aTime;
+  }
+
+  /**
+   * Determines the time (display) value for a given sample index.
+   * 
+   * @param aIndex
+   *          the sample index to convert to a time (display) value.
+   * @return the time display value of the given sample index, never
+   *         <code>null</code>.
+   */
+  private String indexToTime( final long aIndex )
+  {
+    if ( this.timingDataPresent )
+    {
+      return DisplayUtils.displayScaledTime( aIndex, this.sampleRate );
+    }
+    else
+    {
+      return Long.toString( aIndex );
+    }
   }
 }

@@ -95,7 +95,7 @@ public final class DataContainer implements CapturedData
    * @param aData
    *          the data.
    */
-  public void addChannelAnnotation( final int aChannelIdx, final long aStartIdx, final long aEndIdx, final Object aData )
+  public void addChannelAnnotation( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final Object aData )
   {
     if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
     {
@@ -122,7 +122,7 @@ public final class DataContainer implements CapturedData
   {
     if ( this.capturedData.hasTriggerData() )
     {
-      return aTime - this.capturedData.getTriggerPosition();
+      return aTime - this.capturedData.getTriggerTimePosition();
     }
 
     return aTime;
@@ -162,7 +162,7 @@ public final class DataContainer implements CapturedData
    *          < 32.
    * @return the channel annotations, can be <code>null</code>.
    */
-  public ChannelAnnotation getChannelAnnotation( final int aChannelIdx, final long aTimeIndex )
+  public ChannelAnnotation getChannelAnnotation( final int aChannelIdx, final int aTimeIndex )
   {
     if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
     {
@@ -186,8 +186,8 @@ public final class DataContainer implements CapturedData
    *          < 32.
    * @return the channel annotations, can be <code>null</code>.
    */
-  public Iterator<ChannelAnnotation> getChannelAnnotations( final int aChannelIdx, final long aStartIdx,
-      final long aEndIdx )
+  public Iterator<ChannelAnnotation> getChannelAnnotations( final int aChannelIdx, final int aStartIdx,
+      final int aEndIdx )
   {
     if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
     {
@@ -322,13 +322,21 @@ public final class DataContainer implements CapturedData
   }
 
   /**
-   * Returns the trigger position, if it is available.
-   * 
-   * @return the available trigger position, or -1 if it is not available.
+   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerIndex()
    */
-  public long getTriggerPosition()
+  @Override
+  public int getTriggerIndex()
   {
-    return hasCapturedData() && this.capturedData.hasTriggerData() ? this.capturedData.getTriggerPosition()
+    return hasCapturedData() && hasTriggerData() ? this.capturedData.getTriggerIndex() : CapturedData.NOT_AVAILABLE;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerTimePosition()
+   */
+  @Override
+  public long getTriggerTimePosition()
+  {
+    return hasCapturedData() && hasTriggerData() ? this.capturedData.getTriggerTimePosition()
         : CapturedData.NOT_AVAILABLE;
   }
 
@@ -600,8 +608,29 @@ public final class DataContainer implements CapturedData
       System.arraycopy( cursorPositions, 0, this.cursorPositions, 0, cursorPositions.length );
       this.cursorEnabled = cursors;
 
+      // Convert old-style trigger position (as absolute time-value) to relative
+      // index...
+      int triggerPos;
+      if ( t > values.length )
+      {
+        triggerPos = -1;
+        for ( int i = 1; i < timestamps.length; i++ )
+        {
+          if ( t < timestamps[i] )
+          {
+            triggerPos = i;
+            break;
+          }
+        }
+      }
+      else
+      {
+        triggerPos = ( int )t;
+      }
+
       // Finally set the captured data, and notify all event listeners...
-      setCapturedData( new CapturedDataImpl( values, timestamps, t, r, channels, enabledChannels, absoluteLength ) );
+      setCapturedData( new CapturedDataImpl( values, timestamps, triggerPos, r, channels, enabledChannels,
+          absoluteLength ) );
     }
     finally
     {
@@ -713,7 +742,7 @@ public final class DataContainer implements CapturedData
       bw.newLine();
       if ( this.capturedData.hasTriggerData() )
       {
-        bw.write( ";TriggerPosition: " + this.capturedData.getTriggerPosition() );
+        bw.write( ";TriggerPosition: " + this.capturedData.getTriggerIndex() );
         bw.newLine();
       }
       bw.write( ";Compressed: true" );

@@ -346,14 +346,18 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     {
       final CsvExporter exporter = ExportUtils.createCsvExporter( aSelectedFile );
 
-      exporter.setHeaders( "index", "time", "event?", "event-type", "data" );
+      exporter.setHeaders( "index", "start-time", "end-time", "event?", "event-type", "data" );
 
       final List<I2CData> dataSet = aAnalysisResult.getData();
       for ( int i = 0; i < dataSet.size(); i++ )
       {
         final I2CData ds = dataSet.get( i );
 
-        exporter.addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), ds.getEvent(), ( char )ds.getValue() );
+        final String startTime = aAnalysisResult.getDisplayTime( ds.getStartSampleIndex() );
+        final String endTime = aAnalysisResult.getDisplayTime( ds.getEndSampleIndex() );
+        final String data = ds.isEvent() ? "" : Character.toString( ( char )ds.getValue() );
+
+        exporter.addRow( i, startTime, endTime, ds.isEvent(), ds.getEventName(), data );
       }
 
       exporter.close();
@@ -531,7 +535,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
             if ( data.isEvent() )
             {
               // this is an event
-              final String event = data.getEvent();
+              final String event = data.getEventName();
 
               String bgColor;
               if ( I2CDataSet.I2C_START.equals( event ) || I2CDataSet.I2C_STOP.equals( event ) )
@@ -554,7 +558,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( data.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( aAnalysisResult.getDisplayTime( data.getStartSampleIndex() ) );
               tr.addChild( TD ).addContent( event );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -566,7 +570,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( data.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( aAnalysisResult.getDisplayTime( data.getStartSampleIndex() ) );
               tr.addChild( TD ).addContent( "0x" + DisplayUtils.integerToHexString( value, 2 ) );
               tr.addChild( TD ).addContent( "0b" + DisplayUtils.integerToBinString( value, 8 ) );
               tr.addChild( TD ).addContent( String.valueOf( value ) );

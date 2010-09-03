@@ -41,9 +41,9 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   /**
    * Creates a new UARTDataSet instance.
    */
-  public UARTDataSet( final long aStartSampleIdx, final long aStopSampleIdx, final CapturedData aData )
+  public UARTDataSet( final int aStartSampleIdx, final int aEndSampleIdx, final CapturedData aData )
   {
-    super( aStartSampleIdx, aStopSampleIdx, aData );
+    super( aStartSampleIdx, aEndSampleIdx, aData );
 
     this.decodedSymbols = 0;
     this.detectedErrors = 0;
@@ -100,18 +100,20 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    * @param aTime
    * @param aName
    */
-  public void reportControlHigh( final long aTime, final String aName )
+  public void reportControlHigh( final int aChannelIdx, final int aSampleIdx, final String aName )
   {
-    addData( new UARTData( aTime, aName.toUpperCase() + "_HIGH", indexToTime( aTime ) ) );
+    final int idx = size();
+    addData( new UARTData( idx, aChannelIdx, aSampleIdx, aName.toUpperCase() + "_HIGH" ) );
   }
 
   /**
    * @param aTime
    * @param aName
    */
-  public void reportControlLow( final long aTime, final String aName )
+  public void reportControlLow( final int aChannelIdx, final int aSampleIdx, final String aName )
   {
-    addData( new UARTData( aTime, aName.toUpperCase() + "_LOW", indexToTime( aTime ) ) );
+    final int idx = size();
+    addData( new UARTData( idx, aChannelIdx, aSampleIdx, aName.toUpperCase() + "_LOW" ) );
   }
 
   /**
@@ -119,40 +121,45 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    * @param aValue
    * @param aEventType
    */
-  public void reportData( final long aTime, final int aValue, final int aEventType )
+  public void reportData( final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx, final int aValue,
+      final int aEventType )
   {
-    addData( new UARTData( aTime, aValue, aEventType, indexToTime( aTime ) ) );
+    final int idx = size();
     this.decodedSymbols++;
+    addData( new UARTData( idx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, aValue, aEventType ) );
   }
 
   /**
    * @param aTime
    * @param aEventType
    */
-  public void reportFrameError( final long aTime, final int aEventType )
+  public void reportFrameError( final int aChannelIdx, final int aSampleIdx, final int aEventType )
   {
-    addData( new UARTData( aTime, "FRAME_ERR", aEventType, indexToTime( aTime ) ) );
+    final int idx = size();
     this.detectedErrors++;
+    addData( new UARTData( idx, aChannelIdx, aSampleIdx, "FRAME_ERR", aEventType ) );
   }
 
   /**
    * @param aTime
    * @param aEventType
    */
-  public void reportParityError( final long aTime, final int aEventType )
+  public void reportParityError( final int aChannelIdx, final int aSampleIdx, final int aEventType )
   {
-    addData( new UARTData( aTime, "PARITY_ERR", aEventType, indexToTime( aTime ) ) );
+    final int idx = size();
     this.detectedErrors++;
+    addData( new UARTData( idx, aChannelIdx, aSampleIdx, "PARITY_ERR", aEventType ) );
   }
 
   /**
    * @param aTime
    * @param aEventType
    */
-  public void reportStartError( final long aTime, final int aEventType )
+  public void reportStartError( final int aChannelIdx, final int aSampleIdx, final int aEventType )
   {
-    addData( new UARTData( aTime, "START_ERR", aEventType, indexToTime( aTime ) ) );
+    final int idx = size();
     this.detectedErrors++;
+    addData( new UARTData( idx, aChannelIdx, aSampleIdx, "START_ERR", aEventType ) );
   }
 
   /**

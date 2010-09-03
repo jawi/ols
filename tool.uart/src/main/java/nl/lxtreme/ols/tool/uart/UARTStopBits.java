@@ -58,7 +58,7 @@ public enum UARTStopBits
   {
     if ( this == STOP_15 )
     {
-      return 1.5;
+      return 1.25;
     }
     else if ( this == STOP_2 )
     {

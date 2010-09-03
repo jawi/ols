@@ -36,7 +36,6 @@ public final class I2CData extends BaseData<I2CData>
   // VARIABLES
 
   private final int value;
-  private final String event;
 
   // CONSTRUCTORS
 
@@ -44,22 +43,21 @@ public final class I2CData extends BaseData<I2CData>
    * @param aTime
    * @param aValue
    */
-  public I2CData( final long aTime, final int aValue, final String aTimeDisplayValue )
+  public I2CData( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
+      final int aValue )
   {
-    super( aTime, aTimeDisplayValue );
+    super( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx );
     this.value = aValue;
-    this.event = null;
   }
 
   /**
    * @param aTime
-   * @param aEvent
+   * @param aEventName
    */
-  public I2CData( final long aTime, final String aEvent, final String aTimeDisplayValue )
+  public I2CData( final int aIdx, final int aChannelIdx, final int aSampleIdx, final String aEventName )
   {
-    super( aTime, aTimeDisplayValue );
+    super( aIdx, aChannelIdx, aSampleIdx, aEventName );
     this.value = 0;
-    this.event = aEvent;
   }
 
   // METHODS
@@ -85,29 +83,7 @@ public final class I2CData extends BaseData<I2CData>
       return false;
     }
 
-    if ( this.event == null )
-    {
-      if ( other.event != null )
-      {
-        return false;
-      }
-    }
-    else if ( !this.event.equals( other.event ) )
-    {
-      return false;
-    }
-
     return true;
-  }
-
-  /**
-   * Returns the event.
-   * 
-   * @return the event, never <code>null</code>.
-   */
-  public String getEvent()
-  {
-    return this.event;
   }
 
   /**
@@ -128,16 +104,7 @@ public final class I2CData extends BaseData<I2CData>
   {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ( ( this.event == null ) ? 0 : this.event.hashCode() );
     result = prime * result + this.value;
     return result;
-  }
-
-  /**
-   * @return
-   */
-  public boolean isEvent()
-  {
-    return ( this.event != null );
   }
 }

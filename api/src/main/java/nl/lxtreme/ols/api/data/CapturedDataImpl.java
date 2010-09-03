@@ -42,7 +42,7 @@ public class CapturedDataImpl implements CapturedData
   private final long[] timestamps;
 
   /** position of trigger as index of values */
-  private final long triggerPosition;
+  private final int triggerPosition;
 
   /** sampling rate in Hz */
   private final int rate;
@@ -72,7 +72,7 @@ public class CapturedDataImpl implements CapturedData
    * @param enabledChannels
    *          bit mask identifying used channels
    */
-  public CapturedDataImpl( final int[] values, final long triggerPosition, final int rate, final int channels,
+  public CapturedDataImpl( final int[] values, final int triggerPosition, final int rate, final int channels,
       final int enabledChannels )
   {
     this.triggerPosition = triggerPosition;
@@ -132,7 +132,7 @@ public class CapturedDataImpl implements CapturedData
    * @param absLen
    *          absolute number of samples
    */
-  public CapturedDataImpl( final int[] values, final long[] timestamps, final long triggerPosition, final int rate,
+  public CapturedDataImpl( final int[] values, final long[] timestamps, final int triggerPosition, final int rate,
       final int channels, final int enabledChannels, final long absLen )
   {
     this.values = values;
@@ -218,12 +218,21 @@ public class CapturedDataImpl implements CapturedData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerPosition()
+   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerIndex()
    */
   @Override
-  public final long getTriggerPosition()
+  public final int getTriggerIndex()
   {
     return this.triggerPosition;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerTimePosition()
+   */
+  @Override
+  public final long getTriggerTimePosition()
+  {
+    return this.timestamps[this.triggerPosition];
   }
 
   /**

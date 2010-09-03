@@ -275,18 +275,18 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    SwingComponentUtils.setSelectedIndex( this.rxd, aProperties.getProperty( "tools.UARTProtocolAnalysis.rxd" ) );
-    SwingComponentUtils.setSelectedIndex( this.txd, aProperties.getProperty( "tools.UARTProtocolAnalysis.txd" ) );
-    SwingComponentUtils.setSelectedIndex( this.cts, aProperties.getProperty( "tools.UARTProtocolAnalysis.cts" ) );
-    SwingComponentUtils.setSelectedIndex( this.rts, aProperties.getProperty( "tools.UARTProtocolAnalysis.rts" ) );
-    SwingComponentUtils.setSelectedIndex( this.dtr, aProperties.getProperty( "tools.UARTProtocolAnalysis.dtr" ) );
-    SwingComponentUtils.setSelectedIndex( this.dsr, aProperties.getProperty( "tools.UARTProtocolAnalysis.dsr" ) );
-    SwingComponentUtils.setSelectedIndex( this.dcd, aProperties.getProperty( "tools.UARTProtocolAnalysis.dcd" ) );
-    SwingComponentUtils.setSelectedIndex( this.ri, aProperties.getProperty( "tools.UARTProtocolAnalysis.ri" ) );
-    SwingComponentUtils.setSelectedIndex( this.parity, aProperties.getProperty( "tools.UARTProtocolAnalysis.parity" ) );
-    SwingComponentUtils.setSelectedIndex( this.bits, aProperties.getProperty( "tools.UARTProtocolAnalysis.bits" ) );
-    SwingComponentUtils.setSelectedIndex( this.stop, aProperties.getProperty( "tools.UARTProtocolAnalysis.stop" ) );
-    SwingComponentUtils.setSelected( this.inv, aProperties.getProperty( "tools.UARTProtocolAnalysis.inverted" ) );
+    SwingComponentUtils.setSelectedIndex( this.rxd, aProperties.getProperty( aNamespace + ".rxd" ) );
+    SwingComponentUtils.setSelectedIndex( this.txd, aProperties.getProperty( aNamespace + ".txd" ) );
+    SwingComponentUtils.setSelectedIndex( this.cts, aProperties.getProperty( aNamespace + ".cts" ) );
+    SwingComponentUtils.setSelectedIndex( this.rts, aProperties.getProperty( aNamespace + ".rts" ) );
+    SwingComponentUtils.setSelectedIndex( this.dtr, aProperties.getProperty( aNamespace + ".dtr" ) );
+    SwingComponentUtils.setSelectedIndex( this.dsr, aProperties.getProperty( aNamespace + ".dsr" ) );
+    SwingComponentUtils.setSelectedIndex( this.dcd, aProperties.getProperty( aNamespace + ".dcd" ) );
+    SwingComponentUtils.setSelectedIndex( this.ri, aProperties.getProperty( aNamespace + ".ri" ) );
+    SwingComponentUtils.setSelectedIndex( this.parity, aProperties.getProperty( aNamespace + ".parity" ) );
+    SwingComponentUtils.setSelectedIndex( this.bits, aProperties.getProperty( aNamespace + ".bits" ) );
+    SwingComponentUtils.setSelectedIndex( this.stop, aProperties.getProperty( aNamespace + ".stop" ) );
+    SwingComponentUtils.setSelected( this.inv, aProperties.getProperty( aNamespace + ".inverted" ) );
   }
 
   /**
@@ -358,42 +358,42 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   {
     if ( !"unused".equals( this.rxd.getSelectedItem() ) )
     {
-      aToolWorker.setRxdMask( 1 << this.rxd.getSelectedIndex() );
+      aToolWorker.setRxdIndex( this.rxd.getSelectedIndex() );
     }
 
     if ( !"unused".equals( this.txd.getSelectedItem() ) )
     {
-      aToolWorker.setTxdMask( 1 << this.txd.getSelectedIndex() );
+      aToolWorker.setTxdIndex( this.txd.getSelectedIndex() );
     }
 
     if ( !"unused".equals( this.cts.getSelectedItem() ) )
     {
-      aToolWorker.setCtsMask( 1 << this.cts.getSelectedIndex() );
+      aToolWorker.setCtsIndex( this.cts.getSelectedIndex() );
     }
 
     if ( !"unused".equals( this.rts.getSelectedItem() ) )
     {
-      aToolWorker.setRtsMask( 1 << this.rts.getSelectedIndex() );
+      aToolWorker.setRtsIndex( this.rts.getSelectedIndex() );
     }
 
     if ( !"unused".equals( this.dcd.getSelectedItem() ) )
     {
-      aToolWorker.setDcdMask( 1 << this.dcd.getSelectedIndex() );
+      aToolWorker.setDcdIndex( this.dcd.getSelectedIndex() );
     }
 
     if ( !"unused".equals( this.ri.getSelectedItem() ) )
     {
-      aToolWorker.setRiMask( 1 << this.ri.getSelectedIndex() );
+      aToolWorker.setRiIndex( this.ri.getSelectedIndex() );
     }
 
     if ( !"unused".equals( this.dsr.getSelectedItem() ) )
     {
-      aToolWorker.setDsrMask( 1 << this.dsr.getSelectedIndex() );
+      aToolWorker.setDsrIndex( this.dsr.getSelectedIndex() );
     }
 
     if ( !"unused".equals( this.dtr.getSelectedItem() ) )
     {
-      aToolWorker.setDtrMask( 1 << this.dtr.getSelectedIndex() );
+      aToolWorker.setDtrIndex( this.dtr.getSelectedIndex() );
     }
 
     // Other properties...
@@ -416,12 +416,16 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     {
       final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
 
-      exporter.setHeaders( "index", "time", "event?", "event-type", "RxD event", "TxD event", "RxD data", "TxD data" );
+      exporter.setHeaders( "index", "start-time", "end-time", "event?", "event-type", "RxD event", "TxD event",
+          "RxD data", "TxD data" );
 
       final List<UARTData> decodedData = aDataSet.getData();
       for ( int i = 0; i < decodedData.size(); i++ )
       {
         final UARTData ds = decodedData.get( i );
+
+        final String startTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
+        final String endTime = aDataSet.getDisplayTime( ds.getEndSampleIndex() );
 
         String eventType = null;
         String rxdEvent = null;
@@ -432,30 +436,30 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
         switch ( ds.getType() )
         {
           case UARTData.UART_TYPE_EVENT:
-            eventType = ds.getEvent();
+            eventType = ds.getEventName();
             break;
 
           case UARTData.UART_TYPE_RXEVENT:
-            rxdEvent = ds.getEvent();
+            rxdEvent = ds.getEventName();
             break;
 
           case UARTData.UART_TYPE_TXEVENT:
-            txdEvent = ds.getEvent();
+            txdEvent = ds.getEventName();
             break;
 
           case UARTData.UART_TYPE_RXDATA:
-            rxdData = ds.getEvent();
+            rxdData = Integer.toString( ds.getData() );
             break;
 
           case UARTData.UART_TYPE_TXDATA:
-            txdData = ds.getEvent();
+            txdData = Integer.toString( ds.getData() );
             break;
 
           default:
             break;
         }
 
-        exporter.addRow( i, ds.getTimeDisplayValue(), ds.isEvent(), eventType, rxdEvent, txdEvent, rxdData, txdData );
+        exporter.addRow( i, startTime, endTime, ds.isEvent(), eventType, rxdEvent, txdEvent, rxdData, txdData );
       }
 
       exporter.close();
@@ -663,17 +667,17 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
               String bgColor;
               if ( UARTData.UART_TYPE_EVENT == ds.getType() )
               {
-                rxEventData = txEventData = ds.getEvent();
+                rxEventData = txEventData = ds.getEventName();
                 bgColor = "#e0e0e0";
               }
               else if ( UARTData.UART_TYPE_RXEVENT == ds.getType() )
               {
-                rxEventData = ds.getEvent();
+                rxEventData = ds.getEventName();
                 bgColor = "#c0ffc0";
               }
               else if ( UARTData.UART_TYPE_TXEVENT == ds.getType() )
               {
-                txEventData = ds.getEvent();
+                txEventData = ds.getEventName();
                 bgColor = "#c0ffc0";
               }
               else
@@ -689,7 +693,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( ds.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( aDataSet.getDisplayTime( ds.getStartSampleIndex() ) );
               tr.addChild( TD ).addContent( rxEventData );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -733,7 +737,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( ds.getTimeDisplayValue() );
+              tr.addChild( TD ).addContent( aDataSet.getDisplayTime( ds.getStartSampleIndex() ) );
               tr.addChild( TD ).addContent( rxDataHex );
               tr.addChild( TD ).addContent( rxDataBin );
               tr.addChild( TD ).addContent( rxDataDec );

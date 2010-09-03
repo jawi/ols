@@ -28,8 +28,8 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
 {
   // VARIABLES
 
-  private final long startIndex;
-  private final long endIndex;
+  private final int startIndex;
+  private final int endIndex;
   private final Object data;
 
   // CONSTRUCTORS
@@ -37,7 +37,7 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
   /**
    * Creates a new ChannelAnnotation instance.
    */
-  public ChannelAnnotation( final long aStartIndex, final long aEndIndex, final Object aData )
+  public ChannelAnnotation( final int aStartIndex, final int aEndIndex, final Object aData )
   {
     this.startIndex = aStartIndex;
     this.endIndex = aEndIndex;
@@ -109,7 +109,7 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
   /**
    * @return the endIndex
    */
-  public long getEndIndex()
+  public int getEndIndex()
   {
     return this.endIndex;
   }
@@ -117,7 +117,7 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
   /**
    * @return the startIndex
    */
-  public long getStartIndex()
+  public int getStartIndex()
   {
     return this.startIndex;
   }
@@ -131,8 +131,8 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
     final int prime = 31;
     int result = 1;
     result = prime * result + ( ( this.data == null ) ? 0 : this.data.hashCode() );
-    result = prime * result + ( int )( this.endIndex ^ ( this.endIndex >>> 32 ) );
-    result = prime * result + ( int )( this.startIndex ^ ( this.startIndex >>> 32 ) );
+    result = prime * result + this.endIndex;
+    result = prime * result + this.startIndex;
     return result;
   }
 
@@ -145,7 +145,7 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
    * @return <code>true</code> if this annotation is valid at the given index
    *         (see above), <code>false</code> otherwise.
    */
-  public boolean isInRange( final long aIndex )
+  public boolean isInRange( final int aIndex )
   {
     return ( getStartIndex() <= aIndex ) && ( getEndIndex() >= aIndex );
   }
@@ -161,7 +161,7 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
    * @return <code>true</code> if this annotation is valid between the given
    *         range (see above), <code>false</code> otherwise.
    */
-  public boolean isInRange( final long aStartIndex, final long aEndIndex )
+  public boolean isInRange( final int aStartIndex, final int aEndIndex )
   {
     return ( getStartIndex() <= aEndIndex ) && ( getEndIndex() >= aStartIndex );
   }

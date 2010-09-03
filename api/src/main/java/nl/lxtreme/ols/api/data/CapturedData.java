@@ -26,9 +26,12 @@ package nl.lxtreme.ols.api.data;
  */
 public interface CapturedData
 {
+  // INNER TYPES
 
   /** indicates that rate or trigger position are not available */
   public final static int NOT_AVAILABLE = -1;
+
+  // METHODS
 
   /**
    * @return the absoluteLength
@@ -74,9 +77,18 @@ public interface CapturedData
   public abstract long[] getTimestamps();
 
   /**
-   * @return the triggerPosition
+   * Returns the trigger position, as array index.
+   * 
+   * @return an array index representing the trigger position, >= 0.
    */
-  public abstract long getTriggerPosition();
+  public abstract int getTriggerIndex();
+
+  /**
+   * Returns the trigger position, as (array) time-value.
+   * 
+   * @return a value representing the trigger position, >= 0.
+   */
+  public abstract long getTriggerTimePosition();
 
   /**
    * @return the values
