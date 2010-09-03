@@ -93,15 +93,16 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     {
       if ( aEvent.getClickCount() == 2 )
       {
+        final Point point = aEvent.getPoint();
         if ( aEvent.isAltDown() || aEvent.isShiftDown() )
         {
           // Zoom out...
-          zoomOut();
+          zoomOut( point );
         }
         else
         {
           // Zoom in...
-          zoomIn();
+          zoomIn( point );
         }
       }
     }
@@ -830,8 +831,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, getDataContainer() );
     if ( dialog.showDialog() )
     {
-      this.rowLabels.repaint();
-      resize();
+      updatePreferredSize( null, 1 );
     }
 
     dialog.dispose();
@@ -847,7 +847,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     DiagramSettingsDialog dialog = new DiagramSettingsDialog( aParent, getSettings() );
     if ( dialog.showDialog() )
     {
-      resize();
+      updatePreferredSize( null, 1 );
     }
 
     dialog.dispose();
@@ -870,7 +870,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   public void zoomDefault()
   {
     setScale( MAX_SCALE );
-    resize();
+    updatePreferredSize( null, 0.0 );
   }
 
   /**
@@ -881,12 +881,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   public void zoomIn()
   {
-    double newScale = this.scale;
-    if ( newScale < MAX_SCALE )
-    {
-      setScale( newScale * 2.0 );
-      resize();
-    }
+    zoomIn( null );
   }
 
   /**
@@ -897,14 +892,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   public void zoomOut()
   {
-    final double fitScaleFactor = getZoomToFitScale();
-
-    double newScale = this.scale;
-    if ( newScale > fitScaleFactor )
-    {
-      setScale( newScale / 2.0 );
-      resize();
-    }
+    zoomOut( null );
   }
 
   /**
@@ -921,7 +909,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final double fitScaleFactor = getZoomToFitScale();
 
     setScale( fitScaleFactor );
-    resize();
+    updatePreferredSize( null, 0.0 );
   }
 
   /**
@@ -1059,6 +1047,40 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final String status = sb.toString();
     // System.out.println( "STATUS = " + status );
     setToolTipText( status );
+  }
+
+  /**
+   * Zooms in by factor 2 and resizes the component accordingly.
+   * 
+   * @return <code>true</code> if the zoom action succeeded, <code>false</code>
+   *         otherwise.
+   */
+  final void zoomIn( final Point aPoint )
+  {
+    double newScale = this.scale;
+    if ( newScale < MAX_SCALE )
+    {
+      setScale( newScale * 2.0 );
+      updatePreferredSize( aPoint, 2.0 );
+    }
+  }
+
+  /**
+   * Zooms out by factor 2 and resizes the component accordingly.
+   * 
+   * @return <code>true</code> if the zoom action succeeded, <code>false</code>
+   *         otherwise.
+   */
+  final void zoomOut( final Point aPoint )
+  {
+    final double fitScaleFactor = getZoomToFitScale();
+
+    double newScale = this.scale;
+    if ( newScale > fitScaleFactor )
+    {
+      setScale( newScale * 0.5 );
+      updatePreferredSize( aPoint, 0.5 );
+    }
   }
 
   /**
@@ -1547,6 +1569,19 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * @return
+   */
+  private JViewport getViewPort()
+  {
+    final JScrollPane scrollPane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, this );
+    if ( scrollPane == null )
+    {
+      return null;
+    }
+    return scrollPane.getViewport();
+  }
+
+  /**
    * Calculates the scale that should be set to make this diagram fit entirely
    * in the current view.
    * 
@@ -1556,10 +1591,10 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     int visibleWidth;
 
-    final JScrollPane scrollPane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, this );
-    if ( scrollPane != null )
+    final JViewport viewport = getViewPort();
+    if ( viewport != null )
     {
-      visibleWidth = scrollPane.getViewport().getWidth() - 5;
+      visibleWidth = viewport.getWidth() - 5;
     }
     else
     {
@@ -1579,17 +1614,16 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   private void gotoPosition( final long aSamplePos )
   {
-    final JScrollPane pane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, this );
-    if ( pane == null )
+    final JViewport vp = getViewPort();
+    if ( vp == null )
     {
       return;
     }
 
-    final JViewport vp = pane.getViewport();
-    final Dimension dim = getPreferredSize();
+    final int width = vp.getWidth();
 
     // do nothing if the zoom factor is nearly the viewport size
-    final int width = vp.getWidth();
+    final Dimension dim = getPreferredSize();
     if ( dim.width < width * 2 )
     {
       return;
@@ -1679,27 +1713,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Resizes the diagram as required by available data and scaling factor.
-   */
-  private void resize()
-  {
-    if ( !hasCapturedData() )
-    {
-      return;
-    }
-
-    final Dimension newDiagramSize = updatePreferredSize();
-
-    this.timeLine.setPreferredSize( newDiagramSize );
-    this.timeLine.revalidate();
-
-    this.rowLabels.setPreferredSize( newDiagramSize );
-    this.rowLabels.revalidate();
-
-    revalidate();
-  }
-
-  /**
    * Sets the scale to the given value.
    * 
    * @param aScale
@@ -1743,11 +1756,51 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * Tries to update the preferred location (= the current location, or the
+   * given location).
+   * 
+   * @param aPoint
+   *          the point to keep in the center, can be <code>null</code> to keep
+   *          the current center position as-is;
+   * @param aScaleFactor
+   *          the scale multiplication factor, e.g. 2.0 for zooming in, 0.5 for
+   *          zooming out.
+   */
+  private void updatePreferredLocation( final Point aPoint, final double aScaleFactor )
+  {
+    final JViewport vp = getViewPort();
+    if ( vp != null )
+    {
+      final int vpWidth = vp.getWidth();
+      final int zoomDir = aScaleFactor >= 1.0 ? -1 : aScaleFactor == 0.0 ? 0 : +1;
+
+      final Point location = getLocation();
+
+      int locX = 0;
+      if ( aPoint != null )
+      {
+        int offX = ( int )( aPoint.x * aScaleFactor ) - aPoint.x;
+        // we only zoom in width, never in height...
+        locX = location.x - offX;
+      }
+      else
+      {
+        // we only zoom in width, never in height...
+        // XXX works in general OK for zooming in, for zooming out it has some
+        // issues...
+        locX = ( int )( ( location.x * aScaleFactor ) + zoomDir * ( vpWidth / 2.0 ) );
+      }
+
+      setLocation( locX, location.y );
+    }
+  }
+
+  /**
    * Calculates the preferred width and height of this component.
    * 
    * @return a preferred size, never <code>null</code>.
    */
-  private Dimension updatePreferredSize()
+  private void updatePreferredSize( final Point aPoint, final double aScaleFactor )
   {
     final int channels = this.dataContainer.getChannels();
     final int enabledChannels = this.dataContainer.getEnabledChannels();
@@ -1778,9 +1831,16 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final int width = ( int )( this.scale * this.dataContainer.getAbsoluteLength() );
 
     final Dimension newDiagramSize = new Dimension( width, height );
-    setPreferredSize( newDiagramSize );
 
-    return newDiagramSize;
+    setPreferredSize( newDiagramSize );
+    this.timeLine.setPreferredSize( newDiagramSize );
+    this.rowLabels.setPreferredSize( newDiagramSize );
+
+    updatePreferredLocation( aPoint, aScaleFactor );
+
+    this.timeLine.revalidate();
+    this.rowLabels.revalidate();
+    revalidate();
   }
 
   /**
