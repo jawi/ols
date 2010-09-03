@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.tool.state;
 
 
+import java.util.logging.*;
+
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
 
@@ -30,6 +32,10 @@ import nl.lxtreme.ols.tool.base.*;
  */
 public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
 {
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( StateAnalysisWorker.class.getName() );
+
   // VARIABLES
 
   private int number;
@@ -80,11 +86,11 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
   {
     // obtain data from captured data
     final int[] values = getValues();
-    final long triggerPosition = getTriggerTimePosition();
+    final int triggerIndex = getTriggerIndex();
 
     final int maskValue = 1 << this.number;
 
-    int size = 1; // ensure at least one value...
+    int size = 0;
     int last = ( values[0] & maskValue ) >> this.number;
 
     // calculate new sample array size
@@ -96,6 +102,12 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
         size++;
       }
       last = current;
+    }
+
+    if ( size <= 0 )
+    {
+      LOG.log( Level.WARNING, "No state changes found in data; aborting analysis..." );
+      throw new IllegalStateException( "No state changes found!" );
     }
 
     // convert captured data
@@ -111,7 +123,7 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
       {
         newValues[pos++] = values[i - 1];
       }
-      if ( triggerPosition == i )
+      if ( triggerIndex == i )
       {
         newTrigger = pos;
       }

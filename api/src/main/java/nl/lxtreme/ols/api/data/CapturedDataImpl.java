@@ -232,6 +232,10 @@ public class CapturedDataImpl implements CapturedData
   @Override
   public final long getTriggerTimePosition()
   {
+    if ( this.timestamps.length <= this.triggerPosition )
+    {
+      return NOT_AVAILABLE;
+    }
     return this.timestamps[this.triggerPosition];
   }
 

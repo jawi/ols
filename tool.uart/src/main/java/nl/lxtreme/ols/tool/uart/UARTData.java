@@ -78,6 +78,15 @@ public final class UARTData extends BaseData<UARTData>
   // METHODS
 
   /**
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+  @Override
+  public int compareTo( final UARTData aComparable )
+  {
+    return ( getStartSampleIndex() - aComparable.getStartSampleIndex() );
+  }
+
+  /**
    * @see java.lang.Object#equals(java.lang.Object)
    */
   @Override

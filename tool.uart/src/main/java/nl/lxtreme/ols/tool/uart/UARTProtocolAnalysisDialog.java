@@ -640,7 +640,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
           }
           else
           {
-            baudrate = String.format( "%d", aDataSet.getBaudRate() );
+            baudrate = String.format( "%d (exact: %d)", aDataSet.getBaudRate(), aDataSet.getBaudRateExact() );
             if ( aDataSet.getBitLength() < 15 )
             {
               return baudrate
