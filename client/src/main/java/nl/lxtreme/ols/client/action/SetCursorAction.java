@@ -21,12 +21,14 @@
 package nl.lxtreme.ols.client.action;
 
 
+import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -83,14 +85,40 @@ public class SetCursorAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JCheckBoxMenuItem menuitem = ( JCheckBoxMenuItem )aEvent.getSource();
+
+    final Point location = getContextMenuLocation( menuitem );
     if ( menuitem.isSelected() )
     {
-      getController().setCursorPosition( this.cursorIdx );
+      getController().setCursorPosition( this.cursorIdx, location );
     }
     else
     {
       getController().removeCursor( this.cursorIdx );
     }
+  }
+
+  /**
+   * Returns the context menu location client property of the given menu item's
+   * popup menu.
+   * 
+   * @param aMenuItem
+   *          the menu item to return the client property of, cannot be
+   *          <code>null</code>.
+   * @return a location denoting the context menu's position, never
+   *         <code>null</code>.
+   */
+  private Point getContextMenuLocation( final JMenuItem aMenuItem )
+  {
+    final JComponent container = ( JComponent )aMenuItem.getParent();
+
+    Point location = ( Point )container.getClientProperty( Diagram.CONTEXTMENU_LOCATION_KEY );
+    if ( location == null )
+    {
+      // Make sure we return a defined point...
+      return new Point( 0, 0 );
+    }
+
+    return location;
   }
 }
 
