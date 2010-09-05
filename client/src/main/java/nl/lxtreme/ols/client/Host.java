@@ -30,19 +30,11 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.Configurable;
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.osgi.*;
-import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.HostUtils.*;
+import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
 
@@ -53,534 +45,6 @@ import org.osgi.framework.*;
 public final class Host implements ApplicationCallback
 {
   // INNER TYPES
-
-  /**
-   * Denotes the main UI.
-   */
-  public static final class MainFrame extends JFrame implements ActionProvider, CaptureCallback, AnalysisCallback
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // VARIABLES
-
-    private final IActionManager actionManager;
-    private final Diagram diagram;
-    private final JTextStatusBar status;
-
-    private JMenu deviceMenu;
-    private JMenu toolsMenu;
-    private JMenu windowMenu;
-
-    private final JMenuItem noDevicesItem;
-    private final JMenuItem noToolsItem;
-    private final ButtonGroup deviceGroup;
-
-    private volatile DeviceController currentDevCtrl;
-
-    private final JButton contextButton;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new MainFrame instance.
-     * 
-     * @param aCaption
-     *          the caption of this frame.
-     */
-    public MainFrame( final Host aHost, final Project aProject )
-    {
-      super( FULL_NAME );
-
-      this.noDevicesItem = new JMenuItem( "No Devices." );
-      this.noDevicesItem.setEnabled( false );
-
-      this.noToolsItem = new JMenuItem( "No Tools." );
-      this.noToolsItem.setEnabled( false );
-
-      this.deviceGroup = new ButtonGroup();
-
-      this.actionManager = new ActionManager();
-
-      this.diagram = new Diagram( this );
-      this.status = new JTextStatusBar();
-
-      this.actionManager.add( new NewProjectAction( aProject ) );
-      this.actionManager.add( new OpenProjectAction( aProject ) );
-      this.actionManager.add( new SaveProjectAction( aProject ) );
-      this.actionManager.add( new OpenDataFileAction( this.diagram ) );
-      this.actionManager.add( new SaveDataFileAction( this.diagram ) );
-      this.actionManager.add( new ExitAction( aHost ) );
-
-      this.actionManager.add( new CaptureAction( this ) );
-      this.actionManager.add( new RepeatCaptureAction( this ) ).setEnabled( false );
-
-      this.actionManager.add( new ZoomInAction( this.diagram ) ).setEnabled( false );
-      this.actionManager.add( new ZoomOutAction( this.diagram ) ).setEnabled( false );
-      this.actionManager.add( new ZoomDefaultAction( this.diagram ) ).setEnabled( false );
-      this.actionManager.add( new ZoomFitAction( this.diagram ) ).setEnabled( false );
-      this.actionManager.add( new GotoTriggerAction( this.diagram ) ).setEnabled( false );
-      this.actionManager.add( new GotoCursor1Action( this.diagram ) ).setEnabled( false );
-      this.actionManager.add( new GotoCursor2Action( this.diagram ) ).setEnabled( false );
-      this.actionManager.add( new SetCursorModeAction( this.diagram ) ).setEnabled( false );
-      this.actionManager.add( new ShowDiagramSettingsAction( this.diagram ) );
-      this.actionManager.add( new ShowDiagramLabelsAction( this.diagram ) );
-
-      this.actionManager.add( new ScrollPaneContextAction( this ) );
-
-      setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
-      setSize( 1200, 600 );
-
-      final JToolBar tools = createMenuBars();
-
-      // !!! Always add these after the toolbar/menubar is created !!!
-      this.deviceMenu.add( this.noDevicesItem );
-      this.toolsMenu.add( this.noToolsItem );
-
-      // Create a scrollpane for the diagram...
-      final JScrollPane scrollPane = new JScrollPane( this.diagram );
-      this.contextButton = createScrollPaneContextButton();
-
-      scrollPane.setCorner( ScrollPaneConstants.UPPER_LEFT_CORNER, this.contextButton );
-
-      final Container contentPane = getContentPane();
-      contentPane.setLayout( new BorderLayout() );
-
-      contentPane.add( tools, BorderLayout.PAGE_START );
-      contentPane.add( scrollPane, BorderLayout.CENTER );
-      contentPane.add( this.status, BorderLayout.PAGE_END );
-    }
-
-    /**
-     * @param aDevController
-     */
-    public final void addDeviceMenuItem( final DeviceController aDevController )
-    {
-      // We're adding one, so, there's at least one device available...
-      this.deviceMenu.remove( this.noDevicesItem );
-
-      final JMenuItem menuItem = createMenuItem( aDevController );
-      // Determine where in the menu we should add the menu item, this way, we
-      // can make the menu appear consistent...
-      final int idx = determineDeviceMenuItemIndex( menuItem );
-
-      this.deviceGroup.add( menuItem );
-      this.deviceMenu.add( menuItem, idx );
-
-      updateDeviceMenuState( aDevController, menuItem, true /* aAdded */);
-    }
-
-    // METHODS
-
-    /**
-     * @param aTool
-     */
-    public final void addToolMenuItem( final Tool aTool )
-    {
-      // We're adding one, so, there's at least one device available...
-      this.toolsMenu.remove( this.noToolsItem );
-
-      final JMenuItem menuItem = createMenuItem( aTool );
-
-      this.toolsMenu.add( menuItem );
-
-      updateToolMenuState( aTool, menuItem, true /* aAdded */);
-    }
-
-    /**
-     * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisAborted(java.lang.String)
-     */
-    @Override
-    public void analysisAborted( final String aReason )
-    {
-      setStatus( "Analysis aborted! " + aReason );
-    }
-
-    /**
-     * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisComplete(nl.lxtreme.ols.api.data.CapturedData)
-     */
-    @Override
-    public void analysisComplete( final CapturedData aNewCapturedData )
-    {
-      setCapturedData( aNewCapturedData, true /* aEnable */);
-    }
-
-    /**
-     * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureAborted(java.lang.String)
-     */
-    @Override
-    public void captureAborted( final String aReason )
-    {
-      setStatus( "Capture aborted! " + aReason );
-    }
-
-    /**
-     * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureComplete(nl.lxtreme.ols.api.data.CapturedData)
-     */
-    @Override
-    public void captureComplete( final CapturedData aCapturedData )
-    {
-      final boolean actionsEnabled = aCapturedData != null;
-      setCapturedData( aCapturedData, actionsEnabled );
-
-      updateActions();
-    }
-
-    /**
-     * @see nl.lxtreme.ols.client.ActionProvider#getAction(java.lang.String)
-     */
-    public Action getAction( final String aID )
-    {
-      return this.actionManager.getAction( aID );
-    }
-
-    /**
-     * Returns the current device controller.
-     * 
-     * @return the current device controller, can be <code>null</code>.
-     */
-    public DeviceController getCurrentDeviceController()
-    {
-      return this.currentDevCtrl;
-    }
-
-    /**
-     * @param aDevController
-     */
-    public final void removeDeviceMenuItem( final DeviceController aDevController )
-    {
-      final String name = aDevController.getName();
-
-      JMenuItem menuItem = null;
-      for ( int i = 0; i < this.deviceMenu.getItemCount(); i++ )
-      {
-        final JMenuItem comp = this.deviceMenu.getItem( i );
-        if ( name.equals( comp.getName() ) )
-        {
-          menuItem = comp;
-          break;
-        }
-      }
-
-      if ( menuItem != null )
-      {
-        this.deviceGroup.remove( menuItem );
-        this.deviceMenu.remove( menuItem );
-      }
-
-      updateDeviceMenuState( aDevController, menuItem, false /* aAdded */);
-    }
-
-    /**
-     * @param aTool
-     */
-    public final void removeToolMenuItem( final Tool aTool )
-    {
-      final String name = aTool.getName();
-
-      JMenuItem menuItem = null;
-      for ( int i = 0; i < this.toolsMenu.getItemCount(); i++ )
-      {
-        final JMenuItem comp = this.toolsMenu.getItem( i );
-        if ( name.equals( comp.getName() ) )
-        {
-          menuItem = comp;
-          break;
-        }
-      }
-
-      if ( menuItem != null )
-      {
-        this.toolsMenu.remove( menuItem );
-      }
-
-      updateToolMenuState( aTool, menuItem, false /* aAdded */);
-    }
-
-    /**
-     * Sets the current device controller to the given value.
-     * 
-     * @param aCurrentDevCtrl
-     *          the device controller to set, cannot be <code>null</code>.
-     */
-    public void setCurrentDeviceController( final DeviceController aCurrentDevCtrl )
-    {
-      if ( LOG.isLoggable( Level.INFO ) )
-      {
-        final String name = ( aCurrentDevCtrl == null ) ? "no device" : aCurrentDevCtrl.getName();
-        LOG.log( Level.INFO, "Setting current device controller to: \"{0}\" ...", name );
-      }
-
-      this.currentDevCtrl = aCurrentDevCtrl;
-
-      updateActions();
-    }
-
-    /**
-     * Shows the main about box.
-     * 
-     * @param aVersion
-     *          the version to display in this about box.
-     */
-    public void showAboutBox( final String aVersion )
-    {
-      final String message = FULL_NAME + "\n\n" //
-          + "Copyright 2006-2010 Michael Poppitz\n" //
-          + "Copyright 2010 J.W. Janssen\n\n" //
-          + "This software is released under the GNU GPL.\n\n" //
-          + "Version: %s\n\n" //
-          + "For more information see:\n" //
-          + "  <http://www.lxtreme.nl/ols/>\n" //
-          + "  <http://dangerousprototypes.com/open-logic-sniffer/>\n" //
-          + "  <http://www.gadgetfactory.net/gf/project/butterflylogic/>\n" //
-          + "  <http://www.sump.org/projects/analyzer/>";
-
-      final JOptionPane aboutDialogFactory = new JOptionPane( String.format( message, aVersion ), //
-          JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION );
-
-      final JDialog aboutDialog = aboutDialogFactory.createDialog( this, "About ..." );
-      aboutDialog.setVisible( true );
-    }
-
-    /**
-     * @see nl.lxtreme.ols.api.ProgressCallback#updateProgress(int)
-     */
-    public void updateProgress( final int aPercentage )
-    {
-      this.status.setProgress( aPercentage );
-    }
-
-    /**
-     * Creates the menu bar with all menu's and the accompanying toolbar.
-     * 
-     * @return the toolbar, never <code>null</code>.
-     */
-    private JToolBar createMenuBars()
-    {
-      final JMenuBar bar = new JMenuBar();
-      setJMenuBar( bar );
-
-      final JMenu file = new JMenu( "File" );
-      bar.add( file );
-
-      file.add( getAction( NewProjectAction.ID ) );
-      file.add( getAction( OpenProjectAction.ID ) );
-      file.add( getAction( SaveProjectAction.ID ) );
-      file.addSeparator();
-      file.add( getAction( OpenDataFileAction.ID ) );
-      file.add( getAction( SaveDataFileAction.ID ) );
-
-      if ( HostUtils.needsExitMenuItem() )
-      {
-        file.add( new JSeparator() );
-        file.add( getAction( ExitAction.ID ) );
-      }
-
-      this.deviceMenu = bar.add( new JMenu( "Device" ) );
-      this.toolsMenu = bar.add( new JMenu( "Tools" ) );
-
-      final JMenu diagramMenu = bar.add( new JMenu( "Diagram" ) );
-
-      diagramMenu.add( getAction( ZoomInAction.ID ) );
-      diagramMenu.add( getAction( ZoomOutAction.ID ) );
-      diagramMenu.add( getAction( ZoomDefaultAction.ID ) );
-      diagramMenu.add( getAction( ZoomFitAction.ID ) );
-      diagramMenu.addSeparator();
-      diagramMenu.add( getAction( GotoTriggerAction.ID ) );
-      diagramMenu.add( getAction( GotoCursor1Action.ID ) );
-      diagramMenu.add( getAction( GotoCursor2Action.ID ) );
-      diagramMenu.addSeparator();
-      diagramMenu.add( new JCheckBoxMenuItem( getAction( SetCursorModeAction.ID ) ) );
-      diagramMenu.add( getAction( ShowDiagramSettingsAction.ID ) );
-      diagramMenu.add( getAction( ShowDiagramLabelsAction.ID ) );
-
-      this.windowMenu = bar.add( new JMenu( "Window" ) );
-      for ( Window window : Window.getWindows() )
-      {
-        this.windowMenu.add( new JMenuItem( new FocusWindowAction( window ) ) );
-      }
-
-      final JToolBar toolbar = new JToolBar();
-      toolbar.setRollover( true );
-
-      toolbar.add( getAction( OpenDataFileAction.ID ) );
-      toolbar.add( getAction( SaveDataFileAction.ID ) );
-      toolbar.addSeparator();
-
-      toolbar.add( getAction( CaptureAction.ID ) );
-      toolbar.add( getAction( RepeatCaptureAction.ID ) );
-      toolbar.addSeparator();
-
-      toolbar.add( getAction( ZoomInAction.ID ) );
-      toolbar.add( getAction( ZoomOutAction.ID ) );
-      toolbar.add( getAction( ZoomDefaultAction.ID ) );
-      toolbar.add( getAction( ZoomFitAction.ID ) );
-      toolbar.addSeparator();
-
-      toolbar.add( getAction( GotoTriggerAction.ID ) );
-      toolbar.add( getAction( GotoCursor1Action.ID ) );
-      toolbar.add( getAction( GotoCursor2Action.ID ) );
-      // toolbar.addSeparator();
-
-      return toolbar;
-    }
-
-    /**
-     * @param aDevController
-     * @return
-     */
-    private JRadioButtonMenuItem createMenuItem( final DeviceController aDevController )
-    {
-      final JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem( new SelectDeviceAction( this, aDevController ) );
-      menuItem.setName( aDevController.getName() );
-      return menuItem;
-    }
-
-    /**
-     * @param aTool
-     * @return
-     */
-    private JMenuItem createMenuItem( final Tool aTool )
-    {
-      final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( aTool, this.diagram, this ) );
-      menuItem.setName( aTool.getName() );
-      return menuItem;
-    }
-
-    /**
-     * 
-     */
-    private JButton createScrollPaneContextButton()
-    {
-      JButton contextButton = new JButton( getAction( ScrollPaneContextAction.ID ) );
-      contextButton.setBackground( Color.WHITE );
-      contextButton.setBorderPainted( false );
-      contextButton.setVisible( false );
-      return contextButton;
-    }
-
-    /**
-     * Determines the index in the menu where the given menu item should be
-     * inserted.
-     * 
-     * @param aMenuItem
-     *          the menu item to add, cannot be <code>null</code>.
-     * @return the position in the menu to add the given menu item, -1 if the
-     *         menu item should be added as last item.
-     */
-    private int determineDeviceMenuItemIndex( final JMenuItem aMenuItem )
-    {
-      int idx = -1;
-      for ( int i = 0; ( idx < 0 ) && ( i < this.deviceMenu.getItemCount() ); i++ )
-      {
-        final String nameA = this.deviceMenu.getItem( i ).getText();
-        final int comparison = aMenuItem.getText().compareTo( nameA );
-        if ( comparison < 0 )
-        {
-          idx = i;
-        }
-      }
-      return idx;
-    }
-
-    /**
-     * @param aCapturedData
-     * @param aEnableActions
-     */
-    private void setCapturedData( final CapturedData aCapturedData, final boolean aEnableActions )
-    {
-      if ( aCapturedData != null )
-      {
-        this.diagram.setCapturedData( aCapturedData );
-        this.diagram.zoomToFit();
-      }
-      else
-      {
-        this.diagram.repaint();
-      }
-
-      setStatus( "" );
-      this.contextButton.setVisible( aCapturedData != null );
-    }
-
-    /**
-     * @param aText
-     */
-    private void setStatus( final String aText )
-    {
-      this.status.showProgressBar( false );
-      this.status.setText( aText );
-    }
-
-    /**
-     * Synchronizes the state of the actions to the current state of this host.
-     */
-    private void updateActions()
-    {
-      final DeviceController currentDeviceController = getCurrentDeviceController();
-      final boolean deviceControllerSet = currentDeviceController != null;
-
-      getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
-      getAction( RepeatCaptureAction.ID ).setEnabled( deviceControllerSet && currentDeviceController.isSetup() );
-    }
-
-    /**
-     * @param aDevController
-     * @param aMenuItem
-     * @param aAdded
-     */
-    private void updateDeviceMenuState( final DeviceController aDevController, final JMenuItem aMenuItem,
-        final boolean aAdded )
-    {
-      if ( aAdded )
-      {
-        // Always select the first added device...
-        if ( this.deviceMenu.getItemCount() == 1 )
-        {
-          aMenuItem.setSelected( true );
-
-          setCurrentDeviceController( aDevController );
-        }
-      }
-      else
-      {
-        if ( this.deviceMenu.getItemCount() == 0 )
-        {
-          // We've removed the last one...
-          this.deviceMenu.add( this.noDevicesItem );
-        }
-
-        if ( getCurrentDeviceController() == aDevController )
-        {
-          setCurrentDeviceController( null );
-        }
-      }
-
-      this.deviceMenu.revalidate();
-      this.deviceMenu.repaint();
-    }
-
-    /**
-     * @param aTool
-     * @param aMenuItem
-     * @param aAdded
-     */
-    private void updateToolMenuState( final Tool aTool, final JMenuItem aMenuItem, final boolean aAdded )
-    {
-      if ( !aAdded )
-      {
-        if ( this.toolsMenu.getItemCount() == 0 )
-        {
-          // We've removed the last one...
-          this.toolsMenu.add( this.noToolsItem );
-        }
-      }
-
-      this.toolsMenu.revalidate();
-      this.toolsMenu.repaint();
-    }
-  }
 
   /**
    * Defines a (global) AWT event listener for storing/retrieving the window
@@ -682,19 +146,19 @@ public final class Host implements ApplicationCallback
   private static final String PROPERTIES_NAME = "nl.lxtreme.ols.client";
 
   private static final String SHORT_NAME = "LogicSniffer";
-  private static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
+
+  static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
 
   // VARIABLES
 
   private final BundleContext context;
   private final Properties clientProperties;
-  private final Project project;
 
-  private MainFrame mainFrame;
   private MenuTracker menuTracker;
   private DeviceControllerTracker deviceControllerTracker;
   private ToolTracker toolTracker;
   private Properties userProperties;
+  private ClientController controller;
 
   // CONSTRUCTORS
 
@@ -712,7 +176,6 @@ public final class Host implements ApplicationCallback
     }
     this.context = aBundleContext;
 
-    this.project = new Project();
     this.clientProperties = new Properties();
 
     // Try to load the embedded properties...
@@ -783,8 +246,12 @@ public final class Host implements ApplicationCallback
   @Override
   public boolean handleAbout()
   {
-    this.mainFrame.showAboutBox( getVersion() );
-    return true;
+    final MainFrame mainFrame = this.controller.getMainFrame();
+    if ( mainFrame != null )
+    {
+      mainFrame.showAboutBox( getVersion() );
+    }
+    return ( mainFrame != null );
   }
 
   /**
@@ -844,11 +311,14 @@ public final class Host implements ApplicationCallback
     Toolkit.getDefaultToolkit().addAWTEventListener( new WindowStateListener( this.userProperties ),
         AWTEvent.WINDOW_EVENT_MASK );
 
-    this.mainFrame = new MainFrame( this, this.project );
+    this.controller = new ClientController( this.context, this );
 
-    this.menuTracker = new MenuTracker( this.context, this.mainFrame.getJMenuBar() );
-    this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.mainFrame );
-    this.toolTracker = new ToolTracker( this.context, this.mainFrame );
+    final MainFrame mainFrame = new MainFrame( this.controller );
+    this.controller.setMainFrame( mainFrame );
+
+    this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.controller );
+    this.menuTracker = new MenuTracker( this.context, mainFrame.getJMenuBar() );
+    this.toolTracker = new ToolTracker( this.context, this.controller );
 
     LOG.log( Level.FINE, "{0} initialized ...", SHORT_NAME );
   }
@@ -876,7 +346,11 @@ public final class Host implements ApplicationCallback
     this.toolTracker.open();
     this.menuTracker.open();
 
-    this.mainFrame.setVisible( true );
+    final MainFrame mainFrame = this.controller.getMainFrame();
+    if ( mainFrame != null )
+    {
+      mainFrame.setVisible( true );
+    }
 
     LOG.log( Level.INFO, "{0} v{1} started ...", new Object[] { SHORT_NAME, getVersion() } );
   }
@@ -887,10 +361,11 @@ public final class Host implements ApplicationCallback
    */
   public void stop()
   {
-    if ( this.mainFrame != null )
+    final MainFrame mainFrame = this.controller.getMainFrame();
+    if ( mainFrame != null )
     {
-      this.mainFrame.dispose();
-      this.mainFrame = null;
+      mainFrame.dispose();
+      this.controller.setMainFrame( null );
     }
 
     this.deviceControllerTracker.close();

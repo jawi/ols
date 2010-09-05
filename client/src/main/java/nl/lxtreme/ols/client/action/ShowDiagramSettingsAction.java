@@ -24,7 +24,7 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -39,19 +39,14 @@ public class ShowDiagramSettingsAction extends BaseAction
 
   public static final String ID = "ShowDiagramSettings";
 
-  // VARIABLES
-
-  private final Diagram diagram;
-
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public ShowDiagramSettingsAction( final Diagram aDiagram )
+  public ShowDiagramSettingsAction( final ClientController aController )
   {
-    super( ID, "Diagram settings", "Show the diagram settings dialog." );
-    this.diagram = aDiagram;
+    super( ID, aController, "Diagram settings", "Show the diagram settings dialog." );
   }
 
   // METHODS
@@ -63,8 +58,7 @@ public class ShowDiagramSettingsAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-
-    this.diagram.showSettingsDialog( owner );
+    getController().showSettingsDialog( owner );
   }
 }
 

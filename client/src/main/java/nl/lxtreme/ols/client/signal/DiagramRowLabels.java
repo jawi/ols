@@ -47,18 +47,18 @@ public class DiagramRowLabels extends JComponent implements Scrollable
   // VARIABLES
 
   private DiagramSettings settings;
-  private final DataContainer annotatedData;
+  private final DataContainer dataContainer;
 
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public DiagramRowLabels( final DataContainer aData )
+  public DiagramRowLabels( final DataContainer aDataContainer )
   {
     super();
 
-    this.annotatedData = aData;
+    this.dataContainer = aDataContainer;
 
     setPreferredSize( new Dimension( MIN_WIDTH, 100 ) );
   }
@@ -160,7 +160,7 @@ public class DiagramRowLabels extends JComponent implements Scrollable
   @Override
   protected void paintComponent( final Graphics aGraphics )
   {
-    if ( !this.annotatedData.hasCapturedData() )
+    if ( !this.dataContainer.hasCapturedData() )
     {
       return;
     }
@@ -185,8 +185,8 @@ public class DiagramRowLabels extends JComponent implements Scrollable
     final int textXpos = ( clipArea.width - fm.stringWidth( "88" ) - PADDING_X );
     final int textYpos = ( int )( ( channelHeight + fm.getHeight() ) / 2.0 ) - PADDING_Y;
 
-    final int channels = this.annotatedData.getChannels();
-    final int enabledChannels = this.annotatedData.getEnabledChannels();
+    final int channels = this.dataContainer.getChannels();
+    final int enabledChannels = this.dataContainer.getEnabledChannels();
 
     for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
     {
@@ -208,7 +208,7 @@ public class DiagramRowLabels extends JComponent implements Scrollable
           aGraphics.drawLine( clipArea.x, y1, clipArea.x + clipArea.width, y1 );
           aGraphics.drawLine( clipArea.x, y1 + channelHeight, clipArea.x + clipArea.width, y1 + channelHeight );
 
-          String label = this.annotatedData.getChannelLabel( labelIdx );
+          String label = this.dataContainer.getChannelLabel( labelIdx );
           if ( DisplayUtils.isEmpty( label ) )
           {
             label = Integer.toString( labelIdx );
@@ -270,7 +270,7 @@ public class DiagramRowLabels extends JComponent implements Scrollable
       final FontMetrics fm = getFontMetrics( getFont() );
       for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
       {
-        String label = this.annotatedData.getChannelLabel( i );
+        String label = this.dataContainer.getChannelLabel( i );
         if ( DisplayUtils.isEmpty( label ) )
         {
           label = "W88";

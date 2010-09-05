@@ -25,7 +25,7 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -42,7 +42,6 @@ public class SetCursorAction extends BaseAction
 
   // VARIABLES
 
-  private final Diagram diagram;
   private final int cursorIdx;
 
   // CONSTRUCTORS
@@ -51,11 +50,10 @@ public class SetCursorAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public SetCursorAction( final Diagram aDiagram, final int aCursorIdx )
+  public SetCursorAction( final ClientController aController, final int aCursorIdx )
   {
-    super( ID + aCursorIdx, "Set Cursor " + ( aCursorIdx + 1 ), "Sets the "
+    super( ID + aCursorIdx, aController, "Set Cursor " + ( aCursorIdx + 1 ), "Sets the "
         + DisplayUtils.getOrdinalNumber( aCursorIdx + 1 ) + " cursor." );
-    this.diagram = aDiagram;
     this.cursorIdx = aCursorIdx;
   }
 
@@ -70,11 +68,11 @@ public class SetCursorAction extends BaseAction
     final JCheckBoxMenuItem menuitem = ( JCheckBoxMenuItem )aEvent.getSource();
     if ( menuitem.isSelected() )
     {
-      this.diagram.setCursorPosition( this.cursorIdx );
+      getController().setCursorPosition( this.cursorIdx );
     }
     else
     {
-      this.diagram.removeCursorPosition( this.cursorIdx );
+      getController().removeCursor( this.cursorIdx );
     }
   }
 }

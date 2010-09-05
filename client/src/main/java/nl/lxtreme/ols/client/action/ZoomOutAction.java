@@ -23,13 +23,13 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 
 
 /**
  * 
  */
-public class ZoomOutAction extends BaseZoomAction
+public class ZoomOutAction extends BaseAction
 {
   // CONSTANTS
 
@@ -40,11 +40,11 @@ public class ZoomOutAction extends BaseZoomAction
   // CONSTRUCTORS
 
   /**
-   * @param aDiagram
+   * @param aController
    */
-  public ZoomOutAction( final Diagram aDiagram )
+  public ZoomOutAction( final ClientController aController )
   {
-    super( ID, aDiagram, ICON_ZOOM_OUT, "Zoom out", "Zooms out" );
+    super( ID, aController, ICON_ZOOM_OUT, "Zoom out", "Zooms out" );
   }
 
   // METHODS
@@ -55,7 +55,7 @@ public class ZoomOutAction extends BaseZoomAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagram().zoomOut();
+    getController().zoomOut();
   }
 }
 

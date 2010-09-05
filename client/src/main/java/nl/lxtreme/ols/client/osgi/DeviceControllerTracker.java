@@ -24,7 +24,8 @@ package nl.lxtreme.ols.client.osgi;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.client.Host.MainFrame;
+import nl.lxtreme.ols.client.*;
+
 import org.osgi.framework.*;
 import org.osgi.util.tracker.*;
 
@@ -36,7 +37,7 @@ public class DeviceControllerTracker extends ServiceTracker
 {
   // VARIABLES
 
-  private final MainFrame mainFrame;
+  private final ClientController controller;
 
   // CONSTRUCTORS
 
@@ -44,11 +45,11 @@ public class DeviceControllerTracker extends ServiceTracker
    * @param aContext
    * @param aWindow
    */
-  public DeviceControllerTracker( final BundleContext aContext, final MainFrame aFrame )
+  public DeviceControllerTracker( final BundleContext aContext, final ClientController aController )
   {
     super( aContext, DeviceController.class.getName(), null );
 
-    this.mainFrame = aFrame;
+    this.controller = aController;
   }
 
   // METHODS
@@ -65,7 +66,7 @@ public class DeviceControllerTracker extends ServiceTracker
     {
       public void run()
       {
-        DeviceControllerTracker.this.mainFrame.addDeviceMenuItem( devCtrl );
+        DeviceControllerTracker.this.controller.addDevice( devCtrl );
       }
     } );
 
@@ -85,7 +86,7 @@ public class DeviceControllerTracker extends ServiceTracker
     {
       public void run()
       {
-        DeviceControllerTracker.this.mainFrame.removeDeviceMenuItem( devCtrl );
+        DeviceControllerTracker.this.controller.removeDevice( devCtrl );
       }
     } );
   }

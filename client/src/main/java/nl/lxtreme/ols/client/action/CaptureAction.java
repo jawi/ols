@@ -23,12 +23,9 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
-
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.client.Host.MainFrame;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -44,10 +41,6 @@ public class CaptureAction extends BaseAction
 
   public static final String ID = "Capture";
 
-  // VARIABLES
-
-  private final MainFrame mainFrame;
-
   // CONSTRUCTORS
 
   /**
@@ -56,9 +49,9 @@ public class CaptureAction extends BaseAction
    * @param aFrame
    *          the frame this action belongs to.
    */
-  public CaptureAction( final MainFrame aFrame )
+  public CaptureAction( final ClientController aController )
   {
-    this( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser", aFrame );
+    this( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser", aController );
   }
 
   /**
@@ -76,10 +69,9 @@ public class CaptureAction extends BaseAction
    *          the frame this action belongs to.
    */
   protected CaptureAction( final String aID, final String aIconName, final String aName, final String aDescription,
-      final MainFrame aFrame )
+      final ClientController aController )
   {
-    super( aID, aIconName, aName, aDescription );
-    this.mainFrame = aFrame;
+    super( aID, aController, aIconName, aName, aDescription );
   }
 
   // METHODS
@@ -92,62 +84,13 @@ public class CaptureAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final DeviceController devCtrl = this.mainFrame.getCurrentDeviceController();
-    if ( devCtrl == null )
+    if ( !getController().isDeviceSelected() )
     {
-      JOptionPane.showMessageDialog( ( Component )aEvent.getSource(), "No capturing device found!", "Capture error",
-          JOptionPane.ERROR_MESSAGE );
+      JOptionPane.showMessageDialog( owner, "No capturing device found!", "Capture error", JOptionPane.ERROR_MESSAGE );
       return;
     }
 
-    try
-    {
-      captureData( owner, devCtrl );
-    }
-    catch ( IOException exception )
-    {
-      this.mainFrame.captureAborted( "I/O problem: " + exception.getMessage() );
-      exception.printStackTrace();
-    }
-  }
-
-  /**
-   * Does the actual capturing of the data from the given device controller.
-   * 
-   * @param aOwner
-   *          the owning window;
-   * @param aController
-   *          the device controller to use for capturing the data, cannot be
-   *          <code>null</code>;
-   * @param aCallback
-   *          the callback to use for the capturing process, cannot be
-   *          <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  protected void doCaptureData( final Window aOwner, final DeviceController aController, final CaptureCallback aCallback )
-      throws IOException
-  {
-    if ( aController.setupCapture( aOwner ) )
-    {
-      aController.captureData( aCallback );
-    }
-  }
-
-  /**
-   * Captures the data from the given device controller.
-   * 
-   * @param aOwner
-   *          the owning window;
-   * @param aController
-   *          the device controller to use for capturing the data, cannot be
-   *          <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  private void captureData( final Window aOwner, final DeviceController aController ) throws IOException
-  {
-    doCaptureData( aOwner, aController, this.mainFrame );
+    getController().captureData( owner );
   }
 }
 

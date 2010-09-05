@@ -24,13 +24,15 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * Provides an action to give a certain window the current focus.
  */
-public class FocusWindowAction extends BaseAction
+public class FocusWindowAction extends AbstractAction
 {
   // CONSTANTS
 
@@ -48,7 +50,8 @@ public class FocusWindowAction extends BaseAction
    */
   public FocusWindowAction( final Window aWindow )
   {
-    super( ID_PREFIX + getTitle( aWindow ), getTitle( aWindow ), "" );
+    super( ID_PREFIX + getTitle( aWindow ) );
+    putValue( NAME, getTitle( aWindow ) );
   }
 
   // METHODS

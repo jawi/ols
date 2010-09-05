@@ -22,17 +22,19 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.io.*;
+import java.awt.event.*;
 
-import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.client.Host.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * Provides a "repeat capture" action which simply repeats the capture with the
  * current settings.
  */
-public class RepeatCaptureAction extends CaptureAction
+public class RepeatCaptureAction extends BaseAction
 {
   // CONSTANTS
 
@@ -48,21 +50,34 @@ public class RepeatCaptureAction extends CaptureAction
    * @param aFrame
    *          the frame this action belongs to.
    */
-  public RepeatCaptureAction( final MainFrame aFrame )
+  public RepeatCaptureAction( final ClientController aController )
   {
-    super( ID, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat the capture with current device settings.", aFrame );
+    super( ID, aController, ICON_RECAPTURE_DATA, "Repeat capture", "Repeats the capture with current device settings." );
   }
 
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.client.action.CaptureAction#doCaptureData(nl.lxtreme.ols.api.devices.DeviceController)
+   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
   @Override
-  protected void doCaptureData( final Window aOwner, final DeviceController aController, final CaptureCallback aCallback )
-      throws IOException
+  public void actionPerformed( final ActionEvent aEvent )
   {
-    aController.captureData( aCallback );
+    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+
+    if ( !getController().isDeviceSelected() )
+    {
+      JOptionPane.showMessageDialog( owner, "No capturing device found!", "Capture error", JOptionPane.ERROR_MESSAGE );
+      return;
+    }
+    if ( !getController().isDeviceSetup() )
+    {
+      JOptionPane.showMessageDialog( owner, "Capturing device is not setup!", "Capture error",
+          JOptionPane.ERROR_MESSAGE );
+      return;
+    }
+
+    getController().repeatCaptureData( owner );
   }
 }
 

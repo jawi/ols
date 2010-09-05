@@ -25,7 +25,7 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 
 
 /**
@@ -39,19 +39,14 @@ public class SetCursorModeAction extends BaseAction
 
   public static final String ID = "SetCursorMode";
 
-  // VARIABLES
-
-  private final Diagram diagram;
-
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public SetCursorModeAction( final Diagram aDiagramScrollPane )
+  public SetCursorModeAction( final ClientController aController )
   {
-    super( ID, "Enable cursors", "Enables the cursors in the diagram." );
-    this.diagram = aDiagramScrollPane;
+    super( ID, aController, "Enable cursors", "Enables the cursors in the diagram." );
   }
 
   // METHODS
@@ -63,7 +58,7 @@ public class SetCursorModeAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
-    this.diagram.setCursorMode( menuItem.getState() );
+    getController().setCursorMode( menuItem.getState() );
 
     putValue( NAME, menuItem.getState() ? "Disable cursors" : "Enable cursors" );
     putValue( SHORT_DESCRIPTION, menuItem.getState() ? "Disables the diagram cursors" : "Enables the diagram cursors" );

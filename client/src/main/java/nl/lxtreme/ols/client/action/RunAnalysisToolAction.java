@@ -24,9 +24,7 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -39,13 +37,11 @@ public class RunAnalysisToolAction extends BaseAction
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "RunTool";
+  private static final String ID = "RunTool.";
 
   // VARIABLES
 
-  private final Tool tool;
-  private final Diagram diagram;
-  private final AnalysisCallback callback;
+  private final String toolName;
 
   // CONSTRUCTORS
 
@@ -54,13 +50,11 @@ public class RunAnalysisToolAction extends BaseAction
    * @param aName
    * @param aDescription
    */
-  public RunAnalysisToolAction( final Tool aTool, final Diagram aDiagram, final AnalysisCallback aCallback )
+  public RunAnalysisToolAction( final ClientController aController, final String aToolName )
   {
-    super( ID + aTool.getName(), aTool.getName(), "Run " + aTool.getName() );
+    super( ID + aToolName, aController, aToolName, "Run ".concat( aToolName ) );
 
-    this.tool = aTool;
-    this.diagram = aDiagram;
-    this.callback = aCallback;
+    this.toolName = aToolName;
   }
 
   // METHODS
@@ -72,11 +66,7 @@ public class RunAnalysisToolAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-
-    final DataContainer data = this.diagram.getDataContainer();
-    final ToolContext toolContext = null;
-
-    this.tool.process( owner, data, toolContext, this.callback );
+    getController().runTool( this.toolName, owner );
   }
 }
 

@@ -25,8 +25,7 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.client.Host.MainFrame;
+import nl.lxtreme.ols.client.*;
 
 
 /**
@@ -38,24 +37,22 @@ public class SelectDeviceAction extends BaseAction
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "SelectDevice";
+  private static final String ID = "SelectDevice";
 
   // VARIABLES
 
-  private final MainFrame frame;
-  private final DeviceController deviceController;
+  private final String deviceName;
 
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public SelectDeviceAction( final MainFrame aFrame, final DeviceController aDeviceController )
+  public SelectDeviceAction( final ClientController aController, final String aDeviceName )
   {
-    super( ID + aDeviceController.getName(), aDeviceController.getName(), "Selects " + aDeviceController.getName()
-        + " as current capturing device." );
-    this.deviceController = aDeviceController;
-    this.frame = aFrame;
+    super( ID + aDeviceName, aController, aDeviceName, "Selects ".concat( aDeviceName ).concat(
+        " as current capturing device." ) );
+    this.deviceName = aDeviceName;
   }
 
   // METHODS
@@ -67,7 +64,14 @@ public class SelectDeviceAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JMenuItem menuItem = ( JMenuItem )aEvent.getSource();
-    this.frame.setCurrentDeviceController( menuItem.isSelected() ? this.deviceController : null );
+    if ( menuItem.isSelected() )
+    {
+      getController().setDeviceController( this.deviceName );
+    }
+    else
+    {
+      getController().clearDeviceController();
+    }
   }
 
 }
