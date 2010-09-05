@@ -18,40 +18,46 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.tools;
+package nl.lxtreme.ols.client.action;
+
+
+import java.awt.event.*;
+
+import nl.lxtreme.ols.client.*;
 
 
 /**
- * Denotes the context in which a tool is to be run.
- * <p>
- * For example, it provides the information about which range of samples should
- * be analysed.
- * </p>
+ * @author jawi
  */
-public interface ToolContext
+public class CancelCaptureAction extends BaseAction
 {
+  // CONSTANTS
+
+  private static final long serialVersionUID = 1L;
+
+  public static final String ID = "CancelCapture";
+
+  // CONSTRUCTORS
+
+  /**
+   * @param aID
+   * @param aController
+   * @param aName
+   * @param aDescription
+   */
+  public CancelCaptureAction( final ClientController aController )
+  {
+    super( ID, aController, ICON_CANCEL_CAPTURE, "Cancel capture", "Cancels the current capture." );
+  }
+
   // METHODS
 
   /**
-   * Returns the ending sample index on which the decoding should end.
-   * 
-   * @return a end sample index, >= 0.
+   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
-  int getEndSampleIndex();
-
-  /**
-   * Returns the length of the decoding area.
-   * 
-   * @return a decoding length, >= 0.
-   */
-  int getLength();
-
-  /**
-   * Returns the starting sample index on which the decoding should start.
-   * 
-   * @return a start sample index, >= 0.
-   */
-  int getStartSampleIndex();
+  @Override
+  public void actionPerformed( final ActionEvent aEvent )
+  {
+    getController().cancelCapture();
+  }
 }
-
-/* EOF */

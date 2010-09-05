@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.spi;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
@@ -55,12 +56,13 @@ public class SPIAnalyser extends BaseAsyncTool<SPIProtocolAnalysisDialog, SPIDat
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
+   *      ToolContext)
    */
   @Override
-  protected SPIAnalyserWorker createToolWorker( final DataContainer aData )
+  protected SPIAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
   {
-    return new SPIAnalyserWorker( aData );
+    return new SPIAnalyserWorker( aData, aContext );
   }
 }
 

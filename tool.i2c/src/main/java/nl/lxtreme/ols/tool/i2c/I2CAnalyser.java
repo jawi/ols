@@ -25,6 +25,7 @@ import java.awt.*;
 import java.beans.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
@@ -56,12 +57,13 @@ public class I2CAnalyser extends BaseAsyncTool<I2CProtocolAnalysisDialog, I2CDat
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
+   *      ToolContext)
    */
   @Override
-  protected I2CAnalyserWorker createToolWorker( final DataContainer aData )
+  protected I2CAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
   {
-    return new I2CAnalyserWorker( aData );
+    return new I2CAnalyserWorker( aData, aContext );
   }
 
   /**

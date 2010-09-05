@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.spi;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
@@ -59,9 +60,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   /**
    * @param aData
    */
-  public SPIAnalyserWorker( final DataContainer aData )
+  public SPIAnalyserWorker( final DataContainer aData, final ToolContext aContext )
   {
-    super( aData );
+    super( aData, aContext );
   }
 
   // METHODS

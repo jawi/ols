@@ -53,6 +53,15 @@ public class TestDeviceController implements DeviceController
   // METHODS
 
   /**
+   * @see nl.lxtreme.ols.api.devices.DeviceController#cancel()
+   */
+  @Override
+  public void cancel() throws IllegalStateException
+  {
+    throw new IllegalStateException( "Cannot be cancelled!" );
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.devices.DeviceController#captureData(nl.lxtreme.ols.api.devices.CaptureCallback)
    */
   @Override
@@ -118,6 +127,16 @@ public class TestDeviceController implements DeviceController
   public String getName()
   {
     return "Test Device";
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.devices.DeviceController#isCapturing()
+   */
+  @Override
+  public boolean isCapturing()
+  {
+    // Never mark this controller as being capturing...
+    return false;
   }
 
   /**

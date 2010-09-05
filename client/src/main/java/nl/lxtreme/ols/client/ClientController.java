@@ -44,6 +44,63 @@ import org.osgi.framework.*;
  */
 public final class ClientController implements ActionProvider, CaptureCallback, AnalysisCallback
 {
+  // INNER TYPES
+
+  /**
+   * Provides a default tool context implementation.
+   */
+  static final class DefaultToolContext implements ToolContext
+  {
+    // VARIABLES
+
+    private final int startSampleIdx;
+    private final int endSampleIdx;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new DefaultToolContext instance.
+     * 
+     * @param aStartSampleIdx
+     *          the starting sample index;
+     * @param aEndSampleIdx
+     *          the ending sample index.
+     */
+    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx )
+    {
+      this.startSampleIdx = aStartSampleIdx;
+      this.endSampleIdx = aEndSampleIdx;
+    }
+
+    /**
+     * @see nl.lxtreme.ols.api.tools.ToolContext#getEndSampleIndex()
+     */
+    @Override
+    public int getEndSampleIndex()
+    {
+      return this.endSampleIdx;
+    }
+
+    /**
+     * @see nl.lxtreme.ols.api.tools.ToolContext#getLength()
+     */
+    @Override
+    public int getLength()
+    {
+      return Math.max( 0, this.endSampleIdx - this.startSampleIdx );
+    }
+
+    /**
+     * @see nl.lxtreme.ols.api.tools.ToolContext#getStartSampleIndex()
+     */
+    @Override
+    public int getStartSampleIndex()
+    {
+      return this.startSampleIdx;
+    }
+
+  }
+
   // CONSTANTS
 
   private static final Logger LOG = Logger.getLogger( ClientController.class.getName() );
@@ -141,13 +198,26 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Cancels the current capturing (if in progress).
+   */
+  public void cancelCapture()
+  {
+    final DeviceController deviceController = getDeviceController();
+    if ( deviceController == null )
+    {
+      return;
+    }
+
+    deviceController.cancel();
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureAborted(java.lang.String)
    */
   @Override
   public void captureAborted( final String aReason )
   {
     setStatus( "Capture aborted! " + aReason );
-
     updateActions();
   }
 
@@ -160,7 +230,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     final boolean actionsEnabled = aCapturedData != null;
     setCapturedData( aCapturedData, actionsEnabled );
 
-    setStatus( "" );
+    setStatus( "Capture finished at {0,date,medium} {0,time,medium}.", new Date() );
+
     updateActions();
   }
 
@@ -186,6 +257,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       if ( devCtrl.setupCapture( aParent ) )
       {
+        setStatus( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(), new Date() );
+
         devCtrl.captureData( this );
         return true;
       }
@@ -195,6 +268,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     catch ( IOException exception )
     {
       captureAborted( "I/O problem: " + exception.getMessage() );
+
       exception.printStackTrace();
       return false;
     }
@@ -478,7 +552,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     try
     {
+      setStatus( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(), new Date() );
+
       devCtrl.captureData( this );
+
       return true;
     }
     catch ( IOException exception )
@@ -513,7 +590,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       if ( aToolName.equals( tool.getName() ) )
       {
-        tool.process( aParent, this.dataContainer, null, this );
+        final ToolContext context = createToolContext();
+
+        tool.process( aParent, this.dataContainer, context, this );
+
         break;
       }
     }
@@ -566,10 +646,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void setCursorMode( final boolean aState )
   {
-    if ( this.mainFrame != null )
-    {
-      this.dataContainer.setCursorEnabled( aState );
-    }
+    this.dataContainer.setCursorEnabled( aState );
 
     updateActions();
   }
@@ -582,13 +659,14 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void setCursorPosition( final int aCursorIdx )
   {
+    // Implicitly enable cursor mode, the user already had made its
+    // intensions clear that he want to have this by opening up the
+    // context menu anyway...
+    setCursorMode( true );
+
     if ( this.mainFrame != null )
     {
-      // Implicitly enable cursor mode, the user already had made its
-      // intensions clear that he want to have this by opening up the
-      // context menu anyway...
-      setCursorMode( true );
-
+      // XXX this needs to be checked!!!
       this.mainFrame.setCursorPosition( aCursorIdx );
     }
 
@@ -746,6 +824,42 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Creates the tool context denoting the range of samples that should be
+   * analysed by a tool.
+   * 
+   * @return a tool context, never <code>null</code>.
+   */
+  private ToolContext createToolContext()
+  {
+    int startOfDecode = -1;
+    int endOfDecode = -1;
+
+    final int dataLength = this.dataContainer.getValues().length;
+    if ( this.dataContainer.isCursorsEnabled() )
+    {
+      if ( this.dataContainer.isCursorPositionSet( 0 ) )
+      {
+        startOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 0 ) );
+      }
+      if ( this.dataContainer.isCursorPositionSet( 1 ) )
+      {
+        endOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 1 ) + 1 );
+      }
+    }
+    else if ( this.dataContainer.hasTriggerData() )
+    {
+      startOfDecode = this.dataContainer.getTriggerIndex();
+    }
+
+    // XXX allow one cursor to be used as well...
+
+    startOfDecode = Math.max( 0, startOfDecode );
+    endOfDecode = Math.min( dataLength, endOfDecode );
+
+    return new DefaultToolContext( startOfDecode, endOfDecode );
+  }
+
+  /**
    * @param aActionManager
    */
   private void fillActionManager( final ActionManager aActionManager )
@@ -758,16 +872,23 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     aActionManager.add( new ExitAction( this ) );
 
     aActionManager.add( new CaptureAction( this ) );
+    aActionManager.add( new CancelCaptureAction( this ) ).setEnabled( false );
     aActionManager.add( new RepeatCaptureAction( this ) ).setEnabled( false );
 
     aActionManager.add( new ZoomInAction( this ) ).setEnabled( false );
     aActionManager.add( new ZoomOutAction( this ) ).setEnabled( false );
     aActionManager.add( new ZoomDefaultAction( this ) ).setEnabled( false );
     aActionManager.add( new ZoomFitAction( this ) ).setEnabled( false );
+
     aActionManager.add( new GotoTriggerAction( this ) ).setEnabled( false );
     aActionManager.add( new GotoCursor1Action( this ) ).setEnabled( false );
     aActionManager.add( new GotoCursor2Action( this ) ).setEnabled( false );
     aActionManager.add( new SetCursorModeAction( this ) ).setEnabled( false );
+    for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
+    {
+      aActionManager.add( new SetCursorAction( this, c ) );
+    }
+
     aActionManager.add( new ShowDiagramSettingsAction( this ) );
     aActionManager.add( new ShowDiagramLabelsAction( this ) );
   }
@@ -789,11 +910,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   /**
    * @param aMessage
    */
-  private void setStatus( final String aMessage )
+  private void setStatus( final String aMessage, final Object... aMessageArgs )
   {
     if ( this.mainFrame != null )
     {
-      this.mainFrame.setStatus( aMessage );
+      this.mainFrame.setStatus( aMessage, aMessageArgs );
     }
   }
 
@@ -806,6 +927,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     final boolean deviceControllerSet = currentDeviceController != null;
 
     getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
+    getAction( CancelCaptureAction.ID ).setEnabled( deviceControllerSet && currentDeviceController.isCapturing() );
     getAction( RepeatCaptureAction.ID ).setEnabled( deviceControllerSet && currentDeviceController.isSetup() );
 
     final boolean dataAvailable = this.dataContainer.hasCapturedData();
@@ -826,6 +948,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     getAction( SetCursorModeAction.ID ).setEnabled( enableCursors );
     getAction( GotoCursor1Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 0 ) );
     getAction( GotoCursor2Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 1 ) );
+    for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
+    {
+      final Action action = getAction( SetCursorAction.getCursorId( c ) );
+      action.setEnabled( enableCursors );
+      action.putValue( Action.SELECTED_KEY, this.dataContainer.isCursorPositionSet( c ) );
+    }
   }
 
 }

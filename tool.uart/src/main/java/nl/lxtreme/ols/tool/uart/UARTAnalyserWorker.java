@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.uart;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
@@ -56,9 +57,9 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   /**
    * @param aData
    */
-  public UARTAnalyserWorker( final DataContainer aData )
+  public UARTAnalyserWorker( final DataContainer aData, final ToolContext aContext )
   {
-    super( aData );
+    super( aData, aContext );
 
     this.rxdIndex = -1;
     this.txdIndex = -1;

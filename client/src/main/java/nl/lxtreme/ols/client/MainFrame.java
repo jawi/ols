@@ -3,6 +3,7 @@ package nl.lxtreme.ols.client;
 
 import java.awt.*;
 import java.net.*;
+import java.text.*;
 
 import javax.swing.*;
 
@@ -210,12 +211,23 @@ public final class MainFrame extends JFrame
   }
 
   /**
-   * @param aText
+   * Sets the status bar message to the message given.
+   * 
+   * @param aMessage
+   *          the message to set as status text;
+   * @param aMessageArgs
+   *          the (optional) message arguments.
    */
-  public void setStatus( final String aText )
+  public void setStatus( final String aMessage, final Object... aMessageArgs )
   {
     this.status.showProgressBar( false );
-    this.status.setText( aText );
+
+    String message = aMessage;
+    if ( ( aMessageArgs != null ) && ( aMessageArgs.length > 0 ) )
+    {
+      message = MessageFormat.format( message, aMessageArgs );
+    }
+    this.status.setText( message );
   }
 
   /**
@@ -368,6 +380,7 @@ public final class MainFrame extends JFrame
     toolbar.addSeparator();
 
     toolbar.add( this.controller.getAction( CaptureAction.ID ) );
+    toolbar.add( this.controller.getAction( CancelCaptureAction.ID ) );
     toolbar.add( this.controller.getAction( RepeatCaptureAction.ID ) );
     toolbar.addSeparator();
 

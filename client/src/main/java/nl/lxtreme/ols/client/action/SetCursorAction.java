@@ -25,6 +25,7 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
 
@@ -38,7 +39,7 @@ public class SetCursorAction extends BaseAction
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "SetCursor";
+  private static final String ID = "SetCursor";
 
   // VARIABLES
 
@@ -52,12 +53,28 @@ public class SetCursorAction extends BaseAction
    */
   public SetCursorAction( final ClientController aController, final int aCursorIdx )
   {
-    super( ID + aCursorIdx, aController, "Set Cursor " + ( aCursorIdx + 1 ), "Sets the "
+    super( getCursorId( aCursorIdx ), aController, "Set Cursor " + ( aCursorIdx + 1 ), "Sets the "
         + DisplayUtils.getOrdinalNumber( aCursorIdx + 1 ) + " cursor." );
     this.cursorIdx = aCursorIdx;
   }
 
   // METHODS
+
+  /**
+   * Returns the action ID for the given cursor index.
+   * 
+   * @param aCursorIdx
+   *          the cursor index, >= 0 && < 10.
+   * @return a "set cursor" action ID, never <code>null</code>.
+   */
+  public static final String getCursorId( final int aCursorIdx )
+  {
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= DataContainer.MAX_CURSORS ) )
+    {
+      throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx );
+    }
+    return String.format( "%s.%d", ID, aCursorIdx );
+  }
 
   /**
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
