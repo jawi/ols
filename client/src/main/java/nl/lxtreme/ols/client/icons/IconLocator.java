@@ -28,6 +28,8 @@ public interface IconLocator
 {
   // CONSTANTS
 
+  static final String LOGO = "logo.png";
+
   static final String ICON_NEW_PROJECT = "Gnome-Folder-New-32.png";
   static final String ICON_OPEN_PROJECT = "Gnome-Document-Open-32.png";
   static final String ICON_SAVE_PROJECT = "Gnome-Document-Save-32.png";

@@ -48,8 +48,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
 
   private double scale;
   private DiagramSettings diagramSettings;
-
-  private final DataContainer annotatedData;
+  private final DataContainer dataContainer;
 
   // CONSTRUCTORS
 
@@ -59,11 +58,11 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
    * @param aData
    *          the annotated data to use for this timeline.
    */
-  public DiagramTimeLine( final DataContainer aData )
+  public DiagramTimeLine( final DataContainer aDataContainer )
   {
     super();
 
-    this.annotatedData = aData;
+    this.dataContainer = aDataContainer;
 
     setPreferredSize( new Dimension( TIMELINE_HEIGHT, TIMELINE_HEIGHT ) );
   }
@@ -207,13 +206,13 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   @Override
   protected void paintComponent( final Graphics aGraphics )
   {
-    if ( !this.annotatedData.hasCapturedData() )
+    if ( !this.dataContainer.hasCapturedData() )
     {
       return;
     }
 
     final int rowInc = Math.max( 1, ( int )( Diagram.MAX_SCALE / this.scale ) );
-    final int timeLineShift = ( int )( this.annotatedData.getTriggerTimePosition() % rowInc );
+    final int timeLineShift = ( int )( this.dataContainer.getTriggerTimePosition() % rowInc );
 
     // obtain portion of graphics that needs to be drawn
     final Rectangle clipArea = aGraphics.getClipBounds();
@@ -243,11 +242,11 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
       final int y2 = y1 - 3 * SHORT_TICK_HEIGHT;
       final int y3 = y1 - SHORT_TICK_HEIGHT;
 
-      final long relativeTime = row - this.annotatedData.getTriggerTimePosition();
+      final long relativeTime = row - this.dataContainer.getTriggerTimePosition();
       if ( ( relativeTime / rowInc ) % TIMELINE_INCREMENT == 0 )
       {
         final String time;
-        if ( this.annotatedData.hasTimingData() )
+        if ( this.dataContainer.hasTimingData() )
         {
           time = indexToTime( relativeTime );
         }
@@ -275,7 +274,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
     // draw cursor B first (lower priority)
     for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
     {
-      final long cursorPosition = this.annotatedData.getCursorPosition( i );
+      final long cursorPosition = this.dataContainer.getCursorPosition( i );
       if ( ( cursorPosition >= firstRow ) && ( cursorPosition <= lastRow ) )
       {
         final int cursorPos = ( int )( cursorPosition * this.scale );
@@ -300,11 +299,11 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
    */
   private String indexToTime( final long count )
   {
-    if ( !this.annotatedData.hasTimingData() )
+    if ( !this.dataContainer.hasTimingData() )
     {
       return String.format( "%d", count );
     }
-    return DisplayUtils.displayScaledTime( count, this.annotatedData.getSampleRate() );
+    return DisplayUtils.displayScaledTime( count, this.dataContainer.getSampleRate() );
   }
 
   /**
@@ -316,7 +315,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
    */
   private long xToIndex( final int aXpos )
   {
-    return Diagram.xToIndex( this.annotatedData, aXpos, this.scale );
+    return Diagram.xToIndex( this.dataContainer, aXpos, this.scale );
   }
 }
 

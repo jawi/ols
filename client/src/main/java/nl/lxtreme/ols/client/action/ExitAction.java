@@ -38,19 +38,14 @@ public class ExitAction extends BaseAction
 
   public static final String ID = "Exit";
 
-  // VARIABLES
-
-  private final Host host;
-
   // CONSTRUCTORS
 
   /**
    * Creates a new ExitAction instance.
    */
-  public ExitAction( final Host aHost )
+  public ExitAction( final ClientController aController )
   {
-    super( ID, "Quit", "Quit LogicSniffer Client" );
-    this.host = aHost;
+    super( ID, aController, "Quit", "Quit LogicSniffer Client" );
 
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_Q ) );
   }
@@ -63,9 +58,8 @@ public class ExitAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    this.host.exit();
+    getController().exit();
   }
-
 }
 
 /* EOF */

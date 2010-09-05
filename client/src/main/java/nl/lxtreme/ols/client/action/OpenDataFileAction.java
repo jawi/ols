@@ -29,7 +29,7 @@ import java.util.logging.*;
 import javax.swing.filechooser.*;
 import javax.swing.filechooser.FileFilter;
 
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -41,8 +41,8 @@ public class OpenDataFileAction extends BaseAction
   // CONSTANTS
 
   public static final String OLS_FILEEXTENSION = "ols";
-  public static final FileFilter OLS_FILEFILTER = //
-  new FileNameExtensionFilter( "OpenLogic Sniffer data file", OLS_FILEEXTENSION );
+  public static final FileFilter OLS_FILEFILTER = new FileNameExtensionFilter( "OpenLogic Sniffer data file",
+      OLS_FILEEXTENSION );
 
   public static final String ID = "OpenDataFile";
 
@@ -50,19 +50,14 @@ public class OpenDataFileAction extends BaseAction
 
   private static final long serialVersionUID = 1L;
 
-  // VARIABLES
-
-  private final Diagram diagram;
-
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public OpenDataFileAction( final Diagram aDiagram )
+  public OpenDataFileAction( final ClientController aController )
   {
-    super( ID, ICON_OPEN_DATAFILE, "Open ...", "Open an existing data file" );
-    this.diagram = aDiagram;
+    super( ID, aController, ICON_OPEN_DATAFILE, "Open ...", "Open an existing data file" );
   }
 
   // METHODS
@@ -85,7 +80,7 @@ public class OpenDataFileAction extends BaseAction
           LOG.info( "Loading OLS capture date from file: " + file );
         }
 
-        this.diagram.loadData( file );
+        getController().loadDataFile( file );
       }
     }
     catch ( IOException exception )

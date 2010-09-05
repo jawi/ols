@@ -23,13 +23,13 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 
 
 /**
  * 
  */
-public class ZoomFitAction extends BaseZoomAction
+public class ZoomFitAction extends BaseAction
 {
   // CONSTANTS
 
@@ -42,9 +42,9 @@ public class ZoomFitAction extends BaseZoomAction
   /**
    * @param aDiagramScrollPane
    */
-  public ZoomFitAction( final Diagram aDiagram )
+  public ZoomFitAction( final ClientController aController )
   {
-    super( ID, aDiagram, ICON_ZOOM_FIT_BEST, "Zoom to fit", "Zoom to best fit" );
+    super( ID, aController, ICON_ZOOM_FIT_BEST, "Zoom to fit", "Zoom to best fit" );
   }
 
   // METHODS
@@ -55,7 +55,7 @@ public class ZoomFitAction extends BaseZoomAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagram().zoomToFit();
+    getController().zoomToFit();
   }
 }
 

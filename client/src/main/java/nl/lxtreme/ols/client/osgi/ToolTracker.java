@@ -24,7 +24,8 @@ package nl.lxtreme.ols.client.osgi;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.client.Host.MainFrame;
+import nl.lxtreme.ols.client.*;
+
 import org.osgi.framework.*;
 import org.osgi.util.tracker.*;
 
@@ -36,7 +37,7 @@ public class ToolTracker extends ServiceTracker
 {
   // VARIABLES
 
-  private final MainFrame mainFrame;
+  private final ClientController controller;
 
   // CONSTRUCTORS
 
@@ -45,11 +46,11 @@ public class ToolTracker extends ServiceTracker
    * @param aReference
    * @param aCustomizer
    */
-  public ToolTracker( final BundleContext aContext, final MainFrame aFrame )
+  public ToolTracker( final BundleContext aContext, final ClientController aController )
   {
     super( aContext, Tool.class.getName(), null );
 
-    this.mainFrame = aFrame;
+    this.controller = aController;
   }
 
   // METHODS
@@ -60,17 +61,17 @@ public class ToolTracker extends ServiceTracker
   @Override
   public Object addingService( final ServiceReference aReference )
   {
-    final Tool devCtrl = ( Tool )this.context.getService( aReference );
+    final Tool tool = ( Tool )this.context.getService( aReference );
 
     SwingUtilities.invokeLater( new Runnable()
     {
       public void run()
       {
-        ToolTracker.this.mainFrame.addToolMenuItem( devCtrl );
+        ToolTracker.this.controller.addTool( tool );
       }
     } );
 
-    return devCtrl;
+    return tool;
   }
 
   /**
@@ -80,13 +81,13 @@ public class ToolTracker extends ServiceTracker
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )
   {
-    final Tool devCtrl = ( Tool )aService;
+    final Tool tool = ( Tool )aService;
 
     SwingUtilities.invokeLater( new Runnable()
     {
       public void run()
       {
-        ToolTracker.this.mainFrame.removeToolMenuItem( devCtrl );
+        ToolTracker.this.controller.removeTool( tool );
       }
     } );
   }

@@ -23,13 +23,13 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 
 
 /**
  * 
  */
-public class GotoCursor1Action extends BaseCursorAction
+public class GotoCursor1Action extends BaseAction
 {
   // CONSTANTS
 
@@ -42,9 +42,9 @@ public class GotoCursor1Action extends BaseCursorAction
   /**
    * @param aDiagramScrollPane
    */
-  public GotoCursor1Action( final Diagram aDiagram )
+  public GotoCursor1Action( final ClientController aController )
   {
-    super( ID, aDiagram, ICON_GOTO_CURSOR1, "Go to Cursor 1", "Go to first cursor in diagram." );
+    super( ID, aController, ICON_GOTO_CURSOR1, "Go to Cursor 1", "Go to first cursor in diagram." );
   }
 
   // METHODS
@@ -55,7 +55,7 @@ public class GotoCursor1Action extends BaseCursorAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagram().gotoCursorPosition( 0 );
+    getController().gotoCursorPosition( 0 );
   }
 }
 

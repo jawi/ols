@@ -23,7 +23,7 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.client.*;
 
 
 /**
@@ -37,19 +37,14 @@ public class NewProjectAction extends BaseAction
 
   public static final String ID = "NewProject";
 
-  // VARIABLES
-
-  private final Project project;
-
   // CONSTRUCTORS
 
   /**
-   * 
+   * Creates a new NewProjectAction instance.
    */
-  public NewProjectAction( final Project aProject )
+  public NewProjectAction( final ClientController aController )
   {
-    super( ID, ICON_NEW_PROJECT, "New project", "Start a new project..." );
-    this.project = aProject;
+    super( ID, aController, ICON_NEW_PROJECT, "New project", "Start a new project..." );
   }
 
   // METHODS
@@ -60,7 +55,7 @@ public class NewProjectAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    this.project.clear();
+    getController().createNewProject();
   }
 }
 

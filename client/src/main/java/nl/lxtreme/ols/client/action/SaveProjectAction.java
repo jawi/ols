@@ -26,7 +26,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.logging.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -43,19 +43,14 @@ public class SaveProjectAction extends BaseAction
 
   public static final String ID = "SaveProject";
 
-  // VARIABLES
-
-  private final Project project;
-
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public SaveProjectAction( final Project aProject )
+  public SaveProjectAction( final ClientController aController )
   {
-    super( ID, ICON_SAVE_PROJECT, "Save project", "Save the current project." );
-    this.project = aProject;
+    super( ID, aController, ICON_SAVE_PROJECT, "Save project", "Save the current project." );
   }
 
   // METHODS
@@ -78,7 +73,7 @@ public class SaveProjectAction extends BaseAction
           LOG.info( "Saving OLS project to file: " + file );
         }
 
-        this.project.store( file );
+        getController().saveProject( file );
       }
     }
     catch ( IOException exception )

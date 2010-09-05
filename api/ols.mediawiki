@@ -76,12 +76,13 @@ Provides some common utilities that are shared among all other projects.
 # <strike>rename AnnotatedData to DataContainer;</strike>
 # <strike>clear Annotations when new captured data is set;</strike>
 # <strike>allow tool-analysis to be rerun without closing the dialog (thanks to Andre);</strike>
+# <strike>clear Annotations for a channel when tool wants to;</strike>
 # resizing analysis dialogs makes buttons grow (too) large on Linux/Windows (thanks to Andre);
 # closing the window through the [X] on Windows doesn't exit the program (thanks to Andre);
 # the OLS before/after trigger ratio slider has some cosmetic twitches (thanks to Andre);
 # remember the last save/load location for open/save data-files & exports;
-# <strike>clear Annotations for a channel when tool wants to;</strike>
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;
+# rename cursor-labels to "t0", "t1", ... "t9";
 # add annotations to other analysis tools;
 # make the annotated data configurable regarding the displayed text and colors;
 # add a preference pane for the "general" client configuration;

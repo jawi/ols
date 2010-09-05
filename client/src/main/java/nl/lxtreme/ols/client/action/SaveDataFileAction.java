@@ -26,7 +26,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.logging.*;
 
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -44,19 +44,14 @@ public class SaveDataFileAction extends BaseAction
 
   public static final String ID = "SaveDataFile";
 
-  // VARIABLES
-
-  private final Diagram diagram;
-
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public SaveDataFileAction( final Diagram aDiagram )
+  public SaveDataFileAction( final ClientController aController )
   {
-    super( ID, ICON_SAVE_DATAFILE, "Save ...", "Save data file." );
-    this.diagram = aDiagram;
+    super( ID, aController, ICON_SAVE_DATAFILE, "Save ...", "Save data file." );
   }
 
   // METHODS
@@ -80,7 +75,7 @@ public class SaveDataFileAction extends BaseAction
           LOG.info( "Saving OLS capture date to file: " + actualFile );
         }
 
-        this.diagram.saveData( actualFile );
+        getController().saveDataFile( actualFile );
       }
     }
     catch ( IOException exception )

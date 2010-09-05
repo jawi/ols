@@ -23,7 +23,6 @@ package nl.lxtreme.ols.client.signal;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -219,11 +218,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
   // VARIABLES
 
-  private final DataContainer dataContainer;
-
   private final DiagramTimeLine timeLine;
   private final DiagramRowLabels rowLabels;
-  private final ActionProvider actionProvider;
   private double scale;
   private final Cursor cursorDefault;
   private final Cursor cursorDrag;
@@ -249,12 +245,16 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   private final int channelHeight;
   private final int scopeHeight;
 
+  private final DataContainer dataContainer;
+
   /**
    * Create a new empty diagram to be placed in a container.
    */
-  public Diagram( final ActionProvider aActionProvider )
+  public Diagram( final ClientController aController )
   {
     super();
+
+    this.dataContainer = aController.getDataContainer();
 
     // this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
     // this.signalColor = new Color( 0x30, 0x4b, 0x75 );
@@ -285,15 +285,11 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       this.groupSettings[i] = DISPLAY_CHANNELS | DISPLAY_BYTE;
     }
 
-    this.actionProvider = aActionProvider;
-
     this.contextMenu = new JPopupMenu();
     for ( int i = 0; i < 10; i++ )
     {
-      this.contextMenu.add( new JCheckBoxMenuItem( new SetCursorAction( this, i ) ) );
+      this.contextMenu.add( new JCheckBoxMenuItem( new SetCursorAction( aController, i ) ) );
     }
-
-    this.dataContainer = new DataContainer();
 
     this.cursorDefault = getCursor();
     this.cursorDrag = new Cursor( Cursor.MOVE_CURSOR );
@@ -323,11 +319,11 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    *          horizontal position (in pixels).
    * @return sample index
    */
-  static final long xToIndex( final DataContainer aData, final int aXpos, final double aScale )
+  static final long xToIndex( final CapturedData aData, final int aXpos, final double aScale )
   {
     long index = ( long )Math.max( 0.0, ( aXpos / aScale ) );
 
-    if ( aData.hasCapturedData() && ( index >= aData.getAbsoluteLength() ) )
+    if ( ( aData != null ) && ( index >= aData.getAbsoluteLength() ) )
     {
       index = aData.getAbsoluteLength() - 1;
     }
@@ -379,41 +375,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   public final Color getCursorColor( final int aCursorIdx )
   {
     return this.cursorColors[aCursorIdx];
-  }
-
-  /**
-   * get current cursor mode
-   */
-  public boolean getCursorMode()
-  {
-    if ( hasCapturedData() )
-    {
-      return this.dataContainer.isCursorsEnabled();
-    }
-    else
-    {
-      return false;
-    }
-  }
-
-  /**
-   * @param aCursorNo
-   * @return
-   */
-  public long getCursorPosition( final int aCursorNo )
-  {
-    return this.dataContainer.getCursorPosition( aCursorNo );
-  }
-
-  /**
-   * Returns the captured data object currently displayed in the diagram.
-   * 
-   * @return the diagram's current (annotated) captured data, can be
-   *         <code>null</code>.
-   */
-  public final DataContainer getDataContainer()
-  {
-    return this.dataContainer;
   }
 
   /**
@@ -527,16 +488,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Returns the current diagram settings.
-   * 
-   * @return the diagram settings, never <code>null</code>.
-   */
-  public final DiagramSettings getSettings()
-  {
-    return this;
-  }
-
-  /**
    * @see nl.lxtreme.ols.client.signal.DiagramSettings#getSignalColor(int)
    */
   public final Color getSignalColor( final int aChannelIdx )
@@ -593,37 +544,30 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * @param aCursorNo
-   */
-  public void gotoCursorPosition( final int aCursorNo )
-  {
-    if ( getCursorMode() )
-    {
-      gotoPosition( getCursorPosition( aCursorNo ) );
-    }
-  }
-
-  /**
+   * Sets this Diagram's viewport position
    * 
+   * @param aSamplePos
+   *          sample position
    */
-  public void gotoTriggerPosition()
+  public void gotoPosition( final long aSamplePos )
   {
-    final long triggerPosition = this.dataContainer.getTriggerTimePosition();
-    if ( triggerPosition != CapturedData.NOT_AVAILABLE )
+    final JViewport vp = getViewPort();
+    if ( vp == null )
     {
-      gotoPosition( triggerPosition );
+      return;
     }
-  }
 
-  /**
-   * Returns wheter or not the diagram has any data.
-   * 
-   * @return <code>true</code> if captured data exists, <code>false</code>
-   *         otherwise
-   */
-  public boolean hasCapturedData()
-  {
-    return ( this.dataContainer != null ) && this.dataContainer.hasCapturedData();
+    final int width = vp.getWidth();
+
+    // do nothing if the zoom factor is nearly the viewport size
+    final Dimension dim = getPreferredSize();
+    if ( dim.width < width * 2 )
+    {
+      return;
+    }
+
+    final int pos = Math.max( 0, getTargetPosition( aSamplePos ) - ( width / 2 ) );
+    vp.setViewPosition( new Point( pos, 0 ) );
   }
 
   /**
@@ -648,28 +592,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   public final boolean isShowScope( final int aGroup )
   {
     return ( ( this.groupSettings[aGroup] & DISPLAY_SCOPE ) > 0 );
-  }
-
-  /**
-   * @param aFile
-   * @throws IOException
-   */
-  public void loadData( final File aFile ) throws IOException
-  {
-    final FileReader reader = new FileReader( aFile );
-
-    final DataContainer data = getDataContainer();
-    try
-    {
-      data.read( reader );
-      updateActions();
-    }
-    finally
-    {
-      reader.close();
-
-      zoomToFit();
-    }
   }
 
   /**
@@ -711,49 +633,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     unconfigureEnclosingScrollPane();
     super.removeNotify();
-  }
-
-  /**
-   * @param aFile
-   * @throws IOException
-   */
-  public void saveData( final File aFile ) throws IOException
-  {
-    final FileWriter writer = new FileWriter( aFile );
-    try
-    {
-      getDataContainer().write( writer );
-    }
-    finally
-    {
-      writer.flush();
-      writer.close();
-    }
-  }
-
-  /**
-   * @param aCapturedData
-   */
-  public final void setCapturedData( final CapturedData aData )
-  {
-    this.dataContainer.setCapturedData( aData );
-    updateActions();
-  }
-
-  /**
-   * Enable/Disable diagram cursors
-   */
-  public void setCursorMode( final boolean aEnabled )
-  {
-    if ( hasCapturedData() )
-    {
-      // Update the cursor actions accordingly...
-      getAction( GotoCursor1Action.ID ).setEnabled( aEnabled );
-      getAction( GotoCursor2Action.ID ).setEnabled( aEnabled );
-
-      // Update the cursor state of the contained data...
-      this.dataContainer.setCursorEnabled( aEnabled );
-    }
   }
 
   /**
@@ -815,35 +694,23 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Display the diagram labels dialog. Will block until the dialog is closed
-   * again.
+   * Calculates the preferred width and height of this component.
+   * 
+   * @return a preferred size, never <code>null</code>.
    */
-  public void showLabelsDialog( final Window aParent )
+  public void updatePreferredSize( final Point aPoint, final double aScaleFactor )
   {
-    DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, getDataContainer() );
-    if ( dialog.showDialog() )
-    {
-      updatePreferredSize( null, 1 );
-    }
+    final Dimension newDiagramSize = calculateNewDimension();
 
-    dialog.dispose();
-    dialog = null;
-  }
+    setPreferredSize( newDiagramSize );
+    this.timeLine.setPreferredSize( newDiagramSize );
+    this.rowLabels.setPreferredSize( newDiagramSize );
 
-  /**
-   * Display the diagram settings dialog. Will block until the dialog is closed
-   * again.
-   */
-  public void showSettingsDialog( final Window aParent )
-  {
-    DiagramSettingsDialog dialog = new DiagramSettingsDialog( aParent, getSettings() );
-    if ( dialog.showDialog() )
-    {
-      updatePreferredSize( null, 1 );
-    }
+    updatePreferredLocation( aPoint, aScaleFactor );
 
-    dialog.dispose();
-    dialog = null;
+    this.timeLine.revalidate();
+    this.rowLabels.revalidate();
+    revalidate();
   }
 
   /**
@@ -893,7 +760,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   public void zoomToFit()
   {
     // avoid null pointer exception when no data available
-    if ( !hasCapturedData() )
+    if ( this.dataContainer == null )
     {
       return;
     }
@@ -902,24 +769,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
     setScale( fitScaleFactor );
     updatePreferredSize( null, 0.0 );
-  }
-
-  /**
-   * 
-   */
-  final void updateActions()
-  {
-    final boolean enableActions = hasCapturedData();
-    final boolean enableGotoTrigger = enableActions && getDataContainer().hasTriggerData();
-
-    getAction( ZoomInAction.ID ).setEnabled( enableActions );
-    getAction( ZoomOutAction.ID ).setEnabled( enableActions );
-    getAction( ZoomDefaultAction.ID ).setEnabled( enableActions );
-    getAction( ZoomFitAction.ID ).setEnabled( enableActions );
-    getAction( GotoTriggerAction.ID ).setEnabled( enableGotoTrigger );
-    getAction( GotoCursor1Action.ID ).setEnabled( enableActions );
-    getAction( GotoCursor2Action.ID ).setEnabled( enableActions );
-    getAction( SetCursorModeAction.ID ).setEnabled( enableActions );
   }
 
   /**
@@ -932,7 +781,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   final void updateStatus( final int aMouseXpos, final int aMouseYpos, final boolean aDragging,
       final int aStartDragXpos, final ChannelAnnotation aAnnotation )
   {
-    if ( !hasCapturedData() )
+    if ( !this.dataContainer.hasCapturedData() )
     {
       return;
     }
@@ -1049,6 +898,11 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   final void zoomIn( final Point aPoint )
   {
+    if ( !this.dataContainer.hasCapturedData() )
+    {
+      return;
+    }
+
     double newScale = this.scale;
     if ( newScale < MAX_SCALE )
     {
@@ -1065,6 +919,11 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   final void zoomOut( final Point aPoint )
   {
+    if ( !this.dataContainer.hasCapturedData() )
+    {
+      return;
+    }
+
     final double fitScaleFactor = getZoomToFitScale();
 
     double newScale = this.scale;
@@ -1085,21 +944,12 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   protected final void dragCursor( final int aCursorIdx, final int aMouseXpos )
   {
-    if ( !hasCapturedData() || !this.dataContainer.isCursorsEnabled() )
+    if ( ( this.dataContainer == null ) || !this.dataContainer.isCursorsEnabled() )
     {
       return;
     }
 
     internalSetCursorPosition( aCursorIdx, aMouseXpos );
-  }
-
-  /**
-   * @param aID
-   * @return
-   */
-  protected final Action getAction( final String aID )
-  {
-    return this.actionProvider.getAction( aID );
   }
 
   /**
@@ -1147,7 +997,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   @Override
   protected void paintComponent( final Graphics aGraphics )
   {
-    if ( !hasCapturedData() )
+    if ( !this.dataContainer.hasCapturedData() )
     {
       return;
     }
@@ -1197,17 +1047,49 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   protected final void showContextMenu( final Point aPosition )
   {
-    if ( hasCapturedData() )
+    if ( this.dataContainer != null )
     {
-      // Implicitly enable cursor mode, the user already had made its
-      // intensions clear that he want to have this by opening up the
-      // context menu anyway...
-      setCursorMode( true );
-
       this.newCursorPosition = aPosition.x;
 
       this.contextMenu.show( this, aPosition.x, aPosition.y );
     }
+  }
+
+  /**
+   * @return
+   */
+  private Dimension calculateNewDimension()
+  {
+    final int channels = this.dataContainer.getChannels();
+    final int enabledChannels = this.dataContainer.getEnabledChannels();
+
+    final int channelHeight = getChannelHeight();
+    final int scopeHeight = getScopeHeight();
+
+    int height = 0;
+    for ( int group = 0; ( group < channels / 8 ) && ( group < 4 ); group++ )
+    {
+      if ( ( ( enabledChannels >> ( 8 * group ) ) & 0xff ) != 0 )
+      {
+        if ( isShowChannels( group ) )
+        {
+          height += channelHeight * 8;
+        }
+        if ( isShowScope( group ) )
+        {
+          height += scopeHeight;
+        }
+        if ( isShowByte( group ) )
+        {
+          height += channelHeight;
+        }
+      }
+    }
+
+    final int width = ( int )( this.scale * this.dataContainer.getAbsoluteLength() );
+
+    final Dimension newDiagramSize = new Dimension( width, height );
+    return newDiagramSize;
   }
 
   /**
@@ -1249,7 +1131,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    */
   private void drawCursors( final Graphics2D g2d, final long aFirstRow, final long aLastRow )
   {
-    if ( getCursorMode() )
+    if ( this.dataContainer.isCursorsEnabled() )
     {
       for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
       {
@@ -1599,33 +1481,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Sets this Diagram's viewport position
-   * 
-   * @param aSamplePos
-   *          sample position
-   */
-  private void gotoPosition( final long aSamplePos )
-  {
-    final JViewport vp = getViewPort();
-    if ( vp == null )
-    {
-      return;
-    }
-
-    final int width = vp.getWidth();
-
-    // do nothing if the zoom factor is nearly the viewport size
-    final Dimension dim = getPreferredSize();
-    if ( dim.width < width * 2 )
-    {
-      return;
-    }
-
-    final int pos = Math.max( 0, getTargetPosition( aSamplePos ) - ( width / 2 ) );
-    vp.setViewPosition( new Point( pos, 0 ) );
-  }
-
-  /**
    * Sets the actual cursor position.
    * 
    * @param aCursorIdx
@@ -1791,54 +1646,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
       setLocation( locX, location.y );
     }
-  }
-
-  /**
-   * Calculates the preferred width and height of this component.
-   * 
-   * @return a preferred size, never <code>null</code>.
-   */
-  private void updatePreferredSize( final Point aPoint, final double aScaleFactor )
-  {
-    final int channels = this.dataContainer.getChannels();
-    final int enabledChannels = this.dataContainer.getEnabledChannels();
-
-    final int channelHeight = getChannelHeight();
-    final int scopeHeight = getScopeHeight();
-
-    int height = 0;
-    for ( int group = 0; ( group < channels / 8 ) && ( group < 4 ); group++ )
-    {
-      if ( ( ( enabledChannels >> ( 8 * group ) ) & 0xff ) != 0 )
-      {
-        if ( isShowChannels( group ) )
-        {
-          height += channelHeight * 8;
-        }
-        if ( isShowScope( group ) )
-        {
-          height += scopeHeight;
-        }
-        if ( isShowByte( group ) )
-        {
-          height += channelHeight;
-        }
-      }
-    }
-
-    final int width = ( int )( this.scale * this.dataContainer.getAbsoluteLength() );
-
-    final Dimension newDiagramSize = new Dimension( width, height );
-
-    setPreferredSize( newDiagramSize );
-    this.timeLine.setPreferredSize( newDiagramSize );
-    this.rowLabels.setPreferredSize( newDiagramSize );
-
-    updatePreferredLocation( aPoint, aScaleFactor );
-
-    this.timeLine.revalidate();
-    this.rowLabels.revalidate();
-    revalidate();
   }
 
   /**

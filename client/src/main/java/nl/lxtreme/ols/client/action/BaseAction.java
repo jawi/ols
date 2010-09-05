@@ -25,6 +25,7 @@ import java.net.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.icons.*;
 
 
@@ -40,6 +41,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
   // VARIABLES
 
   private final String id;
+  private final ClientController controller;
 
   // CONSTRUCTORS
 
@@ -47,14 +49,10 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
    * @param aName
    * @param aDescription
    */
-  protected BaseAction( final String aID, final String aName, final String aDescription )
+  protected BaseAction( final String aID, final ClientController aController, final String aName,
+      final String aDescription )
   {
-    super();
-
-    this.id = aID;
-
-    putValue( NAME, aName );
-    putValue( SHORT_DESCRIPTION, aDescription );
+    this( aID, aController, null /* aIconName */, aName, aDescription );
   }
 
   /**
@@ -62,12 +60,22 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
    * @param aName
    * @param aDescription
    */
-  protected BaseAction( final String aID, final String aIconName, final String aName, final String aDescription )
+  protected BaseAction( final String aID, final ClientController aController, final String aIconName,
+      final String aName, final String aDescription )
   {
-    this( aID, aName, aDescription );
+    super( aID );
 
-    final URL url = IconLocator.class.getResource( aIconName );
-    putValue( Action.LARGE_ICON_KEY, new ImageIcon( url ) );
+    this.id = aID;
+    this.controller = aController;
+
+    putValue( NAME, aName );
+    putValue( SHORT_DESCRIPTION, aDescription );
+
+    if ( aIconName != null )
+    {
+      final URL url = IconLocator.class.getResource( aIconName );
+      putValue( Action.LARGE_ICON_KEY, new ImageIcon( url ) );
+    }
   }
 
   // METHODS
@@ -79,6 +87,16 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
   public String getId()
   {
     return this.id;
+  }
+
+  /**
+   * Returns the client controller.
+   * 
+   * @return a client controller, never <code>null</code>.
+   */
+  protected final ClientController getController()
+  {
+    return this.controller;
   }
 }
 

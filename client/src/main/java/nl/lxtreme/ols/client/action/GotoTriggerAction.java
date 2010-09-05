@@ -23,13 +23,13 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.*;
 
 
 /**
  * 
  */
-public class GotoTriggerAction extends BaseCursorAction
+public class GotoTriggerAction extends BaseAction
 {
   // CONSTANTS
 
@@ -42,9 +42,9 @@ public class GotoTriggerAction extends BaseCursorAction
   /**
    * @param aDiagramScrollPane
    */
-  public GotoTriggerAction( final Diagram aDiagram )
+  public GotoTriggerAction( final ClientController aController )
   {
-    super( ID, aDiagram, ICON_GOTO_TRIGGER, "Go to Trigger", "Go to trigger moment in diagram." );
+    super( ID, aController, ICON_GOTO_TRIGGER, "Go to Trigger", "Go to trigger moment in diagram." );
   }
 
   // METHODS
@@ -55,7 +55,7 @@ public class GotoTriggerAction extends BaseCursorAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getDiagram().gotoTriggerPosition();
+    getController().gotoTriggerPosition();
   }
 }
 

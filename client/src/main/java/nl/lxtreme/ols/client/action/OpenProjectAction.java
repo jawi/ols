@@ -26,7 +26,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.logging.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -43,19 +43,14 @@ public class OpenProjectAction extends BaseAction
 
   public static final String ID = "OpenProject";
 
-  // VARIABLES
-
-  private final Project project;
-
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public OpenProjectAction( final Project aProject )
+  public OpenProjectAction( final ClientController aController )
   {
-    super( ID, ICON_OPEN_PROJECT, "Open project", "Open an existing project." );
-    this.project = aProject;
+    super( ID, aController, ICON_OPEN_PROJECT, "Open project", "Open an existing project." );
   }
 
   // METHODS
@@ -78,7 +73,7 @@ public class OpenProjectAction extends BaseAction
           LOG.info( "Loading OLS project from file: " + file );
         }
 
-        this.project.load( file );
+        getController().loadDataFile( file );
       }
     }
     catch ( IOException exception )

@@ -38,7 +38,6 @@ public class JTextStatusBar extends JStatusBar
   // VARIABLES
 
   private final JLabel statusText;
-
   private final JProgressBar progressBar;
 
   // CONSTRUCTORS
