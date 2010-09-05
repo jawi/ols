@@ -315,7 +315,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
    */
   private long xToIndex( final int aXpos )
   {
-    return Diagram.xToIndex( this.dataContainer, aXpos, this.scale );
+    return Diagram.xToIndex( this.dataContainer, new Point( aXpos, 0 ), this.scale );
   }
 }
 

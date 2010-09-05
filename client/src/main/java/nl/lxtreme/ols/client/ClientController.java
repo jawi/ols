@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.logging.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
@@ -107,9 +108,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
   // VARIABLES
 
-  private final BundleContext bundleContext;
   private final ActionManager actionManager;
+  private final BundleContext bundleContext;
   private final DataContainer dataContainer;
+  private final EventListenerList evenListeners;
   private final Host host;
 
   private MainFrame mainFrame;
@@ -128,11 +130,23 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     this.actionManager = new ActionManager();
     this.dataContainer = new DataContainer();
+    this.evenListeners = new EventListenerList();
 
     fillActionManager( this.actionManager );
   }
 
   // METHODS
+
+  /**
+   * Adds a cursor change listener.
+   * 
+   * @param aListener
+   *          the listener to add, cannot be <code>null</code>.
+   */
+  public void addCursorChangeListener( final DiagramCursorChangeListener aListener )
+  {
+    this.evenListeners.add( DiagramCursorChangeListener.class, aListener );
+  }
 
   /**
    * Adds the given device controller to this controller.
@@ -493,10 +507,22 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      this.mainFrame.removeCursor( aCursorIdx );
+      this.dataContainer.setCursorPosition( aCursorIdx, Long.MIN_VALUE );
+      fireCursorChangedEvent( aCursorIdx, -1 ); // removed...
     }
 
     updateActions();
+  }
+
+  /**
+   * Removes a cursor change listener.
+   * 
+   * @param aListener
+   *          the listener to remove, cannot be <code>null</code>.
+   */
+  public void removeCursorChangeListener( final DiagramCursorChangeListener aListener )
+  {
+    this.evenListeners.remove( DiagramCursorChangeListener.class, aListener );
   }
 
   /**
@@ -655,9 +681,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * Sets the cursor position of the cursor with the given index.
    * 
    * @param aCursorIdx
-   *          the index of the cursor to set, >= 0 && < 10.
+   *          the index of the cursor to set, >= 0 && < 10;
+   * @param aLocation
+   *          the mouse location on screen where the cursor should become,
+   *          cannot be <code>null</code>.
    */
-  public void setCursorPosition( final int aCursorIdx )
+  public void setCursorPosition( final int aCursorIdx, final Point aLocation )
   {
     // Implicitly enable cursor mode, the user already had made its
     // intensions clear that he want to have this by opening up the
@@ -666,8 +695,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     if ( this.mainFrame != null )
     {
-      // XXX this needs to be checked!!!
-      this.mainFrame.setCursorPosition( aCursorIdx );
+      // Convert the mouse-position to a sample index...
+      final long sampleIdx = this.mainFrame.convertMousePositionToSampleIndex( aLocation );
+
+      this.dataContainer.setCursorPosition( aCursorIdx, sampleIdx );
+
+      fireCursorChangedEvent( aCursorIdx, aLocation.x );
     }
 
     updateActions();
@@ -891,6 +924,26 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     aActionManager.add( new ShowDiagramSettingsAction( this ) );
     aActionManager.add( new ShowDiagramLabelsAction( this ) );
+  }
+
+  /**
+   * @param aCursorIdx
+   * @param aMouseXpos
+   */
+  private void fireCursorChangedEvent( final int aCursorIdx, final int aMouseXpos )
+  {
+    final DiagramCursorChangeListener[] listeners = this.evenListeners.getListeners( DiagramCursorChangeListener.class );
+    for ( final DiagramCursorChangeListener listener : listeners )
+    {
+      if ( aMouseXpos >= 0 )
+      {
+        listener.cursorChanged( aCursorIdx, aMouseXpos );
+      }
+      else
+      {
+        listener.cursorRemoved( aCursorIdx );
+      }
+    }
   }
 
   /**

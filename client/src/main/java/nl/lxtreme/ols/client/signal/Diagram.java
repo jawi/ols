@@ -27,9 +27,6 @@ import java.util.*;
 import java.util.logging.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
-
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
@@ -49,7 +46,7 @@ import nl.lxtreme.ols.util.*;
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
-public final class Diagram extends JComponent implements Configurable, Scrollable, DiagramSettings
+public final class Diagram extends JComponent implements Scrollable, DiagramSettings, DiagramCursorChangeListener
 {
   // INNER TYPES
 
@@ -113,15 +110,13 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     @Override
     public void mouseDragged( final MouseEvent aEvent )
     {
-      final int mouseXpos = aEvent.getX();
-      final int mouseYpos = aEvent.getY();
-
+      final Point mousePosition = aEvent.getPoint();
       if ( this.currentCursor >= 0 )
       {
-        dragCursor( this.currentCursor, mouseXpos );
+        dragCursor( this.currentCursor, mousePosition );
       }
 
-      updateStatus( mouseXpos, mouseYpos, true /* aDragging */, this.startDragXpos, null );
+      updateTooltipText( mousePosition, true /* aDragging */, this.startDragXpos, null );
     }
 
     /**
@@ -131,17 +126,16 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     @Override
     public void mouseMoved( final MouseEvent aEvent )
     {
-      final int mouseXpos = aEvent.getX();
-      final int mouseYpos = aEvent.getY();
+      final Point mousePosition = aEvent.getPoint();
 
-      final int channel = ( mouseYpos / getChannelHeight() );
-      final ChannelAnnotation annotation = getAnnotationHover( channel, mouseXpos );
+      final int channel = ( mousePosition.y / getChannelHeight() );
+      final ChannelAnnotation annotation = getAnnotationHover( channel, mousePosition );
 
-      final int cursorIdx = getCursorHover( mouseXpos );
+      final int cursorIdx = getCursorHover( mousePosition );
       if ( cursorIdx >= 0 )
       {
         this.currentCursor = cursorIdx;
-        this.startDragXpos = mouseXpos;
+        this.startDragXpos = mousePosition.x;
         Diagram.this.setCursor( Diagram.this.cursorDrag );
       }
       else
@@ -151,7 +145,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
         Diagram.this.setCursor( Diagram.this.cursorDefault );
       }
 
-      updateStatus( mouseXpos, mouseYpos, false /* aDragging */, this.startDragXpos, annotation );
+      updateTooltipText( mousePosition, false /* aDragging */, this.startDragXpos, annotation );
     }
 
     /**
@@ -203,13 +197,15 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
   // CONSTANTS
 
+  public static final String CONTEXTMENU_LOCATION_KEY = "OLS.ContextMenu.location";
+
   private static final long serialVersionUID = 1L;
 
   private static final Logger LOG = Logger.getLogger( Diagram.class.getName() );
 
   static final double MAX_SCALE = 15;
-  static final double CURSOR_HOVER = 5.0;
-  static final int PADDING_Y = 2;
+  private static final double CURSOR_HOVER = 5.0;
+  private static final int PADDING_Y = 2;
 
   private static final Stroke SOLID_THICK = new BasicStroke( 1.5f );
 
@@ -223,10 +219,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   private double scale;
   private final Cursor cursorDefault;
   private final Cursor cursorDrag;
-  private final EventListenerList evenListeners;
   private final JPopupMenu contextMenu;
-  private int newCursorPosition;
-
+  private final ClientController controller;
   /**
    * Display settings for each group. Can be any combinations (OR-ed) of the
    * defined MODE_* values.
@@ -254,6 +248,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     super();
 
+    this.controller = aController;
     this.dataContainer = aController.getDataContainer();
 
     // this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
@@ -294,7 +289,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
     this.cursorDefault = getCursor();
     this.cursorDrag = new Cursor( Cursor.MOVE_CURSOR );
-    this.evenListeners = new EventListenerList();
 
     this.rowLabels = new DiagramRowLabels( this.dataContainer );
     this.rowLabels.setDiagramSettings( this );
@@ -305,7 +299,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     setMinimumSize( new Dimension( 25, 1 ) );
     setBackground( getBackgroundColor() );
 
-    addCursorChangeListener( this.timeLine );
+    aController.addCursorChangeListener( this );
+    aController.addCursorChangeListener( this.timeLine );
 
     final MouseListener mouseListener = new MouseListener();
 
@@ -320,9 +315,9 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
    *          horizontal position (in pixels).
    * @return sample index
    */
-  static final long xToIndex( final CapturedData aData, final int aXpos, final double aScale )
+  static final long xToIndex( final CapturedData aData, final Point aPoint, final double aScale )
   {
-    long index = ( long )Math.max( 0.0, ( aXpos / aScale ) );
+    long index = ( long )Math.max( 0.0, ( aPoint.getX() / aScale ) );
 
     if ( ( aData != null ) && ( index >= aData.getAbsoluteLength() ) )
     {
@@ -330,14 +325,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     }
 
     return index;
-  }
-
-  /**
-   * @param aListener
-   */
-  public void addCursorChangeListener( final DiagramCursorChangeListener aListener )
-  {
-    this.evenListeners.add( DiagramCursorChangeListener.class, aListener );
   }
 
   /**
@@ -350,6 +337,37 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     super.addNotify();
     configureEnclosingScrollPane();
+  }
+
+  /**
+   * Convert x position to sample index.
+   * 
+   * @param aXpos
+   *          horizontal position in pixels
+   * @return sample index
+   */
+  public long convertPointToSampleIndex( final Point aPoint )
+  {
+    return Diagram.xToIndex( this.dataContainer, aPoint, this.scale );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramCursorChangeListener#cursorChanged(int,
+   *      int)
+   */
+  @Override
+  public void cursorChanged( final int aCursorIdx, final int aMousePos )
+  {
+    repaint();
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramCursorChangeListener#cursorRemoved(int)
+   */
+  @Override
+  public void cursorRemoved( final int aCursorIdx )
+  {
+    repaint();
   }
 
   /**
@@ -545,6 +563,16 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * Returns the current scale.
+   * 
+   * @return the scale as double value.
+   */
+  public double getZoomScale()
+  {
+    return this.scale;
+  }
+
+  /**
    * Sets this Diagram's viewport position
    * 
    * @param aSamplePos
@@ -596,35 +624,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
-   *      java.util.Properties)
-   */
-  @Override
-  public void readProperties( final String aNamespace, final Properties properties )
-  {
-    // NO-op
-  }
-
-  /**
-   * @param aListener
-   */
-  public void removeCursorChangeListener( final DiagramCursorChangeListener aListener )
-  {
-    this.evenListeners.remove( DiagramCursorChangeListener.class, aListener );
-  }
-
-  /**
-   * Removes the cursor at the given position.
-   * 
-   * @param aCursorIdx
-   *          the cursor index to remove.
-   */
-  public void removeCursorPosition( final int aCursorIdx )
-  {
-    internalSetCursorPosition( aCursorIdx, -1 );
-  }
-
-  /**
    * Calls the <code>unconfigureEnclosingScrollPane</code> method.
    * 
    * @see #unconfigureEnclosingScrollPane
@@ -634,14 +633,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   {
     unconfigureEnclosingScrollPane();
     super.removeNotify();
-  }
-
-  /**
-   * @param aCursorIdx
-   */
-  public void setCursorPosition( final int aCursorIdx )
-  {
-    internalSetCursorPosition( aCursorIdx, this.newCursorPosition );
   }
 
   /**
@@ -715,16 +706,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String,
-   *      java.util.Properties)
-   */
-  @Override
-  public void writeProperties( final String aNamespace, final Properties properties )
-  {
-    // NO-op
-  }
-
-  /**
    * Reverts back to the standard zoom level.
    */
   public void zoomDefault()
@@ -773,14 +754,83 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
+   * Moves the cursor with a given index to a given mouse X position.
+   * 
+   * @param aCursorIdx
+   *          the cursor index to move, should be >= 0;
+   * @param aMousePosition
+   *          the point containing the new X position of the cursor.
+   */
+  final void dragCursor( final int aCursorIdx, final Point aMousePosition )
+  {
+    if ( !this.dataContainer.isCursorsEnabled() )
+    {
+      return;
+    }
+
+    this.controller.setCursorPosition( aCursorIdx, aMousePosition );
+  }
+
+  /**
+   * @param aChannelIdx
+   * @param aMouseXpos
+   * @return
+   */
+  final ChannelAnnotation getAnnotationHover( final int aChannelIdx, final Point aMousePosition )
+  {
+    final int sampleIdx = this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) );
+    return this.dataContainer.getChannelAnnotation( aChannelIdx, sampleIdx );
+  }
+
+  /**
+   * Determines whether the given mouse X position is actually in the vicinity
+   * of a cursor.
+   * 
+   * @param aMouseXpos
+   *          the mouse X position to test.
+   * @return the index of the cursor the given mouse position is near, or -1 if
+   *         there's no cursor set or nowhere near a cursor.
+   */
+  final int getCursorHover( final Point aMousePosition )
+  {
+    final long idx = convertPointToSampleIndex( aMousePosition );
+    final double threshold = CURSOR_HOVER / this.scale;
+    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
+    {
+      final long cursorPosition = this.dataContainer.getCursorPosition( i );
+      if ( cursorPosition < 0 )
+      {
+        continue;
+      }
+      if ( Math.abs( idx - cursorPosition ) < threshold )
+      {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * @param aEvent
+   */
+  final void showContextMenu( final Point aPosition )
+  {
+    if ( this.dataContainer.hasCapturedData() )
+    {
+      this.contextMenu.putClientProperty( CONTEXTMENU_LOCATION_KEY, aPosition );
+      this.contextMenu.show( this, aPosition.x, aPosition.y );
+    }
+  }
+
+  /**
    * Update status information. Notifies {@link StatusChangeListener}.
    * 
    * @param aDragging
    *          <code>true</code> indicates that dragging information should be
    *          added
    */
-  final void updateStatus( final int aMouseXpos, final int aMouseYpos, final boolean aDragging,
-      final int aStartDragXpos, final ChannelAnnotation aAnnotation )
+  final void updateTooltipText( final Point aMousePosition, final boolean aDragging, final int aStartDragXpos,
+      final ChannelAnnotation aAnnotation )
   {
     if ( !this.dataContainer.hasCapturedData() )
     {
@@ -789,7 +839,7 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
     final StringBuffer sb = new StringBuffer( " " );
 
-    final int row = aMouseYpos / getChannelHeight();
+    final int row = aMousePosition.y / getChannelHeight();
     if ( row <= this.dataContainer.getChannels() + ( this.dataContainer.getChannels() / 9 ) )
     {
       if ( row % 9 == 8 )
@@ -849,8 +899,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
       // else
       {
         // print origin status when no cursors used
-        final long idxMouseDragX = xToIndex( aStartDragXpos );
-        final long idxMouseX = xToIndex( aMouseXpos );
+        final long idxMouseDragX = convertPointToSampleIndex( new Point( aStartDragXpos, 0 ) );
+        final long idxMouseX = convertPointToSampleIndex( aMousePosition );
 
         if ( aDragging && ( idxMouseDragX != idxMouseX ) )
         {
@@ -936,63 +986,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * Moves the cursor with a given index to a given mouse X position.
-   * 
-   * @param aCursorIdx
-   *          the cursor index to move, should be >= 0;
-   * @param aMouseXpos
-   *          the new X position of the cursor.
-   */
-  protected final void dragCursor( final int aCursorIdx, final int aMouseXpos )
-  {
-    if ( ( this.dataContainer == null ) || !this.dataContainer.isCursorsEnabled() )
-    {
-      return;
-    }
-
-    internalSetCursorPosition( aCursorIdx, aMouseXpos );
-  }
-
-  /**
-   * @param aChannelIdx
-   * @param aMouseXpos
-   * @return
-   */
-  protected ChannelAnnotation getAnnotationHover( final int aChannelIdx, final int aMouseXpos )
-  {
-    final int sampleIdx = this.dataContainer.getSampleIndex( xToIndex( aMouseXpos ) );
-    return this.dataContainer.getChannelAnnotation( aChannelIdx, sampleIdx );
-  }
-
-  /**
-   * Determines whether the given mouse X position is actually in the vicinity
-   * of a cursor.
-   * 
-   * @param aMouseXpos
-   *          the mouse X position to test.
-   * @return the index of the cursor the given mouse position is near, or -1 if
-   *         there's no cursor set or nowhere near a cursor.
-   */
-  protected int getCursorHover( final int aMouseXpos )
-  {
-    final long idx = xToIndex( aMouseXpos );
-    final double threshold = CURSOR_HOVER / this.scale;
-    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
-    {
-      final long cursorPosition = this.dataContainer.getCursorPosition( i );
-      if ( cursorPosition < 0 )
-      {
-        continue;
-      }
-      if ( Math.abs( idx - cursorPosition ) < threshold )
-      {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  /**
    * Paints the diagram to the extend necessary.
    */
   @Override
@@ -1015,8 +1008,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final int ch = cy + clipArea.height;
 
     // find index of first & last row that needs drawing
-    final long firstRow = xToIndex( cx );
-    final long lastRow = xToIndex( cw ) + 1;
+    final long firstRow = convertPointToSampleIndex( new Point( cx, 0 ) );
+    final long lastRow = convertPointToSampleIndex( new Point( cw, 0 ) ) + 1;
 
     // paint portion of background that needs drawing
     g2d.setColor( getBackgroundColor() );
@@ -1040,19 +1033,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     {
       final long end = System.currentTimeMillis();
       LOG.log( Level.INFO, "Render time = {0}ms.", ( end - start ) );
-    }
-  }
-
-  /**
-   * @param aEvent
-   */
-  protected final void showContextMenu( final Point aPosition )
-  {
-    if ( this.dataContainer != null )
-    {
-      this.newCursorPosition = aPosition.x;
-
-      this.contextMenu.show( this, aPosition.x, aPosition.y );
     }
   }
 
@@ -1424,27 +1404,10 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
   }
 
   /**
-   * @param aCursorIdx
-   * @param aMouseXpos
-   */
-  private void fireCursorChangedEvent( final int aCursorIdx, final int aMouseXpos )
-  {
-    final DiagramCursorChangeListener[] listeners = this.evenListeners.getListeners( DiagramCursorChangeListener.class );
-    for ( final DiagramCursorChangeListener listener : listeners )
-    {
-      if ( aMouseXpos >= 0 )
-      {
-        listener.cursorChanged( aCursorIdx, aMouseXpos );
-      }
-      else
-      {
-        listener.cursorRemoved( aCursorIdx );
-      }
-    }
-  }
-
-  /**
-   * @return
+   * Returns the viewport if this diagram is enclosed in a JScrollPane.
+   * 
+   * @return the viewport of the enclosing JScrollPane, or <code>null</code> if
+   *         this diagram is not enclosed in a JScrollPane.
    */
   private JViewport getViewPort()
   {
@@ -1479,40 +1442,6 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     final int width = Math.max( 1, visibleWidth );
     final double fitScaleFactor = width / ( double )this.dataContainer.getAbsoluteLength();
     return fitScaleFactor;
-  }
-
-  /**
-   * Sets the actual cursor position.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to set;
-   * @param aMouseXpos
-   *          the new X-position (of the mouse) representing the new cursor
-   *          position, if < 0 then the cursor will be removed.
-   */
-  private void internalSetCursorPosition( final int aCursorIdx, final int aMouseXpos )
-  {
-    if ( aMouseXpos < 0 )
-    {
-      // Remove the cursor...
-      this.dataContainer.setCursorPosition( aCursorIdx, Long.MIN_VALUE );
-
-      fireCursorChangedEvent( aCursorIdx, aMouseXpos );
-    }
-    else
-    {
-      final long index = xToIndex( aMouseXpos );
-
-      // notify cursor change listeners
-      if ( ( index > 0 ) && ( index < ( this.dataContainer.getAbsoluteLength() - 1 ) ) )
-      {
-        this.dataContainer.setCursorPosition( aCursorIdx, index );
-
-        fireCursorChangedEvent( aCursorIdx, aMouseXpos );
-      }
-    }
-
-    repaint();
   }
 
   /**
@@ -1647,17 +1576,5 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
 
       setLocation( locX, location.y );
     }
-  }
-
-  /**
-   * Convert x position to sample index.
-   * 
-   * @param aXpos
-   *          horizontal position in pixels
-   * @return sample index
-   */
-  private long xToIndex( final int aXpos )
-  {
-    return Diagram.xToIndex( this.dataContainer, aXpos, this.scale );
   }
 }

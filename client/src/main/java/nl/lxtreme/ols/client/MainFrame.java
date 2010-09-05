@@ -120,6 +120,15 @@ public final class MainFrame extends JFrame
   }
 
   /**
+   * @param aLocation
+   * @return
+   */
+  public long convertMousePositionToSampleIndex( final Point aLocation )
+  {
+    return this.diagram.convertPointToSampleIndex( aLocation );
+  }
+
+  /**
    * Returns the current diagram settings.
    * 
    * @return the diagram settings, never <code>null</code>.
@@ -130,19 +139,21 @@ public final class MainFrame extends JFrame
   }
 
   /**
-   * @param aCursorIdx
+   * Returns the current zoom scale.
+   * 
+   * @return a zoom scale, > 0.0
    */
-  public void gotoPosition( final long aSamplePos )
+  public double getZoomScale()
   {
-    this.diagram.gotoPosition( aSamplePos );
+    return this.diagram.getZoomScale();
   }
 
   /**
    * @param aCursorIdx
    */
-  public void removeCursor( final int aCursorIdx )
+  public void gotoPosition( final long aSamplePos )
   {
-    this.diagram.removeCursorPosition( aCursorIdx );
+    this.diagram.gotoPosition( aSamplePos );
   }
 
   /**
@@ -192,14 +203,6 @@ public final class MainFrame extends JFrame
     }
 
     updateToolMenuState( aToolName, menuItem, false /* aAdded */);
-  }
-
-  /**
-   * @param aCursorIdx
-   */
-  public void setCursorPosition( final int aCursorIdx )
-  {
-    this.diagram.setCursorPosition( aCursorIdx );
   }
 
   /**
