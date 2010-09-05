@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.state;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
@@ -55,12 +56,13 @@ public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, CapturedDa
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
+   *      ToolContext)
    */
   @Override
-  protected StateAnalysisWorker createToolWorker( final DataContainer aData )
+  protected StateAnalysisWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
   {
-    return new StateAnalysisWorker( aData );
+    return new StateAnalysisWorker( aData, aContext );
   }
 }
 

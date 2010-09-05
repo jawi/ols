@@ -112,7 +112,7 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
   public ClockFrequencyMeasureWorker( final DataContainer aData, final int aChannel, final int aStartIndex,
       final int aEndIndex )
   {
-    super( aData );
+    super( aData, null ); // XXX
 
     this.channelMask = ( 1 << aChannel );
     this.startTime = aData.getCursorPosition( aStartIndex );

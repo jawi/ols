@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.base;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 
 
 /**
@@ -41,6 +42,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   // VARIABLES
 
   private final DataContainer data;
+  private final ToolContext context;
 
   // CONSTRUCTORS
 
@@ -50,9 +52,10 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
    * @param aData
    *          the data container to work with, could be <code>null</code>.
    */
-  public BaseAsyncToolWorker( final DataContainer aData )
+  public BaseAsyncToolWorker( final DataContainer aData, final ToolContext aContext )
   {
     this.data = aData;
+    this.context = aContext;
   }
 
   // METHODS
@@ -127,6 +130,16 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   public final int getChannels()
   {
     return this.data.getChannels();
+  }
+
+  /**
+   * Returns the context in which this tool worker should to its job.
+   * 
+   * @return the context, never <code>null</code>.
+   */
+  public ToolContext getContext()
+  {
+    return this.context;
   }
 
   /**

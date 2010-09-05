@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.uart;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
@@ -55,12 +56,13 @@ public class UARTAnalyser extends BaseAsyncTool<UARTProtocolAnalysisDialog, UART
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer)
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
+   *      ToolContext)
    */
   @Override
-  protected UARTAnalyserWorker createToolWorker( final DataContainer aData )
+  protected UARTAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
   {
-    return new UARTAnalyserWorker( aData );
+    return new UARTAnalyserWorker( aData, aContext );
   }
 }
 

@@ -288,7 +288,8 @@ public final class Diagram extends JComponent implements Configurable, Scrollabl
     this.contextMenu = new JPopupMenu();
     for ( int i = 0; i < 10; i++ )
     {
-      this.contextMenu.add( new JCheckBoxMenuItem( new SetCursorAction( aController, i ) ) );
+      final Action setCursorAction = aController.getAction( SetCursorAction.getCursorId( i ) );
+      this.contextMenu.add( new JCheckBoxMenuItem( setCursorAction ) );
     }
 
     this.cursorDefault = getCursor();

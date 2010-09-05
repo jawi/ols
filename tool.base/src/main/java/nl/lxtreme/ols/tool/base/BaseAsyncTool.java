@@ -58,20 +58,23 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
 
   /**
    * Provides a default implementation of a tool worker factory, using the
-   * defined {@link BaseAsyncTool#createToolWorker(DataContainer)} method for
-   * the actual creation of the tool worker itself.
+   * defined {@link BaseAsyncTool#createToolWorker(DataContainer, ToolContext)}
+   * method for the actual creation of the tool worker itself.
    */
   final class ToolWorkerFactoryImpl implements ToolWorkerFactory<RESULT_TYPE, WORKER>
   {
     private final AnalysisCallback callback;
     private final DataContainer data;
+    private final ToolContext context;
 
     /**
      * 
      */
-    public ToolWorkerFactoryImpl( final DataContainer aData, final AnalysisCallback aCallback )
+    public ToolWorkerFactoryImpl( final DataContainer aData, final ToolContext aContext,
+        final AnalysisCallback aCallback )
     {
       this.data = aData;
+      this.context = aContext;
       this.callback = aCallback;
     }
 
@@ -81,7 +84,7 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
     @Override
     public WORKER createToolWorker()
     {
-      final WORKER toolWorker = BaseAsyncTool.this.createToolWorker( this.data );
+      final WORKER toolWorker = BaseAsyncTool.this.createToolWorker( this.data, this.context );
       toolWorker.addPropertyChangeListener( new ToolWorkerPropertyChangeListener( toolWorker, this.callback ) );
       return toolWorker;
     }
@@ -201,10 +204,14 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
   /**
    * Factory method for creating a tool worker.
    * 
+   * @param aData
+   *          the data container to use for the analysis;
+   * @param aContext
+   *          the tool context to use for the analysis.
    * @return a new instance of the intended tool worker, cannot be
    *         <code>null</code>.
    */
-  protected abstract WORKER createToolWorker( final DataContainer aData );
+  protected abstract WORKER createToolWorker( final DataContainer aData, ToolContext aContext );
 
   /**
    * Does the actual processing of data.
@@ -226,7 +233,7 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
     final DIALOG dialog = getDialog();
 
     // Update the tool worker to the new one...
-    dialog.setToolWorkerFactory( new ToolWorkerFactoryImpl( aData, aCallback ) );
+    dialog.setToolWorkerFactory( new ToolWorkerFactoryImpl( aData, aContext, aCallback ) );
     // Show the actual dialog...
     dialog.showDialog( aData );
   }

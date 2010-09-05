@@ -185,6 +185,18 @@ public class LogicSnifferDeviceController implements DeviceController
   // METHODS
 
   /**
+   * @see nl.lxtreme.ols.api.devices.DeviceController#cancel()
+   */
+  @Override
+  public void cancel() throws IllegalStateException
+  {
+    if ( isCapturing() )
+    {
+      this.captureWorker.cancel( true /* mayInterruptIfRunning */);
+    }
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.devices.DeviceController#captureData(nl.lxtreme.ols.api.devices.CaptureCallback)
    */
   @Override
@@ -239,11 +251,25 @@ public class LogicSnifferDeviceController implements DeviceController
   }
 
   /**
-   * @see java.awt.Component#getName()
+   * @see nl.lxtreme.ols.api.devices.DeviceController#getName()
    */
   public String getName()
   {
     return NAME;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.devices.DeviceController#isCapturing()
+   */
+  @Override
+  public boolean isCapturing()
+  {
+    if ( this.captureWorker == null )
+    {
+      return false;
+    }
+
+    return !this.captureWorker.isCancelled() && !this.captureWorker.isDone();
   }
 
   /**

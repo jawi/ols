@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.i2c;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
@@ -63,9 +64,9 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   /**
    * @param aData
    */
-  public I2CAnalyserWorker( final DataContainer aData )
+  public I2CAnalyserWorker( final DataContainer aData, final ToolContext aContext )
   {
-    super( aData );
+    super( aData, aContext );
   }
 
   // METHODS

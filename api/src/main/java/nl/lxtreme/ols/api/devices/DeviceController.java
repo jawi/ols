@@ -34,6 +34,14 @@ public interface DeviceController
   // METHODS
 
   /**
+   * Signals that the capture should be aborted.
+   * 
+   * @throws IllegalStateException
+   *           in case no capture is in progress.
+   */
+  public void cancel() throws IllegalStateException;
+
+  /**
    * Reads the captured device data.
    * 
    * @param aCallback
@@ -50,6 +58,15 @@ public interface DeviceController
    * @return name of the controller, cannot be <code>null</code>.
    */
   public String getName();
+
+  /**
+   * Returns whether or not this device controller is in progress of a capture.
+   * 
+   * @return <code>true</code> if this device controller is currently capturing
+   *         data (or waiting to start capturing due to a trigger),
+   *         <code>false</code> otherwise.
+   */
+  public boolean isCapturing();
 
   /**
    * Returns whether this device is already set up or not.
