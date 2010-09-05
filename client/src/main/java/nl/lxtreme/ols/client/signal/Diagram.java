@@ -27,6 +27,8 @@ import java.util.*;
 import java.util.logging.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
+
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
@@ -66,6 +68,49 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
       this.x = new int[aN];
       this.y1 = new int[aN];
       this.y2 = new int[aN];
+    }
+  }
+
+  /**
+   * Provides a context menu popup listener.
+   */
+  static final class ContextMenuListener implements PopupMenuListener
+  {
+    // METHODS
+
+    /**
+     * @see javax.swing.event.PopupMenuListener#popupMenuCanceled(javax.swing.event.PopupMenuEvent)
+     */
+    @Override
+    public void popupMenuCanceled( final PopupMenuEvent aEvent )
+    {
+      final JPopupMenu menu = ( JPopupMenu )aEvent.getSource();
+      menu.putClientProperty( CONTEXTMENU_LOCATION_KEY, null );
+    }
+
+    /**
+     * @see javax.swing.event.PopupMenuListener#popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent)
+     */
+    @Override
+    public void popupMenuWillBecomeInvisible( final PopupMenuEvent aEvent )
+    {
+      final JPopupMenu menu = ( JPopupMenu )aEvent.getSource();
+      final Diagram diagram = ( Diagram )menu.getInvoker();
+
+      final Point location = menu.getLocationOnScreen();
+      // we *must* convert the mouse location from the screen to the diagram
+      // coordinate space...
+      SwingUtilities.convertPointFromScreen( location, diagram );
+
+      menu.putClientProperty( CONTEXTMENU_LOCATION_KEY, location );
+    }
+
+    /**
+     * @see javax.swing.event.PopupMenuListener#popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent)
+     */
+    @Override
+    public void popupMenuWillBecomeVisible( final PopupMenuEvent aEvent )
+    {
     }
   }
 
@@ -146,35 +191,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
       }
 
       updateTooltipText( mousePosition, false /* aDragging */, this.startDragXpos, annotation );
-    }
-
-    /**
-     * Handles mouse button events for context menu
-     */
-    @Override
-    public void mousePressed( final MouseEvent aEvent )
-    {
-      evaluatePopupEvent( aEvent );
-    }
-
-    /**
-     * @see java.awt.event.MouseAdapter#mouseReleased(java.awt.event.MouseEvent)
-     */
-    @Override
-    public void mouseReleased( final MouseEvent aEvent )
-    {
-      evaluatePopupEvent( aEvent );
-    }
-
-    /**
-     * @param aEvent
-     */
-    private void evaluatePopupEvent( final MouseEvent aEvent )
-    {
-      if ( aEvent.isPopupTrigger() )
-      {
-        showContextMenu( aEvent.getPoint() );
-      }
     }
   }
 
@@ -281,11 +297,13 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     }
 
     this.contextMenu = new JPopupMenu();
+    this.contextMenu.addPopupMenuListener( new ContextMenuListener() );
     for ( int i = 0; i < 10; i++ )
     {
       final Action setCursorAction = aController.getAction( SetCursorAction.getCursorId( i ) );
       this.contextMenu.add( new JCheckBoxMenuItem( setCursorAction ) );
     }
+    setComponentPopupMenu( this.contextMenu );
 
     this.cursorDefault = getCursor();
     this.cursorDrag = new Cursor( Cursor.MOVE_CURSOR );
