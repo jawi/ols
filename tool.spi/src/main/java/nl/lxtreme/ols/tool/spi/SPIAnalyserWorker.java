@@ -50,9 +50,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   private boolean honourCS;
   private int mosiIdx;
   private int misoIdx;
-
   private String mosiLabel;
-
   private String misoLabel;
 
   // CONSTRUCTORS
@@ -188,54 +186,11 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       LOG.fine( "mosimask = 0x" + Integer.toHexString( 1 << this.mosiIdx ) );
     }
 
-    final int[] values = getValues();
+    final int startOfDecode = getContext().getStartSampleIndex();
+    final int endOfDecode = getContext().getEndSampleIndex();
+    final boolean slaveSelected = slaveSelected( startOfDecode, endOfDecode );
 
-    this.mosiLabel = getChannelLabel( this.mosiIdx, "MOSI" );
-    setChannelLabel( this.mosiIdx, this.mosiLabel );
-
-    this.misoLabel = getChannelLabel( this.misoIdx, "MISO" );
-    setChannelLabel( this.misoIdx, this.misoLabel );
-
-    int startOfDecode;
-    int endOfDecode;
-    boolean slaveSelected = false;
-
-    if ( isCursorsEnabled() && isCursorPositionSet( 0 ) && isCursorPositionSet( 1 ) )
-    {
-      startOfDecode = getSampleIndex( getCursorPosition( 0 ) );
-      endOfDecode = getSampleIndex( getCursorPosition( 1 ) + 1 );
-
-      // Search for a CS-low backwards from the first cursor...
-      slaveSelected = searchSlaveSelected( startOfDecode, 0 ) >= 0;
-      if ( !slaveSelected )
-      {
-        // Search for a CS-low forwards from the first cursor...
-        slaveSelected = searchSlaveSelected( startOfDecode, endOfDecode ) >= 0;
-      }
-    }
-    else if ( hasTriggerData() )
-    {
-      startOfDecode = getTriggerIndex();
-      endOfDecode = values.length;
-
-      // Search for a CS-low backwards from the trigger position...
-      slaveSelected = searchSlaveSelected( startOfDecode, 0 ) >= 0;
-      if ( !slaveSelected )
-      {
-        // Search for a CS-low forwards from the first cursor...
-        slaveSelected = searchSlaveSelected( startOfDecode, endOfDecode ) >= 0;
-      }
-    }
-    else
-    {
-      // Search for a CS-low forwards until the end...
-      endOfDecode = values.length;
-      startOfDecode = searchSlaveSelected( 0, endOfDecode );
-
-      slaveSelected = ( startOfDecode > 0 );
-    }
-
-    if ( !slaveSelected || ( startOfDecode >= endOfDecode ) )
+    if ( ( this.honourCS && !slaveSelected ) || ( startOfDecode >= endOfDecode ) )
     {
       // no CS edge found, look for trigger
       LOG.log( Level.WARNING, "No CS start-condition found! Analysis aborted..." );
@@ -249,16 +204,17 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       reportCsLow( decodedData, startOfDecode );
     }
 
+    this.mosiLabel = getChannelLabel( this.mosiIdx, SPIDataSet.SPI_MOSI );
+    setChannelLabel( this.mosiIdx, this.mosiLabel );
     // clear any existing annotations
-    clearChannelAnnotations( this.misoIdx );
     clearChannelAnnotations( this.mosiIdx );
 
-    /*
-     * Use the mode parameter to determine which edges are to detect. Mode 0 and
-     * mode 3 are sampling on the rising clk edge, mode 1 and 2 are sampling on
-     * the falling edge. a is used for start of value, c is register for detect
-     * line changes.
-     */
+    this.misoLabel = getChannelLabel( this.misoIdx, SPIDataSet.SPI_MISO );
+    setChannelLabel( this.misoIdx, this.misoLabel );
+    // clear any existing annotations
+    clearChannelAnnotations( this.misoIdx );
+
+    // Perform the actual decoding of the data line(s)...
     clockDataOnEdge( decodedData, this.mode );
 
     return decodedData;
@@ -506,5 +462,24 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     }
 
     return -1;
+  }
+
+  /**
+   * @param aStartOfDecode
+   * @param aEndOfDecode
+   * @return
+   */
+  private boolean slaveSelected( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    boolean slaveSelected = false;
+
+    // Search for a CS-low backwards from the first cursor...
+    slaveSelected = searchSlaveSelected( aStartOfDecode, 0 ) >= 0;
+    if ( !slaveSelected )
+    {
+      // Search for a CS-low forwards from the first cursor...
+      slaveSelected = searchSlaveSelected( aStartOfDecode, aEndOfDecode ) >= 0;
+    }
+    return slaveSelected;
   }
 }

@@ -226,41 +226,23 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
 
     final int[] values = getValues();
 
-    int startOfDecode = 0;
-    int endOfDecode;
+    int startOfDecode = getContext().getStartSampleIndex();
+    int endOfDecode = getContext().getEndSampleIndex();
 
-    /*
-     * set the start of decode to the trigger if avail or find first state
-     * change on the selected lines
-     */
-    if ( isCursorsEnabled() && isCursorPositionSet( 0 ) && isCursorPositionSet( 1 ) )
-    {
-      startOfDecode = getSampleIndex( getCursorPosition( 0 ) );
-      endOfDecode = getSampleIndex( getCursorPosition( 1 ) + 1 );
-    }
-    else if ( hasTriggerData() )
-    {
-      // the trigger may be too late, a workaround is to go back some samples
-      // here
-      startOfDecode = Math.max( 0, getTriggerIndex() - 10 );
-      endOfDecode = values.length - 1;
-    }
-    else
-    {
-      final int mask = rxdMask | riMask | ctsMask | txdMask | dcdMask | riMask | dsrMask | dtrMask;
+    // find first state change on the selected lines
+    final int mask = rxdMask | riMask | ctsMask | txdMask | dcdMask | riMask | dsrMask | dtrMask;
 
-      endOfDecode = values.length - 1;
-
-      final int value = values[0] & mask;
-      for ( int i = 1; i < endOfDecode; i++ )
+    final int value = values[startOfDecode] & mask;
+    for ( int i = startOfDecode + 1; i < endOfDecode; i++ )
+    {
+      if ( value != ( values[i] & mask ) )
       {
-        if ( value != ( values[i] & mask ) )
-        {
-          startOfDecode = i;
-          break;
-        }
+        startOfDecode = i;
+        break;
       }
     }
+
+    startOfDecode = Math.max( 0, getContext().getStartSampleIndex() - 10 );
 
     // Make sure we've got a valid range to decode..
     if ( startOfDecode >= endOfDecode )
