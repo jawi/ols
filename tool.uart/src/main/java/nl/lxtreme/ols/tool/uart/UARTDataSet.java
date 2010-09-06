@@ -52,6 +52,18 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   // METHODS
 
   /**
+   * Returns the "normalized" baudrate.
+   * 
+   * @return a baudrate, >= 0.
+   */
+  public int getBaudRate()
+  {
+    int baudRateExact = getBaudRateExact();
+    baudRateExact -= ( baudRateExact % 300 );
+    return baudRateExact;
+  }
+
+  /**
    * Returns the (calculated, exact) baudrate.
    * 
    * @return a baudrate, >= 0.
@@ -64,18 +76,6 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
       return 0;
     }
     return getSampleRate() / this.bitLength;
-  }
-
-  /**
-   * Returns the "normalized" baudrate.
-   * 
-   * @return a baudrate, >= 0.
-   */
-  public int getBaudRate()
-  {
-    int baudRateExact = getBaudRateExact();
-    baudRateExact -= ( baudRateExact % 300 );
-    return baudRateExact;
   }
 
   /**

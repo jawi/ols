@@ -882,12 +882,13 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     else if ( this.dataContainer.hasTriggerData() )
     {
       startOfDecode = this.dataContainer.getTriggerIndex();
+      endOfDecode = dataLength;
     }
 
     // XXX allow one cursor to be used as well...
 
     startOfDecode = Math.max( 0, startOfDecode );
-    endOfDecode = Math.min( dataLength, endOfDecode );
+    endOfDecode = Math.min( dataLength - 1, endOfDecode );
 
     return new DefaultToolContext( startOfDecode, endOfDecode );
   }
@@ -916,7 +917,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     aActionManager.add( new GotoTriggerAction( this ) ).setEnabled( false );
     aActionManager.add( new GotoCursor1Action( this ) ).setEnabled( false );
     aActionManager.add( new GotoCursor2Action( this ) ).setEnabled( false );
-    aActionManager.add( new SetCursorModeAction( this ) ).setEnabled( false );
+    aActionManager.add( new SetCursorModeAction( this ) );
     for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
     {
       aActionManager.add( new SetCursorAction( this, c ) );
@@ -998,9 +999,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     // Update the cursor actions accordingly...
     final boolean enableCursors = dataAvailable && this.dataContainer.isCursorsEnabled();
 
-    getAction( SetCursorModeAction.ID ).setEnabled( enableCursors );
     getAction( GotoCursor1Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 0 ) );
     getAction( GotoCursor2Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 1 ) );
+    getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
+    getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY, dataAvailable );
     for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
     {
       final Action action = getAction( SetCursorAction.getCursorId( c ) );
