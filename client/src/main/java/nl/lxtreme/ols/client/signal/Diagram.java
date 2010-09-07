@@ -364,7 +364,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
    *          horizontal position in pixels
    * @return sample index
    */
-  public long convertPointToTimeValue( final Point aPoint )
+  public long convertPointToSampleIndex( final Point aPoint )
   {
     return Diagram.xToIndex( this.dataContainer, aPoint, this.scale );
   }
@@ -806,7 +806,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
    */
   final ChannelAnnotation getAnnotationHover( final int aChannelIdx, final Point aMousePosition )
   {
-    final int sampleIdx = this.dataContainer.getSampleIndex( convertPointToTimeValue( aMousePosition ) );
+    final int sampleIdx = this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) );
     return this.dataContainer.getChannelAnnotation( aChannelIdx, sampleIdx );
   }
 
@@ -821,12 +821,12 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
    */
   final int getCursorHover( final Point aMousePosition )
   {
-    final long idx = convertPointToTimeValue( aMousePosition );
+    final long idx = convertPointToSampleIndex( aMousePosition );
     final double threshold = CURSOR_HOVER / this.scale;
     for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
     {
-      final long cursorPosition = this.dataContainer.getCursorTimestamp( i );
-      if ( cursorPosition == Long.MIN_VALUE )
+      final long cursorPosition = this.dataContainer.getCursorPosition( i );
+      if ( cursorPosition < 0 )
       {
         continue;
       }
@@ -886,7 +886,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
       sb.append( aAnnotation.getData() );
 
       sb.append( " Sample idx = " ).append(
-          this.dataContainer.getSampleIndex( convertPointToTimeValue( aMousePosition ) ) );
+          this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) ) );
     }
     else
     {
@@ -930,11 +930,11 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
       // else
       {
         // print origin status when no cursors used
-        final long idxMouseDragX = convertPointToTimeValue( new Point( aStartDragXpos, 0 ) );
-        final long idxMouseX = convertPointToTimeValue( aMousePosition );
+        final long idxMouseDragX = convertPointToSampleIndex( new Point( aStartDragXpos, 0 ) );
+        final long idxMouseX = convertPointToSampleIndex( aMousePosition );
 
         sb.append( " Sample idx = " )
-            .append( this.dataContainer.getSampleIndex( convertPointToTimeValue( aMousePosition ) ) ).append( " " );
+            .append( this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) ) ).append( " " );
 
         if ( aDragging && ( idxMouseDragX != idxMouseX ) )
         {
@@ -1050,8 +1050,8 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     final int ch = cy + clipArea.height;
 
     // find index of first & last row that needs drawing
-    final long firstRow = convertPointToTimeValue( new Point( cx, 0 ) );
-    final long lastRow = convertPointToTimeValue( new Point( cw, 0 ) ) + 1;
+    final long firstRow = convertPointToSampleIndex( new Point( cx, 0 ) );
+    final long lastRow = convertPointToSampleIndex( new Point( cw, 0 ) ) + 1;
 
     // paint portion of background that needs drawing
     g2d.setColor( getBackgroundColor() );
@@ -1158,7 +1158,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     {
       for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
       {
-        final long cursorPosition = this.dataContainer.getCursorTimestamp( i );
+        final long cursorPosition = this.dataContainer.getCursorPosition( i );
         if ( ( cursorPosition >= aFirstRow ) && ( cursorPosition <= aLastRow ) )
         {
           final int cursorPos = ( int )( cursorPosition * this.scale );
@@ -1216,8 +1216,18 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
 
     // Search the first sample index the is right before the to-be-displayed
     // from index...
-    final int startSampleIndex = Math.max( 0, this.dataContainer.getSampleIndex( aFromIndex ) - 1 );
-    final int endSampleIndex = this.dataContainer.getSampleIndex( aToIndex );
+    int dataStartIndex = 0;
+    do
+    {
+      if ( timestamps[dataStartIndex] >= aFromIndex )
+      {
+        // Found it; use this as starting time-index...
+        dataStartIndex = Math.max( 0, dataStartIndex - 1 );
+        break;
+      }
+      dataStartIndex++;
+    }
+    while ( dataStartIndex < timestamps.length );
 
     int bofs = 0;
 
@@ -1240,7 +1250,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
           long currentSample = aFromIndex - 1;
           int pIdx = 0;
 
-          int dataIndex = startSampleIndex;
+          int dataIndex = dataStartIndex;
           while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
           {
             final long nextSample;
@@ -1283,7 +1293,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
           aGraphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 
           final Iterator<ChannelAnnotation> annotations = this.dataContainer.getChannelAnnotations( channelIdx,
-              startSampleIndex, endSampleIndex );
+              dataStartIndex, timestamps.length );
           while ( annotations.hasNext() )
           {
             final ChannelAnnotation annotation = annotations.next();
@@ -1345,7 +1355,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
         int pIdx = 0;
 
         int val = bofs;
-        int dataIndex = startSampleIndex;
+        int dataIndex = dataStartIndex;
 
         while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
         {
@@ -1377,7 +1387,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
         long currentSample = aFromIndex - 1;
         int pIdx = 0;
 
-        int dataIndex = startSampleIndex;
+        int dataIndex = dataStartIndex;
 
         while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
         {

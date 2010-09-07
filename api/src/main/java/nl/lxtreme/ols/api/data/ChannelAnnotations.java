@@ -82,14 +82,14 @@ public class ChannelAnnotations
   }
 
   /**
-   * @param aSampleIndex
+   * @param aTimeIndex
    * @return
    */
-  public ChannelAnnotation getAnnotation( final int aSampleIndex )
+  public ChannelAnnotation getAnnotation( final int aTimeIndex )
   {
     for ( ChannelAnnotation annotation : this.annotations )
     {
-      if ( annotation.isInRange( aSampleIndex ) )
+      if ( annotation.isInRange( aTimeIndex ) )
       {
         return annotation;
       }
