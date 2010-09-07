@@ -278,19 +278,19 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
       return;
     }
 
-    final int textWidth = fm.stringWidth( "t8" );
+    final int textWidth = fm.stringWidth( "t8" ) + 2;
     for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
     {
-      final long cursorPosition = this.dataContainer.getCursorTimestamp( i );
+      final long cursorPosition = this.dataContainer.getCursorPosition( i );
       if ( ( cursorPosition >= firstRow ) && ( cursorPosition <= lastRow ) )
       {
         final int cursorPos = ( int )( cursorPosition * this.scale );
 
         aGraphics.setColor( this.diagramSettings.getBackgroundColor() );
-        aGraphics.fillRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth + 2, TIMELINE_HEIGHT - 1 );
+        aGraphics.fillRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
 
         aGraphics.setColor( this.diagramSettings.getCursorColor( i ) );
-        aGraphics.drawRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth + 2, TIMELINE_HEIGHT - 1 );
+        aGraphics.drawRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
         aGraphics.drawString( String.format( "t%d", i + 1 ), cursorPos + 1, TIMELINE_HEIGHT - 2 );
       }
     }

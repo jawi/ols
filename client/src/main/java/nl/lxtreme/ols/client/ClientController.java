@@ -430,7 +430,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
     {
-      final long cursorPosition = this.dataContainer.getCursorTimestamp( aCursorIdx );
+      final long cursorPosition = this.dataContainer.getCursorPosition( aCursorIdx );
       this.mainFrame.gotoPosition( cursorPosition );
     }
   }
@@ -519,7 +519,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      this.dataContainer.setCursorPosition( aCursorIdx, Integer.MIN_VALUE );
+      this.dataContainer.setCursorPosition( aCursorIdx, Long.MIN_VALUE );
       fireCursorChangedEvent( aCursorIdx, -1 ); // removed...
     }
 
@@ -713,8 +713,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     if ( this.mainFrame != null )
     {
       // Convert the mouse-position to a sample index...
-      final int sampleIdx = this.dataContainer.getSampleIndex( this.mainFrame
-          .convertMousePositionToTimeValue( aLocation ) );
+      final long sampleIdx = this.mainFrame.convertMousePositionToSampleIndex( aLocation );
 
       this.dataContainer.setCursorPosition( aCursorIdx, sampleIdx );
 
@@ -890,11 +889,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       if ( this.dataContainer.isCursorPositionSet( 0 ) )
       {
-        startOfDecode = this.dataContainer.getCursorPosition( 0 );
+        startOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 0 ) );
       }
       if ( this.dataContainer.isCursorPositionSet( 1 ) )
       {
-        endOfDecode = this.dataContainer.getCursorPosition( 1 ) + 1;
+        endOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 1 ) + 1 );
       }
     }
     else if ( this.dataContainer.hasTriggerData() )
