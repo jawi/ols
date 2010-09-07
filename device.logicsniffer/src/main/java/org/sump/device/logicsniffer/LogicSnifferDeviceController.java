@@ -32,6 +32,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -131,10 +132,16 @@ public class LogicSnifferDeviceController implements DeviceController
       }
       catch ( ExecutionException exception )
       {
+        // Make sure to handle IO-interrupted exceptions properly!
+        HostUtils.handleInterruptedException( exception.getCause() );
+
         abortReason = exception.getCause().getMessage();
       }
       catch ( InterruptedException exception )
       {
+        // Make sure to handle IO-interrupted exceptions properly!
+        HostUtils.handleInterruptedException( exception );
+
         abortReason = exception.getMessage();
       }
 

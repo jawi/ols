@@ -151,6 +151,37 @@ public final class HostUtils
   }
 
   /**
+   * This method calls Thread.currentThread().interrupt() if any exception in
+   * the hierarchy (including all parent causes) is either an
+   * {@link InterruptedIOException} or {@link InterruptedException}. This method
+   * should be called in every catch(IOException), catch(Exception) or
+   * catch(Throwable) block.
+   * 
+   * @param aThrowable
+   *          the exception to be checked for interruption. Does nothing if
+   *          <code>null</code>.
+   */
+  public static void handleInterruptedException( final Throwable aThrowable )
+  {
+    if ( aThrowable == null )
+    {
+      return;
+    }
+
+    Throwable current = aThrowable;
+    do
+    {
+      if ( ( current instanceof InterruptedIOException ) || ( current instanceof InterruptedException ) )
+      {
+        Thread.currentThread().interrupt();
+        return;
+      }
+      current = current.getCause();
+    }
+    while ( current != null );
+  }
+
+  /**
    * Allows the logging properties of the JVM to be set at any moment in time
    * providing the logging configuration in an input-stream.
    * 
@@ -421,6 +452,9 @@ public final class HostUtils
     }
     catch ( IOException exception )
     {
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       LOG.log( Level.FINE, "Writing properties to '" + propFile + "' failed!", exception );
     }
   }
@@ -473,6 +507,9 @@ public final class HostUtils
     }
     catch ( IOException exception )
     {
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       Logger.getAnonymousLogger().log( Level.FINE, "Problems to load the logging configuration file!", exception );
     }
   }
@@ -550,6 +587,9 @@ public final class HostUtils
                 }
                 catch ( Exception exception )
                 {
+                  // Make sure to handle IO-interrupted exceptions properly!
+                  HostUtils.handleInterruptedException( exception );
+
                   Logger.getAnonymousLogger().log( Level.ALL, "Event handling in callback failed!", exception );
                 }
               }
@@ -578,6 +618,9 @@ public final class HostUtils
     }
     catch ( Exception exception )
     {
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       Logger.getAnonymousLogger().log( Level.ALL, "Install application callback failed!", exception );
     }
   }
@@ -599,6 +642,9 @@ public final class HostUtils
     }
     catch ( Exception exception )
     {
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
     }
     finally

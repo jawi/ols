@@ -83,15 +83,7 @@ public final class JdkLogForwarder
     @Override
     public void serviceChanged( final ServiceEvent serviceEvent )
     {
-      try
-      {
-        updateLogHandler();
-      }
-      catch ( final Throwable ex )
-      {
-        System.out.println( "Error: " + ex.getMessage() );
-        ex.printStackTrace();
-      }
+      updateLogHandler();
     }
   }
 

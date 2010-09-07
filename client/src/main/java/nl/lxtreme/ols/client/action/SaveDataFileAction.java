@@ -81,6 +81,8 @@ public class SaveDataFileAction extends BaseAction
     catch ( IOException exception )
     {
       LOG.log( Level.WARNING, "Saving OLS file failed!", exception );
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
     }
   }
 }

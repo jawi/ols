@@ -24,6 +24,8 @@ package nl.lxtreme.ols.util.swing;
 import java.lang.ref.*;
 import javax.swing.*;
 
+import nl.lxtreme.ols.util.*;
+
 
 /**
  * ThreadViolationDetectionRepaintManager provides a custom repaint manager that
@@ -105,6 +107,9 @@ public final class ThreadViolationDetectionRepaintManager extends RepaintManager
     }
     catch ( final Exception exception )
     {
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       return null;
     }
   }

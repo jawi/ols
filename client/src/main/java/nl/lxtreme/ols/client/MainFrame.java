@@ -271,7 +271,7 @@ public final class MainFrame extends JFrame
    */
   public void updatePreferredSize()
   {
-    this.diagram.updatePreferredSize( null, 1.0 );
+    this.diagram.updatePreferredSize();
   }
 
   /**

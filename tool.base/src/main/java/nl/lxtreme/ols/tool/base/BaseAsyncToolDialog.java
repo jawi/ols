@@ -33,6 +33,7 @@ import javax.swing.SwingWorker.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.tool.base.BaseAsyncTool.*;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -97,17 +98,25 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
           }
           catch ( CancellationException exception )
           {
-            LOG.log( Level.WARNING, "Cancellation exception! Message: {0}", exception.getCause().getMessage() );
+            LOG.log( Level.WARNING, "Cancellation exception! Message: {0}", exception.getMessage() );
             onToolWorkerCancelled();
           }
           catch ( ExecutionException exception )
           {
+            // Make sure to handle IO-interrupted exceptions properly!
+            HostUtils.handleInterruptedException( exception.getCause() );
+
             LOG.log( Level.WARNING, "Execution exception! Message: {0}", exception.getCause().getMessage() );
+            exception.getCause().printStackTrace();
+
             onToolWorkerCancelled();
           }
           catch ( InterruptedException exception )
           {
-            LOG.log( Level.WARNING, "Interrupted exception! Message: {0}", exception.getCause().getMessage() );
+            // Make sure to handle IO-interrupted exceptions properly!
+            HostUtils.handleInterruptedException( exception );
+
+            LOG.log( Level.WARNING, "Interrupted exception! Message: {0}", exception.getMessage() );
             onToolWorkerCancelled();
           }
           finally

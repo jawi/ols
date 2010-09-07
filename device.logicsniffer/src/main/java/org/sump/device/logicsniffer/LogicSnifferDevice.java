@@ -31,6 +31,7 @@ import java.util.logging.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -257,6 +258,10 @@ public class LogicSnifferDevice implements Device
     {
       LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
           new Object[] { aPortName, exception.getMessage() } );
+
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       throw new IOException( "Failed to open/use " + aPortName + "! Possible reason: " + exception.getMessage() );
     }
   }
@@ -290,6 +295,9 @@ public class LogicSnifferDevice implements Device
       catch ( final IOException exception )
       {
         LOG.log( Level.FINE, "Detaching failed!", exception );
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        HostUtils.handleInterruptedException( exception );
       }
       finally
       {
@@ -516,8 +524,8 @@ public class LogicSnifferDevice implements Device
         // trigger is not fired yet... We keep waiting...
         if ( !this.running )
         {
-          // Make sure the thread's administration is correctly updated...
-          Thread.currentThread().interrupt();
+          // Make sure to handle IO-interrupted exceptions properly!
+          HostUtils.handleInterruptedException( exception );
           throw exception;
         }
       }
@@ -1005,6 +1013,9 @@ public class LogicSnifferDevice implements Device
         id = -1;
 
         LOG.log( Level.FINE, "I/O exception", exception );
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        HostUtils.handleInterruptedException( exception );
       }
       catch ( final InterruptedException exception )
       {
@@ -1012,6 +1023,9 @@ public class LogicSnifferDevice implements Device
         id = -1;
 
         LOG.log( Level.FINE, "Port timeout!", exception );
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        HostUtils.handleInterruptedException( exception );
       }
     }
 
@@ -1070,7 +1084,9 @@ public class LogicSnifferDevice implements Device
       }
       catch ( final InterruptedException ignore )
       {
-        Thread.currentThread().interrupt();
+        // Make sure to handle IO-interrupted exceptions properly!
+        HostUtils.handleInterruptedException( ignore );
+
         break;
       }
     }

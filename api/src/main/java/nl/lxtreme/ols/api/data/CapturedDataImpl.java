@@ -21,6 +21,9 @@
 package nl.lxtreme.ols.api.data;
 
 
+import java.util.*;
+
+
 /**
  * CapturedData encapsulates the data obtained by the analyzer during a single
  * run.
@@ -147,6 +150,71 @@ public class CapturedDataImpl implements CapturedData
   // METHODS
 
   /**
+   * Provides a binary search for arrays of long-values.
+   * <p>
+   * This implementation is directly copied from the JDK
+   * {@link Arrays#binarySearch(long[], long)} implementation, slightly modified
+   * to only perform a single comparison-action.
+   * </p>
+   * 
+   * @param aArray
+   *          the array of long values to search in;
+   * @param aFromIndex
+   *          the from index to search from;
+   * @param aToIndex
+   *          the to index to search up and until;
+   * @param aKey
+   *          the value to search for.
+   * @return the index of the given key, which is either the greatest index of
+   *         the value less or equal to the given key.
+   * @see Arrays#binarySearch(long[], long)
+   */
+  static final int binarySearch( final long[] aArray, final int aFromIndex, final int aToIndex, final Long aKey )
+  {
+    int mid = -1;
+    int low = aFromIndex;
+    int high = aToIndex - 1;
+
+    while ( low <= high )
+    {
+      mid = ( low + high ) >>> 1;
+      final Long midVal = aArray[mid];
+
+      final int c = aKey.compareTo( midVal );
+      if ( c > 0 )
+      {
+        low = mid + 1;
+      }
+      else if ( c < 0 )
+      {
+        high = mid - 1;
+      }
+      else
+      {
+        return mid; // key found
+      }
+    }
+
+    if ( mid < 0 )
+    {
+      return low;
+    }
+
+    // Determine the insertion point, avoid crossing the array boundaries...
+    if ( mid < aToIndex - 1 )
+    {
+      // If the searched value is greater than the value of the found index,
+      // insert it after this value, otherwise before it (= the last return)...
+      if ( aKey > aArray[mid] )
+      {
+        return mid + 1;
+      }
+    }
+
+    return mid;
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.data.CapturedData#getAbsoluteLength()
    */
   @Override
@@ -165,15 +233,6 @@ public class CapturedDataImpl implements CapturedData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getDataAt(long)
-   */
-  @Override
-  public final int getDataAt( final long abs )
-  {
-    return this.values[getSampleIndex( abs )];
-  }
-
-  /**
    * @see nl.lxtreme.ols.api.data.CapturedData#getEnabledChannels()
    */
   @Override
@@ -188,15 +247,7 @@ public class CapturedDataImpl implements CapturedData
   @Override
   public final int getSampleIndex( final long abs )
   {
-    int i;
-    for ( i = 1; i < this.timestamps.length; i++ )
-    {
-      if ( abs < this.timestamps[i] )
-      {
-        break;
-      }
-    }
-    return i - 1;
+    return binarySearch( this.timestamps, 0, this.timestamps.length, abs );
   }
 
   /**
@@ -265,4 +316,5 @@ public class CapturedDataImpl implements CapturedData
   {
     return ( this.triggerPosition != NOT_AVAILABLE );
   }
+
 }

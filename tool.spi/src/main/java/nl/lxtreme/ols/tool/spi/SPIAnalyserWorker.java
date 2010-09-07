@@ -424,7 +424,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     {
       // Walk backwards...
       int oldCsValue = values[aStartIndex] & csMask;
-      for ( int i = aStartIndex; i >= aEndIndex; i-- )
+      for ( int i = aStartIndex; i > aEndIndex; i-- )
       {
         final int csValue = values[i] & csMask;
         if ( oldCsValue < csValue )

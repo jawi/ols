@@ -27,6 +27,7 @@ import java.io.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -79,6 +80,8 @@ public class OpenProjectAction extends BaseAction
     catch ( IOException exception )
     {
       LOG.log( Level.WARNING, "Loading OLS project failed!", exception );
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
     }
   }
 }
