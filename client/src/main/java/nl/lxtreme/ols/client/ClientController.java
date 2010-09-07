@@ -36,6 +36,7 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
 
@@ -204,7 +205,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( aNewCapturedData != null )
     {
-      setCapturedData( aNewCapturedData, true /* aEnable */);
+      this.dataContainer.setCapturedData( aNewCapturedData );
+    }
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.zoomToFit();
     }
 
     setStatus( "" );
@@ -241,8 +246,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   @Override
   public void captureComplete( final CapturedData aCapturedData )
   {
-    final boolean actionsEnabled = aCapturedData != null;
-    setCapturedData( aCapturedData, actionsEnabled );
+    this.dataContainer.setCapturedData( aCapturedData );
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.zoomToFit();
+    }
 
     setStatus( "Capture finished at {0,date,medium} {0,time,medium}.", new Date() );
 
@@ -284,6 +292,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       captureAborted( "I/O problem: " + exception.getMessage() );
 
       exception.printStackTrace();
+
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       return false;
     }
     finally
@@ -587,7 +599,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     catch ( IOException exception )
     {
       captureAborted( "I/O problem: " + exception.getMessage() );
+
       exception.printStackTrace();
+
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       return false;
     }
     finally
@@ -884,11 +901,16 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       startOfDecode = this.dataContainer.getTriggerIndex();
       endOfDecode = dataLength;
     }
+    else
+    {
+      startOfDecode = 0;
+      endOfDecode = dataLength;
+    }
 
     // XXX allow one cursor to be used as well...
 
     startOfDecode = Math.max( 0, startOfDecode );
-    endOfDecode = Math.min( dataLength - 1, endOfDecode );
+    endOfDecode = Math.min( dataLength - 1, Math.max( 0, endOfDecode ) );
 
     return new DefaultToolContext( startOfDecode, endOfDecode );
   }
@@ -948,20 +970,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * @param aCapturedData
-   * @param aEnableActions
-   */
-  private void setCapturedData( final CapturedData aCapturedData, final boolean aEnableActions )
-  {
-    if ( this.mainFrame != null )
-    {
-      this.dataContainer.setCapturedData( aCapturedData );
-
-      this.mainFrame.zoomToFit();
-    }
-  }
-
-  /**
    * @param aMessage
    */
   private void setStatus( final String aMessage, final Object... aMessageArgs )
@@ -1001,12 +1009,14 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     getAction( GotoCursor1Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 0 ) );
     getAction( GotoCursor2Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 1 ) );
+
     getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
-    getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY, dataAvailable );
+    getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY, this.dataContainer.isCursorsEnabled() );
+
     for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
     {
       final Action action = getAction( SetCursorAction.getCursorId( c ) );
-      action.setEnabled( enableCursors );
+      action.setEnabled( dataAvailable );
       action.putValue( Action.SELECTED_KEY, this.dataContainer.isCursorPositionSet( c ) );
     }
   }

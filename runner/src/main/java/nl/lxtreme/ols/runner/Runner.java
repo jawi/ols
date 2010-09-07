@@ -23,6 +23,8 @@ package nl.lxtreme.ols.runner;
 
 import java.util.*;
 
+import nl.lxtreme.ols.util.*;
+
 import org.apache.felix.framework.*;
 import org.apache.felix.framework.util.*;
 import org.apache.felix.main.*;
@@ -75,6 +77,9 @@ public final class Runner
     }
     catch ( Exception exception )
     {
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       System.err.println( "Failed to start OSGi framework! Possible reason: " + exception.getMessage() );
       exception.printStackTrace();
 

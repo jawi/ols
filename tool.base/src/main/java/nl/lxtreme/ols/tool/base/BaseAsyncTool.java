@@ -29,6 +29,7 @@ import javax.swing.SwingWorker.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -148,10 +149,16 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
           }
           catch ( ExecutionException exception )
           {
+            // Make sure to handle IO-interrupted exceptions properly!
+            HostUtils.handleInterruptedException( exception.getCause() );
+
             abortReason = exception.getCause().getMessage();
           }
           catch ( InterruptedException exception )
           {
+            // Make sure to handle IO-interrupted exceptions properly!
+            HostUtils.handleInterruptedException( exception );
+
             abortReason = exception.getMessage();
           }
 

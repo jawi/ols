@@ -708,19 +708,25 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
    * 
    * @return a preferred size, never <code>null</code>.
    */
-  public void updatePreferredSize( final Point aPoint, final double aScaleFactor )
+  // final Point aPoint, final double aScaleFactor
+  public void updatePreferredSize()
   {
     final Dimension newDiagramSize = calculateNewDimension();
-
-    setPreferredSize( newDiagramSize );
-    this.timeLine.setPreferredSize( newDiagramSize );
-    this.rowLabels.setPreferredSize( newDiagramSize );
-
-    updatePreferredLocation( aPoint, aScaleFactor );
-
-    this.timeLine.revalidate();
-    this.rowLabels.revalidate();
-    revalidate();
+    if ( newDiagramSize.equals( getPreferredSize() ) )
+    {
+      // No actual resizing necessary; only repaint us and our
+      // headers/borders...
+      this.rowLabels.repaint();
+      this.timeLine.repaint();
+      repaint();
+    }
+    else
+    {
+      // Resize this component and its headers/borders...
+      this.rowLabels.setPreferredSize( newDiagramSize );
+      this.timeLine.setPreferredSize( newDiagramSize );
+      setPreferredSize( newDiagramSize );
+    }
   }
 
   /**
@@ -729,7 +735,9 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   public void zoomDefault()
   {
     setScale( MAX_SCALE );
-    updatePreferredSize( null, 0.0 );
+
+    updatePreferredSize();
+    revalidateAll();
   }
 
   /**
@@ -768,7 +776,9 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     final double fitScaleFactor = getZoomToFitScale();
 
     setScale( fitScaleFactor );
-    updatePreferredSize( null, 0.0 );
+
+    updatePreferredSize();
+    revalidateAll();
   }
 
   /**
@@ -874,6 +884,9 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     if ( aAnnotation != null )
     {
       sb.append( aAnnotation.getData() );
+
+      sb.append( " Sample idx = " ).append(
+          this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) ) );
     }
     else
     {
@@ -919,6 +932,9 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
         // print origin status when no cursors used
         final long idxMouseDragX = convertPointToSampleIndex( new Point( aStartDragXpos, 0 ) );
         final long idxMouseX = convertPointToSampleIndex( aMousePosition );
+
+        sb.append( " Sample idx = " )
+            .append( this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) ) ).append( " " );
 
         if ( aDragging && ( idxMouseDragX != idxMouseX ) )
         {
@@ -976,7 +992,11 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     if ( newScale < MAX_SCALE )
     {
       setScale( newScale * 2.0 );
-      updatePreferredSize( aPoint, 2.0 );
+
+      updatePreferredSize();
+      updatePreferredLocation( aPoint, 2.0 );
+
+      revalidateAll();
     }
   }
 
@@ -999,7 +1019,11 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     if ( newScale > fitScaleFactor )
     {
       setScale( newScale * 0.5 );
-      updatePreferredSize( aPoint, 0.5 );
+
+      updatePreferredSize();
+      updatePreferredLocation( aPoint, 0.5 );
+
+      revalidateAll();
     }
   }
 
@@ -1505,6 +1529,16 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     final Color[] result = new Color[aLength];
     Arrays.fill( result, this.signalColor );
     return result;
+  }
+
+  /**
+   * Revalidates this diagram and all of its headers/borders.
+   */
+  private void revalidateAll()
+  {
+    this.timeLine.revalidate();
+    this.rowLabels.revalidate();
+    revalidate();
   }
 
   /**

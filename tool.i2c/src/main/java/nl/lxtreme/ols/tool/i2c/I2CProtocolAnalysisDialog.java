@@ -219,6 +219,9 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     }
     catch ( final IOException exception )
     {
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       // This should not happen for the no-file exports!
       throw new RuntimeException( exception );
     }
@@ -364,6 +367,9 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     }
     catch ( final IOException exception )
     {
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       if ( LOG.isLoggable( Level.WARNING ) )
       {
         LOG.log( Level.WARNING, "CSV export failed!", exception );
@@ -384,6 +390,9 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     }
     catch ( final IOException exception )
     {
+      // Make sure to handle IO-interrupted exceptions properly!
+      HostUtils.handleInterruptedException( exception );
+
       if ( LOG.isLoggable( Level.WARNING ) )
       {
         LOG.log( Level.WARNING, "HTML export failed!", exception );

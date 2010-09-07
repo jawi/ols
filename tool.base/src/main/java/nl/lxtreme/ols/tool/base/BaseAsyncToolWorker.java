@@ -151,15 +151,6 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getDataAt(long)
-   */
-  @Override
-  public final int getDataAt( final long aAbs )
-  {
-    return this.data.getDataAt( aAbs );
-  }
-
-  /**
    * @see nl.lxtreme.ols.api.data.CapturedData#getEnabledChannels()
    */
   @Override

@@ -529,10 +529,10 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
 
     long result = -1;
 
-    int oldBitValue = getDataAt( aStartOfDecode ) & aMask;
+    int oldBitValue = getDataValue( aStartOfDecode ) & aMask;
     for ( long timeCursor = aStartOfDecode + 1; ( result < 0 ) && ( timeCursor < aEndOfDecode ); timeCursor++ )
     {
-      final int bitValue = getDataAt( timeCursor ) & aMask;
+      final int bitValue = getDataValue( timeCursor ) & aMask;
 
       final Edge edge = Edge.toEdge( oldBitValue, bitValue );
       if ( sampleEdge == edge )
@@ -544,6 +544,30 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
     }
 
     return result;
+  }
+
+  /**
+   * Returns the data value for the given time stamp.
+   * 
+   * @param aTimeValue
+   *          the time stamp to return the data value for.
+   * @return the data value of the sample index right before the given time
+   *         value.
+   */
+  private int getDataValue( final long aTimeValue )
+  {
+    final int[] values = getValues();
+    final long[] timestamps = getTimestamps();
+
+    int i;
+    for ( i = 1; i < timestamps.length; i++ )
+    {
+      if ( aTimeValue < timestamps[i] )
+      {
+        break;
+      }
+    }
+    return values[i - 1];
   }
 
   /**
@@ -576,7 +600,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
    */
   private boolean isExpectedLevel( final long aTimestamp, final int aMask, final int aExpectedMask )
   {
-    final int value = getDataAt( aTimestamp ) & aMask;
+    final int value = getDataValue( aTimestamp ) & aMask;
     if ( isInverted() )
     {
       return value != aExpectedMask;
@@ -637,8 +661,8 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   private void reportData( final UARTDataSet aDataSet, final int aChannelIndex, final long aStartTimestamp,
       final long aEndTimestamp, final int aByteValue, final int aType )
   {
-    final int startSampleIdx = getSampleIndex( aStartTimestamp );
-    final int endSampleIdx = getSampleIndex( aEndTimestamp ) + 1;
+    final int startSampleIdx = Math.max( getSampleIndex( aStartTimestamp ), 0 );
+    final int endSampleIdx = Math.min( getSampleIndex( aEndTimestamp ) + 1, getTimestamps().length - 1 );
 
     aDataSet.reportData( aChannelIndex, startSampleIdx, endSampleIdx, aByteValue, aType );
 

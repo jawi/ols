@@ -34,45 +34,46 @@ public interface CapturedData
   // METHODS
 
   /**
-   * @return the absoluteLength
+   * Returns the absolute length of the captured data.
+   * 
+   * @return the absolute length, >= 0.
    */
   public abstract long getAbsoluteLength();
 
   /**
-   * @return the channels
+   * Returns the number of channels in the sample data.
+   * 
+   * @return the channel count, >= 0.
    */
   public abstract int getChannels();
 
   /**
-   * return the data value at a specified absolute time offset
+   * Returns the number of enabled channels in the sample data.
    * 
-   * @param abs
-   *          absolute time value
-   * @return data value
-   */
-  public abstract int getDataAt( final long abs );
-
-  /**
-   * @return the enabledChannels
+   * @return the enabled channels, >= 0.
    */
   public abstract int getEnabledChannels();
 
   /**
-   * calculate index number from absolute time
+   * Returns the sample index from the given absolute time value.
    * 
-   * @param abs
-   *          absolute time value
-   * @return sample number before selected absolute time
+   * @param aTimeValue
+   *          the (absolute) time value to convert to a sample index.
+   * @return the sample number <em>before</b> the selected absolute time.
    */
-  public abstract int getSampleIndex( final long abs );
+  public abstract int getSampleIndex( final long aTimeValue );
 
   /**
-   * @return the rate
+   * Returns the sample rate in which this data was captured.
+   * 
+   * @return a sample rate in hertz (Hz).
    */
   public abstract int getSampleRate();
 
   /**
-   * @return the timestamps
+   * Returns the time stamp data.
+   * 
+   * @return the time stamps, as array of long values.
    */
   public abstract long[] getTimestamps();
 

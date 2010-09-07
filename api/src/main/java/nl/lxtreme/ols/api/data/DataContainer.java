@@ -277,15 +277,6 @@ public final class DataContainer implements CapturedData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getDataAt(long)
-   */
-  @Override
-  public int getDataAt( final long aAbs )
-  {
-    return hasCapturedData() ? this.capturedData.getDataAt( aAbs ) : NOT_AVAILABLE;
-  }
-
-  /**
    * @see nl.lxtreme.ols.api.data.CapturedData#getEnabledChannels()
    */
   @Override
