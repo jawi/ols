@@ -123,9 +123,9 @@ public final class MainFrame extends JFrame
    * @param aLocation
    * @return
    */
-  public long convertMousePositionToSampleIndex( final Point aLocation )
+  public long convertMousePositionToTimeValue( final Point aLocation )
   {
-    return this.diagram.convertPointToSampleIndex( aLocation );
+    return this.diagram.convertPointToTimeValue( aLocation );
   }
 
   /**

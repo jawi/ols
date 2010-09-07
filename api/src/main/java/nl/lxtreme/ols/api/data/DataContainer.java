@@ -55,8 +55,8 @@ public final class DataContainer implements CapturedData
   /** the actual captured data */
   private volatile CapturedData capturedData;
 
-  /** position of cursors */
-  private final long[] cursorPositions;
+  /** sample positions of cursors */
+  private final int[] cursorPositions;
   /** The labels of each channel. */
   private final String[] channelLabels;
   /** The individual annotations. */
@@ -72,8 +72,8 @@ public final class DataContainer implements CapturedData
    */
   public DataContainer()
   {
-    this.cursorPositions = new long[MAX_CURSORS];
-    Arrays.fill( this.cursorPositions, Long.MIN_VALUE );
+    this.cursorPositions = new int[MAX_CURSORS];
+    Arrays.fill( this.cursorPositions, Integer.MIN_VALUE );
 
     this.channelLabels = new String[MAX_CHANNELS];
     Arrays.fill( this.channelLabels, "" );
@@ -162,7 +162,7 @@ public final class DataContainer implements CapturedData
    *          < 32.
    * @return the channel annotations, can be <code>null</code>.
    */
-  public ChannelAnnotation getChannelAnnotation( final int aChannelIdx, final int aTimeIndex )
+  public ChannelAnnotation getChannelAnnotation( final int aChannelIdx, final int aSampleIndex )
   {
     if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
     {
@@ -175,7 +175,7 @@ public final class DataContainer implements CapturedData
     {
       return null;
     }
-    return channelAnnotations.getAnnotation( aTimeIndex );
+    return channelAnnotations.getAnnotation( aSampleIndex );
   }
 
   /**
@@ -234,11 +234,11 @@ public final class DataContainer implements CapturedData
    * 
    * @param aCursorIdx
    *          the index of the cursor to set, should be >= 0 and < 10.
-   * @return a cursor position, or Long.MIN_VALUE if not set.
+   * @return a cursor position, or Integer.MIN_VALUE if not set.
    * @throws IllegalArgumentException
    *           in case an invalid cursor index was given.
    */
-  public long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
+  public int getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
   {
     if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursorPositions.length - 1 ) )
     {
@@ -251,9 +251,28 @@ public final class DataContainer implements CapturedData
   /**
    * @return the cursorPositions
    */
-  public long[] getCursorPositions()
+  public int[] getCursorPositions()
   {
     return this.cursorPositions;
+  }
+
+  /**
+   * Returns the time value of a cursor.
+   * 
+   * @param aCursorIdx
+   *          the index of the cursor to set, should be >= 0 and < 10.
+   * @return a cursor position, or Long.MIN_VALUE if not set.
+   * @throws IllegalArgumentException
+   *           in case an invalid cursor index was given.
+   */
+  public long getCursorTimestamp( final int aCursorIdx ) throws IllegalArgumentException
+  {
+    final int cursorSampleIdx = getCursorPosition( aCursorIdx );
+    if ( cursorSampleIdx == Integer.MIN_VALUE )
+    {
+      return Long.MIN_VALUE;
+    }
+    return this.capturedData.getTimestamps()[cursorSampleIdx];
   }
 
   /**
@@ -268,10 +287,11 @@ public final class DataContainer implements CapturedData
    */
   public Double getCursorTimeValue( final int aCursorIdx )
   {
-    long cursorPos = getCursorPosition( aCursorIdx );
-    if ( cursorPos > Long.MIN_VALUE )
+    int cursorPos = getCursorPosition( aCursorIdx );
+    if ( cursorPos > Integer.MIN_VALUE )
     {
-      return calculateTime( cursorPos ) / ( double )this.capturedData.getSampleRate();
+      return calculateTime( this.capturedData.getTimestamps()[cursorPos] )
+          / ( double )this.capturedData.getSampleRate();
     }
     return null;
   }
@@ -404,7 +424,7 @@ public final class DataContainer implements CapturedData
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
           + this.cursorPositions.length );
     }
-    return this.cursorPositions[aCursorIdx] > Long.MIN_VALUE;
+    return this.cursorPositions[aCursorIdx] > Integer.MIN_VALUE;
   }
 
   /**
@@ -476,11 +496,13 @@ public final class DataContainer implements CapturedData
         }
         else if ( line.startsWith( ";CursorA: " ) )
         {
-          cursorPositions[0] = Long.parseLong( line.substring( 10 ) );
+          final long value = Long.parseLong( line.substring( 10 ) );
+          cursorPositions[0] = value;
         }
         else if ( line.startsWith( ";CursorB: " ) )
         {
-          cursorPositions[1] = Long.parseLong( line.substring( 10 ) );
+          final long value = Long.parseLong( line.substring( 10 ) );
+          cursorPositions[1] = value;
         }
         else if ( line.matches( ";Cursor(\\d+): (\\d+)" ) )
         {
@@ -595,10 +617,6 @@ public final class DataContainer implements CapturedData
         }
       }
 
-      // Create a copy of all read cursor positions...
-      System.arraycopy( cursorPositions, 0, this.cursorPositions, 0, cursorPositions.length );
-      this.cursorEnabled = cursors;
-
       // Convert old-style trigger position (as absolute time-value) to relative
       // index...
       int triggerPos;
@@ -618,6 +636,35 @@ public final class DataContainer implements CapturedData
       {
         triggerPos = ( int )t;
       }
+
+      for ( int c = 0; c < MAX_CURSORS; c++ )
+      {
+        int newCursor = Integer.MIN_VALUE;
+
+        final long oldCursor = cursorPositions[c];
+        if ( oldCursor != Long.MIN_VALUE )
+        {
+          if ( ( oldCursor < 0 ) || ( oldCursor > timestamps.length ) )
+          {
+            // Old-style cursor (= time value); convert it to a sample index...
+            for ( int i = 1; i < timestamps.length; i++ )
+            {
+              if ( oldCursor < timestamps[i] )
+              {
+                newCursor = i;
+                break;
+              }
+            }
+          }
+          else
+          {
+            newCursor = ( int )oldCursor;
+          }
+        }
+        // New value...
+        this.cursorPositions[c] = newCursor;
+      }
+      this.cursorEnabled = cursors;
 
       // Finally set the captured data, and notify all event listeners...
       setCapturedData( new CapturedDataImpl( values, timestamps, triggerPos, r, channels, enabledChannels,
@@ -692,11 +739,11 @@ public final class DataContainer implements CapturedData
    * @param aCursorIdx
    *          the index of the cursor to set, should be >= 0 and < 10;
    * @param aCursorPosition
-   *          the actual cursor position to set.
+   *          the actual cursor sample position to set.
    * @throws IllegalArgumentException
    *           in case an invalid cursor index was given.
    */
-  public void setCursorPosition( final int aCursorIdx, final long aCursorPosition ) throws IllegalArgumentException
+  public void setCursorPosition( final int aCursorIdx, final int aCursorPosition ) throws IllegalArgumentException
   {
     if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursorPositions.length - 1 ) )
     {

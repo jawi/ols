@@ -308,8 +308,8 @@ public class MeasurementDialog extends BaseToolDialog
 
     final double rate = this.data.getSampleRate();
 
-    final long cursorApos = this.data.getCursorPosition( this.cursorA.getSelectedIndex() );
-    final long cursorBpos = this.data.getCursorPosition( this.cursorB.getSelectedIndex() );
+    final long cursorApos = this.data.getCursorTimestamp( this.cursorA.getSelectedIndex() );
+    final long cursorBpos = this.data.getCursorTimestamp( this.cursorB.getSelectedIndex() );
 
     String distanceText = "<???>";
     String frequencyText = "<???>";

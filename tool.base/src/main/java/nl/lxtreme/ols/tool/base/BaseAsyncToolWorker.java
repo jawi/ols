@@ -143,14 +143,6 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getCursorPosition(int)
-   */
-  public final long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
-  {
-    return this.data.getCursorPosition( aCursorIdx );
-  }
-
-  /**
    * @see nl.lxtreme.ols.api.data.CapturedData#getEnabledChannels()
    */
   @Override
