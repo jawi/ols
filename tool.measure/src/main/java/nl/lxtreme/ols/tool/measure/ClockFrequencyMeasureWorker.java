@@ -115,8 +115,8 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     super( aData, null ); // XXX
 
     this.channelMask = ( 1 << aChannel );
-    this.startTime = aData.getCursorPosition( aStartIndex );
-    this.endTime = aData.getCursorPosition( aEndIndex );
+    this.startTime = aData.getCursorTimestamp( aStartIndex );
+    this.endTime = aData.getCursorTimestamp( aEndIndex );
     this.stats = new HashMap<Edge, Map<Integer, Integer>>( 2 );
   }
 
