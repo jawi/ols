@@ -209,7 +209,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
     if ( this.mainFrame != null )
     {
-      this.mainFrame.zoomToFit();
+      this.mainFrame.repaint();
     }
 
     setStatus( "" );
