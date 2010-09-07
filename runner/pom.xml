@@ -44,7 +44,6 @@
     <dependency>
     	<groupId>nl.lxtreme.ols</groupId>
     	<artifactId>util</artifactId>
-    	<scope>runtime</scope>
     </dependency>
     <dependency>
     	<groupId>nl.lxtreme.ols.device</groupId>
