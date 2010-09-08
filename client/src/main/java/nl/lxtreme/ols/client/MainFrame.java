@@ -2,6 +2,7 @@ package nl.lxtreme.ols.client;
 
 
 import java.awt.*;
+import java.awt.event.*;
 import java.net.*;
 import java.text.*;
 
@@ -19,10 +20,13 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Denotes the main UI.
  */
-public final class MainFrame extends JFrame
+public final class MainFrame extends JFrame implements Closeable
 {
   // INNER TYPES
 
+  /**
+   * Provides an about box dialog.
+   */
   static final class AboutBox extends JDialog implements Closeable
   {
     // CONSTANTS
@@ -110,6 +114,23 @@ public final class MainFrame extends JFrame
     }
   }
 
+  /**
+   * Listens to window-close events for our main frame, explicitly invoking code
+   * to close it on all platforms.
+   */
+  static final class MainFrameListener extends WindowAdapter
+  {
+    /**
+     * @see java.awt.event.WindowAdapter#windowClosing(java.awt.event.WindowEvent)
+     */
+    @Override
+    public void windowClosing( final WindowEvent aEvent )
+    {
+      final MainFrame mainFrame = ( MainFrame )aEvent.getSource();
+      mainFrame.close();
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -172,6 +193,9 @@ public final class MainFrame extends JFrame
     contentPane.add( tools, BorderLayout.PAGE_START );
     contentPane.add( scrollPane, BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
+
+    // Support CMD + W on MacOSX (closes this frame)...
+    addWindowListener( new MainFrameListener() );
   }
 
   /**
@@ -208,6 +232,24 @@ public final class MainFrame extends JFrame
     this.toolsMenu.add( menuItem );
 
     updateToolMenuState( aToolName, menuItem, true /* aAdded */);
+  }
+
+  /**
+   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
+   */
+  @Override
+  public void close()
+  {
+    setVisible( false );
+    dispose();
+
+    // On Windows and/or Linux hosts, we should exit upon closing the main
+    // frame. On MacOSX however, we can remain running until explicitly quit is
+    // chosen from the menubar...
+    if ( !HostUtils.isMacOSX() )
+    {
+      this.controller.exit();
+    }
   }
 
   /**

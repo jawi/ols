@@ -44,8 +44,8 @@ public class CapturedDataImpl implements CapturedData
   /** timestamp values in samples count from start */
   private final long[] timestamps;
 
-  /** position of trigger as index of values */
-  private final int triggerPosition;
+  /** position of trigger as time value */
+  private final long triggerPosition;
 
   /** sampling rate in Hz */
   private final int rate;
@@ -67,7 +67,7 @@ public class CapturedDataImpl implements CapturedData
    * @param values
    *          32bit values as read from device
    * @param triggerPosition
-   *          position of trigger as index of values array
+   *          position of trigger as time value
    * @param rate
    *          sampling rate (may be set to <code>NOT_AVAILABLE</code>)
    * @param channels
@@ -75,7 +75,7 @@ public class CapturedDataImpl implements CapturedData
    * @param enabledChannels
    *          bit mask identifying used channels
    */
-  public CapturedDataImpl( final int[] values, final int triggerPosition, final int rate, final int channels,
+  public CapturedDataImpl( final int[] values, final long triggerPosition, final int rate, final int channels,
       final int enabledChannels )
   {
     this.triggerPosition = triggerPosition;
@@ -125,7 +125,7 @@ public class CapturedDataImpl implements CapturedData
    * @param timestamps
    *          timstamps in number of samples since sample start
    * @param triggerPosition
-   *          position of trigger as index of values array
+   *          position of trigger as time value
    * @param rate
    *          sampling rate (may be set to <code>NOT_AVAILABLE</code>)
    * @param channels
@@ -135,7 +135,7 @@ public class CapturedDataImpl implements CapturedData
    * @param absLen
    *          absolute number of samples
    */
-  public CapturedDataImpl( final int[] values, final long[] timestamps, final int triggerPosition, final int rate,
+  public CapturedDataImpl( final int[] values, final long[] timestamps, final long triggerPosition, final int rate,
       final int channels, final int enabledChannels, final long absLen )
   {
     this.values = values;
@@ -269,25 +269,12 @@ public class CapturedDataImpl implements CapturedData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerIndex()
+   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerPosition()
    */
   @Override
-  public final int getTriggerIndex()
+  public final long getTriggerPosition()
   {
     return this.triggerPosition;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerTimePosition()
-   */
-  @Override
-  public final long getTriggerTimePosition()
-  {
-    if ( this.timestamps.length <= this.triggerPosition )
-    {
-      return NOT_AVAILABLE;
-    }
-    return this.timestamps[this.triggerPosition];
   }
 
   /**

@@ -87,7 +87,7 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
   {
     // obtain data from captured data
     final int[] values = getValues();
-    final int triggerIndex = getTriggerIndex();
+    final long triggerPosition = getTriggerPosition();
 
     final int maskValue = 1 << this.number;
 
@@ -124,7 +124,7 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
       {
         newValues[pos++] = values[i - 1];
       }
-      if ( triggerIndex == i )
+      if ( triggerPosition == i )
       {
         newTrigger = pos;
       }

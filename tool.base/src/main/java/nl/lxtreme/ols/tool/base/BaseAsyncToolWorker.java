@@ -187,21 +187,12 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerIndex()
+   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerPosition()
    */
   @Override
-  public int getTriggerIndex()
+  public long getTriggerPosition()
   {
-    return this.data.getTriggerIndex();
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerTimePosition()
-   */
-  @Override
-  public final long getTriggerTimePosition()
-  {
-    return this.data.getTriggerTimePosition();
+    return this.data.getTriggerPosition();
   }
 
   /**

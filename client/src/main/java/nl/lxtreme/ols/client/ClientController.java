@@ -432,7 +432,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.hasTriggerData() )
     {
-      final long position = this.dataContainer.getTriggerTimePosition();
+      final long position = this.dataContainer.getTriggerPosition();
       this.mainFrame.gotoPosition( position );
     }
   }
@@ -907,7 +907,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
     else if ( this.dataContainer.hasTriggerData() )
     {
-      startOfDecode = this.dataContainer.getTriggerIndex();
+      startOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getTriggerPosition() ) - 10;
       endOfDecode = dataLength;
     }
     else
