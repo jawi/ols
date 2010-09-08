@@ -286,6 +286,20 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   // METHODS
 
   /**
+   * Closes this dialog, cancels any running tool workers if they are still
+   * running.
+   */
+  @Override
+  public final void close()
+  {
+    synchronized ( this.toolWorkerFactory )
+    {
+      cancelToolWorker();
+      super.close();
+    }
+  }
+
+  /**
    * @see nl.lxtreme.ols.tool.base.ToolDialog#reset()
    */
   @Override
@@ -356,20 +370,6 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
 
       this.worker.addPropertyChangeListener( new ToolWorkerPropertyChangeListener() );
       this.worker.execute();
-    }
-  }
-
-  /**
-   * Closes this dialog, cancels any running tool workers if they are still
-   * running.
-   */
-  @Override
-  protected final void close()
-  {
-    synchronized ( this.toolWorkerFactory )
-    {
-      cancelToolWorker();
-      super.close();
     }
   }
 

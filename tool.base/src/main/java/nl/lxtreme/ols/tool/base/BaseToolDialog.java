@@ -22,56 +22,19 @@ package nl.lxtreme.ols.tool.base;
 
 
 import java.awt.*;
-import java.awt.event.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 
 /**
  * Provides a base tool dialog.
  */
-public abstract class BaseToolDialog extends JDialog implements ToolDialog, Configurable
+public abstract class BaseToolDialog extends JDialog implements ToolDialog, Configurable, Closeable
 {
-  // INNER TYPES
-
-  /**
-   * Provides a generic close dialog action.
-   */
-  protected final class CloseAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * 
-     */
-    public CloseAction()
-    {
-      super( "Close" );
-      putValue( SHORT_DESCRIPTION, "Closes this dialog" );
-
-      putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ) );
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      close();
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -112,21 +75,21 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   // METHODS
 
   /**
+   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
+   */
+  public void close()
+  {
+    setVisible( false );
+    dispose();
+  }
+
+  /**
    * @see nl.lxtreme.ols.tool.base.ToolDialog#showDialog(nl.lxtreme.ols.api.data.DataContainer)
    */
   @Override
   public void showDialog( final DataContainer aData )
   {
     setVisible( true );
-  }
-
-  /**
-   * Closes this dialog.
-   */
-  protected void close()
-  {
-    setVisible( false );
-    dispose();
   }
 
   /**
@@ -137,9 +100,6 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
    */
   protected final JButton createCloseButton()
   {
-    final CloseAction action = new CloseAction();
-    final JButton closeButton = new JButton( action );
-    SwingComponentUtils.registerKeystroke( closeButton, action, "CLOSE-DIALOG" );
-    return closeButton;
+    return StandardActionFactory.createCloseButton();
   }
 }

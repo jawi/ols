@@ -385,16 +385,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Returns the current main frame.
-   * 
-   * @return the main frame, can be <code>null</code>.
-   */
-  public MainFrame getMainFrame()
-  {
-    return this.mainFrame;
-  }
-
-  /**
    * Returns all current tools known to the OSGi framework.
    * 
    * @return a collection of tools, never <code>null</code>.
@@ -760,6 +750,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Shows the "about OLS" dialog on screen. the parent window to use, can be
+   * <code>null</code>.
+   */
+  public void showAboutBox()
+  {
+    this.mainFrame.showAboutBox( this.host.getVersion() );
+  }
+
+  /**
    * Shows the label-editor dialog on screen.
    * <p>
    * Display the diagram labels dialog. Will block until the dialog is closed
@@ -874,6 +873,16 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Returns the current main frame.
+   * 
+   * @return the main frame, can be <code>null</code>.
+   */
+  final MainFrame getMainFrame()
+  {
+    return this.mainFrame;
+  }
+
+  /**
    * Creates the tool context denoting the range of samples that should be
    * analysed by a tool.
    * 
@@ -947,6 +956,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     aActionManager.add( new ShowDiagramSettingsAction( this ) );
     aActionManager.add( new ShowDiagramLabelsAction( this ) );
+
+    aActionManager.add( new HelpAboutAction( this ) );
   }
 
   /**

@@ -85,7 +85,7 @@ public final class Host implements ApplicationCallback
       if ( ( id == WindowEvent.WINDOW_OPENED ) && ( aEvent instanceof ComponentEvent ) )
       {
         final ComponentEvent event = ( ComponentEvent )aEvent;
-        final Component component = event.getComponent();
+        final Window component = ( Window )event.getComponent();
 
         try
         {
@@ -101,7 +101,7 @@ public final class Host implements ApplicationCallback
           if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
           {
             LOG.log( Level.FINE, "Reading window-properties for '{0}' ...", namespace );
-            SwingComponentUtils.loadWindowState( namespace, this.properties, ( Window )component );
+            SwingComponentUtils.loadWindowState( namespace, this.properties, component );
           }
         }
         catch ( RuntimeException exception )
@@ -112,7 +112,7 @@ public final class Host implements ApplicationCallback
       else if ( ( id == WindowEvent.WINDOW_CLOSED ) && ( aEvent instanceof ComponentEvent ) )
       {
         final ComponentEvent event = ( ComponentEvent )aEvent;
-        final Component component = event.getComponent();
+        final Window component = ( Window )event.getComponent();
 
         try
         {
@@ -128,7 +128,7 @@ public final class Host implements ApplicationCallback
           if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
           {
             LOG.log( Level.FINE, "Writing window-properties for '{0}' ...", namespace );
-            SwingComponentUtils.saveWindowState( namespace, this.properties, ( Window )component );
+            SwingComponentUtils.saveWindowState( namespace, this.properties, component );
           }
         }
         catch ( RuntimeException exception )
@@ -145,9 +145,8 @@ public final class Host implements ApplicationCallback
 
   private static final String PROPERTIES_NAME = "nl.lxtreme.ols.client";
 
-  private static final String SHORT_NAME = "LogicSniffer";
-
-  static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
+  public static final String SHORT_NAME = "LogicSniffer";
+  public static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
 
   // VARIABLES
 
@@ -246,12 +245,8 @@ public final class Host implements ApplicationCallback
   @Override
   public boolean handleAbout()
   {
-    final MainFrame mainFrame = this.controller.getMainFrame();
-    if ( mainFrame != null )
-    {
-      mainFrame.showAboutBox( getVersion() );
-    }
-    return ( mainFrame != null );
+    this.controller.showAboutBox();
+    return true;
   }
 
   /**

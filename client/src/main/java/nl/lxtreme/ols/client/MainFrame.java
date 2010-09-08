@@ -2,7 +2,6 @@ package nl.lxtreme.ols.client;
 
 
 import java.awt.*;
-import java.awt.event.*;
 import java.net.*;
 import java.text.*;
 
@@ -12,6 +11,8 @@ import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
 
@@ -22,7 +23,7 @@ public final class MainFrame extends JFrame
 {
   // INNER TYPES
 
-  static final class AboutBox extends JDialog
+  static final class AboutBox extends JDialog implements Closeable
   {
     // CONSTANTS
 
@@ -50,23 +51,15 @@ public final class MainFrame extends JFrame
           + "<li>&lt;http://www.sump.org/projects/analyzer/&gt;</li>" //
           + "</ul></p></body></html>", Host.FULL_NAME, aVersion );
 
-      final JLabel label = new JLabel( message );
+      final JLabel messageLabel = new JLabel( message );
 
       final URL url = IconLocator.class.getResource( IconLocator.LOGO );
       final ImageIcon icon = new ImageIcon( url );
 
-      final JButton closeButton = new JButton( "Close" );
-      closeButton.addActionListener( new ActionListener()
-      {
-        /**
-         * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-         */
-        @Override
-        public void actionPerformed( final ActionEvent aEvent )
-        {
-          closeDialog();
-        }
-      } );
+      final JLabel iconLabel = new JLabel( icon );
+      iconLabel.setBackground( Color.WHITE );
+
+      final JButton closeButton = StandardActionFactory.createCloseButton();
 
       final JPanel buttonPane = new JPanel();
       buttonPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
@@ -79,11 +72,11 @@ public final class MainFrame extends JFrame
       contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
       setContentPane( contentPane );
 
-      contentPane.add( new JLabel( icon ), //
+      contentPane.add( iconLabel, //
           new GridBagConstraints( 0, 0, 1, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL,
               new Insets( 0, 0, 5, 0 ), 0, 0 ) );
 
-      contentPane.add( label, //
+      contentPane.add( messageLabel, //
           new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets(
               5, 10, 5, 10 ), 0, 0 ) );
 
@@ -92,6 +85,8 @@ public final class MainFrame extends JFrame
               new Insets( 5, 0, 5, 0 ), 0, 0 ) );
 
       pack();
+
+      setLocationRelativeTo( aOwner );
       setResizable( false );
     }
 
@@ -100,7 +95,7 @@ public final class MainFrame extends JFrame
     /**
      * Closes this dialog and disposes it.
      */
-    public void closeDialog()
+    public final void close()
     {
       setVisible( false );
       dispose();
@@ -337,30 +332,6 @@ public final class MainFrame extends JFrame
    */
   public void showAboutBox( final String aVersion )
   {
-    // final String message = Host.FULL_NAME + "\n\n" //
-    // + "Copyright 2006-2010 Michael Poppitz\n" //
-    // + "Copyright 2010 J.W. Janssen\n\n" //
-    // + "This software is released under the GNU GPL.\n\n" //
-    // + "Version: %s\n\n" //
-    // + "For more information see:\n" //
-    // + "  <http://www.lxtreme.nl/ols/>\n" //
-    // + "  <http://dangerousprototypes.com/open-logic-sniffer/>\n" //
-    // + "  <http://www.gadgetfactory.net/gf/project/butterflylogic/>\n" //
-    // + "  <http://www.sump.org/projects/analyzer/>";
-    //
-    // ImageIcon icon = null;
-    // final URL url = IconLocator.class.getResource( IconLocator.LOGO );
-    // if ( url != null )
-    // {
-    // icon = new ImageIcon( url );
-    // }
-    //
-    // final JOptionPane aboutDialogFactory = new JOptionPane( String.format(
-    // message, aVersion ), //
-    // JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, icon );
-    //
-    // final JDialog aboutDialog = aboutDialogFactory.createDialog( this,
-    // "About ..." );
     final AboutBox aboutDialog = new AboutBox( this, aVersion );
     aboutDialog.showDialog();
   }
@@ -473,6 +444,9 @@ public final class MainFrame extends JFrame
     {
       this.windowMenu.add( new JMenuItem( new FocusWindowAction( window ) ) );
     }
+
+    final JMenu helpMenu = bar.add( new JMenu( "Help" ) );
+    helpMenu.add( this.controller.getAction( HelpAboutAction.ID ) );
 
     final JToolBar toolbar = new JToolBar();
     toolbar.setRollover( true );
