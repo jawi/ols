@@ -33,12 +33,13 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 
 /**
  * 
  */
-public class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable
+public class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable, Closeable
 {
   // INNER TYPES
 
@@ -82,7 +83,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
      */
     private String updateLabel( final int aBeforeRatio, final int aAfterRatio )
     {
-      final String ratioText = String.format( "% 3d/% 3d", aBeforeRatio, aAfterRatio );
+      final String ratioText = String.format( "%d / %d", aBeforeRatio, aAfterRatio );
       this.label.setText( ratioText );
       return ratioText;
     }
@@ -252,6 +253,19 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   /**
+   * Properly closes the dialog. This method makes sure timer and worker thread
+   * are stopped before the dialog is closed.
+   * 
+   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
+   */
+  public final void close()
+  {
+    this.device.stop();
+    setVisible( false );
+    dispose();
+  }
+
+  /**
    * @return
    */
   public int getPortBaudrate()
@@ -266,6 +280,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   {
     return ( String )this.portSelect.getSelectedItem();
   }
+
+  // METHODS
 
   /**
    * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
@@ -330,8 +346,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     updateDevice();
     updateFields();
   }
-
-  // METHODS
 
   /**
    * @return
@@ -401,17 +415,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   /**
-   * Properly closes the dialog. This method makes sure timer and worker thread
-   * are stopped before the dialog is closed.
-   */
-  private void close()
-  {
-    this.device.stop();
-    setVisible( false );
-    dispose();
-  }
-
-  /**
    * @return
    */
   private JPanel createButtonPane()
@@ -419,9 +422,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.captureButton = new JButton( "Capture" );
     this.captureButton.addActionListener( this );
 
-    final JButton cancel = new JButton( "Close" );
+    final JButton cancel = StandardActionFactory.createCloseButton();
     cancel.setPreferredSize( this.captureButton.getPreferredSize() );
-    cancel.addActionListener( this );
 
     final JPanel buttonPane = new JPanel();
     buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
@@ -649,6 +651,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.triggerEnable.addActionListener( this );
 
     this.ratioLabel = new JLabel( "" );
+    SwingComponentUtils.fixLabelWidth( this.ratioLabel, "100 / 100" );
 
     this.ratioSlider = new JSlider( SwingConstants.HORIZONTAL, 0, 100, 50 );
     this.ratioSlider.setMajorTickSpacing( 10 );
@@ -711,6 +714,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
       stagePane.add( new JLabel( "Delay: ", SwingConstants.RIGHT ), createConstraints( 4, 4, 1, 1, 0.5, 1.0 ) );
       this.triggerDelay[i] = new JTextField( "0" );
+      this.triggerDelay[i].setToolTipText( "Delays trigger # samples after its condition is met." );
       stagePane.add( this.triggerDelay[i], createConstraints( 5, 4, 1, 1, 0.5, 1.0 ) );
 
       this.triggerStageTabs.add( String.format( "Stage %d", i + 1 ), stagePane );
@@ -722,31 +726,37 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
         BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
     triggerPane.add( new JLabel( "Trigger: " ), //
-        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 1.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE,
+            LABEL_INSETS, 0, 0 ) );
     triggerPane.add( this.triggerEnable, //
-        new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+        new GridBagConstraints( 1, 0, 2, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
             GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
 
     triggerPane.add( new JLabel( "Before/After ratio: " ), //
-        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
-            LABEL_INSETS, 0, 0 ) );
+        new GridBagConstraints( 0, 1, 1, 1, 0.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, LABEL_INSETS,
+            0, 0 ) );
     triggerPane.add( this.ratioSlider, //
-        new GridBagConstraints( 1, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
-            COMP_INSETS, 0, 0 ) );
+        new GridBagConstraints( 1, 1, 1, 1, 3.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
     triggerPane.add( this.ratioLabel, //
-        new GridBagConstraints( 2, 1, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, COMP_INSETS, 0,
+        new GridBagConstraints( 2, 1, 1, 1, 0.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, COMP_INSETS, 0,
             0 ) );
+    triggerPane.add( new JLabel( " " ), //
+        new GridBagConstraints( 3, 1, 1, 1, 4.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+            COMP_INSETS, 0, 0 ) );
 
     triggerPane.add( new JLabel( "Type: " ), //
-        new GridBagConstraints( 0, 2, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+        new GridBagConstraints( 0, 2, 1, 1, 0.0, 1.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE,
+            LABEL_INSETS, 0, 0 ) );
     triggerPane.add( this.triggerTypeSelect, //
-        new GridBagConstraints( 1, 2, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+        new GridBagConstraints( 1, 2, 1, 1, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.NONE, COMP_INSETS, 0,
+            0 ) );
+    triggerPane.add( new JLabel( " " ), //
+        new GridBagConstraints( 2, 2, 2, 1, 4.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+            COMP_INSETS, 0, 0 ) );
 
     triggerPane.add( this.triggerStageTabs, //
-        new GridBagConstraints( 0, 3, 3, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.BOTH,
+        new GridBagConstraints( 0, 3, 4, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.BOTH,
             COMP_INSETS, 0, 0 ) );
 
     return triggerPane;
