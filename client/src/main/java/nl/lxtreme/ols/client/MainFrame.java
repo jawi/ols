@@ -245,13 +245,9 @@ public final class MainFrame extends JFrame implements Closeable
     setVisible( false );
     dispose();
 
-    // On Windows and/or Linux hosts, we should exit upon closing the main
-    // frame. On MacOSX however, we can remain running until explicitly quit is
-    // chosen from the menubar...
-    if ( !HostUtils.isMacOSX() )
-    {
-      this.controller.exit();
-    }
+    // Make sure that if this frame is closed, the entire application is
+    // shutdown as well...
+    this.controller.exit();
   }
 
   /**

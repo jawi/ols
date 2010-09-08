@@ -87,6 +87,17 @@ public class FocusWindowAction extends AbstractAction
 
     if ( ( window != null ) && !SwingComponentUtils.isActivelyShown( window ) )
     {
+      if ( window instanceof Frame )
+      {
+        final Frame frame = ( Frame )window;
+        int state = frame.getExtendedState();
+        if ( ( state & Frame.ICONIFIED ) != 0 )
+        {
+          state &= ~Frame.ICONIFIED;
+          frame.setExtendedState( state );
+        }
+      }
+      window.toFront();
       window.requestFocus();
     }
   }
