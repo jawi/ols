@@ -29,12 +29,13 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.*;
 
 
 /**
  * @author jawi
  */
-public class TestDeviceDialog extends JDialog implements Configurable
+public class TestDeviceDialog extends JDialog implements Configurable, Closeable
 {
   // CONSTANTS
 
@@ -88,6 +89,15 @@ public class TestDeviceDialog extends JDialog implements Configurable
   }
 
   // METHODS
+
+  /**
+   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
+   */
+  @Override
+  public void close()
+  {
+    closeDialog( false );
+  }
 
   /**
    * @return the channels

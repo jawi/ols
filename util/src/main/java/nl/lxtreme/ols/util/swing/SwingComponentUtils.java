@@ -86,6 +86,22 @@ public final class SwingComponentUtils
   }
 
   /**
+   * "Fixates" the preferred width of the given label to the given text.
+   * 
+   * @param aLabel
+   *          the label to fixate, cannot be <code>null</code>;
+   * @param aMinimalText
+   *          the text to use as minimal width indicator.
+   */
+  public static final void fixLabelWidth( final JLabel aLabel, final String aMinimalText )
+  {
+    final FontMetrics fm = aLabel.getFontMetrics( aLabel.getFont() );
+    final int height = fm.getHeight();
+
+    aLabel.setPreferredSize( new Dimension( fm.stringWidth( aMinimalText ), height ) );
+  }
+
+  /**
    * Tries to find the current focused window.
    * 
    * @return the current focused window, or <code>null</code> if no such window

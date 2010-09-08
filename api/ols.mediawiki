@@ -77,19 +77,19 @@ Provides some common utilities that are shared among all other projects.
 # <strike>clear Annotations when new captured data is set;</strike>
 # <strike>allow tool-analysis to be rerun without closing the dialog (thanks to Andre);</strike>
 # <strike>clear Annotations for a channel when tool wants to;</strike>
+# <strike>support for <tt>CMD+W</tt> on OSX;</strike>
+# <strike>closing the window through the [X] on Windows doesn't exit the program (thanks to Andre);</strike>
+# <strike>rename cursor-labels to "t0", "t1", ... "t9";</strike>
+# <strike>add annotations to other analysis tools;</strike>
+# <strike>the OLS before/after trigger ratio slider has some cosmetic twitches (thanks to Andre);</strike>
 # resizing analysis dialogs makes buttons grow (too) large on Linux/Windows (thanks to Andre);
-# closing the window through the [X] on Windows doesn't exit the program (thanks to Andre);
-# the OLS before/after trigger ratio slider has some cosmetic twitches (thanks to Andre);
 # remember the last save/load location for open/save data-files & exports;
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;
-# rename cursor-labels to "t0", "t1", ... "t9";
-# add annotations to other analysis tools;
 # make the annotated data configurable regarding the displayed text and colors;
 # add a preference pane for the "general" client configuration;
 # make it configurable whether state-transitions are straight or diagonal;
 # make the order of tools in the menu predictable;
-# support for <tt>CMD+W</tt> on OSX;
-# make distinction between analysis tools and other tools;
+# make distinction between decoding tools and other tools;
 # provide easier access to analysis tools;
 # analysis protocol results synopsis (client: <bla bla>, master: <bla bla>, client ...);
 # support reordering of channels with DnD;
