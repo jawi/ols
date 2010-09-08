@@ -78,18 +78,11 @@ public interface CapturedData
   public abstract long[] getTimestamps();
 
   /**
-   * Returns the trigger position, as array index.
+   * Returns the trigger position, as (absolute) time-value.
    * 
-   * @return an array index representing the trigger position, >= 0.
+   * @return a value representing the trigger position in time.
    */
-  public abstract int getTriggerIndex();
-
-  /**
-   * Returns the trigger position, as (array) time-value.
-   * 
-   * @return a value representing the trigger position, >= 0.
-   */
-  public abstract long getTriggerTimePosition();
+  public abstract long getTriggerPosition();
 
   /**
    * @return the values

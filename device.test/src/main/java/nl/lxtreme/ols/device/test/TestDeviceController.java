@@ -74,6 +74,8 @@ public class TestDeviceController implements DeviceController
     final int[] data;
     int rate = 1000000000;
 
+    final double halfWidth = ( 1L << ( channels - 1 ) ) / 2.0;
+
     if ( DATA_FUNCTIONS[6].equals( dataFunction ) )
     {
       final I2CGenerator generator = new I2CGenerator();
@@ -99,7 +101,7 @@ public class TestDeviceController implements DeviceController
         }
         else if ( DATA_FUNCTIONS[2].equals( dataFunction ) )
         {
-          data[i] = ( int )( 128 + 128.0 * Math.sin( i / ( data.length / 8.0 ) ) );
+          data[i] = ( int )( halfWidth + halfWidth * Math.sin( i / ( data.length / ( double )channels ) ) );
         }
         else if ( DATA_FUNCTIONS[3].equals( dataFunction ) )
         {

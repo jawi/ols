@@ -40,7 +40,7 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   private final boolean timingDataPresent;
   private final int sampleRate;
   private final boolean triggerDataPresent;
-  private final int triggerIndex;
+  private final long triggerPosition;
   private final long[] timestamps;
 
   // CONSTRUCTORS
@@ -63,7 +63,7 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
     this.sampleRate = aData.getSampleRate();
 
     this.triggerDataPresent = aData.hasTriggerData();
-    this.triggerIndex = aData.getTriggerIndex();
+    this.triggerPosition = aData.getTriggerPosition();
 
     this.timestamps = aData.getTimestamps();
   }
@@ -93,7 +93,7 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
     long time = this.timestamps[aSampleIdx];
     if ( this.triggerDataPresent )
     {
-      time -= this.timestamps[this.triggerIndex];
+      time -= this.triggerPosition;
     }
     return indexToTime( time );
   }

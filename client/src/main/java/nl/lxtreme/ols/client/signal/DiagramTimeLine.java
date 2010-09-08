@@ -212,7 +212,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
     }
 
     final int rowInc = Math.max( 1, ( int )( Diagram.MAX_SCALE / this.scale ) );
-    final int timeLineShift = ( int )( this.dataContainer.getTriggerTimePosition() % rowInc );
+    final int timeLineShift = ( int )( this.dataContainer.getTriggerPosition() % rowInc );
 
     // obtain portion of graphics that needs to be drawn
     final Rectangle clipArea = aGraphics.getClipBounds();
@@ -242,7 +242,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
       final int y2 = y1 - 3 * SHORT_TICK_HEIGHT;
       final int y3 = y1 - SHORT_TICK_HEIGHT;
 
-      final long relativeTime = row - this.dataContainer.getTriggerTimePosition();
+      final long relativeTime = row - this.dataContainer.getTriggerPosition();
       if ( ( relativeTime / rowInc ) % TIMELINE_INCREMENT == 0 )
       {
         final String time;

@@ -122,7 +122,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     // VARIABLES
 
     private int currentCursor;
-    private int startDragXpos;
 
     // METHODS
 
@@ -161,7 +160,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
         dragCursor( this.currentCursor, mousePosition );
       }
 
-      updateTooltipText( mousePosition, true /* aDragging */, this.startDragXpos, null );
+      updateTooltipText( mousePosition, null );
     }
 
     /**
@@ -180,17 +179,15 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
       if ( cursorIdx >= 0 )
       {
         this.currentCursor = cursorIdx;
-        this.startDragXpos = mousePosition.x;
         Diagram.this.setCursor( Diagram.this.cursorDrag );
       }
       else
       {
         this.currentCursor = -1;
-        this.startDragXpos = -1;
         Diagram.this.setCursor( Diagram.this.cursorDefault );
       }
 
-      updateTooltipText( mousePosition, false /* aDragging */, this.startDragXpos, annotation );
+      updateTooltipText( mousePosition, annotation );
     }
   }
 
@@ -293,7 +290,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     this.groupSettings = new int[4];
     for ( int i = 0; i < this.groupSettings.length; i++ )
     {
-      this.groupSettings[i] = DISPLAY_CHANNELS | DISPLAY_BYTE;
+      this.groupSettings[i] = DISPLAY_CHANNELS;
     }
 
     this.contextMenu = new JPopupMenu();
@@ -857,8 +854,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
    *          <code>true</code> indicates that dragging information should be
    *          added
    */
-  final void updateTooltipText( final Point aMousePosition, final boolean aDragging, final int aStartDragXpos,
-      final ChannelAnnotation aAnnotation )
+  final void updateTooltipText( final Point aMousePosition, final ChannelAnnotation aAnnotation )
   {
     if ( !this.dataContainer.hasCapturedData() )
     {
@@ -884,89 +880,21 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     if ( aAnnotation != null )
     {
       sb.append( aAnnotation.getData() );
-
-      sb.append( " Sample idx = " ).append(
-          this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) ) );
     }
     else
     {
-      final int sampleRate = this.dataContainer.getSampleRate();
-      final long triggerPosition = this.dataContainer.getTriggerTimePosition();
+      final long idxMouseX = convertPointToSampleIndex( aMousePosition );
+      final long triggerPosition = this.dataContainer.getTriggerPosition();
 
-      // if ( this.dataContainer.isCursorsEnabled() )
-      // {
-      // // print cursor data to status line
-      // final long absCursorPosA = this.dataContainer.getCursorPosition( 0 ) -
-      // triggerPosition;
-      // final long absCursorPosB = this.dataContainer.getCursorPosition( 1 ) -
-      // triggerPosition;
-      // final long relCursorPos = this.dataContainer.getCursorPosition( 0 ) -
-      // this.dataContainer.getCursorPosition( 1 );
-      //
-      // if ( !this.dataContainer.hasTimingData() )
-      // {
-      // sb.append( "Sample@1=" ).append( absCursorPosA ).append( " | " );
-      // sb.append( "Sample@2=" ).append( absCursorPosB ).append( " | " );
-      // sb.append( "Distance(1,2)=" ).append( relCursorPos );
-      // }
-      // else
-      // {
-      // sb.append( "Time@1=" ).append( DisplayUtils.displayScaledTime(
-      // absCursorPosA, sampleRate ) ).append( " | " );
-      // sb.append( "Time@2=" ).append( DisplayUtils.displayScaledTime(
-      // absCursorPosB, sampleRate ) );
-      // sb.append( " (duration " ).append( DisplayUtils.displayScaledTime(
-      // Math.abs( relCursorPos ), sampleRate ) );
-      // if ( relCursorPos != 0 )
-      // {
-      // sb.append( ", " ).append( "frequency " );
-      // final double frequency = Math.abs( ( double )sampleRate / ( double
-      // )relCursorPos );
-      // sb.append( DisplayUtils.displayFrequency( frequency ) );
-      // }
-      // sb.append( ")" );
-      // }
-      // }
-      // else
+      final long absMouseX = idxMouseX - triggerPosition;
+      if ( DEBUG || !this.dataContainer.hasTimingData() )
       {
-        // print origin status when no cursors used
-        final long idxMouseDragX = convertPointToSampleIndex( new Point( aStartDragXpos, 0 ) );
-        final long idxMouseX = convertPointToSampleIndex( aMousePosition );
-
-        sb.append( " Sample idx = " )
-            .append( this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) ) ).append( " " );
-
-        if ( aDragging && ( idxMouseDragX != idxMouseX ) )
-        {
-          final long relDrag = idxMouseDragX - idxMouseX;
-          final long absMouseDragX = idxMouseDragX - triggerPosition;
-
-          if ( !this.dataContainer.hasTimingData() )
-          {
-            sb.append( "Sample " ).append( absMouseDragX );
-            sb.append( " (distance " ).append( relDrag ).append( ")" );
-          }
-          else
-          {
-            final double frequency = Math.abs( ( double )sampleRate / ( double )relDrag );
-
-            sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseDragX, sampleRate ) );
-            sb.append( " (duration " ).append( DisplayUtils.displayScaledTime( relDrag, sampleRate ) ).append( ", " );
-            sb.append( "Frequency " ).append( DisplayUtils.displayFrequency( frequency ) ).append( ")" );
-          }
-        }
-        else
-        {
-          final long absMouseX = idxMouseX - triggerPosition;
-          if ( !this.dataContainer.hasTimingData() )
-          {
-            sb.append( "Sample " ).append( absMouseX );
-          }
-          else
-          {
-            sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
-          }
-        }
+        sb.append( "Sample " ).append( absMouseX );
+      }
+      else
+      {
+        final int sampleRate = this.dataContainer.getSampleRate();
+        sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
       }
     }
 
@@ -1058,7 +986,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     g2d.fillRect( cx, cy, cw, ch );
 
     // draw trigger if existing and visible
-    final long triggerPosition = this.dataContainer.getTriggerTimePosition();
+    final long triggerPosition = this.dataContainer.getTriggerPosition();
     if ( ( triggerPosition >= firstRow ) && ( triggerPosition <= lastRow ) )
     {
       g2d.setColor( getTriggerColor() );
