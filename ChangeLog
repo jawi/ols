@@ -1,0 +1,1717 @@
+2010-09-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceDial
+	og.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Some cosmetic fixes on the device configuration dialogs;
+	corrected the alignment of the components.
+
+2010-09-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/MainFrame.java: Forgot
+	small comment.
+
+2010-09-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/action/HelpAboutAction.j
+	ava,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/StandardActionFactory.
+	java: Added missing header.
+
+2010-09-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/FocusWindowAction
+	.java, pom.xml,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Verifed whether CMD+W on MacOSX works correctly; also verified
+	whether the focus window command on MacOSX brings the window to the
+	front (as it should).
+
+2010-09-08  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/StandardActionFactory.
+	java: Only enable Windows menu for MacOSX. Added real support for
+	CMD+W (untested).
+
+2010-09-08  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/CapturedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedDataImpl.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseDataSet.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisWor
+	ker.java: Fixed a severe bug due to the refactoring of the trigger
+	position (Thanks to Andre for pointing this out). Reverted this to
+	the original behaviour. Also fixed a bug regarding the reading of
+	OLS datafiles causing cursor information to be ignored. Also fixed
+	the window close behaviour on Windows platforms.
+
+2010-09-08  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/HelpAboutAction.j
+	ava,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	util/src/main/java/nl/lxtreme/ols/util/swing/StandardActionFactory.
+	java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: - Added about action & menu item to show some information about this
+	client; - Added a standard action factory for creating a generic actions,
+	such as close window.
+
+2010-09-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Worked on the about box of OLS; still not entirely complete.
+
+2010-09-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java: 
+	Do not zoom-to-fit when running an tool-analysis; simply repaint
+	will suffice.
+
+2010-09-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* runner/pom.xml: runner/pom.xml
+
+2010-09-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	api/src/main/java/nl/lxtreme/ols/api/data/ChannelAnnotations.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java: Revert "Small updates." as it breaks the cursor
+	functionality severly.  This reverts commit b59ffcf1e8f763c95ff42024ddf8dfa886e1cf5b.
+
+2010-09-07  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	api/src/main/java/nl/lxtreme/ols/api/data/ChannelAnnotations.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java: Small updates.
+
+2010-09-07  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/CapturedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedDataImpl.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	logging/src/main/java/nl/lxtreme/ols/logging/JdkLogForwarder.java,
+	runner/src/main/java/nl/lxtreme/ols/runner/Runner.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/ThreadViolationDetecti
+	onRepaintManager.java: Several cleanups; take proper care of
+	IOExceptions (especially InterruptedIOException). Reworked
+	CapturedDataImpl#getSampleIndex to use a binary search iso linear
+	one. Small UI fixes.
+
+2010-09-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java: 
+	Small updates regarding tool context.
+
+2010-09-05  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java: 
+	Make use of the new Java functionality to display a context menu.
+
+2010-09-05  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava: Moved cursor logic to client controller; less logic in Diagram.
+
+2010-09-05  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	api/src/main/java/nl/lxtreme/ols/api/devices/DeviceController.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/ToolContext.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/CancelCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/icons/IconLocator.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyser.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyser.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalyser.ja
+	va,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisWor
+	ker.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyser.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java: Added additional button for cancelling a ongoing capture;
+	this also indicates whether a capture is in progress or not. Added
+	support for providing the tool context to all tools. Several
+	UI-related cleanups.
+
+2010-09-05  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/BaseAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/BaseCursorAction.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/action/BaseZoomAction.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/action/CaptureAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/ExitAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/FocusWindowAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor1Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor2Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoTriggerAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/NewProjectAction.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RepeatCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ScrollPaneContext
+	Action.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SelectDeviceActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorModeActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramLabels
+	Action.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramSettin
+	gsAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomDefaultAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomFitAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomInAction.java
+	,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomOutAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/icons/IconLocator.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/DeviceControllerTra
+	cker.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramRowLabels.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava, pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JPopdownButt
+	on.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JTextStatusB
+	ar.java: Added separate front-end controller for the client; this
+	way, it is much easier to keep track of the state of the client and
+	propagate changes to all components.
+
+2010-09-03  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedDataImpl.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseDataSet.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisWor
+	ker.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTData.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Various small bugs fixed in the analysis tools; made
+	them abort upon illegal states.
+
+2010-09-03  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/CapturedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedDataImpl.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/ChannelAnnotation.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/ChannelAnnotations.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/Edge.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseData.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseDataSet.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va, tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CData.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CDataSet.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va, tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIData.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIDataSet.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIMode.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisWor
+	ker.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTData.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTStopBits.java: 
+	Reworked the analysis tools to integrate the report-data and
+	annotations. Currently, the report data contains the same
+	information as would be needed for the annotations. Also reworked
+	the UART analysis tool to make it a bit more maintainable and
+	understandable.
+
+2010-09-03  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java: 
+	Implemented a 'new' algorithm to keep the correct center position
+	while zooming in. Works almost ok, has some issues with zooming out;
+	is ok for now.
+
+2010-09-02  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/BaseCursorAction.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/action/BaseZoomAction.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor1Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor2Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoTriggerAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ScrollPaneContext
+	Action.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorModeActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramLabels
+	Action.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramSettin
+	gsAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomDefaultAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomFitAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomInAction.java
+	,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomOutAction.jav
+	a, client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseDataSet.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java: - Updated the tool base for support of updating channel labels; - fixed some small bugs in the SPI analysis tool, such as negative
+	  times always being reported as '0.0s'; - worked on the zooming of the client, still no satisfactory
+	results.
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va: In case no CS start condition could be found, the analysis
+	cannot succeed and is aborted.
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java: When an analysis is aborted due to an exception, log the
+	actual exception and close the dialog automatically to denote this.
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va: Small bug fixed when no cursors were set; caused the analysis to
+	fail.
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Host.java: Fixed a
+	small bug on MacOSX causing our stop/shutdown hooks not to be
+	called.
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java: Added shortcut keys for "run analysis" (CTRL/CMD+ENTER),
+	"export" (CTRL/CMD+E) and "close" (CTRL/CMD+W).
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va: Search for CS-transition honouring the cursors/trigger. If
+	found, do *not* use that location as starting point.
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java: Fixed some small bugs in the decoding of modes 0 and 2.
+	Some additional cleanups performed.
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: Added
+	convenience method to determine the (largest) bit-index that is set
+	to '1' on a mask value.
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va, tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIMode.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Added support for closing windows through ctrl+w/cmd+w.
+
+2010-09-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/AsyncToolDialog.ja
+	va,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Made it possible to restart analysis.
+
+2010-08-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/Tool.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/DeviceControllerTra
+	cker.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramLabelsDial
+	og.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramRowLabels.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseTool.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/ToolDialog.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyser.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementT
+	ool.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyser.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalyser.ja
+	va,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisWor
+	ker.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyser.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java: Simplify tool-API a bit; when creating the dialog, do not
+	pass everything as-is to this method. Simplify the UI-code a bit (in
+	the area of OSGi). Some cleanups.
+
+2010-08-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	pom.xml,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java: Re-enabled the cursors usage in SPI + UART tool.
+
+2010-08-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Latest todo list.
+
+2010-08-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java: 
+	Cleanup; (temporarily) reverted to original color scheme.
+
+2010-08-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java: 
+	Experimental gradient painting of annotated data (eye candy!).
+
+2010-08-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	* : Merge with latest GitHub changes.
+
+2010-08-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Small cleanup.
+
+2010-08-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramCursorChan
+	geListener.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramRowLabels.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettings.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava: - Added support for removing cursors; - Some UI-related fixes, row labels were not always directly shown
+	  and scrolled sometimes; - First approach for "rainbow" colors on channels; - cleanups.
+
+2010-08-30  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va: Small update: first implementation of annotated data.
+
+2010-08-30  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java: 
+	Make sure annotations appear in the correct channel.
+
+2010-08-30  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/Endianness.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java: Cleanup of SPI analysis tool; added options to report
+	CS-transitions (or not) and whether or not to honour CS in a strict
+	way.
+
+2010-08-30  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: Added
+	convenience methods to perform bit-swaps.
+
+2010-08-27  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Starting documenting some things.
+
+2010-08-27  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Host.java: (Re)storing window preferences a bit too eagerly: popups and
+	dropdowns were taken into consideration as well.
+
+2010-08-27  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* : Started working on 0.8.4. Cleanup of settings & label dialog.
+
+2010-08-27  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ActionProvider.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/manager/ActionMan
+	ager.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/manager/IActionMa
+	nager.java,
+	client/src/main/java/nl/lxtreme/ols/client/icons/IconLocator.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramLabelsDial
+	og.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramRowLabels.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettings.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettingsDi
+	alog.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava, pom.xml: Started working on 0.8.4. Cleanup of settings & label
+	dialog.
+
+2010-08-27  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* pom.xml: Switch to version 2.6 of eclipse plugin to solve weird
+	resources issue when running eclipse:eclipse target.
+
+2010-08-26  JaWi <j.w.janssen@lxtreme.nl>
+
+	* pom.xml: Version bump to 0.8.3 release.
+
+2010-08-26  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/resources/client.properties,
+	ols.distribution/pom.xml, pom.xml: Take the version number from the
+	one defined in the reactor POM; ensure this version is shown
+	correctly in the about box of the client.
+
+2010-08-26  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/FocusWindowAction
+	.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseDataSet.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java: Keeping track of all opened windows (experimental
+	feature).
+
+2010-08-26  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/devices/Device.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/DeviceController.java,
+	client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/CaptureAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/RepeatCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SelectDeviceActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/DeviceControllerTra
+	cker.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceDial
+	og.java,
+	logging/src/main/java/nl/lxtreme/ols/logging/JdkLogForwarder.java,
+	logging/src/main/java/nl/lxtreme/ols/logging/SimpleLogReader.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java: Several
+	UI-related bugs solved. Also corrected the storing/retrieving of
+	user-settings. Ensured the devices menu has a predictable order.
+
+2010-08-25  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/CaptureAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor1Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor2Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RepeatCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceDial
+	og.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va,
+	util/src/main/java/nl/lxtreme/ols/util/swing/ThreadViolationDetecti
+	onRepaintManager.java: Various UI updates; tried to clean up the
+	saving/restoring of implicit user settings. Not entirely done yet.
+
+2010-08-25  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java, runner/src/main/java/nl/lxtreme/ols/runner/Runner.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/ThreadViolationDetecti
+	onRepaintManager.java,
+	util/src/test/java/nl/lxtreme/ols/util/HostUtilsTest.java: Fixed
+	some small bugs (failing JUnit) and Swing threading issues. Added
+	custom repaint manager to detect these problems.
+
+2010-08-24  JaWi <j.w.janssen@lxtreme.nl>
+
+	* : commit 2ade21a019b60ec9b1e5857ba3b1f9a807a864be Author: J.W.
+	Janssen <j.w.janssen@lxtreme.nl> Date:   Tue Aug 24 09:05:07 2010
+	+0200
+
+2010-08-24  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va: Ensure the progress value stays within the boundries (0..100).
+	Thanks to Michael for reporting.
+
+2010-08-24  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java: Do
+	not close writer, as it should be done by the caller.
+
+2010-08-22  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/pom.xml: Released version 0.8.2.
+
+2010-08-22  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va: - Added decoding of 7- & 10-bit addresses + direction; - some code cleanups.
+
+2010-08-22  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/ChannelAnnotation.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/ChannelAnnotations.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java: 
+	Performance improvement, don't draw all annotations but only those
+	that are really visible.
+
+2010-08-22  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.test/src/main/java/nl/lxtreme/ols/device/test/I2CGenerator.j
+	ava,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java: Rewrote i2c generator to be more versatile and provide
+	better bitstreams.
+
+2010-08-22  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/ChannelAnnotations.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java: 
+	Added hover support for annotations; hovering over an annotation
+	will cause the tooltip to display the annotation.
+
+2010-08-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	* logging/src/main/java/nl/lxtreme/ols/logging/JdkLogForwarder.java: 
+	Added support for MessageFormat-like arguments, as is supported by
+	the JDK logger.
+
+2010-08-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Adjusted RLE decoding routine to suggestions of
+	rotdrop.
+
+2010-08-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/run.bat, ols.distribution/run.sh: Updated the run
+	scripts to make them location agnostic.
+
+2010-08-20  JaWi <j.w.janssen@lxtreme.nl>
+
+	* eclipse/Maven install.launch, eclipse/OLS Runner.launch: Added
+	launch tasks for eclipse.
+
+2010-08-20  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java: Added clock frequency measurement implementation + duty
+	cycle.
+
+2010-08-20  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	ols.distribution/pom.xml,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementT
+	ool.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: In progress of making the measurement tool a bit more useful.
+
+2010-08-20  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/run.sh,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/CursorLabel.
+	java: Make run script independent of current working directory
+	(Thanks Wayoda).
+
+2010-08-20  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java: Added a
+	warning when the number of channel groups outlimits the capture
+	size; added an option to automatically select the capture size based
+	on the selected channel groups.
+
+2010-08-20  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/BaudRateAnalyzer.j
+	ava,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Fixed decoding problem (reported by jone; fixed some
+	small bugs regarding baudrate calculation.
+
+2010-08-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* README, pom.xml: Updated README to contain some information about
+	the development of OLS; configured the eclipse plugin of Maven to
+	play nice with the current project structure.
+
+2010-08-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* : commit ebb4484e584fc6734e893a3b959782ee5f0df169 Author: JaWi
+	<j.w.janssen@lxtreme.nl> Date:   Thu Aug 19 17:37:04 2010 +0200
+
+2010-08-19  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/pom.xml,
+	api/src/main/java/nl/lxtreme/ols/api/Configurable.java,
+	api/src/main/java/nl/lxtreme/ols/api/Project.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedDataImpl.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/CaptureCallback.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/Device.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/DeviceController.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/AnalysisCallback.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/Tool.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/StatusChangeListener.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/CaptureAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/ExitAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RepeatCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramLabels
+	Action.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramSettin
+	gsAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramCursorChan
+	geListener.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramLabelsDial
+	og.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramRowLabels.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettingsDi
+	alog.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava, device.logicsniffer/pom.xml,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java, device.test/pom.xml,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java, ols.distribution/run.bat, ols.distribution/run.sh,
+	runner/pom.xml,
+	runner/src/main/java/nl/lxtreme/ols/runner/Runner.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseTool.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va, tool.measure/pom.xml,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/Activator.ja
+	va,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/CursorLabel.
+	java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementT
+	ool.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIData.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalyser.ja
+	va,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisWor
+	ker.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTData.java,
+	util/pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SpringLayoutUtils.java
+	, util/src/main/java/nl/lxtreme/ols/util/swing/StdFileFilter.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va, util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: Fix
+	CRLF
+
+2010-08-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/ChannelAnnotation.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/ChannelAnnotations.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettingsDi
+	alog.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/I2CGenerator.j
+	ava,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java: - Initial commit for annotations: tools can annotate the captured
+	data with their analysis results in order to make them visual in the
+	main signal screen.
+
+2010-08-14  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramLabels.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramLabelsDial
+	og.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramRowLabels.
+	java: Moved channel labels to AnnotatedData; now tools can modify
+	channel labels when they desire.
+
+2010-08-14  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/pom.xml, pom.xml: Version bumps; in progress to
+	release 0.8.2.
+
+2010-08-14  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/src/test/java/nl/lxtreme/ols/util/ExportUtilsTest.java: 
+	Missing code header added.
+
+2010-08-14  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/export/HtmlExporterImpl.java: - Cleanup of HTML reports; mostly cosmetics, consistency, and so on; - Minor javadoc updates & code cleanups.
+
+2010-08-14  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java, util/pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/ExportUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/export/AttributeImpl.java,
+	util/src/main/java/nl/lxtreme/ols/util/export/CsvExporterImpl.java,
+	util/src/main/java/nl/lxtreme/ols/util/export/HtmlExporterImpl.java
+	,
+	util/src/main/java/nl/lxtreme/ols/util/export/HtmlFileExporterImpl.
+	java,
+	util/src/main/java/nl/lxtreme/ols/util/export/NullMacroResolver.jav
+	a, util/src/main/java/nl/lxtreme/ols/util/export/TagElement.java,
+	util/src/main/java/nl/lxtreme/ols/util/export/TextElement.java,
+	util/src/test/java/nl/lxtreme/ols/util/ExportUtilsTest.java: 
+	Reworked the HTML exporting functionality in the same way as was
+	done for the CSV exporter: now a utility class is used to generate
+	the HTML output. All tools that exported to HTML were rewritten to
+	this new approach.
+
+2010-08-12  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/src/main/java/nl/lxtreme/ols/util/ExportUtils.java: 
+	Documentation update.
+
+2010-08-12  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/ExportAware.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTData.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/ExportUtils.java: - Added convenience util to make data exports to CSV more easy; - integrated CSV exporter in existing tools; - small cleanup (removed unused ExportAware interface).
+
+2010-08-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/ProgressCallback.java,
+	api/src/main/java/nl/lxtreme/ols/api/Project.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/CaptureCallback.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/Device.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/DeviceController.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/AnalysisCallback.java,
+	api/src/main/java/nl/lxtreme/ols/api/ui/ComponentProvider.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/BaseAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/BaseCursorAction.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/action/BaseZoomAction.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/action/CaptureAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/ExitAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor1Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor2Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoTriggerAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/IManagedAction.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/action/NewProjectAction.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RepeatCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SelectDeviceActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorModeActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramLabels
+	Action.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomDefaultAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomFitAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomInAction.java
+	,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomOutAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/manager/IActionMa
+	nager.java,
+	client/src/main/java/nl/lxtreme/ols/client/icons/IconLocator.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/DeviceControllerTra
+	cker.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/MenuTracker.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramCursorChan
+	geListener.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramLabelsDial
+	og.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettingsDi
+	alog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/I2CGenerator.j
+	ava,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java,
+	logging/src/main/java/nl/lxtreme/ols/logging/Activator.java,
+	logging/src/main/java/nl/lxtreme/ols/logging/JdkLogForwarder.java,
+	runner/src/main/java/nl/lxtreme/ols/runner/Runner.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/AsyncToolDialog.ja
+	va,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/ExportAware.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CData.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/Activator.ja
+	va, tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/BaudRateAnalyzer.j
+	ava,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/FilenameFilterAdapter.
+	java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SpringLayoutUtils.java
+	, util/src/main/java/nl/lxtreme/ols/util/swing/StdFileFilter.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JStatusBar.j
+	ava,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JTextStatusB
+	ar.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/icon/AngledL
+	inesWindowsCornerIcon.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/icon/Triangl
+	eSquareWindowsCornerIcon.java,
+	util/src/test/java/nl/lxtreme/ols/util/DisplayUtilsTest.java,
+	util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: Code
+	formatting applied.
+
+2010-08-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseData.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseDataSet.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/ToolDialog.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va, tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CData.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CDataSet.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va, tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIData.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIDataSet.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalyser.ja
+	va,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisWor
+	ker.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTData.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Simplified tool API even more; the asynchronous ones
+	have less boilerplate stuff to do their work.
+
+2010-08-09  JaWi <j.w.janssen@lxtreme.nl>
+
+	* tool.base/pom.xml,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/AsyncToolDialog.ja
+	va,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseTool.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/ToolDialog.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Made a base dialog for tools.
+
+2010-08-09  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/ExportAware.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyser.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyser.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyser.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Simplified report aware tools even more.
+
+2010-08-09  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/Endianness.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va, tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIDataSet.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIMode.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTParity.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTStopBits.java: 
+	Rewrote all tools to be asynchronous (those that were not already
+	asynchronous)
+
+2010-08-09  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/pom.xml,
+	api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/CaptureCallback.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/Device.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/AnalysisCallback.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/Tool.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/CaptureAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/ExitAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RepeatCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramLabels
+	Action.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramSettin
+	gsAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	device.logicsniffer/pom.xml,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseTool.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a, tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyser.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java, tool.measure/pom.xml,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/Activator.ja
+	va,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/CursorLabel.
+	java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementT
+	ool.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/Endianness.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyser.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va, tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIData.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIDataSet.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIMode.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ataSet.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalyser.ja
+	va,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisWor
+	ker.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyser.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTData.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTParity.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTStopBits.java,
+	util/pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SpringLayoutUtils.java
+	, util/src/main/java/nl/lxtreme/ols/util/swing/StdFileFilter.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va, util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: 
+	Rewrote all tools to be asynchronous (those that were not already
+	asynchronous)
+
+2010-08-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/pom.xml,
+	api/src/main/java/nl/lxtreme/ols/api/CapturedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/Configurable.java,
+	api/src/main/java/nl/lxtreme/ols/api/Project.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/AnnotatedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedDataImpl.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/CaptureCallback.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/Device.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/AnalysisCallback.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/Tool.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/PropertyManager.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/CaptureAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RepeatCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramLabelsDial
+	og.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramRowLabels.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettingsDi
+	alog.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseTool.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolWorker.jav
+	a, tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyser.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/CursorLabel.
+	java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementT
+	ool.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyser.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalyser.ja
+	va,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisWor
+	ker.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyser.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java: - Added support to keep cursors across multiple captures; - API cleanup (mostly in the tools); - moved properties to (anonymous) project.  ToDo: - somehow tools are getting incorrect parent frames (null). This
+	causes their properties to be destroyed.
+
+2010-08-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/run.bat: Wrong version argument to detect java.
+
+2010-08-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/pom.xml, ols.distribution/run.bat, pom.xml: 
+	Version bumps; small update on the run script for Windows hosts.
+
+2010-08-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: - Added some additional speed settings for serial port (on request
+	of arhi and ian); - fixed various problems in the UI when no valid defaults were
+	applicable (NPEs and empty comboboxes).
+
+2010-08-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Added utility class to "safely" set values of comboboxes and
+	checkboxes (for example when used to restore user-settings of a UI).
+	Bumped to version 1.0.3-SNAPSHOT for this.
+
+2010-08-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: - Added some additional JavaDoc on the usage; - added methods that can return any other default value than zero
+	when parsing fails; - bumped version to 1.0.2.
+
+2010-08-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: Fixed
+	possible NPE when passing null-arguments to smartParseInt.
+
+2010-07-24  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/pom.xml, pom.xml: Added tool.measure as new
+	sub-project
+
+2010-07-24  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/tools/Tool.java,
+	client/src/main/java/nl/lxtreme/ols/client/PropertyManager.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RunAnalysisToolAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseTool.java,
+	tool.measure/pom.xml,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/Activator.ja
+	va,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/CursorLabel.
+	java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementT
+	ool.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyser.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyser.java,
+	util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SpringLayoutUtils.java
+	, util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: - Removed generic type from Tool interface, as it was not used; - Added new measure-tool, allowing some basic measurements between
+	defined cursors; - Fixed some small bugs in the cursor displaying routines (not
+	immediately showing up; dragging not consistent); - Other small cleanups.
+
+2010-07-23  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java: - StdFileFilters moved to swing package.
+
+2010-07-23  JaWi <j.w.janssen@lxtreme.nl>
+
+	* device.logicsniffer/pom.xml,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: - Code cleanup; make use of utility classes for parsing numbers
+	"smartly".
+
+2010-07-23  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/StdFileFilter.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SpringLayoutUtils.java
+	, util/src/main/java/nl/lxtreme/ols/util/swing/StdFileFilter.java,
+	util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: - Moved StdFileFilter to swing package; as it is Swing specific; - added several utility classes for layouting SpringLayout & parsing
+	numbers.
+
+2010-07-22  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: Small UI-related updates.
+
+2010-07-20  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: Small UI-related changes.
+
+2010-07-20  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* device.test/pom.xml,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java: Small UI-related fixes.
+
+2010-07-20  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramRowLabels.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava: Fixed some painting problems.
+
+2010-07-20  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* runner/pom.xml,
+	runner/src/main/java/nl/lxtreme/ols/runner/Runner.java: - Added JGoodies as runtime dependency.
+
+2010-07-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramScrollPane
+	.java: Made scroll pane non-transparent (opaque).
+
+2010-07-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* eclipse/eclipse-prefs.epf: Added common Eclipse preferences.
+
+2010-07-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava, runner/src/main/java/nl/lxtreme/ols/runner/Runner.java: 
+	Cleanup; make use of DisplayUtils class for displaying time
+	component.
+
+2010-07-19  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava: Fixed yet another embedded UTF8 character. Reported by jone.
+
+2010-07-19  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/icon/AngledL
+	inesWindowsCornerIcon.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/icon/Triangl
+	eSquareWindowsCornerIcon.java,
+	util/src/test/java/nl/lxtreme/ols/util/DisplayUtilsTest.java: Make
+	sure to use encoded UTF-characters are being used (reported by
+	arhi). Ensure that tests run on non-English hosts as well.
+
+2010-07-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	* .gitignore, eclipse/code-cleanups.xml,
+	eclipse/code-formatting.xml, eclipse/jautodoc_header.txt,
+	eclipse/jautodoc_replacements.xml, runner/pom.xml,
+	tool.base/pom.xml: Added some Eclipse stuff; small POM updates
+
+2010-07-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	* .gitignore, README: Small updates.
+
+2010-07-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	* Initial commit.
+
