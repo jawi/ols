@@ -929,9 +929,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   private void fillActionManager( final ActionManager aActionManager )
   {
-    aActionManager.add( new NewProjectAction( this ) );
-    aActionManager.add( new OpenProjectAction( this ) );
-    aActionManager.add( new SaveProjectAction( this ) );
+    aActionManager.add( new NewProjectAction( this ) ).setEnabled( false );
+    aActionManager.add( new OpenProjectAction( this ) ).setEnabled( false );
+    aActionManager.add( new SaveProjectAction( this ) ).setEnabled( false );
     aActionManager.add( new OpenDataFileAction( this ) );
     aActionManager.add( new SaveDataFileAction( this ) ).setEnabled( false );
     aActionManager.add( new ExitAction( this ) );

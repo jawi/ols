@@ -66,7 +66,7 @@ public final class StandardActionFactory
       {
         final Component source = ( Component )aEvent.getSource();
 
-        final Closeable closeableParent = ( Closeable )SwingUtilities.getAncestorOfClass( Closeable.class, source );
+        final Closeable closeableParent = findCloseableParent( source );
         if ( closeableParent == null )
         {
           throw new RuntimeException( "Failed to find closeable parent?!" );
@@ -80,6 +80,36 @@ public final class StandardActionFactory
           ( ( Window )closeableParent ).dispose();
         }
       }
+    }
+
+    /**
+     * Tries to find a parent container/component that implements the
+     * {@link Closeable} interface.
+     * 
+     * @param aComponent
+     *          the component to find the closeable parent for, may be
+     *          <code>null</code>.
+     * @return the closeable parent, or <code>null</code> if no such parent was
+     *         found (or the given component was <code>null</code>).
+     */
+    private Closeable findCloseableParent( final Component aComponent )
+    {
+      Closeable closeableParent;
+      if ( aComponent instanceof JMenuItem )
+      {
+        final Component parent = ( ( JMenuItem )aComponent ).getParent();
+        closeableParent = findCloseableParent( parent );
+      }
+      else if ( aComponent instanceof JPopupMenu )
+      {
+        final Component invoker = ( ( JPopupMenu )aComponent ).getInvoker();
+        closeableParent = findCloseableParent( invoker );
+      }
+      else
+      {
+        closeableParent = ( Closeable )SwingUtilities.getAncestorOfClass( Closeable.class, aComponent );
+      }
+      return closeableParent;
     }
   }
 
