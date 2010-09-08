@@ -205,6 +205,22 @@ public final class SwingComponentUtils
       // Ignore...
     }
 
+    if ( aWindow instanceof Dialog )
+    {
+      if ( !( ( Dialog )aWindow ).isResizable() )
+      {
+        return;
+      }
+    }
+
+    if ( aWindow instanceof Frame )
+    {
+      if ( !( ( Frame )aWindow ).isResizable() )
+      {
+        return;
+      }
+    }
+
     try
     {
       final String width = aProperties.getProperty( aNamespace + ".width" );
