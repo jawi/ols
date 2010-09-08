@@ -194,8 +194,10 @@ public final class MainFrame extends JFrame implements Closeable
     contentPane.add( scrollPane, BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
 
-    // Support CMD + W on MacOSX (closes this frame)...
+    // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
+
+    // Support CMD + W on MacOSX (closes this frame)...
   }
 
   /**
@@ -481,10 +483,17 @@ public final class MainFrame extends JFrame implements Closeable
     diagramMenu.add( this.controller.getAction( ShowDiagramSettingsAction.ID ) );
     diagramMenu.add( this.controller.getAction( ShowDiagramLabelsAction.ID ) );
 
-    this.windowMenu = bar.add( new JMenu( "Window" ) );
-    for ( Window window : Window.getWindows() )
+    if ( HostUtils.isMacOSX() )
     {
-      this.windowMenu.add( new JMenuItem( new FocusWindowAction( window ) ) );
+      this.windowMenu = bar.add( new JMenu( "Window" ) );
+
+      this.windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) );
+      this.windowMenu.addSeparator();
+
+      for ( Window window : Window.getWindows() )
+      {
+        this.windowMenu.add( new JMenuItem( new FocusWindowAction( window ) ) );
+      }
     }
 
     final JMenu helpMenu = bar.add( new JMenu( "Help" ) );
