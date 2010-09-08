@@ -205,20 +205,11 @@ public final class SwingComponentUtils
       // Ignore...
     }
 
-    if ( aWindow instanceof Dialog )
+    if ( isNonResizableWindow( aWindow ) )
     {
-      if ( !( ( Dialog )aWindow ).isResizable() )
-      {
-        return;
-      }
-    }
-
-    if ( aWindow instanceof Frame )
-    {
-      if ( !( ( Frame )aWindow ).isResizable() )
-      {
-        return;
-      }
+      // In case the window cannot be resized, don't restore its width &
+      // height...
+      return;
     }
 
     try
@@ -295,6 +286,14 @@ public final class SwingComponentUtils
     final Point location = aWindow.getLocation();
     aProperties.put( aNamespace + ".xPos", Integer.toString( location.x ) );
     aProperties.put( aNamespace + ".yPos", Integer.toString( location.y ) );
+
+    if ( isNonResizableWindow( aWindow ) )
+    {
+      // In case the window cannot be resized, don't restore its width &
+      // height...
+      return;
+    }
+
     final Dimension dims = aWindow.getSize();
     aProperties.put( aNamespace + ".width", Integer.toString( dims.width ) );
     aProperties.put( aNamespace + ".height", Integer.toString( dims.height ) );
@@ -619,5 +618,35 @@ public final class SwingComponentUtils
       dialog.setVisible( true );
       return dialog.getSelectedFile();
     }
+  }
+
+  /**
+   * Returns whether the given window is non-resizable.
+   * 
+   * @param aWindow
+   *          the window to determine whether it can be resized or not, may be
+   *          <code>null</code>.
+   * @return <code>true</code> if the given window is not resizable,
+   *         <code>false</code> otherwise.
+   */
+  private static boolean isNonResizableWindow( final Window aWindow )
+  {
+    if ( aWindow instanceof Dialog )
+    {
+      if ( !( ( Dialog )aWindow ).isResizable() )
+      {
+        return true;
+      }
+    }
+
+    if ( aWindow instanceof Frame )
+    {
+      if ( !( ( Frame )aWindow ).isResizable() )
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
