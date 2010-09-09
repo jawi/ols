@@ -41,7 +41,7 @@ public class I2CAnalyser extends BaseAsyncTool<I2CProtocolAnalysisDialog, I2CDat
    */
   public I2CAnalyser()
   {
-    super( "I2C protocol analyser ..." );
+    super( Category.DECODER, "I2C protocol analyser ..." );
   }
 
   // METHODS

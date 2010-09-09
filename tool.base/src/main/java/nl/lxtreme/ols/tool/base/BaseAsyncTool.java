@@ -196,14 +196,16 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
   // CONSTRUCTORS
 
   /**
-   * Creates a new BaseTool instance.
+   * Creates a new BaseAsyncTool instance.
    * 
+   * @param aCategory
+   *          the category of this tool;
    * @param aName
    *          the name of the tool as it should appear in the main UI.
    */
-  protected BaseAsyncTool( final String aName )
+  protected BaseAsyncTool( final Category aCategory, final String aName )
   {
-    super( aName );
+    super( aCategory, aName );
   }
 
   // METHODS
