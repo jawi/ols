@@ -40,7 +40,7 @@ public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, CapturedDa
    */
   public StateAnalyser()
   {
-    super( "State analyser ..." );
+    super( Category.OTHER, "State analyser ..." );
   }
 
   // METHODS

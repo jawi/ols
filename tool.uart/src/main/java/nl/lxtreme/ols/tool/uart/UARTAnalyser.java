@@ -40,7 +40,7 @@ public class UARTAnalyser extends BaseAsyncTool<UARTProtocolAnalysisDialog, UART
    */
   public UARTAnalyser()
   {
-    super( "UART analyser ..." );
+    super( Category.DECODER, "UART analyser ..." );
   }
 
   // METHODS

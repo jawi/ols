@@ -250,8 +250,11 @@ public final class MainFrame extends JFrame implements Closeable
     this.toolsMenu.remove( this.noToolsItem );
 
     final JMenuItem menuItem = createToolMenuItem( aToolName );
+    // Determine where in the menu we should add the menu item, this way, we
+    // can make the menu appear consistent...
+    final int idx = determineToolMenuItemIndex( menuItem );
 
-    this.toolsMenu.add( menuItem );
+    this.toolsMenu.add( menuItem, idx );
 
     updateToolMenuState( aToolName, menuItem, true /* aAdded */);
   }
@@ -563,11 +566,39 @@ public final class MainFrame extends JFrame implements Closeable
    */
   private int determineDeviceMenuItemIndex( final JMenuItem aMenuItem )
   {
+    final String newMenuItem = aMenuItem.getText();
+
     int idx = -1;
     for ( int i = 0; ( idx < 0 ) && ( i < this.deviceMenu.getItemCount() ); i++ )
     {
       final String nameA = this.deviceMenu.getItem( i ).getText();
-      final int comparison = aMenuItem.getText().compareTo( nameA );
+      final int comparison = newMenuItem.compareTo( nameA );
+      if ( comparison < 0 )
+      {
+        idx = i;
+      }
+    }
+    return idx;
+  }
+
+  /**
+   * Determines the index in the menu where the given menu item should be
+   * inserted.
+   * 
+   * @param aMenuItem
+   *          the menu item to add, cannot be <code>null</code>.
+   * @return the position in the menu to add the given menu item, -1 if the menu
+   *         item should be added as last item.
+   */
+  private int determineToolMenuItemIndex( final JMenuItem aMenuItem )
+  {
+    final String newMenuItem = aMenuItem.getText();
+
+    int idx = -1;
+    for ( int i = 0; ( idx < 0 ) && ( i < this.toolsMenu.getItemCount() ); i++ )
+    {
+      final String nameA = this.toolsMenu.getItem( i ).getText();
+      final int comparison = newMenuItem.compareTo( nameA );
       if ( comparison < 0 )
       {
         idx = i;
