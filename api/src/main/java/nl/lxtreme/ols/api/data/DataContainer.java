@@ -424,7 +424,7 @@ public final class DataContainer implements CapturedData
    */
   public void read( final Reader aReader ) throws IOException
   {
-    int size = 0, rate = -1, channels = 32, enabledChannels = -1;
+    int size = -1, rate = -1, channels = 32, enabledChannels = -1;
     long triggerPos = -1;
 
     long[] cursorPositions = new long[10];
@@ -514,6 +514,11 @@ public final class DataContainer implements CapturedData
       long absoluteLength;
       int[] values;
       long[] timestamps;
+
+      if ( dataValues.isEmpty() || ( size < 0 ) )
+      {
+        throw new IOException( "File does not appear to be a valid datafile!" );
+      }
 
       if ( !compressed )
       {
