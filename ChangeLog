@@ -1,3 +1,27 @@
+2010-09-09  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Always use the canonical paths for properties files; ensure the
+	last selected directory of a file chooser (either AWT or Swing) is
+	retained in the user properties.
+
+2010-09-09  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java: When
+	trying to load another file than a OLS datafile, ensure we give a
+	proper message.
+
+2010-09-09  JaWi <j.w.janssen@lxtreme.nl>
+
+	* : commit 0990f28dbd232d0ce8272ad68986f2465e6bfd46 Author: J.W.
+	Janssen <j.w.janssen@lxtreme.nl> Date:   Thu Sep 9 13:15:01 2010
+	+0200
+
+2010-09-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ChangeLog: Added changelog.
+
 2010-09-08  JaWi <j.w.janssen@lxtreme.nl>
 
 	* api/ols.mediawiki,
