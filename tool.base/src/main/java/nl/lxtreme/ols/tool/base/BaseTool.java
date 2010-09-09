@@ -39,6 +39,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   // VARIABLES
 
   private final String name;
+  private final Category category;
   private DIALOG dialog;
 
   // CONSTRUCTORS
@@ -46,11 +47,23 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   /**
    * Creates a new BaseTool instance.
    * 
+   * @param aCategory
+   *          the category of this tool;
    * @param aName
    *          the name of this tool (to show in the UI).
    */
-  public BaseTool( final String aName )
+  protected BaseTool( final Category aCategory, final String aName )
   {
+    if ( aCategory == null )
+    {
+      throw new IllegalArgumentException( "Category cannot be null!" );
+    }
+    this.category = aCategory;
+
+    if ( ( aName == null ) || aName.trim().isEmpty() )
+    {
+      throw new IllegalArgumentException( "Name cannot be null or empty!" );
+    }
     this.name = aName;
   }
 
@@ -85,6 +98,15 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
     }
 
     return true;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.tools.Tool#getCategory()
+   */
+  @Override
+  public final Category getCategory()
+  {
+    return this.category;
   }
 
   /**
