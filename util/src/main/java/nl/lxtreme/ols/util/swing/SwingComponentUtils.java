@@ -207,6 +207,10 @@ public final class SwingComponentUtils
    */
   public static void loadWindowState( final String aNamespace, final Properties aProperties, final Window aWindow )
   {
+    // Special case: for FileDialog/JFileChooser we also should restore the
+    // properties...
+    loadFileDialogState( aNamespace, aProperties, aWindow );
+
     try
     {
       final String xPos = aProperties.getProperty( aNamespace + ".xPos" );
@@ -299,6 +303,9 @@ public final class SwingComponentUtils
    */
   public static void saveWindowState( final String aNamespace, final Properties aProperties, final Window aWindow )
   {
+    // Special case: for FileDialog/JFileChooser we also store the properties...
+    saveFileDialogState( aNamespace, aProperties, aWindow );
+
     final Point location = aWindow.getLocation();
     aProperties.put( aNamespace + ".xPos", Integer.toString( location.x ) );
     aProperties.put( aNamespace + ".yPos", Integer.toString( location.y ) );
@@ -470,9 +477,16 @@ public final class SwingComponentUtils
 
       dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
 
-      dialog.setVisible( true );
-      final String selectedFile = dialog.getFile();
-      return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
+      try
+      {
+        dialog.setVisible( true );
+        final String selectedFile = dialog.getFile();
+        return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
+      }
+      finally
+      {
+        dialog.dispose();
+      }
     }
     else
     {
@@ -487,12 +501,13 @@ public final class SwingComponentUtils
         dialog.addChoosableFileFilter( filter );
       }
 
+      File result = null;
       if ( dialog.showOpenDialog( aOwner ) == JFileChooser.APPROVE_OPTION )
       {
-        return dialog.getSelectedFile();
+        result = dialog.getSelectedFile();
       }
 
-      return null;
+      return result;
     }
   }
 
@@ -542,9 +557,16 @@ public final class SwingComponentUtils
 
       dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
 
-      dialog.setVisible( true );
-      final String selectedFile = dialog.getFile();
-      return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
+      try
+      {
+        dialog.setVisible( true );
+        final String selectedFile = dialog.getFile();
+        return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
+      }
+      finally
+      {
+        dialog.dispose();
+      }
     }
     else
     {
@@ -614,9 +636,16 @@ public final class SwingComponentUtils
 
       dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
 
-      dialog.setVisible( true );
-      final String selectedFile = dialog.getFile();
-      return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
+      try
+      {
+        dialog.setVisible( true );
+        final String selectedFile = dialog.getFile();
+        return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
+      }
+      finally
+      {
+        dialog.dispose();
+      }
     }
     else
     {
@@ -634,6 +663,31 @@ public final class SwingComponentUtils
       dialog.setVisible( true );
       return dialog.getSelectedFile();
     }
+  }
+
+  /**
+   * @param aContainer
+   * @param aComponentClass
+   * @return
+   */
+  private static Component findComponent( final Container aContainer, final Class<? extends Component> aComponentClass )
+  {
+    Component result = null;
+
+    final int cnt = aContainer.getComponentCount();
+    for ( int i = 0; ( result == null ) && ( i < cnt ); i++ )
+    {
+      final Component comp = aContainer.getComponent( i );
+      if ( aComponentClass.equals( comp.getClass() ) )
+      {
+        result = comp;
+      }
+      else if ( comp instanceof Container )
+      {
+        result = findComponent( ( Container )comp, aComponentClass );
+      }
+    }
+    return result;
   }
 
   /**
@@ -664,5 +718,83 @@ public final class SwingComponentUtils
     }
 
     return false;
+  }
+
+  /**
+   * Checks whether the given window is either a FileDialog, or contains a
+   * JFileChooser component. If so, its current directory is stored in the given
+   * properties.
+   * 
+   * @param aNamespace
+   *          the name space to use;
+   * @param aProperties
+   *          the properties to store the found directory in;
+   * @param aWindow
+   *          the window to check for.
+   */
+  private static void loadFileDialogState( final String aNamespace, final Properties aProperties, final Window aWindow )
+  {
+    final String propKey = aNamespace + ".dir";
+
+    if ( aWindow instanceof FileDialog )
+    {
+      final String dir = aProperties.getProperty( propKey );
+      if ( dir != null )
+      {
+        ( ( FileDialog )aWindow ).setDirectory( dir );
+      }
+    }
+    else if ( aWindow instanceof JDialog )
+    {
+      final Container contentPane = ( ( JDialog )aWindow ).getContentPane();
+      final JFileChooser fileChooser = ( JFileChooser )findComponent( contentPane, JFileChooser.class );
+      if ( fileChooser != null )
+      {
+        final String dir = aProperties.getProperty( propKey );
+        if ( dir != null )
+        {
+          fileChooser.setCurrentDirectory( new File( dir ) );
+        }
+      }
+    }
+  }
+
+  /**
+   * Checks whether the given window is either a FileDialog, or contains a
+   * JFileChooser component. If so, its current directory is restored from the
+   * given properties.
+   * 
+   * @param aNamespace
+   *          the name space to use;
+   * @param aProperties
+   *          the properties to get the directory from;
+   * @param aWindow
+   *          the window to check for.
+   */
+  private static void saveFileDialogState( final String aNamespace, final Properties aProperties, final Window aWindow )
+  {
+    final String propKey = aNamespace + ".dir";
+
+    if ( aWindow instanceof FileDialog )
+    {
+      final String dir = ( ( FileDialog )aWindow ).getDirectory();
+      if ( dir != null )
+      {
+        aProperties.put( propKey, dir );
+      }
+    }
+    else if ( aWindow instanceof JDialog )
+    {
+      final Container contentPane = ( ( JDialog )aWindow ).getContentPane();
+      final JFileChooser fileChooser = ( JFileChooser )findComponent( contentPane, JFileChooser.class );
+      if ( fileChooser != null )
+      {
+        final File dir = fileChooser.getCurrentDirectory();
+        if ( dir != null )
+        {
+          aProperties.put( propKey, dir.getAbsolutePath() );
+        }
+      }
+    }
   }
 }

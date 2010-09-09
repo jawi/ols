@@ -348,10 +348,9 @@ public final class HostUtils
       throw new IllegalArgumentException( "Properties name cannot be null or empty!" );
     }
 
-    final File propFile = createPropertiesFile( aName );
-
     try
     {
+      final File propFile = createPropertiesFile( aName );
       final FileReader propFileReader = new FileReader( propFile );
 
       LOG.log( Level.ALL, "Reading properties from '{0}' ...", propFile );
@@ -362,7 +361,7 @@ public final class HostUtils
     }
     catch ( IOException exception )
     {
-      LOG.log( Level.FINE, "Reading properties from '" + propFile + "' failed!", exception );
+      LOG.log( Level.FINE, "Reading properties failed!", exception );
     }
     // Unable to load any (valid) properties file, return null to indicate
     // this...
@@ -440,10 +439,9 @@ public final class HostUtils
       throw new IllegalArgumentException( "Properties object cannot be null!" );
     }
 
-    final File propFile = createPropertiesFile( aName );
-
     try
     {
+      final File propFile = createPropertiesFile( aName );
       final FileWriter propFileWriter = new FileWriter( propFile );
 
       LOG.log( Level.ALL, "Writing properties to '{0}' ...", propFile );
@@ -455,7 +453,7 @@ public final class HostUtils
       // Make sure to handle IO-interrupted exceptions properly!
       HostUtils.handleInterruptedException( exception );
 
-      LOG.log( Level.FINE, "Writing properties to '" + propFile + "' failed!", exception );
+      LOG.log( Level.FINE, "Writing properties failed!", exception );
     }
   }
 
@@ -469,8 +467,10 @@ public final class HostUtils
    *          "com.foo.bar".
    * @return the file pointing to the OS-specific properties file location,
    *         never <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems.
    */
-  private static final File createPropertiesFile( final String aName )
+  private static final File createPropertiesFile( final String aName ) throws IOException
   {
     final String dirName;
     final String fileName;
@@ -491,7 +491,7 @@ public final class HostUtils
     }
 
     final File propFile = new File( dirName, fileName );
-    return propFile;
+    return propFile.getCanonicalFile();
   }
 
   /**
