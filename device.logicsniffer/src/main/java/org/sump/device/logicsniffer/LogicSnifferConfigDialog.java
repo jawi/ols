@@ -34,6 +34,7 @@ import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
@@ -444,10 +445,19 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    */
   private JPanel createConnectionPane()
   {
-    final String[] ports = LogicSnifferDevice.getPorts();
-    this.portSelect = new JComboBox( ports );
-    this.portSelect.setEditable( true ); // allow people to put their own port
-                                         // name into it...
+    this.portSelect = new JLazyComboBox( new JLazyComboBox.ItemProvider()
+    {
+      @Override
+      public Object[] getItems()
+      {
+        return LogicSnifferDevice.getPorts();
+        // return new String[] { "com1", "com2", "com3", "com4", "com5", "com6",
+        // "com7", "com8", "com9", "com10", "com11",
+        // "com12" };
+      }
+    } );
+    // allow people to put their own port name into it...
+    this.portSelect.setEditable( true );
 
     this.portRateSelect = new JComboBox( BAUDRATES );
     this.portRateSelect.setSelectedIndex( 3 ); // 115k2
