@@ -26,7 +26,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.client.signal.laf.*;
 
 
 /**
@@ -37,34 +37,27 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
-  /** The tick increment (in pixels). */
-  public static final int TIMELINE_INCREMENT = 20;
-
-  private static final int TIMELINE_HEIGHT = 30;
-  private static final int SHORT_TICK_HEIGHT = 4;
-  private static final int PADDING_Y = 1;
 
   // VARIABLES
 
-  private double scale;
-  private DiagramSettings diagramSettings;
-  private final DataContainer dataContainer;
+  private final Diagram diagram;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new DiagramTimeLine instance.
    * 
-   * @param aData
-   *          the annotated data to use for this timeline.
+   * @param aDiagram
+   *          the diagram this timeline belongs to, cannot be <code>null</code>.
    */
-  public DiagramTimeLine( final DataContainer aDataContainer )
+  public DiagramTimeLine( final Diagram aDiagram )
   {
     super();
 
-    this.dataContainer = aDataContainer;
+    this.diagram = aDiagram;
 
-    setPreferredSize( new Dimension( TIMELINE_HEIGHT, TIMELINE_HEIGHT ) );
+    // Make sure to properly initialize our (custom) UI...
+    updateUI();
   }
 
   // METHODS
@@ -89,6 +82,22 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   }
 
   /**
+   * @return
+   */
+  public final DataContainer getDataContainer()
+  {
+    return this.diagram.getDataContainer();
+  }
+
+  /**
+   * @return the diagram
+   */
+  public final Diagram getDiagram()
+  {
+    return this.diagram;
+  }
+
+  /**
    * @see javax.swing.Scrollable#getPreferredScrollableViewportSize()
    */
   @Override
@@ -102,9 +111,9 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
    * 
    * @return the scale, never <code>null</code>.
    */
-  public double getScale()
+  public final double getScale()
   {
-    return this.scale;
+    return this.diagram.getScale();
   }
 
   /**
@@ -119,7 +128,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
       return 0;
     }
 
-    return aVisibleRect.width - TIMELINE_INCREMENT;
+    return aVisibleRect.width - DiagramTimeLineUI.TIMELINE_INCREMENT;
   }
 
   /**
@@ -153,7 +162,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
     }
 
     int currentPosition = aVisibleRect.x;
-    int maxUnitIncrement = DiagramTimeLine.TIMELINE_INCREMENT;
+    int maxUnitIncrement = DiagramTimeLineUI.TIMELINE_INCREMENT;
 
     // Return the number of pixels between currentPosition
     // and the nearest tick mark in the indicated direction.
@@ -169,160 +178,12 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   }
 
   /**
-   * Sets the diagramSettings to the given value.
-   * 
-   * @param aDiagramSettings
-   *          the diagramSettings to set, cannot be <code>null</code>.
-   */
-  public void setDiagramSettings( final DiagramSettings aDiagramSettings )
-  {
-    this.diagramSettings = aDiagramSettings;
-  }
-
-  /**
-   * @see javax.swing.JComponent#setPreferredSize(java.awt.Dimension)
+   * @see javax.swing.JComponent#updateUI()
    */
   @Override
-  public final void setPreferredSize( final Dimension aPreferredSize )
+  public void updateUI()
   {
-    // Let us only scale in width, not height!
-    super.setPreferredSize( new Dimension( aPreferredSize.width, TIMELINE_HEIGHT ) );
-  }
-
-  /**
-   * Sets the scale to the given value.
-   * 
-   * @param aScale
-   *          the scale to set, cannot be <code>null</code>.
-   */
-  public void setScale( final double aScale )
-  {
-    this.scale = aScale;
-  }
-
-  /**
-   * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
-   */
-  @Override
-  protected void paintComponent( final Graphics aGraphics )
-  {
-    if ( !this.dataContainer.hasCapturedData() )
-    {
-      return;
-    }
-
-    final int rowInc = Math.max( 1, ( int )( Diagram.MAX_SCALE / this.scale ) );
-    final int timeLineShift = ( int )( this.dataContainer.getTriggerPosition() % rowInc );
-
-    // obtain portion of graphics that needs to be drawn
-    final Rectangle clipArea = aGraphics.getClipBounds();
-    // for some reason, this component gets scrolled vertically although it has
-    // no reasons to do so. Resetting the Y-position & height of the clip-area
-    // seems to solve this problem...
-    clipArea.y = 0;
-    clipArea.height = TIMELINE_HEIGHT;
-
-    // find index of first row that needs drawing
-    final long firstRow = xToIndex( clipArea.x );
-    // find index of last row that needs drawing
-    final long lastRow = xToIndex( clipArea.x + clipArea.width ) + 1;
-
-    final FontMetrics fm = aGraphics.getFontMetrics();
-
-    aGraphics.setColor( this.diagramSettings.getBackgroundColor() );
-    aGraphics.fillRect( clipArea.x, clipArea.y, clipArea.x + clipArea.width, clipArea.y + clipArea.height );
-
-    aGraphics.setColor( this.diagramSettings.getTimeColor() );
-
-    for ( long row = ( firstRow / rowInc ) * rowInc + timeLineShift; row < lastRow; row += rowInc )
-    {
-      final int pos = Math.max( 0, ( int )( this.scale * row ) );
-
-      final int y1 = clipArea.y + TIMELINE_HEIGHT - PADDING_Y;
-      final int y2 = y1 - 3 * SHORT_TICK_HEIGHT;
-      final int y3 = y1 - SHORT_TICK_HEIGHT;
-
-      final long relativeTime = row - this.dataContainer.getTriggerPosition();
-      if ( ( relativeTime / rowInc ) % TIMELINE_INCREMENT == 0 )
-      {
-        final String time;
-        if ( this.dataContainer.hasTimingData() )
-        {
-          time = indexToTime( relativeTime );
-        }
-        else
-        {
-          time = Long.toString( relativeTime );
-        }
-
-        final int labelYpos = y2 - 2 * PADDING_Y;
-        int labelXpos = pos - ( fm.stringWidth( time ) / 2 );
-        if ( labelXpos < clipArea.x )
-        {
-          labelXpos = clipArea.x;
-        }
-
-        aGraphics.drawLine( pos, y1, pos, y2 );
-        aGraphics.drawString( time, labelXpos, labelYpos );
-      }
-      else
-      {
-        aGraphics.drawLine( pos, y1, pos, y3 );
-      }
-    }
-
-    // If cursors are disabled entirely, we're done; otherwise we need to draw
-    // them
-    if ( !this.dataContainer.isCursorsEnabled() )
-    {
-      return;
-    }
-
-    final int textWidth = fm.stringWidth( "t8" ) + 2;
-    for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
-    {
-      final long cursorPosition = this.dataContainer.getCursorPosition( i );
-      if ( ( cursorPosition >= firstRow ) && ( cursorPosition <= lastRow ) )
-      {
-        final int cursorPos = ( int )( cursorPosition * this.scale );
-
-        aGraphics.setColor( this.diagramSettings.getBackgroundColor() );
-        aGraphics.fillRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
-
-        aGraphics.setColor( this.diagramSettings.getCursorColor( i ) );
-        aGraphics.drawRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
-        aGraphics.drawString( String.format( "t%d", i + 1 ), cursorPos + 1, TIMELINE_HEIGHT - 2 );
-      }
-    }
-
-  }
-
-  /**
-   * Convert sample count to time string.
-   * 
-   * @param count
-   *          sample count (or index)
-   * @return string containing time information
-   */
-  private String indexToTime( final long count )
-  {
-    if ( !this.dataContainer.hasTimingData() )
-    {
-      return String.format( "%d", count );
-    }
-    return DisplayUtils.displayScaledTime( count, this.dataContainer.getSampleRate() );
-  }
-
-  /**
-   * Convert x position to sample index.
-   * 
-   * @param aXpos
-   *          horizontal position in pixels
-   * @return sample index
-   */
-  private long xToIndex( final int aXpos )
-  {
-    return Diagram.xToIndex( this.dataContainer, new Point( aXpos, 0 ), this.scale );
+    setUI( new DiagramTimeLineUI() );
   }
 }
 

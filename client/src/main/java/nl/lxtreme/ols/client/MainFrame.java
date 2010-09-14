@@ -289,7 +289,7 @@ public final class MainFrame extends JFrame implements Closeable
    */
   public final DiagramSettings getDiagramSettings()
   {
-    return this.diagram;
+    return null; // XXX
   }
 
   /**
@@ -299,7 +299,7 @@ public final class MainFrame extends JFrame implements Closeable
    */
   public double getZoomScale()
   {
-    return this.diagram.getZoomScale();
+    return this.diagram.getScale();
   }
 
   /**

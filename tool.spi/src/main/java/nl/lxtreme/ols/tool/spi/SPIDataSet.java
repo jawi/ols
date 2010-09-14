@@ -22,7 +22,7 @@ package nl.lxtreme.ols.tool.spi;
 
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -48,6 +48,18 @@ public final class SPIDataSet extends BaseDataSet<SPIData>
   }
 
   // METHODS
+
+  /**
+   * Returns the time as display string.
+   * 
+   * @param aSampleIdx
+   *          a sample index to return the time value for.
+   * @return a time display value, never <code>null</code>.
+   */
+  public String getDisplayTime( final int aSampleIdx )
+  {
+    return DisplayUtils.displayTime( getTime( aSampleIdx ) );
+  }
 
   /**
    * @param aTimeValue

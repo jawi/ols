@@ -18,13 +18,10 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.base;
+package nl.lxtreme.ols.api.data;
 
 
 import java.util.*;
-
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -81,24 +78,6 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   }
 
   /**
-   * Returns the display time-value for the given sample index, taking the
-   * (optional) trigger position into consideration.
-   * 
-   * @param aSampleIdx
-   *          the sample index to return as (absolute) time value.
-   * @return a time display string, never <code>null</code>.
-   */
-  public final String getDisplayTime( final int aSampleIdx )
-  {
-    long time = this.timestamps[aSampleIdx];
-    if ( this.triggerDataPresent )
-    {
-      time -= this.triggerPosition;
-    }
-    return indexToTime( time );
-  }
-
-  /**
    * Returns the sample (array) index on which the decoding is stopped.
    * 
    * @return a sample (array) index, >= 0.
@@ -124,6 +103,29 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   public final int getStartOfDecode()
   {
     return this.startOfDecode;
+  }
+
+  /**
+   * Returns the time-value for the given sample index, taking the (optional)
+   * trigger position into consideration.
+   * 
+   * @param aSampleIdx
+   *          the sample index to return as (absolute) time value.
+   * @return a real time value, never <code>null</code>.
+   */
+  public final double getTime( final int aSampleIdx )
+  {
+    long time = this.timestamps[aSampleIdx];
+    if ( this.triggerDataPresent )
+    {
+      time -= this.triggerPosition;
+    }
+    if ( this.timingDataPresent )
+    {
+      return time / ( double )this.sampleRate;
+    }
+
+    return time;
   }
 
   /**
@@ -164,25 +166,5 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   protected void sort()
   {
     Collections.sort( this.data );
-  }
-
-  /**
-   * Determines the time (display) value for a given sample index.
-   * 
-   * @param aIndex
-   *          the sample index to convert to a time (display) value.
-   * @return the time display value of the given sample index, never
-   *         <code>null</code>.
-   */
-  private String indexToTime( final long aIndex )
-  {
-    if ( this.timingDataPresent )
-    {
-      return DisplayUtils.displayScaledTime( aIndex, this.sampleRate );
-    }
-    else
-    {
-      return Long.toString( aIndex );
-    }
   }
 }

@@ -28,7 +28,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.signal.laf.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -111,7 +111,7 @@ public class SetCursorAction extends BaseAction
   {
     final JComponent container = ( JComponent )aMenuItem.getParent();
 
-    Point location = ( Point )container.getClientProperty( Diagram.CONTEXTMENU_LOCATION_KEY );
+    Point location = ( Point )container.getClientProperty( DiagramUI.CONTEXTMENU_LOCATION_KEY );
     if ( location == null )
     {
       // Make sure we return a defined point...
