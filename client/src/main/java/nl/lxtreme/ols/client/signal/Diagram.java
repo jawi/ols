@@ -22,16 +22,12 @@ package nl.lxtreme.ols.client.signal;
 
 
 import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.logging.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.signal.laf.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -48,211 +44,30 @@ import nl.lxtreme.ols.util.*;
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
-public final class Diagram extends JComponent implements Scrollable, DiagramSettings, DiagramCursorChangeListener
+public final class Diagram extends JComponent implements Scrollable, DiagramCursorChangeListener
 {
   // INNER TYPES
 
-  /**
-   * Denotes a polyline for drawing byte values.
-   */
-  static final class ByteValuePolyline
-  {
-    public final int[] x;
-    public final int[] y1;
-    public final int[] y2;
-    public final int n;
-
-    public ByteValuePolyline( final int aN )
-    {
-      this.n = aN;
-      this.x = new int[aN];
-      this.y1 = new int[aN];
-      this.y2 = new int[aN];
-    }
-  }
-
-  /**
-   * Provides a context menu popup listener.
-   */
-  static final class ContextMenuListener implements PopupMenuListener
-  {
-    // METHODS
-
-    /**
-     * @see javax.swing.event.PopupMenuListener#popupMenuCanceled(javax.swing.event.PopupMenuEvent)
-     */
-    @Override
-    public void popupMenuCanceled( final PopupMenuEvent aEvent )
-    {
-      final JPopupMenu menu = ( JPopupMenu )aEvent.getSource();
-      menu.putClientProperty( CONTEXTMENU_LOCATION_KEY, null );
-    }
-
-    /**
-     * @see javax.swing.event.PopupMenuListener#popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent)
-     */
-    @Override
-    public void popupMenuWillBecomeInvisible( final PopupMenuEvent aEvent )
-    {
-      final JPopupMenu menu = ( JPopupMenu )aEvent.getSource();
-      final Diagram diagram = ( Diagram )menu.getInvoker();
-
-      final Point location = menu.getLocationOnScreen();
-      // we *must* convert the mouse location from the screen to the diagram
-      // coordinate space...
-      SwingUtilities.convertPointFromScreen( location, diagram );
-
-      menu.putClientProperty( CONTEXTMENU_LOCATION_KEY, location );
-    }
-
-    /**
-     * @see javax.swing.event.PopupMenuListener#popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent)
-     */
-    @Override
-    public void popupMenuWillBecomeVisible( final PopupMenuEvent aEvent )
-    {
-    }
-  }
-
-  /**
-   * 
-   */
-  final class MouseListener extends MouseAdapter
-  {
-    // VARIABLES
-
-    private int currentCursor;
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
-     */
-    @Override
-    public void mouseClicked( final MouseEvent aEvent )
-    {
-      if ( aEvent.getClickCount() == 2 )
-      {
-        final Point point = aEvent.getPoint();
-        if ( aEvent.isAltDown() || aEvent.isShiftDown() )
-        {
-          // Zoom out...
-          zoomOut( point );
-        }
-        else
-        {
-          // Zoom in...
-          zoomIn( point );
-        }
-      }
-    }
-
-    /**
-     * Handles mouse dragged events and produces status change "events"
-     * accordingly.
-     */
-    @Override
-    public void mouseDragged( final MouseEvent aEvent )
-    {
-      final Point mousePosition = aEvent.getPoint();
-      if ( this.currentCursor >= 0 )
-      {
-        dragCursor( this.currentCursor, mousePosition );
-      }
-
-      updateTooltipText( mousePosition, null );
-    }
-
-    /**
-     * Handles mouse moved events and produces status change "events"
-     * accordingly.
-     */
-    @Override
-    public void mouseMoved( final MouseEvent aEvent )
-    {
-      final Point mousePosition = aEvent.getPoint();
-
-      final int channel = ( mousePosition.y / getChannelHeight() );
-      final ChannelAnnotation annotation = getAnnotationHover( channel, mousePosition );
-
-      final int cursorIdx = getCursorHover( mousePosition );
-      if ( cursorIdx >= 0 )
-      {
-        this.currentCursor = cursorIdx;
-        Diagram.this.setCursor( Diagram.this.cursorDrag );
-      }
-      else
-      {
-        this.currentCursor = -1;
-        Diagram.this.setCursor( Diagram.this.cursorDefault );
-      }
-
-      updateTooltipText( mousePosition, annotation );
-    }
-  }
-
-  /**
-   * Denotes a polyline for drawing signals.
-   */
-  static final class SignalPolyline
-  {
-    public final int[] x;
-    public final int[] y;
-    public final int n;
-
-    public SignalPolyline( final int aN )
-    {
-      this.n = aN;
-      this.x = new int[aN];
-      this.y = new int[aN];
-    }
-  }
-
-  // CONSTANTS
-
-  public static final String CONTEXTMENU_LOCATION_KEY = "OLS.ContextMenu.location";
-
   private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG = Logger.getLogger( Diagram.class.getName() );
-
-  static final double MAX_SCALE = 15;
   private static final double CURSOR_HOVER = 5.0;
-  private static final int PADDING_Y = 2;
-
-  private static final Stroke SOLID_THICK = new BasicStroke( 1.5f );
 
   private static final boolean DEBUG = Boolean.parseBoolean( System
       .getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
 
+  /** The maximum scale that is possible in this diagram. */
+  public static final double MAX_SCALE = 15;
+
   // VARIABLES
 
+  private final DiagramSettings diagramSettings;
   private final DiagramTimeLine timeLine;
   private final DiagramRowLabels rowLabels;
   private double scale;
-  private final Cursor cursorDefault;
-  private final Cursor cursorDrag;
-  private final JPopupMenu contextMenu;
   private final ClientController controller;
-  /**
-   * Display settings for each group. Can be any combinations (OR-ed) of the
-   * defined MODE_* values.
-   */
-  private final int[] groupSettings;
-  private final Color signalColor;
-  private final Color triggerColor;
-  private final Color gridColor;
-  private final Color textColor;
-  private final Color timeColor;
-  private final Color groupBackgroundColor;
-  private final Color backgroundColor;
-  private final Color labelColor;
-  private final Color[] cursorColors;
-  private final Color[] channelColors;
-  private final int channelHeight;
-  private final int scopeHeight;
-
   private final DataContainer dataContainer;
+
+  // CONSTRUCTORS
 
   /**
    * Create a new empty diagram to be placed in a container.
@@ -264,63 +79,15 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     this.controller = aController;
     this.dataContainer = aController.getDataContainer();
 
-    // this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
-    // this.signalColor = new Color( 0x30, 0x4b, 0x75 );
-    // this.triggerColor = new Color( 0x82, 0x87, 0x8f );
-    // this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
-    // this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
-    // this.textColor = Color.WHITE;
-    // this.timeColor = Color.WHITE;
-    // this.labelColor = new Color( 0x82, 0x87, 0x8f );
-    this.backgroundColor = Color.WHITE;
-    this.signalColor = new Color( 0x30, 0x4b, 0x75 );
-    this.triggerColor = new Color( 0x82, 0x87, 0x8f );
-    this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
-    this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
-    this.textColor = new Color( 0x25, 0x25, 0x25 );
-    this.timeColor = new Color( 0x25, 0x25, 0x25 );
-    this.labelColor = new Color( 0x82, 0x87, 0x8f );
+    this.diagramSettings = new MutableDiagramSettings();
 
-    this.cursorColors = makeColorPalette( DataContainer.MAX_CURSORS, DataContainer.MAX_CURSORS );
-    this.channelColors = makeMonochromaticColorPalette( DataContainer.MAX_CHANNELS );
-
-    this.channelHeight = 30;
-    this.scopeHeight = 133;
-
-    this.groupSettings = new int[4];
-    for ( int i = 0; i < this.groupSettings.length; i++ )
-    {
-      this.groupSettings[i] = DISPLAY_CHANNELS;
-    }
-
-    this.contextMenu = new JPopupMenu();
-    this.contextMenu.addPopupMenuListener( new ContextMenuListener() );
-    for ( int i = 0; i < 10; i++ )
-    {
-      final Action setCursorAction = aController.getAction( SetCursorAction.getCursorId( i ) );
-      this.contextMenu.add( new JCheckBoxMenuItem( setCursorAction ) );
-    }
-    setComponentPopupMenu( this.contextMenu );
-
-    this.cursorDefault = getCursor();
-    this.cursorDrag = new Cursor( Cursor.MOVE_CURSOR );
-
-    this.rowLabels = new DiagramRowLabels( this.dataContainer );
-    this.rowLabels.setDiagramSettings( this );
-
-    this.timeLine = new DiagramTimeLine( this.dataContainer );
-    this.timeLine.setDiagramSettings( this );
+    this.rowLabels = new DiagramRowLabels( this );
+    this.timeLine = new DiagramTimeLine( this );
 
     setMinimumSize( new Dimension( 25, 1 ) );
-    setBackground( getBackgroundColor() );
 
     aController.addCursorChangeListener( this );
     aController.addCursorChangeListener( this.timeLine );
-
-    final MouseListener mouseListener = new MouseListener();
-
-    addMouseListener( mouseListener );
-    addMouseMotionListener( mouseListener );
   }
 
   /**
@@ -352,6 +119,9 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   {
     super.addNotify();
     configureEnclosingScrollPane();
+
+    // Make sure to properly initialize our (custom) UI...
+    updateUI();
   }
 
   /**
@@ -386,53 +156,78 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getBackgroundColor()
+   * Moves the cursor with a given index to a given mouse X position.
+   * 
+   * @param aCursorIdx
+   *          the cursor index to move, should be >= 0;
+   * @param aMousePosition
+   *          the point containing the new X position of the cursor.
    */
-  public final Color getBackgroundColor()
+  public final void dragCursor( final int aCursorIdx, final Point aMousePosition )
   {
-    return this.backgroundColor;
+    if ( !this.dataContainer.isCursorsEnabled() )
+    {
+      return;
+    }
+
+    this.controller.setCursorPosition( aCursorIdx, aMousePosition );
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getChannelHeight()
+   * @param aChannelIdx
+   * @param aMouseXpos
+   * @return
    */
-  @Override
-  public final int getChannelHeight()
+  public final ChannelAnnotation getAnnotationHover( final int aChannelIdx, final Point aMousePosition )
   {
-    return this.channelHeight;
+    final int sampleIdx = this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) );
+    return this.dataContainer.getChannelAnnotation( aChannelIdx, sampleIdx );
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getCursorColor(int)
+   * Determines whether the given mouse X position is actually in the vicinity
+   * of a cursor.
+   * 
+   * @param aMouseXpos
+   *          the mouse X position to test.
+   * @return the index of the cursor the given mouse position is near, or -1 if
+   *         there's no cursor set or nowhere near a cursor.
    */
-  @Override
-  public final Color getCursorColor( final int aCursorIdx )
+  public final int getCursorHover( final Point aMousePosition )
   {
-    return this.cursorColors[aCursorIdx];
+    final long idx = convertPointToSampleIndex( aMousePosition );
+    final double threshold = CURSOR_HOVER / this.scale;
+    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
+    {
+      final long cursorPosition = this.dataContainer.getCursorPosition( i );
+      if ( cursorPosition < 0 )
+      {
+        continue;
+      }
+      if ( Math.abs( idx - cursorPosition ) < threshold )
+      {
+        return i;
+      }
+    }
+    return -1;
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getGridColor()
+   * @return the dataContainer
    */
-  public final Color getGridColor()
+  public final DataContainer getDataContainer()
   {
-    return this.gridColor;
+    return this.dataContainer;
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getGroupBackgroundColor()
+   * Returns the diagram settings.
+   * 
+   * @return the diagram settings, never <code>null</code>.
    */
-  public final Color getGroupBackgroundColor()
+  public DiagramSettings getDiagramSettings()
   {
-    return this.groupBackgroundColor;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getLabelColor()
-   */
-  public final Color getLabelColor()
-  {
-    return this.labelColor;
+    return this.diagramSettings;
   }
 
   /**
@@ -445,12 +240,11 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getScopeHeight()
+   * @return the scale
    */
-  @Override
-  public final int getScopeHeight()
+  public final double getScale()
   {
-    return this.scopeHeight;
+    return this.scale;
   }
 
   /**
@@ -462,11 +256,11 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   {
     if ( aOrientation == SwingConstants.HORIZONTAL )
     {
-      return aVisibleRect.width - DiagramTimeLine.TIMELINE_INCREMENT;
+      return aVisibleRect.width - DiagramTimeLineUI.TIMELINE_INCREMENT;
     }
     else
     {
-      return aVisibleRect.height - getChannelHeight();
+      return aVisibleRect.height - getDiagramSettings().getChannelHeight();
     }
   }
 
@@ -500,12 +294,12 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
     if ( aOrientation == SwingConstants.HORIZONTAL )
     {
       currentPosition = aVisibleRect.x;
-      maxUnitIncrement = DiagramTimeLine.TIMELINE_INCREMENT;
+      maxUnitIncrement = DiagramTimeLineUI.TIMELINE_INCREMENT;
     }
     else
     {
       currentPosition = aVisibleRect.y;
-      maxUnitIncrement = getChannelHeight();
+      maxUnitIncrement = getDiagramSettings().getChannelHeight();
     }
 
     // Return the number of pixels between currentPosition
@@ -522,23 +316,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getSignalColor(int)
-   */
-  public final Color getSignalColor( final int aChannelIdx )
-  {
-    return this.channelColors[aChannelIdx];
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getSignalHeight()
-   */
-  @Override
-  public final int getSignalHeight()
-  {
-    return getChannelHeight() - 4;
-  }
-
-  /**
    * calulate the position within a window (pane) based on current page and zoom
    * settings
    * 
@@ -551,40 +328,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   public int getTargetPosition( final long aPosition )
   {
     return ( int )( Math.max( 0.0, aPosition ) * this.scale );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getTextColor()
-   */
-  public final Color getTextColor()
-  {
-    return this.textColor;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getTimeColor()
-   */
-  public final Color getTimeColor()
-  {
-    return this.timeColor;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getTriggerColor()
-   */
-  public final Color getTriggerColor()
-  {
-    return this.triggerColor;
-  }
-
-  /**
-   * Returns the current scale.
-   * 
-   * @return the scale as double value.
-   */
-  public double getZoomScale()
-  {
-    return this.scale;
   }
 
   /**
@@ -615,30 +358,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#isShowByte(int)
-   */
-  public final boolean isShowByte( final int aGroup )
-  {
-    return ( ( this.groupSettings[aGroup] & DISPLAY_BYTE ) > 0 );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#isShowChannels(int)
-   */
-  public final boolean isShowChannels( final int aGroup )
-  {
-    return ( ( this.groupSettings[aGroup] & DISPLAY_CHANNELS ) > 0 );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#isShowScope(int)
-   */
-  public final boolean isShowScope( final int aGroup )
-  {
-    return ( ( this.groupSettings[aGroup] & DISPLAY_SCOPE ) > 0 );
-  }
-
-  /**
    * Calls the <code>unconfigureEnclosingScrollPane</code> method.
    * 
    * @see #unconfigureEnclosingScrollPane
@@ -651,53 +370,14 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#setShowByte(int, boolean)
+   * @see java.awt.Component#repaint()
    */
   @Override
-  public final void setShowByte( final int aGroup, final boolean aShow )
+  public void repaint()
   {
-    if ( aShow )
-    {
-      this.groupSettings[aGroup] |= DISPLAY_BYTE;
-    }
-    else
-    {
-      this.groupSettings[aGroup] &= ~DISPLAY_BYTE;
-    }
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#setShowChannels(int,
-   *      boolean)
-   */
-  @Override
-  public final void setShowChannels( final int aGroup, final boolean aShow )
-  {
-    if ( aShow )
-    {
-      this.groupSettings[aGroup] |= DISPLAY_CHANNELS;
-    }
-    else
-    {
-      this.groupSettings[aGroup] &= ~DISPLAY_CHANNELS;
-    }
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#setShowScope(int,
-   *      boolean)
-   */
-  @Override
-  public final void setShowScope( final int aGroup, final boolean aShow )
-  {
-    if ( aShow )
-    {
-      this.groupSettings[aGroup] |= DISPLAY_SCOPE;
-    }
-    else
-    {
-      this.groupSettings[aGroup] &= ~DISPLAY_SCOPE;
-    }
+    super.repaint();
+    this.rowLabels.repaint();
+    this.timeLine.repaint();
   }
 
   /**
@@ -705,10 +385,10 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
    * 
    * @return a preferred size, never <code>null</code>.
    */
-  // final Point aPoint, final double aScaleFactor
   public void updatePreferredSize()
   {
-    final Dimension newDiagramSize = calculateNewDimension();
+    final DiagramUI diagramUI = ( DiagramUI )this.ui;
+    final Dimension newDiagramSize = diagramUI.calculateNewDimension( this );
     if ( newDiagramSize.equals( getPreferredSize() ) )
     {
       // No actual resizing necessary; only repaint us and our
@@ -727,134 +407,13 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   }
 
   /**
-   * Reverts back to the standard zoom level.
-   */
-  public void zoomDefault()
-  {
-    setScale( MAX_SCALE );
-
-    updatePreferredSize();
-    revalidateAll();
-  }
-
-  /**
-   * Zooms in by factor 2 and resizes the component accordingly.
-   * 
-   * @return <code>true</code> if the zoom action succeeded, <code>false</code>
-   *         otherwise.
-   */
-  public void zoomIn()
-  {
-    zoomIn( null );
-  }
-
-  /**
-   * Zooms out by factor 2 and resizes the component accordingly.
-   * 
-   * @return <code>true</code> if the zoom action succeeded, <code>false</code>
-   *         otherwise.
-   */
-  public void zoomOut()
-  {
-    zoomOut( null );
-  }
-
-  /**
-   * Zooms to fitting the view on Display.
-   */
-  public void zoomToFit()
-  {
-    // avoid null pointer exception when no data available
-    if ( this.dataContainer == null )
-    {
-      return;
-    }
-
-    final double fitScaleFactor = getZoomToFitScale();
-
-    setScale( fitScaleFactor );
-
-    updatePreferredSize();
-    revalidateAll();
-  }
-
-  /**
-   * Moves the cursor with a given index to a given mouse X position.
-   * 
-   * @param aCursorIdx
-   *          the cursor index to move, should be >= 0;
-   * @param aMousePosition
-   *          the point containing the new X position of the cursor.
-   */
-  final void dragCursor( final int aCursorIdx, final Point aMousePosition )
-  {
-    if ( !this.dataContainer.isCursorsEnabled() )
-    {
-      return;
-    }
-
-    this.controller.setCursorPosition( aCursorIdx, aMousePosition );
-  }
-
-  /**
-   * @param aChannelIdx
-   * @param aMouseXpos
-   * @return
-   */
-  final ChannelAnnotation getAnnotationHover( final int aChannelIdx, final Point aMousePosition )
-  {
-    final int sampleIdx = this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) );
-    return this.dataContainer.getChannelAnnotation( aChannelIdx, sampleIdx );
-  }
-
-  /**
-   * Determines whether the given mouse X position is actually in the vicinity
-   * of a cursor.
-   * 
-   * @param aMouseXpos
-   *          the mouse X position to test.
-   * @return the index of the cursor the given mouse position is near, or -1 if
-   *         there's no cursor set or nowhere near a cursor.
-   */
-  final int getCursorHover( final Point aMousePosition )
-  {
-    final long idx = convertPointToSampleIndex( aMousePosition );
-    final double threshold = CURSOR_HOVER / this.scale;
-    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
-    {
-      final long cursorPosition = this.dataContainer.getCursorPosition( i );
-      if ( cursorPosition < 0 )
-      {
-        continue;
-      }
-      if ( Math.abs( idx - cursorPosition ) < threshold )
-      {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  /**
-   * @param aEvent
-   */
-  final void showContextMenu( final Point aPosition )
-  {
-    if ( this.dataContainer.hasCapturedData() )
-    {
-      this.contextMenu.putClientProperty( CONTEXTMENU_LOCATION_KEY, aPosition );
-      this.contextMenu.show( this, aPosition.x, aPosition.y );
-    }
-  }
-
-  /**
    * Update status information. Notifies {@link StatusChangeListener}.
    * 
    * @param aDragging
    *          <code>true</code> indicates that dragging information should be
    *          added
    */
-  final void updateTooltipText( final Point aMousePosition, final ChannelAnnotation aAnnotation )
+  public final void updateTooltipText( final Point aMousePosition, final ChannelAnnotation aAnnotation )
   {
     if ( !this.dataContainer.hasCapturedData() )
     {
@@ -863,7 +422,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
 
     final StringBuffer sb = new StringBuffer( " " );
 
-    final int row = aMousePosition.y / getChannelHeight();
+    final int row = aMousePosition.y / getDiagramSettings().getChannelHeight();
     if ( row <= this.dataContainer.getChannels() + ( this.dataContainer.getChannels() / 9 ) )
     {
       if ( row % 9 == 8 )
@@ -904,12 +463,47 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   }
 
   /**
+   * Overridden in order to set a custom UI, which not only paints this diagram,
+   * but also can be used to manage the various settings, such as colors,
+   * height, and so on.
+   * 
+   * @see javax.swing.JComponent#updateUI()
+   */
+  @Override
+  public void updateUI()
+  {
+    setUI( new DiagramUI( this.controller ) );
+  }
+
+  /**
+   * Reverts back to the standard zoom level.
+   */
+  public void zoomDefault()
+  {
+    setScale( MAX_SCALE );
+
+    updatePreferredSize();
+    revalidateAll();
+  }
+
+  /**
    * Zooms in by factor 2 and resizes the component accordingly.
    * 
    * @return <code>true</code> if the zoom action succeeded, <code>false</code>
    *         otherwise.
    */
-  final void zoomIn( final Point aPoint )
+  public void zoomIn()
+  {
+    zoomIn( null );
+  }
+
+  /**
+   * Zooms in by factor 2 and resizes the component accordingly.
+   * 
+   * @return <code>true</code> if the zoom action succeeded, <code>false</code>
+   *         otherwise.
+   */
+  public final void zoomIn( final Point aPoint )
   {
     if ( !this.dataContainer.hasCapturedData() )
     {
@@ -934,7 +528,18 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
    * @return <code>true</code> if the zoom action succeeded, <code>false</code>
    *         otherwise.
    */
-  final void zoomOut( final Point aPoint )
+  public void zoomOut()
+  {
+    zoomOut( null );
+  }
+
+  /**
+   * Zooms out by factor 2 and resizes the component accordingly.
+   * 
+   * @return <code>true</code> if the zoom action succeeded, <code>false</code>
+   *         otherwise.
+   */
+  public final void zoomOut( final Point aPoint )
   {
     if ( !this.dataContainer.hasCapturedData() )
     {
@@ -956,91 +561,22 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   }
 
   /**
-   * Paints the diagram to the extend necessary.
+   * Zooms to fitting the view on Display.
    */
-  @Override
-  protected void paintComponent( final Graphics aGraphics )
+  public void zoomToFit()
   {
-    if ( !this.dataContainer.hasCapturedData() )
+    // avoid null pointer exception when no data available
+    if ( this.dataContainer == null )
     {
       return;
     }
 
-    final long start = System.currentTimeMillis();
-    final Graphics2D g2d = ( Graphics2D )aGraphics;
+    final double fitScaleFactor = getZoomToFitScale();
 
-    // obtain portion of graphics that needs to be drawn
-    final Rectangle clipArea = aGraphics.getClipBounds();
+    setScale( fitScaleFactor );
 
-    final int cx = clipArea.x;
-    final int cy = clipArea.y;
-    final int cw = cx + clipArea.width;
-    final int ch = cy + clipArea.height;
-
-    // find index of first & last row that needs drawing
-    final long firstRow = convertPointToSampleIndex( new Point( cx, 0 ) );
-    final long lastRow = convertPointToSampleIndex( new Point( cw, 0 ) ) + 1;
-
-    // paint portion of background that needs drawing
-    g2d.setColor( getBackgroundColor() );
-    g2d.fillRect( cx, cy, cw, ch );
-
-    // draw trigger if existing and visible
-    final long triggerPosition = this.dataContainer.getTriggerPosition();
-    if ( ( triggerPosition >= firstRow ) && ( triggerPosition <= lastRow ) )
-    {
-      g2d.setColor( getTriggerColor() );
-      g2d.fillRect( ( int )( triggerPosition * this.scale ) - 1, cy, ( int )( this.scale + 2 ), ch );
-    }
-
-    // draw all signal groups...
-    drawSignals( g2d, clipArea, firstRow, lastRow );
-
-    // draw cursors if enabled...
-    drawCursors( g2d, firstRow, lastRow );
-
-    if ( DEBUG )
-    {
-      final long end = System.currentTimeMillis();
-      LOG.log( Level.INFO, "Render time = {0}ms.", ( end - start ) );
-    }
-  }
-
-  /**
-   * @return
-   */
-  private Dimension calculateNewDimension()
-  {
-    final int channels = this.dataContainer.getChannels();
-    final int enabledChannels = this.dataContainer.getEnabledChannels();
-
-    final int channelHeight = getChannelHeight();
-    final int scopeHeight = getScopeHeight();
-
-    int height = 0;
-    for ( int group = 0; ( group < channels / 8 ) && ( group < 4 ); group++ )
-    {
-      if ( ( ( enabledChannels >> ( 8 * group ) ) & 0xff ) != 0 )
-      {
-        if ( isShowChannels( group ) )
-        {
-          height += channelHeight * 8;
-        }
-        if ( isShowScope( group ) )
-        {
-          height += scopeHeight;
-        }
-        if ( isShowByte( group ) )
-        {
-          height += channelHeight;
-        }
-      }
-    }
-
-    final int width = ( int )( this.scale * this.dataContainer.getAbsoluteLength() );
-
-    final Dimension newDiagramSize = new Dimension( width, height );
-    return newDiagramSize;
+    updatePreferredSize();
+    revalidateAll();
   }
 
   /**
@@ -1071,304 +607,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
         }
         scrollPane.setColumnHeaderView( this.timeLine );
         scrollPane.setRowHeaderView( this.rowLabels );
-      }
-    }
-  }
-
-  /**
-   * @param g2d
-   * @param aFirstRow
-   * @param aLastRow
-   */
-  private void drawCursors( final Graphics2D g2d, final long aFirstRow, final long aLastRow )
-  {
-    if ( this.dataContainer.isCursorsEnabled() )
-    {
-      for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
-      {
-        final long cursorPosition = this.dataContainer.getCursorPosition( i );
-        if ( ( cursorPosition >= aFirstRow ) && ( cursorPosition <= aLastRow ) )
-        {
-          final int cursorPos = ( int )( cursorPosition * this.scale );
-
-          g2d.setColor( getCursorColor( i ) );
-          g2d.drawLine( cursorPos, 0, cursorPos, 36 * getChannelHeight() );
-        }
-      }
-    }
-  }
-
-  /**
-   * @param g
-   * @param clipArea
-   * @param y
-   */
-  private void drawGridLine( final Graphics g, final Rectangle clipArea, final int y )
-  {
-    g.setColor( getGridColor() );
-    g.drawLine( clipArea.x, y, clipArea.x + clipArea.width, y );
-  }
-
-  /**
-   * Draws all signals, byte values and scopes.
-   * 
-   * @param aGraphics
-   *          the canvas to paint on;
-   * @param aClipArea
-   *          the clip area to paint;
-   * @param aFromIndex
-   *          the first sample to paint;
-   * @param aToIndex
-   *          the last sample to paint.
-   */
-  private void drawSignals( final Graphics2D aGraphics, final Rectangle aClipArea, final long aFromIndex,
-      final long aToIndex )
-  {
-    final int channels = this.dataContainer.getChannels();
-    final int enabled = this.dataContainer.getEnabledChannels();
-    final long[] timestamps = this.dataContainer.getTimestamps();
-    final int[] values = this.dataContainer.getValues();
-
-    final int channelHeight = getChannelHeight();
-    final int signalHeight = getSignalHeight();
-    final int scopeHeight = getScopeHeight();
-
-    final double scopeScaleFactor = ( 256.0 / ( scopeHeight - 2 * PADDING_Y ) );
-
-    final int center = ( int )( this.scale / 2.0 );
-
-    final FontMetrics fm = aGraphics.getFontMetrics();
-    final int labelYpos = ( int )( channelHeight - ( fm.getHeight() / 2.0 ) + 1 );
-
-    final int n = 2 * timestamps.length;
-
-    // Search the first sample index the is right before the to-be-displayed
-    // from index...
-    int dataStartIndex = 0;
-    do
-    {
-      if ( timestamps[dataStartIndex] >= aFromIndex )
-      {
-        // Found it; use this as starting time-index...
-        dataStartIndex = Math.max( 0, dataStartIndex - 1 );
-        break;
-      }
-      dataStartIndex++;
-    }
-    while ( dataStartIndex < timestamps.length );
-
-    int bofs = 0;
-
-    for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
-    {
-      final boolean blockEnabled = ( ( enabled >> ( 8 * block ) ) & 0xff ) != 0;
-      if ( !blockEnabled )
-      {
-        continue;
-      }
-
-      if ( isShowChannels( block ) )
-      {
-        final SignalPolyline polyline = new SignalPolyline( n );
-
-        // draw actual data
-        for ( int bit = 0; bit < 8; bit++ )
-        {
-          final int channelIdx = 8 * block + bit;
-          long currentSample = aFromIndex - 1;
-          int pIdx = 0;
-
-          int dataIndex = dataStartIndex;
-          while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
-          {
-            final long nextSample;
-
-            final int currentValue = ( values[dataIndex] >> channelIdx ) & 0x01;
-            if ( dataIndex >= values.length - 1 )
-            {
-              nextSample = aToIndex + 1;
-            }
-            else
-            {
-              nextSample = timestamps[dataIndex + 1];
-            }
-
-            // Calculate display coordinates...
-            final int x1 = ( int )( ( this.scale * currentSample ) - center );
-            final int x2 = ( int )( ( this.scale * ( nextSample - 1 ) ) + center );
-            final int y1 = bofs + channelHeight * bit + signalHeight * ( 1 - currentValue ) + 1;
-
-            polyline.x[pIdx] = x1;
-            polyline.y[pIdx] = y1;
-            polyline.x[pIdx + 1] = x2;
-            polyline.y[pIdx + 1] = y1;
-            pIdx += 2;
-
-            // Update loop administration...
-            dataIndex++;
-            currentSample = nextSample;
-          }
-
-          aGraphics.setColor( getSignalColor( channelIdx ) );
-          aGraphics.drawPolyline( polyline.x, polyline.y, pIdx );
-
-          // XXX XXX
-          final Color oldColor = aGraphics.getColor();
-          final Paint oldPaint = aGraphics.getPaint();
-          final Stroke oldStroke = aGraphics.getStroke();
-          final Composite oldComposite = aGraphics.getComposite();
-          final Object oldHint = aGraphics.getRenderingHint( RenderingHints.KEY_ANTIALIASING );
-          aGraphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-
-          final Iterator<ChannelAnnotation> annotations = this.dataContainer.getChannelAnnotations( channelIdx,
-              dataStartIndex, timestamps.length );
-          while ( annotations.hasNext() )
-          {
-            final ChannelAnnotation annotation = annotations.next();
-
-            final long startIdx = timestamps[annotation.getStartIndex()];
-            final long endIdx = timestamps[annotation.getEndIndex()];
-            final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
-
-            final int x1 = ( int )( this.scale * startIdx );
-            final int x2 = ( int )( this.scale * endIdx );
-            final int y1 = bofs + channelHeight * channelIdx;
-
-            final int textXoffset = ( int )( ( x2 - x1 - fm.stringWidth( data ) ) / 2.0 );
-
-            final Color newColor = getSignalColor( channelIdx );
-            final Color newBrighterColor = newColor.brighter();
-            final Color newDarkerColor = newColor.darker().darker();
-            final GradientPaint newPaint = new GradientPaint( x1, y1 - 5, newBrighterColor, x1, y1
-                + ( signalHeight / 2 ), newDarkerColor );
-
-            final int annotationWidth = ( x2 - x1 );
-            final int annotationHeight = ( signalHeight - 6 );
-            final int arc = ( int )( annotationHeight / 2.0 );
-
-            aGraphics.setComposite( AlphaComposite.SrcOver.derive( 0.75f ) );
-            aGraphics.setStroke( SOLID_THICK );
-
-            aGraphics.setPaint( newPaint );
-            aGraphics.fillRoundRect( x1, y1 + 4, annotationWidth, annotationHeight, arc, arc );
-
-            aGraphics.setColor( newBrighterColor );
-            aGraphics.drawRoundRect( x1, y1 + 4, annotationWidth, annotationHeight, arc, arc );
-
-            if ( textXoffset > 0 )
-            {
-              aGraphics.setColor( Color.WHITE );
-              aGraphics.setComposite( oldComposite );
-
-              aGraphics.drawString( data, x1 + textXoffset, y1 + labelYpos - 4 );
-            }
-          }
-
-          aGraphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, oldHint );
-          aGraphics.setPaint( oldPaint );
-          aGraphics.setComposite( oldComposite );
-          aGraphics.setStroke( oldStroke );
-          aGraphics.setColor( oldColor );
-          // XXX XXX
-
-          drawGridLine( aGraphics, aClipArea, channelHeight * bit + bofs + ( channelHeight - 1 ) );
-        }
-        bofs += ( channelHeight * 8 );
-      }
-
-      if ( isShowScope( block ) )
-      {
-        final SignalPolyline scopePolyline = new SignalPolyline( n );
-
-        int pIdx = 0;
-
-        int val = bofs;
-        int dataIndex = dataStartIndex;
-
-        while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
-        {
-          val = ( int )( ( 0xff - ( ( values[dataIndex] >> ( 8 * block ) ) & 0xff ) ) / scopeScaleFactor );
-
-          scopePolyline.x[pIdx] = ( int )( timestamps[dataIndex] * this.scale );
-          scopePolyline.y[pIdx] = bofs + val + PADDING_Y;
-          pIdx++;
-
-          dataIndex++;
-        }
-
-        scopePolyline.x[pIdx] = ( int )( aToIndex * this.scale );
-        scopePolyline.y[pIdx] = bofs + val + PADDING_Y;
-        pIdx++;
-
-        // draw actual data
-        aGraphics.setColor( this.signalColor ); // XXX
-        aGraphics.drawPolyline( scopePolyline.x, scopePolyline.y, pIdx );
-        bofs += scopeHeight;
-        // draw bottom grid line
-        drawGridLine( aGraphics, aClipArea, bofs );
-      }
-
-      if ( isShowByte( block ) )
-      {
-        final ByteValuePolyline bytePolyline = new ByteValuePolyline( n );
-
-        long currentSample = aFromIndex - 1;
-        int pIdx = 0;
-
-        int dataIndex = dataStartIndex;
-
-        while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
-        {
-          final long nextSample;
-
-          final int currentValue = ( values[dataIndex] >> ( 8 * block ) ) & 0xff;
-          if ( dataIndex >= values.length - 1 )
-          {
-            nextSample = aToIndex + 1;
-          }
-          else
-          {
-            nextSample = timestamps[dataIndex + 1];
-          }
-
-          // Calculate display coordinates...
-          final int x1 = ( int )( this.scale * currentSample - center );
-          final int x2 = ( int )( this.scale * ( nextSample - 1 ) + center );
-
-          final int bit = ( dataIndex % 2 );
-          final int y1 = bofs + signalHeight * ( 1 - bit );
-          final int y2 = bofs + signalHeight * bit;
-
-          bytePolyline.x[pIdx] = x1;
-          bytePolyline.y1[pIdx] = y1;
-          bytePolyline.y2[pIdx] = y2;
-          bytePolyline.x[pIdx + 1] = x2;
-          bytePolyline.y1[pIdx + 1] = y1;
-          bytePolyline.y2[pIdx + 1] = y2;
-          pIdx += 2;
-
-          // if steady long enough, add hex value
-          final String byteValue = String.format( "%02X", currentValue );
-          final int labelWidth = fm.stringWidth( byteValue );
-
-          if ( ( x2 - x1 ) > labelWidth )
-          {
-            final int labelXpos = ( int )( ( x1 + x2 - labelWidth ) / 2.0 );
-
-            aGraphics.drawString( byteValue, labelXpos, bofs + labelYpos );
-          }
-
-          // Update loop administration...
-          dataIndex++;
-          currentSample = nextSample;
-        }
-
-        aGraphics.setColor( this.signalColor ); // XXX
-        aGraphics.drawPolyline( bytePolyline.x, bytePolyline.y1, pIdx );
-        aGraphics.drawPolyline( bytePolyline.x, bytePolyline.y2, pIdx );
-        bofs += channelHeight;
-        // draw bottom grid line
-        drawGridLine( aGraphics, aClipArea, bofs );
       }
     }
   }
@@ -1415,51 +653,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   }
 
   /**
-   * @param aI
-   * @param aFreq1
-   * @param aFreq2
-   * @param aFreq3
-   * @param aPhase1
-   * @param aPhase2
-   * @param aPhase3
-   * @return
-   */
-  private Color makeColorGradient( final int aI, final double aFreq1, final double aFreq2, final double aFreq3,
-      final double aPhase1, final double aPhase2, final double aPhase3 )
-  {
-    final int width = 127;
-    final int center = 128;
-    final int red = ( int )( Math.sin( aFreq1 * aI + aPhase1 ) * width + center );
-    final int grn = ( int )( Math.sin( aFreq2 * aI + aPhase2 ) * width + center );
-    final int blu = ( int )( Math.sin( aFreq3 * aI + aPhase3 ) * width + center );
-    return new Color( red, grn, blu );
-  }
-
-  /**
-   * @return
-   */
-  private Color[] makeColorPalette( final int aLength, final int aSteps )
-  {
-    final Color[] result = new Color[aLength];
-    final double freq = 2 * Math.PI / aSteps;
-    for ( int i = 0; i < result.length; i++ )
-    {
-      result[i] = makeColorGradient( i, freq, freq, freq, 0.0, 2.0, 4.0 );
-    }
-    return result;
-  }
-
-  /**
-   * @return
-   */
-  private Color[] makeMonochromaticColorPalette( final int aLength )
-  {
-    final Color[] result = new Color[aLength];
-    Arrays.fill( result, this.signalColor );
-    return result;
-  }
-
-  /**
    * Revalidates this diagram and all of its headers/borders.
    */
   private void revalidateAll()
@@ -1478,7 +671,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramSett
   private void setScale( final double aScale )
   {
     this.scale = aScale;
-    this.timeLine.setScale( aScale );
   }
 
   /**

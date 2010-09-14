@@ -70,20 +70,6 @@ Provides some common utilities that are shared among all other projects.
 
 == To do ==
 
-# <strike>sometimes when a dropdown list is opened, the options don't come on the right places (somewhere else then beneath the dropdown menu);</strike>
-# <strike>move more (time-)calculation routines from Diagram to AnnotatedData;</strike>
-# <strike>add removal of cursors;</strike>
-# <strike>rename AnnotatedData to DataContainer;</strike>
-# <strike>clear Annotations when new captured data is set;</strike>
-# <strike>allow tool-analysis to be rerun without closing the dialog (thanks to Andre);</strike>
-# <strike>clear Annotations for a channel when tool wants to;</strike>
-# <strike>support for <tt>CMD+W</tt> on OSX;</strike>
-# <strike>closing the window through the [X] on Windows doesn't exit the program (thanks to Andre);</strike>
-# <strike>rename cursor-labels to "t0", "t1", ... "t9";</strike>
-# <strike>add annotations to other analysis tools;</strike>
-# <strike>the OLS before/after trigger ratio slider has some cosmetic twitches (thanks to Andre);</strike>
-# <strike>resizing analysis dialogs makes buttons grow (too) large on Linux/Windows (thanks to Andre);</strike>
-# <strike>remember the last save/load location for open/save data-files & exports;</strike>
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;
 # make the annotated data configurable regarding the displayed text and colors;
 # add a preference pane for the "general" client configuration;

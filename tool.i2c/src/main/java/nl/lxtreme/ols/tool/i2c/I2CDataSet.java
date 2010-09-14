@@ -22,7 +22,7 @@ package nl.lxtreme.ols.tool.i2c;
 
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -76,6 +76,18 @@ public final class I2CDataSet extends BaseDataSet<I2CData>
   public int getDecodedByteCount()
   {
     return this.decodedBytes;
+  }
+
+  /**
+   * Returns the time as display string.
+   * 
+   * @param aSampleIdx
+   *          a sample index to return the time value for.
+   * @return a time display value, never <code>null</code>.
+   */
+  public String getDisplayTime( final int aSampleIdx )
+  {
+    return DisplayUtils.displayTime( getTime( aSampleIdx ) );
   }
 
   /**

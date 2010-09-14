@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.base;
+package nl.lxtreme.ols.api.data;
 
 
 /**
@@ -72,7 +72,7 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
    */
   public int compareTo( final TYPE aComparable )
   {
-    return ( this.idx - ( ( BaseData<?> )aComparable ).getIndex() );
+    return ( this.idx - ( (nl.lxtreme.ols.api.data.BaseData<?> )aComparable ).getIndex() );
   }
 
   /**
@@ -90,7 +90,7 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
       return false;
     }
 
-    final BaseData<?> other = ( BaseData<?> )aObject;
+    final BaseData<?> other = (nl.lxtreme.ols.api.data.BaseData<?> )aObject;
     if ( this.idx != other.idx )
     {
       return false;
