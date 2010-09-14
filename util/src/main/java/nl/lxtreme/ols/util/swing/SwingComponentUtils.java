@@ -392,7 +392,7 @@ public final class SwingComponentUtils
       throw new IllegalArgumentException( "Combobox cannot be null!" );
     }
 
-    if ( aValue != null )
+    if ( ( aValue != null ) && !"null".equals( aValue ) )
     {
       aComboBox.setSelectedItem( aValue );
     }
@@ -421,7 +421,7 @@ public final class SwingComponentUtils
       throw new IllegalArgumentException( "Default value cannot be null!" );
     }
 
-    if ( aValue != null )
+    if ( ( aValue != null ) && !"null".equals( aValue ) )
     {
       aComboBox.setSelectedItem( aValue );
     }
