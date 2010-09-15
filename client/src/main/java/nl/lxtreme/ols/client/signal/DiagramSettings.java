@@ -54,6 +54,15 @@ public interface DiagramSettings
   Color getBackgroundColor();
 
   /**
+   * Returns the signal color.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to get the color for, >= 0 && < 32.
+   * @return the signal, never <code>null</code>.
+   */
+  Color getChannelColor( int aChannelIdx );
+
+  /**
    * Returns the height of the channels indicator.
    * 
    * @return a channel height, in pixels.
@@ -85,6 +94,11 @@ public interface DiagramSettings
   Color getGroupBackgroundColor();
 
   /**
+   * @return
+   */
+  Color getGroupByteColor();
+
+  /**
    * Returns the label color.
    * 
    * @return the label, never <code>null</code>.
@@ -92,20 +106,18 @@ public interface DiagramSettings
   Color getLabelColor();
 
   /**
+   * Returns the scope color.
+   * 
+   * @return a scope color, never <code>null</code>.
+   */
+  Color getScopeColor();
+
+  /**
    * Returns the height of the scope indicator.
    * 
    * @return a scope height, in pixels.
    */
   int getScopeHeight();
-
-  /**
-   * Returns the signal color.
-   * 
-   * @param aChannelIdx
-   *          the index of the channel to get the color for, >= 0 && < 32.
-   * @return the signal, never <code>null</code>.
-   */
-  Color getSignalColor( int aChannelIdx );
 
   /**
    * Returns the height of the signal indicator.
@@ -152,25 +164,6 @@ public interface DiagramSettings
    * @return
    */
   boolean isShowScope( final int aGroup );
-
-  /**
-   * @param aGroup
-   * @return
-   */
-  void setShowByte( final int aGroup, final boolean aShow );
-
-  /**
-   * @param aGroup
-   * @return
-   */
-  void setShowChannels( final int aGroup, final boolean aShow );
-
-  /**
-   * @param aGroup
-   * @return
-   */
-  void setShowScope( final int aGroup, final boolean aShow );
-
 }
 
 /* EOF */

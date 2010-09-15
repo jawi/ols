@@ -526,10 +526,10 @@ public class DiagramUI extends ComponentUI
             currentSample = nextSample;
           }
 
-          aCanvas.setColor( settings.getSignalColor( channelIdx ) );
+          aCanvas.setColor( settings.getChannelColor( channelIdx ) );
           aCanvas.drawPolyline( polyline.x, polyline.y, pIdx );
 
-          // XXX XXX
+          // XXX
           final Color oldColor = aCanvas.getColor();
           final Paint oldPaint = aCanvas.getPaint();
           final Stroke oldStroke = aCanvas.getStroke();
@@ -553,7 +553,7 @@ public class DiagramUI extends ComponentUI
 
             final int textXoffset = ( int )( ( x2 - x1 - fm.stringWidth( data ) ) / 2.0 );
 
-            final Color newColor = settings.getSignalColor( channelIdx );
+            final Color newColor = settings.getChannelColor( channelIdx );
             final Color newBrighterColor = newColor.brighter();
             final Color newDarkerColor = newColor.darker().darker();
             final GradientPaint newPaint = new GradientPaint( x1, y1 - 5, newBrighterColor, x1, y1
@@ -586,7 +586,7 @@ public class DiagramUI extends ComponentUI
           aCanvas.setComposite( oldComposite );
           aCanvas.setStroke( oldStroke );
           aCanvas.setColor( oldColor );
-          // XXX XXX
+          // XXX
 
           drawGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + bofs + ( channelHeight - 1 ) );
         }
@@ -618,7 +618,7 @@ public class DiagramUI extends ComponentUI
         pIdx++;
 
         // draw actual data
-        aCanvas.setColor( settings.getSignalColor( 0 ) ); // XXX
+        aCanvas.setColor( settings.getScopeColor() );
         aCanvas.drawPolyline( scopePolyline.x, scopePolyline.y, pIdx );
         bofs += scopeHeight;
         // draw bottom grid line
@@ -680,7 +680,7 @@ public class DiagramUI extends ComponentUI
           currentSample = nextSample;
         }
 
-        aCanvas.setColor( settings.getSignalColor( 0 ) ); // XXX
+        aCanvas.setColor( settings.getGroupByteColor() );
         aCanvas.drawPolyline( bytePolyline.x, bytePolyline.y1, pIdx );
         aCanvas.drawPolyline( bytePolyline.x, bytePolyline.y2, pIdx );
         bofs += channelHeight;

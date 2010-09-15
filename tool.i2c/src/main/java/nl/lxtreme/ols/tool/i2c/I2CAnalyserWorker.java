@@ -312,7 +312,6 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
                 byteValue );
           }
 
-          // TEST TODO XXX
           addChannelAnnotation( this.sdaIdx, prevIdx, idx, annotation );
 
           byteValue = 0;

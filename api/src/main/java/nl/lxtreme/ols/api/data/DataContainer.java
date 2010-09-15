@@ -227,6 +227,18 @@ public final class DataContainer implements CapturedData
   }
 
   /**
+   * Returns all channel labels.
+   * 
+   * @return an array of all channel's label, never <code>null</code>.
+   */
+  public final String[] getChannelLabels()
+  {
+    final String[] result = new String[this.channelLabels.length];
+    System.arraycopy( this.channelLabels, 0, result, 0, result.length );
+    return result;
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.data.CapturedData#getChannels()
    */
   @Override
@@ -611,6 +623,22 @@ public final class DataContainer implements CapturedData
           + this.channelLabels.length );
     }
     this.channelLabels[aChannelIdx] = aLabel;
+  }
+
+  /**
+   * Sets all channel labels directly.
+   * 
+   * @param aLabels
+   *          the array of labels to set, cannot be <code>null</code>.
+   */
+  public void setChannelLabels( final String[] aLabels )
+  {
+    if ( aLabels.length != this.channelLabels.length )
+    {
+      throw new IllegalArgumentException( "Invalid channel labels! Should have exact " + this.channelLabels.length
+          + " items!" );
+    }
+    System.arraycopy( aLabels, 0, this.channelLabels, 0, this.channelLabels.length );
   }
 
   /**

@@ -28,6 +28,8 @@ import java.util.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.*;
 
 
 /**
@@ -36,7 +38,7 @@ import nl.lxtreme.ols.api.*;
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
-public class DiagramSettingsDialog extends JDialog implements Configurable
+public class DiagramSettingsDialog extends JDialog implements Configurable, Closeable
 {
   // INNER TYPES
 
@@ -76,7 +78,7 @@ public class DiagramSettingsDialog extends JDialog implements Configurable
 
   // VARIABLES
 
-  private final DiagramSettings settings;
+  private final MutableDiagramSettings settings;
   private boolean result;
 
   // CONSTRUCTORS
@@ -91,7 +93,7 @@ public class DiagramSettingsDialog extends JDialog implements Configurable
   {
     super( aParent, "Group Display Settings", ModalityType.DOCUMENT_MODAL );
 
-    this.settings = aSettings;
+    this.settings = new MutableDiagramSettings( aSettings );
 
     final JPanel contentPane = new JPanel( new GridBagLayout() );
     setContentPane( contentPane );
@@ -144,22 +146,15 @@ public class DiagramSettingsDialog extends JDialog implements Configurable
         new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, LABEL_INSETS,
             0, 0 ) );
 
-    final JButton cancel = new JButton( "Cancel" );
-    cancel.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        close( false );
-      }
-    } );
+    final JButton cancel = StandardActionFactory.createCloseButton();
     final JButton ok = new JButton( "Ok" );
     ok.addActionListener( new ActionListener()
     {
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
-        close( true );
+        DiagramSettingsDialog.this.result = true;
+        close();
       }
     } );
     // Make both buttons the same size...
@@ -183,12 +178,32 @@ public class DiagramSettingsDialog extends JDialog implements Configurable
   // METHODS
 
   /**
+   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
+   */
+  @Override
+  public void close()
+  {
+    setVisible( false );
+    dispose();
+  }
+
+  /**
+   * Returns the (mutated) diagram settings.
+   * 
+   * @return the diagram settings, never <code>null</code>.
+   */
+  public final DiagramSettings getDiagramSettings()
+  {
+    return this.settings;
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
    *      java.util.Properties)
    */
   public void readProperties( final String aNamespace, final Properties aProperties )
   {
-    // TODO
+    // NO-op
   }
 
   /**
@@ -211,16 +226,7 @@ public class DiagramSettingsDialog extends JDialog implements Configurable
    */
   public void writeProperties( final String aNamespace, final Properties aProperties )
   {
-    // TODO
-  }
-
-  /**
-   * @param aDialogResult
-   */
-  final void close( final boolean aDialogResult )
-  {
-    this.result = aDialogResult;
-    setVisible( false );
+    // NO-op
   }
 
   /**

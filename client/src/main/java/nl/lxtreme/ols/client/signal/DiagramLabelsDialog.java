@@ -27,6 +27,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -46,7 +47,7 @@ public class DiagramLabelsDialog extends JDialog
 
   // VARIABLES
 
-  private final DataContainer annotatedData;
+  private final String[] channelLabels;
   private final JTextField[] labelFields;
   private boolean result;
 
@@ -55,11 +56,11 @@ public class DiagramLabelsDialog extends JDialog
   /**
    * Constructs diagram labels component.
    */
-  public DiagramLabelsDialog( final Window aParent, final DataContainer aAnnotatedData )
+  public DiagramLabelsDialog( final Window aParent, final String[] aChannelLabels )
   {
     super( aParent, "Diagram Labels", ModalityType.DOCUMENT_MODAL );
 
-    this.annotatedData = aAnnotatedData;
+    this.channelLabels = aChannelLabels;
 
     final JPanel contentPane = new JPanel( new GridBagLayout() );
     contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
@@ -76,7 +77,7 @@ public class DiagramLabelsDialog extends JDialog
         final int index = 16 * col + row;
 
         this.labelFields[index] = new JTextField( 20 );
-        this.labelFields[index].setText( this.annotatedData.getChannelLabel( index ) );
+        this.labelFields[index].setText( this.channelLabels[index] );
 
         modePane.add( new JLabel( String.format( "Channel % 2d:", index ) ), //
             new GridBagConstraints( 2 * col, row, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
@@ -140,6 +141,16 @@ public class DiagramLabelsDialog extends JDialog
   }
 
   /**
+   * @return the channelLabels
+   */
+  public final String[] getChannelLabels()
+  {
+    return this.channelLabels;
+  }
+
+  // METHODS
+
+  /**
    * Display the settings dialog. If the user clicks ok, all changes are
    * reflected in the properties of this object. Otherwise changes are
    * discarded.
@@ -152,8 +163,6 @@ public class DiagramLabelsDialog extends JDialog
     setVisible( true );
     return ( this.result );
   }
-
-  // METHODS
 
   /**
    * Clears all labels.
@@ -182,7 +191,8 @@ public class DiagramLabelsDialog extends JDialog
   {
     for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
     {
-      this.annotatedData.setChannelLabel( i, this.labelFields[i].getText() );
+      final String newLabel = this.labelFields[i].getText();
+      this.channelLabels[i] = DisplayUtils.isEmpty( newLabel ) ? null : newLabel.trim();
     }
   }
 
@@ -192,7 +202,6 @@ public class DiagramLabelsDialog extends JDialog
    */
   final void setLabel( final int aChannelIdx, final String aText )
   {
-    System.out.println( "Setting label " + aChannelIdx + " to '" + aText + "'" );
-    this.annotatedData.setChannelLabel( aChannelIdx, aText );
+    this.channelLabels[aChannelIdx] = aText;
   }
 }

@@ -369,8 +369,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       try
       {
-        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences(
-            DeviceController.class.getName(), null );
+        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences( DeviceController.class
+            .getName(), null );
         for ( ServiceReference serviceRef : serviceRefs )
         {
           tools.add( ( DeviceController )this.bundleContext.getService( serviceRef ) );
@@ -770,17 +770,18 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void showLabelsDialog( final Window aParent )
   {
-    DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, this.dataContainer );
-    if ( dialog.showDialog() )
+    if ( this.mainFrame != null )
     {
-      if ( this.mainFrame != null )
+      DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, this.dataContainer.getChannelLabels() );
+      if ( dialog.showDialog() )
       {
-        this.mainFrame.updatePreferredSize();
+        this.dataContainer.setChannelLabels( dialog.getChannelLabels() );
+        this.mainFrame.setChannelLabels( dialog.getChannelLabels() );
       }
-    }
 
-    dialog.dispose();
-    dialog = null;
+      dialog.dispose();
+      dialog = null;
+    }
   }
 
   /**
@@ -800,7 +801,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       DiagramSettingsDialog dialog = new DiagramSettingsDialog( aParent, this.mainFrame.getDiagramSettings() );
       if ( dialog.showDialog() )
       {
-        this.mainFrame.updatePreferredSize();
+        this.mainFrame.setDiagramSettings( dialog.getDiagramSettings() );
       }
 
       dialog.dispose();

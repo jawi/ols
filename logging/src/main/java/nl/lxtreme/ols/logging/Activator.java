@@ -71,8 +71,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
   @Override
   public void modifiedService( final ServiceReference aServiceRef, final Object aService )
   {
-    // TODO Auto-generated method stub
-
+    // NO-op
   }
 
   /**
@@ -82,8 +81,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
   @Override
   public void removedService( final ServiceReference aServiceRef, final Object aService )
   {
-    // TODO Auto-generated method stub
-
+    // NO-op
   }
 
   /**

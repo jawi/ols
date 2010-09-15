@@ -289,7 +289,7 @@ public final class MainFrame extends JFrame implements Closeable
    */
   public final DiagramSettings getDiagramSettings()
   {
-    return null; // XXX
+    return this.diagram.getDiagramSettings();
   }
 
   /**
@@ -360,6 +360,27 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
+   * @param aChannelLabels
+   */
+  public void setChannelLabels( final String[] aChannelLabels )
+  {
+    this.diagram.updatePreferredSize();
+    this.diagram.revalidate();
+  }
+
+  /**
+   * Sets the current diagram settings.
+   * 
+   * @param aDiagramSettings
+   *          the diagram settings to set, cannot be <code>null</code>.
+   */
+  public final void setDiagramSettings( final DiagramSettings aDiagramSettings )
+  {
+    this.diagram.setDiagramSettings( aDiagramSettings );
+    this.diagram.revalidate();
+  }
+
+  /**
    * @param aPercentage
    */
   public void setProgress( final int aPercentage )
@@ -397,14 +418,6 @@ public final class MainFrame extends JFrame implements Closeable
   {
     final AboutBox aboutDialog = new AboutBox( this, aVersion );
     aboutDialog.showDialog();
-  }
-
-  /**
-   * 
-   */
-  public void updatePreferredSize()
-  {
-    this.diagram.updatePreferredSize();
   }
 
   /**
