@@ -38,11 +38,12 @@ public class MutableDiagramSettings implements DiagramSettings
   private int scopeHeight;
   private int signalHeight;
 
-  private Color signalColor;
   private Color triggerColor;
   private Color gridColor;
   private Color backgroundColor;
   private Color groupBackgroundColor;
+  private Color groupByteColor;
+  private Color scopeColor;
   private Color textColor;
   private Color timeColor;
   private Color labelColor;
@@ -64,13 +65,14 @@ public class MutableDiagramSettings implements DiagramSettings
   public MutableDiagramSettings()
   {
     this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
-    this.signalColor = new Color( 0x30, 0x4b, 0x75 );
     this.triggerColor = new Color( 0x82, 0x87, 0x8f );
     this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
     this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
     this.textColor = Color.WHITE;
     this.timeColor = Color.WHITE;
     this.labelColor = new Color( 0x82, 0x87, 0x8f );
+    this.groupByteColor = Color.GRAY;
+    this.scopeColor = Color.GRAY;
 
     // this.backgroundColor = Color.WHITE;
     // this.signalColor = new Color( 0x30, 0x4b, 0x75 );
@@ -96,12 +98,66 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
+   * Creates a new MutableDiagramSettings instance.
+   * 
+   * @param aDiagramSettings
+   *          the diagram settings to use as default, cannot be
+   *          <code>null</code>.
+   */
+  public MutableDiagramSettings( final DiagramSettings aDiagramSettings )
+  {
+    this();
+
+    setBackgroundColor( aDiagramSettings.getBackgroundColor() );
+    setTriggerColor( aDiagramSettings.getTriggerColor() );
+    setGridColor( aDiagramSettings.getGridColor() );
+    setGroupBackgroundColor( aDiagramSettings.getGroupBackgroundColor() );
+    setTextColor( aDiagramSettings.getTextColor() );
+    setTimeColor( aDiagramSettings.getTimeColor() );
+    setLabelColor( aDiagramSettings.getLabelColor() );
+    setGroupByteColor( aDiagramSettings.getGroupByteColor() );
+    setScopeColor( aDiagramSettings.getScopeColor() );
+
+    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
+    {
+      setCursorColor( i, aDiagramSettings.getCursorColor( i ) );
+    }
+
+    for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
+    {
+      setChannelColor( i, aDiagramSettings.getChannelColor( i ) );
+    }
+
+    for ( int i = 0; i < 4; i++ )
+    {
+      setShowByte( i, aDiagramSettings.isShowByte( i ) );
+      setShowChannels( i, aDiagramSettings.isShowChannels( i ) );
+      setShowScope( i, aDiagramSettings.isShowScope( i ) );
+    }
+
+    setChannelHeight( aDiagramSettings.getChannelHeight() );
+    setScopeHeight( aDiagramSettings.getScopeHeight() );
+    setSignalHeight( aDiagramSettings.getSignalHeight() );
+  }
+
+  // METHODS
+
+  /**
    * @see nl.lxtreme.ols.client.signal.DiagramSettings#getBackgroundColor()
    */
   @Override
   public final Color getBackgroundColor()
   {
     return this.backgroundColor;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getChannelColor(int)
+   */
+  @Override
+  public final Color getChannelColor( final int aChannelIdx )
+  {
+    return this.channelColors[aChannelIdx];
   }
 
   /**
@@ -157,6 +213,15 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getGroupByteColor()
+   */
+  @Override
+  public final Color getGroupByteColor()
+  {
+    return this.groupByteColor;
+  }
+
+  /**
    * @see nl.lxtreme.ols.client.signal.DiagramSettings#getLabelColor()
    */
   @Override
@@ -166,21 +231,21 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
+   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getScopeColor()
+   */
+  @Override
+  public final Color getScopeColor()
+  {
+    return this.scopeColor;
+  }
+
+  /**
    * @see nl.lxtreme.ols.client.signal.DiagramSettings#getScopeHeight()
    */
   @Override
   public final int getScopeHeight()
   {
     return this.scopeHeight;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getSignalColor(int)
-   */
-  @Override
-  public final Color getSignalColor( final int aChannelIdx )
-  {
-    return this.channelColors[aChannelIdx];
   }
 
   /**
@@ -298,12 +363,30 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
+   * @param aGroupByteColor
+   *          the groupByteColor to set
+   */
+  public final void setGroupByteColor( final Color aGroupByteColor )
+  {
+    this.groupByteColor = aGroupByteColor;
+  }
+
+  /**
    * @param aLabelColor
    *          the labelColor to set
    */
   public final void setLabelColor( final Color aLabelColor )
   {
     this.labelColor = aLabelColor;
+  }
+
+  /**
+   * @param aScopeColor
+   *          the scopeColor to set
+   */
+  public final void setScopeColor( final Color aScopeColor )
+  {
+    this.scopeColor = aScopeColor;
   }
 
   /**
@@ -360,15 +443,6 @@ public class MutableDiagramSettings implements DiagramSettings
     {
       this.groupSettings[aGroup] &= ~DiagramSettings.DISPLAY_SCOPE;
     }
-  }
-
-  /**
-   * @param aSignalColor
-   *          the signalColor to set
-   */
-  public final void setSignalColor( final Color aSignalColor )
-  {
-    this.signalColor = aSignalColor;
   }
 
   /**
@@ -449,7 +523,7 @@ public class MutableDiagramSettings implements DiagramSettings
   private Color[] makeMonochromaticColorPalette( final int aLength )
   {
     final Color[] result = new Color[aLength];
-    Arrays.fill( result, this.signalColor );
+    Arrays.fill( result, new Color( 0x30, 0x4b, 0x75 ) );
     return result;
   }
 }

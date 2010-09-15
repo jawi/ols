@@ -83,7 +83,7 @@ public class MeasurementDialog extends BaseToolDialog
 
       if ( this.worker == null )
       {
-        this.worker = new ClockFrequencyMeasureWorker( MeasurementDialog.this.data, this.channel,
+        this.worker = new ClockFrequencyMeasureWorker( MeasurementDialog.this.data, null, this.channel,
             MeasurementDialog.this.cursorA.getSelectedIndex(), MeasurementDialog.this.cursorB.getSelectedIndex() );
         this.worker.addPropertyChangeListener( this );
 
@@ -257,8 +257,8 @@ public class MeasurementDialog extends BaseToolDialog
   {
     SwingComponentUtils.setSelectedIndex( this.cursorA, aProperties.getProperty( aNamespace + ".selectedCursorA" ) );
     SwingComponentUtils.setSelectedIndex( this.cursorB, aProperties.getProperty( aNamespace + ".selectedCursorB" ) );
-    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser,
-        aProperties.getProperty( aNamespace + ".selectedClockChannel" ) );
+    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser, aProperties.getProperty( aNamespace
+        + ".selectedClockChannel" ) );
   }
 
   /**
@@ -445,8 +445,8 @@ public class MeasurementDialog extends BaseToolDialog
     this.distanceLabel = new JLabel( "<???>         " );
 
     final JPanel basicMeasurements = new JPanel( new GridBagLayout() );
-    basicMeasurements.setBorder( BorderFactory.createCompoundBorder(
-        BorderFactory.createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    basicMeasurements.setBorder( BorderFactory.createCompoundBorder( BorderFactory
+        .createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
     basicMeasurements.add( new JLabel( "Distance:" ), //
         new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,

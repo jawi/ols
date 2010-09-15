@@ -60,7 +60,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
 
   // VARIABLES
 
-  private final DiagramSettings diagramSettings;
+  private DiagramSettings diagramSettings;
   private final DiagramTimeLine timeLine;
   private final DiagramRowLabels rowLabels;
   private double scale;
@@ -225,7 +225,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    * 
    * @return the diagram settings, never <code>null</code>.
    */
-  public DiagramSettings getDiagramSettings()
+  public final DiagramSettings getDiagramSettings()
   {
     return this.diagramSettings;
   }
@@ -378,6 +378,15 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     super.repaint();
     this.rowLabels.repaint();
     this.timeLine.repaint();
+  }
+
+  /**
+   * @param aDiagramSettings
+   *          the diagramSettings to set
+   */
+  public void setDiagramSettings( final DiagramSettings aDiagramSettings )
+  {
+    this.diagramSettings = aDiagramSettings;
   }
 
   /**

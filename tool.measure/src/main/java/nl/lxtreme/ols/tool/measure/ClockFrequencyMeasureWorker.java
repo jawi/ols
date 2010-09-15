@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.measure;
 import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 
@@ -126,10 +127,10 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
    * @param aEndIndex
    *          the ending index (cursor B).
    */
-  public ClockFrequencyMeasureWorker( final DataContainer aData, final int aChannel, final int aStartIndex,
-      final int aEndIndex )
+  public ClockFrequencyMeasureWorker( final DataContainer aData, final ToolContext aContext, final int aChannel,
+      final int aStartIndex, final int aEndIndex )
   {
-    super( aData, null ); // XXX
+    super( aData, aContext );
 
     this.channelMask = ( 1 << aChannel );
     this.startTime = aData.getCursorPosition( aStartIndex );
