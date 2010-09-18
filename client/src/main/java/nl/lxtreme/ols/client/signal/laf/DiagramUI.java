@@ -123,7 +123,7 @@ public class DiagramUI extends ComponentUI
     public void mouseClicked( final MouseEvent aEvent )
     {
       final Diagram diagram = ( Diagram )aEvent.getSource();
-      if ( aEvent.getClickCount() == 2 )
+      if ( isZoomEvent( aEvent ) )
       {
         final Point point = aEvent.getPoint();
         if ( aEvent.isAltDown() || aEvent.isShiftDown() )
@@ -185,6 +185,39 @@ public class DiagramUI extends ComponentUI
       }
 
       diagram.updateTooltipText( mousePosition, annotation );
+    }
+
+    /**
+     * @see java.awt.event.MouseAdapter#mouseWheelMoved(java.awt.event.MouseWheelEvent)
+     */
+    @Override
+    public void mouseWheelMoved( final MouseWheelEvent aEvent )
+    {
+      final Diagram diagram = ( Diagram )aEvent.getSource();
+      final Point point = aEvent.getPoint();
+
+      final int notches = aEvent.getWheelRotation();
+      if ( notches < 0 )
+      {
+        diagram.zoomIn( point );
+      }
+      else if ( notches > 0 )
+      {
+        diagram.zoomOut( point );
+      }
+    }
+
+    /**
+     * Returns whether the given mouse event is a "zoom in/out" event.
+     * 
+     * @param aEvent
+     *          the mouse event to check, cannot be <code>null</code>.
+     * @return <code>true</code> if the given mouse event is a zoom event,
+     *         <code>false</code> otherwise.
+     */
+    private boolean isZoomEvent( final MouseEvent aEvent )
+    {
+      return aEvent.getClickCount() == 2;
     }
   }
 
@@ -311,6 +344,7 @@ public class DiagramUI extends ComponentUI
 
     diagram.addMouseListener( mouseListener );
     diagram.addMouseMotionListener( mouseListener );
+    diagram.addMouseWheelListener( mouseListener );
   }
 
   /**
