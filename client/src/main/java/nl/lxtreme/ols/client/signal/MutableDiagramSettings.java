@@ -64,32 +64,36 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public MutableDiagramSettings()
   {
-    this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
+    // this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
+    // this.triggerColor = new Color( 0x82, 0x87, 0x8f );
+    // this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
+    // this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
+    // this.textColor = Color.WHITE;
+    // this.timeColor = Color.WHITE;
+    // this.labelColor = new Color( 0x82, 0x87, 0x8f );
+    //
+    // this.cursorColors = makeMonochromaticColorPalette(
+    // DataContainer.MAX_CURSORS );
+    // this.channelColors = makeColorPalette( DataContainer.MAX_CHANNELS, 8 );
+
+    this.backgroundColor = Color.WHITE;
     this.triggerColor = new Color( 0x82, 0x87, 0x8f );
     this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
     this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
-    this.textColor = Color.WHITE;
-    this.timeColor = Color.WHITE;
+    this.textColor = new Color( 0x25, 0x25, 0x25 );
+    this.timeColor = new Color( 0x25, 0x25, 0x25 );
     this.labelColor = new Color( 0x82, 0x87, 0x8f );
+
+    this.cursorColors = makeColorPalette( DataContainer.MAX_CURSORS, DataContainer.MAX_CURSORS );
+    this.channelColors = makeMonochromaticColorPalette( DataContainer.MAX_CHANNELS );
+
     this.groupByteColor = Color.GRAY;
     this.scopeColor = Color.GRAY;
-
-    // this.backgroundColor = Color.WHITE;
-    // this.signalColor = new Color( 0x30, 0x4b, 0x75 );
-    // this.triggerColor = new Color( 0x82, 0x87, 0x8f );
-    // this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
-    // this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
-    // this.textColor = new Color( 0x25, 0x25, 0x25 );
-    // this.timeColor = new Color( 0x25, 0x25, 0x25 );
-    // this.labelColor = new Color( 0x82, 0x87, 0x8f );
-
-    this.cursorColors = makeMonochromaticColorPalette( DataContainer.MAX_CURSORS );
-    this.channelColors = makeColorPalette( DataContainer.MAX_CHANNELS, 8 );
 
     this.groupSettings = new int[4];
     for ( int i = 0; i < this.groupSettings.length; i++ )
     {
-      this.groupSettings[i] = DiagramSettings.DISPLAY_CHANNELS;
+      this.groupSettings[i] = DISPLAY_CHANNELS;
     }
 
     setChannelHeight( 30 );
