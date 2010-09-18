@@ -117,6 +117,9 @@ public class DiagramRowLabelsUI extends ComponentUI
     final int channels = dataContainer.getChannels();
     final int enabledChannels = dataContainer.getEnabledChannels();
 
+    // Draw top grid line...
+    aGraphics.drawLine( clipArea.x, 0, clipArea.x + clipArea.width, 0 );
+
     for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
     {
       final boolean blockEnabled = ( ( enabledChannels >> ( 8 * block ) ) & 0xff ) != 0;
@@ -134,8 +137,7 @@ public class DiagramRowLabelsUI extends ComponentUI
           final int y1 = channelHeight * bit + yofs;
 
           aGraphics.setColor( settings.getGridColor() );
-          aGraphics.drawLine( clipArea.x, y1, clipArea.x + clipArea.width, y1 );
-          aGraphics.drawLine( clipArea.x, y1 + channelHeight, clipArea.x + clipArea.width, y1 + channelHeight );
+          aGraphics.drawLine( clipArea.x, y1 + channelHeight - 1, clipArea.x + clipArea.width, y1 + channelHeight - 1 );
 
           String label = dataContainer.getChannelLabel( labelIdx );
           if ( DisplayUtils.isEmpty( label ) )
@@ -163,6 +165,10 @@ public class DiagramRowLabelsUI extends ComponentUI
         aGraphics.setColor( settings.getTextColor() );
         aGraphics.drawString( "S" + block, textXpos, yofs + ( scopeHeight + fm.getHeight() ) / 2 );
 
+        // draw bottom grid line
+        aGraphics.setColor( settings.getGridColor() );
+        aGraphics.drawLine( clipArea.x, yofs + scopeHeight - 1, clipArea.x + clipArea.width, yofs + scopeHeight - 1 );
+
         yofs += scopeHeight;
       }
 
@@ -174,8 +180,8 @@ public class DiagramRowLabelsUI extends ComponentUI
 
         // draw bottom grid line
         aGraphics.setColor( settings.getGridColor() );
-        aGraphics.drawLine( clipArea.x, yofs, clipArea.x + clipArea.width, yofs );
-        aGraphics.drawLine( clipArea.x, yofs + channelHeight, clipArea.x + clipArea.width, yofs + channelHeight );
+        aGraphics
+            .drawLine( clipArea.x, yofs + channelHeight - 1, clipArea.x + clipArea.width, yofs + channelHeight - 1 );
 
         aGraphics.setColor( settings.getTextColor() );
         aGraphics.drawString( "B" + block, textXpos, yofs + textYpos );

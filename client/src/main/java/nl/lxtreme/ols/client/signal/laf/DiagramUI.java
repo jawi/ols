@@ -34,6 +34,7 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -193,6 +194,13 @@ public class DiagramUI extends ComponentUI
     @Override
     public void mouseWheelMoved( final MouseWheelEvent aEvent )
     {
+      if ( HostUtils.isMacOSX() )
+      {
+        // On Mac OSX the mouse wheel events are also generated for all kinds of
+        // other scrolling events which only confuses the user...
+        return;
+      }
+
       final Diagram diagram = ( Diagram )aEvent.getSource();
       final Point point = aEvent.getPoint();
 
@@ -486,7 +494,7 @@ public class DiagramUI extends ComponentUI
     final double scopeScaleFactor = ( 256.0 / ( scopeHeight - 2 * PADDING_Y ) );
 
     final double scale = aDiagram.getScale();
-    final int center = ( int )( scale / 2.0 );
+    final int edgeX = ( int )( scale * 0.5 );
 
     final FontMetrics fm = aCanvas.getFontMetrics();
     final int labelYpos = ( int )( channelHeight - ( fm.getHeight() / 2.0 ) + 1 );
@@ -545,8 +553,8 @@ public class DiagramUI extends ComponentUI
             }
 
             // Calculate display coordinates...
-            final int x1 = ( int )( ( scale * currentSample ) - center );
-            final int x2 = ( int )( ( scale * ( nextSample - 1 ) ) + center );
+            final int x1 = ( int )( ( scale * currentSample ) - edgeX );
+            final int x2 = ( int )( ( scale * ( nextSample - 1 ) ) + edgeX );
             final int y1 = bofs + channelHeight * bit + signalHeight * ( 1 - currentValue ) + 1;
 
             polyline.x[pIdx] = x1;
@@ -656,7 +664,7 @@ public class DiagramUI extends ComponentUI
         aCanvas.drawPolyline( scopePolyline.x, scopePolyline.y, pIdx );
         bofs += scopeHeight;
         // draw bottom grid line
-        drawGridLine( aCanvas, aDiagram, aClipArea, bofs );
+        drawGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
       }
 
       if ( settings.isShowByte( block ) )
@@ -683,12 +691,12 @@ public class DiagramUI extends ComponentUI
           }
 
           // Calculate display coordinates...
-          final int x1 = ( int )( scale * currentSample - center );
-          final int x2 = ( int )( scale * ( nextSample - 1 ) + center );
+          final int x1 = ( int )( scale * currentSample - edgeX );
+          final int x2 = ( int )( scale * ( nextSample - 1 ) + edgeX );
 
           final int bit = ( dataIndex % 2 );
-          final int y1 = bofs + signalHeight * ( 1 - bit );
-          final int y2 = bofs + signalHeight * bit;
+          final int y1 = bofs + signalHeight * ( 1 - bit ) + 1;
+          final int y2 = bofs + signalHeight * bit + 1;
 
           bytePolyline.x[pIdx] = x1;
           bytePolyline.y1[pIdx] = y1;
@@ -719,7 +727,7 @@ public class DiagramUI extends ComponentUI
         aCanvas.drawPolyline( bytePolyline.x, bytePolyline.y2, pIdx );
         bofs += channelHeight;
         // draw bottom grid line
-        drawGridLine( aCanvas, aDiagram, aClipArea, bofs );
+        drawGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
       }
     }
   }
