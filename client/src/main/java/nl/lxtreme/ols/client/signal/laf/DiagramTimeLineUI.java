@@ -43,6 +43,9 @@ public class DiagramTimeLineUI extends ComponentUI
   /** The height of this component. */
   public static final int TIMELINE_HEIGHT = 30;
 
+  private static final int LONG_TICK_INTERVAL = 10;
+  private static final int TIME_INTERVAL = 20;
+
   private static final int SHORT_TICK_HEIGHT = 4;
   private static final int PADDING_Y = 1;
 
@@ -97,8 +100,8 @@ public class DiagramTimeLineUI extends ComponentUI
 
     final double scale = timeLine.getScale();
 
-    final int rowInc = Math.max( 1, ( int )( Diagram.MAX_SCALE / scale ) );
-    final int timeLineShift = ( int )( dataContainer.getTriggerPosition() % rowInc );
+    final int tickInc = Math.max( 1, ( int )( Diagram.MAX_SCALE / scale ) );
+    final int timeLineShift = ( int )( dataContainer.getTriggerPosition() % tickInc );
 
     // obtain portion of graphics that needs to be drawn
     final Rectangle clipArea = aGraphics.getClipBounds();
@@ -120,32 +123,33 @@ public class DiagramTimeLineUI extends ComponentUI
 
     aGraphics.setColor( settings.getTimeColor() );
 
-    for ( long row = ( firstRow / rowInc ) * rowInc + timeLineShift; row < lastRow; row += rowInc )
+    for ( long time = ( firstRow / tickInc ) * tickInc + timeLineShift; time < lastRow; time += tickInc )
     {
-      final int pos = Math.max( 0, ( int )( scale * row ) );
+      final int xPos = Math.max( 0, ( int )( scale * time ) );
 
-      final int y1 = clipArea.y + TIMELINE_HEIGHT - PADDING_Y;
-      final int y2 = y1 - 3 * SHORT_TICK_HEIGHT;
-      final int y3 = y1 - SHORT_TICK_HEIGHT;
+      final int baselineYpos = clipArea.y + TIMELINE_HEIGHT - PADDING_Y;
+      final int longTickYpos = ( int )( baselineYpos - ( 3.5 * SHORT_TICK_HEIGHT ) );
+      final int shortTickYpos = baselineYpos - SHORT_TICK_HEIGHT;
 
-      final long relativeTime = row - dataContainer.getTriggerPosition();
-      if ( ( relativeTime / rowInc ) % TIMELINE_INCREMENT == 0 )
+      final long relativeTime = time - dataContainer.getTriggerPosition();
+      final long scaledTime = relativeTime / tickInc;
+
+      if ( scaledTime % LONG_TICK_INTERVAL == 0 )
       {
-        final String time = indexToTime( dataContainer, relativeTime );
+        final String timeValue = indexToTime( dataContainer, relativeTime );
 
-        final int labelYpos = y2 - 2 * PADDING_Y;
-        int labelXpos = pos - ( fm.stringWidth( time ) / 2 );
-        if ( labelXpos < clipArea.x )
+        final int labelYpos = longTickYpos - 2 * PADDING_Y;
+        final int labelXpos = Math.max( clipArea.x, xPos - ( fm.stringWidth( timeValue ) / 2 ) );
+
+        aGraphics.drawLine( xPos, baselineYpos, xPos, longTickYpos );
+        if ( scaledTime % TIME_INTERVAL == 0 )
         {
-          labelXpos = clipArea.x;
+          aGraphics.drawString( timeValue, labelXpos, labelYpos );
         }
-
-        aGraphics.drawLine( pos, y1, pos, y2 );
-        aGraphics.drawString( time, labelXpos, labelYpos );
       }
       else
       {
-        aGraphics.drawLine( pos, y1, pos, y3 );
+        aGraphics.drawLine( xPos, baselineYpos, xPos, shortTickYpos );
       }
     }
 
