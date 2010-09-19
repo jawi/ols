@@ -21,18 +21,12 @@
 package nl.lxtreme.ols.client;
 
 
-import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
 
-import javax.swing.*;
-
-import nl.lxtreme.ols.api.Configurable;
 import nl.lxtreme.ols.client.osgi.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -44,106 +38,9 @@ import org.osgi.framework.*;
  */
 public final class Host implements ApplicationCallback
 {
-  // INNER TYPES
-
-  /**
-   * Defines a (global) AWT event listener for storing/retrieving the window
-   * state.
-   */
-  static final class WindowStateListener implements AWTEventListener
-  {
-    // CONSTANTS
-
-    private static final Logger LOG = Logger.getLogger( WindowStateListener.class.getName() );
-
-    // VARIABLES
-
-    private final Properties properties;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new FrameStateListener instance.
-     * 
-     * @param aProperties
-     *          the properties to pass to the individual opened windows.
-     */
-    public WindowStateListener( final Properties aProperties )
-    {
-      this.properties = aProperties;
-    }
-
-    // METHODS
-
-    /**
-     * @see java.awt.event.AWTEventListener#eventDispatched(java.awt.AWTEvent)
-     */
-    @Override
-    public void eventDispatched( final AWTEvent aEvent )
-    {
-      final int id = aEvent.getID();
-      if ( ( id == WindowEvent.WINDOW_OPENED ) && ( aEvent instanceof ComponentEvent ) )
-      {
-        final ComponentEvent event = ( ComponentEvent )aEvent;
-        final Window component = ( Window )event.getComponent();
-
-        try
-        {
-          final String namespace = component.getClass().getName();
-          if ( component instanceof Configurable )
-          {
-            LOG.log( Level.FINE, "Reading dialog-specific properties for '{0}' ...", namespace );
-            ( ( Configurable )component ).readProperties( namespace, this.properties );
-          }
-
-          // Only store settings of "real" frames and dialogs, not
-          // popups/dropdowns, etc...
-          if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
-          {
-            LOG.log( Level.FINE, "Reading window-properties for '{0}' ...", namespace );
-            SwingComponentUtils.loadWindowState( namespace, this.properties, component );
-          }
-        }
-        catch ( RuntimeException exception )
-        {
-          LOG.log( Level.WARNING, "Reading dialog properties failed!", exception );
-        }
-      }
-      else if ( ( id == WindowEvent.WINDOW_CLOSED ) && ( aEvent instanceof ComponentEvent ) )
-      {
-        final ComponentEvent event = ( ComponentEvent )aEvent;
-        final Window component = ( Window )event.getComponent();
-
-        try
-        {
-          final String namespace = component.getClass().getName();
-          if ( component instanceof Configurable )
-          {
-            LOG.log( Level.FINE, "Writing dialog-specific properties for '{0}' ...", namespace );
-            ( ( Configurable )component ).writeProperties( namespace, this.properties );
-          }
-
-          // Only store settings of "real" frames and dialogs, not
-          // popups/dropdowns, etc...
-          if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
-          {
-            LOG.log( Level.FINE, "Writing window-properties for '{0}' ...", namespace );
-            SwingComponentUtils.saveWindowState( namespace, this.properties, component );
-          }
-        }
-        catch ( RuntimeException exception )
-        {
-          LOG.log( Level.WARNING, "Writing dialog properties failed!", exception );
-        }
-      }
-    }
-  }
-
   // CONSTANT
 
   private static final Logger LOG = Logger.getLogger( Host.class.getName() );
-
-  private static final String PROPERTIES_NAME = "nl.lxtreme.ols.client";
 
   public static final String SHORT_NAME = "LogicSniffer";
   public static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
@@ -153,10 +50,10 @@ public final class Host implements ApplicationCallback
   private final BundleContext context;
   private final Properties clientProperties;
 
-  private MenuTracker menuTracker;
   private DeviceControllerTracker deviceControllerTracker;
+  private MenuTracker menuTracker;
+  private PreferenceServiceTracker preferencesServiceTracker;
   private ToolTracker toolTracker;
-  private Properties userProperties;
   private ClientController controller;
 
   // CONSTRUCTORS
@@ -287,13 +184,6 @@ public final class Host implements ApplicationCallback
    */
   public void initialize()
   {
-    // Read back the user preferences from last time...
-    this.userProperties = HostUtils.readProperties( PROPERTIES_NAME );
-    if ( this.userProperties == null )
-    {
-      this.userProperties = new Properties();
-    }
-
     if ( Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) ) )
     {
       // Install a custom repaint manager that detects whether Swing components
@@ -302,15 +192,12 @@ public final class Host implements ApplicationCallback
       ThreadViolationDetectionRepaintManager.install();
     }
 
-    // Install a global window state listener...
-    Toolkit.getDefaultToolkit().addAWTEventListener( new WindowStateListener( this.userProperties ),
-        AWTEvent.WINDOW_EVENT_MASK );
-
     this.controller = new ClientController( this.context, this );
 
     final MainFrame mainFrame = new MainFrame( this.controller );
     this.controller.setMainFrame( mainFrame );
 
+    this.preferencesServiceTracker = new PreferenceServiceTracker( this.context, this.controller );
     this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.controller );
     this.menuTracker = new MenuTracker( this.context, mainFrame.getJMenuBar() );
     this.toolTracker = new ToolTracker( this.context, this.controller );
@@ -325,9 +212,6 @@ public final class Host implements ApplicationCallback
    */
   public void shutdown()
   {
-    // Write back the user properties for use next time...
-    HostUtils.writeProperties( PROPERTIES_NAME, this.userProperties );
-
     LOG.log( Level.FINE, "{0} shutting down ...", SHORT_NAME );
   }
 
@@ -337,6 +221,7 @@ public final class Host implements ApplicationCallback
    */
   public void start()
   {
+    this.preferencesServiceTracker.open();
     this.deviceControllerTracker.open();
     this.toolTracker.open();
     this.menuTracker.open();
@@ -363,9 +248,10 @@ public final class Host implements ApplicationCallback
       this.controller.setMainFrame( null );
     }
 
-    this.deviceControllerTracker.close();
-    this.toolTracker.close();
     this.menuTracker.close();
+    this.toolTracker.close();
+    this.deviceControllerTracker.close();
+    this.preferencesServiceTracker.close();
 
     LOG.log( Level.INFO, "{0} stopped ...", SHORT_NAME );
   }

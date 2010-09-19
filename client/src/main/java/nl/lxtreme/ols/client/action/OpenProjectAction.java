@@ -74,7 +74,7 @@ public class OpenProjectAction extends BaseAction
           LOG.info( "Loading OLS project from file: " + file );
         }
 
-        getController().loadDataFile( file );
+        getController().openProject( file );
       }
     }
     catch ( IOException exception )

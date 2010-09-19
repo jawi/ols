@@ -1,36 +1,43 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>nl.lxtreme.ols</groupId>
-    <artifactId>parent</artifactId>
-    <version>1.0.0</version>
-  </parent>
-  <groupId>nl.lxtreme.ols</groupId>
-  <artifactId>util</artifactId>
-  <packaging>bundle</packaging>
-  <version>1.0.4-SNAPSHOT</version>
-  <name>OLS Utilities</name>
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-  <build>
-  <plugins>
-    <plugin>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>maven-bundle-plugin</artifactId>
-      <extensions>true</extensions>
-      <configuration>
-        <instructions>
-          <Export-Package>nl.lxtreme.ols.util, nl.lxtreme.ols.util.swing, nl.lxtreme.ols.util.swing.component, nl.lxtreme.ols.util.swing.component.icon</Export-Package>
-          <Private-Package>nl.lxtreme.ols.util.export</Private-Package>
-        </instructions>
-      </configuration>
-    </plugin>
-  </plugins>
-  </build>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>nl.lxtreme.ols</groupId>
+		<artifactId>parent</artifactId>
+		<version>1.0.0</version>
+	</parent>
+	<groupId>nl.lxtreme.ols</groupId>
+	<artifactId>util</artifactId>
+	<packaging>bundle</packaging>
+	<version>1.0.4-SNAPSHOT</version>
+	<name>OLS Utilities</name>
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.compendium</artifactId>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Export-Package>nl.lxtreme.ols.util, nl.lxtreme.ols.util.swing,
+							nl.lxtreme.ols.util.swing.component,
+							nl.lxtreme.ols.util.swing.component.icon</Export-Package>
+						<Private-Package>nl.lxtreme.ols.util.export</Private-Package>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

@@ -24,7 +24,6 @@ package nl.lxtreme.ols.util;
 import java.awt.event.*;
 import java.io.*;
 import java.lang.reflect.*;
-import java.util.*;
 import java.util.logging.*;
 
 import javax.swing.*;
@@ -112,8 +111,6 @@ public final class HostUtils
       return HostUtils.class.getClassLoader();
     }
   }
-
-  private static final Logger LOG = Logger.getLogger( HostUtils.class.getName() );
 
   // CONSTRUCTORS
 
@@ -329,46 +326,6 @@ public final class HostUtils
   }
 
   /**
-   * Tries to read the properties from a file with a given name.
-   * 
-   * @param aName
-   *          the name of the properties file, excluding <tt>.properties</tt>,
-   *          cannot be <code>null</code> or empty. By convention, the name of a
-   *          properties file should be in the "reverse package name", e.g.,
-   *          "com.foo.bar".
-   * @return the read properties (object), or <code>null</code> if no such
-   *         property file exists.
-   * @throws IllegalArgumentException
-   *           in case the given name was <code>null</code> or empty.
-   */
-  public static final Properties readProperties( final String aName )
-  {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
-    {
-      throw new IllegalArgumentException( "Properties name cannot be null or empty!" );
-    }
-
-    try
-    {
-      final File propFile = createPropertiesFile( aName );
-      final FileReader propFileReader = new FileReader( propFile );
-
-      LOG.log( Level.ALL, "Reading properties from '{0}' ...", propFile );
-
-      final Properties props = new Properties();
-      props.load( propFileReader );
-      return props;
-    }
-    catch ( IOException exception )
-    {
-      LOG.log( Level.FINE, "Reading properties failed!", exception );
-    }
-    // Unable to load any (valid) properties file, return null to indicate
-    // this...
-    return null;
-  }
-
-  /**
    * Sets the filename to end with the given file extension, if this is not
    * already the case.
    * 
@@ -412,86 +369,6 @@ public final class HostUtils
     }
 
     return new File( directory, filename );
-  }
-
-  /**
-   * Tries to write the properties from a file with a given name.
-   * 
-   * @param aName
-   *          the name of the properties file, excluding <tt>.properties</tt>,
-   *          cannot be <code>null</code> or empty. By convention, the name of a
-   *          properties file should be in the "reverse package name", e.g.,
-   *          "com.foo.bar".
-   * @return the read properties (object), or <code>null</code> if no such
-   *         property file exists.
-   * @throws IllegalArgumentException
-   *           in case the given name was <code>null</code> or empty, or the
-   *           given properties was <code>null</code>.
-   */
-  public static final void writeProperties( final String aName, final Properties aProperties )
-  {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
-    {
-      throw new IllegalArgumentException( "Properties name cannot be null or empty!" );
-    }
-    if ( aProperties == null )
-    {
-      throw new IllegalArgumentException( "Properties object cannot be null!" );
-    }
-
-    try
-    {
-      final File propFile = createPropertiesFile( aName );
-      final FileWriter propFileWriter = new FileWriter( propFile );
-
-      LOG.log( Level.ALL, "Writing properties to '{0}' ...", propFile );
-
-      aProperties.store( propFileWriter, "Written on " + new Date() );
-    }
-    catch ( IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      LOG.log( Level.FINE, "Writing properties failed!", exception );
-    }
-  }
-
-  /**
-   * Creates an OS-specific properties file location.
-   * 
-   * @param aName
-   *          the name of the properties file, excluding <tt>.properties</tt>,
-   *          cannot be <code>null</code> or empty. By convention, the name of a
-   *          properties file should be in the "reverse package name", e.g.,
-   *          "com.foo.bar".
-   * @return the file pointing to the OS-specific properties file location,
-   *         never <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  private static final File createPropertiesFile( final String aName ) throws IOException
-  {
-    final String dirName;
-    final String fileName;
-    if ( isMacOSX() )
-    {
-      dirName = System.getProperty( "user.home" ) + "/Library/Preferences/";
-      fileName = aName + ".Application";
-    }
-    else if ( isUnix() )
-    {
-      dirName = System.getProperty( "user.home" );
-      fileName = "." + aName + ".properties";
-    }
-    else
-    {
-      dirName = System.getProperty( "user.home" );
-      fileName = aName + ".properties";
-    }
-
-    final File propFile = new File( dirName, fileName );
-    return propFile.getCanonicalFile();
   }
 
   /**

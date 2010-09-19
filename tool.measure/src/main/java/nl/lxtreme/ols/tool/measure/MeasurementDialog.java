@@ -24,13 +24,14 @@ package nl.lxtreme.ols.tool.measure;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
-import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.SwingWorker.*;
+
+import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
@@ -250,15 +251,13 @@ public class MeasurementDialog extends BaseToolDialog
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#readProperties(String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
-  public void readProperties( final String aNamespace, final Properties aProperties )
+  public void readPreferences( final Preferences aPrefs )
   {
-    SwingComponentUtils.setSelectedIndex( this.cursorA, aProperties.getProperty( aNamespace + ".selectedCursorA" ) );
-    SwingComponentUtils.setSelectedIndex( this.cursorB, aProperties.getProperty( aNamespace + ".selectedCursorB" ) );
-    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser, aProperties.getProperty( aNamespace
-        + ".selectedClockChannel" ) );
+    SwingComponentUtils.setSelectedIndex( this.cursorA, aPrefs.getInt( "selectedCursorA", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.cursorB, aPrefs.getInt( "selectedCursorB", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser, aPrefs.getInt( "selectedClockChannel", -1 ) );
   }
 
   /**
@@ -284,15 +283,13 @@ public class MeasurementDialog extends BaseToolDialog
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#writeProperties(String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
    */
-  public void writeProperties( final String aNamespace, final Properties aProperties )
+  public void writePreferences( final Preferences aPrefs )
   {
-    aProperties.put( aNamespace + ".selectedCursorA", String.valueOf( this.cursorA.getSelectedIndex() ) );
-    aProperties.put( aNamespace + ".selectedCursorB", String.valueOf( this.cursorB.getSelectedIndex() ) );
-    aProperties
-        .put( aNamespace + ".selectedClockChannel", String.valueOf( this.clockChannelChooser.getSelectedIndex() ) );
+    aPrefs.putInt( "selectedCursorA", this.cursorA.getSelectedIndex() );
+    aPrefs.putInt( "selectedCursorB", this.cursorB.getSelectedIndex() );
+    aPrefs.putInt( "selectedClockChannel", this.clockChannelChooser.getSelectedIndex() );
   }
 
   /**
