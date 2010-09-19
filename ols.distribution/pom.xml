@@ -33,6 +33,13 @@
                 <outputDirectory>${project.basedir}/target/bin</outputDirectory>
               </artifactItem>
               <artifactItem>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.compendium</artifactId>
+                <type>jar</type>
+                <overWrite>true</overWrite>
+                <outputDirectory>${project.basedir}/target/bin</outputDirectory>
+              </artifactItem>
+              <artifactItem>
                 <groupId>com.jgoodies</groupId>
                 <artifactId>looks</artifactId>
                 <type>jar</type>
@@ -50,6 +57,13 @@
               <artifactItem>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.log</artifactId>
+                <type>jar</type>
+                <overWrite>true</overWrite>
+                <outputDirectory>${project.basedir}/target/plugins</outputDirectory>
+              </artifactItem>
+              <artifactItem>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.prefs</artifactId>
                 <type>jar</type>
                 <overWrite>true</overWrite>
                 <outputDirectory>${project.basedir}/target/plugins</outputDirectory>
