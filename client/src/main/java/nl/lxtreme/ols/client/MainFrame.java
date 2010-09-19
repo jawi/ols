@@ -28,6 +28,9 @@ import java.text.*;
 
 import javax.swing.*;
 
+import org.osgi.service.prefs.*;
+
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signal.*;
@@ -40,7 +43,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Denotes the main UI.
  */
-public final class MainFrame extends JFrame implements Closeable
+public final class MainFrame extends JFrame implements Configurable, Closeable
 {
   // INNER TYPES
 
@@ -311,6 +314,15 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   */
+  @Override
+  public void readPreferences( final Preferences aPreferences )
+  {
+    // NO-op
+  }
+
+  /**
    * @param aDevController
    */
   public final void removeDeviceMenuItem( final String aDeviceName )
@@ -426,6 +438,15 @@ public final class MainFrame extends JFrame implements Closeable
   public void updateProgress( final int aPercentage )
   {
     this.status.setProgress( aPercentage );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   */
+  @Override
+  public void writePreferences( final Preferences aPreferences )
+  {
+    // NO-op
   }
 
   /**

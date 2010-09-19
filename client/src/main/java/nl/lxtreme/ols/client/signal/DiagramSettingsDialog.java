@@ -23,9 +23,9 @@ package nl.lxtreme.ols.client.signal;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
-
 import javax.swing.*;
+
+import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -198,10 +198,9 @@ public class DiagramSettingsDialog extends JDialog implements Configurable, Clos
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
-  public void readProperties( final String aNamespace, final Properties aProperties )
+  public void readPreferences( final Preferences aProperties )
   {
     // NO-op
   }
@@ -221,10 +220,9 @@ public class DiagramSettingsDialog extends JDialog implements Configurable, Clos
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
    */
-  public void writeProperties( final String aNamespace, final Properties aProperties )
+  public void writePreferences( final Preferences aProperties )
   {
     // NO-op
   }

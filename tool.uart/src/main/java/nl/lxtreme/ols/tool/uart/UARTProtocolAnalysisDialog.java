@@ -32,6 +32,8 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import org.osgi.service.prefs.*;
+
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.*;
@@ -273,23 +275,22 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
-  public void readProperties( final String aNamespace, final Properties aProperties )
+  public void readPreferences( final Preferences aPrefs )
   {
-    SwingComponentUtils.setSelectedIndex( this.rxd, aProperties.getProperty( aNamespace + ".rxd" ) );
-    SwingComponentUtils.setSelectedIndex( this.txd, aProperties.getProperty( aNamespace + ".txd" ) );
-    SwingComponentUtils.setSelectedIndex( this.cts, aProperties.getProperty( aNamespace + ".cts" ) );
-    SwingComponentUtils.setSelectedIndex( this.rts, aProperties.getProperty( aNamespace + ".rts" ) );
-    SwingComponentUtils.setSelectedIndex( this.dtr, aProperties.getProperty( aNamespace + ".dtr" ) );
-    SwingComponentUtils.setSelectedIndex( this.dsr, aProperties.getProperty( aNamespace + ".dsr" ) );
-    SwingComponentUtils.setSelectedIndex( this.dcd, aProperties.getProperty( aNamespace + ".dcd" ) );
-    SwingComponentUtils.setSelectedIndex( this.ri, aProperties.getProperty( aNamespace + ".ri" ) );
-    SwingComponentUtils.setSelectedIndex( this.parity, aProperties.getProperty( aNamespace + ".parity" ) );
-    SwingComponentUtils.setSelectedIndex( this.bits, aProperties.getProperty( aNamespace + ".bits" ) );
-    SwingComponentUtils.setSelectedIndex( this.stop, aProperties.getProperty( aNamespace + ".stop" ) );
-    SwingComponentUtils.setSelected( this.inv, aProperties.getProperty( aNamespace + ".inverted" ) );
+    SwingComponentUtils.setSelectedIndex( this.rxd, aPrefs.getInt( "rxd", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.txd, aPrefs.getInt( "txd", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.cts, aPrefs.getInt( "cts", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.rts, aPrefs.getInt( "rts", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.dtr, aPrefs.getInt( "dtr", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.dsr, aPrefs.getInt( "dsr", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.dcd, aPrefs.getInt( "dcd", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.ri, aPrefs.getInt( "ri", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.parity, aPrefs.getInt( "parity", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.bits, aPrefs.getInt( "bits", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.stop, aPrefs.getInt( "stop", -1 ) );
+    SwingComponentUtils.setSelected( this.inv, aPrefs.getBoolean( "inverted", Boolean.FALSE ) );
   }
 
   /**
@@ -309,23 +310,22 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
    */
-  public void writeProperties( final String aNamespace, final Properties aProperties )
+  public void writePreferences( final Preferences aProperties )
   {
-    aProperties.setProperty( aNamespace + ".rxd", Integer.toString( this.rxd.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".txd", Integer.toString( this.txd.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".cts", Integer.toString( this.cts.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".rts", Integer.toString( this.rts.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".dtr", Integer.toString( this.dtr.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".dsr", Integer.toString( this.dsr.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".dcd", Integer.toString( this.dcd.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".ri", Integer.toString( this.ri.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".parity", Integer.toString( this.parity.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".bits", Integer.toString( this.bits.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".stop", Integer.toString( this.stop.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".inverted", Boolean.toString( this.inv.isSelected() ) );
+    aProperties.putInt( "rxd", this.rxd.getSelectedIndex() );
+    aProperties.putInt( "txd", this.txd.getSelectedIndex() );
+    aProperties.putInt( "cts", this.cts.getSelectedIndex() );
+    aProperties.putInt( "rts", this.rts.getSelectedIndex() );
+    aProperties.putInt( "dtr", this.dtr.getSelectedIndex() );
+    aProperties.putInt( "dsr", this.dsr.getSelectedIndex() );
+    aProperties.putInt( "dcd", this.dcd.getSelectedIndex() );
+    aProperties.putInt( "ri", this.ri.getSelectedIndex() );
+    aProperties.putInt( "parity", this.parity.getSelectedIndex() );
+    aProperties.putInt( "bits", this.bits.getSelectedIndex() );
+    aProperties.putInt( "stop", this.stop.getSelectedIndex() );
+    aProperties.putBoolean( "inverted", this.inv.isSelected() );
   }
 
   /**

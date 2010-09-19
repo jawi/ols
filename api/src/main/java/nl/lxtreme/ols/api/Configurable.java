@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.api;
 
 
-import java.util.*;
+import org.osgi.service.prefs.*;
 
 
 /**
@@ -44,24 +44,22 @@ import java.util.*;
 public interface Configurable
 {
   /**
-   * Reads configuration from given properties. UI element settings must be
+   * Reads configuration from given preferences. UI element settings must be
    * modified according to the properties found.
    * 
-   * @param aNamespace
-   *          the namespace to use for reading the properties;
-   * @param aProperties
-   *          properties to read configuration from
+   * @param aPreferences
+   *          the preferences to read configuration from, cannot be
+   *          <code>null</code>.
    */
-  public void readProperties( final String aNamespace, final Properties aProperties );
+  public void readPreferences( final Preferences aPreferences );
 
   /**
-   * Writes configuration to given properties. Properties must be set according
+   * Writes configuration to given preferences. Properties must be set according
    * to the UI element settings.
    * 
-   * @param aNamespace
-   *          the namespace to use for writing the properties;
-   * @param aProperties
-   *          properties to write configuration to
+   * @param aPreferences
+   *          the preferences to write configuration to, cannot be
+   *          <code>null</code>.
    */
-  public void writeProperties( final String aNamespace, final Properties aProperties );
+  public void writePreferences( final Preferences aPreferences );
 }

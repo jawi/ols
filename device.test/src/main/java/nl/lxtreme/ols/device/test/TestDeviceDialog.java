@@ -23,9 +23,9 @@ package nl.lxtreme.ols.device.test;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
-
 import javax.swing.*;
+
+import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -124,15 +124,14 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
   @Override
-  public void readProperties( final String aNamespace, final Properties aProperties )
+  public void readPreferences( final Preferences aPrefs )
   {
-    SwingComponentUtils.setSelectedIndex( this.channelsCombo, aProperties.get( aNamespace + ".channels" ) );
-    SwingComponentUtils.setSelectedIndex( this.dataFunctionCombo, aProperties.get( aNamespace + ".dataFunction" ) );
-    SwingComponentUtils.setSelectedIndex( this.dataLengthCombo, aProperties.get( aNamespace + ".dataLength" ) );
+    SwingComponentUtils.setSelectedIndex( this.channelsCombo, aPrefs.getInt( "channels", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.dataFunctionCombo, aPrefs.getInt( "dataFunction", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.dataLengthCombo, aPrefs.getInt( "dataLength", -1 ) );
   }
 
   /**
@@ -148,15 +147,14 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
    */
   @Override
-  public void writeProperties( final String aNamespace, final Properties aProperties )
+  public void writePreferences( final Preferences aPrefs )
   {
-    aProperties.put( aNamespace + ".channels", Integer.toString( this.channelsCombo.getSelectedIndex() ) );
-    aProperties.put( aNamespace + ".dataFunction", Integer.toString( this.dataFunctionCombo.getSelectedIndex() ) );
-    aProperties.put( aNamespace + ".dataLength", Integer.toString( this.dataLengthCombo.getSelectedIndex() ) );
+    aPrefs.putInt( "channels", this.channelsCombo.getSelectedIndex() );
+    aPrefs.putInt( "dataFunction", this.dataFunctionCombo.getSelectedIndex() );
+    aPrefs.putInt( "dataLength", this.dataLengthCombo.getSelectedIndex() );
   }
 
   /**

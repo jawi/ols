@@ -22,9 +22,9 @@ package nl.lxtreme.ols.tool.base;
 
 
 import java.awt.*;
-import java.util.*;
-
 import javax.swing.*;
+
+import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
@@ -162,28 +162,26 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
   @Override
-  public void readProperties( final String aNamespace, final Properties aProperties )
+  public void readPreferences( final Preferences aPrefs )
   {
     if ( this.dialog instanceof Configurable )
     {
-      ( ( Configurable )this.dialog ).readProperties( aNamespace, aProperties );
+      ( ( Configurable )this.dialog ).readPreferences( aPrefs );
     }
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
    */
   @Override
-  public void writeProperties( final String aNamespace, final Properties aProperties )
+  public void writePreferences( final Preferences aPrefs )
   {
     if ( this.dialog instanceof Configurable )
     {
-      ( ( Configurable )this.dialog ).writeProperties( aNamespace, aProperties );
+      ( ( Configurable )this.dialog ).writePreferences( aPrefs );
     }
   }
 

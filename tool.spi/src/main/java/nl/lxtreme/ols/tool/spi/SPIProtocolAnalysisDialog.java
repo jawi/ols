@@ -32,6 +32,8 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import org.osgi.service.prefs.*;
+
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
@@ -272,20 +274,19 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
-  public void readProperties( final String aNamespace, final Properties aProperties )
+  public void readPreferences( final Preferences aPrefs )
   {
-    SwingComponentUtils.setSelected( this.reportCS, aProperties.getProperty( aNamespace + ".reportCS" ) );
-    SwingComponentUtils.setSelected( this.honourCS, aProperties.getProperty( aNamespace + ".honourCS" ) );
-    SwingComponentUtils.setSelectedIndex( this.sck, aProperties.getProperty( aNamespace + ".sck" ) );
-    SwingComponentUtils.setSelectedIndex( this.miso, aProperties.getProperty( aNamespace + ".miso" ) );
-    SwingComponentUtils.setSelectedIndex( this.mosi, aProperties.getProperty( aNamespace + ".mosi" ) );
-    SwingComponentUtils.setSelectedIndex( this.cs, aProperties.getProperty( aNamespace + ".cs" ) );
-    SwingComponentUtils.setSelectedIndex( this.mode, aProperties.getProperty( aNamespace + ".mode" ) );
-    SwingComponentUtils.setSelectedIndex( this.bits, aProperties.getProperty( aNamespace + ".bits" ) );
-    SwingComponentUtils.setSelectedIndex( this.order, aProperties.getProperty( aNamespace + ".order" ) );
+    SwingComponentUtils.setSelected( this.reportCS, aPrefs.getBoolean( "reportCS", Boolean.TRUE ) );
+    SwingComponentUtils.setSelected( this.honourCS, aPrefs.getBoolean( "honourCS", Boolean.FALSE ) );
+    SwingComponentUtils.setSelectedIndex( this.sck, aPrefs.getInt( "sck", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.miso, aPrefs.getInt( "miso", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.mosi, aPrefs.getInt( "mosi", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.cs, aPrefs.getInt( "cs", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.mode, aPrefs.getInt( "mode", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.bits, aPrefs.getInt( "bits", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.order, aPrefs.getInt( "order", -1 ) );
   }
 
   /**
@@ -305,20 +306,19 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
    */
-  public void writeProperties( final String aNamespace, final Properties aProperties )
+  public void writePreferences( final Preferences aProperties )
   {
-    aProperties.setProperty( aNamespace + ".reportCS", Boolean.toString( this.reportCS.isSelected() ) );
-    aProperties.setProperty( aNamespace + ".honourCS", Boolean.toString( this.honourCS.isSelected() ) );
-    aProperties.setProperty( aNamespace + ".sck", Integer.toString( this.sck.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".miso", Integer.toString( this.miso.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".mosi", Integer.toString( this.mosi.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".cs", Integer.toString( this.cs.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".mode", Integer.toString( this.mode.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".bits", Integer.toString( this.bits.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".order", Integer.toString( this.order.getSelectedIndex() ) );
+    aProperties.putBoolean( "reportCS", this.reportCS.isSelected() );
+    aProperties.putBoolean( "honourCS", this.honourCS.isSelected() );
+    aProperties.putInt( "sck", this.sck.getSelectedIndex() );
+    aProperties.putInt( "miso", this.miso.getSelectedIndex() );
+    aProperties.putInt( "mosi", this.mosi.getSelectedIndex() );
+    aProperties.putInt( "cs", this.cs.getSelectedIndex() );
+    aProperties.putInt( "mode", this.mode.getSelectedIndex() );
+    aProperties.putInt( "bits", this.bits.getSelectedIndex() );
+    aProperties.putInt( "order", this.order.getSelectedIndex() );
   }
 
   /**

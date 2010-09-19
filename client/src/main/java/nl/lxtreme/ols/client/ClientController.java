@@ -30,6 +30,7 @@ import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
@@ -39,6 +40,7 @@ import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
+import org.osgi.service.prefs.*;
 
 
 /**
@@ -118,6 +120,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   private MainFrame mainFrame;
 
   private volatile DeviceController currentDevCtrl;
+  private volatile Preferences preferences;
 
   // CONSTRUCTORS
 
@@ -317,7 +320,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void createNewProject()
   {
-    // TODO
+    // this.project = new Project();
   }
 
   /**
@@ -496,7 +499,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void openProject( final File aFile ) throws IOException
   {
-    // TODO
+    Project.load( aFile, this.preferences );
   }
 
   /**
@@ -667,7 +670,16 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void saveProject( final File aFile ) throws IOException
   {
-    // TODO
+    try
+    {
+      this.preferences.flush();
+
+      Project.store( aFile, this.preferences );
+    }
+    catch ( BackingStoreException exception )
+    {
+      throw new IOException( "Flushing preferences failed! Project not stored.", exception );
+    }
   }
 
   /**
@@ -747,6 +759,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   public void setMainFrame( final MainFrame aMainFrame )
   {
     this.mainFrame = aMainFrame;
+  }
+
+  /**
+   * @param aPreferences
+   *          the preferences to set
+   */
+  public void setPreferences( final Preferences aPreferences )
+  {
+    this.preferences = aPreferences;
   }
 
   /**
@@ -930,9 +951,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   private void fillActionManager( final ActionManager aActionManager )
   {
-    aActionManager.add( new NewProjectAction( this ) ).setEnabled( false );
-    aActionManager.add( new OpenProjectAction( this ) ).setEnabled( false );
-    aActionManager.add( new SaveProjectAction( this ) ).setEnabled( false );
+    aActionManager.add( new NewProjectAction( this ) );
+    aActionManager.add( new OpenProjectAction( this ) );
+    aActionManager.add( new SaveProjectAction( this ) );
     aActionManager.add( new OpenDataFileAction( this ) );
     aActionManager.add( new SaveDataFileAction( this ) ).setEnabled( false );
     aActionManager.add( new ExitAction( this ) );
@@ -1032,5 +1053,4 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       action.putValue( Action.SELECTED_KEY, this.dataContainer.isCursorPositionSet( c ) );
     }
   }
-
 }

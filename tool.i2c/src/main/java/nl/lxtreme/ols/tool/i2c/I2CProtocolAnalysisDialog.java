@@ -32,6 +32,8 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import org.osgi.service.prefs.*;
+
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
@@ -228,18 +230,17 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
-  public void readProperties( final String aNamespace, final Properties aProperties )
+  public void readPreferences( final Preferences aPrefs )
   {
-    SwingComponentUtils.setSelectedIndex( this.lineA, aProperties.getProperty( aNamespace + ".lineA" ) );
-    SwingComponentUtils.setSelectedIndex( this.lineB, aProperties.getProperty( aNamespace + ".lineB" ) );
+    SwingComponentUtils.setSelectedIndex( this.lineA, aPrefs.getInt( "lineA", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.lineB, aPrefs.getInt( "lineB", -1 ) );
 
-    SwingComponentUtils.setSelected( this.detectSTART, aProperties.getProperty( aNamespace + ".detectStart" ) );
-    SwingComponentUtils.setSelected( this.detectSTOP, aProperties.getProperty( aNamespace + ".detectStop" ) );
-    SwingComponentUtils.setSelected( this.detectNACK, aProperties.getProperty( aNamespace + ".detectNack" ) );
-    SwingComponentUtils.setSelected( this.detectACK, aProperties.getProperty( aNamespace + ".detectAck" ) );
+    SwingComponentUtils.setSelected( this.detectSTART, aPrefs.getBoolean( "detectStart", Boolean.TRUE ) );
+    SwingComponentUtils.setSelected( this.detectSTOP, aPrefs.getBoolean( "detectStop", Boolean.TRUE ) );
+    SwingComponentUtils.setSelected( this.detectNACK, aPrefs.getBoolean( "detectNack", Boolean.TRUE ) );
+    SwingComponentUtils.setSelected( this.detectACK, aPrefs.getBoolean( "detectAck", Boolean.TRUE ) );
   }
 
   /**
@@ -309,18 +310,17 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
    */
-  public void writeProperties( final String aNamespace, final Properties aProperties )
+  public void writePreferences( final Preferences aPrefs )
   {
-    aProperties.setProperty( aNamespace + ".lineA", Integer.toString( this.lineA.getSelectedIndex() ) );
-    aProperties.setProperty( aNamespace + ".lineB", Integer.toString( this.lineB.getSelectedIndex() ) );
+    aPrefs.putInt( "lineA", this.lineA.getSelectedIndex() );
+    aPrefs.putInt( "lineB", this.lineB.getSelectedIndex() );
 
-    aProperties.setProperty( aNamespace + ".detectStart", Boolean.toString( this.detectSTART.isSelected() ) );
-    aProperties.setProperty( aNamespace + ".detectStop", Boolean.toString( this.detectSTOP.isSelected() ) );
-    aProperties.setProperty( aNamespace + ".detectNack", Boolean.toString( this.detectNACK.isSelected() ) );
-    aProperties.setProperty( aNamespace + ".detectAck", Boolean.toString( this.detectACK.isSelected() ) );
+    aPrefs.putBoolean( "detectStart", this.detectSTART.isSelected() );
+    aPrefs.putBoolean( "detectStop", this.detectSTOP.isSelected() );
+    aPrefs.putBoolean( "detectNack", this.detectNACK.isSelected() );
+    aPrefs.putBoolean( "detectAck", this.detectACK.isSelected() );
   }
 
   /**

@@ -22,9 +22,9 @@ package nl.lxtreme.ols.tool.state;
 
 
 import java.awt.*;
-import java.util.*;
-
 import javax.swing.*;
+
+import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
@@ -108,13 +108,12 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
-  public void readProperties( final String aNamespace, final Properties properties )
+  public void readPreferences( final Preferences aPrefs )
   {
-    SwingComponentUtils.setSelectedIndex( this.edgeSelect, properties.getProperty( aNamespace + ".edge" ) );
-    SwingComponentUtils.setSelectedIndex( this.channelSelect, properties.getProperty( aNamespace + ".channel" ) );
+    SwingComponentUtils.setSelectedIndex( this.edgeSelect, aPrefs.getInt( "edge", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.channelSelect, aPrefs.getInt( "channel", -1 ) );
   }
 
   /**
@@ -127,13 +126,12 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writeProperties(java.lang.String,
-   *      java.util.Properties)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
    */
-  public void writeProperties( final String aNamespace, final Properties properties )
+  public void writePreferences( final Preferences aPrefs )
   {
-    properties.setProperty( aNamespace + ".channel", Integer.toString( this.channelSelect.getSelectedIndex() ) );
-    properties.setProperty( aNamespace + ".edge", Integer.toString( this.edgeSelect.getSelectedIndex() ) );
+    aPrefs.putInt( "channel", this.channelSelect.getSelectedIndex() );
+    aPrefs.putInt( "edge", this.edgeSelect.getSelectedIndex() );
   }
 
   /**

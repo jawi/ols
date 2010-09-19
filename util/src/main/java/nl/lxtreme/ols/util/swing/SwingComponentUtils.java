@@ -23,9 +23,9 @@ package nl.lxtreme.ols.util.swing;
 
 import java.awt.*;
 import java.io.*;
-import java.util.*;
-
 import javax.swing.*;
+
+import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.util.*;
 
@@ -205,17 +205,17 @@ public final class SwingComponentUtils
    * @param aWindow
    *          the window to load the state for.
    */
-  public static void loadWindowState( final String aNamespace, final Properties aProperties, final Window aWindow )
+  public static void loadWindowState( final Preferences aProperties, final Window aWindow )
   {
     // Special case: for FileDialog/JFileChooser we also should restore the
     // properties...
-    loadFileDialogState( aNamespace, aProperties, aWindow );
+    loadFileDialogState( aProperties, aWindow );
 
     try
     {
-      final String xPos = aProperties.getProperty( aNamespace + ".xPos" );
-      final String yPos = aProperties.getProperty( aNamespace + ".yPos" );
-      if ( ( xPos != null ) && ( yPos != null ) )
+      final int xPos = aProperties.getInt( "winXpos", -1 );
+      final int yPos = aProperties.getInt( "winYpos", -1 );
+      if ( ( xPos >= 0 ) && ( yPos >= 0 ) )
       {
         aWindow.setLocation( Integer.valueOf( xPos ), Integer.valueOf( yPos ) );
       }
@@ -234,9 +234,9 @@ public final class SwingComponentUtils
 
     try
     {
-      final String width = aProperties.getProperty( aNamespace + ".width" );
-      final String height = aProperties.getProperty( aNamespace + ".height" );
-      if ( ( width != null ) && ( height != null ) )
+      final int width = aProperties.getInt( "winWidth", -1 );
+      final int height = aProperties.getInt( "winHeight", -1 );
+      if ( ( width >= 0 ) && ( height >= 0 ) )
       {
         aWindow.setSize( Integer.valueOf( width ), Integer.valueOf( height ) );
       }
@@ -301,14 +301,14 @@ public final class SwingComponentUtils
    * @param aWindow
    *          the window to save the state for.
    */
-  public static void saveWindowState( final String aNamespace, final Properties aProperties, final Window aWindow )
+  public static void saveWindowState( final Preferences aProperties, final Window aWindow )
   {
     // Special case: for FileDialog/JFileChooser we also store the properties...
-    saveFileDialogState( aNamespace, aProperties, aWindow );
+    saveFileDialogState( aProperties, aWindow );
 
     final Point location = aWindow.getLocation();
-    aProperties.put( aNamespace + ".xPos", Integer.toString( location.x ) );
-    aProperties.put( aNamespace + ".yPos", Integer.toString( location.y ) );
+    aProperties.put( "winXpos", Integer.toString( location.x ) );
+    aProperties.put( "winYpos", Integer.toString( location.y ) );
 
     if ( isNonResizableWindow( aWindow ) )
     {
@@ -318,8 +318,8 @@ public final class SwingComponentUtils
     }
 
     final Dimension dims = aWindow.getSize();
-    aProperties.put( aNamespace + ".width", Integer.toString( dims.width ) );
-    aProperties.put( aNamespace + ".height", Integer.toString( dims.height ) );
+    aProperties.put( "winWidth", Integer.toString( dims.width ) );
+    aProperties.put( "winHeight", Integer.toString( dims.height ) );
   }
 
   /**
@@ -362,17 +362,16 @@ public final class SwingComponentUtils
    * @param aIndex
    *          the index to set, may be <code>null</code>.
    */
-  public static void setSelectedIndex( final JComboBox aComboBox, final Object aIndex )
+  public static void setSelectedIndex( final JComboBox aComboBox, final int aIndex )
   {
     if ( aComboBox == null )
     {
       throw new IllegalArgumentException( "Combobox cannot be null!" );
     }
 
-    if ( aIndex != null )
+    if ( aIndex >= 0 )
     {
-      final int idx = NumberUtils.smartParseInt( String.valueOf( aIndex ) );
-      aComboBox.setSelectedIndex( idx );
+      aComboBox.setSelectedIndex( aIndex );
     }
   }
 
@@ -475,7 +474,10 @@ public final class SwingComponentUtils
         dialog.setDirectory( aCurrentDirectory );
       }
 
-      dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
+      if ( ( aFileFilters != null ) && ( aFileFilters.length > 0 ) )
+      {
+        dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
+      }
 
       try
       {
@@ -555,7 +557,10 @@ public final class SwingComponentUtils
         dialog.setDirectory( aCurrentDirectory );
       }
 
-      dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
+      if ( ( aFileFilters != null ) && ( aFileFilters.length > 0 ) )
+      {
+        dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
+      }
 
       try
       {
@@ -634,7 +639,10 @@ public final class SwingComponentUtils
         dialog.setDirectory( aCurrentDirectory );
       }
 
-      dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
+      if ( ( aFileFilters != null ) && ( aFileFilters.length > 0 ) )
+      {
+        dialog.setFilenameFilter( new FilenameFilterAdapter( aFileFilters ) );
+      }
 
       try
       {
@@ -732,13 +740,13 @@ public final class SwingComponentUtils
    * @param aWindow
    *          the window to check for.
    */
-  private static void loadFileDialogState( final String aNamespace, final Properties aProperties, final Window aWindow )
+  private static void loadFileDialogState( final Preferences aProperties, final Window aWindow )
   {
-    final String propKey = aNamespace + ".dir";
+    final String propKey = "lastDirectory";
 
     if ( aWindow instanceof FileDialog )
     {
-      final String dir = aProperties.getProperty( propKey );
+      final String dir = aProperties.get( propKey, null );
       if ( dir != null )
       {
         ( ( FileDialog )aWindow ).setDirectory( dir );
@@ -750,7 +758,7 @@ public final class SwingComponentUtils
       final JFileChooser fileChooser = ( JFileChooser )findComponent( contentPane, JFileChooser.class );
       if ( fileChooser != null )
       {
-        final String dir = aProperties.getProperty( propKey );
+        final String dir = aProperties.get( propKey, null );
         if ( dir != null )
         {
           fileChooser.setCurrentDirectory( new File( dir ) );
@@ -771,9 +779,9 @@ public final class SwingComponentUtils
    * @param aWindow
    *          the window to check for.
    */
-  private static void saveFileDialogState( final String aNamespace, final Properties aProperties, final Window aWindow )
+  private static void saveFileDialogState( final Preferences aProperties, final Window aWindow )
   {
-    final String propKey = aNamespace + ".dir";
+    final String propKey = "lastDirectory";
 
     if ( aWindow instanceof FileDialog )
     {

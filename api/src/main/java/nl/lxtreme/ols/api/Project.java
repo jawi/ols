@@ -24,6 +24,8 @@ package nl.lxtreme.ols.api;
 import java.io.*;
 import java.util.*;
 
+import org.osgi.service.prefs.*;
+
 
 /**
  * Project maintains a global properties list for all registered objects
@@ -34,120 +36,126 @@ import java.util.*;
  * @version 0.7
  * @author Michael "Mr. Sump" Poppitz
  */
-public class Project
+public final class Project
 {
-  // VARIABLES
+  // INNER TYPES
 
-  private Properties properties;
-  private final List<Configurable> configurableObjectList;
+  /**
+   * @author jawi
+   */
+  static interface PreferenceNodeVisitor
+  {
+    /**
+     * @param aNode
+     * @throws BackingStoreException
+     */
+    public void visit( final Preferences aNode ) throws BackingStoreException;
+  }
 
   // CONSTRUCTORS
 
   /**
-   * Constructs a new project with an empty set of properties and configurable
-   * objects.
+   * Constructs a new project, never used.
    */
-  public Project()
+  private Project()
   {
-    this.properties = new Properties();
-    this.configurableObjectList = new LinkedList<Configurable>();
+    // NO-op
   }
 
   // METHODS
 
   /**
-   * Adds a configurable object to the project. The given objects properties
-   * will be read and written whenever load and store operations take place.
-   * 
-   * @param aConfigurable
-   *          configurable object
-   */
-  public void addConfigurable( final Configurable aConfigurable )
-  {
-    if ( !this.configurableObjectList.contains( aConfigurable ) )
-    {
-      this.configurableObjectList.add( aConfigurable );
-    }
-  }
-
-  /**
-   * Clears all properties from this project.
-   */
-  public void clear()
-  {
-    this.properties = new Properties();
-  }
-
-  /**
-   * Gets all currently defined properties for this project.
-   * 
-   * @return project properties
-   */
-  public Properties getProperties()
-  {
-    final Iterator<Configurable> i = this.configurableObjectList.iterator();
-    while ( i.hasNext() )
-    {
-      final Configurable configurable = i.next();
-      configurable.writeProperties( configurable.getClass().getName(), this.properties );
-    }
-    return ( this.properties );
-  }
-
-  /**
    * Loads properties from the given file and notifies all registered
    * configurable objects.
    * 
-   * @param file
+   * @param aFile
    *          file to read properties from
    * @throws IOException
    *           when IO operation failes
    */
-  public void load( final File file ) throws IOException
+  public static void load( final File aFile, final Preferences aPreferences ) throws IOException
   {
-    final InputStream stream = new FileInputStream( file );
-    this.properties.load( stream );
-    final Iterator<Configurable> i = this.configurableObjectList.iterator();
-    while ( i.hasNext() )
-    {
-      final Configurable configurable = i.next();
-      configurable.readProperties( configurable.getClass().getName(), this.properties );
-    }
-  }
+    final Properties properties = new Properties();
 
-  /**
-   * Removes a configurable object from the project. The given objects
-   * properties will be read and written whenever load and store operations take
-   * place.
-   * 
-   * @param configurable
-   *          configurable object
-   */
-  public void removeConfigurable( final Configurable configurable )
-  {
-    this.configurableObjectList.remove( configurable );
+    final Reader reader = new FileReader( aFile );
+    try
+    {
+      properties.load( reader );
+    }
+    finally
+    {
+      reader.close();
+    }
+
+    for ( Map.Entry<Object, Object> entry : properties.entrySet() )
+    {
+      final String key = ( String )entry.getKey();
+      final String value = ( String )entry.getValue();
+
+      final String[] keyEntry = key.split( "/", 2 );
+      aPreferences.node( keyEntry[0] ).put( keyEntry[1], value );
+    }
   }
 
   /**
    * Stores properties fetched from all registered configurable objects in the
    * given file.
    * 
-   * @param file
+   * @param aFile
    *          file to store properties in
    * @throws IOException
    *           when IO operation failes
    */
-  public void store( final File file ) throws IOException
+  public static void store( final File aFile, final Preferences aPreferences ) throws IOException
   {
-    // creating new properties object will remove alien properties read from
-    // broken / old project files
-    this.properties = new Properties();
-    final Iterator<Configurable> i = this.configurableObjectList.iterator();
-    while ( i.hasNext() )
+    final Properties properties = new Properties();
+
+    try
     {
-      ( i.next() ).writeProperties( null, this.properties );
+      traversePreferences( aPreferences, new PreferenceNodeVisitor()
+      {
+        @Override
+        public void visit( final Preferences aNode ) throws BackingStoreException
+        {
+          final String prefix = aNode.name();
+          for ( String key : aNode.keys() )
+          {
+            properties.put( prefix + "/" + key, aNode.get( key, null ) );
+          }
+        }
+      } );
+
+      final Writer writer = new FileWriter( aFile );
+
+      properties.store( writer, "OpenBench Logic Analyzer Client Project File" );
+
+      writer.flush();
+      writer.close();
     }
-    final OutputStream stream = new FileOutputStream( file );
-    this.properties.store( stream, "Sumps Logic Analyzer Project File" );
+    catch ( BackingStoreException exception )
+    {
+      throw new IOException( "Failed to store project!", exception );
+    }
+  }
+
+  /**
+   * Visits all nodes in the given preferences tree.
+   * 
+   * @param aPreferences
+   *          the preferences tree to visit;
+   * @param aVisitor
+   *          the visitor that wants to visit each node in the tree.
+   * @throws BackingStoreException
+   *           in case of problems accessing the preferences tree.
+   */
+  private static void traversePreferences( final Preferences aPreferences, final PreferenceNodeVisitor aVisitor )
+      throws BackingStoreException
+  {
+    aVisitor.visit( aPreferences );
+
+    for ( String childName : aPreferences.childrenNames() )
+    {
+      traversePreferences( aPreferences.node( childName ), aVisitor );
+    }
   }
 }
