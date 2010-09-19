@@ -591,8 +591,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
                 final SPIData nextDS = decodedData.get( i + 1 );
                 if ( nextDS.getStartSampleIndex() == sampleIdx )
                 {
-                  mosiValue = nextDS.isMosiData() ? nextDS.getDataValue() : 0;
-                  misoValue = nextDS.isMisoData() ? nextDS.getDataValue() : 0;
+                  mosiValue = nextDS.isMosiData() ? nextDS.getDataValue() : mosiValue;
+                  misoValue = nextDS.isMisoData() ? nextDS.getDataValue() : misoValue;
                   // Make sure to skip this DS in the next iteration...
                   i++;
                 }
