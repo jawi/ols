@@ -61,7 +61,10 @@ public final class Runner
     config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.eawt" );
     config.put( AutoProcessor.AUTO_DEPLOY_ACTION_PROPERY, "install,start" );
     config.put( AutoProcessor.AUTO_DEPLOY_DIR_PROPERY, pluginDir );
-    config.put( Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT );
+    if ( Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) ) )
+    {
+      config.put( Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT );
+    }
     config.put( Constants.FRAMEWORK_BEGINNING_STARTLEVEL, "4" );
     config.put( FelixConstants.BUNDLE_STARTLEVEL_PROP, "1" );
     config.put( FelixConstants.LOG_LEVEL_PROP, "1" );

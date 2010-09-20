@@ -63,20 +63,31 @@ public class PreferenceServiceTracker extends ServiceTracker
     @Override
     public void eventDispatched( final AWTEvent aEvent )
     {
-      final int id = aEvent.getID();
-      if ( ( id == WindowEvent.WINDOW_OPENED ) && ( aEvent instanceof ComponentEvent ) )
+      if ( !( aEvent instanceof ComponentEvent ) )
       {
-        final ComponentEvent event = ( ComponentEvent )aEvent;
-        final Window component = ( Window )event.getComponent();
+        return;
+      }
+
+      final ComponentEvent event = ( ComponentEvent )aEvent;
+      final Window component = ( Window )event.getComponent();
+      final String namespace = component.getClass().getName();
+      final int id = aEvent.getID();
+
+      if ( ( id == WindowEvent.WINDOW_OPENED ) || ( id == WindowEvent.WINDOW_ACTIVATED ) )
+      {
+        // When we've already set the preferences once; don't do this again...
+        if ( arePreferencesLoaded( namespace ) )
+        {
+          return;
+        }
 
         try
         {
-          final String namespace = component.getClass().getName();
           if ( component instanceof Configurable )
           {
-            LOG.log( Level.FINE, "Reading dialog-specific properties for '{0}' ...", namespace );
+            LOG.log( Level.FINE, "Reading dialog-specific properties for {0} ...", namespace );
 
-            final Preferences componentPrefs = getPreferences( namespace );
+            final Preferences componentPrefs = getUserPreferences( namespace );
             ( ( Configurable )component ).readPreferences( componentPrefs );
           }
 
@@ -84,9 +95,9 @@ public class PreferenceServiceTracker extends ServiceTracker
           // popups/dropdowns, etc...
           if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
           {
-            LOG.log( Level.FINE, "Reading window-properties for '{0}' ...", namespace );
+            LOG.log( Level.FINE, "Reading window-properties for {0} ...", namespace );
 
-            final Preferences componentPrefs = getPreferences( namespace );
+            final Preferences componentPrefs = getUserPreferences( namespace );
             SwingComponentUtils.loadWindowState( componentPrefs, component );
           }
         }
@@ -94,20 +105,20 @@ public class PreferenceServiceTracker extends ServiceTracker
         {
           LOG.log( Level.WARNING, "Reading dialog properties failed!", exception );
         }
+        finally
+        {
+          registerPreferencesLoaded( namespace );
+        }
       }
-      else if ( ( id == WindowEvent.WINDOW_CLOSED ) && ( aEvent instanceof ComponentEvent ) )
+      else if ( id == WindowEvent.WINDOW_CLOSED )
       {
-        final ComponentEvent event = ( ComponentEvent )aEvent;
-        final Window component = ( Window )event.getComponent();
-
         try
         {
-          final String namespace = component.getClass().getName();
           if ( component instanceof Configurable )
           {
-            LOG.log( Level.FINE, "Writing dialog-specific properties for '{0}' ...", namespace );
+            LOG.log( Level.FINE, "Writing dialog-specific properties for {0} ...", namespace );
 
-            final Preferences componentPrefs = getPreferences( namespace );
+            final Preferences componentPrefs = getUserPreferences( namespace );
             ( ( Configurable )component ).writePreferences( componentPrefs );
           }
 
@@ -115,9 +126,9 @@ public class PreferenceServiceTracker extends ServiceTracker
           // popups/dropdowns, etc...
           if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
           {
-            LOG.log( Level.FINE, "Writing window-properties for '{0}' ...", namespace );
+            LOG.log( Level.FINE, "Writing window-properties for {0} ...", namespace );
 
-            final Preferences componentPrefs = getPreferences( namespace );
+            final Preferences componentPrefs = getUserPreferences( namespace );
             SwingComponentUtils.saveWindowState( componentPrefs, component );
           }
         }
@@ -129,6 +140,18 @@ public class PreferenceServiceTracker extends ServiceTracker
     }
 
     /**
+     * @param aNamespace
+     * @return
+     */
+    private boolean arePreferencesLoaded( final String aNamespace )
+    {
+      final Preferences systemPreferences = this.preferenceService.getSystemPreferences();
+
+      final Preferences windowPrefs = systemPreferences.node( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY );
+      return windowPrefs.getBoolean( aNamespace, false );
+    }
+
+    /**
      * Returns the preferences node for the given namespace.
      * 
      * @param aNamespace
@@ -137,12 +160,26 @@ public class PreferenceServiceTracker extends ServiceTracker
      * @return the preferences node for the given namespace, never
      *         <code>null</code>.
      */
-    private Preferences getPreferences( final String aNamespace )
+    private Preferences getUserPreferences( final String aNamespace )
     {
       final Preferences userPreferences = this.preferenceService.getUserPreferences( this.userName );
       return userPreferences.node( aNamespace );
     }
+
+    /**
+     * @param aNamespace
+     */
+    private void registerPreferencesLoaded( final String aNamespace )
+    {
+      final Preferences systemPreferences = this.preferenceService.getSystemPreferences();
+      final Preferences windowPrefs = systemPreferences.node( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY );
+      windowPrefs.putBoolean( aNamespace, true );
+    }
   }
+
+  // CONSTANTS
+
+  public static final String OLS_WINDOW_PREFERENCES_KEY = "ols/windowPreferencesSet";
 
   // VARIABLES
 
@@ -185,8 +222,14 @@ public class PreferenceServiceTracker extends ServiceTracker
       Toolkit.getDefaultToolkit().addAWTEventListener( this.windowStateListener, AWTEvent.WINDOW_EVENT_MASK );
     }
 
+    final Preferences userPreferences = preferenceService.getUserPreferences( userName );
+    final Preferences systemPreferences = preferenceService.getSystemPreferences();
+
+    // Clear any stored window preference keys...
+    clearWindowPreferencesNode( systemPreferences );
+
     // Publish the current user preferences to the controller...
-    this.controller.setPreferences( preferenceService.getUserPreferences( userName ) );
+    this.controller.setPreferences( userPreferences, systemPreferences );
 
     return preferenceService;
   }
@@ -200,13 +243,33 @@ public class PreferenceServiceTracker extends ServiceTracker
   {
     // Make sure the preferences are actually removed from the controller as
     // well...
-    this.controller.setPreferences( null );
+    this.controller.setPreferences( null, null );
 
     if ( this.windowStateListener != null )
     {
       Toolkit.getDefaultToolkit().removeAWTEventListener( this.windowStateListener );
 
       this.windowStateListener = null;
+    }
+  }
+
+  /**
+   * Clears the preference-node in which the administration is kept which
+   * windows have already their preferences set.
+   */
+  private void clearWindowPreferencesNode( final Preferences aSystemPreferences )
+  {
+    try
+    {
+      if ( aSystemPreferences.nodeExists( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ) )
+      {
+        aSystemPreferences.node( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ).removeNode();
+        aSystemPreferences.flush();
+      }
+    }
+    catch ( BackingStoreException exception )
+    {
+      // Ignore...
     }
   }
 }

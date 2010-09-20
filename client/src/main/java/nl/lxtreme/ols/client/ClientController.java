@@ -36,6 +36,7 @@ import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
+import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
 
@@ -120,7 +121,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   private MainFrame mainFrame;
 
   private volatile DeviceController currentDevCtrl;
-  private volatile Preferences preferences;
+  private volatile Preferences userPreferences;
+  private volatile Preferences systemPreferences;
 
   // CONSTRUCTORS
 
@@ -499,7 +501,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void openProject( final File aFile ) throws IOException
   {
-    Project.load( aFile, this.preferences );
+    Project.load( aFile, this.userPreferences );
+    clearWindowPreferencesNode();
   }
 
   /**
@@ -672,9 +675,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     try
     {
-      this.preferences.flush();
+      this.userPreferences.flush();
 
-      Project.store( aFile, this.preferences );
+      Project.store( aFile, this.userPreferences );
     }
     catch ( BackingStoreException exception )
     {
@@ -762,12 +765,13 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * @param aPreferences
+   * @param aUserPreferences
    *          the preferences to set
    */
-  public void setPreferences( final Preferences aPreferences )
+  public void setPreferences( final Preferences aUserPreferences, final Preferences aSystemPreferences )
   {
-    this.preferences = aPreferences;
+    this.userPreferences = aUserPreferences;
+    this.systemPreferences = aSystemPreferences;
   }
 
   /**
@@ -905,6 +909,26 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Clears the preference-node in which the administration is kept which
+   * windows have already their preferences set.
+   */
+  private void clearWindowPreferencesNode() throws IOException
+  {
+    try
+    {
+      if ( this.systemPreferences.nodeExists( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ) )
+      {
+        this.systemPreferences.node( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ).removeNode();
+        this.systemPreferences.flush();
+      }
+    }
+    catch ( BackingStoreException exception )
+    {
+      throw new IOException( "Clearing window preferences node failed!", exception );
+    }
+  }
+
+  /**
    * Creates the tool context denoting the range of samples that should be
    * analysed by a tool.
    * 
@@ -951,7 +975,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   private void fillActionManager( final ActionManager aActionManager )
   {
-    aActionManager.add( new NewProjectAction( this ) );
     aActionManager.add( new OpenProjectAction( this ) );
     aActionManager.add( new SaveProjectAction( this ) );
     aActionManager.add( new OpenDataFileAction( this ) );

@@ -505,7 +505,6 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
     final JMenu file = new JMenu( "File" );
     bar.add( file );
 
-    file.add( this.controller.getAction( NewProjectAction.ID ) );
     file.add( this.controller.getAction( OpenProjectAction.ID ) );
     file.add( this.controller.getAction( SaveProjectAction.ID ) );
     file.addSeparator();
