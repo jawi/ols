@@ -36,8 +36,9 @@ import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
+import nl.lxtreme.ols.client.diagram.*;
+import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
-import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
@@ -819,11 +820,29 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * @param aParent
    *          the parent window to use, can be <code>null</code>.
    */
-  public void showSettingsDialog( final Window aParent )
+  public void showModeSettingsDialog( final Window aParent )
   {
     if ( this.mainFrame != null )
     {
-      DiagramSettingsDialog dialog = new DiagramSettingsDialog( aParent, this.mainFrame.getDiagramSettings() );
+      ModeSettingsDialog dialog = new ModeSettingsDialog( aParent, this.mainFrame.getDiagramSettings() );
+      if ( dialog.showDialog() )
+      {
+        this.mainFrame.setDiagramSettings( dialog.getDiagramSettings() );
+      }
+
+      dialog.dispose();
+      dialog = null;
+    }
+  }
+
+  /**
+   * @param aOwner
+   */
+  public void showPreferencesDialog( final Window aParent )
+  {
+    if ( this.mainFrame != null )
+    {
+      GeneralSettingsDialog dialog = new GeneralSettingsDialog( aParent, this.mainFrame.getDiagramSettings() );
       if ( dialog.showDialog() )
       {
         this.mainFrame.setDiagramSettings( dialog.getDiagramSettings() );
@@ -912,11 +931,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * Clears the preference-node in which the administration is kept which
    * windows have already their preferences set.
    */
-  private void clearWindowPreferencesNode() throws IOException
+  private void clearWindowPreferencesNode()
   {
     try
     {
-      if ( this.systemPreferences.nodeExists( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ) )
+      if ( ( this.systemPreferences != null )
+          && this.systemPreferences.nodeExists( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ) )
       {
         this.systemPreferences.node( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ).removeNode();
         this.systemPreferences.flush();
@@ -924,8 +944,28 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
     catch ( BackingStoreException exception )
     {
-      throw new IOException( "Clearing window preferences node failed!", exception );
+      // Ignore...
     }
+  }
+
+  /**
+   * @return
+   */
+  private boolean containsWindowsPreferencesNode()
+  {
+    try
+    {
+      if ( ( this.systemPreferences != null )
+          && this.systemPreferences.nodeExists( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ) )
+      {
+        return true;
+      }
+    }
+    catch ( BackingStoreException exception )
+    {
+      // Ignore...
+    }
+    return false;
   }
 
   /**
@@ -976,7 +1016,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   private void fillActionManager( final ActionManager aActionManager )
   {
     aActionManager.add( new OpenProjectAction( this ) );
-    aActionManager.add( new SaveProjectAction( this ) );
+    aActionManager.add( new SaveProjectAction( this ) ).setEnabled( false );
     aActionManager.add( new OpenDataFileAction( this ) );
     aActionManager.add( new SaveDataFileAction( this ) ).setEnabled( false );
     aActionManager.add( new ExitAction( this ) );
@@ -999,7 +1039,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       aActionManager.add( new SetCursorAction( this, c ) );
     }
 
-    aActionManager.add( new ShowDiagramSettingsAction( this ) );
+    aActionManager.add( new ShowModeSettingsAction( this ) );
     aActionManager.add( new ShowDiagramLabelsAction( this ) );
 
     aActionManager.add( new HelpAboutAction( this ) );
@@ -1048,8 +1088,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     getAction( CancelCaptureAction.ID ).setEnabled( deviceControllerSet && currentDeviceController.isCapturing() );
     getAction( RepeatCaptureAction.ID ).setEnabled( deviceControllerSet && currentDeviceController.isSetup() );
 
+    final boolean windowPrefsAvailable = containsWindowsPreferencesNode();
     final boolean dataAvailable = this.dataContainer.hasCapturedData();
 
+    getAction( SaveProjectAction.ID ).setEnabled( windowPrefsAvailable );
     getAction( SaveDataFileAction.ID ).setEnabled( dataAvailable );
 
     getAction( ZoomInAction.ID ).setEnabled( dataAvailable );

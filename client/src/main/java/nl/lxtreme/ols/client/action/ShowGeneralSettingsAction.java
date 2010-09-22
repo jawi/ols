@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,29 +18,48 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signal;
+package nl.lxtreme.ols.client.action;
 
 
-import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+
+import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * @author Frank Kunz Diagram cursor change listener interface
+ * 
  */
-public interface DiagramCursorChangeListener extends EventListener
+public class ShowGeneralSettingsAction extends BaseAction
 {
+  // CONSTANTS
+
+  private static final long serialVersionUID = 1L;
+
+  public static final String ID = "ShowGeneralSettings";
+
+  // CONSTRUCTORS
+
+  /**
+   * 
+   */
+  public ShowGeneralSettingsAction( final ClientController aController )
+  {
+    super( ID, aController, "Preferences", "Shows the preferences dialog." );
+  }
+
   // METHODS
 
   /**
-   * Cursor changed event
-   * 
-   * @param mousePos
-   *          current mouse position on (virtual) diagram screen
+   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
-  public void cursorChanged( final int aCursorIdx, final int aMousePos );
-
-  /**
-   * Cursor removed event
-   */
-  public void cursorRemoved( final int aCursorIdx );
+  @Override
+  public void actionPerformed( final ActionEvent aEvent )
+  {
+    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+    getController().showPreferencesDialog( owner );
+  }
 }
+
+/* EOF */

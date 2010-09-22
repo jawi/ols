@@ -32,8 +32,9 @@ import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.diagram.*;
+import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.icons.*;
-import nl.lxtreme.ols.client.signal.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.*;
@@ -532,7 +533,7 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
     diagramMenu.add( this.controller.getAction( GotoCursor2Action.ID ) );
     diagramMenu.addSeparator();
     diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorModeAction.ID ) ) );
-    diagramMenu.add( this.controller.getAction( ShowDiagramSettingsAction.ID ) );
+    diagramMenu.add( this.controller.getAction( ShowModeSettingsAction.ID ) );
     diagramMenu.add( this.controller.getAction( ShowDiagramLabelsAction.ID ) );
 
     if ( HostUtils.isMacOSX() )

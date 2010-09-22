@@ -152,7 +152,8 @@ public final class Host implements ApplicationCallback
   @Override
   public boolean handlePreferences()
   {
-    return false;
+    this.controller.showPreferencesDialog( this.controller.getMainFrame() );
+    return true;
   }
 
   /**
@@ -175,7 +176,7 @@ public final class Host implements ApplicationCallback
   @Override
   public boolean hasPreferences()
   {
-    return false;
+    return true;
   }
 
   /**

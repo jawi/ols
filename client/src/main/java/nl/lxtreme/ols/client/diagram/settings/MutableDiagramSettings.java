@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signal;
+package nl.lxtreme.ols.client.diagram.settings;
 
 
 import java.awt.*;
@@ -147,7 +147,7 @@ public class MutableDiagramSettings implements DiagramSettings
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getBackgroundColor()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getBackgroundColor()
    */
   @Override
   public final Color getBackgroundColor()
@@ -156,7 +156,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getChannelColor(int)
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getChannelColor(int)
    */
   @Override
   public final Color getChannelColor( final int aChannelIdx )
@@ -173,7 +173,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getChannelHeight()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getChannelHeight()
    */
   @Override
   public final int getChannelHeight()
@@ -182,7 +182,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getCursorColor(int)
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getCursorColor(int)
    */
   @Override
   public final Color getCursorColor( final int aCursorIdx )
@@ -199,7 +199,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getGridColor()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getGridColor()
    */
   @Override
   public final Color getGridColor()
@@ -208,7 +208,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getGroupBackgroundColor()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getGroupBackgroundColor()
    */
   @Override
   public final Color getGroupBackgroundColor()
@@ -217,7 +217,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getGroupByteColor()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getGroupByteColor()
    */
   @Override
   public final Color getGroupByteColor()
@@ -226,7 +226,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getLabelColor()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getLabelColor()
    */
   @Override
   public final Color getLabelColor()
@@ -235,7 +235,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getScopeColor()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getScopeColor()
    */
   @Override
   public final Color getScopeColor()
@@ -244,7 +244,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getScopeHeight()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getScopeHeight()
    */
   @Override
   public final int getScopeHeight()
@@ -253,7 +253,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getSignalHeight()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getSignalHeight()
    */
   @Override
   public final int getSignalHeight()
@@ -262,7 +262,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getTextColor()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getTextColor()
    */
   @Override
   public final Color getTextColor()
@@ -271,7 +271,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getTimeColor()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getTimeColor()
    */
   @Override
   public final Color getTimeColor()
@@ -280,7 +280,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#getTriggerColor()
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getTriggerColor()
    */
   @Override
   public final Color getTriggerColor()
@@ -289,7 +289,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#isShowByte(int)
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isShowByte(int)
    */
   public final boolean isShowByte( final int aGroup )
   {
@@ -297,7 +297,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#isShowChannels(int)
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isShowChannels(int)
    */
   public final boolean isShowChannels( final int aGroup )
   {
@@ -305,7 +305,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#isShowScope(int)
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isShowScope(int)
    */
   public final boolean isShowScope( final int aGroup )
   {
@@ -403,7 +403,8 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#setShowByte(int, boolean)
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#setShowByte(int,
+   *      boolean)
    */
   public final void setShowByte( final int aGroup, final boolean aShow )
   {
@@ -418,7 +419,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#setShowChannels(int,
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#setShowChannels(int,
    *      boolean)
    */
   public final void setShowChannels( final int aGroup, final boolean aShow )
@@ -434,7 +435,7 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramSettings#setShowScope(int,
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#setShowScope(int,
    *      boolean)
    */
   public final void setShowScope( final int aGroup, final boolean aShow )
