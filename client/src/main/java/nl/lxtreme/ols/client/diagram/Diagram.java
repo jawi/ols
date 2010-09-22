@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signal;
+package nl.lxtreme.ols.client.diagram;
 
 
 import java.awt.*;
@@ -27,14 +27,15 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.client.signal.laf.*;
+import nl.lxtreme.ols.client.diagram.laf.*;
+import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.util.*;
 
 
 /**
  * This component displays a diagram which is obtained from a
  * {@link CapturedDataImpl} object. The settings for the diagram are obtained
- * from the embedded {@link DiagramSettingsDialog} and
+ * from the embedded {@link ModeSettingsDialog} and
  * {@link DiagramLabelsDialog} objects. Look there for an overview of ways to
  * display data.
  * <p>
@@ -137,7 +138,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramCursorChangeListener#cursorChanged(int,
+   * @see nl.lxtreme.ols.client.diagram.DiagramCursorChangeListener#cursorChanged(int,
    *      int)
    */
   @Override
@@ -147,7 +148,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramCursorChangeListener#cursorRemoved(int)
+   * @see nl.lxtreme.ols.client.diagram.DiagramCursorChangeListener#cursorRemoved(int)
    */
   @Override
   public void cursorRemoved( final int aCursorIdx )

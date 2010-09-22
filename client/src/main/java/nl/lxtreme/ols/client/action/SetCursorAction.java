@@ -28,7 +28,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.client.signal.laf.*;
+import nl.lxtreme.ols.client.diagram.laf.*;
 import nl.lxtreme.ols.util.*;
 
 

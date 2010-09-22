@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signal;
+package nl.lxtreme.ols.client.diagram;
 
 
 import java.awt.*;
@@ -26,7 +26,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.signal.laf.*;
+import nl.lxtreme.ols.client.diagram.laf.*;
 
 
 /**
@@ -63,7 +63,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramCursorChangeListener#cursorChanged(int,
+   * @see nl.lxtreme.ols.client.diagram.DiagramCursorChangeListener#cursorChanged(int,
    *      int)
    */
   @Override
@@ -73,7 +73,7 @@ public class DiagramTimeLine extends JComponent implements Scrollable, DiagramCu
   }
 
   /**
-   * @see nl.lxtreme.ols.client.signal.DiagramCursorChangeListener#cursorRemoved(int)
+   * @see nl.lxtreme.ols.client.diagram.DiagramCursorChangeListener#cursorRemoved(int)
    */
   @Override
   public void cursorRemoved( final int aCursorIdx )

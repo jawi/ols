@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signal.laf;
+package nl.lxtreme.ols.client.diagram.laf;
 
 
 import java.awt.*;
@@ -27,7 +27,8 @@ import javax.swing.*;
 import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.signal.*;
+import nl.lxtreme.ols.client.diagram.*;
+import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.util.*;
 
 

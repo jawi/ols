@@ -31,22 +31,22 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * 
  */
-public class ShowDiagramSettingsAction extends BaseAction
+public class ShowModeSettingsAction extends BaseAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "ShowDiagramSettings";
+  public static final String ID = "ShowModeSettings";
 
   // CONSTRUCTORS
 
   /**
    * 
    */
-  public ShowDiagramSettingsAction( final ClientController aController )
+  public ShowModeSettingsAction( final ClientController aController )
   {
-    super( ID, aController, "Diagram settings", "Show the diagram settings dialog." );
+    super( ID, aController, "Diagram mode settings", "Shows the mode settings dialog." );
   }
 
   // METHODS
@@ -58,7 +58,7 @@ public class ShowDiagramSettingsAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-    getController().showSettingsDialog( owner );
+    getController().showModeSettingsDialog( owner );
   }
 }
 
