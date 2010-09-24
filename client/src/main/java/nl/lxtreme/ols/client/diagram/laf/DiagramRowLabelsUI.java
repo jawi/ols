@@ -134,6 +134,7 @@ public class DiagramRowLabelsUI extends ComponentUI
         for ( int bit = 0; bit < 8; bit++ )
         {
           final int labelIdx = bit + block * 8;
+          final Color labelColor = getLabelColor( labelIdx, settings );
 
           final int y1 = channelHeight * bit + yofs;
 
@@ -143,17 +144,13 @@ public class DiagramRowLabelsUI extends ComponentUI
           String label = dataContainer.getChannelLabel( labelIdx );
           if ( DisplayUtils.isEmpty( label ) )
           {
-            label = Integer.toString( labelIdx );
-            aGraphics.setColor( settings.getTextColor() );
-          }
-          else
-          {
-            aGraphics.setColor( settings.getLabelColor() );
+            label = String.format( "%d", labelIdx + 1 );
           }
 
           final int labelYpos = y1 + textYpos;
           final int labelXpos = ( clipArea.width - fm.stringWidth( label ) - PADDING_X );
 
+          aGraphics.setColor( labelColor );
           aGraphics.drawString( label, labelXpos, labelYpos );
         }
 
@@ -190,6 +187,21 @@ public class DiagramRowLabelsUI extends ComponentUI
         yofs += channelHeight;
       }
     }
+  }
+
+  /**
+   * @param aChannelIdx
+   * @param aSettings
+   * @return
+   */
+  private Color getLabelColor( final int aChannelIdx, final DiagramSettings aSettings )
+  {
+    Color result = aSettings.getLabelColor();
+    if ( aSettings.isColorLabels() )
+    {
+      result = aSettings.getChannelColor( aChannelIdx );
+    }
+    return result;
   }
 
   /**

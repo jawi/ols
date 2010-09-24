@@ -29,6 +29,24 @@ import java.awt.*;
  */
 public interface DiagramSettings
 {
+  // INNER TYPES
+
+  /**
+   * Denotes which color scheme to use for the diagram.
+   */
+  public static enum ColorScheme
+  {
+    LIGHT, DARK, CUSTOM;
+  }
+
+  /**
+   * Denotes where the signal is to be drawn inside a channel.
+   */
+  public static enum SignalAlignment
+  {
+    TOP, CENTER, BOTTOM;
+  }
+
   // CONSTANTS
 
   /**
@@ -71,6 +89,13 @@ public interface DiagramSettings
   int getChannelHeight();
 
   /**
+   * Returns the color scheme to use for drawing the signals, cursors and so on.
+   * 
+   * @return a color scheme, never <code>null</code>.
+   */
+  ColorScheme getColorScheme();
+
+  /**
    * Returns the cursor color for the cursor with a given index.
    * 
    * @param aCursorIdx
@@ -99,9 +124,10 @@ public interface DiagramSettings
   Color getGroupByteColor();
 
   /**
-   * Returns the label color.
+   * Returns the default label color, in case the channel colors are to be
+   * applied to the signals.
    * 
-   * @return the label, never <code>null</code>.
+   * @return a label color, never <code>null</code>.
    */
   Color getLabelColor();
 
@@ -118,6 +144,21 @@ public interface DiagramSettings
    * @return a scope height, in pixels.
    */
   int getScopeHeight();
+
+  /**
+   * Returns where the signal is to be drawn in a channel.
+   * 
+   * @return a signal alignment, never <code>null</code>.
+   */
+  SignalAlignment getSignalAlignment();
+
+  /**
+   * Returns the default signal color, in case the channel colors are to be
+   * applied to the labels.
+   * 
+   * @return a signal color, never <code>null</code>.
+   */
+  Color getSignalColor();
 
   /**
    * Returns the height of the signal indicator.
@@ -146,6 +187,26 @@ public interface DiagramSettings
    * @return the trigger, never <code>null</code>.
    */
   Color getTriggerColor();
+
+  /**
+   * Returns whether the <em>labels</em> should denote the individual channel
+   * colors.
+   * 
+   * @return <code>true</code> if the labels should be colored according to the
+   *         channel colors, <code>false</code> to let the channel signals be
+   *         colored.
+   */
+  boolean isColorLabels();
+
+  /**
+   * Returns whether the <em>signals</em> should denote the individual channel
+   * colors.
+   * 
+   * @return <code>true</code> if the signals should be colored according to the
+   *         channel colors, <code>false</code> to let the channel labels be
+   *         colored.
+   */
+  boolean isColorSignals();
 
   /**
    * @param aGroup

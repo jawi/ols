@@ -550,6 +550,8 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
     }
 
     final JMenu helpMenu = bar.add( new JMenu( "Help" ) );
+    helpMenu.add( this.controller.getAction( ShowGeneralSettingsAction.ID ) );
+    helpMenu.addSeparator();
     helpMenu.add( this.controller.getAction( HelpAboutAction.ID ) );
 
     final JToolBar toolbar = new JToolBar();

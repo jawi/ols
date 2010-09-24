@@ -28,7 +28,7 @@ import nl.lxtreme.ols.api.data.*;
 
 
 /**
- * @author jawi
+ * Provides mutable diagram settings.
  */
 public class MutableDiagramSettings implements DiagramSettings
 {
@@ -44,9 +44,14 @@ public class MutableDiagramSettings implements DiagramSettings
   private Color groupBackgroundColor;
   private Color groupByteColor;
   private Color scopeColor;
+  private Color signalColor;
   private Color textColor;
   private Color timeColor;
   private Color labelColor;
+
+  private SignalAlignment signalAlignment;
+  private ColorScheme colorScheme;
+  private boolean colorLabels;
 
   private final Color[] cursorColors;
   private final Color[] channelColors;
@@ -64,28 +69,14 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public MutableDiagramSettings()
   {
-    // this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
-    // this.triggerColor = new Color( 0x82, 0x87, 0x8f );
-    // this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
-    // this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
-    // this.textColor = Color.WHITE;
-    // this.timeColor = Color.WHITE;
-    // this.labelColor = new Color( 0x82, 0x87, 0x8f );
-    //
-    // this.cursorColors = makeMonochromaticColorPalette(
-    // DataContainer.MAX_CURSORS );
-    // this.channelColors = makeColorPalette( DataContainer.MAX_CHANNELS, 8 );
+    this.colorScheme = ColorScheme.LIGHT;
 
-    this.backgroundColor = Color.WHITE;
-    this.triggerColor = new Color( 0x82, 0x87, 0x8f );
-    this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
-    this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
-    this.textColor = new Color( 0x25, 0x25, 0x25 );
-    this.timeColor = new Color( 0x25, 0x25, 0x25 );
-    this.labelColor = new Color( 0x82, 0x87, 0x8f );
+    this.cursorColors = new Color[DataContainer.MAX_CURSORS];
+    this.channelColors = new Color[DataContainer.MAX_CHANNELS];
 
-    this.cursorColors = makeColorPalette( DataContainer.MAX_CURSORS, DataContainer.MAX_CURSORS );
-    this.channelColors = makeMonochromaticColorPalette( DataContainer.MAX_CHANNELS );
+    this.colorLabels = false;
+
+    setDefaultColorScheme();
 
     this.groupByteColor = Color.GRAY;
     this.scopeColor = Color.GRAY;
@@ -96,9 +87,10 @@ public class MutableDiagramSettings implements DiagramSettings
       this.groupSettings[i] = DISPLAY_CHANNELS;
     }
 
-    setChannelHeight( 30 );
+    setChannelHeight( 35 );
+    setSignalHeight( 20 );
     setScopeHeight( 133 );
-    setSignalHeight( getChannelHeight() - 4 );
+    setSignalAlignment( SignalAlignment.CENTER );
   }
 
   /**
@@ -112,6 +104,10 @@ public class MutableDiagramSettings implements DiagramSettings
   {
     this();
 
+    setColorLabels( aDiagramSettings.isColorLabels() );
+
+    setColorScheme( aDiagramSettings.getColorScheme() );
+
     setBackgroundColor( aDiagramSettings.getBackgroundColor() );
     setTriggerColor( aDiagramSettings.getTriggerColor() );
     setGridColor( aDiagramSettings.getGridColor() );
@@ -121,6 +117,8 @@ public class MutableDiagramSettings implements DiagramSettings
     setLabelColor( aDiagramSettings.getLabelColor() );
     setGroupByteColor( aDiagramSettings.getGroupByteColor() );
     setScopeColor( aDiagramSettings.getScopeColor() );
+
+    setColorScheme( aDiagramSettings.getColorScheme() );
 
     for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
     {
@@ -142,6 +140,7 @@ public class MutableDiagramSettings implements DiagramSettings
     setChannelHeight( aDiagramSettings.getChannelHeight() );
     setScopeHeight( aDiagramSettings.getScopeHeight() );
     setSignalHeight( aDiagramSettings.getSignalHeight() );
+    setSignalAlignment( aDiagramSettings.getSignalAlignment() );
   }
 
   // METHODS
@@ -179,6 +178,15 @@ public class MutableDiagramSettings implements DiagramSettings
   public final int getChannelHeight()
   {
     return this.channelHeight;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getColorScheme()
+   */
+  @Override
+  public final ColorScheme getColorScheme()
+  {
+    return this.colorScheme;
   }
 
   /**
@@ -253,6 +261,24 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getSignalAlignment()
+   */
+  @Override
+  public final SignalAlignment getSignalAlignment()
+  {
+    return this.signalAlignment;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getSignalColor()
+   */
+  @Override
+  public Color getSignalColor()
+  {
+    return this.signalColor;
+  }
+
+  /**
    * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getSignalHeight()
    */
   @Override
@@ -289,6 +315,24 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isColorLabels()
+   */
+  @Override
+  public final boolean isColorLabels()
+  {
+    return this.colorLabels;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isColorSignals()
+   */
+  @Override
+  public final boolean isColorSignals()
+  {
+    return !isColorLabels();
+  }
+
+  /**
    * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isShowByte(int)
    */
   public final boolean isShowByte( final int aGroup )
@@ -318,6 +362,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setBackgroundColor( final Color aBackgroundColor )
   {
+    if ( aBackgroundColor == null )
+    {
+      throw new IllegalArgumentException( "Background color cannot be null!" );
+    }
     this.backgroundColor = aBackgroundColor;
   }
 
@@ -327,6 +375,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setChannelColor( final int aChannelIdx, final Color aChannelColor )
   {
+    if ( aChannelColor == null )
+    {
+      throw new IllegalArgumentException( "Channel color cannot be null!" );
+    }
     this.channelColors[aChannelIdx] = aChannelColor;
   }
 
@@ -340,11 +392,45 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
+   * Sets whether or not the labels should be colors according to the channel
+   * color coding scheme.
+   * 
+   * @param aColorLabels
+   *          <code>true</code> to color only the labels, <code>false</code> to
+   *          color the signals.
+   */
+  public final void setColorLabels( final boolean aColorLabels )
+  {
+    this.colorLabels = aColorLabels;
+  }
+
+  /**
+   * @param aColorScheme
+   */
+  public final void setColorScheme( final ColorScheme aColorScheme )
+  {
+    if ( aColorScheme == null )
+    {
+      throw new IllegalArgumentException( "Color scheme cannot be null!" );
+    }
+    this.colorScheme = aColorScheme;
+
+    if ( ColorScheme.CUSTOM != aColorScheme )
+    {
+      setDefaultColorScheme();
+    }
+  }
+
+  /**
    * @param aCursorColors
    *          the cursorColors to set
    */
   public final void setCursorColor( final int aCursorIdx, final Color aCursorColor )
   {
+    if ( aCursorColor == null )
+    {
+      throw new IllegalArgumentException( "Cursor color cannot be null!" );
+    }
     this.cursorColors[aCursorIdx] = aCursorColor;
   }
 
@@ -354,6 +440,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setGridColor( final Color aGridColor )
   {
+    if ( aGridColor == null )
+    {
+      throw new IllegalArgumentException( "Grid color cannot be null!" );
+    }
     this.gridColor = aGridColor;
   }
 
@@ -363,6 +453,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setGroupBackgroundColor( final Color aGroupBackgroundColor )
   {
+    if ( aGroupBackgroundColor == null )
+    {
+      throw new IllegalArgumentException( "Groupbyte background color cannot be null!" );
+    }
     this.groupBackgroundColor = aGroupBackgroundColor;
   }
 
@@ -372,6 +466,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setGroupByteColor( final Color aGroupByteColor )
   {
+    if ( aGroupByteColor == null )
+    {
+      throw new IllegalArgumentException( "Groupbyte color cannot be null!" );
+    }
     this.groupByteColor = aGroupByteColor;
   }
 
@@ -381,6 +479,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setLabelColor( final Color aLabelColor )
   {
+    if ( aLabelColor == null )
+    {
+      throw new IllegalArgumentException( "Label color cannot be null!" );
+    }
     this.labelColor = aLabelColor;
   }
 
@@ -390,6 +492,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setScopeColor( final Color aScopeColor )
   {
+    if ( aScopeColor == null )
+    {
+      throw new IllegalArgumentException( "Scope color cannot be null!" );
+    }
     this.scopeColor = aScopeColor;
   }
 
@@ -451,6 +557,29 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
+   * Sets the signal alignment.
+   * 
+   * @param aSignalAlignment
+   *          a signal alignment, never <code>null</code>.
+   */
+  public final void setSignalAlignment( final SignalAlignment aSignalAlignment )
+  {
+    if ( aSignalAlignment == null )
+    {
+      throw new IllegalArgumentException( "Signal alignment cannot be null!" );
+    }
+    this.signalAlignment = aSignalAlignment;
+  }
+
+  /**
+   * @param aSignalColor
+   */
+  public void setSignalColor( final Color aSignalColor )
+  {
+    this.signalColor = aSignalColor;
+  }
+
+  /**
    * @param aSignalHeight
    *          the signalHeight to set
    */
@@ -465,6 +594,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setTextColor( final Color aTextColor )
   {
+    if ( aTextColor == null )
+    {
+      throw new IllegalArgumentException( "Text color cannot be null!" );
+    }
     this.textColor = aTextColor;
   }
 
@@ -474,6 +607,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setTimeColor( final Color aTimeColor )
   {
+    if ( aTimeColor == null )
+    {
+      throw new IllegalArgumentException( "Time color cannot be null!" );
+    }
     this.timeColor = aTimeColor;
   }
 
@@ -483,6 +620,10 @@ public class MutableDiagramSettings implements DiagramSettings
    */
   public final void setTriggerColor( final Color aTriggerColor )
   {
+    if ( aTriggerColor == null )
+    {
+      throw new IllegalArgumentException( "Trigger color cannot be null!" );
+    }
     this.triggerColor = aTriggerColor;
   }
 
@@ -510,25 +651,58 @@ public class MutableDiagramSettings implements DiagramSettings
   /**
    * @return
    */
-  private Color[] makeColorPalette( final int aLength, final int aSteps )
+  private void makeColorPalette( final Color[] aResult, final int aSteps )
   {
-    final Color[] result = new Color[aLength];
     final double freq = 2 * Math.PI / aSteps;
-    for ( int i = 0; i < result.length; i++ )
+    for ( int i = 0; i < aResult.length; i++ )
     {
       // result[i] = makeColorGradient( i, freq, freq, freq, 2.7, 2.4, 4.6 );
-      result[i] = makeColorGradient( i, freq, freq, freq, 2.7, 7.4, 3.4 );
+      aResult[i] = makeColorGradient( i, freq, freq, freq, 2.7, 7.4, 3.4 );
     }
-    return result;
   }
 
   /**
    * @return
    */
-  private Color[] makeMonochromaticColorPalette( final int aLength )
+  private void makeMonochromaticColorPalette( final Color[] aResult, final Color aColor )
   {
-    final Color[] result = new Color[aLength];
-    Arrays.fill( result, new Color( 0x30, 0x4b, 0x75 ) );
-    return result;
+    Arrays.fill( aResult, aColor );
+  }
+
+  /**
+   * 
+   */
+  private void setDefaultColorScheme()
+  {
+    if ( ColorScheme.DARK.equals( this.colorScheme ) )
+    {
+      this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
+      this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
+      this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
+      this.labelColor = new Color( 0x82, 0x87, 0x8f );
+      this.signalColor = new Color( 0x30, 0x4b, 0x75 );
+      this.scopeColor = this.signalColor;
+      this.textColor = Color.WHITE;
+      this.timeColor = Color.WHITE;
+      this.triggerColor = new Color( 0x82, 0x87, 0x8f );
+
+      makeMonochromaticColorPalette( this.cursorColors, this.signalColor );
+      makeColorPalette( this.channelColors, 8 );
+    }
+    else
+    {
+      this.backgroundColor = Color.WHITE;
+      this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
+      this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
+      this.labelColor = new Color( 0x82, 0x87, 0x8f );
+      this.signalColor = new Color( 0x30, 0x4b, 0x75 );
+      this.scopeColor = this.signalColor;
+      this.textColor = new Color( 0x25, 0x25, 0x25 );
+      this.timeColor = new Color( 0x25, 0x25, 0x25 );
+      this.triggerColor = new Color( 0x82, 0x87, 0x8f );
+
+      makeColorPalette( this.cursorColors, DataContainer.MAX_CURSORS );
+      makeMonochromaticColorPalette( this.channelColors, this.signalColor );
+    }
   }
 }
