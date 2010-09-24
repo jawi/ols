@@ -375,8 +375,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       try
       {
-        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences( DeviceController.class
-            .getName(), null );
+        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences(
+            DeviceController.class.getName(), null );
         for ( ServiceReference serviceRef : serviceRefs )
         {
           tools.add( ( DeviceController )this.bundleContext.getService( serviceRef ) );
@@ -846,6 +846,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       if ( dialog.showDialog() )
       {
         this.mainFrame.setDiagramSettings( dialog.getDiagramSettings() );
+        this.mainFrame.repaint();
       }
 
       dialog.dispose();
@@ -1039,6 +1040,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       aActionManager.add( new SetCursorAction( this, c ) );
     }
 
+    aActionManager.add( new ShowGeneralSettingsAction( this ) );
     aActionManager.add( new ShowModeSettingsAction( this ) );
     aActionManager.add( new ShowDiagramLabelsAction( this ) );
 

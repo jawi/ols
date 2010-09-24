@@ -35,6 +35,7 @@ import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -139,6 +140,15 @@ public class DiagramUI extends ComponentUI
           diagram.zoomIn( point );
         }
       }
+      else
+      {
+        // Not handled by us; let other components handle it...
+        final JScrollPane scrollpane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, diagram );
+        if ( scrollpane != null )
+        {
+          scrollpane.dispatchEvent( aEvent );
+        }
+      }
     }
 
     /**
@@ -206,13 +216,25 @@ public class DiagramUI extends ComponentUI
       final Point point = aEvent.getPoint();
 
       final int notches = aEvent.getWheelRotation();
-      if ( notches < 0 )
+      // Is CTRL also down?
+      final boolean isCtrlDown = aEvent.isControlDown();
+
+      if ( isCtrlDown && ( notches < 0 ) )
       {
         diagram.zoomIn( point );
       }
-      else if ( notches > 0 )
+      else if ( isCtrlDown && ( notches > 0 ) )
       {
         diagram.zoomOut( point );
+      }
+      else
+      {
+        // Not handled by us; let other components handle it...
+        final JScrollPane scrollpane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, diagram );
+        if ( scrollpane != null )
+        {
+          scrollpane.dispatchEvent( aEvent );
+        }
       }
     }
 
@@ -492,13 +514,29 @@ public class DiagramUI extends ComponentUI
     final int signalHeight = settings.getSignalHeight();
     final int scopeHeight = settings.getScopeHeight();
 
+    // Where is the signal to be drawn?
+    final int signalOffset;
+    if ( SignalAlignment.BOTTOM.equals( settings.getSignalAlignment() ) )
+    {
+      signalOffset = ( channelHeight - signalHeight ) - 2;
+    }
+    else if ( SignalAlignment.CENTER.equals( settings.getSignalAlignment() ) )
+    {
+      signalOffset = ( channelHeight - signalHeight ) / 2;
+    }
+    else
+    {
+      signalOffset = 1;
+    }
+
     final double scopeScaleFactor = ( 256.0 / ( scopeHeight - 2 * PADDING_Y ) );
 
     final double scale = aDiagram.getScale();
     final int edgeX = ( int )( scale * 0.5 );
 
     final FontMetrics fm = aCanvas.getFontMetrics();
-    final int labelYpos = ( int )( channelHeight - ( fm.getHeight() / 2.0 ) + 1 );
+    final int fontHeight = fm.getHeight() + 2;
+    final int labelYpos = ( int )( channelHeight - ( fontHeight / 2.0 ) + 1 );
 
     final int n = 2 * timestamps.length;
 
@@ -535,6 +573,8 @@ public class DiagramUI extends ComponentUI
         for ( int bit = 0; bit < 8; bit++ )
         {
           final int channelIdx = 8 * block + bit;
+          final Color signalColor = getSignalColor( channelIdx, settings );
+
           long currentSample = aFromIndex - 1;
           int pIdx = 0;
 
@@ -556,7 +596,7 @@ public class DiagramUI extends ComponentUI
             // Calculate display coordinates...
             final int x1 = ( int )( ( scale * currentSample ) - edgeX );
             final int x2 = ( int )( ( scale * ( nextSample - 1 ) ) + edgeX );
-            final int y1 = bofs + channelHeight * bit + signalHeight * ( 1 - currentValue ) + 1;
+            final int y1 = bofs + ( channelHeight * bit ) + ( signalHeight * ( 1 - currentValue ) ) + signalOffset;
 
             polyline.x[pIdx] = x1;
             polyline.y[pIdx] = y1;
@@ -569,7 +609,7 @@ public class DiagramUI extends ComponentUI
             currentSample = nextSample;
           }
 
-          aCanvas.setColor( settings.getChannelColor( channelIdx ) );
+          aCanvas.setColor( signalColor );
           aCanvas.drawPolyline( polyline.x, polyline.y, pIdx );
 
           // XXX
@@ -596,9 +636,8 @@ public class DiagramUI extends ComponentUI
 
             final int textXoffset = ( int )( ( x2 - x1 - fm.stringWidth( data ) ) / 2.0 );
 
-            final Color newColor = settings.getChannelColor( channelIdx );
-            final Color newBrighterColor = newColor.brighter();
-            final Color newDarkerColor = newColor.darker().darker();
+            final Color newBrighterColor = signalColor.brighter().brighter();
+            final Color newDarkerColor = signalColor.darker().darker();
             final GradientPaint newPaint = new GradientPaint( x1, y1 - 5, newBrighterColor, x1, y1
                 + ( signalHeight / 2 ), newDarkerColor );
 
@@ -620,7 +659,7 @@ public class DiagramUI extends ComponentUI
               aCanvas.setColor( Color.WHITE );
               aCanvas.setComposite( oldComposite );
 
-              aCanvas.drawString( data, x1 + textXoffset, y1 + labelYpos - 4 );
+              aCanvas.drawString( data, x1 + textXoffset, y1 + fontHeight - 2 );
             }
           }
 
@@ -663,6 +702,7 @@ public class DiagramUI extends ComponentUI
         // draw actual data
         aCanvas.setColor( settings.getScopeColor() );
         aCanvas.drawPolyline( scopePolyline.x, scopePolyline.y, pIdx );
+
         bofs += scopeHeight;
         // draw bottom grid line
         drawGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
@@ -726,10 +766,26 @@ public class DiagramUI extends ComponentUI
         aCanvas.setColor( settings.getGroupByteColor() );
         aCanvas.drawPolyline( bytePolyline.x, bytePolyline.y1, pIdx );
         aCanvas.drawPolyline( bytePolyline.x, bytePolyline.y2, pIdx );
+
         bofs += channelHeight;
         // draw bottom grid line
         drawGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
       }
     }
+  }
+
+  /**
+   * @param aChannelIdx
+   * @param aSettings
+   * @return
+   */
+  private Color getSignalColor( final int aChannelIdx, final DiagramSettings aSettings )
+  {
+    Color result = aSettings.getSignalColor();
+    if ( aSettings.isColorSignals() )
+    {
+      result = aSettings.getChannelColor( aChannelIdx );
+    }
+    return result;
   }
 }
