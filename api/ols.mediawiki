@@ -71,14 +71,15 @@ Provides some common utilities that are shared among all other projects.
 == To do ==
 
 # <strike>restore project functionality;</strike>
-# upon opening windows for the second time, the properties aren't read/reset;
+# <strike>upon opening windows for the second time, the properties aren't read/reset;</strike>
+# <strike>make the order of tools in the menu predictable;</strike>
+# make channel numbering uniform across entire platform;
 # show timing measurements between edges, or from rising to rising or falling to falling edges;
 # configurable colors would be nice, so that the user can set them to match the probes;
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;
 # make the annotated data configurable regarding the displayed text and colors;
 # add a preference pane for the "general" client configuration;
 # make it configurable whether state-transitions are straight or diagonal;
-# <strike>make the order of tools in the menu predictable;</strike>
 # make distinction between decoding tools and other tools;
 # provide easier access to analysis tools;
 # analysis protocol results synopsis (client: <bla bla>, master: <bla bla>, client ...);

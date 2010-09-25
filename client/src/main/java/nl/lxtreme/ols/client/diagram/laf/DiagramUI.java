@@ -535,8 +535,8 @@ public class DiagramUI extends ComponentUI
     final int edgeX = ( int )( scale * 0.5 );
 
     final FontMetrics fm = aCanvas.getFontMetrics();
-    final int fontHeight = fm.getHeight() + 2;
-    final int labelYpos = ( int )( channelHeight - ( fontHeight / 2.0 ) + 1 );
+    final int fontHeight = fm.getHeight();
+    final int labelYpos = ( int )( channelHeight - ( fontHeight / 2.0 ) + 3 );
 
     final int n = 2 * timestamps.length;
 
@@ -618,7 +618,10 @@ public class DiagramUI extends ComponentUI
           final Stroke oldStroke = aCanvas.getStroke();
           final Composite oldComposite = aCanvas.getComposite();
           final Object oldHint = aCanvas.getRenderingHint( RenderingHints.KEY_ANTIALIASING );
+
           aCanvas.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+          final Color newBrighterColor = signalColor.brighter();
+          final Color newDarkerColor = signalColor.darker().darker().darker();
 
           final Iterator<ChannelAnnotation> annotations = dataContainer.getChannelAnnotations( channelIdx,
               dataStartIndex, timestamps.length );
@@ -628,24 +631,24 @@ public class DiagramUI extends ComponentUI
 
             final long startIdx = timestamps[annotation.getStartIndex()];
             final long endIdx = timestamps[annotation.getEndIndex()];
+
             final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
 
             final int x1 = ( int )( scale * startIdx );
             final int x2 = ( int )( scale * endIdx );
             final int y1 = bofs + channelHeight * channelIdx;
 
-            final int textXoffset = ( int )( ( x2 - x1 - fm.stringWidth( data ) ) / 2.0 );
+            final int textWidth = fm.stringWidth( data );
 
-            final Color newBrighterColor = signalColor.brighter().brighter();
-            final Color newDarkerColor = signalColor.darker().darker();
             final GradientPaint newPaint = new GradientPaint( x1, y1 - 5, newBrighterColor, x1, y1
                 + ( signalHeight / 2 ), newDarkerColor );
 
-            final int annotationWidth = ( x2 - x1 );
-            final int annotationHeight = ( signalHeight - 6 );
+            final int annotationWidth = Math.max( textWidth, x2 - x1 ) + 2;
+            final int annotationHeight = ( fontHeight + 0 );
             final int arc = ( int )( annotationHeight / 2.0 );
+            final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
 
-            aCanvas.setComposite( AlphaComposite.SrcOver.derive( 0.75f ) );
+            aCanvas.setComposite( AlphaComposite.SrcOver.derive( 0.8f ) );
             aCanvas.setStroke( SOLID_THICK );
 
             aCanvas.setPaint( newPaint );
@@ -659,7 +662,7 @@ public class DiagramUI extends ComponentUI
               aCanvas.setColor( Color.WHITE );
               aCanvas.setComposite( oldComposite );
 
-              aCanvas.drawString( data, x1 + textXoffset, y1 + fontHeight - 2 );
+              aCanvas.drawString( data, x1 + textXoffset, y1 + fontHeight );
             }
           }
 
