@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.client.diagram.settings;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -193,18 +194,16 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
    */
   final void setColorSchemeTabState( final boolean aEnable )
   {
-    this.tabbedPane.setEnabledAt( 1, aEnable );
-    this.tabbedPane.setEnabledAt( 2, aEnable );
-    this.tabbedPane.setEnabledAt( 3, aEnable );
-    this.tabbedPane.setEnabledAt( 4, aEnable );
-    this.tabbedPane.setEnabledAt( 5, aEnable );
-    this.tabbedPane.setEnabledAt( 6, aEnable );
+    for ( int i = 1; i < this.tabbedPane.getTabCount(); i++ )
+    {
+      this.tabbedPane.setEnabledAt( i, aEnable );
+    }
   }
 
   /**
    * @return
    */
-  private JPanel createButtonsPane()
+  private JComponent createButtonsPane()
   {
     final JButton cancel = StandardActionFactory.createCloseButton();
     final JButton ok = new JButton( "Ok" );
@@ -221,18 +220,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
         }
       }
     } );
-    // Make both buttons the same size...
-    ok.setPreferredSize( cancel.getPreferredSize() );
 
-    final JPanel buttonPane = new JPanel();
-    buttonPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 0 ) );
-    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
-
-    buttonPane.add( Box.createHorizontalGlue() );
-    buttonPane.add( ok );
-    buttonPane.add( Box.createHorizontalStrut( 16 ) );
-    buttonPane.add( cancel );
-    return buttonPane;
+    return SwingComponentUtils.createButtonPane( new JButton[] { ok, cancel } );
   }
 
   /**
@@ -254,8 +243,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     {
       final int channelIdx = ( aBlockNr * CHANNELS_PER_BLOCK ) + i;
 
-      final JLabel label = new JLabel( String.format( "Channel %d color", ( channelIdx + 1 ) ) );
-      label.setHorizontalAlignment( SwingConstants.RIGHT );
+      final JLabel label = createRightAlignedLabel( String.format( "Channel %d color", ( channelIdx + 1 ) ) );
 
       this.channelColor[channelIdx] = new JTextField( 10 );
 
@@ -280,63 +268,32 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
    */
   private JPanel createColorSchemePane()
   {
-    final JLabel backgroundColorLabel = new JLabel( "Background color" );
-    backgroundColorLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.backgroundColor = new JTextField( 10 );
-
-    final JLabel gridColorLabel = new JLabel( "Grid color" );
-    gridColorLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.gridColor = new JTextField( 10 );
-
-    final JLabel labelColorLabel = new JLabel( "Label color" );
-    labelColorLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.labelColor = new JTextField( 10 );
-
-    final JLabel scopeColorLabel = new JLabel( "Scope color" );
-    scopeColorLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.scopeColor = new JTextField( 10 );
-
-    final JLabel signalColorLabel = new JLabel( "Signal color" );
-    signalColorLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.signalColor = new JTextField( 10 );
-
-    final JLabel textColorLabel = new JLabel( "Text color" );
-    textColorLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.textColor = new JTextField( 10 );
-
-    final JLabel timeColorLabel = new JLabel( "Time color" );
-    timeColorLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.timeColor = new JTextField( 10 );
-
-    final JLabel triggerColorLabel = new JLabel( "Trigger color" );
-    triggerColorLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.triggerColor = new JTextField( 10 );
 
     // Create panel...
     final JPanel editorsPane = new JPanel( new SpringLayout() );
-    editorsPane.add( backgroundColorLabel );
+    editorsPane.add( createRightAlignedLabel( "Background color" ) );
     editorsPane.add( this.backgroundColor );
-    editorsPane.add( gridColorLabel );
+    editorsPane.add( createRightAlignedLabel( "Grid color" ) );
     editorsPane.add( this.gridColor );
-    editorsPane.add( labelColorLabel );
+    editorsPane.add( createRightAlignedLabel( "Label color" ) );
     editorsPane.add( this.labelColor );
-    editorsPane.add( scopeColorLabel );
+    editorsPane.add( createRightAlignedLabel( "Scope color" ) );
     editorsPane.add( this.scopeColor );
-    editorsPane.add( signalColorLabel );
+    editorsPane.add( createRightAlignedLabel( "Signal color" ) );
     editorsPane.add( this.signalColor );
-    editorsPane.add( textColorLabel );
+    editorsPane.add( createRightAlignedLabel( "Text color" ) );
     editorsPane.add( this.textColor );
-    editorsPane.add( timeColorLabel );
+    editorsPane.add( createRightAlignedLabel( "Time color" ) );
     editorsPane.add( this.timeColor );
-    editorsPane.add( triggerColorLabel );
+    editorsPane.add( createRightAlignedLabel( "Trigger color" ) );
     editorsPane.add( this.triggerColor );
 
     SpringLayoutUtils.makeCompactGrid( editorsPane, 8, 2, 6, 6, 6, 6 );
@@ -362,9 +319,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
     for ( int i = 0; i < this.cursorColor.length; i++ )
     {
-      final JLabel label = new JLabel( String.format( "Cursor %d color", ( i + 1 ) ) );
-      label.setHorizontalAlignment( SwingConstants.RIGHT );
-
+      final JLabel label = createRightAlignedLabel( String.format( "Cursor %d color", ( i + 1 ) ) );
       this.cursorColor[i] = new JTextField( 10 );
 
       editorsPane.add( label );
@@ -388,23 +343,9 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
    */
   private JPanel createGeneralSettingsPane()
   {
-    final JLabel channelHeightLabel = new JLabel( "Channel height" );
-    channelHeightLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.channelHeight = new JTextField( 10 );
-
-    final JLabel signalHeightLabel = new JLabel( "Signal height" );
-    signalHeightLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.signalHeight = new JTextField( 10 );
-
-    final JLabel scopeHeightLabel = new JLabel( "Scope height" );
-    scopeHeightLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.scopeHeight = new JTextField( 10 );
-
-    final JLabel colorLabelsOrSignalsLabel = new JLabel( "Apply channel colors to" );
-    colorLabelsOrSignalsLabel.setHorizontalAlignment( SwingConstants.RIGHT );
 
     this.colorLabels = new JRadioButton( "Labels" );
     this.colorSignals = new JRadioButton( "Signals" );
@@ -417,10 +358,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     colorLabelsOrSignals.add( this.colorLabels, BorderLayout.WEST );
     colorLabelsOrSignals.add( this.colorSignals, BorderLayout.EAST );
 
-    final JLabel colorSchemeLabel = new JLabel( "Color scheme" );
-    colorSchemeLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
-    this.colorScheme = new JComboBox( ColorScheme.values() );
+    this.colorScheme = new JComboBox( new ColorScheme[] { ColorScheme.LIGHT, ColorScheme.DARK } );
     this.colorScheme.addItemListener( new ItemListener()
     {
       @Override
@@ -433,22 +371,24 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
     // Create panel...
     final JPanel editorsPane = new JPanel( new SpringLayout() );
-    editorsPane.add( channelHeightLabel );
+
+    SpringLayoutUtils.addSeparator( editorsPane, "Layout" );
+
+    editorsPane.add( createRightAlignedLabel( "Channel height" ) );
     editorsPane.add( this.channelHeight );
-    editorsPane.add( signalHeightLabel );
+    editorsPane.add( createRightAlignedLabel( "Signal height" ) );
     editorsPane.add( this.signalHeight );
-    editorsPane.add( scopeHeightLabel );
+    editorsPane.add( createRightAlignedLabel( "Scope height" ) );
     editorsPane.add( this.scopeHeight );
-    editorsPane.add( colorLabelsOrSignalsLabel );
+
+    SpringLayoutUtils.addSeparator( editorsPane, "Color scheme" );
+
+    editorsPane.add( createRightAlignedLabel( "Apply channel colors to" ) );
     editorsPane.add( colorLabelsOrSignals );
-
-    editorsPane.add( new JLabel() );
-    editorsPane.add( new JSeparator() );
-
-    editorsPane.add( colorSchemeLabel );
+    editorsPane.add( createRightAlignedLabel( "Color scheme" ) );
     editorsPane.add( this.colorScheme );
 
-    SpringLayoutUtils.makeCompactGrid( editorsPane, 6, 2, 6, 6, 6, 6 );
+    SpringLayoutUtils.makeEditorGrid( editorsPane );
 
     final JPanel result = new JPanel( new GridBagLayout() );
 
@@ -465,32 +405,15 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
    */
   private void initDialog()
   {
-    final JPanel contentPane = new JPanel( new GridBagLayout() );
-    contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-    setContentPane( contentPane );
-
-    final JPanel buttonPane = createButtonsPane();
-
-    this.tabbedPane = new JTabbedPane();
+    this.tabbedPane = new JTabbedPane( SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT );
     this.tabbedPane.addTab( "General", createGeneralSettingsPane() );
     this.tabbedPane.addTab( "General colors", createColorSchemePane() );
     this.tabbedPane.addTab( "Cursor colors", createCursorColorSchemePane() );
-    this.tabbedPane.addTab( "Colors channel block 1", createChannelColorSchemePane( 0 ) );
-    this.tabbedPane.addTab( "Colors channel block 2", createChannelColorSchemePane( 1 ) );
-    this.tabbedPane.addTab( "Colors channel block 3", createChannelColorSchemePane( 2 ) );
-    this.tabbedPane.addTab( "Colors channel block 4", createChannelColorSchemePane( 3 ) );
+    this.tabbedPane.addTab( "Channel colors", createChannelColorSchemePane( 0 ) );
 
-    final Insets insets = new Insets( 2, 2, 2, 2 );
-    contentPane
-        .add(
-            this.tabbedPane, //
-            new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.SOUTH, GridBagConstraints.BOTH, insets, 0,
-                0 ) );
-    contentPane.add( buttonPane, //
-        new GridBagConstraints( 0, 1, 1, 1, 0.0, 1.0, GridBagConstraints.SOUTH, GridBagConstraints.HORIZONTAL, insets,
-            0, 0 ) );
+    final JComponent buttonPane = createButtonsPane();
 
-    pack();
+    SwingComponentUtils.setupDialogContentPane( this, this.tabbedPane, buttonPane );
   }
 
   /**
@@ -676,12 +599,20 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
       for ( int i = 0; i < this.cursorColor.length; i++ )
       {
-        this.cursorColor[i].setText( SwingComponentUtils.toString( this.settings.getCursorColor( i ) ) );
+        final JTextField textfield = this.cursorColor[i];
+        if ( textfield != null )
+        {
+          textfield.setText( SwingComponentUtils.toString( this.settings.getCursorColor( i ) ) );
+        }
       }
 
       for ( int i = 0; i < this.channelColor.length; i++ )
       {
-        this.channelColor[i].setText( SwingComponentUtils.toString( this.settings.getChannelColor( i ) ) );
+        final JTextField textfield = this.channelColor[i];
+        if ( textfield != null )
+        {
+          textfield.setText( SwingComponentUtils.toString( this.settings.getChannelColor( i ) ) );
+        }
       }
 
       setColorSchemeTabState( customSchemeSelected );

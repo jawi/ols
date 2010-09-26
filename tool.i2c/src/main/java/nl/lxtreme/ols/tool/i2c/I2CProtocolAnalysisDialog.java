@@ -60,19 +60,18 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
   // VARIABLES
 
-  private final JComboBox lineA;
-  private final JComboBox lineB;
-  private final JEditorPane outText;
-  private final JLabel busSetSCL;
-  private final JLabel busSetSDA;
-  private final JCheckBox detectSTART;
-  private final JCheckBox detectSTOP;
-  private final JCheckBox detectACK;
-  private final JCheckBox detectNACK;
-
-  private final RestorableAction runAnalysisAction;
-  private final Action exportAction;
-  private final Action closeAction;
+  private JComboBox lineA;
+  private JComboBox lineB;
+  private JEditorPane outText;
+  private JLabel busSetSCL;
+  private JLabel busSetSDA;
+  private JCheckBox detectSTART;
+  private JCheckBox detectSTOP;
+  private JCheckBox detectACK;
+  private JCheckBox detectNACK;
+  private RestorableAction runAnalysisAction;
+  private Action exportAction;
+  private Action closeAction;
 
   // CONSTRUCTORS
 
@@ -84,111 +83,8 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   {
     super( aOwner, aName );
 
-    setMinimumSize( new Dimension( 640, 480 ) );
-
-    setLayout( new GridBagLayout() );
-    getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-
-    /*
-     * add protocol settings elements
-     */
-    final JPanel panSettings = new JPanel();
-    panSettings.setLayout( new GridLayout( 6, 2, 5, 5 ) );
-    panSettings.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Settings" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-
-    final String channels[] = new String[32];
-    for ( int i = 0; i < 32; i++ )
-    {
-      channels[i] = "Channel " + i;
-    }
-
-    panSettings.add( new JLabel( "Line A" ) );
-    this.lineA = new JComboBox( channels );
-    this.lineA.setSelectedIndex( 0 );
-    panSettings.add( this.lineA );
-    panSettings.add( new JLabel( "Line B" ) );
-    this.lineB = new JComboBox( channels );
-    this.lineB.setSelectedIndex( 1 );
-    panSettings.add( this.lineB );
-    this.detectSTART = new JCheckBox( "Show START", true );
-    panSettings.add( this.detectSTART );
-    panSettings.add( new JLabel( " " ) );
-    this.detectSTOP = new JCheckBox( "Show STOP", true );
-    panSettings.add( this.detectSTOP );
-    panSettings.add( new JLabel( " " ) );
-    this.detectACK = new JCheckBox( "Show ACK", true );
-    panSettings.add( this.detectACK );
-    panSettings.add( new JLabel( " " ) );
-    this.detectNACK = new JCheckBox( "Show NACK", true );
-    panSettings.add( this.detectNACK );
-    panSettings.add( new JLabel( " " ) );
-
-    add( panSettings, //
-        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
-            COMP_INSETS, 0, 0 ) );
-
-    /*
-     * add bus configuration panel
-     */
-    final JPanel panBusConfig = new JPanel();
-    panBusConfig.setLayout( new GridLayout( 2, 2, 5, 5 ) );
-    panBusConfig.setBorder( BorderFactory.createCompoundBorder(
-        BorderFactory.createTitledBorder( "Bus Configuration" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-    panBusConfig.add( new JLabel( "SCL :" ) );
-    this.busSetSCL = new JLabel( "<autodetect>" );
-    panBusConfig.add( this.busSetSCL );
-    panBusConfig.add( new JLabel( "SDA :" ) );
-    this.busSetSDA = new JLabel( "<autodetect>" );
-    panBusConfig.add( this.busSetSDA );
-
-    add( panBusConfig, //
-        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
-            COMP_INSETS, 0, 0 ) );
-
-    /*
-     * add an empty output view
-     */
-    final JPanel output = new JPanel( new GridLayout( 1, 1, 5, 5 ) );
-    this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
-    this.outText.setMargin( new Insets( 5, 5, 5, 5 ) );
-    output.add( new JScrollPane( this.outText ) );
-
-    add( output, //
-        new GridBagConstraints( 1, 0, 1, 2, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.BOTH, COMP_INSETS, 0,
-            0 ) );
-
-    /*
-     * add buttons
-     */
-    final JButton runAnalysisButton = createRunAnalysisButton();
-    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
-
-    final JButton exportButton = createExportButton();
-    this.exportAction = exportButton.getAction();
-    this.exportAction.setEnabled( false );
-
-    final JButton closeButton = createCloseButton();
-    this.closeAction = closeButton.getAction();
-
-    final JPanel buttons = new JPanel();
-    final BoxLayout layoutMgr = new BoxLayout( buttons, BoxLayout.LINE_AXIS );
-    buttons.setLayout( layoutMgr );
-    buttons.add( Box.createHorizontalGlue() );
-    buttons.add( runAnalysisButton );
-    buttons.add( Box.createHorizontalStrut( 8 ) );
-    buttons.add( exportButton );
-    buttons.add( Box.createHorizontalStrut( 16 ) );
-    buttons.add( closeButton );
-
-    add( buttons, //
-        new GridBagConstraints( 0, 2, 2, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL,
-            COMP_INSETS, 0, 0 ) );
-
-    pack();
+    initDialog();
   }
-
-  // CONSTRUCTORS
 
   /**
    * This is the I2C protocol decoder core The decoder scans for a decode start
@@ -228,6 +124,8 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
       throw new RuntimeException( exception );
     }
   }
+
+  // CONSTRUCTORS
 
   /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
@@ -401,6 +299,51 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
+   * @return
+   */
+  private JPanel createBusConfigPane()
+  {
+    final JPanel panBusConfig = new JPanel();
+    panBusConfig.setLayout( new GridLayout( 2, 2, 5, 5 ) );
+    panBusConfig.setBorder( BorderFactory.createCompoundBorder(
+        BorderFactory.createTitledBorder( "Bus Configuration" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    panBusConfig.add( new JLabel( "SCL :" ) );
+    this.busSetSCL = new JLabel( "<autodetect>" );
+    panBusConfig.add( this.busSetSCL );
+    panBusConfig.add( new JLabel( "SDA :" ) );
+    this.busSetSDA = new JLabel( "<autodetect>" );
+    panBusConfig.add( this.busSetSDA );
+    return panBusConfig;
+  }
+
+  /**
+   * @return
+   */
+  private JPanel createButtonPane()
+  {
+    final JButton runAnalysisButton = createRunAnalysisButton();
+    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
+
+    final JButton exportButton = createExportButton();
+    this.exportAction = exportButton.getAction();
+    this.exportAction.setEnabled( false );
+
+    final JButton closeButton = createCloseButton();
+    this.closeAction = closeButton.getAction();
+
+    final JPanel buttons = new JPanel();
+    final BoxLayout layoutMgr = new BoxLayout( buttons, BoxLayout.LINE_AXIS );
+    buttons.setLayout( layoutMgr );
+    buttons.add( Box.createHorizontalGlue() );
+    buttons.add( runAnalysisButton );
+    buttons.add( Box.createHorizontalStrut( 8 ) );
+    buttons.add( exportButton );
+    buttons.add( Box.createHorizontalStrut( 16 ) );
+    buttons.add( closeButton );
+    return buttons;
+  }
+
+  /**
    * Creates the HTML template for exports to HTML.
    * 
    * @param aExporter
@@ -467,6 +410,59 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
+   * @return
+   */
+  private JPanel createPreviewPane()
+  {
+    final JPanel output = new JPanel( new GridLayout( 1, 1, 0, 0 ) );
+    output.setBorder( BorderFactory.createEmptyBorder( 7, 5, 2, 0 ) );
+
+    this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
+    output.add( new JScrollPane( this.outText ) );
+
+    return output;
+  }
+
+  /**
+   * @return
+   */
+  private JPanel createSettingsPane()
+  {
+    final JPanel panSettings = new JPanel();
+    panSettings.setLayout( new GridLayout( 6, 2, 5, 5 ) );
+    panSettings.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Settings" ),
+        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+
+    final String channels[] = new String[32];
+    for ( int i = 0; i < 32; i++ )
+    {
+      channels[i] = "Channel " + i;
+    }
+
+    panSettings.add( new JLabel( "Line A" ) );
+    this.lineA = new JComboBox( channels );
+    this.lineA.setSelectedIndex( 0 );
+    panSettings.add( this.lineA );
+    panSettings.add( new JLabel( "Line B" ) );
+    this.lineB = new JComboBox( channels );
+    this.lineB.setSelectedIndex( 1 );
+    panSettings.add( this.lineB );
+    this.detectSTART = new JCheckBox( "Show START", true );
+    panSettings.add( this.detectSTART );
+    panSettings.add( new JLabel( " " ) );
+    this.detectSTOP = new JCheckBox( "Show STOP", true );
+    panSettings.add( this.detectSTOP );
+    panSettings.add( new JLabel( " " ) );
+    this.detectACK = new JCheckBox( "Show ACK", true );
+    panSettings.add( this.detectACK );
+    panSettings.add( new JLabel( " " ) );
+    this.detectNACK = new JCheckBox( "Show NACK", true );
+    panSettings.add( this.detectNACK );
+    panSettings.add( new JLabel( " " ) );
+    return panSettings;
+  }
+
+  /**
    * Returns an "empty" HTML page.
    * 
    * @return an empty HTML page string, never <code>null</code>.
@@ -495,6 +491,37 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
         return null;
       }
     } );
+  }
+
+  /**
+   * 
+   */
+  private void initDialog()
+  {
+    setMinimumSize( new Dimension( 640, 480 ) );
+
+    final JComponent settingsPane = createSettingsPane();
+    final JComponent busConfigPane = createBusConfigPane();
+    final JComponent previewPane = createPreviewPane();
+
+    final JPanel contentPane = new JPanel( new GridBagLayout() );
+    contentPane.add( settingsPane, //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
+            new Insets( 2, 0, 2, 0 ), 0, 0 ) );
+
+    contentPane.add( busConfigPane, //
+        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
+            new Insets( 2, 0, 2, 0 ), 0, 0 ) );
+
+    contentPane.add( previewPane, //
+        new GridBagConstraints( 1, 0, 1, 2, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.BOTH, new Insets( 2,
+            0, 2, 0 ), 0, 0 ) );
+
+    final JComponent buttonPane = createButtonPane();
+
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane );
+
+    pack();
   }
 
   /**

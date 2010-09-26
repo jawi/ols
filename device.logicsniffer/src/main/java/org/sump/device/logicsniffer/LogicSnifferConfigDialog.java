@@ -21,6 +21,7 @@
 package org.sump.device.logicsniffer;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -168,7 +169,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    */
   public LogicSnifferConfigDialog( final Window aParent, final LogicSnifferDevice aDevice )
   {
-    super( aParent, "OLS Capture Settings", ModalityType.DOCUMENT_MODAL );
+    super( aParent, "Capture settings", ModalityType.DOCUMENT_MODAL );
 
     this.device = aDevice;
 
@@ -176,8 +177,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
     // sync dialog status with device
     updateFields();
-
-    pack();
   }
 
   /**
@@ -332,8 +331,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
           SwingComponentUtils.setSelected( this.triggerValue[stage][i], value.charAt( i ) == '1' );
         }
 
-        SwingComponentUtils.setSelected( this.triggerStart[stage], aPrefs.getBoolean( prefix + ".startCapture",
-            Boolean.FALSE ) );
+        SwingComponentUtils.setSelected( this.triggerStart[stage],
+            aPrefs.getBoolean( prefix + ".startCapture", Boolean.FALSE ) );
       }
 
       final String group = aPrefs.get( "channelGroup", "" );
@@ -419,24 +418,14 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * @return
    */
-  private JPanel createButtonPane()
+  private JComponent createButtonPane()
   {
+    final JButton cancel = StandardActionFactory.createCloseButton();
+
     this.captureButton = new JButton( "Capture" );
     this.captureButton.addActionListener( this );
 
-    final JButton cancel = StandardActionFactory.createCloseButton();
-    cancel.setPreferredSize( this.captureButton.getPreferredSize() );
-
-    final JPanel buttonPane = new JPanel();
-    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
-    buttonPane.setBorder( BorderFactory.createEmptyBorder( 8, 4, 8, 4 ) );
-
-    buttonPane.add( Box.createHorizontalGlue() );
-    buttonPane.add( this.captureButton );
-    buttonPane.add( Box.createHorizontalStrut( 16 ) );
-    buttonPane.add( cancel );
-
-    return buttonPane;
+    return SwingComponentUtils.createButtonPane( cancel, this.captureButton );
   }
 
   /**
@@ -446,9 +435,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    */
   private JPanel createGeneralSettingsPane()
   {
-    final JLabel analyzerPortLabel = new JLabel( "Analyzer port:" );
-    analyzerPortLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.portSelect = new JLazyComboBox( new JLazyComboBox.ItemProvider()
     {
       @Override
@@ -460,34 +446,19 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     // allow people to put their own port name into it...
     this.portSelect.setEditable( true );
 
-    final JLabel portRateSelectLabel = new JLabel( "Port Speed:" );
-    portRateSelectLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.portRateSelect = new JComboBox( BAUDRATES );
     this.portRateSelect.setSelectedIndex( 3 ); // 115k2
 
-    final JLabel numberSchemeSelectLabel = new JLabel( "Number scheme:" );
-    numberSchemeSelectLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.numberSchemeSelect = new JComboBox( NUMBER_SCHEMES );
     this.numberSchemeSelect.setSelectedIndex( 0 );
-
-    final JLabel sourceSelectLabel = new JLabel( "Sampling Clock:" );
-    sourceSelectLabel.setHorizontalAlignment( SwingConstants.RIGHT );
 
     this.sourceSelect = new JComboBox( CAPTURE_SOURCES );
     this.sourceSelect.setSelectedIndex( 0 );
     this.sourceSelect.addActionListener( this );
 
-    final JLabel speedSelectLabel = new JLabel( "Sampling Rate:" );
-    speedSelectLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.speedSelect = new JComboBox( CAPTURE_SPEEDS );
     this.speedSelect.setSelectedIndex( 1 );
     this.speedSelect.addActionListener( this );
-
-    final JLabel groupsLabel = new JLabel( "Channel Groups:" );
-    groupsLabel.setHorizontalAlignment( SwingConstants.RIGHT );
 
     final Container groups = new Container();
     groups.setLayout( new GridLayout( 1, 4 ) );
@@ -500,9 +471,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       this.channelGroup[i].setActionCommand( "channel" );
       groups.add( this.channelGroup[i] );
     }
-
-    final JLabel sizeSelectLabel = new JLabel( "Recording Size:" );
-    sizeSelectLabel.setHorizontalAlignment( SwingConstants.RIGHT );
 
     this.sizeSelect = new JComboBox( CAPTURE_SIZES );
     this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer() );
@@ -522,15 +490,9 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       }
     } );
 
-    final JLabel filterEnableLabel = new JLabel( "Noise Filter: " );
-    filterEnableLabel.setHorizontalAlignment( SwingConstants.RIGHT );
-
     this.filterEnable = new JCheckBox( "Enabled" );
     this.filterEnable.setSelected( true );
     this.filterEnable.setEnabled( false );
-
-    final JLabel rleEnableLabel = new JLabel( "Run Length Encoding: " );
-    rleEnableLabel.setHorizontalAlignment( SwingConstants.RIGHT );
 
     this.rleEnable = new JCheckBox( "Enabled" );
     this.rleEnable.setSelected( false );
@@ -538,42 +500,44 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
     final JPanel connectionPane = new JPanel( new SpringLayout() );
 
-    connectionPane.add( analyzerPortLabel );
+    SpringLayoutUtils.addSeparator( connectionPane, "Connection" );
+
+    connectionPane.add( createRightAlignedLabel( "Analyzer port:" ) );
     connectionPane.add( this.portSelect );
 
-    connectionPane.add( portRateSelectLabel );
+    connectionPane.add( createRightAlignedLabel( "Port Speed:" ) );
     connectionPane.add( this.portRateSelect );
 
-    connectionPane.add( numberSchemeSelectLabel );
+    connectionPane.add( createRightAlignedLabel( "Number scheme:" ) );
     connectionPane.add( this.numberSchemeSelect );
 
-    connectionPane.add( new JLabel() );
-    connectionPane.add( new JSeparator() );
+    SpringLayoutUtils.addSeparator( connectionPane, "Capture" );
 
-    connectionPane.add( sourceSelectLabel );
+    connectionPane.add( createRightAlignedLabel( "Sampling Clock:" ) );
     connectionPane.add( this.sourceSelect );
 
-    connectionPane.add( speedSelectLabel );
+    connectionPane.add( createRightAlignedLabel( "Sampling Rate:" ) );
     connectionPane.add( this.speedSelect );
 
-    connectionPane.add( new JLabel() );
-    connectionPane.add( new JSeparator() );
+    SpringLayoutUtils.addSeparator( connectionPane, "" );
 
-    connectionPane.add( groupsLabel );
+    connectionPane.add( createRightAlignedLabel( "Channel Groups:" ) );
     connectionPane.add( groups );
 
-    connectionPane.add( sizeSelectLabel );
+    connectionPane.add( createRightAlignedLabel( "Recording Size:" ) );
     connectionPane.add( this.maxSampleSize );
     connectionPane.add( new JLabel() );
     connectionPane.add( this.sizeSelect );
 
-    connectionPane.add( filterEnableLabel );
+    SpringLayoutUtils.addSeparator( connectionPane, "Options" );
+
+    connectionPane.add( createRightAlignedLabel( "Noise Filter: " ) );
     connectionPane.add( this.filterEnable );
 
-    connectionPane.add( rleEnableLabel );
+    connectionPane.add( createRightAlignedLabel( "Run Length Encoding: " ) );
     connectionPane.add( this.rleEnable );
 
-    SpringLayoutUtils.makeCompactGrid( connectionPane, 12, 2, 6, 6, 6, 6 );
+    SpringLayoutUtils.makeEditorGrid( connectionPane );
 
     final JPanel result = new JPanel( new GridBagLayout() );
     result.add( connectionPane, new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER,
@@ -729,7 +693,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     SpringLayoutUtils.makeCompactGrid( generalPane, 3, 3, 6, 6, 6, 6 );
 
     final JPanel triggerPane = new JPanel( new GridBagLayout() );
-    triggerPane.add( generalPane, // 
+    triggerPane.add( generalPane, //
         new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(
             0, 0, 0, 0 ), 0, 0 ) );
     triggerPane.add( this.triggerStageTabs, //
@@ -777,22 +741,13 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    */
   private void initDialog()
   {
-    final JPanel contentPane = new JPanel( new GridBagLayout() );
-    contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-    setContentPane( contentPane );
-
-    final JTabbedPane tabs = new JTabbedPane();
+    final JTabbedPane tabs = new JTabbedPane( JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT );
     tabs.addTab( "General", createGeneralSettingsPane() );
     tabs.addTab( "Triggers", createTriggerPane() );
 
-    final Insets insets = new Insets( 2, 2, 2, 2 );
-    contentPane
-        .add( tabs, //
-            new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.SOUTH, GridBagConstraints.BOTH, insets, 0,
-                0 ) );
-    contentPane.add( createButtonPane(), //
-        new GridBagConstraints( 0, 1, 1, 1, 0.0, 1.0, GridBagConstraints.SOUTH, GridBagConstraints.HORIZONTAL, insets,
-            0, 0 ) );
+    final JComponent buttonPane = createButtonPane();
+
+    SwingComponentUtils.setupDialogContentPane( this, tabs, buttonPane );
 
     pack();
   }

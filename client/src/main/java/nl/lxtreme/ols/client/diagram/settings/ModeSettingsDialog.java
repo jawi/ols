@@ -178,9 +178,10 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
   /**
    * @return
    */
-  private JPanel createButtonsPane()
+  private JComponent createButtonsPane()
   {
     final JButton cancel = StandardActionFactory.createCloseButton();
+
     final JButton ok = new JButton( "Ok" );
     ok.addActionListener( new ActionListener()
     {
@@ -191,17 +192,8 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
         close();
       }
     } );
-    // Make both buttons the same size...
-    ok.setPreferredSize( cancel.getPreferredSize() );
 
-    final JPanel buttonPane = new JPanel();
-    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
-
-    buttonPane.add( Box.createHorizontalGlue() );
-    buttonPane.add( ok );
-    buttonPane.add( Box.createHorizontalStrut( 16 ) );
-    buttonPane.add( cancel );
-    return buttonPane;
+    return SwingComponentUtils.createButtonPane( new JButton[] { ok, cancel } );
   }
 
   /**
@@ -254,20 +246,13 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
   }
 
   /**
-   * 
+   * Initializes this dialog.
    */
   private void initDialog()
   {
-    final JPanel contentPane = new JPanel( new BorderLayout() );
-    contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-    setContentPane( contentPane );
+    final JComponent modePane = createDisplayModePane();
+    final JComponent buttonPane = createButtonsPane();
 
-    final JPanel modePane = createDisplayModePane();
-    add( modePane, BorderLayout.CENTER );
-
-    final JPanel buttonPane = createButtonsPane();
-    add( buttonPane, BorderLayout.PAGE_END );
-
-    pack();
+    SwingComponentUtils.setupDialogContentPane( this, modePane, buttonPane );
   }
 }

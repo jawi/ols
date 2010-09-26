@@ -23,11 +23,12 @@ package nl.lxtreme.ols.util.swing;
 
 import java.awt.*;
 import java.io.*;
+
 import javax.swing.*;
 
-import org.osgi.service.prefs.*;
-
 import nl.lxtreme.ols.util.*;
+
+import org.osgi.service.prefs.*;
 
 
 /**
@@ -36,6 +37,17 @@ import nl.lxtreme.ols.util.*;
 public final class SwingComponentUtils
 {
   // CONSTANTS
+
+  private static final int DIALOG_PADDING = 6;
+
+  private static final int BUTTONS_PADDING_TOP = 3;
+  private static final int BUTTONS_PADDING_BOTTOM = 3;
+  private static final int BUTTONS_PADDING_LEFT = 0;
+  private static final int BUTTONS_PADDING_RIGHT = 0;
+
+  private static final int BUTTONS_SPACING_DEFAULT = 8;
+
+  // CONSTRUCTORS
 
   /**
    * Creates a new {@link SwingComponentUtils} instance, never used.
@@ -46,6 +58,88 @@ public final class SwingComponentUtils
   }
 
   // METHODS
+
+  /**
+   * Creates a button pane in which the given buttons are neatly aligned with
+   * proper spacings.
+   * 
+   * @param aDefaultButton
+   *          the default button, will be placed as last button;
+   * @param aButtons
+   *          the other buttons to add to the created button pane, will be added
+   *          in the given order.
+   * @return the button pane, never <code>null</code>.
+   */
+  public static JComponent createButtonPane( final JButton aDefaultButton, final JButton... aButtons )
+  {
+    return createButtonPane( new JButton[] { aDefaultButton }, aButtons );
+  }
+
+  /**
+   * Creates a button pane in which the given buttons are neatly aligned with
+   * proper spacings.
+   * 
+   * @param aDefaultButton
+   *          the default button, will be placed as last button;
+   * @param aButtons
+   *          the other buttons to add to the created button pane, will be added
+   *          in the given order.
+   * @return the button pane, never <code>null</code>.
+   */
+  public static JComponent createButtonPane( final JButton[] aDefaultButtons, final JButton... aButtons )
+  {
+    if ( ( aDefaultButtons == null ) || ( aDefaultButtons.length < 1 ) )
+    {
+      throw new IllegalArgumentException( "Need at least one default button!" );
+    }
+
+    final JPanel buttonPane = new JPanel();
+    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
+    buttonPane.setBorder( BorderFactory.createEmptyBorder( BUTTONS_PADDING_TOP, BUTTONS_PADDING_LEFT,
+        BUTTONS_PADDING_BOTTOM, BUTTONS_PADDING_RIGHT ) );
+
+    buttonPane.add( Box.createHorizontalGlue() );
+
+    int width = 1;
+    int height = 1;
+
+    for ( final JButton button : aDefaultButtons )
+    {
+      width = Math.max( width, button.getPreferredSize().width );
+      height = Math.max( height, button.getPreferredSize().height );
+    }
+
+    if ( ( aButtons != null ) && ( aButtons.length > 0 ) )
+    {
+      for ( JButton button : aButtons )
+      {
+        width = Math.max( width, button.getPreferredSize().width );
+
+        buttonPane.add( Box.createHorizontalStrut( BUTTONS_SPACING_DEFAULT ) );
+        buttonPane.add( button );
+      }
+
+      buttonPane.add( Box.createHorizontalStrut( BUTTONS_SPACING_DEFAULT ) );
+
+      final Dimension newDims = new Dimension( width, height );
+      for ( JButton button : aButtons )
+      {
+        button.setPreferredSize( newDims );
+      }
+    }
+
+    for ( final JButton button : aDefaultButtons )
+    {
+      buttonPane.add( Box.createHorizontalStrut( BUTTONS_SPACING_DEFAULT ) );
+
+      button.setPreferredSize( new Dimension( width, height ) );
+
+      // Add the default button as last one...
+      buttonPane.add( button );
+    }
+
+    return buttonPane;
+  }
 
   /**
    * Convenience method to create a key mask.
@@ -83,6 +177,20 @@ public final class SwingComponentUtils
       modifiers |= aMask;
     }
     return KeyStroke.getKeyStroke( aKeyStroke, modifiers );
+  }
+
+  /**
+   * Creates a JLabel which text is right aligned.
+   * 
+   * @param aText
+   *          the text of the JLabel to create, may be <code>null</code>.
+   * @return a JLabel instance, never <code>null</code>.
+   */
+  public static final JLabel createRightAlignedLabel( final String aText )
+  {
+    final JLabel label = new JLabel( aText );
+    label.setHorizontalAlignment( SwingConstants.RIGHT );
+    return label;
   }
 
   /**
@@ -464,6 +572,32 @@ public final class SwingComponentUtils
     {
       aComboBox.setSelectedItem( aDefault );
     }
+  }
+
+  /**
+   * Sets up the given dialog's content pane by setting its border to provide a
+   * good default spacer, and setting the content pane to the given components.
+   * 
+   * @param aDialog
+   *          the dialog to setup, cannot be <code>null</code>;
+   * @param aCenterComponent
+   *          the component that should appear at the center of the dialog;
+   * @param aButtonPane
+   *          the component that should appear at the bottom of the dialog
+   *          (typically the buttons).
+   */
+  public static void setupDialogContentPane( final JDialog aDialog, //
+      final Component aCenterComponent, final Component aButtonPane )
+  {
+    final JPanel contentPane = new JPanel( new BorderLayout() );
+    contentPane.setBorder( BorderFactory.createEmptyBorder( DIALOG_PADDING, DIALOG_PADDING, //
+        DIALOG_PADDING, DIALOG_PADDING ) );
+
+    contentPane.add( aCenterComponent, BorderLayout.CENTER );
+    contentPane.add( aButtonPane, BorderLayout.PAGE_END );
+
+    aDialog.setContentPane( contentPane );
+    aDialog.pack();
   }
 
   /**
