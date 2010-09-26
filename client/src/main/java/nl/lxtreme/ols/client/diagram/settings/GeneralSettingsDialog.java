@@ -388,7 +388,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     editorsPane.add( createRightAlignedLabel( "Color scheme" ) );
     editorsPane.add( this.colorScheme );
 
-    SpringLayoutUtils.makeEditorGrid( editorsPane );
+    SpringLayoutUtils.makeEditorGrid( editorsPane, 10, 10 );
 
     final JPanel result = new JPanel( new GridBagLayout() );
 

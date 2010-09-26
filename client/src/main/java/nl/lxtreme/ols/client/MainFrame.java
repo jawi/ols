@@ -503,25 +503,34 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
     final JMenuBar bar = new JMenuBar();
     setJMenuBar( bar );
 
-    final JMenu file = new JMenu( "File" );
-    bar.add( file );
+    final JMenu fileMenu = new JMenu( "File" );
+    fileMenu.setMnemonic( 'F' );
+    bar.add( fileMenu );
 
-    file.add( this.controller.getAction( OpenProjectAction.ID ) );
-    file.add( this.controller.getAction( SaveProjectAction.ID ) );
-    file.addSeparator();
-    file.add( this.controller.getAction( OpenDataFileAction.ID ) );
-    file.add( this.controller.getAction( SaveDataFileAction.ID ) );
+    fileMenu.add( this.controller.getAction( OpenProjectAction.ID ) );
+    fileMenu.add( this.controller.getAction( SaveProjectAction.ID ) );
+    fileMenu.addSeparator();
+    fileMenu.add( this.controller.getAction( OpenDataFileAction.ID ) );
+    fileMenu.add( this.controller.getAction( SaveDataFileAction.ID ) );
 
     if ( HostUtils.needsExitMenuItem() )
     {
-      file.add( new JSeparator() );
-      file.add( this.controller.getAction( ExitAction.ID ) );
+      fileMenu.add( new JSeparator() );
+      fileMenu.add( this.controller.getAction( ExitAction.ID ) );
+    }
+
+    if ( !HostUtils.isMacOSX() )
+    {
+      final JMenu editMenu = bar.add( new JMenu( "Edit" ) );
+      editMenu.setMnemonic( 'E' );
+      editMenu.add( this.controller.getAction( ShowGeneralSettingsAction.ID ) );
     }
 
     this.deviceMenu = bar.add( new JMenu( "Device" ) );
-    this.toolsMenu = bar.add( new JMenu( "Tools" ) );
+    this.deviceMenu.setMnemonic( 'v' );
 
     final JMenu diagramMenu = bar.add( new JMenu( "Diagram" ) );
+    diagramMenu.setMnemonic( 'D' );
 
     diagramMenu.add( this.controller.getAction( ZoomInAction.ID ) );
     diagramMenu.add( this.controller.getAction( ZoomOutAction.ID ) );
@@ -536,9 +545,13 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
     diagramMenu.add( this.controller.getAction( ShowModeSettingsAction.ID ) );
     diagramMenu.add( this.controller.getAction( ShowDiagramLabelsAction.ID ) );
 
+    this.toolsMenu = bar.add( new JMenu( "Tools" ) );
+    this.toolsMenu.setMnemonic( 'T' );
+
     if ( HostUtils.isMacOSX() )
     {
       this.windowMenu = bar.add( new JMenu( "Window" ) );
+      this.windowMenu.setMnemonic( 'W' );
 
       this.windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) );
       this.windowMenu.addSeparator();
@@ -550,8 +563,7 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
     }
 
     final JMenu helpMenu = bar.add( new JMenu( "Help" ) );
-    helpMenu.add( this.controller.getAction( ShowGeneralSettingsAction.ID ) );
-    helpMenu.addSeparator();
+    helpMenu.setMnemonic( 'H' );
     helpMenu.add( this.controller.getAction( HelpAboutAction.ID ) );
 
     final JToolBar toolbar = new JToolBar();
