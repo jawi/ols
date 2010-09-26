@@ -52,11 +52,8 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   private String dataFunction;
   private int channels;
   private int dataLength;
-
   private JComboBox dataFunctionCombo;
-
   private JComboBox channelsCombo;
-
   private JComboBox dataLengthCombo;
 
   // CONSTRUCTORS
@@ -66,26 +63,14 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
    */
   public TestDeviceDialog( final Window aParent )
   {
-    super( aParent, "Set up test capture", ModalityType.DOCUMENT_MODAL );
+    super( aParent, "Test capture", ModalityType.DOCUMENT_MODAL );
 
     this.setupConfirmed = false;
     this.dataFunction = DATA_FUNCTIONS[6];
     this.channels = CHANNELS[2];
     this.dataLength = DATA_LENGTH[5];
 
-    setLayout( new BorderLayout() );
-
-    final JPanel contentPane = new JPanel( new BorderLayout() );
-    contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-    setContentPane( contentPane );
-
-    final JPanel contents = createContents();
-    contentPane.add( contents, BorderLayout.CENTER );
-
-    final JPanel buttonPane = createDialogButtonPanel();
-    contentPane.add( buttonPane, BorderLayout.PAGE_END );
-
-    pack();
+    initDialog();
   }
 
   // METHODS
@@ -96,7 +81,8 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   @Override
   public void close()
   {
-    closeDialog( false );
+    setVisible( false );
+    dispose();
   }
 
   /**
@@ -155,17 +141,6 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
     aPrefs.putInt( "channels", this.channelsCombo.getSelectedIndex() );
     aPrefs.putInt( "dataFunction", this.dataFunctionCombo.getSelectedIndex() );
     aPrefs.putInt( "dataLength", this.dataLengthCombo.getSelectedIndex() );
-  }
-
-  /**
-   * 
-   */
-  private void closeDialog( final boolean aResult )
-  {
-    this.setupConfirmed = aResult;
-
-    setVisible( false );
-    dispose();
   }
 
   /**
@@ -239,17 +214,9 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   /**
    * @return
    */
-  private JPanel createDialogButtonPanel()
+  private JComponent createDialogButtonPanel()
   {
-    final JButton closeButton = new JButton( "Close" );
-    closeButton.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        closeDialog( false );
-      }
-    } );
+    final JButton closeButton = StandardActionFactory.createCloseButton();
 
     final JButton okButton = new JButton( "Ok" );
     okButton.setPreferredSize( closeButton.getPreferredSize() );
@@ -258,19 +225,22 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
-        closeDialog( true );
+        TestDeviceDialog.this.setupConfirmed = true;
+        close();
       }
     } );
 
-    final JPanel buttonPane = new JPanel();
-    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
-    buttonPane.setBorder( BorderFactory.createEmptyBorder( 8, 4, 8, 4 ) );
+    return SwingComponentUtils.createButtonPane( new JButton[] { okButton, closeButton } );
+  }
 
-    buttonPane.add( Box.createHorizontalGlue() );
-    buttonPane.add( okButton );
-    buttonPane.add( Box.createHorizontalStrut( 16 ) );
-    buttonPane.add( closeButton );
+  /**
+   * Initializes this dialog.
+   */
+  private void initDialog()
+  {
+    final JComponent contents = createContents();
+    final JComponent buttonPane = createDialogButtonPanel();
 
-    return buttonPane;
+    SwingComponentUtils.setupDialogContentPane( this, contents, buttonPane );
   }
 }

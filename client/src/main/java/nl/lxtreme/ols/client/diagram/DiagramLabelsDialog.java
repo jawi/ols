@@ -28,6 +28,8 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 
 /**
@@ -36,7 +38,7 @@ import nl.lxtreme.ols.util.*;
  * @version 0.7
  * @author Frank Kunz
  */
-public class DiagramLabelsDialog extends JDialog
+public class DiagramLabelsDialog extends JDialog implements Closeable
 {
   // CONSTANTS
 
@@ -48,7 +50,7 @@ public class DiagramLabelsDialog extends JDialog
   // VARIABLES
 
   private final String[] channelLabels;
-  private final JTextField[] labelFields;
+  private JTextField[] labelFields;
   private boolean result;
 
   // CONSTRUCTORS
@@ -58,86 +60,24 @@ public class DiagramLabelsDialog extends JDialog
    */
   public DiagramLabelsDialog( final Window aParent, final String[] aChannelLabels )
   {
-    super( aParent, "Diagram Labels", ModalityType.DOCUMENT_MODAL );
+    super( aParent, "Channel Labels", ModalityType.DOCUMENT_MODAL );
 
+    this.result = false;
     this.channelLabels = aChannelLabels;
 
-    final JPanel contentPane = new JPanel( new GridBagLayout() );
-    contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-    setContentPane( contentPane );
+    initDialog();
+  }
 
-    final JPanel modePane = new JPanel( new GridBagLayout() );
-    modePane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
+  // METHODS
 
-    this.labelFields = new JTextField[32];
-    for ( int col = 0; col < 2; col++ )
-    {
-      for ( int row = 0; row < 16; row++ )
-      {
-        final int index = 16 * col + row;
-
-        this.labelFields[index] = new JTextField( 20 );
-        this.labelFields[index].setText( this.channelLabels[index] );
-
-        modePane.add( new JLabel( String.format( "Channel % 2d:", index ) ), //
-            new GridBagConstraints( 2 * col, row, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-                GridBagConstraints.NONE, LABEL_INSETS, 0, 0 ) );
-        modePane.add( this.labelFields[index], //
-            new GridBagConstraints( 2 * col + 1, row, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
-                GridBagConstraints.NONE, COMP_INSETS, 0, 0 ) );
-      }
-    }
-    add( modePane, //
-        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, LABEL_INSETS,
-            0, 0 ) );
-
-    final JButton clear = new JButton( "Clear" );
-    clear.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        clearAllLabels();
-      }
-    } );
-    final JButton cancel = new JButton( "Cancel" );
-    cancel.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        close( false );
-      }
-    } );
-    final JButton ok = new JButton( "Ok" );
-    ok.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        publishAllLabels();
-        close( true );
-      }
-    } );
-    // Make all buttons the same size...
-    ok.setPreferredSize( cancel.getPreferredSize() );
-    clear.setPreferredSize( cancel.getPreferredSize() );
-
-    final JPanel buttonPane = new JPanel();
-    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
-
-    buttonPane.add( Box.createHorizontalGlue() );
-    buttonPane.add( clear );
-    buttonPane.add( Box.createHorizontalStrut( 16 ) );
-    buttonPane.add( ok );
-    buttonPane.add( Box.createHorizontalStrut( 8 ) );
-    buttonPane.add( cancel );
-
-    add( buttonPane, //
-        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL,
-            LABEL_INSETS, 0, 0 ) );
-
-    pack();
+  /**
+   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
+   */
+  @Override
+  public void close()
+  {
+    setVisible( false );
+    dispose();
   }
 
   /**
@@ -148,20 +88,18 @@ public class DiagramLabelsDialog extends JDialog
     return this.channelLabels;
   }
 
-  // METHODS
-
   /**
    * Display the settings dialog. If the user clicks ok, all changes are
    * reflected in the properties of this object. Otherwise changes are
    * discarded.
    * 
-   * @return <code>OK</code> when user accepted changes, <code>CANCEL</code>
-   *         otherwise
+   * @return <code>true</code> when user accepted changes, <code>false</code>
+   *         otherwise.
    */
   public boolean showDialog()
   {
     setVisible( true );
-    return ( this.result );
+    return this.result;
   }
 
   /**
@@ -173,15 +111,6 @@ public class DiagramLabelsDialog extends JDialog
     {
       this.labelFields[i].setText( "" );
     }
-  }
-
-  /**
-   * @param aDialogResult
-   */
-  final void close( final boolean aDialogResult )
-  {
-    this.result = aDialogResult;
-    setVisible( false );
   }
 
   /**
@@ -203,5 +132,82 @@ public class DiagramLabelsDialog extends JDialog
   final void setLabel( final int aChannelIdx, final String aText )
   {
     this.channelLabels[aChannelIdx] = aText;
+  }
+
+  /**
+   * Creates the buttons pane.
+   * 
+   * @return a button pane, never <code>null</code>.
+   */
+  private JComponent createButtonPane()
+  {
+    final JButton clear = new JButton( "Clear" );
+    clear.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        clearAllLabels();
+      }
+    } );
+
+    final JButton ok = new JButton( "Ok" );
+    ok.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        publishAllLabels();
+        DiagramLabelsDialog.this.result = true;
+
+        close();
+      }
+    } );
+
+    final JButton cancel = StandardActionFactory.createCloseButton();
+
+    return SwingComponentUtils.createButtonPane( new JButton[] { ok, cancel }, clear );
+  }
+
+  /**
+   * Creates the label editors pane.
+   * 
+   * @return a label editor pane, never <code>null</code>.
+   */
+  private JPanel createLabelEditorsPane()
+  {
+    final JPanel modePane = new JPanel( new GridBagLayout() );
+
+    this.labelFields = new JTextField[32];
+    for ( int col = 0; col < 2; col++ )
+    {
+      for ( int row = 0; row < 16; row++ )
+      {
+        final int index = 16 * col + row;
+
+        this.labelFields[index] = new JTextField( 20 );
+        this.labelFields[index].setText( this.channelLabels[index] );
+
+        modePane.add( new JLabel( String.format( "Channel % 2d:", index ) ), //
+            new GridBagConstraints( 2 * col, row, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
+                GridBagConstraints.NONE, LABEL_INSETS, 0, 0 ) );
+        modePane.add( this.labelFields[index], //
+            new GridBagConstraints( 2 * col + 1, row, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_TRAILING,
+                GridBagConstraints.NONE, COMP_INSETS, 0, 0 ) );
+      }
+    }
+
+    return modePane;
+  }
+
+  /**
+   * Initializes this dialog.
+   */
+  private void initDialog()
+  {
+    final JPanel editorsPane = createLabelEditorsPane();
+    final JComponent buttonPane = createButtonPane();
+
+    SwingComponentUtils.setupDialogContentPane( this, editorsPane, buttonPane );
   }
 }

@@ -28,7 +28,6 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import javax.swing.SwingWorker.*;
 
 import org.osgi.service.prefs.*;
@@ -221,18 +220,12 @@ public class MeasurementDialog extends BaseToolDialog
   {
     super( aOwner, aTitle, Dialog.ModalityType.MODELESS );
 
-    final JComponent contentPane = ( JComponent )getContentPane();
-    contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-    contentPane.add( createDialogContent() );
+    initDialog();
 
     this.updateTimer = new Timer( 500, new TimerActionListener() );
     this.updateTimer.setRepeats( true );
     this.updateTimer.start();
-
-    pack();
   }
-
-  // METHODS
 
   /**
    * @see java.awt.Window#dispose()
@@ -249,6 +242,8 @@ public class MeasurementDialog extends BaseToolDialog
     }
     super.dispose();
   }
+
+  // METHODS
 
   /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
@@ -329,16 +324,9 @@ public class MeasurementDialog extends BaseToolDialog
   /**
    * @return
    */
-  private Component createButtonPane()
+  private JComponent createButtonPane()
   {
-    final JPanel buttonPane = new JPanel();
-    buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
-    buttonPane.setBorder( BorderFactory.createEmptyBorder( 8, 4, 8, 4 ) );
-
-    buttonPane.add( Box.createHorizontalGlue() );
-    buttonPane.add( createCloseButton() );
-
-    return buttonPane;
+    return SwingComponentUtils.createButtonPane( createCloseButton() );
   }
 
   /**
@@ -416,7 +404,7 @@ public class MeasurementDialog extends BaseToolDialog
    * 
    * @return a dialog panel, never <code>null</code>.
    */
-  private Component createDialogContent()
+  private JComponent createDialogContent()
   {
     final JPanel result = new JPanel( new GridBagLayout() );
     result.add( createCursorsPane(), //
@@ -424,9 +412,6 @@ public class MeasurementDialog extends BaseToolDialog
             COMP_INSETS, 0, 0 ) );
     result.add( createMeasurePane(), //
         new GridBagConstraints( 1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL,
-            COMP_INSETS, 0, 0 ) );
-    result.add( createButtonPane(), //
-        new GridBagConstraints( 0, 1, 2, 1, 1.0, 1.0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL,
             COMP_INSETS, 0, 0 ) );
     return result;
   }
@@ -442,8 +427,8 @@ public class MeasurementDialog extends BaseToolDialog
     this.distanceLabel = new JLabel( "<???>         " );
 
     final JPanel basicMeasurements = new JPanel( new GridBagLayout() );
-    basicMeasurements.setBorder( BorderFactory.createCompoundBorder( BorderFactory
-        .createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    basicMeasurements.setBorder( BorderFactory.createCompoundBorder(
+        BorderFactory.createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
 
     basicMeasurements.add( new JLabel( "Distance:" ), //
         new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
@@ -464,7 +449,7 @@ public class MeasurementDialog extends BaseToolDialog
     final String[] channelNames = new String[DataContainer.MAX_CHANNELS];
     for ( int i = 0; i < channelNames.length; i++ )
     {
-      channelNames[i] = String.format( "Channel %d", ( i + 1 ) );
+      channelNames[i] = String.format( "Channel %d", i );
     }
     this.clockChannelChooser = new JComboBox( channelNames );
     this.clockChannelChooser.addItemListener( new ItemListener()
@@ -544,5 +529,16 @@ public class MeasurementDialog extends BaseToolDialog
       }
     }
     return "<not set>";
+  }
+
+  /**
+   * Initializes this dialog.
+   */
+  private void initDialog()
+  {
+    final JComponent contentPane = createDialogContent();
+    final JComponent buttonPane = createButtonPane();
+
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane );
   }
 }

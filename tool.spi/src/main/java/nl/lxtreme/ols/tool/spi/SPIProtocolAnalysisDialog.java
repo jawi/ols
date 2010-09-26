@@ -62,23 +62,23 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   // VARIABLES
 
-  private final String[] modearray;
-  private final String[] bitarray;
-  private final String[] orderarray;
-  private final JComboBox sck;
-  private final JComboBox miso;
-  private final JComboBox mosi;
-  private final JComboBox cs;
-  private final JComboBox mode;
-  private final JComboBox bits;
-  private final JComboBox order;
-  private final JEditorPane outText;
-  private final JCheckBox reportCS;
-  private final JCheckBox honourCS;
+  private String[] modearray;
+  private String[] bitarray;
+  private String[] orderarray;
+  private JComboBox sck;
+  private JComboBox miso;
+  private JComboBox mosi;
+  private JComboBox cs;
+  private JComboBox mode;
+  private JComboBox bits;
+  private JComboBox order;
+  private JEditorPane outText;
+  private JCheckBox reportCS;
+  private JCheckBox honourCS;
 
-  private final RestorableAction runAnalysisAction;
-  private final Action exportAction;
-  private final Action closeAction;
+  private RestorableAction runAnalysisAction;
+  private Action exportAction;
+  private Action closeAction;
 
   // CONSTRUCTORS
 
@@ -90,121 +90,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   {
     super( aOwner, aName );
 
-    setMinimumSize( new Dimension( 640, 480 ) );
-
-    setLayout( new GridBagLayout() );
-    getRootPane().setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-
-    /*
-     * add protocol settings elements
-     */
-    final JPanel panSettings = new JPanel();
-    panSettings.setLayout( new GridLayout( 10, 2, 5, 5 ) );
-    panSettings.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Settings" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-
-    final String channels[] = new String[32];
-    for ( int i = 0; i < 32; i++ )
-    {
-      channels[i] = new String( "Channel " + i );
-    }
-
-    panSettings.add( new JLabel( "SCK" ) );
-    this.sck = new JComboBox( channels );
-    panSettings.add( this.sck );
-
-    panSettings.add( new JLabel( "MISO" ) );
-    this.miso = new JComboBox( channels );
-    panSettings.add( this.miso );
-
-    panSettings.add( new JLabel( "MOSI" ) );
-    this.mosi = new JComboBox( channels );
-    panSettings.add( this.mosi );
-
-    panSettings.add( new JLabel( "/CS" ) );
-    this.cs = new JComboBox( channels );
-    panSettings.add( this.cs );
-
-    panSettings.add( new JLabel( "Mode" ) );
-    this.modearray = new String[4];
-    for ( int i = 0; i < this.modearray.length; i++ )
-    {
-      this.modearray[i] = new String( "" + i );
-    }
-    this.mode = new JComboBox( this.modearray );
-    panSettings.add( this.mode );
-
-    panSettings.add( new JLabel( "Bits" ) );
-    this.bitarray = new String[13];
-    for ( int i = 0; i < this.bitarray.length; i++ )
-    {
-      this.bitarray[i] = new String( "" + ( i + 4 ) );
-    }
-    this.bits = new JComboBox( this.bitarray );
-    this.bits.setSelectedItem( "8" );
-    panSettings.add( this.bits );
-
-    panSettings.add( new JLabel( "Order" ) );
-    this.orderarray = new String[2];
-    this.orderarray[0] = new String( "MSB first" );
-    this.orderarray[1] = new String( "LSB first" );
-    this.order = new JComboBox( this.orderarray );
-    panSettings.add( this.order );
-
-    panSettings.add( new JLabel( "Show /CS?" ) );
-    this.reportCS = new JCheckBox();
-    this.reportCS.setToolTipText( "Whether or not to show /CS transitions in analysis results?" );
-    this.reportCS.setSelected( true );
-    panSettings.add( this.reportCS );
-
-    panSettings.add( new JLabel( "Honour /CS?" ) );
-    this.honourCS = new JCheckBox();
-    this.honourCS.setToolTipText( "Whether or not to use /CS in analysis results?" );
-    this.honourCS.setSelected( false );
-    panSettings.add( this.honourCS );
-
-    panSettings.add( new JLabel() );
-    panSettings.add( Box.createVerticalGlue() );
-
-    add( panSettings, createConstraints( 0, 0, 1, 1, 0, 0 ) );
-
-    /*
-     * add an empty output view
-     */
-    final JPanel panTable = new JPanel( new GridLayout( 1, 1, 5, 5 ) );
-    this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
-    this.outText.setMargin( new Insets( 5, 5, 5, 5 ) );
-    panTable.add( new JScrollPane( this.outText ) );
-    add( panTable, createConstraints( 1, 0, 1, 1, 1.0, 1.0 ) );
-
-    /*
-     * add buttons
-     */
-    final JButton runAnalysisButton = createRunAnalysisButton();
-    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
-
-    final JButton exportButton = createExportButton();
-    this.exportAction = exportButton.getAction();
-    this.exportAction.setEnabled( false );
-
-    final JButton closeButton = createCloseButton();
-    this.closeAction = closeButton.getAction();
-
-    final JPanel buttons = new JPanel();
-    final BoxLayout layoutMgr = new BoxLayout( buttons, BoxLayout.LINE_AXIS );
-    buttons.setLayout( layoutMgr );
-    buttons.add( Box.createHorizontalGlue() );
-    buttons.add( runAnalysisButton );
-    buttons.add( Box.createHorizontalStrut( 8 ) );
-    buttons.add( exportButton );
-    buttons.add( Box.createHorizontalStrut( 16 ) );
-    buttons.add( closeButton );
-
-    add( buttons, //
-        new GridBagConstraints( 0, 1, 2, 1, 1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL,
-            COMP_INSETS, 0, 0 ) );
-
-    pack();
+    initDialog();
   }
 
   // METHODS
@@ -223,7 +109,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   {
     final GridBagConstraints gbc = new GridBagConstraints();
     gbc.fill = GridBagConstraints.BOTH;
-    gbc.insets = new Insets( 4, 4, 4, 4 );
+    gbc.insets = new Insets( 2, 0, 2, 0 );
     gbc.gridx = x;
     gbc.gridy = y;
     gbc.gridwidth = w;
@@ -232,6 +118,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     gbc.weighty = wy;
     return ( gbc );
   }
+
+  // METHODS
 
   /**
    * This is the SPI protocol decoder core The decoder scans for a decode start
@@ -428,6 +316,24 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
+   * @return
+   */
+  private JComponent createButtonPane()
+  {
+    final JButton runAnalysisButton = createRunAnalysisButton();
+    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
+
+    final JButton exportButton = createExportButton();
+    this.exportAction = exportButton.getAction();
+    this.exportAction.setEnabled( false );
+
+    final JButton closeButton = createCloseButton();
+    this.closeAction = closeButton.getAction();
+
+    return SwingComponentUtils.createButtonPane( closeButton, runAnalysisButton, exportButton );
+  }
+
+  /**
    * Creates the HTML template for exports to HTML.
    * 
    * @param aExporter
@@ -483,6 +389,95 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
+   * @return
+   */
+  private JPanel createPreviewPane()
+  {
+    final JPanel panTable = new JPanel( new GridLayout( 1, 1, 0, 0 ) );
+    panTable.setBorder( BorderFactory.createEmptyBorder( 7, 5, 2, 0 ) );
+
+    this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
+    panTable.add( new JScrollPane( this.outText ) );
+
+    return panTable;
+  }
+
+  /**
+   * @return
+   */
+  private JPanel createSettingsPane()
+  {
+    final JPanel panSettings = new JPanel();
+    panSettings.setLayout( new GridLayout( 10, 2, 5, 5 ) );
+    panSettings.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Settings" ),
+        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+
+    final String channels[] = new String[32];
+    for ( int i = 0; i < 32; i++ )
+    {
+      channels[i] = new String( "Channel " + i );
+    }
+
+    panSettings.add( new JLabel( "SCK" ) );
+    this.sck = new JComboBox( channels );
+    panSettings.add( this.sck );
+
+    panSettings.add( new JLabel( "MISO" ) );
+    this.miso = new JComboBox( channels );
+    panSettings.add( this.miso );
+
+    panSettings.add( new JLabel( "MOSI" ) );
+    this.mosi = new JComboBox( channels );
+    panSettings.add( this.mosi );
+
+    panSettings.add( new JLabel( "/CS" ) );
+    this.cs = new JComboBox( channels );
+    panSettings.add( this.cs );
+
+    panSettings.add( new JLabel( "Mode" ) );
+    this.modearray = new String[4];
+    for ( int i = 0; i < this.modearray.length; i++ )
+    {
+      this.modearray[i] = new String( "" + i );
+    }
+    this.mode = new JComboBox( this.modearray );
+    panSettings.add( this.mode );
+
+    panSettings.add( new JLabel( "Bits" ) );
+    this.bitarray = new String[13];
+    for ( int i = 0; i < this.bitarray.length; i++ )
+    {
+      this.bitarray[i] = new String( "" + ( i + 4 ) );
+    }
+    this.bits = new JComboBox( this.bitarray );
+    this.bits.setSelectedItem( "8" );
+    panSettings.add( this.bits );
+
+    panSettings.add( new JLabel( "Order" ) );
+    this.orderarray = new String[2];
+    this.orderarray[0] = new String( "MSB first" );
+    this.orderarray[1] = new String( "LSB first" );
+    this.order = new JComboBox( this.orderarray );
+    panSettings.add( this.order );
+
+    panSettings.add( new JLabel( "Show /CS?" ) );
+    this.reportCS = new JCheckBox();
+    this.reportCS.setToolTipText( "Whether or not to show /CS transitions in analysis results?" );
+    this.reportCS.setSelected( true );
+    panSettings.add( this.reportCS );
+
+    panSettings.add( new JLabel( "Honour /CS?" ) );
+    this.honourCS = new JCheckBox();
+    this.honourCS.setToolTipText( "Whether or not to use /CS in analysis results?" );
+    this.honourCS.setSelected( false );
+    panSettings.add( this.honourCS );
+
+    panSettings.add( new JLabel() );
+    panSettings.add( Box.createVerticalGlue() );
+    return panSettings;
+  }
+
+  /**
    * Generates an empty HTML page.
    * 
    * @return String with HTML data.
@@ -503,6 +498,25 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
         return null;
       }
     } );
+  }
+
+  /**
+   * Initializes this dialog.
+   */
+  private void initDialog()
+  {
+    setMinimumSize( new Dimension( 640, 480 ) );
+
+    final JComponent settingsPane = createSettingsPane();
+    final JComponent previewPane = createPreviewPane();
+
+    final JPanel contentPane = new JPanel( new GridBagLayout() );
+    contentPane.add( settingsPane, createConstraints( 0, 0, 1, 1, 0, 0 ) );
+    contentPane.add( previewPane, createConstraints( 1, 0, 1, 1, 1.0, 1.0 ) );
+
+    final JComponent buttons = createButtonPane();
+
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons );
   }
 
   /**

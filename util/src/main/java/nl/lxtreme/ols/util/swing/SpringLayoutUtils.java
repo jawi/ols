@@ -33,6 +33,10 @@ import javax.swing.*;
  */
 public final class SpringLayoutUtils
 {
+  // CONSTANTS
+
+  public static final String SEPARATOR = "SEPARATOR";
+
   // CONSTRUCTORS
 
   /**
@@ -46,6 +50,39 @@ public final class SpringLayoutUtils
   // METHODS
 
   /**
+   * Adds a labeled separator to the given container.
+   * 
+   * @param aContainer
+   *          the container to add the separator + label to, cannot be
+   *          <code>null</code>.
+   * @param aText
+   *          the (optional) text of the label to add, may be <code>null</code>.
+   * @return the given container, never <code>null</code>.
+   */
+  public static final Container addSeparator( final Container aContainer, final String aText )
+  {
+    final JList dummyList = new JList();
+
+    final JLabel label = new JLabel( aText );
+    label.setAlignmentY( Component.BOTTOM_ALIGNMENT );
+    // Take the selection color of a JList to make a "striking" difference
+    // between separators and other components...
+    label.setForeground( dummyList.getSelectionBackground() );
+    label.setFont( label.getFont().deriveFont( Font.BOLD ) );
+    label.setHorizontalAlignment( SwingConstants.RIGHT );
+    setSeparatorProperty( label );
+
+    final JSeparator separator = new JSeparator();
+    separator.setAlignmentY( Component.CENTER_ALIGNMENT );
+    setSeparatorProperty( separator );
+
+    aContainer.add( label );
+    aContainer.add( separator );
+
+    return aContainer;
+  }
+
+  /**
    * @param aConstraints
    * @param aEdgeName
    * @param aConstant
@@ -53,8 +90,8 @@ public final class SpringLayoutUtils
   public static void addToConstraint( final SpringLayout.Constraints aConstraints, final String aEdgeName,
       final int aConstant )
   {
-    aConstraints.setConstraint( aEdgeName, Spring.sum( aConstraints.getConstraint( aEdgeName ), Spring
-        .constant( aConstant ) ) );
+    aConstraints.setConstraint( aEdgeName,
+        Spring.sum( aConstraints.getConstraint( aEdgeName ), Spring.constant( aConstant ) ) );
 
   }
 
@@ -121,8 +158,8 @@ public final class SpringLayoutUtils
       for ( int c = 0; c < aCols; c++ )
       {
         final SpringLayout.Constraints constraints = getConstraintsForCell( aContainer, aCols, r, c );
-        constraints.setY( y );
         constraints.setHeight( height );
+        constraints.setY( y );
       }
       y = Spring.sum( y, Spring.sum( height, Spring.constant( aYpad ) ) );
     }
@@ -131,6 +168,90 @@ public final class SpringLayoutUtils
     final SpringLayout.Constraints pCons = layout.getConstraints( aContainer );
     pCons.setConstraint( SpringLayout.SOUTH, y );
     pCons.setConstraint( SpringLayout.EAST, x );
+  }
+
+  /**
+   * Makes a compact grid for use in "editors", in which a grid of two columns
+   * is created.
+   * 
+   * @param aContainer
+   *          the container to layout. Must have a SpringLayout as layout
+   *          manager.
+   * @see #makeCompactGrid(Container, int, int, int, int, int, int)
+   */
+  public static void makeEditorGrid( final Container aContainer )
+  {
+    if ( !( aContainer.getLayout() instanceof SpringLayout ) )
+    {
+      throw new IllegalArgumentException( "Container should have SpringLayout as layout manager!" );
+    }
+
+    final int xPad = 6;
+    final int yPad = 6;
+    final int initialX = 10;
+    final int initialY = 10;
+
+    final int columns = 2;
+    final int rows = ( aContainer.getComponentCount() / columns );
+
+    final SpringLayout layout = ( SpringLayout )aContainer.getLayout();
+
+    // Align all cells in each column and make them the same width.
+    Spring x = Spring.constant( initialX );
+    for ( int c = 0; c < columns; c++ )
+    {
+      Spring width = Spring.constant( 0 );
+      for ( int r = 0; r < rows; r++ )
+      {
+        width = Spring.max( width, getConstraintsForCell( aContainer, columns, r, c ).getWidth() );
+      }
+      for ( int r = 0; r < rows; r++ )
+      {
+        final SpringLayout.Constraints constraints = getConstraintsForCell( aContainer, columns, r, c );
+        constraints.setX( x );
+        constraints.setWidth( width );
+      }
+      x = Spring.sum( x, Spring.sum( width, Spring.constant( xPad ) ) );
+    }
+
+    // Align all cells in each row and make them the same height.
+    Spring y = Spring.constant( initialY );
+    for ( int r = 0; r < rows; r++ )
+    {
+      Spring height = Spring.constant( 0 );
+      for ( int c = 0; c < columns; c++ )
+      {
+        height = Spring.max( height, getConstraintsForCell( aContainer, columns, r, c ).getHeight() );
+      }
+      for ( int c = 0; c < columns; c++ )
+      {
+        final SpringLayout.Constraints constraints = getConstraintsForCell( aContainer, columns, r, c );
+        final Component component = getCellComponent( aContainer, columns, r, c );
+
+        constraints.setHeight( height );
+
+        Spring actualY = y;
+
+        // Keep vertical alignment in consideration (if needed)
+        if ( isSeparatorComponent( component ) )
+        {
+          final float vAlignment = component.getAlignmentY();
+          if ( ( vAlignment > 0.0 ) && ( vAlignment < 1.0 ) )
+          {
+            final int vOffset = ( int )( height.getValue() * component.getAlignmentY() );
+            actualY = Spring.sum( y, Spring.constant( vOffset ) );
+          }
+        }
+
+        constraints.setY( actualY );
+      }
+      y = Spring.sum( y, Spring.sum( height, Spring.constant( yPad ) ) );
+    }
+
+    // Set the parent's size.
+    final SpringLayout.Constraints parentConstraints = layout.getConstraints( aContainer );
+    parentConstraints.setConstraint( SpringLayout.SOUTH, y );
+    parentConstraints.setConstraint( SpringLayout.EAST, x );
   }
 
   /**
@@ -223,10 +344,42 @@ public final class SpringLayoutUtils
 
     // Set the parent's size.
     final SpringLayout.Constraints pCons = layout.getConstraints( aContainer );
-    pCons.setConstraint( SpringLayout.SOUTH, Spring.sum( Spring.constant( aYpad ), lastCons
-        .getConstraint( SpringLayout.SOUTH ) ) );
-    pCons.setConstraint( SpringLayout.EAST, Spring.sum( Spring.constant( aXpad ), lastCons
-        .getConstraint( SpringLayout.EAST ) ) );
+    pCons.setConstraint( SpringLayout.SOUTH,
+        Spring.sum( Spring.constant( aYpad ), lastCons.getConstraint( SpringLayout.SOUTH ) ) );
+    pCons.setConstraint( SpringLayout.EAST,
+        Spring.sum( Spring.constant( aXpad ), lastCons.getConstraint( SpringLayout.EAST ) ) );
+  }
+
+  /**
+   * Marks the given component as "separator" component.
+   * 
+   * @param aComponent
+   *          the component to mark as "separator", cannot be <code>null</code>.
+   * @return the given component.
+   */
+  public static JComponent setSeparatorProperty( final JComponent aComponent )
+  {
+    aComponent.putClientProperty( SEPARATOR, Boolean.TRUE );
+    return aComponent;
+  }
+
+  /**
+   * Returns the actual Swing/AWT component for a denoted cell.
+   * 
+   * @param aContainer
+   *          the container to get the component for. Must have a SpringLayout
+   *          as layout manager;
+   * @param aCols
+   *          number of columns
+   * @param aRow
+   *          the row of the cell to return the constraints of;
+   * @param aCol
+   *          the column of the cell to return the constraints of.
+   * @return the component, might be <code>null</code>.
+   */
+  private static Component getCellComponent( final Container aContainer, final int aCols, final int aRow, final int aCol )
+  {
+    return aContainer.getComponent( aRow * aCols + aCol );
   }
 
   /**
@@ -252,8 +405,23 @@ public final class SpringLayoutUtils
     }
 
     final SpringLayout layout = ( SpringLayout )aContainer.getLayout();
-    final Component c = aContainer.getComponent( aRow * aCols + aCol );
+    final Component c = getCellComponent( aContainer, aCols, aRow, aCol );
     return layout.getConstraints( c );
   }
 
+  /**
+   * @param aComponent
+   * @return
+   */
+  private static boolean isSeparatorComponent( final Component aComponent )
+  {
+    if ( !( aComponent instanceof JComponent ) )
+    {
+      return false;
+    }
+
+    final JComponent comp = ( JComponent )aComponent;
+    final Object property = comp.getClientProperty( SEPARATOR );
+    return Boolean.TRUE.equals( property );
+  }
 }
