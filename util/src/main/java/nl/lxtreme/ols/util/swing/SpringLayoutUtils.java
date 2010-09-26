@@ -176,10 +176,14 @@ public final class SpringLayoutUtils
    * 
    * @param aContainer
    *          the container to layout. Must have a SpringLayout as layout
-   *          manager.
+   *          manager;
+   * @param aInitialX
+   *          the initial X-padding (left side);
+   * @param aInitialY
+   *          the initial Y-padding (top side).
    * @see #makeCompactGrid(Container, int, int, int, int, int, int)
    */
-  public static void makeEditorGrid( final Container aContainer )
+  public static void makeEditorGrid( final Container aContainer, final int aInitialX, final int aInitialY )
   {
     if ( !( aContainer.getLayout() instanceof SpringLayout ) )
     {
@@ -188,8 +192,6 @@ public final class SpringLayoutUtils
 
     final int xPad = 6;
     final int yPad = 6;
-    final int initialX = 10;
-    final int initialY = 10;
 
     final int columns = 2;
     final int rows = ( aContainer.getComponentCount() / columns );
@@ -197,7 +199,7 @@ public final class SpringLayoutUtils
     final SpringLayout layout = ( SpringLayout )aContainer.getLayout();
 
     // Align all cells in each column and make them the same width.
-    Spring x = Spring.constant( initialX );
+    Spring x = Spring.constant( aInitialX );
     for ( int c = 0; c < columns; c++ )
     {
       Spring width = Spring.constant( 0 );
@@ -215,7 +217,7 @@ public final class SpringLayoutUtils
     }
 
     // Align all cells in each row and make them the same height.
-    Spring y = Spring.constant( initialY );
+    Spring y = Spring.constant( aInitialY );
     for ( int r = 0; r < rows; r++ )
     {
       Spring height = Spring.constant( 0 );

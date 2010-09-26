@@ -92,30 +92,6 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   // METHODS
 
   /**
-   * @param x
-   * @param y
-   * @param w
-   * @param h
-   * @param wx
-   * @param wy
-   * @return
-   */
-  private static GridBagConstraints createConstraints( final int x, final int y, final int w, final int h,
-      final double wx, final double wy )
-  {
-    final GridBagConstraints gbc = new GridBagConstraints();
-    gbc.fill = GridBagConstraints.BOTH;
-    gbc.insets = new Insets( 2, 0, 2, 0 );
-    gbc.gridx = x;
-    gbc.gridy = y;
-    gbc.gridwidth = w;
-    gbc.gridheight = h;
-    gbc.weightx = wx;
-    gbc.weighty = wy;
-    return ( gbc );
-  }
-
-  /**
    * This is the UART protocol decoder core The decoder scans for a decode start
    * event like CS high to low edge or the trigger of the captured data. After
    * this the decoder starts to decode the data by the selected mode, number of
@@ -481,9 +457,10 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   private JPanel createPreviewPane()
   {
     final JPanel panTable = new JPanel( new GridLayout( 1, 1, 0, 0 ) );
-    panTable.setBorder( BorderFactory.createEmptyBorder( 7, 5, 2, 0 ) );
 
     this.outText = new JEditorPane( "text/html", getEmptyHtmlPage() );
+    this.outText.setEditable( false );
+
     panTable.add( new JScrollPane( this.outText ) );
 
     return panTable;
@@ -494,11 +471,6 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    */
   private JPanel createSettingsPane()
   {
-    final JPanel panSettings = new JPanel();
-    panSettings.setLayout( new SpringLayout() );
-    panSettings.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Settings" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-
     final String channels[] = new String[33];
     for ( int i = 0; i < 32; i++ )
     {
@@ -506,50 +478,54 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     }
     channels[channels.length - 1] = new String( "unused" );
 
-    panSettings.add( createRightAlignedLabel( "RxD" ) );
+    final JPanel settings = new JPanel( new SpringLayout() );
+
+    SpringLayoutUtils.addSeparator( settings, "Settings" );
+
+    settings.add( createRightAlignedLabel( "RxD" ) );
     this.rxd = new JComboBox( channels );
-    panSettings.add( this.rxd );
+    settings.add( this.rxd );
 
-    panSettings.add( createRightAlignedLabel( "TxD" ) );
+    settings.add( createRightAlignedLabel( "TxD" ) );
     this.txd = new JComboBox( channels );
-    panSettings.add( this.txd );
+    settings.add( this.txd );
 
-    panSettings.add( createRightAlignedLabel( "CTS" ) );
+    settings.add( createRightAlignedLabel( "CTS" ) );
     this.cts = new JComboBox( channels );
     this.cts.setSelectedItem( "unused" );
-    panSettings.add( this.cts );
+    settings.add( this.cts );
 
-    panSettings.add( createRightAlignedLabel( "RTS" ) );
+    settings.add( createRightAlignedLabel( "RTS" ) );
     this.rts = new JComboBox( channels );
     this.rts.setSelectedItem( "unused" );
-    panSettings.add( this.rts );
+    settings.add( this.rts );
 
-    panSettings.add( createRightAlignedLabel( "DTR" ) );
+    settings.add( createRightAlignedLabel( "DTR" ) );
     this.dtr = new JComboBox( channels );
     this.dtr.setSelectedItem( "unused" );
-    panSettings.add( this.dtr );
+    settings.add( this.dtr );
 
-    panSettings.add( createRightAlignedLabel( "DSR" ) );
+    settings.add( createRightAlignedLabel( "DSR" ) );
     this.dsr = new JComboBox( channels );
     this.dsr.setSelectedItem( "unused" );
-    panSettings.add( this.dsr );
+    settings.add( this.dsr );
 
-    panSettings.add( createRightAlignedLabel( "DCD" ) );
+    settings.add( createRightAlignedLabel( "DCD" ) );
     this.dcd = new JComboBox( channels );
     this.dcd.setSelectedItem( "unused" );
-    panSettings.add( this.dcd );
+    settings.add( this.dcd );
 
-    panSettings.add( createRightAlignedLabel( "RI" ) );
+    settings.add( createRightAlignedLabel( "RI" ) );
     this.ri = new JComboBox( channels );
     this.ri.setSelectedItem( "unused" );
-    panSettings.add( this.ri );
+    settings.add( this.ri );
 
-    panSettings.add( createRightAlignedLabel( "Parity" ) );
+    settings.add( createRightAlignedLabel( "Parity" ) );
     final String[] parityarray = new String[] { "None", "Odd", "Even" };
     this.parity = new JComboBox( parityarray );
-    panSettings.add( this.parity );
+    settings.add( this.parity );
 
-    panSettings.add( createRightAlignedLabel( "Bits" ) );
+    settings.add( createRightAlignedLabel( "Bits" ) );
     final String[] bitarray = new String[4];
     for ( int i = 0; i < bitarray.length; i++ )
     {
@@ -557,20 +533,20 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     }
     this.bits = new JComboBox( bitarray );
     this.bits.setSelectedItem( "8" );
-    panSettings.add( this.bits );
+    settings.add( this.bits );
 
-    panSettings.add( createRightAlignedLabel( "Stopbit" ) );
+    settings.add( createRightAlignedLabel( "Stopbit" ) );
     final String[] stoparray = new String[] { "1", "1.5", "2" };
     this.stop = new JComboBox( stoparray );
-    panSettings.add( this.stop );
+    settings.add( this.stop );
 
     this.inv = new JCheckBox();
-    panSettings.add( createRightAlignedLabel( "Invert" ) );
-    panSettings.add( this.inv );
+    settings.add( createRightAlignedLabel( "Invert?" ) );
+    settings.add( this.inv );
 
-    SpringLayoutUtils.makeEditorGrid( panSettings );
+    SpringLayoutUtils.makeEditorGrid( settings, 10, 4 );
 
-    return panSettings;
+    return settings;
   }
 
   /**
@@ -618,8 +594,10 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     final JComponent previewPane = createPreviewPane();
 
     final JPanel contentPane = new JPanel( new GridBagLayout() );
-    contentPane.add( settingsPane, createConstraints( 0, 0, 1, 1, 0, 0 ) );
-    contentPane.add( previewPane, createConstraints( 1, 0, 1, 1, 1.0, 1.0 ) );
+    contentPane.add( settingsPane, new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH,
+        GridBagConstraints.NONE, new Insets( 2, 0, 2, 0 ), 0, 0 ) );
+    contentPane.add( previewPane, new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH,
+        GridBagConstraints.BOTH, new Insets( 2, 0, 2, 0 ), 0, 0 ) );
 
     final JComponent buttons = createButtonsPane();
 

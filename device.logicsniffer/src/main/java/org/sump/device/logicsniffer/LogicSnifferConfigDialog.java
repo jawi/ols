@@ -537,7 +537,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     connectionPane.add( createRightAlignedLabel( "Run Length Encoding: " ) );
     connectionPane.add( this.rleEnable );
 
-    SpringLayoutUtils.makeEditorGrid( connectionPane );
+    SpringLayoutUtils.makeEditorGrid( connectionPane, 10, 10 );
 
     final JPanel result = new JPanel( new GridBagLayout() );
     result.add( connectionPane, new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER,
