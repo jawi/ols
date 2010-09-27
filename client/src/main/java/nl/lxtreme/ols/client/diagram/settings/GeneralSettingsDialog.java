@@ -531,15 +531,17 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       if ( color == null )
       {
         showErrorMessage( "Invalid cursor " + ( i + 1 ) + " color." );
+        return false;
       }
     }
 
     for ( int i = 0; i < this.channelColor.length; i++ )
     {
       final Color color = getColorValue( this.channelColor[i] );
-      if ( color == null )
+      if ( ( this.channelColor[i] != null ) && ( color == null ) )
       {
         showErrorMessage( "Invalid channel " + i + " color." );
+        return false;
       }
     }
 
