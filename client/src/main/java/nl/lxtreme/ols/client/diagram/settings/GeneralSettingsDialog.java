@@ -74,6 +74,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   private JTextField[] cursorColor;
   private JTextField[] channelColor;
 
+  private int channelColorCount;
+
   // CONSTRUCTORS
 
   /**
@@ -246,6 +248,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     {
       this.channelColor = new JTextField[DataContainer.MAX_CHANNELS];
     }
+    // Keep track of the numbers of channels we're creating editors for...
+    this.channelColorCount = Math.max( this.channelColorCount, ( aBlockNr + 1 ) * CHANNELS_PER_BLOCK );
 
     final JPanel editorsPane = new JPanel( new SpringLayout() );
 
@@ -568,7 +572,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
         for ( int i = 0; i < this.cursorColor.length; i++ )
         {
-          final Color color = getColorValue( this.cursorColor[i] );
+          final int colorIdx = ( i % this.channelColorCount );
+          final Color color = getColorValue( this.cursorColor[colorIdx] );
           this.settings.setCursorColor( i, color );
         }
 
