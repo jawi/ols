@@ -45,6 +45,7 @@ public class GotoCursor2Action extends BaseAction
   public GotoCursor2Action( final ClientController aController )
   {
     super( ID, aController, ICON_GOTO_CURSOR2, "Go to Cursor 2", "Go to second cursor in diagram." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_2 ) );
   }
 
   // METHODS

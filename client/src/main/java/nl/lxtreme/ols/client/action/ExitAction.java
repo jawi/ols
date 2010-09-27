@@ -48,6 +48,7 @@ public class ExitAction extends BaseAction
     super( ID, aController, "Quit", "Quit LogicSniffer Client" );
 
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_Q ) );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_Q ) );
   }
 
   // METHODS

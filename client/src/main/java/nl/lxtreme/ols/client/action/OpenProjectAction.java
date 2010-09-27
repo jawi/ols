@@ -52,6 +52,7 @@ public class OpenProjectAction extends BaseAction
   public OpenProjectAction( final ClientController aController )
   {
     super( ID, aController, ICON_OPEN_PROJECT, "Open project", "Open an existing project." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
   }
 
   // METHODS

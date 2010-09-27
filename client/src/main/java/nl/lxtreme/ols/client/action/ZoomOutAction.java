@@ -45,6 +45,7 @@ public class ZoomOutAction extends BaseAction
   public ZoomOutAction( final ClientController aController )
   {
     super( ID, aController, ICON_ZOOM_OUT, "Zoom out", "Zooms out" );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_O ) );
   }
 
   // METHODS

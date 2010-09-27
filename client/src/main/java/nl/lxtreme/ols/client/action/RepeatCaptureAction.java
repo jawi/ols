@@ -53,6 +53,7 @@ public class RepeatCaptureAction extends BaseAction
   public RepeatCaptureAction( final ClientController aController )
   {
     super( ID, aController, ICON_RECAPTURE_DATA, "Repeat capture", "Repeats the capture with current device settings." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_R ) );
   }
 
   // METHODS
