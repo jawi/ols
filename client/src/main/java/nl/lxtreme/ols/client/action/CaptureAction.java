@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
@@ -52,6 +53,7 @@ public class CaptureAction extends BaseAction
   public CaptureAction( final ClientController aController )
   {
     this( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser", aController );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_C ) );
   }
 
   /**

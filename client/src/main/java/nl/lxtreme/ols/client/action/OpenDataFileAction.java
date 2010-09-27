@@ -59,6 +59,7 @@ public class OpenDataFileAction extends BaseAction
   public OpenDataFileAction( final ClientController aController )
   {
     super( ID, aController, ICON_OPEN_DATAFILE, "Open ...", "Open an existing data file" );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_O ) );
   }
 
   // METHODS

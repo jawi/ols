@@ -52,6 +52,7 @@ public class SaveDataFileAction extends BaseAction
   public SaveDataFileAction( final ClientController aController )
   {
     super( ID, aController, ICON_SAVE_DATAFILE, "Save ...", "Save data file." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_S ) );
   }
 
   // METHODS

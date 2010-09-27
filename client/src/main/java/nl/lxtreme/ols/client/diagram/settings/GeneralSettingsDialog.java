@@ -101,6 +101,11 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
    */
   private static Color getColorValue( final JTextField aTextField )
   {
+    if ( aTextField == null )
+    {
+      return null;
+    }
+
     final String text = aTextField.getText();
     if ( DisplayUtils.isEmpty( text ) )
     {
@@ -116,6 +121,11 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
    */
   private static int getIntegerValue( final JTextField aTextField )
   {
+    if ( aTextField == null )
+    {
+      return -1;
+    }
+
     final String text = aTextField.getText();
     if ( DisplayUtils.isEmpty( text ) )
     {

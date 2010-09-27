@@ -48,6 +48,7 @@ public class CancelCaptureAction extends BaseAction
   public CancelCaptureAction( final ClientController aController )
   {
     super( ID, aController, ICON_CANCEL_CAPTURE, "Cancel capture", "Cancels the current capture." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
   }
 
   // METHODS

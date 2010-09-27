@@ -45,6 +45,7 @@ public class ZoomInAction extends BaseAction
   public ZoomInAction( final ClientController aController )
   {
     super( ID, aController, ICON_ZOOM_IN, "Zoom in", "Zooms in." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_I ) );
   }
 
   // METHODS

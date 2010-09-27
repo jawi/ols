@@ -47,6 +47,7 @@ public class ShowGeneralSettingsAction extends BaseAction
   public ShowGeneralSettingsAction( final ClientController aController )
   {
     super( ID, aController, "Preferences", "Shows the preferences dialog." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
   }
 
   // METHODS

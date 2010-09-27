@@ -52,6 +52,7 @@ public class SaveProjectAction extends BaseAction
   public SaveProjectAction( final ClientController aController )
   {
     super( ID, aController, ICON_SAVE_PROJECT, "Save project", "Save the current project." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
   }
 
   // METHODS

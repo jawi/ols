@@ -47,6 +47,7 @@ public class ShowModeSettingsAction extends BaseAction
   public ShowModeSettingsAction( final ClientController aController )
   {
     super( ID, aController, "Diagram mode settings", "Shows the mode settings dialog." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_M ) );
   }
 
   // METHODS

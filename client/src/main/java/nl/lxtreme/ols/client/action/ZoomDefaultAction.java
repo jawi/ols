@@ -45,6 +45,7 @@ public class ZoomDefaultAction extends BaseAction
   public ZoomDefaultAction( final ClientController aController )
   {
     super( ID, aController, ICON_ZOOM_DEFAULT, "Zoom original", "Zoom to original level." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_R ) );
   }
 
   // METHODS

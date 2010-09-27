@@ -45,6 +45,7 @@ public class ZoomFitAction extends BaseAction
   public ZoomFitAction( final ClientController aController )
   {
     super( ID, aController, ICON_ZOOM_FIT_BEST, "Zoom to fit", "Zoom to best fit" );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_F ) );
   }
 
   // METHODS

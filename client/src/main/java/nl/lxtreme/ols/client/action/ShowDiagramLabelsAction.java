@@ -47,6 +47,7 @@ public class ShowDiagramLabelsAction extends BaseAction
   public ShowDiagramLabelsAction( final ClientController aController )
   {
     super( ID, aController, "Diagram labels", "Show the diagram labels dialog." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_L ) );
   }
 
   // METHODS
