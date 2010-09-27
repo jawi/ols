@@ -29,15 +29,13 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.diagram.laf.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
  * This component displays a diagram which is obtained from a
  * {@link CapturedDataImpl} object. The settings for the diagram are obtained
- * from the embedded {@link ModeSettingsDialog} and
- * {@link DiagramLabelsDialog} objects. Look there for an overview of ways to
- * display data.
+ * from the embedded {@link ModeSettingsDialog} and {@link DiagramLabelsDialog}
+ * objects. Look there for an overview of ways to display data.
  * <p>
  * Component size changes with the size of the diagram. Therefore it should only
  * be used from within a JScrollPane.
@@ -52,9 +50,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   private static final long serialVersionUID = 1L;
 
   private static final double CURSOR_HOVER = 5.0;
-
-  private static final boolean DEBUG = Boolean.parseBoolean( System
-      .getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
 
   /** The maximum scale that is possible in this diagram. */
   public static final double MAX_SCALE = 15;
@@ -126,11 +121,58 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   }
 
   /**
-   * Convert x position to sample index.
+   * Converts the Y-position of the given point to a channel index.
    * 
-   * @param aXpos
-   *          horizontal position in pixels
-   * @return sample index
+   * @param aPoint
+   *          the screen position whose Y-coordinate should be converted to a
+   *          channel index, cannot be <code>null</code>.
+   * @return the channel index, or a valid < 0 in case of an invalid channel
+   *         index.
+   */
+  public int convertPointToChannelIndex( final Point aPoint )
+  {
+    final int yPos = aPoint.y;
+
+    final int maxChannels = this.dataContainer.getChannels();
+    final int channelHeight = getDiagramSettings().getChannelHeight();
+    final int scopeHeight = getDiagramSettings().getScopeHeight();
+
+    int height = 0, channelIdx = 0;
+    for ( int b = 0; ( height < yPos ) && ( b < DataContainer.MAX_BLOCKS ); b++ )
+    {
+      if ( ( height < yPos ) && this.diagramSettings.isShowChannels( b ) )
+      {
+        channelIdx = ( b * DataContainer.CHANNELS_PER_BLOCK );
+        for ( int c = 0; ( height < yPos ) && ( c < DataContainer.CHANNELS_PER_BLOCK ); c++ )
+        {
+          height += channelHeight;
+          channelIdx++;
+        }
+      }
+      if ( ( height < yPos ) && this.diagramSettings.isShowScope( b ) )
+      {
+        height += scopeHeight;
+        channelIdx = -b;
+      }
+      if ( ( height < yPos ) && this.diagramSettings.isShowByte( b ) )
+      {
+        height += channelHeight;
+        channelIdx = -b;
+      }
+    }
+    // Make sure we're within the boundries of our current dataset...
+    channelIdx = Math.min( maxChannels, channelIdx - 1 );
+
+    return channelIdx;
+  }
+
+  /**
+   * Converts the X-position of the given point to a sample index.
+   * 
+   * @param aPoint
+   *          the screen position whose X-coordinate should be converted to a
+   *          sample index, cannot be <code>null</code>.
+   * @return the sample index corresponding to the X-position.
    */
   public long convertPointToSampleIndex( final Point aPoint )
   {
@@ -317,13 +359,11 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   }
 
   /**
-   * calulate the position within a window (pane) based on current page and zoom
-   * settings
+   * Calculates the position within a window (pane) based on current page and
+   * zoom settings
    * 
-   * @param width
-   *          window width
    * @param aPosition
-   *          sample position
+   *          the sample position.
    * @return current position within window
    */
   public int getTargetPosition( final long aPosition )
@@ -403,8 +443,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     {
       // No actual resizing necessary; only repaint us and our
       // headers/borders...
-      this.rowLabels.repaint();
-      this.timeLine.repaint();
       repaint();
     }
     else
@@ -414,62 +452,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
       this.timeLine.setPreferredSize( newDiagramSize );
       setPreferredSize( newDiagramSize );
     }
-  }
-
-  /**
-   * Update status information. Notifies {@link StatusChangeListener}.
-   * 
-   * @param aDragging
-   *          <code>true</code> indicates that dragging information should be
-   *          added
-   */
-  public final void updateTooltipText( final Point aMousePosition, final ChannelAnnotation aAnnotation )
-  {
-    if ( !this.dataContainer.hasCapturedData() )
-    {
-      return;
-    }
-
-    final StringBuffer sb = new StringBuffer( " " );
-
-    final int row = aMousePosition.y / getDiagramSettings().getChannelHeight();
-    if ( row <= this.dataContainer.getChannels() + ( this.dataContainer.getChannels() / 9 ) )
-    {
-      if ( row % 9 == 8 )
-      {
-        sb.append( "Byte " ).append( ( row / 9 ) );
-      }
-      else
-      {
-        sb.append( "Channel " ).append( ( row - ( row / 9 ) ) );
-      }
-      sb.append( " | " );
-    }
-
-    if ( aAnnotation != null )
-    {
-      sb.append( aAnnotation.getData() );
-    }
-    else
-    {
-      final long idxMouseX = convertPointToSampleIndex( aMousePosition );
-      final long triggerPosition = this.dataContainer.getTriggerPosition();
-
-      final long absMouseX = idxMouseX - triggerPosition;
-      if ( DEBUG || !this.dataContainer.hasTimingData() )
-      {
-        sb.append( "Sample " ).append( absMouseX );
-      }
-      else
-      {
-        final int sampleRate = this.dataContainer.getSampleRate();
-        sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
-      }
-    }
-
-    final String status = sb.toString();
-    // System.out.println( "STATUS = " + status );
-    setToolTipText( status );
   }
 
   /**

@@ -165,7 +165,7 @@ public class DiagramUI extends ComponentUI
         diagram.dragCursor( this.currentCursor, mousePosition );
       }
 
-      diagram.updateTooltipText( mousePosition, null );
+      updateTooltipText( diagram, mousePosition, null );
     }
 
     /**
@@ -176,27 +176,31 @@ public class DiagramUI extends ComponentUI
     public void mouseMoved( final MouseEvent aEvent )
     {
       final Diagram diagram = ( Diagram )aEvent.getSource();
-      final DiagramSettings settings = diagram.getDiagramSettings();
-
       final Point mousePosition = aEvent.getPoint();
 
-      final int channel = ( mousePosition.y / settings.getChannelHeight() );
+      // Determine whether we're hovering over an annotation...
+      ChannelAnnotation annotation = null;
 
-      final ChannelAnnotation annotation = diagram.getAnnotationHover( channel, mousePosition );
+      final int channelIdx = diagram.convertPointToChannelIndex( mousePosition );
+      if ( channelIdx >= 0 )
+      {
+        diagram.getAnnotationHover( channelIdx, mousePosition );
+      }
+
+      // Determine whether we're hovering over a cursor...
+      this.currentCursor = -1;
+      Cursor mouseCursor = DiagramUI.this.cursorDefault;
+
       final int cursorIdx = diagram.getCursorHover( mousePosition );
-
       if ( cursorIdx >= 0 )
       {
         this.currentCursor = cursorIdx;
-        diagram.setCursor( DiagramUI.this.cursorDrag );
-      }
-      else
-      {
-        this.currentCursor = -1;
-        diagram.setCursor( DiagramUI.this.cursorDefault );
+        mouseCursor = DiagramUI.this.cursorDrag;
       }
 
-      diagram.updateTooltipText( mousePosition, annotation );
+      // Update the graphical state of the diagram...
+      diagram.setCursor( mouseCursor );
+      updateTooltipText( diagram, mousePosition, annotation );
     }
 
     /**
@@ -250,6 +254,59 @@ public class DiagramUI extends ComponentUI
     {
       return aEvent.getClickCount() == 2;
     }
+
+    /**
+     * Update status information. Notifies {@link StatusChangeListener}.
+     * 
+     * @param aDragging
+     *          <code>true</code> indicates that dragging information should be
+     *          added
+     */
+    private void updateTooltipText( final Diagram aDiagram, final Point aMousePosition,
+        final ChannelAnnotation aAnnotation )
+    {
+      final DataContainer dataContainer = aDiagram.getDataContainer();
+      if ( !dataContainer.hasCapturedData() )
+      {
+        return;
+      }
+
+      final StringBuffer sb = new StringBuffer();
+
+      final int channelIdx = aDiagram.convertPointToChannelIndex( aMousePosition );
+      if ( channelIdx < 0 )
+      {
+        sb.append( "Scope/byte " ).append( Math.abs( channelIdx + 1 ) );
+      }
+      else
+      {
+        sb.append( "Channel " ).append( channelIdx );
+      }
+      sb.append( " | " );
+
+      if ( aAnnotation != null )
+      {
+        sb.append( aAnnotation.getData() );
+      }
+      else
+      {
+        final long idxMouseX = aDiagram.convertPointToSampleIndex( aMousePosition );
+        final long triggerPosition = dataContainer.getTriggerPosition();
+
+        final long absMouseX = idxMouseX - triggerPosition;
+        if ( !dataContainer.hasTimingData() )
+        {
+          sb.append( "Sample " ).append( absMouseX );
+        }
+        else if ( dataContainer.hasTimingData() )
+        {
+          final int sampleRate = dataContainer.getSampleRate();
+          sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
+        }
+      }
+
+      aDiagram.setToolTipText( sb.toString() );
+    }
   }
 
   /**
@@ -269,9 +326,9 @@ public class DiagramUI extends ComponentUI
     }
   }
 
-  // CONSTANTS
-
   public static final String CONTEXTMENU_LOCATION_KEY = "OLS.ContextMenu.location";
+
+  // CONSTANTS
 
   private static final boolean DEBUG = Boolean.parseBoolean( System
       .getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
@@ -282,14 +339,13 @@ public class DiagramUI extends ComponentUI
 
   private static final Stroke SOLID_THICK = new BasicStroke( 1.5f );
 
-  // VARIABLES
-
   private final JPopupMenu contextMenu;
 
-  private final Cursor cursorDefault;
-  private final Cursor cursorDrag;
+  // VARIABLES
 
-  // CONSTRUCTORS
+  private final Cursor cursorDefault;
+
+  private final Cursor cursorDrag;
 
   /**
    * 
@@ -309,7 +365,7 @@ public class DiagramUI extends ComponentUI
 
   }
 
-  // METHODS
+  // CONSTRUCTORS
 
   /**
    * @return
@@ -351,6 +407,8 @@ public class DiagramUI extends ComponentUI
     final Dimension newDiagramSize = new Dimension( width, height );
     return newDiagramSize;
   }
+
+  // METHODS
 
   /**
    * @see javax.swing.plaf.ComponentUI#getPreferredSize(javax.swing.JComponent)
@@ -573,7 +631,20 @@ public class DiagramUI extends ComponentUI
         for ( int bit = 0; bit < 8; bit++ )
         {
           final int channelIdx = 8 * block + bit;
+
           final Color signalColor = getSignalColor( channelIdx, settings );
+          final Color newBrighterColor = signalColor.brighter();
+          final Color newDarkerColor = signalColor.darker().darker().darker();
+
+          // final int py1 = channelHeight * bit + bofs;
+          // final int py2 = py1 + ( channelHeight - 1 );
+          //
+          // final GradientPaint paint = new GradientPaint( aClipArea.x, py1 -
+          // 5, newBrighterColor, aClipArea.x, py1
+          // + ( channelHeight / 3 ), settings.getBackgroundColor() );
+          // aCanvas.setPaint( paint );
+          // aCanvas.fillRect( aClipArea.x, py1, aClipArea.x + aClipArea.width,
+          // py2 );
 
           long currentSample = aFromIndex - 1;
           int pIdx = 0;
@@ -612,16 +683,10 @@ public class DiagramUI extends ComponentUI
           aCanvas.setColor( signalColor );
           aCanvas.drawPolyline( polyline.x, polyline.y, pIdx );
 
-          // XXX
-          final Color oldColor = aCanvas.getColor();
-          final Paint oldPaint = aCanvas.getPaint();
-          final Stroke oldStroke = aCanvas.getStroke();
-          final Composite oldComposite = aCanvas.getComposite();
-          final Object oldHint = aCanvas.getRenderingHint( RenderingHints.KEY_ANTIALIASING );
-
-          aCanvas.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-          final Color newBrighterColor = signalColor.brighter();
-          final Color newDarkerColor = signalColor.darker().darker().darker();
+          // Create a new canvas instance so we can paint our annotations
+          // without having to restore anything...
+          final Graphics2D newCanvas = ( Graphics2D )aCanvas.create();
+          newCanvas.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 
           final Iterator<ChannelAnnotation> annotations = dataContainer.getChannelAnnotations( channelIdx,
               dataStartIndex, timestamps.length );
@@ -640,7 +705,7 @@ public class DiagramUI extends ComponentUI
 
             final int textWidth = fm.stringWidth( data );
 
-            final GradientPaint newPaint = new GradientPaint( x1, y1 - 5, newBrighterColor, x1, y1
+            final GradientPaint annotationPaint = new GradientPaint( x1, y1 - 5, newBrighterColor, x1, y1
                 + ( signalHeight / 2 ), newDarkerColor );
 
             final int annotationWidth = Math.max( textWidth, x2 - x1 ) + 2;
@@ -648,30 +713,25 @@ public class DiagramUI extends ComponentUI
             final int arc = ( int )( annotationHeight / 2.0 );
             final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
 
-            aCanvas.setComposite( AlphaComposite.SrcOver.derive( 0.8f ) );
-            aCanvas.setStroke( SOLID_THICK );
+            final Composite oldComposite = newCanvas.getComposite();
 
-            aCanvas.setPaint( newPaint );
-            aCanvas.fillRoundRect( x1, y1 + 4, annotationWidth, annotationHeight, arc, arc );
+            newCanvas.setComposite( AlphaComposite.SrcOver.derive( 0.8f ) );
+            newCanvas.setStroke( SOLID_THICK );
 
-            aCanvas.setColor( newBrighterColor );
-            aCanvas.drawRoundRect( x1, y1 + 4, annotationWidth, annotationHeight, arc, arc );
+            newCanvas.setPaint( annotationPaint );
+            newCanvas.fillRoundRect( x1, y1 + 4, annotationWidth, annotationHeight, arc, arc );
+
+            newCanvas.setColor( newBrighterColor );
+            newCanvas.drawRoundRect( x1, y1 + 4, annotationWidth, annotationHeight, arc, arc );
 
             if ( textXoffset > 0 )
             {
-              aCanvas.setColor( Color.WHITE );
-              aCanvas.setComposite( oldComposite );
+              newCanvas.setColor( Color.WHITE );
+              newCanvas.setComposite( oldComposite );
 
-              aCanvas.drawString( data, x1 + textXoffset, y1 + fontHeight );
+              newCanvas.drawString( data, x1 + textXoffset, y1 + fontHeight );
             }
           }
-
-          aCanvas.setRenderingHint( RenderingHints.KEY_ANTIALIASING, oldHint );
-          aCanvas.setPaint( oldPaint );
-          aCanvas.setComposite( oldComposite );
-          aCanvas.setStroke( oldStroke );
-          aCanvas.setColor( oldColor );
-          // XXX
 
           drawGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + bofs + ( channelHeight - 1 ) );
         }

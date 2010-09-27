@@ -74,6 +74,7 @@ Provides some common utilities that are shared among all other projects.
 # <strike>upon opening windows for the second time, the properties aren't read/reset;</strike>
 # <strike>make the order of tools in the menu predictable;</strike>
 # make channel numbering uniform across entire platform;
+# provide support for exporting a diagram to PNG/JPEG/...;
 # show timing measurements between edges, or from rising to rising or falling to falling edges;
 # configurable colors would be nice, so that the user can set them to match the probes;
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;

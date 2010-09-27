@@ -144,7 +144,7 @@ public class DiagramRowLabelsUI extends ComponentUI
           String label = dataContainer.getChannelLabel( labelIdx );
           if ( DisplayUtils.isEmpty( label ) )
           {
-            label = String.format( "%d", labelIdx + 1 );
+            label = String.format( "%d", labelIdx );
           }
 
           final int labelYpos = y1 + textYpos;
