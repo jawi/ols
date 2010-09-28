@@ -36,7 +36,20 @@ public interface DiagramSettings
    */
   public static enum ColorScheme
   {
-    LIGHT, DARK, CUSTOM;
+    LIGHT, //
+    DARK, //
+    CUSTOM;
+  }
+
+  /**
+   * Denotes what needs to be colorized, the labels, the signals or the
+   * channel-background.
+   */
+  public static enum ColorTarget
+  {
+    LABELS, //
+    SIGNALS, //
+    BACKGROUND;
   }
 
   /**
@@ -94,6 +107,14 @@ public interface DiagramSettings
    * @return a color scheme, never <code>null</code>.
    */
   ColorScheme getColorScheme();
+
+  /**
+   * Returns what needs to be colored, the labels, the signals or the
+   * channel-background.
+   * 
+   * @return a color target, never <code>null</code>.
+   */
+  ColorTarget getColorTarget();
 
   /**
    * Returns the cursor color for the cursor with a given index.
@@ -187,26 +208,6 @@ public interface DiagramSettings
    * @return the trigger, never <code>null</code>.
    */
   Color getTriggerColor();
-
-  /**
-   * Returns whether the <em>labels</em> should denote the individual channel
-   * colors.
-   * 
-   * @return <code>true</code> if the labels should be colored according to the
-   *         channel colors, <code>false</code> to let the channel signals be
-   *         colored.
-   */
-  boolean isColorLabels();
-
-  /**
-   * Returns whether the <em>signals</em> should denote the individual channel
-   * colors.
-   * 
-   * @return <code>true</code> if the signals should be colored according to the
-   *         channel colors, <code>false</code> to let the channel labels be
-   *         colored.
-   */
-  boolean isColorSignals();
 
   /**
    * @param aGroup

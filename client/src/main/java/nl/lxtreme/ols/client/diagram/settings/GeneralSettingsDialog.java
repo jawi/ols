@@ -29,7 +29,8 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorScheme;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
@@ -58,8 +59,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   private JTabbedPane tabbedPane;
   private JComboBox colorScheme;
-  private JRadioButton colorLabels;
-  private JRadioButton colorSignals;
+  private JComboBox colorTarget;
   private JTextField channelHeight;
   private JTextField signalHeight;
   private JTextField scopeHeight;
@@ -361,16 +361,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     this.signalHeight = new JTextField( 10 );
     this.scopeHeight = new JTextField( 10 );
 
-    this.colorLabels = new JRadioButton( "Labels" );
-    this.colorSignals = new JRadioButton( "Signals" );
-
-    final ButtonGroup buttonGroup = new ButtonGroup();
-    buttonGroup.add( this.colorLabels );
-    buttonGroup.add( this.colorSignals );
-
-    final JPanel colorLabelsOrSignals = new JPanel();
-    colorLabelsOrSignals.add( this.colorLabels, BorderLayout.WEST );
-    colorLabelsOrSignals.add( this.colorSignals, BorderLayout.EAST );
+    this.colorTarget = new JComboBox( ColorTarget.values() );
 
     this.colorScheme = new JComboBox( new ColorScheme[] { ColorScheme.LIGHT, ColorScheme.DARK } );
     this.colorScheme.addItemListener( new ItemListener()
@@ -398,7 +389,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     SpringLayoutUtils.addSeparator( editorsPane, "Color scheme" );
 
     editorsPane.add( createRightAlignedLabel( "Apply channel colors to" ) );
-    editorsPane.add( colorLabelsOrSignals );
+    editorsPane.add( this.colorTarget );
     editorsPane.add( createRightAlignedLabel( "Color scheme" ) );
     editorsPane.add( this.colorScheme );
 
@@ -470,7 +461,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       return false;
     }
 
-    final boolean colorLabelsValue = this.colorLabels.isSelected();
+    final ColorTarget colorTargetValue = ( ColorTarget )this.colorTarget.getSelectedItem();
     final ColorScheme colorSchemeValue = ( ColorScheme )this.colorScheme.getSelectedItem();
 
     final Color backgroundColorValue = getColorValue( this.backgroundColor );
@@ -556,7 +547,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       this.settings.setChannelHeight( channelHeightValue );
       this.settings.setSignalHeight( signalHeightValue );
       this.settings.setScopeHeight( scopeHeightValue );
-      this.settings.setColorLabels( colorLabelsValue );
+      this.settings.setColorTarget( colorTargetValue );
       this.settings.setColorScheme( colorSchemeValue );
 
       if ( ColorScheme.CUSTOM.equals( colorSchemeValue ) )
@@ -601,8 +592,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       this.channelHeight.setText( String.valueOf( this.settings.getChannelHeight() ) );
       this.signalHeight.setText( String.valueOf( this.settings.getSignalHeight() ) );
       this.scopeHeight.setText( String.valueOf( this.settings.getScopeHeight() ) );
-      this.colorLabels.setSelected( this.settings.isColorLabels() );
-      this.colorSignals.setSelected( this.settings.isColorSignals() );
+      this.colorTarget.setSelectedItem( this.settings.getColorTarget() );
       this.colorScheme.setSelectedItem( selectedScheme );
 
       this.backgroundColor.setText( SwingComponentUtils.toString( this.settings.getBackgroundColor() ) );

@@ -59,6 +59,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   private DiagramSettings diagramSettings;
   private final DiagramTimeLine timeLine;
   private final DiagramRowLabels rowLabels;
+  private final DiagramCorner corner;
   private double scale;
   private final ClientController controller;
   private final DataContainer dataContainer;
@@ -79,6 +80,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
 
     this.rowLabels = new DiagramRowLabels( this );
     this.timeLine = new DiagramTimeLine( this );
+    this.corner = new DiagramCorner( this );
 
     setMinimumSize( new Dimension( 25, 1 ) );
 
@@ -599,6 +601,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
         }
         scrollPane.setColumnHeaderView( this.timeLine );
         scrollPane.setRowHeaderView( this.rowLabels );
+        scrollPane.setCorner( ScrollPaneConstants.UPPER_LEADING_CORNER, this.corner );
       }
     }
   }
@@ -692,6 +695,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
         }
         scrollPane.setColumnHeaderView( null );
         scrollPane.setRowHeaderView( null );
+        scrollPane.setCorner( ScrollPaneConstants.UPPER_LEADING_CORNER, null );
       }
     }
   }

@@ -50,6 +50,10 @@ public class DiagramTimeLineUI extends ComponentUI
   private static final int SHORT_TICK_HEIGHT = 4;
   private static final int PADDING_Y = 1;
 
+  // VARIABLES
+
+  private Font labelFont;
+
   // METHODS
 
   /**
@@ -82,12 +86,23 @@ public class DiagramTimeLineUI extends ComponentUI
   }
 
   /**
+   * @see javax.swing.plaf.ComponentUI#installUI(javax.swing.JComponent)
+   */
+  @Override
+  public void installUI( final JComponent aComponent )
+  {
+    this.labelFont = LafHelper.getDefaultFont();
+  }
+
+  /**
    * @see javax.swing.plaf.ComponentUI#paint(java.awt.Graphics,
    *      javax.swing.JComponent)
    */
   @Override
-  public void paint( final Graphics aGraphics, final JComponent aComponent )
+  public void paint( final Graphics aCanvas, final JComponent aComponent )
   {
+    final Graphics2D canvas = ( Graphics2D )aCanvas;
+
     final DiagramTimeLine timeLine = ( DiagramTimeLine )aComponent;
 
     final DataContainer dataContainer = timeLine.getDataContainer();
@@ -105,7 +120,7 @@ public class DiagramTimeLineUI extends ComponentUI
     final int timeLineShift = ( int )( dataContainer.getTriggerPosition() % tickInc );
 
     // obtain portion of graphics that needs to be drawn
-    final Rectangle clipArea = aGraphics.getClipBounds();
+    final Rectangle clipArea = canvas.getClipBounds();
     // for some reason, this component gets scrolled vertically although it has
     // no reasons to do so. Resetting the Y-position & height of the clip-area
     // seems to solve this problem...
@@ -117,12 +132,13 @@ public class DiagramTimeLineUI extends ComponentUI
     // find index of last row that needs drawing
     final long lastRow = diagram.convertPointToSampleIndex( new Point( clipArea.x + clipArea.width, 0 ) ) + 1;
 
-    final FontMetrics fm = aGraphics.getFontMetrics();
+    canvas.setFont( this.labelFont );
+    final FontMetrics fm = canvas.getFontMetrics();
 
-    aGraphics.setColor( settings.getBackgroundColor() );
-    aGraphics.fillRect( clipArea.x, clipArea.y, clipArea.x + clipArea.width, clipArea.y + clipArea.height );
+    canvas.setColor( settings.getBackgroundColor() );
+    canvas.fillRect( clipArea.x, clipArea.y, clipArea.width, clipArea.height );
 
-    aGraphics.setColor( settings.getTimeColor() );
+    canvas.setColor( settings.getTimeColor() );
 
     for ( long time = ( firstRow / tickInc ) * tickInc + timeLineShift; time < lastRow; time += tickInc )
     {
@@ -142,15 +158,15 @@ public class DiagramTimeLineUI extends ComponentUI
         final int labelYpos = longTickYpos - 2 * PADDING_Y;
         final int labelXpos = Math.max( clipArea.x, xPos - ( fm.stringWidth( timeValue ) / 2 ) );
 
-        aGraphics.drawLine( xPos, baselineYpos, xPos, longTickYpos );
+        canvas.drawLine( xPos, baselineYpos, xPos, longTickYpos );
         if ( scaledTime % TIME_INTERVAL == 0 )
         {
-          aGraphics.drawString( timeValue, labelXpos, labelYpos );
+          canvas.drawString( timeValue, labelXpos, labelYpos );
         }
       }
       else
       {
-        aGraphics.drawLine( xPos, baselineYpos, xPos, shortTickYpos );
+        canvas.drawLine( xPos, baselineYpos, xPos, shortTickYpos );
       }
     }
 
@@ -169,12 +185,12 @@ public class DiagramTimeLineUI extends ComponentUI
       {
         final int cursorPos = ( int )( cursorPosition * scale );
 
-        aGraphics.setColor( settings.getBackgroundColor() );
-        aGraphics.fillRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
+        canvas.setColor( settings.getBackgroundColor() );
+        canvas.fillRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
 
-        aGraphics.setColor( settings.getCursorColor( i ) );
-        aGraphics.drawRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
-        aGraphics.drawString( String.format( "T%d", i + 1 ), cursorPos + 2, TIMELINE_HEIGHT - 2 );
+        canvas.setColor( settings.getCursorColor( i ) );
+        canvas.drawRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
+        canvas.drawString( String.format( "T%d", i + 1 ), cursorPos + 2, TIMELINE_HEIGHT - 2 );
       }
     }
   }
