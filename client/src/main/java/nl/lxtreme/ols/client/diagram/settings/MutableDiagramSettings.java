@@ -51,7 +51,6 @@ public class MutableDiagramSettings implements DiagramSettings
 
   private SignalAlignment signalAlignment;
   private ColorScheme colorScheme;
-  private boolean colorLabels;
 
   private final Color[] cursorColors;
   private final Color[] channelColors;
@@ -64,6 +63,8 @@ public class MutableDiagramSettings implements DiagramSettings
 
   // CONSTRUCTORS
 
+  private ColorTarget colorTarget;
+
   /**
    * Creates a new MutableDiagramSettings instance.
    */
@@ -74,7 +75,7 @@ public class MutableDiagramSettings implements DiagramSettings
     this.cursorColors = new Color[DataContainer.MAX_CURSORS];
     this.channelColors = new Color[DataContainer.MAX_CHANNELS];
 
-    this.colorLabels = false;
+    this.colorTarget = ColorTarget.SIGNALS;
 
     setDefaultColorScheme();
 
@@ -93,6 +94,8 @@ public class MutableDiagramSettings implements DiagramSettings
     setSignalAlignment( SignalAlignment.CENTER );
   }
 
+  // METHODS
+
   /**
    * Creates a new MutableDiagramSettings instance.
    * 
@@ -104,8 +107,7 @@ public class MutableDiagramSettings implements DiagramSettings
   {
     this();
 
-    setColorLabels( aDiagramSettings.isColorLabels() );
-
+    setColorTarget( aDiagramSettings.getColorTarget() );
     setColorScheme( aDiagramSettings.getColorScheme() );
 
     setBackgroundColor( aDiagramSettings.getBackgroundColor() );
@@ -142,8 +144,6 @@ public class MutableDiagramSettings implements DiagramSettings
     setSignalHeight( aDiagramSettings.getSignalHeight() );
     setSignalAlignment( aDiagramSettings.getSignalAlignment() );
   }
-
-  // METHODS
 
   /**
    * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getBackgroundColor()
@@ -187,6 +187,15 @@ public class MutableDiagramSettings implements DiagramSettings
   public final ColorScheme getColorScheme()
   {
     return this.colorScheme;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getColorTarget()
+   */
+  @Override
+  public final ColorTarget getColorTarget()
+  {
+    return this.colorTarget;
   }
 
   /**
@@ -315,24 +324,6 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isColorLabels()
-   */
-  @Override
-  public final boolean isColorLabels()
-  {
-    return this.colorLabels;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isColorSignals()
-   */
-  @Override
-  public final boolean isColorSignals()
-  {
-    return !isColorLabels();
-  }
-
-  /**
    * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isShowByte(int)
    */
   public final boolean isShowByte( final int aGroup )
@@ -392,19 +383,6 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
-   * Sets whether or not the labels should be colors according to the channel
-   * color coding scheme.
-   * 
-   * @param aColorLabels
-   *          <code>true</code> to color only the labels, <code>false</code> to
-   *          color the signals.
-   */
-  public final void setColorLabels( final boolean aColorLabels )
-  {
-    this.colorLabels = aColorLabels;
-  }
-
-  /**
    * @param aColorScheme
    */
   public final void setColorScheme( final ColorScheme aColorScheme )
@@ -419,6 +397,17 @@ public class MutableDiagramSettings implements DiagramSettings
     {
       setDefaultColorScheme();
     }
+  }
+
+  /**
+   * Sets the color target.
+   * 
+   * @param aColorTarget
+   *          the color target to set, cannot be <code>null</code>.
+   */
+  public final void setColorTarget( final ColorTarget aColorTarget )
+  {
+    this.colorTarget = aColorTarget;
   }
 
   /**
@@ -656,8 +645,9 @@ public class MutableDiagramSettings implements DiagramSettings
     final double freq = 2 * Math.PI / aSteps;
     for ( int i = 0; i < aResult.length; i++ )
     {
-      // result[i] = makeColorGradient( i, freq, freq, freq, 2.7, 2.4, 4.6 );
-      aResult[i] = makeColorGradient( i, freq, freq, freq, 2.7, 7.4, 3.4 );
+      // aResult[i] = makeColorGradient( i, freq, freq, freq, 2.7, 2.4, 4.6 );
+      // aResult[i] = makeColorGradient( i, freq, freq, freq, 2.7, 7.4, 3.4 );
+      aResult[i] = makeColorGradient( i, freq, freq, freq, 0.0, 2.0, 4.0 );
     }
   }
 
@@ -677,13 +667,13 @@ public class MutableDiagramSettings implements DiagramSettings
     if ( ColorScheme.DARK.equals( this.colorScheme ) )
     {
       this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
-      this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
+      this.gridColor = new Color( 0x30, 0x30, 0x30 );
       this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
       this.labelColor = new Color( 0x82, 0x87, 0x8f );
-      this.signalColor = new Color( 0x30, 0x4b, 0x75 );
+      this.signalColor = new Color( 0xc9, 0xc9, 0xc9 );
       this.scopeColor = this.signalColor;
       this.textColor = Color.WHITE;
-      this.timeColor = Color.WHITE;
+      this.timeColor = new Color( 0x82, 0x87, 0x8f );
       this.triggerColor = new Color( 0x82, 0x87, 0x8f );
 
       makeMonochromaticColorPalette( this.cursorColors, this.signalColor );

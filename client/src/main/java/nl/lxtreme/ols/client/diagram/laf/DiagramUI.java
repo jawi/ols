@@ -339,13 +339,14 @@ public class DiagramUI extends ComponentUI
 
   private static final Stroke SOLID_THICK = new BasicStroke( 1.5f );
 
-  private final JPopupMenu contextMenu;
-
   // VARIABLES
 
+  private final JPopupMenu contextMenu;
+  private Font labelFont;
   private final Cursor cursorDefault;
-
   private final Cursor cursorDrag;
+
+  // CONSTRUCTORS
 
   /**
    * 
@@ -365,7 +366,7 @@ public class DiagramUI extends ComponentUI
 
   }
 
-  // CONSTRUCTORS
+  // METHODS
 
   /**
    * @return
@@ -429,6 +430,8 @@ public class DiagramUI extends ComponentUI
     final Diagram diagram = ( Diagram )aComponent;
     diagram.setComponentPopupMenu( this.contextMenu );
 
+    this.labelFont = LafHelper.getDefaultFont();
+
     final MouseListener mouseListener = new MouseListener();
 
     diagram.addMouseListener( mouseListener );
@@ -441,7 +444,7 @@ public class DiagramUI extends ComponentUI
    *      javax.swing.JComponent)
    */
   @Override
-  public void paint( final Graphics aGraphics, final JComponent aComponent )
+  public void paint( final Graphics aCanvas, final JComponent aComponent )
   {
     final Diagram diagram = ( Diagram )aComponent;
     final DiagramSettings settings = diagram.getDiagramSettings();
@@ -453,10 +456,10 @@ public class DiagramUI extends ComponentUI
     }
 
     final long start = System.currentTimeMillis();
-    final Graphics2D g2d = ( Graphics2D )aGraphics;
+    final Graphics2D canvas = ( Graphics2D )aCanvas;
 
     // obtain portion of graphics that needs to be drawn
-    final Rectangle clipArea = aGraphics.getClipBounds();
+    final Rectangle clipArea = canvas.getClipBounds();
 
     final int cx = clipArea.x;
     final int cy = clipArea.y;
@@ -467,9 +470,7 @@ public class DiagramUI extends ComponentUI
     final long firstRow = diagram.convertPointToSampleIndex( new Point( cx, 0 ) );
     final long lastRow = diagram.convertPointToSampleIndex( new Point( cw, 0 ) ) + 1;
 
-    // paint portion of background that needs drawing
-    g2d.setColor( settings.getBackgroundColor() );
-    g2d.fillRect( cx, cy, cw, ch );
+    canvas.setFont( this.labelFont );
 
     // draw trigger if existing and visible
     final long triggerPosition = dataContainer.getTriggerPosition();
@@ -477,15 +478,15 @@ public class DiagramUI extends ComponentUI
     {
       final double scale = diagram.getScale();
 
-      g2d.setColor( settings.getTriggerColor() );
-      g2d.fillRect( ( int )( triggerPosition * scale ) - 1, cy, ( int )( scale + 2 ), ch );
+      canvas.setColor( settings.getTriggerColor() );
+      canvas.fillRect( ( int )( triggerPosition * scale ) - 1, cy, ( int )( scale + 2 ), ch );
     }
 
     // draw all signal groups...
-    drawSignals( g2d, diagram, clipArea, firstRow, lastRow );
+    paintSignals( canvas, diagram, clipArea, firstRow, lastRow );
 
     // draw cursors if enabled...
-    drawCursors( g2d, diagram, firstRow, lastRow );
+    paintCursors( canvas, diagram, firstRow, lastRow );
 
     if ( DEBUG )
     {
@@ -508,11 +509,36 @@ public class DiagramUI extends ComponentUI
   }
 
   /**
+   * @param aChannelIdx
+   * @param aSettings
+   * @return
+   */
+  private Color getSignalColor( final int aChannelIdx, final DiagramSettings aSettings )
+  {
+    Color result = aSettings.getSignalColor();
+    if ( ColorTarget.SIGNALS.equals( aSettings.getColorTarget() ) )
+    {
+      result = aSettings.getChannelColor( aChannelIdx );
+    }
+    return result;
+  }
+
+  /**
+   * @see LafHelper#paintChannelBackground(Graphics2D, DiagramSettings,
+   *      Rectangle, int, int)
+   */
+  private void paintChannelBackground( final Graphics2D aCanvas, final DiagramSettings aSettings,
+      final Rectangle aClipArea, final int aChannelIdx, final int aYoffset )
+  {
+    LafHelper.paintChannelBackground( aCanvas, aSettings, aClipArea, aChannelIdx, aYoffset );
+  }
+
+  /**
    * @param aCanvas
    * @param aFirstRow
    * @param aLastRow
    */
-  private void drawCursors( final Graphics2D aCanvas, final Diagram aDiagram, final long aFirstRow, final long aLastRow )
+  private void paintCursors( final Graphics2D aCanvas, final Diagram aDiagram, final long aFirstRow, final long aLastRow )
   {
     final DataContainer dataContainer = aDiagram.getDataContainer();
     if ( dataContainer.isCursorsEnabled() )
@@ -538,7 +564,7 @@ public class DiagramUI extends ComponentUI
    * @param aClipArea
    * @param aYoffset
    */
-  private void drawGridLine( final Graphics2D aCanvas, final Diagram aDiagram, final Rectangle aClipArea,
+  private void paintGridLine( final Graphics2D aCanvas, final Diagram aDiagram, final Rectangle aClipArea,
       final int aYoffset )
   {
     aCanvas.setColor( aDiagram.getDiagramSettings().getGridColor() );
@@ -557,7 +583,7 @@ public class DiagramUI extends ComponentUI
    * @param aToIndex
    *          the last sample to paint.
    */
-  private void drawSignals( final Graphics2D aCanvas, final Diagram aDiagram, final Rectangle aClipArea,
+  private void paintSignals( final Graphics2D aCanvas, final Diagram aDiagram, final Rectangle aClipArea,
       final long aFromIndex, final long aToIndex )
   {
     final DataContainer dataContainer = aDiagram.getDataContainer();
@@ -636,15 +662,9 @@ public class DiagramUI extends ComponentUI
           final Color newBrighterColor = signalColor.brighter();
           final Color newDarkerColor = signalColor.darker().darker().darker();
 
-          // final int py1 = channelHeight * bit + bofs;
-          // final int py2 = py1 + ( channelHeight - 1 );
-          //
-          // final GradientPaint paint = new GradientPaint( aClipArea.x, py1 -
-          // 5, newBrighterColor, aClipArea.x, py1
-          // + ( channelHeight / 3 ), settings.getBackgroundColor() );
-          // aCanvas.setPaint( paint );
-          // aCanvas.fillRect( aClipArea.x, py1, aClipArea.x + aClipArea.width,
-          // py2 );
+          final int py1 = channelHeight * bit + bofs;
+          // Paint the (optional) channel background...
+          paintChannelBackground( aCanvas, settings, aClipArea, channelIdx, py1 );
 
           long currentSample = aFromIndex - 1;
           int pIdx = 0;
@@ -667,7 +687,7 @@ public class DiagramUI extends ComponentUI
             // Calculate display coordinates...
             final int x1 = ( int )( ( scale * currentSample ) - edgeX );
             final int x2 = ( int )( ( scale * ( nextSample - 1 ) ) + edgeX );
-            final int y1 = bofs + ( channelHeight * bit ) + ( signalHeight * ( 1 - currentValue ) ) + signalOffset;
+            final int y1 = py1 + ( signalHeight * ( 1 - currentValue ) ) + signalOffset;
 
             polyline.x[pIdx] = x1;
             polyline.y[pIdx] = y1;
@@ -733,7 +753,7 @@ public class DiagramUI extends ComponentUI
             }
           }
 
-          drawGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + bofs + ( channelHeight - 1 ) );
+          paintGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + bofs + ( channelHeight - 1 ) );
         }
         bofs += ( channelHeight * 8 );
       }
@@ -768,7 +788,7 @@ public class DiagramUI extends ComponentUI
 
         bofs += scopeHeight;
         // draw bottom grid line
-        drawGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
+        paintGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
       }
 
       if ( settings.isShowByte( block ) )
@@ -832,23 +852,8 @@ public class DiagramUI extends ComponentUI
 
         bofs += channelHeight;
         // draw bottom grid line
-        drawGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
+        paintGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
       }
     }
-  }
-
-  /**
-   * @param aChannelIdx
-   * @param aSettings
-   * @return
-   */
-  private Color getSignalColor( final int aChannelIdx, final DiagramSettings aSettings )
-  {
-    Color result = aSettings.getSignalColor();
-    if ( aSettings.isColorSignals() )
-    {
-      result = aSettings.getChannelColor( aChannelIdx );
-    }
-    return result;
   }
 }

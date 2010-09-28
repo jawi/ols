@@ -29,6 +29,7 @@ import javax.swing.plaf.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -45,6 +46,10 @@ public class DiagramRowLabelsUI extends ComponentUI
 
   private static final int PADDING_X = 2;
   private static final int PADDING_Y = 2;
+
+  // VARIABLES
+
+  private Font labelFont;
 
   // METHODS
 
@@ -78,12 +83,23 @@ public class DiagramRowLabelsUI extends ComponentUI
   }
 
   /**
+   * @see javax.swing.plaf.ComponentUI#installUI(javax.swing.JComponent)
+   */
+  @Override
+  public void installUI( final JComponent aComponent )
+  {
+    this.labelFont = LafHelper.getDefaultFont().deriveFont( Font.BOLD );
+  }
+
+  /**
    * @see javax.swing.plaf.ComponentUI#paint(java.awt.Graphics,
    *      javax.swing.JComponent)
    */
   @Override
-  public void paint( final Graphics aGraphics, final JComponent aComponent )
+  public void paint( final Graphics aCanvas, final JComponent aComponent )
   {
+    final Graphics2D canvas = ( Graphics2D )aCanvas;
+
     final DiagramRowLabels rowLabels = ( DiagramRowLabels )aComponent;
     final DataContainer dataContainer = rowLabels.getDataContainer();
 
@@ -96,7 +112,7 @@ public class DiagramRowLabelsUI extends ComponentUI
     final DiagramSettings settings = diagram.getDiagramSettings();
 
     // obtain portion of graphics that needs to be drawn
-    final Rectangle clipArea = aGraphics.getClipBounds();
+    final Rectangle clipArea = canvas.getClipBounds();
     // for some reason, this component gets scrolled horizontally although it
     // has no reasons to do so. Resetting the X-position & width of the clip-
     // area seems to solve this problem...
@@ -105,13 +121,10 @@ public class DiagramRowLabelsUI extends ComponentUI
 
     int yofs = 0;
 
-    aGraphics.setColor( settings.getBackgroundColor() );
-    aGraphics.fillRect( clipArea.x, clipArea.y, clipArea.width, clipArea.height );
-
     final int channelHeight = settings.getChannelHeight();
     final int scopeHeight = settings.getScopeHeight();
 
-    final FontMetrics fm = aGraphics.getFontMetrics();
+    final FontMetrics fm = canvas.getFontMetrics();
     final int textXpos = ( clipArea.width - fm.stringWidth( "88" ) - PADDING_X );
     final int textYpos = ( int )( ( channelHeight + fm.getHeight() ) / 2.0 ) - PADDING_Y;
 
@@ -119,7 +132,8 @@ public class DiagramRowLabelsUI extends ComponentUI
     final int enabledChannels = dataContainer.getEnabledChannels();
 
     // Draw top grid line...
-    aGraphics.drawLine( clipArea.x, 0, clipArea.x + clipArea.width, 0 );
+    canvas.drawLine( clipArea.x, 0, clipArea.x + clipArea.width, 0 );
+    canvas.setFont( this.labelFont );
 
     for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
     {
@@ -134,12 +148,15 @@ public class DiagramRowLabelsUI extends ComponentUI
         for ( int bit = 0; bit < 8; bit++ )
         {
           final int labelIdx = bit + block * 8;
+
           final Color labelColor = getLabelColor( labelIdx, settings );
 
           final int y1 = channelHeight * bit + yofs;
+          // Paint the (optional) channel background...
+          paintChannelBackground( canvas, settings, clipArea, labelIdx, y1 );
 
-          aGraphics.setColor( settings.getGridColor() );
-          aGraphics.drawLine( clipArea.x, y1 + channelHeight - 1, clipArea.x + clipArea.width, y1 + channelHeight - 1 );
+          canvas.setColor( settings.getGridColor() );
+          canvas.drawLine( clipArea.x, y1 + channelHeight - 1, clipArea.x + clipArea.width, y1 + channelHeight - 1 );
 
           String label = dataContainer.getChannelLabel( labelIdx );
           if ( DisplayUtils.isEmpty( label ) )
@@ -150,8 +167,8 @@ public class DiagramRowLabelsUI extends ComponentUI
           final int labelYpos = y1 + textYpos;
           final int labelXpos = ( clipArea.width - fm.stringWidth( label ) - PADDING_X );
 
-          aGraphics.setColor( labelColor );
-          aGraphics.drawString( label, labelXpos, labelYpos );
+          canvas.setColor( labelColor );
+          canvas.drawString( label, labelXpos, labelYpos );
         }
 
         yofs += channelHeight * 8;
@@ -160,12 +177,12 @@ public class DiagramRowLabelsUI extends ComponentUI
       // Draw scope-thingie (if available)
       if ( settings.isShowScope( block ) )
       {
-        aGraphics.setColor( settings.getTextColor() );
-        aGraphics.drawString( "S" + block, textXpos, yofs + ( scopeHeight + fm.getHeight() ) / 2 );
+        canvas.setColor( settings.getTextColor() );
+        canvas.drawString( "S" + block, textXpos, yofs + ( scopeHeight + fm.getHeight() ) / 2 );
 
         // draw bottom grid line
-        aGraphics.setColor( settings.getGridColor() );
-        aGraphics.drawLine( clipArea.x, yofs + scopeHeight - 1, clipArea.x + clipArea.width, yofs + scopeHeight - 1 );
+        canvas.setColor( settings.getGridColor() );
+        canvas.drawLine( clipArea.x, yofs + scopeHeight - 1, clipArea.x + clipArea.width, yofs + scopeHeight - 1 );
 
         yofs += scopeHeight;
       }
@@ -173,16 +190,15 @@ public class DiagramRowLabelsUI extends ComponentUI
       // Draw group-byte (if available)
       if ( settings.isShowByte( block ) )
       {
-        aGraphics.setColor( settings.getGroupBackgroundColor() );
-        aGraphics.fillRect( clipArea.x, yofs, clipArea.x + clipArea.width, channelHeight );
+        canvas.setColor( settings.getGroupBackgroundColor() );
+        canvas.fillRect( clipArea.x, yofs, clipArea.x + clipArea.width, channelHeight );
 
         // draw bottom grid line
-        aGraphics.setColor( settings.getGridColor() );
-        aGraphics
-            .drawLine( clipArea.x, yofs + channelHeight - 1, clipArea.x + clipArea.width, yofs + channelHeight - 1 );
+        canvas.setColor( settings.getGridColor() );
+        canvas.drawLine( clipArea.x, yofs + channelHeight - 1, clipArea.x + clipArea.width, yofs + channelHeight - 1 );
 
-        aGraphics.setColor( settings.getTextColor() );
-        aGraphics.drawString( "B" + block, textXpos, yofs + textYpos );
+        canvas.setColor( settings.getTextColor() );
+        canvas.drawString( "B" + block, textXpos, yofs + textYpos );
 
         yofs += channelHeight;
       }
@@ -197,7 +213,7 @@ public class DiagramRowLabelsUI extends ComponentUI
   private Color getLabelColor( final int aChannelIdx, final DiagramSettings aSettings )
   {
     Color result = aSettings.getLabelColor();
-    if ( aSettings.isColorLabels() )
+    if ( ColorTarget.LABELS.equals( aSettings.getColorTarget() ) )
     {
       result = aSettings.getChannelColor( aChannelIdx );
     }
@@ -239,5 +255,15 @@ public class DiagramRowLabelsUI extends ComponentUI
     }
 
     return minWidth;
+  }
+
+  /**
+   * @see LafHelper#paintChannelBackground(Graphics2D, DiagramSettings,
+   *      Rectangle, int, int)
+   */
+  private void paintChannelBackground( final Graphics2D aCanvas, final DiagramSettings aSettings,
+      final Rectangle aClipArea, final int aChannelIdx, final int aYoffset )
+  {
+    LafHelper.paintChannelBackground( aCanvas, aSettings, aClipArea, aChannelIdx, aYoffset );
   }
 }
