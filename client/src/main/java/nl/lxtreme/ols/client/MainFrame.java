@@ -378,7 +378,7 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
   public void setChannelLabels( final String[] aChannelLabels )
   {
     this.diagram.updatePreferredSize();
-    this.diagram.revalidate();
+    this.diagram.revalidateAll();
   }
 
   /**
@@ -390,7 +390,7 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
   public final void setDiagramSettings( final DiagramSettings aDiagramSettings )
   {
     this.diagram.setDiagramSettings( aDiagramSettings );
-    this.diagram.revalidate();
+    this.diagram.revalidateAll();
   }
 
   /**

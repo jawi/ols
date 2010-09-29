@@ -177,6 +177,10 @@ public class DiagramRowLabelsUI extends ComponentUI
       // Draw scope-thingie (if available)
       if ( settings.isShowScope( block ) )
       {
+        // draw background...
+        aCanvas.setColor( settings.getBackgroundColor() );
+        aCanvas.fillRect( clipArea.x, yofs, clipArea.width, scopeHeight );
+
         canvas.setColor( settings.getTextColor() );
         canvas.drawString( "S" + block, textXpos, yofs + ( scopeHeight + fm.getHeight() ) / 2 );
 
@@ -191,7 +195,7 @@ public class DiagramRowLabelsUI extends ComponentUI
       if ( settings.isShowByte( block ) )
       {
         canvas.setColor( settings.getGroupBackgroundColor() );
-        canvas.fillRect( clipArea.x, yofs, clipArea.x + clipArea.width, channelHeight );
+        canvas.fillRect( clipArea.x, yofs, clipArea.width, channelHeight );
 
         // draw bottom grid line
         canvas.setColor( settings.getGridColor() );
