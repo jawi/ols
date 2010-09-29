@@ -24,13 +24,16 @@ package nl.lxtreme.ols.client.diagram.settings;
 import java.awt.*;
 import java.util.*;
 
+import org.osgi.service.prefs.*;
+
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 
 
 /**
  * Provides mutable diagram settings.
  */
-public class MutableDiagramSettings implements DiagramSettings
+public class MutableDiagramSettings implements DiagramSettings, Configurable
 {
   // VARIABLES
 
@@ -345,6 +348,23 @@ public class MutableDiagramSettings implements DiagramSettings
   }
 
   /**
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   */
+  @Override
+  public void readPreferences( final Preferences aPreferences )
+  {
+    setChannelHeight( aPreferences.getInt( "channelHeight", this.channelHeight ) );
+    setSignalHeight( aPreferences.getInt( "signalHeight", this.signalHeight ) );
+    setScopeHeight( aPreferences.getInt( "scopeHeight", this.scopeHeight ) );
+
+    String colorTargetName = aPreferences.get( "colorTarget", this.colorTarget.name() );
+    setColorTarget( ColorTarget.valueOf( colorTargetName ) );
+
+    String colorSchemeName = aPreferences.get( "colorScheme", this.colorScheme.name() );
+    setColorScheme( ColorScheme.valueOf( colorSchemeName ) );
+  }
+
+  /**
    * @param aBackgroundColor
    *          the backgroundColor to set
    */
@@ -611,6 +631,20 @@ public class MutableDiagramSettings implements DiagramSettings
       throw new IllegalArgumentException( "Trigger color cannot be null!" );
     }
     this.triggerColor = aTriggerColor;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   */
+  @Override
+  public void writePreferences( final Preferences aPreferences )
+  {
+    aPreferences.putInt( "channelHeight", this.channelHeight );
+    aPreferences.putInt( "signalHeight", this.signalHeight );
+    aPreferences.putInt( "scopeHeight", this.scopeHeight );
+
+    aPreferences.put( "colorTarget", this.colorTarget.name() );
+    aPreferences.put( "colorScheme", this.colorScheme.name() );
   }
 
   /**

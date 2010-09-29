@@ -319,6 +319,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * 
+   */
+  public void clearPreferences()
+  {
+    this.systemPreferences = null;
+    this.userPreferences = null;
+  }
+
+  /**
    * Clears the current project, and start over as it were a new project.
    */
   public void createNewProject()
@@ -375,8 +384,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       try
       {
-        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences(
-            DeviceController.class.getName(), null );
+        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences( DeviceController.class
+            .getName(), null );
         for ( ServiceReference serviceRef : serviceRefs )
         {
           tools.add( ( DeviceController )this.bundleContext.getService( serviceRef ) );
@@ -773,6 +782,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     this.userPreferences = aUserPreferences;
     this.systemPreferences = aSystemPreferences;
+
+    this.mainFrame.readPreferences( this.systemPreferences.node( "/ols/settings" ) );
   }
 
   /**
@@ -828,6 +839,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       if ( dialog.showDialog() )
       {
         this.mainFrame.setDiagramSettings( dialog.getDiagramSettings() );
+        this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
+        this.mainFrame.repaint();
       }
 
       dialog.dispose();
@@ -846,6 +859,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       if ( dialog.showDialog() )
       {
         this.mainFrame.setDiagramSettings( dialog.getDiagramSettings() );
+        this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
         this.mainFrame.repaint();
       }
 
@@ -863,6 +877,23 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     if ( this.mainFrame != null )
     {
       this.mainFrame.setProgress( aPercentage );
+    }
+  }
+
+  /**
+   * 
+   */
+  public void writePreferences()
+  {
+    try
+    {
+      clearWindowPreferencesNode();
+      this.systemPreferences.flush();
+    }
+    catch ( BackingStoreException exception )
+    {
+      // TODO Auto-generated catch block
+      exception.printStackTrace();
     }
   }
 

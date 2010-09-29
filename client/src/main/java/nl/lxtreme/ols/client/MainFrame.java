@@ -44,7 +44,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Denotes the main UI.
  */
-public final class MainFrame extends JFrame implements Configurable, Closeable
+public final class MainFrame extends JFrame implements Closeable
 {
   // INNER TYPES
 
@@ -317,10 +317,13 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
   /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
-  @Override
   public void readPreferences( final Preferences aPreferences )
   {
-    // NO-op
+    final DiagramSettings settings = this.diagram.getDiagramSettings();
+    if ( settings instanceof Configurable )
+    {
+      ( ( Configurable )settings ).readPreferences( aPreferences );
+    }
   }
 
   /**
@@ -444,10 +447,15 @@ public final class MainFrame extends JFrame implements Configurable, Closeable
   /**
    * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
    */
-  @Override
   public void writePreferences( final Preferences aPreferences )
   {
-    // NO-op
+    final DiagramSettings settings = this.diagram.getDiagramSettings();
+    if ( settings instanceof Configurable )
+    {
+      ( ( Configurable )settings ).writePreferences( aPreferences );
+
+      this.controller.writePreferences();
+    }
   }
 
   /**
