@@ -177,7 +177,9 @@ public class DiagramTimeLineUI extends ComponentUI
       return;
     }
 
-    final int textWidth = fm.stringWidth( "T8" ) + 4;
+    final int textHeight = fm.getHeight();
+    final int flagHeight = textHeight;
+
     for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
     {
       final long cursorPosition = dataContainer.getCursorPosition( i );
@@ -185,12 +187,21 @@ public class DiagramTimeLineUI extends ComponentUI
       {
         final int cursorPos = ( int )( cursorPosition * scale );
 
-        canvas.setColor( settings.getBackgroundColor() );
-        canvas.fillRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
+        final Color cursorColor = settings.getCursorColor( i );
 
-        canvas.setColor( settings.getCursorColor( i ) );
-        canvas.drawRect( cursorPos, TIMELINE_HEIGHT - 14, textWidth, TIMELINE_HEIGHT - 1 );
-        canvas.drawString( String.format( "T%d", i + 1 ), cursorPos + 2, TIMELINE_HEIGHT - 2 );
+        final String text = String.format( "T%d", i + 1 );
+
+        final int textWidth = fm.stringWidth( text );
+        final int flagWidth = textWidth + 4;
+
+        canvas.setColor( cursorColor );
+        canvas.fillRect( cursorPos, TIMELINE_HEIGHT - flagHeight, flagWidth, flagHeight );
+
+        canvas.setColor( cursorColor.darker() );
+        canvas.drawRect( cursorPos, TIMELINE_HEIGHT - flagHeight, flagWidth, flagHeight - 1 );
+
+        canvas.setColor( cursorColor.darker().darker() );
+        canvas.drawString( text, cursorPos + 3, TIMELINE_HEIGHT - 3 );
       }
     }
   }
