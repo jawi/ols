@@ -486,7 +486,7 @@ public class DiagramUI extends ComponentUI
     paintSignals( canvas, diagram, clipArea, firstRow, lastRow );
 
     // draw cursors if enabled...
-    paintCursors( canvas, diagram, firstRow, lastRow );
+    paintCursors( canvas, diagram, clipArea, firstRow, lastRow );
 
     if ( DEBUG )
     {
@@ -538,12 +538,16 @@ public class DiagramUI extends ComponentUI
    * @param aFirstRow
    * @param aLastRow
    */
-  private void paintCursors( final Graphics2D aCanvas, final Diagram aDiagram, final long aFirstRow, final long aLastRow )
+  private void paintCursors( final Graphics2D aCanvas, final Diagram aDiagram, final Rectangle aClipArea,
+      final long aFirstRow, final long aLastRow )
   {
     final DataContainer dataContainer = aDiagram.getDataContainer();
     if ( dataContainer.isCursorsEnabled() )
     {
       final DiagramSettings settings = aDiagram.getDiagramSettings();
+
+      final int y1 = aClipArea.y;
+      final int y2 = y1 + aClipArea.height;
 
       for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
       {
@@ -553,7 +557,7 @@ public class DiagramUI extends ComponentUI
           final int cursorPos = ( int )( cursorPosition * aDiagram.getScale() );
 
           aCanvas.setColor( settings.getCursorColor( i ) );
-          aCanvas.drawLine( cursorPos, 0, cursorPos, 36 * settings.getChannelHeight() );
+          aCanvas.drawLine( cursorPos, y1, cursorPos, y2 );
         }
       }
     }
