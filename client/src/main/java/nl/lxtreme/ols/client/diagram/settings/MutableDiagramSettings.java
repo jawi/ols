@@ -79,9 +79,6 @@ public class MutableDiagramSettings implements DiagramSettings
 
     setDefaultColorScheme();
 
-    this.groupByteColor = Color.GRAY;
-    this.scopeColor = Color.GRAY;
-
     this.groupSettings = new int[4];
     for ( int i = 0; i < this.groupSettings.length; i++ )
     {
@@ -668,10 +665,11 @@ public class MutableDiagramSettings implements DiagramSettings
     {
       this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
       this.gridColor = new Color( 0x30, 0x30, 0x30 );
-      this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
+      this.groupBackgroundColor = this.gridColor.brighter();
       this.labelColor = new Color( 0x82, 0x87, 0x8f );
       this.signalColor = new Color( 0xc9, 0xc9, 0xc9 );
       this.scopeColor = this.signalColor;
+      this.groupByteColor = this.signalColor;
       this.textColor = Color.WHITE;
       this.timeColor = new Color( 0x82, 0x87, 0x8f );
       this.triggerColor = new Color( 0x82, 0x87, 0x8f );
@@ -683,10 +681,11 @@ public class MutableDiagramSettings implements DiagramSettings
     {
       this.backgroundColor = Color.WHITE;
       this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
-      this.groupBackgroundColor = new Color( 0x82, 0x87, 0x8f );
+      this.groupBackgroundColor = this.gridColor.darker();
       this.labelColor = new Color( 0x82, 0x87, 0x8f );
       this.signalColor = new Color( 0x30, 0x4b, 0x75 );
       this.scopeColor = this.signalColor;
+      this.groupByteColor = this.signalColor;
       this.textColor = new Color( 0x25, 0x25, 0x25 );
       this.timeColor = new Color( 0x25, 0x25, 0x25 );
       this.triggerColor = new Color( 0x82, 0x87, 0x8f );

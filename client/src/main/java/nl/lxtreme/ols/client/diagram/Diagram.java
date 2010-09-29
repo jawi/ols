@@ -424,6 +424,16 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   }
 
   /**
+   * Revalidates this diagram and all of its headers/borders.
+   */
+  public void revalidateAll()
+  {
+    this.timeLine.revalidate();
+    this.rowLabels.revalidate();
+    revalidate();
+  }
+
+  /**
    * @param aDiagramSettings
    *          the diagramSettings to set
    */
@@ -450,9 +460,9 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     else
     {
       // Resize this component and its headers/borders...
+      setPreferredSize( newDiagramSize );
       this.rowLabels.setPreferredSize( newDiagramSize );
       this.timeLine.setPreferredSize( newDiagramSize );
-      setPreferredSize( newDiagramSize );
     }
   }
 
@@ -645,16 +655,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     final int width = Math.max( 1, visibleWidth );
     final double fitScaleFactor = width / ( double )this.dataContainer.getAbsoluteLength();
     return fitScaleFactor;
-  }
-
-  /**
-   * Revalidates this diagram and all of its headers/borders.
-   */
-  private void revalidateAll()
-  {
-    this.timeLine.revalidate();
-    this.rowLabels.revalidate();
-    revalidate();
   }
 
   /**

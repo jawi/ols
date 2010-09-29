@@ -209,25 +209,21 @@ public class DiagramUI extends ComponentUI
     @Override
     public void mouseWheelMoved( final MouseWheelEvent aEvent )
     {
-      if ( HostUtils.isMacOSX() )
-      {
-        // On Mac OSX the mouse wheel events are also generated for all kinds of
-        // other scrolling events which only confuses the user...
-        return;
-      }
-
       final Diagram diagram = ( Diagram )aEvent.getSource();
       final Point point = aEvent.getPoint();
 
       final int notches = aEvent.getWheelRotation();
       // Is CTRL also down?
       final boolean isCtrlDown = aEvent.isControlDown();
+      // On Mac OSX the mouse wheel events are also generated for all kinds of
+      // other scrolling events which only confuses the user...
+      final boolean isZoomEvent = !HostUtils.isMacOSX() && isCtrlDown;
 
-      if ( isCtrlDown && ( notches < 0 ) )
+      if ( isZoomEvent && ( notches < 0 ) )
       {
         diagram.zoomIn( point );
       }
-      else if ( isCtrlDown && ( notches > 0 ) )
+      else if ( isZoomEvent && ( notches > 0 ) )
       {
         diagram.zoomOut( point );
       }
@@ -624,8 +620,6 @@ public class DiagramUI extends ComponentUI
 
     final FontMetrics fm = aCanvas.getFontMetrics();
     final int fontHeight = fm.getHeight();
-    final int labelYpos = ( int )( channelHeight - ( fontHeight / 2.0 ) + 3 );
-
     final int n = 2 * timestamps.length;
 
     // Search the first sample index the is right before the to-be-displayed
@@ -643,7 +637,7 @@ public class DiagramUI extends ComponentUI
     }
     while ( dataStartIndex < timestamps.length );
 
-    int bofs = 0;
+    int yofs = 0;
 
     for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
     {
@@ -666,7 +660,7 @@ public class DiagramUI extends ComponentUI
           final Color newBrighterColor = signalColor.brighter();
           final Color newDarkerColor = signalColor.darker().darker().darker();
 
-          final int py1 = channelHeight * bit + bofs;
+          final int py1 = channelHeight * bit + yofs;
           // Paint the (optional) channel background...
           paintChannelBackground( aCanvas, settings, aClipArea, channelIdx, py1 );
 
@@ -725,7 +719,7 @@ public class DiagramUI extends ComponentUI
 
             final int x1 = ( int )( scale * startIdx );
             final int x2 = ( int )( scale * endIdx );
-            final int y1 = bofs + channelHeight * channelIdx;
+            final int y1 = yofs + channelHeight * channelIdx;
 
             final int textWidth = fm.stringWidth( data );
 
@@ -757,9 +751,9 @@ public class DiagramUI extends ComponentUI
             }
           }
 
-          paintGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + bofs + ( channelHeight - 1 ) );
+          paintGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + yofs + ( channelHeight - 1 ) );
         }
-        bofs += ( channelHeight * 8 );
+        yofs += ( channelHeight * 8 );
       }
 
       if ( settings.isShowScope( block ) )
@@ -768,7 +762,7 @@ public class DiagramUI extends ComponentUI
 
         int pIdx = 0;
 
-        int val = bofs;
+        int val = yofs;
         int dataIndex = dataStartIndex;
 
         while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
@@ -776,23 +770,27 @@ public class DiagramUI extends ComponentUI
           val = ( int )( ( 0xff - ( ( values[dataIndex] >> ( 8 * block ) ) & 0xff ) ) / scopeScaleFactor );
 
           scopePolyline.x[pIdx] = ( int )( timestamps[dataIndex] * scale );
-          scopePolyline.y[pIdx] = bofs + val + PADDING_Y;
+          scopePolyline.y[pIdx] = yofs + val + PADDING_Y;
           pIdx++;
 
           dataIndex++;
         }
 
         scopePolyline.x[pIdx] = ( int )( aToIndex * scale );
-        scopePolyline.y[pIdx] = bofs + val + PADDING_Y;
+        scopePolyline.y[pIdx] = yofs + val + PADDING_Y;
         pIdx++;
+
+        // draw background...
+        aCanvas.setColor( settings.getBackgroundColor() );
+        aCanvas.fillRect( aClipArea.x, yofs, aClipArea.width, scopeHeight );
 
         // draw actual data
         aCanvas.setColor( settings.getScopeColor() );
         aCanvas.drawPolyline( scopePolyline.x, scopePolyline.y, pIdx );
 
-        bofs += scopeHeight;
+        yofs += scopeHeight;
         // draw bottom grid line
-        paintGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
+        paintGridLine( aCanvas, aDiagram, aClipArea, yofs - 1 );
       }
 
       if ( settings.isShowByte( block ) )
@@ -803,6 +801,10 @@ public class DiagramUI extends ComponentUI
         int pIdx = 0;
 
         int dataIndex = dataStartIndex;
+
+        // draw background...
+        aCanvas.setColor( settings.getGroupBackgroundColor() );
+        aCanvas.fillRect( aClipArea.x, yofs, aClipArea.width, channelHeight );
 
         while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
         {
@@ -823,8 +825,8 @@ public class DiagramUI extends ComponentUI
           final int x2 = ( int )( scale * ( nextSample - 1 ) + edgeX );
 
           final int bit = ( dataIndex % 2 );
-          final int y1 = bofs + signalHeight * ( 1 - bit ) + 1;
-          final int y2 = bofs + signalHeight * bit + 1;
+          final int y1 = yofs + signalHeight * ( 1 - bit ) + signalOffset;
+          final int y2 = yofs + signalHeight * bit + signalOffset;
 
           bytePolyline.x[pIdx] = x1;
           bytePolyline.y1[pIdx] = y1;
@@ -842,7 +844,8 @@ public class DiagramUI extends ComponentUI
           {
             final int labelXpos = ( int )( ( x1 + x2 - labelWidth ) / 2.0 );
 
-            aCanvas.drawString( byteValue, labelXpos, bofs + labelYpos );
+            aCanvas.setColor( settings.getTextColor() );
+            aCanvas.drawString( byteValue, labelXpos, yofs + ( fontHeight + signalOffset ) );
           }
 
           // Update loop administration...
@@ -854,9 +857,9 @@ public class DiagramUI extends ComponentUI
         aCanvas.drawPolyline( bytePolyline.x, bytePolyline.y1, pIdx );
         aCanvas.drawPolyline( bytePolyline.x, bytePolyline.y2, pIdx );
 
-        bofs += channelHeight;
+        yofs += channelHeight;
         // draw bottom grid line
-        paintGridLine( aCanvas, aDiagram, aClipArea, bofs - 1 );
+        paintGridLine( aCanvas, aDiagram, aClipArea, yofs - 1 );
       }
     }
   }
