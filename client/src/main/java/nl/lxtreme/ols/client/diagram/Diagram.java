@@ -421,6 +421,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     super.repaint();
     this.rowLabels.repaint();
     this.timeLine.repaint();
+    this.corner.repaint();
   }
 
   /**

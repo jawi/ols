@@ -50,6 +50,8 @@ public class DiagramCorner extends JComponent
   {
     this.diagram = aDiagram;
 
+    setOpaque( true );
+
     // Make sure to properly initialize our (custom) UI...
     updateUI();
   }
