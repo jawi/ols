@@ -443,7 +443,6 @@ public class DiagramUI extends ComponentUI
   public void paint( final Graphics aCanvas, final JComponent aComponent )
   {
     final Diagram diagram = ( Diagram )aComponent;
-    final DiagramSettings settings = diagram.getDiagramSettings();
 
     final DataContainer dataContainer = diagram.getDataContainer();
     if ( !dataContainer.hasCapturedData() )
@@ -458,25 +457,13 @@ public class DiagramUI extends ComponentUI
     final Rectangle clipArea = canvas.getClipBounds();
 
     final int cx = clipArea.x;
-    final int cy = clipArea.y;
     final int cw = cx + clipArea.width;
-    final int ch = cy + clipArea.height;
 
     // find index of first & last row that needs drawing
     final long firstRow = diagram.convertPointToSampleIndex( new Point( cx, 0 ) );
     final long lastRow = diagram.convertPointToSampleIndex( new Point( cw, 0 ) ) + 1;
 
     canvas.setFont( this.labelFont );
-
-    // draw trigger if existing and visible
-    final long triggerPosition = dataContainer.getTriggerPosition();
-    if ( ( triggerPosition >= firstRow ) && ( triggerPosition <= lastRow ) )
-    {
-      final double scale = diagram.getScale();
-
-      canvas.setColor( settings.getTriggerColor() );
-      canvas.fillRect( ( int )( triggerPosition * scale ) - 1, cy, ( int )( scale + 2 ), ch );
-    }
 
     // draw all signal groups...
     paintSignals( canvas, diagram, clipArea, firstRow, lastRow );
@@ -637,6 +624,8 @@ public class DiagramUI extends ComponentUI
     }
     while ( dataStartIndex < timestamps.length );
 
+    final long triggerPosition = dataContainer.getTriggerPosition();
+
     int yofs = 0;
 
     for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
@@ -663,6 +652,18 @@ public class DiagramUI extends ComponentUI
           final int py1 = channelHeight * bit + yofs;
           // Paint the (optional) channel background...
           paintChannelBackground( aCanvas, settings, aClipArea, channelIdx, py1 );
+
+          // draw trigger if existing and visible
+          if ( ( triggerPosition >= aFromIndex ) && ( triggerPosition <= aToIndex ) )
+          {
+            final Composite oldComposite = aCanvas.getComposite();
+
+            aCanvas.setColor( settings.getTriggerColor() );
+            aCanvas.setComposite( AlphaComposite.SrcOver.derive( 0.35f ) );
+            aCanvas.fillRect( ( int )( triggerPosition * scale ) + 1, py1, Math.max( 1, ( int )scale - 1 ),
+                channelHeight );
+            aCanvas.setComposite( oldComposite );
+          }
 
           long currentSample = aFromIndex - 1;
           int pIdx = 0;
@@ -742,10 +743,11 @@ public class DiagramUI extends ComponentUI
             newCanvas.setColor( newBrighterColor );
             newCanvas.drawRoundRect( x1, y1 + 4, annotationWidth, annotationHeight, arc, arc );
 
+            newCanvas.setComposite( oldComposite );
+
             if ( textXoffset > 0 )
             {
               newCanvas.setColor( Color.WHITE );
-              newCanvas.setComposite( oldComposite );
 
               newCanvas.drawString( data, x1 + textXoffset, y1 + fontHeight );
             }
