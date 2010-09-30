@@ -678,7 +678,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       // aResult[i] = makeColorGradient( i, freq, freq, freq, 2.7, 2.4, 4.6 );
       // aResult[i] = makeColorGradient( i, freq, freq, freq, 2.7, 7.4, 3.4 );
-      aResult[i] = makeColorGradient( i, freq, freq, freq, 0.0, 2.0, 4.0 );
+      aResult[i] = makeColorGradient( i, freq, freq, freq, 2.0, 4.0, 6.0 );
     }
   }
 

@@ -29,7 +29,6 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -46,6 +45,83 @@ import org.osgi.service.prefs.*;
  */
 public class GeneralSettingsDialog extends JDialog implements Configurable, Closeable
 {
+  // INNER TYPES
+
+  /**
+   * Provides a combobox renderer for ColorScheme values.
+   */
+  static final class ColorSchemeItemRenderer extends DefaultListCellRenderer
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see javax.swing.DefaultListCellRenderer#getListCellRendererComponent(javax.swing.JList,
+     *      java.lang.Object, int, boolean, boolean)
+     */
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      String text = String.valueOf( aValue );
+      final ColorScheme value = ( ColorScheme )aValue;
+      if ( ColorScheme.LIGHT.equals( value ) )
+      {
+        text = "Light (default) theme";
+      }
+      else if ( ColorScheme.DARK.equals( value ) )
+      {
+        text = "Dark/rainbow theme";
+      }
+      else if ( ColorScheme.CUSTOM.equals( value ) )
+      {
+        text = "Custom theme";
+      }
+      return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
+
+  /**
+   * Provides a combobox renderer for ColorTarget values.
+   */
+  static final class ColorTargetItemRenderer extends DefaultListCellRenderer
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see javax.swing.DefaultListCellRenderer#getListCellRendererComponent(javax.swing.JList,
+     *      java.lang.Object, int, boolean, boolean)
+     */
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      String text = String.valueOf( aValue );
+      final ColorTarget value = ( ColorTarget )aValue;
+      if ( ColorTarget.LABELS.equals( value ) )
+      {
+        text = "Labels";
+      }
+      else if ( ColorTarget.BACKGROUND.equals( value ) )
+      {
+        text = "Channel background";
+      }
+      else if ( ColorTarget.SIGNALS.equals( value ) )
+      {
+        text = "Signals";
+      }
+      return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
+    }
+
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -362,8 +438,12 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     this.scopeHeight = new JTextField( 10 );
 
     this.colorTarget = new JComboBox( ColorTarget.values() );
+    this.colorTarget.setRenderer( new ColorTargetItemRenderer() );
+    this.colorTarget.putClientProperty( "JComboBox.isPopDown", Boolean.TRUE );
 
     this.colorScheme = new JComboBox( new ColorScheme[] { ColorScheme.LIGHT, ColorScheme.DARK } );
+    this.colorScheme.setRenderer( new ColorSchemeItemRenderer() );
+    this.colorScheme.putClientProperty( "JComboBox.isPopDown", Boolean.TRUE );
     this.colorScheme.addItemListener( new ItemListener()
     {
       @Override
