@@ -331,8 +331,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
           SwingComponentUtils.setSelected( this.triggerValue[stage][i], value.charAt( i ) == '1' );
         }
 
-        SwingComponentUtils.setSelected( this.triggerStart[stage],
-            aPrefs.getBoolean( prefix + ".startCapture", Boolean.FALSE ) );
+        SwingComponentUtils.setSelected( this.triggerStart[stage], aPrefs.getBoolean( prefix + ".startCapture",
+            Boolean.FALSE ) );
       }
 
       final String group = aPrefs.get( "channelGroup", "" );
@@ -502,39 +502,39 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
     SpringLayoutUtils.addSeparator( connectionPane, "Connection" );
 
-    connectionPane.add( createRightAlignedLabel( "Analyzer port:" ) );
+    connectionPane.add( createRightAlignedLabel( "Analyzer port" ) );
     connectionPane.add( this.portSelect );
 
-    connectionPane.add( createRightAlignedLabel( "Port Speed:" ) );
+    connectionPane.add( createRightAlignedLabel( "Port Speed" ) );
     connectionPane.add( this.portRateSelect );
 
-    connectionPane.add( createRightAlignedLabel( "Number scheme:" ) );
+    connectionPane.add( createRightAlignedLabel( "Number scheme" ) );
     connectionPane.add( this.numberSchemeSelect );
 
     SpringLayoutUtils.addSeparator( connectionPane, "Capture" );
 
-    connectionPane.add( createRightAlignedLabel( "Sampling Clock:" ) );
+    connectionPane.add( createRightAlignedLabel( "Sampling Clock" ) );
     connectionPane.add( this.sourceSelect );
 
-    connectionPane.add( createRightAlignedLabel( "Sampling Rate:" ) );
+    connectionPane.add( createRightAlignedLabel( "Sampling Rate" ) );
     connectionPane.add( this.speedSelect );
 
     SpringLayoutUtils.addSeparator( connectionPane, "" );
 
-    connectionPane.add( createRightAlignedLabel( "Channel Groups:" ) );
+    connectionPane.add( createRightAlignedLabel( "Channel Groups" ) );
     connectionPane.add( groups );
 
-    connectionPane.add( createRightAlignedLabel( "Recording Size:" ) );
+    connectionPane.add( createRightAlignedLabel( "Recording Size" ) );
     connectionPane.add( this.maxSampleSize );
     connectionPane.add( new JLabel() );
     connectionPane.add( this.sizeSelect );
 
     SpringLayoutUtils.addSeparator( connectionPane, "Options" );
 
-    connectionPane.add( createRightAlignedLabel( "Noise Filter: " ) );
+    connectionPane.add( createRightAlignedLabel( "Noise Filter" ) );
     connectionPane.add( this.filterEnable );
 
-    connectionPane.add( createRightAlignedLabel( "Run Length Encoding: " ) );
+    connectionPane.add( createRightAlignedLabel( "Run Length Encoding" ) );
     connectionPane.add( this.rleEnable );
 
     SpringLayoutUtils.makeEditorGrid( connectionPane, 10, 10 );
@@ -566,7 +566,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       maskValuePanel.add( channelLabels[j - 1] );
     }
 
-    maskValuePanel.add( new JLabel( "Mask: " ) );
+    maskValuePanel.add( createRightAlignedLabel( "Mask" ) );
     this.triggerMask[aStage] = new JCheckBox[32];
     for ( int j = 32; j > 0; j-- )
     {
@@ -578,7 +578,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       maskValuePanel.add( triggerEnabled );
     }
 
-    maskValuePanel.add( new JLabel( "Value: " ) );
+    maskValuePanel.add( createRightAlignedLabel( "Value" ) );
 
     this.triggerValue[aStage] = new JCheckBox[32];
     for ( int j = 32; j > 0; j-- )
@@ -642,14 +642,14 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       this.triggerLevel[i] = new JComboBox( levels );
       this.triggerLevel[i].setSelectedIndex( i );
 
-      stagePane.add( new JLabel( "Arm:" ), createConstraints( 0, 0, 1, 1, 1.0, 1.0 ) );
+      stagePane.add( createRightAlignedLabel( "Arm" ), createConstraints( 0, 0, 1, 1, 1.0, 1.0 ) );
       stagePane.add( this.triggerLevel[i], createConstraints( 1, 0, 1, 1, 0.5, 1.0 ) );
 
       final String[] modes = { "Parallel", "Serial" };
       this.triggerMode[i] = new JComboBox( modes );
       this.triggerMode[i].setSelectedIndex( 0 );
 
-      stagePane.add( new JLabel( "Mode:", SwingConstants.RIGHT ), createConstraints( 2, 0, 1, 1, 0.5, 1.0 ) );
+      stagePane.add( createRightAlignedLabel( "Mode" ), createConstraints( 2, 0, 1, 1, 0.5, 1.0 ) );
       stagePane.add( this.triggerMode[i], createConstraints( 3, 0, 1, 1, 0.5, 1.0 ) );
 
       this.triggerMode[i].addActionListener( this );
@@ -658,18 +658,18 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       this.triggerChannel[i] = new JComboBox( channels );
       this.triggerChannel[i].setSelectedIndex( 0 );
 
-      stagePane.add( new JLabel( "Channel: ", SwingConstants.RIGHT ), createConstraints( 4, 0, 1, 1, 0.5, 1.0 ) );
+      stagePane.add( createRightAlignedLabel( "Channel" ), createConstraints( 4, 0, 1, 1, 0.5, 1.0 ) );
       stagePane.add( this.triggerChannel[i], createConstraints( 5, 0, 1, 1, 0.5, 1.0 ) );
 
       final JPanel maskValueEditor = createMaskValueEditor( i );
       stagePane.add( maskValueEditor, createConstraints( 0, 1, 6, 1, 1.0, 1.0 ) );
 
-      stagePane.add( new JLabel( "Action: " ), createConstraints( 0, 4, 1, 1, 1.0, 1.0 ) );
+      stagePane.add( createRightAlignedLabel( "Action" ), createConstraints( 0, 4, 1, 1, 1.0, 1.0 ) );
 
       this.triggerStart[i] = new JCheckBox( "Start Capture    (otherwise trigger level will rise by one)" );
       stagePane.add( this.triggerStart[i], createConstraints( 1, 4, 3, 1, 1.0, 1.0 ) );
 
-      stagePane.add( new JLabel( "Delay: ", SwingConstants.RIGHT ), createConstraints( 4, 4, 1, 1, 0.5, 1.0 ) );
+      stagePane.add( createRightAlignedLabel( "Delay" ), createConstraints( 4, 4, 1, 1, 0.5, 1.0 ) );
       this.triggerDelay[i] = new JTextField( "0" );
       this.triggerDelay[i].setToolTipText( "Delays trigger # samples after its condition is met." );
       stagePane.add( this.triggerDelay[i], createConstraints( 5, 4, 1, 1, 0.5, 1.0 ) );
@@ -678,15 +678,15 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     }
 
     final JPanel generalPane = new JPanel( new SpringLayout() );
-    generalPane.add( new JLabel( "Trigger: " ) );
+    generalPane.add( createRightAlignedLabel( "Trigger" ) );
     generalPane.add( this.triggerEnable );
     generalPane.add( new JLabel() );
 
-    generalPane.add( new JLabel( "Before/After ratio: " ) );
+    generalPane.add( createRightAlignedLabel( "Before/After ratio" ) );
     generalPane.add( this.ratioSlider );
     generalPane.add( this.ratioLabel );
 
-    generalPane.add( new JLabel( "Type: " ) );
+    generalPane.add( createRightAlignedLabel( "Type" ) );
     generalPane.add( this.triggerTypeSelect );
     generalPane.add( new JLabel() );
 
