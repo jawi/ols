@@ -25,6 +25,8 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.util.*;
+
 
 /**
  * A 1.4 file that provides utility methods for creating form- or grid-style
@@ -73,7 +75,9 @@ public final class SpringLayoutUtils
     setSeparatorProperty( label );
 
     final JSeparator separator = new JSeparator();
-    separator.setAlignmentY( Component.CENTER_ALIGNMENT );
+    // Apparently, on Mac OSX, the height of a separator is slightly different
+    // than on other OSs...
+    separator.setAlignmentY( HostUtils.isMacOSX() ? 0.25f : Component.CENTER_ALIGNMENT );
     setSeparatorProperty( separator );
 
     aContainer.add( label );
@@ -90,8 +94,8 @@ public final class SpringLayoutUtils
   public static void addToConstraint( final SpringLayout.Constraints aConstraints, final String aEdgeName,
       final int aConstant )
   {
-    aConstraints.setConstraint( aEdgeName,
-        Spring.sum( aConstraints.getConstraint( aEdgeName ), Spring.constant( aConstant ) ) );
+    aConstraints.setConstraint( aEdgeName, Spring.sum( aConstraints.getConstraint( aEdgeName ), Spring
+        .constant( aConstant ) ) );
 
   }
 
@@ -346,10 +350,10 @@ public final class SpringLayoutUtils
 
     // Set the parent's size.
     final SpringLayout.Constraints pCons = layout.getConstraints( aContainer );
-    pCons.setConstraint( SpringLayout.SOUTH,
-        Spring.sum( Spring.constant( aYpad ), lastCons.getConstraint( SpringLayout.SOUTH ) ) );
-    pCons.setConstraint( SpringLayout.EAST,
-        Spring.sum( Spring.constant( aXpad ), lastCons.getConstraint( SpringLayout.EAST ) ) );
+    pCons.setConstraint( SpringLayout.SOUTH, Spring.sum( Spring.constant( aYpad ), lastCons
+        .getConstraint( SpringLayout.SOUTH ) ) );
+    pCons.setConstraint( SpringLayout.EAST, Spring.sum( Spring.constant( aXpad ), lastCons
+        .getConstraint( SpringLayout.EAST ) ) );
   }
 
   /**
