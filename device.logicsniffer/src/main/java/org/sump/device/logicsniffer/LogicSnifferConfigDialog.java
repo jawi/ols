@@ -331,8 +331,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
           SwingComponentUtils.setSelected( this.triggerValue[stage][i], value.charAt( i ) == '1' );
         }
 
-        SwingComponentUtils.setSelected( this.triggerStart[stage], aPrefs.getBoolean( prefix + ".startCapture",
-            Boolean.FALSE ) );
+        SwingComponentUtils.setSelected( this.triggerStart[stage],
+            aPrefs.getBoolean( prefix + ".startCapture", Boolean.FALSE ) );
       }
 
       final String group = aPrefs.get( "channelGroup", "" );
@@ -906,6 +906,13 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
         }
         final int level = this.triggerLevel[stage].getSelectedIndex();
         final int delay = NumberUtils.smartParseInt( this.triggerDelay[stage].getText() );
+        if ( result && ( delay > 65535 ) )
+        {
+          result = ( JOptionPane.showConfirmDialog( this, //
+              "Trigger delay for stage " + stage + " is larger than 65535 cycles! Continue capture?", //
+              "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE ) == JOptionPane.YES_OPTION );
+        }
+
         final int channel = this.triggerChannel[stage].getSelectedIndex();
         final boolean startCapture = this.triggerStart[stage].isSelected();
         if ( complex )
