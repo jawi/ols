@@ -727,7 +727,7 @@ public class DiagramUI extends ComponentUI
             final GradientPaint annotationPaint = new GradientPaint( x1, y1 - 5, newBrighterColor, x1, y1
                 + ( signalHeight / 2 ), newDarkerColor );
 
-            final int annotationWidth = Math.max( textWidth, x2 - x1 ) + 2;
+            final int annotationWidth = ( x2 - x1 ) + 2;
             final int annotationHeight = ( fontHeight + 0 );
             final int arc = ( int )( annotationHeight / 2.0 );
             final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );

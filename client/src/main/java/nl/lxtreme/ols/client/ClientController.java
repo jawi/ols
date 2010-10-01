@@ -384,8 +384,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       try
       {
-        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences( DeviceController.class
-            .getName(), null );
+        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences(
+            DeviceController.class.getName(), null );
         for ( ServiceReference serviceRef : serviceRefs )
         {
           tools.add( ( DeviceController )this.bundleContext.getService( serviceRef ) );
@@ -960,6 +960,22 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Sets a status message.
+   * 
+   * @param aMessage
+   *          the message to set;
+   * @param aMessageArgs
+   *          the (optional) message arguments.
+   */
+  final void setStatus( final String aMessage, final Object... aMessageArgs )
+  {
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.setStatus( aMessage, aMessageArgs );
+    }
+  }
+
+  /**
    * Clears the preference-node in which the administration is kept which
    * windows have already their preferences set.
    */
@@ -1095,17 +1111,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       {
         listener.cursorRemoved( aCursorIdx );
       }
-    }
-  }
-
-  /**
-   * @param aMessage
-   */
-  private void setStatus( final String aMessage, final Object... aMessageArgs )
-  {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.setStatus( aMessage, aMessageArgs );
     }
   }
 
