@@ -75,7 +75,7 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
       final double dutycycle = getDutyCycle();
       if ( dutycycle == 0.0 )
       {
-        return "";
+        return MeasurementDialog.EMPTY_TEXT;
       }
       return String.format( "%.1f%%", ( getDutyCycle() * 100.0 ) );
     }
@@ -95,7 +95,7 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     {
       if ( this.period == 0.0 )
       {
-        return "";
+        return MeasurementDialog.EMPTY_TEXT;
       }
       return DisplayUtils.displayFrequency( this.frequency );
     }
@@ -110,8 +110,6 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
   private final int channelMask;
   private final Map<Edge, Map<Integer, Integer>> stats;
-  private final long startTime;
-  private final long endTime;
 
   // CONSTRUCTORS
 
@@ -127,14 +125,11 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
    * @param aEndIndex
    *          the ending index (cursor B).
    */
-  public ClockFrequencyMeasureWorker( final DataContainer aData, final ToolContext aContext, final int aChannel,
-      final int aStartIndex, final int aEndIndex )
+  public ClockFrequencyMeasureWorker( final DataContainer aData, final ToolContext aContext, final int aChannel )
   {
     super( aData, aContext );
 
     this.channelMask = ( 1 << aChannel );
-    this.startTime = aData.getCursorPosition( aStartIndex );
-    this.endTime = aData.getCursorPosition( aEndIndex );
     this.stats = new HashMap<Edge, Map<Integer, Integer>>( 2 );
   }
 
@@ -149,16 +144,9 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     final int[] values = getValues();
     final long[] timestamps = getTimestamps();
 
-    int start = 0;
-    while ( ( start < timestamps.length ) && ( timestamps[start] < this.startTime ) )
-    {
-      start++;
-    }
-    int end = start;
-    while ( ( end < timestamps.length ) && ( timestamps[end] < this.endTime ) )
-    {
-      end++;
-    }
+    final ToolContext context = getContext();
+    int start = context.getStartSampleIndex();
+    int end = context.getEndSampleIndex();
 
     int i = Math.max( 0, start - 1 );
     long lastTransition = 0;

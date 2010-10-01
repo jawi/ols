@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.measure;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
@@ -33,6 +34,7 @@ import javax.swing.SwingWorker.*;
 import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureWorker.*;
 import nl.lxtreme.ols.util.*;
@@ -83,8 +85,59 @@ public class MeasurementDialog extends BaseToolDialog
 
       if ( this.worker == null )
       {
-        this.worker = new ClockFrequencyMeasureWorker( MeasurementDialog.this.data, null, this.channel,
-            MeasurementDialog.this.cursorA.getSelectedIndex(), MeasurementDialog.this.cursorB.getSelectedIndex() );
+        final DataContainer container = MeasurementDialog.this.data;
+        final int cursorAidx = MeasurementDialog.this.cursorA.getSelectedIndex();
+        final int cursorBidx = MeasurementDialog.this.cursorB.getSelectedIndex();
+
+        final ToolContext context = new ToolContext()
+        {
+          /**
+           * @see nl.lxtreme.ols.api.tools.ToolContext#getEndSampleIndex()
+           */
+          @Override
+          public int getEndSampleIndex()
+          {
+            if ( container.hasCapturedData() )
+            {
+              if ( container.isCursorPositionSet( cursorBidx ) )
+              {
+                return container.getSampleIndex( container.getCursorPosition( cursorBidx ) );
+              }
+
+              return container.getValues().length - 1;
+            }
+            return -1;
+          }
+
+          /**
+           * @see nl.lxtreme.ols.api.tools.ToolContext#getLength()
+           */
+          @Override
+          public int getLength()
+          {
+            return getEndSampleIndex() - getStartSampleIndex();
+          }
+
+          /**
+           * @see nl.lxtreme.ols.api.tools.ToolContext#getStartSampleIndex()
+           */
+          @Override
+          public int getStartSampleIndex()
+          {
+            if ( container.hasCapturedData() )
+            {
+              if ( container.isCursorPositionSet( cursorAidx ) )
+              {
+                return container.getSampleIndex( container.getCursorPosition( cursorAidx ) );
+              }
+
+              return 0;
+            }
+            return -1;
+          }
+        };
+
+        this.worker = new ClockFrequencyMeasureWorker( MeasurementDialog.this.data, context, this.channel );
 
         if ( !this.worker.containsData() )
         {
@@ -193,6 +246,8 @@ public class MeasurementDialog extends BaseToolDialog
   private static final long serialVersionUID = 1L;
 
   private static final Logger LOG = Logger.getLogger( MeasurementDialog.class.getName() );
+
+  static final String EMPTY_TEXT = "<???>        ";
 
   // VARIABLES
 
@@ -310,8 +365,8 @@ public class MeasurementDialog extends BaseToolDialog
     final long cursorApos = this.data.getCursorPosition( this.cursorA.getSelectedIndex() );
     final long cursorBpos = this.data.getCursorPosition( this.cursorB.getSelectedIndex() );
 
-    String distanceText = "<???>";
-    String frequencyText = "<???>";
+    String distanceText = EMPTY_TEXT;
+    String frequencyText = EMPTY_TEXT;
 
     if ( ( cursorApos >= 0 ) && ( cursorBpos >= 0 ) && ( cursorApos != cursorBpos ) )
     {
@@ -337,70 +392,28 @@ public class MeasurementDialog extends BaseToolDialog
   }
 
   /**
-   * @param aData
+   * @param aCursorNames
    * @return
    */
-  private Component createCursorsPane()
+  private JPanel createCursorListingPane( final String[] aCursorNames )
   {
-    final String[] cursorNames = new String[DataContainer.MAX_CURSORS];
-    for ( int i = 0; i < cursorNames.length; i++ )
-    {
-      cursorNames[i] = String.format( "Cursor %d", ( i + 1 ) );
-    }
+    final JPanel cursorListing = new JPanel( new SpringLayout() );
+    cursorListing.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
 
-    final JPanel referenceCursors = new JPanel( new GridBagLayout() );
-    referenceCursors.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Reference" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    SpringLayoutUtils.addSeparator( cursorListing, "Cursors" );
 
-    this.cursorA = new JComboBox( cursorNames );
-    this.cursorA.setSelectedIndex( 0 );
-
-    this.cursorB = new JComboBox( cursorNames );
-    this.cursorB.setSelectedIndex( 1 );
-
-    referenceCursors.add( new JLabel( "Cursor A:" ), //
-        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    referenceCursors.add( this.cursorA, //
-        new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-
-    referenceCursors.add( new JLabel( "Cursor B:" ), //
-        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    referenceCursors.add( this.cursorB, //
-        new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-
-    final JPanel cursorListing = new JPanel( new GridBagLayout() );
-    cursorListing.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Current cursors" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
-
-    int yIdx = 0;
     this.cursorValueLabels = new JLabel[DataContainer.MAX_CURSORS];
     for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
     {
-      cursorListing.add( new JLabel( cursorNames[i] ), //
-          new GridBagConstraints( 0, yIdx, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-              GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+      cursorListing.add( createRightAlignedLabel( aCursorNames[i] ) );
 
       this.cursorValueLabels[i] = new JLabel( getCursorTimeDisplayValue( i ) );
-      cursorListing.add( this.cursorValueLabels[i], //
-          new GridBagConstraints( 1, yIdx, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-              GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-      yIdx++;
+      cursorListing.add( this.cursorValueLabels[i] );
     }
 
-    final JPanel result = new JPanel( new GridBagLayout() );
-    result.add( referenceCursors, //
-        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
-            LABEL_INSETS, 0, 0 ) );
+    SpringLayoutUtils.makeEditorGrid( cursorListing, 10, 6 );
 
-    result.add( cursorListing, //
-        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
-            LABEL_INSETS, 0, 0 ) );
-
-    return result;
+    return cursorListing;
   }
 
   /**
@@ -413,13 +426,21 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private JComponent createDialogContent()
   {
+    final String[] cursorNames = new String[DataContainer.MAX_CURSORS];
+    for ( int i = 0; i < cursorNames.length; i++ )
+    {
+      cursorNames[i] = String.format( "Cursor %d", ( i + 1 ) );
+    }
+
     final JPanel result = new JPanel( new GridBagLayout() );
-    result.add( createCursorsPane(), //
-        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL,
-            COMP_INSETS, 0, 0 ) );
-    result.add( createMeasurePane(), //
-        new GridBagConstraints( 1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL,
-            COMP_INSETS, 0, 0 ) );
+
+    result.add( createCursorListingPane( cursorNames ), //
+        new GridBagConstraints( 1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.NONE,
+            new Insets( 0, 0, 0, 0 ), 0, 0 ) );
+    result.add( createMeasurementPane( cursorNames ), //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.NONE,
+            new Insets( 0, 0, 0, 0 ), 0, 0 ) );
+
     return result;
   }
 
@@ -428,28 +449,35 @@ public class MeasurementDialog extends BaseToolDialog
    * 
    * @return a measurement panel, never <code>null</code>.
    */
-  private Component createMeasurePane()
+  private Component createMeasurementPane( final String[] aCursorNames )
   {
-    this.frequencyLabel = new JLabel( "<???>        " );
-    this.distanceLabel = new JLabel( "<???>         " );
+    this.frequencyLabel = new JLabel( EMPTY_TEXT );
+    this.distanceLabel = new JLabel( EMPTY_TEXT );
 
-    final JPanel basicMeasurements = new JPanel( new GridBagLayout() );
-    basicMeasurements.setBorder( BorderFactory.createCompoundBorder(
-        BorderFactory.createTitledBorder( "Measurement results" ), BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    this.cursorA = new JComboBox( aCursorNames );
+    this.cursorA.setSelectedIndex( 0 );
 
-    basicMeasurements.add( new JLabel( "Distance:" ), //
-        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    basicMeasurements.add( this.distanceLabel, //
-        new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+    this.cursorB = new JComboBox( aCursorNames );
+    this.cursorB.setSelectedIndex( 1 );
 
-    basicMeasurements.add( new JLabel( "Frequency:" ), //
-        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    basicMeasurements.add( this.frequencyLabel, //
-        new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
+    final JPanel rightPane = new JPanel( new SpringLayout() );
+    rightPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
+
+    SpringLayoutUtils.addSeparator( rightPane, "Reference" );
+
+    rightPane.add( createRightAlignedLabel( "Cursor A" ) );
+    rightPane.add( this.cursorA );
+
+    rightPane.add( createRightAlignedLabel( "Cursor B" ) );
+    rightPane.add( this.cursorB );
+
+    SpringLayoutUtils.addSeparator( rightPane, "" );
+
+    rightPane.add( createRightAlignedLabel( "Distance" ) );
+    rightPane.add( this.distanceLabel );
+
+    rightPane.add( createRightAlignedLabel( "Frequency" ) );
+    rightPane.add( this.frequencyLabel );
 
     final MeasureClockFrequencyAction measureAction = new MeasureClockFrequencyAction();
 
@@ -469,52 +497,24 @@ public class MeasurementDialog extends BaseToolDialog
       }
     } );
 
-    this.clockFrequencyLabel = new JLabel( "" );
-    this.clockDutyCycleLabel = new JLabel( "" );
+    this.clockFrequencyLabel = new JLabel( EMPTY_TEXT );
+    this.clockDutyCycleLabel = new JLabel( EMPTY_TEXT );
     final JButton measureClockFrequency = new JButton( measureAction );
 
-    final JPanel measureClock = new JPanel( new GridBagLayout() );
-    measureClock.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( "Measure clock" ),
-        BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) ) );
+    SpringLayoutUtils.addSeparator( rightPane, "Measure clock" );
 
-    measureClock.add( new JLabel( "Frequency:" ), //
-        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    measureClock.add( this.clockFrequencyLabel, //
-        new GridBagConstraints( 1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-    measureClock.add( new JLabel( "Duty cycle:" ), //
-        new GridBagConstraints( 0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    measureClock.add( this.clockDutyCycleLabel, //
-        new GridBagConstraints( 1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-    measureClock.add( new JLabel( "Channel:" ), //
-        new GridBagConstraints( 0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
-    measureClock.add( this.clockChannelChooser, //
-        new GridBagConstraints( 1, 2, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING,
-            GridBagConstraints.HORIZONTAL, COMP_INSETS, 0, 0 ) );
-    measureClock.add( measureClockFrequency, //
-        new GridBagConstraints( 0, 3, 2, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING,
-            GridBagConstraints.HORIZONTAL, LABEL_INSETS, 0, 0 ) );
+    rightPane.add( createRightAlignedLabel( "Frequency" ) );
+    rightPane.add( this.clockFrequencyLabel );
+    rightPane.add( createRightAlignedLabel( "Duty cycle" ) );
+    rightPane.add( this.clockDutyCycleLabel );
+    rightPane.add( createRightAlignedLabel( "Channel" ) );
+    rightPane.add( this.clockChannelChooser );
+    rightPane.add( new JLabel() );
+    rightPane.add( measureClockFrequency );
 
-    final JPanel result = new JPanel( new GridBagLayout() );
+    SpringLayoutUtils.makeEditorGrid( rightPane, 10, 6 );
 
-    result.add( basicMeasurements, //
-        new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.HORIZONTAL,
-            LABEL_INSETS, 0, 0 ) );
-
-    result.add( measureClock, //
-        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.HORIZONTAL,
-            LABEL_INSETS, 0, 0 ) );
-
-    // Spacer
-    result.add( Box.createVerticalGlue(), //
-        new GridBagConstraints( 0, 2, 2, 1, 10.0, 10.0, GridBagConstraints.NORTHEAST, GridBagConstraints.HORIZONTAL,
-            LABEL_INSETS, 0, 0 ) );
-
-    return result;
+    return rightPane;
   }
 
   /**
