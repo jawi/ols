@@ -39,7 +39,9 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
 
   private static final long serialVersionUID = 1L;
 
+  /** Provides insets (padding) that can be used for labels. */
   protected static final Insets LABEL_INSETS = new Insets( 4, 4, 4, 2 );
+  /** Provides insets (padding) that can be used for components. */
   protected static final Insets COMP_INSETS = new Insets( 4, 2, 4, 4 );
 
   // CONSTRUCTORS
@@ -70,6 +72,7 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   protected BaseToolDialog( final Window aOwner, final String aTitle, final ModalityType aModalityType )
   {
     super( aOwner, aTitle, aModalityType );
+    setLocationRelativeTo( aOwner );
   }
 
   // METHODS
@@ -101,5 +104,38 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   protected final JButton createCloseButton()
   {
     return StandardActionFactory.createCloseButton();
+  }
+
+  /**
+   * Convenience method to show an error message.
+   * 
+   * @param aMessage
+   *          the error message to show, cannot be <code>null</code>.
+   */
+  protected void showErrorMessage( final String aMessage )
+  {
+    JOptionPane.showMessageDialog( this, aMessage, "Error ...", JOptionPane.ERROR_MESSAGE );
+  }
+
+  /**
+   * Convenience method to show a (information) message.
+   * 
+   * @param aMessage
+   *          the message to show, cannot be <code>null</code>.
+   */
+  protected void showMessage( final String aMessage )
+  {
+    JOptionPane.showMessageDialog( this, aMessage );
+  }
+
+  /**
+   * Convenience method to show a warning message.
+   * 
+   * @param aMessage
+   *          the warning message to show, cannot be <code>null</code>.
+   */
+  protected void showWarningMessage( final String aMessage )
+  {
+    JOptionPane.showMessageDialog( this, aMessage, "Warning ...", JOptionPane.WARNING_MESSAGE );
   }
 }

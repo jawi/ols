@@ -38,8 +38,11 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * Provides a base class for asynchronous tools wishing to show their results in
- * a dialog.
+ * Provides a base class for asynchronous tool dialogs.
+ * <p>
+ * Implementors of this class also need to subclass {@link BaseAsyncToolWorker}
+ * as well.
+ * </p>
  */
 public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends
     BaseToolDialog implements AsyncToolDialog<RESULT_TYPE, WORKER>, Configurable
@@ -104,10 +107,11 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
           catch ( ExecutionException exception )
           {
             // Make sure to handle IO-interrupted exceptions properly!
-            HostUtils.handleInterruptedException( exception.getCause() );
+            final Throwable cause = exception.getCause();
+            HostUtils.handleInterruptedException( cause );
 
-            LOG.log( Level.WARNING, "Execution exception! Message: {0}", exception.getCause().getMessage() );
-            exception.getCause().printStackTrace();
+            LOG.log( Level.WARNING, "Execution exception! Message: {0}", cause.getMessage() );
+            cause.printStackTrace();
 
             onToolWorkerCancelled();
           }
@@ -142,7 +146,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
     // CONSTRUCTORS
 
     /**
-     * 
+     * Creates new ExportAction instance.
      */
     public ExportAction()
     {
@@ -170,8 +174,8 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
           LOG.info( "Writing analysis results to " + selectedFile.getPath() );
         }
 
-        final String filename = selectedFile.getName();
-        if ( filename.endsWith( ".htm" ) || filename.endsWith( ".html" ) )
+        final String filenameExt = HostUtils.getFileExtension( selectedFile );
+        if ( "htm".equalsIgnoreCase( filenameExt ) || "html".equalsIgnoreCase( filenameExt ) )
         {
           storeToHtmlFile( selectedFile, analysisResult );
         }
@@ -196,7 +200,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
     // CONSTRUCTORS
 
     /**
-     * 
+     * Creates a new RunAnalysisAction instance.
      */
     public RunAnalysisAction()
     {
@@ -222,16 +226,19 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
       }
       else
       {
-        startToolWorker();
-
-        putValue( NAME, "Abort" );
-        putValue( SHORT_DESCRIPTION, "Aborts current analysis..." );
-        putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_ESCAPE ) );
+        if ( startToolWorker() )
+        {
+          // Update the state of this action to denote it can also be used as an
+          // abort button...
+          putValue( NAME, "Abort" );
+          putValue( SHORT_DESCRIPTION, "Aborts current analysis..." );
+          putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_ESCAPE ) );
+        }
       }
     }
 
     /**
-     * 
+     * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog.RestorableAction#restore()
      */
     public void restore()
     {
@@ -286,8 +293,7 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   // METHODS
 
   /**
-   * Closes this dialog, cancels any running tool workers if they are still
-   * running.
+   * Closes this dialog, cancels any tool workers if they are still running.
    */
   @Override
   public final void close()
@@ -300,6 +306,10 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
+   * <p>
+   * Does nothing by default.
+   * </p>
+   * 
    * @see nl.lxtreme.ols.tool.base.ToolDialog#reset()
    */
   @Override
@@ -324,7 +334,8 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * Cancels all running tool workers.
+   * Cancels all running tool workers and resets the current analysis result to
+   * <code>null</code>.
    */
   final void cancelToolWorker()
   {
@@ -357,24 +368,39 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * Starts the tool worker.
+   * Sets up and starts the tool worker (in the background).
+   * 
+   * @return <code>true</code> if the tool worker is started, <code>false</code>
+   *         if it couldn't be started because there was no data to process.
    */
-  final void startToolWorker()
+  final boolean startToolWorker()
   {
     synchronized ( this.toolWorkerFactory )
     {
       this.worker = this.toolWorkerFactory.createToolWorker();
+      if ( !isWorkerValid( this.worker ) )
+      {
+        showErrorMessage( "There is no data available. Please perform a capture first..." );
+        return false;
+      }
 
       setControlsEnabled( false );
       setupToolWorker( this.worker );
 
       this.worker.addPropertyChangeListener( new ToolWorkerPropertyChangeListener() );
       this.worker.execute();
+
+      return true;
     }
   }
 
   /**
-   * @return
+   * Factory method for creating an "export" button that -upon execution- calls
+   * the methods {@link #storeToCsvFile(File, Object)} or
+   * {@link #storeToHtmlFile(File, Object)}.
+   * 
+   * @return an "export" button, with keyboard shortcuts enabled, never
+   *         <code>null</code>.
    */
   protected final JButton createExportButton()
   {
@@ -385,7 +411,11 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * @return
+   * Factory method for creating a "run analysis" button that -upon execution-
+   * creates and starts the tool worker.
+   * 
+   * @return a "run analysis" button, with keyboard shortcuts enabled, never
+   *         <code>null</code>.
    */
   protected final JButton createRunAnalysisButton()
   {
@@ -407,7 +437,29 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
+   * Provides a hook method which is used to determine whether the tool-worker
+   * can actually be started.
+   * <p>
+   * By default, this method returns the result of
+   * <code>aWorker.containsData()</code>.
+   * </p>
+   * 
+   * @param aWorker
+   *          the tool worker that is queried for, never <code>null</code>.
+   * @return <code>true</code> if the worker is valid and can be used to work,
+   *         <code>false</code> otherwise.
+   * @see #startToolWorker()
+   */
+  protected boolean isWorkerValid( final WORKER aWorker )
+  {
+    return aWorker.containsData();
+  }
+
+  /**
    * Called upon canceling the tool worker.
+   * <p>
+   * By default this method closes this dialog.
+   * </p>
    */
   protected void onToolWorkerCancelled()
   {
@@ -430,6 +482,9 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
 
   /**
    * Called when the tool worker is started (in the background).
+   * <p>
+   * Does nothing by default.
+   * </p>
    */
   protected void onToolWorkerStarted()
   {
@@ -437,7 +492,10 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   }
 
   /**
-   * Called to enable/disable the various UI-controls.
+   * Called to enable/disable the various UI-controls (mostly buttons).
+   * <p>
+   * Does nothing by default.
+   * </p>
    * 
    * @param aEnabled
    *          <code>true</code> to enable the controls, <code>false</code> to
@@ -451,7 +509,8 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   /**
    * Called right before the tool worker is started.
    * <p>
-   * Can be used to parameterize the toolworker with UI-options.
+   * Can be used to parameterize the tool worker with UI-options (if any). Does
+   * nothing by default.
    * </p>
    * 
    * @param aToolWorker
@@ -464,6 +523,9 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
 
   /**
    * Called when the user has chosen to export the analysis results as CSV.
+   * <p>
+   * Does nothing by default.
+   * </p>
    * 
    * @param aSelectedFile
    *          the file to write the CSV-data to;
@@ -477,6 +539,9 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
 
   /**
    * Called when the user has chosen to export the analysis results as HTML.
+   * <p>
+   * Does nothing by default.
+   * </p>
    * 
    * @param aSelectedFile
    *          the file to write the CSV-data to;
