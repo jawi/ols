@@ -31,6 +31,12 @@ import nl.lxtreme.ols.api.tools.*;
  * Provides a base class for tools wishing to do their processing in the
  * background.
  * <p>
+ * Implementors of this class should implement {@link #doInBackground()} and do
+ * the actual work. During this process, you can use {@link #setProgress(int)}
+ * and {@link #publish(Object...)} to communicate with the GUI. See JavaDoc on
+ * SwingWorker for more information on this.
+ * </p>
+ * <p>
  * For convenience, this base class provides direct access to all captured data.
  * </p>
  * 
@@ -84,6 +90,17 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   public final void clearChannelAnnotations( final int aChannelIdx )
   {
     this.data.clearChannelAnnotations( aChannelIdx );
+  }
+
+  /**
+   * Returns whether or not this worker contains any data to work on.
+   * 
+   * @return <code>true</code> if there is any data to process by this worker,
+   *         <code>false</code> otherwise.
+   */
+  public final boolean containsData()
+  {
+    return ( this.data != null ) && this.data.hasCapturedData();
   }
 
   /**

@@ -25,10 +25,14 @@ import nl.lxtreme.ols.tool.base.BaseAsyncTool.*;
 
 
 /**
- * @author jajans
+ * Provides an interface for asynchronous tool dialogs.
+ * 
+ * @see ToolDialog
  */
 public interface AsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncToolWorker<RESULT_TYPE>> extends ToolDialog
 {
+  // METHODS
+
   /**
    * Sets the tool worker factory to use for creating a new tool worker.
    * 

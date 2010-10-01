@@ -51,6 +51,9 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
    *          the category of this tool;
    * @param aName
    *          the name of this tool (to show in the UI).
+   * @throws IllegalArgumentException
+   *           in case the given category was <code>null</code> or the given
+   *           name was <code>null</code> or empty.
    */
   protected BaseTool( final Category aCategory, final String aName )
   {
@@ -186,9 +189,14 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   }
 
   /**
+   * Factory method for creating a tool dialog.
+   * 
    * @param aOwner
+   *          the owning window of the newly created tool dialog, can be
+   *          <code>null</code>;
    * @param aName
-   * @return
+   *          the name of the tool dialog to create, never <code>null</code>.
+   * @return a new tool dialog, never <code>null</code>.
    */
   protected abstract DIALOG createDialog( final Window aOwner, final String aName );
 
@@ -211,7 +219,9 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   }
 
   /**
-   * @return
+   * Returns the dialog that is currently available.
+   * 
+   * @return the current dialog, can be <code>null</code>.
    */
   protected final DIALOG getDialog()
   {
