@@ -85,9 +85,16 @@ public class MeasurementDialog extends BaseToolDialog
       {
         this.worker = new ClockFrequencyMeasureWorker( MeasurementDialog.this.data, null, this.channel,
             MeasurementDialog.this.cursorA.getSelectedIndex(), MeasurementDialog.this.cursorB.getSelectedIndex() );
-        this.worker.addPropertyChangeListener( this );
 
-        this.worker.execute();
+        if ( !this.worker.containsData() )
+        {
+          showErrorMessage( "There is no data available to measure. Please perform a capture first..." );
+        }
+        else
+        {
+          this.worker.addPropertyChangeListener( this );
+          this.worker.execute();
+        }
       }
     }
 
