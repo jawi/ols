@@ -1,3 +1,507 @@
+2010-10-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JStatusBar.j
+	ava,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JTextStatusB
+	ar.java: Small UI-fixes in the status bar (removed static date &
+	added some additional padding); made the annotation display a bit
+	clearer when the text is too large.
+
+2010-10-01  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Made the initial location where tool dialogs are
+	shown relative to the main frame.
+
+2010-10-01  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java: Revamped the measurement tool a bit; to give it the same
+	look and feel as the other dialogs.
+
+2010-10-01  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java: Added a check that prevents the measurement to take
+	place when no data is available.
+
+2010-10-01  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/AsyncToolDialog.ja
+	va,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseTool.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a: Documented tool base API a bit; added a check that prevents a
+	tool worker from starting when no data is available.
+
+2010-09-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java, pom.xml: Added cell renderers for preference
+	pane; bumped version to beta 2.
+
+2010-09-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: Added warning when entering a trigger
+	delay of more than 65535 cycles.
+
+2010-09-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: Removed redundant colons and spaces from
+	labels.
+
+2010-09-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/SpringLayoutUtils.java: 
+	Minor fix for separators on Mac OSX.
+
+2010-09-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/diagram/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/DiagramCorner.ja
+	va: Small repainting bug solved in the diagram corner when using the
+	dark color scheme by default.
+
+2010-09-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/PreferenceServiceTr
+	acker.java, runner/pom.xml: Started working on saving/restoring the
+	main preferences. Made runner a runnable JAR.
+
+2010-09-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramRowLa
+	belsUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java: Some minor painting issues fixed for the scope
+	& byte background; also when the scope and/or byte display was
+	enabled, the row-labels were not always correctly updated. Fixed a
+	small scrolling problem on Mac OSX.
+
+2010-09-29  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramTimeL
+	ineUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va: Small cleanup in the drawing of cursors: take the clip into
+	account; made the cursor flags a bit more readable.
+
+2010-09-28  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/diagram/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/DiagramCorner.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramCorne
+	rUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramRowLa
+	belsUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramTimeL
+	ineUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/LafHelper.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Diagram
+	Settings.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java: Added option to paint the channel indicator as
+	background; refactored some stuff to helper classes.
+
+2010-09-27  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramRowLa
+	belsUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java: Fixed some minor issues in the main diagram.
+	Started with a subtle background paint for each channel.
+
+2010-09-27  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java: Made general settings dialog fail fast upon
+	invalid colors (not repeating error messages). Also allow less
+	colors to be defined.
+
+2010-09-27  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/action/CancelCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/CaptureAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/ExitAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor1Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor2Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoTriggerAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/HelpAboutAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/RepeatCaptureActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorModeActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramLabels
+	Action.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowGeneralSettin
+	gsAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowModeSettingsA
+	ction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomDefaultAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomFitAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomInAction.java
+	,
+	client/src/main/java/nl/lxtreme/ols/client/action/ZoomOutAction.jav
+	a,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java: Added mnemonic keys for all menu items.
+
+2010-09-26  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SpringLayoutUtils.java: 
+	Made the configuration dialogs of several tools a bit more modern;
+	visual cleanup of several dialog (once again); added mnemonic keys
+	for menu bar.
+
+2010-09-26  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/DiagramLabelsDia
+	log.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/ModeSet
+	tingsDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceDial
+	og.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SpringLayoutUtils.java
+	,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Unified the layouts of all dialogs; improved the settings of
+	some on the visual side at bit; fixed a small bug regarding the
+	measurement tool (channels starting at 1 iso 0); various cleanups.
+
+2010-09-25  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va: Minor updates on annotations.
+
+2010-09-24  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramRowLa
+	belsUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Diagram
+	Settings.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Implemented rough version of preference editor (including color
+	schemes). Works well in basic, some details need to be filled
+	though.
+
+2010-09-22  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowDiagramSettin
+	gsAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowGeneralSettin
+	gsAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowModeSettingsA
+	ction.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/DiagramCursorCha
+	ngeListener.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/DiagramLabelsDia
+	log.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/DiagramRowLabels
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/DiagramTimeLine.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramRowLa
+	belsUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramTimeL
+	ineUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Diagram
+	Settings.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/ModeSet
+	tingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/PreferenceServiceTr
+	acker.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramCursorChan
+	geListener.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramLabelsDial
+	og.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramRowLabels.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettings.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettingsDi
+	alog.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramTimeLine.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/signal/MutableDiagramSet
+	tings.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/laf/DiagramRowLab
+	elsUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/laf/DiagramTimeLi
+	neUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/laf/DiagramUI.jav
+	a: Initial preferences dialog; shifted some code around to make it
+	appear logical again.
+
+2010-09-20  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/NewProjectAction.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/PreferenceServiceTr
+	acker.java, runner/src/main/java/nl/lxtreme/ols/runner/Runner.java: 
+	Fixed a small bug regarding the restoring of (window) preferences
+	when opening a dialog _after_ a project was loaded.  Made the
+	cleanup of temporary storage used by Felix a debug option.
+
+2010-09-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/pom.xml, pom.xml: Added compendium to list of
+	dependencies.
+
+2010-09-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Added small bug to my todo list.
+
+2010-09-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/pom.xml,
+	api/src/main/java/nl/lxtreme/ols/api/Configurable.java,
+	api/src/main/java/nl/lxtreme/ols/api/Project.java, client/pom.xml,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/PreferenceServiceTr
+	acker.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettingsDi
+	alog.java, device.logicsniffer/pom.xml,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java, device.test/pom.xml,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceDial
+	og.java, runner/pom.xml, tool.base/pom.xml,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseTool.java,
+	tool.i2c/pom.xml,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java, tool.measure/pom.xml,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java, tool.spi/pom.xml,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java, tool.state/pom.xml,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java, tool.uart/pom.xml,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java, util/pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: - Reworked configurable interface to support the Preferences service
+	interface; - re-enabled project support.
+
+2010-09-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java: Fixed a small bug in decoding of SPI data in which both
+	MISO and MOSI data is available; one would always be reported as
+	zero.  Thanks to FirefighterBlu3 for reporting this.
+
+2010-09-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	client/src/main/java/nl/lxtreme/ols/client/signal/MutableDiagramSet
+	tings.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/laf/DiagramRowLab
+	elsUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/laf/DiagramUI.jav
+	a, pom.xml: Disabled the mouse wheel scrolling on MacOSX as it
+	causes weird behaviour with scrolling; some small (detail) fixes on
+	the gridline painting; updated todo-list.
+
+2010-09-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: Reworked the OLS configuration dialog a
+	bit to work better on low-resolution devices; thanks to siklosi for
+	reporting this.
+
+2010-09-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/signal/laf/DiagramUI.jav
+	a: Added support for mouse wheel zooming. Thanks to jone for
+	reporting this.
+
+2010-09-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/signal/laf/DiagramTimeLi
+	neUI.java: Made the timeline show "long" ticks after each 10
+	increments; to make it visually easier to count time increments.
+	Thanks to rasmus for suggesting this.
+
+2010-09-15  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramLabelsDial
+	og.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettings.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/signal/DiagramSettingsDi
+	alog.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/MutableDiagramSet
+	tings.java,
+	client/src/main/java/nl/lxtreme/ols/client/signal/laf/DiagramUI.jav
+	a, logging/src/main/java/nl/lxtreme/ols/logging/Activator.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java: Fixed diagram settings to work properly; refactored most
+	settings to the readonly interface while the settings dialog (for
+	now) only uses the mutable settings.
+
+2010-09-14  JaWi <j.w.janssen@lxtreme.nl>
+
+	* : commit c4730f2274ecef8358a67e2968133210d35ec0dc Author: JaWi
+	<j.w.janssen@lxtreme.nl> Date:   Tue Sep 14 20:12:41 2010 +0200
+
+2010-09-14  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: Experimental: lazy load the serial ports
+	for the OLS-device. Reported by FirefighterBlu3.
+
+2010-09-14  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JLazyComboBo
+	x.java: Added experimental lazy loading combobox; ensure to avoid
+	selecting a literal null-value in comboboxes.
+
+2010-09-09  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ChangeLog, api/ols.mediawiki, pom.xml: Version 0.8.4 release.
+
 2010-09-09  JaWi <j.w.janssen@lxtreme.nl>
 
 	* util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
