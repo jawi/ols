@@ -21,8 +21,6 @@
 package nl.lxtreme.ols.util.swing.component;
 
 
-import java.util.*;
-
 import javax.swing.*;
 
 
@@ -51,8 +49,6 @@ public class JTextStatusBar extends JStatusBar
 
     this.statusText = new JLabel( " " );
     setMainLeftComponent( this.statusText );
-
-    addRightComponent( new JLabel( new Date().toString() ) );
 
     this.progressBar = new JProgressBar( SwingConstants.HORIZONTAL, 0, 100 );
     addRightComponent( this.progressBar );

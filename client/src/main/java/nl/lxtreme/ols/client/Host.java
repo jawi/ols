@@ -231,6 +231,8 @@ public final class Host implements ApplicationCallback
     if ( mainFrame != null )
     {
       mainFrame.setVisible( true );
+
+      this.controller.setStatus( "{0} v{1} ready ...", SHORT_NAME, getVersion() );
     }
 
     LOG.log( Level.INFO, "{0} v{1} started ...", new Object[] { SHORT_NAME, getVersion() } );

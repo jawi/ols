@@ -80,7 +80,7 @@ public class JStatusBar extends JPanel
   private static final long serialVersionUID = 1L;
 
   protected static final int HEIGHT = 23;
-  protected static final Insets INSETS = new Insets( 0, 2, 0, 2 );
+  protected static final Insets INSETS = new Insets( 0, 4, 0, 2 );
 
   private final JPanel contentPanel;
   private JComponent mainLeftComponent;

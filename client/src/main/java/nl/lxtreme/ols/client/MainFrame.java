@@ -418,14 +418,13 @@ public final class MainFrame extends JFrame implements Closeable
    */
   public void setStatus( final String aMessage, final Object... aMessageArgs )
   {
-    this.status.showProgressBar( false );
-
     String message = aMessage;
     if ( ( aMessageArgs != null ) && ( aMessageArgs.length > 0 ) )
     {
       message = MessageFormat.format( message, aMessageArgs );
     }
     this.status.setText( message );
+    this.status.setProgress( 0 );
   }
 
   /**
