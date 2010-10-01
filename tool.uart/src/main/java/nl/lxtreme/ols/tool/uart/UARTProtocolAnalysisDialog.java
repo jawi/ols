@@ -87,6 +87,8 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     super( aOwner, aName );
 
     initDialog();
+
+    setLocationRelativeTo( getOwner() );
   }
 
   // METHODS

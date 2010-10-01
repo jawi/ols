@@ -287,6 +287,8 @@ public class MeasurementDialog extends BaseToolDialog
     this.updateTimer = new Timer( 500, new TimerActionListener() );
     this.updateTimer.setRepeats( true );
     this.updateTimer.start();
+
+    setLocationRelativeTo( getOwner() );
   }
 
   /**

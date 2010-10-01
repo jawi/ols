@@ -85,6 +85,8 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     super( aOwner, aName );
 
     initDialog();
+
+    setLocationRelativeTo( getOwner() );
   }
 
   /**
