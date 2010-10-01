@@ -57,6 +57,8 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
     super( aOwner, aName );
 
     initDialog();
+
+    setLocationRelativeTo( getOwner() );
   }
 
   // METHODS

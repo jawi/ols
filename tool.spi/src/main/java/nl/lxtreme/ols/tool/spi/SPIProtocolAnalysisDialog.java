@@ -92,6 +92,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     super( aOwner, aName );
 
     initDialog();
+
+    setLocationRelativeTo( getOwner() );
   }
 
   // METHODS

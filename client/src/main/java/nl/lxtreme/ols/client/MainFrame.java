@@ -186,6 +186,10 @@ public final class MainFrame extends JFrame implements Closeable
   {
     super( Host.FULL_NAME );
 
+    // Let the host platform determine where this diagram should be displayed;
+    // gives it more or less a native feel...
+    setLocationByPlatform( true );
+
     this.controller = aController;
 
     this.noDevicesItem = new JMenuItem( "No Devices." );

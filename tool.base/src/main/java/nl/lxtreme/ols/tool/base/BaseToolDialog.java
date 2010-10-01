@@ -72,7 +72,6 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   protected BaseToolDialog( final Window aOwner, final String aTitle, final ModalityType aModalityType )
   {
     super( aOwner, aTitle, aModalityType );
-    setLocationRelativeTo( aOwner );
   }
 
   // METHODS
