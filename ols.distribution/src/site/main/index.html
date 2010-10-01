@@ -16,73 +16,176 @@
     })();
 /* ]]> */
 </script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.toc-0.1.js"></script>
+<script type="text/javascript" src="js/reflection.js"></script>
+<script type="text/javascript" src="js/galleria.js"></script>
+<script type="text/javascript" src="js/dots/galleria.dots.js"></script>
 <style type="text/css">
 body {
-  font-family: sans-serif;
-  font-size: 10pt;
-	width: 50em;
+  padding: 0em 0em 0em 20em;
+  margin: 0;
+  width: 50em;
+  font-family: georgia,serif;
+  font-size: 12pt;
+}
+.title {
+  position: relative;
+  top: -30px;
+}
+.title h1 {
+  font-size: 2.13em;
+}
+.title h2 {
+  position: relative;
+  font-size: 1.1em;
+  top: -0.75em;
+}
+h3 {
+  margin-top: 2em;
+}
+ul {
+  list-style-type: circle;
+  list-style-position: inside;
+  padding-left: 0em;
+}
+ul li span {
+  color: gray;
+}
+a:visited {
+  color: blue;
+}
+#toc {
+  font-size: 0.9em;
+}
+#toc ul {
+  list-style-type: decimal;
+}
+#releases a {
+  margin-right: 1em;
 }
 .x-small {
   font-size: 8pt;
+}
+.right {
+  text-align: right;
 }
 </style>
 </head>
 
 <body>
-  <h1>OpenBench LogicSniffer</h1>
-  <h2>Alternative Java Client</h2>
+    <p class="logo"><img id="reflect" src="img/logo.png" /></p>
+    <div class="title">
+        <h1>Logic Sniffer</h1>
+        <h2>An alternative OLS client</h2>
+    </div>
 	<p>
-	  This page is quickly hacked up to provide some information on this project.
-		I'll update it in the upcoming days/weeks to provide more information and 
-		content. Please bear with me for a moment...
+	  Welcome to the project page of <em>Logic Sniffer</em> alternative Java client. This page will 
+	  provide some documentation and, of course, download links. 
 	</p>
-	<h3>Introduction</h3>
+	<h3>Table of contents</h3>
+	<div id="toc"></div>
+	<h3 class="content">Introduction</h3>
 	<p>
-	  The alternative OLS-client provides a client for the open source <a 
-		href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">Open Bench Logic Sniffer</a>
-		logic analyser developed and maintained by Dangerous Prototypes. 
-		<em>more information to come...</em>
+	  The alternative OLS-client provides a client for the open source <a
+	  href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">Open Bench Logic Sniffer</a> logic 
+	  analyser developed and maintained by <a href="http://dangerousprototypes.com/">Dangerous Prototypes</a>.
 	</p>
-	<h3>Screenshots</h3>
-  <p>
-	  Screenshots of the 0.8.3 release can be found on <a href="screenshots">this location</a>. 
-		You can mail me your own screenshots through the mail address found on the GitHub
-		repository (see below).
-	</p>
-  <h3>Releases</h3>
-  <p>
-    Current release: <strong><a href="ols-0.8.5.tar.gz">0.8.5</a></strong>.
-  </p>
-  <ul>
-	  <li><a href="ols-0.7.0.tar.gz">ols-0.7.0.tar.gz</a> (09-Jul-2010 23:37, 1.3M)</li>
-	  <li><a href="ols-0.8.0.tar.gz">ols-0.8.0.tar.gz</a> (24-Jul-2010 19:18, 1.4M)</li>
-	  <li><a href="ols-0.8.1.tar.gz">ols-0.8.1.tar.gz</a> (07-Aug-2010 12:31, 1.4M)</li>
-	  <li><a href="ols-0.8.2.tar.gz">ols-0.8.2.tar.gz</a> (22-Aug-2010 21:57, 1.5M)</li>
-	  <li><a href="ols-0.8.3.tar.gz">ols-0.8.3.tar.gz</a> (26-Aug-2010 21:36, 1.5M)</li>
-	  <li><a href="ols-0.8.4.tar.gz">ols-0.8.4.tar.gz</a> (09-Sep-2010 17:24, 1.5M)</li>
-      <li><a href="ols-0.8.5.tar.gz">ols-0.8.5.tar.gz</a> (01-Oct-2010 18:09, 2.1M)</li>
-  </ul>
-	<h3>Development</h3>
 	<p>
-	  Development of this project is shared through <a 
-		href="http://www.github.com">GitHub</a>, and the main repository can be found on
-		<a href="http://github.com/jawi/ols">http://github.com/jawi/ols</a>.
+	  The guys of <a href="http://dangerousprototypes.com/">Dangerous Prototypes</a> created a cheap custom 
+	  implementation that is compatible to the original <a href="http://www.sump.org/projects/analyzer/">SUMP 
+	  client</a> (developed by Michael Poppitz).<br/> 
+	  While the original SUMP client was feature complete and working quite well, it was no longer actively 
+	  developed. Being Open Source, I immediately started hacking and tweaking it. The result? <em>An alternative SUMP 
+	  client</em>.
 	</p>
-	<h3>Changelog</h3>
+	<h3 class="content">Features</h3>
 	<p>
-	  The most recent list of changes can always be found on: <a href="http://github.com/jawi/ols/blob/master/ChangeLog">GitHub</a>.
+	  The alternative Java client provides the following features:
 	</p>
-	<h3>Tip jar</h3>
+	<ul>
+	  <li><em>Cross platform</em>: the client runs on Mac OSX (64-bit), Windows (32/64 bit) and Linux (32/64 bit);</li>
+	  <li><em>Simple installation</em>: no longer fiddling with the serial libraries (RXTX) in order to get the client
+	  up and running. The client embeds the suitable serial libraries for several operating systems;</li>
+	  <li><em>Pluggable</em>: adding new functionality on the fly is possible and as easy as copying files to a single
+	  directory;</li>
+	  <li><em>Look good, and feel good</em>: the client has a good look and feel and aims at being as usable as 
+	  possible.</li>
+	</ul>
+	<h3 class="content">Documentation</h3>
 	<p>
-	  This project is open source, and written in my sparse free time. You can use it 
-		free of charge and without any fees. However, if you really want to, you can 
-		show your appreciation on this project by clicking the following link:
-		<a class="FlattrButton" style="display:none;" rev="flattr;button:compact;"
-		href="http://www.lxtreme.nl/ols/"></a>.
+	  <em>TO DO...</em>
 	</p>
+    <h3 class="content">Download</h3>
+    <p>
+      The current release of Logic Sniffer is <strong><a href="ols-0.8.5.tar.gz">0.8.5</a></strong>.
+      Older releases, for historical reasons:
+    </p>
+    <ul id="releases">
+      <li><a href="ols-0.8.5.tar.gz">ols-0.8.5.tar.gz</a> <span>released <em>October 1st, 2010</em>, 2.1M;</span></li>
+	  <li><a href="ols-0.8.4.tar.gz">ols-0.8.4.tar.gz</a> <span>released <em>September 9th 2010</em>, 1.5M;</span></li>
+	  <li><a href="ols-0.8.3.tar.gz">ols-0.8.3.tar.gz</a> <span>released <em>August 26th 2010</em>, 1.5M;</span></li>
+	  <li><a href="ols-0.8.2.tar.gz">ols-0.8.2.tar.gz</a> <span>released <em>August 22nd 2010</em>, 1.5M;</span></li>
+	  <li><a href="ols-0.8.1.tar.gz">ols-0.8.1.tar.gz</a> <span>released <em>August 07th 2010</em>, 1.4M;</span></li>
+	  <li><a href="ols-0.8.0.tar.gz">ols-0.8.0.tar.gz</a> <span>released <em>August 24th 2010</em>, 1.4M;</span></li>
+	  <li><a href="ols-0.7.0.tar.gz">ols-0.7.0.tar.gz</a> <span>released <em>August 9th 2010</em>, 1.3M.</span></li>
+    </ul>
+    <h3 class="content">Changelog</h3>
+    <p>
+      The most recent list of changes can always be found on <a href="http://github.com/jawi/ols/blob/master/ChangeLog">GitHub</a>.
+    </p>
+	<h3 class="content">Screenshots</h3>
+    <p>
+      Screenshots of the 0.8.5 release, running on Mac OSX (10.6, 64-bit):
+    </p>
+    <ul class="screenshots">
+      <li><a href="img/main_window_scope.png"><img src="img/main_window_scope.png" alt="Main window (light theme) with scope." /></a></li>
+      <li><a href="img/main_window_tooltip.png"><img src="img/main_window_tooltip.png" alt="Main window (light theme) with measure tooltip." /></a></li>
+      <li><a href="img/main_window.png"><img src="img/main_window.png" alt="Main window (dark theme)." /></a></li>
+      <li><a href="img/measure_tool.png"><img src="img/measure_tool.png" alt="Measurement tool." /></a></li>
+      <li><a href="img/ols_config_general.png"><img src="img/ols_config_general.png" alt="OLS general settings." /></a></li>
+      <li><a href="img/ols_config_triggers.png"><img src="img/ols_config_triggers.png" alt="OLS trigger settings." /></a></li>
+      <li><a href="img/preferences.png"><img src="img/preferences.png" alt="General preferences." /></a></li>
+    </ul>
+    <h3 class="content">Development</h3>
+    <p>
+      Currently, the project is developed by me, Jan Willem. If you want to contribute, drop me <a 
+      href="http://www.lxtreme.nl/index.pl/main/contact">a line</a>.
+    </p>
+    <p>
+      All development of this project is shared through <a 
+        href="http://www.github.com">GitHub</a>, and the main repository can be found on
+        <tt><a href="http://github.com/jawi/ols">http://github.com/jawi/ols</a></tt>.
+    </p>
+    <h3>License</h3>
+    <p>
+      The alternative Java client is developed and released under the <em>General Public License, version 2</em>.
+      For the license details, see the full <a href="http://www.gnu.org/licenses/gpl-2.0-standalone.html">license 
+      text</a>.
+    </p>
+    <h3 class="content">Links</h3>
+    <ul>
+      <li><a href="http://www.sump.org/projects/analyzer/">http://www.sump.org/projects/analyzer/</a> <span>the original SUMP hardware and client</span>;</li>
+      <li><a href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer</a>;</li>
+      <li><a href="http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/">http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/</a>.</li>
+    </ul>
+    <h3 class="content">Tip jar</h3>
+    <p>
+      This project is open source, and written in my (sparse) free time. You can use it free of charge 
+      and without any fees. However, if you want to, you can show your appreciation on this project by 
+      clicking the following link: <a class="FlattrButton" style="display:none;" rev="flattr;button:compact;"
+      href="http://www.lxtreme.nl/ols/" title="flatter link"></a>.
+    </p>
 	<hr/>
-	<p class="x-small">
+	<p class="x-small right">
 	  &copy; Copyright 2010 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
 	</p>
+	<script type="text/javascript">
+/* <![CDATA[ */
+    $('.screenshots').galleria({transition: 'fade', popup_links: true});
+    $("#reflect").reflect({});
+    $.toc('h3.content').prependTo('#toc');
+/* ]]> */
+</script>
 </body>
 </html>
