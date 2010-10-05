@@ -32,6 +32,7 @@ import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.action.*;
@@ -171,6 +172,22 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     if ( this.currentDevCtrl == null )
     {
       this.currentDevCtrl = aDeviceController;
+    }
+
+    updateActions();
+  }
+
+  /**
+   * Adds the given exporter to this controller.
+   * 
+   * @param aExporter
+   *          the exporter to add, cannot be <code>null</code>.
+   */
+  public void addExporter( final Exporter aExporter )
+  {
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.addExportMenuItem( aExporter.getName() );
     }
 
     updateActions();
@@ -347,6 +364,24 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Exports the current diagram to the given exporter.
+   * 
+   * @param aExporter
+   *          the exporter to export to, cannot be <code>null</code>.
+   * @param aWriter
+   *          the writer to write the export to, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems.
+   */
+  public void exportTo( final Exporter aExporter, final FileWriter aWriter ) throws IOException
+  {
+    if ( this.mainFrame != null )
+    {
+      aExporter.export( this.dataContainer, aWriter );
+    }
+  }
+
+  /**
    * @see nl.lxtreme.ols.client.ActionProvider#getAction(java.lang.String)
    */
   public Action getAction( final String aID )
@@ -397,6 +432,79 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       }
     }
     return tools;
+  }
+
+  /**
+   * Returns the exporter with the given name.
+   * 
+   * @param aName
+   *          the name of the exporter to return, cannot be <code>null</code>.
+   * @return the exporter with the given name, can be <code>null</code> if no
+   *         such exporter is found.
+   * @throws IllegalArgumentException
+   *           in case the given name was <code>null</code> or empty.
+   */
+  public Exporter getExporter( final String aName ) throws IllegalArgumentException
+  {
+    if ( ( aName == null ) || aName.trim().isEmpty() )
+    {
+      throw new IllegalArgumentException( "Name cannot be null or empty!" );
+    }
+
+    try
+    {
+      final ServiceReference[] serviceRefs = this.bundleContext
+          .getAllServiceReferences( Exporter.class.getName(), null );
+      final int count = ( serviceRefs == null ) ? 0 : serviceRefs.length;
+
+      for ( int i = 0; i < count; i++ )
+      {
+        final Exporter exporter = ( Exporter )this.bundleContext.getService( serviceRefs[i] );
+
+        if ( aName.equals( exporter.getName() ) )
+        {
+          return exporter;
+        }
+      }
+
+      return null;
+    }
+    catch ( InvalidSyntaxException exception )
+    {
+      throw new RuntimeException( "getExporter failed!", exception );
+    }
+  }
+
+  /**
+   * Returns the names of all current available exporters.
+   * 
+   * @return an array of exporter names, never <code>null</code>, but can be
+   *         empty.
+   */
+  public String[] getExporterNames()
+  {
+    try
+    {
+      final ServiceReference[] serviceRefs = this.bundleContext
+          .getAllServiceReferences( Exporter.class.getName(), null );
+      final int count = serviceRefs == null ? 0 : serviceRefs.length;
+
+      final String[] result = new String[count];
+
+      for ( int i = 0; i < count; i++ )
+      {
+        final Exporter exporter = ( Exporter )this.bundleContext.getService( serviceRefs[i] );
+
+        result[i] = exporter.getName();
+        this.bundleContext.ungetService( serviceRefs[i] );
+      }
+
+      return result;
+    }
+    catch ( InvalidSyntaxException exception )
+    {
+      throw new RuntimeException( "getAllExporterNames failed!", exception );
+    }
   }
 
   /**
@@ -559,6 +667,22 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     if ( this.mainFrame != null )
     {
       this.mainFrame.removeDeviceMenuItem( aDeviceController.getName() );
+    }
+
+    updateActions();
+  }
+
+  /**
+   * Removes the given exporter from the list of exporters.
+   * 
+   * @param aExporter
+   *          the exporter to remove, cannot be <code>null</code>.
+   */
+  public void removeExporter( final Exporter aExporter )
+  {
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.removeExportMenuItem( aExporter.getName() );
     }
 
     updateActions();
@@ -787,6 +911,22 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Sets a status message.
+   * 
+   * @param aMessage
+   *          the message to set;
+   * @param aMessageArgs
+   *          the (optional) message arguments.
+   */
+  public final void setStatus( final String aMessage, final Object... aMessageArgs )
+  {
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.setStatus( aMessage, aMessageArgs );
+    }
+  }
+
+  /**
    * Shows the "about OLS" dialog on screen. the parent window to use, can be
    * <code>null</code>.
    */
@@ -957,22 +1097,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   final MainFrame getMainFrame()
   {
     return this.mainFrame;
-  }
-
-  /**
-   * Sets a status message.
-   * 
-   * @param aMessage
-   *          the message to set;
-   * @param aMessageArgs
-   *          the (optional) message arguments.
-   */
-  final void setStatus( final String aMessage, final Object... aMessageArgs )
-  {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.setStatus( aMessage, aMessageArgs );
-    }
   }
 
   /**

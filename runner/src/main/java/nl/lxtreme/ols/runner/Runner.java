@@ -58,7 +58,7 @@ public final class Runner
     activators.add( this.hostActivator );
 
     config.put( FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, activators );
-    config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.eawt" );
+    config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.eawt,javax.media.jai" );
     config.put( AutoProcessor.AUTO_DEPLOY_ACTION_PROPERY, "install,start" );
     config.put( AutoProcessor.AUTO_DEPLOY_DIR_PROPERY, pluginDir );
     if ( Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) ) )

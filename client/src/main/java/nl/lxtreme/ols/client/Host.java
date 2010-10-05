@@ -53,6 +53,7 @@ public final class Host implements ApplicationCallback
   private DeviceControllerTracker deviceControllerTracker;
   private MenuTracker menuTracker;
   private PreferenceServiceTracker preferencesServiceTracker;
+  private ExporterTracker exporterTracker;
   private ToolTracker toolTracker;
   private ClientController controller;
 
@@ -200,6 +201,7 @@ public final class Host implements ApplicationCallback
 
     this.preferencesServiceTracker = new PreferenceServiceTracker( this.context, this.controller );
     this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.controller );
+    this.exporterTracker = new ExporterTracker( this.context, this.controller );
     this.menuTracker = new MenuTracker( this.context, mainFrame.getJMenuBar() );
     this.toolTracker = new ToolTracker( this.context, this.controller );
 
@@ -224,6 +226,7 @@ public final class Host implements ApplicationCallback
   {
     this.preferencesServiceTracker.open();
     this.deviceControllerTracker.open();
+    this.exporterTracker.open();
     this.toolTracker.open();
     this.menuTracker.open();
 
@@ -257,6 +260,14 @@ public final class Host implements ApplicationCallback
     this.preferencesServiceTracker.close();
 
     LOG.log( Level.INFO, "{0} stopped ...", SHORT_NAME );
+  }
+
+  /**
+   * @return the controller
+   */
+  final ClientController getController()
+  {
+    return this.controller;
   }
 }
 

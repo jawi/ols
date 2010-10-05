@@ -23,6 +23,9 @@ package nl.lxtreme.ols.client;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.data.export.*;
+import nl.lxtreme.ols.client.diagram.*;
+import nl.lxtreme.ols.client.diagram.export.*;
 import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
@@ -33,6 +36,62 @@ import org.osgi.framework.*;
  */
 public class Activator implements BundleActivator
 {
+  // INNER TYPES
+
+  /**
+   *
+   */
+  static class ImageExporterServiceFactory implements ServiceFactory
+  {
+    // VARIABLES
+
+    private final Host host;
+
+    // CONSTRUCTORS
+
+    /**
+     * 
+     */
+    public ImageExporterServiceFactory( final Host aHost )
+    {
+      this.host = aHost;
+    }
+
+    // METHODS
+
+    /**
+     * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle,
+     *      org.osgi.framework.ServiceRegistration)
+     */
+    @Override
+    public Object getService( final Bundle aBundle, final ServiceRegistration aRegistration )
+    {
+      return createImageExporterService();
+    }
+
+    /**
+     * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle,
+     *      org.osgi.framework.ServiceRegistration, java.lang.Object)
+     */
+    @Override
+    public void ungetService( final Bundle aBundle, final ServiceRegistration aRegistration, final Object aService )
+    {
+      // NO-op
+    }
+
+    /**
+     * @return
+     */
+    private ImageExporter createImageExporterService()
+    {
+      final ClientController controller = this.host.getController();
+      final Diagram diagram = controller.getMainFrame().getDiagram();
+      final JComponent contentPane = ( JComponent )diagram.getParent().getParent();
+
+      return new ImageExporter( contentPane );
+    }
+  }
+
   // VARIABLES
 
   private Host host = null;
@@ -47,6 +106,9 @@ public class Activator implements BundleActivator
   {
     this.host = new Host( aContext );
 
+    // Register the image exporter as service...
+    aContext.registerService( Exporter.class.getName(), new ImageExporterServiceFactory( this.host ), null );
+
     // This has to be done *before* any other Swing related code is executed
     // so this also means the #invokeLater call done below...
     HostUtils.initOSSpecifics( Host.getShortName(), this.host );
@@ -59,7 +121,6 @@ public class Activator implements BundleActivator
         Activator.this.host.initialize();
       }
     };
-    SwingUtilities.invokeAndWait( initTask );
 
     final Runnable startTask = new Runnable()
     {
@@ -69,6 +130,9 @@ public class Activator implements BundleActivator
         Activator.this.host.start();
       }
     };
+
+    SwingUtilities.invokeAndWait( initTask );
+
     SwingUtilities.invokeLater( startTask );
   }
 
@@ -98,7 +162,6 @@ public class Activator implements BundleActivator
     };
     SwingUtilities.invokeAndWait( shutdownTask );
   }
-
 }
 
 /* EOF */

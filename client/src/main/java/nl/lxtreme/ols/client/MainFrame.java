@@ -167,7 +167,9 @@ public final class MainFrame extends JFrame implements Closeable
   private JMenu deviceMenu;
   private JMenu toolsMenu;
   private JMenu windowMenu;
+  private JMenu exportMenu;
 
+  private final JMenuItem noExportersItem;
   private final JMenuItem noDevicesItem;
   private final JMenuItem noToolsItem;
   private final ButtonGroup deviceGroup;
@@ -191,6 +193,9 @@ public final class MainFrame extends JFrame implements Closeable
     setLocationByPlatform( true );
 
     this.controller = aController;
+
+    this.noExportersItem = new JMenuItem( "No Exporters." );
+    this.noExportersItem.setEnabled( false );
 
     this.noDevicesItem = new JMenuItem( "No Devices." );
     this.noDevicesItem.setEnabled( false );
@@ -247,7 +252,23 @@ public final class MainFrame extends JFrame implements Closeable
     updateDeviceMenuState( aDeviceName, menuItem, true /* aAdded */);
   }
 
-  // METHODS
+  /**
+   * @param aExporterName
+   */
+  public final void addExportMenuItem( final String aExporterName )
+  {
+    // We're adding one, so, there's at least one device available...
+    this.exportMenu.remove( this.noExportersItem );
+
+    final JMenuItem menuItem = createExporterMenuItem( aExporterName );
+    // Determine where in the menu we should add the menu item, this way, we
+    // can make the menu appear consistent...
+    final int idx = determineExporterMenuItemIndex( menuItem );
+
+    this.exportMenu.add( menuItem, idx );
+
+    updateExportMenuState( aExporterName, menuItem, true /* aAdded */);
+  }
 
   /**
    * @param aTool
@@ -288,6 +309,16 @@ public final class MainFrame extends JFrame implements Closeable
   public long convertMousePositionToSampleIndex( final Point aLocation )
   {
     return this.diagram.convertPointToSampleIndex( aLocation );
+  }
+
+  /**
+   * Returns the current diagram instance.
+   * 
+   * @return a diagram instance, can be <code>null</code>.
+   */
+  public final Diagram getDiagram()
+  {
+    return this.diagram;
   }
 
   /**
@@ -353,6 +384,30 @@ public final class MainFrame extends JFrame implements Closeable
     }
 
     updateDeviceMenuState( aDeviceName, menuItem, false /* aAdded */);
+  }
+
+  /**
+   * @param aTool
+   */
+  public final void removeExportMenuItem( final String aExporterName )
+  {
+    JMenuItem menuItem = null;
+    for ( int i = 0; i < this.exportMenu.getItemCount(); i++ )
+    {
+      final JMenuItem comp = this.exportMenu.getItem( i );
+      if ( aExporterName.equals( comp.getName() ) )
+      {
+        menuItem = comp;
+        break;
+      }
+    }
+
+    if ( menuItem != null )
+    {
+      this.exportMenu.remove( menuItem );
+    }
+
+    updateToolMenuState( aExporterName, menuItem, false /* aAdded */);
   }
 
   /**
@@ -505,6 +560,17 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
+   * @param aExporterName
+   * @return
+   */
+  private JMenuItem createExporterMenuItem( final String aExporterName )
+  {
+    final JMenuItem menuItem = new JMenuItem( new ExportAction( this.controller, aExporterName ) );
+    menuItem.setName( aExporterName );
+    return menuItem;
+  }
+
+  /**
    * Creates the menu bar with all menu's and the accompanying toolbar.
    * 
    * @return the toolbar, never <code>null</code>.
@@ -518,8 +584,13 @@ public final class MainFrame extends JFrame implements Closeable
     fileMenu.setMnemonic( 'F' );
     bar.add( fileMenu );
 
+    this.exportMenu = new JMenu( "Export ..." );
+    this.exportMenu.setMnemonic( 'e' );
+
     fileMenu.add( this.controller.getAction( OpenProjectAction.ID ) );
     fileMenu.add( this.controller.getAction( SaveProjectAction.ID ) );
+    fileMenu.addSeparator();
+    fileMenu.add( this.exportMenu );
     fileMenu.addSeparator();
     fileMenu.add( this.controller.getAction( OpenDataFileAction.ID ) );
     fileMenu.add( this.controller.getAction( SaveDataFileAction.ID ) );
@@ -641,6 +712,27 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
+   * @param aMenuItem
+   * @return
+   */
+  private int determineExporterMenuItemIndex( final JMenuItem aMenuItem )
+  {
+    final String newMenuItem = aMenuItem.getText();
+
+    int idx = -1;
+    for ( int i = 0; ( idx < 0 ) && ( i < this.exportMenu.getItemCount() ); i++ )
+    {
+      final String nameA = this.exportMenu.getItem( i ).getText();
+      final int comparison = newMenuItem.compareTo( nameA );
+      if ( comparison < 0 )
+      {
+        idx = i;
+      }
+    }
+    return idx;
+  }
+
+  /**
    * Determines the index in the menu where the given menu item should be
    * inserted.
    * 
@@ -692,6 +784,26 @@ public final class MainFrame extends JFrame implements Closeable
 
     this.deviceMenu.revalidate();
     this.deviceMenu.repaint();
+  }
+
+  /**
+   * @param aExporterName
+   * @param aMenuItem
+   * @param aB
+   */
+  private void updateExportMenuState( final String aExporterName, final JMenuItem aMenuItem, final boolean aAdded )
+  {
+    if ( !aAdded )
+    {
+      if ( this.exportMenu.getItemCount() == 0 )
+      {
+        // We've removed the last one...
+        this.exportMenu.add( this.noExportersItem );
+      }
+    }
+
+    this.exportMenu.revalidate();
+    this.exportMenu.repaint();
   }
 
   /**
