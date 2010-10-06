@@ -84,6 +84,17 @@ public class DisplayUtilsTest
     assertEquals( "0.000 s", DisplayUtils.displayTime( 1.0e-16 ) );
   }
 
+  /**
+   * Test method for
+   * {@link nl.lxtreme.ols.util.DisplayUtils#displayTime(double,int)}.
+   */
+  @Test
+  public void testDisplayTimeWithVariablePrecision()
+  {
+    assertEquals( "1000.0 s", DisplayUtils.displayTime( 1.0e3, 1, " " ) );
+    assertEquals( "1s", DisplayUtils.displayTime( 1.0, 0, "" ) );
+    assertEquals( "1.000000  ms", DisplayUtils.displayTime( 1.0e-3, 6, "  " ) );
+  }
 }
 
 /* EOF */

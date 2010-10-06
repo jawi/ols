@@ -134,7 +134,7 @@ public final class DisplayUtils
 
   /**
    * Converts a given time (in seconds) to something more readable for the user,
-   * like "1.000 ms".
+   * like "1.000 ms" (always a precision of three).
    * 
    * @param aTime
    *          the time (in seconds) to convert to a given display value.
@@ -143,9 +143,34 @@ public final class DisplayUtils
    */
   public static String displayTime( final double aTime )
   {
-    final String[] unitStrs = { "s", "ms", "\u03BCs", "ns", "ps" }; // \u03BC ==
-    // Greek mu
-    // character
+    return displayTime( aTime, 3, " " );
+  }
+
+  /**
+   * Converts a given time (in seconds) to something more readable for the user,
+   * like "1.000 ms".
+   * 
+   * @param aTime
+   *          the time (in seconds) to convert to a given display value;
+   * @param aPrecision
+   *          the precision of the returned string (decimals after the
+   *          decimal-separator), should be >= 0 && <= 6.
+   * @return the display representation of the given time, never
+   *         <code>null</code>.
+   */
+  public static String displayTime( final double aTime, final int aPrecision, final String aSeparator )
+  {
+    if ( ( aPrecision < 0 ) || ( aPrecision > 6 ) )
+    {
+      throw new IllegalArgumentException( "Precision cannot be less than zero or greater than six." );
+    }
+    if ( aSeparator == null )
+    {
+      throw new IllegalArgumentException( "Separator cannot be null!" );
+    }
+
+    // \u03BC == Greek mu character
+    final String[] unitStrs = { "s", "ms", "\u03BCs", "ns", "ps" };
     final double[] unitVals = { 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12 };
 
     double absTime = Math.abs( aTime );
@@ -168,7 +193,8 @@ public final class DisplayUtils
       LOG.fine( "aTime = " + aTime + " -> " + unitVals[i] + " " + unitStrs[i] );
     }
 
-    return String.format( "%.3f %s", aTime / unitVals[i], unitStrs[i] );
+    final String format = "%." + aPrecision + "f" + aSeparator + "%s";
+    return String.format( format, aTime / unitVals[i], unitStrs[i] );
   }
 
   /**
