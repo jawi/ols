@@ -121,6 +121,24 @@ public class ImageExporter implements Exporter
    */
   private Dimension getExportSize( final JComponent aDiagram )
   {
+    Dimension dims = getImageSize( aDiagram );
+
+    final int width = Math.min( dims.width, MAX_WIDTH );
+    final int height = Math.min( dims.height, MAX_HEIGHT );
+
+    return new Dimension( width, height );
+  }
+
+  /**
+   * Returns the export image size for the given component.
+   * 
+   * @param aDiagram
+   *          the component to get the export image size for, cannot be
+   *          <code>null</code>.
+   * @return a export image size, never <code>null</code>.
+   */
+  private Dimension getImageSize( final JComponent aDiagram )
+  {
     if ( aDiagram instanceof JScrollPane )
     {
       final JScrollPane scrollpane = ( JScrollPane )aDiagram;
@@ -129,8 +147,8 @@ public class ImageExporter implements Exporter
       final Dimension rowHeaderSize = scrollpane.getRowHeader().getViewSize();
       final Dimension columnHeaderSize = scrollpane.getColumnHeader().getViewSize();
 
-      final int width = Math.min( viewSize.width + rowHeaderSize.width, MAX_WIDTH );
-      final int height = Math.min( viewSize.height + columnHeaderSize.height, MAX_HEIGHT );
+      final int width = viewSize.width + rowHeaderSize.width;
+      final int height = viewSize.height + columnHeaderSize.height;
 
       return new Dimension( width, height );
     }
