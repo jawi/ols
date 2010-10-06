@@ -21,7 +21,10 @@
 package nl.lxtreme.ols.export.vcd;
 
 
+import static nl.lxtreme.ols.export.vcd.ValueChangeDumpHelper.*;
 import java.io.*;
+import java.text.*;
+import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.export.*;
@@ -33,6 +36,10 @@ import nl.lxtreme.ols.api.data.export.*;
  */
 public class ValueChangeDumpExporter implements Exporter
 {
+  // CONSTANTS
+
+  private static final String VERSION = "VCD exporter v1";
+
   // METHODS
 
   /**
@@ -42,8 +49,36 @@ public class ValueChangeDumpExporter implements Exporter
   @Override
   public void export( final DataContainer aContainer, final Writer aWriter ) throws IOException
   {
-    // TODO Auto-generated method stub
-    System.out.println( "Export to VCD: " + aContainer );
+    final PrintWriter writer = new PrintWriter( aWriter );
+    try
+    {
+      final double timescale = getTimebase( aContainer.getSampleRate() );
+
+      writeDeclaration( writer, "date", DateFormat.getDateTimeInstance().format( new Date() ) );
+      writeDeclaration( writer, "version", VERSION );
+      writeDeclaration( writer, "timescale", getTimescale( timescale ) );
+      writeDeclaration( writer, "scope", "module logic" );
+      writer.println( "$var wire 8 # data $end" );
+      writer.println( "$var wire 1 $ data_valid $end" );
+      writer.println( "$var wire 1 % en $end" );
+      writer.println( "$var wire 1 & rx_en $end" );
+      writer.println( "$var wire 1 ' tx_en $end" );
+      writer.println( "$var wire 1 ( empty $end" );
+      writer.println( "$var wire 1 ) underrun $end" );
+      writeDeclaration( writer, "upscope" );
+      writeDeclaration( writer, "enddefinitions" );
+      writeOpenDeclaration( writer, "dumpvars" );
+      writer.println( "bxxxxxxxx #\n" + "x$\n" + "0%\n" + "x&\n" + "x'\n" + "1(\n" + "0)\n" );
+      writeCloseDeclaration( writer );
+      writeTime( writer, 0 );
+      writer.println( "b10000001 #\n" + "0$\n" + "1%\n" + "0&\n" + "1'\n" + "0(\n" + "0)\n" );
+      writeTime( writer, 2211 );
+      writer.println( "0'\n" + "#2296\n" + "b0 #\n" + "1$\n" + "#2302\n" + "0$\n" + "#2303\n" );
+    }
+    finally
+    {
+      writer.flush();
+    }
   }
 
   /**
