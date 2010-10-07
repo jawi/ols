@@ -37,7 +37,7 @@
         <include>LICENSE*</include>
         <include>run.*</include>
       </includes>
-      <outputDirectory>.</outputDirectory>
+      <outputDirectory>/</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
   </fileSet>
   </fileSets>
