@@ -247,12 +247,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
         close();
       }
     }
-    else if ( l.equals( "Close" ) )
-    {
-      this.dialogResult = false;
-
-      close();
-    }
     else
     {
       updateFields();
@@ -355,6 +349,10 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    */
   public boolean showDialog()
   {
+    // make sure we've got a predictable result; otherwise it causes
+    // (re)captures successive uses; Thanks to erik for reporting this issue.
+    this.dialogResult = false;
+
     setVisible( true );
     return this.dialogResult;
   }
