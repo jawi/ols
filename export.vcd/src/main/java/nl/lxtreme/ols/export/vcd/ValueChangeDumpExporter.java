@@ -23,11 +23,10 @@ package nl.lxtreme.ols.export.vcd;
 
 import static nl.lxtreme.ols.export.vcd.ValueChangeDumpHelper.*;
 import java.io.*;
-import java.text.*;
-import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.export.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -54,26 +53,9 @@ public class ValueChangeDumpExporter implements Exporter
     {
       final double timescale = getTimebase( aContainer.getSampleRate() );
 
-      writeDeclaration( writer, "date", DateFormat.getDateTimeInstance().format( new Date() ) );
-      writeDeclaration( writer, "version", VERSION );
-      writeDeclaration( writer, "timescale", getTimescale( timescale ) );
-      writeDeclaration( writer, "scope", "module logic" );
-      writer.println( "$var wire 8 # data $end" );
-      writer.println( "$var wire 1 $ data_valid $end" );
-      writer.println( "$var wire 1 % en $end" );
-      writer.println( "$var wire 1 & rx_en $end" );
-      writer.println( "$var wire 1 ' tx_en $end" );
-      writer.println( "$var wire 1 ( empty $end" );
-      writer.println( "$var wire 1 ) underrun $end" );
-      writeDeclaration( writer, "upscope" );
-      writeDeclaration( writer, "enddefinitions" );
-      writeOpenDeclaration( writer, "dumpvars" );
-      writer.println( "bxxxxxxxx #\n" + "x$\n" + "0%\n" + "x&\n" + "x'\n" + "1(\n" + "0)\n" );
-      writeCloseDeclaration( writer );
-      writeTime( writer, 0 );
-      writer.println( "b10000001 #\n" + "0$\n" + "1%\n" + "0&\n" + "1'\n" + "0(\n" + "0)\n" );
-      writeTime( writer, 2211 );
-      writer.println( "0'\n" + "#2296\n" + "b0 #\n" + "1$\n" + "#2302\n" + "0$\n" + "#2303\n" );
+      writePreamble( writer, aContainer, timescale );
+      writeVariableDump( writer, aContainer );
+      writeDataDump( writer, aContainer, timescale );
     }
     finally
     {
@@ -97,5 +79,93 @@ public class ValueChangeDumpExporter implements Exporter
   public String getName()
   {
     return "Value Change Dump";
+  }
+
+  private void writeDataDump( final PrintWriter aWriter, final DataContainer aContainer, final double aTimebase )
+  {
+    final int[] values = aContainer.getValues();
+    final long[] timestamps = aContainer.getTimestamps();
+    final int channelCount = aContainer.getChannels();
+
+    for ( int i = 0, size = values.length; i < size; i++ )
+    {
+      final int value = values[i];
+
+      long timestamp = timestamps[i];
+      final int time = ( int )( ( timestamp / ( double )aContainer.getSampleRate() ) / aTimebase );
+
+      writeTime( aWriter, time );
+      writeVariableData( aWriter, value, channelCount );
+    }
+  }
+
+  /**
+   * @param aWriter
+   * @param aContainer
+   * @param aTimescale
+   */
+  private void writePreamble( final PrintWriter aWriter, final DataContainer aContainer, final double aTimescale )
+  {
+    writeDate( aWriter );
+    writeDeclaration( aWriter, "version", VERSION );
+    writeTimescale( aWriter, aTimescale );
+    writeDeclaration( aWriter, "scope", "module logic" );
+    writeVariableDefinitions( aWriter, aContainer );
+    writeDeclaration( aWriter, "upscope" );
+    writeDeclaration( aWriter, "enddefinitions" );
+  }
+
+  /**
+   * @param aWriter
+   * @param aValue
+   * @param aChannelCount
+   */
+  private void writeVariableData( final PrintWriter aWriter, final int aValue, final int aChannelCount )
+  {
+    int value = aValue;
+    for ( int i = 0; i < aChannelCount; i++ )
+    {
+      final char id = ( char )( '#' + i );
+      aWriter.printf( "%d%c", ( value & 1 ), id ).println();
+      value >>= 1;
+    }
+  }
+
+  /**
+   * Writes down all variable definitions.
+   * 
+   * @param aWriter
+   *          the print writer to write to, cannot be <code>null</code>;
+   * @param aContainer
+   *          the data container to take the channel information from, cannot be
+   *          <code>null</code>.
+   */
+  private void writeVariableDefinitions( final PrintWriter aWriter, final DataContainer aContainer )
+  {
+    for ( int i = 0; i < aContainer.getChannels(); i++ )
+    {
+      String label = aContainer.getChannelLabel( i );
+      if ( DisplayUtils.isEmpty( label ) )
+      {
+        label = "channel" + i;
+      }
+      writeVariable( aWriter, i, label );
+    }
+  }
+
+  /**
+   * @param aWriter
+   * @param aContainer
+   */
+  private void writeVariableDump( final PrintWriter aWriter, final DataContainer aContainer )
+  {
+    writeOpenDeclaration( aWriter, "dumpvars" );
+
+    for ( int i = 0; i < aContainer.getChannels(); i++ )
+    {
+      aWriter.printf( "x%c", ( '#' + i ) ).println();
+    }
+
+    writeCloseDeclaration( aWriter );
   }
 }
