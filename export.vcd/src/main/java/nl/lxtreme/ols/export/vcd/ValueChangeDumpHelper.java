@@ -5,6 +5,9 @@ package nl.lxtreme.ols.export.vcd;
 
 
 import java.io.*;
+import java.text.*;
+import java.util.*;
+
 import nl.lxtreme.ols.util.*;
 
 
@@ -13,6 +16,16 @@ import nl.lxtreme.ols.util.*;
  */
 public class ValueChangeDumpHelper
 {
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new ValueChangeDumpHelper instance. Never used.
+   */
+  private ValueChangeDumpHelper()
+  {
+    super();
+  }
+
   // METHODS
 
   /**
@@ -48,15 +61,6 @@ public class ValueChangeDumpHelper
   }
 
   /**
-   * @param aTimebase
-   * @return
-   */
-  public static final String getTimescale( final double aTimebase )
-  {
-    return DisplayUtils.displayTime( aTimebase, 0, " " );
-  }
-
-  /**
    * @param aWriter
    * @param aKeyword
    * @param aValues
@@ -64,6 +68,14 @@ public class ValueChangeDumpHelper
   public static final void writeCloseDeclaration( final PrintWriter aWriter )
   {
     aWriter.println( "$end" );
+  }
+
+  /**
+   * @param aWriter
+   */
+  public static final void writeDate( final PrintWriter aWriter )
+  {
+    writeDeclaration( aWriter, "date", DateFormat.getDateTimeInstance().format( new Date() ) );
   }
 
   /**
@@ -103,6 +115,34 @@ public class ValueChangeDumpHelper
   public static final void writeTime( final PrintWriter aWriter, final long aTimebase )
   {
     aWriter.printf( "#%d", aTimebase ).println();
+  }
+
+  /**
+   * @param aWriter
+   * @param aTimebase
+   */
+  public static final void writeTimescale( final PrintWriter aWriter, final double aTimebase )
+  {
+    writeDeclaration( aWriter, "timescale", getTimescale( aTimebase ) );
+  }
+
+  /**
+   * @param aWriter
+   * @param aIndex
+   * @param aLabel
+   */
+  public static final void writeVariable( final PrintWriter aWriter, final int aIndex, final String aLabel )
+  {
+    aWriter.printf( "$var wire 1 %c %s $end", ( '#' + aIndex ), aLabel ).println();
+  }
+
+  /**
+   * @param aTimebase
+   * @return
+   */
+  private static final String getTimescale( final double aTimebase )
+  {
+    return DisplayUtils.displayTime( aTimebase, 0, " " );
   }
 
   /**
