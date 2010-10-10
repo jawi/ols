@@ -17,7 +17,7 @@
 			<artifactId>rxtx</artifactId>
 			<version>2.2.0-8</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/resources/RXTXcomm.jar</systemPath>
+			<systemPath>${basedir}/RXTXcomm.jar</systemPath>
 		</dependency>
 	</dependencies>
 	<build>
@@ -28,7 +28,6 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Embed-Dependency>*;scope=system;inline=true</Embed-Dependency>
 						<Import-Package></Import-Package>
 						<Export-Package>nl.lxtreme.rxtx;version="2.2.0", gnu.io;version="2.2.0"</Export-Package>
 						<Bundle-SymbolicName>org.rxtx</Bundle-SymbolicName>
