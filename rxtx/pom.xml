@@ -1,39 +1,54 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>nl.lxtreme.ols</groupId>
-    <artifactId>parent</artifactId>
-    <version>1.0.0</version>
-  </parent>
-  <groupId>nl.lxtreme.ols</groupId>
-  <artifactId>org.rxtx</artifactId>
-  <version>2.2.0-8</version>
-  <packaging>bundle</packaging>
-  <name>RxTx Serial library</name>
-  <build>
-  <plugins>
-    <plugin>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>maven-bundle-plugin</artifactId>
-      <extensions>true</extensions>
-      <configuration>
-        <instructions>
-          <Export-Package>gnu.io;version="2.2.0.8"</Export-Package>
-          <Bundle-SymbolicName>org.rxtx</Bundle-SymbolicName>
-          <Bundle-Vendor>rxtx.org</Bundle-Vendor>
-          <Bundle-DocURL>http://rxtx.qbang.org/wiki</Bundle-DocURL>
-					<Bundle-ClassPath>RXTXcomm.jar</Bundle-ClassPath>
-					<Bundle-NativeCode>
- native/Mac_OS_X/librxtxSerial.jnilib; osname=MacOSX; processor=x86; processor=x86-64,
- native/Linux/x86/librxtxParallel.so; native/Linux/x86/librxtxSerial.so; osname=Linux; processor=x86,
- native/Linux/x86_64/librxtxSerial.so; osname=Linux; processor=x86-64,
- native/Windows/x86/rxtxSerial.dll; osname=Win32; processor=x86,
- native/Windows/x86_64/rxtxSerial.dll; osname=Win32; processor=x86-64
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>nl.lxtreme.ols</groupId>
+		<artifactId>parent</artifactId>
+		<version>1.0.0</version>
+	</parent>
+	<groupId>nl.lxtreme.ols</groupId>
+	<artifactId>org.rxtx</artifactId>
+	<version>2.2.0-8</version>
+	<packaging>bundle</packaging>
+	<name>RxTx Serial library</name>
+	<dependencies>
+		<dependency>
+			<groupId>org.rxtx</groupId>
+			<artifactId>rxtx</artifactId>
+			<version>2.2.0-8</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/src/main/resources/RXTXcomm.jar</systemPath>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Embed-Dependency>*;scope=system;inline=true</Embed-Dependency>
+						<Import-Package></Import-Package>
+						<Export-Package>nl.lxtreme.rxtx;version="2.2.0", gnu.io;version="2.2.0"</Export-Package>
+						<Bundle-SymbolicName>org.rxtx</Bundle-SymbolicName>
+						<Bundle-Vendor>rxtx.org</Bundle-Vendor>
+						<Bundle-DocURL>http://rxtx.qbang.org/wiki</Bundle-DocURL>
+						<Bundle-NativeCode>
+							native/Mac_OS_X/librxtxSerial.jnilib;
+							osname=MacOSX; processor=x86; processor=x86-64,
+							native/Linux/x86/librxtxParallel.so;
+							native/Linux/x86/librxtxSerial.so; osname=Linux; processor=x86,
+							native/Linux/x86_64/librxtxSerial.so; osname=Linux;
+							processor=x86-64,
+							native/Windows/x86/rxtxSerial.dll; osname=Win32;
+							processor=x86,
+							native/Windows/x86_64/rxtxSerial.dll; osname=Win32;
+							processor=x86-64
 					</Bundle-NativeCode>
-        </instructions>
-      </configuration>
-    </plugin>
-  </plugins>
-  </build>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
