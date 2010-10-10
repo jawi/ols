@@ -46,8 +46,8 @@ public class SetCursorModeAction extends BaseAction
    */
   public SetCursorModeAction( final ClientController aController )
   {
-    super( ID, aController, "Enable cursors", "Enables the cursors in the diagram." );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_E ) );
+    super( ID, aController, "Cursor mode", "Enable/disable the cursors in the diagram." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_M ) );
   }
 
   // METHODS
@@ -60,9 +60,6 @@ public class SetCursorModeAction extends BaseAction
   {
     final JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
     getController().setCursorMode( menuItem.getState() );
-
-    putValue( NAME, menuItem.getState() ? "Disable cursors" : "Enable cursors" );
-    putValue( SHORT_DESCRIPTION, menuItem.getState() ? "Disables the diagram cursors" : "Enables the diagram cursors" );
   }
 }
 
