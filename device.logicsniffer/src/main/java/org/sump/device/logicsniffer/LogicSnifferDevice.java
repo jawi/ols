@@ -32,6 +32,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.rxtx.*;
 
 
 /**
@@ -231,13 +232,11 @@ public class LogicSnifferDevice implements Device
   {
     try
     {
-      final CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier( aPortName );
+      detach();
 
       LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { aPortName, aPortRate } );
 
-      detach();
-
-      this.port = ( SerialPort )portId.open( "Logic Analyzer Client", 1000 );
+      this.port = CommPortUtils.getSerialPort( aPortName );
 
       this.port.setSerialPortParams( aPortRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE );
       this.port.setFlowControlMode( SerialPort.FLOWCONTROL_XONXOFF_IN );
@@ -249,15 +248,11 @@ public class LogicSnifferDevice implements Device
 
       return true;
     }
-    catch ( final NoSuchPortException exception )
-    {
-      LOG.log( Level.WARNING, "Failed to attach to {0}: no such port!", aPortName );
-      throw new IOException( "Failed to attach to " + aPortName + ": no such port!" );
-    }
     catch ( final Exception exception )
     {
       LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
           new Object[] { aPortName, exception.getMessage() } );
+      LOG.log( Level.WARNING, "Detailed stack trace:", exception );
 
       // Make sure to handle IO-interrupted exceptions properly!
       HostUtils.handleInterruptedException( exception );
