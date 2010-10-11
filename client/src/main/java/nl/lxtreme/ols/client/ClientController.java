@@ -829,6 +829,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   public void setCursorMode( final boolean aState )
   {
     this.dataContainer.setCursorEnabled( aState );
+    // Reflect the change directly on the diagram...
+    this.mainFrame.repaint();
 
     updateActions();
   }
