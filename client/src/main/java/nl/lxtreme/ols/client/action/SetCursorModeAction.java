@@ -46,8 +46,8 @@ public class SetCursorModeAction extends BaseAction
    */
   public SetCursorModeAction( final ClientController aController )
   {
-    super( ID, aController, "Cursor mode", "Enable/disable the cursors in the diagram." );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_M ) );
+    super( ID, aController, "Cursors", "Enables or disables cursors in the diagram." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_C ) );
   }
 
   // METHODS
