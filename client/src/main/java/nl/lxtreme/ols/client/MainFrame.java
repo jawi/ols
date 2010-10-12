@@ -303,22 +303,15 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
+   * Converts a mouse position to a sample index.
+   * 
    * @param aLocation
-   * @return
+   *          the mouse position to convert, cannot be <code>null</code>.
+   * @return the sample index of the sample under the mouse.
    */
   public long convertMousePositionToSampleIndex( final Point aLocation )
   {
     return this.diagram.convertPointToSampleIndex( aLocation );
-  }
-
-  /**
-   * Returns the current diagram instance.
-   * 
-   * @return a diagram instance, can be <code>null</code>.
-   */
-  public final Diagram getDiagram()
-  {
-    return this.diagram;
   }
 
   /**
@@ -342,7 +335,10 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
-   * @param aCursorIdx
+   * Sets the view to the position indicated by the given sample position.
+   * 
+   * @param aSamplePos
+   *          the sample position, >= 0.
    */
   public void gotoPosition( final long aSamplePos )
   {
@@ -362,76 +358,53 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
-   * @param aDevController
+   * Removes the menu item from the device menu with the given name.
+   * 
+   * @param aDeviceName
+   *          the name of the device to remove as menu item from the menu,
+   *          cannot be <code>null</code>.
    */
   public final void removeDeviceMenuItem( final String aDeviceName )
   {
-    JMenuItem menuItem = null;
-    for ( int i = 0; i < this.deviceMenu.getItemCount(); i++ )
-    {
-      final JMenuItem comp = this.deviceMenu.getItem( i );
-      if ( aDeviceName.equals( comp.getName() ) )
-      {
-        menuItem = comp;
-        break;
-      }
-    }
-
+    final JMenuItem menuItem = removeMenuItem( this.deviceMenu, aDeviceName );
     if ( menuItem != null )
     {
       this.deviceGroup.remove( menuItem );
-      this.deviceMenu.remove( menuItem );
-    }
 
-    updateDeviceMenuState( aDeviceName, menuItem, false /* aAdded */);
+      updateDeviceMenuState( aDeviceName, menuItem, false /* aAdded */);
+    }
   }
 
   /**
-   * @param aTool
+   * Removes the menu item from the export menu with the given name.
+   * 
+   * @param aExporterName
+   *          the name of the exporter to remove as menu item from the menu,
+   *          cannot be <code>null</code>.
    */
   public final void removeExportMenuItem( final String aExporterName )
   {
-    JMenuItem menuItem = null;
-    for ( int i = 0; i < this.exportMenu.getItemCount(); i++ )
-    {
-      final JMenuItem comp = this.exportMenu.getItem( i );
-      if ( aExporterName.equals( comp.getName() ) )
-      {
-        menuItem = comp;
-        break;
-      }
-    }
-
+    final JMenuItem menuItem = removeMenuItem( this.exportMenu, aExporterName );
     if ( menuItem != null )
     {
-      this.exportMenu.remove( menuItem );
+      updateToolMenuState( aExporterName, menuItem, false /* aAdded */);
     }
-
-    updateToolMenuState( aExporterName, menuItem, false /* aAdded */);
   }
 
   /**
-   * @param aTool
+   * Removes the menu item from the tools menu with the given name.
+   * 
+   * @param aToolName
+   *          the name of the tool to remove as menu item from the menu, cannot
+   *          be <code>null</code>.
    */
   public final void removeToolMenuItem( final String aToolName )
   {
-    JMenuItem menuItem = null;
-    for ( int i = 0; i < this.toolsMenu.getItemCount(); i++ )
-    {
-      final JMenuItem comp = this.toolsMenu.getItem( i );
-      if ( aToolName.equals( comp.getName() ) )
-      {
-        menuItem = comp;
-        break;
-      }
-    }
-
+    final JMenuItem menuItem = removeMenuItem( this.toolsMenu, aToolName );
     if ( menuItem != null )
     {
-      this.toolsMenu.remove( menuItem );
+      updateToolMenuState( aToolName, menuItem, false /* aAdded */);
     }
-
-    updateToolMenuState( aToolName, menuItem, false /* aAdded */);
   }
 
   /**
@@ -546,6 +519,17 @@ public final class MainFrame extends JFrame implements Closeable
   public void zoomToFit()
   {
     this.diagram.zoomToFit();
+  }
+
+  /**
+   * Returns the scroll pane of the current diagram instance.
+   * 
+   * @return a scroll pane instance, can be <code>null</code>.
+   */
+  final JComponent getDiagramScrollPane()
+  {
+    final Container viewport = this.diagram.getParent();
+    return ( JComponent )viewport.getParent();
   }
 
   /**
@@ -696,33 +680,43 @@ public final class MainFrame extends JFrame implements Closeable
    */
   private int determineDeviceMenuItemIndex( final JMenuItem aMenuItem )
   {
-    final String newMenuItem = aMenuItem.getText();
-
-    int idx = -1;
-    for ( int i = 0; ( idx < 0 ) && ( i < this.deviceMenu.getItemCount() ); i++ )
-    {
-      final String nameA = this.deviceMenu.getItem( i ).getText();
-      final int comparison = newMenuItem.compareTo( nameA );
-      if ( comparison < 0 )
-      {
-        idx = i;
-      }
-    }
-    return idx;
+    return determineMenuItemIndex( this.deviceMenu, aMenuItem );
   }
 
   /**
+   * Determines the index in the menu where the given menu item should be
+   * inserted.
+   * 
    * @param aMenuItem
-   * @return
+   *          the menu item to add, cannot be <code>null</code>.
+   * @return the position in the menu to add the given menu item, -1 if the menu
+   *         item should be added as last item.
    */
   private int determineExporterMenuItemIndex( final JMenuItem aMenuItem )
+  {
+    return determineMenuItemIndex( this.exportMenu, aMenuItem );
+  }
+
+  /**
+   * Determines the index in the menu where the given menu item should be
+   * inserted.
+   * 
+   * @param aMenu
+   *          the menu to determine the given items' index of, cannot be
+   *          <code>null</code>;
+   * @param aMenuItem
+   *          the menu item to add, cannot be <code>null</code>.
+   * @return the position in the menu to add the given menu item, -1 if the menu
+   *         item should be added as last item.
+   */
+  private int determineMenuItemIndex( final JMenu aMenu, final JMenuItem aMenuItem )
   {
     final String newMenuItem = aMenuItem.getText();
 
     int idx = -1;
-    for ( int i = 0; ( idx < 0 ) && ( i < this.exportMenu.getItemCount() ); i++ )
+    for ( int i = 0; ( idx < 0 ) && ( i < aMenu.getItemCount() ); i++ )
     {
-      final String nameA = this.exportMenu.getItem( i ).getText();
+      final String nameA = aMenu.getItem( i ).getText();
       final int comparison = newMenuItem.compareTo( nameA );
       if ( comparison < 0 )
       {
@@ -743,19 +737,36 @@ public final class MainFrame extends JFrame implements Closeable
    */
   private int determineToolMenuItemIndex( final JMenuItem aMenuItem )
   {
-    final String newMenuItem = aMenuItem.getText();
+    return determineMenuItemIndex( this.toolsMenu, aMenuItem );
+  }
 
-    int idx = -1;
-    for ( int i = 0; ( idx < 0 ) && ( i < this.toolsMenu.getItemCount() ); i++ )
+  /**
+   * Removes a menu item with a given name from the given menu.
+   * 
+   * @param aMenu
+   *          the menu to remove the item from, cannot be <code>null</code>;
+   * @param aMenuItemName
+   *          the name of the menu item to remove, cannot be <code>null</code>.
+   */
+  private JMenuItem removeMenuItem( final JMenu aMenu, final String aMenuItemName )
+  {
+    JMenuItem menuItem = null;
+    for ( int i = 0; ( menuItem == null ) && ( i < aMenu.getItemCount() ); i++ )
     {
-      final String nameA = this.toolsMenu.getItem( i ).getText();
-      final int comparison = newMenuItem.compareTo( nameA );
-      if ( comparison < 0 )
+      final JMenuItem comp = aMenu.getItem( i );
+      if ( aMenuItemName.equals( comp.getName() ) )
       {
-        idx = i;
+        menuItem = comp;
+        break;
       }
     }
-    return idx;
+
+    if ( menuItem != null )
+    {
+      aMenu.remove( menuItem );
+    }
+
+    return menuItem;
   }
 
   /**

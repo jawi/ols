@@ -176,6 +176,13 @@
               </artifactItem>
               <artifactItem>
                 <groupId>nl.lxtreme.ols.export</groupId>
+                <artifactId>image</artifactId>
+                <type>jar</type>
+                <overWrite>true</overWrite>
+                <outputDirectory>${project.basedir}/target/plugins</outputDirectory>
+              </artifactItem>
+              <artifactItem>
+                <groupId>nl.lxtreme.ols.export</groupId>
                 <artifactId>vcd</artifactId>
                 <type>jar</type>
                 <overWrite>true</overWrite>

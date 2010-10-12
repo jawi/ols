@@ -23,6 +23,8 @@ package nl.lxtreme.ols.api.data.export;
 
 import java.io.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.api.data.*;
 
 
@@ -39,12 +41,16 @@ public interface Exporter
    * 
    * @param aContainer
    *          the data container to export, can never be <code>null</code>;
+   * @param aComponent
+   *          the Swing UI component that is being exported, this is for example
+   *          the scroll pane in which the diagram is shown, cannot be
+   *          <code>null</code>;
    * @param aWriter
    *          the writer to write the export to, can never be <code>null</code>.
    * @throws IOException
    *           in case of I/O problems.
    */
-  void export( final DataContainer aContainer, final Writer aWriter ) throws IOException;
+  void export( final DataContainer aContainer, final JComponent aComponent, final Writer aWriter ) throws IOException;
 
   /**
    * Returns the file extensions supported by this exporter.
