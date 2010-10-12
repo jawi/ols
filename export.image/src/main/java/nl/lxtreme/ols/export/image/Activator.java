@@ -18,25 +18,19 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client;
+package nl.lxtreme.ols.export.image;
 
 
-import javax.swing.*;
-
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.api.data.export.*;
 
 import org.osgi.framework.*;
 
 
 /**
- * 
+ * Provides the bundle activator.
  */
 public class Activator implements BundleActivator
 {
-  // VARIABLES
-
-  private Host host = null;
-
   // METHODS
 
   /**
@@ -45,33 +39,7 @@ public class Activator implements BundleActivator
   @Override
   public void start( final BundleContext aContext ) throws Exception
   {
-    this.host = new Host( aContext );
-
-    // This has to be done *before* any other Swing related code is executed
-    // so this also means the #invokeLater call done below...
-    HostUtils.initOSSpecifics( Host.getShortName(), this.host );
-
-    final Runnable initTask = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        Activator.this.host.initialize();
-      }
-    };
-
-    final Runnable startTask = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        Activator.this.host.start();
-      }
-    };
-
-    SwingUtilities.invokeAndWait( initTask );
-
-    SwingUtilities.invokeLater( startTask );
+    aContext.registerService( Exporter.class.getName(), new ImageExporter(), null );
   }
 
   /**
@@ -80,26 +48,6 @@ public class Activator implements BundleActivator
   @Override
   public void stop( final BundleContext aContext ) throws Exception
   {
-    final Runnable stopTask = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        Activator.this.host.stop();
-      }
-    };
-    SwingUtilities.invokeAndWait( stopTask );
-
-    final Runnable shutdownTask = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        Activator.this.host.shutdown();
-      }
-    };
-    SwingUtilities.invokeAndWait( shutdownTask );
+    // NO-op
   }
 }
-
-/* EOF */

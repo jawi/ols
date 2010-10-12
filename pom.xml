@@ -156,6 +156,11 @@
       </dependency>
       <dependency>
         <groupId>nl.lxtreme.ols.export</groupId>
+        <artifactId>image</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>nl.lxtreme.ols.export</groupId>
         <artifactId>vcd</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
@@ -231,6 +236,7 @@
     <module>tool.state</module>
     <module>tool.uart</module>
     <module>tool.measure</module>
+    <module>export.image</module>
     <module>export.vcd</module>
     <!-- main distribution -->
     <module>ols.distribution</module>

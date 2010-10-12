@@ -24,6 +24,8 @@ package nl.lxtreme.ols.export.vcd;
 import static nl.lxtreme.ols.export.vcd.ValueChangeDumpHelper.*;
 import java.io.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.util.*;
@@ -37,16 +39,18 @@ public class ValueChangeDumpExporter implements Exporter
 {
   // CONSTANTS
 
+  private static final String ID = "OLS Java Client";
   private static final String VERSION = "VCD exporter v1";
 
   // METHODS
 
   /**
    * @see nl.lxtreme.ols.api.data.export.Exporter#export(nl.lxtreme.ols.api.data.DataContainer,
-   *      java.io.Writer)
+   *      javax.swing.JComponent, java.io.Writer)
    */
   @Override
-  public void export( final DataContainer aContainer, final Writer aWriter ) throws IOException
+  public void export( final DataContainer aContainer, final JComponent aComponent, final Writer aWriter )
+      throws IOException
   {
     final PrintWriter writer = new PrintWriter( aWriter );
     try
@@ -106,6 +110,7 @@ public class ValueChangeDumpExporter implements Exporter
    */
   private void writePreamble( final PrintWriter aWriter, final DataContainer aContainer, final double aTimescale )
   {
+    writeDeclaration( aWriter, "comment", ID );
     writeDate( aWriter );
     writeDeclaration( aWriter, "version", VERSION );
     writeTimescale( aWriter, aTimescale );

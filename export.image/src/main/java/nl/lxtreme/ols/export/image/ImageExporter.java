@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.diagram.export;
+package nl.lxtreme.ols.export.image;
 
 
 import java.awt.*;
@@ -45,33 +45,17 @@ public class ImageExporter implements Exporter
   /** The maximum height of the image to export. */
   private static final int MAX_HEIGHT = 8192;
 
-  // VARIABLES
-
-  private final JComponent component;
-
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new ImageExporter instance.
-   * 
-   * @param aComponent
-   *          the component to write to an image, cannot be <code>null</code>.
-   */
-  public ImageExporter( final JComponent aComponent )
-  {
-    this.component = aComponent;
-  }
-
   // METHODS
 
   /**
    * @see nl.lxtreme.ols.api.data.export.Exporter#export(nl.lxtreme.ols.api.data.DataContainer,
-   *      java.io.Writer)
+   *      javax.swing.JComponent, java.io.Writer)
    */
   @Override
-  public void export( final DataContainer aContainer, final Writer aWriter ) throws IOException
+  public void export( final DataContainer aContainer, final JComponent aComponent, final Writer aWriter )
+      throws IOException
   {
-    final Dimension dims = getExportSize( this.component );
+    final Dimension dims = getExportSize( aComponent );
 
     final BufferedImage image = new BufferedImage( dims.width, dims.height, BufferedImage.TYPE_INT_RGB );
 
@@ -79,7 +63,7 @@ public class ImageExporter implements Exporter
     Graphics2D g2d = image.createGraphics();
     try
     {
-      paintDiagram( image, g2d, this.component );
+      paintDiagram( image, g2d, aComponent );
     }
     finally
     {

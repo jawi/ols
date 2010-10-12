@@ -232,7 +232,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
     if ( this.mainFrame != null )
     {
-      this.mainFrame.repaint();
+      repaintMainFrame();
     }
 
     setStatus( "" );
@@ -377,7 +377,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      aExporter.export( this.dataContainer, aWriter );
+      aExporter.export( this.dataContainer, this.mainFrame.getDiagramScrollPane(), aWriter );
     }
   }
 
@@ -830,7 +830,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     this.dataContainer.setCursorEnabled( aState );
     // Reflect the change directly on the diagram...
-    this.mainFrame.repaint();
+    repaintMainFrame();
 
     updateActions();
   }
@@ -980,9 +980,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       ModeSettingsDialog dialog = new ModeSettingsDialog( aParent, this.mainFrame.getDiagramSettings() );
       if ( dialog.showDialog() )
       {
-        this.mainFrame.setDiagramSettings( dialog.getDiagramSettings() );
-        this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
-        this.mainFrame.repaint();
+        updateDiagramSettings( dialog.getDiagramSettings() );
       }
 
       dialog.dispose();
@@ -1000,9 +998,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       GeneralSettingsDialog dialog = new GeneralSettingsDialog( aParent, this.mainFrame.getDiagramSettings() );
       if ( dialog.showDialog() )
       {
-        this.mainFrame.setDiagramSettings( dialog.getDiagramSettings() );
-        this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
-        this.mainFrame.repaint();
+        updateDiagramSettings( dialog.getDiagramSettings() );
       }
 
       dialog.dispose();
@@ -1241,6 +1237,21 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Dispatches a request to repaint the entire main frame.
+   */
+  private void repaintMainFrame()
+  {
+    SwingUtilities.invokeLater( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        ClientController.this.mainFrame.repaint();
+      }
+    } );
+  }
+
+  /**
    * Synchronizes the state of the actions to the current state of this host.
    */
   private void updateActions()
@@ -1281,5 +1292,21 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       action.setEnabled( dataAvailable );
       action.putValue( Action.SELECTED_KEY, this.dataContainer.isCursorPositionSet( c ) );
     }
+  }
+
+  /**
+   * Should be called after the diagram settings are changed. This method will
+   * cause the settings to be set on the main frame and writes them to the
+   * preference store.
+   * 
+   * @param aSettings
+   *          the (new/changed) diagram settings to set, cannot be
+   *          <code>null</code>.
+   */
+  private void updateDiagramSettings( final DiagramSettings aSettings )
+  {
+    this.mainFrame.setDiagramSettings( aSettings );
+    this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
+    repaintMainFrame();
   }
 }
