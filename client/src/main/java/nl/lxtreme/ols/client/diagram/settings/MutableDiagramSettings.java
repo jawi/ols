@@ -41,6 +41,8 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   private int scopeHeight;
   private int signalHeight;
 
+  private EdgeSlope edgeSlope;
+
   private Color triggerColor;
   private Color gridColor;
   private Color backgroundColor;
@@ -92,6 +94,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     setSignalHeight( 20 );
     setScopeHeight( 133 );
     setSignalAlignment( SignalAlignment.CENTER );
+    setEdgeSlope( EdgeSlope.NON_PERPENDICULAR );
   }
 
   // METHODS
@@ -143,6 +146,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     setScopeHeight( aDiagramSettings.getScopeHeight() );
     setSignalHeight( aDiagramSettings.getSignalHeight() );
     setSignalAlignment( aDiagramSettings.getSignalAlignment() );
+    setEdgeSlope( aDiagramSettings.getEdgeSlope() );
   }
 
   /**
@@ -213,6 +217,15 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   public final Color[] getCursorColors()
   {
     return this.cursorColors;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getEdgeSlope()
+   */
+  @Override
+  public final EdgeSlope getEdgeSlope()
+  {
+    return this.edgeSlope;
   }
 
   /**
@@ -438,6 +451,21 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
       throw new IllegalArgumentException( "Cursor color cannot be null!" );
     }
     this.cursorColors[aCursorIdx] = aCursorColor;
+  }
+
+  /**
+   * Sets the signal edge slope.
+   * 
+   * @param aEdgeSlope
+   *          the edge slope to set, cannot be <code>null</code>.
+   */
+  public void setEdgeSlope( final EdgeSlope aEdgeSlope )
+  {
+    if ( aEdgeSlope == null )
+    {
+      throw new IllegalArgumentException( "Edge slope cannot be null!" );
+    }
+    this.edgeSlope = aEdgeSlope;
   }
 
   /**

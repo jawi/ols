@@ -53,6 +53,14 @@ public interface DiagramSettings
   }
 
   /**
+   * Denotes how the slope of a signal edge should look like.
+   */
+  public static enum EdgeSlope
+  {
+    PERPENDICULAR, NON_PERPENDICULAR;
+  }
+
+  /**
    * Denotes where the signal is to be drawn inside a channel.
    */
   public static enum SignalAlignment
@@ -124,6 +132,13 @@ public interface DiagramSettings
    * @return the cursor color, never <code>null</code>.
    */
   Color getCursorColor( final int aCursorIdx );
+
+  /**
+   * Returns the slope of a signal edge.
+   * 
+   * @return a signal slope edge, either perpendicular or non perpendicular.
+   */
+  EdgeSlope getEdgeSlope();
 
   /**
    * Returns the grid color.
