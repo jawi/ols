@@ -603,7 +603,9 @@ public class DiagramUI extends ComponentUI
     final double scopeScaleFactor = ( 256.0 / ( scopeHeight - 2 * PADDING_Y ) );
 
     final double scale = aDiagram.getScale();
-    final int edgeX = ( int )( scale * 0.5 );
+
+    final double edgeSlopeFactor = ( settings.getEdgeSlope() == EdgeSlope.PERPENDICULAR ) ? 0.5 : 0.3;
+    final double edgeX = ( scale * edgeSlopeFactor );
 
     final FontMetrics fm = aCanvas.getFontMetrics();
     final int fontHeight = fm.getHeight();
@@ -684,14 +686,15 @@ public class DiagramUI extends ComponentUI
             }
 
             // Calculate display coordinates...
-            final int x1 = ( int )( ( scale * currentSample ) - edgeX );
-            final int x2 = ( int )( ( scale * ( nextSample - 1 ) ) + edgeX );
+            int x1 = ( int )( ( scale * currentSample ) - edgeX );
+            int x2 = ( int )( ( scale * ( nextSample - 1 ) ) + edgeX );
             final int y1 = py1 + ( signalHeight * ( 1 - currentValue ) ) + signalOffset;
 
             polyline.x[pIdx] = x1;
             polyline.y[pIdx] = y1;
             polyline.x[pIdx + 1] = x2;
             polyline.y[pIdx + 1] = y1;
+
             pIdx += 2;
 
             // Update loop administration...

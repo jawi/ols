@@ -50,7 +50,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   /**
    * Provides a combobox renderer for ColorScheme values.
    */
-  static final class ColorSchemeItemRenderer extends DefaultListCellRenderer
+  static final class ColorSchemeItemRenderer extends EnumItemRenderer<ColorScheme>
   {
     // CONSTANTS
 
@@ -59,35 +59,96 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     // METHODS
 
     /**
-     * @see javax.swing.DefaultListCellRenderer#getListCellRendererComponent(javax.swing.JList,
-     *      java.lang.Object, int, boolean, boolean)
+     * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
      */
     @Override
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-        final boolean aIsSelected, final boolean aCellHasFocus )
+    protected String getDisplayValue( final ColorScheme aValue )
     {
-      String text = String.valueOf( aValue );
-      final ColorScheme value = ( ColorScheme )aValue;
-      if ( ColorScheme.LIGHT.equals( value ) )
+      String text = super.getDisplayValue( aValue );
+      if ( ColorScheme.LIGHT.equals( aValue ) )
       {
         text = "Light (default) theme";
       }
-      else if ( ColorScheme.DARK.equals( value ) )
+      else if ( ColorScheme.DARK.equals( aValue ) )
       {
         text = "Dark/rainbow theme";
       }
-      else if ( ColorScheme.CUSTOM.equals( value ) )
+      else if ( ColorScheme.CUSTOM.equals( aValue ) )
       {
         text = "Custom theme";
       }
-      return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
+      return text;
     }
   }
 
   /**
    * Provides a combobox renderer for ColorTarget values.
    */
-  static final class ColorTargetItemRenderer extends DefaultListCellRenderer
+  static final class ColorTargetItemRenderer extends EnumItemRenderer<ColorTarget>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final ColorTarget aValue )
+    {
+      String text = super.getDisplayValue( aValue );
+      if ( ColorTarget.LABELS.equals( aValue ) )
+      {
+        text = "Labels";
+      }
+      else if ( ColorTarget.BACKGROUND.equals( aValue ) )
+      {
+        text = "Channel background";
+      }
+      else if ( ColorTarget.SIGNALS.equals( aValue ) )
+      {
+        text = "Signals";
+      }
+      return text;
+    }
+  }
+
+  /**
+   * Provides a combobox renderer for EdgeSlope values.
+   */
+  static final class EdgeSlopeItemRenderer extends EnumItemRenderer<EdgeSlope>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final EdgeSlope aValue )
+    {
+      String text = super.getDisplayValue( aValue );
+      if ( EdgeSlope.PERPENDICULAR.equals( aValue ) )
+      {
+        text = "Perpendicular";
+      }
+      else if ( EdgeSlope.NON_PERPENDICULAR.equals( aValue ) )
+      {
+        text = "Non perpendicular";
+      }
+      return text;
+    }
+  }
+
+  /**
+   * Provides a generic cell-renderer for enum-constants.
+   */
+  static class EnumItemRenderer<ENUM_TYPE extends Enum<?>> extends DefaultListCellRenderer
   {
     // CONSTANTS
 
@@ -100,26 +161,26 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
      *      java.lang.Object, int, boolean, boolean)
      */
     @Override
+    @SuppressWarnings( "unchecked" )
     public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
         final boolean aIsSelected, final boolean aCellHasFocus )
     {
-      String text = String.valueOf( aValue );
-      final ColorTarget value = ( ColorTarget )aValue;
-      if ( ColorTarget.LABELS.equals( value ) )
-      {
-        text = "Labels";
-      }
-      else if ( ColorTarget.BACKGROUND.equals( value ) )
-      {
-        text = "Channel background";
-      }
-      else if ( ColorTarget.SIGNALS.equals( value ) )
-      {
-        text = "Signals";
-      }
+      final String text = getDisplayValue( ( ENUM_TYPE )aValue );
       return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
     }
 
+    /**
+     * Returns the display value for the given enum value.
+     * 
+     * @param aValue
+     *          the enum value to render as display value, cannot be
+     *          <code>null</code>.
+     * @return a display value string, never <code>null</code>.
+     */
+    protected String getDisplayValue( final ENUM_TYPE aValue )
+    {
+      return String.valueOf( aValue );
+    }
   }
 
   // CONSTANTS
@@ -136,6 +197,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   private JTabbedPane tabbedPane;
   private JComboBox colorScheme;
   private JComboBox colorTarget;
+  private JComboBox edgeSlope;
   private JTextField channelHeight;
   private JTextField signalHeight;
   private JTextField scopeHeight;
@@ -454,6 +516,10 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       }
     } );
 
+    this.edgeSlope = new JComboBox( EdgeSlope.values() );
+    this.edgeSlope.setRenderer( new EdgeSlopeItemRenderer() );
+    this.edgeSlope.putClientProperty( "JComboBox.isPopDown", Boolean.TRUE );
+
     // Create panel...
     final JPanel editorsPane = new JPanel( new SpringLayout() );
 
@@ -465,6 +531,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     editorsPane.add( this.signalHeight );
     editorsPane.add( createRightAlignedLabel( "Scope height" ) );
     editorsPane.add( this.scopeHeight );
+    editorsPane.add( createRightAlignedLabel( "Signal edges" ) );
+    editorsPane.add( this.edgeSlope );
 
     SpringLayoutUtils.addSeparator( editorsPane, "Color scheme" );
 
@@ -543,6 +611,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
     final ColorTarget colorTargetValue = ( ColorTarget )this.colorTarget.getSelectedItem();
     final ColorScheme colorSchemeValue = ( ColorScheme )this.colorScheme.getSelectedItem();
+    final EdgeSlope edgeSlopeValue = ( EdgeSlope )this.edgeSlope.getSelectedItem();
 
     final Color backgroundColorValue = getColorValue( this.backgroundColor );
     if ( backgroundColorValue == null )
@@ -629,6 +698,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       this.settings.setScopeHeight( scopeHeightValue );
       this.settings.setColorTarget( colorTargetValue );
       this.settings.setColorScheme( colorSchemeValue );
+      this.settings.setEdgeSlope( edgeSlopeValue );
 
       if ( ColorScheme.CUSTOM.equals( colorSchemeValue ) )
       {
@@ -673,6 +743,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       this.signalHeight.setText( String.valueOf( this.settings.getSignalHeight() ) );
       this.scopeHeight.setText( String.valueOf( this.settings.getScopeHeight() ) );
       this.colorTarget.setSelectedItem( this.settings.getColorTarget() );
+      this.edgeSlope.setSelectedItem( this.settings.getEdgeSlope() );
       this.colorScheme.setSelectedItem( selectedScheme );
 
       this.backgroundColor.setText( SwingComponentUtils.toString( this.settings.getBackgroundColor() ) );
