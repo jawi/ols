@@ -139,7 +139,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       }
       else if ( EdgeSlope.NON_PERPENDICULAR.equals( aValue ) )
       {
-        text = "Non perpendicular";
+        text = "Slant";
       }
       return text;
     }
