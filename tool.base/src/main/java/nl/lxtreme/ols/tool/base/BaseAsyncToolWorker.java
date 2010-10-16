@@ -132,7 +132,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
    */
   public final String getChannelLabel( final int aChannelIdx, final String aDefault )
   {
-    String result = this.data.getChannelLabel( aChannelIdx );
+    String result = getChannelLabel( aChannelIdx );
     if ( ( result == null ) || result.trim().isEmpty() )
     {
       result = aDefault;
@@ -277,6 +277,16 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   public final void setChannelLabel( final int aChannelIdx, final String aLabel )
   {
     this.data.setChannelLabel( aChannelIdx, aLabel );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.CapturedData#setChannelLabel(int, String)
+   */
+  public final String updateChannelLabel( final int aChannelIdx, final String aLabel )
+  {
+    final String label = getChannelLabel( aChannelIdx, aLabel );
+    setChannelLabel( aChannelIdx, label );
+    return label;
   }
 
   /**

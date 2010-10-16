@@ -194,28 +194,6 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   @Override
   protected UARTDataSet doInBackground() throws Exception
   {
-    // process the captured data and write to output
-    final int rxdMask = 1 << this.rxdIndex;
-    final int txdMask = 1 << this.txdIndex;
-    final int ctsMask = 1 << this.ctsIndex;
-    final int rtsMask = 1 << this.rtsIndex;
-    final int dcdMask = 1 << this.dcdIndex;
-    final int riMask = 1 << this.riIndex;
-    final int dsrMask = 1 << this.dsrIndex;
-    final int dtrMask = 1 << this.dtrIndex;
-
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( "rxdmask = 0x" + Integer.toHexString( rxdMask ) );
-      LOG.fine( "txdmask = 0x" + Integer.toHexString( txdMask ) );
-      LOG.fine( "ctsmask = 0x" + Integer.toHexString( ctsMask ) );
-      LOG.fine( "rtsmask = 0x" + Integer.toHexString( rtsMask ) );
-      LOG.fine( "dcdmask = 0x" + Integer.toHexString( dcdMask ) );
-      LOG.fine( "rimask  = 0x" + Integer.toHexString( riMask ) );
-      LOG.fine( "dsrmask = 0x" + Integer.toHexString( dsrMask ) );
-      LOG.fine( "dtrmask = 0x" + Integer.toHexString( dtrMask ) );
-    }
-
     /*
      * Start decode from trigger or if no trigger is available from the first
      * falling edge. The decoder works with two independant decoder runs. First
@@ -227,10 +205,10 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
     final int[] values = getValues();
 
     int startOfDecode = getContext().getStartSampleIndex();
-    int endOfDecode = getContext().getEndSampleIndex();
+    final int endOfDecode = getContext().getEndSampleIndex();
 
     // find first state change on the selected lines
-    final int mask = rxdMask | riMask | ctsMask | txdMask | dcdMask | riMask | dsrMask | dtrMask;
+    final int mask = getBitMask();
 
     final int value = values[startOfDecode] & mask;
     for ( int i = startOfDecode + 1; i < endOfDecode; i++ )
@@ -253,42 +231,40 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
 
     final UARTDataSet decodedData = new UARTDataSet( startOfDecode, endOfDecode, this );
 
-    // decode RxD
+    // decode RxD/TxD data lines...
     if ( this.rxdIndex >= 0 )
     {
-      decodeData( decodedData, this.rxdIndex, UARTData.UART_TYPE_RXDATA );
+      prepareAndDecodeData( decodedData, this.rxdIndex, UARTData.UART_TYPE_RXDATA, UARTDataSet.UART_RXD );
     }
-
-    // decode TxD
     if ( this.txdIndex >= 0 )
     {
-      decodeData( decodedData, this.txdIndex, UARTData.UART_TYPE_TXDATA );
+      prepareAndDecodeData( decodedData, this.txdIndex, UARTData.UART_TYPE_TXDATA, UARTDataSet.UART_TXD );
     }
 
-    // decode control lines
+    // decode control lines...
     if ( this.ctsIndex >= 0 )
     {
-      decodeControl( decodedData, this.ctsIndex, "CTS" );
+      prepareAndDecodeControl( decodedData, this.ctsIndex, UARTDataSet.UART_CTS );
     }
     if ( this.rtsIndex >= 0 )
     {
-      decodeControl( decodedData, this.rtsIndex, "RTS" );
+      prepareAndDecodeControl( decodedData, this.rtsIndex, UARTDataSet.UART_RTS );
     }
     if ( this.dcdIndex >= 0 )
     {
-      decodeControl( decodedData, this.dcdIndex, "DCD" );
+      prepareAndDecodeControl( decodedData, this.dcdIndex, UARTDataSet.UART_DCD );
     }
     if ( this.riIndex >= 0 )
     {
-      decodeControl( decodedData, this.riIndex, "RI" );
+      prepareAndDecodeControl( decodedData, this.riIndex, UARTDataSet.UART_RI );
     }
     if ( this.dsrIndex >= 0 )
     {
-      decodeControl( decodedData, this.dsrIndex, "DSR" );
+      prepareAndDecodeControl( decodedData, this.dsrIndex, UARTDataSet.UART_DSR );
     }
     if ( this.dtrIndex >= 0 )
     {
-      decodeControl( decodedData, this.dtrIndex, "DTR" );
+      prepareAndDecodeControl( decodedData, this.dtrIndex, UARTDataSet.UART_DTR );
     }
 
     // sort the results by time
@@ -311,7 +287,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   {
     if ( LOG.isLoggable( Level.FINE ) )
     {
-      LOG.fine( "Decode " + aName );
+      LOG.log( Level.FINE, "Decoding control: {0} ...", aName );
     }
 
     final int mask = ( 1 << aChannelIndex );
@@ -363,10 +339,10 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
     }
 
     final int bitLength = baudrate.getBestBitLength();
-    if ( bitLength == 0 )
+    if ( bitLength <= 0 )
     {
       LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",
-          aChannelIndex == this.rxdIndex ? "RxD" : "TxD" );
+          aChannelIndex == this.rxdIndex ? UARTDataSet.UART_RXD : UARTDataSet.UART_TXD );
     }
     else
     {
@@ -379,9 +355,6 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
         LOG.fine( "Samplerate: " + getSampleRate() + ", bitlength: " + bitLength + ", baudrate = "
             + aDataSet.getBaudRate() );
       }
-
-      // clear any existing annotations...
-      clearChannelAnnotations( aChannelIndex );
 
       decodeDataLine( aDataSet, aChannelIndex, bitLength, aEventType );
     }
@@ -428,7 +401,8 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
       time = findStartBit( time, endOfDecode, mask );
       if ( time < 0 )
       {
-        LOG.info( "Decoding ended; no start bit found..." );
+        LOG.log( Level.INFO, "Decoding ended for {0}; no start bit found...",
+            ( aChannelIndex == this.rxdIndex ) ? UARTDataSet.UART_RXD : UARTDataSet.UART_TXD );
         break;
       }
 
@@ -547,6 +521,66 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   }
 
   /**
+   * Builds a bit mask that can be applied to the data to filter out only the
+   * interesting channels.
+   * 
+   * @return a bit mask, >= 0.
+   */
+  private int getBitMask()
+  {
+    int result = 0x00;
+    if ( this.rxdIndex >= 0 )
+    {
+      final int mask = ( 1 << this.rxdIndex );
+      LOG.log( Level.FINE, "RxD mask = 0x{0}", Integer.toHexString( mask ) );
+      result |= mask;
+    }
+    if ( this.txdIndex >= 0 )
+    {
+      final int mask = ( 1 << this.txdIndex );
+      LOG.log( Level.FINE, "TxD mask = 0x{0}", Integer.toHexString( mask ) );
+      result |= mask;
+    }
+    if ( this.ctsIndex >= 0 )
+    {
+      final int mask = ( 1 << this.ctsIndex );
+      LOG.log( Level.FINE, "CTS mask = 0x{0}", Integer.toHexString( mask ) );
+      result |= mask;
+    }
+    if ( this.rtsIndex >= 0 )
+    {
+      final int mask = ( 1 << this.rtsIndex );
+      LOG.log( Level.FINE, "RTS mask = 0x{0}", Integer.toHexString( mask ) );
+      result |= mask;
+    }
+    if ( this.dcdIndex >= 0 )
+    {
+      final int mask = ( 1 << this.dcdIndex );
+      LOG.log( Level.FINE, "DCD mask = 0x{0}", Integer.toHexString( mask ) );
+      result |= mask;
+    }
+    if ( this.riIndex >= 0 )
+    {
+      final int mask = ( 1 << this.riIndex );
+      LOG.log( Level.FINE, "RI mask = 0x{0}", Integer.toHexString( mask ) );
+      result |= mask;
+    }
+    if ( this.dsrIndex >= 0 )
+    {
+      final int mask = ( 1 << this.dsrIndex );
+      LOG.log( Level.FINE, "DSR mask = 0x{0}", Integer.toHexString( mask ) );
+      result |= mask;
+    }
+    if ( this.dtrIndex >= 0 )
+    {
+      final int mask = ( 1 << this.dtrIndex );
+      LOG.log( Level.FINE, "DTR mask = 0x{0}", Integer.toHexString( mask ) );
+      result |= mask;
+    }
+    return result;
+  }
+
+  /**
    * Returns the data value for the given time stamp.
    * 
    * @param aTimeValue
@@ -649,6 +683,55 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   private boolean isSpace( final long aTimestamp, final int aMask )
   {
     return isExpectedLevel( aTimestamp, aMask, 0x00 );
+  }
+
+  /**
+   * Prepares and decoded the control line indicated by the given channel index.
+   * 
+   * @param aDataSet
+   *          the dataset to add the decoding results to;
+   * @param aChannelIndex
+   *          the channel index of the channel to decode;
+   * @param aDefaultLabel
+   *          the default label to use for the decoded channel.
+   */
+  private void prepareAndDecodeControl( final UARTDataSet aDataSet, final int aChannelIndex, final String aDefaultLabel )
+  {
+    prepareResult( aChannelIndex, aDefaultLabel );
+    decodeControl( aDataSet, aChannelIndex, aDefaultLabel );
+  }
+
+  /**
+   * Prepares and decoded the data line indicated by the given channel index.
+   * 
+   * @param aDataSet
+   *          the dataset to add the decoding results to;
+   * @param aChannelIndex
+   *          the channel index of the channel to decode;
+   * @param aEventType
+   *          the event type to use for the decoded data;
+   * @param aDefaultLabel
+   *          the default label to use for the decoded channel.
+   */
+  private void prepareAndDecodeData( final UARTDataSet aDataSet, final int aChannelIndex, final int aEventType,
+      final String aDefaultLabel )
+  {
+    prepareResult( aChannelIndex, aDefaultLabel );
+    decodeData( aDataSet, aChannelIndex, aEventType );
+  }
+
+  /**
+   * Determines the resulting channel label and clears any existing annotations.
+   * 
+   * @param aChannelIndex
+   *          the channel index of the channel to prepare;
+   * @param aLabel
+   *          the default label to use for the channel (in case none is set).
+   */
+  private void prepareResult( final int aChannelIndex, final String aLabel )
+  {
+    updateChannelLabel( aChannelIndex, aLabel );
+    clearChannelAnnotations( aChannelIndex );
   }
 
   /**
