@@ -51,8 +51,6 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   private boolean honourCS;
   private int mosiIdx;
   private int misoIdx;
-  private String mosiLabel;
-  private String misoLabel;
 
   // CONSTRUCTORS
 
@@ -198,6 +196,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       throw new IllegalStateException( "No CS start-condition found!" );
     }
 
+    // Initialize the channel labels + clear any existing annotations...
+    prepareResults();
+
     if ( this.mode == null )
     {
       LOG.log( Level.INFO, "Detecting which SPI mode is most probably used..." );
@@ -210,16 +211,6 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       // now the trigger is in b, add trigger event to table
       reportCsLow( decodedData, startOfDecode );
     }
-
-    this.mosiLabel = getChannelLabel( this.mosiIdx, SPIDataSet.SPI_MOSI );
-    setChannelLabel( this.mosiIdx, this.mosiLabel );
-    // clear any existing annotations
-    clearChannelAnnotations( this.mosiIdx );
-
-    this.misoLabel = getChannelLabel( this.misoIdx, SPIDataSet.SPI_MISO );
-    setChannelLabel( this.misoIdx, this.misoLabel );
-    // clear any existing annotations
-    clearChannelAnnotations( this.misoIdx );
 
     // Perform the actual decoding of the data line(s)...
     clockDataOnEdge( decodedData, this.mode );
@@ -396,6 +387,24 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     }
 
     return result;
+  }
+
+  /**
+   * Determines the channel labels that are used in the annotations and reports
+   * and clears any existing annotations on the decoded channels.
+   */
+  private void prepareResults()
+  {
+    updateChannelLabel( this.mosiIdx, SPIDataSet.SPI_MOSI );
+    updateChannelLabel( this.misoIdx, SPIDataSet.SPI_MISO );
+    updateChannelLabel( this.sckIdx, SPIDataSet.SPI_SCK );
+    updateChannelLabel( this.csIdx, SPIDataSet.SPI_CS );
+
+    // clear any existing annotations
+    clearChannelAnnotations( this.mosiIdx );
+    clearChannelAnnotations( this.misoIdx );
+    clearChannelAnnotations( this.sckIdx );
+    clearChannelAnnotations( this.csIdx );
   }
 
   /**

@@ -56,7 +56,7 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
    */
   protected BaseToolDialog( final Window aOwner, final String aTitle )
   {
-    this( aOwner, aTitle, Dialog.ModalityType.DOCUMENT_MODAL );
+    this( aOwner, aTitle, Dialog.ModalityType.MODELESS );
   }
 
   /**

@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.tool.uart;
 
 
+import java.util.logging.*;
+
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
 
@@ -30,6 +32,19 @@ import nl.lxtreme.ols.util.*;
  */
 public final class UARTDataSet extends BaseDataSet<UARTData>
 {
+  // CONSTANTS
+
+  public static final String UART_RXD = "RxD";
+  public static final String UART_TXD = "TxD";
+  public static final String UART_CTS = "CTS";
+  public static final String UART_RTS = "RTS";
+  public static final String UART_DCD = "DCD";
+  public static final String UART_RI = "RI";
+  public static final String UART_DSR = "DSR";
+  public static final String UART_DTR = "DTR";
+
+  private static final Logger LOG = Logger.getLogger( UARTDataSet.class.getName() );
+
   // VARIABLES
 
   private int decodedSymbols;
@@ -47,6 +62,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
 
     this.decodedSymbols = 0;
     this.detectedErrors = 0;
+    this.bitLength = -1;
   }
 
   // METHODS
@@ -187,18 +203,45 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   }
 
   /**
+   * Sets the (average) bit length for this data set.
+   * <p>
+   * A bit length is used to determine the baudrate of this data set. If there
+   * is already a bit length available from an earlier call to this method, it
+   * will be used to average the resulting bit length if both the current and
+   * the given bit length are "close". This allows you to use the bit lengths of
+   * both the RxD- and TxD-lines to get a good approximation of the actual
+   * baudrate.
+   * </p>
+   * 
    * @param aBitLength
+   *          the bit length to set/add, should be >= 0.
    */
   public void setSampledBitLength( final int aBitLength )
   {
-    final int diff = Math.abs( aBitLength - this.bitLength );
-    if ( ( this.bitLength > 0 ) && ( diff > 0 ) && ( diff < 50 ) )
+    // If the given bit length is "much" smaller (smaller bit length means
+    // higher baudrate) than the current one, switch to that one instead; this
+    // way we can recover from bad values...
+    if ( ( this.bitLength <= 0 ) || ( ( 10.0 * aBitLength ) < this.bitLength ) )
     {
-      // Take the average as the current and the given bitlength are "close" to
-      // each other
-      this.bitLength = ( int )( diff / 2.0 );
+      // First time being called, take the given bit length as our "truth"...
+      this.bitLength = aBitLength;
     }
-    this.bitLength = aBitLength;
+    else
+    {
+      // Take the average as the current and the given bit lengths are "close"
+      // to each other; ignore the given bit length otherwise, as it clobbers
+      // our earlier results...
+      final int diff = Math.abs( aBitLength - this.bitLength );
+      if ( ( diff >= 0 ) && ( diff < 50 ) )
+      {
+        this.bitLength = ( int )( ( aBitLength + this.bitLength ) / 2.0 );
+      }
+      else
+      {
+        LOG.log( Level.INFO, "Ignoring sampled bit length ({0}) as it deviates "
+            + "too much from current bit length ({1}).", new Object[] { aBitLength, this.bitLength } );
+      }
+    }
   }
 
   /**
