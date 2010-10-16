@@ -350,8 +350,20 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   }
 
   /**
+   * Tries the detect what the clock polarity of the contained data values is.
+   * Based on this we can make a "educated" guess what SPI mode should be used
+   * for the decoding of the remainder of data.
+   * <p>
+   * Currently, there is no way I can think of how the CPHA value can be
+   * determined from the data. Hence, we can only determine the clock polarity
+   * (CPOL), which also provides a good idea on what mode the SPI-data is.
+   * </p>
+   * 
    * @param aStartIndex
+   *          the starting sample index to use;
    * @param aEndIndex
+   *          the ending sample index to use.
+   * @return the presumed SPI mode, either mode 1 or 3.
    */
   private SPIMode detectSPIMode( final int aStartIndex, final int aEndIndex )
   {
@@ -360,11 +372,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     final int[] values = getValues();
     final int sckMask = 1 << this.sckIdx;
 
-    /*
-     * For analyze scan the CS line for a falling edge. If no edge could be
-     * found, the position of the trigger is used for start of analysis. If no
-     * trigger and no edge is found the analysis fails.
-     */
+    // Determine the value of the clock line of each sample; the value that
+    // occurs the most is probably the default polarity...
     for ( int i = aStartIndex; i < aEndIndex; i++ )
     {
       final int newValue = ( values[i] & sckMask ) >> this.sckIdx;
@@ -467,61 +476,43 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
      * found, the position of the trigger is used for start of analysis. If no
      * trigger and no edge is found the analysis fails.
      */
-    if ( aStartIndex > aEndIndex )
+    int oldCsValue = values[aStartIndex] & csMask;
+    for ( int i = aStartIndex + 1; i < aEndIndex; i++ )
     {
-      // Walk backwards...
-      int oldCsValue = values[aStartIndex] & csMask;
-      for ( int i = aStartIndex; i > aEndIndex; i-- )
+      final int csValue = values[i] & csMask;
+      if ( oldCsValue > csValue )
       {
-        final int csValue = values[i] & csMask;
-        if ( oldCsValue < csValue )
+        // found first falling edge; start decoding from here...
+        if ( LOG.isLoggable( Level.FINE ) )
         {
-          // found first falling edge; start decoding from here...
-          if ( LOG.isLoggable( Level.FINE ) )
-          {
-            LOG.fine( "CS found at " + i );
-          }
-
-          return i;
+          LOG.fine( "CS found at " + i );
         }
-        oldCsValue = csValue;
-      }
-    }
-    else
-    {
-      // Walk forwards...
-      int oldCsValue = values[aStartIndex] & csMask;
-      for ( int i = aStartIndex + 1; i < aEndIndex; i++ )
-      {
-        final int csValue = values[i] & csMask;
-        if ( oldCsValue > csValue )
-        {
-          // found first falling edge; start decoding from here...
-          if ( LOG.isLoggable( Level.FINE ) )
-          {
-            LOG.fine( "CS found at " + i );
-          }
 
-          return i;
-        }
-        oldCsValue = csValue;
+        return i;
       }
+      oldCsValue = csValue;
     }
 
     return -1;
   }
 
   /**
-   * @param aStartOfDecode
-   * @param aEndOfDecode
-   * @return
+   * Tries to find whether the SPI-slave is actually selected due to CS going
+   * low (defaults to high).
+   * 
+   * @param aStartIndex
+   *          the starting sample index to use;
+   * @param aEndIndex
+   *          the ending sample index to use.
+   * @return <code>true</code> if the slave is actually selected,
+   *         <code>false</code> otherwise.
    */
   private boolean slaveSelected( final int aStartOfDecode, final int aEndOfDecode )
   {
     boolean slaveSelected = false;
 
     // Search for a CS-low backwards from the first cursor...
-    slaveSelected = searchSlaveSelected( aStartOfDecode, 0 ) >= 0;
+    slaveSelected = searchSlaveSelected( 0, aStartOfDecode ) >= 0;
     if ( !slaveSelected )
     {
       // Search for a CS-low forwards from the first cursor...
