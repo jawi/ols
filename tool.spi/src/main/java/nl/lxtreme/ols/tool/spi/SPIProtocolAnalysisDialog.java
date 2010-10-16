@@ -21,8 +21,8 @@
 package nl.lxtreme.ols.tool.spi;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.io.*;
@@ -33,8 +33,6 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import org.osgi.service.prefs.*;
-
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
@@ -44,6 +42,9 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
+
+import org.osgi.service.prefs.*;
 
 
 /**
@@ -55,6 +56,71 @@ import nl.lxtreme.ols.util.swing.*;
  */
 public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>
 {
+  // INNER TYPES
+
+  /**
+   * Provides a combobox renderer for SPIMode enums.
+   */
+  static class SPIModeRenderer extends EnumItemRenderer<SPIMode>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.util.swing.component.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final SPIMode aValue )
+    {
+      switch ( aValue )
+      {
+        case MODE_0:
+          return "Mode 0";
+        case MODE_1:
+          return "Mode 1";
+        case MODE_2:
+          return "Mode 2";
+        case MODE_3:
+          return "Mode 3";
+      }
+      // Strange, we shouldn't be here...
+      LOG.warning( "We should not be here actually! Value = " + aValue );
+      return super.getDisplayValue( aValue );
+    }
+
+    /**
+     * @see nl.lxtreme.ols.util.swing.component.EnumItemRenderer#getToolTip(java.lang.Object)
+     */
+    @Override
+    protected String getToolTip( final Object aValue )
+    {
+      if ( aValue instanceof SPIMode )
+      {
+        switch ( ( SPIMode )aValue )
+        {
+          case MODE_0:
+            return "CPOL = 0, CPHA = 0";
+          case MODE_1:
+            return "CPOL = 0, CPHA = 1";
+          case MODE_2:
+            return "CPOL = 1, CPHA = 0";
+          case MODE_3:
+            return "CPOL = 1, CPHA = 1";
+        }
+      }
+      else if ( aValue instanceof String )
+      {
+        return "Tries to determine the SPI mode based on the clock polarity (Mode 1 or 3).";
+      }
+      // Strange, we shouldn't be here...
+      LOG.warning( "We should not be here actually! Value = " + aValue );
+      return super.getToolTip( aValue );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -63,7 +129,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   // VARIABLES
 
-  private String[] modearray;
+  private Object[] modearray;
   private String[] bitarray;
   private String[] orderarray;
   private JComboBox sck;
@@ -220,9 +286,17 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     aToolWorker.setMisoIndex( this.miso.getSelectedIndex() );
     aToolWorker.setMosiIndex( this.mosi.getSelectedIndex() );
     aToolWorker.setOrder( "MSB first".equals( this.order.getSelectedItem() ) ? BitOrder.MSB_FIRST : BitOrder.LSB_FIRST );
-    aToolWorker.setMode( SPIMode.parse( ( String )this.mode.getSelectedItem() ) );
     aToolWorker.setReportCS( this.reportCS.isSelected() );
     aToolWorker.setHonourCS( this.honourCS.isSelected() );
+    final Object modeValue = this.mode.getSelectedItem();
+    if ( modeValue instanceof SPIMode )
+    {
+      aToolWorker.setMode( ( SPIMode )modeValue );
+    }
+    else
+    {
+      aToolWorker.setMode( null );
+    }
   }
 
   /**
@@ -412,12 +486,9 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     settings.add( this.cs );
 
     settings.add( createRightAlignedLabel( "Mode" ) );
-    this.modearray = new String[4];
-    for ( int i = 0; i < this.modearray.length; i++ )
-    {
-      this.modearray[i] = new String( "" + i );
-    }
+    this.modearray = new Object[] { SPIMode.MODE_0, SPIMode.MODE_1, SPIMode.MODE_2, SPIMode.MODE_3, "Auto-detect" };
     this.mode = new JComboBox( this.modearray );
+    this.mode.setRenderer( new SPIModeRenderer() );
     settings.add( this.mode );
 
     settings.add( createRightAlignedLabel( "Bits" ) );

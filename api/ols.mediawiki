@@ -75,12 +75,14 @@ Provides some common utilities that are shared among all other projects.
 # <strike>make the order of tools in the menu predictable;</strike>
 # <strike>add a preference pane for the "general" client configuration;</strike>
 # <strike>make channel numbering uniform across entire platform;</strike>
-# provide support for exporting a diagram to PNG/JPEG/...;
+# <strike>make it configurable whether state-transitions are straight or diagonal;</strike>
+# <strike>provide support for exporting a diagram to PNG/JPEG/...;</strike>
+# set the decoded channel labels for the other decoding tools (see I2C tool);
+# add 1-Wire decoder tool;
 # show timing measurements between edges, or from rising to rising or falling to falling edges;
 # configurable colors would be nice, so that the user can set them to match the probes;
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;
 # make the annotated data configurable regarding the displayed text and colors;
-# make it configurable whether state-transitions are straight or diagonal;
 # make distinction between decoding tools and other tools;
 # provide easier access to analysis tools;
 # analysis protocol results synopsis (client: <bla bla>, master: <bla bla>, client ...);

@@ -21,38 +21,38 @@
 package nl.lxtreme.ols.tool.uart;
 
 
-import java.util.*;
+import nl.lxtreme.ols.util.analysis.*;
 
 
 /**
- * Inner class for statistical baudrate analysis
+ * Inner class for statistical baudrate analysis. Creates a histogram that
+ * allows to evaluate each detected bit length. The bit length with the highest
+ * occurrence is used for baudrate calculation.
  */
 final class BaudRateAnalyzer
 {
   // VARIABLES
 
-  /*
-   * Store as linked list with 2 int sized arrays as elements. Each array
-   * element stores at index 0 the bitlength and at index 1 the number of
-   * occurrences.
-   */
-  private final LinkedList<int[]> statData;
+  private final Frequency<Integer> statData;
 
   // CONSTRUCTORS
 
-  /*
-   * create a histogram that allows to evaluate each detected bitlength. The
-   * bitlength with the highest occurrence is used for baudrate calculation.
+  /**
+   * Creates a new BaudRateAnalyzer instance.
+   * 
+   * @param aValues
+   *          the values to determine the baudrate for;
+   * @param aTimestamps
+   *          the timestamps to use when determining the bit lengths;
+   * @param aMask
+   *          the value mask to isolate the data.
    */
   public BaudRateAnalyzer( final int[] aValues, final long[] aTimestamps, final int aMask )
   {
-    this.statData = new LinkedList<int[]>();
+    this.statData = new Frequency<Integer>();
 
-    int a, lastBitValue, c;
-    int[] valuePair;
     long lastTransition = 0;
-    lastBitValue = aValues[0] & aMask;
-    a = 0;
+    int lastBitValue = aValues[0] & aMask;
 
     for ( int i = 0; i < aValues.length; i++ )
     {
@@ -60,19 +60,8 @@ final class BaudRateAnalyzer
 
       if ( lastBitValue != bitValue )
       {
-        a = ( int )( aTimestamps[i] - lastTransition );
-        c = findValue( a );
-        if ( c < 0 )
-        {
-          valuePair = new int[2];
-          valuePair[0] = a; // bitlength
-          valuePair[1] = 1; // count
-          this.statData.add( valuePair );
-        }
-        else
-        {
-          this.statData.get( c )[1]++;
-        }
+        final int bitLength = ( int )( aTimestamps[i] - lastTransition );
+        this.statData.addValue( Integer.valueOf( bitLength ) );
 
         lastTransition = aTimestamps[i];
       }
@@ -84,81 +73,13 @@ final class BaudRateAnalyzer
   // METHODS
 
   /**
-   * @return
+   * Returns the highest ranked bit length (= with the highest count).
+   * 
+   * @return the best bit length, >= 0 or -1 if there is not best bit length.
    */
-  public int getBest()
+  public int getBestBitLength()
   {
-    int rank = 0;
-    int index = 0;
-    for ( int i = 0; i < this.statData.size(); i++ )
-    {
-      if ( this.statData.get( i )[1] > rank )
-      {
-        rank = this.statData.get( i )[1];
-        index = i;
-      }
-    }
-    if ( this.statData.size() == 0 )
-    {
-      return 0;
-    }
-    return this.statData.get( index )[0];
-  }
-
-  /**
-   * @return
-   */
-  public int getMax()
-  {
-    int max = 0;
-    for ( int i = 0; i < this.statData.size(); i++ )
-    {
-      if ( this.statData.get( i )[0] > max )
-      {
-        max = this.statData.get( i )[0];
-      }
-    }
-    return max;
-  }
-
-  /**
-   * @return
-   */
-  public int getMin()
-  {
-    int min = Integer.MAX_VALUE;
-    for ( int i = 0; i < this.statData.size(); i++ )
-    {
-      if ( this.statData.get( i )[0] < min )
-      {
-        min = this.statData.get( i )[0];
-      }
-    }
-    return min;
-  }
-
-  /**
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString()
-  {
-    return new String( "BaudRateAnalyzer:min=" + getMin() + ":max=" + getMax() + ":best=" + getBest() );
-  }
-
-  /**
-   * @param val
-   * @return
-   */
-  private int findValue( final int val )
-  {
-    for ( int i = 0; i < this.statData.size(); i++ )
-    {
-      if ( this.statData.get( i )[0] == val )
-      {
-        return i;
-      }
-    }
-    return -1;
+    final Integer highestRanked = this.statData.getHighestRanked();
+    return highestRanked == null ? -1 : highestRanked.intValue();
   }
 }
