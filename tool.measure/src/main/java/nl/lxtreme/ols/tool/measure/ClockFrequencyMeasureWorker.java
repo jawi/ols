@@ -27,6 +27,7 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.analysis.*;
 
 
 /**
@@ -101,15 +102,10 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     }
   }
 
-  public enum Edge
-  {
-    RISING, FALLING;
-  }
-
   // VARIABLES
 
   private final int channelMask;
-  private final Map<Edge, Map<Integer, Integer>> stats;
+  private final Map<Edge, Frequency<Integer>> stats;
 
   // CONSTRUCTORS
 
@@ -130,7 +126,11 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     super( aData, aContext );
 
     this.channelMask = ( 1 << aChannel );
-    this.stats = new HashMap<Edge, Map<Integer, Integer>>( 2 );
+
+    this.stats = new HashMap<Edge, Frequency<Integer>>( 2 );
+    // Populate with empty distribution maps...
+    this.stats.put( Edge.RISING, new Frequency<Integer>() );
+    this.stats.put( Edge.FALLING, new Frequency<Integer>() );
   }
 
   // METHODS
@@ -170,25 +170,8 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
           edge = Edge.FALLING;
         }
 
-        Map<Integer, Integer> edgeStats = this.stats.get( edge );
-        if ( edgeStats == null )
-        {
-          edgeStats = new HashMap<Integer, Integer>();
-          this.stats.put( edge, edgeStats );
-        }
-
-        final Integer length = Integer.valueOf( ( int )( timestamps[i] - lastTransition ) );
-
-        Integer count = edgeStats.get( length );
-        if ( count == null )
-        {
-          count = Integer.valueOf( 1 );
-        }
-        else
-        {
-          count = Integer.valueOf( count.intValue() + 1 );
-        }
-        edgeStats.put( length, count );
+        final Frequency<Integer> edgeStats = this.stats.get( edge );
+        edgeStats.addValue( Integer.valueOf( ( int )( timestamps[i] - lastTransition ) ) );
 
         lastTransition = timestamps[i];
       }
@@ -196,35 +179,9 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
       lastBitValue = bitValue;
     }
 
-    final int bestRising = getBest( Edge.RISING );
-    final int bestFalling = getBest( Edge.FALLING );
+    final int bestRising = this.stats.get( Edge.RISING ).getHighestRanked();
+    final int bestFalling = this.stats.get( Edge.FALLING ).getHighestRanked();
 
     return new ClockStats( bestRising, bestFalling, getSampleRate() );
-  }
-
-  /**
-   * @return
-   */
-  private int getBest( final Edge aEdge )
-  {
-    final Map<Integer, Integer> edgeStats = this.stats.get( aEdge );
-    if ( edgeStats == null )
-    {
-      return 0;
-    }
-
-    Integer rank = 0;
-    int result = 0;
-
-    for ( Map.Entry<Integer, Integer> entry : edgeStats.entrySet() )
-    {
-      if ( entry.getValue() > rank )
-      {
-        rank = entry.getValue();
-        result = entry.getKey();
-      }
-    }
-
-    return result;
   }
 }

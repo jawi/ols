@@ -28,6 +28,7 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
+import nl.lxtreme.ols.util.analysis.*;
 
 
 /**
@@ -197,6 +198,12 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       throw new IllegalStateException( "No CS start-condition found!" );
     }
 
+    if ( this.mode == null )
+    {
+      LOG.log( Level.INFO, "Detecting which SPI mode is most probably used..." );
+      this.mode = detectSPIMode( startOfDecode, endOfDecode );
+    }
+
     final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode, this );
     if ( slaveSelected )
     {
@@ -340,6 +347,46 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
       setProgress( ( int )( ( idx - startOfDecode ) * 100.0 / length ) );
     }
+  }
+
+  /**
+   * @param aStartIndex
+   * @param aEndIndex
+   */
+  private SPIMode detectSPIMode( final int aStartIndex, final int aEndIndex )
+  {
+    final Frequency<Integer> valueStats = new Frequency<Integer>();
+
+    final int[] values = getValues();
+    final int sckMask = 1 << this.sckIdx;
+
+    /*
+     * For analyze scan the CS line for a falling edge. If no edge could be
+     * found, the position of the trigger is used for start of analysis. If no
+     * trigger and no edge is found the analysis fails.
+     */
+    for ( int i = aStartIndex; i < aEndIndex; i++ )
+    {
+      final int newValue = ( values[i] & sckMask ) >> this.sckIdx;
+      valueStats.addValue( Integer.valueOf( newValue ) );
+    }
+
+    SPIMode result;
+
+    // If the clock line's most occurring value is one, then
+    // we're fairly sure that CPOL == 1...
+    if ( valueStats.getHighestRanked() == 1 )
+    {
+      LOG.log( Level.INFO, "SPI mode is probably mode 2 or 3 (CPOL == 1). Assuming mode 3 ..." );
+      result = SPIMode.MODE_3;
+    }
+    else
+    {
+      LOG.log( Level.INFO, "SPI mode is probably mode 0 or 1 (CPOL == 0). Assuming mode 1 ..." );
+      result = SPIMode.MODE_1;
+    }
+
+    return result;
   }
 
   /**

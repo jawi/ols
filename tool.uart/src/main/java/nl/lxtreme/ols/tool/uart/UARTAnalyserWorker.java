@@ -362,7 +362,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
       LOG.fine( baudrate.toString() );
     }
 
-    final int bitLength = baudrate.getBest();
+    final int bitLength = baudrate.getBestBitLength();
     if ( bitLength == 0 )
     {
       LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",

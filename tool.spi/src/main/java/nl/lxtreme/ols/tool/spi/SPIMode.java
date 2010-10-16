@@ -67,31 +67,6 @@ public enum SPIMode
   // METHODS
 
   /**
-   * @param aModeValue
-   * @return
-   */
-  public static SPIMode parse( final String aModeValue )
-  {
-    if ( "0".equals( aModeValue ) )
-    {
-      return MODE_0;
-    }
-    else if ( "1".equals( aModeValue ) )
-    {
-      return MODE_1;
-    }
-    else if ( "2".equals( aModeValue ) )
-    {
-      return MODE_2;
-    }
-    else if ( "3".equals( aModeValue ) )
-    {
-      return MODE_3;
-    }
-    throw new IllegalArgumentException( "Unknown mode value: " + aModeValue );
-  }
-
-  /**
    * Returns the data change edge, on which the MISO/MOSI lines are allowed to
    * change.
    * 

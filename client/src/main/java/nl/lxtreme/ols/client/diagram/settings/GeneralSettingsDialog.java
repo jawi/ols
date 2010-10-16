@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.diagram.settings;
 
 
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
 import java.awt.event.*;
 
@@ -29,10 +30,13 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.*;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorScheme;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.EdgeSlope;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.service.prefs.*;
 
@@ -142,44 +146,6 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
         text = "Slant";
       }
       return text;
-    }
-  }
-
-  /**
-   * Provides a generic cell-renderer for enum-constants.
-   */
-  static class EnumItemRenderer<ENUM_TYPE extends Enum<?>> extends DefaultListCellRenderer
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // METHODS
-
-    /**
-     * @see javax.swing.DefaultListCellRenderer#getListCellRendererComponent(javax.swing.JList,
-     *      java.lang.Object, int, boolean, boolean)
-     */
-    @Override
-    @SuppressWarnings( "unchecked" )
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-        final boolean aIsSelected, final boolean aCellHasFocus )
-    {
-      final String text = getDisplayValue( ( ENUM_TYPE )aValue );
-      return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
-    }
-
-    /**
-     * Returns the display value for the given enum value.
-     * 
-     * @param aValue
-     *          the enum value to render as display value, cannot be
-     *          <code>null</code>.
-     * @return a display value string, never <code>null</code>.
-     */
-    protected String getDisplayValue( final ENUM_TYPE aValue )
-    {
-      return String.valueOf( aValue );
     }
   }
 

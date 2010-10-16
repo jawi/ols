@@ -1154,11 +1154,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       if ( this.dataContainer.isCursorPositionSet( 0 ) )
       {
-        startOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 0 ) );
+        startOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 0 ) ) - 1;
       }
       if ( this.dataContainer.isCursorPositionSet( 1 ) )
       {
-        endOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 1 ) + 1 );
+        endOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 1 ) ) + 1;
       }
     }
     else if ( this.dataContainer.hasTriggerData() )
@@ -1175,7 +1175,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     // XXX allow one cursor to be used as well...
 
     startOfDecode = Math.max( 0, startOfDecode );
-    endOfDecode = Math.min( dataLength - 1, Math.max( 0, endOfDecode ) );
+    if ( ( endOfDecode < 0 ) || ( endOfDecode >= dataLength ) )
+    {
+      endOfDecode = dataLength - 1;
+    }
 
     return new DefaultToolContext( startOfDecode, endOfDecode );
   }
