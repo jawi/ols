@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="ols.distribution" default="all">
+
+	<property name="project.target" value="${basedir}/target" />
+	<property name="project.targetapp" value="${basedir}/target/osx" />
+	<property name="project.version" value="0.9.0" />
+
+	<target name="init" description="Initializes the artifact target folder.">
+		<mkdir dir="${project.targetapp}" />
+
+		<taskdef name="jarbundler" classname="net.sourceforge.jarbundler.JarBundler" 
+			classpath="${basedir}/src/main/resources/jarbundler-2.1.0.jar" />
+	</target>
+
+	<target name="clean" description="Clean up the artifacts of this script.">
+		<delete dir="${project.targetapp}" />
+	</target>
+
+	<target name="package" depends="init" description="Creates the OSX app bundle">
+		<jarbundler dir="${project.targetapp}" 
+			bundleid="nl.lxtreme.ols" 
+			name="LogicSniffer"
+			mainclass="nl.lxtreme.ols.runner.Runner" 
+			version="${project.version}" build="1" 
+			jvmversion="1.6+" arguments="-Dnl.lxtreme.ols.bundle.dir=$JAVAROOT/plugins"
+			workingdirectory="$APP_PACKAGE/Contents/Resources/Java">
+			<jarfileset dir="${project.target}/bin">
+				<include name="*.jar" />
+			</jarfileset>
+            <javafileset dir="${project.target}">
+                <include name="plugins/*.jar" />
+            </javafileset>
+		</jarbundler>
+	</target>
+
+	<target name="all" depends="init, clean" description="Runs the two targets" />
+</project>
