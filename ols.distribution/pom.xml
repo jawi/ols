@@ -224,9 +224,7 @@
 							<target>
 								<ant antfile="${basedir}/app-bundle.xml" inheritAll="false">
 									<property name="project.version" value="${ols.version}" />
-									<target name="package" />
-									<target name="create-dmg" />
-									<target name="clean" />
+									<target name="all" />
 								</ant>
 							</target>
 						</configuration>
