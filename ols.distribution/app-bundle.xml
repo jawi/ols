@@ -11,13 +11,17 @@
 		<!-- be sure to have a proper version defined at all times! -->
 		<fail message="No project version property is defined! Cannot continue..." unless="project.version" />
 		<mkdir dir="${project.targetapp}" />
+
+		<condition property="isMac">
+		  <os family="mac" />
+		</condition>
 	</target>
 
 	<target name="clean" description="Clean up the artifacts of this script.">
 		<delete dir="${project.targetapp}" />
 	</target>
 
-	<target name="package" depends="init" description="Creates the OSX app bundle">
+	<target name="package" depends="init" description="Creates the OSX app bundle" if="isMac">
 		<jarbundler dir="${project.targetapp}" bundleid="nl.lxtreme.ols" name="${project.name}" shortname="${project.name}" mainclass="nl.lxtreme.ols.runner.Runner" version="${project.version}" build="1" jvmversion="1.6+" arguments="-Dnl.lxtreme.ols.bundle.dir=$JAVAROOT/plugins" workingdirectory="$APP_PACKAGE/Contents/Resources/Java">
 			<jarfileset dir="${project.target}/bin">
 				<include name="*.jar" />
@@ -28,8 +32,8 @@
 		</jarbundler>
 	</target>
 
-	<target name="create-dmg" depends="init" description="Creates the DMG archive">
-		<exec executable="hdiutil" os="Mac OS X">
+	<target name="create-dmg" depends="init" description="Creates the DMG archive" if="isMac">
+		<exec executable="hdiutil">
 			<arg value="create" />
 			<arg value="-ov" />
 			<arg value="-scrub" />
@@ -39,12 +43,14 @@
 			<arg value="${project.targetapp}" />
 			<arg value="${project.target}/ols-${project.version}.dmg" />
 		</exec>
-		<exec executable="hdiutil" os="Mac OS X">
+		<exec executable="hdiutil">
 			<arg value="internet-enable" />
 			<arg value="-yes" />
 			<arg value="${project.target}/ols-${project.version}.dmg" />
 		</exec>
 	</target>
+	
+	<target name="all" depends="init, package, create-dmg, clean" description="Does it all." />
 
 	<target name="noop" />
 </project>
