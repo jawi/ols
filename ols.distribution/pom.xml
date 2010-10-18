@@ -222,10 +222,11 @@
 						<phase>package</phase>
 						<configuration>
 							<target>
-								<property name="project.version" value="${ols.version}" />
-
-								<ant antfile="${basedir}/app-bundle.xml">
+								<ant antfile="${basedir}/app-bundle.xml" inheritAll="false">
+									<property name="project.version" value="${ols.version}" />
 									<target name="package" />
+									<target name="create-dmg" />
+									<target name="clean" />
 								</ant>
 							</target>
 						</configuration>
