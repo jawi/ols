@@ -50,6 +50,12 @@ about captured data. Most of the current tools do some "heavy" processing of dat
 should be done in the background to keep the UI responsive. To make writing such tools
 easier, a "base" tool is provided which provides most of the boilerplate code. 
 
+=== Exports ===
+
+Provides the export functionality from the diagram to various output formats. The 
+exporters get access to the complete diagram, which can result in a ''very'' memory
+consuming export. No limitations are enforced from the platform.
+
 === Runner ===
 
 Provides a small "bootstrap" for the OSGi container. This project is the only non-OSGi 
@@ -77,7 +83,7 @@ Provides some common utilities that are shared among all other projects.
 # <strike>make channel numbering uniform across entire platform;</strike>
 # <strike>make it configurable whether state-transitions are straight or diagonal;</strike>
 # <strike>provide support for exporting a diagram to PNG/JPEG/...;</strike>
-# set the decoded channel labels for the other decoding tools (see I2C tool);
+# <strike>set the decoded channel labels for the other decoding tools (see I2C tool);</strike>
 # add 1-Wire decoder tool;
 # show timing measurements between edges, or from rising to rising or falling to falling edges;
 # configurable colors would be nice, so that the user can set them to match the probes;
