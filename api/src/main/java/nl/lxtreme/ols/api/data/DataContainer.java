@@ -122,20 +122,16 @@ public final class DataContainer implements CapturedData
   }
 
   /**
-   * Calculates the time offset
+   * Calculates the time value corresponding to the given sample index.
    * 
-   * @param time
-   *          absolute sample number
-   * @return time relative to data
+   * @param aSampleIndex
+   *          the sample index to get the time value for, >= 0.
+   * @return the time value, in seconds.
    */
-  public long calculateTime( final long aTime )
+  public double calculateTime( final int aSampleIndex )
   {
-    if ( this.capturedData.hasTriggerData() )
-    {
-      return aTime - this.capturedData.getTriggerPosition();
-    }
-
-    return aTime;
+    double timestamp = calculateTimeOffset( getTimestamps()[aSampleIndex] );
+    return ( timestamp / getSampleRate() );
   }
 
   /**
@@ -293,7 +289,7 @@ public final class DataContainer implements CapturedData
     long cursorPos = getCursorPosition( aCursorIdx );
     if ( cursorPos > Long.MIN_VALUE )
     {
-      return calculateTime( cursorPos ) / ( double )this.capturedData.getSampleRate();
+      return calculateTimeOffset( cursorPos ) / ( double )this.capturedData.getSampleRate();
     }
     return null;
   }
@@ -749,5 +745,22 @@ public final class DataContainer implements CapturedData
     {
       bw.flush();
     }
+  }
+
+  /**
+   * Calculates the time offset
+   * 
+   * @param time
+   *          absolute sample number
+   * @return time relative to data
+   */
+  protected long calculateTimeOffset( final long aTime )
+  {
+    if ( this.capturedData.hasTriggerData() )
+    {
+      return aTime - this.capturedData.getTriggerPosition();
+    }
+
+    return aTime;
   }
 }

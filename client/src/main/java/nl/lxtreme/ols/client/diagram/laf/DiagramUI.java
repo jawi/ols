@@ -160,12 +160,14 @@ public class DiagramUI extends ComponentUI
     {
       final Diagram diagram = ( Diagram )aEvent.getSource();
       final Point mousePosition = aEvent.getPoint();
+
       if ( this.currentCursor >= 0 )
       {
         diagram.dragCursor( this.currentCursor, mousePosition );
       }
 
-      updateTooltipText( diagram, mousePosition, null );
+      final int channelIdx = diagram.convertPointToChannelIndex( mousePosition );
+      updateTooltipText( diagram, mousePosition, channelIdx, null );
     }
 
     /**
@@ -184,7 +186,7 @@ public class DiagramUI extends ComponentUI
       final int channelIdx = diagram.convertPointToChannelIndex( mousePosition );
       if ( channelIdx >= 0 )
       {
-        diagram.getAnnotationHover( channelIdx, mousePosition );
+        annotation = diagram.getAnnotationHover( channelIdx, mousePosition );
       }
 
       // Determine whether we're hovering over a cursor...
@@ -200,7 +202,7 @@ public class DiagramUI extends ComponentUI
 
       // Update the graphical state of the diagram...
       diagram.setCursor( mouseCursor );
-      updateTooltipText( diagram, mousePosition, annotation );
+      updateTooltipText( diagram, mousePosition, channelIdx, annotation );
     }
 
     /**
@@ -258,7 +260,7 @@ public class DiagramUI extends ComponentUI
      *          <code>true</code> indicates that dragging information should be
      *          added
      */
-    private void updateTooltipText( final Diagram aDiagram, final Point aMousePosition,
+    private void updateTooltipText( final Diagram aDiagram, final Point aMousePosition, final int aChannelIndex,
         final ChannelAnnotation aAnnotation )
     {
       final DataContainer dataContainer = aDiagram.getDataContainer();
@@ -268,36 +270,46 @@ public class DiagramUI extends ComponentUI
       }
 
       final StringBuffer sb = new StringBuffer();
-
-      final int channelIdx = aDiagram.convertPointToChannelIndex( aMousePosition );
-      if ( channelIdx < 0 )
+      if ( aChannelIndex < 0 )
       {
-        sb.append( "Scope/byte " ).append( Math.abs( channelIdx + 1 ) );
+        sb.append( "Scope/byte " ).append( Math.abs( aChannelIndex + 1 ) );
       }
       else
       {
-        sb.append( "Channel " ).append( channelIdx );
+        sb.append( "Channel " ).append( aChannelIndex );
       }
       sb.append( " | " );
 
+      final long triggerPosition = dataContainer.getTriggerPosition();
+      final int sampleRate = dataContainer.getSampleRate();
+
       if ( aAnnotation != null )
       {
+        final double start = dataContainer.calculateTime( aAnnotation.getStartIndex() );
+        final double end = dataContainer.calculateTime( aAnnotation.getEndIndex() );
+
         sb.append( aAnnotation.getData() );
+        sb.append( " | Time: " );
+        sb.append( DisplayUtils.displayTime( start ) );
+        sb.append( ".." );
+        sb.append( DisplayUtils.displayTime( end ) );
       }
       else
       {
         final long idxMouseX = aDiagram.convertPointToSampleIndex( aMousePosition );
-        final long triggerPosition = dataContainer.getTriggerPosition();
 
-        final long absMouseX = idxMouseX - triggerPosition;
         if ( !dataContainer.hasTimingData() )
         {
-          sb.append( "Sample " ).append( absMouseX );
+          sb.append( "Sample: " ).append( idxMouseX );
         }
-        else if ( dataContainer.hasTimingData() )
+        else
         {
-          final int sampleRate = dataContainer.getSampleRate();
-          sb.append( "Time " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
+          long absMouseX = idxMouseX;
+          if ( dataContainer.hasTriggerData() )
+          {
+            absMouseX -= triggerPosition;
+          }
+          sb.append( "Time: " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
         }
       }
 
