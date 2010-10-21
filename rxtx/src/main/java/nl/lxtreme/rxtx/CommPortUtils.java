@@ -23,6 +23,8 @@ package nl.lxtreme.rxtx;
 
 import gnu.io.*;
 
+import java.io.*;
+
 
 /**
  * Provides some common utilities for talking to (serial/parallel) communication
@@ -80,8 +82,7 @@ public final class CommPortUtils
       }
       catch ( NoSuchPortException exception )
       {
-        // Try to add the portname as possible serial port...
-        CommPortIdentifier.addPortName( aPortName, CommPortIdentifier.PORT_SERIAL, createDriver() );
+        addSerialPort( aPortName );
       }
     }
     while ( ( port == null ) && ( tries >= 0 ) );
@@ -92,6 +93,29 @@ public final class CommPortUtils
     }
 
     return port;
+  }
+
+  /**
+   * @param aPortName
+   */
+  private static void addSerialPort( final String aPortName ) throws NoSuchPortException
+  {
+    File device = new File( aPortName );
+    try
+    {
+      device = device.getCanonicalFile();
+      if ( !device.exists() )
+      {
+        throw new NoSuchPortException();
+      }
+
+      // Try to add the portname as possible serial port...
+      CommPortIdentifier.addPortName( aPortName, CommPortIdentifier.PORT_SERIAL, createDriver() );
+    }
+    catch ( IOException exception )
+    {
+      throw new NoSuchPortException();
+    }
   }
 
   /**
