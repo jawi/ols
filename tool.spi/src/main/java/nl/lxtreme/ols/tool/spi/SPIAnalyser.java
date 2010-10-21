@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.spi;
 
 
 import java.awt.*;
+import java.beans.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
@@ -63,6 +64,21 @@ public class SPIAnalyser extends BaseAsyncTool<SPIProtocolAnalysisDialog, SPIDat
   protected SPIAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
   {
     return new SPIAnalyserWorker( aData, aContext );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onPropertyChange(java.beans.PropertyChangeEvent)
+   */
+  @Override
+  protected void onPropertyChange( final PropertyChangeEvent aEvent )
+  {
+    final String name = aEvent.getPropertyName();
+    final Object value = aEvent.getNewValue();
+
+    if ( SPIAnalyserWorker.PROPERTY_AUTO_DETECT_MODE.equals( name ) )
+    {
+      getDialog().setAutoDetectSPIMode( ( SPIMode )value );
+    }
   }
 }
 

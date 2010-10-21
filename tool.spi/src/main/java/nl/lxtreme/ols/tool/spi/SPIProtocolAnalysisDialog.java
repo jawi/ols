@@ -147,6 +147,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   private Action exportAction;
   private Action closeAction;
 
+  private SPIMode detectedSPIMode;
+
   // CONSTRUCTORS
 
   /**
@@ -234,6 +236,17 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     this.runAnalysisAction.restore();
 
     setControlsEnabled( true );
+  }
+
+  /**
+   * Sets the auto detected SPI mode to the given value.
+   * 
+   * @param aMode
+   *          the detected SPI mode, cannot be <code>null</code>.
+   */
+  public void setAutoDetectSPIMode( final SPIMode aMode )
+  {
+    this.detectedSPIMode = aMode;
   }
 
   /**
@@ -417,6 +430,14 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     Element table, tr, thead, tbody;
 
     table = body.addChild( TABLE ).addAttribute( "class", "w100" );
+    tbody = table.addChild( TBODY );
+    tr = tbody.addChild( TR );
+    tr.addChild( TH ).addAttribute( "colspan", "2" ).addContent( "Configuration" );
+    tr = tbody.addChild( TR );
+    tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "SPI mode" );
+    tr.addChild( TD ).addContent( "{detected-spi-mode}" );
+
+    table = body.addChild( TABLE ).addAttribute( "class", "w100" );
     thead = table.addChild( THEAD );
     tr = thead.addChild( TR );
     tr.addChild( TH ).addAttribute( "class", "w30" ).addAttribute( "colspan", "2" );
@@ -591,6 +612,28 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
         {
           final DateFormat df = DateFormat.getDateInstance( DateFormat.LONG );
           return df.format( new Date() );
+        }
+        else if ( "detected-spi-mode".equals( aMacro ) )
+        {
+          String result = "<unknown>";
+          switch ( SPIProtocolAnalysisDialog.this.detectedSPIMode )
+          {
+            case MODE_0:
+              result = "Mode 0 (CPOL = 0, CPHA = 0)";
+              break;
+            case MODE_1:
+              result = "Mode 1 (CPOL = 0, CPHA = 1)";
+              break;
+            case MODE_2:
+              result = "Mode 2 (CPOL = 1, CPHA = 0)";
+              break;
+            case MODE_3:
+              result = "Mode 3 (CPOL = 1, CPHA = 1)";
+              break;
+            default:
+              break;
+          }
+          return result;
         }
         else if ( "decoded-data".equals( aMacro ) )
         {

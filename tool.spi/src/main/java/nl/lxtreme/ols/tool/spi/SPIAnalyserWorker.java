@@ -40,6 +40,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
   private static final Logger LOG = Logger.getLogger( SPIAnalyserWorker.class.getName() );
 
+  public static final String PROPERTY_AUTO_DETECT_MODE = "AutoDetectSPIMode";
+
   // VARIABLES
 
   private int csIdx;
@@ -204,6 +206,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       LOG.log( Level.INFO, "Detecting which SPI mode is most probably used..." );
       this.mode = detectSPIMode( startOfDecode, endOfDecode );
     }
+
+    // Notify any listeners of the detected mode...
+    firePropertyChange( PROPERTY_AUTO_DETECT_MODE, null, this.mode );
 
     final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode, this );
     if ( slaveSelected )
