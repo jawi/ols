@@ -77,14 +77,6 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.DataContainer#calculateTime(long)
-   */
-  public long calculateTime( final long aTime )
-  {
-    return this.data.calculateTime( aTime );
-  }
-
-  /**
    * @see nl.lxtreme.ols.api.data.CapturedData#clearChannelAnnotations(int)
    */
   public final void clearChannelAnnotations( final int aChannelIdx )

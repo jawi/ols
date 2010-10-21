@@ -139,7 +139,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       String text = super.getDisplayValue( aValue );
       if ( EdgeSlope.PERPENDICULAR.equals( aValue ) )
       {
-        text = "Perpendicular";
+        text = "Straight";
       }
       else if ( EdgeSlope.NON_PERPENDICULAR.equals( aValue ) )
       {
