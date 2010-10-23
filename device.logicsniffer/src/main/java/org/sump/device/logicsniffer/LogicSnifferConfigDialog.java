@@ -295,6 +295,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       SwingComponentUtils.setSelectedItem( this.portSelect, aPrefs.get( "port", null ) );
       SwingComponentUtils.setSelectedIndex( this.portRateSelect, aPrefs.getInt( "portRate", -1 ) );
       SwingComponentUtils.setSelectedIndex( this.sourceSelect, aPrefs.getInt( "source", -1 ) );
+      SwingComponentUtils.setSelectedIndex( this.numberSchemeSelect, aPrefs.getInt( "numberScheme", -1 ) );
       SwingComponentUtils.setSelectedIndex( this.speedSelect, aPrefs.getInt( "speed", -1 ) );
       SwingComponentUtils.setSelectedIndex( this.sizeSelect, aPrefs.getInt( "size", -1 ) );
       SwingComponentUtils.setSelected( this.maxSampleSize, aPrefs.getBoolean( "autosize", Boolean.FALSE ) );
@@ -371,6 +372,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     aPrefs.put( "port", String.valueOf( this.portSelect.getSelectedItem() ) );
     aPrefs.putInt( "portRate", this.portRateSelect.getSelectedIndex() );
     aPrefs.putInt( "source", this.sourceSelect.getSelectedIndex() );
+    aPrefs.putInt( "numberScheme", this.numberSchemeSelect.getSelectedIndex() );
     aPrefs.putInt( "speed", this.speedSelect.getSelectedIndex() );
     aPrefs.putBoolean( "autosize", this.maxSampleSize.isSelected() );
     aPrefs.putInt( "size", this.sizeSelect.getSelectedIndex() );
