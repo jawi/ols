@@ -1,3 +1,243 @@
+2010-10-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	* tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyser.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java: Added detected SPI mode to analysis report.
+
+2010-10-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ExporterTracker.jav
+	a,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpH
+	elper.java: Added missing HEADERS.
+
+2010-10-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java: Some small bugfixes in the annotations tooltip shown in the
+	main diagram.
+
+2010-10-20  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki, pom.xml: Preparing for 0.9.0 branch.
+
+2010-10-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/app-bundle.xml, ols.distribution/pom.xml: Made it
+	less platform dependent (allow to run app-bundle script on non OSX
+	hosts as well; but do not do anything there).
+
+2010-10-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/app-bundle.xml, ols.distribution/pom.xml: Create
+	DMG distribution file automatically from OSX app bundle.
+
+2010-10-17  JaWi <j.w.janssen@lxtreme.nl>
+
+	* eclipse/OLS Runner.launch, ols.distribution/app-bundle.xml,
+	ols.distribution/pom.xml, pom.xml: First attempt in creating an OSX
+	app bundle.
+
+2010-10-16  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseToolDialog.jav
+	a,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va, tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java: - Made all decoder dialogs modeless, on request of Eric; - Some bugfixes in the UART decoding; support for channel labels
+	  when decoding, better baudrate prediction; - small updates/cleanups.
+
+2010-10-16  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va: Added some JavaDoc on the SPI detection.
+
+2010-10-16  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va, tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIMode.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/BaudRateAnalyzer.j
+	ava,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java, util/pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/analysis/Frequency.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/EnumItemRend
+	erer.java,
+	util/src/test/java/nl/lxtreme/ols/util/analysis/FrequencyTest.java: 
+	Added common analysis utility for creating a frequency distribution
+	map (useful for determining bit lenghts and such). Fixed some bugs
+	in the SPI decoder tool causing CS detection to fail. Added a
+	SPI-mode detect option to the SPI decoder tool.
+
+2010-10-13  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java: Small translation fix.
+
+2010-10-13  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Diagram
+	Settings.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java: Added setting for displaying signal edges in
+	perpendicular or non-perpendicular way.
+
+2010-10-12  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/export/Exporter.java,
+	client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/export/ImageExpo
+	rter.java, export.image/pom.xml,
+	export.image/src/main/java/nl/lxtreme/ols/export/image/Activator.ja
+	va,
+	export.image/src/main/java/nl/lxtreme/ols/export/image/ImageExporte
+	r.java,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpE
+	xporter.java, ols.distribution/pom.xml, pom.xml: Moved the image
+	exporter to a separate bundle, as this is easier for (future)
+	maintenance. Solved some minor bugs/code cleanups.
+
+2010-10-11  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorModeActi
+	on.java: Renamed the cursors-mode action; fixed a bug when switching
+	cursors on/off on a diagram with cursors.
+
+2010-10-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	* rxtx/pom.xml: Cleaned up the RXTX library; removed redundant
+	references to embedded RXTX library.
+
+2010-10-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/pom.xml, device.logicsniffer/pom.xml,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java, pom.xml, rxtx/pom.xml,
+	rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java: Cleaned up
+	the dependencies on RXTX library. Added a convenience class
+	(CommPortUtils) for RXTX to allow a central point for providing some
+	platform specific hacks (e.g. add ttyACM as device on Linux
+	platforms).
+
+2010-10-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorModeActi
+	on.java: Renamed the 'enable/disable cursors' action to 'Cursor
+	mode' to make its purpose and state a bit more clearer. Thanks to
+	Eric for mentioning this.
+
+2010-10-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* .gitignore: Added additional ignore entry.
+
+2010-10-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/assembly.xml, pom.xml: Fixed a small problem in
+	the created assembly; the tarball was not correctly ended with 2
+	zero blocks causing some archivers to issue a warning. In addition,
+	made the root entry use a slash instead of a dot.
+
+2010-10-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpE
+	xporter.java,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpH
+	elper.java: Initial working version of VCD dump; only the timing
+	representation is not entirely correct.
+
+2010-10-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: When opening the capture dialog after a
+	succesful capture; it will always perform a recapture. Thanks to
+	erik for reporting this issue.
+
+2010-10-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpE
+	xporter.java,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpH
+	elper.java,
+	util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java,
+	util/src/test/java/nl/lxtreme/ols/util/DisplayUtilsTest.java: 
+	Started implementation of VCD exporter.
+
+2010-10-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/export/ImageExpo
+	rter.java: Small update on the import/export of diagrams.
+
+2010-10-05  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/pom.xml,
+	api/src/main/java/nl/lxtreme/ols/api/data/export/Exporter.java,
+	client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ExportAction.java
+	,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/export/ImageExpo
+	rter.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ExporterTracker.jav
+	a, export.vcd/pom.xml,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/Activator.java,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpE
+	xporter.java, ols.distribution/pom.xml, pom.xml,
+	runner/src/main/java/nl/lxtreme/ols/runner/Runner.java,
+	util/src/main/java/nl/lxtreme/ols/util/ExportUtils.java: Added
+	simple API for exporting data to a file.
+
+2010-10-02  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki, ols.distribution/src/site/main/index.html,
+	ols.distribution/src/site/main/js/dots/galleria.dots.css,
+	ols.distribution/src/site/main/js/dots/galleria.dots.js,
+	ols.distribution/src/site/main/js/galleria.js,
+	ols.distribution/src/site/main/js/jquery.toc-0.1.js,
+	ols.distribution/src/site/main/js/reflection.js: Updated main site.
+
+2010-10-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ChangeLog, ols.distribution/src/site/main/.htaccess,
+	ols.distribution/src/site/main/index.html, pom.xml: Release 0.8.5.
+
 2010-10-01  JaWi <j.w.janssen@lxtreme.nl>
 
 	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,

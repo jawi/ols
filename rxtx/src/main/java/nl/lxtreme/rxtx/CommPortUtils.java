@@ -24,6 +24,7 @@ package nl.lxtreme.rxtx;
 import gnu.io.*;
 
 import java.io.*;
+import java.util.regex.*;
 
 
 /**
@@ -34,7 +35,8 @@ public final class CommPortUtils
 {
   // VARIABLES
 
-  static boolean initialized = false;
+  private static boolean initialized = false;
+  private static String osName = "";
 
   // CONSTRUCTORS
 
@@ -64,8 +66,10 @@ public final class CommPortUtils
    */
   public static SerialPort getSerialPort( final String aPortName ) throws PortInUseException, NoSuchPortException
   {
-    SerialPort port = null;
-    int tries = 3;
+    if ( aPortName == null )
+    {
+      throw new IllegalArgumentException( "Port name cannot be null!" );
+    }
 
     if ( !initialized )
     {
@@ -73,6 +77,9 @@ public final class CommPortUtils
       System.out.println( RXTXVersion.getVersion() + " initialized..." );
       initialized = true;
     }
+
+    SerialPort port = null;
+    int tries = 3;
 
     do
     {
@@ -96,26 +103,42 @@ public final class CommPortUtils
   }
 
   /**
+   * Tries to verify the given port name as a valid device and if this appears
+   * so, adds it to the list of devices of RXTX.
+   * 
    * @param aPortName
+   *          the name of the port to add, cannot be <code>null</code>.
    */
   private static void addSerialPort( final String aPortName ) throws NoSuchPortException
   {
-    File device = new File( aPortName );
-    try
+    if ( !osName.contains( "windows" ) )
     {
-      device = device.getCanonicalFile();
-      if ( !device.exists() )
+      File device = new File( aPortName );
+      try
+      {
+        device = device.getCanonicalFile();
+        if ( !device.exists() )
+        {
+          throw new NoSuchPortException();
+        }
+      }
+      catch ( IOException exception )
       {
         throw new NoSuchPortException();
       }
-
-      // Try to add the portname as possible serial port...
-      CommPortIdentifier.addPortName( aPortName, CommPortIdentifier.PORT_SERIAL, createDriver() );
     }
-    catch ( IOException exception )
+    else
     {
-      throw new NoSuchPortException();
+      final Pattern pattern = Pattern.compile( "^COM\\d+$", Pattern.CASE_INSENSITIVE );
+      final Matcher matcher = pattern.matcher( aPortName );
+      if ( !matcher.matches() )
+      {
+        throw new NoSuchPortException();
+      }
     }
+
+    // Try to add the portname as possible serial port...
+    CommPortIdentifier.addPortName( aPortName, CommPortIdentifier.PORT_SERIAL, createDriver() );
   }
 
   /**
@@ -138,9 +161,15 @@ public final class CommPortUtils
     // Suppress the version mismatch banner...
     System.setProperty( "gnu.io.rxtx.NoVersionOutput", "true" );
 
+    osName = System.getProperty( "os.name" );
+    if ( osName == null )
+    {
+      osName = "unknown";
+    }
+    osName = osName.toLowerCase();
+
     // Ugly hack: force a greater set of port names for some OSs...
-    final String osName = System.getProperty( "os.name" );
-    if ( ( osName != null ) && osName.toLowerCase().contains( "linux" ) )
+    if ( osName.contains( "linux" ) )
     {
       // Set taken from RXTXCommDriver.java ...
       final String[] portPrefixes = { "/dev/ttyS", "/dev/ttySA", "/dev/ttyACM", "/dev/ttyUSB", "/dev/rfcomm",
