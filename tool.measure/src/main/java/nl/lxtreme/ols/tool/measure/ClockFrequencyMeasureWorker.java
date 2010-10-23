@@ -148,6 +148,10 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     int start = context.getStartSampleIndex();
     int end = context.getEndSampleIndex();
 
+    // Make sure no other stuff from previous runs keep lingering...
+    this.stats.get( Edge.RISING ).clear();
+    this.stats.get( Edge.FALLING ).clear();
+
     int i = Math.max( 0, start - 1 );
     long lastTransition = 0;
     int lastBitValue = values[i] & this.channelMask;
@@ -179,9 +183,10 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
       lastBitValue = bitValue;
     }
 
-    final int bestRising = this.stats.get( Edge.RISING ).getHighestRanked();
-    final int bestFalling = this.stats.get( Edge.FALLING ).getHighestRanked();
+    final Integer bestRising = this.stats.get( Edge.RISING ).getHighestRanked();
+    final Integer bestFalling = this.stats.get( Edge.FALLING ).getHighestRanked();
 
-    return new ClockStats( bestRising, bestFalling, getSampleRate() );
+    return new ClockStats( ( bestRising == null ) ? 0 : bestRising.intValue(), //
+        ( bestFalling == null ) ? 0 : bestFalling.intValue(), getSampleRate() );
   }
 }
