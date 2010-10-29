@@ -49,10 +49,10 @@ public class ValueChangeDumpExporter implements Exporter
    *      javax.swing.JComponent, java.io.Writer)
    */
   @Override
-  public void export( final DataContainer aContainer, final JComponent aComponent, final Writer aWriter )
+  public void export( final DataContainer aContainer, final JComponent aComponent, final OutputStream aStream )
       throws IOException
   {
-    final PrintWriter writer = new PrintWriter( aWriter );
+    final PrintWriter writer = new PrintWriter( aStream );
     try
     {
       final double timescale = getTimebase( aContainer.getSampleRate() );

@@ -94,11 +94,11 @@ public class ExportAction extends BaseAction
     final File exportFileName = getExportFileName( owner, exporter );
     if ( exportFileName != null )
     {
-      FileWriter writer = null;
+      OutputStream writer = null;
 
       try
       {
-        writer = new FileWriter( exportFileName );
+        writer = new FileOutputStream( exportFileName );
 
         controller.exportTo( exporter, writer );
 
@@ -118,6 +118,7 @@ public class ExportAction extends BaseAction
         {
           LOG.log( Level.FINE, "Flushing (file) writer failed?!", exception );
         }
+
         try
         {
           writer.close();

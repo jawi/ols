@@ -188,7 +188,6 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
 								</artifactItem>
-
 							</artifactItems>
 						</configuration>
 					</execution>

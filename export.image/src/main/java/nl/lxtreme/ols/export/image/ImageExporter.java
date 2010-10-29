@@ -27,10 +27,10 @@ import java.io.*;
 
 import javax.imageio.*;
 import javax.swing.*;
+import javax.swing.border.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.export.*;
-import nl.lxtreme.ols.util.ExportUtils.WriterOutputStream;
 
 
 /**
@@ -49,10 +49,10 @@ public class ImageExporter implements Exporter
 
   /**
    * @see nl.lxtreme.ols.api.data.export.Exporter#export(nl.lxtreme.ols.api.data.DataContainer,
-   *      javax.swing.JComponent, java.io.Writer)
+   *      javax.swing.JComponent, java.io.OutputStream)
    */
   @Override
-  public void export( final DataContainer aContainer, final JComponent aComponent, final Writer aWriter )
+  public void export( final DataContainer aContainer, final JComponent aComponent, final OutputStream aStream )
       throws IOException
   {
     final Dimension dims = getExportSize( aComponent );
@@ -63,7 +63,7 @@ public class ImageExporter implements Exporter
     Graphics2D g2d = image.createGraphics();
     try
     {
-      paintDiagram( image, g2d, aComponent );
+      paintDiagram( g2d, aComponent );
     }
     finally
     {
@@ -71,7 +71,7 @@ public class ImageExporter implements Exporter
       g2d = null;
     }
 
-    if ( !ImageIO.write( image, "png", new WriterOutputStream( aWriter ) ) )
+    if ( !ImageIO.write( image, "png", aStream ) )
     {
       throw new IOException( "Export to PNG failed! Image not supported?" );
     }
@@ -127,94 +127,40 @@ public class ImageExporter implements Exporter
     {
       final JScrollPane scrollpane = ( JScrollPane )aDiagram;
 
+      final Dimension visibleViewSize = scrollpane.getViewport().getExtentSize();
       final Dimension viewSize = scrollpane.getViewport().getViewSize();
-      final Dimension rowHeaderSize = scrollpane.getRowHeader().getViewSize();
-      final Dimension columnHeaderSize = scrollpane.getColumnHeader().getViewSize();
+      final Dimension rowHeaderSize = scrollpane.getRowHeader().getExtentSize();
+      final Dimension columnHeaderSize = scrollpane.getColumnHeader().getExtentSize();
 
-      final int width = viewSize.width + rowHeaderSize.width;
-      final int height = viewSize.height + columnHeaderSize.height;
+      final int width = Math.min( viewSize.width, visibleViewSize.width ) + rowHeaderSize.width;
+      final int height = Math.min( viewSize.height, visibleViewSize.height ) + columnHeaderSize.height;
 
       return new Dimension( width, height );
     }
 
-    return aDiagram.getPreferredSize();
+    return aDiagram.getSize();
   }
 
   /**
    * Paints the given component on the given canvas.
    * 
-   * @param aRenderedImage
    * @param aCanvas
    *          the canvas to paint on, cannot be <code>null</code>;
    * @param aDiagram
    *          the component to paint, cannot be <code>null</code>.
    * @see #paintScrollPaneContents(Graphics2D, JScrollPane)
    */
-  private void paintDiagram( final RenderedImage aRenderedImage, final Graphics2D aCanvas, final JComponent aDiagram )
+  private void paintDiagram( final Graphics2D aCanvas, final JComponent aDiagram )
   {
-    if ( aDiagram instanceof JScrollPane )
+    final Border border = aDiagram.getBorder();
+    if ( border != null )
     {
-      paintScrollPaneContents( aRenderedImage, aCanvas, ( JScrollPane )aDiagram );
+      final Insets insets = border.getBorderInsets( aDiagram );
+      if ( insets != null )
+      {
+        aCanvas.translate( -insets.left, -insets.top );
+      }
     }
-    else
-    {
-      aDiagram.paint( aCanvas );
-    }
-  }
-
-  /**
-   * Paints the contents of the given scrollpane on the given canvas, expanding
-   * it to its full view (without scroll bars).
-   * 
-   * @param aCanvas
-   *          the canvas to paint on, cannot be <code>null</code>;
-   * @param aScrollPane
-   *          the scroll pane to paint, cannot be <code>null</code>.
-   */
-  private void paintScrollPaneContents( final RenderedImage aRenderedImage, final Graphics2D aCanvas,
-      final JScrollPane aScrollPane )
-  {
-    int offsetX = 0;
-    int offsetY = 0;
-
-    final Component rowHeaderView = aScrollPane.getRowHeader().getView();
-    final Component columnHeaderView = aScrollPane.getColumnHeader().getView();
-    final Component cornerView = aScrollPane.getCorner( ScrollPaneConstants.UPPER_LEADING_CORNER );
-    final Component contentView = aScrollPane.getViewport().getView();
-
-    if ( rowHeaderView != null )
-    {
-      offsetX = rowHeaderView.getWidth();
-    }
-    if ( columnHeaderView != null )
-    {
-      offsetY = columnHeaderView.getHeight();
-    }
-
-    if ( cornerView != null )
-    {
-      cornerView.paint( aCanvas );
-    }
-
-    if ( columnHeaderView != null )
-    {
-      aCanvas.translate( offsetX, 0 );
-      columnHeaderView.paint( aCanvas );
-      aCanvas.translate( -offsetX, 0 );
-    }
-
-    if ( rowHeaderView != null )
-    {
-      aCanvas.translate( 0, offsetY );
-      rowHeaderView.paint( aCanvas );
-      aCanvas.translate( 0, -offsetY );
-    }
-
-    if ( contentView != null )
-    {
-      aCanvas.translate( offsetX, offsetY );
-      contentView.paint( aCanvas );
-      aCanvas.translate( -offsetX, -offsetY );
-    }
+    aDiagram.paint( aCanvas );
   }
 }
