@@ -368,16 +368,17 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * 
    * @param aExporter
    *          the exporter to export to, cannot be <code>null</code>.
-   * @param aWriter
-   *          the writer to write the export to, cannot be <code>null</code>.
+   * @param aOutputStream
+   *          the output stream to write the export to, cannot be
+   *          <code>null</code>.
    * @throws IOException
    *           in case of I/O problems.
    */
-  public void exportTo( final Exporter aExporter, final FileWriter aWriter ) throws IOException
+  public void exportTo( final Exporter aExporter, final OutputStream aOutputStream ) throws IOException
   {
     if ( this.mainFrame != null )
     {
-      aExporter.export( this.dataContainer, this.mainFrame.getDiagramScrollPane(), aWriter );
+      aExporter.export( this.dataContainer, this.mainFrame.getDiagramScrollPane(), aOutputStream );
     }
   }
 
@@ -758,17 +759,16 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       LOG.log( Level.INFO, "Running tool: \"{0}\" ...", aToolName );
     }
 
-    final Collection<Tool> tools = getTools();
-    for ( Tool tool : tools )
+    final Tool tool = findToolByName( aToolName );
+    if ( tool == null )
     {
-      if ( aToolName.equals( tool.getName() ) )
-      {
-        final ToolContext context = createToolContext();
-
-        tool.process( aParent, this.dataContainer, context, this );
-
-        break;
-      }
+      JOptionPane.showMessageDialog( aParent, "No such tool found: " + aToolName, "Error ...",
+          JOptionPane.ERROR_MESSAGE );
+    }
+    else
+    {
+      final ToolContext context = createToolContext();
+      tool.process( aParent, this.dataContainer, context, this );
     }
 
     updateActions();
@@ -1217,6 +1217,30 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     aActionManager.add( new ShowDiagramLabelsAction( this ) );
 
     aActionManager.add( new HelpAboutAction( this ) );
+  }
+
+  /**
+   * Searches for the tool with the given name.
+   * 
+   * @param aToolName
+   *          the name of the tool to search for, cannot be <code>null</code>.
+   * @return the tool with the given name, can be <code>null</code> if no such
+   *         tool can be found.
+   */
+  private Tool findToolByName( final String aToolName )
+  {
+    Tool tool = null;
+
+    final Collection<Tool> tools = getTools();
+    for ( Tool _tool : tools )
+    {
+      if ( aToolName.equals( _tool.getName() ) )
+      {
+        tool = _tool;
+        break;
+      }
+    }
+    return tool;
   }
 
   /**

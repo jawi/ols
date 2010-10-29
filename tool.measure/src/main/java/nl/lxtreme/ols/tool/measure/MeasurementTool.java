@@ -22,7 +22,6 @@ package nl.lxtreme.ols.tool.measure;
 
 
 import java.awt.*;
-
 import nl.lxtreme.ols.tool.base.*;
 
 

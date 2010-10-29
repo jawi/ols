@@ -522,13 +522,23 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
+   * Returns the current diagram instance.
+   * 
+   * @return a diagram instance, cannot be <code>null</code>.
+   */
+  final Diagram getDiagram()
+  {
+    return this.diagram;
+  }
+
+  /**
    * Returns the scroll pane of the current diagram instance.
    * 
    * @return a scroll pane instance, can be <code>null</code>.
    */
   final JComponent getDiagramScrollPane()
   {
-    final Container viewport = this.diagram.getParent();
+    final Container viewport = getDiagram().getParent();
     return ( JComponent )viewport.getParent();
   }
 
