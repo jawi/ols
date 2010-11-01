@@ -375,6 +375,9 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
 
     String colorSchemeName = aPreferences.get( "colorScheme", this.colorScheme.name() );
     setColorScheme( ColorScheme.valueOf( colorSchemeName ) );
+
+    String edgeSlopeName = aPreferences.get( "edgeSlope", this.edgeSlope.name() );
+    setEdgeSlope( EdgeSlope.valueOf( edgeSlopeName ) );
   }
 
   /**
@@ -673,6 +676,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
 
     aPreferences.put( "colorTarget", this.colorTarget.name() );
     aPreferences.put( "colorScheme", this.colorScheme.name() );
+    aPreferences.put( "edgeSlope", this.edgeSlope.name() );
   }
 
   /**
