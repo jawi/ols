@@ -85,3 +85,6 @@ Provides some common utilities that are shared among all other projects.
 # provide easier access to analysis tools;
 # analysis protocol results synopsis (client: <bla bla>, master: <bla bla>, client ...);
 # support reordering of channels with DnD;
+# support overlay of signals, to view differences between two, or more signal captures;
+# add option to auto-center captured signal on trigger moment;
+

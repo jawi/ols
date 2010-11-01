@@ -175,6 +175,13 @@
 									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
 								</artifactItem>
 								<artifactItem>
+									<groupId>nl.lxtreme.ols.tool</groupId>
+									<artifactId>1wire</artifactId>
+									<type>jar</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
+								</artifactItem>
+								<artifactItem>
 									<groupId>nl.lxtreme.ols.export</groupId>
 									<artifactId>image</artifactId>
 									<type>jar</type>
