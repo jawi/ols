@@ -1,3 +1,61 @@
+2010-11-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java: Store edge slope in user preferences.
+
+2010-10-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	api/src/main/java/nl/lxtreme/ols/api/data/export/Exporter.java,
+	api/src/main/java/nl/lxtreme/ols/api/tools/Tool.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ExportAction.java
+	,
+	export.image/src/main/java/nl/lxtreme/ols/export/image/ImageExporte
+	r.java,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpE
+	xporter.java, ols.distribution/pom.xml, pom.xml,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementT
+	ool.java, util/src/main/java/nl/lxtreme/ols/util/ExportUtils.java: 
+	Fixed export to image problems on Linux & Windows; some minor
+	updates.
+
+2010-10-23  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/src/site/main/index.html: Site update for 0.9.0
+	release.
+
+2010-10-23  JaWi <j.w.janssen@lxtreme.nl>
+
+	* pom.xml: Release v0.9.0
+
+2010-10-23  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java: Fixed a possible NPE due to auto boxing.
+
+2010-10-23  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: Added numbering scheme to preferences.
+
+2010-10-23  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ChangeLog, pom.xml,
+	rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java: Fixed a small
+	bug when trying to detect the COM-port on Windows platforms (you
+	cannot access it through the filesystem).
+
+2010-10-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	* rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java: Fixed a
+	small bug when RXTX tried to open an invalid device; thanks to
+	rasmus for reporting this.
+
 2010-10-21  JaWi <j.w.janssen@lxtreme.nl>
 
 	* tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyser.java,
