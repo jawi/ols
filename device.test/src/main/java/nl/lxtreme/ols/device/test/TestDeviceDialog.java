@@ -23,13 +23,14 @@ package nl.lxtreme.ols.device.test;
 
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
 
-import org.osgi.service.prefs.*;
+import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+
+import org.osgi.service.prefs.*;
 
 
 /**
@@ -42,7 +43,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   private static final long serialVersionUID = 1L;
 
   static final String[] DATA_FUNCTIONS = new String[] { "Sawtooth", "All zeros", "Sine", "odd-even", "0x55-0xAA",
-      "Random", "I2C sample" };
+      "Random", "I2C sample", "1-Wire sample" };
   static final Integer[] CHANNELS = new Integer[] { 1, 4, 8, 16, 32 };
   static final Integer[] DATA_LENGTH = new Integer[] { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072 };
 
