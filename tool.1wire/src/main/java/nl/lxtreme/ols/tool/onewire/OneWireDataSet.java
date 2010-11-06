@@ -22,13 +22,24 @@ package nl.lxtreme.ols.tool.onewire;
 
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
- * @author jawi
+ * Denotes a 1-Wire data set.
  */
 public class OneWireDataSet extends BaseDataSet<OneWireData>
 {
+  // CONSTANTS
+
+  public static final String OW_RESET = "RESET";
+  public static final String OW_BUS_ERROR = "BUS-ERROR";
+
+  // VARIABLES
+
+  private int busErrors;
+  private int decodedBytes;
+
   // CONSTRUCTORS
 
   /**
@@ -39,6 +50,97 @@ public class OneWireDataSet extends BaseDataSet<OneWireData>
   public OneWireDataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final CapturedData aData )
   {
     super( aStartOfDecodeIdx, aEndOfDecodeIdx, aData );
+
+    this.busErrors = 0;
+    this.decodedBytes = 0;
   }
 
+  // METHODS
+
+  /**
+   * Returns the number of bus errors.
+   * 
+   * @return the number of bus errors, >= 0.
+   */
+  public int getBusErrorCount()
+  {
+    return this.busErrors;
+  }
+
+  /**
+   * Returns the number of decoded bytes.
+   * 
+   * @return the number of decoded bytes, >= 0.
+   */
+  public int getDecodedByteCount()
+  {
+    return this.decodedBytes;
+  }
+
+  /**
+   * Returns the time as display string.
+   * 
+   * @param aSampleIdx
+   *          a sample index to return the time value for.
+   * @return a time display value, never <code>null</code>.
+   */
+  public String getDisplayTime( final int aSampleIdx )
+  {
+    return DisplayUtils.displayTime( getTime( aSampleIdx ) );
+  }
+
+  /**
+   * Reports a bus error event.
+   * 
+   * @param aChannelIdx
+   *          the channel index on which the bus error event occurred;
+   * @param aSampleIdx
+   *          the sample index on which the bus error event occurred.
+   */
+  public void reportBusError( final int aChannelIdx, final int aSampleIdx )
+  {
+    final int idx = size();
+    this.busErrors++;
+    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, OW_BUS_ERROR ) );
+  }
+
+  /**
+   * Reports a data value.
+   * 
+   * @param aChannelIdx
+   *          the channel index;
+   * @param aStartSampleIdx
+   *          the start sample index of the data;
+   * @param aEndSampleIdx
+   *          the end sample index of the data;
+   * @param aByteValue
+   *          the decoded data value.
+   */
+  public void reportData( final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
+      final int aByteValue )
+  {
+    final int idx = size();
+    this.decodedBytes++;
+    addData( new OneWireData( idx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, aByteValue ) );
+  }
+
+  /**
+   * Reports a reset event.
+   * 
+   * @param aChannelIdx
+   *          the channel index on which the reset event occurred;
+   * @param aSampleIdx
+   *          the sample index on which the reset event occurred;
+   * @param aEndSampleIdx
+   *          the end sample index on which the reset event occurred;
+   * @param aSlaveIsPresent
+   *          <code>true</code> if a slave responsed to the master reset,
+   *          <code>false</code> if no slave responded to the master reset.
+   */
+  public void reportReset( final int aChannelIdx, final int aSampleIdx, final int aEndSampleIdx,
+      final boolean aSlaveIsPresent )
+  {
+    final int idx = size();
+    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, OW_RESET ) );
+  }
 }

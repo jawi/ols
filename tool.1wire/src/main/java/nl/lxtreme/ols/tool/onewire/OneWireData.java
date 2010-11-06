@@ -25,22 +25,91 @@ import nl.lxtreme.ols.api.data.*;
 
 
 /**
- * @author jawi
+ * Represents decoded 1-wire data.
  */
 public class OneWireData extends BaseData<OneWireData>
 {
+  // VARIABLES
+
+  private final int value;
+
   // CONSTRUCTORS
 
   /**
+   * Creates a new OneWireData instance.
+   * 
    * @param aIdx
    * @param aChannelIdx
    * @param aStartSampleIdx
    * @param aEndSampleIdx
+   * @param aValue
    */
-  protected OneWireData( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx )
+  public OneWireData( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
+      final int aValue )
   {
     super( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx );
-    // TODO Auto-generated constructor stub
+    this.value = aValue;
   }
 
+  /**
+   * Creates a new OneWireData instance.
+   * 
+   * @param aIdx
+   * @param aChannelIdx
+   * @param aSampleIdx
+   * @param aEventName
+   */
+  public OneWireData( final int aIdx, final int aChannelIdx, final int aSampleIdx, final String aEventName )
+  {
+    super( aIdx, aChannelIdx, aSampleIdx, aEventName );
+    this.value = 0;
+  }
+
+  // METHODS
+
+  /**
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
+  @Override
+  public boolean equals( final Object aObject )
+  {
+    if ( this == aObject )
+    {
+      return true;
+    }
+    if ( !super.equals( aObject ) || !( aObject instanceof OneWireData ) )
+    {
+      return false;
+    }
+
+    final OneWireData other = ( OneWireData )aObject;
+    if ( this.value != other.value )
+    {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Returns the data value (if this is not an event).
+   * 
+   * @return the data value.
+   */
+  public int getValue()
+  {
+    return this.value;
+  }
+
+  /**
+   * @see java.lang.Object#hashCode()
+   */
+  @Override
+  public int hashCode()
+  {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + this.value;
+    return result;
+  }
 }
