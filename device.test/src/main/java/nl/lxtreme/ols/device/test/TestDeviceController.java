@@ -21,13 +21,14 @@
 package nl.lxtreme.ols.device.test;
 
 
+import static nl.lxtreme.ols.device.test.TestDeviceDialog.*;
+
 import java.awt.*;
 import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
-import static nl.lxtreme.ols.device.test.TestDeviceDialog.*;
 
 
 /**
@@ -79,7 +80,14 @@ public class TestDeviceController implements DeviceController
     if ( DATA_FUNCTIONS[6].equals( dataFunction ) )
     {
       final I2CGenerator generator = new I2CGenerator();
-      generator.writeBitStream( "Hello World; this is a sample I2C bit stream!" );
+      generator.writeBitStream( "Hello World, this is a sample I2C bit stream!" );
+      data = generator.getData();
+      rate = generator.getRate();
+    }
+    else if ( DATA_FUNCTIONS[7].equals( dataFunction ) )
+    {
+      final OneWireGenerator generator = new OneWireGenerator( true /* aStandard */);
+      generator.writeBitStream( "Hello World, this is a sample 1-wire bit stream!" );
       data = generator.getData();
       rate = generator.getRate();
     }
