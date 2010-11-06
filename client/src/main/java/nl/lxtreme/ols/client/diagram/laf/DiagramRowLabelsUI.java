@@ -124,7 +124,7 @@ public class DiagramRowLabelsUI extends ComponentUI
     final int channelHeight = settings.getChannelHeight();
     final int scopeHeight = settings.getScopeHeight();
 
-    final FontMetrics fm = canvas.getFontMetrics();
+    final FontMetrics fm = aComponent.getFontMetrics( this.labelFont );
     final int textXpos = ( clipArea.width - fm.stringWidth( "88" ) - PADDING_X );
     final int textYpos = ( int )( ( channelHeight + fm.getHeight() ) / 2.0 ) - PADDING_Y;
 
@@ -234,19 +234,15 @@ public class DiagramRowLabelsUI extends ComponentUI
 
     int minWidth = -1;
 
-    final Font font = aRowLabels.getFont();
-    if ( font != null )
+    final FontMetrics fm = aRowLabels.getFontMetrics( this.labelFont );
+    for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
     {
-      final FontMetrics fm = aRowLabels.getFontMetrics( font );
-      for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
+      String label = dataContainer.getChannelLabel( i );
+      if ( DisplayUtils.isEmpty( label ) )
       {
-        String label = dataContainer.getChannelLabel( i );
-        if ( DisplayUtils.isEmpty( label ) )
-        {
-          label = "W88";
-        }
-        minWidth = Math.max( minWidth, fm.stringWidth( label ) );
+        label = "W88";
       }
+      minWidth = Math.max( minWidth, fm.stringWidth( label ) );
     }
 
     // Ensure there's room for some padding...
