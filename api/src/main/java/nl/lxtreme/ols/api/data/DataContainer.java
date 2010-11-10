@@ -161,6 +161,18 @@ public final class DataContainer implements CapturedData
   }
 
   /**
+   * Returns the number of channel blocks that are available in the data.
+   * 
+   * @return a block count, >= 0 && < {@value #MAX_BLOCKS}.
+   * @see #MAX_BLOCKS
+   * @see #CHANNELS_PER_BLOCK
+   */
+  public int getBlockCount()
+  {
+    return ( int )Math.min( MAX_BLOCKS, Math.ceil( getChannels() / ( double )CHANNELS_PER_BLOCK ) );
+  }
+
+  /**
    * Returns the channel annotations.
    * 
    * @param aChannelIdx
@@ -245,6 +257,43 @@ public final class DataContainer implements CapturedData
   public int getChannels()
   {
     return hasCapturedData() ? this.capturedData.getChannels() : NOT_AVAILABLE;
+  }
+
+  /**
+   * Returns the number of channels available in the block with the given block
+   * number.
+   * <p>
+   * It is assumed that only the last block can contain less than
+   * {@value #CHANNELS_PER_BLOCK} channels. All preceeding blocks (if available)
+   * are considered to be "complete" blocks.
+   * </p>
+   * 
+   * @param aBlockNr
+   *          the block number, >= 0 && < {@value #MAX_BLOCKS}.
+   * @return the number of channels for the given block, >= 0 && <
+   *         {@link #getBlockCount()}.
+   * @throws IllegalArgumentException
+   *           in case the given block number was invalid.
+   */
+  public int getChannelsForBlock( final int aBlockNr )
+  {
+    final int blockCount = getBlockCount();
+    if ( ( aBlockNr < 0 ) || ( aBlockNr >= blockCount ) )
+    {
+      throw new IllegalArgumentException( "Invalid block number: " + aBlockNr + "!" );
+    }
+
+    int result = CHANNELS_PER_BLOCK;
+    if ( aBlockNr == ( blockCount - 1 ) )
+    {
+      final int remainder = getChannels() % CHANNELS_PER_BLOCK;
+      if ( remainder != 0 )
+      {
+        result = remainder;
+      }
+    }
+
+    return result;
   }
 
   /**

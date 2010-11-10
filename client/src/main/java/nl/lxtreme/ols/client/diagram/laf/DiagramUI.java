@@ -383,7 +383,6 @@ public class DiagramUI extends ComponentUI
   {
     final DataContainer dataContainer = aDiagram.getDataContainer();
 
-    final int channels = dataContainer.getChannels();
     final int enabledChannels = dataContainer.getEnabledChannels();
 
     final DiagramSettings settings = aDiagram.getDiagramSettings();
@@ -392,19 +391,21 @@ public class DiagramUI extends ComponentUI
     final int scopeHeight = settings.getScopeHeight();
 
     int height = 0;
-    for ( int group = 0; ( group < channels / 8 ) && ( group < 4 ); group++ )
+
+    final int blockCnt = dataContainer.getBlockCount();
+    for ( int block = 0; block < blockCnt; block++ )
     {
-      if ( ( ( enabledChannels >> ( 8 * group ) ) & 0xff ) != 0 )
+      if ( ( ( enabledChannels >> ( DataContainer.CHANNELS_PER_BLOCK * block ) ) & 0xff ) != 0 )
       {
-        if ( settings.isShowChannels( group ) )
+        if ( settings.isShowChannels( block ) )
         {
-          height += channelHeight * 8;
+          height += channelHeight * dataContainer.getChannelsForBlock( block );
         }
-        if ( settings.isShowScope( group ) )
+        if ( settings.isShowScope( block ) )
         {
           height += scopeHeight;
         }
-        if ( settings.isShowByte( group ) )
+        if ( settings.isShowByte( block ) )
         {
           height += channelHeight;
         }
@@ -588,7 +589,6 @@ public class DiagramUI extends ComponentUI
     final DataContainer dataContainer = aDiagram.getDataContainer();
     final DiagramSettings settings = aDiagram.getDiagramSettings();
 
-    final int channels = dataContainer.getChannels();
     final int enabled = dataContainer.getEnabledChannels();
     final long[] timestamps = dataContainer.getTimestamps();
     final int[] values = dataContainer.getValues();
@@ -642,9 +642,11 @@ public class DiagramUI extends ComponentUI
 
     int yofs = 0;
 
-    for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
+    final int blockCnt = dataContainer.getBlockCount();
+    for ( int block = 0; block < blockCnt; block++ )
     {
-      final boolean blockEnabled = ( ( enabled >> ( 8 * block ) ) & 0xff ) != 0;
+      final int channelsOffset = DataContainer.CHANNELS_PER_BLOCK * block;
+      final boolean blockEnabled = ( ( enabled >> channelsOffset ) & 0xff ) != 0;
       if ( !blockEnabled )
       {
         continue;
@@ -655,9 +657,10 @@ public class DiagramUI extends ComponentUI
         final SignalPolyline polyline = new SignalPolyline( n );
 
         // draw actual data
-        for ( int bit = 0; bit < 8; bit++ )
+        final int channelsPerBlock = dataContainer.getChannelsForBlock( block );
+        for ( int bit = 0; bit < channelsPerBlock; bit++ )
         {
-          final int channelIdx = 8 * block + bit;
+          final int channelIdx = channelsOffset + bit;
 
           final Color signalColor = getSignalColor( channelIdx, settings );
           final Color newBrighterColor = signalColor.brighter();
@@ -770,7 +773,7 @@ public class DiagramUI extends ComponentUI
 
           paintGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + yofs + ( channelHeight - 1 ) );
         }
-        yofs += ( channelHeight * 8 );
+        yofs += ( channelHeight * DataContainer.CHANNELS_PER_BLOCK );
       }
 
       if ( settings.isShowScope( block ) )
@@ -784,7 +787,7 @@ public class DiagramUI extends ComponentUI
 
         while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
         {
-          val = ( int )( ( 0xff - ( ( values[dataIndex] >> ( 8 * block ) ) & 0xff ) ) / scopeScaleFactor );
+          val = ( int )( ( 0xff - ( ( values[dataIndex] >> channelsOffset ) & 0xff ) ) / scopeScaleFactor );
 
           scopePolyline.x[pIdx] = ( int )( timestamps[dataIndex] * scale );
           scopePolyline.y[pIdx] = yofs + val + PADDING_Y;
@@ -827,7 +830,7 @@ public class DiagramUI extends ComponentUI
         {
           final long nextSample;
 
-          final int currentValue = ( values[dataIndex] >> ( 8 * block ) ) & 0xff;
+          final int currentValue = ( values[dataIndex] >> channelsOffset ) & 0xff;
           if ( dataIndex >= values.length - 1 )
           {
             nextSample = aToIndex + 1;
