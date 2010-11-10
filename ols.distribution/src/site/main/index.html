@@ -52,8 +52,37 @@ ul {
 ul li span {
   color: gray;
 }
+a,
 a:visited {
-  color: blue;
+  color: #47a;
+}
+q {
+  quotes: "\2018" "\2019" "\201C" "\201D" 
+}
+blockquote {
+  display: block;
+  padding: 0 20px;
+  width: 40em;
+  
+  font-style: oblique;
+}
+blockquote:before, blockquote:after {
+  color: #69c;
+  display: block;
+  font-size: 700%;
+  font-style: normal;
+}
+blockquote:before {
+  content: open-quote;
+  height: 0;
+  margin-left: -0.45em;
+}
+blockquote:after {
+  content: no-close-quote;
+}
+blockquote span {
+  color: #69c;
+  font-style: normal;
 }
 #toc {
   font-size: 0.9em;
@@ -74,7 +103,7 @@ a:visited {
     <p class="logo"><img id="reflect" src="img/logo.png" /></p>
     <div class="title">
         <h1>Logic Sniffer</h1>
-        <h2>An alternative OLS client</h2>
+        <h2>An <strike>alternative</strike> OLS client</h2>
     </div>
 	<p>
 	  Welcome to the project page of <em>Logic Sniffer</em> alternative Java client. This page will 
@@ -84,18 +113,31 @@ a:visited {
 	<div id="toc"></div>
 	<h3 class="content">Introduction</h3>
 	<p>
-	  The alternative OLS-client provides a client for the open source <a
+	  The alternative OLS-client provides a software client for the <a
 	  href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">Open Bench Logic Sniffer</a> logic 
-	  analyser developed and maintained by <a href="http://dangerousprototypes.com/">Dangerous Prototypes</a>.
+	  analyser hardware.
 	</p>
 	<p>
-	  The guys of <a href="http://dangerousprototypes.com/">Dangerous Prototypes</a> created a cheap custom 
-	  implementation that is compatible to the original <a href="http://www.sump.org/projects/analyzer/">SUMP 
-	  client</a> (developed by Michael Poppitz).<br/> 
-	  While the original SUMP client was feature complete and working quite well, it was no longer actively 
-	  developed. Being Open Source, I immediately started hacking and tweaking it. The result? <em>An alternative SUMP 
-	  client</em>.
+	  The Open Bench Logic Sniffer is the result of a collaboration between <a 
+	  href="http://www.gadgetfactory.net/">Gadget Factory</a> and <a href="http://dangerousprototypes.com/">Dangerous 
+	  Prototypes</a>. They created a cheap custom implementation of the <a href="http://www.sump.org/projects/analyzer/">SUMP 
+	  client</a> (developed by Michael Poppitz), and released it as Open Source project.<br/>
+	  The original SUMP project already contained a workable client of its own. While this client was feature complete
+	  and working quite well, it was no longer actively developed and maintained. Being a developer and loving Open 
+	  Source, I immediately started hacking and tweaking it. The result? <em>An alternative SUMP client</em>.
 	</p>
+    <h3 class="content">What other people say about...</h3>
+    <blockquote>
+      <p>I had to rock some intense LAing today, and I just wanted to say that the latest version is fantastic! I've completely 
+      abandoned the old version for yours, and moved it to the top of the wiki software list :) It's a joy to use and it doesn't
+      <q>feel like Java</q>. In my opinion this is nicer and richer than the Saleae client (I use the Saleae a lot too).<br/>
+      Great work! Thank you so much! <span>&#8212; Ian (Dangerous Prototypes)</span></p>
+    </blockquote>
+    <blockquote>
+      <p>It keeps getting better and better! I've officially started using your client exclusively, I just spent the last couple 
+      days troubleshooting some SPI output from the AVR8 Soft Processor core project and your client didn't miss a beat <span>&#8212; 
+      Jack Gasset (Gadget Factory)</span></p>
+    </blockquote>
 	<h3 class="content">Features</h3>
 	<p>
 	  The alternative Java client provides the following features:
@@ -106,7 +148,7 @@ a:visited {
 	  up and running. The client embeds the suitable serial libraries for several operating systems;</li>
 	  <li><em>Pluggable</em>: adding new functionality on the fly is possible and as easy as copying files to a single
 	  directory;</li>
-	  <li><em>Look good, and feel good</em>: the client has a good look and feel and aims at being as usable as 
+	  <li><em>Look good, and feel good</em>: the client has a good look and feel, aiming at being as usable as 
 	  possible.</li>
 	</ul>
 	<h3 class="content">Documentation</h3>
@@ -164,9 +206,18 @@ a:visited {
     </p>
     <h3 class="content">Links</h3>
     <ul>
-      <li><a href="http://www.sump.org/projects/analyzer/">http://www.sump.org/projects/analyzer/</a> <span>the original SUMP hardware and client</span>;</li>
-      <li><a href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer</a>;</li>
-      <li><a href="http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/">http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/</a>.</li>
+      <li><a href="http://www.sump.org/projects/analyzer/">http://www.sump.org/projects/analyzer/</a> <span>the 
+       original SUMP hardware and client</span>;</li>
+      <li><a href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer</a>
+       <span>the Open Bench Logic Sniffer project page at Dangerous Prototypes</span>;</li>
+      <li><a href="http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/">http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/</a> 
+       <span>the Butterfly Logic board on which the Open Bench Logic Sniffer is based</span>.</li>
+    </ul>
+    <ul>
+      <li><a href="http://dangerousprototypes.com/category/Prototypes/">http://dangerousprototypes.com/category/Prototypes/</a>
+       <span>the other projects of Dangerous Prototypes</span>;</li>
+      <li><a href="http://gadgetfactory.net/">http://gadgetfactory.net/</a> 
+       <span>the other projects of Gadget Factory</span>.</li>
     </ul>
     <h3 class="content">Tip jar</h3>
     <p>
