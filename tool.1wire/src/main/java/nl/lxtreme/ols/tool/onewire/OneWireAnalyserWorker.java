@@ -382,8 +382,8 @@ public class OneWireAnalyserWorker extends BaseAsyncToolWorker<OneWireDataSet>
 
     aDataSet.reportData( this.owLineIndex, startSampleIdx, endSampleIdx, aByteValue );
 
-    addChannelAnnotation( this.owLineIndex, startSampleIdx, endSampleIdx,
-        String.format( "0x%X (%c)", aByteValue, aByteValue ) );
+    final String annotation = String.format( "0x%X (%c)", aByteValue, aByteValue );
+    addChannelAnnotation( this.owLineIndex, startSampleIdx, endSampleIdx, annotation );
   }
 
   /**
