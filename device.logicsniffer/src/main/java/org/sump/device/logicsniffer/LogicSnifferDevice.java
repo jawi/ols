@@ -70,78 +70,57 @@ public class LogicSnifferDevice implements Device
   private final static int SETFLAGS = 0x82;
 
   /** reset analyzer */
-  private final static int RESET = 0x00;
+  private final static int CMD_RESET = 0x00;
   /** arm trigger / run device */
-  private final static int RUN = 0x01;
+  private final static int CMD_RUN = 0x01;
   /** ask for device id */
-  private final static int ID = 0x02;
-  /** continue data transmission to host */
+  private final static int CMD_ID = 0x02;
+  /** ask for device self test. */
   @SuppressWarnings( "unused" )
-  private final static int XON = 0x11;
-  /** pause data transmission to host */
+  private final static int CMD_SELFTEST = 0x03;
+  /** ask for device meta data. */
+  private final static int CMD_METADATA = 0x04;
+
+  // demultiplex
+  private final static int FLAG_DEMUX = 0x00000001;
+  // noise filter
+  private final static int FLAG_FILTER = 0x00000002;
+  // disable channel group 0
+  private final static int FLAG_DISABLE_G0 = 0x00000004;
+  // disable channel group 1
   @SuppressWarnings( "unused" )
-  private final static int XOFF = 0x13;
-
-  private final static int FLAG_DEMUX = 0x00000001; // demultiplex
-  private final static int FLAG_FILTER = 0x00000002; // noise
-  // filter
-  private final static int FLAG_DISABLE_G0 = 0x00000004; // disable
-  // channel
-  // group 0
+  private final static int FLAG_DISABLE_G1 = 0x00000008;
+  // disable channel group 2
+  private final static int FLAG_DISABLE_G2 = 0x00000010;
+  // disable channel group 3
   @SuppressWarnings( "unused" )
-  private final static int FLAG_DISABLE_G1 = 0x00000008; // disable
-  // channel
-  // group 1
-  private final static int FLAG_DISABLE_G2 = 0x00000010; // disable
-  // channel
-  // group 2
-  @SuppressWarnings( "unused" )
-  private final static int FLAG_DISABLE_G3 = 0x00000020; // disable
-  // channel
-  // group 3
-  private final static int FLAG_EXTERNAL = 0x00000040; // disable
-  // channel
-  // group 3
-  private final static int FLAG_INVERTED = 0x00000080; // disable
-  // channel
-  // group 3
+  private final static int FLAG_DISABLE_G3 = 0x00000020;
+  // external trigger?
+  private final static int FLAG_EXTERNAL = 0x00000040;
+  // inverted
+  private final static int FLAG_INVERTED = 0x00000080;
+  // run length encoding
+  private final static int FLAG_RLE = 0x00000100;
 
-  private final static int FLAG_RLE = 0x00000100; // run
-  // length
-  // encoding
+  // Number Scheme
+  private final static int FLAG_NUMBER_SCHEME = 0x00000200;
+  // Testing mode
+  private final static int FLAG_TEST_MODE = 0x00000400;
 
-  private final static int FLAG_NUMBER_SCHEME = 0x00000200; // Number
-  // Scheme
-  private final static int FLAG_TEST_MODE = 0x00000400; // Number
-  // Scheme
-
-  private final static int TRIGGER_DELAYMASK = 0x0000ffff; // mask
-  // for
-  // delay
-  // value
-  private final static int TRIGGER_LEVELMASK = 0x00030000; // mask
-  // for
-  // level
-  // value
-  private final static int TRIGGER_CHANNELMASK = 0x01f00000; // mask
-  // for
-  // level
-  // value
-  private final static int TRIGGER_SERIAL = 0x04000000; // trigger
-  // operates
-  // in
-  // serial mode
-  private final static int TRIGGER_CAPTURE = 0x08000000; // trigger
-  // will
-  // start
-  // capture when
-  // fired
+  // mask for delay value
+  private final static int TRIGGER_DELAYMASK = 0x0000ffff;
+  // mask for level value
+  private final static int TRIGGER_LEVELMASK = 0x00030000;
+  // mask for channel value
+  private final static int TRIGGER_CHANNELMASK = 0x01f00000;
+  // trigger operates in serial mode
+  private final static int TRIGGER_SERIAL = 0x04000000;
+  // trigger will start capture when fired
+  private final static int TRIGGER_CAPTURE = 0x08000000;
 
   final static int CLOCK = 100000000; // device clock in Hz
-  private final static int TRIGGER_STAGES = 4; // number
-  // of
-  // trigger
-  // stages
+  // number of trigger stages
+  private final static int TRIGGER_STAGES = 4;
 
   private static final Logger LOG = Logger.getLogger( LogicSnifferDevice.class.getName() );
 
@@ -151,7 +130,6 @@ public class LogicSnifferDevice implements Device
   private InputStream inputStream;
   private OutputStream outputStream;
   private volatile boolean running;
-  // private int percentageDone;
   private int clockSource;
   private boolean demux;
   private boolean filterEnabled;
@@ -167,11 +145,12 @@ public class LogicSnifferDevice implements Device
   private int divider;
   private int size;
   private double ratio;
+  private boolean attached;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a device object.
+   * Creates a new LogicSnifferDevice instance.
    */
   public LogicSnifferDevice()
   {
@@ -246,7 +225,7 @@ public class LogicSnifferDevice implements Device
       this.outputStream = this.port.getOutputStream();
       this.inputStream = this.port.getInputStream();
 
-      return true;
+      return this.attached = true;
     }
     catch ( final Exception exception )
     {
@@ -276,7 +255,7 @@ public class LogicSnifferDevice implements Device
         {
           for ( int i = 0; i < 5; i++ )
           {
-            sendCommand( RESET );
+            sendCommand( CMD_RESET );
           }
           this.outputStream.flush();
           this.outputStream.close();
@@ -298,6 +277,8 @@ public class LogicSnifferDevice implements Device
       {
         this.port.close();
         this.port = null;
+
+        this.attached = false;
       }
     }
   }
@@ -347,6 +328,88 @@ public class LogicSnifferDevice implements Device
   public int getMaximumRate()
   {
     return ( 2 * CLOCK );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.devices.Device#getMetadata()
+   */
+  public DeviceMetadata getMetadata() throws IOException, IllegalStateException
+  {
+    if ( !this.attached )
+    {
+      throw new IllegalStateException( "Cannot fetch metadata from device: not attached!" );
+    }
+
+    // Make sure nothing is left in our input buffer...
+    flushInput();
+
+    // Ok; device appears to be good and willing to communicate; let's get its
+    // metadata...
+    sendCommand( CMD_METADATA );
+
+    final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
+
+    int result = -1;
+    do
+    {
+      try
+      {
+        result = readByte();
+
+        if ( result > 0 )
+        {
+          final int type = ( result & 0xE0 ) >> 5;
+          if ( type == 0x00 )
+          {
+            // key value is a null-terminated string...
+            final String value = readString();
+            LOG.log( Level.FINE, "Read {0} -> \"{1}\"", new Object[] { result, value } );
+            metadata.put( result, value );
+          }
+          else if ( type == 0x01 )
+          {
+            // key value is a 32-bit integer...
+            final Integer value = readIntegerMSB();
+            LOG.log( Level.FINE, "Read {0} -> {1} (32-bit)", new Object[] { result, value } );
+            metadata.put( result, value );
+          }
+          else if ( type == 0x02 )
+          {
+            // key value is a 8-bit integer...
+            final Integer value = readByte();
+            LOG.log( Level.FINE, "Read {0} -> {1} (8-bit)", new Object[] { result, value } );
+            metadata.put( result, value );
+          }
+          else
+          {
+            LOG.log( Level.INFO, "Ignoring unknown type: {0}", type );
+          }
+        }
+      }
+      catch ( final IOException exception )
+      {
+        /* don't care */
+        result = -1;
+
+        LOG.log( Level.FINE, "I/O exception", exception );
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        HostUtils.handleInterruptedException( exception );
+      }
+      catch ( final InterruptedException exception )
+      {
+        /* don't care */
+        result = -1;
+
+        LOG.log( Level.FINE, "Port timeout!", exception );
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        HostUtils.handleInterruptedException( exception );
+      }
+    }
+    while ( result > 0x00 );
+
+    return metadata;
   }
 
   /**
@@ -473,21 +536,33 @@ public class LogicSnifferDevice implements Device
    *           if a read time out occurs after trigger match or stop() was
    *           called before trigger match
    */
-  public CapturedDataImpl run( final ProgressCallback aCallback ) throws IOException, InterruptedException
+  public CapturedData run( final ProgressCallback aCallback ) throws IOException, InterruptedException,
+      IllegalStateException
   {
+    if ( !this.attached )
+    {
+      throw new IllegalStateException( "Cannot run capture from device: not attached!" );
+    }
+
     this.running = true;
 
     // First try to find the logic sniffer itself...
     detectDevice();
 
+    DeviceMetadata metadata = getMetadata();
+    LOG.log( Level.INFO, "Metadata = \n{0}", metadata.toString() );
+
     // configure device
-    final int stopCounter = ( int )( this.size * this.ratio );
-    final int readCounter = this.size;
+    final int deviceSize = metadata.getSampleMemoryDepth() != null ? Math.min( metadata.getSampleMemoryDepth(),
+        this.size ) : this.size;
+
+    final int stopCounter = ( int )( deviceSize * this.ratio );
+    final int readCounter = deviceSize;
 
     final int flags = configureDevice( stopCounter, readCounter );
 
     sendCommand( SETFLAGS, flags );
-    sendCommand( RUN );
+    sendCommand( CMD_RUN );
 
     // check if data needs to be multiplexed
     int channels;
@@ -502,6 +577,8 @@ public class LogicSnifferDevice implements Device
       channels = 32;
       samples = ( readCounter & 0xffffc );
     }
+
+    channels = metadata.getProbeCount() != null ? Math.min( metadata.getProbeCount(), channels ) : channels;
 
     int[] buffer = new int[samples];
 
@@ -954,7 +1031,7 @@ public class LogicSnifferDevice implements Device
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
-      LOG.fine( "Flags: " + Integer.toString( flags, 2 ) );
+      LOG.fine( "Flags: 0b" + Integer.toBinaryString( flags ) );
     }
     return flags;
   }
@@ -962,6 +1039,7 @@ public class LogicSnifferDevice implements Device
   /**
    * Tries to detect the LogicSniffer device.
    * 
+   * @return the device's metadata, never <code>null</code>.
    * @throws IOException
    *           in case the device could not be found, or in case of any other
    *           I/O problem.
@@ -979,11 +1057,11 @@ public class LogicSnifferDevice implements Device
       // data of long command
       for ( int i = 0; i < 5; i++ )
       {
-        sendCommand( RESET );
+        sendCommand( CMD_RESET );
       }
 
       // check if device is ready
-      sendCommand( ID );
+      sendCommand( CMD_ID );
 
       try
       {
@@ -1052,6 +1130,21 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
+   * @return
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  private int readByte() throws IOException, InterruptedException
+  {
+    final int read = this.inputStream.read();
+    if ( read < 0 )
+    {
+      return -1;
+    }
+    return ( read & 0xFF );
+  }
+
+  /**
    * Reads a integer (32bits) from stream and compiles them into a single
    * integer.
    * 
@@ -1061,9 +1154,9 @@ public class LogicSnifferDevice implements Device
    * @throws IOException
    *           if stream reading fails
    */
-  private int readInteger() throws IOException, InterruptedException
+  private byte[] readBytes( final int aCount ) throws IOException, InterruptedException
   {
-    final byte bytes[] = new byte[4];
+    final byte bytes[] = new byte[aCount];
 
     final long until = System.currentTimeMillis() + 100L;
     while ( this.inputStream.available() < bytes.length )
@@ -1091,13 +1184,12 @@ public class LogicSnifferDevice implements Device
     {
       throw new InterruptedException( "Data readout interrupted!" );
     }
-    // Craft a 32-bit value from the individual bytes...
-    return ( bytes[3] << 24 ) | ( bytes[2] << 16 ) | ( bytes[1] << 8 ) | bytes[0];
+    return bytes;
   }
 
   /**
-   * Reads <code>channels</code> / 8 bytes from stream and compiles them into a
-   * single integer.
+   * Reads a integer (32bits) from stream and compiles them into a single
+   * integer.
    * 
    * @param channels
    *          number of channels to read (must be multiple of 8)
@@ -1105,11 +1197,45 @@ public class LogicSnifferDevice implements Device
    * @throws IOException
    *           if stream reading fails
    */
-  private int readSample( final int channels ) throws IOException, InterruptedException
+  private int readInteger() throws IOException, InterruptedException
+  {
+    final byte bytes[] = readBytes( 4 );
+    // Craft a 32-bit value from the individual bytes...
+    return ( bytes[3] << 24 ) | ( bytes[2] << 16 ) | ( bytes[1] << 8 ) | bytes[0];
+  }
+
+  /**
+   * Reads a integer (32bits) from stream and compiles them into a single
+   * integer.
+   * 
+   * @param channels
+   *          number of channels to read (must be multiple of 8)
+   * @return integer containing four bytes read
+   * @throws IOException
+   *           if stream reading fails
+   */
+  private int readIntegerMSB() throws IOException, InterruptedException
+  {
+    final byte bytes[] = readBytes( 4 );
+    // Craft a 32-bit value from the individual bytes...
+    return ( bytes[0] << 24 ) | ( bytes[1] << 16 ) | ( bytes[2] << 8 ) | bytes[3];
+  }
+
+  /**
+   * Reads <code>channels</code> / 8 bytes from stream and compiles them into a
+   * single integer.
+   * 
+   * @param aChannels
+   *          number of channels to read (must be multiple of 8)
+   * @return integer containing four bytes read
+   * @throws IOException
+   *           if stream reading fails
+   */
+  private int readSample( final int aChannels ) throws IOException, InterruptedException
   {
     int v, value = 0;
 
-    for ( int i = 0; i < channels / 8; i++ )
+    for ( int i = 0; i < Math.ceil( aChannels / 8.0 ); i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...
 
@@ -1118,7 +1244,11 @@ public class LogicSnifferDevice implements Device
         v = this.inputStream.read();
 
         // Any timeouts/interrupts occurred?
-        if ( ( v < 0 ) || Thread.interrupted() )
+        if ( v < 0 )
+        {
+          continue;
+        }
+        else if ( Thread.interrupted() )
         {
           throw new InterruptedException( "Data readout interrupted." );
         }
@@ -1131,18 +1261,45 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
+   * @return
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  private String readString() throws IOException, InterruptedException
+  {
+    StringBuilder sb = new StringBuilder();
+
+    int read = -1;
+    do
+    {
+      read = this.inputStream.read();
+      if ( read > 0x00 )
+      {
+        sb.append( ( char )read );
+      }
+      else if ( Thread.interrupted() )
+      {
+        throw new InterruptedException( "Data readout interrupted!" );
+      }
+    }
+    while ( read > 0x00 );
+
+    return sb.toString();
+  }
+
+  /**
    * Sends a short command to the given stream. This method is intended to be
    * used for short commands, but can also be called with long command opcodes
    * if the data portion is to be set to 0.
    * 
-   * @param opcode
+   * @param aOpcode
    *          one byte operation code
    * @throws IOException
    *           if writing to stream fails
    */
-  private void sendCommand( final int opcode ) throws IOException
+  private void sendCommand( final int aOpcode ) throws IOException
   {
-    final byte raw = ( byte )opcode;
+    final byte raw = ( byte )aOpcode;
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
@@ -1168,23 +1325,23 @@ public class LogicSnifferDevice implements Device
   /**
    * Sends a long command to the given stream.
    * 
-   * @param opcode
+   * @param aOpcode
    *          one byte operation code
-   * @param data
+   * @param aData
    *          four byte data portion
    * @throws IOException
    *           if writing to stream fails
    */
-  private void sendCommand( final int opcode, final int data ) throws IOException
+  private void sendCommand( final int aOpcode, final int aData ) throws IOException
   {
     final byte[] raw = new byte[5];
     int mask = 0xff;
     int shift = 0;
 
-    raw[0] = ( byte )opcode;
+    raw[0] = ( byte )aOpcode;
     for ( int i = 1; i < 5; i++ )
     {
-      raw[i] = ( byte )( ( data & mask ) >> shift );
+      raw[i] = ( byte )( ( aData & mask ) >> shift );
       mask = mask << 8;
       shift += 8;
     }

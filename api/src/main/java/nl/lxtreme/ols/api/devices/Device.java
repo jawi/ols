@@ -63,18 +63,35 @@ public interface Device
   public void detach();
 
   /**
+   * Returns this device's metadata.
+   * 
+   * @return the device metadata descriptor, never <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems during reading/writing from or to the
+   *           device;
+   * @throws IllegalStateException
+   *           in case this methods was called without being attached to a
+   *           serial port.
+   */
+  public DeviceMetadata getMetadata() throws IOException, IllegalStateException;
+
+  /**
    * Sends the configuration to the device, starts it, reads the captured data
    * and returns a CapturedData object containing the data read as well as
    * device configuration information.
    * 
    * @return captured data
    * @throws IOException
-   *           when writing to or reading from device fails
+   *           when writing to or reading from device fails;
    * @throws InterruptedException
    *           if a read time out occurs after trigger match or stop() was
-   *           called before trigger match
+   *           called before trigger match;
+   * @throws IllegalStateException
+   *           in case this methods was called without being attached to a
+   *           serial port.
    */
-  public CapturedData run( final ProgressCallback aCallback ) throws IOException, InterruptedException;
+  public CapturedData run( final ProgressCallback aCallback ) throws IOException, InterruptedException,
+      IllegalStateException;
 }
 
 /* EOF */

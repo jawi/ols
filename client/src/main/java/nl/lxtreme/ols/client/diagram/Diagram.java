@@ -97,7 +97,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   static final long xToIndex( final CapturedData aData, final Point aPoint, final double aScale )
   {
-    long index = ( long )Math.max( 0.0, ( aPoint.getX() / aScale ) );
+    long index = ( long )Math.rint( Math.max( 0.0, ( aPoint.getX() / aScale ) ) );
 
     if ( ( aData != null ) && ( index >= aData.getAbsoluteLength() ) )
     {

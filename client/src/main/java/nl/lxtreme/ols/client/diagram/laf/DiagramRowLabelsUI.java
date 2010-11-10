@@ -128,16 +128,17 @@ public class DiagramRowLabelsUI extends ComponentUI
     final int textXpos = ( clipArea.width - fm.stringWidth( "88" ) - PADDING_X );
     final int textYpos = ( int )( ( channelHeight + fm.getHeight() ) / 2.0 ) - PADDING_Y;
 
-    final int channels = dataContainer.getChannels();
     final int enabledChannels = dataContainer.getEnabledChannels();
 
     // Draw top grid line...
     canvas.drawLine( clipArea.x, 0, clipArea.x + clipArea.width, 0 );
     canvas.setFont( this.labelFont );
 
-    for ( int block = 0; ( block < channels / 8 ) && ( block < 4 ); block++ )
+    final int blockCnt = dataContainer.getBlockCount();
+    for ( int block = 0; block < blockCnt; block++ )
     {
-      final boolean blockEnabled = ( ( enabledChannels >> ( 8 * block ) ) & 0xff ) != 0;
+      final int channelsOffset = DataContainer.CHANNELS_PER_BLOCK * block;
+      final boolean blockEnabled = ( ( enabledChannels >> channelsOffset ) & 0xff ) != 0;
       if ( !blockEnabled )
       {
         continue;
@@ -145,9 +146,10 @@ public class DiagramRowLabelsUI extends ComponentUI
 
       if ( settings.isShowChannels( block ) )
       {
-        for ( int bit = 0; bit < 8; bit++ )
+        final int channelsPerBlock = dataContainer.getChannelsForBlock( block );
+        for ( int bit = 0; bit < channelsPerBlock; bit++ )
         {
-          final int labelIdx = bit + block * 8;
+          final int labelIdx = bit + channelsOffset;
 
           final Color labelColor = getLabelColor( labelIdx, settings );
 
@@ -171,7 +173,7 @@ public class DiagramRowLabelsUI extends ComponentUI
           canvas.drawString( label, labelXpos, labelYpos );
         }
 
-        yofs += channelHeight * 8;
+        yofs += channelHeight * DataContainer.CHANNELS_PER_BLOCK;
       }
 
       // Draw scope-thingie (if available)
