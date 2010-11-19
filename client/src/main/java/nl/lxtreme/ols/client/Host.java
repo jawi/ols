@@ -238,7 +238,13 @@ public final class Host implements ApplicationCallback
       this.controller.setStatus( "{0} v{1} ready ...", SHORT_NAME, getVersion() );
     }
 
-    LOG.log( Level.INFO, "{0} v{1} started ...", new Object[] { SHORT_NAME, getVersion() } );
+    LOG.log( Level.INFO, "{0} v{1} started ...", new String[] { SHORT_NAME, getVersion() } );
+
+    final String osName = this.context.getProperty( Constants.FRAMEWORK_OS_NAME );
+    final String osVersion = this.context.getProperty( Constants.FRAMEWORK_OS_VERSION );
+    final String processor = this.context.getProperty( Constants.FRAMEWORK_PROCESSOR );
+
+    LOG.log( Level.INFO, "  running on {0}, {1} ({2}).", new String[] { osName, osVersion, processor } );
   }
 
   /**
