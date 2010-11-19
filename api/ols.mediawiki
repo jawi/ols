@@ -18,7 +18,7 @@ Currently, the following operating systems are supported:
 
 * Windows 32/64 bits;
 * Linux 32/64 bits;
-* Mac OSX 64 bits.
+* Mac OSX 32/64 bits.
 
 === API ===
 
