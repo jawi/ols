@@ -218,42 +218,42 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   @Override
   protected void setupToolWorker( final UARTAnalyserWorker aToolWorker )
   {
-    if ( !"unused".equals( this.rxd.getSelectedItem() ) )
+    if ( !"unused".equalsIgnoreCase( ( String )this.rxd.getSelectedItem() ) )
     {
       aToolWorker.setRxdIndex( this.rxd.getSelectedIndex() );
     }
 
-    if ( !"unused".equals( this.txd.getSelectedItem() ) )
+    if ( !"unused".equalsIgnoreCase( ( String )this.txd.getSelectedItem() ) )
     {
       aToolWorker.setTxdIndex( this.txd.getSelectedIndex() );
     }
 
-    if ( !"unused".equals( this.cts.getSelectedItem() ) )
+    if ( !"unused".equalsIgnoreCase( ( String )this.cts.getSelectedItem() ) )
     {
       aToolWorker.setCtsIndex( this.cts.getSelectedIndex() );
     }
 
-    if ( !"unused".equals( this.rts.getSelectedItem() ) )
+    if ( !"unused".equalsIgnoreCase( ( String )this.rts.getSelectedItem() ) )
     {
       aToolWorker.setRtsIndex( this.rts.getSelectedIndex() );
     }
 
-    if ( !"unused".equals( this.dcd.getSelectedItem() ) )
+    if ( !"unused".equalsIgnoreCase( ( String )this.dcd.getSelectedItem() ) )
     {
       aToolWorker.setDcdIndex( this.dcd.getSelectedIndex() );
     }
 
-    if ( !"unused".equals( this.ri.getSelectedItem() ) )
+    if ( !"unused".equalsIgnoreCase( ( String )this.ri.getSelectedItem() ) )
     {
       aToolWorker.setRiIndex( this.ri.getSelectedIndex() );
     }
 
-    if ( !"unused".equals( this.dsr.getSelectedItem() ) )
+    if ( !"unused".equalsIgnoreCase( ( String )this.dsr.getSelectedItem() ) )
     {
       aToolWorker.setDsrIndex( this.dsr.getSelectedIndex() );
     }
 
-    if ( !"unused".equals( this.dtr.getSelectedItem() ) )
+    if ( !"unused".equalsIgnoreCase( ( String )this.dtr.getSelectedItem() ) )
     {
       aToolWorker.setDtrIndex( this.dtr.getSelectedIndex() );
     }
@@ -478,7 +478,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     {
       channels[i] = new String( "Channel " + i );
     }
-    channels[channels.length - 1] = new String( "unused" );
+    channels[channels.length - 1] = "Unused";
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
