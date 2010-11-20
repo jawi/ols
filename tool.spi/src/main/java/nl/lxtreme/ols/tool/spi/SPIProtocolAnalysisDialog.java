@@ -296,8 +296,14 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     aToolWorker.setBitCount( Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1 );
     aToolWorker.setCSIndex( this.cs.getSelectedIndex() );
     aToolWorker.setSCKIndex( this.sck.getSelectedIndex() );
-    aToolWorker.setMisoIndex( this.miso.getSelectedIndex() );
-    aToolWorker.setMosiIndex( this.mosi.getSelectedIndex() );
+    if ( !"unused".equalsIgnoreCase( ( String )this.miso.getSelectedItem() ) )
+    {
+      aToolWorker.setMisoIndex( this.miso.getSelectedIndex() );
+    }
+    if ( !"unused".equalsIgnoreCase( ( String )this.mosi.getSelectedItem() ) )
+    {
+      aToolWorker.setMosiIndex( this.mosi.getSelectedIndex() );
+    }
     aToolWorker.setOrder( "MSB first".equals( this.order.getSelectedItem() ) ? BitOrder.MSB_FIRST : BitOrder.LSB_FIRST );
     aToolWorker.setReportCS( this.reportCS.isSelected() );
     aToolWorker.setHonourCS( this.honourCS.isSelected() );
@@ -486,6 +492,13 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
       channels[i] = new String( "Channel " + i );
     }
 
+    final String dataChannels[] = new String[33];
+    for ( int i = 0; i < 32; i++ )
+    {
+      dataChannels[i] = new String( "Channel " + i );
+    }
+    dataChannels[dataChannels.length - 1] = "Unused";
+
     final JPanel settings = new JPanel( new SpringLayout() );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
@@ -495,11 +508,11 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     settings.add( this.sck );
 
     settings.add( createRightAlignedLabel( "MISO" ) );
-    this.miso = new JComboBox( channels );
+    this.miso = new JComboBox( dataChannels );
     settings.add( this.miso );
 
     settings.add( createRightAlignedLabel( "MOSI" ) );
-    this.mosi = new JComboBox( channels );
+    this.mosi = new JComboBox( dataChannels );
     settings.add( this.mosi );
 
     settings.add( createRightAlignedLabel( "/CS" ) );
