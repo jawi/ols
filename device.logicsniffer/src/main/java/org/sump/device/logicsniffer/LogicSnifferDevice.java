@@ -550,7 +550,8 @@ public class LogicSnifferDevice implements Device
     detectDevice();
 
     DeviceMetadata metadata = getMetadata();
-    LOG.log( Level.INFO, "Metadata = \n{0}", metadata.toString() );
+    // Log the read results...
+    LOG.log( Level.FINE, "Metadata = \n{0}", metadata.toString() );
 
     // configure device
     final int deviceSize = metadata.getSampleMemoryDepth() != null ? Math.min( metadata.getSampleMemoryDepth(),
