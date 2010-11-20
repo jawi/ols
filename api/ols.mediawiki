@@ -78,6 +78,7 @@ Provides some common utilities that are shared among all other projects.
 
 # <strike>add 1-Wire decoder tool;</strike>
 # support OLS-device profiles for BP, regular OLS and SUMP;
+# make the tools aware of the device capabilities (5 channels for BP iso 32, etc.);
 # show timing measurements between edges, or from rising to rising or falling to falling edges;
 # configurable colors would be nice, so that the user can set them to match the probes;
 # integrate analysis reports & annotations into one and make it configurable which one is shown/used;
