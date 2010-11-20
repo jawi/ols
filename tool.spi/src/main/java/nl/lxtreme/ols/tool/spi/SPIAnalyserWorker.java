@@ -62,6 +62,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   public SPIAnalyserWorker( final DataContainer aData, final ToolContext aContext )
   {
     super( aData, aContext );
+
+    this.misoIdx = -1;
+    this.mosiIdx = -1;
   }
 
   // METHODS
@@ -189,9 +192,9 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
     final int startOfDecode = getContext().getStartSampleIndex();
     final int endOfDecode = getContext().getEndSampleIndex();
-    final boolean slaveSelected = slaveSelected( startOfDecode, endOfDecode );
+    final int slaveSelected = slaveSelected( startOfDecode, endOfDecode );
 
-    if ( ( this.honourCS && !slaveSelected ) || ( startOfDecode >= endOfDecode ) )
+    if ( ( this.honourCS && ( slaveSelected < 0 ) ) || ( startOfDecode >= endOfDecode ) )
     {
       // no CS edge found, look for trigger
       LOG.log( Level.WARNING, "No CS start-condition found! Analysis aborted..." );
@@ -211,14 +214,14 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     firePropertyChange( PROPERTY_AUTO_DETECT_MODE, null, this.mode );
 
     final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode, this );
-    if ( slaveSelected )
+    if ( slaveSelected >= 0 )
     {
       // now the trigger is in b, add trigger event to table
-      reportCsLow( decodedData, startOfDecode );
+      reportCsLow( decodedData, slaveSelected );
     }
 
     // Perform the actual decoding of the data line(s)...
-    clockDataOnEdge( decodedData, this.mode );
+    clockDataOnEdge( decodedData, this.mode, slaveSelected );
 
     return decodedData;
   }
@@ -232,20 +235,20 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
    *          the SPI mode defining the edges on which data can be sampled and
    *          on which edges data can change.
    */
-  private void clockDataOnEdge( final SPIDataSet aDataSet, final SPIMode aMode )
+  private void clockDataOnEdge( final SPIDataSet aDataSet, final SPIMode aMode, final int aSlaveSelectedIdx )
   {
     final int[] values = getValues();
 
-    final int startOfDecode = aDataSet.getStartOfDecode();
+    final int startOfDecode = Math.max( aSlaveSelectedIdx, aDataSet.getStartOfDecode() );
     final int endOfDecode = aDataSet.getEndOfDecode();
 
     final Edge sampleEdge = aMode.getSampleEdge();
     final Edge dataChangeEdge = aMode.getDataChangeEdge();
 
-    final int misoMask = 1 << this.misoIdx;
-    final int mosiMask = 1 << this.mosiIdx;
-    final int sckMask = 1 << this.sckIdx;
-    final int csMask = 1 << this.csIdx;
+    final int misoMask = ( this.misoIdx <= 0 ) ? 0xFFFFFF : ( 1 << this.misoIdx );
+    final int mosiMask = ( this.mosiIdx <= 0 ) ? 0xFFFFFF : ( 1 << this.mosiIdx );
+    final int sckMask = ( 1 << this.sckIdx );
+    final int csMask = ( 1 << this.csIdx );
 
     // scanning for falling/rising clk edges
     int oldSckValue = ( values[startOfDecode] & sckMask );
@@ -400,16 +403,30 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
    */
   private void prepareResults()
   {
-    updateChannelLabel( this.mosiIdx, SPIDataSet.SPI_MOSI );
-    updateChannelLabel( this.misoIdx, SPIDataSet.SPI_MISO );
-    updateChannelLabel( this.sckIdx, SPIDataSet.SPI_SCK );
-    updateChannelLabel( this.csIdx, SPIDataSet.SPI_CS );
-
-    // clear any existing annotations
-    clearChannelAnnotations( this.mosiIdx );
-    clearChannelAnnotations( this.misoIdx );
-    clearChannelAnnotations( this.sckIdx );
-    clearChannelAnnotations( this.csIdx );
+    if ( this.mosiIdx >= 0 )
+    {
+      updateChannelLabel( this.mosiIdx, SPIDataSet.SPI_MOSI );
+      // clear any existing annotations
+      clearChannelAnnotations( this.mosiIdx );
+    }
+    if ( this.misoIdx >= 0 )
+    {
+      updateChannelLabel( this.misoIdx, SPIDataSet.SPI_MISO );
+      // clear any existing annotations
+      clearChannelAnnotations( this.misoIdx );
+    }
+    if ( this.sckIdx >= 0 )
+    {
+      updateChannelLabel( this.sckIdx, SPIDataSet.SPI_SCK );
+      // clear any existing annotations
+      clearChannelAnnotations( this.sckIdx );
+    }
+    if ( this.csIdx >= 0 )
+    {
+      updateChannelLabel( this.csIdx, SPIDataSet.SPI_CS );
+      // clear any existing annotations
+      clearChannelAnnotations( this.csIdx );
+    }
   }
 
   /**
@@ -463,15 +480,23 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
   private void reportData( final SPIDataSet aDecodedData, final int aStartIdx, final int aEndIdx, final int aMosiValue,
       final int aMisoValue )
   {
-    // Perform bit-order conversion on the full byte...
-    final int mosivalue = NumberUtils.convertByteOrder( aMosiValue, this.bitOrder );
-    final int misovalue = NumberUtils.convertByteOrder( aMisoValue, this.bitOrder );
+    if ( this.mosiIdx >= 0 )
+    {
+      // Perform bit-order conversion on the full byte...
+      final int mosivalue = NumberUtils.convertByteOrder( aMosiValue, this.bitOrder );
 
-    addChannelAnnotation( this.mosiIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", mosivalue, mosivalue ) );
-    aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
+      addChannelAnnotation( this.mosiIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", mosivalue, mosivalue ) );
+      aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
+    }
 
-    addChannelAnnotation( this.misoIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", misovalue, misovalue ) );
-    aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
+    if ( this.misoIdx >= 0 )
+    {
+      // Perform bit-order conversion on the full byte...
+      final int misovalue = NumberUtils.convertByteOrder( aMisoValue, this.bitOrder );
+
+      addChannelAnnotation( this.misoIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", misovalue, misovalue ) );
+      aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
+    }
   }
 
   /**
@@ -518,20 +543,25 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
    *          the starting sample index to use;
    * @param aEndIndex
    *          the ending sample index to use.
-   * @return <code>true</code> if the slave is actually selected,
-   *         <code>false</code> otherwise.
+   * @return the sample index on which the slave is selected for the first time,
+   *         or -1 if no such moment is found.
    */
-  private boolean slaveSelected( final int aStartOfDecode, final int aEndOfDecode )
+  private int slaveSelected( final int aStartOfDecode, final int aEndOfDecode )
   {
-    boolean slaveSelected = false;
+    int slaveSelected = -1;
 
-    // Search for a CS-low backwards from the first cursor...
-    slaveSelected = searchSlaveSelected( 0, aStartOfDecode ) >= 0;
-    if ( !slaveSelected )
+    if ( aStartOfDecode > 0 )
+    {
+      // Search for a CS-low backwards from the first cursor...
+      slaveSelected = searchSlaveSelected( 0, aStartOfDecode );
+    }
+
+    if ( slaveSelected < 0 )
     {
       // Search for a CS-low forwards from the first cursor...
-      slaveSelected = searchSlaveSelected( aStartOfDecode, aEndOfDecode ) >= 0;
+      slaveSelected = searchSlaveSelected( aStartOfDecode, aEndOfDecode );
     }
+
     return slaveSelected;
   }
 }
