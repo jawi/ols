@@ -84,6 +84,16 @@ blockquote span {
   color: #69c;
   font-style: normal;
 }
+dl.faq {
+  width: 40em;
+}
+dl.faq dt {
+  font-style: italic;
+}
+dl.faq dd {
+  font-style: normal;
+  margin-bottom: 1.5em;
+}
 #toc {
   font-size: 0.9em;
 }
@@ -143,7 +153,7 @@ blockquote span {
 	  The alternative Java client provides the following features:
 	</p>
 	<ul>
-	  <li><em>Cross platform</em>: the client runs on Mac OSX (64-bit), Windows (32/64 bit) and Linux (32/64 bit);</li>
+	  <li><em>Cross platform</em>: the client runs on Mac OSX (32/64-bit), Windows (32/64 bit) and Linux (32/64 bit);</li>
 	  <li><em>Simple installation</em>: no longer fiddling with the serial libraries (RXTX) in order to get the client
 	  up and running. The client embeds the suitable serial libraries for several operating systems;</li>
 	  <li><em>Pluggable</em>: adding new functionality on the fly is possible and as easy as copying files to a single
@@ -155,6 +165,49 @@ blockquote span {
 	<p>
 	  <em>TO DO...</em>
 	</p>
+	<h3 class="content">FAQ</h3>
+	<p>
+	  Some frequently asked questions, as found in the <a href="http://dangerousprototypes.com/forum/index.php?board=23.0">support forums</a>.
+	</p>
+	<h4>Software</h4>
+	<dl class="faq">
+	  <dt>Your client does not run. It cannot find the classes and/or complaints about incorrect version numbers!</dt>
+	  <dd>The OLS client is written in and for Java 6. Ensure you have installed the latest Java 6 version on your system.
+	  For Windows/Linux, see <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">http://www.oracle.com/technetwork/java/javase/downloads/index.html</a>; 
+	  for OSX, see <a href="http://support.apple.com/kb/DL972">http://support.apple.com/kb/DL972</a> and 
+	  <a href="http://support.apple.com/kb/DL971">http://support.apple.com/kb/DL971</a>, or use your regular Software 
+	  Update mechanism.</dd>
+	  
+	  <dt>Your client crashes with an OutOfMemoryException: heap space!</dt>
+	  <dd>If you're performing large captures (e.g. with RLE turned on) it can be that the client hasn't enough memory
+	  by default to store all samples. For now, you can enlarge the memory settings by adding <tt>-Xmx1024m</tt> to the 
+	  Java command in the <tt>run.bat</tt>, <tt>run.sh</tt>, or the 
+	  <a href="http://developer.apple.com/library/mac/#documentation/Java/Reference/Java_InfoplistRef/Articles/JavaDictionaryInfo.plistKeys.html"><tt>VMOptions</tt> option in your <tt>Info.plist</tt></a>.</dd>
+	</dl>
+	<h4>Hardware</h4>
+	<dl class="faq">
+	  <dt>I cannot capture anything; nothing happens (perhaps exceptions in the console)!</dt>
+	  <dd>If you've played with the original SUMP client, you installed the RXTX libraries separately. Try deleting the 
+	  RXTX libraries from your Java installation as they might interfere with the libraries included with this client.</dd>
+	  
+	  <dt>My OLS-device isn't recognized by your client. It does not appear in the list of devices!</dt>
+	  <dd>Try entering the device name of your device (e.g. <tt>/dev/ttyACM0</tt>, <tt>/dev/tty.usbmodemfd142</tt>, 
+	  <tt>COM13</tt>) directly as port name.</dd>
+	  
+	  <dt>I've got multiple serial devices that go mad when/no longer react after opening the device list!</dt>
+	  <dd>The RXTX library shortly opens and closes each port in its detection routines. Try entering the device
+	  name directly as port name.</dd>
+	  
+	  <dt>Opening the device list takes a <em>very</em> long time!</dt>
+	  <dd>The RXTX library probes lists of possible devices, for example, on Windows, it tries to open <tt>COM1</tt> through 
+	  <tt>COM256</tt>(!). Try entring the device name directly as port name.</dd>
+	</dl>
+	<h4>Tools (decoding)</h4>
+	<dl class="faq">
+	  <dt>How can I decode only parts of my captured signal(s)?</dt>
+	  <dd>Mark the area you want to decode with cursors 1 and 2; this will cause most decoding tools to decode only that 
+	  part of your signals.</dd>
+	</dl>
     <h3 class="content">Download</h3>
     <p>
       The current release of Logic Sniffer is <strong><a href="ols-0.9.1.tar.gz">0.9.1</a></strong>.
