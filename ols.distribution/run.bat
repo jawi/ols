@@ -9,9 +9,10 @@ set BASEDIR=%~dp0
 rem all paths are used relatively from the base dir...
 set PLUGINDIR=%BASEDIR%\plugins
 set CLASSPATH=%BASEDIR%\bin\*
+set MEMSETTINGS=-Xmx1024m
 
 rem For now, use the "console enabled" java for Windows...
-java -Dnl.lxtreme.ols.bundle.dir="%PLUGINDIR%" -cp "%CLASSPATH%" nl.lxtreme.ols.runner.Runner
+java %MEMSETTINGS% -Dnl.lxtreme.ols.bundle.dir="%PLUGINDIR%" -cp "%CLASSPATH%" nl.lxtreme.ols.runner.Runner
 goto end
 
 :noJVM
