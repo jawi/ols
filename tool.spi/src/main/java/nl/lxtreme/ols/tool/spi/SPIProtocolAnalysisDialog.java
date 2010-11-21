@@ -113,7 +113,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
       }
       else if ( aValue instanceof String )
       {
-        return "Tries to determine the SPI mode based on the clock polarity (Mode 1 or 3).";
+        return "Tries to determine the SPI mode based on the clock polarity (CPOL).";
       }
       // Strange, we shouldn't be here...
       LOG.warning( "We should not be here actually! Value = " + aValue );
