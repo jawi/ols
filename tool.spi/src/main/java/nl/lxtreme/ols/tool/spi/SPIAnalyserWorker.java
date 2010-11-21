@@ -257,7 +257,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     // We've already found the
     boolean slaveSelected = true;
     boolean dataEdgeSeen = false;
-    int lastIdx = startOfDecode;
+    int dataStartIdx = startOfDecode;
     int bitIdx = this.bitCount;
 
     int misovalue = 0;
@@ -266,10 +266,11 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     final double length = endOfDecode - startOfDecode;
     for ( int idx = startOfDecode + 1; idx < endOfDecode; idx++ )
     {
+      final int dataSample = values[idx];
       /* CLK edge detection */
-      final int sckValue = values[idx] & sckMask;
+      final int sckValue = ( dataSample & sckMask );
       /* CS edge detection */
-      final int csValue = values[idx] & csMask;
+      final int csValue = ( dataSample & csMask );
 
       final Edge slaveSelectEdge = Edge.toEdge( oldCsValue, csValue );
       oldCsValue = csValue;
@@ -286,6 +287,18 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         reportCsHigh( aDataSet, idx );
 
         slaveSelected = false;
+        // it could be that we're waiting until a next clock cycle comes along;
+        // however, the /CS signal might be going up before that cycle actually
+        // comes...
+        if ( bitIdx == 0 )
+        {
+          // Full datagram decoded...
+          reportData( aDataSet, dataStartIdx, idx, mosivalue, misovalue );
+
+          bitIdx = this.bitCount;
+          misovalue = 0;
+          mosivalue = 0;
+        }
       }
 
       if ( this.honourCS && !slaveSelected )
@@ -311,7 +324,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       {
         if ( bitIdx == this.bitCount )
         {
-          lastIdx = idx - 1;
+          dataStartIdx = idx - 1;
         }
       }
 
@@ -319,12 +332,12 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       if ( sampleEdgeSeen )
       {
         // sample MiSo here; always MSB first, perform conversion later on...
-        if ( ( values[idx] & misoMask ) == misoMask )
+        if ( ( dataSample & misoMask ) == misoMask )
         {
           misovalue |= ( 1 << bitIdx );
         }
         // sample MoSi here; always MSB first, perform conversion later on...
-        if ( ( values[idx] & mosiMask ) == mosiMask )
+        if ( ( dataSample & mosiMask ) == mosiMask )
         {
           mosivalue |= ( 1 << bitIdx );
         }
@@ -336,7 +349,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         else if ( bitIdx == 0 )
         {
           // Full datagram decoded...
-          reportData( aDataSet, lastIdx, idx, mosivalue, misovalue );
+          reportData( aDataSet, dataStartIdx, idx, mosivalue, misovalue );
 
           bitIdx = this.bitCount;
           misovalue = 0;
