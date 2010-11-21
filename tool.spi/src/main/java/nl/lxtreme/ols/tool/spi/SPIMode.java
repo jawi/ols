@@ -67,6 +67,28 @@ public enum SPIMode
   // METHODS
 
   /**
+   * Returns the CPHA value, which defines whether the data is to be sampled at
+   * the odd or even clock edges.
+   * 
+   * @return '1' if the CPHA value is one (mode 1 and 3), '0' otherwise.
+   */
+  public int getCPHA()
+  {
+    return ( ( this == MODE_1 ) || ( this == MODE_3 ) ) ? 1 : 0;
+  }
+
+  /**
+   * Returns the CPOL value, which defined the clock polarity (default 1 or
+   * default 0).
+   * 
+   * @return '1' is the CPOL value is default high, '0' otherwise.
+   */
+  public int getCPOL()
+  {
+    return ( ( this == MODE_2 ) || ( this == MODE_3 ) ) ? 1 : 0;
+  }
+
+  /**
    * Returns the data change edge, on which the MISO/MOSI lines are allowed to
    * change.
    * 

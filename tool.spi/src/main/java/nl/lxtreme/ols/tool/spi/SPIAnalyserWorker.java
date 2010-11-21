@@ -242,11 +242,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     final int startOfDecode = Math.max( aSlaveSelectedIdx, aDataSet.getStartOfDecode() );
     final int endOfDecode = aDataSet.getEndOfDecode();
 
-    final Edge sampleEdge = aMode.getSampleEdge();
-    final Edge dataChangeEdge = aMode.getDataChangeEdge();
-
-    final int misoMask = ( this.misoIdx <= 0 ) ? 0xFFFFFF : ( 1 << this.misoIdx );
-    final int mosiMask = ( this.mosiIdx <= 0 ) ? 0xFFFFFF : ( 1 << this.mosiIdx );
+    final int misoMask = ( 1 << this.misoIdx );
+    final int mosiMask = ( 1 << this.mosiIdx );
     final int sckMask = ( 1 << this.sckIdx );
     final int csMask = ( 1 << this.csIdx );
 
@@ -254,11 +251,13 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     int oldSckValue = ( values[startOfDecode] & sckMask );
     int oldCsValue = ( values[startOfDecode] & csMask );
 
-    // We've already found the
     boolean slaveSelected = true;
-    boolean dataEdgeSeen = false;
     int dataStartIdx = startOfDecode;
+
     int bitIdx = this.bitCount;
+
+    final int clockEdgeCount = ( this.bitCount + 1 ) * 2;
+    int clockEdgeIdx = 0;
 
     int misovalue = 0;
     int mosivalue = 0;
@@ -280,7 +279,6 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         reportCsLow( aDataSet, idx );
 
         slaveSelected = true;
-        dataEdgeSeen = false;
       }
       else if ( slaveSelectEdge.isRising() )
       {
@@ -311,33 +309,39 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       final Edge clockEdge = Edge.toEdge( oldSckValue, sckValue );
       oldSckValue = sckValue;
 
-      // In case the clock is phase-shifted with respect to the data line,
-      // we should wait until the first inverse edge is seen. To put it
-      // otherwise, we should simply ignore the first seen clock edge and
-      // wait for the second one...
-      if ( dataChangeEdge == clockEdge )
+      final boolean sampleEdgeSeen;
+      if ( clockEdge.isRising() || clockEdge.isFalling() )
       {
-        dataEdgeSeen = true;
-      }
-      // Keep track where we saw the first clocked bit of a byte-value...
-      if ( dataEdgeSeen )
-      {
-        if ( bitIdx == this.bitCount )
+        clockEdgeIdx = ( clockEdgeIdx + 1 ) % clockEdgeCount;
+        // When CPHA is '1', we should sample at the even numbered clock edges,
+        // when CPHA is '0' we should sample at the odd numbered clock edges...
+        sampleEdgeSeen = ( ( clockEdgeIdx + aMode.getCPHA() ) % 2 ) == 1;
+
+        // First clock edge we've seen? If so, we should keep this index as our
+        // start of data index...
+        if ( sampleEdgeSeen && ( bitIdx == this.bitCount ) )
         {
-          dataStartIdx = idx - 1;
+          dataStartIdx = idx;
         }
+
+        LOG.log( Level.FINE, "Clock edge: {0}, idx: {1}, sample? {2}", //
+            new Object[] { clockEdge, clockEdgeIdx, sampleEdgeSeen } );
+      }
+      else
+      {
+        // Only actual clock edges should be taken into account...
+        sampleEdgeSeen = false;
       }
 
-      final boolean sampleEdgeSeen = dataEdgeSeen && ( sampleEdge == clockEdge );
       if ( sampleEdgeSeen )
       {
         // sample MiSo here; always MSB first, perform conversion later on...
-        if ( ( dataSample & misoMask ) == misoMask )
+        if ( ( this.misoIdx >= 0 ) && ( ( dataSample & misoMask ) == misoMask ) )
         {
           misovalue |= ( 1 << bitIdx );
         }
         // sample MoSi here; always MSB first, perform conversion later on...
-        if ( ( dataSample & mosiMask ) == mosiMask )
+        if ( ( this.mosiIdx >= 0 ) && ( ( dataSample & mosiMask ) == mosiMask ) )
         {
           mosivalue |= ( 1 << bitIdx );
         }
@@ -346,7 +350,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         {
           bitIdx--;
         }
-        else if ( bitIdx == 0 )
+        else
+        /* if ( bitIdx == 0 ) */
         {
           // Full datagram decoded...
           reportData( aDataSet, dataStartIdx, idx, mosivalue, misovalue );
@@ -375,7 +380,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
    *          the starting sample index to use;
    * @param aEndIndex
    *          the ending sample index to use.
-   * @return the presumed SPI mode, either mode 1 or 3.
+   * @return the presumed SPI mode, either mode 0 or 2.
    */
   private SPIMode detectSPIMode( final int aStartIndex, final int aEndIndex )
   {
@@ -398,13 +403,13 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     // we're fairly sure that CPOL == 1...
     if ( valueStats.getHighestRanked() == 1 )
     {
-      LOG.log( Level.INFO, "SPI mode is probably mode 2 or 3 (CPOL == 1). Assuming mode 3 ..." );
-      result = SPIMode.MODE_3;
+      LOG.log( Level.INFO, "SPI mode is probably mode 2 or 3 (CPOL == 1). Assuming mode 2 ..." );
+      result = SPIMode.MODE_2;
     }
     else
     {
-      LOG.log( Level.INFO, "SPI mode is probably mode 0 or 1 (CPOL == 0). Assuming mode 1 ..." );
-      result = SPIMode.MODE_1;
+      LOG.log( Level.INFO, "SPI mode is probably mode 0 or 1 (CPOL == 0). Assuming mode 0 ..." );
+      result = SPIMode.MODE_0;
     }
 
     return result;
