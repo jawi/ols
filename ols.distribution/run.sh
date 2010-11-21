@@ -13,5 +13,6 @@ BASEDIR=$(dirname -- "${0}")
 # all paths are used relatively from the base dir...
 PLUGINDIR=$BASEDIR/plugins
 CLASSPATH=$BASEDIR/bin/*
+MEMSETTINGS=-Xmx1024m
 
-java -Dnl.lxtreme.ols.bundle.dir="$PLUGINDIR" -cp "$CLASSPATH" nl.lxtreme.ols.runner.Runner
+java $MEMSETTINGS -Dnl.lxtreme.ols.bundle.dir="$PLUGINDIR" -cp "$CLASSPATH" nl.lxtreme.ols.runner.Runner
