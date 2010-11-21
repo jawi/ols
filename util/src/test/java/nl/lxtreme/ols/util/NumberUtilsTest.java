@@ -23,6 +23,9 @@ package nl.lxtreme.ols.util;
 
 import static nl.lxtreme.ols.util.NumberUtils.*;
 import static org.junit.Assert.*;
+import nl.lxtreme.ols.util.NumberUtils.BitOrder;
+import nl.lxtreme.ols.util.NumberUtils.UnitDefinition;
+
 import org.junit.*;
 
 
@@ -37,53 +40,22 @@ public class NumberUtilsTest
    * 
    */
   @Test
-  public void testConvertByteOrderOk()
+  public void testConvertOrderOk()
   {
-    assertEquals( 128, convertByteOrder( 1, BitOrder.LSB_FIRST ) );
-    assertEquals( 1, convertByteOrder( 128, BitOrder.LSB_FIRST ) );
-    assertEquals( 1, convertByteOrder( convertByteOrder( 1, BitOrder.LSB_FIRST ), BitOrder.LSB_FIRST ) );
+    assertEquals( 0, reverseBits( 0, 8 ) );
+    assertEquals( 128, reverseBits( 1, 8 ) );
+    assertEquals( 32768, reverseBits( 1, 16 ) );
+    assertEquals( Integer.MIN_VALUE, reverseBits( 1, 32 ) );
 
-    assertEquals( 1, convertByteOrder( 1, BitOrder.MSB_FIRST ) );
-    assertEquals( 128, convertByteOrder( 128, BitOrder.MSB_FIRST ) );
-    assertEquals( 1, convertByteOrder( convertByteOrder( 1, BitOrder.MSB_FIRST ), BitOrder.MSB_FIRST ) );
+    assertEquals( 256, convertBitOrder( 1, 9, BitOrder.LSB_FIRST ) );
+    assertEquals( 1, convertBitOrder( 256, 9, BitOrder.LSB_FIRST ) );
+    assertEquals( 1, convertBitOrder( convertBitOrder( 1, 9, BitOrder.LSB_FIRST ), 9, BitOrder.LSB_FIRST ) );
 
-    assertEquals( 128, convertByteOrder( convertByteOrder( 1, BitOrder.LSB_FIRST ), BitOrder.MSB_FIRST ) );
-  }
+    assertEquals( 1, convertBitOrder( 1, 9, BitOrder.MSB_FIRST ) );
+    assertEquals( 128, convertBitOrder( 128, 9, BitOrder.MSB_FIRST ) );
+    assertEquals( 1, convertBitOrder( convertBitOrder( 1, 9, BitOrder.MSB_FIRST ), 9, BitOrder.MSB_FIRST ) );
 
-  /**
-   * 
-   */
-  @Test
-  public void testConvertLongWordOrderOk()
-  {
-    assertEquals( Integer.MIN_VALUE, convertLongWordOrder( 1, BitOrder.LSB_FIRST ) );
-    assertEquals( 65536, convertLongWordOrder( 32768, BitOrder.LSB_FIRST ) );
-    assertEquals( 1, convertLongWordOrder( Integer.MIN_VALUE, BitOrder.LSB_FIRST ) );
-    assertEquals( 1, convertLongWordOrder( convertLongWordOrder( 1, BitOrder.LSB_FIRST ), BitOrder.LSB_FIRST ) );
-
-    assertEquals( 1, convertLongWordOrder( 1, BitOrder.MSB_FIRST ) );
-    assertEquals( 128, convertLongWordOrder( 128, BitOrder.MSB_FIRST ) );
-    assertEquals( 1, convertLongWordOrder( convertLongWordOrder( 1, BitOrder.MSB_FIRST ), BitOrder.MSB_FIRST ) );
-
-    assertEquals( Integer.MIN_VALUE,
-        convertLongWordOrder( convertLongWordOrder( 1, BitOrder.LSB_FIRST ), BitOrder.MSB_FIRST ) );
-  }
-
-  /**
-   * 
-   */
-  @Test
-  public void testConvertWordOrderOk()
-  {
-    assertEquals( 32768, convertWordOrder( 1, BitOrder.LSB_FIRST ) );
-    assertEquals( 1, convertWordOrder( 32768, BitOrder.LSB_FIRST ) );
-    assertEquals( 1, convertWordOrder( convertWordOrder( 1, BitOrder.LSB_FIRST ), BitOrder.LSB_FIRST ) );
-
-    assertEquals( 1, convertWordOrder( 1, BitOrder.MSB_FIRST ) );
-    assertEquals( 128, convertWordOrder( 128, BitOrder.MSB_FIRST ) );
-    assertEquals( 1, convertWordOrder( convertWordOrder( 1, BitOrder.MSB_FIRST ), BitOrder.MSB_FIRST ) );
-
-    assertEquals( 32768, convertWordOrder( convertWordOrder( 1, BitOrder.LSB_FIRST ), BitOrder.MSB_FIRST ) );
+    assertEquals( 256, convertBitOrder( convertBitOrder( 1, 9, BitOrder.LSB_FIRST ), 9, BitOrder.MSB_FIRST ) );
   }
 
   /**
