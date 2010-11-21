@@ -73,86 +73,30 @@ public final class NumberUtils
   // METHODS
 
   /**
-   * Converts the bits of a byte into a desired order.
+   * Converts the given value into a desired bit order.
    * 
    * @param aValue
-   *          the byte value to convert;
+   *          the value to convert;
+   * @param aBitCount
+   *          the number of bits that are supposed to be in the given value;
    * @param aBitOrder
-   *          the bit order of the given value.
-   * @return the converted value, always most significant byte first (assuming
-   *         you are reading from left to right).
+   *          the desired bit order.
+   * @return the converted value.
    */
-  public static int convertByteOrder( final int aValue, final BitOrder aBitOrder )
+  public static int convertBitOrder( final int aValue, final int aBitCount, final BitOrder aBitOrder )
   {
-    int v = aValue;
-    if ( aBitOrder == BitOrder.LSB_FIRST )
+    if ( ( aBitCount <= 0 ) || ( aBitCount > 32 ) )
     {
-      // Reverse the bits in a byte with 3 operations (64-bit multiply and
-      // modulus division), taken from:
-      // http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64BitsDiv
-      v = ( int )( ( v * 0x0202020202L & 0x010884422010L ) % 1023 );
+      throw new IllegalArgumentException( "Bit count cannot be zero, negative or beyond 32-bits!" );
     }
-    return v;
-  }
+    // We already have the most significant bit first, convert only if the bit
+    // order is LSB first...
+    if ( aBitOrder == BitOrder.MSB_FIRST )
+    {
+      return ( aValue & getBitMask( aBitCount ) );
+    }
 
-  /**
-   * Converts the bits of a long-word (32-bit) into a desired order.
-   * 
-   * @param aValue
-   *          the 32-bit value to convert;
-   * @param aBitOrder
-   *          the bit order of the given value.
-   * @return the converted 32-bit value, always most significant byte first
-   *         (assuming you are reading from left to right).
-   */
-  public static int convertLongWordOrder( final int aValue, final BitOrder aBitOrder )
-  {
-    // Taken from:
-    // http://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
-    long v = aValue;
-    if ( aBitOrder == BitOrder.LSB_FIRST )
-    {
-      // swap odd and even bits
-      v = ( ( v >> 1 ) & 0x55555555L ) | ( ( v & 0x55555555L ) << 1 );
-      // swap consecutive pairs
-      v = ( ( v >> 2 ) & 0x33333333L ) | ( ( v & 0x33333333L ) << 2 );
-      // swap nibbles ...
-      v = ( ( v >> 4 ) & 0x0F0F0F0FL ) | ( ( v & 0x0F0F0F0FL ) << 4 );
-      // swap bytes
-      v = ( ( v >> 8 ) & 0x00FF00FFL ) | ( ( v & 0x00FF00FFL ) << 8 );
-      // swap 2-byte long pairs
-      v = ( v >> 16 ) | ( v << 16 );
-    }
-    return ( int )( v );
-  }
-
-  /**
-   * Converts the bits of a word value into a desired order.
-   * 
-   * @param aValue
-   *          the 16-bit value to convert;
-   * @param aBitOrder
-   *          the bit order of the given value.
-   * @return the converted 16-bit value, always most significant byte first
-   *         (assuming you are reading from left to right).
-   */
-  public static int convertWordOrder( final int aValue, final BitOrder aBitOrder )
-  {
-    // Taken from:
-    // http://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
-    long v = aValue;
-    if ( aBitOrder == BitOrder.LSB_FIRST )
-    {
-      // swap odd and even bits
-      v = ( ( v >> 1 ) & 0x55555555L ) | ( ( v & 0x55555555L ) << 1 );
-      // swap consecutive pairs
-      v = ( ( v >> 2 ) & 0x33333333L ) | ( ( v & 0x33333333L ) << 2 );
-      // swap nibbles ...
-      v = ( ( v >> 4 ) & 0x0F0F0F0FL ) | ( ( v & 0x0F0F0F0FL ) << 4 );
-      // swap bytes
-      v = ( ( v >> 8 ) & 0x00FF00FFL ) | ( ( v & 0x00FF00FFL ) << 8 );
-    }
-    return ( int )( v & 65535 );
+    return reverseBits( aValue, aBitCount );
   }
 
   /**
@@ -170,6 +114,87 @@ public final class NumberUtils
   public static int getBitIndex( final int aMaskValue )
   {
     return ( int )Math.floor( Math.log( aMaskValue ) / Math.log( 2 ) );
+  }
+
+  /**
+   * Returns the maximum value for the given bit count, e.g.,
+   * <tt>( 1 << aBitCount ) - 1</tt>.
+   * 
+   * @param aBitCount
+   *          the number of bits to create a bit mask for, > 0.
+   * @return the bit mask.
+   */
+  public static int getBitMask( final int aBitCount )
+  {
+    if ( ( aBitCount <= 0 ) || ( aBitCount > 32 ) )
+    {
+      throw new IllegalArgumentException( "Invalid bit count, should be > 0 && <= 32." );
+    }
+
+    return ( int )( ( 1L << aBitCount ) - 1 );
+  }
+
+  /**
+   * Returns whether the given value is a power of two.
+   * 
+   * @param aValue
+   *          the value to test as power of two.
+   * @return <code>true</code> if the given value is a power of two,
+   *         <code>false</code> otherwise.
+   */
+  public static boolean isPowerOfTwo( final int aValue )
+  {
+    // See:
+    // <http://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2>
+    return ( aValue != 0 ) && ( ( aValue & ( aValue - 1 ) ) == 0 );
+  }
+
+  /**
+   * Converts the bits of a byte into a desired order.
+   * 
+   * @param aValue
+   *          the byte value to convert.
+   * @return the converted value, always most significant byte first (assuming
+   *         you are reading from left to right).
+   */
+  public static int reverseBits( final int aValue, final int aBitCount )
+  {
+    if ( isPowerOfTwo( aBitCount ) )
+    {
+      // Taken from:
+      // http://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
+      long v = aValue;
+
+      int s = aBitCount;
+      int mask = getBitMask( aBitCount );
+      while ( ( s >>= 1 ) > 0 )
+      {
+        mask ^= ( mask << s );
+        v = ( ( v >> s ) & mask ) | ( ( v << s ) & ~mask );
+      }
+
+      return ( int )( v );
+    }
+    else
+    {
+      int r = 0;
+      int v = aValue;
+      int s = aBitCount;
+
+      for ( ; v != 0; v >>= 1 )
+      {
+        r <<= 1;
+        r |= ( v & 1 );
+        s--;
+      }
+
+      if ( s >= 0 )
+      {
+        r <<= s; // shift when v's highest bits are zero
+      }
+
+      return r;
+    }
   }
 
   /**

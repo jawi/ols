@@ -501,7 +501,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     if ( this.mosiIdx >= 0 )
     {
       // Perform bit-order conversion on the full byte...
-      final int mosivalue = NumberUtils.convertByteOrder( aMosiValue, this.bitOrder );
+      final int mosivalue = NumberUtils.convertBitOrder( aMosiValue, ( this.bitCount + 1 ), this.bitOrder );
 
       addChannelAnnotation( this.mosiIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", mosivalue, mosivalue ) );
       aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
@@ -510,7 +510,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     if ( this.misoIdx >= 0 )
     {
       // Perform bit-order conversion on the full byte...
-      final int misovalue = NumberUtils.convertByteOrder( aMisoValue, this.bitOrder );
+      final int misovalue = NumberUtils.convertBitOrder( aMisoValue, ( this.bitCount + 1 ), this.bitOrder );
 
       addChannelAnnotation( this.misoIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", misovalue, misovalue ) );
       aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
