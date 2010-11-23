@@ -129,6 +129,7 @@ public class LogicSnifferDeviceController implements DeviceController
       catch ( CancellationException exception )
       {
         abortReason = ""; // simply cancelled by user...
+        this.device.stop();
       }
       catch ( ExecutionException exception )
       {
@@ -136,6 +137,7 @@ public class LogicSnifferDeviceController implements DeviceController
         HostUtils.handleInterruptedException( exception.getCause() );
 
         abortReason = exception.getCause().getMessage();
+        this.device.stop();
       }
       catch ( InterruptedException exception )
       {
@@ -143,6 +145,7 @@ public class LogicSnifferDeviceController implements DeviceController
         HostUtils.handleInterruptedException( exception );
 
         abortReason = exception.getMessage();
+        this.device.stop();
       }
 
       // Report the result back to the given callback...
