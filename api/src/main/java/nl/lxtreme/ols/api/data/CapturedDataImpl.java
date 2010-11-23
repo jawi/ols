@@ -117,6 +117,8 @@ public class CapturedDataImpl implements CapturedData
     this.absoluteLength = values.length;
   }
 
+  // METHODS
+
   /**
    * Constructs CapturedData based on the given compressed sampling data.
    * 
@@ -147,7 +149,47 @@ public class CapturedDataImpl implements CapturedData
     this.absoluteLength = absLen;
   }
 
-  // METHODS
+  /**
+   * Constructs CapturedData based on the given compressed sampling data.
+   * 
+   * @param aValues
+   *          32bit values as read from device
+   * @param aTimestamps
+   *          timstamps in number of samples since sample start
+   * @param aTriggerPosition
+   *          position of trigger as time value
+   * @param aRate
+   *          sampling rate (may be set to <code>NOT_AVAILABLE</code>)
+   * @param aChannels
+   *          number of used channels
+   * @param aEnabledChannels
+   *          bit mask identifying used channels
+   * @param aAbsoluteLength
+   *          absolute number of samples
+   */
+  public CapturedDataImpl( final List<Integer> aValues, final List<Long> aTimestamps, final long aTriggerPosition,
+      final int aRate, final int aChannels, final int aEnabledChannels, final long aAbsoluteLength )
+  {
+    this.values = new int[aValues.size()];
+    this.timestamps = new long[aTimestamps.size()];
+
+    if ( this.values.length != this.timestamps.length )
+    {
+      throw new IllegalArgumentException( "Values and timestamps size mismatch!" );
+    }
+
+    for ( int i = 0, size = aValues.size(); i < size; i++ )
+    {
+      this.values[i] = aValues.get( i );
+      this.timestamps[i] = aTimestamps.get( i );
+    }
+
+    this.triggerPosition = aTriggerPosition;
+    this.rate = aRate;
+    this.channels = aChannels;
+    this.enabledChannels = aEnabledChannels;
+    this.absoluteLength = aAbsoluteLength;
+  }
 
   /**
    * Provides a binary search for arrays of long-values.

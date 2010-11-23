@@ -584,12 +584,12 @@ public class LogicSnifferDevice implements Device
     int[] buffer = new int[samples];
 
     // wait for first byte forever (trigger could cause long delay)
-    for ( boolean wait = true; wait == true; )
+    for ( boolean waiting = true; this.running && waiting; )
     {
       try
       {
         buffer[samples - 1] = readSample( channels );
-        wait = false;
+        waiting = false;
       }
       catch ( final InterruptedException exception )
       {
@@ -607,7 +607,7 @@ public class LogicSnifferDevice implements Device
     // read all other samples
     try
     {
-      for ( int i = samples - 2; i >= 0; i-- )
+      for ( int i = samples - 2; this.running && ( i >= 0 ); i-- )
       {
         buffer[i] = readSample( channels );
         if ( aCallback != null )
@@ -624,21 +624,29 @@ public class LogicSnifferDevice implements Device
       }
     }
 
+    final List<Integer> values = new ArrayList<Integer>();
+    final List<Long> timestamps = new ArrayList<Long>();
+
     int rleTrigPos = 0;
+    long absoluteLength = 0;
+
+    // collect additional information for CapturedData
+    int triggerPos = CapturedData.NOT_AVAILABLE;
+
+    int rate = CapturedData.NOT_AVAILABLE;
+    if ( this.clockSource == CLOCK_INTERNAL )
+    {
+      rate = this.demux ? 2 * CLOCK / ( this.divider + 1 ) : CLOCK / ( this.divider + 1 );
+    }
+
     if ( this.rleEnabled )
     {
       LOG.log( Level.FINE, "Decoding Run Length Encoded data, sample count: {0}", samples );
 
-      final List<Integer> decodedBuffer = new ArrayList<Integer>( buffer.length );
-
       int old = buffer[0];
+      long time = 0;
       for ( int i = 0; i < samples; i++ )
       {
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.log( Level.FINE, "RLE decoding: 0x{0}", Integer.toHexString( buffer[i] ) );
-        }
-
         if ( ( buffer[i] & 0x80000000 ) != 0 )
         {
           // This is a "count"
@@ -650,58 +658,55 @@ public class LogicSnifferDevice implements Device
             continue;
           }
 
-          if ( ( buffer[i - 1] & 0x80000000 ) != 0 )
-          {
-            LOG.fine( "Duplicate count!" );
-          }
-
-          final int count = 0x7FFFFFFF & buffer[i];
-          for ( int j = 0; j < count; j++ )
-          {
-            decodedBuffer.add( old );
-          }
+          final int count = ( buffer[i] & 0x7FFFFFFF );
+          // simple increase the time value at which the next sample will
+          // occur...
+          time += count;
         }
         else
         {
           if ( ( i >= stopCounter - 2 ) && ( rleTrigPos == 0 ) )
           {
-            rleTrigPos = decodedBuffer.size();
+            rleTrigPos = values.size();
           }
-          decodedBuffer.add( buffer[i] );
+
+          // add the read sample & add a timestamp value as well...
+          values.add( buffer[i] );
+          timestamps.add( time++ );
+
           old = buffer[i];
         }
       }
 
-      // Copy decoded data to buffer.
-      // TODO: Optimize this so it is done in place...
-      buffer = new int[decodedBuffer.size()];
-      for ( int i = 0; i < decodedBuffer.size(); i++ )
+      // Take the last seen time value as "absolete" length of this trace...
+      absoluteLength = time + 2;
+
+      if ( this.triggerEnabled )
       {
-        buffer[i] = decodedBuffer.get( i );
+        triggerPos = rleTrigPos - 1;
       }
     }
-
-    // collect additional information for CapturedData
-    int pos = CapturedData.NOT_AVAILABLE;
-    if ( this.triggerEnabled )
+    else
     {
-      if ( !this.rleEnabled )
+      LOG.log( Level.FINE, "Decoding unencoded data, sample count: {0}", samples );
+
+      for ( int i = 0; i < samples; i++ )
       {
-        pos = readCounter - stopCounter - 3 - ( 4 / ( this.divider + 1 ) ) - ( this.demux ? 5 : 0 );
+        values.add( buffer[i] );
+        timestamps.add( ( long )i );
       }
-      else
+
+      // Take the number of samples as "absolute" length of this trace...
+      absoluteLength = samples;
+
+      if ( this.triggerEnabled )
       {
-        pos = rleTrigPos - 1;
+        // TODO what the f*ck is this doing???
+        triggerPos = readCounter - stopCounter - 3 - ( 4 / ( this.divider + 1 ) ) - ( this.demux ? 5 : 0 );
       }
     }
 
-    int rate = CapturedData.NOT_AVAILABLE;
-    if ( this.clockSource == CLOCK_INTERNAL )
-    {
-      rate = this.demux ? 2 * CLOCK / ( this.divider + 1 ) : CLOCK / ( this.divider + 1 );
-    }
-
-    return new CapturedDataImpl( buffer, pos, rate, channels, this.enabledChannels );
+    return new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, this.enabledChannels, absoluteLength );
   }
 
   /**
