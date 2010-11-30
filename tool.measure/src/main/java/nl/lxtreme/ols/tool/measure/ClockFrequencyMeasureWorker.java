@@ -39,15 +39,15 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
   public static class ClockStats
   {
-    private final int rising;
-    private final int falling;
+    private final long rising;
+    private final long falling;
     private final double period;
     private final double frequency;
 
     /**
      * 
      */
-    ClockStats( final int aRising, final int aFalling, final long aSampleRate )
+    ClockStats( final long aRising, final long aFalling, final long aSampleRate )
     {
       this.rising = aRising;
       this.falling = aFalling;
@@ -105,7 +105,7 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
   // VARIABLES
 
   private final int channelMask;
-  private final Map<Edge, Frequency<Integer>> stats;
+  private final Map<Edge, Frequency<Long>> stats;
 
   // CONSTRUCTORS
 
@@ -127,10 +127,10 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
     this.channelMask = ( 1 << aChannel );
 
-    this.stats = new HashMap<Edge, Frequency<Integer>>( 2 );
+    this.stats = new HashMap<Edge, Frequency<Long>>( 2 );
     // Populate with empty distribution maps...
-    this.stats.put( Edge.RISING, new Frequency<Integer>() );
-    this.stats.put( Edge.FALLING, new Frequency<Integer>() );
+    this.stats.put( Edge.RISING, new Frequency<Long>() );
+    this.stats.put( Edge.FALLING, new Frequency<Long>() );
   }
 
   // METHODS
@@ -174,8 +174,8 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
           edge = Edge.FALLING;
         }
 
-        final Frequency<Integer> edgeStats = this.stats.get( edge );
-        edgeStats.addValue( Integer.valueOf( ( int )( timestamps[i] - lastTransition ) ) );
+        final Frequency<Long> edgeStats = this.stats.get( edge );
+        edgeStats.addValue( Long.valueOf( ( timestamps[i] - lastTransition ) ) );
 
         lastTransition = timestamps[i];
       }
@@ -183,10 +183,10 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
       lastBitValue = bitValue;
     }
 
-    final Integer bestRising = this.stats.get( Edge.RISING ).getHighestRanked();
-    final Integer bestFalling = this.stats.get( Edge.FALLING ).getHighestRanked();
+    final Long bestRising = this.stats.get( Edge.RISING ).getHighestRanked();
+    final Long bestFalling = this.stats.get( Edge.FALLING ).getHighestRanked();
 
-    return new ClockStats( ( bestRising == null ) ? 0 : bestRising.intValue(), //
-        ( bestFalling == null ) ? 0 : bestFalling.intValue(), getSampleRate() );
+    return new ClockStats( ( bestRising == null ) ? 0 : bestRising.longValue(), //
+        ( bestFalling == null ) ? 0 : bestFalling.longValue(), getSampleRate() );
   }
 }

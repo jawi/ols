@@ -85,16 +85,6 @@ public class LogicSnifferDevice implements Device
   private final static int FLAG_DEMUX = 0x00000001;
   // noise filter
   private final static int FLAG_FILTER = 0x00000002;
-  // disable channel group 0
-  private final static int FLAG_DISABLE_G0 = 0x00000004;
-  // disable channel group 1
-  @SuppressWarnings( "unused" )
-  private final static int FLAG_DISABLE_G1 = 0x00000008;
-  // disable channel group 2
-  private final static int FLAG_DISABLE_G2 = 0x00000010;
-  // disable channel group 3
-  @SuppressWarnings( "unused" )
-  private final static int FLAG_DISABLE_G3 = 0x00000020;
   // external trigger?
   private final static int FLAG_EXTERNAL = 0x00000040;
   // inverted
@@ -219,7 +209,6 @@ public class LogicSnifferDevice implements Device
 
       this.port.setSerialPortParams( aPortRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE );
       this.port.setFlowControlMode( SerialPort.FLOWCONTROL_XONXOFF_IN );
-      this.port.disableReceiveFraming();
       this.port.enableReceiveTimeout( 250 );
 
       this.outputStream = this.port.getOutputStream();
@@ -333,7 +322,7 @@ public class LogicSnifferDevice implements Device
   /**
    * @see nl.lxtreme.ols.api.devices.Device#getMetadata()
    */
-  public DeviceMetadata getMetadata() throws IOException, IllegalStateException
+  public LogicSnifferMetadata getMetadata() throws IOException, IllegalStateException
   {
     if ( !this.attached )
     {
@@ -549,42 +538,43 @@ public class LogicSnifferDevice implements Device
     // First try to find the logic sniffer itself...
     detectDevice();
 
-    DeviceMetadata metadata = getMetadata();
+    final LogicSnifferMetadata metadata = getMetadata();
     // Log the read results...
     LOG.log( Level.FINE, "Metadata = \n{0}", metadata.toString() );
 
-    // configure device
-    final int deviceSize = metadata.getSampleMemoryDepth() != null ? Math.min( metadata.getSampleMemoryDepth(),
-        this.size ) : this.size;
+    final int deviceSize = metadata.getSampleMemoryDepth( this.size );
 
     final int stopCounter = ( int )( deviceSize * this.ratio );
     final int readCounter = deviceSize;
 
-    final int flags = configureDevice( stopCounter, readCounter );
-
-    sendCommand( SETFLAGS, flags );
-    sendCommand( CMD_RUN );
-
     // check if data needs to be multiplexed
-    int channels;
-    int samples;
+    final int channels;
+    final int samples;
     if ( this.demux && ( this.clockSource == CLOCK_INTERNAL ) )
     {
-      channels = 16;
+      // When the multiplexer is turned on, the upper two channel blocks are
+      // disabled, leaving only 16 channels for capturing...
+      channels = metadata.getProbeCount( 16 );
       samples = ( readCounter & 0xffff8 );
     }
     else
     {
-      channels = 32;
+      channels = metadata.getProbeCount( 32 );
       samples = ( readCounter & 0xffffc );
     }
 
-    channels = metadata.getProbeCount() != null ? Math.min( metadata.getProbeCount(), channels ) : channels;
+    // We need to read all samples first before doing any post-processing on
+    // them...
+    final int[] buffer = new int[samples];
 
-    int[] buffer = new int[samples];
+    // configure device
+    configureDevice( stopCounter, readCounter );
+
+    sendCommand( CMD_RUN );
 
     // wait for first byte forever (trigger could cause long delay)
-    for ( boolean waiting = true; this.running && waiting; )
+    boolean waiting = true;
+    while ( this.running && waiting )
     {
       try
       {
@@ -655,12 +645,15 @@ public class LogicSnifferDevice implements Device
             // Skip the first part of the stream if it is composed from
             // repeated repeat-counts.
             old = buffer[i];
+            LOG.log( Level.INFO, "Duplicate RLE count seen of {0} vs {1}!", new Object[] { ( buffer[i] & 0x7FFFFFFF ),
+                ( old & 0x7FFFFFFF ) } );
             continue;
           }
 
           final int count = ( buffer[i] & 0x7FFFFFFF );
           // simple increase the time value at which the next sample will
           // occur...
+          LOG.log( Level.FINE, "RLE count seen of {0} times {1}.", new Object[] { count, buffer[i - 1] } );
           time += count;
         }
         else
@@ -679,7 +672,7 @@ public class LogicSnifferDevice implements Device
       }
 
       // Take the last seen time value as "absolete" length of this trace...
-      absoluteLength = time + 2;
+      absoluteLength = time;
 
       if ( this.triggerEnabled )
       {
@@ -957,25 +950,7 @@ public class LogicSnifferDevice implements Device
    */
   int configureDevice( final int aStopCounter, final int aReadCounter ) throws IOException
   {
-    int effectiveStopCounter;
-    if ( this.triggerEnabled )
-    {
-      for ( int i = 0; i < TRIGGER_STAGES; i++ )
-      {
-        sendCommand( SETTRIGMASK + 4 * i, this.triggerMask[i] );
-        sendCommand( SETTRIGVAL + 4 * i, this.triggerValue[i] );
-        sendCommand( SETTRIGCFG + 4 * i, this.triggerConfig[i] );
-      }
-      effectiveStopCounter = aStopCounter;
-    }
-    else
-    {
-      sendCommand( SETTRIGMASK, 0 );
-      sendCommand( SETTRIGVAL, 0 );
-      sendCommand( SETTRIGCFG, TRIGGER_CAPTURE );
-      effectiveStopCounter = aReadCounter;
-    }
-    sendCommand( SETDIVIDER, this.divider );
+    final int effectiveStopCounter = configureTriggers( aStopCounter, aReadCounter );
 
     int flags = 0;
     if ( ( this.clockSource == CLOCK_EXTERNAL_RISING ) || ( this.clockSource == CLOCK_EXTERNAL_FALLING ) )
@@ -987,37 +962,36 @@ public class LogicSnifferDevice implements Device
       }
     }
 
+    // determine which channel groups are to be disabled...
+    int enabledChannelGroups = 0;
+    for ( int i = 0; i < 4; i++ )
+    {
+      if ( this.enabledGroups[i] )
+      {
+        enabledChannelGroups |= ( 1 << i );
+      }
+    }
+    flags |= ~( enabledChannelGroups << 2 ) & 0x3c;
+
+    final int size;
     if ( this.demux && ( this.clockSource == CLOCK_INTERNAL ) )
     {
       flags |= FLAG_DEMUX;
-      for ( int i = 0; i < 2; i++ )
-      {
-        if ( !this.enabledGroups[i] )
-        {
-          flags |= FLAG_DISABLE_G0 << i;
-          flags |= FLAG_DISABLE_G2 << i;
-        }
-      }
-      sendCommand( SETSIZE, ( ( ( effectiveStopCounter - 8 ) & 0x7fff8 ) << 13 )
-          | ( ( ( aReadCounter & 0x7fff8 ) >> 3 ) - 1 ) );
+      // if the demux bit is set, the filter flag *must* be clear...
+      flags &= ~FLAG_FILTER;
+
+      size = ( ( ( effectiveStopCounter - 8 ) & 0x7fff8 ) << 13 ) | ( ( ( aReadCounter & 0x7fff8 ) >> 3 ) - 1 );
     }
     else
     {
       if ( this.filterEnabled && isFilterAvailable() )
       {
         flags |= FLAG_FILTER;
+        // if the filter bit is set, the filter flag *must* be clear...
+        flags &= ~FLAG_DEMUX;
       }
 
-      for ( int i = 0; i < 4; i++ )
-      {
-        if ( !this.enabledGroups[i] )
-        {
-          flags |= FLAG_DISABLE_G0 << i;
-        }
-      }
-
-      sendCommand( SETSIZE, ( ( ( effectiveStopCounter - 4 ) & 0x3fffc ) << 14 )
-          | ( ( ( aReadCounter & 0x3fffc ) >> 2 ) - 1 ) );
+      size = ( ( ( effectiveStopCounter - 4 ) & 0x3fffc ) << 14 ) | ( ( ( aReadCounter & 0x3fffc ) >> 2 ) - 1 );
     }
 
     if ( this.rleEnabled )
@@ -1035,10 +1009,15 @@ public class LogicSnifferDevice implements Device
       flags |= FLAG_TEST_MODE;
     }
 
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( "Flags: 0b" + Integer.toBinaryString( flags ) );
-    }
+    LOG.log( Level.FINE, "Flags: 0b{0}", Integer.toBinaryString( flags ) );
+
+    // set the sampling frequency...
+    sendCommand( SETDIVIDER, this.divider );
+
+    sendCommand( SETSIZE, size );
+
+    sendCommand( SETFLAGS, flags );
+
     return flags;
   }
 
@@ -1116,6 +1095,30 @@ public class LogicSnifferDevice implements Device
     { // SLA1
       throw new IOException( "Device not found!" );
     }
+  }
+
+  private int configureTriggers( final int aStopCounter, final int aReadCounter ) throws IOException
+  {
+    int effectiveStopCounter;
+    if ( this.triggerEnabled )
+    {
+      for ( int i = 0; i < TRIGGER_STAGES; i++ )
+      {
+        final int indexMask = 4 * i;
+        sendCommand( SETTRIGMASK | indexMask, this.triggerMask[i] );
+        sendCommand( SETTRIGVAL | indexMask, this.triggerValue[i] );
+        sendCommand( SETTRIGCFG | indexMask, this.triggerConfig[i] );
+      }
+      effectiveStopCounter = aStopCounter;
+    }
+    else
+    {
+      sendCommand( SETTRIGMASK, 0 );
+      sendCommand( SETTRIGVAL, 0 );
+      sendCommand( SETTRIGCFG, TRIGGER_CAPTURE );
+      effectiveStopCounter = aReadCounter;
+    }
+    return effectiveStopCounter;
   }
 
   /**
