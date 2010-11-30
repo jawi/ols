@@ -109,6 +109,19 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   }
 
   /**
+   * @see nl.lxtreme.ols.api.devices.DeviceMetadata#getProbeCount()
+   */
+  public int getProbeCount( final int aDefaultProbeCount )
+  {
+    Integer result = getProbeCount();
+    if ( result == null )
+    {
+      result = aDefaultProbeCount;
+    }
+    return result.intValue();
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.devices.DeviceMetadata#getProtocolVersion()
    */
   @Override
@@ -129,6 +142,19 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   public Integer getSampleMemoryDepth()
   {
     return ( Integer )this.values.get( KEY_SAMPLE_MEMORY_DEPTH );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.devices.DeviceMetadata#getSampleMemoryDepth()
+   */
+  public int getSampleMemoryDepth( final int aDefaultSize )
+  {
+    Integer result = getSampleMemoryDepth();
+    if ( result == null )
+    {
+      result = aDefaultSize;
+    }
+    return result.intValue();
   }
 
   /**
