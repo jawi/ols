@@ -48,6 +48,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
 
   // VARIABLES
 
+  private boolean detectSDA_SCL;
   private boolean reportACK;
   private boolean reportNACK;
   private boolean reportStart;
@@ -67,9 +68,21 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   public I2CAnalyserWorker( final DataContainer aData, final ToolContext aContext )
   {
     super( aData, aContext );
+
+    // the default behaviour is remained as-is...
+    this.detectSDA_SCL = true;
   }
 
   // METHODS
+
+  /**
+   * @param aDetectSDA_SCL
+   *          the detectSDA_SCL to set
+   */
+  public void setDetectSDA_SCL( final boolean aDetectSDA_SCL )
+  {
+    this.detectSDA_SCL = aDetectSDA_SCL;
+  }
 
   /**
    * @param aLineAmask
@@ -134,15 +147,8 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     final int[] values = getValues();
 
     // process the captured data and write to output
-    int sampleIdx;
     int oldSCL, oldSDA, bitCount;
     int byteValue;
-
-    /*
-     * Build bitmasks based on the lineA, lineB pins pins.
-     */
-    final int dataMask = this.lineAmask | this.lineBmask;
-    final int sampleCount = values.length;
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
@@ -150,88 +156,27 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
       LOG.log( Level.FINE, "Line B mask = 0x{0}", Integer.toHexString( this.lineBmask ) );
     }
 
-    /*
-     * first of all scan both lines until they are high (IDLE), then the first
-     * line that goes low is the SDA line (START condition).
-     */
-    for ( sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++ )
+    int startOfDecode = getContext().getStartSampleIndex();
+    int endOfDecode = getContext().getEndSampleIndex();
+
+    if ( this.detectSDA_SCL )
     {
-      final int dataValue = values[sampleIdx];
-
-      if ( ( dataValue & dataMask ) == dataMask )
-      {
-        // IDLE found here
-        break;
-      }
-
-      setProgress( ( int )( sampleIdx * 100.0 / sampleCount ) );
+      startOfDecode = autodetectDataAndClock( startOfDecode, endOfDecode );
     }
-
-    if ( sampleIdx == sampleCount )
+    else
     {
-      // no idle state could be found
-      LOG.log( Level.WARNING, "No IDLE state found in data; aborting analysis..." );
-      throw new IllegalStateException( "No IDLE state found!" );
-    }
-
-    this.sdaIdx = 0;
-    this.sclIdx = 0;
-
-    // a is now the start of idle, now find the first start condition
-    for ( ; sampleIdx < sampleCount; sampleIdx++ )
-    {
-      final int dataValue = values[sampleIdx];
-
-      if ( ( ( dataValue & dataMask ) != dataMask ) && ( ( dataValue & dataMask ) != 0 ) )
-      {
-        // one line is low
-        if ( ( dataValue & this.lineAmask ) == 0 )
-        {
-          // lineA is low and lineB is high here: lineA = SDA, lineB = SCL
-          this.sdaIdx = this.lineAidx;
-          this.sclIdx = this.lineBidx;
-
-          firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, LINE_B );
-          firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, LINE_A );
-
-          setChannelLabel( this.sclIdx, CHANNEL_SCL_NAME );
-          setChannelLabel( this.sdaIdx, CHANNEL_SDA_NAME );
-        }
-        else
-        {
-          // lineB is low and lineA is high here: lineA = SCL, lineB = SDA
-          this.sdaIdx = this.lineBidx;
-          this.sclIdx = this.lineAidx;
-
-          firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, LINE_A );
-          firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, LINE_B );
-
-          setChannelLabel( this.sclIdx, CHANNEL_SCL_NAME );
-          setChannelLabel( this.sdaIdx, CHANNEL_SDA_NAME );
-        }
-
-        break;
-      }
-
-      setProgress( ( int )( sampleIdx * 100.0 / sampleCount ) );
-    }
-
-    if ( sampleIdx == sampleCount )
-    {
-      // no start condition could be found
-      LOG.log( Level.WARNING, "No START condition found! Analysis aborted..." );
-      throw new IllegalStateException( "No START condition found!" );
+      //
+      this.sclIdx = this.lineAidx;
+      this.sdaIdx = this.lineBidx;
     }
 
     final int sdaMask = ( 1 << this.sdaIdx );
     final int sclMask = ( 1 << this.sclIdx );
 
-    final I2CDataSet i2cDataSet = new I2CDataSet( sampleIdx, sampleCount, this );
-    final int max = sampleCount - sampleIdx;
+    final I2CDataSet i2cDataSet = new I2CDataSet( startOfDecode, endOfDecode, this );
 
-    // We've just found our start condition, start the report with that...
-    reportStartCondition( i2cDataSet, sampleIdx );
-    addChannelAnnotation( this.sdaIdx, sampleIdx, sampleIdx, "START" );
+    // Prepare everything for the decoding results...
+    prepareResults();
 
     /*
      * Now decode the bytes, SDA may only change when SCL is low. Otherwise it
@@ -240,19 +185,29 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
      * to scan for SCL rises and for SDA changes during SCL is high. Each byte
      * is followed by a 9th bit (ACK/NACK).
      */
-    oldSCL = values[sampleIdx] & sclMask;
-    oldSDA = values[sampleIdx] & sdaMask;
+    int length = i2cDataSet.getEndOfDecode() - i2cDataSet.getStartOfDecode();
+    int idx = i2cDataSet.getStartOfDecode();
+    int prevIdx = -1;
+
+    oldSCL = values[idx] & sclMask;
+    oldSDA = values[idx] & sdaMask;
 
     bitCount = 8;
     byteValue = 0;
 
-    int idx = i2cDataSet.getStartOfDecode();
-    int prevIdx = -1;
-
-    boolean startCondFound = true;
+    boolean startCondFound = false;
     boolean tenBitAddress = false;
     int slaveAddress = 0x00;
     int direction = -1;
+
+    if ( this.detectSDA_SCL )
+    {
+      // We've just found our start condition, start the report with that...
+      reportStartCondition( i2cDataSet, startOfDecode );
+      addChannelAnnotation( this.sdaIdx, startOfDecode, startOfDecode, "START" );
+
+      startCondFound = true;
+    }
 
     for ( ; idx < i2cDataSet.getEndOfDecode() - 1; idx++ )
     {
@@ -397,10 +352,116 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
       oldSCL = scl;
       oldSDA = sda;
 
-      setProgress( ( int )Math.max( 0.0, Math.min( 100.0, ( idx - i2cDataSet.getStartOfDecode() ) * 100.0 / max ) ) );
+      setProgress( ( int )Math.max( 0.0, Math.min( 100.0, ( idx - i2cDataSet.getStartOfDecode() ) * 100.0 / length ) ) );
     }
 
     return i2cDataSet;
+  }
+
+  /**
+   * Tries to auto detect the SDA & SCL lines between the given boundries in the
+   * data.
+   * 
+   * @param aStartOfDecode
+   *          the starting sample index;
+   * @param aEndOfDecode
+   *          the ending sample index.
+   * @return the (new) starting sample index at which the START condition
+   *         occurred.
+   */
+  private int autodetectDataAndClock( final int aStartOfDecode, final int aEndOfDecode )
+  {
+    final int dataMask = this.lineAmask | this.lineBmask;
+
+    final int[] values = getValues();
+
+    int sampleIdx;
+    /*
+     * first of all scan both lines until they are high (IDLE), then the first
+     * line that goes low is the SDA line (START condition).
+     */
+    final int length = aEndOfDecode - aStartOfDecode;
+    for ( sampleIdx = aStartOfDecode; sampleIdx < aEndOfDecode; sampleIdx++ )
+    {
+      final int dataValue = values[sampleIdx];
+
+      if ( ( dataValue & dataMask ) == dataMask )
+      {
+        // IDLE found here
+        break;
+      }
+
+      setProgress( ( int )Math.min( sampleIdx * 100.0 / length, 100.0 ) );
+    }
+
+    if ( sampleIdx == aEndOfDecode )
+    {
+      // no idle state could be found
+      LOG.log( Level.WARNING, "No IDLE state found in data; aborting analysis..." );
+      throw new IllegalStateException( "No IDLE state found!" );
+    }
+
+    // a is now the start of idle, now find the first start condition
+    for ( ; sampleIdx < aEndOfDecode; sampleIdx++ )
+    {
+      final int sample = values[sampleIdx];
+      final int dataValue = sample & dataMask;
+
+      if ( ( dataValue != dataMask ) && ( dataValue != 0 ) )
+      {
+        final int lineAvalue = sample & this.lineAmask;
+        final int lineBvalue = sample & this.lineBmask;
+
+        // is one line low?
+        if ( ( lineAvalue == 0 ) && ( lineBvalue != 0 ) )
+        {
+          // lineA is low and lineB is high here: lineA = SDA, lineB = SCL
+          this.sdaIdx = this.lineAidx;
+          this.sclIdx = this.lineBidx;
+
+          break;
+        }
+        else if ( ( lineAvalue != 0 ) && ( lineBvalue == 0 ) )
+        {
+          // lineB is low and lineA is high here: lineA = SCL, lineB = SDA
+          this.sdaIdx = this.lineBidx;
+          this.sclIdx = this.lineAidx;
+
+          break;
+        }
+      }
+
+      setProgress( ( int )Math.min( sampleIdx * 100.0 / length, 100.0 ) );
+    }
+
+    if ( sampleIdx == aEndOfDecode )
+    {
+      // no start condition could be found
+      LOG.log( Level.WARNING, "No START condition found! Analysis aborted..." );
+      throw new IllegalStateException( "No START condition found!" );
+    }
+
+    return sampleIdx;
+  }
+
+  /**
+   * Prepares everything for the upcoming results.
+   */
+  private void prepareResults()
+  {
+    // Tell our listeners what line A & B mean...
+    firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, this.sclIdx == this.lineAidx ? LINE_A : LINE_B );
+    firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, this.sdaIdx == this.lineBidx ? LINE_B : LINE_A );
+
+    // Update the channel labels...
+    updateChannelLabel( this.sclIdx, CHANNEL_SCL_NAME );
+    // clear any existing annotations
+    clearChannelAnnotations( this.sclIdx );
+
+    // Update the channel labels...
+    updateChannelLabel( this.sdaIdx, CHANNEL_SDA_NAME );
+    // clear any existing annotations
+    clearChannelAnnotations( this.sdaIdx );
   }
 
   /**

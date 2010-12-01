@@ -1161,18 +1161,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
         endOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 1 ) ) + 1;
       }
     }
-    else if ( this.dataContainer.hasTriggerData() )
-    {
-      startOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getTriggerPosition() ) - 10;
-      endOfDecode = dataLength;
-    }
     else
     {
       startOfDecode = 0;
       endOfDecode = dataLength;
     }
-
-    // XXX allow one cursor to be used as well...
 
     startOfDecode = Math.max( 0, startOfDecode );
     if ( ( endOfDecode < 0 ) || ( endOfDecode >= dataLength ) )
