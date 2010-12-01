@@ -25,6 +25,7 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
 
 import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
@@ -61,11 +62,14 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
   // VARIABLES
 
+  private JLabel lineALabel;
   private JComboBox lineA;
+  private JLabel lineBLabel;
   private JComboBox lineB;
   private JEditorPane outText;
   private JLabel busSetSCL;
   private JLabel busSetSDA;
+  private JCheckBox detectSDA_SCL;
   private JCheckBox detectSTART;
   private JCheckBox detectSTOP;
   private JCheckBox detectACK;
@@ -225,6 +229,23 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
+   * @param aCheckBox
+   */
+  final void syncLineLabels( final JCheckBox aCheckBox )
+  {
+    if ( aCheckBox.isSelected() )
+    {
+      I2CProtocolAnalysisDialog.this.lineALabel.setText( "Line A" );
+      I2CProtocolAnalysisDialog.this.lineBLabel.setText( "Line B" );
+    }
+    else
+    {
+      I2CProtocolAnalysisDialog.this.lineALabel.setText( "SCL" );
+      I2CProtocolAnalysisDialog.this.lineBLabel.setText( "SDA" );
+    }
+  }
+
+  /**
    * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
    */
   @Override
@@ -232,6 +253,8 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   {
     aToolWorker.setLineAIndex( this.lineA.getSelectedIndex() );
     aToolWorker.setLineBIndex( this.lineB.getSelectedIndex() );
+
+    aToolWorker.setDetectSDA_SCL( this.detectSDA_SCL.isSelected() );
 
     aToolWorker.setReportACK( this.detectACK.isSelected() );
     aToolWorker.setReportNACK( this.detectNACK.isSelected() );
@@ -418,15 +441,32 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
     SpringLayoutUtils.addSeparator( panel, "Settings" );
 
-    panel.add( createRightAlignedLabel( "Line A" ) );
+    this.lineALabel = createRightAlignedLabel( "Line A" );
+    this.lineBLabel = createRightAlignedLabel( "Line B" );
+
+    panel.add( this.lineALabel );
     this.lineA = new JComboBox( channels );
     this.lineA.setSelectedIndex( 0 );
     panel.add( this.lineA );
 
-    panel.add( createRightAlignedLabel( "Line B" ) );
+    panel.add( this.lineBLabel );
     this.lineB = new JComboBox( channels );
     this.lineB.setSelectedIndex( 1 );
     panel.add( this.lineB );
+
+    this.detectSDA_SCL = new JCheckBox();
+    this.detectSDA_SCL.addItemListener( new ItemListener()
+    {
+      @Override
+      public void itemStateChanged( final ItemEvent aEvent )
+      {
+        final JCheckBox cb = ( JCheckBox )aEvent.getSource();
+        syncLineLabels( cb );
+      }
+    } );
+    this.detectSDA_SCL.setSelected( true );
+    panel.add( createRightAlignedLabel( "Detect SDA & SCL?" ) );
+    panel.add( this.detectSDA_SCL );
 
     this.detectSTART = new JCheckBox();
     panel.add( createRightAlignedLabel( "Show START?" ) );
