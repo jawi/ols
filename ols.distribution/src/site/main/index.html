@@ -3,24 +3,6 @@
 <html>
 <head>
 <title>OLS - alternative Java client</title>
-<script type="text/javascript">
-/* <![CDATA[ */
-    (function() {
-        var s = document.createElement('script'), t = document.getElementsByTagName('script')[0];
-        
-        s.type = 'text/javascript';
-        s.async = true;
-        s.src = 'http://api.flattr.com/js/0.5.0/load.js?mode=auto';
-        
-        t.parentNode.insertBefore(s, t);
-    })();
-/* ]]> */
-</script>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-<script type="text/javascript" src="js/jquery.toc-0.1.js"></script>
-<script type="text/javascript" src="js/reflection.js"></script>
-<script type="text/javascript" src="js/galleria.js"></script>
-<script type="text/javascript" src="js/dots/galleria.dots.js"></script>
 <style type="text/css">
 body {
   padding: 0em 0em 0em 20em;
@@ -177,12 +159,16 @@ dl.faq dd {
 	  for OSX, see <a href="http://support.apple.com/kb/DL972">http://support.apple.com/kb/DL972</a> and 
 	  <a href="http://support.apple.com/kb/DL971">http://support.apple.com/kb/DL971</a>, or use your regular Software 
 	  Update mechanism.</dd>
-	  
+
 	  <dt>Your client crashes with an OutOfMemoryException: heap space!</dt>
 	  <dd>If you're performing large captures (e.g. with RLE turned on) it can be that the client hasn't enough memory
 	  by default to store all samples. For now, you can enlarge the memory settings by adding <tt>-Xmx1024m</tt> to the 
 	  Java command in the <tt>run.bat</tt>, <tt>run.sh</tt>, or the 
 	  <a href="http://developer.apple.com/library/mac/#documentation/Java/Reference/Java_InfoplistRef/Articles/JavaDictionaryInfo.plistKeys.html"><tt>VMOptions</tt> option in your <tt>Info.plist</tt></a>.</dd>
+
+      <dt>I get a warning about RXTX version mismatches!</dt>
+      <dd>While the message is not really nice, you can consider it harmless. The reason for this message is that the
+      client uses an "unofficial" version of the RXTX library.</dd>
 	</dl>
 	<h4>Hardware</h4>
 	<dl class="faq">
@@ -210,10 +196,11 @@ dl.faq dd {
 	</dl>
     <h3 class="content">Download</h3>
     <p>
-      The current release of Logic Sniffer is <strong><a href="ols-0.9.1.tar.gz">0.9.1</a></strong>.
+      The current release of Logic Sniffer is <strong><a href="ols-0.9.2.tar.gz">0.9.2</a></strong>.
       Older releases, for historical reasons:
     </p>
     <ul id="releases">
+      <li>ols-0.9.2 [<a href="ols-0.9.2.tar.gz">tar.gz</a>] [<a href="ols-0.9.2.zip">zip</a>] [<a href="ols-0.9.2.dmg">dmg</a>] <span>released <em>December 19th, 2010</em>, 2.3M;</span></li>
       <li>ols-0.9.1 [<a href="ols-0.9.1.tar.gz">tar.gz</a>] [<a href="ols-0.9.1.zip">zip</a>] [<a href="ols-0.9.1.dmg">dmg</a>] <span>released <em>November 1st, 2010</em>, 2.2M;</span></li>
       <li>ols-0.9.0 [<a href="ols-0.9.0.tar.gz">tar.gz</a>] [<a href="ols-0.9.0.zip">zip</a>] [<a href="ols-0.9.0.dmg">dmg</a>] <span>released <em>October 23rd, 2010</em>, 2.2M;</span></li>
       <li>ols-0.8.5 [<a href="ols-0.8.5.tar.gz">tar.gz</a>] <span>released <em>October 1st, 2010</em>, 2.1M;</span></li>
@@ -283,7 +270,26 @@ dl.faq dd {
 	<p class="x-small right">
 	  &copy; Copyright 2010 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
 	</p>
-	<script type="text/javascript">
+<!-- optimized for loading. -->
+<script type="text/javascript">
+/* <![CDATA[ */
+    (function() {
+        var s = document.createElement('script'), t = document.getElementsByTagName('script')[0];
+        
+        s.type = 'text/javascript';
+        s.async = true;
+        s.src = 'http://api.flattr.com/js/0.5.0/load.js?mode=auto';
+        
+        t.parentNode.insertBefore(s, t);
+    })();
+/* ]]> */
+</script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.toc-0.1.js"></script>
+<script type="text/javascript" src="js/reflection.js"></script>
+<script type="text/javascript" src="js/galleria.js"></script>
+<script type="text/javascript" src="js/dots/galleria.dots.js"></script>
+<script type="text/javascript">
 /* <![CDATA[ */
     $('.screenshots').galleria({transition: 'fade', popup_links: true});
     $("#reflect").reflect({});
