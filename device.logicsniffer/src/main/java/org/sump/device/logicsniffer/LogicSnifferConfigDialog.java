@@ -24,6 +24,7 @@ package org.sump.device.logicsniffer;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
@@ -44,6 +45,57 @@ import nl.lxtreme.ols.util.swing.component.*;
 public class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable, Closeable
 {
   // INNER TYPES
+
+  /**
+   * Renders a binary size.
+   */
+  static final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      final Integer size = ( Integer )aValue;
+      final String value = DisplayUtils.displaySize( size.doubleValue() );
+      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
+
+  /**
+   * Renders a device type.
+   */
+  static final class DeviceTypeComboBoxRenderer extends BasicComboBoxRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      String label;
+
+      final DeviceType size = ( DeviceType )aValue;
+      switch ( size )
+      {
+        case BP:
+          label = "BusPirate";
+          break;
+        case OLS:
+          label = "OLS";
+          break;
+        case SUMP:
+          label = "Original SUMP";
+          break;
+        default:
+          label = "Unknown";
+          break;
+      }
+
+      return super.getListCellRendererComponent( aList, label, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
 
   /**
    * Listens to the ratio slider and updates a label with the chosen ratio
@@ -91,23 +143,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     }
   }
 
-  /**
-   * @author jawi
-   */
-  private static final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-        final boolean aIsSelected, final boolean aCellHasFocus )
-    {
-      final Integer size = ( Integer )aValue;
-      final String value = DisplayUtils.displaySize( size.doubleValue() );
-      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -128,17 +163,18 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
   // VARIABLES
 
+  private JComboBox deviceTypeSelect;
+  private JComboBox numberSchemeSelect;
   private JComboBox portSelect;
   private JComboBox portRateSelect;
-  private JComboBox numberSchemeSelect;
-  private JCheckBox maxSampleSize;
   private JComboBox sourceSelect;
-  private JComboBox speedSelect;
   private JComboBox sizeSelect;
+  private JComboBox speedSelect;
+  private JComboBox triggerTypeSelect;
+  private JCheckBox maxSampleSize;
   private JCheckBox filterEnable;
   private JCheckBox rleEnable;
   private JCheckBox triggerEnable;
-  private JComboBox triggerTypeSelect;
   private JTabbedPane triggerStageTabs;
   private JComboBox[] triggerLevel;
   private JTextField[] triggerDelay;
@@ -149,6 +185,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   private JCheckBox[][] triggerValue;
   private JCheckBox[] channelGroup;
   private JButton captureButton;
+  private JComponent groupsPanel;
   private int triggerStages;
   private final LogicSnifferDevice device;
   private boolean dialogResult;
@@ -174,6 +211,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.device = aDevice;
 
     initDialog();
+    buildDialog();
 
     // sync dialog status with device
     updateFields();
@@ -416,102 +454,52 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   /**
-   * @return
+   * Updates the controls to a given device type.
+   * 
+   * @param aType
+   *          the device type to update the controls for, cannot be
+   *          <code>null</code>.
    */
-  private JComponent createButtonPane()
+  void updateDeviceType( final DeviceType aType )
   {
-    final JButton cancel = StandardActionFactory.createCloseButton();
+    final boolean isBusPirate = aType == DeviceType.BP;
 
-    this.captureButton = new JButton( "Capture" );
-    this.captureButton.addActionListener( this );
-
-    return SwingComponentUtils.createButtonPane( cancel, this.captureButton );
+    // TODO
+    this.triggerEnable.setEnabled( !isBusPirate );
+    this.filterEnable.setEnabled( !isBusPirate );
+    this.rleEnable.setEnabled( !isBusPirate );
   }
 
   /**
-   * Creates the "general settings" pane.
+   * Builds this dialog by adding all components to it.
+   */
+  private void buildDialog()
+  {
+    final JTabbedPane tabs = new JTabbedPane( SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT );
+    tabs.addTab( "Connection", createConnectionSettingsPane() );
+    tabs.addTab( "Acquisition", createAcquisitionSettingsPane() );
+    tabs.addTab( "Triggers", createTriggerPane() );
+
+    final JComponent buttonPane = createButtonPane();
+
+    SwingComponentUtils.setupDialogContentPane( this, tabs, buttonPane );
+
+    pack();
+  }
+
+  /**
+   * Creates the "acquisition settings" pane.
    * 
    * @return a panel, never <code>null</code>.
    */
-  private JPanel createGeneralSettingsPane()
+  private JPanel createAcquisitionSettingsPane()
   {
-    this.portSelect = new JLazyComboBox( new JLazyComboBox.ItemProvider()
-    {
-      @Override
-      public Object[] getItems()
-      {
-        return LogicSnifferDevice.getPorts();
-      }
-    } );
-    // allow people to put their own port name into it...
-    this.portSelect.setEditable( true );
-
-    this.portRateSelect = new JComboBox( BAUDRATES );
-    this.portRateSelect.setSelectedIndex( 3 ); // 115k2
-
-    this.numberSchemeSelect = new JComboBox( NUMBER_SCHEMES );
-    this.numberSchemeSelect.setSelectedIndex( 0 );
-
-    this.sourceSelect = new JComboBox( CAPTURE_SOURCES );
-    this.sourceSelect.setSelectedIndex( 0 );
-    this.sourceSelect.addActionListener( this );
-
-    this.speedSelect = new JComboBox( CAPTURE_SPEEDS );
-    this.speedSelect.setSelectedIndex( 1 );
-    this.speedSelect.addActionListener( this );
-
-    final Container groups = new Container();
-    groups.setLayout( new GridLayout( 1, 4 ) );
-    this.channelGroup = new JCheckBox[4];
-    for ( int i = 0; i < this.channelGroup.length; i++ )
-    {
-      this.channelGroup[i] = new JCheckBox( Integer.toString( i ) );
-      this.channelGroup[i].setSelected( true );
-      this.channelGroup[i].addActionListener( this );
-      this.channelGroup[i].setActionCommand( "channel" );
-      groups.add( this.channelGroup[i] );
-    }
-
-    this.sizeSelect = new JComboBox( CAPTURE_SIZES );
-    this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer() );
-    this.sizeSelect.setSelectedIndex( 2 );
-
-    this.maxSampleSize = new JCheckBox( "Automatic (maximum)" );
-    this.maxSampleSize.setSelected( false );
-    this.maxSampleSize.addItemListener( new ItemListener()
-    {
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        final JCheckBox checkbox = ( JCheckBox )aEvent.getSource();
-
-        LogicSnifferConfigDialog.this.sizeSelect.setEnabled( !checkbox.isSelected() );
-        LogicSnifferConfigDialog.this.sizeSelect.setSelectedItem( Integer.valueOf( determineMaxSampleCount() ) );
-      }
-    } );
-
-    this.filterEnable = new JCheckBox( "Enabled" );
-    this.filterEnable.setSelected( true );
-    this.filterEnable.setEnabled( false );
-
-    this.rleEnable = new JCheckBox( "Enabled" );
-    this.rleEnable.setSelected( false );
-    this.rleEnable.setEnabled( true );
-
     final JPanel connectionPane = new JPanel( new SpringLayout() );
 
-    SpringLayoutUtils.addSeparator( connectionPane, "Connection" );
-
-    connectionPane.add( createRightAlignedLabel( "Analyzer port" ) );
-    connectionPane.add( this.portSelect );
-
-    connectionPane.add( createRightAlignedLabel( "Port Speed" ) );
-    connectionPane.add( this.portRateSelect );
+    SpringLayoutUtils.addSeparator( connectionPane, "Acquisition settings" );
 
     connectionPane.add( createRightAlignedLabel( "Number scheme" ) );
     connectionPane.add( this.numberSchemeSelect );
-
-    SpringLayoutUtils.addSeparator( connectionPane, "Capture" );
 
     connectionPane.add( createRightAlignedLabel( "Sampling Clock" ) );
     connectionPane.add( this.sourceSelect );
@@ -522,7 +510,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     SpringLayoutUtils.addSeparator( connectionPane, "" );
 
     connectionPane.add( createRightAlignedLabel( "Channel Groups" ) );
-    connectionPane.add( groups );
+    connectionPane.add( this.groupsPanel );
 
     connectionPane.add( createRightAlignedLabel( "Recording Size" ) );
     connectionPane.add( this.maxSampleSize );
@@ -536,6 +524,54 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
     connectionPane.add( createRightAlignedLabel( "Run Length Encoding" ) );
     connectionPane.add( this.rleEnable );
+
+    SpringLayoutUtils.makeEditorGrid( connectionPane, 10, 10 );
+
+    final JPanel result = new JPanel( new GridBagLayout() );
+    result.add( connectionPane, new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER,
+        GridBagConstraints.NONE, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
+    result.add( new JLabel(), new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER,
+        GridBagConstraints.BOTH, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
+
+    return result;
+  }
+
+  /**
+   * Creates the button pane.
+   * 
+   * @return a panel, never <code>null</code>.
+   */
+  private JComponent createButtonPane()
+  {
+    final JButton cancel = StandardActionFactory.createCloseButton();
+
+    this.captureButton = new JButton( "Capture" );
+    this.captureButton.addActionListener( this );
+
+    return SwingComponentUtils.createButtonPane( cancel, this.captureButton );
+  }
+
+  /**
+   * Creates the "connection settings" pane.
+   * 
+   * @return a panel, never <code>null</code>.
+   */
+  private JPanel createConnectionSettingsPane()
+  {
+    final JPanel connectionPane = new JPanel( new SpringLayout() );
+
+    SpringLayoutUtils.addSeparator( connectionPane, "General" );
+
+    connectionPane.add( createRightAlignedLabel( "Analyzer port" ) );
+    connectionPane.add( this.portSelect );
+
+    connectionPane.add( createRightAlignedLabel( "Port Speed" ) );
+    connectionPane.add( this.portRateSelect );
+
+    SpringLayoutUtils.addSeparator( connectionPane, "" );
+
+    connectionPane.add( createRightAlignedLabel( "Device type" ) );
+    connectionPane.add( this.deviceTypeSelect );
 
     SpringLayoutUtils.makeEditorGrid( connectionPane, 10, 10 );
 
@@ -604,6 +640,152 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    */
   private JPanel createTriggerPane()
   {
+    final JPanel generalPane = new JPanel( new SpringLayout() );
+    generalPane.add( createRightAlignedLabel( "Trigger" ) );
+    generalPane.add( this.triggerEnable );
+    generalPane.add( new JLabel() );
+
+    generalPane.add( createRightAlignedLabel( "Before/After ratio" ) );
+    generalPane.add( this.ratioSlider );
+    generalPane.add( this.ratioLabel );
+
+    generalPane.add( createRightAlignedLabel( "Type" ) );
+    generalPane.add( this.triggerTypeSelect );
+    generalPane.add( new JLabel() );
+
+    SpringLayoutUtils.makeCompactGrid( generalPane, 3, 3, 6, 6, 6, 6 );
+
+    final JPanel triggerPane = new JPanel( new GridBagLayout() );
+    triggerPane.add( generalPane, //
+        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(
+            0, 0, 0, 0 ), 0, 0 ) );
+    triggerPane.add( this.triggerStageTabs, //
+        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(
+            0, 0, 0, 0 ), 0, 0 ) );
+
+    return triggerPane;
+  }
+
+  /**
+   * Determines the maximum sample count that is supported by the OLS for a
+   * given number of channel groups.
+   * 
+   * @return a maximum sample count, or -1 if no maximum could be determined.
+   */
+  private int determineMaxSampleCount()
+  {
+    int enabledChannelGroups = 0;
+    for ( JCheckBox element : this.channelGroup )
+    {
+      if ( element.isSelected() )
+      {
+        enabledChannelGroups++;
+      }
+    }
+
+    if ( enabledChannelGroups == 1 )
+    {
+      return 24576;
+    }
+    else if ( enabledChannelGroups == 2 )
+    {
+      return 12288;
+    }
+    else if ( ( enabledChannelGroups == 3 ) || ( enabledChannelGroups == 4 ) )
+    {
+      return 6144;
+    }
+
+    return -1;
+  }
+
+  /**
+   * Initializes this dialog by creating all components for it.
+   */
+  private void initDialog()
+  {
+    this.portSelect = new JLazyComboBox( new JLazyComboBox.ItemProvider()
+    {
+      @Override
+      public Object[] getItems()
+      {
+        return LogicSnifferDevice.getPorts();
+      }
+    } );
+    // allow people to put their own port name into it...
+    this.portSelect.setEditable( true );
+
+    this.portRateSelect = new JComboBox( BAUDRATES );
+    this.portRateSelect.setSelectedIndex( 3 ); // 115k2
+
+    this.deviceTypeSelect = new JComboBox( DeviceType.values() );
+    this.deviceTypeSelect.setRenderer( new DeviceTypeComboBoxRenderer() );
+    this.deviceTypeSelect.setSelectedIndex( 1 ); // OLS
+    this.deviceTypeSelect.setEnabled( false ); // XXX
+    this.deviceTypeSelect.addItemListener( new ItemListener()
+    {
+      /**
+       * @see java.awt.event.ItemListener#itemStateChanged(java.awt.event.ItemEvent)
+       */
+      @Override
+      public void itemStateChanged( final ItemEvent aEvent )
+      {
+        final JComboBox combobox = ( JComboBox )aEvent.getSource();
+        final DeviceType selected = ( DeviceType )combobox.getSelectedItem();
+        updateDeviceType( selected );
+      }
+    } );
+
+    this.numberSchemeSelect = new JComboBox( NUMBER_SCHEMES );
+    this.numberSchemeSelect.setSelectedIndex( 0 );
+
+    this.sourceSelect = new JComboBox( CAPTURE_SOURCES );
+    this.sourceSelect.setSelectedIndex( 0 );
+    this.sourceSelect.addActionListener( this );
+
+    this.speedSelect = new JComboBox( CAPTURE_SPEEDS );
+    this.speedSelect.setSelectedIndex( 1 );
+    this.speedSelect.addActionListener( this );
+
+    this.groupsPanel = new JPanel();
+    this.groupsPanel.setLayout( new GridLayout( 1, 4 ) );
+
+    this.channelGroup = new JCheckBox[4];
+    for ( int i = 0; i < this.channelGroup.length; i++ )
+    {
+      this.channelGroup[i] = new JCheckBox( Integer.toString( i ) );
+      this.channelGroup[i].setSelected( true );
+      this.channelGroup[i].addActionListener( this );
+      this.channelGroup[i].setActionCommand( "channel" );
+      this.groupsPanel.add( this.channelGroup[i] );
+    }
+
+    this.sizeSelect = new JComboBox( CAPTURE_SIZES );
+    this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer() );
+    this.sizeSelect.setSelectedIndex( 2 );
+
+    this.maxSampleSize = new JCheckBox( "Automatic (maximum)" );
+    this.maxSampleSize.setSelected( false );
+    this.maxSampleSize.addItemListener( new ItemListener()
+    {
+      @Override
+      public void itemStateChanged( final ItemEvent aEvent )
+      {
+        final JCheckBox checkbox = ( JCheckBox )aEvent.getSource();
+
+        LogicSnifferConfigDialog.this.sizeSelect.setEnabled( !checkbox.isSelected() );
+        LogicSnifferConfigDialog.this.sizeSelect.setSelectedItem( Integer.valueOf( determineMaxSampleCount() ) );
+      }
+    } );
+
+    this.filterEnable = new JCheckBox( "Enabled" );
+    this.filterEnable.setSelected( true );
+    this.filterEnable.setEnabled( false );
+
+    this.rleEnable = new JCheckBox( "Enabled" );
+    this.rleEnable.setSelected( false );
+    this.rleEnable.setEnabled( true );
+
     this.triggerEnable = new JCheckBox( "Enabled" );
     this.triggerEnable.addActionListener( this );
 
@@ -676,80 +858,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
       this.triggerStageTabs.add( String.format( "Stage %d", i + 1 ), stagePane );
     }
-
-    final JPanel generalPane = new JPanel( new SpringLayout() );
-    generalPane.add( createRightAlignedLabel( "Trigger" ) );
-    generalPane.add( this.triggerEnable );
-    generalPane.add( new JLabel() );
-
-    generalPane.add( createRightAlignedLabel( "Before/After ratio" ) );
-    generalPane.add( this.ratioSlider );
-    generalPane.add( this.ratioLabel );
-
-    generalPane.add( createRightAlignedLabel( "Type" ) );
-    generalPane.add( this.triggerTypeSelect );
-    generalPane.add( new JLabel() );
-
-    SpringLayoutUtils.makeCompactGrid( generalPane, 3, 3, 6, 6, 6, 6 );
-
-    final JPanel triggerPane = new JPanel( new GridBagLayout() );
-    triggerPane.add( generalPane, //
-        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(
-            0, 0, 0, 0 ), 0, 0 ) );
-    triggerPane.add( this.triggerStageTabs, //
-        new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(
-            0, 0, 0, 0 ), 0, 0 ) );
-
-    return triggerPane;
-  }
-
-  /**
-   * Determines the maximum sample count that is supported by the OLS for a
-   * given number of channel groups.
-   * 
-   * @return a maximum sample count, or -1 if no maximum could be determined.
-   */
-  private int determineMaxSampleCount()
-  {
-    int enabledChannelGroups = 0;
-    for ( JCheckBox element : this.channelGroup )
-    {
-      if ( element.isSelected() )
-      {
-        enabledChannelGroups++;
-      }
-    }
-
-    if ( enabledChannelGroups == 1 )
-    {
-      return 24576;
-    }
-    else if ( enabledChannelGroups == 2 )
-    {
-      return 12288;
-    }
-    else if ( ( enabledChannelGroups == 3 ) || ( enabledChannelGroups == 4 ) )
-    {
-      return 6144;
-    }
-
-    return -1;
-  }
-
-  /**
-   * Initializes this dialog by creating & adding all components to it.
-   */
-  private void initDialog()
-  {
-    final JTabbedPane tabs = new JTabbedPane( JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT );
-    tabs.addTab( "General", createGeneralSettingsPane() );
-    tabs.addTab( "Triggers", createTriggerPane() );
-
-    final JComponent buttonPane = createButtonPane();
-
-    SwingComponentUtils.setupDialogContentPane( this, tabs, buttonPane );
-
-    pack();
   }
 
   /**

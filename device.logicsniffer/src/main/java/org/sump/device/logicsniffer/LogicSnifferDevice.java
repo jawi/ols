@@ -940,6 +940,7 @@ public class LogicSnifferDevice implements Device
   public void stop()
   {
     this.running = false;
+    Thread.currentThread().interrupt(); // XXX
   }
 
   /**
@@ -1097,6 +1098,58 @@ public class LogicSnifferDevice implements Device
     }
   }
 
+  /**
+   * Blocks the current thread until a given number of bytes is available to be
+   * read from the serial port. Optionally, a timeout can be given to limit the
+   * blocking of the thread.
+   * 
+   * @param aByteCount
+   *          the number of bytes to wait for, should be greater than zero;
+   * @param aTimeout
+   *          the timeout (in milliseconds) to wait for, or -1L if no timeout
+   *          should occur. The minimum timeout is 1 millisecond.
+   * @return <code>true</code> if there are enough bytes available,
+   *         <code>false</code> otherwise.
+   * @throws IOException
+   *           in case of I/O errors;
+   * @throws InterruptedException
+   *           in case of thread interruptions.
+   */
+  private boolean blockUntilByteCountAvailable( final int aByteCount, final long aTimeout ) throws IOException,
+      InterruptedException
+  {
+    final long until = ( aTimeout <= 0 ) ? -1L : System.currentTimeMillis() + aTimeout;
+
+    while ( this.inputStream.available() < aByteCount )
+    {
+      if ( ( until > 0 ) && ( System.currentTimeMillis() > until ) )
+      {
+        LOG.log( Level.FINE, "I/O time out occurred! Waited for {0} msec.", aTimeout );
+        throw new InterruptedException( "I/O time out!" );
+      }
+
+      try
+      {
+        TimeUnit.MICROSECONDS.sleep( 25L );
+        LOG.log( Level.FINE, "Waited for 25 uSec." );
+      }
+      catch ( final InterruptedException ignore )
+      {
+        // Make sure to handle IO-interrupted exceptions properly!
+        HostUtils.handleInterruptedException( ignore );
+        break;
+      }
+    }
+
+    return this.inputStream.available() >= aByteCount;
+  }
+
+  /**
+   * @param aStopCounter
+   * @param aReadCounter
+   * @return
+   * @throws IOException
+   */
   private int configureTriggers( final int aStopCounter, final int aReadCounter ) throws IOException
   {
     int effectiveStopCounter;
@@ -1167,25 +1220,9 @@ public class LogicSnifferDevice implements Device
   {
     final byte bytes[] = new byte[aCount];
 
-    final long until = System.currentTimeMillis() + 100L;
-    while ( this.inputStream.available() < bytes.length )
+    if ( !blockUntilByteCountAvailable( aCount, 100L /* msec. */) )
     {
-      if ( System.currentTimeMillis() > until )
-      {
-        throw new InterruptedException( "I/O time out!" );
-      }
-
-      try
-      {
-        TimeUnit.MICROSECONDS.sleep( 25L );
-      }
-      catch ( final InterruptedException ignore )
-      {
-        // Make sure to handle IO-interrupted exceptions properly!
-        HostUtils.handleInterruptedException( ignore );
-
-        break;
-      }
+      throw new InterruptedException( "Timeout during readBytes!" );
     }
 
     final int read = this.inputStream.read( bytes, 0, bytes.length );
@@ -1250,14 +1287,13 @@ public class LogicSnifferDevice implements Device
 
       if ( this.enabledGroups[i] )
       {
-        v = this.inputStream.read();
+        if ( blockUntilByteCountAvailable( 1, -1 /* no timeout! */) )
+        {
+          v = this.inputStream.read();
+        }
 
         // Any timeouts/interrupts occurred?
-        if ( v < 0 )
-        {
-          continue;
-        }
-        else if ( Thread.interrupted() )
+        if ( ( v < 0 ) || Thread.interrupted() )
         {
           throw new InterruptedException( "Data readout interrupted." );
         }
