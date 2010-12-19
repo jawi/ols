@@ -1,3 +1,244 @@
+2010-12-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/app-bundle-osx.sh,
+	ols.distribution/app-bundle.xml: Made the disk image for OSX include
+	a shortcut to Applications, for easier installing.
+
+2010-12-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* pom.xml: Bumped to beta 4.
+
+2010-12-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Devi
+	ceType.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Some preparations for 'device profiles', to
+	support the BusPirate and such.
+
+2010-12-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rWorker.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java,
+	util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: Some
+	small bugfixes/simplifcations in the progress indicator (it could
+	crash once in a while).
+
+2010-12-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/pom.xml,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	pom.xml, tool.i2c/pom.xml,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java: Added option to disable the auto-detection of SDA/SCL in
+	the I2C decoder tool. This way, not the entire I2C bitstream needs
+	to be present for decoding.
+
+2010-11-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferMetadata.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java: Minor cleanups; made the measurement tool able
+	to use _long_ sample times.
+
+2010-11-23  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/CapturedDataImpl.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java: Reworked sample decoding (with and
+	without RLE) to use less memory and be more efficient.
+
+2010-11-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/app-bundle.xml, ols.distribution/run.bat,
+	ols.distribution/run.sh: Set initial heap space to 1024 megabyte on
+	all platforms.
+
+2010-11-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/src/site/main/index.html: Added some frequently
+	asked questions.
+
+2010-11-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	* export.svg/pom.xml,
+	export.svg/src/main/java/nl/lxtreme/ols/export/svg/Activator.java,
+	export.svg/src/main/java/nl/lxtreme/ols/export/svg/SVGExporter.java: 
+	Added sample for exporting diagrams to SVG.
+
+2010-11-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va, util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/test/java/nl/lxtreme/ols/util/BitFiddlingTest.java,
+	util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: Fixed
+	the reversing of bits in numbers when bit count isn't a power of
+	two.
+
+2010-11-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va, tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIMode.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java: Fixed some bugs in the SPI decoder tool; the modes were
+	incorrectly determined and applied causing weird results. Thanks to
+	smithbone for reporting this and providing the test data.
+
+2010-11-21  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va: Small bugfix: start decoding _after_ /SS is found, not before.
+
+2010-11-20  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Updated todo list.
+
+2010-11-20  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Log less information (temporary).
+
+2010-11-20  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java: First fix for decoding SPI signals without any cursors.
+
+2010-11-20  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Small cleanup.
+
+2010-11-20  JaWi <j.w.janssen@lxtreme.nl>
+
+	* eclipse/OLS Runner.launch: Fixed missing resource folder in launch
+	config.
+
+2010-11-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Small remark about 32-bit status of OSX added.
+
+2010-11-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Host.java: Added some
+	additional information about the OS, version and processor the
+	client is running on.
+
+2010-11-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* rxtx/pom.xml: Updated universal OSX native library.
+
+2010-11-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/src/site/main/index.html: Latest site update.
+
+2010-11-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki, api/pom.xml,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/Device.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/DeviceMetadata.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramRowLa
+	belsUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferMetadata.java, pom.xml: Added experimental support for
+	obtaining OLS metadata from the device; this could be used to
+	determine the device capabilities automatically and provide sensible
+	configuration profiles for that device.
+
+2010-11-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rWorker.java: Small cleanup.
+
+2010-11-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramRowLa
+	belsUI.java: Fixed a small repainting bug in the channel labels.
+
+2010-11-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rDialog.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rWorker.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireBusMode
+	.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireData.ja
+	va,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireDataSet
+	.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireTiming.
+	java: First version of 1-wire decoder. Works reasonably well for
+	generated data.
+
+2010-11-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.test/src/main/java/nl/lxtreme/ols/device/test/OneWireGenerat
+	or.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceDial
+	og.java: Added simple 1-wire data generator to test device.
+
+2010-11-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki, ols.distribution/pom.xml, pom.xml,
+	tool.1wire/pom.xml,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/Activator.java
+	,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	r.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rDialog.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rWorker.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireData.ja
+	va,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireDataSet
+	.java: Added stub for 1-wire decoder tool.
+
+2010-11-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ChangeLog, ols.distribution/src/site/main/index.html: Latest
+	changelog + site updates.
+
 2010-11-01  JaWi <j.w.janssen@lxtreme.nl>
 
 	*
