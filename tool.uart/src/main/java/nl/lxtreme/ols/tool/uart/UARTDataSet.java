@@ -45,6 +45,9 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
 
   private static final Logger LOG = Logger.getLogger( UARTDataSet.class.getName() );
 
+  private static final int[] COMMON_BAUDRATES = { 150, 300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200,
+      230400, 460800, 921600 };
+
   // VARIABLES
 
   private int decodedSymbols;
@@ -68,14 +71,24 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   // METHODS
 
   /**
-   * Returns the "normalized" baudrate.
+   * Returns the "normalized" baudrate most people can recognize.
    * 
    * @return a baudrate, >= 0.
    */
   public int getBaudRate()
   {
     int baudRateExact = getBaudRateExact();
-    baudRateExact -= ( baudRateExact % 300 );
+
+    // Try to find the common baudrate that belongs to the exact one...
+    for ( int idx = 1; idx < COMMON_BAUDRATES.length; idx++ )
+    {
+      if ( ( baudRateExact > COMMON_BAUDRATES[idx - 1] ) && ( baudRateExact < COMMON_BAUDRATES[idx] ) )
+      {
+        baudRateExact = COMMON_BAUDRATES[idx];
+        break;
+      }
+    }
+
     return baudRateExact;
   }
 

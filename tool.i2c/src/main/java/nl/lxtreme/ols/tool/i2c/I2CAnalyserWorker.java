@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.i2c;
 
 
+import static nl.lxtreme.ols.util.NumberUtils.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -185,7 +186,6 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
      * to scan for SCL rises and for SDA changes during SCL is high. Each byte
      * is followed by a 9th bit (ACK/NACK).
      */
-    int length = i2cDataSet.getEndOfDecode() - i2cDataSet.getStartOfDecode();
     int idx = i2cDataSet.getStartOfDecode();
     int prevIdx = -1;
 
@@ -352,7 +352,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
       oldSCL = scl;
       oldSDA = sda;
 
-      setProgress( ( int )Math.max( 0.0, Math.min( 100.0, ( idx - i2cDataSet.getStartOfDecode() ) * 100.0 / length ) ) );
+      setProgress( getPercentage( idx, i2cDataSet.getStartOfDecode(), i2cDataSet.getEndOfDecode() ) );
     }
 
     return i2cDataSet;
@@ -380,7 +380,6 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
      * first of all scan both lines until they are high (IDLE), then the first
      * line that goes low is the SDA line (START condition).
      */
-    final int length = aEndOfDecode - aStartOfDecode;
     for ( sampleIdx = aStartOfDecode; sampleIdx < aEndOfDecode; sampleIdx++ )
     {
       final int dataValue = values[sampleIdx];
@@ -391,7 +390,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
         break;
       }
 
-      setProgress( ( int )Math.min( sampleIdx * 100.0 / length, 100.0 ) );
+      setProgress( getPercentage( sampleIdx, aStartOfDecode, aEndOfDecode ) );
     }
 
     if ( sampleIdx == aEndOfDecode )
@@ -431,7 +430,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
         }
       }
 
-      setProgress( ( int )Math.min( sampleIdx * 100.0 / length, 100.0 ) );
+      setProgress( getPercentage( sampleIdx, aStartOfDecode, aEndOfDecode ) );
     }
 
     if ( sampleIdx == aEndOfDecode )

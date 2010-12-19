@@ -135,6 +135,104 @@ public final class NumberUtils
   }
 
   /**
+   * Calculates the percentage for the given value in the given range.
+   * 
+   * @param aValue
+   *          the value;
+   * @param aRange
+   *          the range (zero-based).
+   * @return the percentage (= value * 100.0 / aRange).
+   */
+  public static int getPercentage( final int aValue, final int aRange )
+  {
+    double value = 0.0;
+    if ( aRange != 0 )
+    {
+      value = aValue * 100.0 / aRange;
+    }
+
+    return ( int )Math.max( 0.0, Math.min( 100.0, value ) );
+  }
+
+  /**
+   * Calculates the percentage for the given value in the range denoted by the
+   * given lower and upper bounds.
+   * 
+   * @param aValue
+   *          the value;
+   * @param aLowerBound
+   *          the lower bound of the range;
+   * @param aUpperBound
+   *          the upper bound of the range.
+   * @return the percentage (= value * 100.0 / range).
+   */
+  public static int getPercentage( final int aValue, final int aLowerBound, final int aUpperBound )
+  {
+    int range;
+    int value = aValue;
+    if ( aLowerBound > aUpperBound )
+    {
+      range = aLowerBound - aUpperBound;
+      value = Math.max( 0, value - aUpperBound );
+    }
+    else
+    {
+      range = aUpperBound - aLowerBound;
+      value = Math.max( 0, value - aLowerBound );
+    }
+    return getPercentage( value, range );
+  }
+
+  /**
+   * Calculates the percentage for the given value in the given range.
+   * 
+   * @param aValue
+   *          the value;
+   * @param aRange
+   *          the range (zero-based).
+   * @return the percentage (= value * 100.0 / aRange).
+   */
+  public static int getPercentage( final long aValue, final long aRange )
+  {
+    double value = 0.0;
+    if ( aRange != 0 )
+    {
+      value = aValue * 100.0 / aRange;
+    }
+
+    return ( int )Math.max( 0.0, Math.min( 100.0, value ) );
+  }
+
+  /**
+   * Calculates the percentage for the given value in the range denoted by the
+   * given lower and upper bounds.
+   * 
+   * @param aValue
+   *          the value;
+   * @param aLowerBound
+   *          the lower bound of the range;
+   * @param aUpperBound
+   *          the upper bound of the range.
+   * @return the percentage (= value * 100.0 / range).
+   */
+  public static int getPercentage( final long aValue, final long aLowerBound, final long aUpperBound )
+  {
+    long range;
+    long value = aValue;
+    if ( aLowerBound > aUpperBound )
+    {
+      range = aLowerBound - aUpperBound;
+      value = Math.max( 0, value - aUpperBound );
+    }
+    else
+    {
+      range = aUpperBound - aLowerBound;
+      value = Math.max( 0, value - aLowerBound );
+    }
+    return getPercentage( value, range );
+  }
+
+  /**
    * Returns whether the given value is a power of two.
    * 
    * @param aValue
