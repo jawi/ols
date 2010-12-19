@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.uart;
 
 
+import static nl.lxtreme.ols.util.NumberUtils.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -294,7 +295,6 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
 
     final int startSampleIdx = aDataSet.getStartOfDecode();
     final int endSampleIdx = aDataSet.getEndOfDecode();
-    final double length = endSampleIdx - startSampleIdx;
 
     final int[] values = getValues();
     setProgress( 0 );
@@ -316,7 +316,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
       oldValue = value;
 
       // update progress
-      setProgress( ( int )( ( i - startSampleIdx ) * 100.0 / length ) );
+      setProgress( getPercentage( i, startSampleIdx, endSampleIdx ) );
     }
   }
 
@@ -386,7 +386,6 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
 
     final long startOfDecode = timestamps[aDataSet.getStartOfDecode()];
     final long endOfDecode = timestamps[aDataSet.getEndOfDecode()];
-    final double length = endOfDecode - startOfDecode;
 
     long time = Math.max( 0, startOfDecode );
     setProgress( 0 );
@@ -477,7 +476,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
         time += stopBitCount * aBitLength;
       }
 
-      setProgress( ( int )( ( time - startOfDecode ) * 100.0 / length ) );
+      setProgress( getPercentage( time, startOfDecode, endOfDecode ) );
     }
 
     setProgress( 100 );

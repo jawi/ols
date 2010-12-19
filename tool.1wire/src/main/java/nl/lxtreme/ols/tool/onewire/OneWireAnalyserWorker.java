@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.onewire;
 
 
+import static nl.lxtreme.ols.util.NumberUtils.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -150,7 +151,6 @@ public class OneWireAnalyserWorker extends BaseAsyncToolWorker<OneWireDataSet>
 
     final long startOfDecode = timestamps[aDataSet.getStartOfDecode()];
     final long endOfDecode = timestamps[aDataSet.getEndOfDecode() - 1];
-    final double length = endOfDecode - startOfDecode;
 
     // The timing of the 1-wire bus is done in uS, so determine what scale we've
     // to use in order to obtain those kind of time values...
@@ -238,7 +238,7 @@ public class OneWireAnalyserWorker extends BaseAsyncToolWorker<OneWireDataSet>
       }
 
       // Update progress...
-      setProgress( Math.max( 0, Math.min( 100, ( int )( ( time - startOfDecode ) * 100.0 / length ) ) ) );
+      setProgress( getPercentage( time, startOfDecode, endOfDecode ) );
     }
 
     setProgress( 100 );

@@ -86,6 +86,49 @@ public class NumberUtilsTest
    * 
    */
   @Test
+  public void testGetPercentageWithBoundsOk()
+  {
+    assertEquals( 0, getPercentage( -1, 1, 11 ) );
+    assertEquals( 0, getPercentage( 0, 1, 11 ) );
+    assertEquals( 0, getPercentage( 1, 1, 11 ) );
+    assertEquals( 10, getPercentage( 2, 1, 11 ) );
+    assertEquals( 20, getPercentage( 3, 1, 11 ) );
+    assertEquals( 30, getPercentage( 4, 1, 11 ) );
+    assertEquals( 40, getPercentage( 5, 1, 11 ) );
+    assertEquals( 50, getPercentage( 6, 1, 11 ) );
+    assertEquals( 60, getPercentage( 7, 1, 11 ) );
+    assertEquals( 70, getPercentage( 8, 1, 11 ) );
+    assertEquals( 80, getPercentage( 9, 1, 11 ) );
+    assertEquals( 90, getPercentage( 10, 1, 11 ) );
+    assertEquals( 100, getPercentage( 11, 1, 11 ) );
+    assertEquals( 100, getPercentage( 12, 1, 11 ) );
+  }
+
+  /**
+   * 
+   */
+  @Test
+  public void testGetPercentageWithRangeOk()
+  {
+    assertEquals( 0, getPercentage( -1, 10 ) );
+    assertEquals( 0, getPercentage( 0, 10 ) );
+    assertEquals( 10, getPercentage( 1, 10 ) );
+    assertEquals( 20, getPercentage( 2, 10 ) );
+    assertEquals( 30, getPercentage( 3, 10 ) );
+    assertEquals( 40, getPercentage( 4, 10 ) );
+    assertEquals( 50, getPercentage( 5, 10 ) );
+    assertEquals( 60, getPercentage( 6, 10 ) );
+    assertEquals( 70, getPercentage( 7, 10 ) );
+    assertEquals( 80, getPercentage( 8, 10 ) );
+    assertEquals( 90, getPercentage( 9, 10 ) );
+    assertEquals( 100, getPercentage( 10, 10 ) );
+    assertEquals( 100, getPercentage( 11, 10 ) );
+  }
+
+  /**
+   * 
+   */
+  @Test
   public void testSmartParseIntBinaryUnitOk()
   {
     assertEquals( 4096, smartParseInt( "4k" ) );

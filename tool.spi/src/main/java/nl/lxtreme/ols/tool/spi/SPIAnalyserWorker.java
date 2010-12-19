@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import static nl.lxtreme.ols.util.NumberUtils.*;
+
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -262,7 +264,6 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     int misovalue = 0;
     int mosivalue = 0;
 
-    final double length = endOfDecode - startOfDecode;
     for ( int idx = startOfDecode + 1; idx < endOfDecode; idx++ )
     {
       final int dataSample = values[idx];
@@ -362,7 +363,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         }
       }
 
-      setProgress( ( int )( ( idx - startOfDecode ) * 100.0 / length ) );
+      setProgress( getPercentage( idx, startOfDecode, endOfDecode ) );
     }
   }
 
