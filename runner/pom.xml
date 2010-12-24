@@ -83,37 +83,38 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.shell</artifactId>
-			<version>1.4.2</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.log</artifactId>
-			<version>1.0.0</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
-			<version>4.2.0</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.shell.remote</artifactId>
-			<version>1.0.4</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.prefs</artifactId>
-			<version>1.0.4</version>
 			<scope>runtime</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.fileinstall</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 	</dependencies>
 	<build>
 		<plugins>
 			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<archive>

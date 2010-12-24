@@ -82,6 +82,13 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
 								</artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>org.apache.felix.fileinstall</artifactId>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.basedir}/target/plugins</outputDirectory>
+                                </artifactItem>
 
 								<artifactItem>
 									<groupId>nl.lxtreme.ols</groupId>

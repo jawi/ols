@@ -76,7 +76,7 @@ Provides some common utilities that are shared among all other projects.
 
 == To do ==
 
-# <strike>add 1-Wire decoder tool;</strike>
+# support easy/easier upgrade procedure;
 # support OLS-device profiles for BP, regular OLS and SUMP;
 # make the tools aware of the device capabilities (5 channels for BP iso 32, etc.);
 # show timing measurements between edges, or from rising to rising or falling to falling edges;

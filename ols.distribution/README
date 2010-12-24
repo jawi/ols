@@ -1,11 +1,16 @@
-OpenBench LogicSniffer
-======================
+OpenBench LogicSniffer Client
+=============================
 
-This is an alternative Java client for the OpenBench LogicSniffer, found at
-<http://dangerousprototypes.com/open-logic-sniffer/>.
+This is the client software for the OpenBench LogicSniffer (short name: ols) 
+written by J.W. Janssen.
 
 Based on the original Sump code base, this project aims at making the client
 more user-friendly, better to extend dynamically and better user experience.
 
-More information on this project to come...
+For more information about the hardware and software, see <http://ols.lxtreme.nl>
+and <http://dangerousprototypes.com/open-logic-sniffer>.
 
+Drop me a line if you want to contribute code to the OLS repository, or need 
+any other form of help with this client.
+
+-- J.W. Janssen, <j dot w dot janssen at lxtreme.nl>
