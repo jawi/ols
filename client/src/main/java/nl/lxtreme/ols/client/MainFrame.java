@@ -640,6 +640,8 @@ public final class MainFrame extends JFrame implements Closeable
 
     final JMenu helpMenu = bar.add( new JMenu( "Help" ) );
     helpMenu.setMnemonic( 'H' );
+    helpMenu.add( this.controller.getAction( ShowBundlesAction.ID ) );
+    helpMenu.addSeparator();
     helpMenu.add( this.controller.getAction( HelpAboutAction.ID ) );
 
     final JToolBar toolbar = new JToolBar();

@@ -938,6 +938,22 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Shows a dialog with all running OSGi bundles.
+   * 
+   * @param aOwner
+   *          the owning window to use, can be <code>null</code>.
+   */
+  public void showBundlesDialog( final Window aOwner )
+  {
+    BundlesDialog dialog = new BundlesDialog( aOwner, this.bundleContext );
+    if ( dialog.showDialog() )
+    {
+      dialog.dispose();
+      dialog = null;
+    }
+  }
+
+  /**
    * Shows the label-editor dialog on screen.
    * <p>
    * Display the diagram labels dialog. Will block until the dialog is closed
@@ -1210,6 +1226,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     aActionManager.add( new ShowDiagramLabelsAction( this ) );
 
     aActionManager.add( new HelpAboutAction( this ) );
+    aActionManager.add( new ShowBundlesAction( this ) );
   }
 
   /**

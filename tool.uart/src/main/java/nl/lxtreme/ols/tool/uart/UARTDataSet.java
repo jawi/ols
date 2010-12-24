@@ -45,8 +45,8 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
 
   private static final Logger LOG = Logger.getLogger( UARTDataSet.class.getName() );
 
-  private static final int[] COMMON_BAUDRATES = { 150, 300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200,
-      230400, 460800, 921600 };
+  private static final int[] COMMON_BAUDRATES = { 150, 300, 600, 1200, 2400, 4800, 9600, 19200, 28800, 38400, 57600,
+      115200, 230400, 460800, 921600 };
 
   // VARIABLES
 
