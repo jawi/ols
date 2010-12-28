@@ -180,6 +180,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   private int channelColorCount;
 
+  private JButton okButton;
+
   // CONSTRUCTORS
 
   /**
@@ -197,9 +199,9 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     initDialog();
 
     syncUiWithSettings();
-  }
 
-  // METHODS
+    setDialogEnabled( aSettings != null );
+  }
 
   /**
    * @param aTextField
@@ -220,6 +222,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
     return SwingComponentUtils.parseColor( text );
   }
+
+  // METHODS
 
   /**
    * @param aTextField
@@ -322,8 +326,9 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   private JComponent createButtonsPane()
   {
     final JButton cancel = StandardActionFactory.createCloseButton();
-    final JButton ok = new JButton( "Ok" );
-    ok.addActionListener( new ActionListener()
+
+    this.okButton = new JButton( "Ok" );
+    this.okButton.addActionListener( new ActionListener()
     {
       @Override
       public void actionPerformed( final ActionEvent aEvent )
@@ -337,7 +342,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       }
     } );
 
-    return SwingComponentUtils.createButtonPane( new JButton[] { ok, cancel } );
+    return SwingComponentUtils.createButtonPane( new JButton[] { this.okButton, cancel } );
   }
 
   /**
@@ -533,6 +538,19 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     final JComponent buttonPane = createButtonsPane();
 
     SwingComponentUtils.setupDialogContentPane( this, this.tabbedPane, buttonPane );
+  }
+
+  /**
+   * Sets this dialog enabled.
+   * 
+   * @param aEnabled
+   *          <code>true</code> to enable the tabbed pane and the "Ok" button,
+   *          <code>false</code> to disable these components.
+   */
+  private void setDialogEnabled( final boolean aEnabled )
+  {
+    this.tabbedPane.setEnabled( aEnabled );
+    this.okButton.setEnabled( aEnabled );
   }
 
   /**

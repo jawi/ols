@@ -108,10 +108,11 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
     catch ( final IOException exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      // This should not happen for the no-file exports!
-      throw new RuntimeException( exception );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        // This should not happen for the no-file exports!
+        throw new RuntimeException( exception );
+      }
     }
   }
 

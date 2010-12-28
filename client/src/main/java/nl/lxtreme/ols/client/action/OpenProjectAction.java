@@ -29,6 +29,7 @@ import java.util.logging.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
@@ -80,9 +81,12 @@ public class OpenProjectAction extends BaseAction
     }
     catch ( IOException exception )
     {
-      LOG.log( Level.WARNING, "Loading OLS project failed!", exception );
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "Loading OLS project failed!", exception );
+        JErrorDialog.showDialog( owner, "Loading OLS project failed!", exception );
+      }
     }
   }
 }

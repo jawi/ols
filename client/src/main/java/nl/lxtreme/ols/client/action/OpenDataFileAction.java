@@ -32,6 +32,7 @@ import javax.swing.filechooser.FileFilter;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
@@ -87,9 +88,12 @@ public class OpenDataFileAction extends BaseAction
     }
     catch ( IOException exception )
     {
-      LOG.log( Level.WARNING, "Loading OLS file failed!", exception );
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "Loading OLS file failed!", exception );
+        JErrorDialog.showDialog( owner, "Loading OLS file failed!", exception );
+      }
     }
   }
 }

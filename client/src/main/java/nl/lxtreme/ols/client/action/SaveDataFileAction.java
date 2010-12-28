@@ -29,6 +29,7 @@ import java.util.logging.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
@@ -81,9 +82,12 @@ public class SaveDataFileAction extends BaseAction
     }
     catch ( IOException exception )
     {
-      LOG.log( Level.WARNING, "Saving OLS file failed!", exception );
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "Saving OLS file failed!", exception );
+        JErrorDialog.showDialog( owner, "Saving OLS file failed!", exception );
+      }
     }
   }
 }

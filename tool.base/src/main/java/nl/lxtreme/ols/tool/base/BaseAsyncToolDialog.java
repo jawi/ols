@@ -108,19 +108,20 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
           {
             // Make sure to handle IO-interrupted exceptions properly!
             final Throwable cause = exception.getCause();
-            HostUtils.handleInterruptedException( cause );
-
-            LOG.log( Level.WARNING, "Execution exception! Message: {0}", cause.getMessage() );
-            cause.printStackTrace();
-
+            if ( !HostUtils.handleInterruptedException( cause ) )
+            {
+              LOG.log( Level.WARNING, "Execution exception! Message: {0}", cause.getMessage() );
+              cause.printStackTrace();
+            }
             onToolWorkerCancelled();
           }
           catch ( InterruptedException exception )
           {
             // Make sure to handle IO-interrupted exceptions properly!
-            HostUtils.handleInterruptedException( exception );
-
-            LOG.log( Level.WARNING, "Interrupted exception! Message: {0}", exception.getMessage() );
+            if ( !HostUtils.handleInterruptedException( exception ) )
+            {
+              LOG.log( Level.WARNING, "Interrupted exception! Message: {0}", exception.getMessage() );
+            }
             onToolWorkerCancelled();
           }
           finally

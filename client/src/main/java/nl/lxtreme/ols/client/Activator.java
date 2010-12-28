@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client;
 
 
+import java.lang.reflect.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.*;
@@ -68,8 +70,7 @@ public class Activator implements BundleActivator
         Activator.this.host.start();
       }
     };
-
-    SwingUtilities.invokeAndWait( initTask );
+    invokeAndWait( initTask );
 
     SwingUtilities.invokeLater( startTask );
   }
@@ -88,7 +89,7 @@ public class Activator implements BundleActivator
         Activator.this.host.stop();
       }
     };
-    SwingUtilities.invokeAndWait( stopTask );
+    invokeAndWait( stopTask );
 
     final Runnable shutdownTask = new Runnable()
     {
@@ -98,7 +99,30 @@ public class Activator implements BundleActivator
         Activator.this.host.shutdown();
       }
     };
-    SwingUtilities.invokeAndWait( shutdownTask );
+    invokeAndWait( shutdownTask );
+  }
+
+  /**
+   * Invokes the given {@link Runnable}'s run method and waits until its
+   * execution is finished.
+   * 
+   * @param aRunnable
+   *          the runnable to execute, cannot be <code>null</code>.
+   * @throws InterruptedException
+   *           in case the thread was interrupted;
+   * @throws InvocationTargetException
+   *           in case the given runnable caused an exception.
+   */
+  private void invokeAndWait( final Runnable aRunnable ) throws InterruptedException, InvocationTargetException
+  {
+    if ( SwingUtilities.isEventDispatchThread() )
+    {
+      aRunnable.run();
+    }
+    else
+    {
+      SwingUtilities.invokeAndWait( aRunnable );
+    }
   }
 }
 

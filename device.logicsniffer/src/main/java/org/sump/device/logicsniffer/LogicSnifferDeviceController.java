@@ -134,18 +134,20 @@ public class LogicSnifferDeviceController implements DeviceController
       catch ( ExecutionException exception )
       {
         // Make sure to handle IO-interrupted exceptions properly!
-        HostUtils.handleInterruptedException( exception.getCause() );
-
-        abortReason = exception.getCause().getMessage();
-        this.device.stop();
+        if ( !HostUtils.handleInterruptedException( exception.getCause() ) )
+        {
+          abortReason = exception.getCause().getMessage();
+          this.device.stop();
+        }
       }
       catch ( InterruptedException exception )
       {
         // Make sure to handle IO-interrupted exceptions properly!
-        HostUtils.handleInterruptedException( exception );
-
-        abortReason = exception.getMessage();
-        this.device.stop();
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          abortReason = exception.getMessage();
+          this.device.stop();
+        }
       }
 
       // Report the result back to the given callback...
