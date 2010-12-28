@@ -77,15 +77,15 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    */
   public int getBaudRate()
   {
-    int baudRateExact = getBaudRateExact();
+    final int roundedBaudRate = getRoundedBaudRate();
 
+    int baudRateExact = -1;
     // Try to find the common baudrate that belongs to the exact one...
-    for ( int idx = 1; idx < COMMON_BAUDRATES.length; idx++ )
+    for ( int idx = 1; ( baudRateExact < 0 ) && ( idx < COMMON_BAUDRATES.length ); idx++ )
     {
-      if ( ( baudRateExact > COMMON_BAUDRATES[idx - 1] ) && ( baudRateExact < COMMON_BAUDRATES[idx] ) )
+      if ( ( roundedBaudRate > COMMON_BAUDRATES[idx - 1] ) && ( roundedBaudRate < COMMON_BAUDRATES[idx] ) )
       {
         baudRateExact = COMMON_BAUDRATES[idx];
-        break;
       }
     }
 
@@ -264,5 +264,17 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   public void sort()
   {
     super.sort();
+  }
+
+  /**
+   * Returns the rounded baud rate, which means that it is rounded to the
+   * nearest multiple of 300.
+   * 
+   * @return a rounded baud rate, >= 0.
+   */
+  private int getRoundedBaudRate()
+  {
+    int baudRateExact = getBaudRateExact();
+    return ( baudRateExact - ( baudRateExact % 300 ) );
   }
 }
