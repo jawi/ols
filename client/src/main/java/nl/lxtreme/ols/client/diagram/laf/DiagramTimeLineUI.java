@@ -60,7 +60,7 @@ public class DiagramTimeLineUI extends ComponentUI
    * @see javax.swing.plaf.ComponentUI#getMaximumSize(javax.swing.JComponent)
    */
   @Override
-  public Dimension getMaximumSize( final JComponent aC )
+  public Dimension getMaximumSize( final JComponent aComponent )
   {
     return new Dimension( Short.MAX_VALUE, Short.MAX_VALUE );
   }
@@ -116,8 +116,9 @@ public class DiagramTimeLineUI extends ComponentUI
 
     final double scale = timeLine.getScale();
 
-    final int tickInc = Math.max( 1, ( int )( Diagram.MAX_SCALE / scale ) );
-    final int timeLineShift = ( int )( dataContainer.getTriggerPosition() % tickInc );
+    final int tickInc = ( int )Math.max( 1.0, Diagram.MAX_SCALE / scale );
+    final long triggerPosition = dataContainer.hasTriggerData() ? dataContainer.getTriggerPosition() : 0L;
+    final long timeLineShift = triggerPosition % tickInc;
 
     // obtain portion of graphics that needs to be drawn
     final Rectangle clipArea = canvas.getClipBounds();
@@ -127,10 +128,10 @@ public class DiagramTimeLineUI extends ComponentUI
     clipArea.y = 0;
     clipArea.height = TIMELINE_HEIGHT;
 
-    // find index of first row that needs drawing
-    final long firstRow = diagram.convertPointToSampleIndex( new Point( clipArea.x, 0 ) );
-    // find index of last row that needs drawing
-    final long lastRow = diagram.convertPointToSampleIndex( new Point( clipArea.x + clipArea.width, 0 ) ) + 1;
+    // find index of first sample we should draw...
+    final long startSample = diagram.convertPointToSampleIndex( new Point( clipArea.x, 0 ) );
+    // find index of last sample we should draw...
+    final long endSample = diagram.convertPointToSampleIndex( new Point( clipArea.x + clipArea.width, 0 ) ) + 1;
 
     canvas.setFont( this.labelFont );
     final FontMetrics fm = canvas.getFontMetrics();
@@ -140,20 +141,20 @@ public class DiagramTimeLineUI extends ComponentUI
 
     canvas.setColor( settings.getTimeColor() );
 
-    for ( long time = ( firstRow / tickInc ) * tickInc + timeLineShift; time < lastRow; time += tickInc )
+    final int baselineYpos = clipArea.y + TIMELINE_HEIGHT - PADDING_Y;
+    final int longTickYpos = ( int )( baselineYpos - ( 3.5 * SHORT_TICK_HEIGHT ) );
+    final int shortTickYpos = baselineYpos - SHORT_TICK_HEIGHT;
+
+    for ( long time = ( startSample / tickInc ) * tickInc + timeLineShift; time < endSample; time += tickInc )
     {
       final int xPos = Math.max( 0, ( int )( scale * time ) );
 
-      final int baselineYpos = clipArea.y + TIMELINE_HEIGHT - PADDING_Y;
-      final int longTickYpos = ( int )( baselineYpos - ( 3.5 * SHORT_TICK_HEIGHT ) );
-      final int shortTickYpos = baselineYpos - SHORT_TICK_HEIGHT;
-
-      final long relativeTime = time - dataContainer.getTriggerPosition();
-      final long scaledTime = relativeTime / tickInc;
+      final long absoluteTime = time - triggerPosition;
+      final long scaledTime = absoluteTime / tickInc;
 
       if ( scaledTime % LONG_TICK_INTERVAL == 0 )
       {
-        final String timeValue = indexToTime( dataContainer, relativeTime );
+        final String timeValue = indexToTime( dataContainer, time );
 
         final int labelYpos = longTickYpos - 2 * PADDING_Y;
         final int labelXpos = Math.max( clipArea.x, xPos - ( fm.stringWidth( timeValue ) / 2 ) );
@@ -171,38 +172,10 @@ public class DiagramTimeLineUI extends ComponentUI
     }
 
     // If cursors are disabled entirely, we're done; otherwise we need to draw
-    // them
-    if ( !dataContainer.isCursorsEnabled() )
+    // them for the range of samples we're currently showing...
+    if ( dataContainer.isCursorsEnabled() )
     {
-      return;
-    }
-
-    final int textHeight = fm.getHeight();
-    final int flagHeight = textHeight;
-
-    for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
-    {
-      final long cursorPosition = dataContainer.getCursorPosition( i );
-      if ( ( cursorPosition >= firstRow ) && ( cursorPosition <= lastRow ) )
-      {
-        final int cursorPos = ( int )( cursorPosition * scale );
-
-        final Color cursorColor = settings.getCursorColor( i );
-
-        final String text = String.format( "T%d", i + 1 );
-
-        final int textWidth = fm.stringWidth( text );
-        final int flagWidth = textWidth + 4;
-
-        canvas.setColor( cursorColor );
-        canvas.fillRect( cursorPos, TIMELINE_HEIGHT - flagHeight, flagWidth, flagHeight );
-
-        canvas.setColor( cursorColor.darker() );
-        canvas.drawRect( cursorPos, TIMELINE_HEIGHT - flagHeight, flagWidth, flagHeight - 1 );
-
-        canvas.setColor( cursorColor.darker().darker() );
-        canvas.drawString( text, cursorPos + 3, TIMELINE_HEIGHT - 3 );
-      }
+      paintCursorFlags( dataContainer, canvas, timeLine, startSample, endSample );
     }
   }
 
@@ -213,12 +186,73 @@ public class DiagramTimeLineUI extends ComponentUI
    *          sample count (or index)
    * @return string containing time information
    */
-  private String indexToTime( final DataContainer aDataContainer, final long count )
+  private String indexToTime( final DataContainer aDataContainer, final long aTimeValue )
   {
     if ( !aDataContainer.hasTimingData() )
     {
-      return String.format( "%d", count );
+      return String.format( "%d", aTimeValue );
     }
-    return DisplayUtils.displayScaledTime( count, aDataContainer.getSampleRate() );
+
+    long timeValue = aTimeValue;
+    if ( aDataContainer.hasTriggerData() )
+    {
+      timeValue -= aDataContainer.getTriggerPosition();
+    }
+
+    return DisplayUtils.displayScaledTime( timeValue, aDataContainer.getSampleRate() );
+  }
+
+  /**
+   * Paints the cursor flags, denoting which cursor line belongs to which
+   * cursor.
+   * 
+   * @param aDataContainer
+   *          the data container to take the cursor information from;
+   * @param aCanvas
+   *          the graphics canvas to draw on;
+   * @param aTimeLine
+   *          the time line component;
+   * @param aStartSample
+   *          the first sample index to draw;
+   * @param aEndSample
+   *          the last sample index to draw.
+   */
+  private void paintCursorFlags( final DataContainer aDataContainer, final Graphics2D aCanvas,
+      final DiagramTimeLine aTimeLine, final long aStartSample, final long aEndSample )
+  {
+    final Diagram diagram = aTimeLine.getDiagram();
+    final DiagramSettings settings = diagram.getDiagramSettings();
+
+    final double scale = aTimeLine.getScale();
+
+    final FontMetrics fm = aCanvas.getFontMetrics();
+
+    final int textHeight = fm.getHeight();
+    final int flagHeight = textHeight;
+
+    for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
+    {
+      final long cursorPosition = aDataContainer.getCursorPosition( i );
+      if ( ( cursorPosition >= aStartSample ) && ( cursorPosition <= aEndSample ) )
+      {
+        final int cursorPos = ( int )( cursorPosition * scale );
+
+        final Color cursorColor = settings.getCursorColor( i );
+
+        final String text = String.format( "T%d", i + 1 );
+
+        final int textWidth = fm.stringWidth( text );
+        final int flagWidth = textWidth + 4;
+
+        aCanvas.setColor( cursorColor );
+        aCanvas.fillRect( cursorPos, TIMELINE_HEIGHT - flagHeight, flagWidth, flagHeight );
+
+        aCanvas.setColor( cursorColor.darker() );
+        aCanvas.drawRect( cursorPos, TIMELINE_HEIGHT - flagHeight, flagWidth, flagHeight - 1 );
+
+        aCanvas.setColor( cursorColor.darker().darker() );
+        aCanvas.drawString( text, cursorPos + 3, TIMELINE_HEIGHT - 3 );
+      }
+    }
   }
 }
