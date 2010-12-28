@@ -24,9 +24,11 @@ package nl.lxtreme.ols.util.swing.component;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.lang.Thread.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 
@@ -202,25 +204,6 @@ public class JErrorDialog extends JDialog implements Closeable
   }
 
   /**
-   * Listener for Details click events. Alternates whether the details section
-   * is visible or not.
-   * 
-   * @author Richard Bair
-   */
-  final class DetailsClickEvent implements ActionListener
-  {
-    /*
-     * (non-Javadoc)
-     * @see
-     * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    public void actionPerformed( final ActionEvent e )
-    {
-      setDetailsVisible( !JErrorDialog.this.detailsScrollPane.isVisible() );
-    }
-  }
-
-  /**
    * Listener for Ok button click events
    */
   final class OkClickEvent implements ActionListener
@@ -237,20 +220,37 @@ public class JErrorDialog extends JDialog implements Closeable
     }
   }
 
+  /**
+   * @author jawi
+   */
+  static final class SwingUncaughtExceptionHandler implements UncaughtExceptionHandler
+  {
+    // METHODS
+
+    /**
+     * @see java.lang.Thread.UncaughtExceptionHandler#uncaughtException(java.lang.Thread,
+     *      java.lang.Throwable)
+     */
+    @Override
+    public void uncaughtException( final Thread aThread, final Throwable aException )
+    {
+      final Window owner = SwingComponentUtils.getCurrentWindow();
+      JErrorDialog.showDialog( owner, "Uncaught exception...", aException );
+    }
+  }
+
+  // CONSTANTS
+
   private static final long serialVersionUID = 1L;
 
   /**
    * Text representing expanding the details section of the dialog
    */
-  private static final String DETAILS_EXPAND_TEXT = "Details >>";
+  private static final String DETAILS_EXPAND_TEXT = "More details";
   /**
    * Text representing contracting the details section of the dialog
    */
-  private static final String DETAILS_CONTRACT_TEXT = "Details <<";
-  /**
-   * Text for the Ok button.
-   */
-  private static final String OK_BUTTON_TEXT = "Ok";
+  private static final String DETAILS_CONTRACT_TEXT = "Less details";
   /**
    * Icon for the error dialog (stop sign, etc)
    */
@@ -284,6 +284,16 @@ public class JErrorDialog extends JDialog implements Closeable
   {
     super( aOwner, "", ModalityType.APPLICATION_MODAL );
     initDialog();
+  }
+
+  // METHODS
+
+  /**
+   * Installs a Swing-capable default exception handler.
+   */
+  public static void installSwingExceptionHandler()
+  {
+    Thread.setDefaultUncaughtExceptionHandler( new SwingUncaughtExceptionHandler() );
   }
 
   /**
@@ -483,7 +493,7 @@ public class JErrorDialog extends JDialog implements Closeable
     gbc.weighty = 0.0;
     gbc.anchor = GridBagConstraints.EAST;
     gbc.insets = new Insets( 12, 0, 11, 5 );
-    JButton okButton = new JButton( OK_BUTTON_TEXT );
+    JButton okButton = StandardActionFactory.createCloseButton();
     contentPane.add( okButton, gbc );
 
     this.detailButton = new JButton( DETAILS_EXPAND_TEXT );
@@ -527,6 +537,16 @@ public class JErrorDialog extends JDialog implements Closeable
     // set the event handling
     okButton.addActionListener( new OkClickEvent() );
 
-    this.detailButton.addActionListener( new DetailsClickEvent() );
+    this.detailButton.addActionListener( new ActionListener()
+    {
+      /**
+       * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+       */
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        setDetailsVisible( !JErrorDialog.this.detailsScrollPane.isVisible() );
+      }
+    } );
   }
 }

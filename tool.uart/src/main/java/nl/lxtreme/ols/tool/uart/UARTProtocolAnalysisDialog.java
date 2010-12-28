@@ -126,10 +126,11 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     catch ( final IOException exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      // Should not happen in this situation!
-      throw new RuntimeException( exception );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        // Should not happen in this situation!
+        throw new RuntimeException( exception );
+      }
     }
   }
 
@@ -329,9 +330,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     catch ( final IOException exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      if ( LOG.isLoggable( Level.WARNING ) )
+      if ( !HostUtils.handleInterruptedException( exception ) )
       {
         LOG.log( Level.WARNING, "CSV export failed!", exception );
       }
@@ -354,9 +353,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     catch ( final IOException exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      if ( LOG.isLoggable( Level.WARNING ) )
+      if ( !HostUtils.handleInterruptedException( exception ) )
       {
         LOG.log( Level.WARNING, "HTML export failed!", exception );
       }

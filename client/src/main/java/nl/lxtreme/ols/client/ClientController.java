@@ -41,6 +41,7 @@ import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
 import org.osgi.service.prefs.*;
@@ -934,7 +935,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void showAboutBox()
   {
-    this.mainFrame.showAboutBox( this.host.getVersion() );
+    MainFrame.showAboutBox( this.host.getVersion() );
   }
 
   /**
@@ -993,7 +994,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      ModeSettingsDialog dialog = new ModeSettingsDialog( aParent, this.mainFrame.getDiagramSettings() );
+      ModeSettingsDialog dialog = new ModeSettingsDialog( aParent, getDiagramSettings() );
       if ( dialog.showDialog() )
       {
         updateDiagramSettings( dialog.getDiagramSettings() );
@@ -1009,17 +1010,14 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void showPreferencesDialog( final Window aParent )
   {
-    if ( this.mainFrame != null )
+    GeneralSettingsDialog dialog = new GeneralSettingsDialog( aParent, getDiagramSettings() );
+    if ( dialog.showDialog() )
     {
-      GeneralSettingsDialog dialog = new GeneralSettingsDialog( aParent, this.mainFrame.getDiagramSettings() );
-      if ( dialog.showDialog() )
-      {
-        updateDiagramSettings( dialog.getDiagramSettings() );
-      }
-
-      dialog.dispose();
-      dialog = null;
+      updateDiagramSettings( dialog.getDiagramSettings() );
     }
+
+    dialog.dispose();
+    dialog = null;
   }
 
   /**
@@ -1046,8 +1044,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
     catch ( BackingStoreException exception )
     {
-      // TODO Auto-generated catch block
-      exception.printStackTrace();
+      JErrorDialog.showDialog( getMainFrame(), "Failed to write preferences!", exception );
     }
   }
 
@@ -1274,6 +1271,17 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Returns the current diagram settings.
+   * 
+   * @return the current diagram settings, can be <code>null</code> if there is
+   *         no main frame to take the settings from.
+   */
+  private DiagramSettings getDiagramSettings()
+  {
+    return this.mainFrame != null ? this.mainFrame.getDiagramSettings() : null;
+  }
+
+  /**
    * Dispatches a request to repaint the entire main frame.
    */
   private void repaintMainFrame()
@@ -1342,8 +1350,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   private void updateDiagramSettings( final DiagramSettings aSettings )
   {
-    this.mainFrame.setDiagramSettings( aSettings );
-    this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
-    repaintMainFrame();
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.setDiagramSettings( aSettings );
+      this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
+      repaintMainFrame();
+    }
   }
 }

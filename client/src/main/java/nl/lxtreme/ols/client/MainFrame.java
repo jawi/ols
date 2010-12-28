@@ -62,9 +62,9 @@ public final class MainFrame extends JFrame implements Closeable
     /**
      * Creates a new AboutBox instance.
      */
-    public AboutBox( final Window aOwner, final String aVersion )
+    public AboutBox( final String aVersion )
     {
-      super( aOwner, "About ...", ModalityType.APPLICATION_MODAL );
+      super( SwingComponentUtils.getCurrentWindow(), "About ...", ModalityType.APPLICATION_MODAL );
 
       final String message = String.format( "<html><body><h3>%s</h3>" //
           + "<p>Copyright 2006-2010 Michael Poppitz<br>" //
@@ -114,7 +114,7 @@ public final class MainFrame extends JFrame implements Closeable
 
       pack();
 
-      setLocationRelativeTo( aOwner );
+      setLocationRelativeTo( getOwner() );
       setResizable( false );
     }
 
@@ -231,6 +231,18 @@ public final class MainFrame extends JFrame implements Closeable
     addWindowListener( new MainFrameListener() );
 
     // Support CMD + W on MacOSX (closes this frame)...
+  }
+
+  /**
+   * Shows the main about box.
+   * 
+   * @param aVersion
+   *          the version to display in this about box.
+   */
+  public static void showAboutBox( final String aVersion )
+  {
+    final AboutBox aboutDialog = new AboutBox( aVersion );
+    aboutDialog.showDialog();
   }
 
   /**
@@ -453,18 +465,6 @@ public final class MainFrame extends JFrame implements Closeable
     }
     this.status.setText( message );
     this.status.setProgress( 0 );
-  }
-
-  /**
-   * Shows the main about box.
-   * 
-   * @param aVersion
-   *          the version to display in this about box.
-   */
-  public void showAboutBox( final String aVersion )
-  {
-    final AboutBox aboutDialog = new AboutBox( this, aVersion );
-    aboutDialog.showDialog();
   }
 
   /**

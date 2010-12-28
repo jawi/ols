@@ -192,16 +192,18 @@ public class MeasurementDialog extends BaseToolDialog
           catch ( ExecutionException exception )
           {
             // Make sure to handle IO-interrupted exceptions properly!
-            HostUtils.handleInterruptedException( exception.getCause() );
-
-            LOG.log( Level.WARNING, "Dialog exception!", exception );
+            if ( !HostUtils.handleInterruptedException( exception.getCause() ) )
+            {
+              LOG.log( Level.WARNING, "Dialog exception!", exception );
+            }
           }
           catch ( InterruptedException exception )
           {
             // Make sure to handle IO-interrupted exceptions properly!
-            HostUtils.handleInterruptedException( exception );
-
-            LOG.log( Level.WARNING, "Dialog exception!", exception );
+            if ( !HostUtils.handleInterruptedException( exception ) )
+            {
+              LOG.log( Level.WARNING, "Dialog exception!", exception );
+            }
           }
         }
       }

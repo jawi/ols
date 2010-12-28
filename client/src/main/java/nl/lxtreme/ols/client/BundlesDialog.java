@@ -27,10 +27,11 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
-import org.osgi.framework.*;
-
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.component.*;
+
+import org.osgi.framework.*;
 
 
 /**
@@ -170,9 +171,10 @@ public class BundlesDialog extends JDialog implements Closeable
     @Override
     public boolean isCellEditable( final int aRow, final int aColumn )
     {
+      // Under certain circumstances, the bundles may be enabled/disabled...
       if ( aColumn == 0 )
       {
-        return true;
+        return DEBUG;
       }
       else
       {
@@ -207,6 +209,9 @@ public class BundlesDialog extends JDialog implements Closeable
 
   private static final long serialVersionUID = 1L;
 
+  private static final boolean DEBUG = Boolean.parseBoolean( System
+      .getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+
   // VARIABLES
 
   private final BundleContext bundleContext;
@@ -226,7 +231,9 @@ public class BundlesDialog extends JDialog implements Closeable
    */
   public BundlesDialog( final Window aOwner, final BundleContext aBundleContext )
   {
-    super( aOwner, "Running bundles", ModalityType.DOCUMENT_MODAL );
+    super( aOwner, "Running bundles", ModalityType.APPLICATION_MODAL );
+
+    setLocationRelativeTo( aOwner );
 
     this.bundleContext = aBundleContext;
 
@@ -289,8 +296,7 @@ public class BundlesDialog extends JDialog implements Closeable
     }
     catch ( BundleException exception )
     {
-      // TODO Auto-generated catch block
-      exception.printStackTrace();
+      JErrorDialog.showDialog( getOwner(), "Starting bundle failed!", exception );
     }
   }
 
@@ -327,8 +333,7 @@ public class BundlesDialog extends JDialog implements Closeable
     }
     catch ( BundleException exception )
     {
-      // TODO Auto-generated catch block
-      exception.printStackTrace();
+      JErrorDialog.showDialog( getOwner(), "Stopping bundle failed!", exception );
     }
   }
 
@@ -356,6 +361,7 @@ public class BundlesDialog extends JDialog implements Closeable
     this.table.getSelectionModel().setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 
     final JButton selectAll = new JButton( "Select all" );
+    selectAll.setVisible( DEBUG );
     selectAll.addActionListener( new ActionListener()
     {
       @Override
@@ -366,6 +372,7 @@ public class BundlesDialog extends JDialog implements Closeable
     } );
 
     final JButton deselectAll = new JButton( "Deselect all" );
+    deselectAll.setVisible( DEBUG );
     deselectAll.addActionListener( new ActionListener()
     {
       @Override
@@ -375,9 +382,20 @@ public class BundlesDialog extends JDialog implements Closeable
       }
     } );
 
+    final JButton test = new JButton( "TEST!" );
+    test.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        throw new RuntimeException( "!!!" );
+      }
+    } );
+
     final JPanel selectionPanel = new JPanel();
     selectionPanel.add( selectAll );
     selectionPanel.add( deselectAll );
+    selectionPanel.add( test );
 
     final JPanel view = new JPanel();
     view.setLayout( new BorderLayout() );

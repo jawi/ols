@@ -223,10 +223,13 @@ public class LogicSnifferDevice implements Device
       LOG.log( Level.WARNING, "Detailed stack trace:", exception );
 
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      throw new IOException( "Failed to open/use " + aPortName + "! Possible reason: " + exception.getMessage() );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        throw new IOException( "Failed to open/use " + aPortName + "! Possible reason: " + exception.getMessage() );
+      }
     }
+
+    return false;
   }
 
   /**
@@ -257,10 +260,11 @@ public class LogicSnifferDevice implements Device
       }
       catch ( final IOException exception )
       {
-        LOG.log( Level.FINE, "Detaching failed!", exception );
-
         // Make sure to handle IO-interrupted exceptions properly!
-        HostUtils.handleInterruptedException( exception );
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.WARNING, "Detaching failed!", exception );
+        }
       }
       finally
       {
@@ -380,20 +384,22 @@ public class LogicSnifferDevice implements Device
         /* don't care */
         result = -1;
 
-        LOG.log( Level.FINE, "I/O exception", exception );
-
         // Make sure to handle IO-interrupted exceptions properly!
-        HostUtils.handleInterruptedException( exception );
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.INFO, "I/O exception", exception );
+        }
       }
       catch ( final InterruptedException exception )
       {
         /* don't care */
         result = -1;
 
-        LOG.log( Level.FINE, "Port timeout!", exception );
-
         // Make sure to handle IO-interrupted exceptions properly!
-        HostUtils.handleInterruptedException( exception );
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.INFO, "Port timeout!", exception );
+        }
       }
     }
     while ( result > 0x00 );
@@ -588,8 +594,10 @@ public class LogicSnifferDevice implements Device
         if ( !this.running )
         {
           // Make sure to handle IO-interrupted exceptions properly!
-          HostUtils.handleInterruptedException( exception );
-          throw exception;
+          if ( !HostUtils.handleInterruptedException( exception ) )
+          {
+            throw exception;
+          }
         }
       }
     }
@@ -1071,20 +1079,22 @@ public class LogicSnifferDevice implements Device
         /* don't care */
         id = -1;
 
-        LOG.log( Level.FINE, "I/O exception", exception );
-
         // Make sure to handle IO-interrupted exceptions properly!
-        HostUtils.handleInterruptedException( exception );
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.INFO, "I/O exception!", exception );
+        }
       }
       catch ( final InterruptedException exception )
       {
         /* don't care */
         id = -1;
 
-        LOG.log( Level.FINE, "Port timeout!", exception );
-
         // Make sure to handle IO-interrupted exceptions properly!
-        HostUtils.handleInterruptedException( exception );
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.INFO, "Port timeout!", exception );
+        }
       }
     }
 
@@ -1136,8 +1146,10 @@ public class LogicSnifferDevice implements Device
       catch ( final InterruptedException ignore )
       {
         // Make sure to handle IO-interrupted exceptions properly!
-        HostUtils.handleInterruptedException( ignore );
-        break;
+        if ( !HostUtils.handleInterruptedException( ignore ) )
+        {
+          throw ignore;
+        }
       }
     }
 

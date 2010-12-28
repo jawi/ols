@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.client;
 
 
+import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -29,6 +30,7 @@ import java.util.logging.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
 
@@ -121,6 +123,12 @@ public final class Host implements ApplicationCallback
       // well...
       this.context.getBundle( 0 ).stop();
     }
+    catch ( IllegalStateException ex )
+    {
+      // The bundle context is no longer valid; we're going to exit anyway, so
+      // lets ignore this exception for now...
+      System.exit( -1 );
+    }
     catch ( BundleException be )
     {
       System.exit( -1 );
@@ -194,6 +202,8 @@ public final class Host implements ApplicationCallback
       ThreadViolationDetectionRepaintManager.install();
     }
 
+    JErrorDialog.installSwingExceptionHandler();
+
     this.controller = new ClientController( this.context, this );
 
     final MainFrame mainFrame = new MainFrame( this.controller );
@@ -253,11 +263,21 @@ public final class Host implements ApplicationCallback
    */
   public void stop()
   {
-    final MainFrame mainFrame = this.controller.getMainFrame();
+    MainFrame mainFrame = this.controller.getMainFrame();
     if ( mainFrame != null )
     {
-      mainFrame.dispose();
-      this.controller.setMainFrame( null );
+      // Safety guard: also loop through all unclosed frames and close them as
+      // well...
+      final Window[] openWindows = Window.getWindows();
+      for ( Window window : openWindows )
+      {
+        LOG.log( Level.FINE, "(Forced) closing window {0} ...", window );
+
+        window.setVisible( false );
+        window.dispose();
+      }
+
+      this.controller.setMainFrame( mainFrame = null );
     }
 
     this.menuTracker.close();

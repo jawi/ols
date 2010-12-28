@@ -103,50 +103,53 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    * Creates a new MutableDiagramSettings instance.
    * 
    * @param aDiagramSettings
-   *          the diagram settings to use as default, cannot be
-   *          <code>null</code>.
+   *          the diagram settings to use as default, may be <code>null</code>
+   *          in which case this constructor falls back to the default settings.
    */
   public MutableDiagramSettings( final DiagramSettings aDiagramSettings )
   {
     this();
 
-    setColorTarget( aDiagramSettings.getColorTarget() );
-    setColorScheme( aDiagramSettings.getColorScheme() );
-
-    setBackgroundColor( aDiagramSettings.getBackgroundColor() );
-    setTriggerColor( aDiagramSettings.getTriggerColor() );
-    setGridColor( aDiagramSettings.getGridColor() );
-    setGroupBackgroundColor( aDiagramSettings.getGroupBackgroundColor() );
-    setTextColor( aDiagramSettings.getTextColor() );
-    setTimeColor( aDiagramSettings.getTimeColor() );
-    setLabelColor( aDiagramSettings.getLabelColor() );
-    setGroupByteColor( aDiagramSettings.getGroupByteColor() );
-    setScopeColor( aDiagramSettings.getScopeColor() );
-
-    setColorScheme( aDiagramSettings.getColorScheme() );
-
-    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
+    if ( aDiagramSettings != null )
     {
-      setCursorColor( i, aDiagramSettings.getCursorColor( i ) );
-    }
+      setColorTarget( aDiagramSettings.getColorTarget() );
+      setColorScheme( aDiagramSettings.getColorScheme() );
 
-    for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
-    {
-      setChannelColor( i, aDiagramSettings.getChannelColor( i ) );
-    }
+      setBackgroundColor( aDiagramSettings.getBackgroundColor() );
+      setTriggerColor( aDiagramSettings.getTriggerColor() );
+      setGridColor( aDiagramSettings.getGridColor() );
+      setGroupBackgroundColor( aDiagramSettings.getGroupBackgroundColor() );
+      setTextColor( aDiagramSettings.getTextColor() );
+      setTimeColor( aDiagramSettings.getTimeColor() );
+      setLabelColor( aDiagramSettings.getLabelColor() );
+      setGroupByteColor( aDiagramSettings.getGroupByteColor() );
+      setScopeColor( aDiagramSettings.getScopeColor() );
 
-    for ( int i = 0; i < 4; i++ )
-    {
-      setShowByte( i, aDiagramSettings.isShowByte( i ) );
-      setShowChannels( i, aDiagramSettings.isShowChannels( i ) );
-      setShowScope( i, aDiagramSettings.isShowScope( i ) );
-    }
+      setColorScheme( aDiagramSettings.getColorScheme() );
 
-    setChannelHeight( aDiagramSettings.getChannelHeight() );
-    setScopeHeight( aDiagramSettings.getScopeHeight() );
-    setSignalHeight( aDiagramSettings.getSignalHeight() );
-    setSignalAlignment( aDiagramSettings.getSignalAlignment() );
-    setEdgeSlope( aDiagramSettings.getEdgeSlope() );
+      for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
+      {
+        setCursorColor( i, aDiagramSettings.getCursorColor( i ) );
+      }
+
+      for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
+      {
+        setChannelColor( i, aDiagramSettings.getChannelColor( i ) );
+      }
+
+      for ( int i = 0; i < 4; i++ )
+      {
+        setShowByte( i, aDiagramSettings.isShowByte( i ) );
+        setShowChannels( i, aDiagramSettings.isShowChannels( i ) );
+        setShowScope( i, aDiagramSettings.isShowScope( i ) );
+      }
+
+      setChannelHeight( aDiagramSettings.getChannelHeight() );
+      setScopeHeight( aDiagramSettings.getScopeHeight() );
+      setSignalHeight( aDiagramSettings.getSignalHeight() );
+      setSignalAlignment( aDiagramSettings.getSignalAlignment() );
+      setEdgeSlope( aDiagramSettings.getEdgeSlope() );
+    }
   }
 
   /**

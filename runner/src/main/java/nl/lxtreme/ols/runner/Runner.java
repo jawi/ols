@@ -81,10 +81,11 @@ public final class Runner
     catch ( Exception exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      System.err.println( "Failed to start OSGi framework! Possible reason: " + exception.getMessage() );
-      exception.printStackTrace();
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        System.err.println( "Failed to start OSGi framework! Possible reason: " + exception.getMessage() );
+        exception.printStackTrace();
+      }
 
       System.exit( -1 );
     }

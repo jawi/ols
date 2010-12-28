@@ -157,12 +157,14 @@ public final class HostUtils
    * @param aThrowable
    *          the exception to be checked for interruption. Does nothing if
    *          <code>null</code>.
+   * @return <code>true</code> if the exception is "handled" by this method,
+   *         <code>false</code> otherwise.
    */
-  public static void handleInterruptedException( final Throwable aThrowable )
+  public static boolean handleInterruptedException( final Throwable aThrowable )
   {
     if ( aThrowable == null )
     {
-      return;
+      return true;
     }
 
     Throwable current = aThrowable;
@@ -171,11 +173,13 @@ public final class HostUtils
       if ( ( current instanceof InterruptedIOException ) || ( current instanceof InterruptedException ) )
       {
         Thread.currentThread().interrupt();
-        return;
+        return true;
       }
       current = current.getCause();
     }
     while ( current != null );
+
+    return false;
   }
 
   /**
@@ -385,9 +389,10 @@ public final class HostUtils
     catch ( IOException exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      Logger.getAnonymousLogger().log( Level.FINE, "Problems to load the logging configuration file!", exception );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        Logger.getAnonymousLogger().log( Level.FINE, "Problems to load the logging configuration file!", exception );
+      }
     }
   }
 
@@ -465,9 +470,10 @@ public final class HostUtils
                 catch ( Exception exception )
                 {
                   // Make sure to handle IO-interrupted exceptions properly!
-                  HostUtils.handleInterruptedException( exception );
-
-                  Logger.getAnonymousLogger().log( Level.ALL, "Event handling in callback failed!", exception );
+                  if ( !HostUtils.handleInterruptedException( exception ) )
+                  {
+                    Logger.getAnonymousLogger().log( Level.ALL, "Event handling in callback failed!", exception );
+                  }
                 }
               }
             } );
@@ -496,9 +502,10 @@ public final class HostUtils
     catch ( Exception exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      Logger.getAnonymousLogger().log( Level.ALL, "Install application callback failed!", exception );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        Logger.getAnonymousLogger().log( Level.ALL, "Install application callback failed!", exception );
+      }
     }
   }
 
@@ -520,9 +527,10 @@ public final class HostUtils
     catch ( Exception exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
-
-      Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
+      }
     }
     finally
     {
