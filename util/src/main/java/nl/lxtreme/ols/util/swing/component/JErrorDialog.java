@@ -235,7 +235,9 @@ public class JErrorDialog extends JDialog implements Closeable
     public void uncaughtException( final Thread aThread, final Throwable aException )
     {
       final Window owner = SwingComponentUtils.getCurrentWindow();
-      JErrorDialog.showDialog( owner, "Uncaught exception...", aException );
+      final IncidentInfo incident = new IncidentInfo( "Uncaught exception...", //
+          "Something unexpected happened!", "", aException );
+      JErrorDialog.showDialog( owner, incident );
     }
   }
 
@@ -290,6 +292,10 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Installs a Swing-capable default exception handler.
+   * <p>
+   * Calling this method will cause <em>all</em> uncaught exceptions, for which
+   * <b>no</b> exception handling is done, to be displayed in this error dialog.
+   * </p>
    */
   public static void installSwingExceptionHandler()
   {
@@ -312,13 +318,14 @@ public class JErrorDialog extends JDialog implements Closeable
     dlg.setErrorMessage( aInfo.getBasicErrorMessage() );
 
     String details = aInfo.getDetailedErrorMessage();
-    if ( details == null )
+    if ( ( details == null ) || details.trim().isEmpty() )
     {
-      if ( aInfo.getErrorException() != null )
+      final Throwable error = aInfo.getErrorException();
+      if ( error != null )
       {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter( sw );
-        aInfo.getErrorException().printStackTrace( pw );
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter( sw );
+        error.printStackTrace( pw );
         details = sw.toString();
       }
       else
@@ -326,6 +333,7 @@ public class JErrorDialog extends JDialog implements Closeable
         details = "";
       }
     }
+
     dlg.setDetails( details );
     dlg.setIncidentInfo( aInfo );
     dlg.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
@@ -461,11 +469,11 @@ public class JErrorDialog extends JDialog implements Closeable
   }
 
   /**
-   * initialize the gui.
+   * Initialize this dialog.
    */
   private void initDialog()
   {
-    final Container contentPane = this.getContentPane();
+    final Container contentPane = getContentPane();
     contentPane.setLayout( new GridBagLayout() );
 
     final GridBagConstraints gbc = new GridBagConstraints();
