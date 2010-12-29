@@ -382,20 +382,28 @@ public class BundlesDialog extends JDialog implements Closeable
       }
     } );
 
-    final JButton test = new JButton( "TEST!" );
-    test.addActionListener( new ActionListener()
+    final JButton crashTest = new JButton( "Crash test" );
+    crashTest.setVisible( DEBUG );
+    crashTest.addActionListener( new ActionListener()
     {
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
-        throw new RuntimeException( "!!!" );
+        final Runnable thrower = new Runnable()
+        {
+          public void run()
+          {
+            throw new RuntimeException( "Test exception; nothing to worry about..." );
+          }
+        };
+        SwingUtilities.invokeLater( thrower );
       }
     } );
 
     final JPanel selectionPanel = new JPanel();
     selectionPanel.add( selectAll );
     selectionPanel.add( deselectAll );
-    selectionPanel.add( test );
+    selectionPanel.add( crashTest );
 
     final JPanel view = new JPanel();
     view.setLayout( new BorderLayout() );

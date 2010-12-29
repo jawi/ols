@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.lang.Thread.*;
+import java.net.*;
 
 import javax.swing.*;
 
@@ -33,14 +34,19 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 
 /**
- * @author jawi
+ * Provides an error dialog for displaying exceptions in a more friendly way.
+ * <p>
+ * This code is largely based on the JXErrorDialog code from the SwingX project.
+ * Some of that code is reshuffled and/or modified to fit into the architecture
+ * of OLS.
+ * </p>
  */
 public class JErrorDialog extends JDialog implements Closeable
 {
   // INNER TYPES
 
   /**
-   * @author jawi
+   * Provides a container with information about the incident.
    */
   public static class IncidentInfo implements Serializable
   {
@@ -204,7 +210,104 @@ public class JErrorDialog extends JDialog implements Closeable
   }
 
   /**
-   * @author jawi
+   *
+   */
+  static final class IncidentMailReporter
+  {
+    // VARIABLES
+
+    private final String mailAddress;
+
+    // CONSTRUCTORS
+
+    /**
+     * 
+     */
+    public IncidentMailReporter( final String aMailAddress )
+    {
+      this.mailAddress = aMailAddress;
+    }
+
+    // METHODS
+
+    /**
+     * @param aIncident
+     */
+    public void reportIncident( final IncidentInfo aIncident, final String aHostDetails ) throws IOException
+    {
+      final String uriStr = String.format( "mailto:%s?subject=%s&body=%s", //
+          this.mailAddress, //
+          urlEncode( "Crash Reporter" ), //
+          urlEncode( getMessageBody( aIncident, aHostDetails ) ) );
+
+      try
+      {
+        final URI mailURI = new URI( uriStr );
+        Desktop.getDesktop().browse( mailURI );
+      }
+      catch ( URISyntaxException exception )
+      {
+        throw new IOException( "Unsupported URI: mailto!", exception );
+      }
+    }
+
+    /**
+     * @param aIncident
+     * @return
+     */
+    private String getMessageBody( final IncidentInfo aIncident, final String aHostDetails )
+    {
+      final boolean debug = Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+
+      StringBuilder body = new StringBuilder();
+
+      if ( aHostDetails != null )
+      {
+        body.append( "Host information: " ).append( aHostDetails );
+      }
+      else
+      {
+        body.append( "No host information found/provided!" );
+      }
+      body.append( '\n' );
+
+      if ( debug )
+      {
+        body.append( "Debugging mode is ENABLED!\n" );
+      }
+
+      final Throwable error = aIncident.getErrorException();
+      if ( error != null )
+      {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter( sw );
+        error.printStackTrace( pw );
+        body.append( "\nStack trace: " ).append( "\n-----\n" ).append( sw.toString() ).append( "\n-----\n" );
+      }
+      body.append( '\n' );
+
+      return body.toString();
+    }
+
+    /**
+     * @param aString
+     * @return
+     */
+    private String urlEncode( final String aString )
+    {
+      try
+      {
+        return URLEncoder.encode( aString, "UTF-8" ).replace( "+", "%20" );
+      }
+      catch ( UnsupportedEncodingException exception )
+      {
+        throw new RuntimeException( exception );
+      }
+    }
+  }
+
+  /**
+   * Provides a exception handler for the JVM exception hook.
    */
   static final class SwingUncaughtExceptionHandler implements UncaughtExceptionHandler
   {
@@ -219,9 +322,9 @@ public class JErrorDialog extends JDialog implements Closeable
     {
       final Window owner = SwingComponentUtils.getCurrentWindow();
       final IncidentInfo incident = new IncidentInfo( "Uncaught exception...", //
-          "<html>Something unexpected happened!<br><br>"
+          "<html><b>Something unexpected happened!</b><br><br>"
               + "Click on \"more details\" for more information about the possible cause.<br><br>"
-              + "If this problem persists, please report it as bug.</html>", "", aException );
+              + "If the problem persists, please report it as bug.</html>", "", aException );
       JErrorDialog.showDialog( owner, incident );
     }
   }
@@ -231,76 +334,53 @@ public class JErrorDialog extends JDialog implements Closeable
   private static final long serialVersionUID = 1L;
 
   /**
-   * Text representing expanding the details section of the dialog
+   * Text representing extracting the details section of this dialog.
    */
-  private static final String DETAILS_EXPAND_TEXT = "More details";
+  private static final String MORE_DETAILS = "More details";
   /**
-   * Text representing contracting the details section of the dialog
+   * Text representing contracting the details section of this dialog.
    */
-  private static final String DETAILS_CONTRACT_TEXT = "Less details";
+  private static final String LESS_DETAILS = "Less details";
+  /**
+   * Text representing the reporting button of this dialog.
+   */
+  private static final String REPORT = "Report";
   /**
    * Icon for the error dialog (stop sign, etc)
    */
-  private static final Icon icon = UIManager.getIcon( "OptionPane.warningIcon" );
-  /**
-   * Error message label
-   */
+  private static final Icon ICON = UIManager.getIcon( "OptionPane.warningIcon" );
+
+  /** To ensure there's at most one error dialog on screen at all times. */
+  private static volatile JErrorDialog instance = null;
+  private static String reportIncidentAddress;
+  private static String hostDetails;
+
+  // VARIABLES
+
   private JLabel errorMessage;
-  /**
-   * details text area
-   */
   private JTextArea details;
-  /**
-   * detail button
-   */
   private JButton detailButton;
-  /**
-   * details scroll pane
-   */
   private JScrollPane detailsScrollPane;
+  private JButton reportButton;
 
-  private IncidentInfo incidentInfo;
+  private final IncidentInfo incidentInfo;
 
-  /**
-   * Create a new ErrorDialog with the given Frame as the owner
-   * 
-   * @param owner
-   *          Owner of this error dialog.
-   */
-  public JErrorDialog( final Window aOwner )
-  {
-    super( aOwner, "", ModalityType.APPLICATION_MODAL );
-    initDialog();
-  }
-
-  // METHODS
+  // CONSTRUCTORS
 
   /**
-   * Installs a Swing-capable default exception handler.
-   * <p>
-   * Calling this method will cause <em>all</em> uncaught exceptions, for which
-   * <b>no</b> exception handling is done, to be displayed in this error dialog.
-   * </p>
-   */
-  public static void installSwingExceptionHandler()
-  {
-    Thread.setDefaultUncaughtExceptionHandler( new SwingUncaughtExceptionHandler() );
-  }
-
-  /**
-   * Show the error dialog.
+   * Create a new JErrorDialog with the given window as the owner.
    * 
    * @param aOwner
    *          Owner of this error dialog.
    * @param aInfo
-   *          <code>IncidentInfo</code> that incorporates all the information
-   *          about the error
    */
-  public static void showDialog( final Window aOwner, final IncidentInfo aInfo )
+  protected JErrorDialog( final Window aOwner, final IncidentInfo aInfo )
   {
-    final JErrorDialog dlg = new JErrorDialog( aOwner );
-    dlg.setTitle( aInfo.getHeader() );
-    dlg.setErrorMessage( aInfo.getBasicErrorMessage() );
+    super( aOwner, "", ModalityType.APPLICATION_MODAL );
+
+    this.incidentInfo = aInfo;
+
+    initDialog();
 
     String details = aInfo.getDetailedErrorMessage();
     if ( ( details == null ) || details.trim().isEmpty() )
@@ -319,12 +399,70 @@ public class JErrorDialog extends JDialog implements Closeable
       }
     }
 
-    dlg.setDetails( details );
-    dlg.setIncidentInfo( aInfo );
-    dlg.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
-    dlg.pack();
-    dlg.setLocationRelativeTo( aOwner );
-    dlg.setVisible( true );
+    setTitle( aInfo.getHeader() );
+    setErrorMessage( aInfo.getBasicErrorMessage() );
+    setDetails( details );
+
+    setLocationRelativeTo( aOwner );
+  }
+
+  // METHODS
+
+  /**
+   * Installs a Swing-capable default exception handler.
+   * <p>
+   * Calling this method will cause <em>all</em> uncaught exceptions, for which
+   * <b>no</b> exception handling is done, to be displayed in this error dialog.
+   * </p>
+   */
+  public static void installSwingExceptionHandler()
+  {
+    Thread.setDefaultUncaughtExceptionHandler( new SwingUncaughtExceptionHandler() );
+  }
+
+  /**
+   * Sets the email address used for reporting incidents.
+   * 
+   * @param aReportIncidentAddress
+   *          the report incident email address to set, may be <code>null</code>
+   *          to disable reporting functionality.
+   */
+  public static void setHostInformation( final String aOSName, final String aOSVersion, final String aProcessor )
+  {
+    hostDetails = String.format( "%s, %s (%s)", aOSName, aOSVersion, aProcessor );
+  }
+
+  /**
+   * Sets the email address used for reporting incidents.
+   * 
+   * @param aReportIncidentAddress
+   *          the report incident email address to set, may be <code>null</code>
+   *          to disable reporting functionality.
+   */
+  public static void setReportIncidentAddress( final String aReportIncidentAddress )
+  {
+    reportIncidentAddress = aReportIncidentAddress;
+  }
+
+  /**
+   * Show the error dialog.
+   * 
+   * @param aOwner
+   *          Owner of this error dialog.
+   * @param aInfo
+   *          <code>IncidentInfo</code> that incorporates all the information
+   *          about the error
+   */
+  public static synchronized void showDialog( final Window aOwner, final IncidentInfo aInfo )
+  {
+    if ( instance == null )
+    {
+      instance = new JErrorDialog( aOwner, aInfo );
+      instance.setVisible( true );
+      // Wait until we're closed...
+      instance.dispose();
+      instance = null;
+    }
   }
 
   /**
@@ -375,27 +513,12 @@ public class JErrorDialog extends JDialog implements Closeable
   }
 
   /**
-   * Set the details section of the error dialog. If the details are either null
-   * or an empty string, then hide the details button and hide the detail scroll
-   * pane. Otherwise, just set the details section.
-   * 
-   * @param aDetails
-   *          Details to be shown in the detail section of the dialog. This can
-   *          be null if you do not want to display the details section of the
-   *          dialog.
+   * Reports the incident through mail.
    */
-  final void setDetails( final String aDetails )
+  final void reportIncident() throws IOException
   {
-    setDetailsVisible( false );
-    if ( ( aDetails == null ) || aDetails.trim().isEmpty() )
-    {
-      this.detailButton.setVisible( false );
-    }
-    else
-    {
-      this.details.setText( aDetails );
-      this.detailButton.setVisible( true );
-    }
+    final IncidentMailReporter reporter = new IncidentMailReporter( reportIncidentAddress );
+    reporter.reportIncident( getIncidentInfo(), hostDetails );
   }
 
   /**
@@ -411,25 +534,14 @@ public class JErrorDialog extends JDialog implements Closeable
     {
       this.details.setCaretPosition( 0 );
       this.detailsScrollPane.setVisible( true );
-      this.detailButton.setText( DETAILS_CONTRACT_TEXT );
+      this.detailButton.setText( LESS_DETAILS );
     }
     else
     {
       this.detailsScrollPane.setVisible( false );
-      this.detailButton.setText( DETAILS_EXPAND_TEXT );
+      this.detailButton.setText( MORE_DETAILS );
     }
     pack();
-  }
-
-  /**
-   * Set the error message for the dialog box
-   * 
-   * @param aErrorMessage
-   *          Message for the error dialog
-   */
-  final void setErrorMessage( final String aErrorMessage )
-  {
-    this.errorMessage.setText( aErrorMessage );
   }
 
   /**
@@ -443,97 +555,36 @@ public class JErrorDialog extends JDialog implements Closeable
   }
 
   /**
-   * Sets the IncidentInfo for this dialog
+   * Creates the buttons pane.
    * 
-   * @param info
-   *          IncidentInfo that incorporates all the details about the error
+   * @return a button pane, never <code>null</code>.
    */
-  protected void setIncidentInfo( final IncidentInfo info )
+  private JComponent createButtonPane()
   {
-    this.incidentInfo = info;
-  }
+    final boolean reportingEnabled = ( reportIncidentAddress != null ) && !reportIncidentAddress.trim().isEmpty();
 
-  /**
-   * Initialize this dialog.
-   */
-  private void initDialog()
-  {
-    final Container contentPane = getContentPane();
-    contentPane.setLayout( new GridBagLayout() );
+    this.reportButton = new JButton( REPORT );
+    this.reportButton.setVisible( reportingEnabled );
+    this.reportButton.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        try
+        {
+          reportIncident();
+        }
+        catch ( IOException exception )
+        {
+          final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
+          JOptionPane.showMessageDialog( parent, exception.getMessage(), "Reporting failed!", JOptionPane.ERROR_MESSAGE );
+        }
+      }
+    } );
 
-    this.errorMessage = new JLabel();
+    final JButton cancel = StandardActionFactory.createCloseButton();
 
-    this.details = new JTextArea( 8, 50 );
-    this.details.setFont( Font.decode( Font.MONOSPACED ) );
-    this.details.setEditable( false );
-
-    this.detailsScrollPane = new JScrollPane( this.details );
-    this.detailsScrollPane.setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
-
-    JButton okButton = StandardActionFactory.createCloseButton();
-    this.detailButton = new JButton( DETAILS_EXPAND_TEXT );
-
-    final GridBagConstraints gbc = new GridBagConstraints();
-    gbc.anchor = GridBagConstraints.CENTER;
-    gbc.fill = GridBagConstraints.NONE;
-    gbc.gridheight = 1;
-    gbc.insets = new Insets( 22, 12, 11, 17 );
-    contentPane.add( new JLabel( icon ), gbc );
-
-    gbc.anchor = GridBagConstraints.WEST;
-    gbc.fill = GridBagConstraints.BOTH;
-    gbc.gridheight = 1;
-    gbc.gridwidth = 2;
-    gbc.gridx = 1;
-    gbc.weightx = 1.0;
-    gbc.insets = new Insets( 12, 0, 0, 11 );
-    contentPane.add( this.errorMessage, gbc );
-
-    gbc.fill = GridBagConstraints.NONE;
-    gbc.gridx = 1;
-    gbc.gridy = 1;
-    gbc.gridwidth = 1;
-    gbc.weightx = 1.0;
-    gbc.weighty = 0.0;
-    gbc.anchor = GridBagConstraints.EAST;
-    gbc.insets = new Insets( 12, 0, 11, 5 );
-    contentPane.add( okButton, gbc );
-
-    gbc.gridx = 3;
-    gbc.weightx = 0.0;
-    gbc.insets = new Insets( 12, 0, 11, 11 );
-    contentPane.add( this.detailButton, gbc );
-
-    gbc.fill = GridBagConstraints.BOTH;
-    gbc.gridwidth = 4;
-    gbc.gridx = 0;
-    gbc.gridy = 2;
-    gbc.weighty = 1.0;
-    gbc.insets = new Insets( 6, 11, 11, 11 );
-    contentPane.add( this.detailsScrollPane, gbc );
-    /*
-     * Here i'm going to add invisible empty container to the bottom of the
-     * content pane to fix minimal width of the dialog. It's quite a hack, but i
-     * have not found anything better.
-     */
-    Dimension spPredictedSize = this.detailsScrollPane.getPreferredSize();
-    Dimension newPanelSize = new Dimension( spPredictedSize.width + 15, 0 );
-    Container widthHolder = new Container();
-    widthHolder.setMinimumSize( newPanelSize );
-    widthHolder.setPreferredSize( newPanelSize );
-    widthHolder.setMaximumSize( newPanelSize );
-    gbc.gridy = 3;
-    gbc.insets = new Insets( 0, 11, 11, 0 );
-    contentPane.add( widthHolder, gbc );
-
-    // make the buttons the same size
-    int buttonLength = this.detailButton.getPreferredSize().width;
-    int buttonHeight = this.detailButton.getPreferredSize().height;
-    Dimension buttonSize = new Dimension( buttonLength, buttonHeight );
-
-    okButton.setPreferredSize( buttonSize );
-    this.detailButton.setPreferredSize( buttonSize );
-
+    this.detailButton = new JButton( MORE_DETAILS );
     this.detailButton.addActionListener( new ActionListener()
     {
       /**
@@ -545,5 +596,114 @@ public class JErrorDialog extends JDialog implements Closeable
         setDetailsVisible( !JErrorDialog.this.detailsScrollPane.isVisible() );
       }
     } );
+
+    return SwingComponentUtils.createButtonPane( new JButton[] { this.reportButton, this.detailButton, cancel } );
+  }
+
+  /**
+   * @return
+   */
+  private JPanel createDetailsPane()
+  {
+    this.errorMessage = new JLabel();
+
+    this.details = new JTextArea( 8, 50 );
+    this.details.setFont( Font.decode( Font.MONOSPACED ) );
+    this.details.setEditable( false );
+
+    this.detailsScrollPane = new JScrollPane( this.details );
+    this.detailsScrollPane.setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
+
+    final JLabel icon = new JLabel( ICON );
+    icon.setBorder( BorderFactory.createEmptyBorder( 16, 0, 12, 24 ) );
+
+    final JPanel topPanel = new JPanel( new BorderLayout() );
+    topPanel.setBorder( BorderFactory.createEmptyBorder( 0, 12, 12, 12 ) );
+    topPanel.add( icon, BorderLayout.WEST );
+    topPanel.add( this.errorMessage, BorderLayout.CENTER );
+
+    final JPanel detailPanel = new JPanel( new BorderLayout() );
+    detailPanel.setBorder( BorderFactory.createEmptyBorder( 12, 6, 12, 6 ) );
+    detailPanel.add( topPanel, BorderLayout.NORTH );
+    detailPanel.add( this.detailsScrollPane, BorderLayout.CENTER );
+
+    return detailPanel;
+  }
+
+  /**
+   * Initialize this dialog.
+   */
+  private void initDialog()
+  {
+    final JPanel contentPane = createDetailsPane();
+    final JComponent buttonPane = createButtonPane();
+
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane );
+
+    setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
+    pack();
+
+    /*
+     * final Container contentPane = getContentPane(); contentPane.setLayout(
+     * new GridBagLayout() ); final GridBagConstraints gbc = new
+     * GridBagConstraints(); gbc.anchor = GridBagConstraints.CENTER; gbc.fill =
+     * GridBagConstraints.NONE; gbc.gridheight = 1; gbc.insets = new Insets( 22,
+     * 12, 11, 17 ); contentPane.add( new JLabel( ICON ), gbc ); gbc.anchor =
+     * GridBagConstraints.WEST; gbc.fill = GridBagConstraints.BOTH;
+     * gbc.gridheight = 1; gbc.gridwidth = 2; gbc.gridx = 1; gbc.weightx = 1.0;
+     * gbc.insets = new Insets( 12, 0, 0, 11 ); contentPane.add(
+     * this.errorMessage, gbc ); gbc.fill = GridBagConstraints.NONE; gbc.gridx =
+     * 1; gbc.gridy = 1; gbc.gridwidth = 1; gbc.weightx = 1.0; gbc.weighty =
+     * 0.0; gbc.anchor = GridBagConstraints.EAST; gbc.insets = new Insets( 12,
+     * 0, 11, 5 ); contentPane.add( okButton, gbc ); gbc.gridx = 3; gbc.weightx
+     * = 0.0; gbc.insets = new Insets( 12, 0, 11, 11 ); contentPane.add(
+     * this.detailButton, gbc ); gbc.fill = GridBagConstraints.BOTH;
+     * gbc.gridwidth = 4; gbc.gridx = 0; gbc.gridy = 2; gbc.weighty = 1.0;
+     * gbc.insets = new Insets( 6, 11, 11, 11 ); contentPane.add(
+     * this.detailsScrollPane, gbc ); / * Here i'm going to add invisible empty
+     * container to the bottom of the content pane to fix minimal width of the
+     * dialog. It's quite a hack, but i have not found anything better. /
+     * Dimension spPredictedSize = this.detailsScrollPane.getPreferredSize();
+     * Dimension newPanelSize = new Dimension( spPredictedSize.width + 15, 0 );
+     * Container widthHolder = new Container(); widthHolder.setMinimumSize(
+     * newPanelSize ); widthHolder.setPreferredSize( newPanelSize );
+     * widthHolder.setMaximumSize( newPanelSize ); gbc.gridy = 3; gbc.insets =
+     * new Insets( 0, 11, 11, 0 ); contentPane.add( widthHolder, gbc );
+     */
+  }
+
+  /**
+   * Set the details section of the error dialog. If the details are either null
+   * or an empty string, then hide the details button and hide the detail scroll
+   * pane. Otherwise, just set the details section.
+   * 
+   * @param aDetails
+   *          Details to be shown in the detail section of the dialog. This can
+   *          be null if you do not want to display the details section of the
+   *          dialog.
+   */
+  private void setDetails( final String aDetails )
+  {
+    setDetailsVisible( false );
+    if ( ( aDetails == null ) || aDetails.trim().isEmpty() )
+    {
+      this.detailButton.setVisible( false );
+    }
+    else
+    {
+      this.details.setText( aDetails );
+      this.detailButton.setVisible( true );
+    }
+  }
+
+  /**
+   * Set the error message for the dialog box
+   * 
+   * @param aErrorMessage
+   *          Message for the error dialog
+   */
+  private void setErrorMessage( final String aErrorMessage )
+  {
+    this.errorMessage.setText( aErrorMessage );
   }
 }
