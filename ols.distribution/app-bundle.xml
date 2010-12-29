@@ -14,7 +14,12 @@
 		<mkdir dir="${project.targetapp}" />
 
 		<condition property="isMac">
-			<os family="mac" />
+			<and>
+			    <os family="mac" />
+				<not>
+					<isset property="package.osx.skip" />
+				</not>
+			</and>
 		</condition>
 	</target>
 

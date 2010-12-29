@@ -204,23 +204,6 @@ public class JErrorDialog extends JDialog implements Closeable
   }
 
   /**
-   * Listener for Ok button click events
-   */
-  final class OkClickEvent implements ActionListener
-  {
-    /*
-     * (non-Javadoc)
-     * @see
-     * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    public void actionPerformed( final ActionEvent e )
-    {
-      // close the window
-      setVisible( false );
-    }
-  }
-
-  /**
    * @author jawi
    */
   static final class SwingUncaughtExceptionHandler implements UncaughtExceptionHandler
@@ -236,7 +219,9 @@ public class JErrorDialog extends JDialog implements Closeable
     {
       final Window owner = SwingComponentUtils.getCurrentWindow();
       final IncidentInfo incident = new IncidentInfo( "Uncaught exception...", //
-          "Something unexpected happened!", "", aException );
+          "<html>Something unexpected happened!<br><br>"
+              + "Click on \"more details\" for more information about the possible cause.<br><br>"
+              + "If this problem persists, please report it as bug.</html>", "", aException );
       JErrorDialog.showDialog( owner, incident );
     }
   }
@@ -476,6 +461,18 @@ public class JErrorDialog extends JDialog implements Closeable
     final Container contentPane = getContentPane();
     contentPane.setLayout( new GridBagLayout() );
 
+    this.errorMessage = new JLabel();
+
+    this.details = new JTextArea( 8, 50 );
+    this.details.setFont( Font.decode( Font.MONOSPACED ) );
+    this.details.setEditable( false );
+
+    this.detailsScrollPane = new JScrollPane( this.details );
+    this.detailsScrollPane.setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
+
+    JButton okButton = StandardActionFactory.createCloseButton();
+    this.detailButton = new JButton( DETAILS_EXPAND_TEXT );
+
     final GridBagConstraints gbc = new GridBagConstraints();
     gbc.anchor = GridBagConstraints.CENTER;
     gbc.fill = GridBagConstraints.NONE;
@@ -483,7 +480,6 @@ public class JErrorDialog extends JDialog implements Closeable
     gbc.insets = new Insets( 22, 12, 11, 17 );
     contentPane.add( new JLabel( icon ), gbc );
 
-    this.errorMessage = new JLabel();
     gbc.anchor = GridBagConstraints.WEST;
     gbc.fill = GridBagConstraints.BOTH;
     gbc.gridheight = 1;
@@ -501,19 +497,13 @@ public class JErrorDialog extends JDialog implements Closeable
     gbc.weighty = 0.0;
     gbc.anchor = GridBagConstraints.EAST;
     gbc.insets = new Insets( 12, 0, 11, 5 );
-    JButton okButton = StandardActionFactory.createCloseButton();
     contentPane.add( okButton, gbc );
 
-    this.detailButton = new JButton( DETAILS_EXPAND_TEXT );
     gbc.gridx = 3;
     gbc.weightx = 0.0;
     gbc.insets = new Insets( 12, 0, 11, 11 );
     contentPane.add( this.detailButton, gbc );
 
-    this.details = new JTextArea( 7, 60 );
-    this.detailsScrollPane = new JScrollPane( this.details );
-    this.detailsScrollPane.setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
-    this.details.setEditable( false );
     gbc.fill = GridBagConstraints.BOTH;
     gbc.gridwidth = 4;
     gbc.gridx = 0;
@@ -540,10 +530,9 @@ public class JErrorDialog extends JDialog implements Closeable
     int buttonLength = this.detailButton.getPreferredSize().width;
     int buttonHeight = this.detailButton.getPreferredSize().height;
     Dimension buttonSize = new Dimension( buttonLength, buttonHeight );
+
     okButton.setPreferredSize( buttonSize );
     this.detailButton.setPreferredSize( buttonSize );
-    // set the event handling
-    okButton.addActionListener( new OkClickEvent() );
 
     this.detailButton.addActionListener( new ActionListener()
     {
