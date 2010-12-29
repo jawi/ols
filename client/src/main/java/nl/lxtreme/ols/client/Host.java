@@ -136,6 +136,16 @@ public final class Host implements ApplicationCallback
   }
 
   /**
+   * Returns the email address to use for reporting incidents.
+   * 
+   * @return a report incident email address, never <code>null</code>.
+   */
+  public final String getReportIncidentAddress()
+  {
+    return ( String )this.clientProperties.get( "client.incidentAddress" );
+  }
+
+  /**
    * Returns this client's version.
    * 
    * @return a version String, never <code>null</code>.
@@ -202,6 +212,7 @@ public final class Host implements ApplicationCallback
       ThreadViolationDetectionRepaintManager.install();
     }
 
+    // Cause exceptions to be shown in a more user-friendly way...
     JErrorDialog.installSwingExceptionHandler();
 
     this.controller = new ClientController( this.context, this );
@@ -255,6 +266,10 @@ public final class Host implements ApplicationCallback
     final String processor = this.context.getProperty( Constants.FRAMEWORK_PROCESSOR );
 
     LOG.log( Level.INFO, "  running on {0}, {1} ({2}).", new String[] { osName, osVersion, processor } );
+
+    // Use the defined email address...
+    JErrorDialog.setReportIncidentAddress( getReportIncidentAddress() );
+    JErrorDialog.setHostInformation( osName, osVersion, processor );
   }
 
   /**
