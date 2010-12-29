@@ -82,13 +82,13 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
 								</artifactItem>
-                                <artifactItem>
-                                    <groupId>org.apache.felix</groupId>
-                                    <artifactId>org.apache.felix.fileinstall</artifactId>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.basedir}/target/plugins</outputDirectory>
-                                </artifactItem>
+								<artifactItem>
+									<groupId>org.apache.felix</groupId>
+									<artifactId>org.apache.felix.fileinstall</artifactId>
+									<type>jar</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
+								</artifactItem>
 
 								<artifactItem>
 									<groupId>nl.lxtreme.ols</groupId>
@@ -233,17 +233,18 @@
 					<execution>
 						<id>bundle</id>
 						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
 						<configuration>
 							<target>
 								<ant antfile="${basedir}/app-bundle.xml" inheritAll="false">
 									<property name="project.version" value="${ols.version}" />
+									<property name="package.osx.skip" value="${package.osx.skip}" />
 									<target name="all" />
 								</ant>
 							</target>
 						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
 					</execution>
 				</executions>
 			</plugin>
