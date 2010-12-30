@@ -21,8 +21,6 @@
 package nl.lxtreme.ols.client;
 
 
-import java.lang.reflect.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.*;
@@ -53,25 +51,22 @@ public class Activator implements BundleActivator
     // so this also means the #invokeLater call done below...
     HostUtils.initOSSpecifics( Host.getShortName(), this.host );
 
-    final Runnable initTask = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        Activator.this.host.initialize();
-      }
-    };
-
     final Runnable startTask = new Runnable()
     {
+      private final Host host = Activator.this.host;
+
       @Override
       public void run()
       {
-        Activator.this.host.start();
+        // First let the host initialize itself...
+        this.host.initialize();
+
+        // Then start it...
+        this.host.start();
       }
     };
-    invokeAndWait( initTask );
-
+    // Make sure we're running on the EDT to ensure the Swing threading model is
+    // correctly defined...
     SwingUtilities.invokeLater( startTask );
   }
 
@@ -81,48 +76,19 @@ public class Activator implements BundleActivator
   @Override
   public void stop( final BundleContext aContext ) throws Exception
   {
-    final Runnable stopTask = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        Activator.this.host.stop();
-      }
-    };
-    invokeAndWait( stopTask );
-
     final Runnable shutdownTask = new Runnable()
     {
+      private final Host host = Activator.this.host;
+
       @Override
       public void run()
       {
-        Activator.this.host.shutdown();
+        this.host.shutdown();
+
+        this.host.stop();
       }
     };
-    invokeAndWait( shutdownTask );
-  }
-
-  /**
-   * Invokes the given {@link Runnable}'s run method and waits until its
-   * execution is finished.
-   * 
-   * @param aRunnable
-   *          the runnable to execute, cannot be <code>null</code>.
-   * @throws InterruptedException
-   *           in case the thread was interrupted;
-   * @throws InvocationTargetException
-   *           in case the given runnable caused an exception.
-   */
-  private void invokeAndWait( final Runnable aRunnable ) throws InterruptedException, InvocationTargetException
-  {
-    if ( SwingUtilities.isEventDispatchThread() )
-    {
-      aRunnable.run();
-    }
-    else
-    {
-      SwingUtilities.invokeAndWait( aRunnable );
-    }
+    SwingUtilities.invokeLater( shutdownTask );
   }
 }
 

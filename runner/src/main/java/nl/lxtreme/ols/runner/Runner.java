@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.runner;
 
 
+import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.util.*;
@@ -47,27 +48,35 @@ public final class Runner
   /**
    * Creates a new Runner instance.
    */
-  public Runner()
+  public Runner() throws Exception
   {
     final Map<String, Object> config = new HashMap<String, Object>();
 
-    final String pluginDir = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
+    final String pluginDir = getPluginDir();
+    final String binaryDir = getBinaryDir();
+
+    final String autoStartBundles = "file:".concat( binaryDir ).concat( "/org.apache.felix.fileinstall-3.1.2.jar" );
 
     this.hostActivator = new HostActivator();
     final List<BundleActivator> activators = new ArrayList<BundleActivator>();
     activators.add( this.hostActivator );
 
     config.put( FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, activators );
-    config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.eawt,javax.media.jai" );
+    config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.eawt,javax.swing,javax.media.jai" );
     config.put( AutoProcessor.AUTO_DEPLOY_ACTION_PROPERY, "install,start" );
-    config.put( AutoProcessor.AUTO_DEPLOY_DIR_PROPERY, pluginDir );
-    if ( Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) ) )
+    config.put( AutoProcessor.AUTO_START_PROP, autoStartBundles );
+    if ( isDebugMode() )
     {
       config.put( Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT );
     }
     config.put( Constants.FRAMEWORK_BEGINNING_STARTLEVEL, "4" );
     config.put( FelixConstants.BUNDLE_STARTLEVEL_PROP, "1" );
     config.put( FelixConstants.LOG_LEVEL_PROP, "1" );
+
+    System.setProperty( "felix.fileinstall.noInitialDelay", Boolean.toString( true ) );
+    System.setProperty( "felix.fileinstall.dir", pluginDir );
+    System.setProperty( "felix.fileinstall.start.level", "2" );
+    System.setProperty( "felix.fileinstall.log.level", "1" );
 
     try
     {
@@ -107,6 +116,27 @@ public final class Runner
   }
 
   /**
+   * @return
+   * @throws IOException
+   */
+  private static String getBinaryDir() throws IOException
+  {
+    final File pluginDir = new File( getPluginDir() );
+    return new File( pluginDir.getParentFile(), "bin" ).getCanonicalPath();
+  }
+
+  /**
+   * @return
+   * @throws IOException
+   */
+  private static String getPluginDir() throws IOException
+  {
+    final String pluginProperty = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
+    final File pluginDir = new File( pluginProperty );
+    return pluginDir.getCanonicalPath();
+  }
+
+  /**
    * Waits until the OSGi framework is shut down.
    * 
    * @throws InterruptedException
@@ -114,6 +144,20 @@ public final class Runner
   public void waitForStop() throws InterruptedException
   {
     this.framework.waitForStop( 0 );
+  }
+
+  /**
+   * Returns whether or not debugging is enabled.
+   * <p>
+   * Useful for additional checks, logging and so on.
+   * </p>
+   * 
+   * @return <code>true</code> if debug mode is enabled, <code>false</code>
+   *         otherwise.
+   */
+  private boolean isDebugMode()
+  {
+    return Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
   }
 }
 

@@ -39,6 +39,13 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.basedir}/target/bin</outputDirectory>
 								</artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>org.apache.felix.fileinstall</artifactId>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.basedir}/target/bin</outputDirectory>
+                                </artifactItem>
 								<artifactItem>
 									<groupId>com.jgoodies</groupId>
 									<artifactId>looks</artifactId>
@@ -64,27 +71,6 @@
 								<artifactItem>
 									<groupId>org.apache.felix</groupId>
 									<artifactId>org.apache.felix.prefs</artifactId>
-									<type>jar</type>
-									<overWrite>true</overWrite>
-									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
-								</artifactItem>
-								<artifactItem>
-									<groupId>org.apache.felix</groupId>
-									<artifactId>org.apache.felix.shell</artifactId>
-									<type>jar</type>
-									<overWrite>true</overWrite>
-									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
-								</artifactItem>
-								<artifactItem>
-									<groupId>org.apache.felix</groupId>
-									<artifactId>org.apache.felix.shell.remote</artifactId>
-									<type>jar</type>
-									<overWrite>true</overWrite>
-									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
-								</artifactItem>
-								<artifactItem>
-									<groupId>org.apache.felix</groupId>
-									<artifactId>org.apache.felix.fileinstall</artifactId>
 									<type>jar</type>
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>

@@ -236,6 +236,8 @@ public final class Host implements ApplicationCallback
    */
   public void shutdown()
   {
+    JErrorDialog.uninstallSwingExceptionHandler();
+
     LOG.log( Level.FINE, "{0} shutting down ...", SHORT_NAME );
   }
 
@@ -278,6 +280,14 @@ public final class Host implements ApplicationCallback
    */
   public void stop()
   {
+    // First stop all OSGi related services; then close down all Swing windows.
+    // This way, we ensure that the cleanup occurs in an orderly fashion and
+    // does not cause "weird" exceptions upon shutdown...
+    this.menuTracker.close();
+    this.toolTracker.close();
+    this.deviceControllerTracker.close();
+    this.preferencesServiceTracker.close();
+
     MainFrame mainFrame = this.controller.getMainFrame();
     if ( mainFrame != null )
     {
@@ -294,11 +304,6 @@ public final class Host implements ApplicationCallback
 
       this.controller.setMainFrame( mainFrame = null );
     }
-
-    this.menuTracker.close();
-    this.toolTracker.close();
-    this.deviceControllerTracker.close();
-    this.preferencesServiceTracker.close();
 
     LOG.log( Level.INFO, "{0} stopped ...", SHORT_NAME );
   }
