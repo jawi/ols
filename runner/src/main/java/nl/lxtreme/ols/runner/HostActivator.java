@@ -25,7 +25,7 @@ import org.osgi.framework.*;
 
 
 /**
- * 
+ * Provide a "stub" bundle activator for the runner.
  */
 public class HostActivator implements BundleActivator
 {
@@ -66,7 +66,6 @@ public class HostActivator implements BundleActivator
   {
     this.context = null;
   }
-
 }
 
 /* EOF */

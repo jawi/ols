@@ -209,21 +209,11 @@
 				<artifactId>org.apache.felix.log</artifactId>
 				<version>1.0.0</version>
 			</dependency>
-			<dependency>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>org.apache.felix.shell</artifactId>
-				<version>1.4.2</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>org.apache.felix.shell.remote</artifactId>
-				<version>1.1.2</version>
-			</dependency>
-            <dependency>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.fileinstall</artifactId>
-                <version>3.1.2</version>
-            </dependency>
+      <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.fileinstall</artifactId>
+        <version>3.1.2</version>
+      </dependency>
 
 			<dependency>
 				<groupId>com.jgoodies</groupId>

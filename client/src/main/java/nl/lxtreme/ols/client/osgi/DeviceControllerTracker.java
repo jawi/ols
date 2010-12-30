@@ -62,13 +62,16 @@ public class DeviceControllerTracker extends ServiceTracker
   {
     final DeviceController devCtrl = ( DeviceController )this.context.getService( aReference );
 
-    SwingUtilities.invokeLater( new Runnable()
+    final Runnable addDeviceTask = new Runnable()
     {
+      private final ClientController controller = DeviceControllerTracker.this.controller;
+
       public void run()
       {
-        DeviceControllerTracker.this.controller.addDevice( devCtrl );
+        this.controller.addDevice( devCtrl );
       }
-    } );
+    };
+    SwingUtilities.invokeLater( addDeviceTask );
 
     return devCtrl;
   }
@@ -82,12 +85,15 @@ public class DeviceControllerTracker extends ServiceTracker
   {
     final DeviceController devCtrl = ( DeviceController )aService;
 
-    SwingUtilities.invokeLater( new Runnable()
+    final Runnable removeDeviceTask = new Runnable()
     {
+      private final ClientController controller = DeviceControllerTracker.this.controller;
+
       public void run()
       {
-        DeviceControllerTracker.this.controller.removeDevice( devCtrl );
+        this.controller.removeDevice( devCtrl );
       }
-    } );
+    };
+    SwingUtilities.invokeLater( removeDeviceTask );
   }
 }

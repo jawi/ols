@@ -504,6 +504,14 @@ public class JErrorDialog extends JDialog implements Closeable
   }
 
   /**
+   * Uninstalls the default exception handler.
+   */
+  public static void uninstallSwingExceptionHandler()
+  {
+    Thread.setDefaultUncaughtExceptionHandler( null );
+  }
+
+  /**
    * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
    */
   @Override
