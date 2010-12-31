@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project
+ * OpenBench LogicSniffer / SUMP project 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,36 +18,41 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.measure;
-
-
-import nl.lxtreme.ols.api.tools.*;
-
-import org.osgi.framework.*;
+package nl.lxtreme.ols.util.osgi;
 
 
 /**
- *
+ * Provides a manifest header scanner that uses an exact keyword to match the
+ * manifest header keys of interest.
  */
-public class Activator implements BundleActivator
+public class KeywordManifestScanner extends AbstractManifestScanner
 {
+  // VARIABLES
+
+  private final String keyword;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new KeywordManifestScanner instance.
+   * 
+   * @param aKeyword
+   *          the keyword to match the manifest header's key to, cannot be
+   *          <code>null</code>.
+   */
+  public KeywordManifestScanner( final String aKeyword )
+  {
+    this.keyword = aKeyword;
+  }
+
   // METHODS
 
   /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+   * @see nl.lxtreme.ols.util.osgi.AbstractManifestScanner#matches(java.lang.String)
    */
   @Override
-  public void start( final BundleContext aContext ) throws Exception
+  protected boolean matches( final String aKey )
   {
-    aContext.registerService( Tool.class.getName(), new MeasurementTool(), null );
-  }
-
-  /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-   */
-  @Override
-  public void stop( final BundleContext aContext ) throws Exception
-  {
-    // NO-op
+    return this.keyword.equals( aKey );
   }
 }

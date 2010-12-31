@@ -9,7 +9,7 @@
 	<groupId>nl.lxtreme.ols.tool</groupId>
 	<artifactId>1wire</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>OLS 1-Wire Analysis Tool</name>
 	<dependencies>
 		<dependency>
@@ -41,7 +41,8 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Activator>nl.lxtreme.ols.tool.onewire.Activator</Bundle-Activator>
+                        <OLS-Tool>1.0</OLS-Tool>
+                        <OLS-ToolClass>nl.lxtreme.ols.tool.onewire.OneWireAnalyser</OLS-ToolClass>
 					</instructions>
 				</configuration>
 			</plugin>

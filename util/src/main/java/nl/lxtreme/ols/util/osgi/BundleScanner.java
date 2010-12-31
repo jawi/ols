@@ -18,37 +18,25 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package org.sump.device.logicsniffer;
+package nl.lxtreme.ols.util.osgi;
 
-
-import java.util.*;
-
-import nl.lxtreme.ols.api.devices.*;
 
 import org.osgi.framework.*;
 
 
 /**
- * 
+ * Denotes a scanner for bundle manifests.
  */
-public class Activator implements BundleActivator
+public interface BundleScanner
 {
   // METHODS
 
   /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+   * Scans the given bundle for anything interesting in its manifest header.
+   * 
+   * @param aBundle
+   *          the bundle to scan, never <code>null</code>.
+   * @return an array of manifest headers, never <code>null</code>.
    */
-  public void start( final BundleContext aContext )
-  {
-    aContext.registerService( DeviceController.class.getName(), new LogicSnifferDeviceController(),
-        new Hashtable<Object, Object>() );
-  }
-
-  /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-   */
-  public void stop( final BundleContext aContext ) throws Exception
-  {
-  }
-
+  ManifestHeader[] scan( final Bundle aBundle );
 }

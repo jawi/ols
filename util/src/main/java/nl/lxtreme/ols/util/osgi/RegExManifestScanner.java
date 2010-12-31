@@ -18,36 +18,44 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.export.svg;
+package nl.lxtreme.ols.util.osgi;
 
 
-import nl.lxtreme.ols.api.data.export.*;
-
-import org.osgi.framework.*;
+import java.util.regex.*;
 
 
 /**
- * @author jawi
+ * Provides a manifest header scanner that uses regular expressions to match the
+ * manifest header keys of interest.
  */
-public class Activator implements BundleActivator
+public class RegExManifestScanner extends AbstractManifestScanner
 {
+  // VARIABLES
+
+  private final Pattern pattern;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new RegExManifestScanner instance.
+   * 
+   * @param aRegEx
+   *          the regular expression for the manifest header key to match,
+   *          cannot be <code>null</code>.
+   */
+  public RegExManifestScanner( final String aRegEx )
+  {
+    this.pattern = Pattern.compile( aRegEx );
+  }
+
   // METHODS
 
   /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+   * @see nl.lxtreme.ols.util.osgi.AbstractManifestScanner#matches(java.lang.String)
    */
   @Override
-  public void start( final BundleContext aContext ) throws Exception
+  protected boolean matches( final String aKey )
   {
-    aContext.registerService( Exporter.class.getName(), new SVGExporter(), null );
-  }
-
-  /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-   */
-  @Override
-  public void stop( final BundleContext aContext ) throws Exception
-  {
-    // NO-op
+    return this.pattern.matcher( aKey ).matches();
   }
 }

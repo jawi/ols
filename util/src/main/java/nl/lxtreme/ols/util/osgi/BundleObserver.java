@@ -18,38 +18,39 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.spi;
+package nl.lxtreme.ols.util.osgi;
 
-
-import nl.lxtreme.ols.api.tools.*;
 
 import org.osgi.framework.*;
 
 
 /**
- * 
+ * Provides a bundle observer that is called for each bundle that matches
+ * certain criteria.
  */
-public class Activator implements BundleActivator
+public interface BundleObserver
 {
   // METHODS
 
   /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+   * Called when a bundle is activated (started) that matches certain criteria
+   * in its bundle manifest.
+   * 
+   * @param aBundle
+   *          the bundle that is matched, never <code>null</code>;
+   * @param aEntries
+   *          the matched manifest entries, never <code>null</code>.
    */
-  @Override
-  public void start( final BundleContext aContext ) throws Exception
-  {
-    aContext.registerService( Tool.class.getName(), new SPIAnalyser(), null );
-  }
+  void added( final Bundle aBundle, final ManifestHeader... aEntries );
 
   /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+   * Called when a bundle is deactivated (stopped) that matches certain criteria
+   * in its bundle manifest.
+   * 
+   * @param aBundle
+   *          the bundle that is matched, never <code>null</code>;
+   * @param aEntries
+   *          the matched manifest entries, never <code>null</code>.
    */
-  @Override
-  public void stop( final BundleContext aContext ) throws Exception
-  {
-  }
-
+  void removed( final Bundle aBundle, final ManifestHeader... aEntries );
 }
-
-/* EOF */

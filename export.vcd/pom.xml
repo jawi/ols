@@ -9,7 +9,7 @@
 	<groupId>nl.lxtreme.ols.export</groupId>
 	<artifactId>vcd</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>Value Change Dump Exporter</name>
 	<dependencies>
 		<dependency>
@@ -37,7 +37,8 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Activator>nl.lxtreme.ols.export.vcd.Activator</Bundle-Activator>
+						<OLS-Exporter>1.0</OLS-Exporter>
+						<OLS-ExporterClass>nl.lxtreme.ols.export.vcd.ValueChangeDumpExporter</OLS-ExporterClass>
 						<Import-Package>nl.lxtreme.ols.api.data.export,*</Import-Package>
 					</instructions>
 				</configuration>

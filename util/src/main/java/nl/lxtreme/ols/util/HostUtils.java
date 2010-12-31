@@ -222,8 +222,6 @@ public final class HostUtils
   public static final void initOSSpecifics( final String aApplicationName,
       final ApplicationCallback aApplicationCallback )
   {
-    initLogging();
-
     if ( isMacOSX() )
     {
       // Moves the main menu bar to the screen menu bar location...
@@ -373,27 +371,6 @@ public final class HostUtils
     }
 
     return new File( directory, filename );
-  }
-
-  /**
-   * 
-   */
-  private static void initLogging()
-  {
-    System.setProperty( "java.util.logging.config.file", "logging.properties" );
-
-    try
-    {
-      LogManager.getLogManager().readConfiguration();
-    }
-    catch ( IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        Logger.getAnonymousLogger().log( Level.FINE, "Problems to load the logging configuration file!", exception );
-      }
-    }
   }
 
   /**

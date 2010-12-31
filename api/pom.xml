@@ -9,7 +9,7 @@
 	<groupId>nl.lxtreme.ols</groupId>
 	<artifactId>api</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.2-SNAPSHOT</version>
+	<version>1.0.3-SNAPSHOT</version>
 	<name>OLS Framework API</name>
 	<dependencies>
 		<dependency>
