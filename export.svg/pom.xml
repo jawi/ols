@@ -79,7 +79,8 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Activator>nl.lxtreme.ols.export.svg.Activator</Bundle-Activator>
+						<OLS-Exporter>1.0</OLS-Exporter>
+						<OLS-ExporterClass>nl.lxtreme.ols.export.svg.SVGExporter</OLS-ExporterClass>
 						<Import-Package>nl.lxtreme.ols.api.data.export,sun.io;resolution:=optional,*</Import-Package>
 						<Export-Package></Export-Package>
 						<Embed-Transitive>true</Embed-Transitive>

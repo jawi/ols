@@ -62,15 +62,7 @@ public class ToolTracker extends ServiceTracker
   public Object addingService( final ServiceReference aReference )
   {
     final Tool tool = ( Tool )this.context.getService( aReference );
-
-    SwingUtilities.invokeLater( new Runnable()
-    {
-      public void run()
-      {
-        ToolTracker.this.controller.addTool( tool );
-      }
-    } );
-
+    registerTool( tool );
     return tool;
   }
 
@@ -82,16 +74,36 @@ public class ToolTracker extends ServiceTracker
   public void removedService( final ServiceReference aReference, final Object aService )
   {
     final Tool tool = ( Tool )aService;
+    unregisterTool( tool );
+  }
 
+  /**
+   * @param aTool
+   */
+  private void registerTool( final Tool aTool )
+  {
     SwingUtilities.invokeLater( new Runnable()
     {
       public void run()
       {
-        ToolTracker.this.controller.removeTool( tool );
+        ToolTracker.this.controller.addTool( aTool );
       }
     } );
   }
 
+  /**
+   * @param aTool
+   */
+  private void unregisterTool( final Tool aTool )
+  {
+    SwingUtilities.invokeLater( new Runnable()
+    {
+      public void run()
+      {
+        ToolTracker.this.controller.removeTool( aTool );
+      }
+    } );
+  }
 }
 
 /* EOF */

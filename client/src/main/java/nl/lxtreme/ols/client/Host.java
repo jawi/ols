@@ -138,7 +138,7 @@ public final class Host implements ApplicationCallback
   /**
    * Returns the email address to use for reporting incidents.
    * 
-   * @return a report incident email address, never <code>null</code>.
+   * @return a report incident email address, can be <code>null</code>.
    */
   public final String getReportIncidentAddress()
   {
@@ -204,7 +204,7 @@ public final class Host implements ApplicationCallback
    */
   public void initialize()
   {
-    if ( Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) ) )
+    if ( isDebugMode() )
     {
       // Install a custom repaint manager that detects whether Swing components
       // are created outside the EDT; if so, it will yield a stack trace to the
@@ -309,11 +309,17 @@ public final class Host implements ApplicationCallback
   }
 
   /**
-   * @return the controller
+   * Returns whether or not debugging is enabled.
+   * <p>
+   * Useful for additional checks, logging and so on.
+   * </p>
+   * 
+   * @return <code>true</code> if debug mode is enabled, <code>false</code>
+   *         otherwise.
    */
-  final ClientController getController()
+  private boolean isDebugMode()
   {
-    return this.controller;
+    return Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
   }
 }
 

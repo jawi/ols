@@ -9,7 +9,7 @@
 	<groupId>nl.lxtreme.ols.tool</groupId>
 	<artifactId>i2c</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.1</version>
 	<name>OLS I2C Analysis Tool</name>
 	<dependencies>
 		<dependency>
@@ -41,7 +41,8 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Activator>nl.lxtreme.ols.tool.i2c.Activator</Bundle-Activator>
+                        <OLS-Tool>1.0</OLS-Tool>
+                        <OLS-ToolClass>nl.lxtreme.ols.tool.i2c.I2CAnalyser</OLS-ToolClass>
 					</instructions>
 				</configuration>
 			</plugin>

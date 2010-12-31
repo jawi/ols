@@ -9,7 +9,7 @@
   <groupId>nl.lxtreme.ols</groupId>
   <artifactId>logging</artifactId>
   <packaging>bundle</packaging>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>OLS Logging support</name>
   <dependencies>
     <dependency>
