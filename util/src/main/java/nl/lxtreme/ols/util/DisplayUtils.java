@@ -21,9 +21,6 @@
 package nl.lxtreme.ols.util;
 
 
-import java.util.logging.*;
-
-
 /**
  * 
  */
@@ -35,8 +32,6 @@ public final class DisplayUtils
    * Constant used to determine whether we should show "0.000 s".
    */
   private static final double ZERO_TIME_THRESHOLD = 1.0e-16;
-
-  private static final Logger LOG = Logger.getLogger( DisplayUtils.class.getName() );
 
   // CONSTRUCTORS
 
@@ -73,11 +68,6 @@ public final class DisplayUtils
       }
     }
     i = Math.max( i, 0 );
-
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( "aFreq = " + aFrequency + " -> " + unitVals[i] + " " + unitStrs[i] );
-    }
 
     return String.format( "%.3f %s", aFrequency / unitVals[i], unitStrs[i] );
   }
@@ -123,11 +113,6 @@ public final class DisplayUtils
       }
     }
     i = Math.max( i, 0 );
-
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( "aFreq = " + aSize + " -> " + unitVals[i] + " " + unitStrs[i] );
-    }
 
     return String.format( "%d%s", ( int )( aSize / unitVals[i] ), unitStrs[i] );
   }
@@ -186,11 +171,6 @@ public final class DisplayUtils
         }
       }
       i = Math.min( i, unitVals.length - 1 );
-    }
-
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( "aTime = " + aTime + " -> " + unitVals[i] + " " + unitStrs[i] );
     }
 
     final String format = "%." + aPrecision + "f" + aSeparator + "%s";

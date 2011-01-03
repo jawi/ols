@@ -21,11 +21,9 @@
 package nl.lxtreme.ols.client;
 
 
-import java.io.*;
-import java.net.*;
-import java.util.logging.*;
-
 import javax.swing.*;
+
+import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.osgi.*;
 
@@ -55,6 +53,8 @@ public class Activator implements BundleActivator
 
   private BundleWatcher bundleWatcher = null;
   private Host host = null;
+
+  private LogReaderTracker logReaderTracker;
 
   // METHODS
 
@@ -108,10 +108,9 @@ public class Activator implements BundleActivator
       }
     };
 
-    // Initialize logging...
-    initLogging( aContext );
-
     this.host = new Host( aContext );
+
+    this.logReaderTracker = new LogReaderTracker( aContext );
 
     // This has to be done *before* any other Swing related code is executed
     // so this also means the #invokeLater call done below...
@@ -127,6 +126,7 @@ public class Activator implements BundleActivator
     // correctly defined...
     SwingUtilities.invokeLater( startTask );
 
+    this.logReaderTracker.open();
     // Start watching all bundles for extenders...
     this.bundleWatcher.start();
   }
@@ -158,6 +158,12 @@ public class Activator implements BundleActivator
     }
 
     SwingUtilities.invokeLater( shutdownTask );
+
+    if ( this.logReaderTracker != null )
+    {
+      this.logReaderTracker.close();
+      this.logReaderTracker = null;
+    }
   }
 
   /**
@@ -168,30 +174,6 @@ public class Activator implements BundleActivator
   final Host getHost()
   {
     return this.host;
-  }
-
-  /**
-   * @param aContext
-   * @throws IOException
-   */
-  private void initLogging( final BundleContext aContext ) throws IOException
-  {
-    final URL loggingFile = aContext.getBundle().getEntry( "/logging.properties" );
-
-    InputStream is = null;
-    try
-    {
-      is = loggingFile.openStream();
-      LogManager.getLogManager().readConfiguration( is );
-    }
-    finally
-    {
-      if ( is != null )
-      {
-        is.close();
-      }
-      is = null;
-    }
   }
 }
 

@@ -338,9 +338,6 @@ public class DiagramUI extends ComponentUI
 
   // CONSTANTS
 
-  private static final boolean DEBUG = Boolean.parseBoolean( System
-      .getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
-
   private static final Logger LOG = Logger.getLogger( DiagramUI.class.getName() );
 
   private static final int PADDING_Y = 2;
@@ -464,6 +461,7 @@ public class DiagramUI extends ComponentUI
     }
 
     final long start = System.currentTimeMillis();
+    LOG.log( Level.FINE, "Start diagram rendering = {0}ms.", start );
     final Graphics2D canvas = ( Graphics2D )aCanvas;
 
     // obtain portion of graphics that needs to be drawn
@@ -484,11 +482,8 @@ public class DiagramUI extends ComponentUI
     // draw cursors if enabled...
     paintCursors( canvas, diagram, clipArea, firstRow, lastRow );
 
-    if ( DEBUG )
-    {
-      final long end = System.currentTimeMillis();
-      LOG.log( Level.INFO, "Render time = {0}ms.", ( end - start ) );
-    }
+    final long end = System.currentTimeMillis();
+    LOG.log( Level.FINE, "Render time = {0}ms.", ( end - start ) );
   }
 
   /**

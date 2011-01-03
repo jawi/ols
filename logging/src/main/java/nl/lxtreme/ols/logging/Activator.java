@@ -21,84 +21,26 @@
 package nl.lxtreme.ols.logging;
 
 
-import java.util.logging.*;
-
 import org.osgi.framework.*;
-import org.osgi.service.log.*;
-import org.osgi.util.tracker.*;
 
 
 /**
  * 
  */
-public class Activator implements BundleActivator, ServiceTrackerCustomizer
+public class Activator implements BundleActivator
 {
-  // CONSTANTS
-
-  private static final Logger LOG = Logger.getLogger( Activator.class.getName() );
-
   // VARIABLES
 
-  private BundleContext context;
   private JdkLogForwarder jdkLogForwarder;
-  private ServiceTracker logReaderTracker;
 
   // METHODS
-
-  /**
-   * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
-   */
-  @Override
-  public Object addingService( final ServiceReference aServiceRef )
-  {
-    LogReaderService reader = null;
-    if ( aServiceRef != null )
-    {
-      reader = ( LogReaderService )this.context.getService( aServiceRef );
-      if ( LOG.isLoggable( Level.INFO ) )
-      {
-        LOG.info( "Installing OSGi log reader..." );
-      }
-      reader.addLogListener( new SimpleLogReader() );
-    }
-    return reader;
-  }
-
-  /**
-   * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
-   *      java.lang.Object)
-   */
-  @Override
-  public void modifiedService( final ServiceReference aServiceRef, final Object aService )
-  {
-    // NO-op
-  }
-
-  /**
-   * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
-   *      java.lang.Object)
-   */
-  @Override
-  public void removedService( final ServiceReference aServiceRef, final Object aService )
-  {
-    // NO-op
-  }
 
   /**
    * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
    */
   public void start( final BundleContext aContext ) throws Exception
   {
-    this.context = aContext;
-    this.logReaderTracker = new ServiceTracker( aContext, LogReaderService.class.getName(), this );
-    this.logReaderTracker.open();
-
-    // The JDK Log Forwarder takes a default log handler as an argument which
-    // will be used in the case the OSGi Log Service was not available.
-    // The handle argument is optional.
-    final ConsoleHandler defaultHandler = new ConsoleHandler();
-
-    this.jdkLogForwarder = new JdkLogForwarder( aContext, defaultHandler, "nl.lxtreme.ols", "org.sump.device" );
+    this.jdkLogForwarder = new JdkLogForwarder( aContext );
     this.jdkLogForwarder.start();
   }
 
@@ -107,8 +49,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
    */
   public void stop( final BundleContext aContext ) throws Exception
   {
-    this.logReaderTracker.close();
     this.jdkLogForwarder.stop();
-    this.context = null;
+    this.jdkLogForwarder = null;
   }
 }
