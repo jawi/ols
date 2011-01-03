@@ -21,12 +21,14 @@
 package nl.lxtreme.ols.logging;
 
 
+import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
 import org.osgi.framework.*;
 import org.osgi.service.log.*;
+import org.osgi.util.tracker.*;
 
 
 /**
@@ -43,71 +45,126 @@ public final class JdkLogForwarder
   // INNER TYPES
 
   /**
-   * 
+   * Provides a bundle tracker to updating the loggers of all additionally
+   * loaded classes.
    */
-  protected static class DummyLogHandler extends Handler
+  final class BundleTracker implements BundleListener
   {
-    /**
-     * @see java.util.logging.Handler#close()
-     */
-    @Override
-    public void close() throws SecurityException
-    {
-    }
+    // METHODS
 
     /**
-     * @see java.util.logging.Handler#flush()
+     * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
     @Override
-    public void flush()
+    public void bundleChanged( final BundleEvent aEvent )
     {
-    }
-
-    /**
-     * @see java.util.logging.Handler#publish(java.util.logging.LogRecord)
-     */
-    @Override
-    public void publish( final LogRecord aRecord )
-    {
+      if ( aEvent.getType() == BundleEvent.INSTALLED )
+      {
+        updateLogHandler( getCurrentHandler() );
+      }
     }
   }
 
   /**
    * 
    */
-  protected final class LogServiceServiceListener implements ServiceListener
+  final class LogServiceServiceTracker extends ServiceTracker
   {
+    // CONSTRUCTORS
+
     /**
-     * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
+     * Creates a new LogServiceServiceTracker instance.
+     * 
+     * @param aBundleContext
+     *          the current bundle context to use.
+     */
+    public LogServiceServiceTracker( final BundleContext aBundleContext )
+    {
+      super( aBundleContext, LOG_SERVICE_CLASS_NAME, null /* aServiceCustomizer */);
+    }
+
+    /**
+     * @see org.osgi.util.tracker.ServiceTracker#addingService(org.osgi.framework.ServiceReference)
      */
     @Override
-    public void serviceChanged( final ServiceEvent serviceEvent )
+    public Object addingService( final ServiceReference aReference )
     {
-      updateLogHandler();
+      final LogService logService = ( LogService )super.addingService( aReference );
+      setCurrentHandler( logService );
+      return logService;
+    }
+
+    /**
+     * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference,
+     *      java.lang.Object)
+     */
+    @Override
+    public void removedService( final ServiceReference aReference, final Object aService )
+    {
+      setCurrentHandler( null );
+      super.removedService( aReference, aService );
     }
   }
 
   /**
-   * 
+   * Provides a JDK-Handler that delegates all log records to the OSGi logging
+   * service.
    */
-  protected static class OsgiLogDelegateHandler extends Handler
+  static class OsgiLogDelegateHandler extends Handler
   {
+    // VARIABLES
+
     private final LogService logService;
 
+    // CONSTRUCTORS
+
     /**
+     * Creates a new OsgiLogDelegateHandler instance.
+     * 
      * @param aLogService
+     *          the OSGi log service to use, cannot be <code>null</code>.
      */
     public OsgiLogDelegateHandler( final LogService aLogService )
     {
       this.logService = aLogService;
     }
 
+    // METHODS
+
+    /**
+     * Converts a JDK log level to an accompanying level from the OSGi
+     * LogService.
+     * 
+     * @param aLevel
+     *          the JDK log level to convert.
+     * @return a OSGi LogService level corresponding to the given level.
+     */
+    private static final int toOSGiLogLevel( final Level aLevel )
+    {
+      final boolean all = ( aLevel == Level.ALL );
+      if ( all || ( aLevel == Level.SEVERE ) )
+      {
+        return LogService.LOG_ERROR;
+      }
+      else if ( all || ( aLevel == Level.WARNING ) )
+      {
+        return LogService.LOG_WARNING;
+      }
+      else if ( all || ( aLevel == Level.INFO ) || ( aLevel == Level.CONFIG ) )
+      {
+        return LogService.LOG_INFO;
+      }
+
+      return LogService.LOG_DEBUG;
+    }
+
     /**
      * @see java.util.logging.Handler#close()
      */
     @Override
     public void close() throws SecurityException
     {
+      // NO-op
     }
 
     /**
@@ -116,6 +173,7 @@ public final class JdkLogForwarder
     @Override
     public void flush()
     {
+      // NO-op
     }
 
     /**
@@ -131,44 +189,11 @@ public final class JdkLogForwarder
 
       if ( aRecord.getThrown() != null )
       {
-        getLogService().log( toOSGiLogLevel( aRecord.getLevel() ), getMessage( aRecord ), aRecord.getThrown() );
+        this.logService.log( toOSGiLogLevel( aRecord.getLevel() ), getMessage( aRecord ), aRecord.getThrown() );
       }
       else
       {
-        getLogService().log( toOSGiLogLevel( aRecord.getLevel() ), getMessage( aRecord ) );
-      }
-    }
-
-    /**
-     * @return
-     */
-    protected LogService getLogService()
-    {
-      return this.logService;
-    }
-
-    /**
-     * @param aLevel
-     * @return
-     */
-    protected int toOSGiLogLevel( final Level aLevel )
-    {
-      final boolean all = aLevel == Level.ALL;
-      if ( all || ( aLevel == Level.SEVERE ) )
-      {
-        return LogService.LOG_ERROR;
-      }
-      else if ( all || ( aLevel == Level.WARNING ) )
-      {
-        return LogService.LOG_WARNING;
-      }
-      else if ( all || ( aLevel == Level.INFO ) || ( aLevel == Level.CONFIG ) )
-      {
-        return LogService.LOG_INFO;
-      }
-      else
-      {
-        return LogService.LOG_DEBUG;
+        this.logService.log( toOSGiLogLevel( aRecord.getLevel() ), getMessage( aRecord ) );
       }
     }
 
@@ -191,207 +216,165 @@ public final class JdkLogForwarder
 
   // CONSTANTS
 
-  protected static final String LOG_SERVICE_CLASS_NAME = LogService.class.getName();
+  private static final String LOG_SERVICE_CLASS_NAME = LogService.class.getName();
 
   // VARIABLES
 
   private final BundleContext bundleContext;
-  private final List<String> loggerNames;
   private final Handler defaultHandler;
-  private final ServiceListener logServiceServiceListener = new LogServiceServiceListener();
-  private ServiceReference lastUsedLogServiceRef;
-  private Handler lastUsedHandler;
+  private final ServiceTracker logServiceTracker;
+  private final BundleListener bundleListener;
+
+  private Handler logHandler;
 
   // CONSTRUCTORS
 
   /**
    * @param aBundleContext
    * @param aLoggerNames
-   * @param aDefaultHandler
    */
-  public JdkLogForwarder( final BundleContext aBundleContext, final Handler aDefaultHandler,
-      final String... aLoggerNames )
+  public JdkLogForwarder( final BundleContext aBundleContext )
   {
-    this.bundleContext = aBundleContext;
-    this.loggerNames = new Vector<String>( Arrays.asList( aLoggerNames ) );
-    this.defaultHandler = aDefaultHandler != null ? aDefaultHandler : new DummyLogHandler();
+    this( aBundleContext, null );
   }
 
   /**
    * @param aBundleContext
    * @param aLoggerNames
+   * @param aDefaultHandler
    */
-  public JdkLogForwarder( final BundleContext aBundleContext, final String... aLoggerNames )
+  public JdkLogForwarder( final BundleContext aBundleContext, final Handler aDefaultHandler )
   {
-    this( aBundleContext, null, aLoggerNames );
+    this.bundleContext = aBundleContext;
+    this.defaultHandler = ( aDefaultHandler != null ) ? aDefaultHandler : new ConsoleHandler();
+
+    this.logServiceTracker = new LogServiceServiceTracker( aBundleContext );
+    this.bundleListener = new BundleTracker();
+
+    this.logHandler = this.defaultHandler;
   }
 
   // METHODS
 
-  public void addLoggerName( final String aName )
-  {
-    this.loggerNames.add( aName );
-  }
-
   /**
-   * 
+   * Starts the JDK-logging forwarding service.
    */
-  public void start()
+  public void start() throws IOException
   {
-    for ( final String loggerName : getLoggerNames() )
-    {
-      final Logger logger = Logger.getLogger( loggerName );
-      logger.setUseParentHandlers( false );
-    }
-    updateLogHandler();
-    addLogServiceListener();
+    this.bundleContext.addBundleListener( this.bundleListener );
+
+    this.logServiceTracker.open();
   }
 
   /**
-   * 
+   * Stops the JDK-logging forwarding service.
    */
   public void stop()
   {
-    final BundleContext context = getBundleContext();
+    this.bundleContext.removeBundleListener( this.bundleListener );
 
-    context.removeServiceListener( getLogServiceServiceListener() );
-    for ( final String loggerName : getLoggerNames() )
-    {
-      Logger.getLogger( loggerName ).removeHandler( getLastUsedHandler() );
-    }
-    if ( getLastUsedLogServiceRef() != null )
-    {
-      context.ungetService( getLastUsedLogServiceRef() );
-    }
+    this.logServiceTracker.close();
+
+    final LogManager logManager = LogManager.getLogManager();
+    logManager.reset();
   }
 
   /**
+   * Returns the current log handler.
    * 
+   * @return a log handler, never <code>null</code>.
    */
-  protected void addLogServiceListener()
+  final Handler getCurrentHandler()
   {
-    try
-    {
-      final BundleContext context = getBundleContext();
-      final String filter = String.format( "(%s=%s)", Constants.OBJECTCLASS, LOG_SERVICE_CLASS_NAME );
-      context.addServiceListener( getLogServiceServiceListener(), filter );
-    }
-    catch ( final InvalidSyntaxException ex )
-    {
-      // / This exception should not occur in the first place
-      throw new RuntimeException( ex.getMessage() );
-    }
+    return this.logHandler;
   }
 
   /**
-   * @return
-   */
-  protected BundleContext getBundleContext()
-  {
-    return this.bundleContext;
-  }
-
-  /**
-   * @return
-   */
-  protected Handler getDefaultHandler()
-  {
-    return this.defaultHandler;
-  }
-
-  /**
-   * @return
-   */
-  protected Handler getLastUsedHandler()
-  {
-    return this.lastUsedHandler;
-  }
-
-  /**
-   * @return
-   */
-  protected ServiceReference getLastUsedLogServiceRef()
-  {
-    return this.lastUsedLogServiceRef;
-  }
-
-  /**
-   * @return
-   */
-  protected List<String> getLoggerNames()
-  {
-    return this.loggerNames;
-  }
-
-  /**
-   * @return
-   */
-  protected ServiceListener getLogServiceServiceListener()
-  {
-    return this.logServiceServiceListener;
-  }
-
-  /**
-   * @param aLastUsedHandler
-   */
-  protected void setLastUsedHandler( final Handler aLastUsedHandler )
-  {
-    this.lastUsedHandler = aLastUsedHandler;
-  }
-
-  /**
-   * @param aLastUsedLogServiceRef
-   */
-  protected void setLastUsedLogServiceRef( final ServiceReference aLastUsedLogServiceRef )
-  {
-    this.lastUsedLogServiceRef = aLastUsedLogServiceRef;
-  }
-
-  /**
+   * Wraps the given log service as the current log handler. When
+   * <code>null</code> is given, the default handler will be set.
    * 
+   * @param aLogService
+   *          the log service to set, can be <code>null</code>.
    */
-  protected void updateLogHandler()
+  final void setCurrentHandler( final LogService aLogService )
   {
-    final ServiceReference logServiceRef = getBundleContext().getServiceReference( LOG_SERVICE_CLASS_NAME );
-    Handler logHandler = null;
-    if ( ( logServiceRef != null ) && ( logServiceRef == getLastUsedLogServiceRef() ) )
+    if ( aLogService != null )
     {
-      return;
-    }
-    if ( logServiceRef != null )
-    {
-      logHandler = new OsgiLogDelegateHandler( ( LogService )getBundleContext().getService( logServiceRef ) );
+      this.logHandler = new OsgiLogDelegateHandler( aLogService );
+      updateLogHandler( this.logHandler );
     }
     else
     {
-      logHandler = getDefaultHandler();
+      this.logHandler = this.defaultHandler;
+      updateLogHandler( this.logHandler );
     }
-
-    updateLoggerHandlers( logHandler );
-
-    if ( getLastUsedLogServiceRef() != null )
-    {
-      getBundleContext().ungetService( getLastUsedLogServiceRef() );
-    }
-
-    setLastUsedLogServiceRef( logServiceRef );
-    setLastUsedHandler( logHandler );
   }
 
   /**
-   * @param aLogHandler
+   * Updates all current loggers to use the given log service...
    */
-  private void updateLoggerHandlers( final Handler aLogHandler )
+  final void updateLogHandler( final Handler aHandler )
   {
-    final Handler lastUsedHandler = getLastUsedHandler();
-    for ( final String loggerName : getLoggerNames() )
+    final LogManager logManager = LogManager.getLogManager();
+
+    final Enumeration<String> loggerNames = logManager.getLoggerNames();
+    while ( loggerNames.hasMoreElements() )
     {
-      final Logger logger = Logger.getLogger( loggerName );
-      logger.removeHandler( lastUsedHandler );
-      logger.addHandler( aLogHandler );
+      final String loggerName = loggerNames.nextElement();
+
+      final Logger logger = logManager.getLogger( loggerName );
+      if ( logger != null )
+      {
+        if ( isNonJdkLogger( logger ) )
+        {
+          logger.setUseParentHandlers( false );
+          logger.setLevel( Level.ALL );
+        }
+        if ( !logger.getUseParentHandlers() )
+        {
+          replaceHandler( logger, aHandler );
+        }
+      }
     }
+    // Replace the global root logger with our own handler...
+    replaceHandler( Logger.getLogger( "" ), aHandler );
   }
 
-}
+  /**
+   * @param aLoggerName
+   * @return
+   */
+  private boolean isNonJdkLogger( final Logger aLogger )
+  {
+    final String loggerName = aLogger.getName();
+    return !( loggerName.startsWith( "java." ) //
+        || loggerName.startsWith( "sun." ) //
+        || loggerName.startsWith( "javax." ) //
+        || loggerName.equals( Logger.GLOBAL_LOGGER_NAME ) //
+    || loggerName.isEmpty() );
+  }
 
-/* EOF */
+  /**
+   * Replaces for the given logger <em>all</em> handlers and replaces them with
+   * the handler given.
+   * 
+   * @param aLogger
+   *          the logger to replace the handlers for;
+   * @param aHandler
+   *          the handler to use for the given logger.
+   */
+  private void replaceHandler( final Logger aLogger, final Handler aHandler )
+  {
+    final Handler[] handlers = aLogger.getHandlers();
+    if ( ( handlers.length == 1 ) && handlers[0].equals( aHandler ) )
+    {
+      return;
+    }
+    for ( Handler handler : handlers )
+    {
+      aLogger.removeHandler( handler );
+      handler.close();
+    }
+    aLogger.addHandler( aHandler );
+  }
+}
