@@ -118,6 +118,11 @@
 				<version>1.0.0</version>
 			</dependency>
 			<dependency>
+				<groupId>nl.lxtreme.ols.service</groupId>
+				<artifactId>io</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+			<dependency>
 				<groupId>nl.lxtreme.ols</groupId>
 				<artifactId>util</artifactId>
 				<version>1.0.5-SNAPSHOT</version>
@@ -234,6 +239,7 @@
 		<module>rxtx</module>
 		<module>util</module>
 		<module>logging</module>
+		<module>service.io</module>
 		<module>client</module>
 		<module>runner</module>
 		<module>device.test</module>
