@@ -12,7 +12,7 @@ set CLASSPATH=%BASEDIR%\bin\*
 set MEMSETTINGS=-Xmx1024m
 
 rem For now, use the "console enabled" java for Windows...
-java %MEMSETTINGS% -Dnl.lxtreme.ols.bundle.dir="%PLUGINDIR%" -cp "%CLASSPATH%" nl.lxtreme.ols.runner.Runner
+java %MEMSETTINGS% -Dnl.lxtreme.ols.bundle.dir="%PLUGINDIR%" -DPlastic.defaultTheme=SkyBluer -cp "%CLASSPATH%" nl.lxtreme.ols.runner.Runner
 goto end
 
 :noJVM
