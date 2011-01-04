@@ -120,7 +120,7 @@ public class LogicSnifferDevice implements Device
 
   // VARIABLES
 
-  private CommConnection connection;
+  private StreamConnection connection;
   private InputStream inputStream;
   private OutputStream outputStream;
   private volatile boolean running;
@@ -210,17 +210,20 @@ public class LogicSnifferDevice implements Device
       LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { aPortName, aPortRate } );
 
       this.connection = getConnection( aPortName, aPortRate );
+      if ( this.connection != null )
+      {
+        this.outputStream = this.connection.openOutputStream();
+        this.inputStream = this.connection.openInputStream();
 
-      this.outputStream = this.connection.openOutputStream();
-      this.inputStream = this.connection.openInputStream();
+        return this.attached = true;
+      }
 
-      return this.attached = true;
     }
     catch ( final Exception exception )
     {
       LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
           new Object[] { aPortName, exception.getMessage() } );
-      LOG.log( Level.WARNING, "Detailed stack trace:", exception );
+      LOG.log( Level.FINE, "Detailed stack trace:", exception );
 
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
@@ -1225,30 +1228,40 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
+   * Queries for a connector service to craft a connection for a given serial
+   * port with a given baudrate.
+   * 
    * @param aPortName
+   *          the name of the port to create a connection for;
    * @param aPortRate
-   * @return
+   *          the baudrate of the connection.
+   * @return a connection capable of communicating with the requested serial
+   *         device, never <code>null</code>.
    * @throws IOException
+   *           in case of I/O problems, or in case the requested port is
+   *           <em>not</em> a serial port.
    */
-  private CommConnection getConnection( final String aPortName, final int aPortRate ) throws IOException
+  private StreamConnection getConnection( final String aPortName, final int aPortRate ) throws IOException
   {
     if ( this.bundleContext != null )
     {
       final ServiceReference serviceRef = this.bundleContext.getServiceReference( ConnectorService.class.getName() );
       if ( serviceRef != null )
       {
-        final String portUri = String.format(
-            "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff", aPortName, aPortRate );
-
         final ConnectorService connectorService = ( ConnectorService )this.bundleContext.getService( serviceRef );
 
-        final Connection result = connectorService.open( portUri, ConnectorService.READ_WRITE );
-        if ( !( result instanceof CommConnection ) )
+        try
         {
-          throw new IOException( "Not a serial port!" );
-        }
+          final String portUri = String.format(
+              "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff", aPortName, aPortRate );
 
-        return ( CommConnection )result;
+          return ( StreamConnection )connectorService.open( portUri, ConnectorService.READ_WRITE, false /* timeouts */);
+        }
+        finally
+        {
+          // Release the connector service, to avoid possible resource leaks...
+          this.bundleContext.ungetService( serviceRef );
+        }
       }
     }
 
