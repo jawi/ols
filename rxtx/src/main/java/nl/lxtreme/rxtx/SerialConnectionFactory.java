@@ -71,7 +71,9 @@ public class SerialConnectionFactory implements ConnectionFactory
       final RXTXPort port = CommPortUtils.getSerialPort( options.getPortName() );
       port.setSerialPortParams( options.getBaudrate(), options.getDatabits(), options.getStopbits(),
           options.getParityMode() );
+
       port.setFlowControlMode( options.getFlowControl() );
+      port.setLowLatency();
 
       port.enableReceiveTimeout( 250 );
 
