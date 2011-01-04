@@ -73,7 +73,6 @@ public class SerialConnectionFactory implements ConnectionFactory
           options.getParityMode() );
 
       port.setFlowControlMode( options.getFlowControl() );
-      port.setLowLatency();
 
       port.enableReceiveTimeout( 250 );
 
