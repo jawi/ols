@@ -28,11 +28,15 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
+import javax.microedition.io.*;
+
+import org.osgi.framework.*;
+import org.osgi.service.io.*;
+
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.rxtx.*;
 
 
 /**
@@ -116,7 +120,7 @@ public class LogicSnifferDevice implements Device
 
   // VARIABLES
 
-  private SerialPort port;
+  private CommConnection connection;
   private InputStream inputStream;
   private OutputStream outputStream;
   private volatile boolean running;
@@ -136,6 +140,8 @@ public class LogicSnifferDevice implements Device
   private int size;
   private double ratio;
   private boolean attached;
+
+  private BundleContext bundleContext;
 
   // CONSTRUCTORS
 
@@ -164,8 +170,6 @@ public class LogicSnifferDevice implements Device
     setEnabledChannels( -1 ); // enable all channels
 
     stop();
-
-    this.port = null;
   }
 
   // METHODS
@@ -205,14 +209,10 @@ public class LogicSnifferDevice implements Device
 
       LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { aPortName, aPortRate } );
 
-      this.port = CommPortUtils.getSerialPort( aPortName );
+      this.connection = getConnection( aPortName, aPortRate );
 
-      this.port.setSerialPortParams( aPortRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE );
-      this.port.setFlowControlMode( SerialPort.FLOWCONTROL_XONXOFF_IN );
-      this.port.enableReceiveTimeout( 250 );
-
-      this.outputStream = this.port.getOutputStream();
-      this.inputStream = this.port.getInputStream();
+      this.outputStream = this.connection.openOutputStream();
+      this.inputStream = this.connection.openInputStream();
 
       return this.attached = true;
     }
@@ -238,7 +238,7 @@ public class LogicSnifferDevice implements Device
    */
   public void detach()
   {
-    if ( this.port != null )
+    if ( this.connection != null )
     {
       try
       {
@@ -268,10 +268,20 @@ public class LogicSnifferDevice implements Device
       }
       finally
       {
-        this.port.close();
-        this.port = null;
+        try
+        {
+          this.connection.close();
+        }
+        catch ( IOException exception )
+        {
+          LOG.log( Level.FINE, "Closing connection failed!", exception );
+        }
+        finally
+        {
+          this.connection = null;
 
-        this.attached = false;
+          this.attached = false;
+        }
       }
     }
   }
@@ -1109,6 +1119,17 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
+   * Sets the OSGi bundle context.
+   * 
+   * @param aBundleContext
+   *          the bundle context to set, cannot be <code>null</code>.
+   */
+  final void setBundleContext( final BundleContext aBundleContext )
+  {
+    this.bundleContext = aBundleContext;
+  }
+
+  /**
    * Blocks the current thread until a given number of bytes is available to be
    * read from the serial port. Optionally, a timeout can be given to limit the
    * blocking of the thread.
@@ -1201,6 +1222,37 @@ public class LogicSnifferDevice implements Device
         this.inputStream.read();
       }
     }
+  }
+
+  /**
+   * @param aPortName
+   * @param aPortRate
+   * @return
+   * @throws IOException
+   */
+  private CommConnection getConnection( final String aPortName, final int aPortRate ) throws IOException
+  {
+    if ( this.bundleContext != null )
+    {
+      final ServiceReference serviceRef = this.bundleContext.getServiceReference( ConnectorService.class.getName() );
+      if ( serviceRef != null )
+      {
+        final String portUri = String.format(
+            "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff", aPortName, aPortRate );
+
+        final ConnectorService connectorService = ( ConnectorService )this.bundleContext.getService( serviceRef );
+
+        final Connection result = connectorService.open( portUri, ConnectorService.READ_WRITE );
+        if ( !( result instanceof CommConnection ) )
+        {
+          throw new IOException( "Not a serial port!" );
+        }
+
+        return ( CommConnection )result;
+      }
+    }
+
+    return null;
   }
 
   /**

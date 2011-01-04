@@ -68,7 +68,7 @@ public class SerialConnectionFactory implements ConnectionFactory
 
     try
     {
-      final RXTXPort port = new RXTXPort( options.getPortName() );
+      final RXTXPort port = CommPortUtils.getSerialPort( options.getPortName() );
       port.setSerialPortParams( options.getBaudrate(), options.getDatabits(), options.getStopbits(),
           options.getParityMode() );
       port.setFlowControlMode( options.getFlowControl() );
@@ -84,6 +84,10 @@ public class SerialConnectionFactory implements ConnectionFactory
     catch ( UnsupportedCommOperationException exception )
     {
       throw new IOException( "Unsupported operation!", exception );
+    }
+    catch ( NoSuchPortException exception )
+    {
+      throw new IOException( "No such port!" );
     }
   }
 }

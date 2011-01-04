@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.util.osgi;
 
 
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -35,7 +36,7 @@ public class BundleServiceObserver extends AbstractBundleObserver
 {
   // CONSTANTS
 
-  private final Logger LOG = Logger.getLogger( BundleServiceObserver.class.getName() );
+  private static final Logger LOG = Logger.getLogger( BundleServiceObserver.class.getName() );
 
   // VARIABLES
 
@@ -90,20 +91,23 @@ public class BundleServiceObserver extends AbstractBundleObserver
           bundleContext
               .registerService( this.serviceClassName, newService, getServiceProperties( aBundle, newService ) );
 
-          this.LOG.log( Level.INFO, "New service (" + className + ") registered ..." );
+          // Give the just registered service to do additional tasks as well...
+          initializeService( newService, bundleContext );
+
+          LOG.log( Level.INFO, "New service (" + className + ") registered ..." );
         }
         catch ( ClassNotFoundException exception )
         {
-          this.LOG.log( Level.WARNING, "Service class not found: " + className + "! Is it included in the bundle?" );
+          LOG.log( Level.WARNING, "Service class not found: " + className + "! Is it included in the bundle?" );
         }
         catch ( InstantiationException exception )
         {
-          this.LOG.log( Level.WARNING, "Service (" + className
+          LOG.log( Level.WARNING, "Service (" + className
               + ") could not be instantiated! Is should be a public concrete class (not abstract, nor an interface!)" );
         }
         catch ( IllegalAccessException exception )
         {
-          this.LOG.log( Level.WARNING, "Service (" + className
+          LOG.log( Level.WARNING, "Service (" + className
               + ") could not be instantiated! Is the class public and does it have a public default constructor?" );
         }
       }
@@ -122,7 +126,7 @@ public class BundleServiceObserver extends AbstractBundleObserver
     {
       for ( String className : values )
       {
-        this.LOG.log( Level.INFO, "Service (" + className + ") unregistered ..." );
+        LOG.log( Level.INFO, "Service (" + className + ") unregistered ..." );
       }
     }
   }
@@ -140,5 +144,49 @@ public class BundleServiceObserver extends AbstractBundleObserver
   protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService )
   {
     return null;
+  }
+
+  /**
+   * Initializes the given service by searching for an
+   * <tt>init(BundleContext)</tt> method, and if found, invokes this method. If
+   * the init method is not found, this method will not do anything.
+   * 
+   * @param aService
+   *          the service to initialize;
+   * @param aBundleContext
+   *          the bundle context to initialize the service with.
+   */
+  protected final void initializeService( final Object aService, final BundleContext aBundleContext )
+  {
+    final Class<?> serviceClazz = aService.getClass();
+    try
+    {
+      final Method initMethod = serviceClazz.getDeclaredMethod( "init", BundleContext.class );
+      if ( initMethod != null )
+      {
+        initMethod.setAccessible( true );
+        initMethod.invoke( aService, aBundleContext );
+      }
+    }
+    catch ( SecurityException exception )
+    {
+      LOG.log( Level.INFO, "Security exception while initializing service...", exception );
+    }
+    catch ( NoSuchMethodException exception )
+    {
+      LOG.log( Level.FINE, "No init-method found; not initializing service!" );
+    }
+    catch ( IllegalArgumentException exception )
+    {
+      LOG.log( Level.FINE, "Illegal argument found; not initializing service!", exception );
+    }
+    catch ( IllegalAccessException exception )
+    {
+      LOG.log( Level.FINE, "Illegal access to init-method; not initializing service!", exception );
+    }
+    catch ( InvocationTargetException exception )
+    {
+      LOG.log( Level.WARNING, "Service initialization failed!", exception.getCause() );
+    }
   }
 }

@@ -34,6 +34,8 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.util.*;
 
+import org.osgi.framework.*;
+
 
 /**
  * GUI Component that allows the user to control the device and start captures.
@@ -316,5 +318,19 @@ public class LogicSnifferDeviceController implements DeviceController
 
     this.setup = this.configDialog.showDialog();
     return this.setup;
+  }
+
+  /**
+   * Called when this class is registered as OSGi service.
+   * 
+   * @param aBundleContext
+   *          the bundle context to use, cannot be <code>null</code>.
+   * @throws Exception
+   *           in case of errors.
+   */
+  protected void init( final BundleContext aBundleContext ) throws Exception
+  {
+    // Keep for later use...
+    this.device.setBundleContext( aBundleContext );
   }
 }

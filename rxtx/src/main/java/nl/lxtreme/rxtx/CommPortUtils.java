@@ -64,7 +64,7 @@ public final class CommPortUtils
    * @throws NoSuchPortException
    *           if there is no such port with the given name.
    */
-  public static SerialPort getSerialPort( final String aPortName ) throws PortInUseException, NoSuchPortException
+  public static RXTXPort getSerialPort( final String aPortName ) throws PortInUseException, NoSuchPortException
   {
     if ( aPortName == null )
     {
@@ -78,8 +78,13 @@ public final class CommPortUtils
       initialized = true;
     }
 
-    SerialPort port = null;
+    RXTXPort port = null;
     int tries = 3;
+
+    if ( !specialFileExists( aPortName ) )
+    {
+      throw new NoSuchPortException();
+    }
 
     do
     {
@@ -196,10 +201,56 @@ public final class CommPortUtils
    * @throws NoSuchPortException
    * @throws PortInUseException
    */
-  private static SerialPort internalGetSerialPort( final String aPortName ) throws NoSuchPortException,
+  private static RXTXPort internalGetSerialPort( final String aPortName ) throws NoSuchPortException,
       PortInUseException
   {
     final CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier( aPortName );
-    return ( SerialPort )portId.open( "RxTx client library", 1000 );
+    return ( RXTXPort )portId.open( "RxTx client library", 1000 );
   }
+
+  /**
+   * @param aPath
+   * @return
+   */
+  private static boolean specialFileExists( final String aPath )
+  {
+    boolean exists;
+
+    final String osName = System.getProperty( "os.name" ).toLowerCase();
+    if ( osName.indexOf( "win" ) >= 0 )
+    {
+      // Windows; use //./comX syntax to denote it's a special file...
+      String path = aPath.replaceAll( "\\\\", "/" );
+      path = !path.startsWith( "//./" ) ? "//./" + aPath : aPath;
+
+      try
+      {
+        final FileInputStream fis = new FileInputStream( path );
+        try
+        {
+          fis.close();
+        }
+        catch ( IOException exception )
+        {
+          // Ok; we're not allowed to do this, but it is an indicator the file
+          // exists...
+        }
+
+        exists = true;
+      }
+      catch ( FileNotFoundException exception )
+      {
+        // Ok; special file doesn't appear to be existing...
+        exists = false;
+      }
+    }
+    else
+    {
+      final File file = new File( aPath );
+      exists = file.exists();
+    }
+
+    return exists;
+  }
+
 }
