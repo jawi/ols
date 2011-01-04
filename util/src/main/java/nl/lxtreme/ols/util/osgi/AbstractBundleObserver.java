@@ -166,4 +166,5 @@ public abstract class AbstractBundleObserver implements BundleObserver
     }
     return false;
   }
+
 }
