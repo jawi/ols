@@ -21,18 +21,9 @@ public class SerialPortOptionsTest
    * @throws Exception
    */
   @Test( expected = IllegalArgumentException.class )
-  public void testParseEmptyBaudrateFail() throws Exception
-  {
-    new SerialPortOptions( "serial:com1;;options=8n1" );
-  }
-
-  /**
-   * @throws Exception
-   */
-  @Test( expected = IllegalArgumentException.class )
   public void testParseEmptyPortNameFail() throws Exception
   {
-    new SerialPortOptions( "serial:;baudrate=1" );
+    new SerialPortOptions( "comm:;baudrate=1" );
   }
 
   /**
@@ -41,7 +32,7 @@ public class SerialPortOptionsTest
   @Test( expected = IllegalArgumentException.class )
   public void testParseEmptyUriFail() throws Exception
   {
-    new SerialPortOptions( "serial:" );
+    new SerialPortOptions( "comm:" );
   }
 
   /**
@@ -50,7 +41,8 @@ public class SerialPortOptionsTest
   @Test
   public void testParseFullUriOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions( "serial:COM13;baudrate=2400;options=5O1.5" );
+    final SerialPortOptions options = new SerialPortOptions(
+        "comm:COM13;baudrate=2400;bitsperchar=5;stopbits=1.5;parity=odd" );
 
     assertNotNull( options );
     assertEquals( "COM13", options.getPortName() );
@@ -66,7 +58,7 @@ public class SerialPortOptionsTest
   @Test
   public void testParsePortNameAndOptionsOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions( "serial:/dev/tty.usb0;options=5m2" );
+    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0;bitsperchar=5;stopbits=2;parity=mark" );
 
     assertNotNull( options );
     assertEquals( "/dev/tty.usb0", options.getPortName() );
@@ -82,7 +74,7 @@ public class SerialPortOptionsTest
   @Test
   public void testParsePortNameBaudrateOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions( "serial:/dev/tty.usb0;baudrate=115200" );
+    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0;baudrate=115200" );
 
     assertNotNull( options );
     assertEquals( "/dev/tty.usb0", options.getPortName() );
@@ -98,7 +90,7 @@ public class SerialPortOptionsTest
   @Test
   public void testParsePortNameOnlyOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions( "serial:/dev/tty.usb0" );
+    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0" );
 
     assertNotNull( options );
     assertEquals( "/dev/tty.usb0", options.getPortName() );

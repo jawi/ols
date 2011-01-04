@@ -33,9 +33,10 @@ final class SerialPortOptions
 {
   // CONSTANTS
 
-  private static final Pattern PATTERN = Pattern.compile(
-      "serial:([^;]+)(?:;baudrate=(\\d+))?(?:;options=([5-8])\\s*([mnoe])\\s*(1|1.5|2)\\s*(off|xon_xoff|rts_cts)?)?",
-      Pattern.CASE_INSENSITIVE );
+  private static final Pattern SCHEMA_REGEX = Pattern.compile( "^comm:([^;]+)(?:;([^\r\n]+))*$" );
+  private static final Pattern OPTION_REGEX = Pattern
+      .compile( "(baudrate|bitsperchar|stopbits|parity|blocking|autocts|autorts|flowcontrol)=([.\\w]+)",
+          Pattern.CASE_INSENSITIVE );
 
   // VARIABLES
 
@@ -45,6 +46,7 @@ final class SerialPortOptions
   private int stopbits;
   private int parityMode;
   private int flowControl;
+  private boolean blocking;
 
   // CONSTRUCTORS
 
@@ -71,7 +73,11 @@ final class SerialPortOptions
     this.parityMode = SerialPort.PARITY_NONE;
     this.stopbits = SerialPort.STOPBITS_1;
 
+    // Default to NO flow control...
     this.flowControl = SerialPort.FLOWCONTROL_NONE;
+
+    // Default to blocking I/O...
+    this.blocking = true;
 
     parseURI( aURI );
   }
@@ -124,6 +130,14 @@ final class SerialPortOptions
   public int getStopbits()
   {
     return this.stopbits;
+  }
+
+  /**
+   * @return
+   */
+  public boolean isBlocking()
+  {
+    return this.blocking;
   }
 
   /**
@@ -196,23 +210,23 @@ final class SerialPortOptions
    */
   private int parseParityMode( final String aStr )
   {
-    if ( "e".equalsIgnoreCase( aStr ) )
+    if ( "even".equalsIgnoreCase( aStr ) )
     {
       return SerialPort.PARITY_EVEN;
     }
-    else if ( "m".equalsIgnoreCase( aStr ) )
+    else if ( "mark".equalsIgnoreCase( aStr ) )
     {
       return SerialPort.PARITY_MARK;
     }
-    else if ( "n".equalsIgnoreCase( aStr ) )
+    else if ( "none".equalsIgnoreCase( aStr ) )
     {
       return SerialPort.PARITY_NONE;
     }
-    else if ( "o".equalsIgnoreCase( aStr ) )
+    else if ( "odd".equalsIgnoreCase( aStr ) )
     {
       return SerialPort.PARITY_ODD;
     }
-    else if ( "s".equalsIgnoreCase( aStr ) )
+    else if ( "space".equalsIgnoreCase( aStr ) )
     {
       return SerialPort.PARITY_SPACE;
     }
@@ -248,55 +262,90 @@ final class SerialPortOptions
    */
   private void parseURI( final String aURI ) throws IllegalArgumentException
   {
-    final Matcher matcher = PATTERN.matcher( aURI );
-    if ( !matcher.matches() )
+    if ( aURI == null )
     {
-      throw new IllegalArgumentException( "Illegal URI!" );
+      throw new IllegalArgumentException( "URI cannot be null!" );
     }
 
-    this.portName = matcher.group( 1 );
-
-    if ( matcher.groupCount() > 1 )
+    final Matcher schemaMatcher = SCHEMA_REGEX.matcher( aURI );
+    if ( !schemaMatcher.matches() )
     {
-      final int parsedBaudrate = parseBaudrate( matcher.group( 2 ) );
-      if ( parsedBaudrate >= 0 )
-      {
-        this.baudrate = parsedBaudrate;
-      }
+      throw new IllegalArgumentException( "URI invalid!" );
+    }
 
-      if ( matcher.groupCount() > 2 )
+    // port name is mandatory...
+    this.portName = schemaMatcher.group( 1 );
+
+    String options = schemaMatcher.group( 2 );
+    if ( options == null )
+    {
+      options = "";
+    }
+
+    final Matcher optionMatcher = OPTION_REGEX.matcher( options );
+    while ( optionMatcher.find() )
+    {
+      final String key = optionMatcher.group( 1 ).toLowerCase();
+      final String value = optionMatcher.group( 2 );
+
+      if ( "baudrate".equals( key ) )
       {
-        final int parsedDataBits = parseDataBits( matcher.group( 3 ) );
-        if ( parsedDataBits >= 0 )
+        int parsedValue = parseBaudrate( value );
+        if ( parsedValue >= 0 )
         {
-          this.databits = parsedDataBits;
+          this.baudrate = parsedValue;
         }
-
-        if ( matcher.groupCount() > 3 )
+      }
+      else if ( "bitsperchar".equals( key ) )
+      {
+        int parsedValue = parseDataBits( value );
+        if ( parsedValue >= 0 )
         {
-          final int parsedParityMode = parseParityMode( matcher.group( 4 ) );
-          if ( parsedParityMode >= 0 )
-          {
-            this.parityMode = parsedParityMode;
-          }
-
-          if ( matcher.groupCount() > 4 )
-          {
-            final int parsedStopBits = parseStopBits( matcher.group( 5 ) );
-            if ( parsedStopBits >= 0 )
-            {
-              this.stopbits = parsedStopBits;
-            }
-
-            if ( matcher.groupCount() > 5 )
-            {
-              final int parsedFlowControl = parseFlowControl( matcher.group( 6 ) );
-              if ( parsedFlowControl >= 0 )
-              {
-                this.flowControl = parsedFlowControl;
-              }
-            }
-          }
+          this.databits = parsedValue;
+        }
+      }
+      else if ( "stopbits".equals( key ) )
+      {
+        int parsedValue = parseStopBits( value );
+        if ( parsedValue >= 0 )
+        {
+          this.stopbits = parsedValue;
+        }
+      }
+      else if ( "parity".equals( key ) )
+      {
+        int parsedValue = parseParityMode( value );
+        if ( parsedValue >= 0 )
+        {
+          this.parityMode = parsedValue;
+        }
+      }
+      else if ( "flowcontrol".equals( key ) )
+      {
+        int parsedValue = parseFlowControl( value );
+        if ( parsedValue >= 0 )
+        {
+          this.flowControl = parsedValue;
+        }
+      }
+      else if ( "blocking".equals( key ) )
+      {
+        this.blocking = "on".equalsIgnoreCase( value );
+      }
+      else if ( "autocts".equals( key ) )
+      {
+        final boolean parsedValue = "on".equalsIgnoreCase( value );
+        if ( parsedValue )
+        {
+          this.flowControl = SerialPort.FLOWCONTROL_RTSCTS_IN;
+        }
+      }
+      else if ( "autorts".equals( key ) )
+      {
+        final boolean parsedValue = "on".equalsIgnoreCase( value );
+        if ( parsedValue )
+        {
+          this.flowControl = SerialPort.FLOWCONTROL_RTSCTS_OUT;
         }
       }
     }
