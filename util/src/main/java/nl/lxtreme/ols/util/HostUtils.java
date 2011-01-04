@@ -253,6 +253,7 @@ public final class HostUtils
     {
       try
       {
+        UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
         setLookAndFeel( "com.jgoodies.looks.plastic.Plastic3DLookAndFeel" );
       }
       catch ( Exception exception )
@@ -264,6 +265,7 @@ public final class HostUtils
     {
       try
       {
+        UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
         setLookAndFeel( "com.jgoodies.looks.plastic.PlasticXPLookAndFeel" );
       }
       catch ( Exception exception )

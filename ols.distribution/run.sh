@@ -15,4 +15,4 @@ PLUGINDIR=$BASEDIR/plugins
 CLASSPATH=$BASEDIR/bin/*
 MEMSETTINGS=-Xmx1024m
 
-java $MEMSETTINGS -Dnl.lxtreme.ols.bundle.dir="$PLUGINDIR" -cp "$CLASSPATH" nl.lxtreme.ols.runner.Runner
+java $MEMSETTINGS -Dnl.lxtreme.ols.bundle.dir="$PLUGINDIR" -DPlastic.defaultTheme=SkyBluer -cp "$CLASSPATH" nl.lxtreme.ols.runner.Runner

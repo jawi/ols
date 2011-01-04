@@ -39,6 +39,10 @@ public final class SpringLayoutUtils
 
   public static final String SEPARATOR = "SEPARATOR";
 
+  // VARIABLES
+
+  private static Color selectionColor = null;
+
   // CONSTRUCTORS
 
   /**
@@ -63,13 +67,13 @@ public final class SpringLayoutUtils
    */
   public static final Container addSeparator( final Container aContainer, final String aText )
   {
-    final JList dummyList = new JList();
+    final Color color = getSeparatorForegroundColor();
 
     final JLabel label = new JLabel( aText );
     label.setAlignmentY( Component.BOTTOM_ALIGNMENT );
     // Take the selection color of a JList to make a "striking" difference
     // between separators and other components...
-    label.setForeground( dummyList.getSelectionBackground() );
+    label.setForeground( color );
     label.setFont( label.getFont().deriveFont( Font.BOLD ) );
     label.setHorizontalAlignment( SwingConstants.RIGHT );
     setSeparatorProperty( label );
@@ -94,8 +98,8 @@ public final class SpringLayoutUtils
   public static void addToConstraint( final SpringLayout.Constraints aConstraints, final String aEdgeName,
       final int aConstant )
   {
-    aConstraints.setConstraint( aEdgeName, Spring.sum( aConstraints.getConstraint( aEdgeName ), Spring
-        .constant( aConstant ) ) );
+    aConstraints.setConstraint( aEdgeName,
+        Spring.sum( aConstraints.getConstraint( aEdgeName ), Spring.constant( aConstant ) ) );
 
   }
 
@@ -350,10 +354,10 @@ public final class SpringLayoutUtils
 
     // Set the parent's size.
     final SpringLayout.Constraints pCons = layout.getConstraints( aContainer );
-    pCons.setConstraint( SpringLayout.SOUTH, Spring.sum( Spring.constant( aYpad ), lastCons
-        .getConstraint( SpringLayout.SOUTH ) ) );
-    pCons.setConstraint( SpringLayout.EAST, Spring.sum( Spring.constant( aXpad ), lastCons
-        .getConstraint( SpringLayout.EAST ) ) );
+    pCons.setConstraint( SpringLayout.SOUTH,
+        Spring.sum( Spring.constant( aYpad ), lastCons.getConstraint( SpringLayout.SOUTH ) ) );
+    pCons.setConstraint( SpringLayout.EAST,
+        Spring.sum( Spring.constant( aXpad ), lastCons.getConstraint( SpringLayout.EAST ) ) );
   }
 
   /**
@@ -413,6 +417,29 @@ public final class SpringLayoutUtils
     final SpringLayout layout = ( SpringLayout )aContainer.getLayout();
     final Component c = getCellComponent( aContainer, aCols, aRow, aCol );
     return layout.getConstraints( c );
+  }
+
+  /**
+   * Determines a foreground color for the separator label.
+   */
+  private static Color getSeparatorForegroundColor()
+  {
+    if ( selectionColor == null )
+    {
+      if ( HostUtils.isMacOSX() )
+      {
+        selectionColor = UIManager.getColor( "List.selectionBackground" );
+      }
+      else
+      {
+        selectionColor = UIManager.getColor( "MenuItem.selectionBackground" );
+      }
+      if ( selectionColor == null )
+      {
+        selectionColor = Color.BLUE;
+      }
+    }
+    return selectionColor;
   }
 
   /**
