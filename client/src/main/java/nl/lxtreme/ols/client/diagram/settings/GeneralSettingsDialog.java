@@ -177,6 +177,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   private JTextField triggerColor;
   private JTextField[] cursorColor;
   private JTextField[] channelColor;
+  private JCheckBox showCursorTimings;
 
   private int channelColorCount;
 
@@ -470,6 +471,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     this.signalHeight = new JTextField( 10 );
     this.scopeHeight = new JTextField( 10 );
 
+    this.showCursorTimings = new JCheckBox();
+
     this.colorTarget = new JComboBox( ColorTarget.values() );
     this.colorTarget.setRenderer( new ColorTargetItemRenderer() );
     this.colorTarget.putClientProperty( "JComboBox.isPopDown", Boolean.TRUE );
@@ -504,6 +507,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     editorsPane.add( this.scopeHeight );
     editorsPane.add( createRightAlignedLabel( "Signal edges" ) );
     editorsPane.add( this.edgeSlope );
+    editorsPane.add( createRightAlignedLabel( "Show cursor times" ) );
+    editorsPane.add( this.showCursorTimings );
 
     SpringLayoutUtils.addSeparator( editorsPane, "Color scheme" );
 
@@ -680,6 +685,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       this.settings.setChannelHeight( channelHeightValue );
       this.settings.setSignalHeight( signalHeightValue );
       this.settings.setScopeHeight( scopeHeightValue );
+      this.settings.setShowCursorTiming( this.showCursorTimings.isSelected() );
       this.settings.setColorTarget( colorTargetValue );
       this.settings.setColorScheme( colorSchemeValue );
       this.settings.setEdgeSlope( edgeSlopeValue );
@@ -726,8 +732,9 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       this.channelHeight.setText( String.valueOf( this.settings.getChannelHeight() ) );
       this.signalHeight.setText( String.valueOf( this.settings.getSignalHeight() ) );
       this.scopeHeight.setText( String.valueOf( this.settings.getScopeHeight() ) );
-      this.colorTarget.setSelectedItem( this.settings.getColorTarget() );
+      this.showCursorTimings.setSelected( this.settings.isShowCursorTiming() );
       this.edgeSlope.setSelectedItem( this.settings.getEdgeSlope() );
+      this.colorTarget.setSelectedItem( this.settings.getColorTarget() );
       this.colorScheme.setSelectedItem( selectedScheme );
 
       this.backgroundColor.setText( SwingComponentUtils.toString( this.settings.getBackgroundColor() ) );

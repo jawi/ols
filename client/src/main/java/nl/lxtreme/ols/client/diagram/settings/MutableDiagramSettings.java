@@ -41,6 +41,8 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   private int scopeHeight;
   private int signalHeight;
 
+  private boolean showCursorTiming;
+
   private EdgeSlope edgeSlope;
 
   private Color triggerColor;
@@ -75,7 +77,9 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public MutableDiagramSettings()
   {
-    this.colorScheme = ColorScheme.LIGHT;
+    this.colorScheme = ColorScheme.DARK;
+
+    this.showCursorTiming = true;
 
     this.cursorColors = new Color[DataContainer.MAX_CURSORS];
     this.channelColors = new Color[DataContainer.MAX_CHANNELS];
@@ -112,6 +116,8 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
 
     if ( aDiagramSettings != null )
     {
+      setShowCursorTiming( aDiagramSettings.isShowCursorTiming() );
+
       setColorTarget( aDiagramSettings.getColorTarget() );
       setColorScheme( aDiagramSettings.getColorScheme() );
 
@@ -356,6 +362,15 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   }
 
   /**
+   * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isShowCursorTiming()
+   */
+  @Override
+  public boolean isShowCursorTiming()
+  {
+    return this.showCursorTiming;
+  }
+
+  /**
    * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#isShowScope(int)
    */
   public final boolean isShowScope( final int aGroup )
@@ -373,14 +388,16 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     setSignalHeight( aPreferences.getInt( "signalHeight", this.signalHeight ) );
     setScopeHeight( aPreferences.getInt( "scopeHeight", this.scopeHeight ) );
 
+    setShowCursorTiming( aPreferences.getBoolean( "showCursorTiming", this.showCursorTiming ) );
+
+    String edgeSlopeName = aPreferences.get( "edgeSlope", this.edgeSlope.name() );
+    setEdgeSlope( EdgeSlope.valueOf( edgeSlopeName ) );
+
     String colorTargetName = aPreferences.get( "colorTarget", this.colorTarget.name() );
     setColorTarget( ColorTarget.valueOf( colorTargetName ) );
 
     String colorSchemeName = aPreferences.get( "colorScheme", this.colorScheme.name() );
     setColorScheme( ColorScheme.valueOf( colorSchemeName ) );
-
-    String edgeSlopeName = aPreferences.get( "edgeSlope", this.edgeSlope.name() );
-    setEdgeSlope( EdgeSlope.valueOf( edgeSlopeName ) );
   }
 
   /**
@@ -581,6 +598,16 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   }
 
   /**
+   * @param aShowCursorTiming
+   *          <code>true</code> if cursor timings should be shown,
+   *          <code>false</code> otherwise.
+   */
+  public void setShowCursorTiming( final boolean aShowCursorTiming )
+  {
+    this.showCursorTiming = aShowCursorTiming;
+  }
+
+  /**
    * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#setShowScope(int,
    *      boolean)
    */
@@ -676,6 +703,8 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     aPreferences.putInt( "channelHeight", this.channelHeight );
     aPreferences.putInt( "signalHeight", this.signalHeight );
     aPreferences.putInt( "scopeHeight", this.scopeHeight );
+
+    aPreferences.putBoolean( "showCursorTiming", this.showCursorTiming );
 
     aPreferences.put( "colorTarget", this.colorTarget.name() );
     aPreferences.put( "colorScheme", this.colorScheme.name() );

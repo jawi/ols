@@ -22,7 +22,6 @@ package nl.lxtreme.ols.client.diagram;
 
 
 import java.awt.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;

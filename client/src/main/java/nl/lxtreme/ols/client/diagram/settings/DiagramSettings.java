@@ -237,6 +237,15 @@ public interface DiagramSettings
   boolean isShowChannels( final int aGroup );
 
   /**
+   * Returns whether or not the cursor flags contain the time of the cursor
+   * itself.
+   * 
+   * @return <code>true</code> if the cursor timing is to be shown,
+   *         <code>false</code> otherwise.
+   */
+  boolean isShowCursorTiming();
+
+  /**
    * @param aGroup
    * @return
    */
