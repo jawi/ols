@@ -40,9 +40,9 @@ public class SerialConnectionFactory implements ConnectionFactory
   /**
    * The scheme we're exposing through this factory. Serial URIs should be
    * written in the form of:
-   * <tt>serial:/path/to/serialPort;baudrate=9600;options=8n1</tt>.
+   * <tt>comm:COM2;baudrate=9600;bitsperchar=8;parity=none;stopbits=1</tt>.
    */
-  public static final String SCHEME = "serial";
+  public static final String SCHEME = "comm";
 
   // CONSTRUCTORS
 
@@ -64,10 +64,10 @@ public class SerialConnectionFactory implements ConnectionFactory
   @Override
   public Connection createConnection( final String aName, final int aMode, final boolean aTimeouts ) throws IOException
   {
+    final SerialPortOptions options = new SerialPortOptions( aName );
+
     try
     {
-      final SerialPortOptions options = new SerialPortOptions( aName );
-
       final RXTXPort port = new RXTXPort( options.getPortName() );
       port.setSerialPortParams( options.getBaudrate(), options.getDatabits(), options.getStopbits(),
           options.getParityMode() );

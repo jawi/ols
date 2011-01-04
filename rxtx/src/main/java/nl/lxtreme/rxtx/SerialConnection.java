@@ -33,7 +33,7 @@ import javax.microedition.io.*;
 /**
  * Provides a serial port connection.
  */
-final class SerialConnection implements StreamConnection, SerialPortEventListener
+final class SerialConnection implements CommConnection, SerialPortEventListener
 {
   // CONSTANTS
 
@@ -82,6 +82,15 @@ final class SerialConnection implements StreamConnection, SerialPortEventListene
     this.port.close();
     // no longer listen to the serial events...
     this.port.removeEventListener();
+  }
+
+  /**
+   * @see javax.microedition.io.CommConnection#getBaudRate()
+   */
+  @Override
+  public int getBaudRate()
+  {
+    return this.port.getBaudRate();
   }
 
   /**
@@ -137,8 +146,32 @@ final class SerialConnection implements StreamConnection, SerialPortEventListene
       }
       catch ( IOException exception )
       {
-        LOG.log( Level.WARNING, "Error closing serial connection?!", exception );
+        LOG.log( Level.WARNING, "Error closing serial connection?! Port may remain in-use!", exception );
       }
     }
+  }
+
+  /**
+   * @see javax.microedition.io.CommConnection#setBaudRate(int)
+   */
+  @Override
+  public int setBaudRate( final int aBaudRate )
+  {
+    final int oldBaudRate = getBaudRate();
+    try
+    {
+      this.port.setBaudBase( aBaudRate );
+    }
+    catch ( UnsupportedCommOperationException exception )
+    {
+      // Ignore...
+      LOG.log( Level.INFO, "Setting the baud rate failed; baudrate is NOT changed!", exception );
+    }
+    catch ( IOException exception )
+    {
+      // Ignore...
+      LOG.log( Level.INFO, "Setting the baud rate failed; baudrate is NOT changed!", exception );
+    }
+    return oldBaudRate;
   }
 }

@@ -1,12 +1,14 @@
 package javax.microedition.io;
 
+
 /**
  * @since CLDC 1.0
  */
-public interface ContentConnection extends StreamConnection {
-    String getEncoding();
+public interface ContentConnection extends StreamConnection
+{
+  String getEncoding();
 
-    long getLength();
+  long getLength();
 
-    String getType();
+  String getType();
 }
