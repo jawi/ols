@@ -22,7 +22,6 @@ package nl.lxtreme.ols.client.diagram.laf;
 
 
 import java.awt.*;
-
 import javax.swing.*;
 import javax.swing.plaf.*;
 
@@ -37,7 +36,7 @@ import nl.lxtreme.ols.util.*;
  */
 public class DiagramTimeLineUI extends ComponentUI
 {
-  // CONSTANTS
+  // INNER TYPES
 
   /** The tick increment (in pixels). */
   public static final int TIMELINE_INCREMENT = 20;
@@ -53,6 +52,7 @@ public class DiagramTimeLineUI extends ComponentUI
   // VARIABLES
 
   private Font labelFont;
+  private Font cursorFont;
 
   // METHODS
 
@@ -91,7 +91,9 @@ public class DiagramTimeLineUI extends ComponentUI
   @Override
   public void installUI( final JComponent aComponent )
   {
-    this.labelFont = LafHelper.getDefaultFont();
+    final Font defaultFont = LafHelper.getDefaultFont();
+    this.labelFont = defaultFont.deriveFont( 0.9f * defaultFont.getSize2D() );
+    this.cursorFont = defaultFont.deriveFont( 0.9f * defaultFont.getSize2D() );
   }
 
   /**
@@ -225,6 +227,7 @@ public class DiagramTimeLineUI extends ComponentUI
 
     final double scale = aTimeLine.getScale();
 
+    aCanvas.setFont( this.cursorFont );
     final FontMetrics fm = aCanvas.getFontMetrics();
 
     final int textHeight = fm.getHeight();
@@ -237,21 +240,30 @@ public class DiagramTimeLineUI extends ComponentUI
       {
         final int cursorPos = ( int )( cursorPosition * scale );
 
-        final Color cursorColor = settings.getCursorColor( i );
+        final double cursorTimeValue = aDataContainer.getCursorTimeValue( i );
+        final String cursorTime = DisplayUtils.displayTime( cursorTimeValue );
 
-        final String text = String.format( "T%d", i + 1 );
+        final Color cursorColor = settings.getCursorColor( i );
+        final Color cursorTextColor = ColorUtils.getContrastColor( cursorColor );
+
+        String text = String.format( "T%d", i + 1 );
+        if ( settings.isShowCursorTiming() )
+        {
+          text = text.concat( ": " ).concat( cursorTime );
+        }
 
         final int textWidth = fm.stringWidth( text );
         final int flagWidth = textWidth + 4;
 
         aCanvas.setColor( cursorColor );
-        aCanvas.fillRect( cursorPos, TIMELINE_HEIGHT - flagHeight, flagWidth, flagHeight );
+        aCanvas.drawLine( cursorPos, TIMELINE_HEIGHT - flagHeight, cursorPos, TIMELINE_HEIGHT );
+        aCanvas.fillRect( cursorPos, TIMELINE_HEIGHT - flagHeight - 1, flagWidth, flagHeight - 1 );
 
         aCanvas.setColor( cursorColor.darker() );
-        aCanvas.drawRect( cursorPos, TIMELINE_HEIGHT - flagHeight, flagWidth, flagHeight - 1 );
+        aCanvas.drawRect( cursorPos, TIMELINE_HEIGHT - flagHeight - 1, flagWidth, flagHeight - 2 );
 
-        aCanvas.setColor( cursorColor.darker().darker() );
-        aCanvas.drawString( text, cursorPos + 3, TIMELINE_HEIGHT - 3 );
+        aCanvas.setColor( cursorTextColor );
+        aCanvas.drawString( text, cursorPos + 3, TIMELINE_HEIGHT - 5 );
       }
     }
   }
