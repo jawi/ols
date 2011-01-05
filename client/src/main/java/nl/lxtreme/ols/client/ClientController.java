@@ -329,6 +329,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureStarted()
+   */
+  @Override
+  public void captureStarted()
+  {
+    updateActions();
+  }
+
+  /**
    * Clears the current device controller.
    */
   public void clearDeviceController()
@@ -773,6 +782,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
 
     updateActions();
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.devices.CaptureCallback#samplesCaptured(java.util.List)
+   */
+  @Override
+  public void samplesCaptured( final List<Integer> aSamples )
+  {
+    // LOG.log( Level.INFO, "Got {0} samples...", aSamples );
   }
 
   /**
@@ -1302,11 +1320,14 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   private void updateActions()
   {
     final DeviceController currentDeviceController = getDeviceController();
+
     final boolean deviceControllerSet = currentDeviceController != null;
+    final boolean deviceCapturing = deviceControllerSet && currentDeviceController.isCapturing();
+    final boolean deviceSetup = deviceControllerSet && !deviceCapturing && currentDeviceController.isSetup();
 
     getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
-    getAction( CancelCaptureAction.ID ).setEnabled( deviceControllerSet && currentDeviceController.isCapturing() );
-    getAction( RepeatCaptureAction.ID ).setEnabled( deviceControllerSet && currentDeviceController.isSetup() );
+    getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );
+    getAction( RepeatCaptureAction.ID ).setEnabled( deviceSetup );
 
     final boolean windowPrefsAvailable = containsWindowsPreferencesNode();
     final boolean dataAvailable = this.dataContainer.hasCapturedData();
