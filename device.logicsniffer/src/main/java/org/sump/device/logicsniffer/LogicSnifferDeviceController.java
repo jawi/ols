@@ -24,10 +24,15 @@ package org.sump.device.logicsniffer;
 import java.awt.*;
 import java.beans.*;
 import java.io.*;
+import java.util.List;
+import java.util.concurrent.*;
 import java.util.logging.*;
 
+import javax.swing.SwingWorker.StateValue;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.util.*;
+
 import org.osgi.framework.*;
 
 
@@ -97,39 +102,75 @@ public class LogicSnifferDeviceController implements DeviceController
       @Override
       public void propertyChange( final PropertyChangeEvent aEvent )
       {
-        final Object value = aEvent.getNewValue();
         final String propertyName = aEvent.getPropertyName();
 
         if ( LogicSnifferDevice.PROP_CAPTURE_PROGRESS.equals( propertyName ) )
         {
-          final Integer progress = ( Integer )value;
+          final Integer progress = ( Integer )aEvent.getNewValue();
 
           LOG.log( Level.FINE, "Progress {0}%", progress );
 
           aCallback.updateProgress( progress );
         }
-        else if ( LogicSnifferDevice.PROP_CAPTURE_ABORTED.equals( propertyName ) )
+        else if ( LogicSnifferDevice.PROP_CAPTURE_STATE.equals( propertyName ) )
         {
-          final String abortReason = ( String )value;
-
-          LOG.log( Level.WARNING, "Capture aborted: {0}.", abortReason );
-
-          aCallback.captureAborted( abortReason );
-        }
-        else if ( LogicSnifferDevice.PROP_CAPTURE_DONE.equals( propertyName ) )
-        {
-          final CapturedData data = ( CapturedData )value;
-
-          LOG.log( Level.INFO, "Capture completed {0}.", ( data == null ? "WITHOUT data" : "with data" ) );
-
-          aCallback.captureComplete( data );
+          final StateValue state = ( StateValue )aEvent.getNewValue();
+          if ( StateValue.STARTED.equals( state ) )
+          {
+            aCallback.captureStarted();
+          }
         }
       }
     };
 
-    // Tell the device on what port & what rate to do its job...
-    this.device = new LogicSnifferDevice( this.bundleContext, this.deviceConfig );
+    this.device = new LogicSnifferDevice( this.bundleContext, this.deviceConfig )
+    {
+      /**
+       * @see javax.swing.SwingWorker#done()
+       */
+      @Override
+      protected void done()
+      {
+        try
+        {
+          final CapturedData data = get();
 
+          aCallback.captureComplete( data );
+        }
+        catch ( CancellationException exception )
+        {
+          // simply canceled by user...
+          aCallback.captureAborted( "" );
+        }
+        catch ( ExecutionException exception )
+        {
+          // Make sure to handle IO-interrupted exceptions properly!
+          if ( !HostUtils.handleInterruptedException( exception.getCause() ) )
+          {
+            aCallback.captureAborted( exception.getCause().getMessage() );
+          }
+        }
+        catch ( InterruptedException exception )
+        {
+          // Make sure to handle IO-interrupted exceptions properly!
+          if ( !HostUtils.handleInterruptedException( exception ) )
+          {
+            aCallback.captureAborted( exception.getCause().getMessage() );
+          }
+        }
+      }
+
+      /**
+       * @see org.sump.device.logicsniffer.LogicSnifferDevice#process(java.util.List)
+       */
+      @Override
+      protected void process( final List<Integer> aSamples )
+      {
+        aCallback.samplesCaptured( aSamples );
+      }
+    };
+
+    // Tell the device on what port & what rate to do its job...
     this.device.addPropertyChangeListener( propertyChangeListener );
 
     // Let the capturing take place in a background thread...

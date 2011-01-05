@@ -23,7 +23,6 @@ package org.sump.device.logicsniffer;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
@@ -46,9 +45,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
 {
   // CONSTANTS
 
-  public static final String PROP_CAPTURE_ABORTED = "captureAborted";
-  public static final String PROP_CAPTURE_DONE = "captureDone";
   public static final String PROP_CAPTURE_PROGRESS = "progress";
+  public static final String PROP_CAPTURE_STATE = "state";
 
   /** Old SLA version, v0 (0x534c4130, or 0x30414c53) - no longer supported. */
   private static final int SLA_V0 = 0x30414c53;
@@ -132,17 +130,21 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
    */
   public boolean isRunning()
   {
-    return ( this.running && !isCancelled() && !isDone() );
+    return this.running;
   }
 
   /**
    * Informs the thread in run() that it is supposed to stop reading data and
    * return.
    */
-  public void stop()
+  public synchronized void stop()
   {
-    this.running = false;
-    cancel( true /* mayInterruptIfRunning */);
+    if ( this.running )
+    {
+      this.running = false;
+
+      cancel( true /* mayInterruptIfRunning */);
+    }
   }
 
   /**
@@ -168,15 +170,10 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       throw new IOException( "Unable to open port " + this.config.getPortName() + ". No specific reason..." );
     }
 
+    this.running = true;
+
     try
     {
-      if ( !this.attached )
-      {
-        throw new IllegalStateException( "Cannot run capture from device: not attached!" );
-      }
-
-      this.running = true;
-
       // First try to find the logic sniffer itself...
       detectDevice();
 
@@ -356,77 +353,10 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     finally
     {
       detach();
-    }
-  }
 
-  /**
-   * @see javax.swing.SwingWorker#done()
-   */
-  @Override
-  protected void done()
-  {
-    CapturedData data = null;
-    String abortReason = null;
-
-    try
-    {
-      data = get();
+      // We're done; let's wrap it up...
+      this.running = false;
     }
-    catch ( CancellationException exception )
-    {
-      abortReason = ""; // simply canceled by user...
-      stop();
-    }
-    catch ( ExecutionException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception.getCause() ) )
-      {
-        abortReason = exception.getCause().getMessage();
-        stop();
-      }
-    }
-    catch ( InterruptedException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        abortReason = exception.getMessage();
-        stop();
-      }
-    }
-
-    // Report the result back to the given callback...
-    if ( isCancelled() || ( abortReason != null ) )
-    {
-      firePropertyChange( PROP_CAPTURE_ABORTED, null, abortReason );
-    }
-    else if ( isDone() )
-    {
-      firePropertyChange( PROP_CAPTURE_DONE, null, data );
-    }
-    else
-    {
-      if ( LOG.isLoggable( Level.WARNING ) )
-      {
-        LOG.warning( "Internal state error: not done nor cancelled?!" );
-      }
-    }
-  }
-
-  /**
-   * Processes the given chunk of samples.
-   * 
-   * @param aSamples
-   *          the list with samples to process, cannot be <code>null</code>.
-   * @see javax.swing.SwingWorker#process(java.util.List)
-   */
-  @Override
-  protected void process( final List<Integer> aSamples )
-  {
-    LOG.log( Level.INFO, "Processing {0} samples...", aSamples.size() );
-    // TODO Auto-generated method stub
-    super.process( aSamples );
   }
 
   /**
@@ -448,7 +378,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
 
         return this.attached = true;
       }
-
     }
     catch ( final Exception exception )
     {

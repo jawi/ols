@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.api.devices;
 
 
+import java.util.*;
+
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 
@@ -50,6 +52,26 @@ public interface CaptureCallback extends ProgressCallback
    *          the captured data, never <code>null</code>.
    */
   public void captureComplete( final CapturedData aCapturedData );
+
+  /**
+   * Called when the capture is just started.
+   * <p>
+   * This method will be called before any other methods of this interface.
+   * </p>
+   */
+  public void captureStarted();
+
+  /**
+   * Called when a number of samples are captured.
+   * <p>
+   * There is no guarantee this method will be called at all! However, if
+   * called, it will always be in order.
+   * </p>
+   * 
+   * @param aSamples
+   *          the captured samples, as 32-bit values.
+   */
+  public void samplesCaptured( final List<Integer> aSamples );
 }
 
 /* EOF */
