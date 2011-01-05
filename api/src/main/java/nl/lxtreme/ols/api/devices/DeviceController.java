@@ -21,13 +21,12 @@
 package nl.lxtreme.ols.api.devices;
 
 
-import java.awt.*;
 import java.io.*;
 
 
 /**
- * Interface for implementing device controllers. Each device controller must
- * implement at least this interface, and possibly {@link Device} as well.
+ * Interface for implementing device controllers. Each supported device must
+ * implement at least this interface.
  */
 public interface DeviceController
 {
@@ -89,5 +88,5 @@ public interface DeviceController
    * @throws IOException
    *           in case of I/O problems.
    */
-  public boolean setupCapture( final Window aParent ) throws IOException;
+  public boolean setupCapture( final java.awt.Window aParent );
 }

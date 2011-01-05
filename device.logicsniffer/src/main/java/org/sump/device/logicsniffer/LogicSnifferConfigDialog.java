@@ -22,8 +22,11 @@ package org.sump.device.logicsniffer;
 
 
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+import gnu.io.*;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -218,6 +221,30 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   /**
+   * Gets a string array containing the names all available serial ports.
+   * 
+   * @return array containing serial port names
+   */
+  @SuppressWarnings( "unchecked" )
+  public static String[] getPorts()
+  {
+    final Enumeration<CommPortIdentifier> portIdentifiers = CommPortIdentifier.getPortIdentifiers();
+    final LinkedList<String> portList = new LinkedList<String>();
+    CommPortIdentifier portId = null;
+
+    while ( portIdentifiers.hasMoreElements() )
+    {
+      portId = portIdentifiers.nextElement();
+      if ( portId.getPortType() == CommPortIdentifier.PORT_SERIAL )
+      {
+        portList.addLast( portId.getName() );
+      }
+    }
+
+    return ( portList.toArray( new String[portList.size()] ) );
+  }
+
+  /**
    * @param x
    * @param y
    * @param w
@@ -312,6 +339,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     return NumberUtils.smartParseInt( ( String )this.portRateSelect.getSelectedItem() );
   }
 
+  // METHODS
+
   /**
    * @return
    */
@@ -319,8 +348,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   {
     return ( String )this.portSelect.getSelectedItem();
   }
-
-  // METHODS
 
   /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
@@ -709,7 +736,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       @Override
       public Object[] getItems()
       {
-        return LogicSnifferDevice.getPorts();
+        return LogicSnifferConfigDialog.getPorts();
       }
     } );
     // allow people to put their own port name into it...
