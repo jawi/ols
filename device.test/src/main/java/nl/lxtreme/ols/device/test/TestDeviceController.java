@@ -162,7 +162,7 @@ public class TestDeviceController implements DeviceController
    * @see nl.lxtreme.ols.api.devices.DeviceController#setupCapture()
    */
   @Override
-  public boolean setupCapture( final Window aOwner ) throws IOException
+  public boolean setupCapture( final Window aOwner )
   {
     // check if dialog exists with different owner and dispose if so
     if ( ( this.configDialog != null ) && ( this.configDialog.getOwner() != aOwner ) )

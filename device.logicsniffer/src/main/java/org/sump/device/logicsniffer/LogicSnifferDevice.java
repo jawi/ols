@@ -34,6 +34,7 @@ import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
 import org.osgi.service.io.*;
+import org.sump.device.logicsniffer.LogicSnifferConfig.*;
 
 
 /**
@@ -53,13 +54,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   private static final int SLA_V0 = 0x30414c53;
   /** Current SLA version, v1 (0x534c4131, or 0x31414c53) - supported. */
   private static final int SLA_V1 = 0x31414c53;
-
-  /** use internal clock */
-  public final static int CLOCK_INTERNAL = 0;
-  /** use external clock rising edge */
-  public final static int CLOCK_EXTERNAL_RISING = 1;
-  /** use external clock falling edge */
-  public final static int CLOCK_EXTERNAL_FALLING = 2;
 
   /** set trigger mask */
   private final static int SETTRIGMASK = 0xc0;
@@ -102,205 +96,32 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   // Testing mode
   private final static int FLAG_TEST_MODE = 0x00000400;
 
-  // mask for delay value
-  private final static int TRIGGER_DELAYMASK = 0x0000ffff;
-  // mask for level value
-  private final static int TRIGGER_LEVELMASK = 0x00030000;
-  // mask for channel value
-  private final static int TRIGGER_CHANNELMASK = 0x01f00000;
-  // trigger operates in serial mode
-  private final static int TRIGGER_SERIAL = 0x04000000;
-  // trigger will start capture when fired
-  private final static int TRIGGER_CAPTURE = 0x08000000;
-
-  final static int CLOCK = 100000000; // device clock in Hz
-  // number of trigger stages
-  private final static int TRIGGER_STAGES = 4;
-
   private static final Logger LOG = Logger.getLogger( LogicSnifferDevice.class.getName() );
 
   // VARIABLES
+
+  private final LogicSnifferConfig config;
 
   private StreamConnection connection;
   private DataInputStream inputStream;
   private DataOutputStream outputStream;
   private volatile boolean running;
-  private int clockSource;
-  private boolean demux;
-  private boolean filterEnabled;
-  private boolean triggerEnabled;
-  private boolean rleEnabled;
-  private boolean altNumberSchemeEnabled;
-  private boolean testModeEnabled;
-  private final int triggerMask[];
-  private final int triggerValue[];
-  private final int triggerConfig[];
-  private int enabledChannels;
-  private final boolean enabledGroups[];
-  private int divider;
-  private int size;
-  private double ratio;
   private boolean attached;
 
-  private BundleContext bundleContext;
+  private final BundleContext bundleContext;
 
   // CONSTRUCTORS
-
-  private String portName;
-
-  // METHODS
-
-  private int baudrate;
 
   /**
    * Creates a new LogicSnifferDevice instance.
    */
-  public LogicSnifferDevice()
+  public LogicSnifferDevice( final BundleContext aBundleContext, final LogicSnifferConfig aConfig )
   {
-    this.triggerMask = new int[4];
-    this.triggerValue = new int[4];
-    this.triggerConfig = new int[4];
-    for ( int i = 0; i < TRIGGER_STAGES; i++ )
-    {
-      this.triggerMask[i] = 0;
-      this.triggerValue[i] = 0;
-      this.triggerConfig[i] = 0;
-    }
-    this.triggerEnabled = false;
-    this.filterEnabled = false;
-    this.demux = false;
-    setClockSource( CLOCK_INTERNAL );
-    this.divider = 0;
-    this.ratio = 0.5;
-    this.size = 512;
-    this.enabledGroups = new boolean[4];
-    setEnabledChannels( -1 ); // enable all channels
+    this.bundleContext = aBundleContext;
+    this.config = aConfig;
   }
 
-  /**
-   * Returns the number of available channels in current configuration.
-   * 
-   * @return number of available channels
-   */
-  public int getAvailableChannelCount()
-  {
-    if ( this.demux && ( this.clockSource == CLOCK_INTERNAL ) )
-    {
-      return ( 16 );
-    }
-    else
-    {
-      return ( 32 );
-    }
-  }
-
-  /**
-   * Returns the current clock source.
-   * 
-   * @return the clock source currently used as defined by the CLOCK_ properties
-   */
-  public int getClockSource()
-  {
-    return ( this.clockSource );
-  }
-
-  /**
-   * Returns the currently enabled channels.
-   * 
-   * @return bitmask with enabled channels represented as 1
-   */
-  public int getEnabledChannels()
-  {
-    return ( this.enabledChannels );
-  }
-
-  /**
-   * Get the maximum sampling rate available.
-   * 
-   * @return maximum sampling rate
-   */
-  public int getMaximumRate()
-  {
-    return ( 2 * CLOCK );
-  }
-
-  /**
-   * Returns the current trigger mask.
-   * 
-   * @param stage
-   *          trigger stage to read mask from
-   * @return current trigger mask
-   */
-  public int getTriggerMask( final int stage )
-  {
-    return ( this.triggerMask[stage] );
-  }
-
-  /**
-   * Returns the number of available trigger stages.
-   * 
-   * @return number of available trigger stages
-   */
-  public int getTriggerStageCount()
-  {
-    return ( TRIGGER_STAGES );
-  }
-
-  /**
-   * Returns the current trigger value.
-   * 
-   * @param stage
-   *          trigger stage to read value from
-   * @return current trigger value
-   */
-  public int getTriggerValue( final int stage )
-  {
-    return ( this.triggerValue[stage] );
-  }
-
-  /**
-   * Returns the current number scheme mask.
-   * 
-   * @return current number scheme mask
-   */
-  public boolean isAltNumberSchemeEnabled()
-  {
-    return ( this.altNumberSchemeEnabled );
-  }
-
-  /**
-   * Returns wether or not the noise filter can be used in the current
-   * configuration.
-   * 
-   * @return <code>true</code> when noise filter is available,
-   *         <code>false</code> otherwise
-   */
-  public boolean isFilterAvailable()
-  {
-    return ( !this.demux && ( this.clockSource == CLOCK_INTERNAL ) );
-  }
-
-  /**
-   * Returns wether or not the noise filter is enabled.
-   * 
-   * @return <code>true</code> when noise filter is enabled, <code>false</code>
-   *         otherwise
-   */
-  public boolean isFilterEnabled()
-  {
-    return ( this.filterEnabled );
-  }
-
-  /**
-   * Returns wether or not the run length encoding is enabled.
-   * 
-   * @return <code>true</code> when run length encoding is enabled,
-   *         <code>false</code> otherwise
-   */
-  public boolean isRleEnabled()
-  {
-    return ( this.rleEnabled );
-  }
+  // METHODS
 
   /**
    * Returns wether or not the device is currently running. It is running, when
@@ -315,269 +136,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   }
 
   /**
-   * Returns wether or not the run length encoding is enabled.
-   * 
-   * @return <code>true</code> when run length encoding is enabled,
-   *         <code>false</code> otherwise
-   */
-  public boolean isTestModeEnabled()
-  {
-    return ( this.testModeEnabled );
-  }
-
-  /**
-   * Returns wether or not the trigger is enabled.
-   * 
-   * @return <code>true</code> when trigger is enabled, <code>false</code>
-   *         otherwise
-   */
-  public boolean isTriggerEnabled()
-  {
-    return ( this.triggerEnabled );
-  }
-
-  /**
-   * Sets the Number Scheme Mask
-   * 
-   * @param mask
-   *          bit map defining number scheme.
-   */
-  public void setAltNumberSchemeEnabled( final boolean enable )
-  {
-    this.altNumberSchemeEnabled = enable;
-  }
-
-  /**
-   * Sets the clock source to use.
-   * 
-   * @param source
-   *          can be any CLOCK_ property of this class
-   */
-  public void setClockSource( final int source )
-  {
-    this.clockSource = source;
-  }
-
-  /**
-   * Set enabled channels.
-   * 
-   * @param mask
-   *          bit map defining enabled channels
-   */
-  public void setEnabledChannels( final int mask )
-  {
-    this.enabledChannels = mask;
-    // determine enabled groups
-    for ( int i = 0; i < 4; i++ )
-    {
-      this.enabledGroups[i] = ( ( this.enabledChannels >> ( 8 * i ) ) & 0xff ) > 0;
-    }
-  }
-
-  /**
-   * Sets wheter or not to enable the noise filter.
-   * 
-   * @param enable
-   *          <code>true</code> enables the noise filter, <code>false</code>
-   *          disables it.
-   */
-  public void setFilterEnabled( final boolean enable )
-  {
-    this.filterEnabled = enable;
-  }
-
-  /**
-   * Configures the given trigger stage in parallel mode. Currenty the trigger
-   * has four stages (0-3).
-   * <p>
-   * In mask and value each bit of the integer parameters represents one
-   * channel. The LSB represents channel 0, the MSB channel 31.
-   * <p>
-   * When a trigger fires, the trigger level will rise by one. Initially the
-   * trigger level is 0.
-   * 
-   * @param stage
-   *          trigger stage to write mask und value to
-   * @param mask
-   *          bit map defining which channels to watch
-   * @param value
-   *          bit map defining what value to wait for on watched channels
-   * @param level
-   *          trigger level at which the trigger will be armed (0 = immediatly)
-   * @param delay
-   *          delay in samples to wait in between match and fire
-   * @param startCapture
-   *          if <code>true</code> that capture when trigger fires, otherwise
-   *          only triggel level will increase
-   */
-  public void setParallelTrigger( final int stage, final int mask, final int value, final int level, final int delay,
-      final boolean startCapture )
-  {
-    if ( !this.demux )
-    { // TODO: demux modification should be done on the fly in
-      // run() and not with stored properties
-      this.triggerMask[stage] = mask;
-      this.triggerValue[stage] = value;
-    }
-    else
-    {
-      this.triggerMask[stage] = mask & 0xffff;
-      this.triggerValue[stage] = value & 0xffff;
-      this.triggerMask[stage] |= this.triggerMask[stage] << 16;
-      this.triggerValue[stage] |= this.triggerValue[stage] << 16;
-    }
-    this.triggerConfig[stage] = 0;
-    this.triggerConfig[stage] |= delay & TRIGGER_DELAYMASK;
-    this.triggerConfig[stage] |= ( level << 16 ) & TRIGGER_LEVELMASK;
-    if ( startCapture )
-    {
-      this.triggerConfig[stage] |= TRIGGER_CAPTURE;
-    }
-  }
-
-  /**
-   * @param aPortName
-   * @param aBaudrate
-   */
-  public void setPortSettings( final String aPortName, final int aBaudrate )
-  {
-    this.portName = aPortName;
-    this.baudrate = aBaudrate;
-  }
-
-  /**
-   * Set the sampling rate. All rates must be a divisor of 200.000.000. Other
-   * rates will be adjusted to a matching divisor.
-   * 
-   * @param aRate
-   *          sampling rate in Hz
-   */
-  public void setRate( final int aRate )
-  {
-    if ( aRate > CLOCK )
-    {
-      this.demux = true;
-      this.divider = ( 2 * CLOCK / aRate ) - 1;
-    }
-    else
-    {
-      this.demux = false;
-      this.divider = ( CLOCK / aRate ) - 1;
-    }
-  }
-
-  /**
-   * Sets the ratio for samples to read before and after started.
-   * 
-   * @param ratio
-   *          value between 0 and 1; 0 means all before start, 1 all after
-   */
-  public void setRatio( final double ratio )
-  {
-    this.ratio = ratio;
-  }
-
-  /**
-   * Sets wheter or not to enable the run length encoding.
-   * 
-   * @param enable
-   *          <code>true</code> enables the RLE, <code>false</code> disables it.
-   */
-  public void setRleEnabled( final boolean enable )
-  {
-    this.rleEnabled = enable;
-  }
-
-  /**
-   * Configures the given trigger stage in serial mode. Currenty the trigger has
-   * four stages (0-3).
-   * <p>
-   * In mask and value each bit of the integer parameters represents one sample.
-   * The LSB represents the oldest sample not yet shifted out, the MSB the most
-   * recent. (The trigger compares to a 32bit shift register that is shifted by
-   * one for each sample.)
-   * <p>
-   * When a trigger fires, the trigger level will rise by one. Initially the
-   * trigger level is 0.
-   * 
-   * @param stage
-   *          trigger stage to write mask und value to
-   * @param channel
-   *          channel to attach trigger to
-   * @param mask
-   *          bit map defining which channels to watch
-   * @param value
-   *          bit map defining what value to wait for on watched channels
-   * @param level
-   *          trigger level at which the trigger will be armed (0 = immediatly)
-   * @param delay
-   *          delay in samples to wait in between match and fire
-   * @param startCapture
-   *          if <code>true</code> that capture when trigger fires, otherwise
-   *          only triggel level will increase
-   */
-  public void setSerialTrigger( final int stage, final int channel, final int mask, final int value, final int level,
-      final int delay, final boolean startCapture )
-  {
-    if ( !this.demux )
-    { // TODO: demux modification should be done on the fly in
-      // run() and not with stored properties
-      this.triggerMask[stage] = mask;
-      this.triggerValue[stage] = value;
-    }
-    else
-    {
-      this.triggerMask[stage] = mask & 0xffff;
-      this.triggerValue[stage] = value & 0xffff;
-      this.triggerMask[stage] |= this.triggerMask[stage] << 16;
-      this.triggerValue[stage] |= this.triggerValue[stage] << 16;
-    }
-    this.triggerConfig[stage] = 0;
-    this.triggerConfig[stage] |= delay & TRIGGER_DELAYMASK;
-    this.triggerConfig[stage] |= ( level << 16 ) & TRIGGER_LEVELMASK;
-    this.triggerConfig[stage] |= ( channel << 20 ) & TRIGGER_CHANNELMASK;
-    this.triggerConfig[stage] |= TRIGGER_SERIAL;
-    if ( startCapture )
-    {
-      this.triggerConfig[stage] |= TRIGGER_CAPTURE;
-    }
-  }
-
-  /**
-   * Sets the number of samples to obtain when started.
-   * 
-   * @param size
-   *          number of samples, must be between 4 and 256*1024
-   */
-  public void setSize( final int size )
-  {
-    this.size = size;
-  }
-
-  /**
-   * Sets wheter or not to enable the run length encoding.
-   * 
-   * @param enable
-   *          <code>true</code> enables the RLE, <code>false</code> disables it.
-   */
-  public void setTestModeEnabled( final boolean enable )
-  {
-    this.testModeEnabled = enable;
-  }
-
-  /**
-   * Sets wheter or not to enable the trigger.
-   * 
-   * @param enable
-   *          <code>true</code> enables the trigger, <code>false</code> disables
-   *          it.
-   */
-  public void setTriggerEnabled( final boolean enable )
-  {
-    this.triggerEnabled = enable;
-  }
-
-  /**
    * Informs the thread in run() that it is supposed to stop reading data and
    * return.
    */
@@ -585,17 +143,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   {
     this.running = false;
     cancel( true /* mayInterruptIfRunning */);
-  }
-
-  /**
-   * Sets the OSGi bundle context.
-   * 
-   * @param aBundleContext
-   *          the bundle context to set, cannot be <code>null</code>.
-   */
-  final void setBundleContext( final BundleContext aBundleContext )
-  {
-    this.bundleContext = aBundleContext;
   }
 
   /**
@@ -616,9 +163,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   {
     LOG.info( "Starting capture ..." );
 
-    if ( !attach( this.portName, this.baudrate ) )
+    if ( !attach( this.config.getPortName(), this.config.getBaudrate() ) )
     {
-      throw new IOException( "Unable to open port " + this.portName + ". No specific reason..." );
+      throw new IOException( "Unable to open port " + this.config.getPortName() + ". No specific reason..." );
     }
 
     try
@@ -637,15 +184,15 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       // Log the read results...
       LOG.log( Level.FINE, "Metadata = \n{0}", metadata.toString() );
 
-      final int deviceSize = metadata.getSampleMemoryDepth( this.size );
+      final int deviceSize = metadata.getSampleMemoryDepth( this.config.getSize() );
 
-      final int stopCounter = ( int )( deviceSize * this.ratio );
+      final int stopCounter = ( int )( deviceSize * this.config.getRatio() );
       final int readCounter = deviceSize;
 
       // check if data needs to be multiplexed
       final int channels;
       final int samples;
-      if ( this.demux && ( this.clockSource == CLOCK_INTERNAL ) )
+      if ( this.config.isDemuxEnabled() && this.config.isInternalClock() )
       {
         // When the multiplexer is turned on, the upper two channel blocks are
         // disabled, leaving only 16 channels for capturing...
@@ -726,12 +273,13 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       int triggerPos = CapturedData.NOT_AVAILABLE;
 
       int rate = CapturedData.NOT_AVAILABLE;
-      if ( this.clockSource == CLOCK_INTERNAL )
+      if ( this.config.isInternalClock() )
       {
-        rate = this.demux ? 2 * CLOCK / ( this.divider + 1 ) : CLOCK / ( this.divider + 1 );
+        rate = this.config.isDemuxEnabled() ? 2 * LogicSnifferConfig.CLOCK / ( this.config.getDivider() + 1 )
+            : LogicSnifferConfig.CLOCK / ( this.config.getDivider() + 1 );
       }
 
-      if ( this.rleEnabled )
+      if ( this.config.isRleEnabled() )
       {
         LOG.log( Level.FINE, "Decoding Run Length Encoded data, sample count: {0}", samples );
 
@@ -776,7 +324,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
         // Take the last seen time value as "absolete" length of this trace...
         absoluteLength = time;
 
-        if ( this.triggerEnabled )
+        if ( this.config.isTriggerEnabled() )
         {
           triggerPos = rleTrigPos - 1;
         }
@@ -794,14 +342,16 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
         // Take the number of samples as "absolute" length of this trace...
         absoluteLength = samples;
 
-        if ( this.triggerEnabled )
+        if ( this.config.isTriggerEnabled() )
         {
           // TODO what the f*ck is this doing???
-          triggerPos = readCounter - stopCounter - 3 - ( 4 / ( this.divider + 1 ) ) - ( this.demux ? 5 : 0 );
+          triggerPos = readCounter - stopCounter - 3 - ( 4 / ( this.config.getDivider() + 1 ) )
+              - ( this.config.isDemuxEnabled() ? 5 : 0 );
         }
       }
 
-      return new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, this.enabledChannels, absoluteLength );
+      return new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, this.config.getEnabledChannels(),
+          absoluteLength );
     }
     finally
     {
@@ -874,6 +424,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   @Override
   protected void process( final List<Integer> aSamples )
   {
+    LOG.log( Level.INFO, "Processing {0} samples...", aSamples.size() );
     // TODO Auto-generated method stub
     super.process( aSamples );
   }
@@ -926,10 +477,10 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     final int effectiveStopCounter = configureTriggers( aStopCounter, aReadCounter );
 
     int flags = 0;
-    if ( ( this.clockSource == CLOCK_EXTERNAL_RISING ) || ( this.clockSource == CLOCK_EXTERNAL_FALLING ) )
+    if ( this.config.isExternalClock() )
     {
       flags |= FLAG_EXTERNAL;
-      if ( this.clockSource == CLOCK_EXTERNAL_FALLING )
+      if ( this.config.getClockSource() == ClockSource.EXTERNAL_FALLING )
       {
         flags |= FLAG_INVERTED;
       }
@@ -939,7 +490,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     int enabledChannelGroups = 0;
     for ( int i = 0; i < 4; i++ )
     {
-      if ( this.enabledGroups[i] )
+      if ( this.config.isGroupEnabled( i ) )
       {
         enabledChannelGroups |= ( 1 << i );
       }
@@ -947,7 +498,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     flags |= ~( enabledChannelGroups << 2 ) & 0x3c;
 
     final int size;
-    if ( this.demux && ( this.clockSource == CLOCK_INTERNAL ) )
+    if ( this.config.isDemuxEnabled() && this.config.isInternalClock() )
     {
       flags |= FLAG_DEMUX;
       // if the demux bit is set, the filter flag *must* be clear...
@@ -957,7 +508,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     }
     else
     {
-      if ( this.filterEnabled && isFilterAvailable() )
+      if ( this.config.isFilterEnabled() && this.config.isFilterAvailable() )
       {
         flags |= FLAG_FILTER;
         // if the filter bit is set, the filter flag *must* be clear...
@@ -967,17 +518,17 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       size = ( ( ( effectiveStopCounter - 4 ) & 0x3fffc ) << 14 ) | ( ( ( aReadCounter & 0x3fffc ) >> 2 ) - 1 );
     }
 
-    if ( this.rleEnabled )
+    if ( this.config.isRleEnabled() )
     {
       flags |= FLAG_RLE;
     }
 
-    if ( this.altNumberSchemeEnabled )
+    if ( this.config.isAltNumberSchemeEnabled() )
     {
       flags |= FLAG_NUMBER_SCHEME;
     }
 
-    if ( this.testModeEnabled )
+    if ( this.config.isTestModeEnabled() )
     {
       flags |= FLAG_TEST_MODE;
     }
@@ -985,7 +536,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     LOG.log( Level.FINE, "Flags: 0b{0}", Integer.toBinaryString( flags ) );
 
     // set the sampling frequency...
-    sendCommand( SETDIVIDER, this.divider );
+    sendCommand( SETDIVIDER, this.config.getDivider() );
 
     sendCommand( SETSIZE, size );
 
@@ -1003,14 +554,14 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   private int configureTriggers( final int aStopCounter, final int aReadCounter ) throws IOException
   {
     int effectiveStopCounter;
-    if ( this.triggerEnabled )
+    if ( this.config.isTriggerEnabled() )
     {
-      for ( int i = 0; i < TRIGGER_STAGES; i++ )
+      for ( int i = 0; i < LogicSnifferConfig.TRIGGER_STAGES; i++ )
       {
         final int indexMask = 4 * i;
-        sendCommand( SETTRIGMASK | indexMask, this.triggerMask[i] );
-        sendCommand( SETTRIGVAL | indexMask, this.triggerValue[i] );
-        sendCommand( SETTRIGCFG | indexMask, this.triggerConfig[i] );
+        sendCommand( SETTRIGMASK | indexMask, this.config.getTriggerMask( i ) );
+        sendCommand( SETTRIGVAL | indexMask, this.config.getTriggerValue( i ) );
+        sendCommand( SETTRIGCFG | indexMask, this.config.getTriggerConfig( i ) );
       }
       effectiveStopCounter = aStopCounter;
     }
@@ -1018,7 +569,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     {
       sendCommand( SETTRIGMASK, 0 );
       sendCommand( SETTRIGVAL, 0 );
-      sendCommand( SETTRIGCFG, TRIGGER_CAPTURE );
+      sendCommand( SETTRIGCFG, LogicSnifferConfig.TRIGGER_CAPTURE );
       effectiveStopCounter = aReadCounter;
     }
     return effectiveStopCounter;
@@ -1111,15 +662,15 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
 
         if ( id == SLA_V0 )
         {
-          LOG.log( Level.INFO, "Found Sump Logic Analyzer (0x{0}) ...", Integer.toHexString( id ) );
+          LOG.log( Level.INFO, "Found (unsupported!) Sump Logic Analyzer ...", Integer.toHexString( id ) );
         }
         else if ( id == SLA_V1 )
         {
-          LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer (0x{0}) ...", Integer.toHexString( id ) );
+          LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer ...", Integer.toHexString( id ) );
         }
         else
         {
-          LOG.log( Level.INFO, "Found unknown device (0x{0}) ...", Integer.toHexString( id ) );
+          LOG.log( Level.INFO, "Found unknown device: 0x{0} ...", Integer.toHexString( id ) );
         }
       }
       catch ( final IOException exception )
@@ -1306,7 +857,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     {
       v = 0; // in case the group is disabled, simply set it to zero...
 
-      if ( this.enabledGroups[i] )
+      if ( this.config.isGroupEnabled( i ) )
       {
         v = this.inputStream.read();
 
@@ -1362,7 +913,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
    */
   private void sendCommand( final int aOpcode ) throws IOException
   {
-    if ( LOG.isLoggable( Level.FINE ) )
+    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
     {
       final byte opcode = ( byte )( aOpcode & 0xFF );
       LOG.log( Level.FINE, "Sending short command: {0} ({1})",
@@ -1385,7 +936,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
    */
   private void sendCommand( final int aOpcode, final int aData ) throws IOException
   {
-    if ( LOG.isLoggable( Level.FINE ) )
+    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
     {
       final byte opcode = ( byte )( aOpcode & 0xFF );
       LOG.log( Level.FINE, "Sending long command: {0} ({1}) with data {2} ({3})",

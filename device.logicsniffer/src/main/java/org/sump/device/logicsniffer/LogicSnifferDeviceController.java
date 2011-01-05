@@ -50,9 +50,12 @@ public class LogicSnifferDeviceController implements DeviceController
 
   // VARIABLES
 
-  private final LogicSnifferDevice device;
+  private final LogicSnifferConfig deviceConfig;
+  private LogicSnifferDevice device;
   private LogicSnifferConfigDialog configDialog;
   private boolean setup;
+
+  private BundleContext bundleContext;
 
   // CONSTRUCTORS
 
@@ -61,8 +64,7 @@ public class LogicSnifferDeviceController implements DeviceController
    */
   public LogicSnifferDeviceController()
   {
-    this.device = new LogicSnifferDevice();
-
+    this.deviceConfig = new LogicSnifferConfig();
     this.setup = false;
   }
 
@@ -74,7 +76,7 @@ public class LogicSnifferDeviceController implements DeviceController
   @Override
   public void cancel() throws IllegalStateException
   {
-    if ( isCapturing() )
+    if ( ( this.device != null ) && isCapturing() )
     {
       this.device.stop();
     }
@@ -86,14 +88,8 @@ public class LogicSnifferDeviceController implements DeviceController
   @Override
   public void captureData( final CaptureCallback aCallback ) throws IOException
   {
-    final String portName = this.configDialog.getPortName();
-    final int baudrate = this.configDialog.getPortBaudrate();
-
-    // Tell the device on what port & what rate to do its job...
-    this.device.setPortSettings( portName, baudrate );
-
     // Listen to various properties for reporting it to our callback...
-    this.device.addPropertyChangeListener( new PropertyChangeListener()
+    final PropertyChangeListener propertyChangeListener = new PropertyChangeListener()
     {
       /**
        * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
@@ -129,7 +125,12 @@ public class LogicSnifferDeviceController implements DeviceController
           aCallback.captureComplete( data );
         }
       }
-    } );
+    };
+
+    // Tell the device on what port & what rate to do its job...
+    this.device = new LogicSnifferDevice( this.bundleContext, this.deviceConfig );
+
+    this.device.addPropertyChangeListener( propertyChangeListener );
 
     // Let the capturing take place in a background thread...
     this.device.execute();
@@ -149,7 +150,7 @@ public class LogicSnifferDeviceController implements DeviceController
   @Override
   public boolean isCapturing()
   {
-    return this.device.isRunning();
+    return ( this.device != null ) && this.device.isRunning();
   }
 
   /**
@@ -179,7 +180,7 @@ public class LogicSnifferDeviceController implements DeviceController
     // if no valid dialog exists, create one
     if ( this.configDialog == null )
     {
-      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.device );
+      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.deviceConfig );
     }
 
     this.setup = this.configDialog.showDialog();
@@ -197,6 +198,6 @@ public class LogicSnifferDeviceController implements DeviceController
   protected void init( final BundleContext aBundleContext ) throws Exception
   {
     // Keep for later use...
-    this.device.setBundleContext( aBundleContext );
+    this.bundleContext = aBundleContext;
   }
 }
