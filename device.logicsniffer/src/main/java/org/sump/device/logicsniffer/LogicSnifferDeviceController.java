@@ -24,16 +24,10 @@ package org.sump.device.logicsniffer;
 import java.awt.*;
 import java.beans.*;
 import java.io.*;
-import java.util.concurrent.*;
 import java.util.logging.*;
 
-import javax.swing.*;
-
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.util.*;
-
 import org.osgi.framework.*;
 
 
@@ -48,129 +42,6 @@ import org.osgi.framework.*;
  */
 public class LogicSnifferDeviceController implements DeviceController
 {
-  // INNER TYPES
-
-  /**
-   * Provides a SwingWorker implementation for capturing data in the background.
-   */
-  static final class CaptureWorker extends SwingWorker<CapturedData, Integer>
-  {
-    // CONSTANTS
-
-    public static final String PROP_CAPTURE_ABORTED = "captureAborted";
-    public static final String PROP_CAPTURE_DONE = "captureDone";
-    public static final String PROP_CAPTURE_PROGRESS = "progress";
-
-    // VARIABLES
-
-    private final LogicSnifferDevice device;
-    private final String portName;
-    private final int baudrate;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new CaptureWorker.
-     * 
-     * @param aDevice
-     *          the Logic Sniffer device to use for capturing data, cannot be
-     *          <code>null</code>.
-     */
-    public CaptureWorker( final LogicSnifferDevice aDevice, final String aPortName, final int aBaudrate )
-    {
-      this.device = aDevice;
-      this.portName = aPortName;
-      this.baudrate = aBaudrate;
-    }
-
-    // METHODS
-
-    /**
-     * @see javax.swing.SwingWorker#doInBackground()
-     */
-    @Override
-    protected CapturedData doInBackground() throws Exception
-    {
-      LOG.info( "Starting capture ..." );
-
-      if ( !this.device.attach( this.portName, this.baudrate ) )
-      {
-        throw new IOException( "Unable to open port " + this.portName + ". No specific reason..." );
-      }
-
-      try
-      {
-        return this.device.run( new ProgressCallback()
-        {
-          @Override
-          public void updateProgress( final int aPercentage )
-          {
-            setProgress( aPercentage );
-          }
-        } );
-      }
-      finally
-      {
-        this.device.detach();
-      }
-    }
-
-    /**
-     * @see javax.swing.SwingWorker#done()
-     */
-    @Override
-    protected void done()
-    {
-      CapturedData data = null;
-      String abortReason = null;
-
-      try
-      {
-        data = get();
-      }
-      catch ( CancellationException exception )
-      {
-        abortReason = ""; // simply cancelled by user...
-        this.device.stop();
-      }
-      catch ( ExecutionException exception )
-      {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception.getCause() ) )
-        {
-          abortReason = exception.getCause().getMessage();
-          this.device.stop();
-        }
-      }
-      catch ( InterruptedException exception )
-      {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          abortReason = exception.getMessage();
-          this.device.stop();
-        }
-      }
-
-      // Report the result back to the given callback...
-      if ( isCancelled() || ( abortReason != null ) )
-      {
-        firePropertyChange( PROP_CAPTURE_ABORTED, null, abortReason );
-      }
-      else if ( isDone() )
-      {
-        firePropertyChange( PROP_CAPTURE_DONE, null, data );
-      }
-      else
-      {
-        if ( LOG.isLoggable( Level.WARNING ) )
-        {
-          LOG.warning( "Internal state error: not done nor cancelled?!" );
-        }
-      }
-    }
-  }
-
   // CONSTANTS
 
   private static final String NAME = "OpenBench LogicSniffer";
@@ -181,7 +52,6 @@ public class LogicSnifferDeviceController implements DeviceController
 
   private final LogicSnifferDevice device;
   private LogicSnifferConfigDialog configDialog;
-  private CaptureWorker captureWorker;
   private boolean setup;
 
   // CONSTRUCTORS
@@ -206,7 +76,7 @@ public class LogicSnifferDeviceController implements DeviceController
   {
     if ( isCapturing() )
     {
-      this.captureWorker.cancel( true /* mayInterruptIfRunning */);
+      this.device.stop();
     }
   }
 
@@ -219,10 +89,11 @@ public class LogicSnifferDeviceController implements DeviceController
     final String portName = this.configDialog.getPortName();
     final int baudrate = this.configDialog.getPortBaudrate();
 
-    this.captureWorker = new CaptureWorker( this.device, portName, baudrate );
+    // Tell the device on what port & what rate to do its job...
+    this.device.setPortSettings( portName, baudrate );
 
     // Listen to various properties for reporting it to our callback...
-    this.captureWorker.addPropertyChangeListener( new PropertyChangeListener()
+    this.device.addPropertyChangeListener( new PropertyChangeListener()
     {
       /**
        * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
@@ -233,7 +104,7 @@ public class LogicSnifferDeviceController implements DeviceController
         final Object value = aEvent.getNewValue();
         final String propertyName = aEvent.getPropertyName();
 
-        if ( CaptureWorker.PROP_CAPTURE_PROGRESS.equals( propertyName ) )
+        if ( LogicSnifferDevice.PROP_CAPTURE_PROGRESS.equals( propertyName ) )
         {
           final Integer progress = ( Integer )value;
 
@@ -241,7 +112,7 @@ public class LogicSnifferDeviceController implements DeviceController
 
           aCallback.updateProgress( progress );
         }
-        else if ( CaptureWorker.PROP_CAPTURE_ABORTED.equals( propertyName ) )
+        else if ( LogicSnifferDevice.PROP_CAPTURE_ABORTED.equals( propertyName ) )
         {
           final String abortReason = ( String )value;
 
@@ -249,7 +120,7 @@ public class LogicSnifferDeviceController implements DeviceController
 
           aCallback.captureAborted( abortReason );
         }
-        else if ( CaptureWorker.PROP_CAPTURE_DONE.equals( propertyName ) )
+        else if ( LogicSnifferDevice.PROP_CAPTURE_DONE.equals( propertyName ) )
         {
           final CapturedData data = ( CapturedData )value;
 
@@ -261,7 +132,7 @@ public class LogicSnifferDeviceController implements DeviceController
     } );
 
     // Let the capturing take place in a background thread...
-    this.captureWorker.execute();
+    this.device.execute();
   }
 
   /**
@@ -278,12 +149,7 @@ public class LogicSnifferDeviceController implements DeviceController
   @Override
   public boolean isCapturing()
   {
-    if ( this.captureWorker == null )
-    {
-      return false;
-    }
-
-    return !this.captureWorker.isCancelled() && !this.captureWorker.isDone();
+    return this.device.isRunning();
   }
 
   /**

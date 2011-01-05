@@ -21,22 +21,19 @@
 package org.sump.device.logicsniffer;
 
 
-import gnu.io.*;
-
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
 import org.osgi.service.io.*;
-
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -44,14 +41,18 @@ import nl.lxtreme.ols.util.*;
  * rxtx package from http://www.rxtx.org/ to access the serial port the analyzer
  * is connected to.
  */
-public class LogicSnifferDevice implements Device
+public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
 {
   // CONSTANTS
 
-  /** Old SLA version, v0 - no longer supported. */
-  private static final int SLA_V0 = 0x534c4130;
-  /** Current SLA version, v1 - supported. */
-  private static final int SLA_V1 = 0x534c4131;
+  public static final String PROP_CAPTURE_ABORTED = "captureAborted";
+  public static final String PROP_CAPTURE_DONE = "captureDone";
+  public static final String PROP_CAPTURE_PROGRESS = "progress";
+
+  /** Old SLA version, v0 (0x534c4130, or 0x30414c53) - no longer supported. */
+  private static final int SLA_V0 = 0x30414c53;
+  /** Current SLA version, v1 (0x534c4131, or 0x31414c53) - supported. */
+  private static final int SLA_V1 = 0x31414c53;
 
   /** use internal clock */
   public final static int CLOCK_INTERNAL = 0;
@@ -121,8 +122,8 @@ public class LogicSnifferDevice implements Device
   // VARIABLES
 
   private StreamConnection connection;
-  private InputStream inputStream;
-  private OutputStream outputStream;
+  private DataInputStream inputStream;
+  private DataOutputStream outputStream;
   private volatile boolean running;
   private int clockSource;
   private boolean demux;
@@ -144,6 +145,12 @@ public class LogicSnifferDevice implements Device
   private BundleContext bundleContext;
 
   // CONSTRUCTORS
+
+  private String portName;
+
+  // METHODS
+
+  private int baudrate;
 
   /**
    * Creates a new LogicSnifferDevice instance.
@@ -168,125 +175,6 @@ public class LogicSnifferDevice implements Device
     this.size = 512;
     this.enabledGroups = new boolean[4];
     setEnabledChannels( -1 ); // enable all channels
-
-    stop();
-  }
-
-  // METHODS
-
-  /**
-   * Gets a string array containing the names all available serial ports.
-   * 
-   * @return array containing serial port names
-   */
-  @SuppressWarnings( "unchecked" )
-  public static String[] getPorts()
-  {
-    final Enumeration<CommPortIdentifier> portIdentifiers = CommPortIdentifier.getPortIdentifiers();
-    final LinkedList<String> portList = new LinkedList<String>();
-    CommPortIdentifier portId = null;
-
-    while ( portIdentifiers.hasMoreElements() )
-    {
-      portId = portIdentifiers.nextElement();
-      if ( portId.getPortType() == CommPortIdentifier.PORT_SERIAL )
-      {
-        portList.addLast( portId.getName() );
-      }
-    }
-
-    return ( portList.toArray( new String[portList.size()] ) );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.Device#attach(java.lang.String, int)
-   */
-  public boolean attach( final String aPortName, final int aPortRate ) throws IOException
-  {
-    try
-    {
-      detach();
-
-      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { aPortName, aPortRate } );
-
-      this.connection = getConnection( aPortName, aPortRate );
-      if ( this.connection != null )
-      {
-        this.outputStream = this.connection.openOutputStream();
-        this.inputStream = this.connection.openInputStream();
-
-        return this.attached = true;
-      }
-
-    }
-    catch ( final Exception exception )
-    {
-      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
-          new Object[] { aPortName, exception.getMessage() } );
-      LOG.log( Level.FINE, "Detailed stack trace:", exception );
-
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        throw new IOException( "Failed to open/use " + aPortName + "! Possible reason: " + exception.getMessage() );
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Detaches the currently attached port, if one exists. This will close the
-   * serial port.
-   */
-  public void detach()
-  {
-    if ( this.connection != null )
-    {
-      try
-      {
-        // try to make sure device is reset (see run() for loop explanation)
-        if ( this.outputStream != null )
-        {
-          for ( int i = 0; i < 5; i++ )
-          {
-            sendCommand( CMD_RESET );
-          }
-          this.outputStream.flush();
-          this.outputStream.close();
-        }
-
-        if ( this.inputStream != null )
-        {
-          this.inputStream.close();
-        }
-      }
-      catch ( final IOException exception )
-      {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.WARNING, "Detaching failed!", exception );
-        }
-      }
-      finally
-      {
-        try
-        {
-          this.connection.close();
-        }
-        catch ( IOException exception )
-        {
-          LOG.log( Level.FINE, "Closing connection failed!", exception );
-        }
-        finally
-        {
-          this.connection = null;
-
-          this.attached = false;
-        }
-      }
-    }
   }
 
   /**
@@ -334,90 +222,6 @@ public class LogicSnifferDevice implements Device
   public int getMaximumRate()
   {
     return ( 2 * CLOCK );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.Device#getMetadata()
-   */
-  public LogicSnifferMetadata getMetadata() throws IOException, IllegalStateException
-  {
-    if ( !this.attached )
-    {
-      throw new IllegalStateException( "Cannot fetch metadata from device: not attached!" );
-    }
-
-    // Make sure nothing is left in our input buffer...
-    flushInput();
-
-    // Ok; device appears to be good and willing to communicate; let's get its
-    // metadata...
-    sendCommand( CMD_METADATA );
-
-    final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
-
-    int result = -1;
-    do
-    {
-      try
-      {
-        result = readByte();
-
-        if ( result > 0 )
-        {
-          final int type = ( result & 0xE0 ) >> 5;
-          if ( type == 0x00 )
-          {
-            // key value is a null-terminated string...
-            final String value = readString();
-            LOG.log( Level.FINE, "Read {0} -> \"{1}\"", new Object[] { result, value } );
-            metadata.put( result, value );
-          }
-          else if ( type == 0x01 )
-          {
-            // key value is a 32-bit integer...
-            final Integer value = readIntegerMSB();
-            LOG.log( Level.FINE, "Read {0} -> {1} (32-bit)", new Object[] { result, value } );
-            metadata.put( result, value );
-          }
-          else if ( type == 0x02 )
-          {
-            // key value is a 8-bit integer...
-            final Integer value = readByte();
-            LOG.log( Level.FINE, "Read {0} -> {1} (8-bit)", new Object[] { result, value } );
-            metadata.put( result, value );
-          }
-          else
-          {
-            LOG.log( Level.INFO, "Ignoring unknown type: {0}", type );
-          }
-        }
-      }
-      catch ( final IOException exception )
-      {
-        /* don't care */
-        result = -1;
-
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.INFO, "I/O exception", exception );
-        }
-      }
-      catch ( final InterruptedException exception )
-      {
-        /* don't care */
-        result = -1;
-
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.INFO, "Port timeout!", exception );
-        }
-      }
-    }
-    while ( result > 0x00 );
-
-    return metadata;
   }
 
   /**
@@ -507,7 +311,7 @@ public class LogicSnifferDevice implements Device
    */
   public boolean isRunning()
   {
-    return ( this.running );
+    return ( this.running && !isCancelled() && !isDone() );
   }
 
   /**
@@ -530,197 +334,6 @@ public class LogicSnifferDevice implements Device
   public boolean isTriggerEnabled()
   {
     return ( this.triggerEnabled );
-  }
-
-  /**
-   * Sends the configuration to the device, starts it, reads the captured data
-   * and returns a CapturedData object containing the data read as well as
-   * device configuration information.
-   * 
-   * @return captured data
-   * @throws IOException
-   *           when writing to or reading from device fails
-   * @throws InterruptedException
-   *           if a read time out occurs after trigger match or stop() was
-   *           called before trigger match
-   */
-  public CapturedData run( final ProgressCallback aCallback ) throws IOException, InterruptedException,
-      IllegalStateException
-  {
-    if ( !this.attached )
-    {
-      throw new IllegalStateException( "Cannot run capture from device: not attached!" );
-    }
-
-    this.running = true;
-
-    // First try to find the logic sniffer itself...
-    detectDevice();
-
-    final LogicSnifferMetadata metadata = getMetadata();
-    // Log the read results...
-    LOG.log( Level.FINE, "Metadata = \n{0}", metadata.toString() );
-
-    final int deviceSize = metadata.getSampleMemoryDepth( this.size );
-
-    final int stopCounter = ( int )( deviceSize * this.ratio );
-    final int readCounter = deviceSize;
-
-    // check if data needs to be multiplexed
-    final int channels;
-    final int samples;
-    if ( this.demux && ( this.clockSource == CLOCK_INTERNAL ) )
-    {
-      // When the multiplexer is turned on, the upper two channel blocks are
-      // disabled, leaving only 16 channels for capturing...
-      channels = metadata.getProbeCount( 16 );
-      samples = ( readCounter & 0xffff8 );
-    }
-    else
-    {
-      channels = metadata.getProbeCount( 32 );
-      samples = ( readCounter & 0xffffc );
-    }
-
-    // We need to read all samples first before doing any post-processing on
-    // them...
-    final int[] buffer = new int[samples];
-
-    // configure device
-    configureDevice( stopCounter, readCounter );
-
-    sendCommand( CMD_RUN );
-
-    // wait for first byte forever (trigger could cause long delay)
-    boolean waiting = true;
-    while ( this.running && waiting )
-    {
-      try
-      {
-        buffer[samples - 1] = readSample( channels );
-        waiting = false;
-      }
-      catch ( final InterruptedException exception )
-      {
-        // When running, we simply have a timeout; this could be that the
-        // trigger is not fired yet... We keep waiting...
-        if ( !this.running )
-        {
-          // Make sure to handle IO-interrupted exceptions properly!
-          if ( !HostUtils.handleInterruptedException( exception ) )
-          {
-            throw exception;
-          }
-        }
-      }
-    }
-
-    // read all other samples
-    try
-    {
-      for ( int i = samples - 2; this.running && ( i >= 0 ); i-- )
-      {
-        buffer[i] = readSample( channels );
-        if ( aCallback != null )
-        {
-          aCallback.updateProgress( 100 - ( 100 * i ) / buffer.length );
-        }
-      }
-    }
-    finally
-    {
-      if ( aCallback != null )
-      {
-        aCallback.updateProgress( 100 );
-      }
-    }
-
-    final List<Integer> values = new ArrayList<Integer>();
-    final List<Long> timestamps = new ArrayList<Long>();
-
-    int rleTrigPos = 0;
-    long absoluteLength = 0;
-
-    // collect additional information for CapturedData
-    int triggerPos = CapturedData.NOT_AVAILABLE;
-
-    int rate = CapturedData.NOT_AVAILABLE;
-    if ( this.clockSource == CLOCK_INTERNAL )
-    {
-      rate = this.demux ? 2 * CLOCK / ( this.divider + 1 ) : CLOCK / ( this.divider + 1 );
-    }
-
-    if ( this.rleEnabled )
-    {
-      LOG.log( Level.FINE, "Decoding Run Length Encoded data, sample count: {0}", samples );
-
-      int old = buffer[0];
-      long time = 0;
-      for ( int i = 0; i < samples; i++ )
-      {
-        if ( ( buffer[i] & 0x80000000 ) != 0 )
-        {
-          // This is a "count"
-          if ( ( old & 0x80000000 ) != 0 )
-          {
-            // Skip the first part of the stream if it is composed from
-            // repeated repeat-counts.
-            old = buffer[i];
-            LOG.log( Level.INFO, "Duplicate RLE count seen of {0} vs {1}!", new Object[] { ( buffer[i] & 0x7FFFFFFF ),
-                ( old & 0x7FFFFFFF ) } );
-            continue;
-          }
-
-          final int count = ( buffer[i] & 0x7FFFFFFF );
-          // simple increase the time value at which the next sample will
-          // occur...
-          LOG.log( Level.FINE, "RLE count seen of {0} times {1}.", new Object[] { count, buffer[i - 1] } );
-          time += count;
-        }
-        else
-        {
-          if ( ( i >= stopCounter - 2 ) && ( rleTrigPos == 0 ) )
-          {
-            rleTrigPos = values.size();
-          }
-
-          // add the read sample & add a timestamp value as well...
-          values.add( buffer[i] );
-          timestamps.add( time++ );
-
-          old = buffer[i];
-        }
-      }
-
-      // Take the last seen time value as "absolete" length of this trace...
-      absoluteLength = time;
-
-      if ( this.triggerEnabled )
-      {
-        triggerPos = rleTrigPos - 1;
-      }
-    }
-    else
-    {
-      LOG.log( Level.FINE, "Decoding unencoded data, sample count: {0}", samples );
-
-      for ( int i = 0; i < samples; i++ )
-      {
-        values.add( buffer[i] );
-        timestamps.add( ( long )i );
-      }
-
-      // Take the number of samples as "absolute" length of this trace...
-      absoluteLength = samples;
-
-      if ( this.triggerEnabled )
-      {
-        // TODO what the f*ck is this doing???
-        triggerPos = readCounter - stopCounter - 3 - ( 4 / ( this.divider + 1 ) ) - ( this.demux ? 5 : 0 );
-      }
-    }
-
-    return new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, this.enabledChannels, absoluteLength );
   }
 
   /**
@@ -820,6 +433,16 @@ public class LogicSnifferDevice implements Device
     {
       this.triggerConfig[stage] |= TRIGGER_CAPTURE;
     }
+  }
+
+  /**
+   * @param aPortName
+   * @param aBaudrate
+   */
+  public void setPortSettings( final String aPortName, final int aBaudrate )
+  {
+    this.portName = aPortName;
+    this.baudrate = aBaudrate;
   }
 
   /**
@@ -961,7 +584,335 @@ public class LogicSnifferDevice implements Device
   public void stop()
   {
     this.running = false;
-    Thread.currentThread().interrupt(); // XXX
+    cancel( true /* mayInterruptIfRunning */);
+  }
+
+  /**
+   * Sets the OSGi bundle context.
+   * 
+   * @param aBundleContext
+   *          the bundle context to set, cannot be <code>null</code>.
+   */
+  final void setBundleContext( final BundleContext aBundleContext )
+  {
+    this.bundleContext = aBundleContext;
+  }
+
+  /**
+   * Sends the configuration to the device, starts it, reads the captured data
+   * and returns a CapturedData object containing the data read as well as
+   * device configuration information.
+   * 
+   * @return the captured results, never <code>null</code>.
+   * @throws IOException
+   *           when writing to or reading from device fails
+   * @throws InterruptedException
+   *           if a read time out occurs after trigger match or stop() was
+   *           called before trigger match
+   * @see javax.swing.SwingWorker#doInBackground()
+   */
+  @Override
+  protected CapturedData doInBackground() throws Exception
+  {
+    LOG.info( "Starting capture ..." );
+
+    if ( !attach( this.portName, this.baudrate ) )
+    {
+      throw new IOException( "Unable to open port " + this.portName + ". No specific reason..." );
+    }
+
+    try
+    {
+      if ( !this.attached )
+      {
+        throw new IllegalStateException( "Cannot run capture from device: not attached!" );
+      }
+
+      this.running = true;
+
+      // First try to find the logic sniffer itself...
+      detectDevice();
+
+      final LogicSnifferMetadata metadata = getMetadata();
+      // Log the read results...
+      LOG.log( Level.FINE, "Metadata = \n{0}", metadata.toString() );
+
+      final int deviceSize = metadata.getSampleMemoryDepth( this.size );
+
+      final int stopCounter = ( int )( deviceSize * this.ratio );
+      final int readCounter = deviceSize;
+
+      // check if data needs to be multiplexed
+      final int channels;
+      final int samples;
+      if ( this.demux && ( this.clockSource == CLOCK_INTERNAL ) )
+      {
+        // When the multiplexer is turned on, the upper two channel blocks are
+        // disabled, leaving only 16 channels for capturing...
+        channels = metadata.getProbeCount( 16 );
+        samples = ( readCounter & 0xffff8 );
+      }
+      else
+      {
+        channels = metadata.getProbeCount( 32 );
+        samples = ( readCounter & 0xffffc );
+      }
+
+      // We need to read all samples first before doing any post-processing on
+      // them...
+      final int[] buffer = new int[samples];
+
+      // configure device
+      configureDevice( stopCounter, readCounter );
+
+      sendCommand( CMD_RUN );
+
+      boolean waiting = true;
+      int sampleIdx = samples - 1;
+
+      // wait for first byte forever (trigger could cause long delay)
+      while ( this.running && waiting )
+      {
+        try
+        {
+          buffer[sampleIdx] = readSample( channels );
+
+          // Notify the EDT that there's possibly something to display...
+          publish( buffer[sampleIdx] );
+
+          sampleIdx--;
+          waiting = false;
+        }
+        catch ( final InterruptedException exception )
+        {
+          // When running, we simply have a timeout; this could be that the
+          // trigger is not fired yet... We keep waiting...
+          if ( !this.running )
+          {
+            // Make sure to handle IO-interrupted exceptions properly!
+            if ( !HostUtils.handleInterruptedException( exception ) )
+            {
+              throw exception;
+            }
+          }
+        }
+      }
+
+      // read all other samples
+      try
+      {
+        for ( ; this.running && ( sampleIdx >= 0 ); sampleIdx-- )
+        {
+          buffer[sampleIdx] = readSample( channels );
+
+          setProgress( 100 - ( 100 * sampleIdx ) / buffer.length );
+
+          // Notify the EDT that there's possibly something to display...
+          publish( buffer[sampleIdx] );
+        }
+      }
+      finally
+      {
+        setProgress( 100 );
+      }
+
+      final List<Integer> values = new ArrayList<Integer>();
+      final List<Long> timestamps = new ArrayList<Long>();
+
+      int rleTrigPos = 0;
+      long absoluteLength = 0;
+
+      // collect additional information for CapturedData
+      int triggerPos = CapturedData.NOT_AVAILABLE;
+
+      int rate = CapturedData.NOT_AVAILABLE;
+      if ( this.clockSource == CLOCK_INTERNAL )
+      {
+        rate = this.demux ? 2 * CLOCK / ( this.divider + 1 ) : CLOCK / ( this.divider + 1 );
+      }
+
+      if ( this.rleEnabled )
+      {
+        LOG.log( Level.FINE, "Decoding Run Length Encoded data, sample count: {0}", samples );
+
+        int old = buffer[0];
+        long time = 0;
+        for ( int i = 0; i < samples; i++ )
+        {
+          if ( ( buffer[i] & 0x80000000 ) != 0 )
+          {
+            // This is a "count"
+            if ( ( old & 0x80000000 ) != 0 )
+            {
+              // Skip the first part of the stream if it is composed from
+              // repeated repeat-counts.
+              old = buffer[i];
+              LOG.log( Level.INFO, "Duplicate RLE count seen of {0} vs {1}!", new Object[] {
+                  ( buffer[i] & 0x7FFFFFFF ), ( old & 0x7FFFFFFF ) } );
+              continue;
+            }
+
+            final int count = ( buffer[i] & 0x7FFFFFFF );
+            // simple increase the time value at which the next sample will
+            // occur...
+            LOG.log( Level.FINE, "RLE count seen of {0} times {1}.", new Object[] { count, buffer[i - 1] } );
+            time += count;
+          }
+          else
+          {
+            if ( ( i >= stopCounter - 2 ) && ( rleTrigPos == 0 ) )
+            {
+              rleTrigPos = values.size();
+            }
+
+            // add the read sample & add a timestamp value as well...
+            values.add( buffer[i] );
+            timestamps.add( time++ );
+
+            old = buffer[i];
+          }
+        }
+
+        // Take the last seen time value as "absolete" length of this trace...
+        absoluteLength = time;
+
+        if ( this.triggerEnabled )
+        {
+          triggerPos = rleTrigPos - 1;
+        }
+      }
+      else
+      {
+        LOG.log( Level.FINE, "Decoding unencoded data, sample count: {0}", samples );
+
+        for ( int i = 0; i < samples; i++ )
+        {
+          values.add( buffer[i] );
+          timestamps.add( ( long )i );
+        }
+
+        // Take the number of samples as "absolute" length of this trace...
+        absoluteLength = samples;
+
+        if ( this.triggerEnabled )
+        {
+          // TODO what the f*ck is this doing???
+          triggerPos = readCounter - stopCounter - 3 - ( 4 / ( this.divider + 1 ) ) - ( this.demux ? 5 : 0 );
+        }
+      }
+
+      return new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, this.enabledChannels, absoluteLength );
+    }
+    finally
+    {
+      detach();
+    }
+  }
+
+  /**
+   * @see javax.swing.SwingWorker#done()
+   */
+  @Override
+  protected void done()
+  {
+    CapturedData data = null;
+    String abortReason = null;
+
+    try
+    {
+      data = get();
+    }
+    catch ( CancellationException exception )
+    {
+      abortReason = ""; // simply canceled by user...
+      stop();
+    }
+    catch ( ExecutionException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception.getCause() ) )
+      {
+        abortReason = exception.getCause().getMessage();
+        stop();
+      }
+    }
+    catch ( InterruptedException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        abortReason = exception.getMessage();
+        stop();
+      }
+    }
+
+    // Report the result back to the given callback...
+    if ( isCancelled() || ( abortReason != null ) )
+    {
+      firePropertyChange( PROP_CAPTURE_ABORTED, null, abortReason );
+    }
+    else if ( isDone() )
+    {
+      firePropertyChange( PROP_CAPTURE_DONE, null, data );
+    }
+    else
+    {
+      if ( LOG.isLoggable( Level.WARNING ) )
+      {
+        LOG.warning( "Internal state error: not done nor cancelled?!" );
+      }
+    }
+  }
+
+  /**
+   * Processes the given chunk of samples.
+   * 
+   * @param aSamples
+   *          the list with samples to process, cannot be <code>null</code>.
+   * @see javax.swing.SwingWorker#process(java.util.List)
+   */
+  @Override
+  protected void process( final List<Integer> aSamples )
+  {
+    // TODO Auto-generated method stub
+    super.process( aSamples );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.devices.Device#attach(java.lang.String, int)
+   */
+  private boolean attach( final String aPortName, final int aPortRate ) throws IOException
+  {
+    try
+    {
+      detach();
+
+      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { aPortName, aPortRate } );
+
+      this.connection = getConnection( aPortName, aPortRate );
+      if ( this.connection != null )
+      {
+        this.outputStream = this.connection.openDataOutputStream();
+        this.inputStream = this.connection.openDataInputStream();
+
+        return this.attached = true;
+      }
+
+    }
+    catch ( final Exception exception )
+    {
+      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
+          new Object[] { aPortName, exception.getMessage() } );
+      LOG.log( Level.FINE, "Detailed stack trace:", exception );
+
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        throw new IOException( "Failed to open/use " + aPortName + "! Possible reason: " + exception.getMessage() );
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -970,7 +921,7 @@ public class LogicSnifferDevice implements Device
    * @return
    * @throws IOException
    */
-  int configureDevice( final int aStopCounter, final int aReadCounter ) throws IOException
+  private int configureDevice( final int aStopCounter, final int aReadCounter ) throws IOException
   {
     final int effectiveStopCounter = configureTriggers( aStopCounter, aReadCounter );
 
@@ -1044,143 +995,6 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * Tries to detect the LogicSniffer device.
-   * 
-   * @return the device's metadata, never <code>null</code>.
-   * @throws IOException
-   *           in case the device could not be found, or in case of any other
-   *           I/O problem.
-   */
-  final void detectDevice() throws IOException
-  {
-    int tries = 3;
-    int id = -1;
-    while ( ( tries-- >= 0 ) && ( id != SLA_V0 ) && ( id != SLA_V1 ) )
-    {
-      // Make sure nothing is left in our input buffer...
-      flushInput();
-
-      // send reset 5 times because in worst case first 4 are interpreted as
-      // data of long command
-      for ( int i = 0; i < 5; i++ )
-      {
-        sendCommand( CMD_RESET );
-      }
-
-      // check if device is ready
-      sendCommand( CMD_ID );
-
-      try
-      {
-        id = readInteger();
-
-        if ( id == SLA_V0 )
-        {
-          LOG.log( Level.INFO, "Found Sump Logic Analyzer (0x{0}) ...", Integer.toHexString( id ) );
-        }
-        else if ( id == SLA_V1 )
-        {
-          LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer (0x{0}) ...", Integer.toHexString( id ) );
-        }
-        else
-        {
-          LOG.log( Level.INFO, "Found unknown device (0x{0}) ...", Integer.toHexString( id ) );
-        }
-      }
-      catch ( final IOException exception )
-      {
-        /* don't care */
-        id = -1;
-
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.INFO, "I/O exception!", exception );
-        }
-      }
-      catch ( final InterruptedException exception )
-      {
-        /* don't care */
-        id = -1;
-
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.INFO, "Port timeout!", exception );
-        }
-      }
-    }
-
-    if ( id == SLA_V0 )
-    { // SLA0
-      throw new IOException( "Device is obsolete. Please upgrade Firmware." );
-    }
-    else if ( id != SLA_V1 )
-    { // SLA1
-      throw new IOException( "Device not found!" );
-    }
-  }
-
-  /**
-   * Sets the OSGi bundle context.
-   * 
-   * @param aBundleContext
-   *          the bundle context to set, cannot be <code>null</code>.
-   */
-  final void setBundleContext( final BundleContext aBundleContext )
-  {
-    this.bundleContext = aBundleContext;
-  }
-
-  /**
-   * Blocks the current thread until a given number of bytes is available to be
-   * read from the serial port. Optionally, a timeout can be given to limit the
-   * blocking of the thread.
-   * 
-   * @param aByteCount
-   *          the number of bytes to wait for, should be greater than zero;
-   * @param aTimeout
-   *          the timeout (in milliseconds) to wait for, or -1L if no timeout
-   *          should occur. The minimum timeout is 1 millisecond.
-   * @return <code>true</code> if there are enough bytes available,
-   *         <code>false</code> otherwise.
-   * @throws IOException
-   *           in case of I/O errors;
-   * @throws InterruptedException
-   *           in case of thread interruptions.
-   */
-  private boolean blockUntilByteCountAvailable( final int aByteCount, final long aTimeout ) throws IOException,
-      InterruptedException
-  {
-    final long until = ( aTimeout <= 0 ) ? -1L : System.currentTimeMillis() + aTimeout;
-
-    while ( this.inputStream.available() < aByteCount )
-    {
-      if ( ( until > 0 ) && ( System.currentTimeMillis() > until ) )
-      {
-        LOG.log( Level.FINE, "I/O time out occurred! Waited for {0} msec.", aTimeout );
-        throw new InterruptedException( "I/O time out!" );
-      }
-
-      try
-      {
-        TimeUnit.MICROSECONDS.sleep( 25L );
-        LOG.log( Level.FINE, "Waited for 25 uSec." );
-      }
-      catch ( final InterruptedException ignore )
-      {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( ignore ) )
-        {
-          throw ignore;
-        }
-      }
-    }
-
-    return this.inputStream.available() >= aByteCount;
-  }
-
-  /**
    * @param aStopCounter
    * @param aReadCounter
    * @return
@@ -1208,6 +1022,127 @@ public class LogicSnifferDevice implements Device
       effectiveStopCounter = aReadCounter;
     }
     return effectiveStopCounter;
+  }
+
+  /**
+   * Detaches the currently attached port, if one exists. This will close the
+   * serial port.
+   */
+  private void detach()
+  {
+    if ( this.connection != null )
+    {
+      try
+      {
+        // try to make sure device is reset (see run() for loop explanation)
+        if ( this.outputStream != null )
+        {
+          for ( int i = 0; i < 5; i++ )
+          {
+            sendCommand( CMD_RESET );
+          }
+          this.outputStream.flush();
+          this.outputStream.close();
+        }
+
+        if ( this.inputStream != null )
+        {
+          this.inputStream.close();
+        }
+      }
+      catch ( final IOException exception )
+      {
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.WARNING, "Detaching failed!", exception );
+        }
+      }
+      finally
+      {
+        try
+        {
+          this.connection.close();
+        }
+        catch ( IOException exception )
+        {
+          LOG.log( Level.FINE, "Closing connection failed!", exception );
+        }
+        finally
+        {
+          this.connection = null;
+
+          this.attached = false;
+        }
+      }
+    }
+  }
+
+  /**
+   * Tries to detect the LogicSniffer device.
+   * 
+   * @return the device's metadata, never <code>null</code>.
+   * @throws IOException
+   *           in case the device could not be found, or in case of any other
+   *           I/O problem.
+   */
+  private void detectDevice() throws IOException
+  {
+    int tries = 3;
+    int id = -1;
+    while ( ( tries-- >= 0 ) && ( id != SLA_V0 ) && ( id != SLA_V1 ) )
+    {
+      // Make sure nothing is left in our input buffer...
+      flushInput();
+
+      // send reset 5 times because in worst case first 4 are interpreted as
+      // data of long command
+      for ( int i = 0; i < 5; i++ )
+      {
+        sendCommand( CMD_RESET );
+      }
+
+      // check if device is ready
+      sendCommand( CMD_ID );
+
+      try
+      {
+        id = this.inputStream.readInt();
+
+        if ( id == SLA_V0 )
+        {
+          LOG.log( Level.INFO, "Found Sump Logic Analyzer (0x{0}) ...", Integer.toHexString( id ) );
+        }
+        else if ( id == SLA_V1 )
+        {
+          LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer (0x{0}) ...", Integer.toHexString( id ) );
+        }
+        else
+        {
+          LOG.log( Level.INFO, "Found unknown device (0x{0}) ...", Integer.toHexString( id ) );
+        }
+      }
+      catch ( final IOException exception )
+      {
+        /* don't care */
+        id = -1;
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.INFO, "I/O exception!", exception );
+        }
+      }
+    }
+
+    if ( id == SLA_V0 )
+    { // SLA0
+      throw new IOException( "Device is obsolete. Please upgrade Firmware." );
+    }
+    else if ( id != SLA_V1 )
+    { // SLA1
+      throw new IOException( "Device not found!" );
+    }
   }
 
   /**
@@ -1269,79 +1204,87 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * @return
-   * @throws IOException
-   * @throws InterruptedException
+   * @see nl.lxtreme.ols.api.devices.Device#getMetadata()
    */
-  private int readByte() throws IOException, InterruptedException
+  private LogicSnifferMetadata getMetadata() throws IOException, IllegalStateException
   {
-    final int read = this.inputStream.read();
-    if ( read < 0 )
+    if ( !this.attached )
     {
-      return -1;
-    }
-    return ( read & 0xFF );
-  }
-
-  /**
-   * Reads a integer (32bits) from stream and compiles them into a single
-   * integer.
-   * 
-   * @param channels
-   *          number of channels to read (must be multiple of 8)
-   * @return integer containing four bytes read
-   * @throws IOException
-   *           if stream reading fails
-   */
-  private byte[] readBytes( final int aCount ) throws IOException, InterruptedException
-  {
-    final byte bytes[] = new byte[aCount];
-
-    if ( !blockUntilByteCountAvailable( aCount, 100L /* msec. */) )
-    {
-      throw new InterruptedException( "Timeout during readBytes!" );
+      throw new IllegalStateException( "Cannot fetch metadata from device: not attached!" );
     }
 
-    final int read = this.inputStream.read( bytes, 0, bytes.length );
-    if ( ( read != bytes.length ) || Thread.interrupted() )
+    // Make sure nothing is left in our input buffer...
+    flushInput();
+
+    // Ok; device appears to be good and willing to communicate; let's get its
+    // metadata...
+    sendCommand( CMD_METADATA );
+
+    final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
+
+    int result = -1;
+    do
     {
-      throw new InterruptedException( "Data readout interrupted!" );
+      try
+      {
+        result = this.inputStream.read();
+
+        if ( result > 0 )
+        {
+          final int type = ( result & 0xE0 ) >> 5;
+          if ( type == 0x00 )
+          {
+            // key value is a null-terminated string...
+            final String value = readString();
+            LOG.log( Level.FINE, "Read {0} -> \"{1}\"", new Object[] { result, value } );
+            metadata.put( result, value );
+          }
+          else if ( type == 0x01 )
+          {
+            // key value is a 32-bit integer...
+            final Integer value = this.inputStream.readInt();
+            LOG.log( Level.FINE, "Read {0} -> {1} (32-bit)", new Object[] { result, value } );
+            metadata.put( result, value );
+          }
+          else if ( type == 0x02 )
+          {
+            // key value is a 8-bit integer...
+            final Integer value = this.inputStream.read();
+            LOG.log( Level.FINE, "Read {0} -> {1} (8-bit)", new Object[] { result, value } );
+            metadata.put( result, value );
+          }
+          else
+          {
+            LOG.log( Level.INFO, "Ignoring unknown type: {0}", type );
+          }
+        }
+      }
+      catch ( final IOException exception )
+      {
+        /* don't care */
+        result = -1;
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.INFO, "I/O exception", exception );
+        }
+      }
+      catch ( final InterruptedException exception )
+      {
+        /* don't care */
+        result = -1;
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.INFO, "Port timeout!", exception );
+        }
+      }
     }
-    return bytes;
-  }
+    while ( result > 0x00 );
 
-  /**
-   * Reads a integer (32bits) from stream and compiles them into a single
-   * integer.
-   * 
-   * @param channels
-   *          number of channels to read (must be multiple of 8)
-   * @return integer containing four bytes read
-   * @throws IOException
-   *           if stream reading fails
-   */
-  private int readInteger() throws IOException, InterruptedException
-  {
-    final byte bytes[] = readBytes( 4 );
-    // Craft a 32-bit value from the individual bytes...
-    return ( bytes[3] << 24 ) | ( bytes[2] << 16 ) | ( bytes[1] << 8 ) | bytes[0];
-  }
-
-  /**
-   * Reads a integer (32bits) from stream and compiles them into a single
-   * integer.
-   * 
-   * @param channels
-   *          number of channels to read (must be multiple of 8)
-   * @return integer containing four bytes read
-   * @throws IOException
-   *           if stream reading fails
-   */
-  private int readIntegerMSB() throws IOException, InterruptedException
-  {
-    final byte bytes[] = readBytes( 4 );
-    // Craft a 32-bit value from the individual bytes...
-    return ( bytes[0] << 24 ) | ( bytes[1] << 16 ) | ( bytes[2] << 8 ) | bytes[3];
+    return metadata;
   }
 
   /**
@@ -1358,16 +1301,14 @@ public class LogicSnifferDevice implements Device
   {
     int v, value = 0;
 
-    for ( int i = 0; i < Math.ceil( aChannels / 8.0 ); i++ )
+    final int groupCount = ( int )Math.ceil( aChannels / 8.0 );
+    for ( int i = 0; i < groupCount; i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...
 
       if ( this.enabledGroups[i] )
       {
-        if ( blockUntilByteCountAvailable( 1, -1 /* no timeout! */) )
-        {
-          v = this.inputStream.read();
-        }
+        v = this.inputStream.read();
 
         // Any timeouts/interrupts occurred?
         if ( ( v < 0 ) || Thread.interrupted() )
@@ -1421,26 +1362,14 @@ public class LogicSnifferDevice implements Device
    */
   private void sendCommand( final int aOpcode ) throws IOException
   {
-    final byte raw = ( byte )aOpcode;
-
     if ( LOG.isLoggable( Level.FINE ) )
     {
-      String debugCmd = "Sending command: ";
-      for ( int i = 7; i >= 0; i-- )
-      {
-        if ( ( raw & ( 1 << i ) ) != 0 )
-        {
-          debugCmd += "1";
-        }
-        else
-        {
-          debugCmd += "0";
-        }
-      }
-      LOG.fine( debugCmd );
+      final byte opcode = ( byte )( aOpcode & 0xFF );
+      LOG.log( Level.FINE, "Sending short command: {0} ({1})",
+          new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ) } );
     }
 
-    this.outputStream.write( raw );
+    this.outputStream.writeByte( aOpcode );
     this.outputStream.flush();
   }
 
@@ -1456,6 +1385,14 @@ public class LogicSnifferDevice implements Device
    */
   private void sendCommand( final int aOpcode, final int aData ) throws IOException
   {
+    if ( LOG.isLoggable( Level.FINE ) )
+    {
+      final byte opcode = ( byte )( aOpcode & 0xFF );
+      LOG.log( Level.FINE, "Sending long command: {0} ({1}) with data {2} ({3})",
+          new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ), //
+              Integer.toHexString( aData ), Integer.toBinaryString( aData ) } );
+    }
+
     final byte[] raw = new byte[5];
     int mask = 0xff;
     int shift = 0;
@@ -1466,27 +1403,6 @@ public class LogicSnifferDevice implements Device
       raw[i] = ( byte )( ( aData & mask ) >> shift );
       mask = mask << 8;
       shift += 8;
-    }
-
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      String debugCmd = "Sending command: ";
-      for ( int j = 0; j < 5; j++ )
-      {
-        for ( int i = 7; i >= 0; i-- )
-        {
-          if ( ( raw[j] & ( 1 << i ) ) != 0 )
-          {
-            debugCmd += "1";
-          }
-          else
-          {
-            debugCmd += "0";
-          }
-        }
-        debugCmd += " ";
-      }
-      LOG.fine( debugCmd );
     }
 
     this.outputStream.write( raw );
