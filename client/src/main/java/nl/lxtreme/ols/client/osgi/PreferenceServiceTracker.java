@@ -269,7 +269,15 @@ public class PreferenceServiceTracker extends ServiceTracker
       this.windowStateListener = null;
     }
 
-    this.context.ungetService( aReference );
+    try
+    {
+      this.context.ungetService( aReference );
+    }
+    catch ( IllegalStateException exception )
+    {
+      Logger.getLogger( getClass().getName() ).log( Level.FINE,
+          "Ungetting service failed! Bundle context no longer valid!" );
+    }
   }
 
   /**
