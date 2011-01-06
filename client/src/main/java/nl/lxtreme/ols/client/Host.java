@@ -283,10 +283,10 @@ public final class Host implements ApplicationCallback
     // First stop all OSGi related services; then close down all Swing windows.
     // This way, we ensure that the cleanup occurs in an orderly fashion and
     // does not cause "weird" exceptions upon shutdown...
-    this.menuTracker.close();
-    this.toolTracker.close();
-    this.deviceControllerTracker.close();
     this.preferencesServiceTracker.close();
+    this.deviceControllerTracker.close();
+    this.toolTracker.close();
+    this.menuTracker.close();
 
     MainFrame mainFrame = this.controller.getMainFrame();
     if ( mainFrame != null )

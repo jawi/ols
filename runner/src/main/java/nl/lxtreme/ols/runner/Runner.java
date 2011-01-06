@@ -55,7 +55,9 @@ public final class Runner
     final String pluginDir = getPluginDir();
     final String binaryDir = getBinaryDir();
 
-    final String autoStartBundles = "file:".concat( binaryDir ).concat( "/org.apache.felix.fileinstall-3.1.2.jar" );
+    // We only start a single bundle: the file install bundle; this bundle will
+    // be responsible for starting all other bundles...
+    final String autoStartBundles = "\"file:".concat( binaryDir ).concat( "/org.apache.felix.fileinstall-3.1.2.jar\"" );
 
     this.hostActivator = new HostActivator();
     final List<BundleActivator> activators = new ArrayList<BundleActivator>();
