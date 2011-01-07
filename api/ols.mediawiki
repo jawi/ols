@@ -73,6 +73,53 @@ service. It allows classes to log using Java's native logging functionality
 
 Provides some common utilities that are shared among all other projects. 
 
+== OLS data file format ==
+
+For storing captured data to files, the OLS uses the data format as used by the original
+sump client. The format is plain text, and rather easy to parse.
+
+If a line starts with a semicolon (;), it will be regarded as a header, or metadata. 
+These headers contain information about the actual sample data, such as sample rate, 
+capture length, and so on. If a line does '''not''' start with a semicolon, but contains 
+only ''hexadecimal digits'' and ''one at-sign'' (@), it will be regarded as sample data.
+All other lines are to be ignored.
+
+=== Headers ===
+
+Headers start with a semicolon and are always a single line (so, terminated with carriage-
+return and/or line-feed). Headers contain of a key-value pair separated by a colon (:). 
+The format of a header is:
+
+  ;<name>: <value>
+
+In which the ''<name>'' is a predefined header name (case sensitive!), and the ''<value>'' 
+an arbritary value for that particular header. 
+
+The following headers are understood by the current client:
+
+* ''Size'': (Integer, mandatory) defines the absolute number of samples the file contains;
+* ''Rate'': (Integer, mandatory) defines the original sample rate, in Hertz, at which the data was taken;
+* ''Channels'': (Integer, mandatory) defines the number of channels in the sample data, should be 8, 16, 24 or 32;
+* ''EnabledChannels'': (Integer, optional) defines which channel groups are enabled (unused at the moment);
+* ''Compressed'': (Boolean, mandatory) should always be set to '''true''';
+* ''AbsoluteLength'': (Integer, mandatory) defines the total number of samples taken. Can be used together with the sample rate to determine the total capture time;
+* ''CursorEnabled'': (Boolean, optional) defines whether or not cursors are to be enabled;
+* ''Cursor0''..''Cursor9'': (Long integer, optional) defines the time values of the individual cursors (up to ten).
+
+Integer values are expected to be ''32-bit signed values'', while Long integers are expected to be 
+''64-bit signed values''. Booleans are expected as ''true'' or ''false'' string values.  
+
+=== Sample data ===
+
+Sample data are always a single line (similar as headers) consisting of hexadecimal digits
+(0-9, a-f, A-F) and an at-sign (@). The format of sample data is:
+
+  <sample value>@<sample number>
+
+In which the ''<sample number>'' is the '''decimal''' (base 10) representation of the absolute sample 
+number, and ''<sample value>'' the '''hexadecimal''' (base 16) representation of the sample value itself.
+
+Note that the ''Size'' header '''must''' match the total count of sample data.
 
 == To do ==
 

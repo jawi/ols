@@ -35,7 +35,7 @@ import org.osgi.service.io.*;
  */
 public class SerialConnectionFactory implements ConnectionFactory
 {
-  // INNER TYPES
+  // CONSTANTS
 
   /**
    * The scheme we're exposing through this factory. Serial URIs should be

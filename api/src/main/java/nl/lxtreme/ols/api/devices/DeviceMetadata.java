@@ -22,7 +22,8 @@ package nl.lxtreme.ols.api.devices;
 
 
 /**
- * Provides some (optional) metadata of a device.
+ * Provides some (optional) metadata of a device, as might be used by devices
+ * made by Dangerous Prototypes.
  * <p>
  * This interface provides direct access to the individual metadata values. In
  * addition, it can be iterated to access all "known" metadata values.
