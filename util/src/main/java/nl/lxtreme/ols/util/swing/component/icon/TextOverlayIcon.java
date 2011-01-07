@@ -156,7 +156,7 @@ public class TextOverlayIcon implements Icon
         break;
     }
 
-    final AffineTransform shift = AffineTransform.getTranslateInstance( xText, yText );
+    final AffineTransform shift = AffineTransform.getTranslateInstance( xText - 1, yText - 1 );
     return shift.createTransformedShape( outline );
   }
 
