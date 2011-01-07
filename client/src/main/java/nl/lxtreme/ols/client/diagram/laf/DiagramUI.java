@@ -626,12 +626,29 @@ public class DiagramUI extends ComponentUI
       if ( timestamps[dataStartIndex] >= aFromIndex )
       {
         // Found it; use this as starting time-index...
-        dataStartIndex = Math.max( 0, dataStartIndex - 1 );
         break;
       }
       dataStartIndex++;
     }
     while ( dataStartIndex < timestamps.length );
+    // Make sure everything is inside the expected ranges...
+    dataStartIndex = Math.min( timestamps.length - 1, Math.max( 0, dataStartIndex - 1 ) );
+
+    // Search the last sample index the is right before the to-be-displayed
+    // to index...
+    int dataEndIndex = dataStartIndex;
+    do
+    {
+      if ( timestamps[dataEndIndex] >= aToIndex )
+      {
+        // Found it; use this as starting time-index...
+        break;
+      }
+      dataEndIndex++;
+    }
+    while ( dataEndIndex < timestamps.length );
+    // Make sure everything is inside the expected ranges...
+    dataEndIndex = Math.min( timestamps.length - 1, Math.max( 0, dataEndIndex - 1 ) );
 
     final long triggerPosition = dataContainer.getTriggerPosition();
 
@@ -677,11 +694,11 @@ public class DiagramUI extends ComponentUI
             aCanvas.setComposite( oldComposite );
           }
 
-          long currentSample = aFromIndex - 1;
+          int dataIndex = dataStartIndex;
+          long currentSample = timestamps[dataIndex];
           int pIdx = 0;
 
-          int dataIndex = dataStartIndex;
-          while ( ( dataIndex < values.length ) && ( timestamps[dataIndex] <= aToIndex ) )
+          while ( dataIndex <= dataEndIndex )
           {
             final long nextSample;
 
