@@ -560,6 +560,44 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Goes to the current cursor position of the first available cursor.
+   */
+  public void gotoFirstAvailableCursor()
+  {
+    if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
+    {
+      for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
+      {
+        if ( this.dataContainer.isCursorPositionSet( c ) )
+        {
+          final long cursorPosition = this.dataContainer.getCursorPosition( c );
+          this.mainFrame.gotoPosition( cursorPosition );
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Goes to the current cursor position of the last available cursor.
+   */
+  public void gotoLastAvailableCursor()
+  {
+    if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
+    {
+      for ( int c = DataContainer.MAX_CURSORS - 1; c >= 0; c-- )
+      {
+        if ( this.dataContainer.isCursorPositionSet( c ) )
+        {
+          final long cursorPosition = this.dataContainer.getCursorPosition( c );
+          this.mainFrame.gotoPosition( cursorPosition );
+          break;
+        }
+      }
+    }
+  }
+
+  /**
    * Goes to the position of the trigger.
    */
   public void gotoTriggerPosition()
@@ -1230,6 +1268,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     aActionManager.add( new GotoTriggerAction( this ) ).setEnabled( false );
     aActionManager.add( new GotoCursor1Action( this ) ).setEnabled( false );
     aActionManager.add( new GotoCursor2Action( this ) ).setEnabled( false );
+    aActionManager.add( new GotoFirstCursorAction( this ) ).setEnabled( false );
+    aActionManager.add( new GotoLastCursorAction( this ) ).setEnabled( false );
     aActionManager.add( new SetCursorModeAction( this ) );
     for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
     {
@@ -1348,6 +1388,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     getAction( GotoCursor1Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 0 ) );
     getAction( GotoCursor2Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 1 ) );
+
+    getAction( GotoFirstCursorAction.ID ).setEnabled( enableCursors );
+    getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors );
 
     getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
     getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY, this.dataContainer.isCursorsEnabled() );

@@ -46,19 +46,72 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
   // CONSTRUCTORS
 
   /**
+   * Creates a new BaseAction instance with a compound icon.
+   * 
+   * @param aID
+   *          the unique ID of this action, cannot be <code>null</code>;
+   * @param aController
+   *          the client controller this action can use, cannot be
+   *          <code>null</code>;
+   * @param aIcon
+   *          the icon to use for this action, can be <code>null</code> if no
+   *          icon is desired;
    * @param aName
+   *          the name of this icon, cannot be <code>null</code>;
    * @param aDescription
+   *          the description/tooltip of this action.
+   */
+  protected BaseAction( final String aID, final ClientController aController, final Icon aIcon, final String aName,
+      final String aDescription )
+  {
+    super( aID );
+
+    this.id = aID;
+    this.controller = aController;
+
+    putValue( NAME, aName );
+    putValue( SHORT_DESCRIPTION, aDescription );
+
+    if ( aIcon != null )
+    {
+      putValue( Action.LARGE_ICON_KEY, aIcon );
+    }
+  }
+
+  /**
+   * Creates a new BaseAction instance without an icon.
+   * 
+   * @param aID
+   *          the unique ID of this action, cannot be <code>null</code>;
+   * @param aController
+   *          the client controller this action can use, cannot be
+   *          <code>null</code>;
+   * @param aName
+   *          the name of this icon, cannot be <code>null</code>;
+   * @param aDescription
+   *          the description/tooltip of this action.
    */
   protected BaseAction( final String aID, final ClientController aController, final String aName,
       final String aDescription )
   {
-    this( aID, aController, null /* aIconName */, aName, aDescription );
+    this( aID, aController, ( String )null /* aIconName */, aName, aDescription );
   }
 
   /**
+   * Creates a new BaseAction instance with an icon.
+   * 
+   * @param aID
+   *          the unique ID of this action, cannot be <code>null</code>;
+   * @param aController
+   *          the client controller this action can use, cannot be
+   *          <code>null</code>;
    * @param aIconName
+   *          the (symbolic) name of the icon to use for this action, can be
+   *          <code>null</code> if no icon is desired;
    * @param aName
+   *          the name of this icon, cannot be <code>null</code>;
    * @param aDescription
+   *          the description/tooltip of this action.
    */
   protected BaseAction( final String aID, final ClientController aController, final String aIconName,
       final String aName, final String aDescription )
