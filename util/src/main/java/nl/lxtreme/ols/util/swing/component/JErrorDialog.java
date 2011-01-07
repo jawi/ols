@@ -325,7 +325,23 @@ public class JErrorDialog extends JDialog implements Closeable
           "<html><b>Something unexpected happened!</b><br><br>"
               + "Click on \"more details\" for more information about the possible cause.<br><br>"
               + "If the problem persists, please report it as bug.</html>", "", aException );
-      JErrorDialog.showDialog( owner, incident );
+
+      final Runnable task = new Runnable()
+      {
+        public void run()
+        {
+          JErrorDialog.showDialog( owner, incident );
+        }
+      };
+
+      if ( SwingUtilities.isEventDispatchThread() )
+      {
+        task.run();
+      }
+      else
+      {
+        SwingUtilities.invokeLater( task );
+      }
     }
   }
 
