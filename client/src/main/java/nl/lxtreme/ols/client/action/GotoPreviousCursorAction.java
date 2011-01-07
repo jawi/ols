@@ -21,8 +21,6 @@
 package nl.lxtreme.ols.client.action;
 
 
-import static nl.lxtreme.ols.client.icons.IconFactory.*;
-
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.*;
@@ -31,24 +29,24 @@ import nl.lxtreme.ols.client.*;
 /**
  * 
  */
-public class GotoCursor2Action extends BaseAction
+public class GotoPreviousCursorAction extends BaseAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "GotoCursor2";
+  public static final String ID = "GotoFirstCursor";
 
   // CONSTRUCTORS
 
   /**
    * @param aDiagramScrollPane
    */
-  public GotoCursor2Action( final ClientController aController )
+  public GotoPreviousCursorAction( final ClientController aController )
   {
-    super( ID, aController, createOverlayIcon( ICON_GOTO_CURSOR1, "2" ), "Go to Cursor 2",
-        "Go to second cursor in diagram." );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_2 ) );
+    super( ID, aController, ICON_GOTO_PREVIOUS_CURSOR, "Go to previous cursor",
+        "Go to the previous available cursor in diagram." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
   }
 
   // METHODS

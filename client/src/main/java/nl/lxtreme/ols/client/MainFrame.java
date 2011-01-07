@@ -614,6 +614,8 @@ public final class MainFrame extends JFrame implements Closeable
     diagramMenu.add( this.controller.getAction( ZoomFitAction.ID ) );
     diagramMenu.addSeparator();
     diagramMenu.add( this.controller.getAction( GotoTriggerAction.ID ) );
+    diagramMenu.add( this.controller.getAction( GotoFirstCursorAction.ID ) );
+    diagramMenu.add( this.controller.getAction( GotoLastCursorAction.ID ) );
     diagramMenu.add( this.controller.getAction( GotoCursor1Action.ID ) );
     diagramMenu.add( this.controller.getAction( GotoCursor2Action.ID ) );
     diagramMenu.addSeparator();

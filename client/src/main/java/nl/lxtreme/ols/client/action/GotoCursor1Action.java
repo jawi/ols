@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client.action;
 
 
+import static nl.lxtreme.ols.client.icons.IconFactory.*;
+
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.*;
@@ -44,7 +46,8 @@ public class GotoCursor1Action extends BaseAction
    */
   public GotoCursor1Action( final ClientController aController )
   {
-    super( ID, aController, ICON_GOTO_CURSOR1, "Go to Cursor 1", "Go to first cursor in diagram." );
+    super( ID, aController, createOverlayIcon( ICON_GOTO_CURSOR1, "1" ), "Go to Cursor 1",
+        "Go to first cursor in diagram." );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_1 ) );
   }
 

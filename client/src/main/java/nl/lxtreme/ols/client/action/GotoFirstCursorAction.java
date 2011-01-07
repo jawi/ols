@@ -21,34 +21,32 @@
 package nl.lxtreme.ols.client.action;
 
 
-import static nl.lxtreme.ols.client.icons.IconFactory.*;
-
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.*;
 
 
 /**
- * 
+ * Provides an action that goes to the first available cursor.
  */
-public class GotoCursor2Action extends BaseAction
+public class GotoFirstCursorAction extends BaseAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "GotoCursor2";
+  public static final String ID = "GotoFirstCursor";
 
   // CONSTRUCTORS
 
   /**
    * @param aDiagramScrollPane
    */
-  public GotoCursor2Action( final ClientController aController )
+  public GotoFirstCursorAction( final ClientController aController )
   {
-    super( ID, aController, createOverlayIcon( ICON_GOTO_CURSOR1, "2" ), "Go to Cursor 2",
-        "Go to second cursor in diagram." );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_2 ) );
+    super( ID, aController, ICON_GOTO_FIRST_CURSOR, "Go to first cursor",
+        "Go to the first available cursor in diagram." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_F ) );
   }
 
   // METHODS
@@ -59,7 +57,7 @@ public class GotoCursor2Action extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().gotoCursorPosition( 1 );
+    getController().gotoFirstAvailableCursor();
   }
 }
 
