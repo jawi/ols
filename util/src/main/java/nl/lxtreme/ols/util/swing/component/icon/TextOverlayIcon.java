@@ -31,14 +31,17 @@ import javax.swing.*;
 
 /**
  * Provides an icon which takes another icon and renders a given text over it.
+ * <p>
+ * Note: it appears that you need to extend {@link ImageIcon} in order to have
+ * Swing render "disabled" (= grayed out) versions of this icon. There is no
+ * other reason to do this.
+ * </p>
  */
-public class TextOverlayIcon implements Icon
+public class TextOverlayIcon extends ImageIcon
 {
-  // VARIABLES
+  // CONSTANTS
 
-  private final int iconWidth;
-  private final int iconHeight;
-  private final BufferedImage compoundIcon;
+  private static final long serialVersionUID = 1L;
 
   // CONSTRUCTORS
 
@@ -73,43 +76,10 @@ public class TextOverlayIcon implements Icon
    */
   public TextOverlayIcon( final Icon aIcon, final String aTextOverlay, final int aPosition )
   {
-    this.iconWidth = aIcon.getIconWidth();
-    this.iconHeight = aIcon.getIconHeight();
-
-    this.compoundIcon = drawCompoundIcon( aIcon, aTextOverlay, aPosition );
+    setImage( drawCompoundIcon( aIcon, aTextOverlay, aPosition ) );
   }
 
   // METHODS
-
-  /**
-   * @see javax.swing.Icon#getIconHeight()
-   */
-  @Override
-  public int getIconHeight()
-  {
-    return this.iconHeight;
-  }
-
-  /**
-   * @see javax.swing.Icon#getIconWidth()
-   */
-  @Override
-  public int getIconWidth()
-  {
-    return this.iconWidth;
-  }
-
-  /**
-   * @see javax.swing.Icon#paintIcon(java.awt.Component, java.awt.Graphics, int,
-   *      int)
-   */
-  @Override
-  public void paintIcon( final Component aComponent, final Graphics aGraphics, final int aX, final int aY )
-  {
-    // We've rendered everything upon instantiation of this class, so we're done
-    // pretty quickly...
-    aGraphics.drawImage( this.compoundIcon, aX, aY, null /* aObserver */);
-  }
 
   /**
    * Creates the text outline and positions this at the correct position given
