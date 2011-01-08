@@ -242,7 +242,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    */
   public LogicSnifferConfigDialog( final Window aParent, final LogicSnifferConfig aConfig )
   {
-    super( aParent, "Capture settings", ModalityType.DOCUMENT_MODAL );
+    super( aParent, "OLS Capture settings", ModalityType.DOCUMENT_MODAL );
 
     this.config = aConfig;
 
