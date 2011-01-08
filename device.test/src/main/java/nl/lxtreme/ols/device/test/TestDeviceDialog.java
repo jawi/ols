@@ -64,7 +64,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
    */
   public TestDeviceDialog( final Window aParent )
   {
-    super( aParent, "Test capture", ModalityType.DOCUMENT_MODAL );
+    super( aParent, "Test capture settings", ModalityType.DOCUMENT_MODAL );
 
     this.setupConfirmed = false;
     this.dataFunction = DATA_FUNCTIONS[6];
