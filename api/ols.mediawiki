@@ -124,6 +124,18 @@ Note that the ''Size'' header '''must''' match the total count of sample data.
 == To do ==
 
 # support easy/easier upgrade procedure;
+# VCD dump is ignoring the selected number of channels and always dumps all 32 channels. Also the VCD format allows to list for each sample only the channels that have change value; instead they are all listed (reported by zelea2);
+# it no longer launches if there's a space in the directory path (reported by jone);
+# Open project should show current directory by default, not home director (reported by nickandrew);
+# Save project should remember the last-saved filename (i.e. typically implemented as two menu options; Save and Save As ...; reported by nickandrew);
+# With RLE enabled, the frequency appears to be changing with different sample rates (reported by nickandrew);
+# Make it easier to remove set cursors (reported by pppd);
+# Make it possible to edit cursor labels (reported by pppd);
+# Display cursor label on "goto cursors button" (reported by pppd);
+# Allow cursors to snap to signal edges (reported by pppd);
+# Allow selecting two cursors and show timing information (reported by pppd);
+# real time acquisition. for e.g. trough named pipe or other resource (reported by arhi);
+# client side triggers for the real time acquisition stream (reported by arhi);
 # support OLS-device profiles for BP, regular OLS and SUMP;
 # make the tools aware of the device capabilities (5 channels for BP iso 32, etc.);
 # show timing measurements between edges, or from rising to rising or falling to falling edges;
