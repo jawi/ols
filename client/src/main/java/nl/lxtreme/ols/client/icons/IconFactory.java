@@ -40,6 +40,10 @@ public final class IconFactory
    */
   public static class CompoundTextIcon extends TextOverlayIcon
   {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
     // CONSTRUCTORS
 
     /**
