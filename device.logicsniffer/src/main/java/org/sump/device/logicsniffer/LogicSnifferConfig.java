@@ -21,9 +21,10 @@ public final class LogicSnifferConfig
 
   // CONSTANTS
 
-  final static int CLOCK = 100000000; // device clock in Hz
-  // number of trigger stages
-  final static int TRIGGER_STAGES = 4;
+  /** The default sample clock in Hertz (Hz). */
+  public final static int CLOCK = 100000000; // device clock in Hz
+  /** The number of trigger stages. */
+  private final static int TRIGGER_STAGES = 4;
 
   // mask for delay value
   private final static int TRIGGER_DELAYMASK = 0x0000ffff;
@@ -35,6 +36,8 @@ public final class LogicSnifferConfig
   private final static int TRIGGER_SERIAL = 0x04000000;
   // trigger will start capture when fired
   final static int TRIGGER_CAPTURE = 0x08000000;
+
+  // VARIABLES
 
   private ClockSource clockSource;
   private boolean demux;
@@ -54,9 +57,12 @@ public final class LogicSnifferConfig
 
   private String portName;
   private int baudrate;
+  private LogicSnifferMetadata metadata;
+
+  // CONSTRUCTORS
 
   /**
-   * 
+   * Creates a new LogicSnifferConfig instance with all default settings.
    */
   public LogicSnifferConfig()
   {
@@ -78,33 +84,47 @@ public final class LogicSnifferConfig
     this.size = 512;
     this.enabledGroups = new boolean[4];
     setEnabledChannels( -1 ); // enable all channels
+
+    this.metadata = new LogicSnifferMetadata();
   }
 
   // METHODS
 
   /**
-   * Returns the number of available channels in current configuration.
+   * Returns the baudrate in which to communicate with the device.
    * 
-   * @return number of available channels
-   */
-  public int getAvailableChannelCount()
-  {
-    if ( this.demux && isInternalClock() )
-    {
-      return 16;
-    }
-    else
-    {
-      return 32;
-    }
-  }
-
-  /**
-   * @return the baudrate
+   * @return the baudrate, for example, 115200.
    */
   public int getBaudrate()
   {
     return this.baudrate;
+  }
+
+  /**
+   * Returns the number of available channels in current configuration.
+   * 
+   * @return number of available channels, e.g., 8 or 16.
+   */
+  public int getChannelCount()
+  {
+    int channels;
+    if ( this.demux && isInternalClock() )
+    {
+      // When the multiplexer is turned on, the upper two channel blocks are
+      // disabled, leaving only 16 channels for capturing...
+      channels = 16;
+    }
+    else
+    {
+      channels = 32;
+    }
+
+    if ( this.metadata != null )
+    {
+      return this.metadata.getProbeCount( channels );
+    }
+
+    return channels;
   }
 
   /**
@@ -118,7 +138,10 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * @return the divider
+   * Returns the divider, or the value used by the OLS device to take samples at
+   * the requested rate.
+   * 
+   * @return the divider as integer.
    */
   public int getDivider()
   {
@@ -136,17 +159,29 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Get the maximum sampling rate available.
+   * Returns the number of available trigger stages.
    * 
-   * @return maximum sampling rate
+   * @return number of available trigger stages, defaults to 4.
    */
-  public int getMaximumRate()
+  public int getMaxTriggerStages()
   {
-    return ( 2 * CLOCK );
+    return TRIGGER_STAGES;
   }
 
   /**
-   * @return the portName
+   * Returns the metadata as obtained from the device.
+   * 
+   * @return the device metadata, might be <code>null</code>.
+   */
+  public LogicSnifferMetadata getMetadata()
+  {
+    return this.metadata;
+  }
+
+  /**
+   * Returns the name of the port through which to communiate with the device.
+   * 
+   * @return the port name, e.g., "COM3", or "/dev/ttyACM0".
    */
   public String getPortName()
   {
@@ -154,7 +189,10 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * @return the ratio
+   * Returns the ratio of samples that is to be returned before the trigger and
+   * after the trigger.
+   * 
+   * @return the ratio, between 0 and 1.
    */
   public double getRatio()
   {
@@ -162,15 +200,57 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * @return the size
+   * The number of samples to read from the OLS device.
+   * 
+   * @return the read counter as integer value.
+   * @see #getStopCounter()
    */
-  public int getSize()
+  public int getReadCounter()
   {
-    return this.size;
+    return this.metadata.getSampleMemoryDepth( this.size );
   }
 
   /**
-   * @return the triggerConfig
+   * Returns the number of samples to be taken in current configuration.
+   * 
+   * @return number of samples, >= 0.
+   */
+  public int getSampleCount()
+  {
+    int samples;
+    if ( this.demux && isInternalClock() )
+    {
+      // When the multiplexer is turned on, the upper two channel blocks are
+      // disabled, leaving only 16 channels for capturing...
+      samples = ( getReadCounter() & 0xffff8 );
+    }
+    else
+    {
+      samples = ( getReadCounter() & 0xffffc );
+    }
+
+    return samples;
+  }
+
+  /**
+   * Returns the "stop" counter, or the value on which the capture should be
+   * stopped.
+   * 
+   * @return a stop counter value, >= 0 && < capture depth.
+   * @see #getReadCounter()
+   */
+  public int getStopCounter()
+  {
+    return ( int )( getReadCounter() * getRatio() );
+  }
+
+  /**
+   * Returns the configuration for a particular trigger stage.
+   * 
+   * @param aStage
+   *          trigger stage to read mask from, >= 0 && <
+   *          {@value #TRIGGER_STAGES}.
+   * @return the trigger configuration as integer.
    */
   public int getTriggerConfig( final int aStage )
   {
@@ -178,51 +258,48 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Returns the current trigger mask.
+   * Returns the current trigger mask for a particular trigger stage.
    * 
-   * @param stage
-   *          trigger stage to read mask from
-   * @return current trigger mask
+   * @param aStage
+   *          trigger stage to read mask from, >= 0 && <
+   *          {@value #TRIGGER_STAGES}.
+   * @return the current trigger mask, as integer.
    */
-  public int getTriggerMask( final int stage )
+  public int getTriggerMask( final int aStage )
   {
-    return this.triggerMask[stage];
+    return this.triggerMask[aStage];
   }
 
   /**
-   * Returns the number of available trigger stages.
+   * Returns the current trigger value for a particular trigger stage.
    * 
-   * @return number of available trigger stages
+   * @param aStage
+   *          trigger stage to read mask from, >= 0 && <
+   *          {@value #TRIGGER_STAGES}.
+   * @return the current trigger value, as integer.
    */
-  public int getTriggerStageCount()
+  public int getTriggerValue( final int aStage )
   {
-    return TRIGGER_STAGES;
+    return this.triggerValue[aStage];
   }
 
   /**
-   * Returns the current trigger value.
+   * Returns whether the alternative number scheme for the probes is to be used.
    * 
-   * @param stage
-   *          trigger stage to read value from
-   * @return current trigger value
-   */
-  public int getTriggerValue( final int stage )
-  {
-    return this.triggerValue[stage];
-  }
-
-  /**
-   * Returns the current number scheme mask.
-   * 
-   * @return current number scheme mask
+   * @return <code>true</code> if the alternative number scheme is to be used,
+   *         <code>false</code> otherwise.
    */
   public boolean isAltNumberSchemeEnabled()
   {
-    return ( this.altNumberSchemeEnabled );
+    return this.altNumberSchemeEnabled;
   }
 
   /**
-   * @return the demux
+   * Returns whether the demultiplexer is used. If the demultiplexer is enabled,
+   * the sampling frequency is doubled to 200MHz.
+   * 
+   * @return <code>true</code> if the demultiplexer is enabled,
+   *         <code>false</code> otherwise.
    */
   public boolean isDemuxEnabled()
   {
@@ -230,7 +307,11 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * @return
+   * Returns whether the sample clock is supplied externally.
+   * 
+   * @return <code>true</code> if an external sample clock is to be used,
+   *         <code>false</code> if the internal sample clock is to be used.
+   * @see #isInternalClock()
    */
   public boolean isExternalClock()
   {
@@ -238,35 +319,49 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Returns wether or not the noise filter can be used in the current
+   * Returns whether or not the noise filter can be used in the current
    * configuration.
    * 
    * @return <code>true</code> when noise filter is available,
-   *         <code>false</code> otherwise
+   *         <code>false</code> otherwise.
+   * @see #isFilterEnabled()
    */
   public boolean isFilterAvailable()
   {
-    return ( !this.demux && isInternalClock() );
+    return !isDemuxEnabled() && isInternalClock();
   }
 
   /**
-   * Returns wether or not the noise filter is enabled.
+   * Returns whether or not the noise filter is enabled.
    * 
    * @return <code>true</code> when noise filter is enabled, <code>false</code>
-   *         otherwise
+   *         otherwise.
+   * @see #isFilterAvailable()
    */
   public boolean isFilterEnabled()
   {
-    return ( this.filterEnabled );
+    return this.filterEnabled;
   }
 
+  /**
+   * Returns whether the probe-group with the given number is enabled.
+   * 
+   * @param aGroupNr
+   *          the number of the probe-group, >= 0 && < 4.
+   * @return <code>true</code> if the probe-group is enabled, <code>false</code>
+   *         otherwise.
+   */
   public boolean isGroupEnabled( final int aGroupNr )
   {
     return this.enabledGroups[aGroupNr];
   }
 
   /**
-   * @return
+   * Returns whether the internal sample clock is used.
+   * 
+   * @return <code>true</code> if an internal sample clock is to be used,
+   *         <code>false</code> if the external sample clock is to be used.
+   * @see #isExternalClock()
    */
   public boolean isInternalClock()
   {
@@ -274,52 +369,55 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Returns wether or not the run length encoding is enabled.
+   * Returns whether or not the run length encoding is enabled.
    * 
    * @return <code>true</code> when run length encoding is enabled,
    *         <code>false</code> otherwise
    */
   public boolean isRleEnabled()
   {
-    return ( this.rleEnabled );
+    return this.rleEnabled;
   }
 
   /**
-   * Returns wether or not the run length encoding is enabled.
+   * Returns whether or not the test mode is enabled.
    * 
-   * @return <code>true</code> when run length encoding is enabled,
-   *         <code>false</code> otherwise
+   * @return <code>true</code> when test mode is enabled, <code>false</code>
+   *         otherwise.
    */
   public boolean isTestModeEnabled()
   {
-    return ( this.testModeEnabled );
+    return this.testModeEnabled;
   }
 
   /**
-   * Returns wether or not the trigger is enabled.
+   * Returns whether or not the triggers are to be used.
    * 
-   * @return <code>true</code> when trigger is enabled, <code>false</code>
-   *         otherwise
+   * @return <code>true</code> when trigger are to be used, <code>false</code>
+   *         otherwise.
    */
   public boolean isTriggerEnabled()
   {
-    return ( this.triggerEnabled );
+    return this.triggerEnabled;
   }
 
   /**
-   * Sets the Number Scheme Mask
+   * Sets whether or not the alternative numbering scheme is to be used.
    * 
-   * @param mask
-   *          bit map defining number scheme.
+   * @param aEnable
+   *          <code>true</code> if the alternative numbering scheme is to be
+   *          used, <code>false</code> otherwise.
    */
-  public void setAltNumberSchemeEnabled( final boolean enable )
+  public void setAltNumberSchemeEnabled( final boolean aEnable )
   {
-    this.altNumberSchemeEnabled = enable;
+    this.altNumberSchemeEnabled = aEnable;
   }
 
   /**
+   * Sets the communication speed with the device.
+   * 
    * @param aBaudrate
-   *          the baudrate to set
+   *          the baudrate to set.
    */
   public void setBaudrate( final int aBaudrate )
   {
@@ -330,7 +428,7 @@ public final class LogicSnifferConfig
    * Sets the clock source to use.
    * 
    * @param aSource
-   *          can be any CLOCK_ property of this class
+   *          the clock source to use, cannot be <code>null</code>.
    */
   public void setClockSource( final ClockSource aSource )
   {
@@ -340,12 +438,12 @@ public final class LogicSnifferConfig
   /**
    * Set enabled channels.
    * 
-   * @param mask
+   * @param aMask
    *          bit map defining enabled channels
    */
-  public void setEnabledChannels( final int mask )
+  public void setEnabledChannels( final int aMask )
   {
-    this.enabledChannels = mask;
+    this.enabledChannels = aMask;
     // determine enabled groups
     for ( int i = 0; i < 4; i++ )
     {
@@ -354,20 +452,31 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Sets wheter or not to enable the noise filter.
+   * Sets whether or not the noise filter is enabled.
    * 
-   * @param enable
-   *          <code>true</code> enables the noise filter, <code>false</code>
-   *          disables it.
+   * @param aEnable
+   *          <code>true</code> to enable the noise filter, <code>false</code>
+   *          to disable it.
    */
-  public void setFilterEnabled( final boolean enable )
+  public void setFilterEnabled( final boolean aEnable )
   {
-    this.filterEnabled = enable;
+    this.filterEnabled = aEnable;
   }
 
   /**
-   * Configures the given trigger stage in parallel mode. Currenty the trigger
-   * has four stages (0-3).
+   * Sets the device metadata.
+   * 
+   * @param aMetadata
+   *          the metadata to set, cannot be <code>null</code>.
+   */
+  public void setMetadata( final LogicSnifferMetadata aMetadata )
+  {
+    this.metadata = aMetadata;
+  }
+
+  /**
+   * Configures the given trigger stage in parallel mode. Currently, the trigger
+   * has up to {@value #TRIGGER_STAGES} stages.
    * <p>
    * In mask and value each bit of the integer parameters represents one
    * channel. The LSB represents channel 0, the MSB channel 31.
@@ -375,48 +484,49 @@ public final class LogicSnifferConfig
    * When a trigger fires, the trigger level will rise by one. Initially the
    * trigger level is 0.
    * 
-   * @param stage
-   *          trigger stage to write mask und value to
-   * @param mask
+   * @param aStage
+   *          trigger stage to write mask and value to
+   * @param aMask
    *          bit map defining which channels to watch
-   * @param value
+   * @param aValue
    *          bit map defining what value to wait for on watched channels
    * @param level
-   *          trigger level at which the trigger will be armed (0 = immediatly)
-   * @param delay
+   *          trigger level at which the trigger will be armed (0 = immediately)
+   * @param aDelay
    *          delay in samples to wait in between match and fire
-   * @param startCapture
+   * @param aStartCapture
    *          if <code>true</code> that capture when trigger fires, otherwise
-   *          only triggel level will increase
+   *          only trigger level will increase
    */
-  public void setParallelTrigger( final int stage, final int mask, final int value, final int level, final int delay,
-      final boolean startCapture )
+  public void setParallelTrigger( final int aStage, final int aMask, final int aValue, final int aLevel,
+      final int aDelay, final boolean aStartCapture )
   {
-    if ( !this.demux )
-    { // TODO: demux modification should be done on the fly in
-      // run() and not with stored properties
-      this.triggerMask[stage] = mask;
-      this.triggerValue[stage] = value;
+    if ( isDemuxEnabled() )
+    {
+      this.triggerMask[aStage] = ( aMask & 0xFFFF ) | ( ( aMask & 0xFFFF ) << 16 );
+      this.triggerValue[aStage] = ( aValue & 0xFFFF ) | ( ( aValue & 0xFFFF ) << 16 );
     }
     else
     {
-      this.triggerMask[stage] = mask & 0xffff;
-      this.triggerValue[stage] = value & 0xffff;
-      this.triggerMask[stage] |= this.triggerMask[stage] << 16;
-      this.triggerValue[stage] |= this.triggerValue[stage] << 16;
+      this.triggerMask[aStage] = aMask;
+      this.triggerValue[aStage] = aValue;
     }
-    this.triggerConfig[stage] = 0;
-    this.triggerConfig[stage] |= delay & TRIGGER_DELAYMASK;
-    this.triggerConfig[stage] |= ( level << 16 ) & TRIGGER_LEVELMASK;
-    if ( startCapture )
+
+    this.triggerConfig[aStage] = 0;
+    this.triggerConfig[aStage] |= aDelay & TRIGGER_DELAYMASK;
+    this.triggerConfig[aStage] |= ( aLevel << 16 ) & TRIGGER_LEVELMASK;
+
+    if ( aStartCapture )
     {
-      this.triggerConfig[stage] |= TRIGGER_CAPTURE;
+      this.triggerConfig[aStage] |= TRIGGER_CAPTURE;
     }
   }
 
   /**
+   * Sets the name of the port to communicate with the device.
+   * 
    * @param aPortName
-   *          the portName to set
+   *          the port name to set, cannot be <code>null</code>.
    */
   public void setPortName( final String aPortName )
   {
@@ -424,13 +534,47 @@ public final class LogicSnifferConfig
   }
 
   /**
+   * Sets the ratio for samples to read before and after started.
+   * 
+   * @param aRatio
+   *          value between 0 and 1; 0 means all before start, 1 all after
+   */
+  public void setRatio( final double aRatio )
+  {
+    this.ratio = aRatio;
+  }
+
+  /**
+   * Sets whether or not to enable the run length encoding.
+   * 
+   * @param enable
+   *          <code>true</code> to enable the RLE, <code>false</code> to disable
+   *          it.
+   */
+  public void setRleEnabled( final boolean enable )
+  {
+    this.rleEnabled = enable;
+  }
+
+  /**
+   * Sets the number of samples to obtain when started.
+   * 
+   * @param aCount
+   *          the number of samples to take, must be between 4 and 256*1024.
+   */
+  public void setSampleCount( final int aCount )
+  {
+    this.size = aCount;
+  }
+
+  /**
    * Set the sampling rate. All rates must be a divisor of 200.000.000. Other
    * rates will be adjusted to a matching divisor.
    * 
    * @param aRate
-   *          sampling rate in Hz
+   *          the sampling rate in Hertz (Hz).
    */
-  public void setRate( final int aRate )
+  public void setSampleRate( final int aRate )
   {
     if ( aRate > CLOCK )
     {
@@ -445,98 +589,64 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Sets the ratio for samples to read before and after started.
-   * 
-   * @param ratio
-   *          value between 0 and 1; 0 means all before start, 1 all after
-   */
-  public void setRatio( final double ratio )
-  {
-    this.ratio = ratio;
-  }
-
-  /**
-   * Sets wheter or not to enable the run length encoding.
-   * 
-   * @param enable
-   *          <code>true</code> enables the RLE, <code>false</code> disables it.
-   */
-  public void setRleEnabled( final boolean enable )
-  {
-    this.rleEnabled = enable;
-  }
-
-  /**
-   * Configures the given trigger stage in serial mode. Currenty the trigger has
-   * four stages (0-3).
+   * Configures the given trigger stage in serial mode. Currently, the trigger
+   * has up to {@value #TRIGGER_STAGES} stages.
    * <p>
    * In mask and value each bit of the integer parameters represents one sample.
    * The LSB represents the oldest sample not yet shifted out, the MSB the most
    * recent. (The trigger compares to a 32bit shift register that is shifted by
    * one for each sample.)
    * <p>
-   * When a trigger fires, the trigger level will rise by one. Initially the
+   * When a trigger fires, the trigger level will rise by one. Initially, the
    * trigger level is 0.
    * 
-   * @param stage
-   *          trigger stage to write mask und value to
-   * @param channel
+   * @param aStage
+   *          trigger stage to write mask and value to
+   * @param aChannel
    *          channel to attach trigger to
-   * @param mask
+   * @param aMask
    *          bit map defining which channels to watch
-   * @param value
+   * @param aValue
    *          bit map defining what value to wait for on watched channels
-   * @param level
-   *          trigger level at which the trigger will be armed (0 = immediatly)
-   * @param delay
+   * @param aLevel
+   *          trigger level at which the trigger will be armed (0 = immediately)
+   * @param aDelay
    *          delay in samples to wait in between match and fire
-   * @param startCapture
+   * @param aStartCapture
    *          if <code>true</code> that capture when trigger fires, otherwise
-   *          only triggel level will increase
+   *          only trigger level will increase
    */
-  public void setSerialTrigger( final int stage, final int channel, final int mask, final int value, final int level,
-      final int delay, final boolean startCapture )
+  public void setSerialTrigger( final int aStage, final int aChannel, final int aMask, final int aValue,
+      final int aLevel, final int aDelay, final boolean aStartCapture )
   {
-    if ( !this.demux )
-    { // TODO: demux modification should be done on the fly in
-      // run() and not with stored properties
-      this.triggerMask[stage] = mask;
-      this.triggerValue[stage] = value;
+    if ( isDemuxEnabled() )
+    {
+      this.triggerMask[aStage] = ( aMask & 0xFFFF ) | ( ( aMask & 0xFFFF ) << 16 );
+      this.triggerValue[aStage] = ( aValue & 0xFFFF ) | ( ( aValue & 0xFFFF ) << 16 );
     }
     else
     {
-      this.triggerMask[stage] = mask & 0xffff;
-      this.triggerValue[stage] = value & 0xffff;
-      this.triggerMask[stage] |= this.triggerMask[stage] << 16;
-      this.triggerValue[stage] |= this.triggerValue[stage] << 16;
+      this.triggerMask[aStage] = aMask;
+      this.triggerValue[aStage] = aValue;
     }
-    this.triggerConfig[stage] = 0;
-    this.triggerConfig[stage] |= delay & TRIGGER_DELAYMASK;
-    this.triggerConfig[stage] |= ( level << 16 ) & TRIGGER_LEVELMASK;
-    this.triggerConfig[stage] |= ( channel << 20 ) & TRIGGER_CHANNELMASK;
-    this.triggerConfig[stage] |= TRIGGER_SERIAL;
-    if ( startCapture )
+
+    this.triggerConfig[aStage] = TRIGGER_SERIAL;
+    this.triggerConfig[aStage] |= aDelay & TRIGGER_DELAYMASK;
+    this.triggerConfig[aStage] |= ( aLevel << 16 ) & TRIGGER_LEVELMASK;
+    this.triggerConfig[aStage] |= ( aChannel << 20 ) & TRIGGER_CHANNELMASK;
+
+    if ( aStartCapture )
     {
-      this.triggerConfig[stage] |= TRIGGER_CAPTURE;
+      this.triggerConfig[aStage] |= TRIGGER_CAPTURE;
     }
   }
 
   /**
-   * Sets the number of samples to obtain when started.
-   * 
-   * @param size
-   *          number of samples, must be between 4 and 256*1024
-   */
-  public void setSize( final int size )
-  {
-    this.size = size;
-  }
-
-  /**
-   * Sets wheter or not to enable the run length encoding.
+   * Sets whether or not to enable the test mode.
    * 
    * @param enable
-   *          <code>true</code> enables the RLE, <code>false</code> disables it.
+   *          <code>true</code> to enable the test mode, <code>false</code> to
+   *          disable it.
    */
   public void setTestModeEnabled( final boolean enable )
   {
@@ -544,15 +654,14 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Sets wheter or not to enable the trigger.
+   * Sets whether or not to enable triggers.
    * 
    * @param enable
-   *          <code>true</code> enables the trigger, <code>false</code> disables
-   *          it.
+   *          <code>true</code> enables the use of trigger, <code>false</code>
+   *          disables its use.
    */
   public void setTriggerEnabled( final boolean enable )
   {
     this.triggerEnabled = enable;
   }
-
 }
