@@ -125,6 +125,73 @@ public final class HostUtils
   // METHODS
 
   /**
+   * Closes a given resource.
+   * <p>
+   * If the given resource also implements the {@link Flushable} interface, the
+   * resource is flushed before being closed.
+   * </p>
+   * 
+   * @param aResource
+   *          the resource to close, can be <code>null</code>, it might already
+   *          be closed.
+   * @return <code>true</code> if the close operation succeeded,
+   *         <code>false</code> if it is unsure whether it succeeded.
+   */
+  public static final boolean closeResource( final Closeable aResource )
+  {
+    boolean result = false;
+    if ( aResource != null )
+    {
+      try
+      {
+        if ( aResource instanceof Flushable )
+        {
+          ( ( Flushable )aResource ).flush();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
+      finally
+      {
+        try
+        {
+          aResource.close();
+          // Indicate success...
+          result = true;
+        }
+        catch ( IOException exception )
+        {
+          // Ignore...
+        }
+      }
+
+    }
+    return result;
+  }
+
+  /**
+   * Flushes the given input stream by reading as many bytes as there are still
+   * available.
+   * 
+   * @param aResource
+   *          the resource to flush, can be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems/
+   */
+  public static final void flushInputStream( final InputStream aResource ) throws IOException
+  {
+    if ( aResource != null )
+    {
+      while ( aResource.available() > 0 )
+      {
+        aResource.read();
+      }
+    }
+  }
+
+  /**
    * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
    * given file.
    * 
