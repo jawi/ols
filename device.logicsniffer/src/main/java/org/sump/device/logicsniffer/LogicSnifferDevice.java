@@ -165,7 +165,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   {
     LOG.info( "Starting capture ..." );
 
-    if ( !attach( this.config.getPortName(), this.config.getBaudrate() ) )
+    if ( !attach() )
     {
       throw new IOException( "Unable to open port " + this.config.getPortName() + ". No specific reason..." );
     }
@@ -177,37 +177,23 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       // First try to find the logic sniffer itself...
       detectDevice();
 
-      final LogicSnifferMetadata metadata = getMetadata();
+      // Try to obtain the device's metadata and use this for the
+      // remainder of the device configuration...
+      this.config.setMetadata( getMetadata() );
+
       // Log the read results...
-      LOG.log( Level.FINE, "Metadata = \n{0}", metadata.toString() );
-
-      final int deviceSize = metadata.getSampleMemoryDepth( this.config.getSize() );
-
-      final int stopCounter = ( int )( deviceSize * this.config.getRatio() );
-      final int readCounter = deviceSize;
+      LOG.log( Level.INFO, "Metadata = \n{0}", this.config.getMetadata().toString() );
 
       // check if data needs to be multiplexed
-      final int channels;
-      final int samples;
-      if ( this.config.isDemuxEnabled() && this.config.isInternalClock() )
-      {
-        // When the multiplexer is turned on, the upper two channel blocks are
-        // disabled, leaving only 16 channels for capturing...
-        channels = metadata.getProbeCount( 16 );
-        samples = ( readCounter & 0xffff8 );
-      }
-      else
-      {
-        channels = metadata.getProbeCount( 32 );
-        samples = ( readCounter & 0xffffc );
-      }
+      final int channels = this.config.getChannelCount();
+      final int samples = this.config.getSampleCount();
 
       // We need to read all samples first before doing any post-processing on
       // them...
       final int[] buffer = new int[samples];
 
       // configure device
-      configureDevice( stopCounter, readCounter );
+      configureDevice();
 
       sendCommand( CMD_RUN );
 
@@ -272,13 +258,19 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       int rate = CapturedData.NOT_AVAILABLE;
       if ( this.config.isInternalClock() )
       {
-        rate = this.config.isDemuxEnabled() ? 2 * LogicSnifferConfig.CLOCK / ( this.config.getDivider() + 1 )
-            : LogicSnifferConfig.CLOCK / ( this.config.getDivider() + 1 );
+        rate = LogicSnifferConfig.CLOCK / ( this.config.getDivider() + 1 );
+        if ( this.config.isDemuxEnabled() )
+        {
+          // The sample clock is 200MHz iso 100MHz...
+          rate *= 2.0;
+        }
       }
 
       if ( this.config.isRleEnabled() )
       {
         LOG.log( Level.FINE, "Decoding Run Length Encoded data, sample count: {0}", samples );
+
+        final int stopCounter = this.config.getStopCounter();
 
         int old = buffer[0];
         long time = 0;
@@ -307,7 +299,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
           {
             if ( ( i >= stopCounter - 2 ) && ( rleTrigPos == 0 ) )
             {
-              rleTrigPos = values.size();
+              // We're reading the samples backwards; hence we need to invert
+              // the trigger position...
+              rleTrigPos = samples - values.size();
             }
 
             // add the read sample & add a timestamp value as well...
@@ -329,6 +323,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       else
       {
         LOG.log( Level.FINE, "Decoding unencoded data, sample count: {0}", samples );
+
+        final int stopCounter = this.config.getStopCounter();
+        final int readCounter = this.config.getReadCounter();
 
         for ( int i = 0; i < samples; i++ )
         {
@@ -360,17 +357,24 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.Device#attach(java.lang.String, int)
+   * Opens the connection to the OLS device.
+   * 
+   * @return <code>true</code> if the attach operation succeeded,
+   *         <code>false</code> otherwise.
    */
-  private boolean attach( final String aPortName, final int aPortRate ) throws IOException
+  private boolean attach() throws IOException
   {
+    final String portName = this.config.getPortName();
+    final int baudrate = this.config.getBaudrate();
+
     try
     {
+      // Make sure we release the device if it was still attached...
       detach();
 
-      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { aPortName, aPortRate } );
+      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { portName, baudrate } );
 
-      this.connection = getConnection( aPortName, aPortRate );
+      this.connection = getConnection( portName, baudrate );
       if ( this.connection != null )
       {
         this.outputStream = this.connection.openDataOutputStream();
@@ -382,13 +386,13 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     catch ( final Exception exception )
     {
       LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
-          new Object[] { aPortName, exception.getMessage() } );
+          new Object[] { portName, exception.getMessage() } );
       LOG.log( Level.FINE, "Detailed stack trace:", exception );
 
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
-        throw new IOException( "Failed to open/use " + aPortName + "! Possible reason: " + exception.getMessage() );
+        throw new IOException( "Failed to open/use " + portName + "! Possible reason: " + exception.getMessage() );
       }
     }
 
@@ -396,20 +400,21 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   }
 
   /**
-   * @param aStopCounter
-   * @param aReadCounter
-   * @return
+   * Configures the OLS device by sending all configuration commands.
+   * 
    * @throws IOException
+   *           in case of I/O problems.
    */
-  private int configureDevice( final int aStopCounter, final int aReadCounter ) throws IOException
+  private void configureDevice() throws IOException
   {
-    final int effectiveStopCounter = configureTriggers( aStopCounter, aReadCounter );
+    final int stopCounter = configureTriggers();
+    final int readCounter = this.config.getReadCounter();
 
     int flags = 0;
     if ( this.config.isExternalClock() )
     {
       flags |= FLAG_EXTERNAL;
-      if ( this.config.getClockSource() == ClockSource.EXTERNAL_FALLING )
+      if ( ClockSource.EXTERNAL_FALLING == this.config.getClockSource() )
       {
         flags |= FLAG_INVERTED;
       }
@@ -430,21 +435,21 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     if ( this.config.isDemuxEnabled() && this.config.isInternalClock() )
     {
       flags |= FLAG_DEMUX;
-      // if the demux bit is set, the filter flag *must* be clear...
+      // if the demux bit is set, the filter flag *must* be cleared...
       flags &= ~FLAG_FILTER;
 
-      size = ( ( ( effectiveStopCounter - 8 ) & 0x7fff8 ) << 13 ) | ( ( ( aReadCounter & 0x7fff8 ) >> 3 ) - 1 );
+      size = ( ( ( stopCounter - 8 ) & 0x7fff8 ) << 13 ) | ( ( ( readCounter & 0x7fff8 ) >> 3 ) - 1 );
     }
     else
     {
       if ( this.config.isFilterEnabled() && this.config.isFilterAvailable() )
       {
         flags |= FLAG_FILTER;
-        // if the filter bit is set, the filter flag *must* be clear...
+        // if the filter bit is set, the demux flag *must* be cleared...
         flags &= ~FLAG_DEMUX;
       }
 
-      size = ( ( ( effectiveStopCounter - 4 ) & 0x3fffc ) << 14 ) | ( ( ( aReadCounter & 0x3fffc ) >> 2 ) - 1 );
+      size = ( ( ( stopCounter - 4 ) & 0x3fffc ) << 14 ) | ( ( ( readCounter & 0x3fffc ) >> 2 ) - 1 );
     }
 
     if ( this.config.isRleEnabled() )
@@ -467,40 +472,42 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     // set the sampling frequency...
     sendCommand( SETDIVIDER, this.config.getDivider() );
 
+    // set the capture size...
     sendCommand( SETSIZE, size );
 
+    // finally set the device flags...
     sendCommand( SETFLAGS, flags );
-
-    return flags;
   }
 
   /**
-   * @param aStopCounter
-   * @param aReadCounter
-   * @return
+   * Sends the trigger mask, value and configuration to the OLS device.
+   * 
+   * @return the stop counter that is used for the trigger configuration.
    * @throws IOException
+   *           in case of I/O problems.
    */
-  private int configureTriggers( final int aStopCounter, final int aReadCounter ) throws IOException
+  private int configureTriggers() throws IOException
   {
-    int effectiveStopCounter;
+    final int effectiveStopCounter;
     if ( this.config.isTriggerEnabled() )
     {
-      for ( int i = 0; i < LogicSnifferConfig.TRIGGER_STAGES; i++ )
+      for ( int i = 0; i < this.config.getMaxTriggerStages(); i++ )
       {
         final int indexMask = 4 * i;
         sendCommand( SETTRIGMASK | indexMask, this.config.getTriggerMask( i ) );
         sendCommand( SETTRIGVAL | indexMask, this.config.getTriggerValue( i ) );
         sendCommand( SETTRIGCFG | indexMask, this.config.getTriggerConfig( i ) );
       }
-      effectiveStopCounter = aStopCounter;
+      effectiveStopCounter = this.config.getStopCounter();
     }
     else
     {
       sendCommand( SETTRIGMASK, 0 );
       sendCommand( SETTRIGVAL, 0 );
       sendCommand( SETTRIGCFG, LogicSnifferConfig.TRIGGER_CAPTURE );
-      effectiveStopCounter = aReadCounter;
+      effectiveStopCounter = this.config.getReadCounter();
     }
+
     return effectiveStopCounter;
   }
 
@@ -510,24 +517,20 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
    */
   private void detach()
   {
+    // We're definitely no longer attached...
+    this.attached = false;
+
     if ( this.connection != null )
     {
       try
       {
-        // try to make sure device is reset (see run() for loop explanation)
+        // try to make sure device is reset...
         if ( this.outputStream != null )
         {
           for ( int i = 0; i < 5; i++ )
           {
             sendCommand( CMD_RESET );
           }
-          this.outputStream.flush();
-          this.outputStream.close();
-        }
-
-        if ( this.inputStream != null )
-        {
-          this.inputStream.close();
         }
       }
       catch ( final IOException exception )
@@ -540,6 +543,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       }
       finally
       {
+        HostUtils.closeResource( this.outputStream );
+        HostUtils.closeResource( this.inputStream );
+
         try
         {
           this.connection.close();
@@ -551,8 +557,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
         finally
         {
           this.connection = null;
-
-          this.attached = false;
         }
       }
     }
@@ -573,7 +577,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     while ( ( tries-- >= 0 ) && ( id != SLA_V0 ) && ( id != SLA_V1 ) )
     {
       // Make sure nothing is left in our input buffer...
-      flushInput();
+      HostUtils.flushInputStream( this.inputStream );
 
       // send reset 5 times because in worst case first 4 are interpreted as
       // data of long command
@@ -626,23 +630,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   }
 
   /**
-   * Flushes the input buffer from the serial port.
-   * 
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  private void flushInput() throws IOException
-  {
-    if ( this.inputStream != null )
-    {
-      while ( this.inputStream.available() > 0 )
-      {
-        this.inputStream.read();
-      }
-    }
-  }
-
-  /**
    * Queries for a connector service to craft a connection for a given serial
    * port with a given baudrate.
    * 
@@ -684,7 +671,14 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.Device#getMetadata()
+   * Tries to obtain the OLS device's metadata.
+   * 
+   * @return the device metadata, can be not populated, but never
+   *         <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems;
+   * @throws IllegalStateException
+   *           in case we're not attached to the OLS device.
    */
   private LogicSnifferMetadata getMetadata() throws IOException, IllegalStateException
   {
@@ -694,7 +688,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     }
 
     // Make sure nothing is left in our input buffer...
-    flushInput();
+    HostUtils.flushInputStream( this.inputStream );
 
     // Ok; device appears to be good and willing to communicate; let's get its
     // metadata...
@@ -771,17 +765,17 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
    * Reads <code>channels</code> / 8 bytes from stream and compiles them into a
    * single integer.
    * 
-   * @param aChannels
+   * @param aChannelCount
    *          number of channels to read (must be multiple of 8)
    * @return integer containing four bytes read
    * @throws IOException
    *           if stream reading fails
    */
-  private int readSample( final int aChannels ) throws IOException, InterruptedException
+  private int readSample( final int aChannelCount ) throws IOException, InterruptedException
   {
     int v, value = 0;
 
-    final int groupCount = ( int )Math.ceil( aChannels / 8.0 );
+    final int groupCount = ( int )Math.ceil( aChannelCount / 8.0 );
     for ( int i = 0; i < groupCount; i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...

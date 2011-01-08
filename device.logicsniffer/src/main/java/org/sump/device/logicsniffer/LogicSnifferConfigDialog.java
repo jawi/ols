@@ -851,7 +851,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.triggerTypeSelect.addActionListener( this );
 
     this.triggerStageTabs = new JTabbedPane();
-    this.triggerStages = this.config.getTriggerStageCount();
+    this.triggerStages = this.config.getMaxTriggerStages();
     this.triggerMask = new JCheckBox[4][];
     this.triggerValue = new JCheckBox[4][];
     this.triggerLevel = new JComboBox[4];
@@ -914,7 +914,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    */
   private void setTriggerEnabled( final boolean aEnable )
   {
-    final int channels = this.config.getAvailableChannelCount();
+    final int channels = this.config.getChannelCount();
     final boolean complex = "Complex".equals( ( String )this.triggerTypeSelect.getSelectedItem() );
     if ( !complex )
     {
@@ -987,7 +987,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     // correct...
     value = ( String )this.speedSelect.getSelectedItem();
     int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, LogicSnifferConfig.CLOCK );
-    this.config.setRate( f );
+    this.config.setSampleRate( f );
 
     // set sample count
     int sampleCount = ( ( Integer )this.sizeSelect.getSelectedItem() ).intValue();
@@ -996,7 +996,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       sampleCount = maxSampleCount;
       this.sizeSelect.setSelectedItem( Integer.valueOf( maxSampleCount ) );
     }
-    this.config.setSize( sampleCount );
+    this.config.setSampleCount( sampleCount );
 
     // set before / after ratio
     double r = 1.0 - ( this.ratioSlider.getValue() / ( double )this.ratioSlider.getMaximum() );
@@ -1118,7 +1118,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
     this.filterEnable.setEnabled( this.config.isFilterAvailable() && aEnable );
 
-    final int availableChannelGroups = this.config.getAvailableChannelCount() / 8;
+    final int availableChannelGroups = this.config.getChannelCount() / 8;
     for ( int i = 0; i < this.channelGroup.length; i++ )
     {
       final boolean enabled = aEnable && ( i < availableChannelGroups );
