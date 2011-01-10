@@ -41,7 +41,7 @@ import org.sump.device.logicsniffer.LogicSnifferConfig.*;
  * rxtx package from http://www.rxtx.org/ to access the serial port the analyzer
  * is connected to.
  */
-public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
+public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 {
   // CONSTANTS
 
@@ -73,7 +73,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   /** ask for device id */
   private final static int CMD_ID = 0x02;
   /** ask for device self test. */
-  @SuppressWarnings( "unused" )
   private final static int CMD_SELFTEST = 0x03;
   /** ask for device meta data. */
   private final static int CMD_METADATA = 0x04;
@@ -107,6 +106,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   private boolean attached;
 
   private final BundleContext bundleContext;
+  private int trigcount; // ***DSF
 
   // CONSTRUCTORS
 
@@ -134,16 +134,47 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
   }
 
   /**
+   * Performs a self-test on the OLS device.
+   * <p>
+   * Note: not all versions of the OLS device firmware support a selftest!
+   * </p>
+   * 
+   * @throws IOException
+   *           in case of I/O problems.
+   */
+  public void selfTest() throws IOException
+  {
+    if ( !this.running )
+    {
+      attach();
+
+      sendCommand( CMD_SELFTEST );
+      // TODO read selftest result...
+
+      detach();
+    }
+  }
+
+  /**
    * Informs the thread in run() that it is supposed to stop reading data and
    * return.
    */
-  public synchronized void stop()
+  public void stop()
   {
     if ( this.running )
     {
-      this.running = false;
-
-      cancel( true /* mayInterruptIfRunning */);
+      try
+      {
+        resetDevice();
+      }
+      catch ( IOException exception )
+      {
+        LOG.log( Level.WARNING, "Device reset failed?!", exception );
+      }
+      finally
+      {
+        this.running = false;
+      }
     }
   }
 
@@ -186,7 +217,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
 
       // check if data needs to be multiplexed
       final int channels = this.config.getChannelCount();
-      final int samples = this.config.getSampleCount();
+      int samples = this.config.getSampleCount();
 
       // We need to read all samples first before doing any post-processing on
       // them...
@@ -206,9 +237,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
         try
         {
           buffer[sampleIdx] = readSample( channels );
-
-          // Notify the EDT that there's possibly something to display...
-          publish( buffer[sampleIdx] );
 
           sampleIdx--;
           waiting = false;
@@ -236,10 +264,12 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
           buffer[sampleIdx] = readSample( channels );
 
           setProgress( 100 - ( 100 * sampleIdx ) / buffer.length );
-
-          // Notify the EDT that there's possibly something to display...
-          publish( buffer[sampleIdx] );
         }
+      }
+      catch ( Exception ex )
+      {
+        System.err.println( "Only " + ( samples - sampleIdx ) + " samples read!" );
+        ex.printStackTrace();
       }
       finally
       {
@@ -249,11 +279,11 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       final List<Integer> values = new ArrayList<Integer>();
       final List<Long> timestamps = new ArrayList<Long>();
 
-      int rleTrigPos = 0;
+      long rleTrigPos = 0; // ***DSF make long
       long absoluteLength = 0;
 
       // collect additional information for CapturedData
-      int triggerPos = CapturedData.NOT_AVAILABLE;
+      long triggerPos = CapturedData.NOT_AVAILABLE; // ***DSF make long
 
       int rate = CapturedData.NOT_AVAILABLE;
       if ( this.config.isInternalClock() )
@@ -270,45 +300,40 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       {
         LOG.log( Level.FINE, "Decoding Run Length Encoded data, sample count: {0}", samples );
 
-        final int stopCounter = this.config.getStopCounter();
-
-        int old = buffer[0];
         long time = 0;
+        int count = 0;
+
         for ( int i = 0; i < samples; i++ )
         {
           if ( ( buffer[i] & 0x80000000 ) != 0 )
           {
             // This is a "count"
-            if ( ( old & 0x80000000 ) != 0 )
+            if ( buffer[i] == 0xbfffffff )
             {
-              // Skip the first part of the stream if it is composed from
-              // repeated repeat-counts.
-              old = buffer[i];
-              LOG.log( Level.INFO, "Duplicate RLE count seen of {0} vs {1}!", new Object[] {
-                  ( buffer[i] & 0x7FFFFFFF ), ( old & 0x7FFFFFFF ) } );
-              continue;
+              // this is an overflow count missing msb
+              count = 0x7fffffff;
             }
-
-            final int count = ( buffer[i] & 0x7FFFFFFF );
-            // simple increase the time value at which the next sample will
-            // occur...
+            else
+            {
+              // normal count overides a previous overflow count
+              count = ( buffer[i] & 0x7fffffff );
+            }
             LOG.log( Level.FINE, "RLE count seen of {0} times {1}.", new Object[] { count, buffer[i - 1] } );
-            time += count;
           }
           else
           {
-            if ( ( i >= stopCounter - 2 ) && ( rleTrigPos == 0 ) )
+            time += count;
+            // set the trigger position as a time value
+            if ( ( i >= ( this.trigcount ) ) && ( rleTrigPos == 0 ) )
             {
               // We're reading the samples backwards; hence we need to invert
               // the trigger position...
-              rleTrigPos = samples - values.size();
+              rleTrigPos = time; // ***DSF trig pos is a time
             }
 
             // add the read sample & add a timestamp value as well...
             values.add( buffer[i] );
             timestamps.add( time++ );
-
-            old = buffer[i];
           }
         }
 
@@ -324,23 +349,38 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       {
         LOG.log( Level.FINE, "Decoding unencoded data, sample count: {0}", samples );
 
-        final int stopCounter = this.config.getStopCounter();
-        final int readCounter = this.config.getReadCounter();
-
         for ( int i = 0; i < samples; i++ )
         {
           values.add( buffer[i] );
           timestamps.add( ( long )i );
+
+          // Notify the EDT that there's possibly something to display...
+          publish( new Sample( i, buffer[i] ) );
         }
 
         // Take the number of samples as "absolute" length of this trace...
         absoluteLength = samples;
-
+        // ***DSF changes to thi section
         if ( this.config.isTriggerEnabled() )
         {
-          // TODO what the f*ck is this doing???
-          triggerPos = readCounter - stopCounter - 3 - ( 4 / ( this.config.getDivider() + 1 ) )
-              - ( this.config.isDemuxEnabled() ? 5 : 0 );
+          int correction;
+          if ( this.config.getDivider() > 3 )
+          {
+            correction = 1;
+          }
+          else
+          {
+            correction = ( ( this.config.getDivider() == 0 ) ? 5 : 2 );
+
+          }
+          if ( this.config.isDemuxEnabled() )
+          {
+            triggerPos = ( ( this.trigcount * 2 ) - 9 );
+          }
+          else
+          {
+            triggerPos = ( this.trigcount - correction );
+          }
         }
       }
 
@@ -438,7 +478,10 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       // if the demux bit is set, the filter flag *must* be cleared...
       flags &= ~FLAG_FILTER;
 
-      size = ( ( ( stopCounter - 8 ) & 0x7fff8 ) << 13 ) | ( ( ( readCounter & 0x7fff8 ) >> 3 ) - 1 );
+      // 0x7fff8 = 511Kb = the maximum size supported by the original SUMP
+      // device when using the demultiplexer...
+      final int maxSize = 0x7fff8;
+      size = ( ( ( stopCounter - 8 ) & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
     }
     else
     {
@@ -449,8 +492,14 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
         flags &= ~FLAG_DEMUX;
       }
 
-      size = ( ( ( stopCounter - 4 ) & 0x3fffc ) << 14 ) | ( ( ( readCounter & 0x3fffc ) >> 2 ) - 1 );
+      // 0x3fffc = 255Kb = the maximum size supported by the original SUMP
+      // device...
+      final int maxSize = 0x3fffc;
+      size = ( ( ( stopCounter - 4 ) & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
     }
+
+    // ***DSF use values sent to OLS
+    this.trigcount = ( size & 0xffff ) * 4 - ( ( size >> 16 ) & 0xffff ) * 4;
 
     if ( this.config.isRleEnabled() )
     {
@@ -527,10 +576,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
         // try to make sure device is reset...
         if ( this.outputStream != null )
         {
-          for ( int i = 0; i < 5; i++ )
-          {
-            sendCommand( CMD_RESET );
-          }
+          resetDevice();
         }
       }
       catch ( final IOException exception )
@@ -579,12 +625,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
       // Make sure nothing is left in our input buffer...
       HostUtils.flushInputStream( this.inputStream );
 
-      // send reset 5 times because in worst case first 4 are interpreted as
-      // data of long command
-      for ( int i = 0; i < 5; i++ )
-      {
-        sendCommand( CMD_RESET );
-      }
+      resetDevice();
 
       // check if device is ready
       sendCommand( CMD_ID );
@@ -785,7 +826,11 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
         v = this.inputStream.read();
 
         // Any timeouts/interrupts occurred?
-        if ( ( v < 0 ) || Thread.interrupted() )
+        if ( v < 0 )
+        {
+          throw new InterruptedException( "Data readout interrupted: EOF." );
+        }
+        else if ( Thread.interrupted() )
         {
           throw new InterruptedException( "Data readout interrupted." );
         }
@@ -822,6 +867,20 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Integer>
     while ( read > 0x00 );
 
     return sb.toString();
+  }
+
+  /**
+   * Resets the OLS device by sending 5 consecutive 'reset' commands.
+   * 
+   * @throws IOException
+   *           in case of I/O problems.
+   */
+  private void resetDevice() throws IOException
+  {
+    for ( int i = 0; i < 5; i++ )
+    {
+      sendCommand( CMD_RESET );
+    }
   }
 
   /**

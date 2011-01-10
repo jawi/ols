@@ -4,6 +4,9 @@
 package org.sump.device.logicsniffer;
 
 
+import nl.lxtreme.ols.api.data.*;
+
+
 /**
  * @author jawi
  */
@@ -230,6 +233,26 @@ public final class LogicSnifferConfig
     }
 
     return samples;
+  }
+
+  /**
+   * Returns the rate in which samples are to be taken.
+   * 
+   * @return a sample rate, in Hertz (Hz).
+   */
+  public int getSampleRate()
+  {
+    int rate = CapturedData.NOT_AVAILABLE;
+    if ( isInternalClock() )
+    {
+      rate = LogicSnifferConfig.CLOCK / ( getDivider() + 1 );
+      if ( isDemuxEnabled() )
+      {
+        // The sample clock is 200MHz iso 100MHz...
+        rate *= 2.0;
+      }
+    }
+    return rate;
   }
 
   /**

@@ -100,7 +100,7 @@ public class LogicSnifferDeviceController implements DeviceController
        * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
        */
       @Override
-      public void propertyChange( final PropertyChangeEvent aEvent )
+      public synchronized void propertyChange( final PropertyChangeEvent aEvent )
       {
         final String propertyName = aEvent.getPropertyName();
 
@@ -117,7 +117,12 @@ public class LogicSnifferDeviceController implements DeviceController
           final StateValue state = ( StateValue )aEvent.getNewValue();
           if ( StateValue.STARTED.equals( state ) )
           {
-            aCallback.captureStarted();
+            final int sampleRate = LogicSnifferDeviceController.this.deviceConfig.getSampleRate();
+            final int channelCount = LogicSnifferDeviceController.this.deviceConfig.getChannelCount();
+            final int channelMask = LogicSnifferDeviceController.this.deviceConfig.getEnabledChannels();
+
+            // Notify our caller that we're started capturing...
+            aCallback.captureStarted( sampleRate, channelCount, channelMask );
           }
         }
       }
@@ -164,7 +169,7 @@ public class LogicSnifferDeviceController implements DeviceController
        * @see org.sump.device.logicsniffer.LogicSnifferDevice#process(java.util.List)
        */
       @Override
-      protected void process( final List<Integer> aSamples )
+      protected void process( final List<Sample> aSamples )
       {
         aCallback.samplesCaptured( aSamples );
       }
