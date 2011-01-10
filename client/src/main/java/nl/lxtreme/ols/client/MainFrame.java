@@ -25,12 +25,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
 import java.text.*;
+import java.util.List;
 
 import javax.swing.*;
 
 import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
@@ -417,6 +419,17 @@ public final class MainFrame extends JFrame implements Closeable
     {
       updateToolMenuState( aToolName, menuItem, false /* aAdded */);
     }
+  }
+
+  /**
+   * Called to update the sample indicator during (continuous) sampling.
+   * 
+   * @param aSamples
+   *          the latest list of samples, cannot be <code>null</code>.
+   */
+  public void sampleCaptured( final List<Sample> aSamples )
+  {
+    // NO-op
   }
 
   /**
