@@ -29,7 +29,7 @@ import nl.lxtreme.ols.api.data.*;
 /**
  * @author jawi
  */
-public class GenericDevice extends SwingWorker<CapturedData, Integer>
+public class GenericDevice extends SwingWorker<CapturedData, Sample>
 {
   // METHODS
 
