@@ -58,8 +58,15 @@ public interface CaptureCallback extends ProgressCallback
    * <p>
    * This method will be called before any other methods of this interface.
    * </p>
+   * 
+   * @param aSampleRate
+   *          the sample rate of the capture, in Hertz (Hz);
+   * @param aChannelCount
+   *          the number of channels in a single sample (1..32);
+   * @param aChannelMask
+   *          the bitmask used to mask out the relevant channels.
    */
-  public void captureStarted();
+  public void captureStarted( final int aSampleRate, final int aChannelCount, final int aChannelMask );
 
   /**
    * Called when a number of samples are captured.
@@ -69,9 +76,9 @@ public interface CaptureCallback extends ProgressCallback
    * </p>
    * 
    * @param aSamples
-   *          the captured samples, as 32-bit values.
+   *          the captured samples, never <code>null</code>.
    */
-  public void samplesCaptured( final List<Integer> aSamples );
+  public void samplesCaptured( final List<Sample> aSamples );
 }
 
 /* EOF */
