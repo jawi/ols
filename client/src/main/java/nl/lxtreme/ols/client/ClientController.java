@@ -329,11 +329,13 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureStarted()
+   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureStarted(int, int,
+   *      int)
    */
   @Override
-  public void captureStarted()
+  public void captureStarted( final int aSampleRate, final int aChannelCount, final int aChannelMask )
   {
+    // TODO Auto-generated method stub
     updateActions();
   }
 
@@ -826,9 +828,13 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * @see nl.lxtreme.ols.api.devices.CaptureCallback#samplesCaptured(java.util.List)
    */
   @Override
-  public void samplesCaptured( final List<Integer> aSamples )
+  public void samplesCaptured( final List<Sample> aSamples )
   {
-    // LOG.log( Level.INFO, "Got {0} samples...", aSamples );
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.sampleCaptured( aSamples );
+    }
+    updateActions();
   }
 
   /**
