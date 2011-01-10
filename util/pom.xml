@@ -17,11 +17,11 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <scope>compile</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
@@ -37,10 +37,12 @@
 				<configuration>
 					<instructions>
 						<Export-Package>nl.lxtreme.ols.util, nl.lxtreme.ols.util.analysis,
-						    nl.lxtreme.ols.util.osgi,
+							nl.lxtreme.ols.util.osgi,
 							nl.lxtreme.ols.util.swing,
 							nl.lxtreme.ols.util.swing.component,
-							nl.lxtreme.ols.util.swing.component.icon</Export-Package>
+							nl.lxtreme.ols.util.swing.component.icon,
+							nl.lxtreme.ols.util.swing.validation
+						</Export-Package>
 						<Private-Package>nl.lxtreme.ols.util.export</Private-Package>
 					</instructions>
 				</configuration>
