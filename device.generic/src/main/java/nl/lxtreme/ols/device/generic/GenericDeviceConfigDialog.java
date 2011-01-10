@@ -21,14 +21,18 @@
 package nl.lxtreme.ols.device.generic;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.validation.*;
 
 import org.osgi.service.prefs.*;
 
@@ -44,16 +48,11 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   // VARIABLES
 
-  /** the path to the device; /dev/ttyS0 or similar. */
-  private String devicePath;
-  /** the sample rate in Hertz (Hz). */
-  private int sampleRate;
-  /** the number of samples to take. */
-  private int sampleDepth;
-  /** the width (in bytes) of each sample. */
-  private int sampleWidth;
-  /** the number of channels in each sample. */
-  private int channelCount;
+  private JTextField devicePath;
+  private JTextField sampleRate;
+  private JTextField sampleDepth;
+  private JTextField sampleWidth;
+  private JTextField channelCount;
 
   private boolean setupConfirmed;
 
@@ -85,43 +84,57 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   }
 
   /**
-   * @return the channelCount
+   * Returns the number of channels in each sample.
+   * 
+   * @return the channel count, >= 0.
    */
   public int getChannelCount()
   {
-    return this.channelCount;
+    final int result = NumberUtils.smartParseInt( this.channelCount.getText(), 8 );
+    return result;
   }
 
   /**
-   * @return the devicePath
+   * Returns the path to the device, like <tt>/dev/ttyS0</tt> or similar.
+   * 
+   * @return the device path, never <code>null</code>.
    */
   public String getDevicePath()
   {
-    return this.devicePath;
+    return this.devicePath.getText();
   }
 
   /**
-   * @return the sampleDepth
+   * Returns the number of samples to take.
+   * 
+   * @return the sample depth, >= 0.
    */
   public int getSampleDepth()
   {
-    return this.sampleDepth;
+    final int result = NumberUtils.smartParseInt( this.sampleDepth.getText(), 1024 );
+    return result;
   }
 
   /**
-   * @return the sampleRate
+   * Returns the sample rate of the generic device.
+   * 
+   * @return the sample rate in Hertz (Hz).
    */
   public int getSampleRate()
   {
-    return this.sampleRate;
+    final int result = NumberUtils.smartParseInt( this.sampleRate.getText(), 1000000 );
+    return result;
   }
 
   /**
-   * @return the sampleWidth
+   * Returns the width (in bytes) of each sample.
+   * 
+   * @return the sample width, in bytes, >= 0.
    */
   public int getSampleWidth()
   {
-    return this.sampleWidth;
+    final int result = NumberUtils.smartParseInt( this.sampleWidth.getText(), 1 );
+    return result;
   }
 
   /**
@@ -155,11 +168,48 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   }
 
   /**
-   * @return
+   * Creates the contents of this dialog.
+   * 
+   * @return a content pane, never <code>null</code>.
    */
   private JComponent createContents()
   {
-    return new JPanel();
+    this.channelCount = new JTextField( 10 );
+    this.channelCount.setInputVerifier( new NumberValidator( "Invalid channel count!" ) );
+
+    this.devicePath = new JTextField( 10 );
+
+    this.sampleDepth = new JTextField( 10 );
+    this.sampleDepth.setInputVerifier( new NumberValidator( "Invalid sample depth!" ) );
+
+    this.sampleRate = new JTextField( 10 );
+    this.sampleRate.setInputVerifier( new NumberValidator( "Invalid sample rate!" ) );
+
+    this.sampleWidth = new JTextField( 10 );
+    this.sampleWidth.setInputVerifier( new NumberValidator( "Invalid sample width!" ) );
+
+    final JPanel result = new JPanel( new SpringLayout() );
+
+    SpringLayoutUtils.addSeparator( result, "Acquisition settings" );
+
+    result.add( createRightAlignedLabel( "Device path" ) );
+    result.add( this.devicePath );
+
+    result.add( createRightAlignedLabel( "Channel count" ) );
+    result.add( this.channelCount );
+
+    result.add( createRightAlignedLabel( "Sample rate" ) );
+    result.add( this.sampleRate );
+
+    result.add( createRightAlignedLabel( "Sample depth" ) );
+    result.add( this.sampleDepth );
+
+    result.add( createRightAlignedLabel( "Sample width" ) );
+    result.add( this.sampleWidth );
+
+    SpringLayoutUtils.makeEditorGrid( result, 6, 6 );
+
+    return result;
   }
 
   /**
