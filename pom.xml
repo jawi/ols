@@ -139,6 +139,11 @@
 			</dependency>
 			<dependency>
 				<groupId>nl.lxtreme.ols.device</groupId>
+				<artifactId>generic</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>nl.lxtreme.ols.device</groupId>
 				<artifactId>logicsniffer</artifactId>
 				<version>1.0.0-SNAPSHOT</version>
 			</dependency>
@@ -243,6 +248,7 @@
 		<module>client</module>
 		<module>runner</module>
 		<module>device.test</module>
+		<module>device.generic</module>
 		<module>device.logicsniffer</module>
 		<module>tool.base</module>
 		<module>tool.i2c</module>
