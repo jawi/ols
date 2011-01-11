@@ -360,19 +360,15 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 
         // Take the number of samples as "absolute" length of this trace...
         absoluteLength = samples;
-        // ***DSF changes to thi section
+        // ***DSF changes to this section
         if ( this.config.isTriggerEnabled() )
         {
-          int correction;
-          if ( this.config.getDivider() > 3 )
-          {
-            correction = 1;
-          }
-          else
+          int correction = 1;
+          if ( this.config.getDivider() < 3 )
           {
             correction = ( ( this.config.getDivider() == 0 ) ? 5 : 2 );
-
           }
+
           if ( this.config.isDemuxEnabled() )
           {
             triggerPos = ( ( this.trigcount * 2 ) - 9 );
