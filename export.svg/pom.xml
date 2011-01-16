@@ -79,6 +79,10 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
+						<Bundle-Description>A scalable vector graphics (SVG) exporter for
+							the OLS client.</Bundle-Description>
+						<Bundle-Copyright>J.W. Janssen (lxtreme.nl) (C) 2010-2011</Bundle-Copyright>
+						<Bundle-License>GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html</Bundle-License>
 						<OLS-Exporter>1.0</OLS-Exporter>
 						<OLS-ExporterClass>nl.lxtreme.ols.export.svg.SVGExporter</OLS-ExporterClass>
 						<Import-Package>nl.lxtreme.ols.api.data.export,sun.io;resolution:=optional,*</Import-Package>
