@@ -84,7 +84,7 @@ public class BundlesDialog extends JDialog implements Closeable
     @Override
     public int getColumnCount()
     {
-      return 5;
+      return 6;
     }
 
     /**
@@ -109,6 +109,9 @@ public class BundlesDialog extends JDialog implements Closeable
 
         case 4:
           return "State";
+
+        case 5:
+          return "Copyright";
 
         default:
           return null;
@@ -159,6 +162,9 @@ public class BundlesDialog extends JDialog implements Closeable
             default:
               return "<???>";
           }
+        case 5:
+          String copyright = ( String )bundle.getHeaders().get( "Bundle-Copyright" );
+          return ( copyright == null ) ? "Unknown" : copyright;
 
         default:
           return null;
@@ -174,7 +180,7 @@ public class BundlesDialog extends JDialog implements Closeable
       // Under certain circumstances, the bundles may be enabled/disabled...
       if ( aColumn == 0 )
       {
-        return DEBUG;
+        return isDebugMode();
       }
       else
       {
@@ -209,8 +215,8 @@ public class BundlesDialog extends JDialog implements Closeable
 
   private static final long serialVersionUID = 1L;
 
-  private static final boolean DEBUG = Boolean.parseBoolean( System
-      .getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+  private static final Color ALT_COLOR = new Color( 0xCC, 0xCC, 0xCC );
+  private static final Color NEW_COLOR = ALT_COLOR.brighter();
 
   // VARIABLES
 
@@ -241,6 +247,17 @@ public class BundlesDialog extends JDialog implements Closeable
   }
 
   // METHODS
+
+  /**
+   * Returns whether or not we're running in debug mode.
+   * 
+   * @return <code>true</code> if debug mode is enabled, <code>false</code>
+   *         otherwise.
+   */
+  private static boolean isDebugMode()
+  {
+    return Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+  }
 
   /**
    * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
@@ -346,7 +363,27 @@ public class BundlesDialog extends JDialog implements Closeable
   {
     final Bundle[] bundles = this.bundleContext.getBundles();
 
-    this.table = new JTable( new TableModel( bundles ) );
+    this.table = new JTable( new TableModel( bundles ) )
+    {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public Component prepareRenderer( final TableCellRenderer aRenderer, final int aRow, final int aColumn )
+      {
+        Component result = super.prepareRenderer( aRenderer, aRow, aColumn );
+
+        if ( !result.getBackground().equals( getSelectionBackground() ) )
+        {
+          result.setBackground( ( aRow % 2 != 0 ? ALT_COLOR : NEW_COLOR ) );
+        }
+        if ( result instanceof JComponent )
+        {
+          final Object value = getModel().getValueAt( aRow, aColumn );
+          ( ( JComponent )result ).setToolTipText( String.valueOf( value ) );
+        }
+        return result;
+      };
+    };
     this.table.setColumnSelectionAllowed( false );
     this.table.setRowSelectionAllowed( true );
 
@@ -355,13 +392,15 @@ public class BundlesDialog extends JDialog implements Closeable
     this.table.getColumnModel().getColumn( 1 ).setPreferredWidth( 30 );
     this.table.getColumnModel().getColumn( 1 ).setMaxWidth( 40 );
     this.table.getColumnModel().getColumn( 2 ).setPreferredWidth( 200 );
-    this.table.getColumnModel().getColumn( 3 ).setPreferredWidth( 40 );
-    this.table.getColumnModel().getColumn( 3 ).setMaxWidth( 80 );
+    this.table.getColumnModel().getColumn( 3 ).setPreferredWidth( 60 );
+    this.table.getColumnModel().getColumn( 3 ).setMaxWidth( 100 );
+    this.table.getColumnModel().getColumn( 4 ).setPreferredWidth( 60 );
+    this.table.getColumnModel().getColumn( 4 ).setMaxWidth( 100 );
 
     this.table.getSelectionModel().setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 
     final JButton selectAll = new JButton( "Select all" );
-    selectAll.setVisible( DEBUG );
+    selectAll.setVisible( isDebugMode() );
     selectAll.addActionListener( new ActionListener()
     {
       @Override
@@ -372,7 +411,7 @@ public class BundlesDialog extends JDialog implements Closeable
     } );
 
     final JButton deselectAll = new JButton( "Deselect all" );
-    deselectAll.setVisible( DEBUG );
+    deselectAll.setVisible( isDebugMode() );
     deselectAll.addActionListener( new ActionListener()
     {
       @Override
@@ -383,7 +422,7 @@ public class BundlesDialog extends JDialog implements Closeable
     } );
 
     final JButton crashTest = new JButton( "Crash test" );
-    crashTest.setVisible( DEBUG );
+    crashTest.setVisible( isDebugMode() );
     crashTest.addActionListener( new ActionListener()
     {
       @Override
