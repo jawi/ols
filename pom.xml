@@ -183,6 +183,11 @@
 				<version>1.0.0</version>
 			</dependency>
 			<dependency>
+				<groupId>nl.lxtreme.ols.tool</groupId>
+				<artifactId>jtag</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+			<dependency>
 				<groupId>nl.lxtreme.ols.export</groupId>
 				<artifactId>image</artifactId>
 				<version>1.0.0</version>
@@ -257,6 +262,7 @@
 		<module>tool.uart</module>
 		<module>tool.measure</module>
 		<module>tool.1wire</module>
+		<module>tool.jtag</module>
 		<module>export.image</module>
 		<module>export.vcd</module>
 		<!-- main distribution -->

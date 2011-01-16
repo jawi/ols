@@ -26,9 +26,14 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
+						<Bundle-Description>The common API for the OLS client.</Bundle-Description>
+						<Bundle-Copyright>J.W. Janssen (lxtreme.nl) (C) 2010-2011</Bundle-Copyright>
+						<Bundle-License>GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html</Bundle-License>
 						<Import-Package>javax.swing,org.osgi.service.prefs;version="1.1"</Import-Package>
-						<Export-Package>nl.lxtreme.ols.api, nl.lxtreme.ols.api.data, nl.lxtreme.ols.api.data.export,
-							nl.lxtreme.ols.api.devices, nl.lxtreme.ols.api.tools, nl.lxtreme.ols.api.ui</Export-Package>
+						<Export-Package>nl.lxtreme.ols.api, nl.lxtreme.ols.api.data,
+							nl.lxtreme.ols.api.data.export,
+							nl.lxtreme.ols.api.devices,
+							nl.lxtreme.ols.api.tools, nl.lxtreme.ols.api.ui</Export-Package>
 					</instructions>
 				</configuration>
 			</plugin>

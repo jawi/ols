@@ -6,11 +6,11 @@
 		<artifactId>parent</artifactId>
 		<version>1.0.0</version>
 	</parent>
-	<groupId>nl.lxtreme.ols</groupId>
-	<artifactId>client</artifactId>
+	<groupId>nl.lxtreme.ols.tool</groupId>
+	<artifactId>jtag</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.1.0-SNAPSHOT</version>
-	<name>OLS Swing client</name>
+	<version>1.0.0</version>
+	<name>OLS JTAG Analysis Tool</name>
 	<dependencies>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
@@ -19,6 +19,10 @@
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>util</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>base</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
@@ -37,12 +41,11 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Description>The (main) user interface for the OLS client.</Bundle-Description>
-						<Bundle-Copyright>J.W. Janssen (lxtreme.nl) (C) 2010-2011</Bundle-Copyright>
+						<Bundle-Description>Provides a JTAG-decoder tool for the OLS client.</Bundle-Description>
+						<Bundle-Copyright>Mario Schrenk (C) 2010-2011</Bundle-Copyright>
 						<Bundle-License>GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html</Bundle-License>
-						<Bundle-Activator>nl.lxtreme.ols.client.Activator</Bundle-Activator>
-						<Import-Package>org.osgi.framework;version="1.3.0",
-							org.osgi.util.tracker;version="1.4.0", *</Import-Package>
+						<OLS-Tool>1.0</OLS-Tool>
+						<OLS-ToolClass>nl.lxtreme.ols.tool.jtag.JTAGAnalyser</OLS-ToolClass>
 					</instructions>
 				</configuration>
 			</plugin>

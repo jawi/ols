@@ -37,6 +37,9 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
+						<Bundle-Description>A common tool base implementation/API for the OLS client.</Bundle-Description>
+						<Bundle-Copyright>J.W. Janssen (lxtreme.nl) (C) 2010-2011</Bundle-Copyright>
+						<Bundle-License>GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html</Bundle-License>
 						<Export-Package>nl.lxtreme.ols.tool.base</Export-Package>
 					</instructions>
 				</configuration>
