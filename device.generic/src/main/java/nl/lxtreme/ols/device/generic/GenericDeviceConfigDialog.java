@@ -164,7 +164,10 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
    */
   public boolean showDialog()
   {
+    this.setupConfirmed = false;
+
     setVisible( true );
+
     return this.setupConfirmed;
   }
 

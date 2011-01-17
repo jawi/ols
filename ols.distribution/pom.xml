@@ -128,6 +128,13 @@
 								</artifactItem>
 								<artifactItem>
 									<groupId>nl.lxtreme.ols.device</groupId>
+									<artifactId>generic</artifactId>
+									<type>jar</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>nl.lxtreme.ols.device</groupId>
 									<artifactId>logicsniffer</artifactId>
 									<type>jar</type>
 									<overWrite>true</overWrite>
