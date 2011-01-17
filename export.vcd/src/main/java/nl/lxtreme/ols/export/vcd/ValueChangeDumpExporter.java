@@ -85,6 +85,11 @@ public class ValueChangeDumpExporter implements Exporter
     return "Value Change Dump";
   }
 
+  /**
+   * @param aWriter
+   * @param aContainer
+   * @param aTimebase
+   */
   private void writeDataDump( final PrintWriter aWriter, final DataContainer aContainer, final double aTimebase )
   {
     final int[] values = aContainer.getValues();
@@ -94,8 +99,8 @@ public class ValueChangeDumpExporter implements Exporter
     for ( int i = 0, size = values.length; i < size; i++ )
     {
       final int value = values[i];
+      final long timestamp = timestamps[i];
 
-      long timestamp = timestamps[i];
       final int time = ( int )( ( timestamp / ( double )aContainer.getSampleRate() ) / aTimebase );
 
       writeTime( aWriter, time );
@@ -154,6 +159,7 @@ public class ValueChangeDumpExporter implements Exporter
       {
         label = "channel" + i;
       }
+
       writeVariable( aWriter, i, label );
     }
   }
