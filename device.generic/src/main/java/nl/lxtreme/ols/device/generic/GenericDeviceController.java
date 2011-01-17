@@ -22,9 +22,17 @@ package nl.lxtreme.ols.device.generic;
 
 
 import java.awt.*;
+import java.beans.*;
 import java.io.*;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.logging.*;
 
+import javax.swing.SwingWorker.StateValue;
+
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -36,9 +44,12 @@ public class GenericDeviceController implements DeviceController
 
   private static final String NAME = "Generic I/O";
 
+  private static final Logger LOG = Logger.getLogger( GenericDeviceController.class.getName() );
+
   // VARIABLES
 
-  private GenericDeviceConfigDialog configDialog = null;
+  private GenericDeviceConfigDialog deviceConfig = null;
+  private GenericDevice device = null;
   private boolean setup = false;
 
   // METHODS
@@ -49,8 +60,11 @@ public class GenericDeviceController implements DeviceController
   @Override
   public void cancel() throws IllegalStateException
   {
-    // TODO Auto-generated method stub
-
+    if ( ( this.device != null ) && isCapturing() )
+    {
+      this.device.stop();
+      this.device.cancel( true /* aMayInterruptIfRunning */);
+    }
   }
 
   /**
@@ -59,8 +73,93 @@ public class GenericDeviceController implements DeviceController
   @Override
   public void captureData( final CaptureCallback aCallback ) throws IOException
   {
-    // TODO Auto-generated method stub
+    // Listen to various properties for reporting it to our callback...
+    final PropertyChangeListener propertyChangeListener = new PropertyChangeListener()
+    {
+      /**
+       * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+       */
+      @Override
+      public synchronized void propertyChange( final PropertyChangeEvent aEvent )
+      {
+        final String propertyName = aEvent.getPropertyName();
 
+        if ( GenericDevice.PROP_CAPTURE_PROGRESS.equals( propertyName ) )
+        {
+          final Integer progress = ( Integer )aEvent.getNewValue();
+
+          LOG.log( Level.FINE, "Progress {0}%", progress );
+
+          aCallback.updateProgress( progress );
+        }
+        else if ( GenericDevice.PROP_CAPTURE_STATE.equals( propertyName ) )
+        {
+          final StateValue state = ( StateValue )aEvent.getNewValue();
+          if ( StateValue.STARTED.equals( state ) )
+          {
+            final int sampleRate = GenericDeviceController.this.deviceConfig.getSampleRate();
+            final int channelCount = GenericDeviceController.this.deviceConfig.getChannelCount();
+            final int channelMask = GenericDeviceController.this.deviceConfig.getEnabledChannelsMask();
+
+            // Notify our caller that we're started capturing...
+            aCallback.captureStarted( sampleRate, channelCount, channelMask );
+          }
+        }
+      }
+    };
+
+    this.device = new GenericDevice( this.deviceConfig )
+    {
+      /**
+       * @see javax.swing.SwingWorker#done()
+       */
+      @Override
+      protected void done()
+      {
+        try
+        {
+          final CapturedData data = get();
+
+          aCallback.captureComplete( data );
+        }
+        catch ( CancellationException exception )
+        {
+          // simply canceled by user...
+          aCallback.captureAborted( "" );
+        }
+        catch ( ExecutionException exception )
+        {
+          // Make sure to handle IO-interrupted exceptions properly!
+          if ( !HostUtils.handleInterruptedException( exception.getCause() ) )
+          {
+            aCallback.captureAborted( exception.getCause().getMessage() );
+          }
+        }
+        catch ( InterruptedException exception )
+        {
+          // Make sure to handle IO-interrupted exceptions properly!
+          if ( !HostUtils.handleInterruptedException( exception ) )
+          {
+            aCallback.captureAborted( exception.getCause().getMessage() );
+          }
+        }
+      }
+
+      /**
+       * @see org.sump.device.logicsniffer.GenericDevice#process(java.util.List)
+       */
+      @Override
+      protected void process( final List<Sample> aSamples )
+      {
+        aCallback.samplesCaptured( aSamples );
+      }
+    };
+
+    // Tell the device on what port & what rate to do its job...
+    this.device.addPropertyChangeListener( propertyChangeListener );
+
+    // Let the capturing take place in a background thread...
+    this.device.execute();
   }
 
   /**
@@ -78,8 +177,7 @@ public class GenericDeviceController implements DeviceController
   @Override
   public boolean isCapturing()
   {
-    // TODO Auto-generated method stub
-    return false;
+    return ( this.device != null ) && this.device.isRunning();
   }
 
   /**
@@ -98,18 +196,18 @@ public class GenericDeviceController implements DeviceController
   public boolean setupCapture( final Window aParent )
   {
     // check if dialog exists with different owner and dispose if so
-    if ( ( this.configDialog != null ) && ( this.configDialog.getOwner() != aParent ) )
+    if ( ( this.deviceConfig != null ) && ( this.deviceConfig.getOwner() != aParent ) )
     {
-      this.configDialog.dispose();
-      this.configDialog = null;
+      this.deviceConfig.dispose();
+      this.deviceConfig = null;
     }
     // if no valid dialog exists, create one
-    if ( this.configDialog == null )
+    if ( this.deviceConfig == null )
     {
-      this.configDialog = new GenericDeviceConfigDialog( aParent );
+      this.deviceConfig = new GenericDeviceConfigDialog( aParent );
     }
 
-    return ( this.setup = this.configDialog.showDialog() );
+    return ( this.setup = this.deviceConfig.showDialog() );
   }
 
 }
