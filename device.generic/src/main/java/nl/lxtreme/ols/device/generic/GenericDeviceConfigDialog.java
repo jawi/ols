@@ -105,6 +105,16 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   }
 
   /**
+   * @return
+   */
+  public int getEnabledChannelsMask()
+  {
+    final int bits = 8 * getSampleWidth();
+    final int width = ( int )( ( 1L << bits ) - 1 );
+    return width;
+  }
+
+  /**
    * Returns the number of samples to take.
    * 
    * @return the sample depth, >= 0.
@@ -175,17 +185,21 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   private JComponent createContents()
   {
     this.channelCount = new JTextField( 10 );
+    this.channelCount.setText( "1" );
     this.channelCount.setInputVerifier( new NumberValidator( "Invalid channel count!" ) );
 
     this.devicePath = new JTextField( 10 );
 
     this.sampleDepth = new JTextField( 10 );
+    this.sampleDepth.setText( "256" );
     this.sampleDepth.setInputVerifier( new NumberValidator( "Invalid sample depth!" ) );
 
     this.sampleRate = new JTextField( 10 );
+    this.sampleRate.setText( "1000000" );
     this.sampleRate.setInputVerifier( new NumberValidator( "Invalid sample rate!" ) );
 
     this.sampleWidth = new JTextField( 10 );
+    this.sampleWidth.setText( "1" );
     this.sampleWidth.setInputVerifier( new NumberValidator( "Invalid sample width!" ) );
 
     final JPanel result = new JPanel( new SpringLayout() );
