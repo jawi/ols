@@ -10,7 +10,7 @@
 	<artifactId>image</artifactId>
 	<packaging>bundle</packaging>
 	<version>1.0.0</version>
-	<name>Image Exporter</name>
+	<name>OLS Image Exporter</name>
 	<dependencies>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>

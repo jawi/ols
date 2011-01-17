@@ -10,7 +10,7 @@
 	<artifactId>vcd</artifactId>
 	<packaging>bundle</packaging>
 	<version>1.0.0</version>
-	<name>Value Change Dump Exporter</name>
+	<name>OLS Value Change Dump Exporter</name>
 	<dependencies>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
