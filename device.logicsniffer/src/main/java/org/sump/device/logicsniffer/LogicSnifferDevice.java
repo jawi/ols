@@ -43,6 +43,228 @@ import org.sump.device.logicsniffer.LogicSnifferConfig.*;
  */
 public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 {
+  // INNER TYPES
+
+  /**
+   * Processes all samples and only returns the actual changed sample values.
+   */
+  final class EqualityFilter implements SampleProcessor
+  {
+    // VARIABLES
+
+    private final int[] buffer;
+    private final int trigCount;
+    private final SampleProcessorCallback callback;
+
+    // CONSTRUCTORS
+
+    /**
+     * @param aBuffer
+     *          the buffer with sample data to decode.
+     * @param aTrigCount
+     *          the trigcount value;
+     * @param aCallback
+     *          the callback to use.
+     */
+    public EqualityFilter( final int[] aBuffer, final int aTrigCount, final SampleProcessorCallback aCallback )
+    {
+      if ( aBuffer == null )
+      {
+        throw new IllegalArgumentException( "Buffer cannot be null!" );
+      }
+      this.buffer = aBuffer;
+      this.trigCount = aTrigCount;
+      this.callback = aCallback;
+    }
+
+    // METHODS
+
+    /**
+     * @see org.sump.device.logicsniffer.LogicSnifferDevice.SampleProcessor#process()
+     */
+    @Override
+    public final void process()
+    {
+      long time = 0;
+
+      final int samples = this.buffer.length;
+
+      int oldSample = 0; // first value doesn't really matter
+      for ( int i = 0; i < samples; i++ )
+      {
+        final int newSample = this.buffer[i];
+        if ( ( i == 0 ) || ( oldSample != newSample ) )
+        {
+          // add the read sample & add a timestamp value as well...
+          this.callback.addValue( this.buffer[i], time );
+        }
+
+        oldSample = newSample;
+        time++;
+      }
+
+      final int correction;
+      if ( LogicSnifferDevice.this.config.getDivider() > 3 )
+      {
+        correction = 1;
+      }
+      else
+      {
+        correction = ( ( LogicSnifferDevice.this.config.getDivider() == 0 ) ? 5 : 2 );
+      }
+
+      long triggerPos;
+      if ( LogicSnifferDevice.this.config.isDemuxEnabled() )
+      {
+        triggerPos = ( ( this.trigCount * 2 ) - 9 );
+      }
+      else
+      {
+        triggerPos = ( this.trigCount - correction );
+      }
+
+      // Take the last seen time value as "absolete" length of this trace...
+      this.callback.ready( time, triggerPos );
+    }
+  }
+
+  /**
+   * Provides a RLE decoder.
+   */
+  final class RleDecoder implements SampleProcessor
+  {
+    // VARIABLES
+
+    private final int[] buffer;
+    private final int trigCount;
+    private final SampleProcessorCallback callback;
+
+    private final int rleCountValue;
+    private final int rleCountMask;
+
+    // CONSTRUCTORS
+
+    /**
+     * @param aBuffer
+     *          the buffer with sample data to decode.
+     * @param aTrigCount
+     *          the trigcount value;
+     * @param aCallback
+     *          the callback to use.
+     */
+    public RleDecoder( final int[] aBuffer, final int aTrigCount, final SampleProcessorCallback aCallback )
+    {
+      if ( aBuffer == null )
+      {
+        throw new IllegalArgumentException( "Buffer cannot be null!" );
+      }
+      this.buffer = aBuffer;
+      this.trigCount = aTrigCount;
+      this.callback = aCallback;
+
+      final int width = LogicSnifferDevice.this.config.getEnabledGroupCount() * 8;
+      switch ( width )
+      {
+        case 32:
+          this.rleCountValue = 0x80000000;
+          this.rleCountMask = this.rleCountValue - 1;
+          break;
+        case 16:
+          this.rleCountValue = 0x8000;
+          this.rleCountMask = this.rleCountValue - 1;
+          break;
+        case 8:
+          this.rleCountValue = 0x80;
+          this.rleCountMask = this.rleCountValue - 1;
+          break;
+        default:
+          throw new IllegalArgumentException( "Illegal RLE width! Should be 8, 16 or 32!" );
+      }
+    }
+
+    // METHODS
+
+    /**
+     * @see org.sump.device.logicsniffer.LogicSnifferDevice.SampleProcessor#process()
+     */
+    public void process()
+    {
+      long time = 0;
+      int count = 0;
+      long rleTrigPos = 0;
+
+      final int samples = this.buffer.length;
+      for ( int i = 0; i < samples; i++ )
+      {
+        if ( ( this.buffer[i] & this.rleCountValue ) != 0 )
+        {
+          // This is a "count"
+          if ( this.buffer[i] > this.rleCountMask )
+          {
+            // this is an overflow count missing msb; TODO this is actually a
+            // bitstream problem?
+            count = this.rleCountMask;
+          }
+          else
+          {
+            // normal count overides a previous overflow count
+            count = ( this.buffer[i] & this.rleCountMask );
+          }
+          LOG.log( Level.FINE, "RLE count seen of {0} times {1}.", new Object[] { count, this.buffer[i - 1] } );
+        }
+        else
+        {
+          time += count;
+          // set the trigger position as a time value
+          if ( ( i >= ( this.trigCount ) ) && ( rleTrigPos == 0 ) )
+          {
+            // We're reading the samples backwards; hence we need to invert
+            // the trigger position...
+            rleTrigPos = time;
+          }
+
+          // add the read sample & add a timestamp value as well...
+          this.callback.addValue( this.buffer[i], time++ );
+        }
+      }
+
+      // Take the last seen time value as "absolete" length of this trace...
+      this.callback.ready( time, rleTrigPos - 1 );
+    }
+  }
+
+  /**
+   * Denotes a sample processor, which performs a transformation function (such
+   * as uncompressing) on a set of samples.
+   */
+  static interface SampleProcessor
+  {
+    /**
+     * Processes the samples.
+     */
+    void process();
+  }
+
+  /**
+   * Provides a callback for the processed samples.
+   * 
+   * @see SampleProcessor
+   */
+  static interface SampleProcessorCallback
+  {
+    /**
+     * @param aSampleValue
+     * @param aTimestamp
+     */
+    void addValue( final int aSampleValue, final long aTimestamp );
+
+    /**
+     * @param aAbsoluteLength
+     * @param aTriggerPosition
+     */
+    void ready( final long aAbsoluteLength, final long aTriggerPosition );
+  }
+
   // CONSTANTS
 
   public static final String PROP_CAPTURE_PROGRESS = "progress";
@@ -279,11 +501,10 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       final List<Integer> values = new ArrayList<Integer>();
       final List<Long> timestamps = new ArrayList<Long>();
 
-      long rleTrigPos = 0; // ***DSF make long
-      long absoluteLength = 0;
-
-      // collect additional information for CapturedData
-      long triggerPos = CapturedData.NOT_AVAILABLE; // ***DSF make long
+      // collect additional information for CapturedData; we use arrays here,
+      // as their values are to be filled from anonymous inner classes...
+      final long[] absoluteLength = { 0L };
+      final long[] triggerPos = { CapturedData.NOT_AVAILABLE };
 
       int rate = CapturedData.NOT_AVAILABLE;
       if ( this.config.isInternalClock() )
@@ -296,92 +517,41 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         }
       }
 
+      final SampleProcessorCallback callback = new SampleProcessorCallback()
+      {
+        public void addValue( final int aSampleValue, final long aTimestamp )
+        {
+          values.add( aSampleValue );
+          timestamps.add( aTimestamp );
+        }
+
+        public void ready( final long aAbsoluteLength, final long aTriggerPosition )
+        {
+          absoluteLength[0] = aAbsoluteLength;
+          if ( LogicSnifferDevice.this.config.isTriggerEnabled() )
+          {
+            triggerPos[0] = aTriggerPosition;
+          }
+        }
+      };
+
+      final SampleProcessor processor;
       if ( this.config.isRleEnabled() )
       {
         LOG.log( Level.FINE, "Decoding Run Length Encoded data, sample count: {0}", samples );
-
-        long time = 0;
-        int count = 0;
-
-        for ( int i = 0; i < samples; i++ )
-        {
-          if ( ( buffer[i] & 0x80000000 ) != 0 )
-          {
-            // This is a "count"
-            if ( buffer[i] == 0xbfffffff )
-            {
-              // this is an overflow count missing msb
-              count = 0x7fffffff;
-            }
-            else
-            {
-              // normal count overides a previous overflow count
-              count = ( buffer[i] & 0x7fffffff );
-            }
-            LOG.log( Level.FINE, "RLE count seen of {0} times {1}.", new Object[] { count, buffer[i - 1] } );
-          }
-          else
-          {
-            time += count;
-            // set the trigger position as a time value
-            if ( ( i >= ( this.trigcount ) ) && ( rleTrigPos == 0 ) )
-            {
-              // We're reading the samples backwards; hence we need to invert
-              // the trigger position...
-              rleTrigPos = time; // ***DSF trig pos is a time
-            }
-
-            // add the read sample & add a timestamp value as well...
-            values.add( buffer[i] );
-            timestamps.add( time++ );
-          }
-        }
-
-        // Take the last seen time value as "absolete" length of this trace...
-        absoluteLength = time;
-
-        if ( this.config.isTriggerEnabled() )
-        {
-          triggerPos = rleTrigPos - 1;
-        }
+        processor = new RleDecoder( buffer, this.trigcount, callback );
       }
       else
       {
         LOG.log( Level.FINE, "Decoding unencoded data, sample count: {0}", samples );
-
-        for ( int i = 0; i < samples; i++ )
-        {
-          values.add( buffer[i] );
-          timestamps.add( ( long )i );
-
-          // Notify the EDT that there's possibly something to display...
-          publish( new Sample( i, buffer[i] ) );
-        }
-
-        // Take the number of samples as "absolute" length of this trace...
-        absoluteLength = samples;
-        // ***DSF changes to this section
-        if ( this.config.isTriggerEnabled() )
-        {
-          int correction = 1;
-          if ( this.config.getDivider() < 3 )
-          {
-            correction = ( ( this.config.getDivider() == 0 ) ? 5 : 2 );
-          }
-
-          if ( this.config.isDemuxEnabled() )
-          {
-            triggerPos = ( ( this.trigcount * 2 ) - 9 );
-          }
-          else
-          {
-            triggerPos = ( this.trigcount - correction );
-          }
-        }
+        processor = new EqualityFilter( buffer, this.trigcount, callback );
       }
 
-      return new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, this.config.getEnabledChannels(),
-          absoluteLength );
+      // Process the actual samples...
+      processor.process();
+
+      return new CapturedDataImpl( values, timestamps, triggerPos[0], rate, channels,
+          this.config.getEnabledChannelsMask(), absoluteLength[0] );
     }
     finally
     {

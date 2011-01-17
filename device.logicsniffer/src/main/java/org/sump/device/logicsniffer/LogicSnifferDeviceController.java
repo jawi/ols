@@ -119,7 +119,7 @@ public class LogicSnifferDeviceController implements DeviceController
           {
             final int sampleRate = LogicSnifferDeviceController.this.deviceConfig.getSampleRate();
             final int channelCount = LogicSnifferDeviceController.this.deviceConfig.getChannelCount();
-            final int channelMask = LogicSnifferDeviceController.this.deviceConfig.getEnabledChannels();
+            final int channelMask = LogicSnifferDeviceController.this.deviceConfig.getEnabledChannelsMask();
 
             // Notify our caller that we're started capturing...
             aCallback.captureStarted( sampleRate, channelCount, channelMask );

@@ -156,9 +156,28 @@ public final class LogicSnifferConfig
    * 
    * @return bitmask with enabled channels represented as 1
    */
-  public int getEnabledChannels()
+  public int getEnabledChannelsMask()
   {
     return ( this.enabledChannels );
+  }
+
+  /**
+   * Returns the number of channel groups (of 8 channels) that are enabled in
+   * the capture.
+   * 
+   * @return the group count, >= 1 && < 4.
+   */
+  public int getEnabledGroupCount()
+  {
+    int cnt = 0;
+    for ( boolean enabledGroup : this.enabledGroups )
+    {
+      if ( enabledGroup )
+      {
+        cnt++;
+      }
+    }
+    return cnt;
   }
 
   /**
