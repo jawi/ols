@@ -10,7 +10,7 @@
 	<artifactId>svg</artifactId>
 	<packaging>bundle</packaging>
 	<version>1.0.0</version>
-	<name>Scalable Vector Graphics Exporter</name>
+	<name>OLS Scalable Vector Graphics Exporter</name>
 	<dependencies>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
