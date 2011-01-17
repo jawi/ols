@@ -121,6 +121,98 @@ number, and ''<sample value>'' the '''hexadecimal''' (base 16) representation of
 
 Note that the ''Size'' header '''must''' match the total count of sample data.
 
+== Extension points ==
+
+The OLS client is extensible at several points. The following extension types are defined:
+
+# devices, denoting physical devices the OLS client can talk to;
+# tools, denoting tools that perform certain actions on sample data;
+# exporters, denoting functionality to export sample data to a certain format, such as images;
+# importers, denoting functionality to import external data formats and represent them as sample data. This extension point is not yet available.
+
+All extensions are written in Java, and have a few dependencies in order to work. They are packaged in
+JAR-files, in which one JAR file can contain multiple extension points of the same type, or of different 
+types. Though it is not mandatory, it is adviced to use Maven as build tool. A typical POM-file looks 
+like:
+
+  <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <name>My Funky Exporter</name>
+    <groupId>nl.lxtreme.ols.export</groupId>
+    <artifactId>funky-exporter</artifactId>
+    <packaging>bundle</packaging>
+    <version>1.0.0</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>nl.lxtreme.ols</groupId>
+            <artifactId>api</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lxtreme.ols</groupId>
+            <artifactId>util</artifactId>
+            <version>1.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <OLS-Exporter>1.0</OLS-Exporter>
+                        <OLS-ExporterClass>nl.lxtreme.ols.export.funky.MyFunkyExporter</OLS-ExporterClass>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+  </project>
+
+There are several "section" in the POM-file (denoted with whitespace), the first one is the project
+information itself, containing of a name, group identifier, version and so on. The second section is
+the list of dependencies. Most of the times the four dependencies listed above are enough. The last
+section is are the build instructions, which instruct Maven how the resulting JAR file should look
+like. Actually, it instructs how to MANIFEST.MF file of the resulting JAR should look like. While 
+most of this is rather static, special care needs to be taken for the tags ''OLS-Exporter'' and 
+''OLS-ExporterClass''. These are specific to the OLS-client, and are verbatimely written to the 
+MANIFEST.MF file, like:
+
+  ...
+  OLS-Exporter: 1.0
+  OLS-ExporterClass: nl.lxtreme.ols.export.funky.MyFunkyExporter
+  ...
+
+Upon startup of the OLS-client, the manifests of all JARs are scanned for line starting with "OLS-".
+If found, it will be regarded as a potential extension point. The lines above tell the OLS-client two 
+things: 
+
+# the JAR contains one or more ''exporter'' extensions;
+# the main class of this exporter extension is ''nl.lxtreme.ols.export.funky.MyFunkyExporter''. Note
+that multiple (exporter) classes can be defined by separating them with comma's, like:
+
+  OLS-ExporterClass: my.first.package.MyExporter1, my.other.package2.MyExporter2 
+
+'''NOTE:''' both mentioned lines are needed! If one of them is omitted from the resulting JAR file, it 
+will be considered an invalid extension and the results are not (well) defined!
+
+
 == To do ==
 
 # support easy/easier upgrade procedure;
