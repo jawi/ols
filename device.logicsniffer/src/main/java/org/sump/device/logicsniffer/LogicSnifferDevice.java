@@ -198,23 +198,22 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       {
         if ( ( this.buffer[i] & this.rleCountValue ) != 0 )
         {
-          // This is a "count"
-          if ( this.buffer[i] > this.rleCountMask )
+          // This is a "count"...
+          if ( this.buffer[i] < this.rleCountMask )
           {
-            // this is an overflow count missing msb; TODO this is actually a
-            // bitstream problem?
-            count = this.rleCountMask;
+            // normal count overrides a previous overflow count
+            count = ( this.buffer[i] & this.rleCountMask );
           }
           else
           {
-            // normal count overides a previous overflow count
-            count = ( this.buffer[i] & this.rleCountMask );
+            // TODO this is what DSF mentioned...
+            LOG.log( Level.WARNING, "Weird RLE count value found: 0x{0}", Integer.toHexString( this.buffer[i] ) );
           }
-          LOG.log( Level.FINE, "RLE count seen of {0} times {1}.", new Object[] { count, this.buffer[i - 1] } );
+
+          LOG.log( Level.FINE, "RLE count seen of {0}x {1}.", new Object[] { count, this.buffer[i - 1] } );
         }
         else
         {
-          time += count;
           // set the trigger position as a time value
           if ( ( i >= ( this.trigCount ) ) && ( rleTrigPos == 0 ) )
           {
@@ -224,7 +223,10 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           }
 
           // add the read sample & add a timestamp value as well...
-          this.callback.addValue( this.buffer[i], time++ );
+          this.callback.addValue( this.buffer[i], time );
+
+          time += count;
+          count = 1;
         }
       }
 
