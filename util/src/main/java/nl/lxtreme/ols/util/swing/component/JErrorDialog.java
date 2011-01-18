@@ -29,6 +29,7 @@ import java.net.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
@@ -214,6 +215,14 @@ public class JErrorDialog extends JDialog implements Closeable
    */
   static final class IncidentMailReporter
   {
+    // CONSTANTS
+
+    /**
+     * For some reason URIs on Windows machines cannot be longer than 1700
+     * characters...
+     */
+    private static final int MAGIC_WINDOWS_URI_LIMIT = 1700;
+
     // VARIABLES
 
     private final String mailAddress;
@@ -233,17 +242,29 @@ public class JErrorDialog extends JDialog implements Closeable
     /**
      * @param aIncident
      */
-    public void reportIncident( final IncidentInfo aIncident, final String aHostDetails ) throws IOException
+    public void reportIncident( final IncidentInfo aIncident ) throws IOException
     {
-      final String uriStr = String.format( "mailto:%s?subject=%s&body=%s", //
+      String uriStr = String.format( "%s?subject=%s&body=%s", //
           this.mailAddress, //
-          urlEncode( "Crash Reporter" ), //
-          urlEncode( getMessageBody( aIncident, aHostDetails ) ) );
+          "Crash Reporter", //
+          getMessageBody( aIncident ) );
 
       try
       {
-        final URI mailURI = new URI( uriStr );
-        Desktop.getDesktop().browse( mailURI );
+        final URI mailURI;
+
+        if ( HostUtils.isWindows() && ( uriStr.length() > MAGIC_WINDOWS_URI_LIMIT ) )
+        {
+          mailURI = new URI( "mailto", uriStr.substring( 0, MAGIC_WINDOWS_URI_LIMIT ), null );
+          uriStr = null;
+        }
+        else
+        {
+          mailURI = new URI( "mailto", uriStr, null );
+          uriStr = null;
+        }
+
+        Desktop.getDesktop().mail( mailURI );
       }
       catch ( URISyntaxException exception )
       {
@@ -255,20 +276,24 @@ public class JErrorDialog extends JDialog implements Closeable
      * @param aIncident
      * @return
      */
-    private String getMessageBody( final IncidentInfo aIncident, final String aHostDetails )
+    private String getMessageBody( final IncidentInfo aIncident )
     {
+      final String osName = System.getProperty( "os.name", "unknown" );
+      final String osVersion = System.getProperty( "os.version", "unknown" );
+      final String processor = System.getProperty( "os.arch", "unknown" );
+      final String hostDetails = String.format( "%s, %s (%s)", osName, osVersion, processor );
+
+      final String javaVendor = System.getProperty( "java.vendor", "unknown" );
+      final String javaVersion = System.getProperty( "java.version", "unknown" );
+      final String javaDetails = String.format( "%s v%s", javaVendor, javaVersion );
+
       final boolean debug = Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
 
       StringBuilder body = new StringBuilder();
 
-      if ( aHostDetails != null )
-      {
-        body.append( "Host information: " ).append( aHostDetails );
-      }
-      else
-      {
-        body.append( "No host information found/provided!" );
-      }
+      body.append( "Java information: " ).append( javaDetails );
+      body.append( '\n' );
+      body.append( "Host information: " ).append( hostDetails );
       body.append( '\n' );
 
       if ( debug )
@@ -287,22 +312,6 @@ public class JErrorDialog extends JDialog implements Closeable
       body.append( '\n' );
 
       return body.toString();
-    }
-
-    /**
-     * @param aString
-     * @return
-     */
-    private String urlEncode( final String aString )
-    {
-      try
-      {
-        return URLEncoder.encode( aString, "UTF-8" ).replace( "+", "%20" );
-      }
-      catch ( UnsupportedEncodingException exception )
-      {
-        throw new RuntimeException( exception );
-      }
     }
   }
 
@@ -349,6 +358,9 @@ public class JErrorDialog extends JDialog implements Closeable
 
   private static final long serialVersionUID = 1L;
 
+  /** System property to read for the incident email address. */
+  public static final String PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS = "nl.lxtreme.ols.report_incident_email_addr";
+
   /**
    * Text representing extracting the details section of this dialog.
    */
@@ -366,11 +378,6 @@ public class JErrorDialog extends JDialog implements Closeable
    */
   private static final Icon ICON = UIManager.getIcon( "OptionPane.warningIcon" );
 
-  /** To ensure there's at most one error dialog on screen at all times. */
-  private static volatile JErrorDialog instance = null;
-  private static String reportIncidentAddress;
-  private static String hostDetails;
-
   // VARIABLES
 
   private JLabel errorMessage;
@@ -378,8 +385,7 @@ public class JErrorDialog extends JDialog implements Closeable
   private JButton detailButton;
   private JScrollPane detailsScrollPane;
   private JButton reportButton;
-
-  private final IncidentInfo incidentInfo;
+  private IncidentInfo incidentInfo;
 
   // CONSTRUCTORS
 
@@ -394,30 +400,9 @@ public class JErrorDialog extends JDialog implements Closeable
   {
     super( aOwner, "", ModalityType.APPLICATION_MODAL );
 
-    this.incidentInfo = aInfo;
-
     initDialog();
 
-    String details = aInfo.getDetailedErrorMessage();
-    if ( ( details == null ) || details.trim().isEmpty() )
-    {
-      final Throwable error = aInfo.getErrorException();
-      if ( error != null )
-      {
-        final StringWriter sw = new StringWriter();
-        final PrintWriter pw = new PrintWriter( sw );
-        error.printStackTrace( pw );
-        details = sw.toString();
-      }
-      else
-      {
-        details = "";
-      }
-    }
-
-    setTitle( aInfo.getHeader() );
-    setErrorMessage( aInfo.getBasicErrorMessage() );
-    setDetails( details );
+    setIncident( aInfo );
 
     setLocationRelativeTo( aOwner );
   }
@@ -437,30 +422,6 @@ public class JErrorDialog extends JDialog implements Closeable
   }
 
   /**
-   * Sets the email address used for reporting incidents.
-   * 
-   * @param aReportIncidentAddress
-   *          the report incident email address to set, may be <code>null</code>
-   *          to disable reporting functionality.
-   */
-  public static void setHostInformation( final String aOSName, final String aOSVersion, final String aProcessor )
-  {
-    hostDetails = String.format( "%s, %s (%s)", aOSName, aOSVersion, aProcessor );
-  }
-
-  /**
-   * Sets the email address used for reporting incidents.
-   * 
-   * @param aReportIncidentAddress
-   *          the report incident email address to set, may be <code>null</code>
-   *          to disable reporting functionality.
-   */
-  public static void setReportIncidentAddress( final String aReportIncidentAddress )
-  {
-    reportIncidentAddress = aReportIncidentAddress;
-  }
-
-  /**
    * Show the error dialog.
    * 
    * @param aOwner
@@ -471,13 +432,33 @@ public class JErrorDialog extends JDialog implements Closeable
    */
   public static synchronized void showDialog( final Window aOwner, final IncidentInfo aInfo )
   {
-    if ( instance == null )
+    JErrorDialog errorDialog = null;
+    // First try to find out whether we're already showing an error dialog on
+    // screen. If so, we need to update that one instead of displaying a new
+    // one...
+    for ( Window window : Window.getWindows() )
     {
-      instance = new JErrorDialog( aOwner, aInfo );
-      instance.setVisible( true );
-      // Wait until we're closed...
-      instance.dispose();
-      instance = null;
+      if ( window instanceof JErrorDialog )
+      {
+        // Hmm, already showing an error dialog... Let's reuse that one...
+        errorDialog = ( JErrorDialog )window;
+        break;
+      }
+    }
+
+    if ( errorDialog == null )
+    {
+      errorDialog = new JErrorDialog( aOwner, aInfo );
+      errorDialog.setVisible( true );
+    }
+    else
+    {
+      errorDialog.setIncident( aInfo );
+      if ( !errorDialog.isVisible() )
+      {
+        errorDialog.setVisible( true );
+      }
+      errorDialog.requestFocus();
     }
   }
 
@@ -534,6 +515,7 @@ public class JErrorDialog extends JDialog implements Closeable
   public void close()
   {
     setVisible( false );
+    dispose();
   }
 
   /**
@@ -541,8 +523,8 @@ public class JErrorDialog extends JDialog implements Closeable
    */
   final void reportIncident() throws IOException
   {
-    final IncidentMailReporter reporter = new IncidentMailReporter( reportIncidentAddress );
-    reporter.reportIncident( getIncidentInfo(), hostDetails );
+    final IncidentMailReporter reporter = new IncidentMailReporter( getReportIncidentAddress() );
+    reporter.reportIncident( getIncidentInfo() );
   }
 
   /**
@@ -585,7 +567,7 @@ public class JErrorDialog extends JDialog implements Closeable
    */
   private JComponent createButtonPane()
   {
-    final boolean reportingEnabled = ( reportIncidentAddress != null ) && !reportIncidentAddress.trim().isEmpty();
+    final boolean reportingEnabled = getReportIncidentAddress() != null;
 
     this.reportButton = new JButton( REPORT );
     this.reportButton.setVisible( reportingEnabled );
@@ -655,6 +637,19 @@ public class JErrorDialog extends JDialog implements Closeable
   }
 
   /**
+   * Returns the email address to report incidents to.
+   * 
+   * @return the report incident email address, can be <code>null</code> if this
+   *         address is not defined.
+   */
+  private String getReportIncidentAddress()
+  {
+    final Object property = System.getProperty( PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, "" );
+    final String result = String.valueOf( property ).trim();
+    return result.isEmpty() ? null : result;
+  }
+
+  /**
    * Initialize this dialog.
    */
   private void initDialog()
@@ -664,36 +659,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane );
 
-    setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
     pack();
-
-    /*
-     * final Container contentPane = getContentPane(); contentPane.setLayout(
-     * new GridBagLayout() ); final GridBagConstraints gbc = new
-     * GridBagConstraints(); gbc.anchor = GridBagConstraints.CENTER; gbc.fill =
-     * GridBagConstraints.NONE; gbc.gridheight = 1; gbc.insets = new Insets( 22,
-     * 12, 11, 17 ); contentPane.add( new JLabel( ICON ), gbc ); gbc.anchor =
-     * GridBagConstraints.WEST; gbc.fill = GridBagConstraints.BOTH;
-     * gbc.gridheight = 1; gbc.gridwidth = 2; gbc.gridx = 1; gbc.weightx = 1.0;
-     * gbc.insets = new Insets( 12, 0, 0, 11 ); contentPane.add(
-     * this.errorMessage, gbc ); gbc.fill = GridBagConstraints.NONE; gbc.gridx =
-     * 1; gbc.gridy = 1; gbc.gridwidth = 1; gbc.weightx = 1.0; gbc.weighty =
-     * 0.0; gbc.anchor = GridBagConstraints.EAST; gbc.insets = new Insets( 12,
-     * 0, 11, 5 ); contentPane.add( okButton, gbc ); gbc.gridx = 3; gbc.weightx
-     * = 0.0; gbc.insets = new Insets( 12, 0, 11, 11 ); contentPane.add(
-     * this.detailButton, gbc ); gbc.fill = GridBagConstraints.BOTH;
-     * gbc.gridwidth = 4; gbc.gridx = 0; gbc.gridy = 2; gbc.weighty = 1.0;
-     * gbc.insets = new Insets( 6, 11, 11, 11 ); contentPane.add(
-     * this.detailsScrollPane, gbc ); / * Here i'm going to add invisible empty
-     * container to the bottom of the content pane to fix minimal width of the
-     * dialog. It's quite a hack, but i have not found anything better. /
-     * Dimension spPredictedSize = this.detailsScrollPane.getPreferredSize();
-     * Dimension newPanelSize = new Dimension( spPredictedSize.width + 15, 0 );
-     * Container widthHolder = new Container(); widthHolder.setMinimumSize(
-     * newPanelSize ); widthHolder.setPreferredSize( newPanelSize );
-     * widthHolder.setMaximumSize( newPanelSize ); gbc.gridy = 3; gbc.insets =
-     * new Insets( 0, 11, 11, 0 ); contentPane.add( widthHolder, gbc );
-     */
   }
 
   /**
@@ -729,5 +695,37 @@ public class JErrorDialog extends JDialog implements Closeable
   private void setErrorMessage( final String aErrorMessage )
   {
     this.errorMessage.setText( aErrorMessage );
+  }
+
+  /**
+   * Sets the incident information.
+   * 
+   * @param aIncident
+   *          the incident information to show, cannot be <code>null</code>.
+   */
+  private void setIncident( final IncidentInfo aIncident )
+  {
+    this.incidentInfo = aIncident;
+
+    String details = aIncident.getDetailedErrorMessage();
+    if ( ( details == null ) || details.trim().isEmpty() )
+    {
+      final Throwable error = aIncident.getErrorException();
+      if ( error != null )
+      {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter( sw );
+        error.printStackTrace( pw );
+        details = sw.toString();
+      }
+      else
+      {
+        details = "";
+      }
+    }
+
+    setTitle( aIncident.getHeader() );
+    setErrorMessage( aIncident.getBasicErrorMessage() );
+    setDetails( details );
   }
 }
