@@ -212,6 +212,9 @@ public final class Host implements ApplicationCallback
       ThreadViolationDetectionRepaintManager.install();
     }
 
+    // Use the defined email address...
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, getReportIncidentAddress() );
+
     // Cause exceptions to be shown in a more user-friendly way...
     JErrorDialog.installSwingExceptionHandler();
 
@@ -268,10 +271,6 @@ public final class Host implements ApplicationCallback
     final String processor = this.context.getProperty( Constants.FRAMEWORK_PROCESSOR );
 
     LOG.log( Level.INFO, "  running on {0}, {1} ({2}).", new String[] { osName, osVersion, processor } );
-
-    // Use the defined email address...
-    JErrorDialog.setReportIncidentAddress( getReportIncidentAddress() );
-    JErrorDialog.setHostInformation( osName, osVersion, processor );
   }
 
   /**

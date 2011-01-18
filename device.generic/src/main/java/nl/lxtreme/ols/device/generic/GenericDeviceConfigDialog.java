@@ -153,7 +153,11 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   @Override
   public void readPreferences( final Preferences aPreferences )
   {
-    // TODO Auto-generated method stub
+    this.channelCount.setText( aPreferences.get( "channelCount", this.channelCount.getText() ) );
+    this.devicePath.setText( aPreferences.get( "devicePath", this.devicePath.getText() ) );
+    this.sampleDepth.setText( aPreferences.get( "sampleDepth", this.sampleDepth.getText() ) );
+    this.sampleRate.setText( aPreferences.get( "sampleRate", this.sampleRate.getText() ) );
+    this.sampleWidth.setText( aPreferences.get( "sampleWidth", this.sampleWidth.getText() ) );
   }
 
   /**
@@ -177,7 +181,11 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   @Override
   public void writePreferences( final Preferences aPreferences )
   {
-    // TODO Auto-generated method stub
+    aPreferences.put( "channelCount", this.channelCount.getText() );
+    aPreferences.put( "devicePath", this.devicePath.getText() );
+    aPreferences.put( "sampleDepth", this.sampleDepth.getText() );
+    aPreferences.put( "sampleRate", this.sampleRate.getText() );
+    aPreferences.put( "sampleWidth", this.sampleWidth.getText() );
   }
 
   /**
@@ -189,21 +197,21 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   {
     this.channelCount = new JTextField( 10 );
     this.channelCount.setText( "1" );
-    this.channelCount.setInputVerifier( new NumberValidator( "Invalid channel count!" ) );
+    this.channelCount.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid channel count!" ) );
 
     this.devicePath = new JTextField( 10 );
 
     this.sampleDepth = new JTextField( 10 );
     this.sampleDepth.setText( "256" );
-    this.sampleDepth.setInputVerifier( new NumberValidator( "Invalid sample depth!" ) );
+    this.sampleDepth.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid sample depth!" ) );
 
     this.sampleRate = new JTextField( 10 );
     this.sampleRate.setText( "1000000" );
-    this.sampleRate.setInputVerifier( new NumberValidator( "Invalid sample rate!" ) );
+    this.sampleRate.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid sample rate!" ) );
 
     this.sampleWidth = new JTextField( 10 );
     this.sampleWidth.setText( "1" );
-    this.sampleWidth.setInputVerifier( new NumberValidator( "Invalid sample width!" ) );
+    this.sampleWidth.setInputVerifier( JComponentInputVerifier.create( Integer.TYPE, "Invalid sample width!" ) );
 
     final JPanel result = new JPanel( new SpringLayout() );
 
