@@ -21,60 +21,105 @@
 package nl.lxtreme.ols.util.swing.validation;
 
 
-import javax.swing.*;
-
-
 /**
- * @author jawi
+ * Provides a simple number validator.
  */
-public final class NumberValidator extends AbstractValidator
+public final class NumberValidator implements IValidator
 {
+  // CONSTANTS
+
+  /** The default radix, denoting decimal numbers. */
+  private static final int DECIMAL_RADIX = 10;
+
   // VARIABLES
 
   private final Class<? extends Number> type;
+  private final int radix;
 
   // CONSTRUCTORS
 
   /**
-   * @param aMessage
+   * Creates a new NumberValidator instance for integer decimal values.
    */
-  public NumberValidator( final String aMessage )
+  public NumberValidator()
   {
-    this( aMessage, Integer.TYPE );
+    this( Integer.TYPE );
   }
 
   /**
-   * @param aMessage
+   * Creates a new NumberValidator instance for numeric (decimal) values of the
+   * given type.
+   * 
+   * @param aType
+   *          the numeric type (Integer, Long, ...) to expect.
    */
-  public NumberValidator( final String aMessage, final Class<? extends Number> aType )
+  public NumberValidator( final Class<? extends Number> aType )
   {
-    super( aMessage );
+    this( aType, DECIMAL_RADIX );
+  }
+
+  /**
+   * Creates a new NumberValidator instance for numeric values of the given type
+   * and radix.
+   * 
+   * @param aType
+   *          the numeric type (Integer, Long, ...) to expect;
+   * @param aRadix
+   *          the radix of the values to expect (2, 8, 10, 16).
+   * @throws IllegalArgumentException
+   *           in case the given type was either a float or double <b>and</b>
+   *           the radix is not 10.
+   */
+  public NumberValidator( final Class<? extends Number> aType, final int aRadix )
+  {
+    if ( ( aRadix != DECIMAL_RADIX )
+        && ( Float.class.isAssignableFrom( aType ) || Double.class.isAssignableFrom( aType ) ) )
+    {
+      throw new IllegalArgumentException( "Floats or doubles can only be validated as decimals (radix 10)!" );
+    }
     this.type = aType;
+    this.radix = aRadix;
+  }
+
+  /**
+   * Creates a new NumberValidator instance for integer values with a given
+   * radix.
+   * 
+   * @param aRadix
+   *          the radix of the values to expect (2, 8, 10, 16).
+   */
+  public NumberValidator( final int aRadix )
+  {
+    this( Integer.TYPE, DECIMAL_RADIX );
   }
 
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.util.swing.validation.AbstractValidator#doVerify(javax.swing.JComponent)
+   * @see nl.lxtreme.ols.util.swing.validation.IValidator#validate(java.lang.Object)
    */
   @Override
-  protected boolean doVerify( final JComponent aInput )
+  public boolean validate( final Object aValue )
   {
-    if ( aInput instanceof JTextField )
+    if ( aValue == null )
     {
-      final String inputText = ( ( JTextField )aInput ).getText();
-      if ( ( inputText == null ) || inputText.trim().isEmpty() )
-      {
-        // Nothing given, this is allowed...
-        return true;
-      }
-
-      if ( parse( inputText.trim() ) != null )
-      {
-        // A valid number was typed!
-        return true;
-      }
+      // Empty value is permitted...
+      return true;
     }
+
+    final String inputText = ( String.valueOf( aValue ) ).trim();
+    if ( inputText.isEmpty() )
+    {
+      // Nothing given, this is allowed...
+      return true;
+    }
+
+    if ( parse( inputText ) != null )
+    {
+      // A valid number was typed!
+      return true;
+    }
+
     return false;
   }
 
@@ -93,22 +138,32 @@ public final class NumberValidator extends AbstractValidator
       final Number value;
       if ( Long.TYPE == this.type )
       {
-        value = Long.parseLong( aInputText );
+        value = Long.parseLong( aInputText, this.radix );
       }
       else if ( Short.TYPE == this.type )
       {
-        value = Short.parseShort( aInputText );
+        value = Short.parseShort( aInputText, this.radix );
+      }
+      else if ( Float.TYPE == this.type )
+      {
+        value = Float.parseFloat( aInputText );
+      }
+      else if ( Double.TYPE == this.type )
+      {
+        value = Double.parseDouble( aInputText );
       }
       else
       // if ( Integer.TYPE == this.type )
       {
-        value = Integer.parseInt( aInputText );
+        value = Integer.parseInt( aInputText, this.radix );
       }
 
       return value;
     }
     catch ( NumberFormatException exception )
     {
+      // Ignore, we're not interested in the details on why the input isn't a
+      // number...
       return null;
     }
   }

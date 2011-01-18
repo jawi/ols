@@ -29,7 +29,7 @@ import nl.lxtreme.ols.util.*;
 
 
 /**
- * Provides a generic cell-renderer for enum-constants.
+ * Provides a generic list cell-renderer for enum-constants.
  */
 public class EnumItemRenderer<ENUM_TYPE extends Enum<?>> extends DefaultListCellRenderer
 {

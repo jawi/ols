@@ -32,8 +32,27 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * @author jawi
  */
-public abstract class AbstractValidator extends InputVerifier implements KeyListener
+public class JComponentInputVerifier extends InputVerifier implements KeyListener
 {
+  // INNER TYPES
+
+  /**
+   * Provides a default validator that always returns <code>true</code>.
+   */
+  private static final class DefaultValidator implements IValidator
+  {
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.util.swing.validation.IValidator#validate(java.lang.Object)
+     */
+    @Override
+    public boolean validate( final Object aValue )
+    {
+      return true;
+    }
+  }
+
   // CONSTANTS
 
   private static final String DEFAULT_MESSAGE = "Input invalid!";
@@ -50,7 +69,7 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
   // VARIABLES
 
   private final String message;
-
+  private final IValidator validator;
   private JDialog popup;
 
   // CONSTRUCTORS
@@ -58,17 +77,69 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
   /**
    * Creates a new AbstractValidator instance.
    * 
-   * @param aMessage
-   *          the message to use when validation fails.
+   * @param aValidator
+   *          the validator to use for verifying the input.
    */
-  public AbstractValidator( final String aMessage )
+  public JComponentInputVerifier( final IValidator aValidator )
+  {
+    this( DEFAULT_MESSAGE, aValidator );
+  }
+
+  /**
+   * Creates a new AbstractValidator instance.
+   * 
+   * @param aMessage
+   *          the message to use when validation fails;
+   * @param aValidator
+   *          the validator to use for verifying the input.
+   */
+  public JComponentInputVerifier( final String aMessage, final IValidator aValidator )
   {
     super();
 
     this.message = aMessage;
+    this.validator = aValidator;
   }
 
   // METHODS
+
+  /**
+   * Creates an instance of this InputVerifier for the given type.
+   * 
+   * @param aType
+   *          the type to create an input verifier for, cannot be
+   *          <code>null</code>.
+   * @return an input verifier instance, never <code>null</code>.
+   */
+  public static JComponentInputVerifier create( final Class<?> aType )
+  {
+    return create( aType, DEFAULT_MESSAGE );
+  }
+
+  /**
+   * Creates an instance of this InputVerifier for the given type.
+   * 
+   * @param aType
+   *          the type to create an input verifier for, cannot be
+   *          <code>null</code>;
+   * @param aMessage
+   *          the message to display in case the verification failed.
+   * @return an input verifier instance, never <code>null</code>.
+   */
+  @SuppressWarnings( "unchecked" )
+  public static JComponentInputVerifier create( final Class<?> aType, final String aMessage )
+  {
+    IValidator validator;
+    if ( Number.class.isAssignableFrom( aType ) )
+    {
+      validator = new NumberValidator( ( Class<? extends Number> )aType );
+    }
+    else
+    {
+      validator = new DefaultValidator();
+    }
+    return new JComponentInputVerifier( aMessage, validator );
+  }
 
   /**
    * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
@@ -111,7 +182,14 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
   @Override
   public final boolean verify( final JComponent aInput )
   {
-    boolean result = doVerify( aInput );
+    final Object value = getInputValue( aInput );
+    if ( value == null )
+    {
+      // Unknown/empty values are assumed to be valid...
+      return true;
+    }
+
+    boolean result = this.validator.validate( value );
     if ( !result )
     {
       if ( ( this.popup != null ) && ( this.popup.getOwner() != SwingComponentUtils.getOwningWindow( aInput ) ) )
@@ -152,15 +230,38 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
   }
 
   /**
-   * Implement this method to perform the actual verification of the given
-   * component.
+   * Tries to obtain the actual value of a given component.
    * 
-   * @param aInput
-   *          the component to verify, cannot be <code>null</code>.
-   * @return <code>true</code> if the component is correct, <code>false</code>
-   *         otherwise.
+   * @param aComponent
+   *          the (Swing) component to get the value of, can be
+   *          <code>null</code>.
+   * @return the component's value, or <code>null</code> if this value is
+   *         unknown.
    */
-  protected abstract boolean doVerify( final JComponent aInput );
+  protected Object getInputValue( final Component aComponent )
+  {
+    if ( aComponent instanceof JComboBox )
+    {
+      return ( ( JComboBox )aComponent ).getSelectedItem();
+    }
+    else if ( aComponent instanceof JTextField )
+    {
+      if ( ( SwingUtilities.getAncestorOfClass( JComboBox.class, aComponent ) == null )
+          && ( SwingUtilities.getAncestorOfClass( JSpinner.class, aComponent ) == null ) )
+      {
+        return ( ( JTextField )aComponent ).getText();
+      }
+    }
+    else if ( aComponent instanceof JSlider )
+    {
+      return ( ( JSlider )aComponent ).getValue();
+    }
+    else if ( aComponent instanceof JCheckBox )
+    {
+      return ( ( JCheckBox )aComponent ).isSelected();
+    }
+    return null;
+  }
 
   /**
    * Returns the message to use when validation fails.
