@@ -6,10 +6,10 @@
 		<artifactId>parent</artifactId>
 		<version>1.0.0</version>
 	</parent>
-	<groupId>nl.lxtreme.ols.service</groupId>
-	<artifactId>io</artifactId>
+	<groupId>nl.lxtreme.ols</groupId>
+	<artifactId>service.io</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>OSGi I/O-connection service</name>
 	<dependencies>
 		<dependency>

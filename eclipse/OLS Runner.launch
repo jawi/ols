@@ -14,7 +14,7 @@
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.maven.ide.eclipse.launchconfig.classpathProvider"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="nl.lxtreme.ols.runner.Runner"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="runner"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="nl.lxtreme.ols.runner"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.maven.ide.eclipse.launchconfig.sourcepathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dnl.lxtreme.ols.bundle.dir=/Users/jawi/Sources/OLS.workspace/ols.distribution/target/plugins/ -Dnl.lxtreme.ols.client.debug=true -Xmx1024m"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dnl.lxtreme.ols.bundle.dir=C:/Sources/Personal/OLS-workspace/ols/ols.distribution/target/plugins/ -Dnl.lxtreme.ols.client.debug=true -Xmx1024m"/>
 </launchConfiguration>

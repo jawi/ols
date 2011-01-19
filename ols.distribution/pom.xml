@@ -99,8 +99,8 @@
 									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
 								</artifactItem>
 								<artifactItem>
-									<groupId>nl.lxtreme.ols.service</groupId>
-									<artifactId>io</artifactId>
+									<groupId>nl.lxtreme.ols</groupId>
+									<artifactId>service.io</artifactId>
 									<type>jar</type>
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>

@@ -57,8 +57,8 @@
 			<scope>runtime</scope>
 		</dependency>
         <dependency>
-            <groupId>nl.lxtreme.ols.service</groupId>
-            <artifactId>io</artifactId>
+            <groupId>nl.lxtreme.ols</groupId>
+            <artifactId>service.io</artifactId>
             <scope>runtime</scope>
         </dependency>
 		<dependency>
