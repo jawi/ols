@@ -144,15 +144,24 @@ public class LogicSnifferDeviceController implements DeviceController
         }
         catch ( CancellationException exception )
         {
+          LOG.log( Level.INFO, "Capture cancelled by user..." );
+
           // simply canceled by user...
           aCallback.captureAborted( "" );
         }
         catch ( ExecutionException exception )
         {
-          // Make sure to handle IO-interrupted exceptions properly!
-          if ( !HostUtils.handleInterruptedException( exception.getCause() ) )
+          final Throwable actualCause = exception.getCause();
+          if ( actualCause == null )
           {
-            aCallback.captureAborted( exception.getCause().getMessage() );
+            LOG.log( Level.SEVERE, "Exception during capture, but no real cause found?!" );
+          }
+
+          // Make sure to handle IO-interrupted exceptions properly!
+          if ( !HostUtils.handleInterruptedException( actualCause ) )
+          {
+            LOG.log( Level.WARNING, "Exception during capture, details:", actualCause );
+            aCallback.captureAborted( actualCause.getMessage() );
           }
         }
         catch ( InterruptedException exception )
@@ -160,7 +169,8 @@ public class LogicSnifferDeviceController implements DeviceController
           // Make sure to handle IO-interrupted exceptions properly!
           if ( !HostUtils.handleInterruptedException( exception ) )
           {
-            aCallback.captureAborted( exception.getCause().getMessage() );
+            LOG.log( Level.WARNING, "Interrupted during capture, details:", exception );
+            aCallback.captureAborted( exception.getMessage() );
           }
         }
       }

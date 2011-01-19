@@ -771,6 +771,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         finally
         {
           this.connection = null;
+          this.outputStream = null;
+          this.inputStream = null;
         }
       }
     }
@@ -814,6 +816,13 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         {
           LOG.log( Level.INFO, "Found unknown device: 0x{0} ...", Integer.toHexString( id ) );
         }
+      }
+      catch ( final EOFException exception )
+      {
+        // We're not able to finish our read; no further effort in detecting the
+        // device is to be taken...
+        id = -1;
+        tries = -1;
       }
       catch ( final IOException exception )
       {
@@ -1011,9 +1020,13 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   }
 
   /**
-   * @return
+   * Reads a zero-terminated ASCII-string from the current input stream.
+   * 
+   * @return the read string, can be empty but never <code>null</code>.
    * @throws IOException
+   *           in case of I/O problems during the string read;
    * @throws InterruptedException
+   *           in case this thread was interrupted during the string read.
    */
   private String readString() throws IOException, InterruptedException
   {
@@ -1025,6 +1038,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       read = this.inputStream.read();
       if ( read > 0x00 )
       {
+        // no additional conversion to UTF-8 is needed, as the ASCII character
+        // set is a subset of UTF-8...
         sb.append( ( char )read );
       }
       else if ( Thread.interrupted() )

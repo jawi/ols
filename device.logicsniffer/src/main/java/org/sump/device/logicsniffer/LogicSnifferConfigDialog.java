@@ -22,25 +22,24 @@ package org.sump.device.logicsniffer;
 
 
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
-import gnu.io.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
 
-import org.osgi.service.prefs.*;
-import org.sump.device.logicsniffer.LogicSnifferConfig.ClockSource;
-
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.NumberUtils.*;
+import nl.lxtreme.ols.util.NumberUtils.UnitDefinition;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
+import nl.lxtreme.rxtx.*;
+
+import org.osgi.service.prefs.*;
+import org.sump.device.logicsniffer.LogicSnifferConfig.ClockSource;
 
 
 /**
@@ -254,30 +253,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   // METHODS
-
-  /**
-   * Gets a string array containing the names all available serial ports.
-   * 
-   * @return array containing serial port names
-   */
-  @SuppressWarnings( "unchecked" )
-  public static String[] getPorts()
-  {
-    final Enumeration<CommPortIdentifier> portIdentifiers = CommPortIdentifier.getPortIdentifiers();
-    final LinkedList<String> portList = new LinkedList<String>();
-    CommPortIdentifier portId = null;
-
-    while ( portIdentifiers.hasMoreElements() )
-    {
-      portId = portIdentifiers.nextElement();
-      if ( portId.getPortType() == CommPortIdentifier.PORT_SERIAL )
-      {
-        portList.addLast( portId.getName() );
-      }
-    }
-
-    return ( portList.toArray( new String[portList.size()] ) );
-  }
 
   /**
    * @param x
@@ -752,7 +727,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       @Override
       public Object[] getItems()
       {
-        return LogicSnifferConfigDialog.getPorts();
+        return CommPortUtils.getAvailablePorts();
       }
     } );
     // allow people to put their own port name into it...

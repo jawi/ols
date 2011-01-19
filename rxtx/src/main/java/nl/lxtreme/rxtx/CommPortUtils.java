@@ -24,6 +24,7 @@ package nl.lxtreme.rxtx;
 import gnu.io.*;
 
 import java.io.*;
+import java.util.*;
 
 
 /**
@@ -43,6 +44,30 @@ public final class CommPortUtils
   }
 
   // METHODS
+
+  /**
+   * Returns the names of all currently available (serial) ports.
+   * 
+   * @return an array containing serial port names, never <code>null</code>.
+   */
+  @SuppressWarnings( "unchecked" )
+  public static String[] getAvailablePorts()
+  {
+    final Enumeration<CommPortIdentifier> portIdentifiers = CommPortIdentifier.getPortIdentifiers();
+    final LinkedList<String> portList = new LinkedList<String>();
+    CommPortIdentifier portId = null;
+
+    while ( portIdentifiers.hasMoreElements() )
+    {
+      portId = portIdentifiers.nextElement();
+      if ( portId.getPortType() == CommPortIdentifier.PORT_SERIAL )
+      {
+        portList.addLast( portId.getName() );
+      }
+    }
+
+    return ( portList.toArray( new String[portList.size()] ) );
+  }
 
   /**
    * Opens the serial device at the given port name, does nothing more than
