@@ -193,16 +193,16 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   public String toString()
   {
     final StringBuilder sb = new StringBuilder();
-    sb.append( "DEVICE_NAME            => " ).append( this.values.get( KEY_DEVICE_NAME ) ).append( '\n' );
-    sb.append( "FPGA_VERSION           => " ).append( this.values.get( KEY_FPGA_VERSION ) ).append( '\n' );
-    sb.append( "ANCILLARY_VERSION      => " ).append( this.values.get( KEY_ANCILLARY_VERSION ) ).append( '\n' );
-    sb.append( "PROBE_COUNT_LONG       => " ).append( this.values.get( KEY_PROBE_COUNT_LONG ) ).append( '\n' );
-    sb.append( "SAMPLE_MEMORY_DEPTH    => " ).append( this.values.get( KEY_SAMPLE_MEMORY_DEPTH ) ).append( '\n' );
-    sb.append( "DYNAMIC_MEMORY_DEPTH   => " ).append( this.values.get( KEY_DYNAMIC_MEMORY_DEPTH ) ).append( '\n' );
-    sb.append( "MAX_SAMPLE_RATE        => " ).append( this.values.get( KEY_MAX_SAMPLE_RATE ) ).append( '\n' );
-    sb.append( "PROTOCOL_VERSION_LONG  => " ).append( this.values.get( KEY_PROTOCOL_VERSION_LONG ) ).append( '\n' );
-    sb.append( "PROBE_COUNT_SHORT      => " ).append( this.values.get( KEY_PROBE_COUNT_SHORT ) ).append( '\n' );
-    sb.append( "PROTOCOL_VERSION_SHORT => " ).append( this.values.get( KEY_PROTOCOL_VERSION_SHORT ) ).append( '\n' );
+    sb.append( "Device name              => " ).append( this.values.get( KEY_DEVICE_NAME ) ).append( '\n' );
+    sb.append( "FPGA version             => " ).append( this.values.get( KEY_FPGA_VERSION ) ).append( '\n' );
+    sb.append( "Ancillary version        => " ).append( this.values.get( KEY_ANCILLARY_VERSION ) ).append( '\n' );
+    sb.append( "Protocol version (long)  => " ).append( this.values.get( KEY_PROTOCOL_VERSION_LONG ) ).append( '\n' );
+    sb.append( "Protocol version (short) => " ).append( this.values.get( KEY_PROTOCOL_VERSION_SHORT ) ).append( '\n' );
+    sb.append( "Probe count (long)       => " ).append( this.values.get( KEY_PROBE_COUNT_LONG ) ).append( '\n' );
+    sb.append( "Probe count (short)      => " ).append( this.values.get( KEY_PROBE_COUNT_SHORT ) ).append( '\n' );
+    sb.append( "Sample memory depth (b)  => " ).append( this.values.get( KEY_SAMPLE_MEMORY_DEPTH ) ).append( '\n' );
+    sb.append( "Dynamic memory depth (b) => " ).append( this.values.get( KEY_DYNAMIC_MEMORY_DEPTH ) ).append( '\n' );
+    sb.append( "Max. sample rate (Hz)    => " ).append( this.values.get( KEY_MAX_SAMPLE_RATE ) ).append( '\n' );
     return sb.toString();
   }
 }
