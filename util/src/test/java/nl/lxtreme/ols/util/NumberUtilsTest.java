@@ -23,6 +23,9 @@ package nl.lxtreme.ols.util;
 
 import static nl.lxtreme.ols.util.NumberUtils.*;
 import static org.junit.Assert.*;
+
+import java.nio.*;
+
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
 import nl.lxtreme.ols.util.NumberUtils.UnitDefinition;
 
@@ -40,7 +43,7 @@ public class NumberUtilsTest
    * 
    */
   @Test
-  public void testConvertOrderOk()
+  public void testConvertBitOrderOk()
   {
     assertEquals( 0, reverseBits( 0, 8 ) );
     assertEquals( 128, reverseBits( 1, 8 ) );
@@ -56,6 +59,16 @@ public class NumberUtilsTest
     assertEquals( 1, convertBitOrder( convertBitOrder( 1, 9, BitOrder.MSB_FIRST ), 9, BitOrder.MSB_FIRST ) );
 
     assertEquals( 256, convertBitOrder( convertBitOrder( 1, 9, BitOrder.LSB_FIRST ), 9, BitOrder.MSB_FIRST ) );
+  }
+
+  /**
+   * 
+   */
+  @Test
+  public void testConvertByteOrderOk()
+  {
+    assertEquals( 0xBEBC200, convertByteOrder( 0x00C2EB0B, 32, ByteOrder.LITTLE_ENDIAN ) );
+    assertEquals( 0x6000, convertByteOrder( 0x00600000, 32, ByteOrder.LITTLE_ENDIAN ) );
   }
 
   /**
