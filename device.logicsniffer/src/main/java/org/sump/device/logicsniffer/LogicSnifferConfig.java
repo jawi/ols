@@ -124,10 +124,10 @@ public final class LogicSnifferConfig
 
     if ( this.metadata != null )
     {
-      return this.metadata.getProbeCount( channels );
+      channels = this.metadata.getProbeCount( channels );
     }
 
-    return channels;
+    return Math.max( 0, channels );
   }
 
   /**
@@ -251,7 +251,7 @@ public final class LogicSnifferConfig
       samples = ( getReadCounter() & 0xffffc );
     }
 
-    return samples;
+    return Math.max( 0, samples );
   }
 
   /**

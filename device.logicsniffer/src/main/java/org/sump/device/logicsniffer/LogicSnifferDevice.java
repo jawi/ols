@@ -22,7 +22,6 @@ package org.sump.device.logicsniffer;
 
 
 import java.io.*;
-import java.nio.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -292,6 +291,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   private final static int CMD_SELFTEST = 0x03;
   /** ask for device meta data. */
   private final static int CMD_METADATA = 0x04;
+  /** ask the device to immediately return its RLE-encoded data. */
+  private final static int CMD_RLE_FINISH_NOW = 0x05;
 
   // demultiplex
   private final static int FLAG_DEMUX = 0x00000001;
@@ -379,17 +380,37 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   {
     if ( this.running )
     {
-      try
+      if ( this.config.isRleEnabled() )
       {
-        resetDevice();
+        try
+        {
+          sendCommand( CMD_RLE_FINISH_NOW );
+        }
+        catch ( IOException exception )
+        {
+          if ( !HostUtils.handleInterruptedException( exception ) )
+          {
+            LOG.log( Level.WARNING, "RLE finish now failed?!", exception );
+          }
+        }
       }
-      catch ( IOException exception )
+      else
       {
-        LOG.log( Level.WARNING, "Device reset failed?!", exception );
-      }
-      finally
-      {
-        this.running = false;
+        try
+        {
+          resetDevice();
+        }
+        catch ( IOException exception )
+        {
+          if ( !HostUtils.handleInterruptedException( exception ) )
+          {
+            LOG.log( Level.WARNING, "Device reset failed?!", exception );
+          }
+        }
+        finally
+        {
+          this.running = false;
+        }
       }
     }
   }
@@ -433,7 +454,17 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 
       // check if data needs to be multiplexed
       final int channels = this.config.getChannelCount();
-      int samples = this.config.getSampleCount();
+      if ( channels < 0 )
+      {
+        throw new IllegalStateException( "Internal error: did not obtain correct number of channels (" + channels
+            + ")?!" );
+      }
+
+      final int samples = this.config.getSampleCount();
+      if ( samples < 0 )
+      {
+        throw new IllegalStateException( "Internal error: did not obtain correct number of samples (" + samples + ")?!" );
+      }
 
       // We need to read all samples first before doing any post-processing on
       // them...
@@ -444,8 +475,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 
       sendCommand( CMD_RUN );
 
-      boolean waiting = true;
       int sampleIdx = samples - 1;
+      boolean waiting = ( sampleIdx >= 0 );
 
       // wait for first byte forever (trigger could cause long delay)
       while ( this.running && waiting )
@@ -532,12 +563,12 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       final SampleProcessor processor;
       if ( this.config.isRleEnabled() )
       {
-        LOG.log( Level.FINE, "Decoding Run Length Encoded data, sample count: {0}", samples );
+        LOG.log( Level.INFO, "Decoding Run Length Encoded data, sample count: {0}", samples );
         processor = new RleDecoder( buffer, this.trigcount, callback );
       }
       else
       {
-        LOG.log( Level.FINE, "Decoding unencoded data, sample count: {0}", samples );
+        LOG.log( Level.INFO, "Decoding unencoded data, sample count: {0}", samples );
         processor = new EqualityFilter( buffer, this.trigcount, callback );
       }
 
@@ -926,8 +957,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           else if ( type == 0x01 )
           {
             // key value is a 32-bit integer; least significant byte first...
-            final Integer value = NumberUtils
-                .convertByteOrder( this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
+            // final Integer value = NumberUtils.convertByteOrder(
+            // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
+            final Integer value = this.inputStream.readInt();
             LOG.log( Level.FINE, "Read {0} -> {1} (32-bit)", new Object[] { result, value } );
             metadata.put( result, value );
           }
