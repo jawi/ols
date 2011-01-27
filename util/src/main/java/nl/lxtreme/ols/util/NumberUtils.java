@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.util;
 
 
+import java.nio.*;
 import java.util.regex.*;
 
 
@@ -97,6 +98,32 @@ public final class NumberUtils
     }
 
     return reverseBits( aValue, aBitCount );
+  }
+
+  /**
+   * Converts the given value into a desired byte order.
+   * 
+   * @param aValue
+   *          the value to convert;
+   * @param aByteCount
+   *          the number of bytes that are supposed to be in the given value;
+   * @param aByteOrder
+   *          the desired byte order.
+   * @return the converted value.
+   */
+  public static int convertByteOrder( final int aValue, final int aByteCount, final ByteOrder aByteOrder )
+  {
+    if ( ( aByteCount <= 0 ) || ( aByteCount > 32 ) )
+    {
+      throw new IllegalArgumentException( "Bit count cannot be zero, negative or beyond 32-bits!" );
+    }
+
+    final ByteBuffer buf = ByteBuffer.allocate( aByteCount );
+    buf.putInt( aValue );
+    buf.order( aByteOrder );
+    buf.position( 0 );
+    final int result = buf.getInt();
+    return result;
   }
 
   /**

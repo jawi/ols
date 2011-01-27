@@ -22,6 +22,7 @@ package org.sump.device.logicsniffer;
 
 
 import java.io.*;
+import java.nio.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -199,18 +200,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         if ( ( this.buffer[i] & this.rleCountValue ) != 0 )
         {
           // This is a "count"...
-          if ( this.buffer[i] < this.rleCountMask )
-          {
-            // normal count overrides a previous overflow count
-            count = ( this.buffer[i] & this.rleCountMask );
-          }
-          else
-          {
-            // TODO this is what DSF mentioned...
-            LOG.log( Level.WARNING, "Weird RLE count value found: 0x{0}", Integer.toHexString( this.buffer[i] ) );
-          }
+          count = ( this.buffer[i] & this.rleCountMask ) + 1;
 
-          LOG.log( Level.FINE, "RLE count seen of {0}x {1}.", new Object[] { count, this.buffer[i - 1] } );
+          LOG.log( Level.FINE, "RLE count seen of {0}...", count );
         }
         else
         {
@@ -933,8 +925,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           }
           else if ( type == 0x01 )
           {
-            // key value is a 32-bit integer...
-            final Integer value = this.inputStream.readInt();
+            // key value is a 32-bit integer; least significant byte first...
+            final Integer value = NumberUtils
+                .convertByteOrder( this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
             LOG.log( Level.FINE, "Read {0} -> {1} (32-bit)", new Object[] { result, value } );
             metadata.put( result, value );
           }
