@@ -76,10 +76,10 @@ public class SimpleProject implements Project
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getCursors()
+   * @see nl.lxtreme.ols.api.data.project.Project#getCursorPositions()
    */
   @Override
-  public long[] getCursors()
+  public long[] getCursorPositions()
   {
     return this.cursors;
   }
@@ -87,6 +87,7 @@ public class SimpleProject implements Project
   /**
    * @return the lastModified
    */
+  @Override
   public Date getLastModified()
   {
     return this.lastModified;
@@ -113,6 +114,7 @@ public class SimpleProject implements Project
   /**
    * @return the sourceVersion
    */
+  @Override
   public String getSourceVersion()
   {
     return this.sourceVersion;
@@ -131,6 +133,7 @@ public class SimpleProject implements Project
    * @param aCapturedData
    *          the capturedData to set
    */
+  @Override
   public void setCapturedData( final CapturedData aCapturedData )
   {
     this.capturedData = aCapturedData;
@@ -140,6 +143,7 @@ public class SimpleProject implements Project
    * @param aChanged
    *          the changed to set
    */
+  @Override
   public void setChanged( final boolean aChanged )
   {
     this.changed = aChanged;
@@ -149,6 +153,7 @@ public class SimpleProject implements Project
    * @param aChannelLabels
    *          the channelLabels to set
    */
+  @Override
   public void setChannelLabels( final String... aChannelLabels )
   {
     if ( aChannelLabels != null )
@@ -162,7 +167,8 @@ public class SimpleProject implements Project
    * @param aCursors
    *          the cursors to set
    */
-  public void setCursors( final long... aCursors )
+  @Override
+  public void setCursorPositions( final long... aCursors )
   {
     if ( aCursors != null )
     {
@@ -175,6 +181,7 @@ public class SimpleProject implements Project
    * @param aLastModified
    *          the lastModified to set
    */
+  @Override
   public void setLastModified( final Date aLastModified )
   {
     this.lastModified = aLastModified;
@@ -186,6 +193,7 @@ public class SimpleProject implements Project
    * @param aName
    *          the name to set, may be <code>null</code>.
    */
+  @Override
   public void setName( final String aName )
   {
     this.name = aName;
@@ -197,6 +205,7 @@ public class SimpleProject implements Project
    * @param aSettings
    *          the settings to set, can be <code>null</code>.
    */
+  @Override
   public void setSettings( final Properties aSettings )
   {
     this.settings = aSettings;
@@ -206,6 +215,7 @@ public class SimpleProject implements Project
    * @param aSourceVersion
    *          the sourceVersion to set
    */
+  @Override
   public void setSourceVersion( final String aSourceVersion )
   {
     this.sourceVersion = aSourceVersion;

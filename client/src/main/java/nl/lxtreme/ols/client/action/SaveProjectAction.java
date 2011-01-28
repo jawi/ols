@@ -68,7 +68,7 @@ public class SaveProjectAction extends BaseAction
 
     try
     {
-      final File file = SwingComponentUtils.showFileSaveDialog( owner );
+      final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenProjectAction.OLS_PROJECT_FILTER );
       if ( file != null )
       {
         final File actualFile = HostUtils.setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
@@ -77,7 +77,7 @@ public class SaveProjectAction extends BaseAction
           LOG.info( "Saving OLS project to file: " + actualFile );
         }
 
-        getController().saveProject( actualFile );
+        getController().saveProject( actualFile.getName(), actualFile );
       }
     }
     catch ( IOException exception )

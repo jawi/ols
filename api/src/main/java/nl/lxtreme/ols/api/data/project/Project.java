@@ -53,7 +53,12 @@ public interface Project
    * 
    * @return an array of cursor positions, can be <code>null</code>.
    */
-  public long[] getCursors();
+  public long[] getCursorPositions();
+
+  /**
+   * @return
+   */
+  public Date getLastModified();
 
   /**
    * Returns the name of this project.
@@ -71,6 +76,11 @@ public interface Project
   public Properties getSettings();
 
   /**
+   * @return
+   */
+  public String getSourceVersion();
+
+  /**
    * Returns whether the contents of this project is changed or not.
    * 
    * @return <code>true</code> if this project is changed, <code>false</code>
@@ -78,4 +88,43 @@ public interface Project
    */
   public boolean isChanged();
 
+  /**
+   * @param aCapturedData
+   */
+  public void setCapturedData( final CapturedData aCapturedData );
+
+  /**
+   * @param aChanged
+   */
+  public void setChanged( final boolean aChanged );
+
+  /**
+   * @param aChannelLabels
+   */
+  public void setChannelLabels( final String... aChannelLabels );
+
+  /**
+   * @param aCursors
+   */
+  public void setCursorPositions( final long... aCursors );
+
+  /**
+   * @param aLastModified
+   */
+  public void setLastModified( final Date aLastModified );
+
+  /**
+   * @param aName
+   */
+  public void setName( final String aName );
+
+  /**
+   * @param aSettings
+   */
+  public void setSettings( final Properties aSettings );
+
+  /**
+   * @param aSourceVersion
+   */
+  public void setSourceVersion( final String aSourceVersion );
 }

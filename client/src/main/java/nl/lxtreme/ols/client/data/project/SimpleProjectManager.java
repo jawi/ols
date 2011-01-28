@@ -24,12 +24,12 @@ package nl.lxtreme.ols.client.data.project;
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
-import java.util.regex.*;
 import java.util.zip.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.data.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -48,15 +48,9 @@ public class SimpleProjectManager implements ProjectManager
 
   private static final Logger LOG = Logger.getLogger( SimpleProjectManager.class.getName() );
 
-  /** The regular expression used to parse an (OLS-datafile) instruction. */
-  private static final Pattern OLS_INSTRUCTION_PATTERN = Pattern.compile( "^;([^:]+):\\s+([^\r\n]+)$" );
-  /** The regular expression used to parse an (OLS-datafile) data value. */
-  private static final Pattern OLS_DATA_PATTERN = Pattern.compile( "^([0-9a-fA-F]+)@(\\d+)$" );
-
   // VARIABLES
 
   private final Host host;
-
   private Project project;
 
   // CONSTRUCTORS
@@ -99,7 +93,7 @@ public class SimpleProjectManager implements ProjectManager
   @Override
   public void loadProject( final InputStream aInput ) throws IOException
   {
-    final SimpleProject newProject = new SimpleProject();
+    final Project newProject = new SimpleProject();
 
     final BufferedInputStream in = new BufferedInputStream( aInput );
     final ZipInputStream zipIS = new ZipInputStream( in );
@@ -175,149 +169,9 @@ public class SimpleProjectManager implements ProjectManager
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void loadCapturedResults( final SimpleProject aProject, final ZipInputStream aZipIS ) throws IOException
+  protected void loadCapturedResults( final Project aProject, final ZipInputStream aZipIS ) throws IOException
   {
-    int size = -1, rate = -1, channels = 32, enabledChannels = -1;
-    long triggerPos = -1;
-
-    long[] cursorPositions = new long[CapturedData.MAX_CURSORS];
-    CapturedData capturedData = null;
-
-    boolean cursors = false;
-    boolean compressed = false;
-    long absLen = 0;
-
-    final InputStreamReader isReader = new InputStreamReader( aZipIS );
-    final BufferedReader br = new BufferedReader( isReader );
-
-    try
-    {
-      final List<String[]> dataValues = new ArrayList<String[]>();
-
-      String line;
-      while ( ( line = br.readLine() ) != null )
-      {
-        // Determine whether the line is an instruction, or data...
-        final Matcher instructionMatcher = OLS_INSTRUCTION_PATTERN.matcher( line );
-        final Matcher dataMatcher = OLS_DATA_PATTERN.matcher( line );
-
-        if ( dataMatcher.matches() )
-        {
-          final String[] dataPair = new String[] { dataMatcher.group( 1 ), dataMatcher.group( 2 ) };
-          dataValues.add( dataPair );
-        }
-        else if ( instructionMatcher.matches() )
-        {
-          // Ok; found an instruction...
-          final String instrKey = instructionMatcher.group( 1 );
-          final String instrValue = instructionMatcher.group( 2 );
-
-          if ( "Size".equals( instrKey ) )
-          {
-            size = Integer.parseInt( instrValue );
-          }
-          else if ( "Rate".equals( instrKey ) )
-          {
-            rate = Integer.parseInt( instrValue );
-          }
-          else if ( "Channels".equals( instrKey ) )
-          {
-            channels = Integer.parseInt( instrValue );
-          }
-          else if ( "TriggerPosition".equals( instrKey ) )
-          {
-            triggerPos = Long.parseLong( instrValue );
-          }
-          else if ( "EnabledChannels".equals( instrKey ) )
-          {
-            enabledChannels = Integer.parseInt( instrValue );
-          }
-          else if ( "CursorEnabled".equals( instrKey ) )
-          {
-            cursors = Boolean.parseBoolean( instrValue );
-          }
-          else if ( "Compressed".equals( instrKey ) )
-          {
-            compressed = Boolean.parseBoolean( instrValue );
-          }
-          else if ( "AbsoluteLength".equals( instrKey ) )
-          {
-            absLen = Long.parseLong( instrValue );
-          }
-          else if ( "CursorA".equals( instrKey ) )
-          {
-            cursorPositions[0] = Long.parseLong( instrValue );
-          }
-          else if ( "CursorB".equals( instrKey ) )
-          {
-            cursorPositions[1] = Long.parseLong( instrValue );
-          }
-          else if ( instrKey.startsWith( "Cursor" ) )
-          {
-            final int idx = Integer.parseInt( instrKey.substring( 6 ) );
-            final long pos = Long.parseLong( instrValue );
-            cursorPositions[idx] = pos;
-          }
-        }
-      }
-
-      long absoluteLength;
-      int[] values;
-      long[] timestamps;
-
-      if ( dataValues.isEmpty() || ( size < 0 ) )
-      {
-        throw new IOException( "File does not appear to be a valid datafile!" );
-      }
-
-      if ( !compressed )
-      {
-        throw new IOException(
-            "Uncompressed data file found! Please sent this file to the OLS developers for further inspection!" );
-      }
-      else if ( size != dataValues.size() )
-      {
-        throw new IOException( "Data size mismatch! Corrupt file encountered!" );
-      }
-      else
-      {
-        // new compressed file format
-        absoluteLength = absLen;
-        values = new int[size];
-        timestamps = new long[size];
-
-        try
-        {
-          for ( int i = 0; i < dataValues.size(); i++ )
-          {
-            final String[] dataPair = dataValues.get( i );
-
-            values[i] = Integer.parseInt( dataPair[0].substring( 0, 4 ), 16 ) << 16
-                | Integer.parseInt( dataPair[0].substring( 4, 8 ), 16 );
-
-            timestamps[i] = Long.parseLong( dataPair[1] );
-          }
-        }
-        catch ( final NumberFormatException exception )
-        {
-          throw new IOException( "Invalid data encountered." );
-        }
-      }
-
-      capturedData = new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, enabledChannels,
-          absoluteLength );
-    }
-    finally
-    {
-      if ( cursors )
-      {
-        aProject.setCursors( cursorPositions );
-      }
-      if ( capturedData != null )
-      {
-        aProject.setCapturedData( capturedData );
-      }
-    }
+    OlsDataHelper.read( aProject, new InputStreamReader( aZipIS ) );
   }
 
   /**
@@ -330,7 +184,7 @@ public class SimpleProjectManager implements ProjectManager
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void loadChannelLabels( final SimpleProject aProject, final ZipInputStream aZipIS ) throws IOException
+  protected void loadChannelLabels( final Project aProject, final ZipInputStream aZipIS ) throws IOException
   {
     final InputStreamReader isReader = new InputStreamReader( aZipIS );
     final BufferedReader reader = new BufferedReader( isReader );
@@ -343,7 +197,7 @@ public class SimpleProjectManager implements ProjectManager
       int idx = 0;
       while ( ( ( label = reader.readLine() ) != null ) && ( idx < ( labels.length - 1 ) ) )
       {
-        labels[idx++] = label;
+        labels[idx++] = DisplayUtils.isEmpty( label ) ? null : label;
       }
     }
     finally
@@ -362,7 +216,7 @@ public class SimpleProjectManager implements ProjectManager
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void loadProjectMetadata( final SimpleProject aProject, final ZipInputStream aZipIS ) throws IOException
+  protected void loadProjectMetadata( final Project aProject, final ZipInputStream aZipIS ) throws IOException
   {
     final InputStreamReader isReader = new InputStreamReader( aZipIS );
     final BufferedReader reader = new BufferedReader( isReader );
@@ -397,7 +251,7 @@ public class SimpleProjectManager implements ProjectManager
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void loadProjectSettings( final SimpleProject aProject, final ZipInputStream aZipIS ) throws IOException
+  protected void loadProjectSettings( final Project aProject, final ZipInputStream aZipIS ) throws IOException
   {
     final Properties settings = new Properties();
     try
@@ -432,65 +286,10 @@ public class SimpleProjectManager implements ProjectManager
       return;
     }
 
-    final long[] cursors = aProject.getCursors();
-    final boolean cursorsEnabled = ( cursors != null ) && ( cursors.length > 0 );
-
     final ZipEntry zipEntry = new ZipEntry( FILENAME_CAPTURE_RESULTS );
     aZipOS.putNextEntry( zipEntry );
 
-    PrintStream out = new PrintStream( aZipOS );
-
-    try
-    {
-      final int[] values = captureData.getValues();
-      final long[] timestamps = captureData.getTimestamps();
-
-      out.print( ";Size: " );
-      out.println( values.length );
-
-      out.print( ";Rate: " );
-      out.println( captureData.getSampleRate() );
-
-      out.print( ";Channels: " );
-      out.println( captureData.getChannels() );
-
-      out.print( ";EnabledChannels: " );
-      out.println( captureData.getEnabledChannels() );
-
-      if ( captureData.hasTriggerData() )
-      {
-        out.print( ";TriggerPosition: " );
-        out.println( captureData.getTriggerPosition() );
-      }
-
-      out.print( ";Compressed: " );
-      out.println( true );
-
-      out.print( ";AbsoluteLength: " );
-      out.println( captureData.getAbsoluteLength() );
-
-      out.print( ";CursorEnabled: " );
-      out.println( cursorsEnabled );
-
-      for ( int i = 0; cursorsEnabled && ( i < cursors.length ); i++ )
-      {
-        out.print( String.format( ";Cursor%d: ", i ) );
-        out.println( cursors[i] );
-      }
-      for ( int i = 0; i < values.length; i++ )
-      {
-        final String hexVal = Integer.toHexString( values[i] );
-        out.print( "00000000".substring( hexVal.length() ) );
-        out.print( hexVal );
-        out.print( "@" );
-        out.println( timestamps[i] );
-      }
-    }
-    finally
-    {
-      out.flush();
-      out = null;
-    }
+    OlsDataHelper.write( aProject, new OutputStreamWriter( aZipOS ) );
   }
 
   /**
@@ -525,7 +324,7 @@ public class SimpleProjectManager implements ProjectManager
     {
       for ( String label : labels )
       {
-        out.println( label );
+        out.println( DisplayUtils.isEmpty( label ) ? "" : label );
       }
     }
     finally
