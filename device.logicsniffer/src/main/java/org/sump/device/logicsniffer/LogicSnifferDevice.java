@@ -190,8 +190,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     public void process()
     {
       long time = 0;
-      int count = 0;
       long rleTrigPos = 0;
+      int count = 1;
 
       final int samples = this.buffer.length;
       for ( int i = 0; i < samples; i++ )
@@ -199,7 +199,12 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         if ( ( this.buffer[i] & this.rleCountValue ) != 0 )
         {
           // This is a "count"...
-          count = ( this.buffer[i] & this.rleCountMask ) + 1;
+          if ( count > 1 )
+          {
+            LOG.log( Level.WARNING, "RLE count rollover seen?" );
+          }
+
+          count = ( this.buffer[i] & this.rleCountMask ) + 0;
 
           LOG.log( Level.FINE, "RLE count seen of {0}...", count );
         }

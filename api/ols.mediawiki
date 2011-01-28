@@ -217,6 +217,7 @@ will be considered an invalid extension and the results are not (well) defined!
 
 # support easy/easier upgrade procedure;
 # make it easier to jump to another transition in a channel (in case you're zoomed in really close; jack.gassett);
+# save channel labels along with the project information (jack.gassett);
 # VCD dump is ignoring the selected number of channels and always dumps all 32 channels. Also the VCD format allows to list for each sample only the channels that have change value; instead they are all listed (reported by zelea2);
 # it no longer launches if there's a space in the directory path (reported by jone);
 # Open project should show current directory by default, not home director (reported by nickandrew);
