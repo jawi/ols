@@ -21,10 +21,7 @@
 package nl.lxtreme.ols.api.data;
 
 
-import java.io.*;
 import java.util.*;
-import java.util.logging.*;
-import java.util.regex.*;
 
 
 /**
@@ -42,15 +39,6 @@ import java.util.regex.*;
  */
 public final class DataContainer implements CapturedData
 {
-  // CONSTANTS
-
-  private static final Logger LOG = Logger.getLogger( DataContainer.class.getName() );
-
-  /** The regular expression used to parse an (OLS-datafile) instruction. */
-  private static final Pattern OLS_INSTRUCTION_PATTERN = Pattern.compile( "^;([^:]+):\\s+([^\r\n]+)$" );
-  /** The regular expression used to parse an (OLS-datafile) data value. */
-  private static final Pattern OLS_DATA_PATTERN = Pattern.compile( "^([0-9a-fA-F]+)@(\\d+)$" );
-
   // VARIABLES
 
   /** the actual captured data */
@@ -467,160 +455,6 @@ public final class DataContainer implements CapturedData
   }
 
   /**
-   * Reads the data from a given reader.
-   * 
-   * @param aReader
-   *          the reader to read the data from, cannot be <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  public void read( final Reader aReader ) throws IOException
-  {
-    int size = -1, rate = -1, channels = 32, enabledChannels = -1;
-    long triggerPos = -1;
-
-    long[] cursorPositions = new long[10];
-    Arrays.fill( cursorPositions, Long.MIN_VALUE );
-
-    boolean cursors = false;
-    boolean compressed = false;
-    long absLen = 0;
-
-    final BufferedReader br = new BufferedReader( aReader );
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      LOG.info( "Parsing OLS captured data from stream..." );
-    }
-
-    try
-    {
-      final List<String[]> dataValues = new ArrayList<String[]>();
-
-      String line;
-      while ( ( line = br.readLine() ) != null )
-      {
-        // Determine whether the line is an instruction, or data...
-        final Matcher instructionMatcher = OLS_INSTRUCTION_PATTERN.matcher( line );
-        final Matcher dataMatcher = OLS_DATA_PATTERN.matcher( line );
-
-        if ( dataMatcher.matches() )
-        {
-          final String[] dataPair = new String[] { dataMatcher.group( 1 ), dataMatcher.group( 2 ) };
-          dataValues.add( dataPair );
-        }
-        else if ( instructionMatcher.matches() )
-        {
-          // Ok; found an instruction...
-          final String instrKey = instructionMatcher.group( 1 );
-          final String instrValue = instructionMatcher.group( 2 );
-
-          if ( "Size".equals( instrKey ) )
-          {
-            size = Integer.parseInt( instrValue );
-          }
-          else if ( "Rate".equals( instrKey ) )
-          {
-            rate = Integer.parseInt( instrValue );
-          }
-          else if ( "Channels".equals( instrKey ) )
-          {
-            channels = Integer.parseInt( instrValue );
-          }
-          else if ( "TriggerPosition".equals( instrKey ) )
-          {
-            triggerPos = Long.parseLong( instrValue );
-          }
-          else if ( "EnabledChannels".equals( instrKey ) )
-          {
-            enabledChannels = Integer.parseInt( instrValue );
-          }
-          else if ( "CursorEnabled".equals( instrKey ) )
-          {
-            cursors = Boolean.parseBoolean( instrValue );
-          }
-          else if ( "Compressed".equals( instrKey ) )
-          {
-            compressed = Boolean.parseBoolean( instrValue );
-          }
-          else if ( "AbsoluteLength".equals( instrKey ) )
-          {
-            absLen = Long.parseLong( instrValue );
-          }
-          else if ( "CursorA".equals( instrKey ) )
-          {
-            cursorPositions[0] = Long.parseLong( instrValue );
-          }
-          else if ( "CursorB".equals( instrKey ) )
-          {
-            cursorPositions[1] = Long.parseLong( instrValue );
-          }
-          else if ( instrKey.startsWith( "Cursor" ) )
-          {
-            final int idx = Integer.parseInt( instrKey.substring( 6 ) );
-            final long pos = Long.parseLong( instrValue );
-            cursorPositions[idx] = pos;
-          }
-        }
-      }
-
-      long absoluteLength;
-      int[] values;
-      long[] timestamps;
-
-      if ( dataValues.isEmpty() || ( size < 0 ) )
-      {
-        throw new IOException( "File does not appear to be a valid datafile!" );
-      }
-
-      if ( !compressed )
-      {
-        throw new IOException(
-            "Uncompressed data file found! Please sent this file to the OLS developers for further inspection!" );
-      }
-      else if ( size != dataValues.size() )
-      {
-        throw new IOException( "Data size mismatch! Corrupt file encountered!" );
-      }
-      else
-      {
-        // new compressed file format
-        absoluteLength = absLen;
-        values = new int[size];
-        timestamps = new long[size];
-
-        try
-        {
-          for ( int i = 0; i < dataValues.size(); i++ )
-          {
-            final String[] dataPair = dataValues.get( i );
-
-            values[i] = Integer.parseInt( dataPair[0].substring( 0, 4 ), 16 ) << 16
-                | Integer.parseInt( dataPair[0].substring( 4, 8 ), 16 );
-
-            timestamps[i] = Long.parseLong( dataPair[1] );
-          }
-        }
-        catch ( final NumberFormatException exception )
-        {
-          throw new IOException( "Invalid data encountered." );
-        }
-      }
-
-      // Create a copy of all read cursor positions...
-      System.arraycopy( cursorPositions, 0, this.cursorPositions, 0, cursorPositions.length );
-      this.cursorEnabled = cursors;
-
-      // Finally set the captured data, and notify all event listeners...
-      setCapturedData( new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, enabledChannels,
-          absoluteLength ) );
-    }
-    finally
-    {
-      br.close();
-    }
-  }
-
-  /**
    * Sets the captured data.
    * 
    * @param aCapturedData
@@ -711,80 +545,6 @@ public final class DataContainer implements CapturedData
           + this.cursorPositions.length );
     }
     this.cursorPositions[aCursorIdx] = aCursorPosition;
-  }
-
-  /**
-   * Writes the data to the given writer.
-   * 
-   * @param aWriter
-   *          the writer to write the data to, cannot be <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  public void write( final Writer aWriter ) throws IOException
-  {
-    final BufferedWriter bw = new BufferedWriter( aWriter );
-
-    try
-    {
-      final int[] values = this.capturedData.getValues();
-      final long[] timestamps = this.capturedData.getTimestamps();
-
-      bw.write( ";Size: " );
-      bw.write( Integer.toString( values.length ) );
-      bw.newLine();
-
-      bw.write( ";Rate: " );
-      bw.write( Integer.toString( this.capturedData.getSampleRate() ) );
-      bw.newLine();
-
-      bw.write( ";Channels: " );
-      bw.write( Integer.toString( this.capturedData.getChannels() ) );
-      bw.newLine();
-
-      bw.write( ";EnabledChannels: " );
-      bw.write( Integer.toString( this.capturedData.getEnabledChannels() ) );
-      bw.newLine();
-
-      if ( this.capturedData.hasTriggerData() )
-      {
-        bw.write( ";TriggerPosition: " );
-        bw.write( Long.toString( this.capturedData.getTriggerPosition() ) );
-        bw.newLine();
-      }
-
-      bw.write( ";Compressed: " );
-      bw.write( Boolean.toString( true ) );
-      bw.newLine();
-
-      bw.write( ";AbsoluteLength: " );
-      bw.write( Long.toString( this.capturedData.getAbsoluteLength() ) );
-      bw.newLine();
-
-      bw.write( ";CursorEnabled: " );
-      bw.write( Boolean.toString( this.cursorEnabled ) );
-      bw.newLine();
-
-      for ( int i = 0; i < this.cursorPositions.length; i++ )
-      {
-        bw.write( String.format( ";Cursor%d: ", i ) );
-        bw.write( Long.toString( this.cursorPositions[i] ) );
-        bw.newLine();
-      }
-      for ( int i = 0; i < values.length; i++ )
-      {
-        final String hexVal = Integer.toHexString( values[i] );
-        bw.write( "00000000".substring( hexVal.length() ) );
-        bw.write( hexVal );
-        bw.write( "@" );
-        bw.write( Long.toString( timestamps[i] ) );
-        bw.newLine();
-      }
-    }
-    finally
-    {
-      bw.flush();
-    }
   }
 
   /**

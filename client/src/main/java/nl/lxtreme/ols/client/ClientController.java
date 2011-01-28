@@ -37,6 +37,7 @@ import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
+import nl.lxtreme.ols.client.data.*;
 import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
@@ -272,11 +273,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   @Override
   public void captureComplete( final CapturedData aCapturedData )
   {
-    this.dataContainer.setCapturedData( aCapturedData );
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.zoomToFit();
-    }
+    setCapturedData( aCapturedData );
 
     setStatus( "Capture finished at {0,date,medium} {0,time,medium}.", new Date() );
 
@@ -363,6 +360,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   public void createNewProject()
   {
     this.projectManager.createNewProject();
+
+    updateMainFrameTitle( this.projectManager.getCurrentProject() );
   }
 
   /**
@@ -649,7 +648,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     try
     {
-      this.dataContainer.read( reader );
+      final Project tempProject = new SimpleProject();
+      OlsDataHelper.read( tempProject, reader );
+
+      setChannelLabels( tempProject.getChannelLabels() );
+      setCapturedData( tempProject.getCapturedData() );
+      // TODO cursors...
+
+      // Reflect the current project state on the main frame...
+      updateMainFrameTitle( tempProject );
     }
     finally
     {
@@ -679,8 +686,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       // TODO flush preferences to project...
 
       final Project project = this.projectManager.getCurrentProject();
-      captureComplete( project.getCapturedData() );
       setChannelLabels( project.getChannelLabels() );
+      setCapturedData( project.getCapturedData() );
+      // TODO cursors...
+
+      updateMainFrameTitle( project );
     }
     finally
     {
@@ -864,7 +874,13 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     final FileWriter writer = new FileWriter( aFile );
     try
     {
-      this.dataContainer.write( writer );
+      final Project tempProject = new SimpleProject();
+      tempProject.setCapturedData( this.dataContainer );
+
+      OlsDataHelper.write( tempProject, writer );
+
+      // Reflect the current project state on the main frame...
+      updateMainFrameTitle( tempProject );
     }
     finally
     {
@@ -882,21 +898,26 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * @throws IOException
    *           in case of I/O problems.
    */
-  public void saveProject( final File aFile ) throws IOException
+  public void saveProject( final String aName, final File aFile ) throws IOException
   {
     FileOutputStream out = null;
     try
     {
-      out = new FileOutputStream( aFile );
-
       this.userPreferences.flush();
 
+      out = new FileOutputStream( aFile );
+
       // TODO flush user preferences to project...
-      final SimpleProject project = ( SimpleProject )this.projectManager.getCurrentProject();
+      final Project project = this.projectManager.getCurrentProject();
+
+      project.setName( aName );
       project.setCapturedData( this.dataContainer );
       project.setChannelLabels( this.dataContainer.getChannelLabels() );
 
       this.projectManager.saveProject( out );
+
+      // Denote the project file in the title of the main window...
+      updateMainFrameTitle( project );
     }
     catch ( BackingStoreException exception )
     {
@@ -1387,6 +1408,18 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * @param aCapturedData
+   */
+  private void setCapturedData( final CapturedData aCapturedData )
+  {
+    this.dataContainer.setCapturedData( aCapturedData );
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.zoomToFit();
+    }
+  }
+
+  /**
    * Set the channel labels.
    * 
    * @param aChannelLabels
@@ -1467,5 +1500,23 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
       repaintMainFrame();
     }
+  }
+
+  /**
+   * Updates the title of the main frame with the given project name.
+   * 
+   * @param aProjectName
+   *          the name of the project to display in the main title, can be
+   *          <code>null</code>.
+   */
+  private void updateMainFrameTitle( final Project aProject )
+  {
+    String title = Host.FULL_NAME;
+    if ( ( aProject != null ) && !DisplayUtils.isEmpty( aProject.getName() ) )
+    {
+      // Denote the project file in the title of the main window...
+      title = title.concat( " :: " ).concat( aProject.getName() );
+    }
+    this.mainFrame.setTitle( title );
   }
 }
