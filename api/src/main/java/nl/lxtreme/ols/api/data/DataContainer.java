@@ -44,15 +44,6 @@ public final class DataContainer implements CapturedData
 {
   // CONSTANTS
 
-  /** The maximum number of cursors that can be set. */
-  public static final int MAX_CURSORS = 10;
-  /** The maximum number of channels. */
-  public static final int MAX_CHANNELS = 32;
-  /** The number of channels per block. */
-  public static final int CHANNELS_PER_BLOCK = 8;
-  /** The maximum number of blocks. */
-  public static final int MAX_BLOCKS = MAX_CHANNELS / CHANNELS_PER_BLOCK;
-
   private static final Logger LOG = Logger.getLogger( DataContainer.class.getName() );
 
   /** The regular expression used to parse an (OLS-datafile) instruction. */

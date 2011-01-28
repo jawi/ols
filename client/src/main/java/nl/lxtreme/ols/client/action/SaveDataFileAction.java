@@ -71,7 +71,7 @@ public class SaveDataFileAction extends BaseAction
       final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenDataFileAction.OLS_FILEFILTER );
       if ( file != null )
       {
-        final File actualFile = HostUtils.setFileExtension( file, OpenDataFileAction.OLS_FILEEXTENSION );
+        final File actualFile = HostUtils.setFileExtension( file, OpenDataFileAction.OLS_FILE_EXTENSION );
         if ( LOG.isLoggable( Level.INFO ) )
         {
           LOG.info( "Saving OLS capture date to file: " + actualFile );

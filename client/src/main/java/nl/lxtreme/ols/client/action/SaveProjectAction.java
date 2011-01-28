@@ -71,12 +71,13 @@ public class SaveProjectAction extends BaseAction
       final File file = SwingComponentUtils.showFileSaveDialog( owner );
       if ( file != null )
       {
+        final File actualFile = HostUtils.setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
         if ( LOG.isLoggable( Level.INFO ) )
         {
-          LOG.info( "Saving OLS project to file: " + file );
+          LOG.info( "Saving OLS project to file: " + actualFile );
         }
 
-        getController().saveProject( file );
+        getController().saveProject( actualFile );
       }
     }
     catch ( IOException exception )

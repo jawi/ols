@@ -26,6 +26,9 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.logging.*;
 
+import javax.swing.filechooser.*;
+import javax.swing.filechooser.FileFilter;
+
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -42,6 +45,10 @@ public class OpenProjectAction extends BaseAction
   private static final long serialVersionUID = 1L;
 
   private static final Logger LOG = Logger.getLogger( OpenProjectAction.class.getName() );
+
+  public static final String OLS_PROJECT_EXTENSION = "olp";
+  public static final FileFilter OLS_PROJECT_FILTER = new FileNameExtensionFilter( "OpenLogic Sniffer project file",
+      OLS_PROJECT_EXTENSION );
 
   public static final String ID = "OpenProject";
 
@@ -68,7 +75,7 @@ public class OpenProjectAction extends BaseAction
 
     try
     {
-      final File file = SwingComponentUtils.showFileOpenDialog( owner );
+      final File file = SwingComponentUtils.showFileOpenDialog( owner, OLS_PROJECT_FILTER );
       if ( ( file != null ) && file.isFile() )
       {
         if ( LOG.isLoggable( Level.INFO ) )

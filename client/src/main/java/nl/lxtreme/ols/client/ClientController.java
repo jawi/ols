@@ -30,13 +30,14 @@ import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.export.*;
+import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
+import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
@@ -106,7 +107,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       return this.startSampleIdx;
     }
-
   }
 
   // CONSTANTS
@@ -119,6 +119,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   private final BundleContext bundleContext;
   private final DataContainer dataContainer;
   private final EventListenerList evenListeners;
+  private final ProjectManager projectManager;
   private final Host host;
 
   private MainFrame mainFrame;
@@ -140,6 +141,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     this.actionManager = new ActionManager();
     this.dataContainer = new DataContainer();
     this.evenListeners = new EventListenerList();
+    this.projectManager = new SimpleProjectManager( aHost );
 
     fillActionManager( this.actionManager );
   }
@@ -335,7 +337,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   @Override
   public void captureStarted( final int aSampleRate, final int aChannelCount, final int aChannelMask )
   {
-    // TODO Auto-generated method stub
     updateActions();
   }
 
@@ -348,7 +349,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * 
+   * Clears all preferences.
    */
   public void clearPreferences()
   {
@@ -361,7 +362,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void createNewProject()
   {
-    // this.project = new Project();
+    this.projectManager.createNewProject();
   }
 
   /**
@@ -568,7 +569,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
     {
-      for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
+      for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
       {
         if ( this.dataContainer.isCursorPositionSet( c ) )
         {
@@ -587,7 +588,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
     {
-      for ( int c = DataContainer.MAX_CURSORS - 1; c >= 0; c-- )
+      for ( int c = CapturedData.MAX_CURSORS - 1; c >= 0; c-- )
       {
         if ( this.dataContainer.isCursorPositionSet( c ) )
         {
@@ -670,8 +671,21 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void openProject( final File aFile ) throws IOException
   {
-    Project.load( aFile, this.userPreferences );
-    clearWindowPreferencesNode();
+    FileInputStream fis = new FileInputStream( aFile );
+
+    try
+    {
+      this.projectManager.loadProject( fis );
+      // TODO flush preferences to project...
+
+      final Project project = this.projectManager.getCurrentProject();
+      captureComplete( project.getCapturedData() );
+      setChannelLabels( project.getChannelLabels() );
+    }
+    finally
+    {
+      clearWindowPreferencesNode();
+    }
   }
 
   /**
@@ -870,15 +884,27 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void saveProject( final File aFile ) throws IOException
   {
+    FileOutputStream out = null;
     try
     {
+      out = new FileOutputStream( aFile );
+
       this.userPreferences.flush();
 
-      Project.store( aFile, this.userPreferences );
+      // TODO flush user preferences to project...
+      final SimpleProject project = ( SimpleProject )this.projectManager.getCurrentProject();
+      project.setCapturedData( this.dataContainer );
+      project.setChannelLabels( this.dataContainer.getChannelLabels() );
+
+      this.projectManager.saveProject( out );
     }
     catch ( BackingStoreException exception )
     {
       throw new IOException( "Flushing preferences failed! Project not stored.", exception );
+    }
+    finally
+    {
+      HostUtils.closeResource( out );
     }
   }
 
@@ -1033,8 +1059,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, this.dataContainer.getChannelLabels() );
       if ( dialog.showDialog() )
       {
-        this.dataContainer.setChannelLabels( dialog.getChannelLabels() );
-        this.mainFrame.setChannelLabels( dialog.getChannelLabels() );
+        final String[] channelLabels = dialog.getChannelLabels();
+        setChannelLabels( channelLabels );
       }
 
       dialog.dispose();
@@ -1277,7 +1303,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     aActionManager.add( new GotoFirstCursorAction( this ) ).setEnabled( false );
     aActionManager.add( new GotoLastCursorAction( this ) ).setEnabled( false );
     aActionManager.add( new SetCursorModeAction( this ) );
-    for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
+    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
     {
       aActionManager.add( new SetCursorAction( this, c ) );
     }
@@ -1361,6 +1387,21 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Set the channel labels.
+   * 
+   * @param aChannelLabels
+   *          the channel labels to set, cannot be <code>null</code>.
+   */
+  private void setChannelLabels( final String[] aChannelLabels )
+  {
+    if ( aChannelLabels != null )
+    {
+      this.dataContainer.setChannelLabels( aChannelLabels );
+      this.mainFrame.setChannelLabels( aChannelLabels );
+    }
+  }
+
+  /**
    * Synchronizes the state of the actions to the current state of this host.
    */
   private void updateActions()
@@ -1401,7 +1442,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
     getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY, this.dataContainer.isCursorsEnabled() );
 
-    for ( int c = 0; c < DataContainer.MAX_CURSORS; c++ )
+    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
     {
       final Action action = getAction( SetCursorAction.getCursorId( c ) );
       action.setEnabled( dataAvailable );
