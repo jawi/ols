@@ -42,15 +42,15 @@ public class OpenDataFileAction extends BaseAction
 {
   // CONSTANTS
 
-  public static final String OLS_FILEEXTENSION = "ols";
-  public static final FileFilter OLS_FILEFILTER = new FileNameExtensionFilter( "OpenLogic Sniffer data file",
-      OLS_FILEEXTENSION );
-
-  public static final String ID = "OpenDataFile";
-
   private static final Logger LOG = Logger.getLogger( OpenDataFileAction.class.getName() );
 
   private static final long serialVersionUID = 1L;
+
+  public static final String ID = "OpenDataFile";
+
+  public static final String OLS_FILE_EXTENSION = "ols";
+  public static final FileFilter OLS_FILEFILTER = new FileNameExtensionFilter( "OpenLogic Sniffer data file",
+      OLS_FILE_EXTENSION );
 
   // CONSTRUCTORS
 
