@@ -642,8 +642,33 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
    */
   private void configureDevice() throws IOException
   {
+    // set the sampling frequency...
+    sendCommand( SETDIVIDER, this.config.getDivider() );
+
     final int stopCounter = configureTriggers();
     final int readCounter = this.config.getReadCounter();
+
+    final int size;
+    if ( this.config.isDemuxEnabled() && this.config.isInternalClock() )
+    {
+      // 0x7fff8 = 511Kb = the maximum size supported by the original SUMP
+      // device when using the demultiplexer...
+      final int maxSize = 0x7fff8;
+      size = ( ( ( stopCounter - 8 ) & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
+    }
+    else
+    {
+      // 0x3fffc = 255Kb = the maximum size supported by the original SUMP
+      // device...
+      final int maxSize = 0x3fffc;
+      size = ( ( ( stopCounter - 4 ) & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
+    }
+
+    // set the capture size...
+    sendCommand( SETSIZE, size );
+
+    // ***DSF use values sent to OLS
+    this.trigcount = ( size & 0xffff ) * 4 - ( ( size >> 16 ) & 0xffff ) * 4;
 
     int flags = 0;
     if ( this.config.isExternalClock() )
@@ -666,35 +691,19 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     }
     flags |= ~( enabledChannelGroups << 2 ) & 0x3c;
 
-    final int size;
     if ( this.config.isDemuxEnabled() && this.config.isInternalClock() )
     {
       flags |= FLAG_DEMUX;
       // if the demux bit is set, the filter flag *must* be cleared...
       flags &= ~FLAG_FILTER;
-
-      // 0x7fff8 = 511Kb = the maximum size supported by the original SUMP
-      // device when using the demultiplexer...
-      final int maxSize = 0x7fff8;
-      size = ( ( ( stopCounter - 8 ) & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
     }
-    else
+
+    if ( this.config.isFilterEnabled() && this.config.isFilterAvailable() )
     {
-      if ( this.config.isFilterEnabled() && this.config.isFilterAvailable() )
-      {
-        flags |= FLAG_FILTER;
-        // if the filter bit is set, the demux flag *must* be cleared...
-        flags &= ~FLAG_DEMUX;
-      }
-
-      // 0x3fffc = 255Kb = the maximum size supported by the original SUMP
-      // device...
-      final int maxSize = 0x3fffc;
-      size = ( ( ( stopCounter - 4 ) & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
+      flags |= FLAG_FILTER;
+      // if the filter bit is set, the demux flag *must* be cleared...
+      flags &= ~FLAG_DEMUX;
     }
-
-    // ***DSF use values sent to OLS
-    this.trigcount = ( size & 0xffff ) * 4 - ( ( size >> 16 ) & 0xffff ) * 4;
 
     if ( this.config.isRleEnabled() )
     {
@@ -712,12 +721,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     }
 
     LOG.log( Level.FINE, "Flags: 0b{0}", Integer.toBinaryString( flags ) );
-
-    // set the sampling frequency...
-    sendCommand( SETDIVIDER, this.config.getDivider() );
-
-    // set the capture size...
-    sendCommand( SETSIZE, size );
 
     // finally set the device flags...
     sendCommand( SETFLAGS, flags );
