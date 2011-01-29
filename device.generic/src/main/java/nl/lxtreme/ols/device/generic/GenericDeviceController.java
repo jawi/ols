@@ -90,7 +90,7 @@ public class GenericDeviceController implements DeviceController
 
           LOG.log( Level.FINE, "Progress {0}%", progress );
 
-          aCallback.updateProgress( progress );
+          aCallback.updateProgress( progress.intValue() );
         }
         else if ( GenericDevice.PROP_CAPTURE_STATE.equals( propertyName ) )
         {

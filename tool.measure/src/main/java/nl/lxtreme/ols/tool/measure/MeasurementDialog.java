@@ -101,7 +101,8 @@ public class MeasurementDialog extends BaseToolDialog
             {
               if ( container.isCursorPositionSet( cursorBidx ) )
               {
-                return container.getSampleIndex( container.getCursorPosition( cursorBidx ) );
+                final Long cursorPosition = container.getCursorPosition( cursorBidx );
+                return container.getSampleIndex( cursorPosition.longValue() );
               }
 
               return container.getValues().length - 1;
@@ -128,7 +129,8 @@ public class MeasurementDialog extends BaseToolDialog
             {
               if ( container.isCursorPositionSet( cursorAidx ) )
               {
-                return container.getSampleIndex( container.getCursorPosition( cursorAidx ) );
+                final Long cursorPosition = container.getCursorPosition( cursorAidx );
+                return container.getSampleIndex( cursorPosition.longValue() );
               }
 
               return 0;
@@ -358,7 +360,7 @@ public class MeasurementDialog extends BaseToolDialog
    */
   final void updateMeasurement()
   {
-    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
+    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
     {
       final String text = getCursorTimeDisplayValue( i );
       this.cursorValueLabels[i].setText( text );
@@ -366,15 +368,15 @@ public class MeasurementDialog extends BaseToolDialog
 
     final double rate = this.data.getSampleRate();
 
-    final long cursorApos = this.data.getCursorPosition( this.cursorA.getSelectedIndex() );
-    final long cursorBpos = this.data.getCursorPosition( this.cursorB.getSelectedIndex() );
+    final Long cursorApos = this.data.getCursorPosition( this.cursorA.getSelectedIndex() );
+    final Long cursorBpos = this.data.getCursorPosition( this.cursorB.getSelectedIndex() );
 
     String distanceText = EMPTY_TEXT;
     String frequencyText = EMPTY_TEXT;
 
-    if ( ( cursorApos >= 0 ) && ( cursorBpos >= 0 ) && ( cursorApos != cursorBpos ) )
+    if ( ( cursorApos != null ) && ( cursorBpos != null ) && ( !cursorApos.equals( cursorBpos ) ) )
     {
-      final long diff = cursorApos - cursorBpos;
+      final long diff = cursorApos.longValue() - cursorBpos.longValue();
 
       final double distance = Math.abs( diff / rate );
       distanceText = DisplayUtils.displayTime( distance );
@@ -406,8 +408,8 @@ public class MeasurementDialog extends BaseToolDialog
 
     SpringLayoutUtils.addSeparator( cursorListing, "Cursors" );
 
-    this.cursorValueLabels = new JLabel[DataContainer.MAX_CURSORS];
-    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
+    this.cursorValueLabels = new JLabel[CapturedData.MAX_CURSORS];
+    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
     {
       cursorListing.add( createRightAlignedLabel( aCursorNames[i] ) );
 
@@ -430,10 +432,10 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private JComponent createDialogContent()
   {
-    final String[] cursorNames = new String[DataContainer.MAX_CURSORS];
+    final String[] cursorNames = new String[CapturedData.MAX_CURSORS];
     for ( int i = 0; i < cursorNames.length; i++ )
     {
-      cursorNames[i] = String.format( "Cursor %d", ( i + 1 ) );
+      cursorNames[i] = String.format( "Cursor %d", Integer.valueOf( i + 1 ) );
     }
 
     final JPanel result = new JPanel( new GridBagLayout() );
@@ -485,10 +487,10 @@ public class MeasurementDialog extends BaseToolDialog
 
     final MeasureClockFrequencyAction measureAction = new MeasureClockFrequencyAction();
 
-    final String[] channelNames = new String[DataContainer.MAX_CHANNELS];
+    final String[] channelNames = new String[CapturedData.MAX_CHANNELS];
     for ( int i = 0; i < channelNames.length; i++ )
     {
-      channelNames[i] = String.format( "Channel %d", i );
+      channelNames[i] = String.format( "Channel %d", Integer.valueOf( i ) );
     }
     this.clockChannelChooser = new JComboBox( channelNames );
     this.clockChannelChooser.addItemListener( new ItemListener()
@@ -536,7 +538,7 @@ public class MeasurementDialog extends BaseToolDialog
       final Double cursorTimeValue = this.data.getCursorTimeValue( aIndex );
       if ( cursorTimeValue != null )
       {
-        return DisplayUtils.displayTime( cursorTimeValue );
+        return DisplayUtils.displayTime( cursorTimeValue.doubleValue() );
       }
     }
     return "<not set>";

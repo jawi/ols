@@ -64,6 +64,7 @@ public class BitFiddlingTest
    * @return a collection of test data.
    */
   @Parameters
+  @SuppressWarnings( "boxing" )
   public static Collection<Object[]> getTestData()
   {
     return Arrays.asList( new Object[][] { //

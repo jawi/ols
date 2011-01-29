@@ -326,7 +326,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         }
 
         LOG.log( Level.FINE, "Clock edge: {0}, idx: {1}, sample? {2}", //
-            new Object[] { clockEdge, clockEdgeIdx, sampleEdgeSeen } );
+            new Object[] { clockEdge, Integer.valueOf( clockEdgeIdx ), Boolean.valueOf( sampleEdgeSeen ) } );
       }
       else
       {
@@ -402,7 +402,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
 
     // If the clock line's most occurring value is one, then
     // we're fairly sure that CPOL == 1...
-    if ( valueStats.getHighestRanked() == 1 )
+    if ( valueStats.getHighestRanked().intValue() == 1 )
     {
       LOG.log( Level.INFO, "SPI mode is probably mode 2 or 3 (CPOL == 1). Assuming mode 2 ..." );
       result = SPIMode.MODE_2;
@@ -504,7 +504,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       // Perform bit-order conversion on the full byte...
       final int mosivalue = NumberUtils.convertBitOrder( aMosiValue, ( this.bitCount + 1 ), this.bitOrder );
 
-      addChannelAnnotation( this.mosiIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", mosivalue, mosivalue ) );
+      addChannelAnnotation( this.mosiIdx, aStartIdx, aEndIdx,
+          String.format( "0x%X (%c)", Integer.valueOf( mosivalue ), Integer.valueOf( mosivalue ) ) );
       aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
     }
 
@@ -513,7 +514,8 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
       // Perform bit-order conversion on the full byte...
       final int misovalue = NumberUtils.convertBitOrder( aMisoValue, ( this.bitCount + 1 ), this.bitOrder );
 
-      addChannelAnnotation( this.misoIdx, aStartIdx, aEndIdx, String.format( "0x%X (%c)", misovalue, misovalue ) );
+      addChannelAnnotation( this.misoIdx, aStartIdx, aEndIdx,
+          String.format( "0x%X (%c)", Integer.valueOf( misovalue ), Integer.valueOf( misovalue ) ) );
       aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
     }
   }

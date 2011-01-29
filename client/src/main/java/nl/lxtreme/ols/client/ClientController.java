@@ -139,10 +139,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     this.bundleContext = aBundleContext;
     this.host = aHost;
 
-    this.actionManager = new ActionManager();
-    this.dataContainer = new DataContainer();
-    this.evenListeners = new EventListenerList();
     this.projectManager = new SimpleProjectManager( aHost );
+    this.dataContainer = new DataContainer( this.projectManager );
+    this.actionManager = new ActionManager();
+    this.evenListeners = new EventListenerList();
 
     fillActionManager( this.actionManager );
   }
@@ -334,6 +334,20 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   @Override
   public void captureStarted( final int aSampleRate, final int aChannelCount, final int aChannelMask )
   {
+    updateActions();
+  }
+
+  /**
+   * Clears all current cursors.
+   */
+  public void clearAllCursors()
+  {
+    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    {
+      this.dataContainer.setCursorPosition( i, null );
+      fireCursorChangedEvent( i, -1 ); // removed...
+    }
+
     updateActions();
   }
 
@@ -556,8 +570,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
     {
-      final long cursorPosition = this.dataContainer.getCursorPosition( aCursorIdx );
-      this.mainFrame.gotoPosition( cursorPosition );
+      final Long cursorPosition = this.dataContainer.getCursorPosition( aCursorIdx );
+      if ( cursorPosition != null )
+      {
+        this.mainFrame.gotoPosition( cursorPosition.longValue() );
+      }
     }
   }
 
@@ -572,8 +589,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       {
         if ( this.dataContainer.isCursorPositionSet( c ) )
         {
-          final long cursorPosition = this.dataContainer.getCursorPosition( c );
-          this.mainFrame.gotoPosition( cursorPosition );
+          final Long cursorPosition = this.dataContainer.getCursorPosition( c );
+          if ( cursorPosition != null )
+          {
+            this.mainFrame.gotoPosition( cursorPosition.longValue() );
+          }
           break;
         }
       }
@@ -591,8 +611,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       {
         if ( this.dataContainer.isCursorPositionSet( c ) )
         {
-          final long cursorPosition = this.dataContainer.getCursorPosition( c );
-          this.mainFrame.gotoPosition( cursorPosition );
+          final Long cursorPosition = this.dataContainer.getCursorPosition( c );
+          if ( cursorPosition != null )
+          {
+            this.mainFrame.gotoPosition( cursorPosition.longValue() );
+          }
           break;
         }
       }
@@ -653,7 +676,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
       setChannelLabels( tempProject.getChannelLabels() );
       setCapturedData( tempProject.getCapturedData() );
-      // TODO cursors...
+      setCursorData( tempProject.getCursorPositions(), tempProject.isCursorsEnabled() );
 
       // Reflect the current project state on the main frame...
       updateMainFrameTitle( tempProject );
@@ -688,7 +711,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       final Project project = this.projectManager.getCurrentProject();
       setChannelLabels( project.getChannelLabels() );
       setCapturedData( project.getCapturedData() );
-      // TODO cursors...
+      setCursorData( project.getCursorPositions(), project.isCursorsEnabled() );
 
       updateMainFrameTitle( project );
     }
@@ -708,7 +731,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      this.dataContainer.setCursorPosition( aCursorIdx, Long.MIN_VALUE );
+      this.dataContainer.setCursorPosition( aCursorIdx, null );
       fireCursorChangedEvent( aCursorIdx, -1 ); // removed...
     }
 
@@ -966,7 +989,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       // Convert the mouse-position to a sample index...
       final long sampleIdx = this.mainFrame.convertMousePositionToSampleIndex( aLocation );
 
-      this.dataContainer.setCursorPosition( aCursorIdx, sampleIdx );
+      this.dataContainer.setCursorPosition( aCursorIdx, Long.valueOf( sampleIdx ) );
 
       fireCursorChangedEvent( aCursorIdx, aLocation.x );
     }
@@ -1276,11 +1299,13 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       if ( this.dataContainer.isCursorPositionSet( 0 ) )
       {
-        startOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 0 ) ) - 1;
+        final Long cursor1 = this.dataContainer.getCursorPosition( 0 );
+        startOfDecode = this.dataContainer.getSampleIndex( cursor1.longValue() ) - 1;
       }
       if ( this.dataContainer.isCursorPositionSet( 1 ) )
       {
-        endOfDecode = this.dataContainer.getSampleIndex( this.dataContainer.getCursorPosition( 1 ) ) + 1;
+        final Long cursor2 = this.dataContainer.getCursorPosition( 1 );
+        endOfDecode = this.dataContainer.getSampleIndex( cursor2.longValue() ) + 1;
       }
     }
     else
@@ -1323,6 +1348,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     aActionManager.add( new GotoCursor2Action( this ) ).setEnabled( false );
     aActionManager.add( new GotoFirstCursorAction( this ) ).setEnabled( false );
     aActionManager.add( new GotoLastCursorAction( this ) ).setEnabled( false );
+    aActionManager.add( new ClearCursors( this ) ).setEnabled( false );
     aActionManager.add( new SetCursorModeAction( this ) );
     for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
     {
@@ -1408,11 +1434,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Sets the captured data and zooms the view to show all the data.
+   * 
    * @param aCapturedData
+   *          the new captured data to set, cannot be <code>null</code>.
    */
   private void setCapturedData( final CapturedData aCapturedData )
   {
     this.dataContainer.setCapturedData( aCapturedData );
+
     if ( this.mainFrame != null )
     {
       this.mainFrame.zoomToFit();
@@ -1431,6 +1461,22 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       this.dataContainer.setChannelLabels( aChannelLabels );
       this.mainFrame.setChannelLabels( aChannelLabels );
+    }
+  }
+
+  /**
+   * @param aCursorData
+   *          the cursor positions to set, cannot be <code>null</code>;
+   * @param aCursorsEnabled
+   *          <code>true</code> if cursors should be enabled, <code>false</code>
+   *          if they should be disabled.
+   */
+  private void setCursorData( final Long[] aCursorData, final boolean aCursorsEnabled )
+  {
+    this.dataContainer.setCursorEnabled( aCursorsEnabled );
+    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    {
+      this.dataContainer.setCursorPosition( i, aCursorData[i] );
     }
   }
 
@@ -1473,14 +1519,21 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors );
 
     getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
-    getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY, this.dataContainer.isCursorsEnabled() );
+    getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY,
+        Boolean.valueOf( this.dataContainer.isCursorsEnabled() ) );
 
+    boolean anyCursorSet = false;
     for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
     {
+      final boolean cursorPositionSet = this.dataContainer.isCursorPositionSet( c );
+      anyCursorSet |= cursorPositionSet;
+
       final Action action = getAction( SetCursorAction.getCursorId( c ) );
       action.setEnabled( dataAvailable );
-      action.putValue( Action.SELECTED_KEY, this.dataContainer.isCursorPositionSet( c ) );
+      action.putValue( Action.SELECTED_KEY, Boolean.valueOf( cursorPositionSet ) );
     }
+
+    getAction( ClearCursors.ID ).setEnabled( enableCursors && anyCursorSet );
   }
 
   /**

@@ -446,7 +446,7 @@ public final class SwingComponentUtils
       final int yPos = aProperties.getInt( "winYpos", -1 );
       if ( ( xPos >= 0 ) && ( yPos >= 0 ) )
       {
-        aWindow.setLocation( Integer.valueOf( xPos ), Integer.valueOf( yPos ) );
+        aWindow.setLocation( xPos, yPos );
       }
     }
     catch ( NumberFormatException exception )
@@ -467,7 +467,7 @@ public final class SwingComponentUtils
       final int height = aProperties.getInt( "winHeight", -1 );
       if ( ( width >= 0 ) && ( height >= 0 ) )
       {
-        aWindow.setSize( Integer.valueOf( width ), Integer.valueOf( height ) );
+        aWindow.setSize( width, height );
       }
     }
     catch ( NumberFormatException exception )
@@ -976,9 +976,9 @@ public final class SwingComponentUtils
   public static final String toString( final Color aColor )
   {
     final StringBuilder sb = new StringBuilder();
-    sb.append( String.format( "%02x", aColor.getRed() ) );
-    sb.append( String.format( "%02x", aColor.getGreen() ) );
-    sb.append( String.format( "%02x", aColor.getBlue() ) );
+    sb.append( String.format( "%02x", Integer.valueOf( aColor.getRed() ) ) );
+    sb.append( String.format( "%02x", Integer.valueOf( aColor.getGreen() ) ) );
+    sb.append( String.format( "%02x", Integer.valueOf( aColor.getBlue() ) ) );
     return sb.toString();
   }
 

@@ -137,7 +137,7 @@ public class DiagramRowLabelsUI extends ComponentUI
     final int blockCnt = dataContainer.getBlockCount();
     for ( int block = 0; block < blockCnt; block++ )
     {
-      final int channelsOffset = DataContainer.CHANNELS_PER_BLOCK * block;
+      final int channelsOffset = CapturedData.CHANNELS_PER_BLOCK * block;
       final boolean blockEnabled = ( ( enabledChannels >> channelsOffset ) & 0xff ) != 0;
       if ( !blockEnabled )
       {
@@ -163,7 +163,7 @@ public class DiagramRowLabelsUI extends ComponentUI
           String label = dataContainer.getChannelLabel( labelIdx );
           if ( DisplayUtils.isEmpty( label ) )
           {
-            label = String.format( "%d", labelIdx );
+            label = String.format( "%d", Integer.valueOf( labelIdx ) );
           }
 
           final int labelYpos = y1 + textYpos;
@@ -173,7 +173,7 @@ public class DiagramRowLabelsUI extends ComponentUI
           canvas.drawString( label, labelXpos, labelYpos );
         }
 
-        yofs += channelHeight * DataContainer.CHANNELS_PER_BLOCK;
+        yofs += channelHeight * CapturedData.CHANNELS_PER_BLOCK;
       }
 
       // Draw scope-thingie (if available)
@@ -237,7 +237,7 @@ public class DiagramRowLabelsUI extends ComponentUI
     int minWidth = -1;
 
     final FontMetrics fm = aRowLabels.getFontMetrics( this.labelFont );
-    for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
     {
       String label = dataContainer.getChannelLabel( i );
       if ( DisplayUtils.isEmpty( label ) )

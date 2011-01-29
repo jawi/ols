@@ -221,7 +221,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
         final String tdiDataValue = data.isTdiData() ? Integer.toString( data.getDataValue() ) : null;
         final String tdoDataValue = data.isTdoData() ? Integer.toString( data.getDataValue() ) : null;
 
-        exporter.addRow( i, Time, Event, tdiDataValue, tdoDataValue );
+        exporter.addRow( Integer.valueOf( i ), Time, Event, tdiDataValue, tdoDataValue );
       }
 
       exporter.close();

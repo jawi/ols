@@ -633,6 +633,8 @@ public final class MainFrame extends JFrame implements Closeable
     diagramMenu.add( this.controller.getAction( GotoCursor2Action.ID ) );
     diagramMenu.addSeparator();
     diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorModeAction.ID ) ) );
+    diagramMenu.add( this.controller.getAction( ClearCursors.ID ) );
+    diagramMenu.addSeparator();
     diagramMenu.add( this.controller.getAction( ShowModeSettingsAction.ID ) );
     diagramMenu.add( this.controller.getAction( ShowDiagramLabelsAction.ID ) );
 

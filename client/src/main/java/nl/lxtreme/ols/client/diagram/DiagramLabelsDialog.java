@@ -107,7 +107,7 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
    */
   final void clearAllLabels()
   {
-    for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
     {
       this.labelFields[i].setText( "" );
     }
@@ -118,7 +118,7 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
    */
   final void publishAllLabels()
   {
-    for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
     {
       final String newLabel = this.labelFields[i].getText();
       this.channelLabels[i] = DisplayUtils.isEmpty( newLabel ) ? null : newLabel.trim();
@@ -188,7 +188,7 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
         this.labelFields[index] = new JTextField( 20 );
         this.labelFields[index].setText( this.channelLabels[index] );
 
-        modePane.add( new JLabel( String.format( "Channel % 2d:", index ) ), //
+        modePane.add( new JLabel( String.format( "Channel % 2d:", Integer.valueOf( index ) ) ), //
             new GridBagConstraints( 2 * col, row, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING,
                 GridBagConstraints.NONE, LABEL_INSETS, 0, 0 ) );
         modePane.add( this.labelFields[index], //

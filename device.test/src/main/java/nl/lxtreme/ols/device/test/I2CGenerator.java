@@ -125,7 +125,7 @@ final class I2CGenerator
     int i = 20;
     while ( i-- >= 0 )
     {
-      this.data.add( 0 );
+      this.data.add( Integer.valueOf( 0 ) );
     }
   }
 
@@ -145,19 +145,19 @@ final class I2CGenerator
    */
   private void writeBit( final int aBit )
   {
-    int val = this.data.get( this.idx );
+    int val = this.data.get( this.idx ).intValue();
 
     // While SCL should be high, let it also keep SDA stable...
     while ( getClock() == 1 )
     {
-      this.data.add( val | SCL );
+      this.data.add( Integer.valueOf( val | SCL ) );
       this.idx++;
     }
 
     // Clear SCL...
     val &= ~SCL;
     this.data.remove( this.idx );
-    this.data.add( val );
+    this.data.add( Integer.valueOf( val ) );
 
     // One tick later, update SDA...
     if ( aBit == 0 )
@@ -168,13 +168,13 @@ final class I2CGenerator
     {
       val |= SDA;
     }
-    this.data.add( val );
+    this.data.add( Integer.valueOf( val ) );
     this.idx++;
 
     // As long as SCL remains low, keep SDA stable...
     while ( getClock() == 0 )
     {
-      this.data.add( val );
+      this.data.add( Integer.valueOf( val ) );
       this.idx++;
     }
   }
@@ -203,14 +203,14 @@ final class I2CGenerator
     int i = this.tickSize - 1;
     while ( i-- > 0 )
     {
-      this.data.add( SDA | SCL );
+      this.data.add( Integer.valueOf( SDA | SCL ) );
     }
-    this.data.add( SCL );
+    this.data.add( Integer.valueOf( SCL ) );
 
     i = this.tickSize;
     while ( i-- > 0 )
     {
-      this.data.add( SCL );
+      this.data.add( Integer.valueOf( SCL ) );
     }
 
     this.idx = this.data.size() - 1;
@@ -225,13 +225,13 @@ final class I2CGenerator
     writeBit( -1 ); // stuff
 
     // SCL should become high now...
-    this.data.add( SCL );
+    this.data.add( Integer.valueOf( SCL ) );
 
     // One tick later also make SDA high...
     int i = this.tickSize - 1;
     while ( i-- > 0 )
     {
-      this.data.add( SDA | SCL );
+      this.data.add( Integer.valueOf( SDA | SCL ) );
     }
 
     this.idx = this.data.size() - 1;

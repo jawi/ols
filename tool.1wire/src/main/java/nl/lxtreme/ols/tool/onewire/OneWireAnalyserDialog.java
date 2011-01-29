@@ -382,11 +382,11 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
         }
         else if ( "decoded-bytes".equals( aMacro ) )
         {
-          return aAnalysisResult.getDecodedByteCount();
+          return Integer.valueOf( aAnalysisResult.getDecodedByteCount() );
         }
         else if ( "detected-bus-errors".equals( aMacro ) )
         {
-          return aAnalysisResult.getBusErrorCount();
+          return Integer.valueOf( aAnalysisResult.getBusErrorCount() );
         }
         else if ( "decoded-data".equals( aMacro ) )
         {

@@ -252,7 +252,8 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
       else
       {
         LOG.log( Level.INFO, "Ignoring sampled bit length ({0}) as it deviates "
-            + "too much from current bit length ({1}).", new Object[] { aBitLength, this.bitLength } );
+            + "too much from current bit length ({1}).",
+            new Object[] { Integer.valueOf( aBitLength ), Integer.valueOf( this.bitLength ) } );
       }
     }
   }

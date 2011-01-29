@@ -212,8 +212,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    */
   public void readPreferences( final Preferences aPrefs )
   {
-    SwingComponentUtils.setSelected( this.reportCS, aPrefs.getBoolean( "reportCS", Boolean.TRUE ) );
-    SwingComponentUtils.setSelected( this.honourCS, aPrefs.getBoolean( "honourCS", Boolean.FALSE ) );
+    SwingComponentUtils.setSelected( this.reportCS, Boolean.valueOf( aPrefs.getBoolean( "reportCS", true ) ) );
+    SwingComponentUtils.setSelected( this.honourCS, Boolean.valueOf( aPrefs.getBoolean( "honourCS", false ) ) );
     SwingComponentUtils.setSelectedIndex( this.sck, aPrefs.getInt( "sck", -1 ) );
     SwingComponentUtils.setSelectedIndex( this.miso, aPrefs.getInt( "miso", -1 ) );
     SwingComponentUtils.setSelectedIndex( this.mosi, aPrefs.getInt( "mosi", -1 ) );
@@ -344,7 +344,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
         final String mosiDataValue = ds.isMosiData() ? Integer.toString( ds.getDataValue() ) : null;
         final String misoDataValue = ds.isMisoData() ? Integer.toString( ds.getDataValue() ) : null;
 
-        exporter.addRow( i, startTime, endTime, ds.isEvent(), ds.getEventName(), mosiDataValue, misoDataValue );
+        exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), ds.getEventName(),
+            mosiDataValue, misoDataValue );
       }
 
       exporter.close();

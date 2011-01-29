@@ -143,10 +143,10 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     SwingComponentUtils.setSelectedIndex( this.lineA, aPrefs.getInt( "lineA", -1 ) );
     SwingComponentUtils.setSelectedIndex( this.lineB, aPrefs.getInt( "lineB", -1 ) );
 
-    SwingComponentUtils.setSelected( this.detectSTART, aPrefs.getBoolean( "detectStart", Boolean.TRUE ) );
-    SwingComponentUtils.setSelected( this.detectSTOP, aPrefs.getBoolean( "detectStop", Boolean.TRUE ) );
-    SwingComponentUtils.setSelected( this.detectNACK, aPrefs.getBoolean( "detectNack", Boolean.TRUE ) );
-    SwingComponentUtils.setSelected( this.detectACK, aPrefs.getBoolean( "detectAck", Boolean.TRUE ) );
+    SwingComponentUtils.setSelected( this.detectSTART, Boolean.valueOf( aPrefs.getBoolean( "detectStart", true ) ) );
+    SwingComponentUtils.setSelected( this.detectSTOP, Boolean.valueOf( aPrefs.getBoolean( "detectStop", true ) ) );
+    SwingComponentUtils.setSelected( this.detectNACK, Boolean.valueOf( aPrefs.getBoolean( "detectNack", true ) ) );
+    SwingComponentUtils.setSelected( this.detectACK, Boolean.valueOf( aPrefs.getBoolean( "detectAck", true ) ) );
   }
 
   /**
@@ -285,7 +285,8 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
         final String endTime = aAnalysisResult.getDisplayTime( ds.getEndSampleIndex() );
         final String data = ds.isEvent() ? "" : Character.toString( ( char )ds.getValue() );
 
-        exporter.addRow( i, startTime, endTime, ds.isEvent(), ds.getEventName(), data );
+        exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), ds.getEventName(),
+            data );
       }
 
       exporter.close();
@@ -580,11 +581,11 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
         }
         else if ( "decoded-bytes".equals( aMacro ) )
         {
-          return aAnalysisResult.getDecodedByteCount();
+          return Integer.valueOf( aAnalysisResult.getDecodedByteCount() );
         }
         else if ( "detected-bus-errors".equals( aMacro ) )
         {
-          return aAnalysisResult.getBusErrorCount();
+          return Integer.valueOf( aAnalysisResult.getBusErrorCount() );
         }
         else if ( "decoded-data".equals( aMacro ) )
         {

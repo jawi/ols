@@ -131,6 +131,7 @@ public final class NumberValidator implements IValidator
    * @return the parsed number, can be <code>null</code> in case the given text
    *         could not be parsed.
    */
+  @SuppressWarnings( "boxing" )
   protected final Number parse( final String aInputText )
   {
     try

@@ -61,7 +61,7 @@ public final class OlsDataHelper
     int size = -1, rate = -1, channels = 32, enabledChannels = -1;
     long triggerPos = -1;
 
-    long[] cursorPositions = new long[CapturedData.MAX_CURSORS];
+    Long[] cursorPositions = new Long[CapturedData.MAX_CURSORS];
     CapturedData capturedData = null;
 
     boolean cursors = false;
@@ -130,17 +130,19 @@ public final class OlsDataHelper
           }
           else if ( "CursorA".equals( instrKey ) )
           {
-            cursorPositions[0] = Long.parseLong( instrValue );
+            final long value = Long.parseLong( instrValue );
+            cursorPositions[0] = ( value > Long.MIN_VALUE ) ? Long.valueOf( value ) : null;
           }
           else if ( "CursorB".equals( instrKey ) )
           {
-            cursorPositions[1] = Long.parseLong( instrValue );
+            final long value = Long.parseLong( instrValue );
+            cursorPositions[1] = ( value > Long.MIN_VALUE ) ? Long.valueOf( value ) : null;
           }
           else if ( instrKey.startsWith( "Cursor" ) )
           {
             final int idx = Integer.parseInt( instrKey.substring( 6 ) );
             final long pos = Long.parseLong( instrValue );
-            cursorPositions[idx] = pos;
+            cursorPositions[idx] = ( pos > Long.MIN_VALUE ) ? Long.valueOf( pos ) : null;
           }
         }
       }
@@ -194,14 +196,9 @@ public final class OlsDataHelper
     }
     finally
     {
-      if ( cursors )
-      {
-        aProject.setCursorPositions( cursorPositions );
-      }
-      if ( capturedData != null )
-      {
-        aProject.setCapturedData( capturedData );
-      }
+      aProject.setCapturedData( capturedData );
+      aProject.setCursorPositions( cursorPositions );
+      aProject.setCursorsEnabled( cursors );
     }
   }
 
@@ -220,7 +217,7 @@ public final class OlsDataHelper
 
     final CapturedData capturedData = aProject.getCapturedData();
 
-    final long[] cursors = aProject.getCursorPositions();
+    final Long[] cursors = aProject.getCursorPositions();
     final boolean cursorsEnabled = ( cursors != null ) && ( cursors.length > 0 );
 
     try
@@ -265,9 +262,12 @@ public final class OlsDataHelper
 
       for ( int i = 0; cursorsEnabled && ( i < cursors.length ); i++ )
       {
-        bw.write( String.format( ";Cursor%d: ", i ) );
-        bw.write( Long.toString( cursors[i] ) );
-        bw.newLine();
+        if ( cursors[i] != null )
+        {
+          bw.write( String.format( ";Cursor%d: ", Integer.valueOf( i ) ) );
+          bw.write( cursors[i].toString() );
+          bw.newLine();
+        }
       }
       for ( int i = 0; i < values.length; i++ )
       {

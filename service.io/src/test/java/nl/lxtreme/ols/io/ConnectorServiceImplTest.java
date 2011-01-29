@@ -456,9 +456,9 @@ public class ConnectorServiceImplTest
   {
     final ServiceReference ref = mock( ServiceReference.class );
 
-    when( ref.getProperty( Constants.SERVICE_RANKING ) ).thenReturn( aRanking );
+    when( ref.getProperty( Constants.SERVICE_RANKING ) ).thenReturn( Integer.valueOf( aRanking ) );
     when( ref.getProperty( ConnectionFactory.IO_SCHEME ) ).thenReturn( aSchemes );
-    when( ref.getProperty( Constants.SERVICE_PID ) ).thenReturn( ++this.pid );
+    when( ref.getProperty( Constants.SERVICE_PID ) ).thenReturn( Integer.valueOf( ++this.pid ) );
 
     aFactory.setServiceReference( ref );
 
