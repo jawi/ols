@@ -93,22 +93,19 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       for ( int i = 0; i < samples; i++ )
       {
         final int newSample = this.buffer[i];
+
         if ( ( i == 0 ) || ( oldSample != newSample ) )
         {
           // add the read sample & add a timestamp value as well...
-          this.callback.addValue( this.buffer[i], time );
+          this.callback.addValue( newSample, time );
         }
 
         oldSample = newSample;
         time++;
       }
 
-      final int correction;
-      if ( LogicSnifferDevice.this.config.getDivider() > 3 )
-      {
-        correction = 1;
-      }
-      else
+      int correction = 1;
+      if ( LogicSnifferDevice.this.config.getDivider() <= 3 )
       {
         correction = ( ( LogicSnifferDevice.this.config.getDivider() == 0 ) ? 5 : 2 );
       }
@@ -169,6 +166,10 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           this.rleCountValue = 0x80000000;
           this.rleCountMask = this.rleCountValue - 1;
           break;
+        case 24:
+          this.rleCountValue = 0x800000;
+          this.rleCountMask = this.rleCountValue - 1;
+          break;
         case 16:
           this.rleCountValue = 0x8000;
           this.rleCountMask = this.rleCountValue - 1;
@@ -178,7 +179,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           this.rleCountMask = this.rleCountValue - 1;
           break;
         default:
-          throw new IllegalArgumentException( "Illegal RLE width! Should be 8, 16 or 32!" );
+          throw new IllegalArgumentException( "Illegal RLE width! Should be 8, 16, 24 or 32!" );
       }
     }
 
@@ -192,6 +193,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       long time = 0;
       long rleTrigPos = 0;
 
+      // if msb set increment time by the count value
+      // else save sample check trigger pos and increment time by 1
+      // this should work for either dogsbody or rasmus bitstreams
       final int samples = this.buffer.length;
       for ( int i = 0; i < samples; i++ )
       {
@@ -199,19 +203,17 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 
         if ( ( sampleValue & this.rleCountValue ) != 0 )
         {
-          // This is a "count"...
+          // This is a "count"; first a value should be seen before adding
+          // RLE-counts...
           if ( i > 0 )
           {
-            final int count = ( sampleValue & this.rleCountMask ) + 1;
-            time += count;
-
-            LOG.log( Level.FINE, "RLE count seen of {0}...", Integer.valueOf( count ) );
+            time += ( sampleValue & this.rleCountMask );
           }
         }
         else
         {
           // set the trigger position as a time value
-          if ( ( i >= ( this.trigCount ) ) && ( rleTrigPos == 0 ) )
+          if ( ( i >= this.trigCount ) && ( rleTrigPos == 0 ) )
           {
             // We're reading the samples backwards; hence we need to invert
             // the trigger position...
