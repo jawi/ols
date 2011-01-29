@@ -36,6 +36,7 @@ import org.osgi.service.prefs.*;
 /**
  * @author jawi
  */
+@SuppressWarnings( "boxing" )
 public class TestDeviceDialog extends JDialog implements Configurable, Closeable
 {
   // CONSTANTS

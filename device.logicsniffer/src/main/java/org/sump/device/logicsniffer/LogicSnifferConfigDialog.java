@@ -45,6 +45,7 @@ import org.sump.device.logicsniffer.LogicSnifferConfig.ClockSource;
 /**
  * Provides the configuration dialog for the Open Bench Logic Sniffer device.
  */
+@SuppressWarnings( "boxing" )
 public class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable, Closeable
 {
   // INNER TYPES
@@ -174,7 +175,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
      */
     private String updateLabel( final int aBeforeRatio, final int aAfterRatio )
     {
-      final String ratioText = String.format( "%d / %d", aBeforeRatio, aAfterRatio );
+      final String ratioText = String
+          .format( "%d / %d", Integer.valueOf( aBeforeRatio ), Integer.valueOf( aAfterRatio ) );
       this.label.setText( ratioText );
       return ratioText;
     }
@@ -354,10 +356,10 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       SwingComponentUtils.setSelectedIndex( this.numberSchemeSelect, aPrefs.getInt( "numberScheme", -1 ) );
       SwingComponentUtils.setSelectedIndex( this.speedSelect, aPrefs.getInt( "speed", -1 ) );
       SwingComponentUtils.setSelectedIndex( this.sizeSelect, aPrefs.getInt( "size", -1 ) );
-      SwingComponentUtils.setSelected( this.maxSampleSize, aPrefs.getBoolean( "autosize", Boolean.FALSE ) );
+      SwingComponentUtils.setSelected( this.maxSampleSize, Boolean.valueOf( aPrefs.getBoolean( "autosize", false ) ) );
       this.ratioSlider.setValue( aPrefs.getInt( "ratio", TriggerRatioChangeListener.DEFAULT_RATIO ) );
-      SwingComponentUtils.setSelected( this.filterEnable, aPrefs.getBoolean( "filter", Boolean.FALSE ) );
-      SwingComponentUtils.setSelected( this.triggerEnable, aPrefs.getBoolean( "trigger", Boolean.FALSE ) );
+      SwingComponentUtils.setSelected( this.filterEnable, Boolean.valueOf( aPrefs.getBoolean( "filter", false ) ) );
+      SwingComponentUtils.setSelected( this.triggerEnable, Boolean.valueOf( aPrefs.getBoolean( "trigger", false ) ) );
       SwingComponentUtils.setSelectedIndex( this.triggerTypeSelect, aPrefs.getInt( "triggerType", -1 ) );
 
       for ( int stage = 0; stage < this.triggerStages; stage++ )
@@ -373,23 +375,23 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
         final String mask = aPrefs.get( prefix + ".mask", "" );
         for ( int i = 0; ( i < 32 ) && ( i < mask.length() ); i++ )
         {
-          SwingComponentUtils.setSelected( this.triggerMask[stage][i], mask.charAt( i ) == '1' );
+          SwingComponentUtils.setSelected( this.triggerMask[stage][i], Boolean.valueOf( mask.charAt( i ) == '1' ) );
         }
 
         final String value = aPrefs.get( prefix + ".value", "" );
         for ( int i = 0; ( i < 32 ) && ( i < value.length() ); i++ )
         {
-          SwingComponentUtils.setSelected( this.triggerValue[stage][i], value.charAt( i ) == '1' );
+          SwingComponentUtils.setSelected( this.triggerValue[stage][i], Boolean.valueOf( value.charAt( i ) == '1' ) );
         }
 
         SwingComponentUtils.setSelected( this.triggerStart[stage],
-            aPrefs.getBoolean( prefix + ".startCapture", Boolean.FALSE ) );
+            Boolean.valueOf( aPrefs.getBoolean( prefix + ".startCapture", false ) ) );
       }
 
       final String group = aPrefs.get( "channelGroup", "" );
       for ( int i = 0; ( i < 4 ) && ( i < group.length() ); i++ )
       {
-        SwingComponentUtils.setSelected( this.channelGroup[i], group.charAt( i ) == '1' );
+        SwingComponentUtils.setSelected( this.channelGroup[i], Boolean.valueOf( group.charAt( i ) == '1' ) );
       }
 
       updateConfig();
@@ -615,7 +617,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     maskValuePanel.add( new JLabel( " " ) );
     for ( int j = 32; j > 0; j-- )
     {
-      final String channel = ( ( j % 8 ) == 0 ) || ( ( j % 8 ) == 1 ) ? String.format( "%2d", j - 1 ) : "";
+      final String channel = ( ( j % 8 ) == 0 ) || ( ( j % 8 ) == 1 ) ? String.format( "%2d", Integer.valueOf( j - 1 ) )
+          : "";
       channelLabels[j - 1] = new JLabel( channel );
       maskValuePanel.add( channelLabels[j - 1] );
     }
@@ -875,7 +878,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       this.triggerDelay[i].setToolTipText( "Delays trigger # samples after its condition is met." );
       stagePane.add( this.triggerDelay[i], createConstraints( 5, 4, 1, 1, 0.5, 1.0 ) );
 
-      this.triggerStageTabs.add( String.format( "Stage %d", i + 1 ), stagePane );
+      this.triggerStageTabs.add( String.format( "Stage %d", Integer.valueOf( i + 1 ) ), stagePane );
     }
   }
 

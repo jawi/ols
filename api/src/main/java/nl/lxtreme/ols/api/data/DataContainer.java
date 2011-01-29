@@ -23,6 +23,8 @@ package nl.lxtreme.ols.api.data;
 
 import java.util.*;
 
+import nl.lxtreme.ols.api.data.project.*;
+
 
 /**
  * Provides a container for captured data in which the data can be annotated
@@ -41,31 +43,22 @@ public final class DataContainer implements CapturedData
 {
   // VARIABLES
 
-  /** the actual captured data */
-  private volatile CapturedData capturedData;
-
-  /** position of cursors */
-  private final long[] cursorPositions;
-  /** The labels of each channel. */
-  private final String[] channelLabels;
   /** The individual annotations. */
   private final Map<Integer, ChannelAnnotations> annotations;
-
-  /** cursors enabled status */
-  private volatile boolean cursorEnabled;
+  private final ProjectManager projectManager;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new DataContainer instance.
    */
-  public DataContainer()
+  public DataContainer( final ProjectManager aProjectManager )
   {
-    this.cursorPositions = new long[MAX_CURSORS];
-    Arrays.fill( this.cursorPositions, Long.MIN_VALUE );
-
-    this.channelLabels = new String[MAX_CHANNELS];
-    Arrays.fill( this.channelLabels, "" );
+    if ( aProjectManager == null )
+    {
+      throw new IllegalArgumentException( "Project manager cannot be null!" );
+    }
+    this.projectManager = aProjectManager;
 
     this.annotations = new HashMap<Integer, ChannelAnnotations>();
   }
@@ -86,10 +79,10 @@ public final class DataContainer implements CapturedData
    */
   public void addChannelAnnotation( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final Object aData )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + this.channelLabels.length );
+          + MAX_CHANNELS );
     }
     ChannelAnnotations annotations = this.annotations.get( Integer.valueOf( aChannelIdx ) );
     if ( annotations == null )
@@ -122,10 +115,10 @@ public final class DataContainer implements CapturedData
    */
   public void clearChannelAnnotations( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + this.channelLabels.length );
+          + MAX_CHANNELS );
     }
     this.annotations.remove( Integer.valueOf( aChannelIdx ) );
   }
@@ -136,7 +129,7 @@ public final class DataContainer implements CapturedData
   @Override
   public long getAbsoluteLength()
   {
-    return hasCapturedData() ? this.capturedData.getAbsoluteLength() : NOT_AVAILABLE;
+    return hasCapturedData() ? getCapturedData().getAbsoluteLength() : NOT_AVAILABLE;
   }
 
   /**
@@ -161,10 +154,10 @@ public final class DataContainer implements CapturedData
    */
   public ChannelAnnotation getChannelAnnotation( final int aChannelIdx, final int aTimeIndex )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + this.channelLabels.length );
+          + MAX_CHANNELS );
     }
 
     final ChannelAnnotations channelAnnotations = this.annotations.get( Integer.valueOf( aChannelIdx ) );
@@ -186,10 +179,10 @@ public final class DataContainer implements CapturedData
   public Iterator<ChannelAnnotation> getChannelAnnotations( final int aChannelIdx, final int aStartIdx,
       final int aEndIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + this.channelLabels.length );
+          + MAX_CHANNELS );
     }
 
     final ChannelAnnotations channelAnnotations = this.annotations.get( Integer.valueOf( aChannelIdx ) );
@@ -209,12 +202,12 @@ public final class DataContainer implements CapturedData
    */
   public String getChannelLabel( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + this.channelLabels.length );
+          + MAX_CHANNELS );
     }
-    return this.channelLabels[aChannelIdx];
+    return getChannelLabels()[aChannelIdx];
   }
 
   /**
@@ -222,11 +215,9 @@ public final class DataContainer implements CapturedData
    * 
    * @return an array of all channel's label, never <code>null</code>.
    */
-  public final String[] getChannelLabels()
+  public String[] getChannelLabels()
   {
-    final String[] result = new String[this.channelLabels.length];
-    System.arraycopy( this.channelLabels, 0, result, 0, result.length );
-    return result;
+    return this.projectManager.getCurrentProject().getChannelLabels();
   }
 
   /**
@@ -235,7 +226,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int getChannels()
   {
-    return hasCapturedData() ? this.capturedData.getChannels() : NOT_AVAILABLE;
+    return hasCapturedData() ? getCapturedData().getChannels() : NOT_AVAILABLE;
   }
 
   /**
@@ -284,22 +275,20 @@ public final class DataContainer implements CapturedData
    * @throws IllegalArgumentException
    *           in case an invalid cursor index was given.
    */
-  public long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
+  public Long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursorPositions.length - 1 ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > MAX_CURSORS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
-          + this.cursorPositions.length );
+          + MAX_CURSORS );
     }
-    return this.cursorPositions[aCursorIdx];
-  }
+    final Long[] cursorPositions = getCursorPositions();
+    if ( ( cursorPositions == null ) || ( cursorPositions[aCursorIdx] == null ) )
+    {
+      return null;
+    }
 
-  /**
-   * @return the cursorPositions
-   */
-  public long[] getCursorPositions()
-  {
-    return this.cursorPositions;
+    return cursorPositions[aCursorIdx];
   }
 
   /**
@@ -314,12 +303,13 @@ public final class DataContainer implements CapturedData
    */
   public Double getCursorTimeValue( final int aCursorIdx )
   {
-    long cursorPos = getCursorPosition( aCursorIdx );
-    if ( cursorPos > Long.MIN_VALUE )
+    if ( !isCursorPositionSet( aCursorIdx ) )
     {
-      return calculateTimeOffset( cursorPos ) / ( double )this.capturedData.getSampleRate();
+      return null;
     }
-    return null;
+
+    Long cursorPos = getCursorPosition( aCursorIdx );
+    return Double.valueOf( calculateTimeOffset( cursorPos.longValue() ) / ( double )getCapturedData().getSampleRate() );
   }
 
   /**
@@ -328,7 +318,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int getEnabledChannels()
   {
-    return hasCapturedData() ? this.capturedData.getEnabledChannels() : NOT_AVAILABLE;
+    return hasCapturedData() ? getCapturedData().getEnabledChannels() : NOT_AVAILABLE;
   }
 
   /**
@@ -337,7 +327,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int getSampleIndex( final long aAbs )
   {
-    return hasCapturedData() ? this.capturedData.getSampleIndex( aAbs ) : NOT_AVAILABLE;
+    return hasCapturedData() ? getCapturedData().getSampleIndex( aAbs ) : NOT_AVAILABLE;
   }
 
   /**
@@ -346,7 +336,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int getSampleRate()
   {
-    return hasCapturedData() ? this.capturedData.getSampleRate() : NOT_AVAILABLE;
+    return hasCapturedData() ? getCapturedData().getSampleRate() : NOT_AVAILABLE;
   }
 
   /**
@@ -355,7 +345,7 @@ public final class DataContainer implements CapturedData
   @Override
   public long[] getTimestamps()
   {
-    return hasCapturedData() ? this.capturedData.getTimestamps() : new long[0];
+    return hasCapturedData() ? getCapturedData().getTimestamps() : new long[0];
   }
 
   /**
@@ -364,7 +354,7 @@ public final class DataContainer implements CapturedData
   @Override
   public long getTriggerPosition()
   {
-    return hasCapturedData() && hasTriggerData() ? this.capturedData.getTriggerPosition() : CapturedData.NOT_AVAILABLE;
+    return hasCapturedData() && hasTriggerData() ? getCapturedData().getTriggerPosition() : CapturedData.NOT_AVAILABLE;
   }
 
   /**
@@ -373,7 +363,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int[] getValues()
   {
-    return hasCapturedData() ? this.capturedData.getValues() : new int[0];
+    return hasCapturedData() ? getCapturedData().getValues() : new int[0];
   }
 
   /**
@@ -384,7 +374,7 @@ public final class DataContainer implements CapturedData
    */
   public boolean hasCapturedData()
   {
-    return this.capturedData != null;
+    return getCapturedData() != null;
   }
 
   /**
@@ -393,7 +383,7 @@ public final class DataContainer implements CapturedData
   @Override
   public boolean hasTimingData()
   {
-    return hasCapturedData() ? this.capturedData.hasTimingData() : false;
+    return hasCapturedData() ? getCapturedData().hasTimingData() : false;
   }
 
   /**
@@ -402,7 +392,7 @@ public final class DataContainer implements CapturedData
   @Override
   public boolean hasTriggerData()
   {
-    return hasCapturedData() ? this.capturedData.hasTriggerData() : false;
+    return hasCapturedData() ? getCapturedData().hasTriggerData() : false;
   }
 
   /**
@@ -415,12 +405,12 @@ public final class DataContainer implements CapturedData
    */
   public boolean isChannelLabelSet( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + this.channelLabels.length );
+          + MAX_CHANNELS );
     }
-    final String label = this.channelLabels[aChannelIdx];
+    final String label = getChannelLabels()[aChannelIdx];
     return ( label != null ) && !label.trim().isEmpty();
   }
 
@@ -435,12 +425,18 @@ public final class DataContainer implements CapturedData
    */
   public boolean isCursorPositionSet( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursorPositions.length - 1 ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > MAX_CURSORS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
-          + this.cursorPositions.length );
+          + MAX_CURSORS );
     }
-    return this.cursorPositions[aCursorIdx] > Long.MIN_VALUE;
+    final Long[] cursorPositions = getCursorPositions();
+    if ( cursorPositions == null )
+    {
+      return false;
+    }
+
+    return ( cursorPositions[aCursorIdx] != null ) && ( cursorPositions[aCursorIdx].longValue() > Long.MIN_VALUE );
   }
 
   /**
@@ -451,7 +447,7 @@ public final class DataContainer implements CapturedData
    */
   public boolean isCursorsEnabled()
   {
-    return this.cursorEnabled;
+    return this.projectManager.getCurrentProject().isCursorsEnabled();
   }
 
   /**
@@ -462,7 +458,7 @@ public final class DataContainer implements CapturedData
    */
   public void setCapturedData( final CapturedData aCapturedData )
   {
-    this.capturedData = aCapturedData;
+    this.projectManager.getCurrentProject().setCapturedData( aCapturedData );
     this.annotations.clear();
   }
 
@@ -473,10 +469,10 @@ public final class DataContainer implements CapturedData
    */
   public void setChannelAnnotations( final int aChannelIdx, final ChannelAnnotations aAnnotations )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + this.channelLabels.length );
+          + MAX_CHANNELS );
     }
     this.annotations.put( Integer.valueOf( aChannelIdx ), aAnnotations );
   }
@@ -491,12 +487,12 @@ public final class DataContainer implements CapturedData
    */
   public void setChannelLabel( final int aChannelIdx, final String aLabel )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > this.channelLabels.length - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + this.channelLabels.length );
+          + MAX_CHANNELS );
     }
-    this.channelLabels[aChannelIdx] = aLabel;
+    getChannelLabels()[aChannelIdx] = aLabel;
   }
 
   /**
@@ -507,12 +503,11 @@ public final class DataContainer implements CapturedData
    */
   public void setChannelLabels( final String[] aLabels )
   {
-    if ( aLabels.length != this.channelLabels.length )
+    if ( aLabels.length != MAX_CHANNELS )
     {
-      throw new IllegalArgumentException( "Invalid channel labels! Should have exact " + this.channelLabels.length
-          + " items!" );
+      throw new IllegalArgumentException( "Invalid channel labels! Should have exact " + MAX_CHANNELS + " items!" );
     }
-    System.arraycopy( aLabels, 0, this.channelLabels, 0, this.channelLabels.length );
+    System.arraycopy( aLabels, 0, getChannelLabels(), 0, MAX_CHANNELS );
   }
 
   /**
@@ -524,7 +519,7 @@ public final class DataContainer implements CapturedData
    */
   public void setCursorEnabled( final boolean aCursorEnabled )
   {
-    this.cursorEnabled = aCursorEnabled;
+    this.projectManager.getCurrentProject().setCursorsEnabled( aCursorEnabled );
   }
 
   /**
@@ -537,14 +532,24 @@ public final class DataContainer implements CapturedData
    * @throws IllegalArgumentException
    *           in case an invalid cursor index was given.
    */
-  public void setCursorPosition( final int aCursorIdx, final long aCursorPosition ) throws IllegalArgumentException
+  public void setCursorPosition( final int aCursorIdx, final Long aCursorPosition ) throws IllegalArgumentException
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursorPositions.length - 1 ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > MAX_CURSORS - 1 ) )
     {
-      throw new IllegalArgumentException( "Invalid cursor index! Should be between 0 and "
-          + this.cursorPositions.length );
+      throw new IllegalArgumentException( "Invalid cursor index! Should be between 0 and " + MAX_CURSORS );
     }
-    this.cursorPositions[aCursorIdx] = aCursorPosition;
+    final Long[] cursorPositions = getCursorPositions();
+    if ( cursorPositions != null )
+    {
+      if ( ( aCursorPosition == null ) || ( aCursorPosition.longValue() == Long.MIN_VALUE ) )
+      {
+        cursorPositions[aCursorIdx] = null;
+      }
+      else
+      {
+        cursorPositions[aCursorIdx] = aCursorPosition;
+      }
+    }
   }
 
   /**
@@ -556,11 +561,30 @@ public final class DataContainer implements CapturedData
    */
   protected long calculateTimeOffset( final long aTime )
   {
-    if ( this.capturedData.hasTriggerData() )
+    final CapturedData capturedData = getCapturedData();
+    if ( capturedData.hasTriggerData() )
     {
-      return aTime - this.capturedData.getTriggerPosition();
+      return aTime - capturedData.getTriggerPosition();
     }
 
     return aTime;
+  }
+
+  /**
+   * XXX
+   * 
+   * @return
+   */
+  private CapturedData getCapturedData()
+  {
+    return this.projectManager.getCurrentProject().getCapturedData();
+  }
+
+  /**
+   * @return the cursorPositions
+   */
+  private Long[] getCursorPositions()
+  {
+    return this.projectManager.getCurrentProject().getCursorPositions();
   }
 }

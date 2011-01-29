@@ -154,11 +154,11 @@ final class OneWireGenerator
     int result;
 
     // drive 1-wire line low...
-    this.data.add( 0 );
+    this.data.add( Integer.valueOf( 0 ) );
     tickDelay( this.a );
 
     // drive 1-wire line high...
-    this.data.add( OW_LINE );
+    this.data.add( Integer.valueOf( OW_LINE ) );
     tickDelay( this.e );
 
     // read 1-wire line (faked)...
@@ -177,7 +177,7 @@ final class OneWireGenerator
    */
   private void tickDelay( final int aValue )
   {
-    final int curValue = this.data.isEmpty() ? 1 : this.data.get( this.data.size() - 1 );
+    final Integer curValue = this.data.isEmpty() ? Integer.valueOf( 1 ) : this.data.get( this.data.size() - 1 );
     for ( int i = 1; i < aValue; i++ )
     {
       this.data.add( curValue );
@@ -196,19 +196,19 @@ final class OneWireGenerator
     if ( aZeroOrOne )
     {
       // write 1...
-      this.data.add( 0 );
+      this.data.add( Integer.valueOf( 0 ) );
       tickDelay( this.a );
 
-      this.data.add( OW_LINE );
+      this.data.add( Integer.valueOf( OW_LINE ) );
       tickDelay( this.b );
     }
     else
     {
       // write 0...
-      this.data.add( 0 );
+      this.data.add( Integer.valueOf( 0 ) );
       tickDelay( this.c );
 
-      this.data.add( OW_LINE );
+      this.data.add( Integer.valueOf( OW_LINE ) );
       tickDelay( this.d );
     }
   }
@@ -236,20 +236,20 @@ final class OneWireGenerator
   {
     tickDelay( this.g );
     // drive 1-wire line low...
-    this.data.add( 0 );
+    this.data.add( Integer.valueOf( 0 ) );
 
     tickDelay( this.h );
     // drive 1-wire line high...
-    this.data.add( OW_LINE );
+    this.data.add( Integer.valueOf( OW_LINE ) );
 
     tickDelay( this.i - 1 );
     // drive 1-wire line low (signals device presence)...
-    this.data.add( Math.random() > 0.3 ? 0 : OW_LINE );
+    this.data.add( Integer.valueOf( Math.random() > 0.3 ? 0 : OW_LINE ) );
 
     tickDelay( this.j - 1 );
     // drive 1-wire line high...
-    this.data.add( OW_LINE );
-    this.data.add( OW_LINE );
+    this.data.add( Integer.valueOf( OW_LINE ) );
+    this.data.add( Integer.valueOf( OW_LINE ) );
   }
 
   /**
@@ -262,7 +262,7 @@ final class OneWireGenerator
    */
   private void writeStuffData( final int aDelay, final int aValue )
   {
-    this.data.add( aValue );
+    this.data.add( Integer.valueOf( aValue ) );
     tickDelay( aDelay );
   }
 }

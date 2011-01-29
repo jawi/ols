@@ -238,6 +238,7 @@ public class JComponentInputVerifier extends InputVerifier implements KeyListene
    * @return the component's value, or <code>null</code> if this value is
    *         unknown.
    */
+  @SuppressWarnings( "boxing" )
   protected Object getInputValue( final Component aComponent )
   {
     if ( aComponent instanceof JComboBox )

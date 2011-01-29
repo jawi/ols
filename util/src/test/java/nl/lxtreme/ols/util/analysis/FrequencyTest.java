@@ -28,6 +28,7 @@ import org.junit.*;
 /**
  *
  */
+@SuppressWarnings( "boxing" )
 public class FrequencyTest
 {
   // METHODS

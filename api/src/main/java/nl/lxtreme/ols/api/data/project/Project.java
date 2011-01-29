@@ -53,10 +53,13 @@ public interface Project
    * 
    * @return an array of cursor positions, can be <code>null</code>.
    */
-  public long[] getCursorPositions();
+  public Long[] getCursorPositions();
 
   /**
-   * @return
+   * Returns the date on which the project is last saved.
+   * 
+   * @return the last modified date of this project, can be <code>null</code> if
+   *         this project is not yet saved.
    */
   public Date getLastModified();
 
@@ -76,7 +79,9 @@ public interface Project
   public Properties getSettings();
 
   /**
-   * @return
+   * Returns the version of the OLS-client that created this project.
+   * 
+   * @return a source version string, such as "0.9.2".
    */
   public String getSourceVersion();
 
@@ -89,42 +94,85 @@ public interface Project
   public boolean isChanged();
 
   /**
+   * Returns whether or not cursors are enabled.
+   * 
+   * @return <code>true</code> if cursors are enabled, <code>false</code>
+   *         otherwise.
+   */
+  public boolean isCursorsEnabled();
+
+  /**
+   * Sets the captured data of this project.
+   * 
    * @param aCapturedData
+   *          the captured data, can be <code>null</code>.
    */
   public void setCapturedData( final CapturedData aCapturedData );
 
   /**
+   * Marks this project as "changed".
+   * 
    * @param aChanged
+   *          <code>true</code> to mark this project as changed,
+   *          <code>false</code> otherwise.
    */
   public void setChanged( final boolean aChanged );
 
   /**
+   * Sets the channel labels.
+   * 
    * @param aChannelLabels
+   *          the channel labels, in order, can be <code>null</code>.
    */
   public void setChannelLabels( final String... aChannelLabels );
 
   /**
+   * Sets the cursor positions.
+   * 
    * @param aCursors
+   *          the cursor positions to set, in order, can be <code>null</code>.
    */
-  public void setCursorPositions( final long... aCursors );
+  public void setCursorPositions( final Long... aCursors );
 
   /**
+   * Sets whether or not cursors are enabled.
+   * 
+   * @param aEnabled
+   *          <code>true</code> if cursors are enabled, <code>false</code>
+   *          otherwise.
+   */
+  public void setCursorsEnabled( final boolean aEnabled );
+
+  /**
+   * Sets the last modified date of this project.
+   * 
    * @param aLastModified
+   *          a last modified date, can be <code>null</code>.
    */
   public void setLastModified( final Date aLastModified );
 
   /**
+   * Sets the name of this project.
+   * 
    * @param aName
+   *          the name of this project, can be <code>null</code>.
    */
   public void setName( final String aName );
 
   /**
+   * Sets the project settings.
+   * 
    * @param aSettings
+   *          the settings of this project, cannot be <code>null</code>.
    */
   public void setSettings( final Properties aSettings );
 
   /**
+   * Sets the version of the OLS-client that saved this project.
+   * 
    * @param aSourceVersion
+   *          the source version, for example, "0.9.2", can be <code>null</code>
+   *          .
    */
   public void setSourceVersion( final String aSourceVersion );
 }

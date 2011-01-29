@@ -229,7 +229,7 @@ public class SimpleProjectManager implements ProjectManager
     {
       name = reader.readLine();
       version = reader.readLine();
-      savedAt = new Date( Long.valueOf( reader.readLine() ) );
+      savedAt = new Date( Long.valueOf( reader.readLine() ).longValue() );
 
       LOG.log( Level.INFO, "Reading project {0}, created at {1} by OLSv{2}.", new Object[] { name, savedAt, version } );
     }

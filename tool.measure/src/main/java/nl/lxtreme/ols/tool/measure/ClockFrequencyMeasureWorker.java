@@ -78,7 +78,7 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
       {
         return MeasurementDialog.EMPTY_TEXT;
       }
-      return String.format( "%.1f%%", ( getDutyCycle() * 100.0 ) );
+      return String.format( "%.1f%%", Double.valueOf( getDutyCycle() * 100.0 ) );
     }
 
     /**

@@ -128,7 +128,7 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
       {
         // Progress update...
         final Integer percentage = ( Integer )value;
-        this.callback.updateProgress( percentage );
+        this.callback.updateProgress( percentage.intValue() );
       }
       else if ( PROPERTY_STATE.equals( name ) )
       {

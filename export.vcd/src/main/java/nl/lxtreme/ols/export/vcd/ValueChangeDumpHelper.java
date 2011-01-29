@@ -131,7 +131,7 @@ public class ValueChangeDumpHelper
    */
   public static final void writeTime( final PrintWriter aWriter, final long aTimebase )
   {
-    aWriter.printf( "#%d", aTimebase ).println();
+    aWriter.printf( "#%d", Long.valueOf( aTimebase ) ).println();
   }
 
   /**
@@ -150,7 +150,7 @@ public class ValueChangeDumpHelper
    */
   public static final void writeVariable( final PrintWriter aWriter, final int aIndex, final String aLabel )
   {
-    aWriter.printf( "$var wire 1 %c %s $end", ( '#' + aIndex ), aLabel ).println();
+    aWriter.printf( "$var wire 1 %c %s $end", Integer.valueOf( '#' + aIndex ), aLabel ).println();
   }
 
   /**

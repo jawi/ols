@@ -137,10 +137,10 @@ public class BundlesDialog extends JDialog implements Closeable
       switch ( aColumnIndex )
       {
         case 0:
-          return bundle.getState() == Bundle.ACTIVE;
+          return Boolean.valueOf( bundle.getState() == Bundle.ACTIVE );
 
         case 1:
-          return bundle.getBundleId();
+          return Long.valueOf( bundle.getBundleId() );
 
         case 2:
           return bundle.getSymbolicName();

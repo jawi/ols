@@ -258,13 +258,13 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
               startCondFound = false;
 
               annotation = String.format( "Setup %s slave: 0x%X", ( direction == 1 ) ? "read from" : "write to",
-                  slaveAddress );
+                  Integer.valueOf( slaveAddress ) );
             }
           }
           else
           {
-            annotation = String.format( "%s data: 0x%X (%c)", ( direction == 1 ) ? "Read" : "Write", byteValue,
-                byteValue );
+            annotation = String.format( "%s data: 0x%X (%c)", ( direction == 1 ) ? "Read" : "Write",
+                Integer.valueOf( byteValue ), Integer.valueOf( byteValue ) );
           }
 
           addChannelAnnotation( this.sdaIdx, prevIdx, idx, annotation );

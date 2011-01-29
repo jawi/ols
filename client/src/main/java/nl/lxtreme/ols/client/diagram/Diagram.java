@@ -140,12 +140,12 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     final int scopeHeight = getDiagramSettings().getScopeHeight();
 
     int height = 0, channelIdx = 0;
-    for ( int b = 0; ( height < yPos ) && ( b < DataContainer.MAX_BLOCKS ); b++ )
+    for ( int b = 0; ( height < yPos ) && ( b < CapturedData.MAX_BLOCKS ); b++ )
     {
       if ( ( height < yPos ) && this.diagramSettings.isShowChannels( b ) )
       {
-        channelIdx = ( b * DataContainer.CHANNELS_PER_BLOCK );
-        for ( int c = 0; ( height < yPos ) && ( c < DataContainer.CHANNELS_PER_BLOCK ); c++ )
+        channelIdx = ( b * CapturedData.CHANNELS_PER_BLOCK );
+        for ( int c = 0; ( height < yPos ) && ( c < CapturedData.CHANNELS_PER_BLOCK ); c++ )
         {
           height += channelHeight;
           channelIdx++;
@@ -242,14 +242,14 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   {
     final long idx = convertPointToSampleIndex( aMousePosition );
     final double threshold = CURSOR_HOVER / this.scale;
-    for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
+    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
     {
-      final long cursorPosition = this.dataContainer.getCursorPosition( i );
-      if ( cursorPosition < 0 )
+      final Long cursorPosition = this.dataContainer.getCursorPosition( i );
+      if ( cursorPosition == null )
       {
         continue;
       }
-      if ( Math.abs( idx - cursorPosition ) < threshold )
+      if ( Math.abs( idx - cursorPosition.longValue() ) < threshold )
       {
         return i;
       }

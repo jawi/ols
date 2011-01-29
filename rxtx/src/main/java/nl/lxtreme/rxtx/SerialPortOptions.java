@@ -149,7 +149,7 @@ final class SerialPortOptions
     int result;
     try
     {
-      result = Integer.valueOf( aStr );
+      result = Integer.parseInt( aStr );
     }
     catch ( NumberFormatException exception )
     {

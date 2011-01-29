@@ -150,7 +150,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     SwingComponentUtils.setSelectedIndex( this.parity, aPrefs.getInt( "parity", -1 ) );
     SwingComponentUtils.setSelectedIndex( this.bits, aPrefs.getInt( "bits", -1 ) );
     SwingComponentUtils.setSelectedIndex( this.stop, aPrefs.getInt( "stop", -1 ) );
-    SwingComponentUtils.setSelected( this.inv, aPrefs.getBoolean( "inverted", Boolean.FALSE ) );
+    SwingComponentUtils.setSelected( this.inv, Boolean.valueOf( aPrefs.getBoolean( "inverted", false ) ) );
   }
 
   /**
@@ -322,7 +322,8 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
             break;
         }
 
-        exporter.addRow( i, startTime, endTime, ds.isEvent(), eventType, rxdEvent, txdEvent, rxdData, txdData );
+        exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), eventType,
+            rxdEvent, txdEvent, rxdData, txdData );
       }
 
       exporter.close();
@@ -627,11 +628,11 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
         }
         else if ( "decoded-bytes".equals( aMacro ) )
         {
-          return aDataSet.getDecodedSymbols();
+          return Integer.valueOf( aDataSet.getDecodedSymbols() );
         }
         else if ( "detected-bus-errors".equals( aMacro ) )
         {
-          return aDataSet.getDetectedErrors();
+          return Integer.valueOf( aDataSet.getDetectedErrors() );
         }
         else if ( "baudrate".equals( aMacro ) )
         {
@@ -642,7 +643,8 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
           }
           else
           {
-            baudrate = String.format( "%d (exact: %d)", aDataSet.getBaudRate(), aDataSet.getBaudRateExact() );
+            baudrate = String.format( "%d (exact: %d)", Integer.valueOf( aDataSet.getBaudRate() ),
+                Integer.valueOf( aDataSet.getBaudRateExact() ) );
             if ( aDataSet.getBitLength() < 15 )
             {
               return baudrate

@@ -71,11 +71,11 @@ public class SetCursorAction extends BaseAction
    */
   public static final String getCursorId( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= DataContainer.MAX_CURSORS ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= CapturedData.MAX_CURSORS ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx );
     }
-    return String.format( "%s.%d", ID, aCursorIdx );
+    return String.format( "%s.%d", ID, Integer.valueOf( aCursorIdx ) );
   }
 
   /**

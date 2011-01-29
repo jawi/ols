@@ -365,6 +365,8 @@ public class DiagramUI extends ComponentUI
       final Action setCursorAction = aActionProvider.getAction( SetCursorAction.getCursorId( i ) );
       this.contextMenu.add( new JCheckBoxMenuItem( setCursorAction ) );
     }
+    this.contextMenu.addSeparator();
+    this.contextMenu.add( aActionProvider.getAction( ClearCursors.ID ) );
 
     this.cursorDefault = Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR );
     this.cursorDrag = Cursor.getPredefinedCursor( Cursor.MOVE_CURSOR );
@@ -392,7 +394,7 @@ public class DiagramUI extends ComponentUI
     final int blockCnt = dataContainer.getBlockCount();
     for ( int block = 0; block < blockCnt; block++ )
     {
-      if ( ( ( enabledChannels >> ( DataContainer.CHANNELS_PER_BLOCK * block ) ) & 0xff ) != 0 )
+      if ( ( ( enabledChannels >> ( CapturedData.CHANNELS_PER_BLOCK * block ) ) & 0xff ) != 0 )
       {
         if ( settings.isShowChannels( block ) )
         {
@@ -461,7 +463,7 @@ public class DiagramUI extends ComponentUI
     }
 
     final long start = System.currentTimeMillis();
-    LOG.log( Level.FINE, "Start diagram rendering = {0}ms.", start );
+    LOG.log( Level.FINE, "Start diagram rendering = {0}ms.", Long.valueOf( start ) );
     final Graphics2D canvas = ( Graphics2D )aCanvas;
 
     // obtain portion of graphics that needs to be drawn
@@ -483,7 +485,7 @@ public class DiagramUI extends ComponentUI
     paintCursors( canvas, diagram, clipArea, firstRow, lastRow );
 
     final long end = System.currentTimeMillis();
-    LOG.log( Level.FINE, "Render time = {0}ms.", ( end - start ) );
+    LOG.log( Level.FINE, "Render time = {0}ms.", Long.valueOf( end - start ) );
   }
 
   /**
@@ -540,12 +542,17 @@ public class DiagramUI extends ComponentUI
       final int y1 = aClipArea.y;
       final int y2 = y1 + aClipArea.height;
 
-      for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
+      for ( int i = 0, size = CapturedData.MAX_CURSORS; i < size; i++ )
       {
-        final long cursorPosition = dataContainer.getCursorPosition( i );
-        if ( ( cursorPosition >= aFirstRow ) && ( cursorPosition <= aLastRow ) )
+        final Long cursorPosition = dataContainer.getCursorPosition( i );
+        if ( cursorPosition == null )
         {
-          final int cursorPos = ( int )( cursorPosition * aDiagram.getScale() );
+          continue;
+        }
+
+        if ( ( cursorPosition.longValue() >= aFirstRow ) && ( cursorPosition.longValue() <= aLastRow ) )
+        {
+          final int cursorPos = ( int )( cursorPosition.longValue() * aDiagram.getScale() );
 
           aCanvas.setColor( settings.getCursorColor( i ) );
           aCanvas.drawLine( cursorPos, y1, cursorPos, y2 );
@@ -657,7 +664,7 @@ public class DiagramUI extends ComponentUI
     final int blockCnt = dataContainer.getBlockCount();
     for ( int block = 0; block < blockCnt; block++ )
     {
-      final int channelsOffset = DataContainer.CHANNELS_PER_BLOCK * block;
+      final int channelsOffset = CapturedData.CHANNELS_PER_BLOCK * block;
       final boolean blockEnabled = ( ( enabled >> channelsOffset ) & 0xff ) != 0;
       if ( !blockEnabled )
       {
@@ -785,7 +792,7 @@ public class DiagramUI extends ComponentUI
 
           paintGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + yofs + ( channelHeight - 1 ) );
         }
-        yofs += ( channelHeight * DataContainer.CHANNELS_PER_BLOCK );
+        yofs += ( channelHeight * CapturedData.CHANNELS_PER_BLOCK );
       }
 
       if ( settings.isShowScope( block ) )
@@ -869,7 +876,7 @@ public class DiagramUI extends ComponentUI
           pIdx += 2;
 
           // if steady long enough, add hex value
-          final String byteValue = String.format( "%02X", currentValue );
+          final String byteValue = String.format( "%02X", Integer.valueOf( currentValue ) );
           final int labelWidth = fm.stringWidth( byteValue );
 
           if ( ( x2 - x1 ) > labelWidth )

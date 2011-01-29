@@ -69,7 +69,7 @@ public final class DisplayUtils
     }
     i = Math.max( i, 0 );
 
-    return String.format( "%.3f %s", aFrequency / unitVals[i], unitStrs[i] );
+    return String.format( "%.3f %s", Double.valueOf( aFrequency / unitVals[i] ), unitStrs[i] );
   }
 
   /**
@@ -114,7 +114,7 @@ public final class DisplayUtils
     }
     i = Math.max( i, 0 );
 
-    return String.format( "%d%s", ( int )( aSize / unitVals[i] ), unitStrs[i] );
+    return String.format( "%d%s", Integer.valueOf( ( int )( aSize / unitVals[i] ) ), unitStrs[i] );
   }
 
   /**
@@ -174,7 +174,7 @@ public final class DisplayUtils
     }
 
     final String format = "%." + aPrecision + "f" + aSeparator + "%s";
-    return String.format( format, aTime / unitVals[i], unitStrs[i] );
+    return String.format( format, Double.valueOf( aTime / unitVals[i] ), unitStrs[i] );
   }
 
   /**
@@ -203,7 +203,7 @@ public final class DisplayUtils
     {
       suffix = "th";
     }
-    return String.format( "%d%s", aValue, suffix );
+    return String.format( "%d%s", Integer.valueOf( aValue ), suffix );
   }
 
   /**

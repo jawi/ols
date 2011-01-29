@@ -35,11 +35,12 @@ public class SimpleProject implements Project
   // VARIABLES
 
   private String name;
-  private String[] channelLabels;
-  private long[] cursors;
+  private final String[] channelLabels;
+  private final Long[] cursors;
   private Properties settings;
   private CapturedData capturedData;
   private boolean changed;
+  private boolean cursorsEnabled;
   private Date lastModified;
   private String sourceVersion;
 
@@ -52,7 +53,11 @@ public class SimpleProject implements Project
   {
     super();
 
+    this.cursors = new Long[CapturedData.MAX_CURSORS];
+    this.channelLabels = new String[CapturedData.MAX_CHANNELS];
+
     this.changed = false;
+    this.cursorsEnabled = false;
   }
 
   // METHODS
@@ -79,13 +84,13 @@ public class SimpleProject implements Project
    * @see nl.lxtreme.ols.api.data.project.Project#getCursorPositions()
    */
   @Override
-  public long[] getCursorPositions()
+  public Long[] getCursorPositions()
   {
     return this.cursors;
   }
 
   /**
-   * @return the lastModified
+   * @see nl.lxtreme.ols.api.data.project.Project#getLastModified()
    */
   @Override
   public Date getLastModified()
@@ -112,7 +117,7 @@ public class SimpleProject implements Project
   }
 
   /**
-   * @return the sourceVersion
+   * @see nl.lxtreme.ols.api.data.project.Project#getSourceVersion()
    */
   @Override
   public String getSourceVersion()
@@ -130,8 +135,16 @@ public class SimpleProject implements Project
   }
 
   /**
-   * @param aCapturedData
-   *          the capturedData to set
+   * @see nl.lxtreme.ols.api.data.project.Project#isCursorsEnabled()
+   */
+  @Override
+  public boolean isCursorsEnabled()
+  {
+    return this.cursorsEnabled;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.project.Project#setCapturedData(nl.lxtreme.ols.api.data.CapturedData)
    */
   @Override
   public void setCapturedData( final CapturedData aCapturedData )
@@ -140,8 +153,7 @@ public class SimpleProject implements Project
   }
 
   /**
-   * @param aChanged
-   *          the changed to set
+   * @see nl.lxtreme.ols.api.data.project.Project#setChanged(boolean)
    */
   @Override
   public void setChanged( final boolean aChanged )
@@ -150,36 +162,40 @@ public class SimpleProject implements Project
   }
 
   /**
-   * @param aChannelLabels
-   *          the channelLabels to set
+   * @see nl.lxtreme.ols.api.data.project.Project#setChannelLabels(java.lang.String[])
    */
   @Override
   public void setChannelLabels( final String... aChannelLabels )
   {
     if ( aChannelLabels != null )
     {
-      this.channelLabels = new String[CapturedData.MAX_CHANNELS];
       System.arraycopy( aChannelLabels, 0, this.channelLabels, 0, aChannelLabels.length );
     }
   }
 
   /**
-   * @param aCursors
-   *          the cursors to set
+   * @see nl.lxtreme.ols.api.data.project.Project#setCursorPositions(long[])
    */
   @Override
-  public void setCursorPositions( final long... aCursors )
+  public void setCursorPositions( final Long... aCursors )
   {
     if ( aCursors != null )
     {
-      this.cursors = new long[CapturedData.MAX_CURSORS];
       System.arraycopy( aCursors, 0, this.cursors, 0, aCursors.length );
     }
   }
 
   /**
-   * @param aLastModified
-   *          the lastModified to set
+   * @see nl.lxtreme.ols.api.data.project.Project#setCursorsEnabled(boolean)
+   */
+  @Override
+  public void setCursorsEnabled( final boolean aEnabled )
+  {
+    this.cursorsEnabled = aEnabled;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.project.Project#setLastModified(java.util.Date)
    */
   @Override
   public void setLastModified( final Date aLastModified )
@@ -188,10 +204,7 @@ public class SimpleProject implements Project
   }
 
   /**
-   * Sets the project name.
-   * 
-   * @param aName
-   *          the name to set, may be <code>null</code>.
+   * @see nl.lxtreme.ols.api.data.project.Project#setName(java.lang.String)
    */
   @Override
   public void setName( final String aName )
@@ -200,10 +213,7 @@ public class SimpleProject implements Project
   }
 
   /**
-   * Sets the project settings.
-   * 
-   * @param aSettings
-   *          the settings to set, can be <code>null</code>.
+   * @see nl.lxtreme.ols.api.data.project.Project#setSettings(java.util.Properties)
    */
   @Override
   public void setSettings( final Properties aSettings )
@@ -212,13 +222,11 @@ public class SimpleProject implements Project
   }
 
   /**
-   * @param aSourceVersion
-   *          the sourceVersion to set
+   * @see nl.lxtreme.ols.api.data.project.Project#setSourceVersion(java.lang.String)
    */
   @Override
   public void setSourceVersion( final String aSourceVersion )
   {
     this.sourceVersion = aSourceVersion;
   }
-
 }

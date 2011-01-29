@@ -206,7 +206,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 
           count = ( this.buffer[i] & this.rleCountMask ) + 0;
 
-          LOG.log( Level.FINE, "RLE count seen of {0}...", count );
+          LOG.log( Level.FINE, "RLE count seen of {0}...", Integer.valueOf( count ) );
         }
         else
         {
@@ -551,8 +551,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       {
         public void addValue( final int aSampleValue, final long aTimestamp )
         {
-          values.add( aSampleValue );
-          timestamps.add( aTimestamp );
+          values.add( Integer.valueOf( aSampleValue ) );
+          timestamps.add( Long.valueOf( aTimestamp ) );
         }
 
         public void ready( final long aAbsoluteLength, final long aTriggerPosition )
@@ -568,12 +568,12 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       final SampleProcessor processor;
       if ( this.config.isRleEnabled() )
       {
-        LOG.log( Level.INFO, "Decoding Run Length Encoded data, sample count: {0}", samples );
+        LOG.log( Level.INFO, "Decoding Run Length Encoded data, sample count: {0}", Integer.valueOf( samples ) );
         processor = new RleDecoder( buffer, this.trigcount, callback );
       }
       else
       {
-        LOG.log( Level.INFO, "Decoding unencoded data, sample count: {0}", samples );
+        LOG.log( Level.INFO, "Decoding unencoded data, sample count: {0}", Integer.valueOf( samples ) );
         processor = new EqualityFilter( buffer, this.trigcount, callback );
       }
 
@@ -608,7 +608,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       // Make sure we release the device if it was still attached...
       detach();
 
-      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { portName, baudrate } );
+      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { portName, Integer.valueOf( baudrate ) } );
 
       this.connection = getConnection( portName, baudrate );
       if ( this.connection != null )
@@ -901,7 +901,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         try
         {
           final String portUri = String.format(
-              "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff", aPortName, aPortRate );
+              "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff", aPortName,
+              Integer.valueOf( aPortRate ) );
 
           return ( StreamConnection )connectorService.open( portUri, ConnectorService.READ_WRITE, false /* timeouts */);
         }
@@ -956,7 +957,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           {
             // key value is a null-terminated string...
             final String value = readString();
-            LOG.log( Level.FINE, "Read {0} -> \"{1}\"", new Object[] { result, value } );
             metadata.put( result, value );
           }
           else if ( type == 0x01 )
@@ -964,20 +964,18 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
             // key value is a 32-bit integer; least significant byte first...
             // final Integer value = NumberUtils.convertByteOrder(
             // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
-            final Integer value = this.inputStream.readInt();
-            LOG.log( Level.FINE, "Read {0} -> {1} (32-bit)", new Object[] { result, value } );
-            metadata.put( result, value );
+            final int value = this.inputStream.readInt();
+            metadata.put( result, Integer.valueOf( value ) );
           }
           else if ( type == 0x02 )
           {
             // key value is a 8-bit integer...
-            final Integer value = this.inputStream.read();
-            LOG.log( Level.FINE, "Read {0} -> {1} (8-bit)", new Object[] { result, value } );
-            metadata.put( result, value );
+            final int value = this.inputStream.read();
+            metadata.put( result, Integer.valueOf( value ) );
           }
           else
           {
-            LOG.log( Level.INFO, "Ignoring unknown type: {0}", type );
+            LOG.log( Level.INFO, "Ignoring unknown type: {0}", Integer.valueOf( type ) );
           }
         }
       }

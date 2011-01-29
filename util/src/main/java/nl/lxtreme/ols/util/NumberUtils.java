@@ -422,7 +422,7 @@ public final class NumberUtils
       final String number = matcher.group( 1 );
       final String unit = matcher.group( 2 );
 
-      int result = Integer.valueOf( number );
+      int result = Integer.parseInt( number );
       if ( unit != null )
       {
         result *= parseUnit( unit, aUnitDefinition );

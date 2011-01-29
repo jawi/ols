@@ -749,7 +749,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
     aDataSet.reportData( aChannelIndex, startSampleIdx, endSampleIdx, aByteValue, aType );
 
     addChannelAnnotation( aChannelIndex, startSampleIdx, endSampleIdx,
-        String.format( "0x%X (%c)", aByteValue, aByteValue ) );
+        String.format( "0x%X (%c)", Integer.valueOf( aByteValue ), Integer.valueOf( aByteValue ) ) );
   }
 
   /**

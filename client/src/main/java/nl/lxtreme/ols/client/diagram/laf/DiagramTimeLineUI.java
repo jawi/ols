@@ -192,7 +192,7 @@ public class DiagramTimeLineUI extends ComponentUI
   {
     if ( !aDataContainer.hasTimingData() )
     {
-      return String.format( "%d", aTimeValue );
+      return String.format( "%d", Long.valueOf( aTimeValue ) );
     }
 
     long timeValue = aTimeValue;
@@ -233,20 +233,25 @@ public class DiagramTimeLineUI extends ComponentUI
     final int textHeight = fm.getHeight();
     final int flagHeight = textHeight;
 
-    for ( int i = 0, size = DataContainer.MAX_CURSORS; i < size; i++ )
+    for ( int i = 0, size = CapturedData.MAX_CURSORS; i < size; i++ )
     {
-      final long cursorPosition = aDataContainer.getCursorPosition( i );
-      if ( ( cursorPosition >= aStartSample ) && ( cursorPosition <= aEndSample ) )
+      final Long cursorPosition = aDataContainer.getCursorPosition( i );
+      if ( cursorPosition == null )
       {
-        final int cursorPos = ( int )( cursorPosition * scale );
+        continue;
+      }
 
-        final double cursorTimeValue = aDataContainer.getCursorTimeValue( i );
-        final String cursorTime = DisplayUtils.displayTime( cursorTimeValue );
+      if ( ( cursorPosition.longValue() >= aStartSample ) && ( cursorPosition.longValue() <= aEndSample ) )
+      {
+        final int cursorPos = ( int )( cursorPosition.longValue() * scale );
+
+        final Double cursorTimeValue = aDataContainer.getCursorTimeValue( i );
+        final String cursorTime = DisplayUtils.displayTime( cursorTimeValue.doubleValue() );
 
         final Color cursorColor = settings.getCursorColor( i );
         final Color cursorTextColor = ColorUtils.getContrastColor( cursorColor );
 
-        String text = String.format( "T%d", i + 1 );
+        String text = String.format( "T%d", Integer.valueOf( i + 1 ) );
         if ( settings.isShowCursorTiming() )
         {
           text = text.concat( ": " ).concat( cursorTime );

@@ -180,8 +180,8 @@ public class CapturedDataImpl implements CapturedData
 
     for ( int i = 0, size = aValues.size(); i < size; i++ )
     {
-      this.values[i] = aValues.get( i );
-      this.timestamps[i] = aTimestamps.get( i );
+      this.values[i] = aValues.get( i ).intValue();
+      this.timestamps[i] = aTimestamps.get( i ).longValue();
     }
 
     this.triggerPosition = aTriggerPosition;
@@ -220,7 +220,7 @@ public class CapturedDataImpl implements CapturedData
     while ( low <= high )
     {
       mid = ( low + high ) >>> 1;
-      final Long midVal = aArray[mid];
+      final Long midVal = Long.valueOf( aArray[mid] );
 
       final int c = aKey.compareTo( midVal );
       if ( c > 0 )
@@ -247,7 +247,7 @@ public class CapturedDataImpl implements CapturedData
     {
       // If the searched value is greater than the value of the found index,
       // insert it after this value, otherwise before it (= the last return)...
-      if ( aKey > aArray[mid] )
+      if ( aKey.longValue() > aArray[mid] )
       {
         return mid + 1;
       }
@@ -289,7 +289,7 @@ public class CapturedDataImpl implements CapturedData
   @Override
   public final int getSampleIndex( final long abs )
   {
-    return binarySearch( this.timestamps, 0, this.timestamps.length, abs );
+    return binarySearch( this.timestamps, 0, this.timestamps.length, Long.valueOf( abs ) );
   }
 
   /**

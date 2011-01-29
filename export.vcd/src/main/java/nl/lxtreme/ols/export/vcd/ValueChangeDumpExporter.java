@@ -136,7 +136,7 @@ public class ValueChangeDumpExporter implements Exporter
     for ( int i = 0; i < aChannelCount; i++ )
     {
       final char id = ( char )( '#' + i );
-      aWriter.printf( "%d%c", ( value & 1 ), id ).println();
+      aWriter.printf( "%d%c", Integer.valueOf( value & 1 ), Character.valueOf( id ) ).println();
       value >>= 1;
     }
   }
@@ -174,7 +174,7 @@ public class ValueChangeDumpExporter implements Exporter
 
     for ( int i = 0; i < aContainer.getChannels(); i++ )
     {
-      aWriter.printf( "x%c", ( '#' + i ) ).println();
+      aWriter.printf( "x%c", Integer.valueOf( '#' + i ) ).println();
     }
 
     writeCloseDeclaration( aWriter );

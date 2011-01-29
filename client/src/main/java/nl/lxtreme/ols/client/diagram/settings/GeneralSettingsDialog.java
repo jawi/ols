@@ -246,7 +246,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     int result = -1;
     try
     {
-      result = Integer.valueOf( text );
+      result = Integer.parseInt( text );
     }
     catch ( NumberFormatException exception )
     {
@@ -356,7 +356,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   {
     if ( this.channelColor == null )
     {
-      this.channelColor = new JTextField[DataContainer.MAX_CHANNELS];
+      this.channelColor = new JTextField[CapturedData.MAX_CHANNELS];
     }
     // Keep track of the numbers of channels we're creating editors for...
     this.channelColorCount = Math.max( this.channelColorCount, ( aBlockNr + 1 ) * CHANNELS_PER_BLOCK );
@@ -367,7 +367,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     {
       final int channelIdx = ( aBlockNr * CHANNELS_PER_BLOCK ) + i;
 
-      final JLabel label = createRightAlignedLabel( String.format( "Channel %d color", ( channelIdx + 1 ) ) );
+      final JLabel label = createRightAlignedLabel( String
+          .format( "Channel %d color", Integer.valueOf( channelIdx + 1 ) ) );
 
       this.channelColor[channelIdx] = new JTextField( 10 );
 
@@ -439,18 +440,18 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   {
     final JPanel editorsPane = new JPanel( new SpringLayout() );
 
-    this.cursorColor = new JTextField[DataContainer.MAX_CURSORS];
+    this.cursorColor = new JTextField[CapturedData.MAX_CURSORS];
 
     for ( int i = 0; i < this.cursorColor.length; i++ )
     {
-      final JLabel label = createRightAlignedLabel( String.format( "Cursor %d color", ( i + 1 ) ) );
+      final JLabel label = createRightAlignedLabel( String.format( "Cursor %d color", Integer.valueOf( i + 1 ) ) );
       this.cursorColor[i] = new JTextField( 10 );
 
       editorsPane.add( label );
       editorsPane.add( this.cursorColor[i] );
     }
 
-    SpringLayoutUtils.makeCompactGrid( editorsPane, DataContainer.MAX_CURSORS, 2, 6, 6, 6, 6 );
+    SpringLayoutUtils.makeCompactGrid( editorsPane, CapturedData.MAX_CURSORS, 2, 6, 6, 6, 6 );
 
     final JPanel result = new JPanel( new GridBagLayout() );
 

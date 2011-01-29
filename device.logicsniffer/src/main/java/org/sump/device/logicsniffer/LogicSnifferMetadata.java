@@ -55,7 +55,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   @Override
   public String getAncillaryVersion()
   {
-    return ( String )this.values.get( KEY_ANCILLARY_VERSION );
+    return ( String )getValue( KEY_ANCILLARY_VERSION );
   }
 
   /**
@@ -64,7 +64,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   @Override
   public Integer getDynamicMemoryDepth()
   {
-    return ( Integer )this.values.get( KEY_DYNAMIC_MEMORY_DEPTH );
+    return ( Integer )getValue( KEY_DYNAMIC_MEMORY_DEPTH );
   }
 
   /**
@@ -73,7 +73,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   @Override
   public String getFpgaVersion()
   {
-    return ( String )this.values.get( KEY_FPGA_VERSION );
+    return ( String )getValue( KEY_FPGA_VERSION );
   }
 
   /**
@@ -82,7 +82,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   @Override
   public Integer getMaxSampleRate()
   {
-    return ( Integer )this.values.get( KEY_MAX_SAMPLE_RATE );
+    return ( Integer )getValue( KEY_MAX_SAMPLE_RATE );
   }
 
   /**
@@ -91,7 +91,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   @Override
   public String getName()
   {
-    return ( String )this.values.get( KEY_DEVICE_NAME );
+    return ( String )getValue( KEY_DEVICE_NAME );
   }
 
   /**
@@ -100,10 +100,10 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   @Override
   public Integer getProbeCount()
   {
-    Object result = this.values.get( KEY_PROBE_COUNT_LONG );
+    Object result = getValue( KEY_PROBE_COUNT_LONG );
     if ( result == null )
     {
-      result = this.values.get( KEY_PROBE_COUNT_SHORT );
+      result = getValue( KEY_PROBE_COUNT_SHORT );
     }
     return ( Integer )result;
   }
@@ -116,7 +116,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
     Integer result = getProbeCount();
     if ( result == null )
     {
-      result = aDefaultProbeCount;
+      return aDefaultProbeCount;
     }
     return result.intValue();
   }
@@ -127,10 +127,10 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   @Override
   public Integer getProtocolVersion()
   {
-    Object result = this.values.get( KEY_PROTOCOL_VERSION_LONG );
+    Object result = getValue( KEY_PROTOCOL_VERSION_LONG );
     if ( result == null )
     {
-      result = this.values.get( KEY_PROTOCOL_VERSION_SHORT );
+      result = getValue( KEY_PROTOCOL_VERSION_SHORT );
     }
     return ( Integer )result;
   }
@@ -141,7 +141,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   @Override
   public Integer getSampleMemoryDepth()
   {
-    return ( Integer )this.values.get( KEY_SAMPLE_MEMORY_DEPTH );
+    return ( Integer )getValue( KEY_SAMPLE_MEMORY_DEPTH );
   }
 
   /**
@@ -152,7 +152,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
     Integer result = getSampleMemoryDepth();
     if ( result == null )
     {
-      result = aDefaultSize;
+      return aDefaultSize;
     }
     return result.intValue();
   }
@@ -193,16 +193,28 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   public String toString()
   {
     final StringBuilder sb = new StringBuilder();
-    sb.append( "Device name              => " ).append( this.values.get( KEY_DEVICE_NAME ) ).append( '\n' );
-    sb.append( "FPGA version             => " ).append( this.values.get( KEY_FPGA_VERSION ) ).append( '\n' );
-    sb.append( "Ancillary version        => " ).append( this.values.get( KEY_ANCILLARY_VERSION ) ).append( '\n' );
-    sb.append( "Protocol version (long)  => " ).append( this.values.get( KEY_PROTOCOL_VERSION_LONG ) ).append( '\n' );
-    sb.append( "Protocol version (short) => " ).append( this.values.get( KEY_PROTOCOL_VERSION_SHORT ) ).append( '\n' );
-    sb.append( "Probe count (long)       => " ).append( this.values.get( KEY_PROBE_COUNT_LONG ) ).append( '\n' );
-    sb.append( "Probe count (short)      => " ).append( this.values.get( KEY_PROBE_COUNT_SHORT ) ).append( '\n' );
-    sb.append( "Sample memory depth (b)  => " ).append( this.values.get( KEY_SAMPLE_MEMORY_DEPTH ) ).append( '\n' );
-    sb.append( "Dynamic memory depth (b) => " ).append( this.values.get( KEY_DYNAMIC_MEMORY_DEPTH ) ).append( '\n' );
-    sb.append( "Max. sample rate (Hz)    => " ).append( this.values.get( KEY_MAX_SAMPLE_RATE ) ).append( '\n' );
+    sb.append( "Device name              => " ).append( getValue( KEY_DEVICE_NAME ) ).append( '\n' );
+    sb.append( "FPGA version             => " ).append( getValue( KEY_FPGA_VERSION ) ).append( '\n' );
+    sb.append( "Ancillary version        => " ).append( getValue( KEY_ANCILLARY_VERSION ) ).append( '\n' );
+    sb.append( "Protocol version (long)  => " ).append( getValue( KEY_PROTOCOL_VERSION_LONG ) ).append( '\n' );
+    sb.append( "Protocol version (short) => " ).append( getValue( KEY_PROTOCOL_VERSION_SHORT ) ).append( '\n' );
+    sb.append( "Probe count (long)       => " ).append( getValue( KEY_PROBE_COUNT_LONG ) ).append( '\n' );
+    sb.append( "Probe count (short)      => " ).append( getValue( KEY_PROBE_COUNT_SHORT ) ).append( '\n' );
+    sb.append( "Sample memory depth (b)  => " ).append( getValue( KEY_SAMPLE_MEMORY_DEPTH ) ).append( '\n' );
+    sb.append( "Dynamic memory depth (b) => " ).append( getValue( KEY_DYNAMIC_MEMORY_DEPTH ) ).append( '\n' );
+    sb.append( "Max. sample rate (Hz)    => " ).append( getValue( KEY_MAX_SAMPLE_RATE ) ).append( '\n' );
     return sb.toString();
+  }
+
+  /**
+   * Returns the value for the given key.
+   * 
+   * @param aKey
+   *          the key whose value to return.
+   * @return the value corresponding to the given key, can be <code>null</code>.
+   */
+  private Object getValue( final int aKey )
+  {
+    return this.values.get( Integer.valueOf( aKey ) );
   }
 }
