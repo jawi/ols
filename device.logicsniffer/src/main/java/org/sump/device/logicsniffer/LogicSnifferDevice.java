@@ -191,22 +191,22 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     {
       long time = 0;
       long rleTrigPos = 0;
-      int count = 1;
 
       final int samples = this.buffer.length;
       for ( int i = 0; i < samples; i++ )
       {
-        if ( ( this.buffer[i] & this.rleCountValue ) != 0 )
+        final int sampleValue = this.buffer[i];
+
+        if ( ( sampleValue & this.rleCountValue ) != 0 )
         {
           // This is a "count"...
-          if ( count > 1 )
+          if ( i > 0 )
           {
-            LOG.log( Level.WARNING, "RLE count rollover seen?" );
+            final int count = ( sampleValue & this.rleCountMask ) + 1;
+            time += count;
+
+            LOG.log( Level.FINE, "RLE count seen of {0}...", Integer.valueOf( count ) );
           }
-
-          count = ( this.buffer[i] & this.rleCountMask ) + 0;
-
-          LOG.log( Level.FINE, "RLE count seen of {0}...", Integer.valueOf( count ) );
         }
         else
         {
@@ -219,10 +219,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           }
 
           // add the read sample & add a timestamp value as well...
-          this.callback.addValue( this.buffer[i], time );
-
-          time += count;
-          count = 1;
+          this.callback.addValue( sampleValue, time++ );
         }
       }
 
