@@ -127,7 +127,7 @@ public final class LogicSnifferConfig
       channels = this.metadata.getProbeCount( channels );
     }
 
-    return Math.max( 0, channels );
+    return channels;
   }
 
   /**
@@ -158,7 +158,7 @@ public final class LogicSnifferConfig
    */
   public int getEnabledChannelsMask()
   {
-    return ( this.enabledChannels );
+    return this.enabledChannels;
   }
 
   /**
@@ -229,7 +229,8 @@ public final class LogicSnifferConfig
    */
   public int getReadCounter()
   {
-    return this.metadata.getSampleMemoryDepth( this.size );
+    int readCounter = this.metadata.getSampleMemoryDepth( this.size );
+    return Math.min( this.size, readCounter );
   }
 
   /**
@@ -251,7 +252,7 @@ public final class LogicSnifferConfig
       samples = ( getReadCounter() & 0xffffc );
     }
 
-    return Math.max( 0, samples );
+    return samples;
   }
 
   /**
