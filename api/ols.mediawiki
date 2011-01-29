@@ -217,16 +217,16 @@ will be considered an invalid extension and the results are not (well) defined!
 
 # support easy/easier upgrade procedure;
 # make it easier to jump to another transition in a channel (in case you're zoomed in really close; jack.gassett);
-# save channel labels along with the project information (jack.gassett);
-# remove all cursors in one action (reported by kandos);
+# <strike>save channel labels along with the project information (jack.gassett);</strike>
+# <strike>remove all cursors in one action (reported by kandos);</strike>
 # VCD dump is ignoring the selected number of channels and always dumps all 32 channels. Also the VCD format allows to list for each sample only the channels that have change value; instead they are all listed (reported by zelea2);
-# it no longer launches if there's a space in the directory path (reported by jone);
+# <strike>it no longer launches if there's a space in the directory path (reported by jone);</strike>
 # Open project should show current directory by default, not home director (reported by nickandrew);
 # Save project should remember the last-saved filename (i.e. typically implemented as two menu options; Save and Save As ...; reported by nickandrew);
 # With RLE enabled, the frequency appears to be changing with different sample rates (reported by nickandrew);
 # Make it easier to remove set cursors (reported by pppd);
 # Make it possible to edit cursor labels (reported by pppd);
-# Display cursor label on "goto cursors button" (reported by pppd);
+# <strike>Display cursor label on "goto cursors button" (reported by pppd);</strike>
 # Allow cursors to snap to signal edges (reported by pppd);
 # Allow selecting two cursors and show timing information (reported by pppd);
 # real time acquisition. for e.g. trough named pipe or other resource (reported by arhi);
