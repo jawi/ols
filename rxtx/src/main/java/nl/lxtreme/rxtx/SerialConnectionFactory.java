@@ -68,13 +68,28 @@ public class SerialConnectionFactory implements ConnectionFactory
 
     try
     {
-      final RXTXPort port = CommPortUtils.getSerialPort( options.getPortName() );
+      final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( options.getPortName() );
+      if ( commPortId.isCurrentlyOwned() )
+      {
+        throw new PortInUseException();
+      }
+
+      final CommPort commPort = commPortId.open( getClass().getName(), 2000 );
+      if ( !( commPort instanceof SerialPort ) )
+      {
+        throw new IOException( "Not a serial port?!" );
+      }
+
+      final SerialPort port = ( SerialPort )commPort;
+
       port.setSerialPortParams( options.getBaudrate(), options.getDatabits(), options.getStopbits(),
           options.getParityMode() );
 
       port.setFlowControlMode( options.getFlowControl() );
+      port.setDTR( false );
+      port.setRTS( true );
 
-      port.enableReceiveTimeout( 250 );
+      port.enableReceiveTimeout( 10 );
 
       return new SerialConnection( port );
     }

@@ -41,7 +41,7 @@ final class SerialConnection implements CommConnection, SerialPortEventListener
 
   // VARIABLES
 
-  private final RXTXPort port;
+  private final SerialPort port;
 
   // CONSTRUCTORS
 
@@ -53,7 +53,7 @@ final class SerialConnection implements CommConnection, SerialPortEventListener
    * @throws IllegalArgumentException
    *           in case the given port was <code>null</code>.
    */
-  public SerialConnection( final RXTXPort aPort ) throws IllegalArgumentException, IOException
+  public SerialConnection( final SerialPort aPort ) throws IllegalArgumentException, IOException
   {
     if ( aPort == null )
     {
@@ -63,6 +63,8 @@ final class SerialConnection implements CommConnection, SerialPortEventListener
 
     try
     {
+      this.port.notifyOnBreakInterrupt( true );
+
       this.port.addEventListener( this );
     }
     catch ( TooManyListenersException exception )
