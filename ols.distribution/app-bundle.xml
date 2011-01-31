@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="ols.distribution" default="noop">
 
-	<property name="project.name" value="LogicSniffer" />
+	<property name="ols.project.name" value="LogicSniffer" />
 	<property name="project.target" value="${basedir}/target" />
 	<property name="project.targetapp" value="${basedir}/target/osx" />
 
 	<taskdef name="jarbundler" classname="net.sourceforge.jarbundler.JarBundler" classpath="${basedir}/src/main/resources/jarbundler-2.1.0.jar" />
 
-	<target name="init" description="Initializes the artifact target folder.">
+	<target name="init" description="Initializes the artifact target folder." unless="package.osx.skip">
 		<!-- be sure to have a proper version defined at all times! -->
 		<fail message="No project version property is defined! Cannot continue..." unless="project.version" />
 		<delete dir="${project.target}/" includes="*.dmg" />
@@ -15,20 +15,17 @@
 
 		<condition property="isMac">
 			<and>
-			    <os family="mac" />
-				<not>
-					<isset property="package.osx.skip" />
-				</not>
+				<os family="mac" />
 			</and>
 		</condition>
 	</target>
 
-	<target name="clean" description="Clean up the artifacts of this script.">	    
+	<target name="clean" description="Clean up the artifacts of this script.">
 		<delete dir="${project.targetapp}" followsymlinks="false" includeemptydirs="true" removeNotFollowedSymlinks="true" />
 	</target>
 
 	<target name="package" depends="init" description="Creates the OSX app bundle" if="isMac">
-		<jarbundler dir="${project.targetapp}" bundleid="nl.lxtreme.ols" name="${project.name}" shortname="${project.name}" mainclass="nl.lxtreme.ols.runner.Runner" version="${project.version}" build="1" jvmversion="1.6+" arguments="-Dnl.lxtreme.ols.bundle.dir=$JAVAROOT/plugins" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m">
+		<jarbundler dir="${project.targetapp}" bundleid="nl.lxtreme.ols" name="${ols.project.name}" shortname="${ols.project.name}" mainclass="nl.lxtreme.ols.runner.Runner" version="${project.version}" build="1" jvmversion="1.6+" arguments="-Dnl.lxtreme.ols.bundle.dir=$JAVAROOT/plugins" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m">
 			<jarfileset dir="${project.target}/bin">
 				<include name="*.jar" />
 			</jarfileset>
@@ -39,17 +36,17 @@
 	</target>
 
 	<target name="create-dmg" depends="init" description="Creates the DMG archive" if="isMac">
-        <mkdir dir="${project.targetapp}/.background" />
+		<mkdir dir="${project.targetapp}/.background" />
 		<copy file="background.png" todir="${project.targetapp}/.background" />
-		
+
 		<exec executable="hdiutil">
 			<arg value="create" />
-            <arg value="-format" />
+			<arg value="-format" />
 			<arg value="UDRW" />
 			<arg value="-ov" />
 			<arg value="-scrub" />
 			<arg value="-volname" />
-			<arg value="${project.name}" />
+			<arg value="${ols.project.name}" />
 			<arg value="-srcfolder" />
 			<arg value="${project.targetapp}" />
 			<arg value="${project.target}/ols-tmp.dmg" />
@@ -57,7 +54,7 @@
 		<exec executable="/bin/bash">
 			<arg value="app-bundle-osx.sh" />
 			<arg value="${project.target}/ols-tmp.dmg" />
-			<arg value="${project.name}" />
+			<arg value="${ols.project.name}" />
 		</exec>
 		<exec executable="hdiutil">
 			<arg value="convert" />
@@ -69,12 +66,12 @@
 			<arg value="-o" />
 			<arg value="${project.target}/ols-${project.version}.dmg" />
 		</exec>
-        <exec executable="hdiutil">
-            <arg value="internet-enable" />
-            <arg value="-yes" />
-            <arg value="${project.target}/ols-${project.version}.dmg" />
-        </exec>
-		
+		<exec executable="hdiutil">
+			<arg value="internet-enable" />
+			<arg value="-yes" />
+			<arg value="${project.target}/ols-${project.version}.dmg" />
+		</exec>
+
 		<!-- remove the temporary disk image -->
 		<delete dir="${project.target}" includes="ols-tmp.dmg" />
 	</target>
