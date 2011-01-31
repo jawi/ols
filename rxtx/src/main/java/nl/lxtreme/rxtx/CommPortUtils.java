@@ -23,7 +23,6 @@ package nl.lxtreme.rxtx;
 
 import gnu.io.*;
 
-import java.io.*;
 import java.util.*;
 
 
@@ -66,88 +65,6 @@ public final class CommPortUtils
       }
     }
 
-    return ( portList.toArray( new String[portList.size()] ) );
+    return portList.toArray( new String[portList.size()] );
   }
-
-  /**
-   * Opens the serial device at the given port name, does nothing more than
-   * that.
-   * 
-   * @param aPortName
-   *          the name of the port to open, for example, "/dev/ttyACM0", "com8:"
-   *          or any other valid device path.
-   * @return the serial port instance, never <code>null</code>.
-   * @throws PortInUseException
-   *           in case the port could not be opened because it is (exclusively)
-   *           locked by another process;
-   * @throws NoSuchPortException
-   *           if there is no such port with the given name.
-   */
-  public static RXTXPort getSerialPort( final String aPortName ) throws PortInUseException, NoSuchPortException
-  {
-    if ( aPortName == null )
-    {
-      throw new IllegalArgumentException( "Port name cannot be null!" );
-    }
-    if ( !specialFileExists( aPortName ) )
-    {
-      throw new NoSuchPortException();
-    }
-
-    final RXTXPort port = new RXTXPort( aPortName );
-    return port;
-  }
-
-  /**
-   * Checks whether the path (to a presumed port) exists or not.
-   * <p>
-   * This method is needed to avoid problems on platforms like Windows where
-   * trying to open non-existing ports causes JVM-errors.
-   * </p>
-   * 
-   * @param aPath
-   *          the path to the presumed port, cannot be <code>null</code>.
-   * @return <code>true</code> if the port exists, <code>false</code> otherwise.
-   */
-  private static boolean specialFileExists( final String aPath )
-  {
-    boolean exists;
-
-    final String osName = System.getProperty( "os.name" ).toLowerCase();
-    if ( osName.indexOf( "win" ) >= 0 )
-    {
-      // Windows; use //./comX syntax to denote it's a special file...
-      String path = aPath.replaceAll( "\\\\", "/" );
-      path = !path.startsWith( "//./" ) ? "//./" + aPath : aPath;
-
-      try
-      {
-        final FileInputStream fis = new FileInputStream( path );
-        try
-        {
-          fis.close();
-        }
-        catch ( IOException exception )
-        {
-          // Ok; we're not allowed to do this, but it is an indicator the file
-          // exists...
-        }
-
-        exists = true;
-      }
-      catch ( FileNotFoundException exception )
-      {
-        // Ok; special file doesn't appear to be existing...
-        exists = false;
-      }
-    }
-    else
-    {
-      final File file = new File( aPath );
-      exists = file.exists();
-    }
-
-    return exists;
-  }
-
 }

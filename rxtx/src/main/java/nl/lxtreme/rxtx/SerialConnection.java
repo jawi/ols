@@ -43,6 +43,9 @@ final class SerialConnection implements CommConnection, SerialPortEventListener
 
   private final SerialPort port;
 
+  private InputStream inputStream;
+  private OutputStream outputStream;
+
   // CONSTRUCTORS
 
   /**
@@ -63,6 +66,8 @@ final class SerialConnection implements CommConnection, SerialPortEventListener
 
     try
     {
+      // We'll be listening for break interrupts, so we want to be notified of
+      // these events...
       this.port.notifyOnBreakInterrupt( true );
 
       this.port.addEventListener( this );
@@ -81,9 +86,12 @@ final class SerialConnection implements CommConnection, SerialPortEventListener
   @Override
   public void close() throws IOException
   {
+    closeResource( this.inputStream );
+    this.inputStream = null;
+    closeResource( this.outputStream );
+    this.outputStream = null;
+
     this.port.close();
-    // no longer listen to the serial events...
-    this.port.removeEventListener();
   }
 
   /**
@@ -119,7 +127,15 @@ final class SerialConnection implements CommConnection, SerialPortEventListener
   @Override
   public InputStream openInputStream() throws IOException
   {
-    return this.port.getInputStream();
+    if ( this.inputStream == null )
+    {
+      this.inputStream = this.port.getInputStream();
+    }
+    else
+    {
+      LOG.warning( "Opening input stream twice?!" );
+    }
+    return this.inputStream;
   }
 
   /**
@@ -128,7 +144,15 @@ final class SerialConnection implements CommConnection, SerialPortEventListener
   @Override
   public OutputStream openOutputStream() throws IOException
   {
-    return this.port.getOutputStream();
+    if ( this.outputStream == null )
+    {
+      this.outputStream = this.port.getOutputStream();
+    }
+    else
+    {
+      LOG.warning( "Opening output stream twice?!" );
+    }
+    return this.outputStream;
   }
 
   /**
@@ -167,13 +191,62 @@ final class SerialConnection implements CommConnection, SerialPortEventListener
     catch ( UnsupportedCommOperationException exception )
     {
       // Ignore...
-      LOG.log( Level.INFO, "Setting the baud rate failed; baudrate is NOT changed!", exception );
+      LOG.log( Level.WARNING, "Setting the baud rate failed; baudrate is NOT changed!", exception );
     }
     catch ( IOException exception )
     {
       // Ignore...
-      LOG.log( Level.INFO, "Setting the baud rate failed; baudrate is NOT changed!", exception );
+      LOG.log( Level.WARNING, "Setting the baud rate failed; baudrate is NOT changed!", exception );
     }
     return oldBaudRate;
+  }
+
+  /**
+   * Closes a given resource.
+   * <p>
+   * If the given resource also implements the {@link Flushable} interface, the
+   * resource is flushed before being closed.
+   * </p>
+   * 
+   * @param aResource
+   *          the resource to close, can be <code>null</code>, it might already
+   *          be closed.
+   * @return <code>true</code> if the close operation succeeded,
+   *         <code>false</code> if it is unsure whether it succeeded.
+   */
+  private boolean closeResource( final Closeable aResource )
+  {
+    boolean result = false;
+    if ( aResource != null )
+    {
+      try
+      {
+        if ( aResource instanceof Flushable )
+        {
+          ( ( Flushable )aResource ).flush();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+        LOG.log( Level.WARNING, "I/O exception during flush!", exception );
+      }
+      finally
+      {
+        try
+        {
+          aResource.close();
+          // Indicate success...
+          result = true;
+        }
+        catch ( IOException exception )
+        {
+          // Ignore...
+          LOG.log( Level.WARNING, "I/O exception during close!", exception );
+        }
+      }
+
+    }
+    return result;
   }
 }
