@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.api.data.project;
 
 
+import java.beans.*;
 import java.io.*;
 
 
@@ -30,11 +31,27 @@ import java.io.*;
 public interface ProjectManager
 {
   // METHODS
+  /**
+   * Adds the given listener to the list of property change listeners.
+   * 
+   * @param aListener
+   *          a property change listener, cannot be <code>null</code>.
+   */
+  public void addPropertyChangeListener( final PropertyChangeListener aListener );
 
   /**
    * Creates a new project.
+   * 
+   * @return a new project, managed by this manager.
    */
-  public void createNewProject();
+  public Project createNewProject();
+
+  /**
+   * Creates a temporary project, useful for loading data files.
+   * 
+   * @return a new project, <b>not</b> managed by this manager!
+   */
+  public Project createTemporaryProject();
 
   /**
    * Returns the current project.
@@ -53,6 +70,14 @@ public interface ProjectManager
    *           in case of I/O problems during the read of the project.
    */
   public void loadProject( final InputStream aInput ) throws IOException;
+
+  /**
+   * Removes the given listener from the list of property change listeners.
+   * 
+   * @param aListener
+   *          a property change listener, cannot be <code>null</code>.
+   */
+  public void removePropertyChangeListener( final PropertyChangeListener aListener );
 
   /**
    * Stores a project to the given output stream.
