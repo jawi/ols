@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.api.data.project;
 
 
+import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -54,6 +55,14 @@ public interface Project
    * @return an array of cursor positions, can be <code>null</code>.
    */
   public Long[] getCursorPositions();
+
+  /**
+   * Returns the path to the project file.
+   * 
+   * @return a file object denoting the filename of this project, can be
+   *         <code>null</code> in case this project is not yet saved.
+   */
+  public File getFilename();
 
   /**
    * Returns the date on which the project is last saved.
@@ -142,6 +151,14 @@ public interface Project
    *          otherwise.
    */
   public void setCursorsEnabled( final boolean aEnabled );
+
+  /**
+   * Sets the filename of this project.
+   * 
+   * @param aFilename
+   *          the filename to set, can be <code>null</code>.
+   */
+  public void setFilename( final File aFilename );
 
   /**
    * Sets the last modified date of this project.
