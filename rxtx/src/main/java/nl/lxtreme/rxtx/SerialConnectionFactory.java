@@ -24,6 +24,7 @@ package nl.lxtreme.rxtx;
 import gnu.io.*;
 
 import java.io.*;
+import java.util.logging.*;
 
 import javax.microedition.io.*;
 
@@ -43,6 +44,16 @@ public class SerialConnectionFactory implements ConnectionFactory
    * <tt>comm:COM2;baudrate=9600;bitsperchar=8;parity=none;stopbits=1</tt>.
    */
   public static final String SCHEME = "comm";
+
+  private static final Logger LOG = Logger.getLogger( SerialConnectionFactory.class.getName() );
+
+  /**
+   * Number of tries before bailing out on establishing a connection to the
+   * serial port...
+   */
+  private static final int MAX_TRIES = 10;
+  /** Name to use when connecting to the port... */
+  private static final String CONNECT_ID = SerialConnectionFactory.class.getSimpleName();
 
   // CONSTRUCTORS
 
@@ -68,34 +79,21 @@ public class SerialConnectionFactory implements ConnectionFactory
 
     try
     {
-      final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( options.getPortName() );
-      if ( commPortId.isCurrentlyOwned() )
-      {
-        throw new PortInUseException();
-      }
-
-      final CommPort commPort = commPortId.open( getClass().getName(), 2000 );
-      if ( !( commPort instanceof SerialPort ) )
-      {
-        throw new IOException( "Not a serial port?!" );
-      }
-
-      final SerialPort port = ( SerialPort )commPort;
+      final SerialPort port = obtainSerialPort( options );
 
       port.setSerialPortParams( options.getBaudrate(), options.getDatabits(), options.getStopbits(),
           options.getParityMode() );
 
       port.setFlowControlMode( options.getFlowControl() );
+      // A receive timeout allows us to better control blocking I/O, such as
+      // read() from the serial port...
+      port.enableReceiveTimeout( 50 );
+      // Taken from
+      // <http://mailman.qbang.org/pipermail/rxtx/2010-September/7821768.html>
       port.setDTR( false );
       port.setRTS( true );
 
-      port.enableReceiveTimeout( 10 );
-
       return new SerialConnection( port );
-    }
-    catch ( PortInUseException exception )
-    {
-      throw new IOException( "Cannot access port! Port in use?" );
     }
     catch ( UnsupportedCommOperationException exception )
     {
@@ -105,5 +103,79 @@ public class SerialConnectionFactory implements ConnectionFactory
     {
       throw new IOException( "No such port!" );
     }
+  }
+
+  /**
+   * Returns the serial port instance.
+   * 
+   * @param aOptions
+   *          the serial port options, cannot be <code>null</code>.
+   * @return the serial port instance, never <code>null</code>.
+   * @throws NoSuchPortException
+   *           in case the desired port does not exist;
+   * @throws PortInUseException
+   *           in case the desired port is already in use;
+   * @throws IOException
+   *           in case of other I/O problems.
+   */
+  private SerialPort getSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
+      IOException
+  {
+    final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( aOptions.getPortName() );
+    if ( commPortId.isCurrentlyOwned() )
+    {
+      throw new PortInUseException();
+    }
+
+    final CommPort commPort = commPortId.open( CONNECT_ID, 2000 );
+    if ( !( commPort instanceof SerialPort ) )
+    {
+      throw new IOException( "Not a serial port?!" );
+    }
+
+    return ( SerialPort )commPort;
+  }
+
+  /**
+   * Performs a best effort in trying to get a serial port instance by calling
+   * {@link #getSerialPort(SerialPortOptions)} a number of times before bailing
+   * out.
+   * <p>
+   * Idea taken from: <a href=
+   * "http://mailman.qbang.org/pipermail/rxtx/2010-September/7821768.html">this
+   * posting</a> on the RxTx mailing list.
+   * </p>
+   * 
+   * @param aOptions
+   *          the serial port options, cannot be <code>null</code>.
+   * @return the serial port instance, never <code>null</code>.
+   * @throws NoSuchPortException
+   *           in case the desired port does (really) not exist;
+   * @throws IOException
+   *           in case of other I/O problems.
+   */
+  private SerialPort obtainSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, IOException
+  {
+    int tries = MAX_TRIES;
+    SerialPort port = null;
+
+    while ( ( tries-- >= 0 ) && ( port == null ) )
+    {
+      try
+      {
+        port = getSerialPort( aOptions );
+      }
+      catch ( PortInUseException exception )
+      {
+        LOG.log( Level.WARNING, "Port (still) in use!", exception );
+      }
+    }
+
+    if ( port == null )
+    {
+      throw new NoSuchPortException();
+    }
+
+    return port;
   }
 }
