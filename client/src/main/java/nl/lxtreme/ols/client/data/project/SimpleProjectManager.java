@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.zip.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.*;
@@ -44,7 +45,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
 
   private static final String FILENAME_PROJECT_METADATA = "ols.project";
   private static final String FILENAME_CHANNEL_LABELS = "channel.labels";
-  private static final String FILENAME_PROJECT_SETTINGS = "settings.properties";
+  private static final String FILENAME_PROJECT_SETTINGS = "settings/";
   private static final String FILENAME_CAPTURE_RESULTS = "data.ols";
 
   private static final Logger LOG = Logger.getLogger( SimpleProjectManager.class.getName() );
@@ -123,10 +124,6 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
         {
           loadProjectMetadata( newProject, zipIS );
         }
-        else if ( FILENAME_PROJECT_SETTINGS.equals( ze.getName() ) )
-        {
-          loadProjectSettings( newProject, zipIS );
-        }
         else if ( FILENAME_CHANNEL_LABELS.equals( ze.getName() ) )
         {
           loadChannelLabels( newProject, zipIS );
@@ -134,6 +131,11 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
         else if ( FILENAME_CAPTURE_RESULTS.equals( ze.getName() ) )
         {
           loadCapturedResults( newProject, zipIS );
+        }
+        else if ( ze.getName().startsWith( FILENAME_PROJECT_SETTINGS ) )
+        {
+          final String userSettingsName = ze.getName().substring( FILENAME_PROJECT_SETTINGS.length() );
+          loadProjectSettings( newProject, userSettingsName, zipIS );
         }
 
         zipIS.closeEntry();
@@ -274,12 +276,15 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
    * 
    * @param aProject
    *          the project to read the settings for;
+   * @param aUserSettingsName
+   *          the name of the user settings that is to be loaded;
    * @param aZipIS
    *          the ZIP input stream to read the settings from.
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void loadProjectSettings( final Project aProject, final ZipInputStream aZipIS ) throws IOException
+  protected void loadProjectSettings( final ProjectImpl aProject, final String aUserSettingsName,
+      final ZipInputStream aZipIS ) throws IOException
   {
     final Properties settings = new Properties();
     try
@@ -288,7 +293,9 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     }
     finally
     {
-      aProject.setSettings( settings );
+      final String name = HostUtils.stripFileExtension( aUserSettingsName, "properties" );
+      final UserSettingsImpl userSettings = new UserSettingsImpl( name, settings );
+      aProject.setSettings( userSettings );
     }
   }
 
@@ -417,21 +424,32 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void storeProjectSettings( final Project aProject, final ZipOutputStream aZipOS ) throws IOException
+  protected void storeProjectSettings( final ProjectImpl aProject, final ZipOutputStream aZipOS ) throws IOException
   {
-    final Properties settings = aProject.getSettings();
-    if ( settings == null )
+    final Map<String, UserSettings> allUserSettings = aProject.getAllUserSettings();
+    if ( ( allUserSettings == null ) || allUserSettings.isEmpty() )
     {
       return;
     }
 
-    final ZipEntry zipEntry = new ZipEntry( FILENAME_PROJECT_SETTINGS );
-    aZipOS.putNextEntry( zipEntry );
-
     try
     {
-      // Write the project settings
-      settings.store( aZipOS, Host.FULL_NAME.concat( " project settings" ) );
+      for ( UserSettings userSettings : allUserSettings.values() )
+      {
+        final String zipEntryName = FILENAME_PROJECT_SETTINGS.concat( userSettings.getName() ).concat( ".properties" );
+
+        final ZipEntry zipEntry = new ZipEntry( zipEntryName );
+        aZipOS.putNextEntry( zipEntry );
+
+        // Convert to a properties object...
+        final Properties props = new Properties();
+        for ( Map.Entry<String, Object> userSetting : userSettings )
+        {
+          props.put( userSetting.getKey(), userSetting.getValue() );
+        }
+        // Write the project settings
+        props.store( aZipOS, userSettings.getName().concat( " settings" ) );
+      }
     }
     finally
     {

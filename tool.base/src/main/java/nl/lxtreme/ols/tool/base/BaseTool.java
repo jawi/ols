@@ -24,9 +24,6 @@ package nl.lxtreme.ols.tool.base;
 import java.awt.*;
 import javax.swing.*;
 
-import org.osgi.service.prefs.*;
-
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 
@@ -34,7 +31,7 @@ import nl.lxtreme.ols.api.tools.*;
 /**
  * Provides a base implementation for tools showing a dialog.
  */
-public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements Tool, Configurable
+public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements Tool
 {
   // VARIABLES
 
@@ -162,30 +159,6 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
     }
 
     doProcess( aData, aContext, aCallback );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
-   */
-  @Override
-  public void readPreferences( final Preferences aPrefs )
-  {
-    if ( this.dialog instanceof Configurable )
-    {
-      ( ( Configurable )this.dialog ).readPreferences( aPrefs );
-    }
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
-   */
-  @Override
-  public void writePreferences( final Preferences aPrefs )
-  {
-    if ( this.dialog instanceof Configurable )
-    {
-      ( ( Configurable )this.dialog ).writePreferences( aPrefs );
-    }
   }
 
   /**

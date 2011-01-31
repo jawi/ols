@@ -25,6 +25,7 @@ import java.beans.*;
 import java.io.*;
 import java.util.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 
@@ -41,7 +42,7 @@ final class ProjectImpl implements Project, ProjectProperties
   private String name;
   private final String[] channelLabels;
   private final Long[] cursors;
-  private Properties settings;
+  private final Map<String, UserSettings> settings;
   private CapturedData capturedData;
   private boolean changed;
   private boolean cursorsEnabled;
@@ -65,6 +66,8 @@ final class ProjectImpl implements Project, ProjectProperties
 
     this.changed = false;
     this.cursorsEnabled = false;
+
+    this.settings = new HashMap<String, UserSettings>();
   }
 
   // METHODS
@@ -135,12 +138,18 @@ final class ProjectImpl implements Project, ProjectProperties
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getSettings()
+   * @see nl.lxtreme.ols.api.data.project.Project#getSettings(java.lang.String)
    */
   @Override
-  public Properties getSettings()
+  public UserSettings getSettings( final String aName )
   {
-    return this.settings;
+    UserSettings result = this.settings.get( aName );
+    if ( result == null )
+    {
+      result = new UserSettingsImpl( aName );
+      this.settings.put( aName, result );
+    }
+    return result;
   }
 
   /**
@@ -310,13 +319,18 @@ final class ProjectImpl implements Project, ProjectProperties
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setSettings(java.util.Properties)
+   * @see nl.lxtreme.ols.api.data.project.Project#setSettings(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
-  public void setSettings( final Properties aSettings )
+  public void setSettings( final UserSettings aSettings )
   {
-    final Properties old = this.settings;
-    this.settings = aSettings;
+    if ( aSettings == null )
+    {
+      throw new IllegalArgumentException( "Settings cannot be null!" );
+    }
+
+    final UserSettings old = this.settings.get( aSettings.getName() );
+    this.settings.put( aSettings.getName(), aSettings );
 
     this.propertyChangeSupport.firePropertyChange( PROPERTY_SETTINGS, old, aSettings );
 
@@ -337,6 +351,16 @@ final class ProjectImpl implements Project, ProjectProperties
 
     // Mark this project as modified...
     setChanged( true );
+  }
+
+  /**
+   * Returns all current user settings.
+   * 
+   * @return the user settings, mapped by their name, never <code>null</code>.
+   */
+  final Map<String, UserSettings> getAllUserSettings()
+  {
+    return this.settings;
   }
 
   /**

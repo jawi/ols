@@ -24,6 +24,7 @@ package nl.lxtreme.ols.api.data.project;
 import java.io.*;
 import java.util.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 
 
@@ -81,11 +82,11 @@ public interface Project
   public String getName();
 
   /**
-   * Returns the other project settings, like UI-settings, and such.
+   * Returns the other user settings, like UI-settings, and such.
    * 
-   * @return a properties object, never <code>null</code>.
+   * @return a user settings object, never <code>null</code>.
    */
-  public Properties getSettings();
+  public UserSettings getSettings( final String aName );
 
   /**
    * Returns the version of the OLS-client that created this project.
@@ -177,12 +178,12 @@ public interface Project
   public void setName( final String aName );
 
   /**
-   * Sets the project settings.
+   * Sets the user settings.
    * 
    * @param aSettings
-   *          the settings of this project, cannot be <code>null</code>.
+   *          the user settings, cannot be <code>null</code>.
    */
-  public void setSettings( final Properties aSettings );
+  public void setSettings( final UserSettings aSettings );
 
   /**
    * Sets the version of the OLS-client that saved this project.

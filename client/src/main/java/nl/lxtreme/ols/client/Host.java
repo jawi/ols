@@ -27,6 +27,8 @@ import java.net.*;
 import java.util.*;
 import java.util.logging.*;
 
+import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
 import nl.lxtreme.ols.util.swing.*;
@@ -218,12 +220,13 @@ public final class Host implements ApplicationCallback
     // Cause exceptions to be shown in a more user-friendly way...
     JErrorDialog.installSwingExceptionHandler();
 
-    this.controller = new ClientController( this.context, this );
+    final ProjectManager projectManger = new SimpleProjectManager( this );
+    this.controller = new ClientController( this.context, this, projectManger );
 
     final MainFrame mainFrame = new MainFrame( this.controller );
     this.controller.setMainFrame( mainFrame );
 
-    this.preferencesServiceTracker = new PreferenceServiceTracker( this.context, this.controller );
+    this.preferencesServiceTracker = new PreferenceServiceTracker( this.context, projectManger );
     this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.controller );
     this.exporterTracker = new ExporterTracker( this.context, this.controller );
     this.menuTracker = new MenuTracker( this.context, mainFrame.getJMenuBar() );

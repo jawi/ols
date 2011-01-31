@@ -33,6 +33,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
@@ -43,8 +44,6 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
-
-import org.osgi.service.prefs.*;
 
 
 /**
@@ -208,19 +207,20 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void readPreferences( final Preferences aPrefs )
+  @Override
+  public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelected( this.reportCS, Boolean.valueOf( aPrefs.getBoolean( "reportCS", true ) ) );
-    SwingComponentUtils.setSelected( this.honourCS, Boolean.valueOf( aPrefs.getBoolean( "honourCS", false ) ) );
-    SwingComponentUtils.setSelectedIndex( this.sck, aPrefs.getInt( "sck", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.miso, aPrefs.getInt( "miso", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.mosi, aPrefs.getInt( "mosi", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.cs, aPrefs.getInt( "cs", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.mode, aPrefs.getInt( "mode", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.bits, aPrefs.getInt( "bits", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.order, aPrefs.getInt( "order", -1 ) );
+    SwingComponentUtils.setSelected( this.reportCS, Boolean.valueOf( aSettings.getBoolean( "reportCS", true ) ) );
+    SwingComponentUtils.setSelected( this.honourCS, Boolean.valueOf( aSettings.getBoolean( "honourCS", false ) ) );
+    SwingComponentUtils.setSelectedIndex( this.sck, aSettings.getInt( "sck", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.miso, aSettings.getInt( "miso", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.mosi, aSettings.getInt( "mosi", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.cs, aSettings.getInt( "cs", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.mode, aSettings.getInt( "mode", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.bits, aSettings.getInt( "bits", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.order, aSettings.getInt( "order", -1 ) );
   }
 
   /**
@@ -251,19 +251,20 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void writePreferences( final Preferences aProperties )
+  @Override
+  public void writePreferences( final UserSettings aSettings )
   {
-    aProperties.putBoolean( "reportCS", this.reportCS.isSelected() );
-    aProperties.putBoolean( "honourCS", this.honourCS.isSelected() );
-    aProperties.putInt( "sck", this.sck.getSelectedIndex() );
-    aProperties.putInt( "miso", this.miso.getSelectedIndex() );
-    aProperties.putInt( "mosi", this.mosi.getSelectedIndex() );
-    aProperties.putInt( "cs", this.cs.getSelectedIndex() );
-    aProperties.putInt( "mode", this.mode.getSelectedIndex() );
-    aProperties.putInt( "bits", this.bits.getSelectedIndex() );
-    aProperties.putInt( "order", this.order.getSelectedIndex() );
+    aSettings.putBoolean( "reportCS", this.reportCS.isSelected() );
+    aSettings.putBoolean( "honourCS", this.honourCS.isSelected() );
+    aSettings.putInt( "sck", this.sck.getSelectedIndex() );
+    aSettings.putInt( "miso", this.miso.getSelectedIndex() );
+    aSettings.putInt( "mosi", this.mosi.getSelectedIndex() );
+    aSettings.putInt( "cs", this.cs.getSelectedIndex() );
+    aSettings.putInt( "mode", this.mode.getSelectedIndex() );
+    aSettings.putInt( "bits", this.bits.getSelectedIndex() );
+    aSettings.putInt( "order", this.order.getSelectedIndex() );
   }
 
   /**

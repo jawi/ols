@@ -34,8 +34,6 @@ import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.validation.*;
 
-import org.osgi.service.prefs.*;
-
 
 /**
  * @author jawi
@@ -148,16 +146,16 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
-  public void readPreferences( final Preferences aPreferences )
+  public void readPreferences( final UserSettings aSettings )
   {
-    this.channelCount.setText( aPreferences.get( "channelCount", this.channelCount.getText() ) );
-    this.devicePath.setText( aPreferences.get( "devicePath", this.devicePath.getText() ) );
-    this.sampleDepth.setText( aPreferences.get( "sampleDepth", this.sampleDepth.getText() ) );
-    this.sampleRate.setText( aPreferences.get( "sampleRate", this.sampleRate.getText() ) );
-    this.sampleWidth.setText( aPreferences.get( "sampleWidth", this.sampleWidth.getText() ) );
+    this.channelCount.setText( aSettings.get( "channelCount", this.channelCount.getText() ) );
+    this.devicePath.setText( aSettings.get( "devicePath", this.devicePath.getText() ) );
+    this.sampleDepth.setText( aSettings.get( "sampleDepth", this.sampleDepth.getText() ) );
+    this.sampleRate.setText( aSettings.get( "sampleRate", this.sampleRate.getText() ) );
+    this.sampleWidth.setText( aSettings.get( "sampleWidth", this.sampleWidth.getText() ) );
   }
 
   /**
@@ -176,16 +174,16 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
-  public void writePreferences( final Preferences aPreferences )
+  public void writePreferences( final UserSettings aSettings )
   {
-    aPreferences.put( "channelCount", this.channelCount.getText() );
-    aPreferences.put( "devicePath", this.devicePath.getText() );
-    aPreferences.put( "sampleDepth", this.sampleDepth.getText() );
-    aPreferences.put( "sampleRate", this.sampleRate.getText() );
-    aPreferences.put( "sampleWidth", this.sampleWidth.getText() );
+    aSettings.put( "channelCount", this.channelCount.getText() );
+    aSettings.put( "devicePath", this.devicePath.getText() );
+    aSettings.put( "sampleDepth", this.sampleDepth.getText() );
+    aSettings.put( "sampleRate", this.sampleRate.getText() );
+    aSettings.put( "sampleWidth", this.sampleWidth.getText() );
   }
 
   /**

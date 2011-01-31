@@ -38,7 +38,6 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
 import nl.lxtreme.rxtx.*;
 
-import org.osgi.service.prefs.*;
 import org.sump.device.logicsniffer.LogicSnifferConfig.ClockSource;
 
 
@@ -345,50 +344,52 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
-  public void readPreferences( final Preferences aPrefs )
+  public void readPreferences( final UserSettings aSettings )
   {
     this.listening = false;
     try
     {
-      SwingComponentUtils.setSelectedItem( this.portSelect, aPrefs.get( "port", null ) );
-      SwingComponentUtils.setSelectedIndex( this.portRateSelect, aPrefs.getInt( "portRate", -1 ) );
-      SwingComponentUtils.setSelectedIndex( this.sourceSelect, aPrefs.getInt( "source", -1 ) );
-      SwingComponentUtils.setSelectedIndex( this.numberSchemeSelect, aPrefs.getInt( "numberScheme", -1 ) );
-      SwingComponentUtils.setSelectedIndex( this.speedSelect, aPrefs.getInt( "speed", -1 ) );
-      SwingComponentUtils.setSelectedIndex( this.sizeSelect, aPrefs.getInt( "size", -1 ) );
-      SwingComponentUtils.setSelected( this.maxSampleSize, Boolean.valueOf( aPrefs.getBoolean( "autosize", false ) ) );
-      this.ratioSlider.setValue( aPrefs.getInt( "ratio", TriggerRatioChangeListener.DEFAULT_RATIO ) );
-      SwingComponentUtils.setSelected( this.filterEnable, Boolean.valueOf( aPrefs.getBoolean( "filter", false ) ) );
-      SwingComponentUtils.setSelected( this.triggerEnable, Boolean.valueOf( aPrefs.getBoolean( "trigger", false ) ) );
-      SwingComponentUtils.setSelectedIndex( this.triggerTypeSelect, aPrefs.getInt( "triggerType", -1 ) );
+      SwingComponentUtils.setSelectedItem( this.portSelect, aSettings.get( "port", null ) );
+      SwingComponentUtils.setSelectedIndex( this.portRateSelect, aSettings.getInt( "portRate", -1 ) );
+      SwingComponentUtils.setSelectedIndex( this.sourceSelect, aSettings.getInt( "source", -1 ) );
+      SwingComponentUtils.setSelectedIndex( this.numberSchemeSelect, aSettings.getInt( "numberScheme", -1 ) );
+      SwingComponentUtils.setSelectedIndex( this.speedSelect, aSettings.getInt( "speed", -1 ) );
+      SwingComponentUtils.setSelectedIndex( this.sizeSelect, aSettings.getInt( "size", -1 ) );
+      SwingComponentUtils
+          .setSelected( this.maxSampleSize, Boolean.valueOf( aSettings.getBoolean( "autosize", false ) ) );
+      this.ratioSlider.setValue( aSettings.getInt( "ratio", TriggerRatioChangeListener.DEFAULT_RATIO ) );
+      SwingComponentUtils.setSelected( this.filterEnable, Boolean.valueOf( aSettings.getBoolean( "filter", false ) ) );
+      SwingComponentUtils.setSelected( this.rleEnable, Boolean.valueOf( aSettings.getBoolean( "rle", false ) ) );
+      SwingComponentUtils.setSelected( this.triggerEnable, Boolean.valueOf( aSettings.getBoolean( "trigger", false ) ) );
+      SwingComponentUtils.setSelectedIndex( this.triggerTypeSelect, aSettings.getInt( "triggerType", -1 ) );
 
       for ( int stage = 0; stage < this.triggerStages; stage++ )
       {
         final String prefix = "triggerStage." + stage;
 
-        this.triggerDelay[stage].setText( aPrefs.get( prefix + ".delay", "" ) );
+        this.triggerDelay[stage].setText( aSettings.get( prefix + ".delay", "" ) );
 
-        SwingComponentUtils.setSelectedIndex( this.triggerLevel[stage], aPrefs.getInt( prefix + ".level", -1 ) );
-        SwingComponentUtils.setSelectedIndex( this.triggerMode[stage], aPrefs.getInt( prefix + ".mode", -1 ) );
-        SwingComponentUtils.setSelectedIndex( this.triggerChannel[stage], aPrefs.getInt( prefix + ".channel", -1 ) );
+        SwingComponentUtils.setSelectedIndex( this.triggerLevel[stage], aSettings.getInt( prefix + ".level", -1 ) );
+        SwingComponentUtils.setSelectedIndex( this.triggerMode[stage], aSettings.getInt( prefix + ".mode", -1 ) );
+        SwingComponentUtils.setSelectedIndex( this.triggerChannel[stage], aSettings.getInt( prefix + ".channel", -1 ) );
 
-        final String mask = aPrefs.get( prefix + ".mask", "" );
+        final String mask = aSettings.get( prefix + ".mask", "" );
         for ( int i = 0; ( i < 32 ) && ( i < mask.length() ); i++ )
         {
           SwingComponentUtils.setSelected( this.triggerMask[stage][i], Boolean.valueOf( mask.charAt( i ) == '1' ) );
         }
 
-        final String value = aPrefs.get( prefix + ".value", "" );
+        final String value = aSettings.get( prefix + ".value", "" );
         for ( int i = 0; ( i < 32 ) && ( i < value.length() ); i++ )
         {
           SwingComponentUtils.setSelected( this.triggerValue[stage][i], Boolean.valueOf( value.charAt( i ) == '1' ) );
         }
 
         SwingComponentUtils.setSelected( this.triggerStart[stage],
-            Boolean.valueOf( aPrefs.getBoolean( prefix + ".startCapture", false ) ) );
+            Boolean.valueOf( aSettings.getBoolean( prefix + ".startCapture", false ) ) );
       }
 
-      final String group = aPrefs.get( "channelGroup", "" );
+      final String group = aSettings.get( "channelGroup", "" );
       for ( int i = 0; ( i < 4 ) && ( i < group.length() ); i++ )
       {
         SwingComponentUtils.setSelected( this.channelGroup[i], Boolean.valueOf( group.charAt( i ) == '1' ) );
@@ -425,44 +426,45 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * @see nl.lxtreme.ols.api.Configurable#writePreferences(java.util.Properties)
    */
-  public void writePreferences( final Preferences aPrefs )
+  public void writePreferences( final UserSettings aSettings )
   {
-    aPrefs.put( "port", String.valueOf( this.portSelect.getSelectedItem() ) );
-    aPrefs.putInt( "portRate", this.portRateSelect.getSelectedIndex() );
-    aPrefs.putInt( "source", this.sourceSelect.getSelectedIndex() );
-    aPrefs.putInt( "numberScheme", this.numberSchemeSelect.getSelectedIndex() );
-    aPrefs.putInt( "speed", this.speedSelect.getSelectedIndex() );
-    aPrefs.putBoolean( "autosize", this.maxSampleSize.isSelected() );
-    aPrefs.putInt( "size", this.sizeSelect.getSelectedIndex() );
-    aPrefs.putInt( "ratio", this.ratioSlider.getValue() );
-    aPrefs.putBoolean( "filter", this.filterEnable.isSelected() );
-    aPrefs.putBoolean( "trigger", this.triggerEnable.isSelected() );
-    aPrefs.putInt( "triggerType", this.triggerTypeSelect.getSelectedIndex() );
+    aSettings.put( "port", String.valueOf( this.portSelect.getSelectedItem() ) );
+    aSettings.putInt( "portRate", this.portRateSelect.getSelectedIndex() );
+    aSettings.putInt( "source", this.sourceSelect.getSelectedIndex() );
+    aSettings.putInt( "numberScheme", this.numberSchemeSelect.getSelectedIndex() );
+    aSettings.putInt( "speed", this.speedSelect.getSelectedIndex() );
+    aSettings.putBoolean( "autosize", this.maxSampleSize.isSelected() );
+    aSettings.putInt( "size", this.sizeSelect.getSelectedIndex() );
+    aSettings.putInt( "ratio", this.ratioSlider.getValue() );
+    aSettings.putBoolean( "filter", this.filterEnable.isSelected() );
+    aSettings.putBoolean( "rle", this.rleEnable.isSelected() );
+    aSettings.putBoolean( "trigger", this.triggerEnable.isSelected() );
+    aSettings.putInt( "triggerType", this.triggerTypeSelect.getSelectedIndex() );
 
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
       final String prefix = "triggerStage." + stage;
 
-      aPrefs.put( prefix + ".delay", this.triggerDelay[stage].getText() );
-      aPrefs.putInt( prefix + ".level", this.triggerLevel[stage].getSelectedIndex() );
-      aPrefs.putInt( prefix + ".mode", this.triggerMode[stage].getSelectedIndex() );
-      aPrefs.putInt( prefix + ".channel", this.triggerChannel[stage].getSelectedIndex() );
+      aSettings.put( prefix + ".delay", this.triggerDelay[stage].getText() );
+      aSettings.putInt( prefix + ".level", this.triggerLevel[stage].getSelectedIndex() );
+      aSettings.putInt( prefix + ".mode", this.triggerMode[stage].getSelectedIndex() );
+      aSettings.putInt( prefix + ".channel", this.triggerChannel[stage].getSelectedIndex() );
 
       final StringBuffer mask = new StringBuffer();
       for ( int i = 0; i < 32; i++ )
       {
         mask.append( this.triggerMask[stage][i].isSelected() ? "1" : "0" );
       }
-      aPrefs.put( prefix + ".mask", mask.toString() );
+      aSettings.put( prefix + ".mask", mask.toString() );
 
       final StringBuffer value = new StringBuffer();
       for ( int i = 0; i < 32; i++ )
       {
         value.append( this.triggerValue[stage][i].isSelected() ? "1" : "0" );
       }
-      aPrefs.put( prefix + ".value", value.toString() );
+      aSettings.put( prefix + ".value", value.toString() );
 
-      aPrefs.putBoolean( prefix + ".startCapture", this.triggerStart[stage].isSelected() );
+      aSettings.putBoolean( prefix + ".startCapture", this.triggerStart[stage].isSelected() );
     }
 
     final StringBuffer group = new StringBuffer();
@@ -470,7 +472,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     {
       group.append( this.channelGroup[i].isSelected() ? "1" : "0" );
     }
-    aPrefs.put( "channelGroup", group.toString() );
+    aSettings.put( "channelGroup", group.toString() );
   }
 
   /**

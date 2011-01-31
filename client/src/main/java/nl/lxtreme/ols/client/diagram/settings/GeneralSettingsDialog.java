@@ -38,8 +38,6 @@ import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
 
-import org.osgi.service.prefs.*;
-
 
 /**
  * Stores diagram "mode" settings and provides a dialog for changing them.
@@ -277,11 +275,12 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void readPreferences( final Preferences aProperties )
+  @Override
+  public void readPreferences( final UserSettings aSettings )
   {
-    // NO-op
+    // TODO Auto-generated method stub
   }
 
   /**
@@ -299,11 +298,12 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void writePreferences( final Preferences aProperties )
+  @Override
+  public void writePreferences( final UserSettings aSettings )
   {
-    // NO-op
+    // TODO Auto-generated method stub
   }
 
   /**

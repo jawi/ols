@@ -33,6 +33,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
@@ -41,8 +42,6 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
-
-import org.osgi.service.prefs.*;
 
 
 /**
@@ -130,14 +129,14 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void readPreferences( final Preferences aPrefs )
+  public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.tck, aPrefs.getInt( "TCK", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.tms, aPrefs.getInt( "TMS", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.tdi, aPrefs.getInt( "TDI", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.tdo, aPrefs.getInt( "TDO", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.tck, aSettings.getInt( "TCK", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.tms, aSettings.getInt( "TMS", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.tdi, aSettings.getInt( "TDI", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.tdo, aSettings.getInt( "TDO", -1 ) );
   }
 
   /**
@@ -157,14 +156,14 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void writePreferences( final Preferences aProperties )
+  public void writePreferences( final UserSettings aSettings )
   {
-    aProperties.putInt( "tck", this.tck.getSelectedIndex() );
-    aProperties.putInt( "tms", this.tms.getSelectedIndex() );
-    aProperties.putInt( "tdi", this.tdi.getSelectedIndex() );
-    aProperties.putInt( "tdo", this.tdo.getSelectedIndex() );
+    aSettings.putInt( "tck", this.tck.getSelectedIndex() );
+    aSettings.putInt( "tms", this.tms.getSelectedIndex() );
+    aSettings.putInt( "tdi", this.tdi.getSelectedIndex() );
+    aSettings.putInt( "tdo", this.tdo.getSelectedIndex() );
   }
 
   /**

@@ -27,8 +27,9 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.Configurable;
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
@@ -56,6 +57,7 @@ public class PreferenceServiceTracker extends ServiceTracker
     // VARIABLES
 
     private final PreferencesService preferenceService;
+    private final ProjectManager projectManager;
     private final String userName;
 
     // CONSTRUCTORS
@@ -66,9 +68,11 @@ public class PreferenceServiceTracker extends ServiceTracker
      * @param aPreferences
      *          the preferences to pass to the individual opened windows.
      */
-    public WindowStateListener( final PreferencesService aPreferenceService, final String aUserName )
+    public WindowStateListener( final PreferencesService aPreferenceService, final ProjectManager aProjectManager,
+        final String aUserName )
     {
       this.userName = aUserName;
+      this.projectManager = aProjectManager;
       this.preferenceService = aPreferenceService;
     }
 
@@ -104,8 +108,8 @@ public class PreferenceServiceTracker extends ServiceTracker
           {
             LOG.log( Level.FINE, "Reading dialog-specific properties for {0} ...", namespace );
 
-            final Preferences componentPrefs = getUserPreferences( namespace );
-            ( ( Configurable )component ).readPreferences( componentPrefs );
+            final UserSettings userSettings = getUserSettings( namespace );
+            ( ( Configurable )component ).readPreferences( userSettings );
           }
 
           // Only store settings of "real" frames and dialogs, not
@@ -135,8 +139,8 @@ public class PreferenceServiceTracker extends ServiceTracker
           {
             LOG.log( Level.FINE, "Writing dialog-specific properties for {0} ...", namespace );
 
-            final Preferences componentPrefs = getUserPreferences( namespace );
-            ( ( Configurable )component ).writePreferences( componentPrefs );
+            final UserSettings userSettings = getUserSettings( namespace );
+            ( ( Configurable )component ).writePreferences( userSettings );
           }
 
           // Only store settings of "real" frames and dialogs, not
@@ -184,6 +188,21 @@ public class PreferenceServiceTracker extends ServiceTracker
     }
 
     /**
+     * Returns the preferences node for the given namespace.
+     * 
+     * @param aNamespace
+     *          the node namespace to retrieve the preferences for, cannot be
+     *          <code>null</code>.
+     * @return the preferences node for the given namespace, never
+     *         <code>null</code>.
+     */
+    private UserSettings getUserSettings( final String aNamespace )
+    {
+      final UserSettings result = this.projectManager.getCurrentProject().getSettings( aNamespace );
+      return result;
+    }
+
+    /**
      * @param aNamespace
      */
     private void registerPreferencesLoaded( final String aNamespace )
@@ -200,7 +219,7 @@ public class PreferenceServiceTracker extends ServiceTracker
 
   // VARIABLES
 
-  private final ClientController controller;
+  private final ProjectManager projectManager;
   private volatile PreferencesService preferenceService = null;
   private transient WindowStateListener windowStateListener = null;
 
@@ -214,11 +233,11 @@ public class PreferenceServiceTracker extends ServiceTracker
    * @param aController
    *          the host to use.
    */
-  public PreferenceServiceTracker( final BundleContext aContext, final ClientController aController )
+  public PreferenceServiceTracker( final BundleContext aContext, final ProjectManager aProjectManager )
   {
     super( aContext, PreferencesService.class.getName(), null );
 
-    this.controller = aController;
+    this.projectManager = aProjectManager;
   }
 
   // METHODS
@@ -234,19 +253,15 @@ public class PreferenceServiceTracker extends ServiceTracker
 
     if ( this.windowStateListener == null )
     {
-      this.windowStateListener = new WindowStateListener( this.preferenceService, userName );
+      this.windowStateListener = new WindowStateListener( this.preferenceService, this.projectManager, userName );
       // Install a global window state listener...
       Toolkit.getDefaultToolkit().addAWTEventListener( this.windowStateListener, AWTEvent.WINDOW_EVENT_MASK );
     }
 
-    final Preferences userPreferences = this.preferenceService.getUserPreferences( userName );
     final Preferences systemPreferences = this.preferenceService.getSystemPreferences();
 
     // Clear any stored window preference keys...
     clearWindowPreferencesNode( systemPreferences );
-
-    // Publish the current user preferences to the controller...
-    this.controller.setPreferences( userPreferences, systemPreferences );
 
     return this.preferenceService;
   }
@@ -258,10 +273,6 @@ public class PreferenceServiceTracker extends ServiceTracker
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )
   {
-    // Make sure the preferences are actually removed from the controller as
-    // well...
-    this.controller.clearPreferences();
-
     if ( this.windowStateListener != null )
     {
       Toolkit.getDefaultToolkit().removeAWTEventListener( this.windowStateListener );
