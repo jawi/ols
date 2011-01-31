@@ -246,9 +246,8 @@
 						</goals>
 						<configuration>
 							<target>
-								<ant antfile="${basedir}/app-bundle.xml" inheritAll="false">
+								<ant antfile="${basedir}/app-bundle.xml" inheritAll="true">
 									<property name="project.version" value="${ols.version}" />
-									<property name="package.osx.skip" value="${package.osx.skip}" />
 									<target name="all" />
 								</ant>
 							</target>
