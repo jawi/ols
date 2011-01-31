@@ -170,12 +170,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      this.mainFrame.addDeviceMenuItem( aDeviceController.getName() );
-    }
-
-    if ( this.currentDevCtrl == null )
-    {
-      this.currentDevCtrl = aDeviceController;
+      if ( this.mainFrame.addDeviceMenuItem( aDeviceController ) )
+      {
+        this.currentDevCtrl = aDeviceController;
+      }
     }
 
     updateActions();
@@ -314,10 +312,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       captureAborted( "I/O problem: " + exception.getMessage() );
 
-      exception.printStackTrace();
-
       // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        exception.printStackTrace();
+      }
 
       return false;
     }
@@ -345,8 +344,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
     {
       this.dataContainer.setCursorPosition( i, null );
-      fireCursorChangedEvent( i, -1 ); // removed...
     }
+    fireCursorChangedEvent( 0, -1 ); // removed...
 
     updateActions();
   }
@@ -374,8 +373,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   public void createNewProject()
   {
     this.projectManager.createNewProject();
-
-    updateMainFrameTitle( this.projectManager.getCurrentProject() );
   }
 
   /**
@@ -535,6 +532,16 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Returns the current project's filename.
+   * 
+   * @return a project filename, as file object, can be <code>null</code>.
+   */
+  public File getProjectFilename()
+  {
+    return this.projectManager.getCurrentProject().getFilename();
+  }
+
+  /**
    * Returns all current tools known to the OSGi framework.
    * 
    * @return a collection of tools, never <code>null</code>.
@@ -665,21 +672,18 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * @throws IOException
    *           in case of I/O problems.
    */
-  public void loadDataFile( final File aFile ) throws IOException
+  public void openDataFile( final File aFile ) throws IOException
   {
     final FileReader reader = new FileReader( aFile );
 
     try
     {
-      final Project tempProject = new SimpleProject();
+      final Project tempProject = this.projectManager.createTemporaryProject();
       OlsDataHelper.read( tempProject, reader );
 
       setChannelLabels( tempProject.getChannelLabels() );
       setCapturedData( tempProject.getCapturedData() );
       setCursorData( tempProject.getCursorPositions(), tempProject.isCursorsEnabled() );
-
-      // Reflect the current project state on the main frame...
-      updateMainFrameTitle( tempProject );
     }
     finally
     {
@@ -699,21 +703,20 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * @throws IOException
    *           in case of I/O problems.
    */
-  public void openProject( final File aFile ) throws IOException
+  public void openProjectFile( final File aFile ) throws IOException
   {
     FileInputStream fis = new FileInputStream( aFile );
 
     try
     {
       this.projectManager.loadProject( fis );
-      // TODO flush preferences to project...
 
       final Project project = this.projectManager.getCurrentProject();
-      setChannelLabels( project.getChannelLabels() );
-      setCapturedData( project.getCapturedData() );
-      setCursorData( project.getCursorPositions(), project.isCursorsEnabled() );
+      project.setFilename( aFile );
 
-      updateMainFrameTitle( project );
+      // TODO flush preferences to project...
+
+      zoomToFit();
     }
     finally
     {
@@ -897,13 +900,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     final FileWriter writer = new FileWriter( aFile );
     try
     {
-      final Project tempProject = new SimpleProject();
+      final Project tempProject = this.projectManager.createTemporaryProject();
       tempProject.setCapturedData( this.dataContainer );
 
       OlsDataHelper.write( tempProject, writer );
-
-      // Reflect the current project state on the main frame...
-      updateMainFrameTitle( tempProject );
     }
     finally
     {
@@ -921,30 +921,27 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * @throws IOException
    *           in case of I/O problems.
    */
-  public void saveProject( final String aName, final File aFile ) throws IOException
+  public void saveProjectFile( final String aName, final File aFile ) throws IOException
   {
     FileOutputStream out = null;
     try
     {
-      this.userPreferences.flush();
-
-      out = new FileOutputStream( aFile );
+      try
+      {
+        this.userPreferences.flush();
+      }
+      catch ( BackingStoreException exception )
+      {
+        LOG.warning( "Flushing preferences failed! Project settings not stored entirely..." );
+      }
 
       // TODO flush user preferences to project...
       final Project project = this.projectManager.getCurrentProject();
-
+      project.setFilename( aFile );
       project.setName( aName );
-      project.setCapturedData( this.dataContainer );
-      project.setChannelLabels( this.dataContainer.getChannelLabels() );
 
+      out = new FileOutputStream( aFile );
       this.projectManager.saveProject( out );
-
-      // Denote the project file in the title of the main window...
-      updateMainFrameTitle( project );
-    }
-    catch ( BackingStoreException exception )
-    {
-      throw new IOException( "Flushing preferences failed! Project not stored.", exception );
     }
     finally
     {
@@ -1030,6 +1027,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void setMainFrame( final MainFrame aMainFrame )
   {
+    if ( this.mainFrame != null )
+    {
+      this.projectManager.removePropertyChangeListener( this.mainFrame );
+    }
+    if ( aMainFrame != null )
+    {
+      this.projectManager.addPropertyChangeListener( aMainFrame );
+    }
+
     this.mainFrame = aMainFrame;
   }
 
@@ -1330,6 +1336,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     aActionManager.add( new OpenProjectAction( this ) );
     aActionManager.add( new SaveProjectAction( this ) ).setEnabled( false );
+    aActionManager.add( new SaveProjectAsAction( this ) ).setEnabled( false );
     aActionManager.add( new OpenDataFileAction( this ) );
     aActionManager.add( new SaveDataFileAction( this ) ).setEnabled( false );
     aActionManager.add( new ExitAction( this ) );
@@ -1498,7 +1505,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     final boolean windowPrefsAvailable = containsWindowsPreferencesNode();
     final boolean dataAvailable = this.dataContainer.hasCapturedData();
 
-    getAction( SaveProjectAction.ID ).setEnabled( windowPrefsAvailable );
+    getAction( SaveProjectAction.ID ).setEnabled( dataAvailable || windowPrefsAvailable );
+    getAction( SaveProjectAsAction.ID ).setEnabled( dataAvailable || windowPrefsAvailable );
     getAction( SaveDataFileAction.ID ).setEnabled( dataAvailable );
 
     getAction( ZoomInAction.ID ).setEnabled( dataAvailable );
@@ -1553,23 +1561,5 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
       repaintMainFrame();
     }
-  }
-
-  /**
-   * Updates the title of the main frame with the given project name.
-   * 
-   * @param aProjectName
-   *          the name of the project to display in the main title, can be
-   *          <code>null</code>.
-   */
-  private void updateMainFrameTitle( final Project aProject )
-  {
-    String title = Host.FULL_NAME;
-    if ( ( aProject != null ) && !DisplayUtils.isEmpty( aProject.getName() ) )
-    {
-      // Denote the project file in the title of the main window...
-      title = title.concat( " :: " ).concat( aProject.getName() );
-    }
-    this.mainFrame.setTitle( title );
   }
 }

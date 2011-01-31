@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client.data.project;
 
 
+import java.beans.*;
+import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -28,11 +30,13 @@ import nl.lxtreme.ols.api.data.project.*;
 
 
 /**
- * @author jawi
+ * Denotes a project implementation.
  */
-public class SimpleProject implements Project
+final class ProjectImpl implements Project, ProjectProperties
 {
   // VARIABLES
+
+  private final PropertyChangeSupport propertyChangeSupport;
 
   private String name;
   private final String[] channelLabels;
@@ -43,15 +47,18 @@ public class SimpleProject implements Project
   private boolean cursorsEnabled;
   private Date lastModified;
   private String sourceVersion;
+  private File filename;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new SimpleProject.
+   * Creates a new ProjectImpl.
    */
-  public SimpleProject()
+  public ProjectImpl()
   {
     super();
+
+    this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.cursors = new Long[CapturedData.MAX_CURSORS];
     this.channelLabels = new String[CapturedData.MAX_CHANNELS];
@@ -61,6 +68,17 @@ public class SimpleProject implements Project
   }
 
   // METHODS
+
+  /**
+   * Adds the given listener to the list of property change listeners.
+   * 
+   * @param aListener
+   *          a property change listener, cannot be <code>null</code>.
+   */
+  public void addPropertyChangeListener( final PropertyChangeListener aListener )
+  {
+    this.propertyChangeSupport.addPropertyChangeListener( aListener );
+  }
 
   /**
    * @see nl.lxtreme.ols.api.data.project.Project#getCapturedData()
@@ -87,6 +105,15 @@ public class SimpleProject implements Project
   public Long[] getCursorPositions()
   {
     return this.cursors;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.project.Project#getFilename()
+   */
+  @Override
+  public File getFilename()
+  {
+    return this.filename;
   }
 
   /**
@@ -144,12 +171,29 @@ public class SimpleProject implements Project
   }
 
   /**
+   * Removes the given listener from the list of property change listeners.
+   * 
+   * @param aListener
+   *          a property change listener, cannot be <code>null</code>.
+   */
+  public void removePropertyChangeListener( final PropertyChangeListener aListener )
+  {
+    this.propertyChangeSupport.removePropertyChangeListener( aListener );
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.data.project.Project#setCapturedData(nl.lxtreme.ols.api.data.CapturedData)
    */
   @Override
   public void setCapturedData( final CapturedData aCapturedData )
   {
+    final CapturedData old = this.capturedData;
     this.capturedData = aCapturedData;
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA, old, aCapturedData );
+
+    // Mark this project as modified...
+    setChanged( true );
   }
 
   /**
@@ -158,7 +202,10 @@ public class SimpleProject implements Project
   @Override
   public void setChanged( final boolean aChanged )
   {
+    final boolean old = this.changed;
     this.changed = aChanged;
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_CHANGED, old, aChanged );
   }
 
   /**
@@ -167,10 +214,18 @@ public class SimpleProject implements Project
   @Override
   public void setChannelLabels( final String... aChannelLabels )
   {
-    if ( aChannelLabels != null )
+    if ( aChannelLabels == null )
     {
-      System.arraycopy( aChannelLabels, 0, this.channelLabels, 0, aChannelLabels.length );
+      throw new IllegalArgumentException( "Channel labels cannot be null!" );
     }
+
+    final String[] old = Arrays.copyOf( this.channelLabels, this.channelLabels.length );
+    System.arraycopy( aChannelLabels, 0, this.channelLabels, 0, aChannelLabels.length );
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_CHANNEL_LABELS, old, aChannelLabels );
+
+    // Mark this project as modified...
+    setChanged( true );
   }
 
   /**
@@ -179,10 +234,18 @@ public class SimpleProject implements Project
   @Override
   public void setCursorPositions( final Long... aCursors )
   {
-    if ( aCursors != null )
+    if ( aCursors == null )
     {
-      System.arraycopy( aCursors, 0, this.cursors, 0, aCursors.length );
+      throw new IllegalArgumentException( "Cursors cannot be null!" );
     }
+
+    final Long[] old = Arrays.copyOf( this.cursors, this.cursors.length );
+    System.arraycopy( aCursors, 0, this.cursors, 0, aCursors.length );
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_CURSORS, old, aCursors );
+
+    // Mark this project as modified...
+    setChanged( true );
   }
 
   /**
@@ -191,7 +254,29 @@ public class SimpleProject implements Project
   @Override
   public void setCursorsEnabled( final boolean aEnabled )
   {
+    final boolean old = this.cursorsEnabled;
     this.cursorsEnabled = aEnabled;
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_CURSORS_ENABLED, old, aEnabled );
+
+    // Mark this project as modified...
+    setChanged( true );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.project.Project#setFilename(java.io.File)
+   */
+  @Override
+  public void setFilename( final File aFilename )
+  {
+    final File old = this.filename;
+    this.filename = aFilename;
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_FILENAME, old, aFilename );
+
+    // We don't mark the project as saved; as this is probably a bit weird: we
+    // save a new project, thereby knowing its filename, and yet we're marking
+    // it immediately as changed...
   }
 
   /**
@@ -200,7 +285,13 @@ public class SimpleProject implements Project
   @Override
   public void setLastModified( final Date aLastModified )
   {
+    final Date old = this.lastModified;
     this.lastModified = aLastModified;
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_LAST_MODIFIED, old, aLastModified );
+
+    // Mark this project as modified...
+    setChanged( true );
   }
 
   /**
@@ -209,7 +300,13 @@ public class SimpleProject implements Project
   @Override
   public void setName( final String aName )
   {
+    final String old = this.name;
     this.name = aName;
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_NAME, old, aName );
+
+    // Mark this project as modified...
+    setChanged( true );
   }
 
   /**
@@ -218,7 +315,13 @@ public class SimpleProject implements Project
   @Override
   public void setSettings( final Properties aSettings )
   {
+    final Properties old = this.settings;
     this.settings = aSettings;
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_SETTINGS, old, aSettings );
+
+    // Mark this project as modified...
+    setChanged( true );
   }
 
   /**
@@ -227,6 +330,22 @@ public class SimpleProject implements Project
   @Override
   public void setSourceVersion( final String aSourceVersion )
   {
+    final String old = this.sourceVersion;
     this.sourceVersion = aSourceVersion;
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_SOURCE_VERSION, old, aSourceVersion );
+
+    // Mark this project as modified...
+    setChanged( true );
+  }
+
+  /**
+   * Returns the current set of property change listeners.
+   * 
+   * @return an array of property change listeners, never <code>null</code>.
+   */
+  final PropertyChangeListener[] getPropertyChangeListeners()
+  {
+    return this.propertyChangeSupport.getPropertyChangeListeners();
   }
 }

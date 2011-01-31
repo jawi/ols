@@ -83,7 +83,7 @@ public class OpenDataFileAction extends BaseAction
           LOG.info( "Loading OLS capture date from file: " + file );
         }
 
-        getController().loadDataFile( file );
+        getController().openDataFile( file );
       }
     }
     catch ( IOException exception )

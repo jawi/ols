@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.net.*;
 import java.text.*;
 import java.util.List;
@@ -33,7 +34,9 @@ import org.osgi.service.prefs.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.icons.*;
@@ -46,7 +49,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Denotes the main UI.
  */
-public final class MainFrame extends JFrame implements Closeable
+public final class MainFrame extends JFrame implements Closeable, PropertyChangeListener
 {
   // INNER TYPES
 
@@ -231,8 +234,6 @@ public final class MainFrame extends JFrame implements Closeable
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
-
-    // Support CMD + W on MacOSX (closes this frame)...
   }
 
   /**
@@ -250,12 +251,14 @@ public final class MainFrame extends JFrame implements Closeable
   /**
    * @param aDevController
    */
-  public final void addDeviceMenuItem( final String aDeviceName )
+  public final boolean addDeviceMenuItem( final DeviceController aDeviceController )
   {
     // We're adding one, so, there's at least one device available...
     this.deviceMenu.remove( this.noDevicesItem );
 
-    final JMenuItem menuItem = createDeviceMenuItem( aDeviceName );
+    final SelectDeviceAction action = new SelectDeviceAction( this.controller, aDeviceController.getName() );
+    final JMenuItem menuItem = new JRadioButtonMenuItem( action );
+
     // Determine where in the menu we should add the menu item, this way, we
     // can make the menu appear consistent...
     final int idx = determineDeviceMenuItemIndex( menuItem );
@@ -263,7 +266,18 @@ public final class MainFrame extends JFrame implements Closeable
     this.deviceGroup.add( menuItem );
     this.deviceMenu.add( menuItem, idx );
 
-    updateDeviceMenuState( aDeviceName, menuItem, true /* aAdded */);
+    // Hacker-dy-hack: if the device controller is of a class starting with
+    // 'org.sump.', we're going to select it by default...
+    boolean result = false;
+    if ( aDeviceController.getClass().getName().startsWith( "org.sump" ) )
+    {
+      menuItem.setSelected( true );
+      result = true;
+    }
+
+    updateMenuState( this.deviceMenu, this.noDevicesItem );
+
+    return result;
   }
 
   /**
@@ -274,14 +288,15 @@ public final class MainFrame extends JFrame implements Closeable
     // We're adding one, so, there's at least one device available...
     this.exportMenu.remove( this.noExportersItem );
 
-    final JMenuItem menuItem = createExporterMenuItem( aExporterName );
+    final JMenuItem menuItem = new JMenuItem( new ExportAction( this.controller, aExporterName ) );
+
     // Determine where in the menu we should add the menu item, this way, we
     // can make the menu appear consistent...
     final int idx = determineExporterMenuItemIndex( menuItem );
 
     this.exportMenu.add( menuItem, idx );
 
-    updateExportMenuState( aExporterName, menuItem, true /* aAdded */);
+    updateMenuState( this.exportMenu, this.noExportersItem );
   }
 
   /**
@@ -292,14 +307,15 @@ public final class MainFrame extends JFrame implements Closeable
     // We're adding one, so, there's at least one device available...
     this.toolsMenu.remove( this.noToolsItem );
 
-    final JMenuItem menuItem = createToolMenuItem( aToolName );
+    final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( this.controller, aToolName ) );
+
     // Determine where in the menu we should add the menu item, this way, we
     // can make the menu appear consistent...
     final int idx = determineToolMenuItemIndex( menuItem );
 
     this.toolsMenu.add( menuItem, idx );
 
-    updateToolMenuState( aToolName, menuItem, true /* aAdded */);
+    updateMenuState( this.toolsMenu, this.noToolsItem );
   }
 
   /**
@@ -360,6 +376,32 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
+   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+   */
+  @Override
+  public void propertyChange( final PropertyChangeEvent aEvent )
+  {
+    final String propertyName = aEvent.getPropertyName();
+    if ( ProjectProperties.PROPERTY_CHANGED.equals( propertyName ) )
+    {
+      final Boolean value = ( Boolean )aEvent.getNewValue();
+      getRootPane().putClientProperty( "Window.documentModified", value );
+    }
+    else if ( ProjectProperties.PROPERTY_NAME.equals( propertyName ) )
+    {
+      final String value = ( String )aEvent.getNewValue();
+
+      String title = Host.FULL_NAME;
+      if ( !DisplayUtils.isEmpty( value ) )
+      {
+        // Denote the project file in the title of the main window...
+        title = title.concat( " :: " ).concat( value );
+      }
+      setTitle( title );
+    }
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
   public void readPreferences( final Preferences aPreferences )
@@ -385,7 +427,7 @@ public final class MainFrame extends JFrame implements Closeable
     {
       this.deviceGroup.remove( menuItem );
 
-      updateDeviceMenuState( aDeviceName, menuItem, false /* aAdded */);
+      updateMenuState( this.deviceMenu, this.noDevicesItem );
     }
   }
 
@@ -401,7 +443,7 @@ public final class MainFrame extends JFrame implements Closeable
     final JMenuItem menuItem = removeMenuItem( this.exportMenu, aExporterName );
     if ( menuItem != null )
     {
-      updateToolMenuState( aExporterName, menuItem, false /* aAdded */);
+      updateMenuState( this.exportMenu, this.noExportersItem );
     }
   }
 
@@ -417,7 +459,7 @@ public final class MainFrame extends JFrame implements Closeable
     final JMenuItem menuItem = removeMenuItem( this.toolsMenu, aToolName );
     if ( menuItem != null )
     {
-      updateToolMenuState( aToolName, menuItem, false /* aAdded */);
+      updateMenuState( this.toolsMenu, this.noToolsItem );
     }
   }
 
@@ -556,28 +598,6 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
-   * @param aDevController
-   * @return
-   */
-  private JMenuItem createDeviceMenuItem( final String aDeviceName )
-  {
-    final JMenuItem menuItem = new JRadioButtonMenuItem( new SelectDeviceAction( this.controller, aDeviceName ) );
-    menuItem.setName( aDeviceName );
-    return menuItem;
-  }
-
-  /**
-   * @param aExporterName
-   * @return
-   */
-  private JMenuItem createExporterMenuItem( final String aExporterName )
-  {
-    final JMenuItem menuItem = new JMenuItem( new ExportAction( this.controller, aExporterName ) );
-    menuItem.setName( aExporterName );
-    return menuItem;
-  }
-
-  /**
    * Creates the menu bar with all menu's and the accompanying toolbar.
    * 
    * @return the toolbar, never <code>null</code>.
@@ -596,11 +616,12 @@ public final class MainFrame extends JFrame implements Closeable
 
     fileMenu.add( this.controller.getAction( OpenProjectAction.ID ) );
     fileMenu.add( this.controller.getAction( SaveProjectAction.ID ) );
-    fileMenu.addSeparator();
-    fileMenu.add( this.exportMenu );
+    fileMenu.add( this.controller.getAction( SaveProjectAsAction.ID ) );
     fileMenu.addSeparator();
     fileMenu.add( this.controller.getAction( OpenDataFileAction.ID ) );
     fileMenu.add( this.controller.getAction( SaveDataFileAction.ID ) );
+    fileMenu.addSeparator();
+    fileMenu.add( this.exportMenu );
 
     if ( HostUtils.needsExitMenuItem() )
     {
@@ -664,8 +685,8 @@ public final class MainFrame extends JFrame implements Closeable
     final JToolBar toolbar = new JToolBar();
     toolbar.setRollover( true );
 
-    toolbar.add( this.controller.getAction( OpenDataFileAction.ID ) );
-    toolbar.add( this.controller.getAction( SaveDataFileAction.ID ) );
+    toolbar.add( this.controller.getAction( OpenProjectAction.ID ) );
+    toolbar.add( this.controller.getAction( SaveProjectAction.ID ) );
     toolbar.addSeparator();
 
     toolbar.add( this.controller.getAction( CaptureAction.ID ) );
@@ -682,20 +703,8 @@ public final class MainFrame extends JFrame implements Closeable
     toolbar.add( this.controller.getAction( GotoTriggerAction.ID ) );
     toolbar.add( this.controller.getAction( GotoCursor1Action.ID ) );
     toolbar.add( this.controller.getAction( GotoCursor2Action.ID ) );
-    // toolbar.addSeparator();
 
     return toolbar;
-  }
-
-  /**
-   * @param aTool
-   * @return
-   */
-  private JMenuItem createToolMenuItem( final String aToolName )
-  {
-    final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( this.controller, aToolName ) );
-    menuItem.setName( aToolName );
-    return menuItem;
   }
 
   /**
@@ -799,70 +808,22 @@ public final class MainFrame extends JFrame implements Closeable
   }
 
   /**
-   * @param aDevController
-   * @param aMenuItem
-   * @param aAdded
+   * Updates the given menu, adding the given default menu item if its item
+   * count drops to zero.
+   * 
+   * @param aMenu
+   *          the menu to update, cannot be <code>null</code>;
+   * @param aDefaultMenuItem
+   *          the default menu item to add in case the given menu is empty.
    */
-  private void updateDeviceMenuState( final String aDeviceName, final JMenuItem aMenuItem, final boolean aAdded )
+  private void updateMenuState( final JMenu aMenu, final JMenuItem aDefaultMenuItem )
   {
-    if ( aAdded )
+    if ( aMenu.getItemCount() == 0 )
     {
-      // Always select the first added device...
-      if ( this.deviceMenu.getItemCount() == 1 )
-      {
-        aMenuItem.setSelected( true );
-      }
-    }
-    else
-    {
-      if ( this.deviceMenu.getItemCount() == 0 )
-      {
-        // We've removed the last one...
-        this.deviceMenu.add( this.noDevicesItem );
-      }
+      aMenu.add( aDefaultMenuItem );
     }
 
-    this.deviceMenu.revalidate();
-    this.deviceMenu.repaint();
-  }
-
-  /**
-   * @param aExporterName
-   * @param aMenuItem
-   * @param aB
-   */
-  private void updateExportMenuState( final String aExporterName, final JMenuItem aMenuItem, final boolean aAdded )
-  {
-    if ( !aAdded )
-    {
-      if ( this.exportMenu.getItemCount() == 0 )
-      {
-        // We've removed the last one...
-        this.exportMenu.add( this.noExportersItem );
-      }
-    }
-
-    this.exportMenu.revalidate();
-    this.exportMenu.repaint();
-  }
-
-  /**
-   * @param aTool
-   * @param aMenuItem
-   * @param aAdded
-   */
-  private void updateToolMenuState( final String aToolName, final JMenuItem aMenuItem, final boolean aAdded )
-  {
-    if ( !aAdded )
-    {
-      if ( this.toolsMenu.getItemCount() == 0 )
-      {
-        // We've removed the last one...
-        this.toolsMenu.add( this.noToolsItem );
-      }
-    }
-
-    this.toolsMenu.revalidate();
-    this.toolsMenu.repaint();
+    aMenu.revalidate();
+    aMenu.repaint();
   }
 }

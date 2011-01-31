@@ -59,7 +59,7 @@ public class OpenProjectAction extends BaseAction
    */
   public OpenProjectAction( final ClientController aController )
   {
-    super( ID, aController, ICON_OPEN_PROJECT, "Open project", "Open an existing project." );
+    super( ID, aController, ICON_OPEN_PROJECT, "Open project ...", "Open an existing project." );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
   }
 
@@ -83,7 +83,7 @@ public class OpenProjectAction extends BaseAction
           LOG.info( "Loading OLS project from file: " + file );
         }
 
-        getController().openProject( file );
+        getController().openProjectFile( file );
       }
     }
     catch ( IOException exception )

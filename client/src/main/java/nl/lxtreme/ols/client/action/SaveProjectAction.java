@@ -33,7 +33,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
- * 
+ * Provides a "save" functionality for (existing) project.
  */
 public class SaveProjectAction extends BaseAction
 {
@@ -48,11 +48,34 @@ public class SaveProjectAction extends BaseAction
   // CONSTRUCTORS
 
   /**
+   * Creates a new SaveProjectAction instance.
    * 
+   * @param aController
+   *          the controller to use in this action.
    */
   public SaveProjectAction( final ClientController aController )
   {
-    super( ID, aController, ICON_SAVE_PROJECT, "Save project", "Save the current project." );
+    this( ID, aController, ICON_SAVE_PROJECT, "Save project", "Save the current project." );
+  }
+
+  /**
+   * Creates a new SaveProjectAction instance.
+   * 
+   * @param aID
+   *          the ID of this action;
+   * @param aController
+   *          the controller to use;
+   * @param aIconName
+   *          the (optional) name of the icon;
+   * @param aName
+   *          the name of this action;
+   * @param aDescription
+   *          the description/tooltip of this action.
+   */
+  protected SaveProjectAction( final String aID, final ClientController aController, final String aIconName,
+      final String aName, final String aDescription )
+  {
+    super( aID, aController, aIconName, aName, aDescription );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
   }
 
@@ -66,19 +89,71 @@ public class SaveProjectAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
+    File file = getProjectFilename();
+    if ( showFileChooserDialogNeeded() )
+    {
+      file = askForFilename( owner );
+    }
+
+    if ( file == null )
+    {
+      // User has canceled the file chooser dialog...
+      return;
+    }
+
+    saveProjectFile( owner, file );
+  }
+
+  /**
+   * Asks the user to specify a filename.
+   * 
+   * @param owner
+   *          the parent/owner window of the file chooser dialog, can be
+   *          <code>null</code>.
+   * @return the file specified by the user, or <code>null</code> if the user
+   *         has cancelled the action.
+   */
+  protected File askForFilename( final Window owner )
+  {
+    final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenProjectAction.OLS_PROJECT_FILTER );
+    if ( file != null )
+    {
+      return HostUtils.setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
+    }
+    return file;
+  }
+
+  /**
+   * Returns the project's filename.
+   * 
+   * @return a file object denoting the project file to save the project to, can
+   *         be <code>null</code> if no name is yet defined for the project.
+   */
+  protected File getProjectFilename()
+  {
+    final File filename = getController().getProjectFilename();
+    return filename;
+  }
+
+  /**
+   * Saves the project file.
+   * 
+   * @param aOwner
+   *          the owning/parent window;
+   * @param aFile
+   *          the file to save the project to.
+   */
+  protected void saveProjectFile( final Window aOwner, final File aFile )
+  {
     try
     {
-      final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenProjectAction.OLS_PROJECT_FILTER );
-      if ( file != null )
-      {
-        final File actualFile = HostUtils.setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
-        if ( LOG.isLoggable( Level.INFO ) )
-        {
-          LOG.info( "Saving OLS project to file: " + actualFile );
-        }
+      LOG.log( Level.INFO, "Saving OLS project to file: {0} ...", aFile );
 
-        getController().saveProject( actualFile.getName(), actualFile );
-      }
+      // Strip any "known" file extensions from the given value...
+      final String projectName = HostUtils.stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
+          OpenProjectAction.OLS_PROJECT_EXTENSION );
+
+      getController().saveProjectFile( projectName, aFile );
     }
     catch ( IOException exception )
     {
@@ -86,9 +161,20 @@ public class SaveProjectAction extends BaseAction
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
         LOG.log( Level.WARNING, "Saving OLS project failed!", exception );
-        JErrorDialog.showDialog( owner, "Saving OLS project failed!", exception );
+        JErrorDialog.showDialog( aOwner, "Saving OLS project failed!", exception );
       }
     }
+  }
+
+  /**
+   * Returns whether or not a file chooser dialog is to be shown.
+   * 
+   * @return <code>true</code> if a file chooser dialog should be shown,
+   *         <code>false</code> otherwise.
+   */
+  protected boolean showFileChooserDialogNeeded()
+  {
+    return getProjectFilename() == null;
   }
 }
 
