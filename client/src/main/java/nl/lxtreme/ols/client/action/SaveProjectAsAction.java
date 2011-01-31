@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,63 +22,46 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.event.*;
-
-import javax.swing.*;
-
 import nl.lxtreme.ols.client.*;
 
 
 /**
- * 
+ * Provides a "save as" functionality for projects.
  */
-public class SelectDeviceAction extends BaseAction
+public class SaveProjectAsAction extends SaveProjectAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  private static final String ID = "SelectDevice";
-
-  // VARIABLES
-
-  private final String deviceName;
+  public static final String ID = "SaveProjectAs";
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new SelectDeviceAction instance.
+   * Creates a new SaveProjectAsAction instance.
    * 
    * @param aController
-   *          the controller to use;
-   * @param aDeviceName
-   *          the name of the device this action represents.
+   *          the controller to use.
    */
-  public SelectDeviceAction( final ClientController aController, final String aDeviceName )
+  public SaveProjectAsAction( final ClientController aController )
   {
-    super( ID + aDeviceName, aController, aDeviceName, "Selects ".concat( aDeviceName ).concat(
-        " as current capturing device." ) );
-    this.deviceName = aDeviceName;
+    super( ID, aController, ICON_SAVE_PROJECT, "Save project as ...",
+        "Save the current project under a different name." );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
   }
 
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * @see nl.lxtreme.ols.client.action.SaveProjectAction#showFileChooserDialogNeeded()
    */
   @Override
-  public void actionPerformed( final ActionEvent aEvent )
+  protected boolean showFileChooserDialogNeeded()
   {
-    final JMenuItem menuItem = ( JMenuItem )aEvent.getSource();
-    if ( menuItem.isSelected() )
-    {
-      getController().setDeviceController( this.deviceName );
-    }
-    else
-    {
-      getController().clearDeviceController();
-    }
+    // Always should the file chooser dialog...
+    return true;
   }
-
 }
 
 /* EOF */

@@ -443,6 +443,62 @@ public final class HostUtils
   }
 
   /**
+   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
+   * given file.
+   * 
+   * @param aFile
+   *          the file to return the extension for, cannot be <code>null</code>.
+   * @return the file extension (always in lower case), never <code>null</code>
+   *         but can be empty if the given file has <em>no</em> file extension.
+   */
+  public static final String stripFileExtension( final File aFile, final String... aExtensions )
+  {
+    return stripFileExtension( aFile.getName(), aExtensions );
+  }
+
+  /**
+   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
+   * given file.
+   * 
+   * @param aFile
+   *          the file to return the extension for, cannot be <code>null</code>.
+   * @return the file extension (always in lower case), never <code>null</code>
+   *         but can be empty if the given file has <em>no</em> file extension.
+   */
+  public static final String stripFileExtension( final String aFilename, final String... aExtensions )
+  {
+    String result = "";
+
+    int idx = aFilename.lastIndexOf( '.' );
+    if ( ( idx >= 0 ) && ( idx < aFilename.length() - 1 ) )
+    {
+      result = aFilename.substring( 0, idx );
+
+      boolean found = ( aExtensions == null ) || ( aExtensions.length == 0 );
+
+      final String ext = aFilename.substring( idx + 1 ).toLowerCase();
+      if ( ( aExtensions != null ) && ( aExtensions.length > 0 ) )
+      {
+        for ( String extension : aExtensions )
+        {
+          if ( ext.equalsIgnoreCase( extension ) )
+          {
+            found = true;
+            break;
+          }
+        }
+      }
+
+      if ( !found )
+      {
+        result = aFilename;
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * @param aApplicationCallback
    */
   private static void installApplicationCallback( final ApplicationCallback aApplicationCallback )

@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.client.data.project;
 
 
+import java.beans.*;
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
@@ -37,7 +38,7 @@ import nl.lxtreme.ols.util.*;
  * Provides a simple implementation of a project manager, which writes an entire
  * project as (compressed) ZIP-file.
  */
-public class SimpleProjectManager implements ProjectManager
+public class SimpleProjectManager implements ProjectManager, ProjectProperties
 {
   // CONSTANTS
 
@@ -51,7 +52,7 @@ public class SimpleProjectManager implements ProjectManager
   // VARIABLES
 
   private final Host host;
-  private Project project;
+  private ProjectImpl project;
 
   // CONSTRUCTORS
 
@@ -64,19 +65,34 @@ public class SimpleProjectManager implements ProjectManager
   public SimpleProjectManager( final Host aHost )
   {
     this.host = aHost;
-
-    this.project = new SimpleProject();
+    this.project = new ProjectImpl();
   }
 
   // METHODS
 
   /**
+   * @see nl.lxtreme.ols.api.data.project.ProjectManager#addPropertyChangeListener(java.beans.PropertyChangeListener)
+   */
+  public void addPropertyChangeListener( final PropertyChangeListener aListener )
+  {
+    this.project.addPropertyChangeListener( aListener );
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.data.project.ProjectManager#createNewProject()
    */
-  public void createNewProject()
+  public Project createNewProject()
   {
-    this.project = new SimpleProject();
-  };
+    return setProject( new ProjectImpl() );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.project.ProjectManager#createTemporaryProject()
+   */
+  public Project createTemporaryProject()
+  {
+    return new ProjectImpl();
+  }
 
   /**
    * @see nl.lxtreme.ols.api.data.project.ProjectManager#getCurrentProject()
@@ -93,10 +109,10 @@ public class SimpleProjectManager implements ProjectManager
   @Override
   public void loadProject( final InputStream aInput ) throws IOException
   {
-    final Project newProject = new SimpleProject();
-
     final BufferedInputStream in = new BufferedInputStream( aInput );
     final ZipInputStream zipIS = new ZipInputStream( in );
+
+    final ProjectImpl newProject = setProject( new ProjectImpl() );
 
     try
     {
@@ -125,10 +141,19 @@ public class SimpleProjectManager implements ProjectManager
     }
     finally
     {
-      this.project = newProject;
+      // Mark the project as no longer changed...
+      newProject.setChanged( false );
 
       HostUtils.closeResource( zipIS );
     }
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.project.ProjectManager#removePropertyChangeListener(java.beans.PropertyChangeListener)
+   */
+  public void removePropertyChangeListener( final PropertyChangeListener aListener )
+  {
+    this.project.removePropertyChangeListener( aListener );
   }
 
   /**
@@ -151,6 +176,9 @@ public class SimpleProjectManager implements ProjectManager
       storeProjectSettings( this.project, zipOS );
       // Store the last capture results...
       storeCapturedResults( this.project, zipOS );
+
+      // Mark the project as no longer changed...
+      this.project.setChanged( false );
     }
     finally
     {
@@ -409,5 +437,24 @@ public class SimpleProjectManager implements ProjectManager
     {
       aZipOS.flush();
     }
+  }
+
+  /**
+   * Sets the current project to the given project, moving all registered
+   * property change listeners to the new project.
+   * 
+   * @param aProject
+   *          the project to set, cannot be <code>null</code>.
+   */
+  private ProjectImpl setProject( final ProjectImpl aProject )
+  {
+    final PropertyChangeListener[] listeners = this.project.getPropertyChangeListeners();
+    for ( PropertyChangeListener listener : listeners )
+    {
+      this.project.removePropertyChangeListener( listener );
+      aProject.addPropertyChangeListener( listener );
+    }
+    this.project = aProject;
+    return aProject;
   }
 }
