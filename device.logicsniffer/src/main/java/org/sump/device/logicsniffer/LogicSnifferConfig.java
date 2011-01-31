@@ -24,8 +24,6 @@ public final class LogicSnifferConfig
 
   // CONSTANTS
 
-  /** The default sample clock in Hertz (Hz). */
-  public final static int CLOCK = 100000000; // device clock in Hz
   /** The number of trigger stages. */
   private final static int TRIGGER_STAGES = 4;
 
@@ -104,7 +102,7 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Returns the number of available channels in current configuration.
+   * Returns the number of <em>available</em> channels in current configuration.
    * 
    * @return number of available channels, e.g., 8 or 16.
    */
@@ -124,7 +122,7 @@ public final class LogicSnifferConfig
 
     if ( this.metadata != null )
     {
-      channels = this.metadata.getProbeCount( channels );
+      channels = Math.min( channels, this.metadata.getProbeCount( channels ) );
     }
 
     return channels;
@@ -177,6 +175,14 @@ public final class LogicSnifferConfig
         cnt++;
       }
     }
+
+    if ( isDemuxEnabled() && isInternalClock() )
+    {
+      // In case the demux is enabled, only a maximum of two channel groups is
+      // allowed...
+      cnt = Math.min( 2, cnt );
+    }
+
     return cnt;
   }
 
@@ -201,7 +207,7 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Returns the name of the port through which to communiate with the device.
+   * Returns the name of the port through which to communicate with the device.
    * 
    * @return the port name, e.g., "COM3", or "/dev/ttyACM0".
    */
@@ -229,8 +235,7 @@ public final class LogicSnifferConfig
    */
   public int getReadCounter()
   {
-    int readCounter = this.metadata.getSampleMemoryDepth( this.size );
-    return Math.min( this.size, readCounter );
+    return this.size;
   }
 
   /**
@@ -241,15 +246,15 @@ public final class LogicSnifferConfig
   public int getSampleCount()
   {
     int samples;
-    if ( this.demux && isInternalClock() )
+    if ( isDemuxEnabled() && isInternalClock() )
     {
       // When the multiplexer is turned on, the upper two channel blocks are
       // disabled, leaving only 16 channels for capturing...
-      samples = ( getReadCounter() & 0xffff8 );
+      samples = getReadCounter() & 0xffff8;
     }
     else
     {
-      samples = ( getReadCounter() & 0xffffc );
+      samples = getReadCounter() & 0xffffc;
     }
 
     return samples;
@@ -265,11 +270,14 @@ public final class LogicSnifferConfig
     int rate = CapturedData.NOT_AVAILABLE;
     if ( isInternalClock() )
     {
-      rate = LogicSnifferConfig.CLOCK / ( getDivider() + 1 );
       if ( isDemuxEnabled() )
       {
         // The sample clock is 200MHz iso 100MHz...
-        rate *= 2.0;
+        rate = ( int )( ( 2.0 * LogicSnifferDevice.CLOCK ) / ( getDivider() + 1 ) );
+      }
+      else
+      {
+        rate = ( int )( ( 1.0 * LogicSnifferDevice.CLOCK ) / ( getDivider() + 1 ) );
       }
     }
     return rate;
@@ -619,15 +627,16 @@ public final class LogicSnifferConfig
    */
   public void setSampleRate( final int aRate )
   {
-    if ( aRate > CLOCK )
+    final int clock = LogicSnifferDevice.CLOCK;
+    if ( aRate > clock )
     {
       this.demux = true;
-      this.divider = ( 2 * CLOCK / aRate ) - 1;
+      this.divider = ( int )( ( 2.0 * clock / aRate ) - 1 );
     }
     else
     {
       this.demux = false;
-      this.divider = ( CLOCK / aRate ) - 1;
+      this.divider = ( int )( ( 1.0 * clock / aRate ) - 1 );
     }
   }
 

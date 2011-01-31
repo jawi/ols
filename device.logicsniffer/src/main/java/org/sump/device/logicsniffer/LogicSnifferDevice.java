@@ -204,7 +204,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         if ( ( sampleValue & this.rleCountValue ) != 0 )
         {
           // This is a "count"; first a value should be seen before adding
-          // RLE-counts...
+          // RLE-counts.
           if ( i > 0 )
           {
             time += ( sampleValue & this.rleCountMask );
@@ -266,6 +266,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 
   public static final String PROP_CAPTURE_PROGRESS = "progress";
   public static final String PROP_CAPTURE_STATE = "state";
+
+  /** The default sample clock in Hertz (Hz). */
+  public final static int CLOCK = 100000000; // device clock in Hz
 
   /** Old SLA version, v0 (0x534c4130, or 0x30414c53) - no longer supported. */
   private static final int SLA_V0 = 0x30414c53;
@@ -534,17 +537,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       // as their values are to be filled from anonymous inner classes...
       final long[] absoluteLength = { 0L };
       final long[] triggerPos = { CapturedData.NOT_AVAILABLE };
-
-      int rate = CapturedData.NOT_AVAILABLE;
-      if ( this.config.isInternalClock() )
-      {
-        rate = LogicSnifferConfig.CLOCK / ( this.config.getDivider() + 1 );
-        if ( this.config.isDemuxEnabled() )
-        {
-          // The sample clock is 200MHz iso 100MHz...
-          rate *= 2.0;
-        }
-      }
+      final int rate = this.config.getSampleRate();
 
       final SampleProcessorCallback callback = new SampleProcessorCallback()
       {
