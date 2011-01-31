@@ -30,8 +30,6 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
-import org.osgi.service.prefs.*;
-
 
 /**
  * @author jawi
@@ -112,14 +110,14 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
-  public void readPreferences( final Preferences aPrefs )
+  public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.channelsCombo, aPrefs.getInt( "channels", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.dataFunctionCombo, aPrefs.getInt( "dataFunction", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.dataLengthCombo, aPrefs.getInt( "dataLength", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.channelsCombo, aSettings.getInt( "channels", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.dataFunctionCombo, aSettings.getInt( "dataFunction", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.dataLengthCombo, aSettings.getInt( "dataLength", -1 ) );
   }
 
   /**
@@ -135,14 +133,14 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
-  public void writePreferences( final Preferences aPrefs )
+  public void writePreferences( final UserSettings aSettings )
   {
-    aPrefs.putInt( "channels", this.channelsCombo.getSelectedIndex() );
-    aPrefs.putInt( "dataFunction", this.dataFunctionCombo.getSelectedIndex() );
-    aPrefs.putInt( "dataLength", this.dataLengthCombo.getSelectedIndex() );
+    aSettings.putInt( "channels", this.channelsCombo.getSelectedIndex() );
+    aSettings.putInt( "dataFunction", this.dataFunctionCombo.getSelectedIndex() );
+    aSettings.putInt( "dataLength", this.dataLengthCombo.getSelectedIndex() );
   }
 
   /**

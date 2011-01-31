@@ -31,8 +31,7 @@ import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.SwingWorker.*;
 
-import org.osgi.service.prefs.*;
-
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
@@ -314,13 +313,13 @@ public class MeasurementDialog extends BaseToolDialog
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void readPreferences( final Preferences aPrefs )
+  public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.cursorA, aPrefs.getInt( "selectedCursorA", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.cursorB, aPrefs.getInt( "selectedCursorB", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser, aPrefs.getInt( "selectedClockChannel", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.cursorA, aSettings.getInt( "selectedCursorA", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.cursorB, aSettings.getInt( "selectedCursorB", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser, aSettings.getInt( "selectedClockChannel", -1 ) );
   }
 
   /**
@@ -346,13 +345,13 @@ public class MeasurementDialog extends BaseToolDialog
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void writePreferences( final Preferences aPrefs )
+  public void writePreferences( final UserSettings aSettings )
   {
-    aPrefs.putInt( "selectedCursorA", this.cursorA.getSelectedIndex() );
-    aPrefs.putInt( "selectedCursorB", this.cursorB.getSelectedIndex() );
-    aPrefs.putInt( "selectedClockChannel", this.clockChannelChooser.getSelectedIndex() );
+    aSettings.putInt( "selectedCursorA", this.cursorA.getSelectedIndex() );
+    aSettings.putInt( "selectedCursorB", this.cursorB.getSelectedIndex() );
+    aSettings.putInt( "selectedClockChannel", this.clockChannelChooser.getSelectedIndex() );
   }
 
   /**

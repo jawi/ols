@@ -21,8 +21,8 @@
 package nl.lxtreme.ols.tool.i2c;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -34,8 +34,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import org.osgi.service.prefs.*;
-
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
@@ -136,17 +135,17 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   // CONSTRUCTORS
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void readPreferences( final Preferences aPrefs )
+  public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.lineA, aPrefs.getInt( "lineA", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.lineB, aPrefs.getInt( "lineB", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.lineA, aSettings.getInt( "lineA", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.lineB, aSettings.getInt( "lineB", -1 ) );
 
-    SwingComponentUtils.setSelected( this.detectSTART, Boolean.valueOf( aPrefs.getBoolean( "detectStart", true ) ) );
-    SwingComponentUtils.setSelected( this.detectSTOP, Boolean.valueOf( aPrefs.getBoolean( "detectStop", true ) ) );
-    SwingComponentUtils.setSelected( this.detectNACK, Boolean.valueOf( aPrefs.getBoolean( "detectNack", true ) ) );
-    SwingComponentUtils.setSelected( this.detectACK, Boolean.valueOf( aPrefs.getBoolean( "detectAck", true ) ) );
+    SwingComponentUtils.setSelected( this.detectSTART, Boolean.valueOf( aSettings.getBoolean( "detectStart", true ) ) );
+    SwingComponentUtils.setSelected( this.detectSTOP, Boolean.valueOf( aSettings.getBoolean( "detectStop", true ) ) );
+    SwingComponentUtils.setSelected( this.detectNACK, Boolean.valueOf( aSettings.getBoolean( "detectNack", true ) ) );
+    SwingComponentUtils.setSelected( this.detectACK, Boolean.valueOf( aSettings.getBoolean( "detectAck", true ) ) );
   }
 
   /**
@@ -216,17 +215,17 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
-  public void writePreferences( final Preferences aPrefs )
+  public void writePreferences( final UserSettings aSettings )
   {
-    aPrefs.putInt( "lineA", this.lineA.getSelectedIndex() );
-    aPrefs.putInt( "lineB", this.lineB.getSelectedIndex() );
+    aSettings.putInt( "lineA", this.lineA.getSelectedIndex() );
+    aSettings.putInt( "lineB", this.lineB.getSelectedIndex() );
 
-    aPrefs.putBoolean( "detectStart", this.detectSTART.isSelected() );
-    aPrefs.putBoolean( "detectStop", this.detectSTOP.isSelected() );
-    aPrefs.putBoolean( "detectNack", this.detectNACK.isSelected() );
-    aPrefs.putBoolean( "detectAck", this.detectACK.isSelected() );
+    aSettings.putBoolean( "detectStart", this.detectSTART.isSelected() );
+    aSettings.putBoolean( "detectStop", this.detectSTOP.isSelected() );
+    aSettings.putBoolean( "detectNack", this.detectNACK.isSelected() );
+    aSettings.putBoolean( "detectAck", this.detectACK.isSelected() );
   }
 
   /**

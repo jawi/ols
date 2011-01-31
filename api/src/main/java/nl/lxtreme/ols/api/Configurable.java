@@ -21,9 +21,6 @@
 package nl.lxtreme.ols.api;
 
 
-import org.osgi.service.prefs.*;
-
-
 /**
  * This interface defines the methods required to make (UI) object states
  * controllable by the project mechanism.
@@ -43,23 +40,23 @@ import org.osgi.service.prefs.*;
  */
 public interface Configurable
 {
-  /**
-   * Reads configuration from given preferences. UI element settings must be
-   * modified according to the properties found.
-   * 
-   * @param aPreferences
-   *          the preferences to read configuration from, cannot be
-   *          <code>null</code>.
-   */
-  public void readPreferences( final Preferences aPreferences );
+  // METHODS
 
   /**
-   * Writes configuration to given preferences. Properties must be set according
-   * to the UI element settings.
+   * Reads configuration from given preferences.
    * 
-   * @param aPreferences
-   *          the preferences to write configuration to, cannot be
+   * @param aSettings
+   *          the user settings to read the configuration from, cannot be
    *          <code>null</code>.
    */
-  public void writePreferences( final Preferences aPreferences );
+  public void readPreferences( final UserSettings aSettings );
+
+  /**
+   * Writes configuration to given preferences.
+   * 
+   * @param aSettings
+   *          the user settins to write the configuration to, cannot be
+   *          <code>null</code>.
+   */
+  public void writePreferences( final UserSettings aSettings );
 }

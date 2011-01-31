@@ -30,9 +30,6 @@ import java.util.List;
 
 import javax.swing.*;
 
-import org.osgi.service.prefs.*;
-
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.action.*;
@@ -402,18 +399,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
-   */
-  public void readPreferences( final Preferences aPreferences )
-  {
-    final DiagramSettings settings = this.diagram.getDiagramSettings();
-    if ( settings instanceof Configurable )
-    {
-      ( ( Configurable )settings ).readPreferences( aPreferences );
-    }
-  }
-
-  /**
    * Removes the menu item from the device menu with the given name.
    * 
    * @param aDeviceName
@@ -528,20 +513,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   public void updateProgress( final int aPercentage )
   {
     this.status.setProgress( aPercentage );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
-   */
-  public void writePreferences( final Preferences aPreferences )
-  {
-    final DiagramSettings settings = this.diagram.getDiagramSettings();
-    if ( settings instanceof Configurable )
-    {
-      ( ( Configurable )settings ).writePreferences( aPreferences );
-
-      this.controller.writePreferences();
-    }
   }
 
   /**

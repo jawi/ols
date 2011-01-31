@@ -32,6 +32,7 @@ import java.util.List;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -39,8 +40,6 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
-
-import org.osgi.service.prefs.*;
 
 
 /**
@@ -117,13 +116,13 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
-  public void readPreferences( final Preferences aPreferences )
+  public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.owMode, aPreferences.getInt( "owMode", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.owLine, aPreferences.getInt( "owLine", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.owMode, aSettings.getInt( "owMode", -1 ) );
+    SwingComponentUtils.setSelectedIndex( this.owLine, aSettings.getInt( "owLine", -1 ) );
   }
 
   /**
@@ -159,13 +158,13 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
-  public void writePreferences( final Preferences aPreferences )
+  public void writePreferences( final UserSettings aSettings )
   {
-    aPreferences.putInt( "owLine", this.owLine.getSelectedIndex() );
-    aPreferences.putInt( "owMode", this.owMode.getSelectedIndex() );
+    aSettings.putInt( "owLine", this.owLine.getSelectedIndex() );
+    aSettings.putInt( "owMode", this.owMode.getSelectedIndex() );
   }
 
   /**

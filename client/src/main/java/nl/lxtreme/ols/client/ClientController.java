@@ -38,15 +38,10 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.data.*;
-import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
-import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.component.*;
-
 import org.osgi.framework.*;
-import org.osgi.service.prefs.*;
 
 
 /**
@@ -126,20 +121,18 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   private MainFrame mainFrame;
 
   private volatile DeviceController currentDevCtrl;
-  private volatile Preferences userPreferences;
-  private volatile Preferences systemPreferences;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new ClientController instance.
    */
-  public ClientController( final BundleContext aBundleContext, final Host aHost )
+  public ClientController( final BundleContext aBundleContext, final Host aHost, final ProjectManager aProjectManager )
   {
     this.bundleContext = aBundleContext;
     this.host = aHost;
+    this.projectManager = aProjectManager;
 
-    this.projectManager = new SimpleProjectManager( aHost );
     this.dataContainer = new DataContainer( this.projectManager );
     this.actionManager = new ActionManager();
     this.evenListeners = new EventListenerList();
@@ -356,15 +349,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   public void clearDeviceController()
   {
     this.currentDevCtrl = null;
-  }
-
-  /**
-   * Clears all preferences.
-   */
-  public void clearPreferences()
-  {
-    this.systemPreferences = null;
-    this.userPreferences = null;
   }
 
   /**
@@ -707,21 +691,14 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     FileInputStream fis = new FileInputStream( aFile );
 
-    try
-    {
-      this.projectManager.loadProject( fis );
+    this.projectManager.loadProject( fis );
 
-      final Project project = this.projectManager.getCurrentProject();
-      project.setFilename( aFile );
+    final Project project = this.projectManager.getCurrentProject();
+    project.setFilename( aFile );
 
-      // TODO flush preferences to project...
+    // TODO flush preferences to project...
 
-      zoomToFit();
-    }
-    finally
-    {
-      clearWindowPreferencesNode();
-    }
+    zoomToFit();
   }
 
   /**
@@ -926,15 +903,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     FileOutputStream out = null;
     try
     {
-      try
-      {
-        this.userPreferences.flush();
-      }
-      catch ( BackingStoreException exception )
-      {
-        LOG.warning( "Flushing preferences failed! Project settings not stored entirely..." );
-      }
-
       // TODO flush user preferences to project...
       final Project project = this.projectManager.getCurrentProject();
       project.setFilename( aFile );
@@ -1037,18 +1005,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
 
     this.mainFrame = aMainFrame;
-  }
-
-  /**
-   * @param aUserPreferences
-   *          the preferences to set
-   */
-  public void setPreferences( final Preferences aUserPreferences, final Preferences aSystemPreferences )
-  {
-    this.userPreferences = aUserPreferences;
-    this.systemPreferences = aSystemPreferences;
-
-    this.mainFrame.readPreferences( this.systemPreferences.node( "/ols/settings" ) );
   }
 
   /**
@@ -1171,22 +1127,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * 
-   */
-  public void writePreferences()
-  {
-    try
-    {
-      clearWindowPreferencesNode();
-      this.systemPreferences.flush();
-    }
-    catch ( BackingStoreException exception )
-    {
-      JErrorDialog.showDialog( getMainFrame(), "Failed to write preferences!", exception );
-    }
-  }
-
-  /**
    * Zooms in to the maximum zoom level.
    */
   public void zoomDefault()
@@ -1246,47 +1186,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   final MainFrame getMainFrame()
   {
     return this.mainFrame;
-  }
-
-  /**
-   * Clears the preference-node in which the administration is kept which
-   * windows have already their preferences set.
-   */
-  private void clearWindowPreferencesNode()
-  {
-    try
-    {
-      if ( ( this.systemPreferences != null )
-          && this.systemPreferences.nodeExists( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ) )
-      {
-        this.systemPreferences.node( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ).removeNode();
-        this.systemPreferences.flush();
-      }
-    }
-    catch ( BackingStoreException exception )
-    {
-      // Ignore...
-    }
-  }
-
-  /**
-   * @return
-   */
-  private boolean containsWindowsPreferencesNode()
-  {
-    try
-    {
-      if ( ( this.systemPreferences != null )
-          && this.systemPreferences.nodeExists( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ) )
-      {
-        return true;
-      }
-    }
-    catch ( BackingStoreException exception )
-    {
-      // Ignore...
-    }
-    return false;
   }
 
   /**
@@ -1502,7 +1401,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );
     getAction( RepeatCaptureAction.ID ).setEnabled( deviceSetup );
 
-    final boolean windowPrefsAvailable = containsWindowsPreferencesNode();
+    final boolean windowPrefsAvailable = false; // XXX
     final boolean dataAvailable = this.dataContainer.hasCapturedData();
 
     getAction( SaveProjectAction.ID ).setEnabled( dataAvailable || windowPrefsAvailable );
@@ -1558,7 +1457,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     if ( this.mainFrame != null )
     {
       this.mainFrame.setDiagramSettings( aSettings );
-      this.mainFrame.writePreferences( this.systemPreferences.node( "/ols/settings" ) );
       repaintMainFrame();
     }
   }

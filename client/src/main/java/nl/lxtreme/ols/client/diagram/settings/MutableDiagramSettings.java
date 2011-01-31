@@ -24,8 +24,6 @@ package nl.lxtreme.ols.client.diagram.settings;
 import java.awt.*;
 import java.util.*;
 
-import org.osgi.service.prefs.*;
-
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 
@@ -81,8 +79,8 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
 
     this.showCursorTiming = true;
 
-    this.cursorColors = new Color[DataContainer.MAX_CURSORS];
-    this.channelColors = new Color[DataContainer.MAX_CHANNELS];
+    this.cursorColors = new Color[CapturedData.MAX_CURSORS];
+    this.channelColors = new Color[CapturedData.MAX_CHANNELS];
 
     this.colorTarget = ColorTarget.SIGNALS;
 
@@ -133,12 +131,12 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
 
       setColorScheme( aDiagramSettings.getColorScheme() );
 
-      for ( int i = 0; i < DataContainer.MAX_CURSORS; i++ )
+      for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
       {
         setCursorColor( i, aDiagramSettings.getCursorColor( i ) );
       }
 
-      for ( int i = 0; i < DataContainer.MAX_CHANNELS; i++ )
+      for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
       {
         setChannelColor( i, aDiagramSettings.getChannelColor( i ) );
       }
@@ -379,24 +377,24 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
-  public void readPreferences( final Preferences aPreferences )
+  public void readPreferences( final UserSettings aSettings )
   {
-    setChannelHeight( aPreferences.getInt( "channelHeight", this.channelHeight ) );
-    setSignalHeight( aPreferences.getInt( "signalHeight", this.signalHeight ) );
-    setScopeHeight( aPreferences.getInt( "scopeHeight", this.scopeHeight ) );
+    setChannelHeight( aSettings.getInt( "channelHeight", this.channelHeight ) );
+    setSignalHeight( aSettings.getInt( "signalHeight", this.signalHeight ) );
+    setScopeHeight( aSettings.getInt( "scopeHeight", this.scopeHeight ) );
 
-    setShowCursorTiming( aPreferences.getBoolean( "showCursorTiming", this.showCursorTiming ) );
+    setShowCursorTiming( aSettings.getBoolean( "showCursorTiming", this.showCursorTiming ) );
 
-    String edgeSlopeName = aPreferences.get( "edgeSlope", this.edgeSlope.name() );
+    String edgeSlopeName = aSettings.get( "edgeSlope", this.edgeSlope.name() );
     setEdgeSlope( EdgeSlope.valueOf( edgeSlopeName ) );
 
-    String colorTargetName = aPreferences.get( "colorTarget", this.colorTarget.name() );
+    String colorTargetName = aSettings.get( "colorTarget", this.colorTarget.name() );
     setColorTarget( ColorTarget.valueOf( colorTargetName ) );
 
-    String colorSchemeName = aPreferences.get( "colorScheme", this.colorScheme.name() );
+    String colorSchemeName = aSettings.get( "colorScheme", this.colorScheme.name() );
     setColorScheme( ColorScheme.valueOf( colorSchemeName ) );
   }
 
@@ -695,20 +693,20 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(org.osgi.service.prefs.Preferences)
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
-  public void writePreferences( final Preferences aPreferences )
+  public void writePreferences( final UserSettings aSettings )
   {
-    aPreferences.putInt( "channelHeight", this.channelHeight );
-    aPreferences.putInt( "signalHeight", this.signalHeight );
-    aPreferences.putInt( "scopeHeight", this.scopeHeight );
+    aSettings.putInt( "channelHeight", this.channelHeight );
+    aSettings.putInt( "signalHeight", this.signalHeight );
+    aSettings.putInt( "scopeHeight", this.scopeHeight );
 
-    aPreferences.putBoolean( "showCursorTiming", this.showCursorTiming );
+    aSettings.putBoolean( "showCursorTiming", this.showCursorTiming );
 
-    aPreferences.put( "colorTarget", this.colorTarget.name() );
-    aPreferences.put( "colorScheme", this.colorScheme.name() );
-    aPreferences.put( "edgeSlope", this.edgeSlope.name() );
+    aSettings.put( "colorTarget", this.colorTarget.name() );
+    aSettings.put( "colorScheme", this.colorScheme.name() );
+    aSettings.put( "edgeSlope", this.edgeSlope.name() );
   }
 
   /**
@@ -788,7 +786,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
       this.timeColor = new Color( 0x25, 0x25, 0x25 );
       this.triggerColor = new Color( 0x82, 0x87, 0x8f );
 
-      makeColorPalette( this.cursorColors, DataContainer.MAX_CURSORS );
+      makeColorPalette( this.cursorColors, CapturedData.MAX_CURSORS );
       makeMonochromaticColorPalette( this.channelColors, this.signalColor );
     }
   }
