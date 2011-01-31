@@ -192,41 +192,73 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     {
       long time = 0;
       long rleTrigPos = 0;
+      int oldSample = 0;
 
       // if msb set increment time by the count value
       // else save sample check trigger pos and increment time by 1
       // this should work for either dogsbody or rasmus bitstreams
+      this.callback.addValue( 0, time );
+
       final int samples = this.buffer.length;
       for ( int i = 0; i < samples; i++ )
       {
         final int sampleValue = this.buffer[i];
+        final int normalizedSampleValue = normalizeSampleValue( sampleValue );
 
-        if ( ( sampleValue & this.rleCountValue ) != 0 )
+        // if a count just add it to the time
+        if ( ( normalizedSampleValue & this.rleCountValue ) != 0 )
         {
-          // This is a "count"; first a value should be seen before adding
-          // RLE-counts.
-          if ( i > 0 )
-          {
-            time += ( sampleValue & this.rleCountMask );
-          }
+          time += ( normalizedSampleValue & this.rleCountMask );
         }
         else
         {
-          // set the trigger position as a time value
-          if ( ( i >= this.trigCount ) && ( rleTrigPos == 0 ) )
+          // this is a data value only save data if different to last
+          if ( sampleValue != oldSample )
           {
-            // We're reading the samples backwards; hence we need to invert
-            // the trigger position...
-            rleTrigPos = time;
+            // set the trigger position as a time value
+            if ( ( i >= this.trigCount - 1 ) && ( rleTrigPos == 0 ) )
+            {
+              rleTrigPos = time;
+            }
+            // add the read sample & add a timestamp value as well...
+            this.callback.addValue( sampleValue, time );
+            oldSample = sampleValue;
           }
-
-          // add the read sample & add a timestamp value as well...
-          this.callback.addValue( sampleValue, time++ );
+          time++;
         }
       }
 
       // Take the last seen time value as "absolete" length of this trace...
       this.callback.ready( time, rleTrigPos - 1 );
+    }
+
+    /**
+     * Normalizes the given sample value to mask out the unused channel groups
+     * and get a sample value in the correct width.
+     * 
+     * @param aSampleValue
+     *          the original sample to normalize.
+     * @return the normalized sample value.
+     */
+    private int normalizeSampleValue( final int aSampleValue )
+    {
+      final int enabledGroupCount = LogicSnifferDevice.this.config.getEnabledGroupCount();
+
+      int compdata = 0;
+
+      // to enable non contiguous channel groups
+      // need to remove zero data from unused groups
+      int indata = aSampleValue;
+      for ( int j = 0, outcount = 0; j < enabledGroupCount; j++ )
+      {
+        if ( LogicSnifferDevice.this.config.isGroupEnabled( j ) )
+        {
+          compdata |= ( ( indata & 0xff ) << ( 8 * outcount++ ) );
+        }
+        indata >>= 8;
+      }
+
+      return compdata;
     }
   }
 
@@ -310,7 +342,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   // inverted
   private final static int FLAG_INVERTED = 0x00000080;
   // run length encoding
-  private final static int FLAG_RLE = 0x00000100;
+  private final static int FLAG_RLE = 0x00004100; // rle mode 1
 
   // Number Scheme
   private final static int FLAG_NUMBER_SCHEME = 0x00000200;
