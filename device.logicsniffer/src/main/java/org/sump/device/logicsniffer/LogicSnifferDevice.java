@@ -242,14 +242,14 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
      */
     private int normalizeSampleValue( final int aSampleValue )
     {
-      final int enabledGroupCount = LogicSnifferDevice.this.config.getEnabledGroupCount();
+      final int groupCount = LogicSnifferDevice.this.config.getGroupCount();
 
       int compdata = 0;
 
       // to enable non contiguous channel groups
       // need to remove zero data from unused groups
       int indata = aSampleValue;
-      for ( int j = 0, outcount = 0; j < enabledGroupCount; j++ )
+      for ( int j = 0, outcount = 0; j < groupCount; j++ )
       {
         if ( LogicSnifferDevice.this.config.isGroupEnabled( j ) )
         {
@@ -843,7 +843,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
    */
   private void detectDevice() throws IOException
   {
-    int tries = 3;
+    int tries = 5;
     int id = -1;
     while ( ( tries-- >= 0 ) && ( id != SLA_V0 ) && ( id != SLA_V1 ) )
     {
