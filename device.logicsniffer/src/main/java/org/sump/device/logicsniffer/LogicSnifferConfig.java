@@ -187,6 +187,16 @@ public final class LogicSnifferConfig
   }
 
   /**
+   * Returns the total number of channel groups.
+   * 
+   * @return a group count, >= 0 && < 4.
+   */
+  public int getGroupCount()
+  {
+    return getChannelCount() / CapturedData.CHANNELS_PER_BLOCK;
+  }
+
+  /**
    * Returns the number of available trigger stages.
    * 
    * @return number of available trigger stages, defaults to 4.
