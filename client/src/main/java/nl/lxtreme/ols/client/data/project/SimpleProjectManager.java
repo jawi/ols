@@ -120,21 +120,22 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
       ZipEntry ze = null;
       while ( ( ze = zipIS.getNextEntry() ) != null )
       {
-        if ( FILENAME_PROJECT_METADATA.equals( ze.getName() ) )
+        final String name = ze.getName();
+        if ( FILENAME_PROJECT_METADATA.equals( name ) )
         {
           loadProjectMetadata( newProject, zipIS );
         }
-        else if ( FILENAME_CHANNEL_LABELS.equals( ze.getName() ) )
+        else if ( FILENAME_CHANNEL_LABELS.equals( name ) )
         {
           loadChannelLabels( newProject, zipIS );
         }
-        else if ( FILENAME_CAPTURE_RESULTS.equals( ze.getName() ) )
+        else if ( FILENAME_CAPTURE_RESULTS.equals( name ) )
         {
           loadCapturedResults( newProject, zipIS );
         }
-        else if ( ze.getName().startsWith( FILENAME_PROJECT_SETTINGS ) )
+        else if ( name.startsWith( FILENAME_PROJECT_SETTINGS ) )
         {
-          final String userSettingsName = ze.getName().substring( FILENAME_PROJECT_SETTINGS.length() );
+          final String userSettingsName = name.substring( FILENAME_PROJECT_SETTINGS.length() );
           loadProjectSettings( newProject, userSettingsName, zipIS );
         }
 
@@ -293,8 +294,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     }
     finally
     {
-      final String name = HostUtils.stripFileExtension( aUserSettingsName, "properties" );
-      final UserSettingsImpl userSettings = new UserSettingsImpl( name, settings );
+      final UserSettingsImpl userSettings = new UserSettingsImpl( aUserSettingsName, settings );
       aProject.setSettings( userSettings );
     }
   }
@@ -436,7 +436,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     {
       for ( UserSettings userSettings : allUserSettings.values() )
       {
-        final String zipEntryName = FILENAME_PROJECT_SETTINGS.concat( userSettings.getName() ).concat( ".properties" );
+        final String zipEntryName = FILENAME_PROJECT_SETTINGS.concat( userSettings.getName() );
 
         final ZipEntry zipEntry = new ZipEntry( zipEntryName );
         aZipOS.putNextEntry( zipEntry );

@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client.osgi;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 import java.util.logging.*;
 
 import javax.swing.*;
@@ -56,6 +57,7 @@ public class PreferenceServiceTracker extends ServiceTracker
 
     // VARIABLES
 
+    private final Map<String, Boolean> prefsLoaded;
     private final PreferencesService preferenceService;
     private final ProjectManager projectManager;
     private final String userName;
@@ -66,7 +68,13 @@ public class PreferenceServiceTracker extends ServiceTracker
      * Creates a new FrameStateListener instance.
      * 
      * @param aPreferences
-     *          the preferences to pass to the individual opened windows.
+     *          the preferences to pass to the individual opened windows;
+     * @param aProjectManager
+     *          the project manager that provides the (current) user settings;
+     * @param aUserName
+     *          the name of the user running the client. Used to "partition" the
+     *          window preferences for individual users in global preferences
+     *          storage.
      */
     public WindowStateListener( final PreferencesService aPreferenceService, final ProjectManager aProjectManager,
         final String aUserName )
@@ -74,6 +82,8 @@ public class PreferenceServiceTracker extends ServiceTracker
       this.userName = aUserName;
       this.projectManager = aProjectManager;
       this.preferenceService = aPreferenceService;
+
+      this.prefsLoaded = new HashMap<String, Boolean>();
     }
 
     // METHODS
@@ -96,80 +106,36 @@ public class PreferenceServiceTracker extends ServiceTracker
 
       if ( ( id == WindowEvent.WINDOW_OPENED ) || ( id == WindowEvent.WINDOW_ACTIVATED ) )
       {
-        // When we've already set the preferences once; don't do this again...
-        if ( arePreferencesLoaded( namespace ) )
+        synchronized ( new Object() )
         {
-          return;
-        }
-
-        try
-        {
-          if ( component instanceof Configurable )
+          // When we've already set the preferences once; don't do this again...
+          if ( arePreferencesLoaded( namespace ) )
           {
-            LOG.log( Level.FINE, "Reading dialog-specific properties for {0} ...", namespace );
-
-            final UserSettings userSettings = getUserSettings( namespace );
-            ( ( Configurable )component ).readPreferences( userSettings );
+            return;
           }
 
-          // Only store settings of "real" frames and dialogs, not
-          // popups/dropdowns, etc...
-          if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
-          {
-            LOG.log( Level.FINE, "Reading window-properties for {0} ...", namespace );
-
-            final Preferences componentPrefs = getUserPreferences( namespace );
-            SwingComponentUtils.loadWindowState( componentPrefs, component );
-          }
-        }
-        catch ( RuntimeException exception )
-        {
-          LOG.log( Level.WARNING, "Reading dialog properties failed!", exception );
-        }
-        finally
-        {
-          registerPreferencesLoaded( namespace );
+          loadPreferences( component, namespace );
         }
       }
       else if ( id == WindowEvent.WINDOW_CLOSED )
       {
-        try
-        {
-          if ( component instanceof Configurable )
-          {
-            LOG.log( Level.FINE, "Writing dialog-specific properties for {0} ...", namespace );
-
-            final UserSettings userSettings = getUserSettings( namespace );
-            ( ( Configurable )component ).writePreferences( userSettings );
-          }
-
-          // Only store settings of "real" frames and dialogs, not
-          // popups/dropdowns, etc...
-          if ( ( component instanceof JFrame ) || ( component instanceof JDialog ) )
-          {
-            LOG.log( Level.FINE, "Writing window-properties for {0} ...", namespace );
-
-            final Preferences componentPrefs = getUserPreferences( namespace );
-            SwingComponentUtils.saveWindowState( componentPrefs, component );
-          }
-        }
-        catch ( RuntimeException exception )
-        {
-          LOG.log( Level.WARNING, "Writing dialog properties failed!", exception );
-        }
+        savePreferences( component, namespace );
       }
     }
 
     /**
+     * Returns whether or not the preferences are loaded for the given
+     * namespace.
+     * 
      * @param aNamespace
-     * @return
+     *          the namespace key to check.
+     * @return <code>true</code> if the (Window) preferences of the given
+     *         namespace are already loaded once, <code>false</code> otherwise.
      */
     private boolean arePreferencesLoaded( final String aNamespace )
     {
-      final Preferences systemPreferences = this.preferenceService.getSystemPreferences();
-
-      final Preferences windowPrefs = systemPreferences.node( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY );
-      return windowPrefs.getBoolean( aNamespace, false );
+      Boolean result = this.prefsLoaded.get( aNamespace );
+      return Boolean.TRUE.equals( result );
     }
 
     /**
@@ -198,30 +164,103 @@ public class PreferenceServiceTracker extends ServiceTracker
      */
     private UserSettings getUserSettings( final String aNamespace )
     {
-      final UserSettings result = this.projectManager.getCurrentProject().getSettings( aNamespace );
-      return result;
+      return this.projectManager.getCurrentProject().getSettings( aNamespace );
     }
 
     /**
+     * Loads the window preferences for the given window with the given
+     * namespace.
+     * 
+     * @param aComponent
+     *          the component to load the window preferences for;
      * @param aNamespace
+     *          the namespace of the component to load the preferences for.
+     */
+    private void loadPreferences( final Window aComponent, final String aNamespace )
+    {
+      try
+      {
+        if ( aComponent instanceof Configurable )
+        {
+          LOG.log( Level.FINE, "Reading dialog-specific properties for {0} ...", aNamespace );
+
+          final UserSettings userSettings = getUserSettings( aNamespace );
+          ( ( Configurable )aComponent ).readPreferences( userSettings );
+        }
+
+        // Only store settings of "real" frames and dialogs, not
+        // popups/dropdowns, etc...
+        if ( ( aComponent instanceof JFrame ) || ( aComponent instanceof JDialog ) )
+        {
+          LOG.log( Level.FINE, "Reading window-properties for {0} ...", aNamespace );
+
+          final Preferences componentPrefs = getUserPreferences( aNamespace );
+          SwingComponentUtils.loadWindowState( componentPrefs, aComponent );
+        }
+      }
+      finally
+      {
+        registerPreferencesLoaded( aNamespace );
+      }
+    }
+
+    /**
+     * Marks for the given namespace that its (Window) preferences are loaded.
+     * 
+     * @param aNamespace
+     *          the namespace to register as being loaded.
      */
     private void registerPreferencesLoaded( final String aNamespace )
     {
-      final Preferences systemPreferences = this.preferenceService.getSystemPreferences();
-      final Preferences windowPrefs = systemPreferences.node( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY );
-      windowPrefs.putBoolean( aNamespace, true );
+      this.prefsLoaded.put( aNamespace, Boolean.TRUE );
+    }
+
+    /**
+     * Saves the preferences for the given window using the given namespace.
+     * 
+     * @param aComponent
+     *          the component to save the window preferences for;
+     * @param aNamespace
+     *          the namespace of the component to save the preferences for.
+     */
+    private void savePreferences( final Window aComponent, final String aNamespace )
+    {
+      try
+      {
+        if ( aComponent instanceof Configurable )
+        {
+          LOG.log( Level.FINE, "Writing dialog-specific properties for {0} ...", aNamespace );
+
+          final UserSettings userSettings = getUserSettings( aNamespace );
+          ( ( Configurable )aComponent ).writePreferences( userSettings );
+        }
+
+        // Only store settings of "real" frames and dialogs, not
+        // popups/dropdowns, etc...
+        if ( ( aComponent instanceof JFrame ) || ( aComponent instanceof JDialog ) )
+        {
+          LOG.log( Level.FINE, "Writing window-properties for {0} ...", aNamespace );
+
+          final Preferences componentPrefs = getUserPreferences( aNamespace );
+          SwingComponentUtils.saveWindowState( componentPrefs, aComponent );
+        }
+      }
+      catch ( RuntimeException exception )
+      {
+        LOG.log( Level.WARNING, "Writing dialog properties failed!", exception );
+      }
     }
   }
 
   // CONSTANTS
 
-  public static final String OLS_WINDOW_PREFERENCES_KEY = "ols/windowPreferencesSet";
+  private static final Logger LOG = Logger.getLogger( PreferenceServiceTracker.class.getName() );
 
   // VARIABLES
 
   private final ProjectManager projectManager;
-  private volatile PreferencesService preferenceService = null;
-  private transient WindowStateListener windowStateListener = null;
+  private PreferencesService preferenceService = null;
+  private WindowStateListener windowStateListener = null;
 
   // CONSTRUCTORS
 
@@ -258,11 +297,6 @@ public class PreferenceServiceTracker extends ServiceTracker
       Toolkit.getDefaultToolkit().addAWTEventListener( this.windowStateListener, AWTEvent.WINDOW_EVENT_MASK );
     }
 
-    final Preferences systemPreferences = this.preferenceService.getSystemPreferences();
-
-    // Clear any stored window preference keys...
-    clearWindowPreferencesNode( systemPreferences );
-
     return this.preferenceService;
   }
 
@@ -286,28 +320,7 @@ public class PreferenceServiceTracker extends ServiceTracker
     }
     catch ( IllegalStateException exception )
     {
-      Logger.getLogger( getClass().getName() ).log( Level.FINE,
-          "Ungetting service failed! Bundle context no longer valid!" );
-    }
-  }
-
-  /**
-   * Clears the preference-node in which the administration is kept which
-   * windows have already their preferences set.
-   */
-  private void clearWindowPreferencesNode( final Preferences aSystemPreferences )
-  {
-    try
-    {
-      if ( aSystemPreferences.nodeExists( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ) )
-      {
-        aSystemPreferences.node( PreferenceServiceTracker.OLS_WINDOW_PREFERENCES_KEY ).removeNode();
-        aSystemPreferences.flush();
-      }
-    }
-    catch ( BackingStoreException exception )
-    {
-      // Ignore...
+      LOG.log( Level.FINE, "Ungetting service failed! Bundle context no longer valid!" );
     }
   }
 }
