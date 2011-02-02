@@ -36,7 +36,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
- * 
+ * Provides an "open project" action.
  */
 public class OpenProjectAction extends BaseAction
 {
@@ -55,7 +55,10 @@ public class OpenProjectAction extends BaseAction
   // CONSTRUCTORS
 
   /**
+   * Creates a new OpenProjectAction instance.
    * 
+   * @param aController
+   *          the client controller to use for this action.
    */
   public OpenProjectAction( final ClientController aController )
   {
@@ -71,11 +74,21 @@ public class OpenProjectAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+    final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
+
+    final ClientController controller = getController();
 
     try
     {
-      final File file = SwingComponentUtils.showFileOpenDialog( owner, OLS_PROJECT_FILTER );
+      if ( controller.isProjectChanged() )
+      {
+        if ( SwingComponentUtils.askConfirmation( parent, "Current project is changed.\nReally loose your changes?" ) )
+        {
+          return;
+        }
+      }
+
+      final File file = SwingComponentUtils.showFileOpenDialog( parent, OLS_PROJECT_FILTER );
       if ( ( file != null ) && file.isFile() )
       {
         if ( LOG.isLoggable( Level.INFO ) )
@@ -83,7 +96,7 @@ public class OpenProjectAction extends BaseAction
           LOG.info( "Loading OLS project from file: " + file );
         }
 
-        getController().openProjectFile( file );
+        controller.openProjectFile( file );
       }
     }
     catch ( IOException exception )
@@ -92,7 +105,7 @@ public class OpenProjectAction extends BaseAction
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
         LOG.log( Level.WARNING, "Loading OLS project failed!", exception );
-        JErrorDialog.showDialog( owner, "Loading OLS project failed!", exception );
+        JErrorDialog.showDialog( parent, "Loading OLS project failed!", exception );
       }
     }
   }

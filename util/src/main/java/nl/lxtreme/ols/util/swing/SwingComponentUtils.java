@@ -63,6 +63,39 @@ public final class SwingComponentUtils
   // METHODS
 
   /**
+   * Asks the user for confirmation.
+   * 
+   * @param aWindow
+   *          the parent window of the confirmation dialog;
+   * @param aMessage
+   *          the message to display in the confirmation dialog.
+   * @return <code>true</code> if the user acknowledged the confirmation,
+   *         <code>false</code> otherwise.
+   */
+  public static boolean askConfirmation( final Window aWindow, final String aMessage )
+  {
+    return askConfirmation( aWindow, aMessage, "Continue?" );
+  }
+
+  /**
+   * Asks the user for confirmation.
+   * 
+   * @param aWindow
+   *          the parent window of the confirmation dialog;
+   * @param aMessage
+   *          the message to display in the confirmation dialog;
+   * @param aTitle
+   *          the title to display in the confirmation dialog.
+   * @return <code>true</code> if the user acknowledged the confirmation,
+   *         <code>false</code> otherwise.
+   */
+  public static boolean askConfirmation( final Window aWindow, final String aMessage, final String aTitle )
+  {
+    return JOptionPane.showConfirmDialog( aWindow, aMessage, aTitle, JOptionPane.YES_NO_OPTION,
+        JOptionPane.WARNING_MESSAGE ) != JOptionPane.YES_OPTION;
+  }
+
+  /**
    * Creates a button pane in which the given buttons are neatly aligned with
    * proper spacings.
    * 

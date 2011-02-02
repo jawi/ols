@@ -585,6 +585,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.exportMenu = new JMenu( "Export ..." );
     this.exportMenu.setMnemonic( 'e' );
 
+    fileMenu.add( this.controller.getAction( NewProjectAction.ID ) );
     fileMenu.add( this.controller.getAction( OpenProjectAction.ID ) );
     fileMenu.add( this.controller.getAction( SaveProjectAction.ID ) );
     fileMenu.add( this.controller.getAction( SaveProjectAsAction.ID ) );

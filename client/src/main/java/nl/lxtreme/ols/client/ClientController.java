@@ -352,11 +352,19 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Clears the current project, and start over as it were a new project.
+   * Clears the current project, and start over as it were a new project, in
+   * which no captured data is shown.
    */
   public void createNewProject()
   {
     this.projectManager.createNewProject();
+
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.repaint();
+    }
+
+    updateActions();
   }
 
   /**
@@ -646,6 +654,17 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   public synchronized boolean isDeviceSetup()
   {
     return ( this.currentDevCtrl != null ) && this.currentDevCtrl.isSetup();
+  }
+
+  /**
+   * Returns whether or not the current project is changed.
+   * 
+   * @return <code>true</code> if the current project is changed,
+   *         <code>false</code> if the current project is not changed.
+   */
+  public boolean isProjectChanged()
+  {
+    return this.projectManager.getCurrentProject().isChanged();
   }
 
   /**
@@ -1233,6 +1252,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   private void fillActionManager( final ActionManager aActionManager )
   {
+    aActionManager.add( new NewProjectAction( this ) );
     aActionManager.add( new OpenProjectAction( this ) );
     aActionManager.add( new SaveProjectAction( this ) ).setEnabled( false );
     aActionManager.add( new SaveProjectAsAction( this ) ).setEnabled( false );
