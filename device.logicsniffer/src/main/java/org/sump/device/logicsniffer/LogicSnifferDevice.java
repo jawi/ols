@@ -192,7 +192,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     {
       long time = 0;
       long rleTrigPos = 0;
-      int oldSample = 0;
+      int oldSample = -1;
 
       // if msb set increment time by the count value
       // else save sample check trigger pos and increment time by 1
@@ -216,7 +216,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           if ( sampleValue != oldSample )
           {
             // set the trigger position as a time value
-            if ( ( i >= this.trigCount - 1 ) && ( rleTrigPos == 0 ) )
+            if ( ( i >= this.trigCount ) && ( rleTrigPos == 0 ) )
             {
               rleTrigPos = time;
             }
@@ -342,7 +342,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   // inverted
   private final static int FLAG_INVERTED = 0x00000080;
   // run length encoding
-  private final static int FLAG_RLE = 0x00004100; // rle mode 1
+  private final static int FLAG_RLE = 0x0000C100; // rle mode 3
 
   // Number Scheme
   private final static int FLAG_NUMBER_SCHEME = 0x00000200;
@@ -968,70 +968,79 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     // metadata...
     sendCommand( CMD_METADATA );
 
-    final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
-
-    int result = -1;
-    do
+    try
     {
-      try
-      {
-        result = this.inputStream.read();
+      final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
 
-        if ( result > 0 )
+      int result = -1;
+      do
+      {
+        try
         {
-          final int type = ( result & 0xE0 ) >> 5;
-          if ( type == 0x00 )
+          result = this.inputStream.read();
+
+          if ( result > 0 )
           {
-            // key value is a null-terminated string...
-            final String value = readString();
-            metadata.put( result, value );
+            final int type = ( result & 0xE0 ) >> 5;
+            if ( type == 0x00 )
+            {
+              // key value is a null-terminated string...
+              final String value = readString();
+              metadata.put( result, value );
+            }
+            else if ( type == 0x01 )
+            {
+              // key value is a 32-bit integer; least significant byte first...
+              // final Integer value = NumberUtils.convertByteOrder(
+              // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
+              final int value = this.inputStream.readInt();
+              metadata.put( result, Integer.valueOf( value ) );
+            }
+            else if ( type == 0x02 )
+            {
+              // key value is a 8-bit integer...
+              final int value = this.inputStream.read();
+              metadata.put( result, Integer.valueOf( value ) );
+            }
+            else
+            {
+              LOG.log( Level.INFO, "Ignoring unknown type: {0}", Integer.valueOf( type ) );
+            }
           }
-          else if ( type == 0x01 )
+        }
+        catch ( final IOException exception )
+        {
+          /* don't care */
+          result = -1;
+
+          // Make sure to handle IO-interrupted exceptions properly!
+          if ( !HostUtils.handleInterruptedException( exception ) )
           {
-            // key value is a 32-bit integer; least significant byte first...
-            // final Integer value = NumberUtils.convertByteOrder(
-            // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
-            final int value = this.inputStream.readInt();
-            metadata.put( result, Integer.valueOf( value ) );
+            LOG.log( Level.INFO, "I/O exception", exception );
           }
-          else if ( type == 0x02 )
+        }
+        catch ( final InterruptedException exception )
+        {
+          /* don't care */
+          result = -1;
+
+          // Make sure to handle IO-interrupted exceptions properly!
+          if ( !HostUtils.handleInterruptedException( exception ) )
           {
-            // key value is a 8-bit integer...
-            final int value = this.inputStream.read();
-            metadata.put( result, Integer.valueOf( value ) );
-          }
-          else
-          {
-            LOG.log( Level.INFO, "Ignoring unknown type: {0}", Integer.valueOf( type ) );
+            LOG.log( Level.INFO, "Port timeout!", exception );
           }
         }
       }
-      catch ( final IOException exception )
-      {
-        /* don't care */
-        result = -1;
+      while ( result > 0x00 );
 
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.INFO, "I/O exception", exception );
-        }
-      }
-      catch ( final InterruptedException exception )
-      {
-        /* don't care */
-        result = -1;
-
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.INFO, "Port timeout!", exception );
-        }
-      }
+      return metadata;
     }
-    while ( result > 0x00 );
-
-    return metadata;
+    finally
+    {
+      // Reset the device again; this ensures correct working for devices whose
+      // firmware do not understand the metadata command...
+      resetDevice();
+    }
   }
 
   /**
