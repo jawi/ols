@@ -342,7 +342,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   // inverted
   private final static int FLAG_INVERTED = 0x00000080;
   // run length encoding
-  private final static int FLAG_RLE = 0x0000C100; // rle mode 3
+  private final static int FLAG_RLE = 0x00004100; // rle mode 1
 
   // Number Scheme
   private final static int FLAG_NUMBER_SCHEME = 0x00000200;
@@ -362,7 +362,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   private boolean attached;
 
   private final BundleContext bundleContext;
-  private int trigcount; // ***DSF
+  private int trigcount;
 
   // CONSTRUCTORS
 
