@@ -765,11 +765,12 @@ public final class SwingComponentUtils
   public static final File showFileOpenDialog( final Window aOwner,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    return showFileOpenDialog( aOwner, null, aFileFilters );
+    final String currentWorkingDir = System.getProperty( "user.dir" );
+    return showFileOpenDialog( aOwner, currentWorkingDir, aFileFilters );
   }
 
   /**
-   * Shows a file-open selection dialog for the current working directory.
+   * Shows a file-open selection dialog for the given working directory.
    * 
    * @param aOwner
    *          the owning window to show the dialog in;
@@ -793,10 +794,7 @@ public final class SwingComponentUtils
       {
         dialog = new FileDialog( ( Frame )aOwner, "Open file", FileDialog.LOAD );
       }
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setDirectory( aCurrentDirectory );
-      }
+      dialog.setDirectory( aCurrentDirectory );
 
       if ( ( aFileFilters != null ) && ( aFileFilters.length > 0 ) )
       {
@@ -817,10 +815,7 @@ public final class SwingComponentUtils
     else
     {
       final JFileChooser dialog = new JFileChooser();
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setCurrentDirectory( new File( aCurrentDirectory ) );
-      }
+      dialog.setCurrentDirectory( ( aCurrentDirectory == null ) ? null : new File( aCurrentDirectory ) );
 
       for ( javax.swing.filechooser.FileFilter filter : aFileFilters )
       {
@@ -848,11 +843,12 @@ public final class SwingComponentUtils
   public static final File showFileSaveDialog( final Window aOwner,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    return showFileSaveDialog( aOwner, null, aFileFilters );
+    final String currentWorkingDir = System.getProperty( "user.dir" );
+    return showFileSaveDialog( aOwner, currentWorkingDir, aFileFilters );
   }
 
   /**
-   * Shows a file-save selection dialog for the current working directory.
+   * Shows a file-save selection dialog for the given working directory.
    * 
    * @param aOwner
    *          the owning window to show the dialog in;
@@ -876,10 +872,7 @@ public final class SwingComponentUtils
       {
         dialog = new FileDialog( ( Frame )aOwner, "Save file", FileDialog.SAVE );
       }
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setDirectory( aCurrentDirectory );
-      }
+      dialog.setDirectory( aCurrentDirectory );
 
       if ( ( aFileFilters != null ) && ( aFileFilters.length > 0 ) )
       {
@@ -900,10 +893,7 @@ public final class SwingComponentUtils
     else
     {
       final JFileChooser dialog = new JFileChooser();
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setCurrentDirectory( new File( aCurrentDirectory ) );
-      }
+      dialog.setCurrentDirectory( ( aCurrentDirectory == null ) ? null : new File( aCurrentDirectory ) );
 
       for ( javax.swing.filechooser.FileFilter filter : aFileFilters )
       {
@@ -930,11 +920,12 @@ public final class SwingComponentUtils
   public static final File showFileSelectionDialog( final Window aOwner,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    return showFileSelectionDialog( aOwner, null, aFileFilters );
+    final String currentWorkingDir = System.getProperty( "user.dir" );
+    return showFileSelectionDialog( aOwner, currentWorkingDir, aFileFilters );
   }
 
   /**
-   * Shows a file selection dialog for the current working directory.
+   * Shows a file selection dialog for the given working directory.
    * 
    * @param aOwner
    *          the owning window to show the dialog in;
@@ -958,10 +949,7 @@ public final class SwingComponentUtils
       {
         dialog = new FileDialog( ( Frame )aOwner );
       }
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setDirectory( aCurrentDirectory );
-      }
+      dialog.setDirectory( aCurrentDirectory );
 
       if ( ( aFileFilters != null ) && ( aFileFilters.length > 0 ) )
       {
@@ -972,7 +960,7 @@ public final class SwingComponentUtils
       {
         dialog.setVisible( true );
         final String selectedFile = dialog.getFile();
-        return selectedFile == null ? null : new File( dialog.getDirectory(), selectedFile );
+        return ( selectedFile == null ) ? null : new File( dialog.getDirectory(), selectedFile );
       }
       finally
       {
@@ -982,10 +970,7 @@ public final class SwingComponentUtils
     else
     {
       final JFileChooser dialog = new JFileChooser();
-      if ( aCurrentDirectory != null )
-      {
-        dialog.setCurrentDirectory( new File( aCurrentDirectory ) );
-      }
+      dialog.setCurrentDirectory( ( aCurrentDirectory == null ) ? null : new File( aCurrentDirectory ) );
 
       for ( javax.swing.filechooser.FileFilter filter : aFileFilters )
       {
@@ -995,24 +980,6 @@ public final class SwingComponentUtils
       dialog.setVisible( true );
       return dialog.getSelectedFile();
     }
-  }
-
-  /**
-   * Returns the given color instance as a string.
-   * 
-   * @param aColor
-   *          the color to return as a string value, cannot be <code>null</code>
-   *          .
-   * @return the string representing the given color.
-   * @see #parseColor(String)
-   */
-  public static final String toString( final Color aColor )
-  {
-    final StringBuilder sb = new StringBuilder();
-    sb.append( String.format( "%02x", Integer.valueOf( aColor.getRed() ) ) );
-    sb.append( String.format( "%02x", Integer.valueOf( aColor.getGreen() ) ) );
-    sb.append( String.format( "%02x", Integer.valueOf( aColor.getBlue() ) ) );
-    return sb.toString();
   }
 
   /**

@@ -100,4 +100,22 @@ public final class ColorUtils
     // (0.2126*R) + (0.7152*G) + (0.0722*B)
     return ( 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] );
   }
+
+  /**
+   * Returns the given color instance as a string.
+   * 
+   * @param aColor
+   *          the color to return as a string value, cannot be <code>null</code>
+   *          .
+   * @return the string representing the given color.
+   * @see #parseColor(String)
+   */
+  public static String toString( final Color aColor )
+  {
+    final StringBuilder sb = new StringBuilder();
+    sb.append( String.format( "%02x", Integer.valueOf( aColor.getRed() ) ) );
+    sb.append( String.format( "%02x", Integer.valueOf( aColor.getGreen() ) ) );
+    sb.append( String.format( "%02x", Integer.valueOf( aColor.getBlue() ) ) );
+    return sb.toString();
+  }
 }
