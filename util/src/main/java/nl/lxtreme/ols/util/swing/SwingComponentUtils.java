@@ -510,42 +510,6 @@ public final class SwingComponentUtils
   }
 
   /**
-   * Parses the given color-string into a valid Color instance.
-   * <p>
-   * A color-string has the following form: <tt>[#]rrggbb</tt> where <tt>rr</tt>, <tt>gg</tt> and <tt>bb</tt> are the hexadecimal color values for red,
-   * green and blue. The string may optionally start with a hashpound sign.
-   * </p>
-   * 
-   * @param aColor
-   *          the color string to parse as color, cannot be <code>null</code>.
-   * @return the Color-instance matching the given color, never
-   *         <code>null</code>.
-   */
-  public static final Color parseColor( final String aColor )
-  {
-    if ( aColor == null )
-    {
-      throw new IllegalArgumentException( "Color cannot be null!" );
-    }
-
-    String color = aColor.trim();
-    if ( color.startsWith( "#" ) )
-    {
-      color = color.substring( 1 );
-    }
-
-    try
-    {
-      final int colorValue = Integer.parseInt( color, 16 );
-      return new Color( ( colorValue >> 16 ) & 0xFF, ( colorValue >> 8 ) & 0xFF, colorValue & 0xFF );
-    }
-    catch ( NumberFormatException exception )
-    {
-      throw new IllegalArgumentException( "Given string does NOT represent a valid color!" );
-    }
-  }
-
-  /**
    * Registers the keystroke of the given action as "command" of the given
    * component.
    * <p>

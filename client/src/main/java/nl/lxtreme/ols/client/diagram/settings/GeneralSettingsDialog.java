@@ -219,7 +219,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       return null;
     }
 
-    return SwingComponentUtils.parseColor( text );
+    return ColorUtils.parseColor( text );
   }
 
   // METHODS
@@ -738,21 +738,21 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       this.colorTarget.setSelectedItem( this.settings.getColorTarget() );
       this.colorScheme.setSelectedItem( selectedScheme );
 
-      this.backgroundColor.setText( SwingComponentUtils.toString( this.settings.getBackgroundColor() ) );
-      this.gridColor.setText( SwingComponentUtils.toString( this.settings.getGridColor() ) );
-      this.labelColor.setText( SwingComponentUtils.toString( this.settings.getLabelColor() ) );
-      this.scopeColor.setText( SwingComponentUtils.toString( this.settings.getScopeColor() ) );
-      this.signalColor.setText( SwingComponentUtils.toString( this.settings.getSignalColor() ) );
-      this.textColor.setText( SwingComponentUtils.toString( this.settings.getTextColor() ) );
-      this.timeColor.setText( SwingComponentUtils.toString( this.settings.getTimeColor() ) );
-      this.triggerColor.setText( SwingComponentUtils.toString( this.settings.getTriggerColor() ) );
+      this.backgroundColor.setText( ColorUtils.toHexString( this.settings.getBackgroundColor() ) );
+      this.gridColor.setText( ColorUtils.toHexString( this.settings.getGridColor() ) );
+      this.labelColor.setText( ColorUtils.toHexString( this.settings.getLabelColor() ) );
+      this.scopeColor.setText( ColorUtils.toHexString( this.settings.getScopeColor() ) );
+      this.signalColor.setText( ColorUtils.toHexString( this.settings.getSignalColor() ) );
+      this.textColor.setText( ColorUtils.toHexString( this.settings.getTextColor() ) );
+      this.timeColor.setText( ColorUtils.toHexString( this.settings.getTimeColor() ) );
+      this.triggerColor.setText( ColorUtils.toHexString( this.settings.getTriggerColor() ) );
 
       for ( int i = 0; i < this.cursorColor.length; i++ )
       {
         final JTextField textfield = this.cursorColor[i];
         if ( textfield != null )
         {
-          textfield.setText( SwingComponentUtils.toString( this.settings.getCursorColor( i ) ) );
+          textfield.setText( ColorUtils.toHexString( this.settings.getCursorColor( i ) ) );
         }
       }
 
@@ -761,7 +761,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
         final JTextField textfield = this.channelColor[i];
         if ( textfield != null )
         {
-          textfield.setText( SwingComponentUtils.toString( this.settings.getChannelColor( i ) ) );
+          textfield.setText( ColorUtils.toHexString( this.settings.getChannelColor( i ) ) );
         }
       }
 

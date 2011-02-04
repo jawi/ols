@@ -102,7 +102,45 @@ public final class ColorUtils
   }
 
   /**
-   * Returns the given color instance as a string.
+   * Parses the given color-string into a valid Color instance.
+   * <p>
+   * A color-string has the following form: <tt>[#]rrggbb</tt> where <tt>rr</tt>, <tt>gg</tt> and <tt>bb</tt> are the hexadecimal color values for red,
+   * green and blue. The string may optionally start with a hashpound sign.
+   * </p>
+   * 
+   * @param aColor
+   *          the color string to parse as color, cannot be <code>null</code>.
+   * @return the Color-instance matching the given color, never
+   *         <code>null</code>.
+   */
+  public static final Color parseColor( final String aColor )
+  {
+    if ( aColor == null )
+    {
+      throw new IllegalArgumentException( "Color cannot be null!" );
+    }
+
+    String color = aColor.trim();
+    if ( color.startsWith( "#" ) )
+    {
+      color = color.substring( 1 );
+    }
+
+    try
+    {
+      final int colorValue = Integer.parseInt( color, 16 );
+      return new Color( ( colorValue >> 16 ) & 0xFF, ( colorValue >> 8 ) & 0xFF, colorValue & 0xFF );
+    }
+    catch ( NumberFormatException exception )
+    {
+      throw new IllegalArgumentException( "Given string does NOT represent a valid color!" );
+    }
+  }
+
+  /**
+   * Returns the given color instance as a string in the form of
+   * <tt>RR GG BB</tt> in which <tt>RR</tt>, <tt>GG</tt>, <tt>BB</tt> are the
+   * hexadecimal representations of red, green and blue.
    * 
    * @param aColor
    *          the color to return as a string value, cannot be <code>null</code>
@@ -110,7 +148,7 @@ public final class ColorUtils
    * @return the string representing the given color.
    * @see #parseColor(String)
    */
-  public static String toString( final Color aColor )
+  public static String toHexString( final Color aColor )
   {
     final StringBuilder sb = new StringBuilder();
     sb.append( String.format( "%02x", Integer.valueOf( aColor.getRed() ) ) );
