@@ -100,7 +100,7 @@ public class LogicSnifferDeviceController implements DeviceController
        * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
        */
       @Override
-      public synchronized void propertyChange( final PropertyChangeEvent aEvent )
+      public void propertyChange( final PropertyChangeEvent aEvent )
       {
         final String propertyName = aEvent.getPropertyName();
 
