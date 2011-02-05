@@ -432,6 +432,10 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
             LOG.log( Level.WARNING, "RLE finish now failed?!", exception );
           }
         }
+        finally
+        {
+          this.running = false;
+        }
       }
       else
       {

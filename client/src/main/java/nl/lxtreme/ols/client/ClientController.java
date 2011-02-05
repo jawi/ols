@@ -324,9 +324,25 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    *      int)
    */
   @Override
-  public void captureStarted( final int aSampleRate, final int aChannelCount, final int aChannelMask )
+  public synchronized void captureStarted( final int aSampleRate, final int aChannelCount, final int aChannelMask )
   {
-    updateActions();
+    final Runnable runner = new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        updateActions();
+      }
+    };
+
+    if ( SwingUtilities.isEventDispatchThread() )
+    {
+      runner.run();
+    }
+    else
+    {
+      SwingUtilities.invokeLater( runner );
+    }
   }
 
   /**
