@@ -8,7 +8,7 @@
 	</parent>
 	<groupId>nl.lxtreme.ols.device</groupId>
 	<artifactId>logicsniffer</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 	<name>OLS OpenBench LogicSniffer Device</name>
 	<dependencies>
@@ -53,6 +53,8 @@
                             nl.lxtreme.rxtx;version="2.2.0", *</Import-Package>
 						<OLS-Device>1.0</OLS-Device>
 						<OLS-DeviceClass>org.sump.device.logicsniffer.LogicSnifferDeviceController</OLS-DeviceClass>
+						<OLS-ManagedService>1.0</OLS-ManagedService>
+						<OLS-ManagedServiceFactory></OLS-ManagedServiceFactory>
 					</instructions>
 				</configuration>
 			</plugin>
