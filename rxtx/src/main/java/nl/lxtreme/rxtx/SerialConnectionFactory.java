@@ -140,7 +140,7 @@ public class SerialConnectionFactory implements ConnectionFactory
    *           in case of other I/O problems.
    */
   private SerialPort getSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
-  IOException
+      IOException
   {
     final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( aOptions.getPortName() );
     if ( commPortId.isCurrentlyOwned() )
