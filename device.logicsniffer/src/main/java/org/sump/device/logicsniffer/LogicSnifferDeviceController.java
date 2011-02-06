@@ -83,6 +83,7 @@ public class LogicSnifferDeviceController implements DeviceController
   {
     if ( ( this.device != null ) && isCapturing() )
     {
+      // this.device.cancel( true );
       this.device.stop();
     }
   }
