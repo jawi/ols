@@ -300,7 +300,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   public static final String PROP_CAPTURE_STATE = "state";
 
   /** The default sample clock in Hertz (Hz). */
-  public final static int CLOCK = 100000000; // device clock in Hz
+  public static final int CLOCK = 100000000; // device clock in Hz
 
   /** Old SLA version, v0 (0x534c4130, or 0x30414c53) - no longer supported. */
   private static final int SLA_V0 = 0x30414c53;
@@ -308,46 +308,49 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   private static final int SLA_V1 = 0x31414c53;
 
   /** set trigger mask */
-  private final static int SETTRIGMASK = 0xc0;
+  private static final int SETTRIGMASK = 0xc0;
   /** set trigger value */
-  private final static int SETTRIGVAL = 0xc1;
+  private static final int SETTRIGVAL = 0xc1;
   /** set trigger configuration */
-  private final static int SETTRIGCFG = 0xc2;
+  private static final int SETTRIGCFG = 0xc2;
   /** set clock divider */
-  private final static int SETDIVIDER = 0x80;
+  private static final int SETDIVIDER = 0x80;
   /** set sample counters */
-  private final static int SETSIZE = 0x81;
+  private static final int SETSIZE = 0x81;
   /** set flags */
-  private final static int SETFLAGS = 0x82;
+  private static final int SETFLAGS = 0x82;
 
   /** reset analyzer */
-  private final static int CMD_RESET = 0x00;
+  private static final int CMD_RESET = 0x00;
   /** arm trigger / run device */
-  private final static int CMD_RUN = 0x01;
+  private static final int CMD_RUN = 0x01;
   /** ask for device id */
-  private final static int CMD_ID = 0x02;
+  private static final int CMD_ID = 0x02;
   /** ask for device self test. */
-  private final static int CMD_SELFTEST = 0x03;
+  private static final int CMD_SELFTEST = 0x03;
   /** ask for device meta data. */
-  private final static int CMD_METADATA = 0x04;
+  private static final int CMD_METADATA = 0x04;
   /** ask the device to immediately return its RLE-encoded data. */
-  private final static int CMD_RLE_FINISH_NOW = 0x05;
+  private static final int CMD_RLE_FINISH_NOW = 0x05;
 
   // demultiplex
-  private final static int FLAG_DEMUX = 0x00000001;
+  private static final int FLAG_DEMUX = 0x00000001;
   // noise filter
-  private final static int FLAG_FILTER = 0x00000002;
+  private static final int FLAG_FILTER = 0x00000002;
   // external trigger?
-  private final static int FLAG_EXTERNAL = 0x00000040;
+  private static final int FLAG_EXTERNAL = 0x00000040;
   // inverted
-  private final static int FLAG_INVERTED = 0x00000080;
+  private static final int FLAG_INVERTED = 0x00000080;
   // run length encoding
-  private final static int FLAG_RLE = 0x00004100; // rle mode 1
-
+  private static final int FLAG_RLE = 0x00000100;
+  private static final int FLAG_RLE_MODE_0 = 0x00000000;
+  private static final int FLAG_RLE_MODE_1 = 0x00004000;
+  private static final int FLAG_RLE_MODE_2 = 0x00008000;
+  private static final int FLAG_RLE_MODE_3 = 0x0000C000;
   // Number Scheme
-  private final static int FLAG_NUMBER_SCHEME = 0x00000200;
+  private static final int FLAG_NUMBER_SCHEME = 0x00000200;
   // Testing mode
-  private final static int FLAG_TEST_MODE = 0x00000400;
+  private static final int FLAG_TEST_MODE = 0x00000400;
 
   private static final Logger LOG = Logger.getLogger( LogicSnifferDevice.class.getName() );
 
@@ -376,6 +379,30 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   }
 
   // METHODS
+
+  /**
+   * Determines which RLE-mode to use. There are up to four different RLE-modes
+   * present in 'dogsbody' Verilog firmware.
+   * <p>
+   * The RLE-Encoding modes are:
+   * </p>
+   * <ol start="0">
+   * <li>Issue {values} & {RLE-count} as pairs. Count inclusive of value
+   * (<strike>backwards compatible</strike>);</li>
+   * <li>Issue {values} & {RLE-count} as pairs. Count is <em>exclusive</em> of
+   * value. Compatible with all clients;</li>
+   * <li>Periodic. {values} reissued approximately every 256 {RLE-count} fields;
+   * </li>
+   * <li>Unlimited. {values} can be followed by unlimited numbers of
+   * {RLE-counts}.</li>
+   * </ol>
+   * 
+   * @return a RLE-mode, defaults to 1.
+   */
+  private static int determineRleMode()
+  {
+    return NumberUtils.smartParseInt( System.getProperty( "nl.lxtreme.ols.rle.mode" ), 1 );
+  }
 
   /**
    * Returns wether or not the device is currently running. It is running, when
@@ -429,12 +456,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         {
           if ( !HostUtils.handleInterruptedException( exception ) )
           {
-            LOG.log( Level.WARNING, "RLE finish now failed?!", exception );
+            LOG.log( Level.WARNING, "RLE 'finish now' failed?!", exception );
           }
-        }
-        finally
-        {
-          this.running = false;
         }
       }
       else
@@ -556,10 +579,19 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           setProgress( 100 - ( 100 * sampleIdx ) / buffer.length );
         }
       }
-      catch ( Exception ex )
+      catch ( InterruptedException exception )
       {
-        System.err.println( "Only " + ( samples - sampleIdx ) + " samples read!" );
-        ex.printStackTrace();
+        LOG.log( Level.INFO, "Capture interrupted! Only {0} samples read ...", Integer.valueOf( samples - sampleIdx ) );
+
+        // Make sure the device is in a state were we can do something with
+        // it after this method is completed...
+        resetDevice();
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          throw exception;
+        }
       }
       finally
       {
@@ -737,6 +769,24 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     if ( this.config.isRleEnabled() )
     {
       flags |= FLAG_RLE;
+
+      // Ian 'dogsbody''s Verilog understands four different RLE-modes...
+      final int rleMode = determineRleMode();
+      switch ( rleMode )
+      {
+        case 0:
+          flags |= FLAG_RLE_MODE_0;
+          break;
+        case 2:
+          flags |= FLAG_RLE_MODE_2;
+          break;
+        case 3:
+          flags |= FLAG_RLE_MODE_3;
+          break;
+        default:
+          flags |= FLAG_RLE_MODE_1;
+          break;
+      }
     }
 
     if ( this.config.isAltNumberSchemeEnabled() )
@@ -847,7 +897,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
    */
   private void detectDevice() throws IOException
   {
-    int tries = 5;
+    int tries = 15;
     int id = -1;
     while ( ( tries-- >= 0 ) && ( id != SLA_V0 ) && ( id != SLA_V1 ) )
     {
@@ -972,6 +1022,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     // metadata...
     sendCommand( CMD_METADATA );
 
+    boolean gotResponse = false;
+
     try
     {
       final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
@@ -985,6 +1037,9 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 
           if ( result > 0 )
           {
+            // We've got response!
+            gotResponse = true;
+
             final int type = ( result & 0xE0 ) >> 5;
             if ( type == 0x00 )
             {
@@ -1008,7 +1063,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
             }
             else
             {
-              LOG.log( Level.INFO, "Ignoring unknown type: {0}", Integer.valueOf( type ) );
+              LOG.log( Level.INFO, "Ignoring unknown metadata type: {0}", Integer.valueOf( type ) );
             }
           }
         }
@@ -1041,9 +1096,12 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     }
     finally
     {
-      // Reset the device again; this ensures correct working for devices whose
-      // firmware do not understand the metadata command...
-      resetDevice();
+      if ( !gotResponse )
+      {
+        // Reset the device again; this ensures correct working for devices
+        // whose firmware do not understand the metadata command...
+        resetDevice();
+      }
     }
   }
 
@@ -1060,6 +1118,16 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   private int readSample( final int aChannelCount ) throws IOException, InterruptedException
   {
     int v, value = 0;
+
+    final int enabledGroupCount = this.config.getEnabledGroupCount();
+
+    // Wait until there's data available, otherwise we could get 'false'
+    // timeouts; do not make the sleep too long, otherwise we might overflow our
+    // receiver buffers...
+    while ( ( this.inputStream.available() < enabledGroupCount ) && !Thread.interrupted() && this.running )
+    {
+      Thread.sleep( 1L );
+    }
 
     final int groupCount = ( int )Math.ceil( aChannelCount / 8.0 );
     for ( int i = 0; i < groupCount; i++ )
