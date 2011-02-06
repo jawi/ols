@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
+import nl.lxtreme.ols.util.*;
+
 import org.osgi.service.io.*;
 
 
@@ -54,6 +56,25 @@ public class SerialConnectionFactory implements ConnectionFactory
   private static final int MAX_TRIES = 10;
   /** Name to use when connecting to the port... */
   private static final String CONNECT_ID = SerialConnectionFactory.class.getSimpleName();
+
+  static
+  {
+    // For some reason, serial ports under Linux do not get properly enumerated.
+    // This is due the fact that ttyACM is ignored in the detection routines of
+    // RxTx. Therefore, the device won't appear in the list of devices, and also
+    // cannot be entered manually as RxTx will refuse to add that particular
+    // comm.port identifier.
+    //
+    // The workaround is to craft a serial ports path ourselves, and set the
+    // system property 'gnu.io.rxtx.SerialPorts' ourselves with the "correct"
+    // list of ports...
+    // Reported by frankalicious on February 6th, 2011.
+    if ( HostUtils.isUnix() )
+    {
+      final String portsEnum = CommPortUtils.enumerateDevices( "/dev" );
+      System.setProperty( "gnu.io.rxtx.SerialPorts", portsEnum );
+    }
+  }
 
   // CONSTRUCTORS
 
@@ -119,7 +140,7 @@ public class SerialConnectionFactory implements ConnectionFactory
    *           in case of other I/O problems.
    */
   private SerialPort getSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
-      IOException
+  IOException
   {
     final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( aOptions.getPortName() );
     if ( commPortId.isCurrentlyOwned() )

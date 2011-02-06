@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,11 @@ package nl.lxtreme.rxtx;
 
 import gnu.io.*;
 
+import java.io.*;
 import java.util.*;
+import java.util.regex.*;
+
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -66,5 +70,51 @@ public final class CommPortUtils
     }
 
     return portList.toArray( new String[portList.size()] );
+  }
+
+  /**
+   * Enumerates all devices below the given base path.
+   * 
+   * @param aDeviceBasePath
+   *          the base path of the devices to enumerate, cannot be
+   *          <code>null</code>.
+   * @return a colon-separated string with all found devices, never
+   *         <code>null</code>.
+   */
+  static final String enumerateDevices( final String aDeviceBasePath )
+  {
+    final String deviceRegEx;
+    if ( HostUtils.isUnix() )
+    {
+      deviceRegEx = "tty(\\w+)\\d+";
+    }
+    else if ( HostUtils.isMacOSX() )
+    {
+      deviceRegEx = "tty\\.(\\w+)\\d+";
+    }
+    else
+    {
+      throw new RuntimeException( "Unsupported operating system!" );
+    }
+
+    final StringBuilder result = new StringBuilder();
+    final Pattern pattern = Pattern.compile( deviceRegEx );
+
+    final File basePath = new File( aDeviceBasePath );
+    for ( String fileName : basePath.list() )
+    {
+      final Matcher matcher = pattern.matcher( fileName );
+      if ( matcher.matches() )
+      {
+        if ( result.length() > 0 )
+        {
+          result.append( ":" );
+        }
+        final File device = new File( basePath, fileName );
+        result.append( device.getAbsolutePath() );
+      }
+    }
+
+    return result.toString();
   }
 }
