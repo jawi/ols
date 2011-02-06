@@ -1,3 +1,1088 @@
+2011-02-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki, ols.distribution/src/site/main/index.html,
+	pom.xml: OLS v0.9.3 release.
+
+2011-02-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java: Fixed several small issues regarding
+	the OLS device, such as stopping the capture and usage of RLE-modes.
+
+2011-02-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	* rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java: 
+	Minor formatting update.
+
+2011-02-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	* rxtx/pom.xml,
+	rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java: 
+	Fixed device enumeration on Linux hosts. Thanks to frankalicious for
+	reporting.
+
+2011-02-05  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java: Updated TODO list; fixed(?) the issue
+	in which the stop-button remained disabled after starting a capture.
+
+2011-02-04  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/ColorUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Moved some color related routines to ColorUtils.
+
+2011-02-04  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Reverted to RLE mode 1, due to reasons found on
+	the DP-forum.
+
+2011-02-04  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/src/main/java/nl/lxtreme/ols/util/ColorUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Make file open/save/selection dialogs by default use the current
+	working directory.
+
+2011-02-03  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Implemented fixes suggested by David Francis.
+	Also send a reset after the metadata command as suggested by Ian.
+	This will allow 'older' devices to better cope with this command.
+
+2011-02-02  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Updated todo list.
+
+2011-02-02  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/NewProjectAction.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ctManager.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/PreferenceServiceTr
+	acker.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va: Added 'new project' option and confirmations when opening
+	new/existing project with changes.
+
+2011-02-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Updated TODO list.
+
+2011-02-01  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfig.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Fixed incorrect application of patches from
+	DavidFrancis regarding RLE decoding.
+
+2011-01-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Applied further patches from DavidFrancis
+	regarding RLE decoding.
+
+2011-01-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/Configurable.java,
+	api/src/main/java/nl/lxtreme/ols/api/UserSettings.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/project/Project.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/ProjectImpl
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ctManager.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/UserSetting
+	sImpl.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/ModeSet
+	tingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/PreferenceServiceTr
+	acker.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceDial
+	og.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rDialog.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseTool.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.jtag/src/main/java/nl/lxtreme/ols/tool/jtag/JTAGProtocolAnalys
+	isDialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/StateAnalysisDia
+	log.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Added UserSettings interface to separate the explicit
+	user settings from the implicit user settings (window size,
+	position). Also storing/retrieving these user settings with the
+	project is now supported.
+
+2011-01-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* pom.xml: Bumped to beta 7.
+
+2011-01-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/project/Project.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/project/ProjectManager.ja
+	va: Several usability fixes; added 'save as' functionality for
+	projects. Refactored 'save project' to store to the same file.
+
+2011-01-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAsActi
+	on.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SelectDeviceActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/ProjectImpl
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/ProjectProp
+	erties.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ct.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ctManager.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java: Several
+	usability fixes; added 'save as' functionality for projects.
+	Refactored 'save project' to store to the same file.
+
+2011-01-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/app-bundle.xml, ols.distribution/assembly.xml,
+	ols.distribution/pom.xml: Fixed building OSX images; they can be
+	disabled by setting the 'package.osx.skip' property to any value.
+
+2011-01-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* pom.xml: Bumped to beta 6
+
+2011-01-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfig.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Some small bugfixes in the OLS configuration.
+
+2011-01-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnection.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java: 
+	Fixed several crashes when using RxTx on Windows platforms.
+
+2011-01-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	* rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnection.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java: 
+	Rewrote port initialization routines of SerialConnectionFactory as
+	described in
+
+	<http://mailman.qbang.org/pipermail/rxtx/2010-September/7821768.html>, hopefully this will fix some crashes on Windows VMs.
+
+2011-01-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	* pom.xml: Bumped to b5.
+
+2011-01-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Updated TODO list.
+
+2011-01-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfig.java: Fixed a problem with the read counter being
+	locked to the maximum sample depth.
+
+2011-01-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Minor update.
+
+2011-01-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Applied patch of DavidFrancis regarding 24-bit
+	RLE decoding.
+
+2011-01-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: commit to make it possible to merge changes
+	made by DavidFrancis.
+
+2011-01-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	api/src/main/java/nl/lxtreme/ols/api/Project.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedDataImpl.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/project/Project.java,
+	client/src/main/java/nl/lxtreme/ols/client/BundlesDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ClearCursors.java
+	,
+	client/src/main/java/nl/lxtreme/ols/client/action/SetCursorAction.j
+	ava,
+	client/src/main/java/nl/lxtreme/ols/client/data/OlsDataHelper.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ct.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ctManager.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/Diagram.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/DiagramLabelsDia
+	log.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramRowLa
+	belsUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramTimeL
+	ineUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceController.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferMetadata.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/I2CGenerator.j
+	ava,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/OneWireGenerat
+	or.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceDial
+	og.java,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpE
+	xporter.java,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpH
+	elper.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialPortOptions.java,
+	service.io/src/test/java/nl/lxtreme/ols/io/ConnectorServiceImplTest
+	.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rDialog.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rWorker.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolWorke
+	r.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CAnalyserWorker.ja
+	va,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.jtag/src/main/java/nl/lxtreme/ols/tool/jtag/JTAGProtocolAnalys
+	isDialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/ClockFrequen
+	cyMeasureWorker.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIAnalyserWorker.ja
+	va,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTAnalyserWorker
+	.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va,
+	util/src/main/java/nl/lxtreme/ols/util/swing/validation/JComponentI
+	nputVerifier.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/validation/NumberValid
+	ator.java,
+	util/src/test/java/nl/lxtreme/ols/util/BitFiddlingTest.java,
+	util/src/test/java/nl/lxtreme/ols/util/analysis/FrequencyTest.java: 
+	Added support for clearing all cursors in one shot, restore cursors
+	after loading project/data file.
+
+2011-01-28  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/project/Project.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/OlsDataHelper.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ct.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ctManager.java: In progress to unify project & data loading.
+
+2011-01-28  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/pom.xml,
+	api/src/main/java/nl/lxtreme/ols/api/data/CapturedData.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/DataContainer.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/project/Project.java,
+	api/src/main/java/nl/lxtreme/ols/api/data/project/ProjectManager.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ct.java,
+	client/src/main/java/nl/lxtreme/ols/client/data/project/SimpleProje
+	ctManager.java, pom.xml: Implemented first version of an actual
+	project structure; which contains labels, capture results and
+	preferences.
+
+2011-01-28  JaWi <j.w.janssen@lxtreme.nl>
+
+	* pom.xml: Bumped to beta 3 of 0.9.3
+
+2011-01-28  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Updated todo-list; added log message when RLE
+	count rollover occurs.
+
+2011-01-27  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfig.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Some small changes; ensure valid values are
+	returned by the OLS-config class. Also implemented the 'finish now'
+	command, useful for RLE encoded captures.
+
+2011-01-27  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferMetadata.java: Small updates; updated todo list.
+
+2011-01-27  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	util/src/main/java/nl/lxtreme/ols/util/NumberUtils.java,
+	util/src/test/java/nl/lxtreme/ols/util/NumberUtilsTest.java: Testing
+	new firmware of 'dogsbody' including RLE and metadata commands.
+
+2011-01-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/SwingComponentUtils.ja
+	va,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/StackLayout.
+	java: Added some utility classes/methods for Swing.
+
+2011-01-19  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* device.logicsniffer/pom.xml,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java, eclipse/OLS Runner.launch,
+	ols.distribution/pom.xml, pom.xml, runner/pom.xml, rxtx/pom.xml,
+	rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java,
+	service.io/pom.xml: Fixed project dependencies of
+	device.logicsniffer project; moved code to retrieve serial ports to
+	CommPortUtils; added more logging on the capturing process of the
+	OLS device.
+
+2011-01-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java, pom.xml: Small bugfix regarding RLE decoding;
+	only works with new RLE-implementation of rasmus?
+
+2011-01-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceConfigDialog.java: Cleanups; save dialog preferences of generic
+	device.
+
+2011-01-18  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/EnumItemRend
+	erer.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JErrorDialog
+	.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/validation/AbstractVal
+	idator.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/validation/IValidator.
+	java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/validation/JComponentI
+	nputVerifier.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/validation/NumberValid
+	ator.java: Simplified the mini-validation routines for Swing; some
+	cleanups in the error dialog.
+
+2011-01-17  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceConfigDialog.java, ols.distribution/pom.xml: Some bugfixes on
+	the generic device; added generic device to the main build process.
+
+2011-01-17  JaWi <j.w.janssen@lxtreme.nl>
+
+	* device.generic/pom.xml, export.image/pom.xml, export.svg/pom.xml,
+	export.vcd/pom.xml: Minor naming update (use correct prefix).
+
+2011-01-17  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	evice.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceConfigDialog.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceController.java: Implemented a crude generic device; it allows
+	FIFO devices to be read as it were a sample source.
+
+2011-01-17  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/ValueChangeDumpE
+	xporter.java: Cleanups.
+
+2011-01-17  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfig.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java: Added support for 8, 16 and 32 bit
+	RLE decoding; still testing it! Some additional cleanups.
+
+2011-01-17  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Started on documenting the extension support of
+	the client.
+
+2011-01-16  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/BundlesDialog.java: 
+	Show copyright message of bundles in bundle view dialog.
+
+2011-01-16  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/pom.xml, client/pom.xml, device.generic/pom.xml,
+	device.logicsniffer/pom.xml, device.test/pom.xml,
+	export.image/pom.xml, export.svg/pom.xml, export.vcd/pom.xml,
+	logging/pom.xml, ols.distribution/pom.xml, pom.xml, rxtx/pom.xml,
+	service.io/pom.xml, tool.1wire/pom.xml, tool.base/pom.xml,
+	tool.i2c/pom.xml, tool.jtag/pom.xml,
+	tool.jtag/src/main/java/nl/lxtreme/ols/tool/jtag/JTAGAnalyser.java,
+	tool.jtag/src/main/java/nl/lxtreme/ols/tool/jtag/JTAGAnalyserWorker
+	.java,
+	tool.jtag/src/main/java/nl/lxtreme/ols/tool/jtag/JTAGData.java,
+	tool.jtag/src/main/java/nl/lxtreme/ols/tool/jtag/JTAGDataSet.java,
+	tool.jtag/src/main/java/nl/lxtreme/ols/tool/jtag/JTAGProtocolAnalys
+	isDialog.java, tool.measure/pom.xml, tool.spi/pom.xml,
+	tool.state/pom.xml, tool.uart/pom.xml, util/pom.xml: Added
+	contributed JTAG decoder tool from Mario Schrenk; added correct
+	licensing information to all bundles.
+
+2011-01-11  JaWi <j.w.janssen@lxtreme.nl>
+
+	* pom.xml: Added generic device to build structure.
+
+2011-01-11  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java.rej: Small cleanups
+
+2011-01-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfig.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java.rej,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java: Clean ups; applied patch from David
+	Francis regarding RLE.
+
+2011-01-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	evice.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceConfigDialog.java: Reflected changes of API.
+
+2011-01-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java: Reflected
+	changes of API.
+
+2011-01-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/validation/AbstractVal
+	idator.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/validation/NumberValid
+	ator.java: Added minimal version of input validators.
+
+2011-01-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/pom.xml: Added bundle manifest.
+
+2011-01-10  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/data/Sample.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/CaptureCallback.java: 
+	Extended API a bit (prepaaration for future work).
+
+2011-01-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java: Small update in OLS configure dialog.
+
+2011-01-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceDial
+	og.java: Small update in test configure dialog.
+
+2011-01-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* device.generic/pom.xml,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	evice.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceConfigDialog.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceController.java: Added stub project for generic device, in
+	which you can use any device/file as capture source.
+
+2011-01-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfig.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Several small bugfixes and cleanups for the OLS
+	device.
+
+2011-01-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* util/src/main/java/nl/lxtreme/ols/util/HostUtils.java: Added
+	convenience methods to flush an input stream and close a resource
+	properly.
+
+2011-01-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/icons/IconFactory.java: 
+	Small compiler warning fixed.
+
+2011-01-08  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki: Updated central TODO list with local one.
+
+2011-01-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/icon/TextOve
+	rlayIcon.java: Fixed TextOverlayIcon to also be rendered in a grayed
+	out/disabled fashion. Problem appears on OSX only...
+
+2011-01-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/icon/TextOve
+	rlayIcon.java: Small estaetic fix for the overlay icon.
+
+2011-01-07  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va: Fixed a small bug that caused the 'last' samples to disappear
+	from screen when viewing signals at the greatest zoom level (causing
+	an 'empty' screen). Also simplified the main signal drawing loop a
+	bit.
+
+2011-01-07  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JErrorDialog
+	.java: When an exception occurs outside the EDT; make sure to invoke
+	the error dialog on the EDT.
+
+2011-01-07  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	api/src/main/java/nl/lxtreme/ols/api/devices/DeviceMetadata.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java: 
+	Added description of the OLS datafile format. Some other small
+	updates (comments related).
+
+2011-01-07  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/BaseAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor1Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoCursor2Action
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoFirstCursorAc
+	tion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoLastCursorAct
+	ion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoNextCursorAct
+	ion.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/GotoPreviousCurso
+	rAction.java,
+	client/src/main/java/nl/lxtreme/ols/client/icons/IconFactory.java,
+	client/src/main/java/nl/lxtreme/ols/client/icons/IconLocator.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/icon/TextOve
+	rlayIcon.java: Use a rendered icon with a sensible label for the
+	'goto cursor 1&2' buttons. Also added menu items to go directly to
+	the first or last cursor.
+
+2011-01-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/PreferenceServiceTr
+	acker.java, runner/src/main/java/nl/lxtreme/ols/runner/Runner.java: 
+	Fixed a bug in the runner causing the client to not function when it
+	is installed on a path with spaces. Thanks to jone for reporting
+	this. Minor fix in the teardown of the client causing spurious
+	exceptions.
+
+2011-01-05  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	api/src/main/java/nl/lxtreme/ols/api/devices/CaptureCallback.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java: Made client 'aware' of individual
+	samples so it can -to be implemented- display this in real-time.
+	Some small bugfixes due to all the changes.
+
+2011-01-05  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfig.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDeviceCont
+	roller.java: Moved configuration of LogicSniffer device outside the
+	device-logic. This way, we can reuse configurations while creating
+	new device objects.
+
+2011-01-05  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/devices/Device.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/DeviceController.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferConfigDialog.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java: Cleanup of OLS device + API.
+
+2011-01-04  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/run.bat, ols.distribution/run.sh,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/SpringLayoutUtils.java: 
+	Minor UI-related fixes; use better color for separators on Linux and
+	Windows.
+
+2011-01-04  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/DiagramTimeLine.
+	java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramTimeL
+	ineUI.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Diagram
+	Settings.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java,
+	util/src/main/java/nl/lxtreme/ols/util/ColorUtils.java: Added an
+	option to show the time value of a cursor in its flag. Also made a
+	small change in the color used to display the text in a cursor-flag;
+	it is now using a 'smarter' algorithm to provide a good contrasting
+	color.
+
+2011-01-04  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java: 
+	Some small bugfixes.
+
+2011-01-04  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java: 
+	Minor cleanups.
+
+2011-01-04  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/AbstractBundleObserver.
+	java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/BundleServiceObserver.j
+	ava: Initial rework on using IO-connector service in OLS device.
+	Also did some hacking on determining whether the serial port does
+	exists. It appears that the JVM crashes on Windows when trying to
+	open a non-existing port.
+
+2011-01-04  J.W. Janssen <j.w.janssen@lxtreme.nl>
+
+	* rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnection.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialPortOptions.java,
+	rxtx/src/test/java/nl/lxtreme/rxtx/SerialPortOptionsTest.java,
+	service.io/src/main/java/javax/microedition/io/CommConnection.java,
+	service.io/src/main/java/javax/microedition/io/Connection.java,
+	service.io/src/main/java/javax/microedition/io/ConnectionNotFoundEx
+	ception.java,
+	service.io/src/main/java/javax/microedition/io/ContentConnection.ja
+	va, service.io/src/main/java/javax/microedition/io/Datagram.java,
+	service.io/src/main/java/javax/microedition/io/DatagramConnection.j
+	ava,
+	service.io/src/main/java/javax/microedition/io/HttpConnection.java,
+	service.io/src/main/java/javax/microedition/io/InputConnection.java
+	,
+	service.io/src/main/java/javax/microedition/io/OutputConnection.jav
+	a,
+	service.io/src/main/java/javax/microedition/io/ServerSocketConnecti
+	on.java,
+	service.io/src/main/java/javax/microedition/io/SocketConnection.jav
+	a,
+	service.io/src/main/java/javax/microedition/io/StreamConnection.jav
+	a,
+	service.io/src/main/java/javax/microedition/io/StreamConnectionNoti
+	fier.java,
+	service.io/src/main/java/javax/microedition/io/UDPDatagramConnectio
+	n.java: Updated javax.microedition.io packages to have full JavaDocs
+	+ added some missing interfaces from MIDP2; reflected CommConnection
+	schema to RXTX.
+
+2011-01-04  JaWi <j.w.janssen@lxtreme.nl>
+
+	* rxtx/pom.xml, rxtx/src/main/java/nl/lxtreme/rxtx/Activator.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnection.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialPortOptions.java,
+	rxtx/src/test/java/nl/lxtreme/rxtx/SerialPortOptionsTest.java,
+	service.io/pom.xml: In progress to make RXTX bundle IO-service
+	aware.
+
+2011-01-03  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/pom.xml, pom.xml, runner/pom.xml: Integrated the
+	service.io project into the main build.
+
+2011-01-03  JaWi <j.w.janssen@lxtreme.nl>
+
+	* service.io/pom.xml,
+	service.io/src/main/java/javax/microedition/io/CommConnection.java,
+	service.io/src/main/java/javax/microedition/io/Connection.java,
+	service.io/src/main/java/javax/microedition/io/ConnectionNotFoundEx
+	ception.java,
+	service.io/src/main/java/javax/microedition/io/ContentConnection.ja
+	va, service.io/src/main/java/javax/microedition/io/Datagram.java,
+	service.io/src/main/java/javax/microedition/io/DatagramConnection.j
+	ava,
+	service.io/src/main/java/javax/microedition/io/InputConnection.java
+	,
+	service.io/src/main/java/javax/microedition/io/OutputConnection.jav
+	a,
+	service.io/src/main/java/javax/microedition/io/StreamConnection.jav
+	a,
+	service.io/src/main/java/javax/microedition/io/StreamConnectionNoti
+	fier.java,
+	service.io/src/main/java/javax/microedition/io/UDPDatagramConnectio
+	n.java, service.io/src/main/java/nl/lxtreme/ols/io/Activator.java,
+	service.io/src/main/java/nl/lxtreme/ols/io/ConnectorServiceImpl.jav
+	a,
+	service.io/src/test/java/nl/lxtreme/ols/io/ConnectorServiceImplTest
+	.java: OSGi I/O-service implementation. Also exports the necessary
+	javax.microedition.io classes.
+
+2011-01-03  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramUI.ja
+	va,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/LogReaderTracker.ja
+	va, client/src/main/resources/logging.properties,
+	logging/src/main/java/nl/lxtreme/ols/logging/Activator.java,
+	logging/src/main/java/nl/lxtreme/ols/logging/JdkLogForwarder.java,
+	logging/src/main/java/nl/lxtreme/ols/logging/SimpleLogReader.java,
+	util/src/main/java/nl/lxtreme/ols/util/DisplayUtils.java: Did some
+	rework on the logging part of this client; the logging forwarder is
+	cleaned up a bit, and the reading of the log is moved to the client.
+
+2010-12-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/pom.xml, client/pom.xml,
+	client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/ToolTracker.java,
+	client/src/main/resources/logging.properties,
+	device.logicsniffer/pom.xml,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Acti
+	vator.java, device.test/pom.xml,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/Activator.java
+	, export.image/pom.xml,
+	export.image/src/main/java/nl/lxtreme/ols/export/image/Activator.ja
+	va, export.svg/pom.xml,
+	export.svg/src/main/java/nl/lxtreme/ols/export/svg/Activator.java,
+	export.vcd/pom.xml,
+	export.vcd/src/main/java/nl/lxtreme/ols/export/vcd/Activator.java,
+	logging/pom.xml, pom.xml, runner/pom.xml, tool.1wire/pom.xml,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/Activator.java
+	, tool.base/pom.xml, tool.i2c/pom.xml,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/Activator.java,
+	tool.measure/pom.xml,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/Activator.ja
+	va, tool.spi/pom.xml,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/Activator.java,
+	tool.state/pom.xml,
+	tool.state/src/main/java/nl/lxtreme/ols/tool/state/Activator.java,
+	tool.uart/pom.xml,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/Activator.java,
+	util/pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/AbstractBundleObserver.
+	java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/AbstractManifestScanner
+	.java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/BundleObserver.java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/BundleScanner.java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/BundleServiceObserver.j
+	ava,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/BundleWatcher.java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/KeywordManifestScanner.
+	java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/ManifestHeader.java,
+	util/src/main/java/nl/lxtreme/ols/util/osgi/RegExManifestScanner.ja
+	va, util/src/test/java/nl/lxtreme/ols/util/Ensure.java,
+	util/src/test/java/nl/lxtreme/ols/util/osgi/ManifestHeaderTest.java: 
+	Implemented extender service and rewrote all tools, devices and
+	exporters to make use of this service. This simplifies the way new
+	tools/devices/exporters are to be written.
+
+2010-12-30  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/osgi/DeviceControllerTra
+	cker.java, ols.distribution/pom.xml, pom.xml, runner/pom.xml,
+	runner/src/main/java/nl/lxtreme/ols/runner/HostActivator.java,
+	runner/src/main/java/nl/lxtreme/ols/runner/Runner.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JErrorDialog
+	.java: Simplified the OSGi startup a bit; make use of Felix's file
+	installer bundle to start stuff for us. Fixed some bugs that popped
+	up because of this in the cleanup routines. Most preparations for
+	'auto' upgrades should be done now.
+
+2010-12-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/BundlesDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/resources/client.properties,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JErrorDialog
+	.java: Added crash reporting functionality through email.
+
+2010-12-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	* build.sh, ols.distribution/app-bundle.xml,
+	ols.distribution/pom.xml,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JErrorDialog
+	.java: Added property 'package.osx.skip' to skip the packaging level
+	on OSX (saves some time). Some updates on the error dialog.
+
+2010-12-29  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JErrorDialog
+	.java: Small update; provide more information for uncaught
+	exceptions.
+
+2010-12-28  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/Activator.java,
+	client/src/main/java/nl/lxtreme/ols/client/BundlesDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/Host.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/OpenProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveDataFileActio
+	n.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/SaveProjectAction
+	.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/General
+	SettingsDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/diagram/settings/Mutable
+	DiagramSettings.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDeviceController.java,
+	runner/src/main/java/nl/lxtreme/ols/runner/Runner.java,
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rDialog.java,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncTool.java
+	,
+	tool.base/src/main/java/nl/lxtreme/ols/tool/base/BaseAsyncToolDialo
+	g.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.measure/src/main/java/nl/lxtreme/ols/tool/measure/MeasurementD
+	ialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java,
+	util/src/main/java/nl/lxtreme/ols/util/HostUtils.java,
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JErrorDialog
+	.java: Minor updates in the exception handling; allow entire client
+	to be shut down without any errors. Exception display is now
+	enabled.
+
+2010-12-28  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	util/src/main/java/nl/lxtreme/ols/util/swing/component/JErrorDialog
+	.java: Added simple error dialog, based on JXErrorDialog. Needs some
+	polishing...
+
+2010-12-28  JaWi <j.w.janssen@lxtreme.nl>
+
+	* tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java: 
+	Too eager baudrate calculation, the rates were a bit off. Should
+	work a bit more reliable now.
+
+2010-12-28  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	client/src/main/java/nl/lxtreme/ols/client/diagram/laf/DiagramTimeL
+	ineUI.java: Fixed a off-by-one error in time line drawing routines.
+	This caused the zero-line to be lost in some situations. Thanks to
+	'ttp' for reporting this.
+
+2010-12-24  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/ols.mediawiki,
+	client/src/main/java/nl/lxtreme/ols/client/BundlesDialog.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java,
+	client/src/main/java/nl/lxtreme/ols/client/action/ShowBundlesAction
+	.java, ols.distribution/README, ols.distribution/pom.xml, pom.xml,
+	runner/pom.xml,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTDataSet.java: 
+	Added dialog for displaying the OSGi bundle states, handy for
+	debugging.
+
+2010-12-19  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ChangeLog, ols.distribution/src/site/main/index.html, pom.xml: 
+	Release of version 0.9.2
+
 2010-12-19  JaWi <j.w.janssen@lxtreme.nl>
 
 	* ols.distribution/app-bundle-osx.sh,
