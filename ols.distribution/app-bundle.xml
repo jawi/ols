@@ -26,8 +26,8 @@
 
 	<target name="package" depends="init" description="Creates the OSX app bundle" if="isMac">
 		<jarbundler dir="${project.targetapp}" bundleid="nl.lxtreme.ols" name="${ols.project.name}" shortname="${ols.project.name}" mainclass="nl.lxtreme.ols.runner.Runner" version="${project.version}" build="1" jvmversion="1.6+" arguments="-Dnl.lxtreme.ols.bundle.dir=$JAVAROOT/plugins" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m">
-			<jarfileset dir="${project.target}/bin">
-				<include name="*.jar" />
+			<jarfileset dir="${project.target}">
+				<include name="bin/*.jar" />
 			</jarfileset>
 			<javafileset dir="${project.target}">
 				<include name="plugins/*.jar" />
