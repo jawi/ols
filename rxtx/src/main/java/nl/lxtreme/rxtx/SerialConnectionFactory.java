@@ -69,7 +69,7 @@ public class SerialConnectionFactory implements ConnectionFactory
     // system property 'gnu.io.rxtx.SerialPorts' ourselves with the "correct"
     // list of ports...
     // Reported by frankalicious on February 6th, 2011.
-    if ( HostUtils.isUnix() )
+    if ( !HostUtils.isWindows() )
     {
       final String portsEnum = CommPortUtils.enumerateDevices( "/dev" );
       System.setProperty( "gnu.io.rxtx.SerialPorts", portsEnum );
@@ -204,6 +204,29 @@ public class SerialConnectionFactory implements ConnectionFactory
       try
       {
         port = getSerialPort( aOptions );
+      }
+      catch ( PortInUseException exception )
+      {
+        LOG.log( Level.WARNING, "Port (still) in use!", exception );
+      }
+      catch ( NoSuchPortException exception )
+      {
+        LOG.log( Level.FINE, "No such port!", exception );
+        // Immediately stop trying. On non-Windows platforms, try an alternative
+        // approach as last resort...
+        tries = -1;
+      }
+    }
+
+    // A workaround for all non-Windows platforms: it could be that the device
+    // name is not in the list of searched port-names, so we should try whether
+    // the port itself can be opened directly. We should consider this a
+    // best-effort strategy...
+    if ( ( port == null ) && !HostUtils.isWindows() )
+    {
+      try
+      {
+        port = new RXTXPort( aOptions.getPortName() );
       }
       catch ( PortInUseException exception )
       {
