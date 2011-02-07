@@ -83,36 +83,40 @@ public final class CommPortUtils
    */
   static final String enumerateDevices( final String aDeviceBasePath )
   {
+    final StringBuilder result = new StringBuilder();
+
     final String deviceRegEx;
-    if ( HostUtils.isUnix() )
+    if ( HostUtils.isUnix() || HostUtils.isMacOSX() )
     {
-      deviceRegEx = "tty(\\w+)\\d+";
-    }
-    else if ( HostUtils.isMacOSX() )
-    {
-      deviceRegEx = "tty\\.(\\w+)\\d+";
+      if ( HostUtils.isUnix() )
+      {
+        deviceRegEx = "tty\\w+\\d+";
+      }
+      else
+      {
+        deviceRegEx = "tty\\..+";
+      }
+
+      final Pattern pattern = Pattern.compile( deviceRegEx );
+
+      final File basePath = new File( aDeviceBasePath );
+      for ( String fileName : basePath.list() )
+      {
+        final Matcher matcher = pattern.matcher( fileName );
+        if ( matcher.matches() )
+        {
+          if ( result.length() > 0 )
+          {
+            result.append( ":" );
+          }
+          final File device = new File( basePath, fileName );
+          result.append( device.getAbsolutePath() );
+        }
+      }
     }
     else
     {
       throw new RuntimeException( "Unsupported operating system!" );
-    }
-
-    final StringBuilder result = new StringBuilder();
-    final Pattern pattern = Pattern.compile( deviceRegEx );
-
-    final File basePath = new File( aDeviceBasePath );
-    for ( String fileName : basePath.list() )
-    {
-      final Matcher matcher = pattern.matcher( fileName );
-      if ( matcher.matches() )
-      {
-        if ( result.length() > 0 )
-        {
-          result.append( ":" );
-        }
-        final File device = new File( basePath, fileName );
-        result.append( device.getAbsolutePath() );
-      }
     }
 
     return result.toString();

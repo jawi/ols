@@ -38,6 +38,9 @@ import org.osgi.framework.*;
  */
 public final class Runner
 {
+  // CONSTANTS
+
+  private static final String[] AUTO_START_BUNDLES = { "org.apache.felix.fileinstall" };
   // VARIABLES
 
   private final HostActivator hostActivator;
@@ -57,7 +60,7 @@ public final class Runner
 
     // We only start a single bundle: the file install bundle; this bundle will
     // be responsible for starting all other bundles...
-    final String autoStartBundles = "\"file:".concat( binaryDir ).concat( "/org.apache.felix.fileinstall-3.1.2.jar\"" );
+    final String autoStartBundles = getAutoInstallBundles( binaryDir );
 
     this.hostActivator = new HostActivator();
     final List<BundleActivator> activators = new ArrayList<BundleActivator>();
@@ -118,8 +121,62 @@ public final class Runner
   }
 
   /**
-   * @return
+   * Returns a space-separated list of bundles that should be started by the
+   * framework. These bundles should be present in the given directory.
+   * Currently, this is only one bundle, the Felix file-install bundle, which
+   * takes care of starting all other bundles.
+   * 
+   * @param aBinDir
+   *          the binary directory, cannot be <code>null</code>.
+   * @return the list of bundles that should be automatically started by the
+   *         framework, never <code>null</code>.
+   */
+  private static String getAutoInstallBundles( final String aBinDir )
+  {
+    final File binDir = new File( aBinDir );
+
+    final String[] autoInstallBundleNames = binDir.list( new FilenameFilter()
+    {
+      @Override
+      public boolean accept( final File aDir, final String aName )
+      {
+        for ( String autoStartedBundleName : AUTO_START_BUNDLES )
+        {
+          if ( aName.startsWith( autoStartedBundleName ) )
+          {
+            return true;
+          }
+        }
+        return false;
+      }
+    } );
+
+    final StringBuilder result = new StringBuilder();
+    if ( ( autoInstallBundleNames != null ) && ( autoInstallBundleNames.length > 0 ) )
+    {
+      for ( String autoInstallBundleName : autoInstallBundleNames )
+      {
+        if ( result.length() > 0 )
+        {
+          result.append( ' ' );
+        }
+
+        final File file = new File( binDir, autoInstallBundleName );
+        result.append( '"' ).append( file.toURI() ).append( '"' );
+      }
+    }
+
+    return result.toString();
+  }
+
+  /**
+   * Determines the binary directory.
+   * 
+   * @return the fully qualified path to the directory with 'binaries', never
+   *         <code>null</code>.
    * @throws IOException
+   *           in case an I/O problem occurred during determining the binary
+   *           path.
    */
   private static String getBinaryDir() throws IOException
   {
@@ -128,13 +185,36 @@ public final class Runner
   }
 
   /**
-   * @return
+   * Searches for the plugins directory.
+   * <p>
+   * This method will take the system property
+   * <tt>nl.lxtreme.ols.bundle.dir</tt> into consideration.
+   * </p>
+   * 
+   * @return the fully qualified path to the directory with plugins, never
+   *         <code>null</code>.
    * @throws IOException
+   *           in case an I/O problem occurred during determining the plugins
+   *           path.
    */
   private static String getPluginDir() throws IOException
   {
-    final String pluginProperty = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
-    final File pluginDir = new File( pluginProperty );
+    File pluginDir;
+
+    pluginDir = new File( System.getProperty( "user.dir" ), "plugins" );
+    if ( pluginDir.exists() && pluginDir.isDirectory() )
+    {
+      return pluginDir.getCanonicalPath();
+    }
+
+    pluginDir = new File( "./plugins" );
+    if ( pluginDir.exists() && pluginDir.isDirectory() )
+    {
+      return pluginDir.getCanonicalPath();
+    }
+
+    String pluginProperty = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
+    pluginDir = new File( pluginProperty );
     return pluginDir.getCanonicalPath();
   }
 
