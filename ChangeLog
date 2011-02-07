@@ -1,3 +1,18 @@
+2011-02-07  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ols.distribution/app-bundle-osx.sh,
+	ols.distribution/app-bundle.xml, pom.xml,
+	runner/src/main/java/nl/lxtreme/ols/runner/Runner.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java: 
+	Fixed several severe bugs in the runner, RxTx initialization,
+	startup scripts and OSX disk image causing all kinds of nasty
+	crashes.
+
+2011-02-06  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ChangeLog: Updated changelog
+
 2011-02-06  JaWi <j.w.janssen@lxtreme.nl>
 
 	* api/ols.mediawiki, ols.distribution/src/site/main/index.html,
