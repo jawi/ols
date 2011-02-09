@@ -32,6 +32,65 @@ import nl.lxtreme.ols.api.*;
  */
 public final class UserSettingsImpl implements UserSettings
 {
+  // INNER TYPES
+
+  /**
+   * Provides a user settings iterator.
+   */
+  static final class UserSettingsIterator implements Iterator<Map.Entry<String, Object>>
+  {
+    // VARIABLES
+
+    private final Iterator<Entry<Object, Object>> entries;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new UserSettingsIterator instance.
+     * 
+     * @param aProperties
+     *          the properties to iterate over, cannot be <code>null</code>.
+     */
+    public UserSettingsIterator( final Properties aProperties )
+    {
+      this.entries = aProperties.entrySet().iterator();
+    }
+
+    // METHODS
+
+    /**
+     * @see java.util.Iterator#hasNext()
+     */
+    @Override
+    public boolean hasNext()
+    {
+      return this.entries.hasNext();
+    }
+
+    /**
+     * @see java.util.Iterator#next()
+     */
+    @Override
+    public Entry<String, Object> next()
+    {
+      final Entry<Object, Object> nextEntry = this.entries.next();
+
+      final String key = String.valueOf( nextEntry.getKey() );
+      final Object value = nextEntry.getValue();
+
+      return new AbstractMap.SimpleImmutableEntry<String, Object>( key, value );
+    }
+
+    /**
+     * @see java.util.Iterator#remove()
+     */
+    @Override
+    public void remove()
+    {
+      throw new UnsupportedOperationException();
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -149,33 +208,7 @@ public final class UserSettingsImpl implements UserSettings
   @Override
   public Iterator<Entry<String, Object>> iterator()
   {
-    return new Iterator<Map.Entry<String, Object>>()
-    {
-      final Iterator<Entry<Object, Object>> entries = UserSettingsImpl.this.properties.entrySet().iterator();
-
-      @Override
-      public boolean hasNext()
-      {
-        return this.entries.hasNext();
-      }
-
-      @Override
-      public Entry<String, Object> next()
-      {
-        final Entry<Object, Object> nextEntry = this.entries.next();
-
-        final String key = String.valueOf( nextEntry.getKey() );
-        final Object value = nextEntry.getValue();
-
-        return new AbstractMap.SimpleImmutableEntry<String, Object>( key, value );
-      }
-
-      @Override
-      public void remove()
-      {
-        throw new UnsupportedOperationException();
-      }
-    };
+    return new UserSettingsIterator( this.properties );
   }
 
   /**

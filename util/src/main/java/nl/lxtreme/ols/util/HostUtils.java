@@ -172,6 +172,74 @@ public final class HostUtils
   }
 
   /**
+   * Creates an OS-specific file location to store data.
+   * 
+   * @param aName
+   *          the name of the data file, excluding the file extension, cannot be
+   *          <code>null</code> or empty;
+   * @param aExtension
+   *          the extension of the data file to use, note that this is an
+   *          <em>indication</em> an might not be used for a particular host
+   *          operating system.
+   * @return the file pointing to the OS-specific properties file location,
+   *         never <code>null</code>.
+   */
+  public static final File createLocalDataFile( final String aName, final String aExtension )
+  {
+    final String fileName;
+    final String extension = ( aExtension.startsWith( "." ) ? "" : "." ) + aExtension;
+
+    String dirName;
+    if ( isMacOS() )
+    {
+      // This is the location where to store data on MacOS...
+      dirName = System.getProperty( "user.home" ) + "/Library/Preferences";
+      fileName = aName + ".Application";
+    }
+    else if ( isUnix() )
+    {
+      // The home folder is the 'default' location on Unix flavors...
+      dirName = System.getProperty( "user.home" );
+      fileName = "." + aName + extension;
+    }
+    else
+    {
+      // On Windows, there's no 'single' concept where to store local
+      // application data...
+      dirName = System.getenv( "LOCALAPPDATA" );
+      if ( ( dirName == null ) || dirName.trim().isEmpty() )
+      {
+        System.getenv( "APPDATA" );
+      }
+      if ( ( dirName == null ) || dirName.trim().isEmpty() )
+      {
+        dirName = System.getProperty( "user.home" );
+      }
+
+      fileName = aName + extension;
+    }
+
+    final File propFile = new File( dirName, fileName );
+    return propFile;
+  }
+
+  /**
+   * Creates an OS-specific file location to store properties.
+   * 
+   * @param aName
+   *          the name of the properties file, excluding <tt>.properties</tt>,
+   *          cannot be <code>null</code> or empty. By convention, the name of a
+   *          properties file should be in the "reverse package name", e.g.,
+   *          "com.foo.bar".
+   * @return the file pointing to the OS-specific properties file location,
+   *         never <code>null</code>.
+   */
+  public static final File createLocalPropertiesFile( final String aName )
+  {
+    return createLocalDataFile( aName, "properties" );
+  }
+
+  /**
    * Flushes the given input stream by reading as many bytes as there are still
    * available.
    * 
@@ -289,7 +357,7 @@ public final class HostUtils
   public static final void initOSSpecifics( final String aApplicationName,
       final ApplicationCallback aApplicationCallback )
   {
-    if ( isMacOSX() )
+    if ( isMacOS() )
     {
       // Moves the main menu bar to the screen menu bar location...
       System.setProperty( "apple.laf.useScreenMenuBar", "true" );
@@ -348,7 +416,7 @@ public final class HostUtils
    * @return <code>true</code> if running on Mac OS X, <code>false</code>
    *         otherwise.
    */
-  public static final boolean isMacOSX()
+  public static final boolean isMacOS()
   {
     final String osName = System.getProperty( "os.name" );
     return ( "Mac OS X".equalsIgnoreCase( osName ) );
@@ -393,7 +461,7 @@ public final class HostUtils
    */
   public static final boolean needsExitMenuItem()
   {
-    return !isMacOSX();
+    return !isMacOS();
   }
 
   /**
