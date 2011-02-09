@@ -81,7 +81,7 @@ public final class SpringLayoutUtils
     final JSeparator separator = new JSeparator();
     // Apparently, on Mac OSX, the height of a separator is slightly different
     // than on other OSs...
-    separator.setAlignmentY( HostUtils.isMacOSX() ? 0.25f : Component.CENTER_ALIGNMENT );
+    separator.setAlignmentY( HostUtils.isMacOS() ? 0.25f : Component.CENTER_ALIGNMENT );
     setSeparatorProperty( separator );
 
     aContainer.add( label );
@@ -426,7 +426,7 @@ public final class SpringLayoutUtils
   {
     if ( selectionColor == null )
     {
-      if ( HostUtils.isMacOSX() )
+      if ( HostUtils.isMacOS() )
       {
         selectionColor = UIManager.getColor( "List.selectionBackground" );
       }

@@ -30,6 +30,7 @@ import java.util.logging.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.osgi.*;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -49,6 +50,9 @@ public final class Host implements ApplicationCallback
   public static final String SHORT_NAME = "LogicSniffer";
   public static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
 
+  /** The name of the implicit user settings properties file name. */
+  private static final String IMPLICIT_USER_SETTING_NAME = "nl.lxtreme.ols.client";
+
   // VARIABLES
 
   private final BundleContext context;
@@ -60,6 +64,7 @@ public final class Host implements ApplicationCallback
   private ExporterTracker exporterTracker;
   private ToolTracker toolTracker;
   private ClientController controller;
+  private ProjectManager projectManager;
 
   // CONSTRUCTORS
 
@@ -121,6 +126,9 @@ public final class Host implements ApplicationCallback
   {
     try
     {
+      // Store the implicit user settings...
+      saveImplicitUserSettings( this.projectManager );
+
       // Stop the framework bundle; which should stop all other bundles as
       // well...
       this.context.getBundle( 0 ).stop();
@@ -184,7 +192,7 @@ public final class Host implements ApplicationCallback
   public boolean handleQuit()
   {
     exit();
-    // On MacOSX, it appears that if we acknowledge this event, the system
+    // On Mac OS, it appears that if we acknowledge this event, the system
     // shuts down our application for us, thereby not calling our stop/shutdown
     // hooks... By returning false, we're not acknowledging the quit action to
     // the system, but instead do it all on our own...
@@ -220,13 +228,16 @@ public final class Host implements ApplicationCallback
     // Cause exceptions to be shown in a more user-friendly way...
     JErrorDialog.installSwingExceptionHandler();
 
-    final ProjectManager projectManger = new SimpleProjectManager( this );
-    this.controller = new ClientController( this.context, this, projectManger );
+    this.projectManager = new SimpleProjectManager( this );
+    // Restore the implicit user settings...
+    loadImplicitUserSettings( this.projectManager );
+
+    this.controller = new ClientController( this.context, this, this.projectManager );
 
     final MainFrame mainFrame = new MainFrame( this.controller );
     this.controller.setMainFrame( mainFrame );
 
-    this.preferencesServiceTracker = new PreferenceServiceTracker( this.context, projectManger );
+    this.preferencesServiceTracker = new PreferenceServiceTracker( this.context, this.projectManager );
     this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.controller );
     this.exporterTracker = new ExporterTracker( this.context, this.controller );
     this.menuTracker = new MenuTracker( this.context, mainFrame.getJMenuBar() );
@@ -322,6 +333,57 @@ public final class Host implements ApplicationCallback
   private boolean isDebugMode()
   {
     return Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+  }
+
+  /**
+   * @param aProjectManager
+   */
+  private void loadImplicitUserSettings( final ProjectManager aProjectManager )
+  {
+    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME, "settings" );
+    if ( userSettingsFile.exists() )
+    {
+      InputStream is = null;
+
+      try
+      {
+        is = new FileInputStream( userSettingsFile );
+
+        aProjectManager.loadProject( is );
+      }
+      catch ( IOException exception )
+      {
+        LOG.log( Level.WARNING, "Failed to load implicit user settings...", exception );
+      }
+      finally
+      {
+        HostUtils.closeResource( is );
+      }
+    }
+  }
+
+  /**
+   * @param aProjectManager
+   */
+  private void saveImplicitUserSettings( final ProjectManager aProjectManager )
+  {
+    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME, "settings" );
+    OutputStream is = null;
+
+    try
+    {
+      is = new FileOutputStream( userSettingsFile );
+
+      aProjectManager.saveProject( is );
+    }
+    catch ( IOException exception )
+    {
+      LOG.log( Level.WARNING, "Failed to save implicit user settings...", exception );
+    }
+    finally
+    {
+      HostUtils.closeResource( is );
+    }
   }
 }
 

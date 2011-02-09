@@ -86,7 +86,7 @@ public final class CommPortUtils
     final StringBuilder result = new StringBuilder();
 
     final String deviceRegEx;
-    if ( HostUtils.isUnix() || HostUtils.isMacOSX() )
+    if ( HostUtils.isUnix() || HostUtils.isMacOS() )
     {
       if ( HostUtils.isUnix() )
       {

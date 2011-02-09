@@ -232,6 +232,7 @@ will be considered an invalid extension and the results are not (well) defined!
 # Make it possible to edit cursor labels (reported by pppd);
 # Allow cursors to snap to signal edges (reported by pppd);
 # Allow selecting two cursors and show timing information (reported by pppd);
+# "Mask" out unused channels to hide transients and ringing on unused signals (reported by miro);
 # real time acquisition. for e.g. trough named pipe or other resource (reported by arhi);
 # client side triggers for the real time acquisition stream (reported by arhi);
 # make the tools aware of the device capabilities (5 channels for BP iso 32, etc.);

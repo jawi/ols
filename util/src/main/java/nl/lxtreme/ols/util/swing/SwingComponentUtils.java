@@ -747,7 +747,7 @@ public final class SwingComponentUtils
   public static final File showFileOpenDialog( final Window aOwner, final String aCurrentDirectory,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    if ( HostUtils.isMacOSX() )
+    if ( HostUtils.isMacOS() )
     {
       final FileDialog dialog;
       if ( aOwner instanceof Dialog )
@@ -825,7 +825,7 @@ public final class SwingComponentUtils
   public static final File showFileSaveDialog( final Window aOwner, final String aCurrentDirectory,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    if ( HostUtils.isMacOSX() )
+    if ( HostUtils.isMacOS() )
     {
       final FileDialog dialog;
       if ( aOwner instanceof Dialog )
@@ -902,7 +902,7 @@ public final class SwingComponentUtils
   public static final File showFileSelectionDialog( final Window aOwner, final String aCurrentDirectory,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    if ( HostUtils.isMacOSX() )
+    if ( HostUtils.isMacOS() )
     {
       final FileDialog dialog;
       if ( aOwner instanceof Dialog )

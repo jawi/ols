@@ -601,7 +601,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       fileMenu.add( this.controller.getAction( ExitAction.ID ) );
     }
 
-    if ( !HostUtils.isMacOSX() )
+    if ( !HostUtils.isMacOS() )
     {
       final JMenu editMenu = bar.add( new JMenu( "Edit" ) );
       editMenu.setMnemonic( 'E' );
@@ -634,7 +634,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.toolsMenu = bar.add( new JMenu( "Tools" ) );
     this.toolsMenu.setMnemonic( 'T' );
 
-    if ( HostUtils.isMacOSX() )
+    if ( HostUtils.isMacOS() )
     {
       this.windowMenu = bar.add( new JMenu( "Window" ) );
       this.windowMenu.setMnemonic( 'W' );
