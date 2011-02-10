@@ -76,25 +76,6 @@ public class SerialConnectionFactory implements ConnectionFactory
     }
   }
 
-  static
-  {
-    // For some reason, serial ports under Linux do not get properly enumerated.
-    // This is due the fact that ttyACM is ignored in the detection routines of
-    // RxTx. Therefore, the device won't appear in the list of devices, and also
-    // cannot be entered manually as RxTx will refuse to add that particular
-    // comm.port identifier.
-    //
-    // The workaround is to craft a serial ports path ourselves, and set the
-    // system property 'gnu.io.rxtx.SerialPorts' ourselves with the "correct"
-    // list of ports...
-    // Reported by frankalicious on February 6th, 2011.
-    if ( HostUtils.isUnix() )
-    {
-      final String portsEnum = CommPortUtils.enumerateDevices( "/dev" );
-      System.setProperty( "gnu.io.rxtx.SerialPorts", portsEnum );
-    }
-  }
-
   // CONSTRUCTORS
 
   /**
@@ -159,7 +140,7 @@ public class SerialConnectionFactory implements ConnectionFactory
    *           in case of other I/O problems.
    */
   private SerialPort getSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
-  IOException
+      IOException
   {
     final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( aOptions.getPortName() );
     if ( commPortId.isCurrentlyOwned() )
