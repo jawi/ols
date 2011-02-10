@@ -4,6 +4,12 @@
 **/.project
 **/.classpath
 **/.settings/
+**/*.iml
+**/*.ipr
+**/*.iws
+*.ipr
+*.iml
+*.iws
 .metadata/
 .DS_Store?
 ehthumbs.db
