@@ -83,7 +83,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
     // Try to find the common baudrate that belongs to the exact one...
     for ( int idx = 1; ( baudRateExact < 0 ) && ( idx < COMMON_BAUDRATES.length ); idx++ )
     {
-      if ( ( roundedBaudRate > COMMON_BAUDRATES[idx - 1] ) && ( roundedBaudRate < COMMON_BAUDRATES[idx] ) )
+      if ( ( roundedBaudRate > COMMON_BAUDRATES[idx - 1] ) && ( roundedBaudRate <= COMMON_BAUDRATES[idx] ) )
       {
         baudRateExact = COMMON_BAUDRATES[idx];
       }
