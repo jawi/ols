@@ -24,10 +24,12 @@ package nl.lxtreme.ols.client.data.project;
 import java.beans.*;
 import java.io.*;
 import java.util.*;
+import java.util.logging.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.data.settings.*;
 
 
 /**
@@ -35,6 +37,10 @@ import nl.lxtreme.ols.api.data.project.*;
  */
 final class ProjectImpl implements Project, ProjectProperties
 {
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( ProjectImpl.class.getName() );
+
   // VARIABLES
 
   private final PropertyChangeSupport propertyChangeSupport;
@@ -354,13 +360,23 @@ final class ProjectImpl implements Project, ProjectProperties
   }
 
   /**
-   * Returns all current user settings.
-   * 
-   * @return the user settings, mapped by their name, never <code>null</code>.
+   * @see nl.lxtreme.ols.api.data.project.Project#visit(nl.lxtreme.ols.api.data.project.ProjectVisitor)
    */
-  final Map<String, UserSettings> getAllUserSettings()
+  @Override
+  public void visit( final ProjectVisitor aVisitor )
   {
-    return this.settings;
+    final List<UserSettings> userSettings = new ArrayList<UserSettings>( this.settings.values() );
+    for ( UserSettings settings : userSettings )
+    {
+      try
+      {
+        aVisitor.visit( settings );
+      }
+      catch ( Exception exception )
+      {
+        LOG.log( Level.INFO, "Exception during visiting project! Continuing anyway...", exception );
+      }
+    }
   }
 
   /**

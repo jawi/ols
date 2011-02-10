@@ -154,12 +154,13 @@ public class PreferenceServiceTracker extends ServiceTracker
     }
 
     /**
-     * Returns the preferences node for the given namespace.
+     * Returns the user settings of the current project for the given name
+     * space.
      * 
      * @param aNamespace
-     *          the node namespace to retrieve the preferences for, cannot be
+     *          the node name space to retrieve the preferences for, cannot be
      *          <code>null</code>.
-     * @return the preferences node for the given namespace, never
+     * @return the preferences node for the given name space, never
      *         <code>null</code>.
      */
     private UserSettings getUserSettings( final String aNamespace )
@@ -233,6 +234,9 @@ public class PreferenceServiceTracker extends ServiceTracker
 
           final UserSettings userSettings = getUserSettings( aNamespace );
           ( ( Configurable )aComponent ).writePreferences( userSettings );
+          // Important: write back the user settings to mark the project as
+          // changed!
+          setUserSettings( userSettings );
         }
 
         // Only store settings of "real" frames and dialogs, not
@@ -249,6 +253,18 @@ public class PreferenceServiceTracker extends ServiceTracker
       {
         LOG.log( Level.WARNING, "Writing dialog properties failed!", exception );
       }
+    }
+
+    /**
+     * Stores the given user settings in the current project.
+     * 
+     * @param aUserSettings
+     *          the user settings for the given namespace, cannot be
+     *          <code>null</code>.
+     */
+    private void setUserSettings( final UserSettings aUserSettings )
+    {
+      this.projectManager.getCurrentProject().setSettings( aUserSettings );
     }
   }
 

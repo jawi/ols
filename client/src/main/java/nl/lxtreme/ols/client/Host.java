@@ -26,11 +26,10 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
-
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.data.project.*;
+import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -49,9 +48,6 @@ public final class Host implements ApplicationCallback
 
   public static final String SHORT_NAME = "LogicSniffer";
   public static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
-
-  /** The name of the implicit user settings properties file name. */
-  private static final String IMPLICIT_USER_SETTING_NAME = "nl.lxtreme.ols.client";
 
   // VARIABLES
 
@@ -336,53 +332,30 @@ public final class Host implements ApplicationCallback
   }
 
   /**
+   * Loads the implicit user settings for the given project manager.
+   * 
    * @param aProjectManager
+   *          the project manager to load the implicit user settings for, cannot
+   *          be <code>null</code>.
    */
   private void loadImplicitUserSettings( final ProjectManager aProjectManager )
   {
-    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME, "settings" );
-    if ( userSettingsFile.exists() )
-    {
-      InputStream is = null;
-
-      try
-      {
-        is = new FileInputStream( userSettingsFile );
-
-        aProjectManager.loadProject( is );
-      }
-      catch ( IOException exception )
-      {
-        LOG.log( Level.WARNING, "Failed to load implicit user settings...", exception );
-      }
-      finally
-      {
-        HostUtils.closeResource( is );
-      }
-    }
+    UserSettingsManager.loadUserSettings( aProjectManager.getCurrentProject() );
   }
 
   /**
+   * Saves the implicit user settings for the given project manager.
+   * 
    * @param aProjectManager
+   *          the project manager to save the implicit user settings for, cannot
+   *          be <code>null</code>.
    */
   private void saveImplicitUserSettings( final ProjectManager aProjectManager )
   {
-    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME, "settings" );
-    OutputStream is = null;
-
-    try
+    final Project currentProject = aProjectManager.getCurrentProject();
+    if ( currentProject.isChanged() )
     {
-      is = new FileOutputStream( userSettingsFile );
-
-      aProjectManager.saveProject( is );
-    }
-    catch ( IOException exception )
-    {
-      LOG.log( Level.WARNING, "Failed to save implicit user settings...", exception );
-    }
-    finally
-    {
-      HostUtils.closeResource( is );
+      UserSettingsManager.saveUserSettings( currentProject );
     }
   }
 }
