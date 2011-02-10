@@ -731,8 +731,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     final Project project = this.projectManager.getCurrentProject();
     project.setFilename( aFile );
 
-    // TODO flush preferences to project...
-
     zoomToFit();
   }
 
@@ -938,7 +936,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     FileOutputStream out = null;
     try
     {
-      // TODO flush user preferences to project...
       final Project project = this.projectManager.getCurrentProject();
       project.setFilename( aFile );
       project.setName( aName );
@@ -1437,11 +1434,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );
     getAction( RepeatCaptureAction.ID ).setEnabled( deviceSetup );
 
-    final boolean windowPrefsAvailable = false; // XXX
+    final boolean projectChanged = this.projectManager.getCurrentProject().isChanged();
+    final boolean projectSavedBefore = this.projectManager.getCurrentProject().getFilename() != null;
     final boolean dataAvailable = this.dataContainer.hasCapturedData();
 
-    getAction( SaveProjectAction.ID ).setEnabled( dataAvailable || windowPrefsAvailable );
-    getAction( SaveProjectAsAction.ID ).setEnabled( dataAvailable || windowPrefsAvailable );
+    getAction( SaveProjectAction.ID ).setEnabled( projectChanged );
+    getAction( SaveProjectAsAction.ID ).setEnabled( projectSavedBefore && projectChanged );
     getAction( SaveDataFileAction.ID ).setEnabled( dataAvailable );
 
     getAction( ZoomInAction.ID ).setEnabled( dataAvailable );
