@@ -193,4 +193,13 @@ public interface Project
    *          .
    */
   public void setSourceVersion( final String aSourceVersion );
+
+  /**
+   * Allows external callers to traverse the project structure without having to
+   * know the exact implementation details of a project.
+   * 
+   * @param aVisitor
+   *          the visitor callback to use, cannot be <code>null</code>.
+   */
+  public void visit( final ProjectVisitor aVisitor );
 }

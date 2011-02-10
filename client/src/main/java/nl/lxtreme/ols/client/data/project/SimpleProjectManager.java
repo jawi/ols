@@ -32,6 +32,7 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.data.*;
+import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -426,30 +427,29 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
    */
   protected void storeProjectSettings( final ProjectImpl aProject, final ZipOutputStream aZipOS ) throws IOException
   {
-    final Map<String, UserSettings> allUserSettings = aProject.getAllUserSettings();
-    if ( ( allUserSettings == null ) || allUserSettings.isEmpty() )
-    {
-      return;
-    }
-
     try
     {
-      for ( UserSettings userSettings : allUserSettings.values() )
+      aProject.visit( new ProjectVisitor()
       {
-        final String zipEntryName = FILENAME_PROJECT_SETTINGS.concat( userSettings.getName() );
-
-        final ZipEntry zipEntry = new ZipEntry( zipEntryName );
-        aZipOS.putNextEntry( zipEntry );
-
-        // Convert to a properties object...
-        final Properties props = new Properties();
-        for ( Map.Entry<String, Object> userSetting : userSettings )
+        @Override
+        public void visit( final UserSettings aSettings ) throws IOException
         {
-          props.put( userSetting.getKey(), userSetting.getValue() );
+          final String zipEntryName = FILENAME_PROJECT_SETTINGS.concat( aSettings.getName() );
+
+          final ZipEntry zipEntry = new ZipEntry( zipEntryName );
+          aZipOS.putNextEntry( zipEntry );
+
+          // Convert to a properties object...
+          final Properties props = new Properties();
+          for ( Map.Entry<String, Object> userSetting : aSettings )
+          {
+            props.put( userSetting.getKey(), userSetting.getValue() );
+          }
+
+          // Write the project settings
+          props.store( aZipOS, aSettings.getName().concat( " settings" ) );
         }
-        // Write the project settings
-        props.store( aZipOS, userSettings.getName().concat( " settings" ) );
-      }
+      } );
     }
     finally
     {
