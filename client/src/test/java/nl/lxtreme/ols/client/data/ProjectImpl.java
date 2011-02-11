@@ -34,7 +34,7 @@ import nl.lxtreme.ols.api.data.project.*;
 /**
  * @author jawi
  */
-public final class TestProject implements Project
+public final class ProjectImpl implements Project
 {
   // VARIABLES
 

@@ -3,14 +3,16 @@
  */
 package nl.lxtreme.ols.client.data.project;
 
+
 import static org.junit.Assert.*;
 
 import org.junit.*;
 
+
 /**
  * @author jawi
- *
  */
+@Ignore
 public class SimpleProjectManagerTest
 {
 
@@ -23,7 +25,9 @@ public class SimpleProjectManagerTest
   }
 
   /**
-   * Test method for {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#createNewProject()}.
+   * Test method for
+   * {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#createNewProject()}
+   * .
    */
   @Test
   public void testCreateNewProject()
@@ -32,7 +36,9 @@ public class SimpleProjectManagerTest
   }
 
   /**
-   * Test method for {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#createTemporaryProject()}.
+   * Test method for
+   * {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#createTemporaryProject()}
+   * .
    */
   @Test
   public void testCreateTemporaryProject()
@@ -41,7 +47,9 @@ public class SimpleProjectManagerTest
   }
 
   /**
-   * Test method for {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#getCurrentProject()}.
+   * Test method for
+   * {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#getCurrentProject()}
+   * .
    */
   @Test
   public void testGetCurrentProject()
@@ -50,7 +58,9 @@ public class SimpleProjectManagerTest
   }
 
   /**
-   * Test method for {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#loadProject(java.io.InputStream)}.
+   * Test method for
+   * {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#loadProject(java.io.InputStream)}
+   * .
    */
   @Test
   public void testLoadProject()
@@ -59,7 +69,9 @@ public class SimpleProjectManagerTest
   }
 
   /**
-   * Test method for {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#saveProject(java.io.OutputStream)}.
+   * Test method for
+   * {@link nl.lxtreme.ols.client.data.project.SimpleProjectManager#saveProject(java.io.OutputStream)}
+   * .
    */
   @Test
   public void testSaveProject()
