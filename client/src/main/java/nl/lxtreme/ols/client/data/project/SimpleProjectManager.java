@@ -27,8 +27,6 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.zip.*;
 
-import datafiles.*;
-
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
@@ -55,7 +53,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
 
   // VARIABLES
 
-  private final Host host;
+  private final String hostVersion;
   private ProjectImpl project;
 
   // CONSTRUCTORS
@@ -63,12 +61,13 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
   /**
    * Creates a new SimpleProjectManager instance.
    * 
-   * @param aHost
-   *          the host to use, cannot be <code>null</code>.
+   * @param aHostVersion
+   *          the host version this project manager instantiated, cannot be
+   *          <code>null</code>.
    */
-  public SimpleProjectManager( final Host aHost )
+  public SimpleProjectManager( final String aHostVersion )
   {
-    this.host = aHost;
+    this.hostVersion = aHostVersion;
     this.project = new ProjectImpl();
   }
 
@@ -403,7 +402,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     try
     {
       out.println( name );
-      out.println( this.host.getVersion() );
+      out.println( this.hostVersion );
       out.println( System.currentTimeMillis() );
     }
     finally

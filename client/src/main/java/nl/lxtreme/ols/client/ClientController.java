@@ -41,9 +41,8 @@ import nl.lxtreme.ols.client.data.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.util.*;
-import org.osgi.framework.*;
 
-import datafiles.*;
+import org.osgi.framework.*;
 
 
 /**

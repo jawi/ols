@@ -1,5 +1,22 @@
-/**
- * 
+/*
+ * OpenBench LogicSniffer / SUMP project 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
+ *
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.client.data;
 
@@ -24,8 +41,28 @@ public final class TestProject implements Project
   private CapturedData capturedData;
   private boolean cursorsEnabled;
   private Long[] cursors;
+  private String[] labels;
+  private String sourceVersion;
+  private final Map<String, UserSettings> settings = new HashMap<String, UserSettings>();
+  private String name;
+  private Date lastModified;
+  private File file;
+  private boolean changed;
 
   // METHODS
+
+  /**
+   * Asserts the given absolute lengths is defined in the captured data.
+   * 
+   * @param aTimestamps
+   */
+  public void assertAbsoluteLength( final long aAbsLength )
+  {
+    assertNotNull( this.capturedData );
+
+    final long absLength = this.capturedData.getAbsoluteLength();
+    assertEquals( aAbsLength, absLength );
+  }
 
   /**
    * Asserts the cursor with the given index occur in the captured data.
@@ -93,8 +130,7 @@ public final class TestProject implements Project
   @Override
   public String[] getChannelLabels()
   {
-    // TODO Auto-generated method stub
-    return null;
+    return this.labels;
   }
 
   /**
@@ -112,8 +148,7 @@ public final class TestProject implements Project
   @Override
   public File getFilename()
   {
-    // TODO Auto-generated method stub
-    return null;
+    return this.file;
   }
 
   /**
@@ -122,8 +157,7 @@ public final class TestProject implements Project
   @Override
   public Date getLastModified()
   {
-    // TODO Auto-generated method stub
-    return null;
+    return this.lastModified;
   }
 
   /**
@@ -132,8 +166,7 @@ public final class TestProject implements Project
   @Override
   public String getName()
   {
-    // TODO Auto-generated method stub
-    return null;
+    return this.name;
   }
 
   /**
@@ -142,8 +175,7 @@ public final class TestProject implements Project
   @Override
   public UserSettings getSettings( final String aName )
   {
-    // TODO Auto-generated method stub
-    return null;
+    return this.settings.get( aName );
   }
 
   /**
@@ -152,8 +184,7 @@ public final class TestProject implements Project
   @Override
   public String getSourceVersion()
   {
-    // TODO Auto-generated method stub
-    return null;
+    return this.sourceVersion;
   }
 
   /**
@@ -162,8 +193,7 @@ public final class TestProject implements Project
   @Override
   public boolean isChanged()
   {
-    // TODO Auto-generated method stub
-    return false;
+    return this.changed;
   }
 
   /**
@@ -190,8 +220,7 @@ public final class TestProject implements Project
   @Override
   public void setChanged( final boolean aChanged )
   {
-    // TODO Auto-generated method stub
-
+    this.changed = aChanged;
   }
 
   /**
@@ -200,8 +229,7 @@ public final class TestProject implements Project
   @Override
   public void setChannelLabels( final String... aChannelLabels )
   {
-    // TODO Auto-generated method stub
-
+    this.labels = aChannelLabels;
   }
 
   /**
@@ -228,8 +256,7 @@ public final class TestProject implements Project
   @Override
   public void setFilename( final File aFilename )
   {
-    // TODO Auto-generated method stub
-
+    this.file = aFilename;
   }
 
   /**
@@ -238,8 +265,7 @@ public final class TestProject implements Project
   @Override
   public void setLastModified( final Date aLastModified )
   {
-    // TODO Auto-generated method stub
-
+    this.lastModified = aLastModified;
   }
 
   /**
@@ -248,8 +274,7 @@ public final class TestProject implements Project
   @Override
   public void setName( final String aName )
   {
-    // TODO Auto-generated method stub
-
+    this.name = aName;
   }
 
   /**
@@ -258,8 +283,7 @@ public final class TestProject implements Project
   @Override
   public void setSettings( final UserSettings aSettings )
   {
-    // TODO Auto-generated method stub
-
+    this.settings.put( aSettings.getName(), aSettings );
   }
 
   /**
@@ -268,8 +292,7 @@ public final class TestProject implements Project
   @Override
   public void setSourceVersion( final String aSourceVersion )
   {
-    // TODO Auto-generated method stub
-
+    this.sourceVersion = aSourceVersion;
   }
 
   /**
@@ -278,8 +301,6 @@ public final class TestProject implements Project
   @Override
   public void visit( final ProjectVisitor aVisitor )
   {
-    // TODO Auto-generated method stub
-
+    throw new UnsupportedOperationException();
   }
-
 }
