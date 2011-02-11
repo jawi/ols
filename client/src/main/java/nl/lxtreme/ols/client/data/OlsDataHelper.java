@@ -50,7 +50,7 @@ public final class OlsDataHelper
    * The time margin that is added to the last timestamp to obtain the absolute
    * length.
    */
-  private static final int ABS_TIME_MARGIN = 4;
+  static final int ABS_TIME_MARGIN = 4;
 
   // METHODS
 
@@ -211,7 +211,7 @@ public final class OlsDataHelper
       // Allow the absolute length to be undefined, in which case the last
       // time stamp is used (+ some margin to be able to see the last
       // sample)...
-      long absoluteLength = ( absLen < 0 ) ? timestamps[size - 1] + ABS_TIME_MARGIN : absLen;
+      long absoluteLength = Math.max( absLen, timestamps[size - 1] + ABS_TIME_MARGIN );
 
       // Finally set the captured data, and notify all event listeners...
       capturedData = new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, enabledChannels,
@@ -241,7 +241,7 @@ public final class OlsDataHelper
     final CapturedData capturedData = aProject.getCapturedData();
 
     final Long[] cursors = aProject.getCursorPositions();
-    final boolean cursorsEnabled = ( cursors != null ) && ( cursors.length > 0 );
+    final boolean cursorsEnabled = aProject.isCursorsEnabled();
 
     try
     {
@@ -294,11 +294,7 @@ public final class OlsDataHelper
       }
       for ( int i = 0; i < values.length; i++ )
       {
-        final String hexVal = Integer.toHexString( values[i] );
-        bw.write( "00000000".substring( hexVal.length() ) );
-        bw.write( hexVal );
-        bw.write( "@" );
-        bw.write( Long.toString( timestamps[i] ) );
+        bw.write( formatSample( values[i], timestamps[i] ) );
         bw.newLine();
       }
     }
@@ -306,5 +302,26 @@ public final class OlsDataHelper
     {
       bw.flush();
     }
+  }
+
+  /**
+   * Formats the given value and timestamp into a single sample string.
+   * 
+   * @param aValue
+   *          the sample value to format;
+   * @param aTimestamp
+   *          the timestamp to format.
+   * @return the sample string, in the form of
+   *         &lt;value<sub>16</sub>&gt;@&lt;timestamp<sub>10</sub>&gt;.
+   */
+  static String formatSample( final int aValue, final long aTimestamp )
+  {
+    final String hexVal = Integer.toHexString( aValue & Integer.MAX_VALUE );
+    final StringBuilder sb = new StringBuilder();
+    sb.append( "00000000".substring( hexVal.length() ) );
+    sb.append( hexVal );
+    sb.append( "@" );
+    sb.append( Long.toString( aTimestamp & Long.MAX_VALUE ) );
+    return sb.toString();
   }
 }

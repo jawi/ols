@@ -27,6 +27,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.util.*;
 
@@ -125,6 +126,22 @@ public class OlsDataHelperTest
   /**
    * Test method for {@link OlsDataHelper#read(Project, Reader)}.
    */
+  @Test
+  public void testReadDataFileMissingAbsoluteLengthOk() throws Exception
+  {
+    final String snippet = MINIMAL_HEADER + ";Size: 3\n0@0\n1@1\n3@3";
+
+    final StringReader reader = new StringReader( snippet );
+    OlsDataHelper.read( this.project, reader );
+
+    this.project.assertTimeStamps( 0, 1, 3 );
+    this.project.assertValues( 0, 1, 3 );
+    this.project.assertAbsoluteLength( 3 + OlsDataHelper.ABS_TIME_MARGIN );
+  }
+
+  /**
+   * Test method for {@link OlsDataHelper#read(Project, Reader)}.
+   */
   @Test( expected = IOException.class )
   public void testReadDataFileMissingChannelsFail() throws Exception
   {
@@ -180,6 +197,38 @@ public class OlsDataHelperTest
 
     this.project.assertTimeStamps( 0 );
     this.project.assertValues( 0 );
+  }
+
+  /**
+   * Test method for {@link OlsDataHelper#read(Project, Reader)}.
+   */
+  @Test
+  public void testReadDataFileWithAbsoluteLengthOk() throws Exception
+  {
+    final String snippet = MINIMAL_HEADER + ";Size: 3\n;AbsoluteLength: 9\n0@0\n1@1\n3@3";
+
+    final StringReader reader = new StringReader( snippet );
+    OlsDataHelper.read( this.project, reader );
+
+    this.project.assertTimeStamps( 0, 1, 3 );
+    this.project.assertValues( 0, 1, 3 );
+    this.project.assertAbsoluteLength( 9 );
+  }
+
+  /**
+   * Test method for {@link OlsDataHelper#read(Project, Reader)}.
+   */
+  @Test
+  public void testReadDataFileWithInvalidAbsoluteLengthOk() throws Exception
+  {
+    final String snippet = MINIMAL_HEADER + ";Size: 3\n;AbsoluteLength: 2\n0@0\n1@1\n3@3";
+
+    final StringReader reader = new StringReader( snippet );
+    OlsDataHelper.read( this.project, reader );
+
+    this.project.assertTimeStamps( 0, 1, 3 );
+    this.project.assertValues( 0, 1, 3 );
+    this.project.assertAbsoluteLength( 3 + OlsDataHelper.ABS_TIME_MARGIN );
   }
 
   /**
@@ -404,14 +453,50 @@ public class OlsDataHelperTest
   }
 
   /**
-   * Test method for
-   * {@link OlsDataHelper#write(nl.lxtreme.ols.api.data.project.Project, java.io.Writer)}
-   * .
+   * Test method for {@link OlsDataHelper#write(Project, Writer)}.
    */
   @Test
-  public void testWrite()
+  public void testSimpleWriteOk() throws Exception
   {
-    // fail( "Not yet implemented" );
+    this.project.setCapturedData( new CapturedDataImpl( new int[] { 1 }, new long[] { 2L }, -1, 100, 2, 2, 1 ) );
+
+    final StringWriter writer = new StringWriter();
+    OlsDataHelper.write( this.project, writer );
+
+    final String snippet = writer.toString();
+    assertTrue( snippet.contains( ";Rate: 100" ) );
+    assertTrue( snippet.contains( ";Channels: 2" ) );
+    assertTrue( snippet.contains( ";EnabledChannels: 2" ) );
+    assertTrue( snippet.contains( "1@2" ) );
   }
 
+  /**
+   * Test method for {@link OlsDataHelper#write(Project, Writer)}.
+   */
+  @Test
+  public void testWriteInvalidSampleValueOk() throws Exception
+  {
+    this.project.setCapturedData( new CapturedDataImpl( new int[] { -1 }, new long[] { 1L }, -1, 100, 2, 2, 1 ) );
+
+    final StringWriter writer = new StringWriter();
+    OlsDataHelper.write( this.project, writer );
+
+    final String snippet = writer.toString();
+    assertTrue( snippet.contains( Integer.toHexString( Integer.MAX_VALUE ) + "@1" ) );
+  }
+
+  /**
+   * Test method for {@link OlsDataHelper#write(Project, Writer)}.
+   */
+  @Test
+  public void testWriteInvalidTimestampOk() throws Exception
+  {
+    this.project.setCapturedData( new CapturedDataImpl( new int[] { 1 }, new long[] { -1L }, -1, 100, 2, 2, 1 ) );
+
+    final StringWriter writer = new StringWriter();
+    OlsDataHelper.write( this.project, writer );
+
+    final String snippet = writer.toString();
+    assertTrue( snippet.contains( "1@" + Long.MAX_VALUE ) );
+  }
 }

@@ -26,10 +26,12 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
+
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -48,6 +50,10 @@ public final class Host implements ApplicationCallback
 
   public static final String SHORT_NAME = "LogicSniffer";
   public static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
+
+  /** The name of the implicit user settings properties file name. */
+  private static final String IMPLICIT_USER_SETTING_NAME_PREFIX = "nl.lxtreme.ols.client";
+  private static final String IMPLICIT_USER_SETTING_NAME_SUFFIX = "settings";
 
   // VARIABLES
 
@@ -224,7 +230,7 @@ public final class Host implements ApplicationCallback
     // Cause exceptions to be shown in a more user-friendly way...
     JErrorDialog.installSwingExceptionHandler();
 
-    this.projectManager = new SimpleProjectManager( this );
+    this.projectManager = new SimpleProjectManager( getVersion() );
     // Restore the implicit user settings...
     loadImplicitUserSettings( this.projectManager );
 
@@ -340,7 +346,9 @@ public final class Host implements ApplicationCallback
    */
   private void loadImplicitUserSettings( final ProjectManager aProjectManager )
   {
-    UserSettingsManager.loadUserSettings( aProjectManager.getCurrentProject() );
+    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
+        IMPLICIT_USER_SETTING_NAME_SUFFIX );
+    UserSettingsManager.loadUserSettings( userSettingsFile, aProjectManager.getCurrentProject() );
   }
 
   /**
@@ -355,7 +363,9 @@ public final class Host implements ApplicationCallback
     final Project currentProject = aProjectManager.getCurrentProject();
     if ( currentProject.isChanged() )
     {
-      UserSettingsManager.saveUserSettings( currentProject );
+      final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
+          IMPLICIT_USER_SETTING_NAME_SUFFIX );
+      UserSettingsManager.saveUserSettings( userSettingsFile, currentProject );
     }
   }
 }

@@ -22,28 +22,37 @@ public final class UserSettingsManager
   // CONSTANTS
 
   private static final Logger LOG = Logger.getLogger( UserSettingsManager.class.getName() );
-  /** The name of the implicit user settings properties file name. */
-  private static final String IMPLICIT_USER_SETTING_NAME = "nl.lxtreme.ols.client";
 
   // METHODS
 
   /**
    * Loads the user settings for the given project.
    * 
+   * @param aUserSettingsFile
+   *          the file to load the user settings from, cannot be
+   *          <code>null</code>;
    * @param aProject
    *          the project to load the user settings for, cannot be
    *          <code>null</code>.
    */
-  public static void loadUserSettings( final Project aProject )
+  public static void loadUserSettings( final File aUserSettingsFile, final Project aProject )
   {
-    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME, "settings" );
-    if ( userSettingsFile.exists() )
+    if ( aUserSettingsFile == null )
+    {
+      throw new IllegalArgumentException( "User settings file cannot be null!" );
+    }
+    if ( aProject == null )
+    {
+      throw new IllegalArgumentException( "Project cannot be null!" );
+    }
+
+    if ( aUserSettingsFile.exists() )
     {
       InputStream is = null;
 
       try
       {
-        is = new BufferedInputStream( new FileInputStream( userSettingsFile ) );
+        is = new BufferedInputStream( new FileInputStream( aUserSettingsFile ) );
         final ZipInputStream zipIS = new ZipInputStream( is );
 
         ZipEntry ze = null;
@@ -74,19 +83,29 @@ public final class UserSettingsManager
   /**
    * Saves the user settings for the given project.
    * 
+   * @param aUserSettingsFile
+   *          the file to write the user settings to, cannot be
+   *          <code>null</code>;
    * @param aProject
    *          the project to save the user settings for, cannot be
    *          <code>null</code>.
    */
-  public static void saveUserSettings( final Project aProject )
+  public static void saveUserSettings( final File aUserSettingsFile, final Project aProject )
   {
-    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME, "settings" );
+    if ( aUserSettingsFile == null )
+    {
+      throw new IllegalArgumentException( "User settings file cannot be null!" );
+    }
+    if ( aProject == null )
+    {
+      throw new IllegalArgumentException( "Project cannot be null!" );
+    }
 
     OutputStream os = null;
 
     try
     {
-      os = new BufferedOutputStream( new FileOutputStream( userSettingsFile ) );
+      os = new BufferedOutputStream( new FileOutputStream( aUserSettingsFile ) );
       final ZipOutputStream zipOS = new ZipOutputStream( os );
 
       aProject.visit( new ProjectVisitor()
