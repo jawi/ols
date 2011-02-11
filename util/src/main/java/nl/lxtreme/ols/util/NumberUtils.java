@@ -323,6 +323,84 @@ public final class NumberUtils
   }
 
   /**
+   * Parses the given text as an integer, avoiding runtime exceptions.
+   * 
+   * @param aText
+   *          the text to parse as an integer, can be <code>null</code> or
+   *          empty.
+   * @return the numeric representation of the given text, or -1 if the text
+   *         could not be parsed correctly as integer.
+   * @see #safeParseInt(String, int)
+   */
+  public static int safeParseInt( final String aText )
+  {
+    return safeParseInt( aText, -1 );
+  }
+
+  /**
+   * Parses the given text as an integer, avoiding runtime exceptions.
+   * 
+   * @param aText
+   *          the text to parse as an integer, can be <code>null</code> or
+   *          empty;
+   * @param aDefault
+   *          the default value to return in case parsing failed.
+   * @return the numeric representation of the given text, or the given default
+   *         if the text could not be parsed correctly as integer.
+   * @see Integer#parseInt(String)
+   */
+  public static int safeParseInt( final String aText, final int aDefault )
+  {
+    try
+    {
+      return Integer.parseInt( aText );
+    }
+    catch ( NumberFormatException exception )
+    {
+      return aDefault;
+    }
+  }
+
+  /**
+   * Parses the given text as an integer, avoiding runtime exceptions.
+   * 
+   * @param aText
+   *          the text to parse as an integer, can be <code>null</code> or
+   *          empty.
+   * @return the numeric representation of the given text, or -1 if the text
+   *         could not be parsed correctly as integer.
+   * @see #safeParseLong(String, long)
+   */
+  public static long safeParseLong( final String aText )
+  {
+    return safeParseLong( aText, -1L );
+  }
+
+  /**
+   * Parses the given text as an integer, avoiding runtime exceptions.
+   * 
+   * @param aText
+   *          the text to parse as an integer, can be <code>null</code> or
+   *          empty;
+   * @param aDefault
+   *          the default value to return in case parsing failed.
+   * @return the numeric representation of the given text, or the given default
+   *         if the text could not be parsed correctly as integer.
+   * @see Long#parseLong(String)
+   */
+  public static long safeParseLong( final String aText, final long aDefault )
+  {
+    try
+    {
+      return Long.parseLong( aText );
+    }
+    catch ( NumberFormatException exception )
+    {
+      return aDefault;
+    }
+  }
+
+  /**
    * Provides a "smart" integer parsing routine that allows (decimal) numbers in
    * string form with all kind of trailing characters to be parsed into an
    * integer. Some trailing characters are understood as being part of the

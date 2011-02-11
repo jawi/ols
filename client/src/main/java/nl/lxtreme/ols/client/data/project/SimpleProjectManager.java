@@ -27,6 +27,8 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.zip.*;
 
+import datafiles.*;
+
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
