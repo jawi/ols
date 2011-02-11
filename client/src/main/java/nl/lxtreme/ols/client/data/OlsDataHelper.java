@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client.data;
 
 
+import static nl.lxtreme.ols.util.NumberUtils.*;
+
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
@@ -28,6 +30,7 @@ import java.util.regex.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -43,6 +46,11 @@ public final class OlsDataHelper
   private static final Pattern OLS_INSTRUCTION_PATTERN = Pattern.compile( "^;([^:]+):\\s+([^\r\n]+)$" );
   /** The regular expression used to parse an (OLS-datafile) data value. */
   private static final Pattern OLS_DATA_PATTERN = Pattern.compile( "^([0-9a-fA-F]+)@(\\d+)$" );
+  /**
+   * The time margin that is added to the last timestamp to obtain the absolute
+   * length.
+   */
+  private static final int ABS_TIME_MARGIN = 4;
 
   // METHODS
 
@@ -58,15 +66,16 @@ public final class OlsDataHelper
    */
   public static void read( final Project aProject, final Reader aReader ) throws IOException
   {
-    int size = -1, rate = -1, channels = 32, enabledChannels = -1;
-    long triggerPos = -1;
+    int size = -1, rate = -1, channels = -1, enabledChannels = -1;
+    long triggerPos = -1L;
+    long absLen = -1L;
+
+    boolean cursors = false;
+    // assume 'new' file format is in use, don't support uncompressed ones...
+    boolean compressed = true;
 
     Long[] cursorPositions = new Long[CapturedData.MAX_CURSORS];
     CapturedData capturedData = null;
-
-    boolean cursors = false;
-    boolean compressed = false;
-    long absLen = 0;
 
     final BufferedReader br = new BufferedReader( aReader );
     if ( LOG.isLoggable( Level.INFO ) )
@@ -98,15 +107,15 @@ public final class OlsDataHelper
 
           if ( "Size".equals( instrKey ) )
           {
-            size = Integer.parseInt( instrValue );
+            size = safeParseInt( instrValue );
           }
           else if ( "Rate".equals( instrKey ) )
           {
-            rate = Integer.parseInt( instrValue );
+            rate = safeParseInt( instrValue );
           }
           else if ( "Channels".equals( instrKey ) )
           {
-            channels = Integer.parseInt( instrValue );
+            channels = safeParseInt( instrValue );
           }
           else if ( "TriggerPosition".equals( instrKey ) )
           {
@@ -114,7 +123,7 @@ public final class OlsDataHelper
           }
           else if ( "EnabledChannels".equals( instrKey ) )
           {
-            enabledChannels = Integer.parseInt( instrValue );
+            enabledChannels = safeParseInt( instrValue );
           }
           else if ( "CursorEnabled".equals( instrKey ) )
           {
@@ -130,65 +139,79 @@ public final class OlsDataHelper
           }
           else if ( "CursorA".equals( instrKey ) )
           {
-            final long value = Long.parseLong( instrValue );
+            final long value = safeParseLong( instrValue );
             cursorPositions[0] = ( value > Long.MIN_VALUE ) ? Long.valueOf( value ) : null;
           }
           else if ( "CursorB".equals( instrKey ) )
           {
-            final long value = Long.parseLong( instrValue );
+            final long value = safeParseLong( instrValue );
             cursorPositions[1] = ( value > Long.MIN_VALUE ) ? Long.valueOf( value ) : null;
           }
           else if ( instrKey.startsWith( "Cursor" ) )
           {
-            final int idx = Integer.parseInt( instrKey.substring( 6 ) );
+            final int idx = safeParseInt( instrKey.substring( 6 ) );
             final long pos = Long.parseLong( instrValue );
             cursorPositions[idx] = ( pos > Long.MIN_VALUE ) ? Long.valueOf( pos ) : null;
           }
         }
       }
 
-      long absoluteLength;
-      int[] values;
-      long[] timestamps;
-
-      if ( dataValues.isEmpty() || ( size < 0 ) )
+      // Perform some sanity checks, make it not possible to import invalid
+      // data...
+      if ( dataValues.isEmpty() )
       {
-        throw new IOException( "File does not appear to be a valid datafile!" );
+        throw new IOException( "Data file does not contain any sample data!" );
       }
-
       if ( !compressed )
       {
-        throw new IOException(
-            "Uncompressed data file found! Please sent this file to the OLS developers for further inspection!" );
+        throw new IOException( "Uncompressed data file found! Please send this file to the OLS developers!" );
       }
-      else if ( size != dataValues.size() )
+      // In case the size is not provided (as of 0.9.4 no longer mandatory),
+      // take the length of the data values as size indicator...
+      if ( size < 0 )
       {
-        throw new IOException( "Data size mismatch! Corrupt file encountered!" );
+        size = dataValues.size();
       }
-      else
+      if ( size != dataValues.size() )
       {
-        // new compressed file format
-        absoluteLength = absLen;
-        values = new int[size];
-        timestamps = new long[size];
+        throw new IOException( "Data file is corrupt?! Data size does not match sample count!" );
+      }
+      if ( rate <= 0 )
+      {
+        throw new IOException( "Data file is corrupt?! Sample rate is not provided!" );
+      }
+      if ( ( channels <= 0 ) || ( channels > 32 ) )
+      {
+        throw new IOException( "Data file is corrupt?! Channel count is not provided!" );
+      }
+      // Make sure the enabled channels are defined...
+      if ( enabledChannels < 0 )
+      {
+        enabledChannels = NumberUtils.getBitMask( channels );
+      }
 
-        try
+      int[] values = new int[size];
+      long[] timestamps = new long[size];
+
+      try
+      {
+        for ( int i = 0; i < size; i++ )
         {
-          for ( int i = 0; i < dataValues.size(); i++ )
-          {
-            final String[] dataPair = dataValues.get( i );
+          final String[] dataPair = dataValues.get( i );
 
-            values[i] = Integer.parseInt( dataPair[0].substring( 0, 4 ), 16 ) << 16
-                | Integer.parseInt( dataPair[0].substring( 4, 8 ), 16 );
-
-            timestamps[i] = Long.parseLong( dataPair[1] );
-          }
-        }
-        catch ( final NumberFormatException exception )
-        {
-          throw new IOException( "Invalid data encountered." );
+          values[i] = ( int )( Long.parseLong( dataPair[0], 16 ) & Integer.MAX_VALUE );
+          timestamps[i] = Long.parseLong( dataPair[1], 10 ) & Long.MAX_VALUE;
         }
       }
+      catch ( final NumberFormatException exception )
+      {
+        throw new IOException( "Invalid data encountered.", exception );
+      }
+
+      // Allow the absolute length to be undefined, in which case the last
+      // time stamp is used (+ some margin to be able to see the last
+      // sample)...
+      long absoluteLength = ( absLen < 0 ) ? timestamps[size - 1] + ABS_TIME_MARGIN : absLen;
 
       // Finally set the captured data, and notify all event listeners...
       capturedData = new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, enabledChannels,

@@ -43,6 +43,8 @@ import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.util.*;
 import org.osgi.framework.*;
 
+import datafiles.*;
+
 
 /**
  * Denotes a front-end controller for the client.
