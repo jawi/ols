@@ -45,7 +45,7 @@ public class OlsDataHelperTest
 
   // VARIABLES
 
-  private TestProject project;
+  private ProjectImpl project;
   private List<File> dataFiles;
 
   // METHODS
@@ -59,7 +59,7 @@ public class OlsDataHelperTest
   @Before
   public void setUp() throws Exception
   {
-    this.project = new TestProject();
+    this.project = new ProjectImpl();
 
     this.dataFiles = new ArrayList<File>();
 

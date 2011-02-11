@@ -12,6 +12,7 @@ import org.junit.*;
 /**
  * Test cases for {@link UserSettingsManager}.
  */
+@Ignore
 public class UserSettingsManagerTest
 {
   // METHODS
