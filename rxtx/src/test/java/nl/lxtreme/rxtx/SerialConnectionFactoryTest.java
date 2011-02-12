@@ -63,7 +63,9 @@ public class SerialConnectionFactoryTest
   {
     final String env = System.getProperty( "user.home" ) + "/.m2/repository";
 
-    return options( localRepository( env ), //
+    return options( //
+        cleanCaches(), //
+        localRepository( env ), //
         mavenBundle().groupId( "org.osgi" ).artifactId( "org.osgi.compendium" ).version( "4.2.0" ), //
         mavenBundle().groupId( "nl.lxtreme.ols" ).artifactId( "service.io" ).version( "1.0.1" ), //
         mavenBundle().groupId( "nl.lxtreme.ols" ).artifactId( "util" ).version( "1.0.5-SNAPSHOT" ), //
@@ -99,12 +101,12 @@ public class SerialConnectionFactoryTest
     {
       try
       {
-        final Connection connection = this.connectionFactory.createConnection( "comm:/dev/ttyS0", 0, false );
+        final Connection connection = this.connectionFactory.createConnection( "comm:/dev/ttyACM0", 0, false );
         assertNotNull( connection );
       }
-      catch ( Exception exception )
+      catch ( IOException exception )
       {
-        // fail( exception.toString() );
+        Assume.assumeNoException( exception );
       }
     }
   }
@@ -122,12 +124,12 @@ public class SerialConnectionFactoryTest
     {
       try
       {
-        final Connection connection = this.connectionFactory.createConnection( "comm:/dev/tty.usbserial", 0, false );
+        final Connection connection = this.connectionFactory.createConnection( "comm:/dev/tty.usbmodemfd131", 0, false );
         assertNotNull( connection );
       }
-      catch ( Exception exception )
+      catch ( IOException exception )
       {
-        // fail( exception.toString() );
+        Assume.assumeNoException( exception );
       }
     }
   }
@@ -148,9 +150,9 @@ public class SerialConnectionFactoryTest
         final Connection connection = this.connectionFactory.createConnection( "comm:com3", 0, false );
         assertNotNull( connection );
       }
-      catch ( Exception exception )
+      catch ( IOException exception )
       {
-        // fail( exception.toString() );
+        Assume.assumeNoException( exception );
       }
     }
   }
@@ -168,7 +170,7 @@ public class SerialConnectionFactoryTest
     {
       try
       {
-        this.connectionFactory.createConnection( "comm:/dev/ttyACM0", 0, false );
+        this.connectionFactory.createConnection( "comm:/dev/ttyS99", 0, false );
         fail( "I/O exception expected!" );
       }
       catch ( Exception exception )
@@ -214,7 +216,7 @@ public class SerialConnectionFactoryTest
     {
       try
       {
-        this.connectionFactory.createConnection( "comm:COM13", 0, false );
+        this.connectionFactory.createConnection( "comm:COM255", 0, false );
         fail( "I/O exception expected!" );
       }
       catch ( Exception exception )
