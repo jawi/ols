@@ -188,7 +188,7 @@ public class SerialConnectionFactory implements ConnectionFactory
       }
       catch ( PortInUseException exception )
       {
-        LOG.log( Level.WARNING, "Port (still) in use!", exception );
+        LOG.log( Level.FINE, "Port (still) in use!", exception );
       }
       catch ( NoSuchPortException exception )
       {
@@ -211,7 +211,7 @@ public class SerialConnectionFactory implements ConnectionFactory
       }
       catch ( PortInUseException exception )
       {
-        LOG.log( Level.WARNING, "Port (still) in use!", exception );
+        LOG.log( Level.FINE, "Port (still) in use!", exception );
       }
     }
 
