@@ -301,6 +301,16 @@ public final class ProjectImpl implements Project
   @Override
   public void visit( final ProjectVisitor aVisitor )
   {
-    throw new UnsupportedOperationException();
+    for ( UserSettings settings : this.settings.values() )
+    {
+      try
+      {
+        aVisitor.visit( settings );
+      }
+      catch ( Exception exception )
+      {
+        fail( exception.toString() );
+      }
+    }
   }
 }
