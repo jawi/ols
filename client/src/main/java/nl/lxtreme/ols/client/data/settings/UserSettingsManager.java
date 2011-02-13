@@ -23,6 +23,8 @@ public final class UserSettingsManager
 
   private static final Logger LOG = Logger.getLogger( UserSettingsManager.class.getName() );
 
+  private static final String SETTINGS_ID_FILENAME = "settings.";
+
   // METHODS
 
   /**
@@ -59,6 +61,11 @@ public final class UserSettingsManager
         while ( ( ze = zipIS.getNextEntry() ) != null )
         {
           final String userSettingsName = ze.getName();
+          // Ignore settings ID marker file...
+          if ( userSettingsName.startsWith( SETTINGS_ID_FILENAME ) )
+          {
+            continue;
+          }
 
           final Properties settings = new Properties();
           settings.load( zipIS );
@@ -108,6 +115,11 @@ public final class UserSettingsManager
       os = new BufferedOutputStream( new FileOutputStream( aUserSettingsFile ) );
       final ZipOutputStream zipOS = new ZipOutputStream( os );
 
+      // Provide a "special" marker to ensure the ZIP file has at least one
+      // entry and can be detected as settings file...
+      final ZipEntry zipEntry = new ZipEntry( SETTINGS_ID_FILENAME + System.currentTimeMillis() );
+      zipOS.putNextEntry( zipEntry );
+
       aProject.visit( new ProjectVisitor()
       {
         @Override
@@ -134,6 +146,7 @@ public final class UserSettingsManager
     catch ( IOException exception )
     {
       LOG.log( Level.WARNING, "Failed to save implicit user settings...", exception );
+      throw new RuntimeException( "Failed to save implicit user settings.", exception );
     }
     finally
     {
