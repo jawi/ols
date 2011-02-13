@@ -43,6 +43,7 @@ import org.osgi.service.io.*;
 /**
  * Tests for {@link SerialConnectionFactory}.
  */
+@Ignore
 @RunWith( JUnit4TestRunner.class )
 public class SerialConnectionFactoryTest
 {
