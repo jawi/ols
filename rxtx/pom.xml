@@ -8,7 +8,7 @@
 	</parent>
 	<groupId>nl.lxtreme.ols</groupId>
 	<artifactId>org.rxtx</artifactId>
-	<version>2.2.0-8</version>
+	<version>2.2.0-9</version>
 	<packaging>bundle</packaging>
 	<name>RxTx Serial library</name>
 	<dependencies>
@@ -91,15 +91,12 @@
 						<Export-Package>nl.lxtreme.rxtx;version="2.2.0"</Export-Package>
 						<Embed-Dependency>*;scope=system</Embed-Dependency>
 						<Bundle-NativeCode>
-							native/Mac_OS_X/librxtxSerial.jnilib;
-							osname=MacOSX; processor=x86; processor=x86-64; processor=ppc,
+						    native/SunOS/x86/librxtxSerial.so; osname=SunOS; processor=x86,
+							native/Mac_OS_X/librxtxSerial.jnilib; osname=MacOSX; processor=x86; processor=x86-64; processor=ppc,
 							native/Linux/x86/librxtxSerial.so; osname=Linux; processor=x86,
-							native/Linux/x86_64/librxtxSerial.so; osname=Linux;
-							processor=x86-64,
-							native/Windows/x86/rxtxSerial.dll; osname=Win32;
-							processor=x86,
-							native/Windows/x86_64/rxtxSerial.dll; osname=Win32;
-							processor=x86-64
+							native/Linux/x86_64/librxtxSerial.so; osname=Linux; processor=x86-64,
+							native/Windows/x86/rxtxSerial.dll; osname=Win32; processor=x86,
+							native/Windows/x86_64/rxtxSerial.dll; osname=Win32; processor=x86-64
 					</Bundle-NativeCode>
 					</instructions>
 				</configuration>

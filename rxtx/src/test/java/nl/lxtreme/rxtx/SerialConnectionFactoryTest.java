@@ -98,7 +98,7 @@ public class SerialConnectionFactoryTest
     // XXX this does not work correctly with PAX-Exam...
     // assumeTrue( HostUtils.isUnix() );
 
-    if ( HostUtils.isUnix() )
+    if ( HostUtils.isLinux() )
     {
       try
       {
@@ -126,6 +126,29 @@ public class SerialConnectionFactoryTest
       try
       {
         final Connection connection = this.connectionFactory.createConnection( "comm:/dev/tty.usbmodemfd131", 0, false );
+        assertNotNull( connection );
+      }
+      catch ( IOException exception )
+      {
+        Assume.assumeNoException( exception );
+      }
+    }
+  }
+
+  /**
+   * Tests that creating a serial connection works on Solaris platforms.
+   */
+  @Test
+  public void testCreateExistingConnectionSolaris() throws IOException
+  {
+    // XXX this does not work correctly with PAX-Exam...
+    // assumeTrue( HostUtils.isUnix() );
+
+    if ( HostUtils.isUnix() )
+    {
+      try
+      {
+        final Connection connection = this.connectionFactory.createConnection( "comm:/dev/term/A", 0, false );
         assertNotNull( connection );
       }
       catch ( IOException exception )
@@ -167,7 +190,7 @@ public class SerialConnectionFactoryTest
     // XXX this does not work correctly with PAX-Exam...
     // assumeTrue( HostUtils.isUnix() );
 
-    if ( HostUtils.isUnix() )
+    if ( HostUtils.isLinux() )
     {
       try
       {
@@ -195,6 +218,29 @@ public class SerialConnectionFactoryTest
       try
       {
         this.connectionFactory.createConnection( "comm:/dev/tty.usbserial", 0, false );
+        fail( "I/O exception expected!" );
+      }
+      catch ( Exception exception )
+      {
+        assertThat( exception, instanceOf( IOException.class ) );
+      }
+    }
+  }
+
+  /**
+   * Tests that creating a serial connection works on Solaris platforms.
+   */
+  @Test
+  public void testCreateNonExistingConnectionSolaris() throws IOException
+  {
+    // XXX this does not work correctly with PAX-Exam...
+    // assumeTrue( HostUtils.isUnix() );
+
+    if ( HostUtils.isLinux() )
+    {
+      try
+      {
+        this.connectionFactory.createConnection( "comm:/dev/term/XYZ", 0, false );
         fail( "I/O exception expected!" );
       }
       catch ( Exception exception )
