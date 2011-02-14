@@ -26,6 +26,7 @@ import static org.junit.Assume.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
+import org.junit.internal.*;
 
 
 /**
@@ -43,11 +44,8 @@ public class CommPortUtilsTest
   {
     assumeTrue( HostUtils.isUnix() );
 
-    String enumeratedDevices = CommPortUtils.enumerateDevices( "/dev" );
+    String enumeratedDevices = CommPortUtils.enumerateDevices();
     assertNotNull( enumeratedDevices );
-
-    enumeratedDevices = CommPortUtils.enumerateDevices( "/tmp" );
-    assertEquals( "", enumeratedDevices );
   }
 
   /**
@@ -58,21 +56,26 @@ public class CommPortUtilsTest
   {
     assumeTrue( HostUtils.isMacOS() );
 
-    String enumeratedDevices = CommPortUtils.enumerateDevices( "/dev" );
+    String enumeratedDevices = CommPortUtils.enumerateDevices();
     assertNotNull( enumeratedDevices );
-
-    enumeratedDevices = CommPortUtils.enumerateDevices( "/tmp" );
-    assertEquals( "", enumeratedDevices );
   }
 
   /**
    * Tests {@link CommPortUtils#enumerateDevices(String)} on Windows platforms.
    */
-  @Test( expected = RuntimeException.class )
-  public void testEnumerateDevicesWindows()
+  @Test
+  public void testEnumerateDevicesWindows() throws AssumptionViolatedException
   {
     assumeTrue( HostUtils.isWindows() );
 
-    CommPortUtils.enumerateDevices( "/" );
+    try
+    {
+      CommPortUtils.enumerateDevices();
+      fail();
+    }
+    catch ( UnsupportedOperationException exception )
+    {
+      assertTrue( true );
+    }
   }
 }
