@@ -25,6 +25,7 @@ import gnu.io.*;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.*;
 import java.util.regex.*;
 
 import nl.lxtreme.ols.util.*;
@@ -81,25 +82,33 @@ public final class CommPortUtils
    * @return a colon-separated string with all found devices, never
    *         <code>null</code>.
    */
-  static final String enumerateDevices( final String aDeviceBasePath )
+  static final String enumerateDevices()
   {
     final StringBuilder result = new StringBuilder();
 
     final String deviceRegEx;
     if ( HostUtils.isUnix() || HostUtils.isMacOS() )
     {
-      if ( HostUtils.isUnix() )
+      if ( HostUtils.isLinux() || HostUtils.isUnix() )
       {
         deviceRegEx = "tty\\w+\\d+";
       }
-      else
+      else if ( HostUtils.isMacOS() )
       {
         deviceRegEx = "tty\\..+";
+      }
+      else if ( HostUtils.isSolaris() )
+      {
+        deviceRegEx = "[\\d\\w]+";
+      }
+      else
+      {
+        deviceRegEx = ".+";
       }
 
       final Pattern pattern = Pattern.compile( deviceRegEx );
 
-      final File basePath = new File( aDeviceBasePath );
+      final File basePath = new File( getDevicePath() );
       for ( String fileName : basePath.list() )
       {
         final Matcher matcher = pattern.matcher( fileName );
@@ -116,9 +125,36 @@ public final class CommPortUtils
     }
     else
     {
-      throw new RuntimeException( "Unsupported operating system!" );
+      throw new UnsupportedOperationException( "Cannot enumerate devices; unknown platform!" );
     }
 
     return result.toString();
+  }
+
+  /**
+   * Returns the device path under which the serial devices should be
+   * enumerated.
+   * 
+   * @return
+   */
+  private static final String getDevicePath()
+  {
+    if ( HostUtils.isSolaris() )
+    {
+      return "/dev/term";
+    }
+    else if ( HostUtils.isUnix() || HostUtils.isMacOS() )
+    {
+      return "/dev";
+    }
+    else if ( HostUtils.isWindows() )
+    {
+      throw new UnsupportedOperationException( "GetDevicePath should not be called on Windows platforms!" );
+    }
+    else
+    {
+      Logger.getLogger( CommPortUtils.class.getName() ).warning( "Unsupported operating system! Assuming /dev..." );
+      return "/dev";
+    }
   }
 }

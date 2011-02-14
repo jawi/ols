@@ -69,10 +69,18 @@ public class SerialConnectionFactory implements ConnectionFactory
     // system property 'gnu.io.rxtx.SerialPorts' ourselves with the "correct"
     // list of ports...
     // Reported by frankalicious on February 6th, 2011.
-    if ( !HostUtils.isWindows() )
+    try
     {
-      final String portsEnum = CommPortUtils.enumerateDevices( "/dev" );
-      System.setProperty( "gnu.io.rxtx.SerialPorts", portsEnum );
+      final String portsEnum = CommPortUtils.enumerateDevices();
+      if ( ( portsEnum != null ) && !portsEnum.trim().isEmpty() )
+      {
+        System.setProperty( "gnu.io.rxtx.SerialPorts", portsEnum );
+      }
+    }
+    catch ( UnsupportedOperationException exception )
+    {
+      LOG.log( Level.WARNING, "Enumeration of serial devices failed! Proceeding anyway..." );
+      LOG.log( Level.FINE, "Detailed stacktrace:", exception );
     }
   }
 
