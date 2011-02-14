@@ -105,6 +105,19 @@ public class DiagramUI extends ComponentUI
     @Override
     public void popupMenuWillBecomeVisible( final PopupMenuEvent aEvent )
     {
+      final JPopupMenu menu = ( JPopupMenu )aEvent.getSource();
+      final Diagram diagram = ( Diagram )menu.getInvoker();
+
+      final Point location = menu.getLocation();
+      // we *must* convert the mouse location from the screen to the diagram
+      // coordinate space...
+      SwingUtilities.convertPointFromScreen( location, diagram );
+
+      final int cursorIdx = diagram.getCursorHover( location );
+      if ( cursorIdx >= 0 )
+      {
+        System.out.println( "Hovering over cursor #" + cursorIdx );
+      }
     }
   }
 
@@ -206,6 +219,24 @@ public class DiagramUI extends ComponentUI
     }
 
     /**
+     * @see java.awt.event.MouseAdapter#mousePressed(java.awt.event.MouseEvent)
+     */
+    @Override
+    public void mousePressed( final MouseEvent aEvent )
+    {
+      handlePopupTrigger( aEvent );
+    }
+
+    /**
+     * @see java.awt.event.MouseAdapter#mouseReleased(java.awt.event.MouseEvent)
+     */
+    @Override
+    public void mouseReleased( final MouseEvent aEvent )
+    {
+      handlePopupTrigger( aEvent );
+    }
+
+    /**
      * @see java.awt.event.MouseAdapter#mouseWheelMoved(java.awt.event.MouseWheelEvent)
      */
     @Override
@@ -238,6 +269,24 @@ public class DiagramUI extends ComponentUI
           scrollpane.dispatchEvent( aEvent );
         }
       }
+    }
+
+    /**
+     * Checks whether the given mouse event is actually a popup trigger. If so,
+     * it will open the context menu.
+     * 
+     * @param aEvent
+     *          the mouse event to evaluate, never <code>null</code>.
+     */
+    private void handlePopupTrigger( final MouseEvent aEvent )
+    {
+      if ( !aEvent.isPopupTrigger() )
+      {
+        return;
+      }
+
+      final Diagram diagram = ( Diagram )aEvent.getSource();
+      DiagramUI.this.contextMenu.show( diagram, aEvent.getX(), aEvent.getY() );
     }
 
     /**
@@ -436,7 +485,7 @@ public class DiagramUI extends ComponentUI
   public void installUI( final JComponent aComponent )
   {
     final Diagram diagram = ( Diagram )aComponent;
-    diagram.setComponentPopupMenu( this.contextMenu );
+    // diagram.setComponentPopupMenu( this.contextMenu );
 
     this.labelFont = LafHelper.getDefaultFont();
 
@@ -486,19 +535,6 @@ public class DiagramUI extends ComponentUI
 
     final long end = System.currentTimeMillis();
     LOG.log( Level.FINE, "Render time = {0}ms.", Long.valueOf( end - start ) );
-  }
-
-  /**
-   * @param aEvent
-   */
-  final void showContextMenu( final Diagram aDiagram, final Point aPosition )
-  {
-    final DataContainer dataContainer = aDiagram.getDataContainer();
-    if ( dataContainer.hasCapturedData() )
-    {
-      this.contextMenu.putClientProperty( CONTEXTMENU_LOCATION_KEY, aPosition );
-      this.contextMenu.show( aDiagram, aPosition.x, aPosition.y );
-    }
   }
 
   /**
