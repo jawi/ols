@@ -221,6 +221,8 @@ will be considered an invalid extension and the results are not (well) defined!
 # support OLS-device profiles for BP, regular OLS and SUMP;
 # make it easier to jump to another transition in a channel (in case you're zoomed in really close; jack.gassett);
 # make the "unused" option default in the UART analyzer, and place it on top (reported by miro);
+# make it possible to define any sampling speed (to support external clocks; reported by miro);
+# support zoom-window, and zoom-region functionality (reported by frankalicious);
 # Make it easier to remove set cursors (reported by pppd);
 # Make it possible to edit cursor labels (reported by pppd);
 # Allow cursors to snap to signal edges (reported by pppd);
