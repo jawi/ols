@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.data;
+package nl.lxtreme.ols.api.data;
 
 
 import static org.junit.Assert.*;
@@ -27,7 +27,6 @@ import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 
 

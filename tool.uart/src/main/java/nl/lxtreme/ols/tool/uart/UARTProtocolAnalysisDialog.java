@@ -21,8 +21,8 @@
 package nl.lxtreme.ols.tool.uart;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.io.*;
@@ -36,7 +36,11 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.ExportUtils.*;
+import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
+import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -220,45 +224,17 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   @Override
   protected void setupToolWorker( final UARTAnalyserWorker aToolWorker )
   {
-    if ( !"unused".equalsIgnoreCase( ( String )this.rxd.getSelectedItem() ) )
-    {
-      aToolWorker.setRxdIndex( this.rxd.getSelectedIndex() );
-    }
-
-    if ( !"unused".equalsIgnoreCase( ( String )this.txd.getSelectedItem() ) )
-    {
-      aToolWorker.setTxdIndex( this.txd.getSelectedIndex() );
-    }
-
-    if ( !"unused".equalsIgnoreCase( ( String )this.cts.getSelectedItem() ) )
-    {
-      aToolWorker.setCtsIndex( this.cts.getSelectedIndex() );
-    }
-
-    if ( !"unused".equalsIgnoreCase( ( String )this.rts.getSelectedItem() ) )
-    {
-      aToolWorker.setRtsIndex( this.rts.getSelectedIndex() );
-    }
-
-    if ( !"unused".equalsIgnoreCase( ( String )this.dcd.getSelectedItem() ) )
-    {
-      aToolWorker.setDcdIndex( this.dcd.getSelectedIndex() );
-    }
-
-    if ( !"unused".equalsIgnoreCase( ( String )this.ri.getSelectedItem() ) )
-    {
-      aToolWorker.setRiIndex( this.ri.getSelectedIndex() );
-    }
-
-    if ( !"unused".equalsIgnoreCase( ( String )this.dsr.getSelectedItem() ) )
-    {
-      aToolWorker.setDsrIndex( this.dsr.getSelectedIndex() );
-    }
-
-    if ( !"unused".equalsIgnoreCase( ( String )this.dtr.getSelectedItem() ) )
-    {
-      aToolWorker.setDtrIndex( this.dtr.getSelectedIndex() );
-    }
+    // The value at index zero is "Unused", so extracting one of all items
+    // causes all "unused" values to be equivalent to -1, which is interpreted
+    // as not used...
+    aToolWorker.setRxdIndex( this.rxd.getSelectedIndex() - 1 );
+    aToolWorker.setTxdIndex( this.txd.getSelectedIndex() - 1 );
+    aToolWorker.setCtsIndex( this.cts.getSelectedIndex() - 1 );
+    aToolWorker.setRtsIndex( this.rts.getSelectedIndex() - 1 );
+    aToolWorker.setDcdIndex( this.dcd.getSelectedIndex() - 1 );
+    aToolWorker.setRiIndex( this.ri.getSelectedIndex() - 1 );
+    aToolWorker.setDsrIndex( this.dsr.getSelectedIndex() - 1 );
+    aToolWorker.setDtrIndex( this.dtr.getSelectedIndex() - 1 );
 
     // Other properties...
     aToolWorker.setInverted( this.inv.isSelected() );
@@ -473,11 +449,11 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   private JPanel createSettingsPane()
   {
     final String channels[] = new String[33];
+    channels[0] = "Unused";
     for ( int i = 0; i < 32; i++ )
     {
-      channels[i] = new String( "Channel " + i );
+      channels[i + 1] = new String( "Channel " + i );
     }
-    channels[channels.length - 1] = "Unused";
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
