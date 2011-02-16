@@ -26,6 +26,7 @@ import static org.mockito.Mockito.*;
 
 import java.io.*;
 import java.net.*;
+import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
@@ -33,14 +34,55 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
+import org.junit.runner.*;
+import org.junit.runners.*;
+import org.junit.runners.Parameterized.Parameters;
 
 
 /**
- * @author jawi
+ * (Parameterized) tests cases for {@link UARTAnalyserWorker}.
  */
-public class UARTAnalyserWorkerTest
+@RunWith( Parameterized.class )
+public class UARTAnalyserWorkerDataFilesTest
 {
+  // VARIABLES
+
+  private final String resourceName;
+  private final int expectedErrorCount;
+  private final int expectedSymbolCount;
+  private final int expectedBaudrate;
+  private final int[] channels;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new UARTAnalyserWorkerTest instance.
+   */
+  public UARTAnalyserWorkerDataFilesTest( final String aResourceName, final int aExpectedErrorCount,
+      final int aExpectedSymbolCount, final int aExpectedBaudrate, final int... aChannels )
+  {
+    this.resourceName = aResourceName;
+    this.expectedErrorCount = aExpectedErrorCount;
+    this.expectedSymbolCount = aExpectedSymbolCount;
+    this.expectedBaudrate = aExpectedBaudrate;
+    this.channels = aChannels;
+  }
+
   // METHODS
+
+  /**
+   * @return a collection of test data.
+   */
+  @Parameters
+  @SuppressWarnings( "boxing" )
+  public static Collection<Object[]> getTestData()
+  {
+    return Arrays.asList( new Object[][] { //
+        // { filename, error count, symbol count, baudrate, (rxd, txd) }
+            { "uart_8bit_1.ols", 0, 33, 57600, new int[] { 0, -1 } }, //
+            { "uart_8bit_2.ols", 0, 6, 9600, new int[] { 2, -1 } }, //
+        } );
+  }
 
   /**
    * @param aContainer
@@ -70,7 +112,7 @@ public class UARTAnalyserWorkerTest
     try
     {
       final Project project = new ProjectImpl();
-      project.setChannelLabels( new String[] { "RxD", "TxD" } );
+      project.setChannelLabels( new String[32] );
       OlsDataHelper.read( project, new InputStreamReader( is ) );
 
       ProjectManager projectMgr = mock( ProjectManager.class );
@@ -95,7 +137,7 @@ public class UARTAnalyserWorkerTest
    */
   private static URL getResource( final String aName )
   {
-    final URL resource = UARTAnalyserWorkerTest.class.getClassLoader().getResource( "datafiles/" + aName );
+    final URL resource = UARTAnalyserWorkerDataFilesTest.class.getClassLoader().getResource( "datafiles/" + aName );
     if ( resource == null )
     {
       throw new RuntimeException( "Resource not found: " + aName );
@@ -108,19 +150,38 @@ public class UARTAnalyserWorkerTest
    * {@link nl.lxtreme.ols.tool.uart.UARTAnalyserWorker#doInBackground()}.
    */
   @Test
-  public void test8bitUartAnalysis_Sample1Ok() throws Exception
+  public void testUartAnalysisOk() throws Exception
   {
-    DataContainer container = getCapturedData( "uart_8bit_1.ols" );
+    UARTDataSet result = analyseDataFile( this.resourceName );
+    assertEquals( this.expectedErrorCount, result.getDetectedErrors() );
+    assertEquals( this.expectedSymbolCount, result.getDecodedSymbols() );
+    assertEquals( this.expectedBaudrate, result.getBaudRate() );
+  }
+
+  /**
+   * Analyses the data file identified by the given resource name.
+   * 
+   * @param aResourceName
+   *          the name of the resource (= data file) to analyse, cannot be
+   *          <code>null</code>.
+   * @return the analysis results, never <code>null</code>.
+   * @throws Exception
+   *           in case of exceptions.
+   */
+  private UARTDataSet analyseDataFile( final String aResourceName ) throws Exception
+  {
+    DataContainer container = getCapturedData( aResourceName );
     ToolContext toolContext = createToolContext( container );
 
     UARTAnalyserWorker worker = new UARTAnalyserWorker( container, toolContext );
     worker.setStopBits( UARTStopBits.STOP_1 );
     worker.setParity( UARTParity.NONE );
     worker.setBitCount( 8 );
-    worker.setRxdIndex( 0 );
-    worker.setTxdIndex( 1 );
+    worker.setRxdIndex( this.channels[0] );
+    worker.setTxdIndex( this.channels[1] );
 
     UARTDataSet result = worker.doInBackground();
     assertNotNull( result );
+    return result;
   }
 }
