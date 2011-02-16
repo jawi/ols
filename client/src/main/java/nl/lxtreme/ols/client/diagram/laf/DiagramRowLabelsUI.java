@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ public class DiagramRowLabelsUI extends ComponentUI
   // VARIABLES
 
   private Font labelFont;
+  private Font indexFont;
 
   // METHODS
 
@@ -88,7 +89,9 @@ public class DiagramRowLabelsUI extends ComponentUI
   @Override
   public void installUI( final JComponent aComponent )
   {
-    this.labelFont = LafHelper.getDefaultFont().deriveFont( Font.BOLD );
+    Font font = LafHelper.getDefaultFont();
+    this.labelFont = font.deriveFont( Font.BOLD );
+    this.indexFont = font.deriveFont(font.getSize()*0.75f);
   }
 
   /**
@@ -125,8 +128,10 @@ public class DiagramRowLabelsUI extends ComponentUI
     final int scopeHeight = settings.getScopeHeight();
 
     final FontMetrics fm = aComponent.getFontMetrics( this.labelFont );
+    final FontMetrics indexFm = aComponent.getFontMetrics( this.indexFont );
     final int textXpos = ( clipArea.width - fm.stringWidth( "88" ) - PADDING_X );
-    final int textYpos = ( int )( ( channelHeight + fm.getHeight() ) / 2.0 ) - PADDING_Y;
+    final int textYpos = ( int )( ( channelHeight + fm.getHeight() ) / 2.5 ) - PADDING_Y;
+    final int indexYpos = ( int )( ( channelHeight + fm.getHeight() + indexFm.getHeight() ) / 2.0 ) - PADDING_Y;
 
     final int enabledChannels = dataContainer.getEnabledChannels();
 
@@ -160,10 +165,11 @@ public class DiagramRowLabelsUI extends ComponentUI
           canvas.setColor( settings.getGridColor() );
           canvas.drawLine( clipArea.x, y1 + channelHeight - 1, clipArea.x + clipArea.width, y1 + channelHeight - 1 );
 
+          String indexStr = Integer.toString( labelIdx );
           String label = dataContainer.getChannelLabel( labelIdx );
           if ( DisplayUtils.isEmpty( label ) )
           {
-            label = String.format( "%d", Integer.valueOf( labelIdx ) );
+            label = indexStr;
           }
 
           final int labelYpos = y1 + textYpos;
@@ -171,6 +177,13 @@ public class DiagramRowLabelsUI extends ComponentUI
 
           canvas.setColor( labelColor );
           canvas.drawString( label, labelXpos, labelYpos );
+
+          // paint the channel number below the label
+          canvas.setFont( this.indexFont );
+          int indexXPos = ( clipArea.width - indexFm.stringWidth( indexStr ) - PADDING_X );
+          int indexYPos = y1 + indexYpos;
+          canvas.drawString( indexStr, indexXPos, indexYPos );
+          canvas.setFont( this.labelFont );
         }
 
         yofs += channelHeight * CapturedData.CHANNELS_PER_BLOCK;
