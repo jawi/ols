@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   // CONSTRUCTORS
 
   /**
-   * 
+   *
    */
   public TestDeviceDialog( final Window aParent )
   {
@@ -122,7 +122,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
 
   /**
    * Shows this dialog on screen.
-   * 
+   *
    * @return <code>true</code> if this dialog is confirmed, <code>false</code>
    *         if it was cancelled.
    */
@@ -217,6 +217,15 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   private JComponent createDialogButtonPanel()
   {
     final JButton closeButton = StandardActionFactory.createCloseButton();
+    closeButton.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        TestDeviceDialog.this.setupConfirmed = false;
+        close();
+      }
+    } );
 
     final JButton okButton = new JButton( "Ok" );
     okButton.setPreferredSize( closeButton.getPreferredSize() );
