@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
 
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.ClientController;
 
 
 /**
@@ -44,7 +44,7 @@ public class ClearCursors extends BaseAction
    */
   public ClearCursors( final ClientController aController )
   {
-    super( ID, aController, "Clear all cursors", "Clears all cursors" );
+    super( ID, aController, "Clear all cursors", "Clear all cursors" );
   }
 
   // METHODS

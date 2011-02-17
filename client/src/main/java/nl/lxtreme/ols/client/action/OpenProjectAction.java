@@ -22,17 +22,20 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.logging.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import javax.swing.filechooser.*;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.component.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.HostUtils;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.util.swing.component.JErrorDialog;
 
 
 /**
@@ -56,13 +59,14 @@ public class OpenProjectAction extends BaseAction
 
   /**
    * Creates a new OpenProjectAction instance.
-   * 
+   *
    * @param aController
    *          the client controller to use for this action.
    */
   public OpenProjectAction( final ClientController aController )
   {
-    super( ID, aController, ICON_OPEN_PROJECT, "Open project ...", "Open an existing project." );
+    super( ID, aController, ICON_OPEN_PROJECT, "Open project ...", "Open an existing project" );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_O) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
   }
 

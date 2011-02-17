@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,16 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.client.ClientController;
 
 
 /**
- * 
+ *
  */
 public class GotoTriggerAction extends BaseAction
 {
@@ -44,7 +47,8 @@ public class GotoTriggerAction extends BaseAction
    */
   public GotoTriggerAction( final ClientController aController )
   {
-    super( ID, aController, ICON_GOTO_TRIGGER, "Go to Trigger", "Go to trigger moment in diagram." );
+    super( ID, aController, ICON_GOTO_TRIGGER, "Go to Trigger", "Go to trigger moment in diagram" );
+    putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke ( KeyEvent.VK_HOME, 0 ) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_0 ) );
   }
 

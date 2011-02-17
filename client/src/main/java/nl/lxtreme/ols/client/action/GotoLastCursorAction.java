@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,10 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.ClientController;
 
 
 /**
@@ -44,7 +45,8 @@ public class GotoLastCursorAction extends BaseAction
    */
   public GotoLastCursorAction( final ClientController aController )
   {
-    super( ID, aController, ICON_GOTO_LAST_CURSOR, "Go to last cursor", "Go to the last available cursor in diagram." );
+    super( ID, aController, ICON_GOTO_LAST_CURSOR, "Go to highest cursor",
+        "Go to the cursor with highest index in diagram" );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_L ) );
   }
 

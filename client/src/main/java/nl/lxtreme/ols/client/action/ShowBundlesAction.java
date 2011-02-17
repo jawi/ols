@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,11 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
@@ -45,13 +46,13 @@ public class ShowBundlesAction extends BaseAction
 
   /**
    * Creates a new ShowBundlesAction instance.
-   * 
+   *
    * @param aController
    *          the client controller to use, cannot be <code>null</code>.
    */
   public ShowBundlesAction( final ClientController aController )
   {
-    super( ID, aController, "Show Bundles", "Show running OSGi bundles." );
+    super( ID, aController, "Show Bundles", "Show running OSGi bundles" );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_B ) );
   }
 

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,14 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.ClientController;
 
 
 /**
- * 
+ *
  */
 public class GotoPreviousCursorAction extends BaseAction
 {
@@ -45,7 +46,7 @@ public class GotoPreviousCursorAction extends BaseAction
   public GotoPreviousCursorAction( final ClientController aController )
   {
     super( ID, aController, ICON_GOTO_PREVIOUS_CURSOR, "Go to previous cursor",
-        "Go to the previous available cursor in diagram." );
+        "Go to the previous available cursor in diagram" );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
   }
 

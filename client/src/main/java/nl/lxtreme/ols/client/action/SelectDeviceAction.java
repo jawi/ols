@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,15 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.ClientController;
 
 
 /**
- * 
+ *
  */
 public class SelectDeviceAction extends BaseAction
 {
@@ -47,7 +47,7 @@ public class SelectDeviceAction extends BaseAction
 
   /**
    * Creates a new SelectDeviceAction instance.
-   * 
+   *
    * @param aController
    *          the controller to use;
    * @param aDeviceName
@@ -56,7 +56,7 @@ public class SelectDeviceAction extends BaseAction
   public SelectDeviceAction( final ClientController aController, final String aDeviceName )
   {
     super( ID + aDeviceName, aController, aDeviceName, "Selects ".concat( aDeviceName ).concat(
-        " as current capturing device." ) );
+        " as current capturing device" ) );
     this.deviceName = aDeviceName;
   }
 

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,11 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
@@ -43,13 +44,14 @@ public class NewProjectAction extends BaseAction
 
   /**
    * Creates a new NewProjectAction instance.
-   * 
+   *
    * @param aController
    *          the client controller to use.
    */
   public NewProjectAction( final ClientController aController )
   {
-    super( ID, aController, "New project ...", "Creates a new project." );
+    super( ID, aController, "New project ...", "Create a new project" );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_N) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_N ) );
   }
 
@@ -65,7 +67,7 @@ public class NewProjectAction extends BaseAction
     if ( controller.isProjectChanged() )
     {
       final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
-      if ( SwingComponentUtils.askConfirmation( parent, "Current project is changed.\nReally loose your changes?" ) )
+      if ( SwingComponentUtils.askConfirmation( parent, "Current project is changed.\nReally lose your changes?" ) )
       {
         return;
       }

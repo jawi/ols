@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,12 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.client.ClientController;
 
 
 /**
@@ -47,7 +50,8 @@ public class CancelCaptureAction extends BaseAction
    */
   public CancelCaptureAction( final ClientController aController )
   {
-    super( ID, aController, ICON_CANCEL_CAPTURE, "Cancel capture", "Cancels the current capture." );
+    super( ID, aController, ICON_CANCEL_CAPTURE, "Cancel capture", "Cancel the current capture" );
+    putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke ( KeyEvent.VK_ESCAPE, 0) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
   }
 

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,19 +20,22 @@
  */
 package nl.lxtreme.ols.client.action;
 
-
 import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.logging.*;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.*;
-import javax.swing.filechooser.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.export.*;
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.api.data.DataContainer;
+import nl.lxtreme.ols.api.data.export.Exporter;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
@@ -56,7 +59,7 @@ public class ExportAction extends BaseAction
 
   /**
    * Creates a new ExportAction instance.
-   * 
+   *
    * @param aController
    *          the client controller to use;
    * @param aExporterName
@@ -64,8 +67,8 @@ public class ExportAction extends BaseAction
    */
   public ExportAction( final ClientController aController, final String aExporterName )
   {
-    super( ID + aExporterName, aController, aExporterName, "Exports the current diagram to a " + aExporterName
-        + " file." );
+    super( ID + aExporterName, aController, aExporterName, "Export the current diagram to a " + aExporterName
+        + " file" );
 
     this.exporterName = aExporterName;
   }
@@ -134,7 +137,7 @@ public class ExportAction extends BaseAction
 
   /**
    * Returns the exporter file name.
-   * 
+   *
    * @param aOwner
    *          the parent window;
    * @param aExporter

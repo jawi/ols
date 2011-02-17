@@ -22,12 +22,13 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
@@ -46,19 +47,20 @@ public class CaptureAction extends BaseAction
 
   /**
    * Creates a new CaptureAction instance.
-   * 
+   *
    * @param aFrame
    *          the frame this action belongs to.
    */
   public CaptureAction( final ClientController aController )
   {
-    this( ID, ICON_CAPTURE_DATA, "Capture", "Starts capturing data from the logic analyser", aController );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_C ) );
+    this( ID, ICON_CAPTURE_DATA, "Begin capture", "Start capturing data from the logic analyser", aController );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_B) );
+    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_B ) );
   }
 
   /**
    * Creates a new CaptureAction instance.
-   * 
+   *
    * @param aID
    *          the ID of this action;
    * @param aIconName

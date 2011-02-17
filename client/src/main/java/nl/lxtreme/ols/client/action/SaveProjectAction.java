@@ -22,14 +22,17 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.logging.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.component.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.HostUtils;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.util.swing.component.JErrorDialog;
 
 
 /**
@@ -49,18 +52,18 @@ public class SaveProjectAction extends BaseAction
 
   /**
    * Creates a new SaveProjectAction instance.
-   * 
+   *
    * @param aController
    *          the controller to use in this action.
    */
   public SaveProjectAction( final ClientController aController )
   {
-    this( ID, aController, ICON_SAVE_PROJECT, "Save project", "Save the current project." );
+    this( ID, aController, ICON_SAVE_PROJECT, "Save project", "Save the current project" );
   }
 
   /**
    * Creates a new SaveProjectAction instance.
-   * 
+   *
    * @param aID
    *          the ID of this action;
    * @param aController
@@ -76,6 +79,7 @@ public class SaveProjectAction extends BaseAction
       final String aName, final String aDescription )
   {
     super( aID, aController, aIconName, aName, aDescription );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_S) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
   }
 
@@ -106,7 +110,7 @@ public class SaveProjectAction extends BaseAction
 
   /**
    * Asks the user to specify a filename.
-   * 
+   *
    * @param owner
    *          the parent/owner window of the file chooser dialog, can be
    *          <code>null</code>.
@@ -125,7 +129,7 @@ public class SaveProjectAction extends BaseAction
 
   /**
    * Returns the project's filename.
-   * 
+   *
    * @return a file object denoting the project file to save the project to, can
    *         be <code>null</code> if no name is yet defined for the project.
    */
@@ -137,7 +141,7 @@ public class SaveProjectAction extends BaseAction
 
   /**
    * Saves the project file.
-   * 
+   *
    * @param aOwner
    *          the owning/parent window;
    * @param aFile
@@ -168,7 +172,7 @@ public class SaveProjectAction extends BaseAction
 
   /**
    * Returns whether or not a file chooser dialog is to be shown.
-   * 
+   *
    * @return <code>true</code> if a file chooser dialog should be shown,
    *         <code>false</code> otherwise.
    */

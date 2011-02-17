@@ -22,18 +22,21 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.logging.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.component.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.HostUtils;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.util.swing.component.JErrorDialog;
 
 
 /**
- * 
+ *
  */
 public class SaveDataFileAction extends BaseAction
 {
@@ -48,11 +51,11 @@ public class SaveDataFileAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * 
+   *
    */
   public SaveDataFileAction( final ClientController aController )
   {
-    super( ID, aController, ICON_SAVE_DATAFILE, "Save ...", "Save data file." );
+    super( ID, aController, ICON_SAVE_DATAFILE, "Save ...", "Save data file" );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_S ) );
   }
 
