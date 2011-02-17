@@ -48,7 +48,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 
 /**
  * The Dialog Class
- * 
+ *
  * @author Frank Kunz The dialog class draws the basic dialog with a grid
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
@@ -241,7 +241,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * Sets the auto detected SPI mode to the given value.
-   * 
+   *
    * @param aMode
    *          the detected SPI mode, cannot be <code>null</code>.
    */
@@ -269,7 +269,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnable
    *          status of the controls
    */
@@ -322,7 +322,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * exports the table data to a CSV file
-   * 
+   *
    * @param aFile
    *          File object
    */
@@ -363,7 +363,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * stores the data to a HTML file
-   * 
+   *
    * @param aFile
    *          file object
    */
@@ -385,26 +385,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
-   * @return
-   */
-  private JComponent createButtonPane()
-  {
-    final JButton runAnalysisButton = createRunAnalysisButton();
-    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
-
-    final JButton exportButton = createExportButton();
-    this.exportAction = exportButton.getAction();
-    this.exportAction.setEnabled( false );
-
-    final JButton closeButton = createCloseButton();
-    this.closeAction = closeButton.getAction();
-
-    return SwingComponentUtils.createButtonPane( closeButton, runAnalysisButton, exportButton );
-  }
-
-  /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -560,7 +542,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * Generates an empty HTML page.
-   * 
+   *
    * @return String with HTML data.
    */
   private String getEmptyHtmlPage()
@@ -597,14 +579,24 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     contentPane.add( previewPane, new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH,
         GridBagConstraints.BOTH, new Insets( 2, 0, 2, 0 ), 0, 0 ) );
 
-    final JComponent buttons = createButtonPane();
+    final JButton runAnalysisButton = createRunAnalysisButton();
+    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons );
+    final JButton exportButton = createExportButton();
+    this.exportAction = exportButton.getAction();
+    this.exportAction.setEnabled( false );
+
+    final JButton closeButton = createCloseButton();
+    this.closeAction = closeButton.getAction();
+
+    final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
+
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
   }
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param aDataSet
    *          the data set to create the HTML page for, cannot be
    *          <code>null</code>.

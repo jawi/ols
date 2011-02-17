@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Main constructor that adds all the information to IncidentInfo
-     * 
+     *
      * @param aHeader
      * @param aBasicErrorMessage
      * @param aDetailedErrorMesage
@@ -129,7 +129,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Get the basic error description
-     * 
+     *
      * @return basic error description
      */
     public String getBasicErrorMessage()
@@ -139,7 +139,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Get the detailed error description
-     * 
+     *
      * @return detailed description
      */
     public String getDetailedErrorMessage()
@@ -150,7 +150,7 @@ public class JErrorDialog extends JDialog implements Closeable
     /**
      * Get an exception that contains some additional information about the
      * error if provided.
-     * 
+     *
      * @return exception or null if no exception provided
      */
     public Throwable getErrorException()
@@ -160,7 +160,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Get the current header string
-     * 
+     *
      * @return header string
      */
     public String getHeader()
@@ -170,7 +170,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Set the current basic error description
-     * 
+     *
      * @param basicErrorMessage
      */
     public void setBasicErrorMessage( final String basicErrorMessage )
@@ -180,7 +180,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Set the detailed description for this error
-     * 
+     *
      * @param detailedErrorMessage
      */
     public void setDetailedErrorMessage( final String detailedErrorMessage )
@@ -191,7 +191,7 @@ public class JErrorDialog extends JDialog implements Closeable
     /**
      * Set the exception that may contain additional information about the
      * error.
-     * 
+     *
      * @param errorException
      */
     public void setErrorException( final Throwable errorException )
@@ -201,7 +201,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Set the current header string
-     * 
+     *
      * @param header
      */
     public void setHeader( final String header )
@@ -230,7 +230,7 @@ public class JErrorDialog extends JDialog implements Closeable
     // CONSTRUCTORS
 
     /**
-     * 
+     *
      */
     public IncidentMailReporter( final String aMailAddress )
     {
@@ -391,7 +391,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Create a new JErrorDialog with the given window as the owner.
-   * 
+   *
    * @param aOwner
    *          Owner of this error dialog.
    * @param aInfo
@@ -423,7 +423,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Show the error dialog.
-   * 
+   *
    * @param aOwner
    *          Owner of this error dialog.
    * @param aInfo
@@ -464,7 +464,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Show the error dialog.
-   * 
+   *
    * @param owner
    *          Owner of this error dialog
    * @param title
@@ -486,7 +486,7 @@ public class JErrorDialog extends JDialog implements Closeable
    * Constructs and shows the error dialog for the given exception. The
    * exceptions message will be the errorMessage, and the stacktrace will be the
    * details.
-   * 
+   *
    * @param aOwner
    *          Owner of this error dialog.
    * @param aTitle
@@ -530,7 +530,7 @@ public class JErrorDialog extends JDialog implements Closeable
   /**
    * Set the details section to be either visible or invisible. Set the text of
    * the Details button accordingly.
-   * 
+   *
    * @param aVisible
    *          if true details section will be visible
    */
@@ -552,58 +552,12 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Get curent dialog's IncidentInfo
-   * 
+   *
    * @return <code>IncidentInfo</code> assigned to this dialog
    */
   protected IncidentInfo getIncidentInfo()
   {
     return this.incidentInfo;
-  }
-
-  /**
-   * Creates the buttons pane.
-   * 
-   * @return a button pane, never <code>null</code>.
-   */
-  private JComponent createButtonPane()
-  {
-    final boolean reportingEnabled = getReportIncidentAddress() != null;
-
-    this.reportButton = new JButton( REPORT );
-    this.reportButton.setVisible( reportingEnabled );
-    this.reportButton.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        try
-        {
-          reportIncident();
-        }
-        catch ( IOException exception )
-        {
-          final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
-          JOptionPane.showMessageDialog( parent, exception.getMessage(), "Reporting failed!", JOptionPane.ERROR_MESSAGE );
-        }
-      }
-    } );
-
-    final JButton cancel = StandardActionFactory.createCloseButton();
-
-    this.detailButton = new JButton( MORE_DETAILS );
-    this.detailButton.addActionListener( new ActionListener()
-    {
-      /**
-       * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-       */
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        setDetailsVisible( !JErrorDialog.this.detailsScrollPane.isVisible() );
-      }
-    } );
-
-    return SwingComponentUtils.createButtonPane( new JButton[] { this.reportButton, this.detailButton, cancel } );
   }
 
   /**
@@ -638,7 +592,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Returns the email address to report incidents to.
-   * 
+   *
    * @return the report incident email address, can be <code>null</code> if this
    *         address is not defined.
    */
@@ -655,9 +609,45 @@ public class JErrorDialog extends JDialog implements Closeable
   private void initDialog()
   {
     final JPanel contentPane = createDetailsPane();
-    final JComponent buttonPane = createButtonPane();
+    final boolean reportingEnabled = getReportIncidentAddress() != null;
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane );
+    this.reportButton = new JButton( REPORT );
+    this.reportButton.setVisible( reportingEnabled );
+    this.reportButton.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        try
+        {
+          reportIncident();
+        }
+        catch ( IOException exception )
+        {
+          final Window parent1 = SwingComponentUtils.getOwningWindow( aEvent );
+          JOptionPane.showMessageDialog( parent1, exception.getMessage(), "Reporting failed!", JOptionPane.ERROR_MESSAGE );
+        }
+      }
+    } );
+
+    final JButton cancel = StandardActionFactory.createCloseButton();
+
+    this.detailButton = new JButton( MORE_DETAILS );
+    this.detailButton.addActionListener( new ActionListener()
+    {
+      /**
+       * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+       */
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        setDetailsVisible( !JErrorDialog.this.detailsScrollPane.isVisible() );
+      }
+    } );
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( this.reportButton, this.detailButton, cancel );
+
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, cancel );
 
     pack();
   }
@@ -666,7 +656,7 @@ public class JErrorDialog extends JDialog implements Closeable
    * Set the details section of the error dialog. If the details are either null
    * or an empty string, then hide the details button and hide the detail scroll
    * pane. Otherwise, just set the details section.
-   * 
+   *
    * @param aDetails
    *          Details to be shown in the detail section of the dialog. This can
    *          be null if you do not want to display the details section of the
@@ -688,7 +678,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Set the error message for the dialog box
-   * 
+   *
    * @param aErrorMessage
    *          Message for the error dialog
    */
@@ -699,7 +689,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Sets the incident information.
-   * 
+   *
    * @param aIncident
    *          the incident information to show, cannot be <code>null</code>.
    */

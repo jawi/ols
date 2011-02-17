@@ -21,24 +21,30 @@
 package org.sump.device.logicsniffer;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
-
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.plaf.basic.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.api.Configurable;
+import nl.lxtreme.ols.api.UserSettings;
+import nl.lxtreme.ols.util.DisplayUtils;
+import nl.lxtreme.ols.util.NumberUtils;
 import nl.lxtreme.ols.util.NumberUtils.UnitDefinition;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
+import nl.lxtreme.ols.util.swing.StandardActionFactory;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-import nl.lxtreme.ols.util.swing.component.*;
-import nl.lxtreme.rxtx.*;
-
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.util.swing.component.JLazyComboBox;
+import nl.lxtreme.rxtx.CommPortUtils;
 import org.sump.device.logicsniffer.LogicSnifferConfig.ClockSource;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
 
 
 /**
@@ -234,7 +240,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
   /**
    * Creates a new LogicSnifferConfigDialog instance.
-   * 
+   *
    * @param aParent
    *          the parent window of this dialog;
    * @param aConfig
@@ -332,7 +338,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * Properly closes the dialog. This method makes sure timer and worker thread
    * are stopped before the dialog is closed.
-   * 
+   *
    * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
    */
   public final void close()
@@ -477,7 +483,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
   /**
    * Updates the controls to a given device type.
-   * 
+   *
    * @param aType
    *          the device type to update the controls for, cannot be
    *          <code>null</code>.
@@ -502,16 +508,21 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     tabs.addTab( "Acquisition", createAcquisitionSettingsPane() );
     tabs.addTab( "Triggers", createTriggerPane() );
 
-    final JComponent buttonPane = createButtonPane();
+    final JButton cancel = StandardActionFactory.createCloseButton();
 
-    SwingComponentUtils.setupDialogContentPane( this, tabs, buttonPane );
+    this.captureButton = new JButton( "Capture" );
+    this.captureButton.addActionListener( this );
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( this.captureButton, cancel );
+
+    SwingComponentUtils.setupDialogContentPane( this, tabs, buttonPane, this.captureButton );
 
     pack();
   }
 
   /**
    * Creates the "acquisition settings" pane.
-   * 
+   *
    * @return a panel, never <code>null</code>.
    */
   private JPanel createAcquisitionSettingsPane()
@@ -559,23 +570,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   /**
-   * Creates the button pane.
-   * 
-   * @return a panel, never <code>null</code>.
-   */
-  private JComponent createButtonPane()
-  {
-    final JButton cancel = StandardActionFactory.createCloseButton();
-
-    this.captureButton = new JButton( "Capture" );
-    this.captureButton.addActionListener( this );
-
-    return SwingComponentUtils.createButtonPane( cancel, this.captureButton );
-  }
-
-  /**
    * Creates the "connection settings" pane.
-   * 
+   *
    * @return a panel, never <code>null</code>.
    */
   private JPanel createConnectionSettingsPane()
@@ -692,7 +688,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * Determines the maximum sample count that is supported by the OLS for a
    * given number of channel groups.
-   * 
+   *
    * @return a maximum sample count, or -1 if no maximum could be determined.
    */
   private int determineMaxSampleCount()
@@ -887,7 +883,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * Sets the enabled state of all available trigger check boxes and the ratio
    * select.
-   * 
+   *
    * @param aEnable
    *          <code>true</code> to enable trigger configuration fields,
    *          <code>false</code> to disable them

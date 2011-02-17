@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnabled
    *          status of the controls
    */
@@ -179,28 +179,8 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
   }
 
   /**
-   * Creates the button pane for this dialog.
-   * 
-   * @return a button pane, never <code>null</code>.
-   */
-  private JComponent createButtonPane()
-  {
-    final JButton runAnalysisButton = createRunAnalysisButton();
-    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
-
-    final JButton exportButton = createExportButton();
-    this.exportAction = exportButton.getAction();
-    this.exportAction.setEnabled( false );
-
-    final JButton closeButton = createCloseButton();
-    this.closeAction = closeButton.getAction();
-
-    return SwingComponentUtils.createButtonPane( closeButton, runAnalysisButton, exportButton );
-  }
-
-  /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -271,7 +251,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
 
   /**
    * Creates the settings pane.
-   * 
+   *
    * @return a settings pane, never <code>null</code>.
    */
   private JComponent createSettingsPane()
@@ -305,7 +285,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
 
   /**
    * Returns an "empty" HTML page.
-   * 
+   *
    * @return an empty HTML page string, never <code>null</code>.
    */
   private String getEmptyHtmlPage()
@@ -353,16 +333,26 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
         new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets( 2,
             0, 2, 0 ), 0, 0 ) );
 
-    final JComponent buttonPane = createButtonPane();
+    final JButton runAnalysisButton = createRunAnalysisButton();
+    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane );
+    final JButton exportButton = createExportButton();
+    this.exportAction = exportButton.getAction();
+    this.exportAction.setEnabled( false );
+
+    final JButton closeButton = createCloseButton();
+    this.closeAction = closeButton.getAction();
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
+
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, runAnalysisButton );
 
     pack();
   }
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param aEmpty
    *          if this is true an empty output is generated
    * @return String with HTML data

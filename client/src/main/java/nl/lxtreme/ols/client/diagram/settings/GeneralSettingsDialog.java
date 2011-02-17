@@ -21,27 +21,33 @@
 package nl.lxtreme.ols.client.diagram.settings;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
-
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.Configurable;
+import nl.lxtreme.ols.api.UserSettings;
+import nl.lxtreme.ols.api.data.CapturedData;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorScheme;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.EdgeSlope;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.ColorUtils;
+import nl.lxtreme.ols.util.DisplayUtils;
+import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
+import nl.lxtreme.ols.util.swing.StandardActionFactory;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-import nl.lxtreme.ols.util.swing.component.*;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.util.swing.component.EnumItemRenderer;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
 
 
 /**
  * Stores diagram "mode" settings and provides a dialog for changing them.
- * 
+ *
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
@@ -185,7 +191,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Constructs diagram settings component.
-   * 
+   *
    * @param aParent
    * @param aSettings
    */
@@ -266,7 +272,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Returns the (mutated) diagram settings.
-   * 
+   *
    * @return the diagram settings, never <code>null</code>.
    */
   public final DiagramSettings getDiagramSettings()
@@ -287,7 +293,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
    * Display the settings dialog. If the user clicks ok, all changes are
    * reflected in the properties of this object. Otherwise changes are
    * discarded.
-   * 
+   *
    * @return <code>OK</code> when user accepted changes, <code>CANCEL</code>
    *         otherwise
    */
@@ -308,7 +314,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Enables/disables all color scheme-related tabs
-   * 
+   *
    * @param aEnable
    *          <code>true</code> to enable all color scheme-related tabs,
    *          <code>false</code> to disable them.
@@ -319,31 +325,6 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     {
       this.tabbedPane.setEnabledAt( i, aEnable );
     }
-  }
-
-  /**
-   * @return
-   */
-  private JComponent createButtonsPane()
-  {
-    final JButton cancel = StandardActionFactory.createCloseButton();
-
-    this.okButton = new JButton( "Ok" );
-    this.okButton.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        final boolean validSettings = syncSettingsWithUi();
-        if ( validSettings )
-        {
-          GeneralSettingsDialog.this.result = validSettings;
-          close();
-        }
-      }
-    } );
-
-    return SwingComponentUtils.createButtonPane( new JButton[] { this.okButton, cancel } );
   }
 
   /**
@@ -541,14 +522,31 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     this.tabbedPane.addTab( "Cursor colors", createCursorColorSchemePane() );
     this.tabbedPane.addTab( "Channel colors", createChannelColorSchemePane( 0 ) );
 
-    final JComponent buttonPane = createButtonsPane();
+    final JButton cancel = StandardActionFactory.createCloseButton();
 
-    SwingComponentUtils.setupDialogContentPane( this, this.tabbedPane, buttonPane );
+    this.okButton = new JButton( "Ok" );
+    this.okButton.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        final boolean validSettings = syncSettingsWithUi();
+        if ( validSettings )
+        {
+          GeneralSettingsDialog.this.result = validSettings;
+          close();
+        }
+      }
+    } );
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( this.okButton, cancel );
+
+    SwingComponentUtils.setupDialogContentPane( this, this.tabbedPane, buttonPane, this.okButton );
   }
 
   /**
    * Sets this dialog enabled.
-   * 
+   *
    * @param aEnabled
    *          <code>true</code> to enable the tabbed pane and the "Ok" button,
    *          <code>false</code> to disable these components.
@@ -561,7 +559,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Shows an error message.
-   * 
+   *
    * @param aMessage
    *          the error message to show, cannot be <code>null</code>.
    */
@@ -572,7 +570,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Synchronizes the settings with the values chosen in the UI.
-   * 
+   *
    * @return <code>true</code> if no errors were found in the settings,
    *         <code>false</code> otherwise.
    */
