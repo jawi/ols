@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,16 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.ClientController;
 
 
 /**
- * 
+ *
  */
 public class SetCursorModeAction extends BaseAction
 {
@@ -42,11 +43,11 @@ public class SetCursorModeAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * 
+   *
    */
   public SetCursorModeAction( final ClientController aController )
   {
-    super( ID, aController, "Cursors", "Enables or disables cursors in the diagram." );
+    super( ID, aController, "Toggle visibility of all cursors", "Toggle visibility of all cursors in the diagram" );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_C ) );
   }
 

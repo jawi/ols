@@ -22,14 +22,15 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
- * 
+ *
  */
 public class ShowDiagramLabelsAction extends BaseAction
 {
@@ -42,11 +43,11 @@ public class ShowDiagramLabelsAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * 
+   *
    */
   public ShowDiagramLabelsAction( final ClientController aController )
   {
-    super( ID, aController, "Diagram labels", "Show the diagram labels dialog." );
+    super( ID, aController, "Diagram labels", "Show the diagram labels dialog" );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_L ) );
   }
 

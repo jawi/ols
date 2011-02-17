@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,16 +20,16 @@
  */
 package nl.lxtreme.ols.client.action;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import static nl.lxtreme.ols.client.icons.IconFactory.*;
-
-import java.awt.event.*;
-
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import static nl.lxtreme.ols.client.icons.IconFactory.createOverlayIcon;
 
 
 /**
- * 
+ *
  */
 public class GotoCursor2Action extends BaseAction
 {
@@ -46,8 +46,9 @@ public class GotoCursor2Action extends BaseAction
    */
   public GotoCursor2Action( final ClientController aController )
   {
-    super( ID, aController, createOverlayIcon( ICON_GOTO_CURSOR1, "2" ), "Go to Cursor 2",
-        "Go to second cursor in diagram." );
+    super( ID, aController, createOverlayIcon( ICON_GOTO_CURSOR1, "2" ), "Go to cursor 2",
+        "Go to cursor 2 in diagram" );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_2) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_2 ) );
   }
 

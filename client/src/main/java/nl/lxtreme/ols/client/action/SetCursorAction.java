@@ -22,18 +22,18 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.client.diagram.laf.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.api.data.CapturedData;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.client.diagram.laf.DiagramUI;
+import nl.lxtreme.ols.util.DisplayUtils;
 
 
 /**
- * 
+ *
  */
 public class SetCursorAction extends BaseAction
 {
@@ -55,8 +55,8 @@ public class SetCursorAction extends BaseAction
    */
   public SetCursorAction( final ClientController aController, final int aCursorIdx )
   {
-    super( getCursorId( aCursorIdx ), aController, "Set Cursor " + ( aCursorIdx + 1 ), "Sets the "
-        + DisplayUtils.getOrdinalNumber( aCursorIdx + 1 ) + " cursor." );
+    super( getCursorId( aCursorIdx ), aController, "Set Cursor " + ( aCursorIdx + 1 ), "Set the "
+        + DisplayUtils.getOrdinalNumber( aCursorIdx + 1 ) + " cursor" );
     this.cursorIdx = aCursorIdx;
   }
 
@@ -64,7 +64,7 @@ public class SetCursorAction extends BaseAction
 
   /**
    * Returns the action ID for the given cursor index.
-   * 
+   *
    * @param aCursorIdx
    *          the cursor index, >= 0 && < 10.
    * @return a "set cursor" action ID, never <code>null</code>.
@@ -100,7 +100,7 @@ public class SetCursorAction extends BaseAction
   /**
    * Returns the context menu location client property of the given menu item's
    * popup menu.
-   * 
+   *
    * @param aMenuItem
    *          the menu item to return the client property of, cannot be
    *          <code>null</code>.

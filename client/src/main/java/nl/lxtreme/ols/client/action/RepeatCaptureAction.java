@@ -22,12 +22,13 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
@@ -46,13 +47,14 @@ public class RepeatCaptureAction extends BaseAction
 
   /**
    * Creates a new RepeatCaptureAction instance.
-   * 
+   *
    * @param aFrame
    *          the frame this action belongs to.
    */
   public RepeatCaptureAction( final ClientController aController )
   {
-    super( ID, aController, ICON_RECAPTURE_DATA, "Repeat capture", "Repeats the capture with current device settings." );
+    super( ID, aController, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat capture with current device settings" );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_R) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_R ) );
   }
 

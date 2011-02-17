@@ -22,14 +22,15 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
- * 
+ *
  */
 public class ShowModeSettingsAction extends BaseAction
 {
@@ -42,11 +43,11 @@ public class ShowModeSettingsAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * 
+   *
    */
   public ShowModeSettingsAction( final ClientController aController )
   {
-    super( ID, aController, "Diagram mode settings", "Shows the mode settings dialog." );
+    super( ID, aController, "Diagram mode settings", "Show the mode settings dialog" );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_M ) );
   }
 

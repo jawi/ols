@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,15 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
- * 
+ *
  */
 public class ZoomDefaultAction extends BaseAction
 {
@@ -44,7 +46,8 @@ public class ZoomDefaultAction extends BaseAction
    */
   public ZoomDefaultAction( final ClientController aController )
   {
-    super( ID, aController, ICON_ZOOM_DEFAULT, "Zoom original", "Zoom to original level." );
+    super( ID, aController, ICON_ZOOM_DEFAULT, "Zoom original", "Zoom to original level" );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_0) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_R ) );
   }
 

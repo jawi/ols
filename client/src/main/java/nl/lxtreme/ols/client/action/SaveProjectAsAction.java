@@ -21,8 +21,10 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.*;
-import nl.lxtreme.ols.client.*;
+import java.awt.event.KeyEvent;
+
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
@@ -40,14 +42,15 @@ public class SaveProjectAsAction extends SaveProjectAction
 
   /**
    * Creates a new SaveProjectAsAction instance.
-   * 
+   *
    * @param aController
    *          the controller to use.
    */
   public SaveProjectAsAction( final ClientController aController )
   {
     super( ID, aController, ICON_SAVE_PROJECT, "Save project as ...",
-        "Save the current project under a different name." );
+        "Save the current project under a different name" );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_S, KeyEvent.SHIFT_MASK) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
   }
 

@@ -22,14 +22,15 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
 
 /**
- * 
+ *
  */
 public class ShowGeneralSettingsAction extends BaseAction
 {
@@ -42,11 +43,11 @@ public class ShowGeneralSettingsAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * 
+   *
    */
   public ShowGeneralSettingsAction( final ClientController aController )
   {
-    super( ID, aController, "Preferences", "Shows the preferences dialog." );
+    super( ID, aController, "Preferences", "Show the preferences dialog" );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
   }
 
