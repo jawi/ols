@@ -616,7 +616,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     captureMenu.setMnemonic( 'C' );
 
     this.deviceMenu = new JMenu( "Device" );
-    this.deviceMenu.setMnemonic( 'v' );
+    this.deviceMenu.setMnemonic( 'D' );
 
     captureMenu.add( this.controller.getAction( CaptureAction.ID ) );
     captureMenu.add( this.controller.getAction( RepeatCaptureAction.ID ) );
