@@ -33,7 +33,7 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.*;
 
 /**
  * Stores diagram "mode" settings and provides a dialog for changing them.
- * 
+ *
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
@@ -87,7 +87,7 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
 
   /**
    * Constructs diagram settings component.
-   * 
+   *
    * @param aParent
    * @param aSettings
    */
@@ -114,7 +114,7 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
 
   /**
    * Returns the (mutated) diagram settings.
-   * 
+   *
    * @return the diagram settings, never <code>null</code>.
    */
   public final DiagramSettings getDiagramSettings()
@@ -135,7 +135,7 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
    * Display the settings dialog. If the user clicks ok, all changes are
    * reflected in the properties of this object. Otherwise changes are
    * discarded.
-   * 
+   *
    * @return <code>OK</code> when user accepted changes, <code>CANCEL</code>
    *         otherwise
    */
@@ -173,27 +173,6 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
     {
       this.settings.setShowScope( aGroup, aSelected );
     }
-  }
-
-  /**
-   * @return
-   */
-  private JComponent createButtonsPane()
-  {
-    final JButton cancel = StandardActionFactory.createCloseButton();
-
-    final JButton ok = new JButton( "Ok" );
-    ok.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        ModeSettingsDialog.this.result = true;
-        close();
-      }
-    } );
-
-    return SwingComponentUtils.createButtonPane( new JButton[] { ok, cancel } );
   }
 
   /**
@@ -251,8 +230,21 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
   private void initDialog()
   {
     final JComponent modePane = createDisplayModePane();
-    final JComponent buttonPane = createButtonsPane();
+    final JButton cancel = StandardActionFactory.createCloseButton();
 
-    SwingComponentUtils.setupDialogContentPane( this, modePane, buttonPane );
+    final JButton ok = new JButton( "Ok" );
+    ok.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        ModeSettingsDialog.this.result = true;
+        close();
+      }
+    } );
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( ok, cancel );
+
+    SwingComponentUtils.setupDialogContentPane( this, modePane, buttonPane, ok );
   }
 }

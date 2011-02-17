@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,18 +21,21 @@
 package nl.lxtreme.ols.device.generic;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
-
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.api.Configurable;
+import nl.lxtreme.ols.api.UserSettings;
+import nl.lxtreme.ols.util.NumberUtils;
+import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
+import nl.lxtreme.ols.util.swing.StandardActionFactory;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-import nl.lxtreme.ols.util.swing.validation.*;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.util.swing.validation.JComponentInputVerifier;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
 
 
 /**
@@ -58,7 +61,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Creates a new GenericDeviceConfigDialog instance.
-   * 
+   *
    * @param aParent
    *          the parent window of this dialog, can be <code>null</code>.
    */
@@ -83,7 +86,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Returns the number of channels in each sample.
-   * 
+   *
    * @return the channel count, >= 0.
    */
   public int getChannelCount()
@@ -94,7 +97,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Returns the path to the device, like <tt>/dev/ttyS0</tt> or similar.
-   * 
+   *
    * @return the device path, never <code>null</code>.
    */
   public String getDevicePath()
@@ -114,7 +117,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Returns the number of samples to take.
-   * 
+   *
    * @return the sample depth, >= 0.
    */
   public int getSampleDepth()
@@ -125,7 +128,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Returns the sample rate of the generic device.
-   * 
+   *
    * @return the sample rate in Hertz (Hz).
    */
   public int getSampleRate()
@@ -136,7 +139,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Returns the width (in bytes) of each sample.
-   * 
+   *
    * @return the sample width, in bytes, >= 0.
    */
   public int getSampleWidth()
@@ -160,7 +163,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Shows this dialog on screen.
-   * 
+   *
    * @return <code>true</code> if this dialog is confirmed, <code>false</code>
    *         if it was cancelled.
    */
@@ -188,7 +191,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Creates the contents of this dialog.
-   * 
+   *
    * @return a content pane, never <code>null</code>.
    */
   private JComponent createContents()
@@ -236,10 +239,11 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   }
 
   /**
-   * @return
+   * Initializes this dialog.
    */
-  private JComponent createDialogButtonPanel()
+  private void initDialog()
   {
+    final JComponent contents = createContents();
     final JButton closeButton = StandardActionFactory.createCloseButton();
 
     final JButton okButton = new JButton( "Ok" );
@@ -254,17 +258,8 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
       }
     } );
 
-    return SwingComponentUtils.createButtonPane( new JButton[] { okButton, closeButton } );
-  }
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( okButton, closeButton );
 
-  /**
-   * Initializes this dialog.
-   */
-  private void initDialog()
-  {
-    final JComponent contents = createContents();
-    final JComponent buttonPane = createDialogButtonPanel();
-
-    SwingComponentUtils.setupDialogContentPane( this, contents, buttonPane );
+    SwingComponentUtils.setupDialogContentPane( this, contents, buttonPane, okButton );
   }
 }

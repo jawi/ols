@@ -47,7 +47,7 @@ import nl.lxtreme.ols.util.swing.*;
 
 /**
  * Provides a main dialog for the I2C analyser.
- * 
+ *
  * @author Frank Kunz
  * @author J.W. Janssen
  */
@@ -197,7 +197,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnabled
    *          status of the controls
    */
@@ -322,26 +322,8 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
-   * @return
-   */
-  private JComponent createButtonPane()
-  {
-    final JButton runAnalysisButton = createRunAnalysisButton();
-    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
-
-    final JButton exportButton = createExportButton();
-    this.exportAction = exportButton.getAction();
-    this.exportAction.setEnabled( false );
-
-    final JButton closeButton = createCloseButton();
-    this.closeAction = closeButton.getAction();
-
-    return SwingComponentUtils.createButtonPane( closeButton, runAnalysisButton, exportButton );
-  }
-
-  /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -496,7 +478,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
   /**
    * Returns an "empty" HTML page.
-   * 
+   *
    * @return an empty HTML page string, never <code>null</code>.
    */
   private String getEmptyHtmlPage()
@@ -526,7 +508,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
-   * 
+   *
    */
   private void initDialog()
   {
@@ -544,16 +526,26 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
         new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets( 2,
             0, 2, 0 ), 0, 0 ) );
 
-    final JComponent buttonPane = createButtonPane();
+    final JButton runAnalysisButton = createRunAnalysisButton();
+    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane );
+    final JButton exportButton = createExportButton();
+    this.exportAction = exportButton.getAction();
+    this.exportAction.setEnabled( false );
+
+    final JButton closeButton = createCloseButton();
+    this.closeAction = closeButton.getAction();
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
+
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, runAnalysisButton );
 
     pack();
   }
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param aEmpty
    *          if this is true an empty output is generated
    * @return String with HTML data

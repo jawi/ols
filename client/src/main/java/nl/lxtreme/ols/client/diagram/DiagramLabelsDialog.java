@@ -34,7 +34,7 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 /**
  * Stores the diagram labels and provides a dialog to change them.
- * 
+ *
  * @version 0.7
  * @author Frank Kunz
  */
@@ -92,7 +92,7 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
    * Display the settings dialog. If the user clicks ok, all changes are
    * reflected in the properties of this object. Otherwise changes are
    * discarded.
-   * 
+   *
    * @return <code>true</code> when user accepted changes, <code>false</code>
    *         otherwise.
    */
@@ -135,43 +135,8 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
   }
 
   /**
-   * Creates the buttons pane.
-   * 
-   * @return a button pane, never <code>null</code>.
-   */
-  private JComponent createButtonPane()
-  {
-    final JButton clear = new JButton( "Clear" );
-    clear.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        clearAllLabels();
-      }
-    } );
-
-    final JButton ok = new JButton( "Ok" );
-    ok.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        publishAllLabels();
-        DiagramLabelsDialog.this.result = true;
-
-        close();
-      }
-    } );
-
-    final JButton cancel = StandardActionFactory.createCloseButton();
-
-    return SwingComponentUtils.createButtonPane( new JButton[] { ok, cancel }, clear );
-  }
-
-  /**
    * Creates the label editors pane.
-   * 
+   *
    * @return a label editor pane, never <code>null</code>.
    */
   private JPanel createLabelEditorsPane()
@@ -206,8 +171,33 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
   private void initDialog()
   {
     final JPanel editorsPane = createLabelEditorsPane();
-    final JComponent buttonPane = createButtonPane();
+    final JButton clear = new JButton( "Clear" );
+    clear.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        clearAllLabels();
+      }
+    } );
 
-    SwingComponentUtils.setupDialogContentPane( this, editorsPane, buttonPane );
+    final JButton ok = new JButton( "Ok" );
+    ok.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        publishAllLabels();
+        DiagramLabelsDialog.this.result = true;
+
+        close();
+      }
+    } );
+
+    final JButton cancel = StandardActionFactory.createCloseButton();
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( ok, cancel, clear );
+
+    SwingComponentUtils.setupDialogContentPane( this, editorsPane, buttonPane, ok );
   }
 }

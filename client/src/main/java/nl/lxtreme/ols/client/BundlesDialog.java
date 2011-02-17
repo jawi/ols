@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,9 +58,8 @@ public class BundlesDialog extends JDialog implements Closeable
 
     /**
      * Creates a new TableModel instance.
-     * 
-     * @param aBundles
-     *          the current active bundles, cannot be <code>null</code>.
+     *
+     * @param aBundles the current active bundles, cannot be <code>null</code>.
      */
     public TableModel( final Bundle[] aBundles )
     {
@@ -228,12 +227,10 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Creates a new BundlesDialog instance.
-   * 
-   * @param aOwner
-   *          the owning window, can be <code>null</code>;
-   * @param aBundleContext
-   *          the bundle context to use for communicating with the OSGi
-   *          framework, cannot be <code>null</code>.
+   *
+   * @param aOwner         the owning window, can be <code>null</code>;
+   * @param aBundleContext the bundle context to use for communicating with the OSGi
+   *                       framework, cannot be <code>null</code>.
    */
   public BundlesDialog( final Window aOwner, final BundleContext aBundleContext )
   {
@@ -250,7 +247,7 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Returns whether or not we're running in debug mode.
-   * 
+   *
    * @return <code>true</code> if debug mode is enabled, <code>false</code>
    *         otherwise.
    */
@@ -271,7 +268,7 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Display the bundles dialog.
-   * 
+   *
    * @return always <code>true</code>.
    */
   public boolean showDialog()
@@ -282,9 +279,8 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Starts all bundles.
-   * 
-   * @param aBundles
-   *          the bundles to start, cannot be <code>null</code>.
+   *
+   * @param aBundles the bundles to start, cannot be <code>null</code>.
    */
   final void startAllBundles( final Bundle[] aBundles )
   {
@@ -298,9 +294,8 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Starts the given bundle.
-   * 
-   * @param aBundle
-   *          the bundle to start, cannot be <code>null</code>.
+   *
+   * @param aBundle the bundle to start, cannot be <code>null</code>.
    */
   final void startBundle( final Bundle aBundle )
   {
@@ -319,9 +314,8 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Stops all bundles.
-   * 
-   * @param aBundles
-   *          the bundles to stop, cannot be <code>null</code>.
+   *
+   * @param aBundles the bundles to stop, cannot be <code>null</code>.
    */
   final void stopAllBundles( final Bundle[] aBundles )
   {
@@ -335,9 +329,8 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Stops the given bundle.
-   * 
-   * @param aBundle
-   *          the bundle to stop, cannot be <code>null</code>.
+   *
+   * @param aBundle the bundle to stop, cannot be <code>null</code>.
    */
   final void stopBundle( final Bundle aBundle )
   {
@@ -356,7 +349,7 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Creates the bundle view pane.
-   * 
+   *
    * @return a bundle view pane.
    */
   private JPanel createBundleViewPane()
@@ -382,7 +375,7 @@ public class BundlesDialog extends JDialog implements Closeable
           ( ( JComponent )result ).setToolTipText( String.valueOf( value ) );
         }
         return result;
-      };
+      }
     };
     this.table.setColumnSelectionAllowed( false );
     this.table.setRowSelectionAllowed( true );
@@ -453,25 +446,15 @@ public class BundlesDialog extends JDialog implements Closeable
   }
 
   /**
-   * Creates the buttons pane.
-   * 
-   * @return a button pane, never <code>null</code>.
-   */
-  private JComponent createButtonPane()
-  {
-    final JButton cancel = StandardActionFactory.createCloseButton();
-
-    return SwingComponentUtils.createButtonPane( new JButton[] { cancel } );
-  }
-
-  /**
    * Initializes this dialog.
    */
   private void initDialog()
   {
     final JPanel editorsPane = createBundleViewPane();
-    final JComponent buttonPane = createButtonPane();
+    final JButton cancel = StandardActionFactory.createCloseButton();
 
-    SwingComponentUtils.setupDialogContentPane( this, editorsPane, buttonPane );
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( cancel );
+
+    SwingComponentUtils.setupDialogContentPane( this, editorsPane, buttonPane, cancel );
   }
 }

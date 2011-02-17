@@ -130,19 +130,6 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
   /**
    * @return
    */
-  private JComponent createButtonPane()
-  {
-    final JButton runAnalysisButton = createRunAnalysisButton();
-    this.runAction = ( RestorableAction )runAnalysisButton.getAction();
-
-    final JButton closeButton = createCloseButton();
-
-    return SwingComponentUtils.createButtonPane( closeButton, runAnalysisButton );
-  }
-
-  /**
-   * @return
-   */
   private JPanel createContentPane()
   {
     final JPanel pane = new JPanel( new GridLayout( 2, 2, 5, 5 ) );
@@ -173,9 +160,14 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
     setResizable( false );
 
     final JComponent pane = createContentPane();
-    final JComponent buttons = createButtonPane();
+    final JButton runAnalysisButton = createRunAnalysisButton();
+    this.runAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    SwingComponentUtils.setupDialogContentPane( this, pane, buttons );
+    final JButton closeButton = createCloseButton();
+
+    final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, closeButton );
+
+    SwingComponentUtils.setupDialogContentPane( this, pane, buttons, runAnalysisButton );
   }
 }
 

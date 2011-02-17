@@ -58,7 +58,7 @@ public class MeasurementDialog extends BaseToolDialog
     private ClockFrequencyMeasureWorker worker = null;
 
     /**
-     * 
+     *
      */
     public MeasureClockFrequencyAction()
     {
@@ -212,7 +212,7 @@ public class MeasurementDialog extends BaseToolDialog
 
     /**
      * Sets the channel on which the clock-frequency should be determined.
-     * 
+     *
      * @param aChannel
      */
     public void setChannel( final int aChannel )
@@ -271,7 +271,7 @@ public class MeasurementDialog extends BaseToolDialog
 
   /**
    * Creates a new MeasurementDialog instance (non modal).
-   * 
+   *
    * @param aOwner
    *          the owning window;
    * @param aTitle
@@ -389,14 +389,6 @@ public class MeasurementDialog extends BaseToolDialog
   }
 
   /**
-   * @return
-   */
-  private JComponent createButtonPane()
-  {
-    return SwingComponentUtils.createButtonPane( createCloseButton() );
-  }
-
-  /**
    * @param aCursorNames
    * @return
    */
@@ -426,7 +418,7 @@ public class MeasurementDialog extends BaseToolDialog
    * <p>
    * Should be called from the EDT!
    * </p>
-   * 
+   *
    * @return a dialog panel, never <code>null</code>.
    */
   private JComponent createDialogContent()
@@ -451,7 +443,7 @@ public class MeasurementDialog extends BaseToolDialog
 
   /**
    * Creates the pane on which the measurement results are shown.
-   * 
+   *
    * @return a measurement panel, never <code>null</code>.
    */
   private Component createMeasurementPane( final String[] aCursorNames )
@@ -524,7 +516,7 @@ public class MeasurementDialog extends BaseToolDialog
 
   /**
    * Returns the time of a cursor with a given index as display value.
-   * 
+   *
    * @param aIndex
    *          the cursor index to get the time for, >= 0 && < 10.
    * @return a display value for the cursor time, can be "not set" if the cursor
@@ -549,8 +541,9 @@ public class MeasurementDialog extends BaseToolDialog
   private void initDialog()
   {
     final JComponent contentPane = createDialogContent();
-    final JComponent buttonPane = createButtonPane();
+    final JButton closeButton = createCloseButton();
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane );
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, closeButton );
   }
 }

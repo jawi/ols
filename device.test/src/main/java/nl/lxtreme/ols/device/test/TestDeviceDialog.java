@@ -212,10 +212,11 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   }
 
   /**
-   * @return
+   * Initializes this dialog.
    */
-  private JComponent createDialogButtonPanel()
+  private void initDialog()
   {
+    final JComponent contents = createContents();
     final JButton closeButton = StandardActionFactory.createCloseButton();
     closeButton.addActionListener( new ActionListener()
     {
@@ -239,17 +240,8 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
       }
     } );
 
-    return SwingComponentUtils.createButtonPane( new JButton[] { okButton, closeButton } );
-  }
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( okButton, closeButton );
 
-  /**
-   * Initializes this dialog.
-   */
-  private void initDialog()
-  {
-    final JComponent contents = createContents();
-    final JComponent buttonPane = createDialogButtonPanel();
-
-    SwingComponentUtils.setupDialogContentPane( this, contents, buttonPane );
+    SwingComponentUtils.setupDialogContentPane( this, contents, buttonPane, okButton );
   }
 }

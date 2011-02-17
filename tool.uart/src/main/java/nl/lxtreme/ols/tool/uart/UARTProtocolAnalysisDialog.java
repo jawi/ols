@@ -46,7 +46,7 @@ import nl.lxtreme.ols.util.swing.*;
 
 /**
  * The Dialog Class
- * 
+ *
  * @author Frank Kunz The dialog class draws the basic dialog with a grid
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
@@ -195,7 +195,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * set the controls of the dialog enabled/disabled
-   * 
+   *
    * @param aEnable
    *          status of the controls
    */
@@ -245,7 +245,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * exports the data to a CSV file
-   * 
+   *
    * @param aFile
    *          File object
    */
@@ -317,7 +317,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * stores the data to a HTML file
-   * 
+   *
    * @param aFile
    *          file object
    */
@@ -339,26 +339,8 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   }
 
   /**
-   * @return
-   */
-  private JComponent createButtonsPane()
-  {
-    final JButton runAnalysisButton = createRunAnalysisButton();
-    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
-
-    final JButton exportButton = createExportButton();
-    this.exportAction = exportButton.getAction();
-    this.exportAction.setEnabled( false );
-
-    final JButton closeButton = createCloseButton();
-    this.closeAction = closeButton.getAction();
-
-    return SwingComponentUtils.createButtonPane( closeButton, runAnalysisButton, exportButton );
-  }
-
-  /**
    * Creates the HTML template for exports to HTML.
-   * 
+   *
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -528,7 +510,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param empty
    *          if this is true an empty output is generated
    * @return String with HTML data
@@ -576,14 +558,24 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     contentPane.add( previewPane, new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH,
         GridBagConstraints.BOTH, new Insets( 2, 0, 2, 0 ), 0, 0 ) );
 
-    final JComponent buttons = createButtonsPane();
+    final JButton runAnalysisButton = createRunAnalysisButton();
+    this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons );
+    final JButton exportButton = createExportButton();
+    this.exportAction = exportButton.getAction();
+    this.exportAction.setEnabled( false );
+
+    final JButton closeButton = createCloseButton();
+    this.closeAction = closeButton.getAction();
+
+    final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
+
+    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
   }
 
   /**
    * generate a HTML page
-   * 
+   *
    * @param empty
    *          if this is true an empty output is generated
    * @return String with HTML data
