@@ -128,6 +128,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
    */
   public boolean showDialog()
   {
+    TestDeviceDialog.this.setupConfirmed = false;
     setVisible( true );
     return this.setupConfirmed;
   }
@@ -218,15 +219,6 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   {
     final JComponent contents = createContents();
     final JButton closeButton = StandardActionFactory.createCloseButton();
-    closeButton.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        TestDeviceDialog.this.setupConfirmed = false;
-        close();
-      }
-    } );
 
     final JButton okButton = new JButton( "Ok" );
     okButton.setPreferredSize( closeButton.getPreferredSize() );
