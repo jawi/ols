@@ -21,28 +21,22 @@
 package nl.lxtreme.ols.client.diagram.settings;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.Configurable;
-import nl.lxtreme.ols.api.UserSettings;
-import nl.lxtreme.ols.api.data.CapturedData;
+import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorScheme;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.EdgeSlope;
-import nl.lxtreme.ols.util.ColorUtils;
-import nl.lxtreme.ols.util.DisplayUtils;
-import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
-import nl.lxtreme.ols.util.swing.StandardActionFactory;
+import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
-import nl.lxtreme.ols.util.swing.component.EnumItemRenderer;
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**

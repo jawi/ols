@@ -35,7 +35,9 @@ import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
-import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.*;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.EdgeSlope;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.SignalAlignment;
 import nl.lxtreme.ols.util.*;
 
 

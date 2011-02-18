@@ -21,11 +21,11 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.event.ActionEvent;
+import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.ClientController;
+import nl.lxtreme.ols.client.*;
 
 
 /**

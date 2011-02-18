@@ -22,29 +22,25 @@ package nl.lxtreme.ols.client;
 
 
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.net.URL;
-import java.text.MessageFormat;
+import java.awt.event.*;
+import java.beans.*;
+import java.net.*;
+import java.text.*;
 import java.util.List;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.Sample;
-import nl.lxtreme.ols.api.devices.DeviceController;
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.data.project.ProjectProperties;
-import nl.lxtreme.ols.client.diagram.Diagram;
-import nl.lxtreme.ols.client.diagram.settings.DiagramSettings;
-import nl.lxtreme.ols.client.icons.IconLocator;
-import nl.lxtreme.ols.util.DisplayUtils;
-import nl.lxtreme.ols.util.HostUtils;
-import nl.lxtreme.ols.util.swing.StandardActionFactory;
+import nl.lxtreme.ols.client.data.project.*;
+import nl.lxtreme.ols.client.diagram.*;
+import nl.lxtreme.ols.client.diagram.settings.*;
+import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
-import nl.lxtreme.ols.util.swing.component.JTextStatusBar;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
@@ -186,7 +182,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Creates a new MainFrame instance.
-   *
+   * 
    * @param aController
    *          the client controller to use, cannot be <code>null</code>.
    */
@@ -239,7 +235,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Shows the main about box.
-   *
+   * 
    * @param aVersion
    *          the version to display in this about box.
    */
@@ -335,7 +331,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Converts a mouse position to a sample index.
-   *
+   * 
    * @param aLocation
    *          the mouse position to convert, cannot be <code>null</code>.
    * @return the sample index of the sample under the mouse.
@@ -347,7 +343,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Returns the current diagram settings.
-   *
+   * 
    * @return the diagram settings, never <code>null</code>.
    */
   public final DiagramSettings getDiagramSettings()
@@ -357,7 +353,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Returns the current zoom scale.
-   *
+   * 
    * @return a zoom scale, > 0.0
    */
   public double getZoomScale()
@@ -367,7 +363,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Sets the view to the position indicated by the given sample position.
-   *
+   * 
    * @param aSamplePos
    *          the sample position, >= 0.
    */
@@ -404,7 +400,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Removes the menu item from the device menu with the given name.
-   *
+   * 
    * @param aDeviceName
    *          the name of the device to remove as menu item from the menu,
    *          cannot be <code>null</code>.
@@ -422,7 +418,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Removes the menu item from the export menu with the given name.
-   *
+   * 
    * @param aExporterName
    *          the name of the exporter to remove as menu item from the menu,
    *          cannot be <code>null</code>.
@@ -438,7 +434,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Removes the menu item from the tools menu with the given name.
-   *
+   * 
    * @param aToolName
    *          the name of the tool to remove as menu item from the menu, cannot
    *          be <code>null</code>.
@@ -454,7 +450,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Called to update the sample indicator during (continuous) sampling.
-   *
+   * 
    * @param aSamples
    *          the latest list of samples, cannot be <code>null</code>.
    */
@@ -474,7 +470,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Sets the current diagram settings.
-   *
+   * 
    * @param aDiagramSettings
    *          the diagram settings to set, cannot be <code>null</code>.
    */
@@ -494,7 +490,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Sets the status bar message to the message given.
-   *
+   * 
    * @param aMessage
    *          the message to set as status text;
    * @param aMessageArgs
@@ -553,7 +549,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Returns the current diagram instance.
-   *
+   * 
    * @return a diagram instance, cannot be <code>null</code>.
    */
   final Diagram getDiagram()
@@ -563,7 +559,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Returns the scroll pane of the current diagram instance.
-   *
+   * 
    * @return a scroll pane instance, can be <code>null</code>.
    */
   final JComponent getDiagramScrollPane()
@@ -574,7 +570,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Creates the menu bar with all menu's and the accompanying toolbar.
-   *
+   * 
    * @return the toolbar, never <code>null</code>.
    */
   private JToolBar createMenuBars()
@@ -695,7 +691,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   /**
    * Determines the index in the menu where the given menu item should be
    * inserted.
-   *
+   * 
    * @param aMenuItem
    *          the menu item to add, cannot be <code>null</code>.
    * @return the position in the menu to add the given menu item, -1 if the menu
@@ -709,7 +705,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   /**
    * Determines the index in the menu where the given menu item should be
    * inserted.
-   *
+   * 
    * @param aMenuItem
    *          the menu item to add, cannot be <code>null</code>.
    * @return the position in the menu to add the given menu item, -1 if the menu
@@ -723,7 +719,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   /**
    * Determines the index in the menu where the given menu item should be
    * inserted.
-   *
+   * 
    * @param aMenu
    *          the menu to determine the given items' index of, cannot be
    *          <code>null</code>;
@@ -752,7 +748,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   /**
    * Determines the index in the menu where the given menu item should be
    * inserted.
-   *
+   * 
    * @param aMenuItem
    *          the menu item to add, cannot be <code>null</code>.
    * @return the position in the menu to add the given menu item, -1 if the menu
@@ -765,7 +761,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Removes a menu item with a given name from the given menu.
-   *
+   * 
    * @param aMenu
    *          the menu to remove the item from, cannot be <code>null</code>;
    * @param aMenuItemName
@@ -795,7 +791,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   /**
    * Updates the given menu, adding the given default menu item if its item
    * count drops to zero.
-   *
+   * 
    * @param aMenu
    *          the menu to update, cannot be <code>null</code>;
    * @param aDefaultMenuItem

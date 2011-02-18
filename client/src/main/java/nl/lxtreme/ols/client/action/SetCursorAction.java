@@ -22,14 +22,14 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.CapturedData;
-import nl.lxtreme.ols.client.ClientController;
-import nl.lxtreme.ols.client.diagram.laf.DiagramUI;
-import nl.lxtreme.ols.util.DisplayUtils;
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.diagram.laf.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**

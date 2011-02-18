@@ -29,7 +29,7 @@ import javax.swing.plaf.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
-import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.*;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 import nl.lxtreme.ols.util.*;
 
 

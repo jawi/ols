@@ -26,7 +26,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.diagram.settings.*;
-import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.*;
+import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 
 
 /**
