@@ -133,10 +133,10 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    this.tck.setSelectedIndex( aSettings.getInt( "TCK", -1 ) );
-    this.tms.setSelectedIndex( aSettings.getInt( "TMS", -1 ) );
-    this.tdi.setSelectedIndex( aSettings.getInt( "TDI", -1 ) );
-    this.tdo.setSelectedIndex( aSettings.getInt( "TDO", -1 ) );
+    this.tck.setSelectedIndex( aSettings.getInt( "TCK", this.tck.getSelectedIndex() ) );
+    this.tms.setSelectedIndex( aSettings.getInt( "TMS", this.tms.getSelectedIndex() ) );
+    this.tdi.setSelectedIndex( aSettings.getInt( "TDI", this.tdi.getSelectedIndex() ) );
+    this.tdo.setSelectedIndex( aSettings.getInt( "TDO", this.tdo.getSelectedIndex() ) );
   }
 
   /**
@@ -191,8 +191,8 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
   {
     aToolWorker.setTmsIndex( this.tms.getSelectedIndex() );
     aToolWorker.setTckIndex( this.tck.getSelectedIndex() );
-    aToolWorker.setTdoIndex( this.tdo.getSelectedIndex() );
-    aToolWorker.setTdiIndex( this.tdi.getSelectedIndex() );
+    aToolWorker.setTdoIndex( this.tdo.getSelectedIndex() - 1 );
+    aToolWorker.setTdiIndex( this.tdi.getSelectedIndex() - 1 );
   }
 
   /**
@@ -216,7 +216,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
         final JTAGData data = dataSet.get( i );
 
         final String Time = aDataSet.getDisplayTime( data.getStartSampleIndex() );
-        final String Event = data.isEvent() ? data.getEventName() : State( data.getDataValue() );
+        final String Event = data.isEvent() ? data.getEventName() : getState( data.getDataValue() );
         final String tdiDataValue = data.isTdiData() ? Integer.toString( data.getDataValue() ) : null;
         final String tdoDataValue = data.isTdoData() ? Integer.toString( data.getDataValue() ) : null;
 
@@ -345,11 +345,11 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
     }
 
     final String dataChannels[] = new String[33];
+    dataChannels[0] = "Unused";
     for ( int i = 0; i < 32; i++ )
     {
-      dataChannels[i] = new String( "Channel " + i );
+      dataChannels[i + 1] = new String( "Channel " + i );
     }
-    dataChannels[dataChannels.length - 1] = "Unused";
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
@@ -367,12 +367,12 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
 
     settings.add( createRightAlignedLabel( "TDI" ) );
     this.tdi = new JComboBox( dataChannels );
-    this.tdi.setSelectedIndex( 2 );
+    this.tdi.setSelectedIndex( 3 );
     settings.add( this.tdi );
 
     settings.add( createRightAlignedLabel( "TDO" ) );
     this.tdo = new JComboBox( dataChannels );
-    this.tdo.setSelectedIndex( 3 );
+    this.tdo.setSelectedIndex( 4 );
     settings.add( this.tdo );
 
     SpringLayoutUtils.makeEditorGrid( settings, 10, 4 );
@@ -404,6 +404,82 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
   }
 
   /**
+   * @param aValue
+   * @return
+   */
+  private String getState( final int aValue )
+  {
+    if ( aValue == 0 )
+    {
+      return "Test Logic Reset";
+    }
+    else if ( aValue == 1 )
+    {
+      return "Run Test Idle";
+    }
+    else if ( aValue == 2 )
+    {
+      return "Select DR";
+    }
+    else if ( aValue == 3 )
+    {
+      return "Capture DR";
+    }
+    else if ( aValue == 4 )
+    {
+      return "Shift DR";
+    }
+    else if ( aValue == 5 )
+    {
+      return "Exit1 DR";
+    }
+    else if ( aValue == 6 )
+    {
+      return "Pause DR";
+    }
+    else if ( aValue == 7 )
+    {
+      return "Exit2 DR";
+    }
+    else if ( aValue == 8 )
+    {
+      return "Update DR";
+    }
+    else if ( aValue == 9 )
+    {
+      return "Select IR";
+    }
+    else if ( aValue == 10 )
+    {
+      return "Capture IR";
+    }
+    else if ( aValue == 11 )
+    {
+      return "Shift IR";
+    }
+    else if ( aValue == 12 )
+    {
+      return "Exit1 IR";
+    }
+    else if ( aValue == 13 )
+    {
+      return "Pause IR";
+    }
+    else if ( aValue == 14 )
+    {
+      return "Exit2 IR";
+    }
+    else if ( aValue == 15 )
+    {
+      return "Update IR";
+    }
+    else
+    {
+      return "ERROR";
+    }
+  }
+
+  /**
    * Initializes this dialog.
    */
   private void initDialog()
@@ -432,78 +508,6 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
-  }
-
-  private String State( final int value )
-  {
-    if ( value == 0 )
-    {
-      return "Test Logic Reset";
-    }
-    else if ( value == 1 )
-    {
-      return "Run Test Idle";
-    }
-    else if ( value == 2 )
-    {
-      return "Select DR";
-    }
-    else if ( value == 3 )
-    {
-      return "Capture DR";
-    }
-    else if ( value == 4 )
-    {
-      return "Shift DR";
-    }
-    else if ( value == 5 )
-    {
-      return "Exit1 DR";
-    }
-    else if ( value == 6 )
-    {
-      return "Pause DR";
-    }
-    else if ( value == 7 )
-    {
-      return "Exit2 DR";
-    }
-    else if ( value == 8 )
-    {
-      return "Update DR";
-    }
-    else if ( value == 9 )
-    {
-      return "Select IR";
-    }
-    else if ( value == 10 )
-    {
-      return "Capture IR";
-    }
-    else if ( value == 11 )
-    {
-      return "Shift IR";
-    }
-    else if ( value == 12 )
-    {
-      return "Exit1 IR";
-    }
-    else if ( value == 13 )
-    {
-      return "Pause IR";
-    }
-    else if ( value == 14 )
-    {
-      return "Exit2 IR";
-    }
-    else if ( value == 15 )
-    {
-      return "Update IR";
-    }
-    else
-    {
-      return "ERROR";
-    }
   }
 
   /**
@@ -559,7 +563,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
             else
             {
               final int value = data.getDataValue();
-              final String State = State( value );
+              final String State = getState( value );
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );

@@ -29,6 +29,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
@@ -36,6 +37,38 @@ import nl.lxtreme.ols.util.swing.*;
  */
 public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData, StateAnalysisWorker>
 {
+  // INNER TYPES
+
+  /**
+   * Provides a combobox renderer for {@link Edge} values.
+   */
+  static final class EdgeItemRenderer extends EnumItemRenderer<Edge>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final Edge aValue )
+    {
+      String text = super.getDisplayValue( aValue );
+      if ( Edge.FALLING.equals( aValue ) )
+      {
+        text = "Falling";
+      }
+      else if ( Edge.RISING.equals( aValue ) )
+      {
+        text = "Rising";
+      }
+      return text;
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -69,8 +102,8 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    this.edgeSelect.setSelectedIndex( aSettings.getInt( "edge", -1 ) );
-    this.channelSelect.setSelectedIndex( aSettings.getInt( "channel", -1 ) );
+    this.edgeSelect.setSelectedIndex( aSettings.getInt( "edge", this.edgeSelect.getSelectedIndex() ) );
+    this.channelSelect.setSelectedIndex( aSettings.getInt( "channel", this.channelSelect.getSelectedIndex() ) );
   }
 
   /**
@@ -118,7 +151,7 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
   {
     aToolWorker.setNumber( this.channelSelect.getSelectedIndex() );
 
-    if ( "Rising".equals( this.edgeSelect.getSelectedItem() ) )
+    if ( Edge.RISING == this.edgeSelect.getSelectedItem() )
     {
       aToolWorker.setLevel( 0 );
     }
@@ -133,21 +166,24 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
    */
   private JPanel createContentPane()
   {
-    final JPanel pane = new JPanel( new GridLayout( 2, 2, 5, 5 ) );
-    pane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 0 ) );
-
     final String[] channels = new String[32];
     for ( int i = 0; i < channels.length; i++ )
     {
       channels[i] = Integer.toString( i );
     }
     this.channelSelect = new JComboBox( channels );
+    this.channelSelect.setSelectedIndex( 0 );
+
+    this.edgeSelect = new JComboBox( new Edge[] { Edge.RISING, Edge.FALLING } );
+    this.edgeSelect.setSelectedIndex( 0 );
+    this.edgeSelect.setRenderer( new EdgeItemRenderer() );
+
+    final JPanel pane = new JPanel( new GridLayout( 2, 2, 5, 5 ) );
+    pane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 0 ) );
+
     pane.add( new JLabel( "Clock Channel:" ) );
     pane.add( this.channelSelect );
 
-    final String[] edges = { "Rising", "Falling" };
-
-    this.edgeSelect = new JComboBox( edges );
     pane.add( new JLabel( "Clock Edge:" ) );
     pane.add( this.edgeSelect );
     return pane;

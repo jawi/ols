@@ -58,6 +58,36 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   // INNER TYPES
 
   /**
+   * Provides a combobox renderer for {@link BitOrder} enums.
+   */
+  static class BitOrderItemRenderer extends EnumItemRenderer<BitOrder>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.util.swing.component.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final BitOrder aValue )
+    {
+      switch ( aValue )
+      {
+        case LSB_FIRST:
+          return "LSB first";
+        case MSB_FIRST:
+          return "MSB first";
+      }
+      // Strange, we shouldn't be here...
+      LOG.warning( "We should not be here actually! Value = " + aValue );
+      return super.getDisplayValue( aValue );
+    }
+  }
+
+  /**
    * Provides a combobox renderer for SPIMode enums.
    */
   static class SPIModeRenderer extends EnumItemRenderer<SPIMode>
@@ -128,9 +158,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   // VARIABLES
 
-  private Object[] modearray;
-  private String[] bitarray;
-  private String[] orderarray;
   private JComboBox sck;
   private JComboBox miso;
   private JComboBox mosi;
@@ -212,15 +239,15 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    this.reportCS.setSelected( aSettings.getBoolean( "reportCS", true ) );
-    this.honourCS.setSelected( aSettings.getBoolean( "honourCS", false ) );
-    this.sck.setSelectedIndex( aSettings.getInt( "sck", -1 ) );
-    this.miso.setSelectedIndex( aSettings.getInt( "miso", -1 ) );
-    this.mosi.setSelectedIndex( aSettings.getInt( "mosi", -1 ) );
-    this.cs.setSelectedIndex( aSettings.getInt( "cs", -1 ) );
-    this.mode.setSelectedIndex( aSettings.getInt( "mode", -1 ) );
-    this.bits.setSelectedIndex( aSettings.getInt( "bits", -1 ) );
-    this.order.setSelectedIndex( aSettings.getInt( "order", -1 ) );
+    this.reportCS.setSelected( aSettings.getBoolean( "reportCS", this.reportCS.isSelected() ) );
+    this.honourCS.setSelected( aSettings.getBoolean( "honourCS", this.honourCS.isSelected() ) );
+    this.sck.setSelectedIndex( aSettings.getInt( "sck", this.sck.getSelectedIndex() ) );
+    this.miso.setSelectedIndex( aSettings.getInt( "miso", this.miso.getSelectedIndex() ) );
+    this.mosi.setSelectedIndex( aSettings.getInt( "mosi", this.mosi.getSelectedIndex() ) );
+    this.cs.setSelectedIndex( aSettings.getInt( "cs", this.cs.getSelectedIndex() ) );
+    this.mode.setSelectedIndex( aSettings.getInt( "mode", this.mode.getSelectedIndex() ) );
+    this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
+    this.order.setSelectedIndex( aSettings.getInt( "order", this.order.getSelectedIndex() ) );
   }
 
   /**
@@ -298,26 +325,12 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     aToolWorker.setBitCount( Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1 );
     aToolWorker.setCSIndex( this.cs.getSelectedIndex() );
     aToolWorker.setSCKIndex( this.sck.getSelectedIndex() );
-    if ( !"unused".equalsIgnoreCase( ( String )this.miso.getSelectedItem() ) )
-    {
-      aToolWorker.setMisoIndex( this.miso.getSelectedIndex() );
-    }
-    if ( !"unused".equalsIgnoreCase( ( String )this.mosi.getSelectedItem() ) )
-    {
-      aToolWorker.setMosiIndex( this.mosi.getSelectedIndex() );
-    }
-    aToolWorker.setOrder( "MSB first".equals( this.order.getSelectedItem() ) ? BitOrder.MSB_FIRST : BitOrder.LSB_FIRST );
+    aToolWorker.setMisoIndex( this.miso.getSelectedIndex() - 1 );
+    aToolWorker.setMosiIndex( this.mosi.getSelectedIndex() - 1 );
     aToolWorker.setReportCS( this.reportCS.isSelected() );
     aToolWorker.setHonourCS( this.honourCS.isSelected() );
-    final Object modeValue = this.mode.getSelectedItem();
-    if ( modeValue instanceof SPIMode )
-    {
-      aToolWorker.setMode( ( SPIMode )modeValue );
-    }
-    else
-    {
-      aToolWorker.setMode( null );
-    }
+    aToolWorker.setOrder( ( BitOrder )this.order.getSelectedItem() );
+    aToolWorker.setMode( ( SPIMode )this.mode.getSelectedItem() );
   }
 
   /**
@@ -474,11 +487,11 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     }
 
     final String dataChannels[] = new String[33];
+    dataChannels[0] = "Unused";
     for ( int i = 0; i < 32; i++ )
     {
-      dataChannels[i] = new String( "Channel " + i );
+      dataChannels[i + 1] = new String( "Channel " + i );
     }
-    dataChannels[dataChannels.length - 1] = "Unused";
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
@@ -486,41 +499,45 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
     settings.add( createRightAlignedLabel( "SCK" ) );
     this.sck = new JComboBox( channels );
+    this.sck.setSelectedIndex( 0 );
     settings.add( this.sck );
 
     settings.add( createRightAlignedLabel( "MISO" ) );
     this.miso = new JComboBox( dataChannels );
+    this.miso.setSelectedIndex( 2 );
     settings.add( this.miso );
 
     settings.add( createRightAlignedLabel( "MOSI" ) );
     this.mosi = new JComboBox( dataChannels );
+    this.mosi.setSelectedIndex( 3 );
     settings.add( this.mosi );
 
     settings.add( createRightAlignedLabel( "/CS" ) );
     this.cs = new JComboBox( channels );
+    this.cs.setSelectedIndex( 3 );
     settings.add( this.cs );
 
     settings.add( createRightAlignedLabel( "Mode" ) );
-    this.modearray = new Object[] { SPIMode.MODE_0, SPIMode.MODE_1, SPIMode.MODE_2, SPIMode.MODE_3, "Auto-detect" };
-    this.mode = new JComboBox( this.modearray );
+    this.mode = new JComboBox( new Object[] { SPIMode.MODE_0, SPIMode.MODE_1, SPIMode.MODE_2, SPIMode.MODE_3,
+        "Auto-detect" } );
+    this.mode.setSelectedIndex( 2 );
     this.mode.setRenderer( new SPIModeRenderer() );
     settings.add( this.mode );
 
     settings.add( createRightAlignedLabel( "Bits" ) );
-    this.bitarray = new String[13];
-    for ( int i = 0; i < this.bitarray.length; i++ )
+    String[] bitarray = new String[13];
+    for ( int i = 0; i < bitarray.length; i++ )
     {
-      this.bitarray[i] = new String( "" + ( i + 4 ) );
+      bitarray[i] = String.format( "%d", ( i + 4 ) );
     }
-    this.bits = new JComboBox( this.bitarray );
-    this.bits.setSelectedItem( "8" );
+    this.bits = new JComboBox( bitarray );
+    this.bits.setSelectedIndex( 4 );
     settings.add( this.bits );
 
     settings.add( createRightAlignedLabel( "Order" ) );
-    this.orderarray = new String[2];
-    this.orderarray[0] = new String( "MSB first" );
-    this.orderarray[1] = new String( "LSB first" );
-    this.order = new JComboBox( this.orderarray );
+    this.order = new JComboBox( BitOrder.values() );
+    this.order.setSelectedIndex( 0 );
+    this.order.setRenderer( new BitOrderItemRenderer() );
     settings.add( this.order );
 
     settings.add( createRightAlignedLabel( "Show /CS?" ) );
