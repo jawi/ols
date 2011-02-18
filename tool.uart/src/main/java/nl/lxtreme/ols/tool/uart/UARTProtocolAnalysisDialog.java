@@ -42,6 +42,7 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
@@ -53,6 +54,76 @@ import nl.lxtreme.ols.util.swing.*;
  */
 public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>
 {
+  // INNER TYPES
+
+  /**
+   * Provides a combobox renderer for {@link UARTParity} values.
+   */
+  static final class UARTParityItemRenderer extends EnumItemRenderer<UARTParity>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final UARTParity aValue )
+    {
+      String text = super.getDisplayValue( aValue );
+      if ( UARTParity.EVEN.equals( aValue ) )
+      {
+        text = "Even parity";
+      }
+      else if ( UARTParity.NONE.equals( aValue ) )
+      {
+        text = "No parity";
+      }
+      else if ( UARTParity.ODD.equals( aValue ) )
+      {
+        text = "Odd parity";
+      }
+      return text;
+    }
+  }
+
+  /**
+   * Provides a combobox renderer for {@link UARTStopBits} values.
+   */
+  static final class UARTStopBitsItemRenderer extends EnumItemRenderer<UARTStopBits>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final UARTStopBits aValue )
+    {
+      String text = super.getDisplayValue( aValue );
+      if ( UARTStopBits.STOP_1.equals( aValue ) )
+      {
+        text = "1";
+      }
+      else if ( UARTStopBits.STOP_15.equals( aValue ) )
+      {
+        text = "1.5";
+      }
+      else if ( UARTStopBits.STOP_2.equals( aValue ) )
+      {
+        text = "2";
+      }
+      return text;
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -143,18 +214,18 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    this.rxd.setSelectedIndex( aSettings.getInt( "rxd", -1 ) );
-    this.txd.setSelectedIndex( aSettings.getInt( "txd", -1 ) );
-    this.cts.setSelectedIndex( aSettings.getInt( "cts", -1 ) );
-    this.rts.setSelectedIndex( aSettings.getInt( "rts", -1 ) );
-    this.dtr.setSelectedIndex( aSettings.getInt( "dtr", -1 ) );
-    this.dsr.setSelectedIndex( aSettings.getInt( "dsr", -1 ) );
-    this.dcd.setSelectedIndex( aSettings.getInt( "dcd", -1 ) );
-    this.ri.setSelectedIndex( aSettings.getInt( "ri", -1 ) );
-    this.parity.setSelectedIndex( aSettings.getInt( "parity", -1 ) );
-    this.bits.setSelectedIndex( aSettings.getInt( "bits", -1 ) );
-    this.stop.setSelectedIndex( aSettings.getInt( "stop", -1 ) );
-    this.inv.setSelected( aSettings.getBoolean( "inverted", false ) );
+    this.rxd.setSelectedIndex( aSettings.getInt( "rxd", this.rxd.getSelectedIndex() ) );
+    this.txd.setSelectedIndex( aSettings.getInt( "txd", this.txd.getSelectedIndex() ) );
+    this.cts.setSelectedIndex( aSettings.getInt( "cts", this.cts.getSelectedIndex() ) );
+    this.rts.setSelectedIndex( aSettings.getInt( "rts", this.rts.getSelectedIndex() ) );
+    this.dtr.setSelectedIndex( aSettings.getInt( "dtr", this.dtr.getSelectedIndex() ) );
+    this.dsr.setSelectedIndex( aSettings.getInt( "dsr", this.dsr.getSelectedIndex() ) );
+    this.dcd.setSelectedIndex( aSettings.getInt( "dcd", this.dcd.getSelectedIndex() ) );
+    this.ri.setSelectedIndex( aSettings.getInt( "ri", this.ri.getSelectedIndex() ) );
+    this.parity.setSelectedIndex( aSettings.getInt( "parity", this.parity.getSelectedIndex() ) );
+    this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
+    this.stop.setSelectedIndex( aSettings.getInt( "stop", this.stop.getSelectedIndex() ) );
+    this.inv.setSelected( aSettings.getBoolean( "inverted", this.inv.isSelected() ) );
   }
 
   /**
@@ -238,8 +309,8 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
     // Other properties...
     aToolWorker.setInverted( this.inv.isSelected() );
-    aToolWorker.setParity( UARTParity.parse( this.parity.getSelectedItem() ) );
-    aToolWorker.setStopBits( UARTStopBits.parse( this.stop.getSelectedItem() ) );
+    aToolWorker.setParity( ( UARTParity )this.parity.getSelectedItem() );
+    aToolWorker.setStopBits( ( UARTStopBits )this.stop.getSelectedItem() );
     aToolWorker.setBitCount( NumberUtils.smartParseInt( ( String )this.bits.getSelectedItem(), 8 ) );
   }
 
@@ -443,63 +514,68 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
     settings.add( createRightAlignedLabel( "RxD" ) );
     this.rxd = new JComboBox( channels );
+    this.rxd.setSelectedIndex( 0 );
     settings.add( this.rxd );
 
     settings.add( createRightAlignedLabel( "TxD" ) );
     this.txd = new JComboBox( channels );
+    this.txd.setSelectedIndex( 0 );
     settings.add( this.txd );
 
     settings.add( createRightAlignedLabel( "CTS" ) );
     this.cts = new JComboBox( channels );
-    this.cts.setSelectedItem( "unused" );
+    this.cts.setSelectedIndex( 0 );
     settings.add( this.cts );
 
     settings.add( createRightAlignedLabel( "RTS" ) );
     this.rts = new JComboBox( channels );
-    this.rts.setSelectedItem( "unused" );
+    this.rts.setSelectedIndex( 0 );
     settings.add( this.rts );
 
     settings.add( createRightAlignedLabel( "DTR" ) );
     this.dtr = new JComboBox( channels );
-    this.dtr.setSelectedItem( "unused" );
+    this.dtr.setSelectedIndex( 0 );
     settings.add( this.dtr );
 
     settings.add( createRightAlignedLabel( "DSR" ) );
     this.dsr = new JComboBox( channels );
-    this.dsr.setSelectedItem( "unused" );
+    this.dsr.setSelectedIndex( 0 );
     settings.add( this.dsr );
 
     settings.add( createRightAlignedLabel( "DCD" ) );
     this.dcd = new JComboBox( channels );
-    this.dcd.setSelectedItem( "unused" );
+    this.dcd.setSelectedIndex( 0 );
     settings.add( this.dcd );
 
     settings.add( createRightAlignedLabel( "RI" ) );
     this.ri = new JComboBox( channels );
-    this.ri.setSelectedItem( "unused" );
+    this.ri.setSelectedIndex( 0 );
     settings.add( this.ri );
 
     settings.add( createRightAlignedLabel( "Parity" ) );
-    final String[] parityarray = new String[] { "None", "Odd", "Even" };
-    this.parity = new JComboBox( parityarray );
+    this.parity = new JComboBox( UARTParity.values() );
+    this.parity.setSelectedIndex( 0 );
+    this.parity.setRenderer( new UARTParityItemRenderer() );
     settings.add( this.parity );
 
     settings.add( createRightAlignedLabel( "Bits" ) );
     final String[] bitarray = new String[4];
     for ( int i = 0; i < bitarray.length; i++ )
     {
-      bitarray[i] = new String( "" + ( i + 5 ) );
+      bitarray[i] = String.format( "%d", ( i + 5 ) );
     }
     this.bits = new JComboBox( bitarray );
-    this.bits.setSelectedItem( "8" );
+    this.bits.setSelectedIndex( 3 );
     settings.add( this.bits );
 
-    settings.add( createRightAlignedLabel( "Stopbit" ) );
-    final String[] stoparray = new String[] { "1", "1.5", "2" };
-    this.stop = new JComboBox( stoparray );
+    settings.add( createRightAlignedLabel( "Stopbits" ) );
+    this.stop = new JComboBox( UARTStopBits.values() );
+    this.stop.setSelectedIndex( 0 );
+    this.stop.setRenderer( new UARTStopBitsItemRenderer() );
     settings.add( this.stop );
 
     this.inv = new JCheckBox();
+    this.inv.setSelected( false );
     settings.add( createRightAlignedLabel( "Invert?" ) );
     settings.add( this.inv );
 

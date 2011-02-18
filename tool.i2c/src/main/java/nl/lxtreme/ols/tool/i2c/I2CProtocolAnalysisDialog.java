@@ -139,13 +139,13 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    this.lineA.setSelectedIndex( aSettings.getInt( "lineA", -1 ) );
-    this.lineB.setSelectedIndex( aSettings.getInt( "lineB", -1 ) );
+    this.lineA.setSelectedIndex( aSettings.getInt( "lineA", this.lineA.getSelectedIndex() ) );
+    this.lineB.setSelectedIndex( aSettings.getInt( "lineB", this.lineB.getSelectedIndex() ) );
 
-    this.detectSTART.setSelected( aSettings.getBoolean( "detectStart", true ) );
-    this.detectSTOP.setSelected( aSettings.getBoolean( "detectStop", true ) );
-    this.detectNACK.setSelected( aSettings.getBoolean( "detectNack", true ) );
-    this.detectACK.setSelected( aSettings.getBoolean( "detectAck", true ) );
+    this.detectSTART.setSelected( aSettings.getBoolean( "detectStart", this.detectSTART.isSelected() ) );
+    this.detectSTOP.setSelected( aSettings.getBoolean( "detectStop", this.detectSTOP.isSelected() ) );
+    this.detectNACK.setSelected( aSettings.getBoolean( "detectNack", this.detectNACK.isSelected() ) );
+    this.detectACK.setSelected( aSettings.getBoolean( "detectAck", this.detectACK.isSelected() ) );
   }
 
   /**
@@ -448,18 +448,22 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     panel.add( this.detectSDA_SCL );
 
     this.detectSTART = new JCheckBox();
+    this.detectSTART.setSelected( true );
     panel.add( createRightAlignedLabel( "Show START?" ) );
     panel.add( this.detectSTART );
 
     this.detectSTOP = new JCheckBox();
+    this.detectSTOP.setSelected( true );
     panel.add( createRightAlignedLabel( "Show STOP?" ) );
     panel.add( this.detectSTOP );
 
     this.detectACK = new JCheckBox();
+    this.detectACK.setSelected( true );
     panel.add( createRightAlignedLabel( "Show ACK?" ) );
     panel.add( this.detectACK );
 
     this.detectNACK = new JCheckBox();
+    this.detectNACK.setSelected( true );
     panel.add( createRightAlignedLabel( "Show NACK?" ) );
     panel.add( this.detectNACK );
 
