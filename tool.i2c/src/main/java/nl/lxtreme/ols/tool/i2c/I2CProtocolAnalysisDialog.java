@@ -47,7 +47,7 @@ import nl.lxtreme.ols.util.swing.*;
 
 /**
  * Provides a main dialog for the I2C analyser.
- *
+ * 
  * @author Frank Kunz
  * @author J.W. Janssen
  */
@@ -139,13 +139,13 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.lineA, aSettings.getInt( "lineA", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.lineB, aSettings.getInt( "lineB", -1 ) );
+    this.lineA.setSelectedIndex( aSettings.getInt( "lineA", -1 ) );
+    this.lineB.setSelectedIndex( aSettings.getInt( "lineB", -1 ) );
 
-    SwingComponentUtils.setSelected( this.detectSTART, Boolean.valueOf( aSettings.getBoolean( "detectStart", true ) ) );
-    SwingComponentUtils.setSelected( this.detectSTOP, Boolean.valueOf( aSettings.getBoolean( "detectStop", true ) ) );
-    SwingComponentUtils.setSelected( this.detectNACK, Boolean.valueOf( aSettings.getBoolean( "detectNack", true ) ) );
-    SwingComponentUtils.setSelected( this.detectACK, Boolean.valueOf( aSettings.getBoolean( "detectAck", true ) ) );
+    this.detectSTART.setSelected( aSettings.getBoolean( "detectStart", true ) );
+    this.detectSTOP.setSelected( aSettings.getBoolean( "detectStop", true ) );
+    this.detectNACK.setSelected( aSettings.getBoolean( "detectNack", true ) );
+    this.detectACK.setSelected( aSettings.getBoolean( "detectAck", true ) );
   }
 
   /**
@@ -197,7 +197,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
   /**
    * set the controls of the dialog enabled/disabled
-   *
+   * 
    * @param aEnabled
    *          status of the controls
    */
@@ -323,7 +323,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
   /**
    * Creates the HTML template for exports to HTML.
-   *
+   * 
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -478,7 +478,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
   /**
    * Returns an "empty" HTML page.
-   *
+   * 
    * @return an empty HTML page string, never <code>null</code>.
    */
   private String getEmptyHtmlPage()
@@ -545,7 +545,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
 
   /**
    * generate a HTML page
-   *
+   * 
    * @param aEmpty
    *          if this is true an empty output is generated
    * @return String with HTML data

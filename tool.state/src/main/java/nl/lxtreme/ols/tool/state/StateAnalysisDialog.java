@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.state;
 
 
 import java.awt.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
@@ -68,8 +69,8 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.edgeSelect, aSettings.getInt( "edge", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.channelSelect, aSettings.getInt( "channel", -1 ) );
+    this.edgeSelect.setSelectedIndex( aSettings.getInt( "edge", -1 ) );
+    this.channelSelect.setSelectedIndex( aSettings.getInt( "channel", -1 ) );
   }
 
   /**

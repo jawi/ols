@@ -46,7 +46,7 @@ import nl.lxtreme.ols.util.swing.*;
 
 /**
  * The Dialog Class
- *
+ * 
  * @author Frank Kunz The dialog class draws the basic dialog with a grid
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
@@ -143,18 +143,18 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.rxd, aSettings.getInt( "rxd", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.txd, aSettings.getInt( "txd", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.cts, aSettings.getInt( "cts", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.rts, aSettings.getInt( "rts", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.dtr, aSettings.getInt( "dtr", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.dsr, aSettings.getInt( "dsr", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.dcd, aSettings.getInt( "dcd", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.ri, aSettings.getInt( "ri", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.parity, aSettings.getInt( "parity", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.bits, aSettings.getInt( "bits", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.stop, aSettings.getInt( "stop", -1 ) );
-    SwingComponentUtils.setSelected( this.inv, Boolean.valueOf( aSettings.getBoolean( "inverted", false ) ) );
+    this.rxd.setSelectedIndex( aSettings.getInt( "rxd", -1 ) );
+    this.txd.setSelectedIndex( aSettings.getInt( "txd", -1 ) );
+    this.cts.setSelectedIndex( aSettings.getInt( "cts", -1 ) );
+    this.rts.setSelectedIndex( aSettings.getInt( "rts", -1 ) );
+    this.dtr.setSelectedIndex( aSettings.getInt( "dtr", -1 ) );
+    this.dsr.setSelectedIndex( aSettings.getInt( "dsr", -1 ) );
+    this.dcd.setSelectedIndex( aSettings.getInt( "dcd", -1 ) );
+    this.ri.setSelectedIndex( aSettings.getInt( "ri", -1 ) );
+    this.parity.setSelectedIndex( aSettings.getInt( "parity", -1 ) );
+    this.bits.setSelectedIndex( aSettings.getInt( "bits", -1 ) );
+    this.stop.setSelectedIndex( aSettings.getInt( "stop", -1 ) );
+    this.inv.setSelected( aSettings.getBoolean( "inverted", false ) );
   }
 
   /**
@@ -195,7 +195,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * set the controls of the dialog enabled/disabled
-   *
+   * 
    * @param aEnable
    *          status of the controls
    */
@@ -245,7 +245,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * exports the data to a CSV file
-   *
+   * 
    * @param aFile
    *          File object
    */
@@ -317,7 +317,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * stores the data to a HTML file
-   *
+   * 
    * @param aFile
    *          file object
    */
@@ -340,7 +340,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * Creates the HTML template for exports to HTML.
-   *
+   * 
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -510,7 +510,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * generate a HTML page
-   *
+   * 
    * @param empty
    *          if this is true an empty output is generated
    * @return String with HTML data
@@ -575,7 +575,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
 
   /**
    * generate a HTML page
-   *
+   * 
    * @param empty
    *          if this is true an empty output is generated
    * @return String with HTML data
