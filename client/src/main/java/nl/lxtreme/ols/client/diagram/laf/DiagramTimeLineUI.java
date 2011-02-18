@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.diagram.laf;
 
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.*;
 

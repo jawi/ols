@@ -212,33 +212,3 @@ that multiple (exporter) classes can be defined by separating them with comma's,
 '''NOTE:''' both mentioned lines are needed! If one of them is omitted from the resulting JAR file, it 
 will be considered an invalid extension and the results are not (well) defined!
 
-
-== To do ==
-
-# support easy/easier upgrade procedure;
-# VCD dump is ignoring the selected number of channels and always dumps all 32 channels. Also the VCD format allows to list for each sample only the channels that have change value; instead they are all listed (reported by zelea2);
-# With RLE enabled, the frequency appears to be changing with different sample rates (reported by nickandrew);
-# support OLS-device profiles for BP, regular OLS and SUMP;
-# make it easier to jump to another transition in a channel (in case you're zoomed in really close; jack.gassett);
-# make the "unused" option default in the UART analyzer, and place it on top (reported by miro);
-# make it possible to define any sampling speed (to support external clocks; reported by miro);
-# support zoom-window, and zoom-region functionality (reported by frankalicious);
-# Make it easier to remove set cursors (reported by pppd);
-# Make it possible to edit cursor labels (reported by pppd);
-# Allow cursors to snap to signal edges (reported by pppd);
-# Allow selecting two cursors and show timing information (reported by pppd);
-# "Mask" out unused channels to hide transients and ringing on unused signals (reported by miro);
-# real time acquisition. for e.g. trough named pipe or other resource (reported by arhi);
-# client side triggers for the real time acquisition stream (reported by arhi);
-# make the tools aware of the device capabilities (5 channels for BP iso 32, etc.);
-# show timing measurements between edges, or from rising to rising or falling to falling edges;
-# configurable colors would be nice, so that the user can set them to match the probes;
-# integrate analysis reports & annotations into one and make it configurable which one is shown/used;
-# make the annotated data configurable regarding the displayed text and colors;
-# make distinction between decoding tools and other tools;
-# provide easier access to analysis tools;
-# analysis protocol results synopsis (client: <bla bla>, master: <bla bla>, client ...);
-# support reordering of channels with DnD;
-# support overlay of signals, to view differences between two, or more signal captures;
-# add option to auto-center captured signal on trigger moment;
-

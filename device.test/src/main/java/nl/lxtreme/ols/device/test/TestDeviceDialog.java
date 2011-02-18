@@ -115,14 +115,14 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.channelsCombo, aSettings.getInt( "channels", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.dataFunctionCombo, aSettings.getInt( "dataFunction", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.dataLengthCombo, aSettings.getInt( "dataLength", -1 ) );
+    this.channelsCombo.setSelectedIndex( aSettings.getInt( "channels", -1 ) );
+    this.dataFunctionCombo.setSelectedIndex( aSettings.getInt( "dataFunction", -1 ) );
+    this.dataLengthCombo.setSelectedIndex( aSettings.getInt( "dataLength", -1 ) );
   }
 
   /**
    * Shows this dialog on screen.
-   *
+   * 
    * @return <code>true</code> if this dialog is confirmed, <code>false</code>
    *         if it was cancelled.
    */

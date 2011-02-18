@@ -26,6 +26,8 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.util.*;
+
 
 /**
  * Provides a Swing {@link Action}-factory for some commonly used actions.
@@ -61,14 +63,23 @@ public final class StandardActionFactory
     // CONSTRUCTORS
 
     /**
-     * 
+     * Creates a new {@link CloseAction} instance.
      */
     public CloseAction()
     {
       super( "Close" );
       putValue( SHORT_DESCRIPTION, "Closes this dialog" );
 
-      putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ) );
+      if ( HostUtils.isMacOS() )
+      {
+        // On Mac OS, the default Window-close accelerator is CMD + W
+        putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ) );
+      }
+      else
+      {
+        // On Windows/Linux platforms it is ESCape...
+        putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke( KeyEvent.VK_ESCAPE, 0 ) );
+      }
     }
 
     // METHODS
@@ -150,7 +161,8 @@ public final class StandardActionFactory
   /**
    * Creates a new close action instance.
    * <p>
-   * The close action will have a default shortcut key of CTRL/CMD + W.
+   * The close action will have a default shortcut key of CTRL/CMD + W on Mac OS
+   * platforms, and ESC on other platforms.
    * </p>
    * 
    * @return a close action instance, never <code>null</code>.
