@@ -161,7 +161,8 @@ public final class StandardActionFactory
   /**
    * Creates a new close action instance.
    * <p>
-   * The close action will have a default shortcut key of CTRL/CMD + W.
+   * The close action will have a default shortcut key of CTRL/CMD + W on Mac OS
+   * platforms, and ESC on other platforms.
    * </p>
    * 
    * @return a close action instance, never <code>null</code>.

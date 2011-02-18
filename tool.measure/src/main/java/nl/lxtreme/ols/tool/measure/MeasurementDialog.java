@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.measure;
 
 
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
@@ -29,13 +30,13 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.swing.*;
-import javax.swing.SwingWorker.*;
+import javax.swing.SwingWorker.StateValue;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
-import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureWorker.*;
+import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureWorker.ClockStats;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -212,7 +213,7 @@ public class MeasurementDialog extends BaseToolDialog
 
     /**
      * Sets the channel on which the clock-frequency should be determined.
-     *
+     * 
      * @param aChannel
      */
     public void setChannel( final int aChannel )
@@ -271,7 +272,7 @@ public class MeasurementDialog extends BaseToolDialog
 
   /**
    * Creates a new MeasurementDialog instance (non modal).
-   *
+   * 
    * @param aOwner
    *          the owning window;
    * @param aTitle
@@ -317,9 +318,9 @@ public class MeasurementDialog extends BaseToolDialog
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.cursorA, aSettings.getInt( "selectedCursorA", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.cursorB, aSettings.getInt( "selectedCursorB", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.clockChannelChooser, aSettings.getInt( "selectedClockChannel", -1 ) );
+    this.cursorA.setSelectedIndex( aSettings.getInt( "selectedCursorA", -1 ) );
+    this.cursorB.setSelectedIndex( aSettings.getInt( "selectedCursorB", -1 ) );
+    this.clockChannelChooser.setSelectedIndex( aSettings.getInt( "selectedClockChannel", -1 ) );
   }
 
   /**
@@ -418,7 +419,7 @@ public class MeasurementDialog extends BaseToolDialog
    * <p>
    * Should be called from the EDT!
    * </p>
-   *
+   * 
    * @return a dialog panel, never <code>null</code>.
    */
   private JComponent createDialogContent()
@@ -443,7 +444,7 @@ public class MeasurementDialog extends BaseToolDialog
 
   /**
    * Creates the pane on which the measurement results are shown.
-   *
+   * 
    * @return a measurement panel, never <code>null</code>.
    */
   private Component createMeasurementPane( final String[] aCursorNames )
@@ -516,7 +517,7 @@ public class MeasurementDialog extends BaseToolDialog
 
   /**
    * Returns the time of a cursor with a given index as display value.
-   *
+   * 
    * @param aIndex
    *          the cursor index to get the time for, >= 0 && < 10.
    * @return a display value for the cursor time, can be "not set" if the cursor

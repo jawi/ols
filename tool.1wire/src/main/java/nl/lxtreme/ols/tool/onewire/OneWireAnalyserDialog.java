@@ -121,8 +121,8 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelectedIndex( this.owMode, aSettings.getInt( "owMode", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.owLine, aSettings.getInt( "owLine", -1 ) );
+    this.owMode.setSelectedIndex( aSettings.getInt( "owMode", -1 ) );
+    this.owLine.setSelectedIndex( aSettings.getInt( "owLine", -1 ) );
   }
 
   /**
@@ -144,7 +144,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
 
   /**
    * set the controls of the dialog enabled/disabled
-   *
+   * 
    * @param aEnabled
    *          status of the controls
    */
@@ -180,7 +180,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
 
   /**
    * Creates the HTML template for exports to HTML.
-   *
+   * 
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -251,7 +251,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
 
   /**
    * Creates the settings pane.
-   *
+   * 
    * @return a settings pane, never <code>null</code>.
    */
   private JComponent createSettingsPane()
@@ -285,7 +285,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
 
   /**
    * Returns an "empty" HTML page.
-   *
+   * 
    * @return an empty HTML page string, never <code>null</code>.
    */
   private String getEmptyHtmlPage()
@@ -352,7 +352,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
 
   /**
    * generate a HTML page
-   *
+   * 
    * @param aEmpty
    *          if this is true an empty output is generated
    * @return String with HTML data

@@ -48,7 +48,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 
 /**
  * The Dialog Class
- *
+ * 
  * @author Frank Kunz The dialog class draws the basic dialog with a grid
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
@@ -212,15 +212,15 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    SwingComponentUtils.setSelected( this.reportCS, Boolean.valueOf( aSettings.getBoolean( "reportCS", true ) ) );
-    SwingComponentUtils.setSelected( this.honourCS, Boolean.valueOf( aSettings.getBoolean( "honourCS", false ) ) );
-    SwingComponentUtils.setSelectedIndex( this.sck, aSettings.getInt( "sck", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.miso, aSettings.getInt( "miso", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.mosi, aSettings.getInt( "mosi", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.cs, aSettings.getInt( "cs", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.mode, aSettings.getInt( "mode", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.bits, aSettings.getInt( "bits", -1 ) );
-    SwingComponentUtils.setSelectedIndex( this.order, aSettings.getInt( "order", -1 ) );
+    this.reportCS.setSelected( aSettings.getBoolean( "reportCS", true ) );
+    this.honourCS.setSelected( aSettings.getBoolean( "honourCS", false ) );
+    this.sck.setSelectedIndex( aSettings.getInt( "sck", -1 ) );
+    this.miso.setSelectedIndex( aSettings.getInt( "miso", -1 ) );
+    this.mosi.setSelectedIndex( aSettings.getInt( "mosi", -1 ) );
+    this.cs.setSelectedIndex( aSettings.getInt( "cs", -1 ) );
+    this.mode.setSelectedIndex( aSettings.getInt( "mode", -1 ) );
+    this.bits.setSelectedIndex( aSettings.getInt( "bits", -1 ) );
+    this.order.setSelectedIndex( aSettings.getInt( "order", -1 ) );
   }
 
   /**
@@ -241,7 +241,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * Sets the auto detected SPI mode to the given value.
-   *
+   * 
    * @param aMode
    *          the detected SPI mode, cannot be <code>null</code>.
    */
@@ -269,7 +269,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * set the controls of the dialog enabled/disabled
-   *
+   * 
    * @param aEnable
    *          status of the controls
    */
@@ -322,7 +322,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * exports the table data to a CSV file
-   *
+   * 
    * @param aFile
    *          File object
    */
@@ -363,7 +363,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * stores the data to a HTML file
-   *
+   * 
    * @param aFile
    *          file object
    */
@@ -386,7 +386,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * Creates the HTML template for exports to HTML.
-   *
+   * 
    * @param aExporter
    *          the HTML exporter instance to use, cannot be <code>null</code>.
    * @return a HTML exporter filled with the template, never <code>null</code>.
@@ -542,7 +542,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * Generates an empty HTML page.
-   *
+   * 
    * @return String with HTML data.
    */
   private String getEmptyHtmlPage()
@@ -596,7 +596,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
 
   /**
    * generate a HTML page
-   *
+   * 
    * @param aDataSet
    *          the data set to create the HTML page for, cannot be
    *          <code>null</code>.
