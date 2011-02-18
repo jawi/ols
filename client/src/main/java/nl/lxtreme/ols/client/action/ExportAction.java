@@ -21,21 +21,17 @@
 package nl.lxtreme.ols.client.action;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.awt.event.*;
+import java.io.*;
+import java.util.logging.*;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.*;
 
-import nl.lxtreme.ols.api.data.DataContainer;
-import nl.lxtreme.ols.api.data.export.Exporter;
-import nl.lxtreme.ols.client.ClientController;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.export.*;
+import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**

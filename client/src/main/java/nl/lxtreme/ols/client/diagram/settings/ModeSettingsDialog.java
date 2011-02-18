@@ -28,7 +28,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 
 /**

@@ -22,12 +22,13 @@ package nl.lxtreme.ols.util.swing;
 
 
 import java.awt.*;
-import java.io.File;
+import java.io.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.util.HostUtils;
-import org.osgi.service.prefs.Preferences;
+import nl.lxtreme.ols.util.*;
+
+import org.osgi.service.prefs.*;
 
 
 /**
@@ -97,25 +98,28 @@ public final class SwingComponentUtils
   /**
    * Creates a button pane in which the given buttons are neatly aligned with
    * proper spacings.
-   *
-   * @param aButtons the buttons to add to the created button pane, will be added
-   *                 in the given order.
+   * 
+   * @param aButtons
+   *          the buttons to add to the created button pane, will be added in
+   *          the given order.
    * @return the button pane, never <code>null</code>.
    */
   public static JComponent createButtonPane( final JButton... aButtons )
   {
     if ( ( aButtons == null ) || ( aButtons.length < 1 ) )
+    {
       throw new IllegalArgumentException( "Need at least one button!" );
+    }
 
     final JPanel buttonPane = new JPanel();
     buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
     buttonPane.setBorder( BorderFactory.createEmptyBorder( BUTTONS_PADDING_TOP, BUTTONS_PADDING_LEFT,
-            BUTTONS_PADDING_BOTTOM, BUTTONS_PADDING_RIGHT ) );
+        BUTTONS_PADDING_BOTTOM, BUTTONS_PADDING_RIGHT ) );
 
     buttonPane.add( Box.createHorizontalGlue() );
 
-    // we want equally sized buttons, so we are recording preferred sizes while adding the buttons
-    // and set them to the maximum afterwards...
+    // we want equally sized buttons, so we are recording preferred sizes while
+    // adding the buttons and set them to the maximum afterwards...
     int width = 1;
     int height = 1;
 
@@ -132,9 +136,12 @@ public final class SwingComponentUtils
 
     final Dimension newDims = new Dimension( width, height );
 
-    // everything added; let's set all sizes (aDefaultButton's may be set again; no harm)
+    // everything added; let's set all sizes (aDefaultButton's may be set again;
+    // no harm)
     for ( final JButton button : aButtons )
+    {
       button.setPreferredSize( newDims );
+    }
 
     return buttonPane;
   }
@@ -657,14 +664,17 @@ public final class SwingComponentUtils
   /**
    * Sets up the given dialog's content pane by setting its border to provide a
    * good default spacer, and setting the content pane to the given components.
-   *
-   * @param aDialog          the dialog to setup, cannot be <code>null</code>;
-   * @param aCenterComponent the component that should appear at the center of the dialog;
-   * @param aButtonPane      the component that should appear at the bottom of the dialog
-   *                         (typically the buttons).
+   * 
+   * @param aDialog
+   *          the dialog to setup, cannot be <code>null</code>;
+   * @param aCenterComponent
+   *          the component that should appear at the center of the dialog;
+   * @param aButtonPane
+   *          the component that should appear at the bottom of the dialog
+   *          (typically the buttons).
    */
   public static void setupDialogContentPane( final JDialog aDialog, //
-                                             final Component aCenterComponent, final Component aButtonPane )
+      final Component aCenterComponent, final Component aButtonPane )
   {
     setupDialogContentPane( aDialog, aCenterComponent, aButtonPane, null );
   }
@@ -672,19 +682,23 @@ public final class SwingComponentUtils
   /**
    * Sets up the given dialog's content pane by setting its border to provide a
    * good default spacer, and setting the content pane to the given components.
-   *
-   * @param aDialog          the dialog to setup, cannot be <code>null</code>;
-   * @param aCenterComponent the component that should appear at the center of the dialog;
-   * @param aButtonPane      the component that should appear at the bottom of the dialog
-   * @param defaultButton    the default button for this dialog; can be null for "none".
+   * 
+   * @param aDialog
+   *          the dialog to setup, cannot be <code>null</code>;
+   * @param aCenterComponent
+   *          the component that should appear at the center of the dialog;
+   * @param aButtonPane
+   *          the component that should appear at the bottom of the dialog
+   * @param defaultButton
+   *          the default button for this dialog; can be null for "none".
    * @see javax.swing.JRootPane#setDefaultButton(javax.swing.JButton)
    */
-  public static void setupDialogContentPane( final JDialog aDialog,
-                                             final Component aCenterComponent, final Component aButtonPane, JButton defaultButton )
+  public static void setupDialogContentPane( final JDialog aDialog, final Component aCenterComponent,
+      final Component aButtonPane, final JButton defaultButton )
   {
     final JPanel contentPane = new JPanel( new BorderLayout() );
     contentPane.setBorder( BorderFactory.createEmptyBorder( DIALOG_PADDING, DIALOG_PADDING, //
-            DIALOG_PADDING, DIALOG_PADDING ) );
+        DIALOG_PADDING, DIALOG_PADDING ) );
 
     contentPane.add( aCenterComponent, BorderLayout.CENTER );
     contentPane.add( aButtonPane, BorderLayout.PAGE_END );
