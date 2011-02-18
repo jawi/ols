@@ -22,20 +22,17 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.awt.event.*;
+import java.io.*;
+import java.util.logging.*;
 
+import javax.swing.filechooser.*;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
-import nl.lxtreme.ols.client.ClientController;
-import nl.lxtreme.ols.util.HostUtils;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
-import nl.lxtreme.ols.util.swing.component.JErrorDialog;
+import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**

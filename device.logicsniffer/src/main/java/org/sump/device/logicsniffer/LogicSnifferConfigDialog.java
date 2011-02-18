@@ -21,30 +21,24 @@
 package org.sump.device.logicsniffer;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
+import javax.swing.event.*;
+import javax.swing.plaf.basic.*;
 
-import nl.lxtreme.ols.api.Configurable;
-import nl.lxtreme.ols.api.UserSettings;
-import nl.lxtreme.ols.util.DisplayUtils;
-import nl.lxtreme.ols.util.NumberUtils;
+import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.UnitDefinition;
-import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
-import nl.lxtreme.ols.util.swing.StandardActionFactory;
+import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
-import nl.lxtreme.ols.util.swing.component.JLazyComboBox;
-import nl.lxtreme.rxtx.CommPortUtils;
+import nl.lxtreme.ols.util.swing.component.*;
+import nl.lxtreme.rxtx.*;
+
 import org.sump.device.logicsniffer.LogicSnifferConfig.ClockSource;
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
 
 
 /**
@@ -240,7 +234,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
   /**
    * Creates a new LogicSnifferConfigDialog instance.
-   *
+   * 
    * @param aParent
    *          the parent window of this dialog;
    * @param aConfig
@@ -338,7 +332,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * Properly closes the dialog. This method makes sure timer and worker thread
    * are stopped before the dialog is closed.
-   *
+   * 
    * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
    */
   public final void close()
@@ -355,19 +349,22 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.listening = false;
     try
     {
-      SwingComponentUtils.setSelectedItem( this.portSelect, aSettings.get( "port", null ) );
-      SwingComponentUtils.setSelectedIndex( this.portRateSelect, aSettings.getInt( "portRate", -1 ) );
-      SwingComponentUtils.setSelectedIndex( this.sourceSelect, aSettings.getInt( "source", -1 ) );
-      SwingComponentUtils.setSelectedIndex( this.numberSchemeSelect, aSettings.getInt( "numberScheme", -1 ) );
-      SwingComponentUtils.setSelectedIndex( this.speedSelect, aSettings.getInt( "speed", -1 ) );
-      SwingComponentUtils.setSelectedIndex( this.sizeSelect, aSettings.getInt( "size", -1 ) );
-      SwingComponentUtils
-          .setSelected( this.maxSampleSize, Boolean.valueOf( aSettings.getBoolean( "autosize", false ) ) );
+      final String preferredPortName = aSettings.get( "port", null );
+      if ( ( preferredPortName != null ) && !"null".equals( preferredPortName ) )
+      {
+        this.portSelect.setSelectedItem( preferredPortName );
+      }
+      this.portRateSelect.setSelectedIndex( aSettings.getInt( "portRate", -1 ) );
+      this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", -1 ) );
+      this.numberSchemeSelect.setSelectedIndex( aSettings.getInt( "numberScheme", -1 ) );
+      this.speedSelect.setSelectedIndex( aSettings.getInt( "speed", -1 ) );
+      this.sizeSelect.setSelectedIndex( aSettings.getInt( "size", -1 ) );
+      this.maxSampleSize.setSelected( aSettings.getBoolean( "autosize", false ) );
       this.ratioSlider.setValue( aSettings.getInt( "ratio", TriggerRatioChangeListener.DEFAULT_RATIO ) );
-      SwingComponentUtils.setSelected( this.filterEnable, Boolean.valueOf( aSettings.getBoolean( "filter", false ) ) );
-      SwingComponentUtils.setSelected( this.rleEnable, Boolean.valueOf( aSettings.getBoolean( "rle", false ) ) );
-      SwingComponentUtils.setSelected( this.triggerEnable, Boolean.valueOf( aSettings.getBoolean( "trigger", false ) ) );
-      SwingComponentUtils.setSelectedIndex( this.triggerTypeSelect, aSettings.getInt( "triggerType", -1 ) );
+      this.filterEnable.setSelected( aSettings.getBoolean( "filter", false ) );
+      this.rleEnable.setSelected( aSettings.getBoolean( "rle", false ) );
+      this.triggerEnable.setSelected( aSettings.getBoolean( "trigger", false ) );
+      this.triggerTypeSelect.setSelectedIndex( aSettings.getInt( "triggerType", -1 ) );
 
       for ( int stage = 0; stage < this.triggerStages; stage++ )
       {
@@ -375,30 +372,29 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
         this.triggerDelay[stage].setText( aSettings.get( prefix + ".delay", "" ) );
 
-        SwingComponentUtils.setSelectedIndex( this.triggerLevel[stage], aSettings.getInt( prefix + ".level", -1 ) );
-        SwingComponentUtils.setSelectedIndex( this.triggerMode[stage], aSettings.getInt( prefix + ".mode", -1 ) );
-        SwingComponentUtils.setSelectedIndex( this.triggerChannel[stage], aSettings.getInt( prefix + ".channel", -1 ) );
+        this.triggerLevel[stage].setSelectedIndex( aSettings.getInt( prefix + ".level", -1 ) );
+        this.triggerMode[stage].setSelectedIndex( aSettings.getInt( prefix + ".mode", -1 ) );
+        this.triggerChannel[stage].setSelectedIndex( aSettings.getInt( prefix + ".channel", -1 ) );
 
         final String mask = aSettings.get( prefix + ".mask", "" );
         for ( int i = 0; ( i < 32 ) && ( i < mask.length() ); i++ )
         {
-          SwingComponentUtils.setSelected( this.triggerMask[stage][i], Boolean.valueOf( mask.charAt( i ) == '1' ) );
+          this.triggerMask[stage][i].setSelected( mask.charAt( i ) == '1' );
         }
 
         final String value = aSettings.get( prefix + ".value", "" );
         for ( int i = 0; ( i < 32 ) && ( i < value.length() ); i++ )
         {
-          SwingComponentUtils.setSelected( this.triggerValue[stage][i], Boolean.valueOf( value.charAt( i ) == '1' ) );
+          this.triggerValue[stage][i].setSelected( value.charAt( i ) == '1' );
         }
 
-        SwingComponentUtils.setSelected( this.triggerStart[stage],
-            Boolean.valueOf( aSettings.getBoolean( prefix + ".startCapture", false ) ) );
+        this.triggerStart[stage].setSelected( aSettings.getBoolean( prefix + ".startCapture", false ) );
       }
 
       final String group = aSettings.get( "channelGroup", "" );
       for ( int i = 0; ( i < 4 ) && ( i < group.length() ); i++ )
       {
-        SwingComponentUtils.setSelected( this.channelGroup[i], Boolean.valueOf( group.charAt( i ) == '1' ) );
+        this.channelGroup[i].setSelected( group.charAt( i ) == '1' );
       }
 
       updateConfig();
@@ -483,7 +479,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
   /**
    * Updates the controls to a given device type.
-   *
+   * 
    * @param aType
    *          the device type to update the controls for, cannot be
    *          <code>null</code>.
@@ -522,7 +518,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
   /**
    * Creates the "acquisition settings" pane.
-   *
+   * 
    * @return a panel, never <code>null</code>.
    */
   private JPanel createAcquisitionSettingsPane()
@@ -571,7 +567,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
   /**
    * Creates the "connection settings" pane.
-   *
+   * 
    * @return a panel, never <code>null</code>.
    */
   private JPanel createConnectionSettingsPane()
@@ -688,7 +684,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * Determines the maximum sample count that is supported by the OLS for a
    * given number of channel groups.
-   *
+   * 
    * @return a maximum sample count, or -1 if no maximum could be determined.
    */
   private int determineMaxSampleCount()
@@ -883,7 +879,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * Sets the enabled state of all available trigger check boxes and the ratio
    * select.
-   *
+   * 
    * @param aEnable
    *          <code>true</code> to enable trigger configuration fields,
    *          <code>false</code> to disable them

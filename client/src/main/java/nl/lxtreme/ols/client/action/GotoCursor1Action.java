@@ -20,12 +20,12 @@
  */
 package nl.lxtreme.ols.client.action;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
+import static nl.lxtreme.ols.client.icons.IconFactory.*;
 
-import nl.lxtreme.ols.client.ClientController;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
-import static nl.lxtreme.ols.client.icons.IconFactory.createOverlayIcon;
+import java.awt.event.*;
+
+import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
