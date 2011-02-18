@@ -184,6 +184,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
+  private static final String rleWarning = "The last channel will always be low when RLE is enabled!";
 
   /** The serial port baudrates that can be chosen. */
   private static final String[] BAUDRATES = { "921600bps", "460800bps", "230400bps", "115200bps", "57600bps",
@@ -308,6 +309,18 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     {
       updateConfig();
       updateFields();
+    }
+    else if ( o == this.rleEnable )
+    {
+      JCheckBox jb = ( JCheckBox )o;
+      if ( jb.getModel().isSelected() )
+        jb.setText( "Enabled - See tooltip!" );
+      else
+        jb.setText( "Enabled" );
+
+// TODO:  ?
+//      updateConfig();
+//      updateFields();
     }
     else if ( o == this.speedSelect )
     {
@@ -557,7 +570,9 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     connectionPane.add( createRightAlignedLabel( "Noise Filter" ) );
     connectionPane.add( this.filterEnable );
 
-    connectionPane.add( createRightAlignedLabel( "Run Length Encoding" ) );
+    final JLabel rleEnableLabel = createRightAlignedLabel( "Run Length Encoding" );
+    rleEnableLabel.setToolTipText( rleWarning );
+    connectionPane.add( rleEnableLabel );
     connectionPane.add( this.rleEnable );
 
     SpringLayoutUtils.makeEditorGrid( connectionPane, 10, 10 );
@@ -804,9 +819,15 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.filterEnable.setSelected( true );
     this.filterEnable.setEnabled( false );
 
-    this.rleEnable = new JCheckBox( "Enabled" );
+    this.rleEnable = new JCheckBox( "Enabled - See tooltip!" );
+    // ugly hack to get consistent layout even when we change the text as warning.
+    this.rleEnable.setPreferredSize( this.rleEnable.getPreferredSize() );
+    this.rleEnable.setText( "Enabled" );
+    this.rleEnable.setToolTipText( rleWarning );
+
     this.rleEnable.setSelected( false );
     this.rleEnable.setEnabled( true );
+    this.rleEnable.addActionListener( this );
 
     this.triggerEnable = new JCheckBox( "Enabled" );
     this.triggerEnable.addActionListener( this );
