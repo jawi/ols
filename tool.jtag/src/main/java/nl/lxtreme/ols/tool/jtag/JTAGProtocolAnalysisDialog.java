@@ -216,9 +216,9 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
         final JTAGData data = dataSet.get( i );
 
         final String Time = aDataSet.getDisplayTime( data.getStartSampleIndex() );
-        final String Event = data.isEvent() ? data.getEventName() : getState( data.getDataValue() );
-        final String tdiDataValue = data.isTdiData() ? Integer.toString( data.getDataValue() ) : null;
-        final String tdoDataValue = data.isTdoData() ? Integer.toString( data.getDataValue() ) : null;
+        final String Event = data.isEvent() ? data.getEventName() : data.getDataValue().getDisplayText();
+        final String tdiDataValue = data.isTdiData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
+        final String tdoDataValue = data.isTdoData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
 
         exporter.addRow( Integer.valueOf( i ), Time, Event, tdiDataValue, tdoDataValue );
       }
@@ -404,82 +404,6 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
   }
 
   /**
-   * @param aValue
-   * @return
-   */
-  private String getState( final int aValue )
-  {
-    if ( aValue == 0 )
-    {
-      return "Test Logic Reset";
-    }
-    else if ( aValue == 1 )
-    {
-      return "Run Test Idle";
-    }
-    else if ( aValue == 2 )
-    {
-      return "Select DR";
-    }
-    else if ( aValue == 3 )
-    {
-      return "Capture DR";
-    }
-    else if ( aValue == 4 )
-    {
-      return "Shift DR";
-    }
-    else if ( aValue == 5 )
-    {
-      return "Exit1 DR";
-    }
-    else if ( aValue == 6 )
-    {
-      return "Pause DR";
-    }
-    else if ( aValue == 7 )
-    {
-      return "Exit2 DR";
-    }
-    else if ( aValue == 8 )
-    {
-      return "Update DR";
-    }
-    else if ( aValue == 9 )
-    {
-      return "Select IR";
-    }
-    else if ( aValue == 10 )
-    {
-      return "Capture IR";
-    }
-    else if ( aValue == 11 )
-    {
-      return "Shift IR";
-    }
-    else if ( aValue == 12 )
-    {
-      return "Exit1 IR";
-    }
-    else if ( aValue == 13 )
-    {
-      return "Pause IR";
-    }
-    else if ( aValue == 14 )
-    {
-      return "Exit2 IR";
-    }
-    else if ( aValue == 15 )
-    {
-      return "Update IR";
-    }
-    else
-    {
-      return "ERROR";
-    }
-  }
-
-  /**
    * Initializes this dialog.
    */
   private void initDialog()
@@ -562,13 +486,12 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
             }
             else
             {
-              final int value = data.getDataValue();
-              final String State = getState( value );
+              final JTAGState value = data.getDataValue();
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
               tr.addChild( TD ).addContent( aAnalysisResult.getDisplayTime( data.getStartSampleIndex() ) );
-              tr.addChild( TD ).addContent( State );
+              tr.addChild( TD ).addContent( value.getDisplayText() );
             }
           }
         }

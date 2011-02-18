@@ -65,27 +65,9 @@ public final class JTAGDataSet extends BaseDataSet<JTAGData>
   /**
    * @param aTimeValue
    */
-  public void reportJTAGState( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final int aDataValue )
+  public void reportJTAGState( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final JTAGState aDataValue )
   {
     final int idx = size();
     addData( new JTAGData( idx, aChannelIdx, JTAG_TMS, aDataValue, aStartIdx, aEndIdx ) );
-  }
-
-  /**
-   * @param aTimeValue
-   */
-  public void reportTDIData( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final int aDataValue )
-  {
-    final int idx = size();
-    addData( new JTAGData( idx, aChannelIdx, JTAG_TDI, aDataValue, aStartIdx, aEndIdx ) );
-  }
-
-  /**
-   * @param aTimeValue
-   */
-  public void reportTDOData( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final int aDataValue )
-  {
-    final int idx = size();
-    addData( new JTAGData( idx, aChannelIdx, JTAG_TDO, aDataValue, aStartIdx, aEndIdx ) );
   }
 }
