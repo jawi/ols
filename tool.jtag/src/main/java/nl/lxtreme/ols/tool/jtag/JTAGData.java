@@ -35,7 +35,7 @@ public final class JTAGData extends BaseData<JTAGData>
 {
   // VARIABLES
 
-  private final int dataValue;
+  private final JTAGState dataValue;
   private final String dataName;
 
   // CONSTRUCTORS
@@ -47,7 +47,7 @@ public final class JTAGData extends BaseData<JTAGData>
   public JTAGData( final int aIdx, final int aChannelIdx, final String aEvent, final int aSampleIdx )
   {
     super( aIdx, aChannelIdx, aSampleIdx, aEvent );
-    this.dataValue = 0;
+    this.dataValue = null;
     this.dataName = null;
   }
 
@@ -56,7 +56,7 @@ public final class JTAGData extends BaseData<JTAGData>
    * @param aMoSiValue
    * @param aMiSoValue
    */
-  public JTAGData( final int aIdx, final int aChannelIdx, final String aDataName, final int aDataValue,
+  public JTAGData( final int aIdx, final int aChannelIdx, final String aDataName, final JTAGState aDataValue,
       final int aStartSampleIdx, final int aEndSampleIdx )
   {
     super( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx );
@@ -103,7 +103,7 @@ public final class JTAGData extends BaseData<JTAGData>
   /**
    * @return the TDO/TDI data value.
    */
-  public final int getDataValue()
+  public final JTAGState getDataValue()
   {
     return this.dataValue;
   }
@@ -116,7 +116,10 @@ public final class JTAGData extends BaseData<JTAGData>
   {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + this.dataValue;
+    if ( this.dataValue != null )
+    {
+      result = prime * result + this.dataValue.hashCode();
+    }
     return result;
   }
 
@@ -131,16 +134,16 @@ public final class JTAGData extends BaseData<JTAGData>
   /**
    * @return
    */
-  public final boolean isTdoData()
+  public final boolean isTdiData()
   {
-    return JTAGDataSet.JTAG_TDO.equals( this.dataName );
+    return JTAGDataSet.JTAG_TDI.equals( this.dataName );
   }
 
   /**
    * @return
    */
-  public final boolean isTdiData()
+  public final boolean isTdoData()
   {
-    return JTAGDataSet.JTAG_TDI.equals( this.dataName );
+    return JTAGDataSet.JTAG_TDO.equals( this.dataName );
   }
 }

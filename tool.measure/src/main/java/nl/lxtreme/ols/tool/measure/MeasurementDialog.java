@@ -318,9 +318,10 @@ public class MeasurementDialog extends BaseToolDialog
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    this.cursorA.setSelectedIndex( aSettings.getInt( "selectedCursorA", -1 ) );
-    this.cursorB.setSelectedIndex( aSettings.getInt( "selectedCursorB", -1 ) );
-    this.clockChannelChooser.setSelectedIndex( aSettings.getInt( "selectedClockChannel", -1 ) );
+    this.cursorA.setSelectedIndex( aSettings.getInt( "selectedCursorA", this.cursorA.getSelectedIndex() ) );
+    this.cursorB.setSelectedIndex( aSettings.getInt( "selectedCursorB", this.cursorB.getSelectedIndex() ) );
+    this.clockChannelChooser.setSelectedIndex( aSettings.getInt( "selectedClockChannel",
+        this.clockChannelChooser.getSelectedIndex() ) );
   }
 
   /**

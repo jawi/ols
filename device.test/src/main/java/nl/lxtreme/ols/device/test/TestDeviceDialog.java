@@ -66,9 +66,6 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
     super( aParent, "Test capture settings", ModalityType.DOCUMENT_MODAL );
 
     this.setupConfirmed = false;
-    this.dataFunction = DATA_FUNCTIONS[6];
-    this.channels = CHANNELS[2];
-    this.dataLength = DATA_LENGTH[5];
 
     initDialog();
   }
@@ -115,9 +112,9 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    this.channelsCombo.setSelectedIndex( aSettings.getInt( "channels", -1 ) );
-    this.dataFunctionCombo.setSelectedIndex( aSettings.getInt( "dataFunction", -1 ) );
-    this.dataLengthCombo.setSelectedIndex( aSettings.getInt( "dataLength", -1 ) );
+    this.dataFunctionCombo.setSelectedIndex( aSettings.getInt( "dataFunction", 6 ) );
+    this.channelsCombo.setSelectedIndex( aSettings.getInt( "channels", 2 ) );
+    this.dataLengthCombo.setSelectedIndex( aSettings.getInt( "dataLength", 5 ) );
   }
 
   /**
@@ -128,8 +125,10 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
    */
   public boolean showDialog()
   {
-    TestDeviceDialog.this.setupConfirmed = false;
+    this.setupConfirmed = false;
+
     setVisible( true );
+
     return this.setupConfirmed;
   }
 
@@ -150,7 +149,6 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   private JPanel createContents()
   {
     this.dataFunctionCombo = new JComboBox( DATA_FUNCTIONS );
-    this.dataFunctionCombo.setSelectedItem( this.dataFunction );
     this.dataFunctionCombo.addItemListener( new ItemListener()
     {
       @Override
@@ -161,7 +159,6 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
     } );
 
     this.channelsCombo = new JComboBox( CHANNELS );
-    this.channelsCombo.setSelectedItem( this.channels );
     this.channelsCombo.addItemListener( new ItemListener()
     {
       @Override
@@ -172,7 +169,6 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
     } );
 
     this.dataLengthCombo = new JComboBox( DATA_LENGTH );
-    this.dataLengthCombo.setSelectedItem( this.dataLength );
     this.dataLengthCombo.addItemListener( new ItemListener()
     {
       @Override

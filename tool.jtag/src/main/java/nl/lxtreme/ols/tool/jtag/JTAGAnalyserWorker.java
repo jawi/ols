@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
+import static nl.lxtreme.ols.tool.jtag.JTAGState.*;
+
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -47,8 +49,8 @@ public class JTAGAnalyserWorker extends BaseAsyncToolWorker<JTAGDataSet>
   private int tdiIdx;
   private int tdoIdx;
 
-  private int JTAGState;
-  private int oldJTAGState;
+  private JTAGState currentState;
+  private JTAGState oldState;
   private int startIdx;
 
   // CONSTRUCTORS
@@ -165,14 +167,14 @@ public class JTAGAnalyserWorker extends BaseAsyncToolWorker<JTAGDataSet>
     // scanning for falling/rising clk edges
     int oldTckValue = ( values[startOfDecode] & tckMask );
 
-    String State;
+    String state;
     int startTdiDataIdx = 0;
     int endTdiDataIdx = 0;
     String TdiData = "";
     String TdoData = "";
 
-    this.JTAGState = 0;
-    this.oldJTAGState = 0;
+    this.currentState = TEST_LOGIC_RESET;
+    this.oldState = TEST_LOGIC_RESET;
     this.startIdx = startOfDecode;
 
     LOG.log( Level.INFO, "clockDataOnEdge: " + startOfDecode + " to " + endOfDecode );
@@ -195,55 +197,55 @@ public class JTAGAnalyserWorker extends BaseAsyncToolWorker<JTAGDataSet>
           // LOG.log( Level.INFO, "TCK rising edge  (" + idx + ", TMS: " +
           // tmsValue + ",  State: " + JTAGState + ")");
 
-          if ( this.JTAGState == 0 )
+          if ( this.currentState == TEST_LOGIC_RESET )
           { // state 0: Test Logic Reset
-            State = "Test Logic Reset";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 1;
+              this.currentState = RUN_TEST_IDLE;
             }
           }
-          else if ( this.JTAGState == 1 )
+          else if ( this.currentState == RUN_TEST_IDLE )
           { // state 1: Run Test Idle
-            State = "Run Test Idle";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 1;
+              this.currentState = RUN_TEST_IDLE;
             }
             else
             {
-              this.JTAGState = 2;
+              this.currentState = SELECT_DR;
             }
           }
-          else if ( this.JTAGState == 2 )
+          else if ( this.currentState == SELECT_DR )
           { // state 2: Select DR
-            State = "Select DR";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 3;
+              this.currentState = CAPTURE_DR;
             }
             else
             {
-              this.JTAGState = 9;
+              this.currentState = SELECT_IR;
             }
           }
-          else if ( this.JTAGState == 3 )
+          else if ( this.currentState == CAPTURE_DR )
           { // state 3: Capture DR
-            State = "Capture DR";
+            state = this.currentState.getDisplayText();
             TdiData = "";
             TdoData = "";
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 4;
+              this.currentState = SHIFT_DR;
             }
             else
             {
-              this.JTAGState = 5;
+              this.currentState = EXIT1_DR;
             }
           }
-          else if ( this.JTAGState == 4 )
+          else if ( this.currentState == SHIFT_DR )
           { // state 4: Shift DR
-            State = "Shift DR";
+            state = this.currentState.getDisplayText();
             if ( TdiData == "" )
             {
               startTdiDataIdx = idx;
@@ -274,89 +276,89 @@ public class JTAGAnalyserWorker extends BaseAsyncToolWorker<JTAGDataSet>
             }
             else
             {
-              this.JTAGState = 5;
+              this.currentState = EXIT1_DR;
             }
           }
-          else if ( this.JTAGState == 5 )
+          else if ( this.currentState == EXIT1_DR )
           { // state 5: Exit1 DR
-            State = "Exit1 DR";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 6;
+              this.currentState = PAUSE_DR;
             }
             else
             {
-              this.JTAGState = 8;
+              this.currentState = UPDATE_DR;
             }
           }
-          else if ( this.JTAGState == 6 )
+          else if ( this.currentState == PAUSE_DR )
           { // state 6: Pause DR
-            State = "Pause DR";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 6;
+              this.currentState = PAUSE_DR;
             }
             else
             {
-              this.JTAGState = 7;
+              this.currentState = EXIT2_DR;
             }
           }
-          else if ( this.JTAGState == 7 )
+          else if ( this.currentState == EXIT2_DR )
           { // state 7: Exit2 DR
-            State = "Exit2 DR";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 4;
+              this.currentState = SHIFT_DR;
             }
             else
             {
-              this.JTAGState = 8;
+              this.currentState = UPDATE_DR;
             }
           }
-          else if ( this.JTAGState == 8 )
+          else if ( this.currentState == UPDATE_DR )
           { // state 8: Update DR
-            State = "Update DR";
+            state = this.currentState.getDisplayText();
             addChannelAnnotation( this.tdiIdx, startTdiDataIdx, endTdiDataIdx, TdiData );
             addChannelAnnotation( this.tdoIdx, startTdiDataIdx, endTdiDataIdx, TdoData );
 
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 1;
+              this.currentState = RUN_TEST_IDLE;
             }
             else
             {
-              this.JTAGState = 2;
+              this.currentState = SELECT_DR;
             }
           }
-          else if ( this.JTAGState == 9 )
+          else if ( this.currentState == SELECT_IR )
           { // state 9: Select IR
-            State = "Select IR";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 10;
+              this.currentState = CAPTURE_IR;
             }
             else
             {
-              this.JTAGState = 0;
+              this.currentState = TEST_LOGIC_RESET;
             }
           }
-          else if ( this.JTAGState == 10 )
+          else if ( this.currentState == CAPTURE_IR )
           { // state 10: Capture IR
-            State = "Capture IR";
+            state = this.currentState.getDisplayText();
             TdiData = "";
             TdoData = "";
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 11;
+              this.currentState = SHIFT_IR;
             }
             else
             {
-              this.JTAGState = 12;
+              this.currentState = EXIT1_IR;
             }
           }
-          else if ( this.JTAGState == 11 )
+          else if ( this.currentState == SHIFT_IR )
           { // state 11: Shift IR
-            State = "Shift IR";
+            state = this.currentState.getDisplayText();
 
             if ( TdiData == "" )
             {
@@ -388,48 +390,48 @@ public class JTAGAnalyserWorker extends BaseAsyncToolWorker<JTAGDataSet>
             }
             else
             {
-              this.JTAGState = 12;
+              this.currentState = EXIT1_IR;
             }
           }
-          else if ( this.JTAGState == 12 )
+          else if ( this.currentState == EXIT1_IR )
           { // state 12: Exit1 IR
-            State = "Exit1 IR";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 13;
+              this.currentState = PAUSE_IR;
             }
             else
             {
-              this.JTAGState = 15;
+              this.currentState = UPDATE_IR;
             }
           }
-          else if ( this.JTAGState == 13 )
+          else if ( this.currentState == PAUSE_IR )
           { // state 13: Pause IR
-            State = "Pause IR";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 13;
+              this.currentState = PAUSE_IR;
             }
             else
             {
-              this.JTAGState = 14;
+              this.currentState = EXIT2_IR;
             }
           }
-          else if ( this.JTAGState == 14 )
+          else if ( this.currentState == EXIT2_IR )
           { // state 14: Exit2 IR
-            State = "Exit2 IR";
+            state = this.currentState.getDisplayText();
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 11;
+              this.currentState = SHIFT_IR;
             }
             else
             {
-              this.JTAGState = 15;
+              this.currentState = UPDATE_IR;
             }
           }
-          else if ( this.JTAGState == 15 )
+          else if ( this.currentState == UPDATE_IR )
           { // state 15: Update IR
-            State = "Update IR";
+            state = this.currentState.getDisplayText();
             addChannelAnnotation( this.tdiIdx, startTdiDataIdx, endTdiDataIdx, TdiData );
             // aDataSet.reportJTAGState( this.tdiIdx, startTdiDataIdx,
             // endTdiDataIdx, TdiData );
@@ -439,28 +441,28 @@ public class JTAGAnalyserWorker extends BaseAsyncToolWorker<JTAGDataSet>
 
             if ( tmsValue == 0 )
             {
-              this.JTAGState = 1;
+              this.currentState = RUN_TEST_IDLE;
             }
             else
             {
-              this.JTAGState = 2;
+              this.currentState = SELECT_DR;
             }
           }
           else
           {
-            State = "ERROR";
+            state = "ERROR";
           }
 
-          if ( this.oldJTAGState != this.JTAGState )
+          if ( this.oldState != this.currentState )
           {
             // LOG.log( Level.INFO, "state transition: " + oldJTAGState + " to "
             // + JTAGState + " (" + StartIdx + "," + idx + ")");
 
-            addChannelAnnotation( this.tmsIdx, this.startIdx, idx, State );
-            aDataSet.reportJTAGState( this.tmsIdx, this.startIdx, idx, this.oldJTAGState );
+            addChannelAnnotation( this.tmsIdx, this.startIdx, idx, state );
+            aDataSet.reportJTAGState( this.tmsIdx, this.startIdx, idx, this.oldState );
 
             this.startIdx = idx + 1;
-            this.oldJTAGState = this.JTAGState;
+            this.oldState = this.currentState;
           }
 
           setProgress( ( int )( ( idx - startOfDecode ) * 100.0 / length ) );
