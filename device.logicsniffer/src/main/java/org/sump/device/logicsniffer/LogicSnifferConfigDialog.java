@@ -354,17 +354,19 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       {
         this.portSelect.setSelectedItem( preferredPortName );
       }
-      this.portRateSelect.setSelectedIndex( aSettings.getInt( "portRate", -1 ) );
-      this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", -1 ) );
-      this.numberSchemeSelect.setSelectedIndex( aSettings.getInt( "numberScheme", -1 ) );
-      this.speedSelect.setSelectedIndex( aSettings.getInt( "speed", -1 ) );
-      this.sizeSelect.setSelectedIndex( aSettings.getInt( "size", -1 ) );
-      this.maxSampleSize.setSelected( aSettings.getBoolean( "autosize", false ) );
+      this.portRateSelect.setSelectedIndex( aSettings.getInt( "portRate", this.portRateSelect.getSelectedIndex() ) );
+      this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", this.sourceSelect.getSelectedIndex() ) );
+      this.numberSchemeSelect.setSelectedIndex( aSettings.getInt( "numberScheme",
+          this.numberSchemeSelect.getSelectedIndex() ) );
+      this.speedSelect.setSelectedIndex( aSettings.getInt( "speed", this.speedSelect.getSelectedIndex() ) );
+      this.sizeSelect.setSelectedIndex( aSettings.getInt( "size", this.sizeSelect.getSelectedIndex() ) );
+      this.maxSampleSize.setSelected( aSettings.getBoolean( "autosize", this.maxSampleSize.isSelected() ) );
       this.ratioSlider.setValue( aSettings.getInt( "ratio", TriggerRatioChangeListener.DEFAULT_RATIO ) );
-      this.filterEnable.setSelected( aSettings.getBoolean( "filter", false ) );
-      this.rleEnable.setSelected( aSettings.getBoolean( "rle", false ) );
-      this.triggerEnable.setSelected( aSettings.getBoolean( "trigger", false ) );
-      this.triggerTypeSelect.setSelectedIndex( aSettings.getInt( "triggerType", -1 ) );
+      this.filterEnable.setSelected( aSettings.getBoolean( "filter", this.filterEnable.isSelected() ) );
+      this.rleEnable.setSelected( aSettings.getBoolean( "rle", this.rleEnable.isSelected() ) );
+      this.triggerEnable.setSelected( aSettings.getBoolean( "trigger", this.triggerEnable.isSelected() ) );
+      this.triggerTypeSelect.setSelectedIndex( aSettings.getInt( "triggerType",
+          this.triggerTypeSelect.getSelectedIndex() ) );
 
       for ( int stage = 0; stage < this.triggerStages; stage++ )
       {
@@ -372,9 +374,12 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
         this.triggerDelay[stage].setText( aSettings.get( prefix + ".delay", "" ) );
 
-        this.triggerLevel[stage].setSelectedIndex( aSettings.getInt( prefix + ".level", -1 ) );
-        this.triggerMode[stage].setSelectedIndex( aSettings.getInt( prefix + ".mode", -1 ) );
-        this.triggerChannel[stage].setSelectedIndex( aSettings.getInt( prefix + ".channel", -1 ) );
+        this.triggerLevel[stage].setSelectedIndex( aSettings.getInt( prefix + ".level",
+            this.triggerLevel[stage].getSelectedIndex() ) );
+        this.triggerMode[stage].setSelectedIndex( aSettings.getInt( prefix + ".mode",
+            this.triggerMode[stage].getSelectedIndex() ) );
+        this.triggerChannel[stage].setSelectedIndex( aSettings.getInt( prefix + ".channel",
+            this.triggerChannel[stage].getSelectedIndex() ) );
 
         final String mask = aSettings.get( prefix + ".mask", "" );
         for ( int i = 0; ( i < 32 ) && ( i < mask.length() ); i++ )
@@ -388,7 +393,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
           this.triggerValue[stage][i].setSelected( value.charAt( i ) == '1' );
         }
 
-        this.triggerStart[stage].setSelected( aSettings.getBoolean( prefix + ".startCapture", false ) );
+        this.triggerStart[stage].setSelected( aSettings.getBoolean( prefix + ".startCapture",
+            this.triggerStart[stage].isSelected() ) );
       }
 
       final String group = aSettings.get( "channelGroup", "" );

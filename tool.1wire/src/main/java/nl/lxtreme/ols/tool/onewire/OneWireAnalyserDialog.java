@@ -121,8 +121,8 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    this.owMode.setSelectedIndex( aSettings.getInt( "owMode", -1 ) );
-    this.owLine.setSelectedIndex( aSettings.getInt( "owLine", -1 ) );
+    this.owMode.setSelectedIndex( aSettings.getInt( "owMode", this.owMode.getSelectedIndex() ) );
+    this.owLine.setSelectedIndex( aSettings.getInt( "owLine", this.owLine.getSelectedIndex() ) );
   }
 
   /**
