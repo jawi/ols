@@ -136,8 +136,7 @@ public final class SwingComponentUtils
 
     final Dimension newDims = new Dimension( width, height );
 
-    // everything added; let's set all sizes (aDefaultButton's may be set again;
-    // no harm)
+    // everything added; let's set all sizes
     for ( final JButton button : aButtons )
     {
       button.setPreferredSize( newDims );
