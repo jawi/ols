@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client.diagram;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 
 import javax.swing.*;
 
@@ -196,7 +197,21 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
 
     final JButton cancel = StandardActionFactory.createCloseButton();
 
-    final JComponent buttonPane = SwingComponentUtils.createButtonPane( ok, cancel, clear );
+    final JButton[] buttons = { ok, cancel, clear };
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( buttons );
+
+    final ArrayList<Component> focusComponents = new ArrayList<Component>( this.labelFields.length + buttons.length );
+    Collections.addAll( focusComponents, this.labelFields );
+    Collections.addAll( focusComponents, buttons );
+
+      // alternative implementation with arraycopy:
+//    final int labelsLength = this.labelFields.length;
+//    final Component[] focusComponents = new Component[labelsLength + buttons.length];
+//    System.arraycopy( this.labelFields, 0, focusComponents, 0, labelsLength );
+//    System.arraycopy( buttons, 0, focusComponents, labelsLength, buttons.length );
+
+    FocusTraversalPolicy pol = new ArrayFocusTravelPolicy( focusComponents );
+    this.setFocusTraversalPolicy( pol );
 
     SwingComponentUtils.setupDialogContentPane( this, editorsPane, buttonPane, ok );
   }
