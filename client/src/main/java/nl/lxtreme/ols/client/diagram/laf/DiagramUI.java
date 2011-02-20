@@ -39,6 +39,7 @@ import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.EdgeSlope;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.SignalAlignment;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -131,6 +132,7 @@ public class DiagramUI extends ComponentUI
     // VARIABLES
 
     private int currentCursor;
+    private Point lastDragPoint;
 
     // METHODS
 
@@ -158,7 +160,7 @@ public class DiagramUI extends ComponentUI
       else
       {
         // Not handled by us; let other components handle it...
-        final JScrollPane scrollpane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, diagram );
+        final JScrollPane scrollpane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, diagram );
         if ( scrollpane != null )
         {
           scrollpane.dispatchEvent( aEvent );
@@ -183,6 +185,29 @@ public class DiagramUI extends ComponentUI
 
       final int channelIdx = diagram.convertPointToChannelIndex( mousePosition );
       updateTooltipText( diagram, mousePosition, channelIdx, null );
+
+      final JViewport viewPort = diagram.getViewPort();
+      if ( viewPort != null )
+      {
+        int dx = aEvent.getX() - this.lastDragPoint.x;
+        int dy = aEvent.getY() - this.lastDragPoint.y;
+
+        Point scrollPosition = viewPort.getViewPosition();
+        int newX = scrollPosition.x - dx;
+        int newY = scrollPosition.y - dy;
+
+        int diagramWidth = diagram.getWidth();
+        int viewportWidth = viewPort.getWidth();
+        int maxX = diagramWidth - viewportWidth - 1;
+        scrollPosition.x = Math.max( 0, Math.min( maxX, newX ) );
+
+        int diagramHeight = diagram.getHeight();
+        int viewportHeight = viewPort.getHeight();
+        int maxY = diagramHeight - viewportHeight;
+        scrollPosition.y = Math.max( 0, Math.min( maxY, newY ) );
+
+        viewPort.setViewPosition( scrollPosition );
+      }
     }
 
     /**
@@ -227,6 +252,7 @@ public class DiagramUI extends ComponentUI
     public void mousePressed( final MouseEvent aEvent )
     {
       handlePopupTrigger( aEvent );
+      this.lastDragPoint = aEvent.getPoint();
     }
 
     /**
@@ -265,7 +291,7 @@ public class DiagramUI extends ComponentUI
       else
       {
         // Not handled by us; let other components handle it...
-        final JScrollPane scrollpane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, diagram );
+        final JScrollPane scrollpane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, diagram );
         if ( scrollpane != null )
         {
           scrollpane.dispatchEvent( aEvent );

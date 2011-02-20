@@ -631,8 +631,10 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     diagramMenu.add( this.controller.getAction( GotoTriggerAction.ID ) );
     diagramMenu.add( this.controller.getAction( GotoFirstCursorAction.ID ) );
     diagramMenu.add( this.controller.getAction( GotoLastCursorAction.ID ) );
-    diagramMenu.add( this.controller.getAction( GotoCursor1Action.ID ) );
-    diagramMenu.add( this.controller.getAction( GotoCursor2Action.ID ) );
+    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
+    {
+      diagramMenu.add( this.controller.getAction( GotoNthCursorAction.getID( c ) ) );
+    }
     diagramMenu.addSeparator();
     diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorModeAction.ID ) ) );
     diagramMenu.add( this.controller.getAction( ClearCursors.ID ) );
@@ -682,8 +684,10 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     toolbar.addSeparator();
 
     toolbar.add( this.controller.getAction( GotoTriggerAction.ID ) );
-    toolbar.add( this.controller.getAction( GotoCursor1Action.ID ) );
-    toolbar.add( this.controller.getAction( GotoCursor2Action.ID ) );
+    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
+    {
+      toolbar.add( this.controller.getAction( GotoNthCursorAction.getID( c ) ) );
+    }
 
     return toolbar;
   }

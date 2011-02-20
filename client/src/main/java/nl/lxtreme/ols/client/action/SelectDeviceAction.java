@@ -51,13 +51,20 @@ public class SelectDeviceAction extends BaseAction
    * @param aController
    *          the controller to use;
    * @param aDeviceName
-   *          the name of the device this action represents.
+   *          the name of the device this action represents; not null.
    */
   public SelectDeviceAction( final ClientController aController, final String aDeviceName )
   {
     super( ID + aDeviceName, aController, aDeviceName, "Selects ".concat( aDeviceName ).concat(
         " as current capturing device" ) );
     this.deviceName = aDeviceName;
+    // if the first character of the name isAlpha, use it as mnemonic
+    // (there is no direct conversion between char and KeyEvent available yet)
+    char mnemonic = aDeviceName.charAt( 0 );
+    if ( mnemonic >= 'a' || mnemonic <= 'z' )
+      mnemonic = Character.toUpperCase( mnemonic );
+    if ( mnemonic >= 'A' || mnemonic <= 'Z' )
+      putValue( MNEMONIC_KEY, new Integer ( mnemonic ) );
   }
 
   // METHODS
