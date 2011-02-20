@@ -123,6 +123,8 @@ public final class StandardActionFactory
     private Closeable findCloseableParent( final Component aComponent )
     {
       Closeable closeableParent;
+      // Some magic in order to also be able to find the parent's of menu items
+      // or popup menu items...
       if ( aComponent instanceof JMenuItem )
       {
         final Component parent = ( ( JMenuItem )aComponent ).getParent();
@@ -135,7 +137,7 @@ public final class StandardActionFactory
       }
       else
       {
-        closeableParent = ( Closeable )SwingUtilities.getAncestorOfClass( Closeable.class, aComponent );
+        closeableParent = SwingComponentUtils.getAncestorOfClass( Closeable.class, aComponent );
       }
       return closeableParent;
     }

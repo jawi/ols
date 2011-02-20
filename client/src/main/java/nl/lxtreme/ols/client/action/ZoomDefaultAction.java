@@ -46,7 +46,7 @@ public class ZoomDefaultAction extends BaseAction
   public ZoomDefaultAction( final ClientController aController )
   {
     super( ID, aController, ICON_ZOOM_DEFAULT, "Zoom original", "Zoom to original level" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_0) );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_R ) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_R ) );
   }
 
