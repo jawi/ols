@@ -1,77 +1,150 @@
+/*
+ * OpenBench LogicSniffer / SUMP project 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
+ *
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
+ */
 package nl.lxtreme.ols.util.swing;
+
 
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.FocusTraversalPolicy;
 import java.util.*;
 
+
 /**
  * A FocusTraversalPolicy based on the order of the elements of an array.
+ * 
+ * @author stefant
  */
 public class ArrayFocusTravelPolicy extends FocusTraversalPolicy
 {
-  private final Component comps[];
+  // VARIABLES
 
-  public ArrayFocusTravelPolicy( final Component components[] )
+  private final Component components[];
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new {@link ArrayFocusTravelPolicy} instance.
+   * 
+   * @param aComponents
+   *          the (ordered!) component to traverse the focus for.
+   */
+  public ArrayFocusTravelPolicy( final Component... aComponents )
   {
-    this.comps = components;
+    this.components = aComponents;
   }
 
-  public ArrayFocusTravelPolicy( final List<Component> components )
+  /**
+   * Creates a new {@link ArrayFocusTravelPolicy} instance.
+   * 
+   * @param aComponents
+   *          the (ordered!) component to traverse the focus for.
+   */
+  public ArrayFocusTravelPolicy( final List<Component> aComponents )
   {
-    this.comps = components.toArray( new Component[components.size()] );
+    this.components = aComponents.toArray( new Component[aComponents.size()] );
   }
 
-  private Component cycle( final Component lastComp, int delta )
-  {
-    int size = this.comps.length;
-    int index = findIndexFromComponent( lastComp );
-    if ( index < 0 )
-      return null;
+  // METHODS
 
-    int newIndex = ( size + index + delta ) % size; // note that size is added before due to java's % semantic!
-    return this.comps[newIndex];
-  }
-
-  private int findIndexFromComponent( final Component component )
-  {
-    final int size = this.comps.length;
-    for ( int i = 0; i < size; i++ )
-    {
-      final Component currentC = this.comps[i];
-      if ( currentC == component )
-        return i;
-    }
-    return -1;
-  }
-
+  /**
+   * @see java.awt.FocusTraversalPolicy#getComponentAfter(java.awt.Container,
+   *      java.awt.Component)
+   */
   @Override
   public Component getComponentAfter( final Container container, final Component component )
   {
     return cycle( component, 1 );
   }
 
+  /**
+   * @see java.awt.FocusTraversalPolicy#getComponentBefore(java.awt.Container,
+   *      java.awt.Component)
+   */
   @Override
   public Component getComponentBefore( final Container container, final Component component )
   {
     return cycle( component, -1 );
   }
 
-  @Override
-  public Component getFirstComponent( final Container container )
-  {
-    return this.comps[0];
-  }
-
-  @Override
-  public Component getLastComponent( final Container container )
-  {
-    return this.comps[this.comps.length - 1];
-  }
-
+  /**
+   * @see java.awt.FocusTraversalPolicy#getDefaultComponent(java.awt.Container)
+   */
   @Override
   public Component getDefaultComponent( final Container container )
   {
     return getFirstComponent( container );
+  }
+
+  /**
+   * @see java.awt.FocusTraversalPolicy#getFirstComponent(java.awt.Container)
+   */
+  @Override
+  public Component getFirstComponent( final Container container )
+  {
+    return this.components[0];
+  }
+
+  /**
+   * @see java.awt.FocusTraversalPolicy#getLastComponent(java.awt.Container)
+   */
+  @Override
+  public Component getLastComponent( final Container container )
+  {
+    return this.components[this.components.length - 1];
+  }
+
+  /**
+   * @param aLastComponent
+   * @param aDelta
+   * @return
+   */
+  private Component cycle( final Component aLastComponent, final int aDelta )
+  {
+    int size = this.components.length;
+    int index = findIndexFromComponent( aLastComponent );
+    if ( index < 0 )
+    {
+      return null;
+    }
+
+    // note that size is added before due to java's % semantic!
+    int newIndex = ( size + index + aDelta ) % size;
+    return this.components[newIndex];
+  }
+
+  /**
+   * @param aComponent
+   * @return
+   */
+  private int findIndexFromComponent( final Component aComponent )
+  {
+    final int size = this.components.length;
+    for ( int i = 0; i < size; i++ )
+    {
+      final Component currentC = this.components[i];
+      if ( currentC == aComponent )
+      {
+        return i;
+      }
+    }
+    return -1;
   }
 }
