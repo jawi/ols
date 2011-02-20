@@ -39,6 +39,7 @@ import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.EdgeSlope;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.SignalAlignment;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -159,7 +160,7 @@ public class DiagramUI extends ComponentUI
       else
       {
         // Not handled by us; let other components handle it...
-        final JScrollPane scrollpane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, diagram );
+        final JScrollPane scrollpane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, diagram );
         if ( scrollpane != null )
         {
           scrollpane.dispatchEvent( aEvent );
@@ -184,37 +185,25 @@ public class DiagramUI extends ComponentUI
       }
       else // if not we are dragging the whole display
       {
-        Container parent = diagram.getParent();
-        if ( parent.getClass() == JViewport.class )
+        final JViewport viewPort = diagram.getViewPort();
+        if ( viewPort != null )
         {
-          JViewport viewPort = ( JViewport )parent;
-
-          int dx = aEvent.getX() - lastDragPoint.x;
-          int dy = aEvent.getY() - lastDragPoint.y;
+          int dx = aEvent.getX() - this.lastDragPoint.x;
+          int dy = aEvent.getY() - this.lastDragPoint.y;
 
           Point scrollPosition = viewPort.getViewPosition();
           int newX = scrollPosition.x - dx;
           int newY = scrollPosition.y - dy;
 
-          int w = diagram.getWidth();
-          int vpW = viewPort.getWidth();
-          int maxX = w - vpW - 1;
-          if ( newX < 0 || w <= vpW )
-            scrollPosition.x = 0;
-          else if ( newX >= maxX )
-            scrollPosition.x = maxX;
-          else
-            scrollPosition.x = newX;
+          int diagramWidth = diagram.getWidth();
+          int viewportWidth = viewPort.getWidth();
+          int maxX = diagramWidth - viewportWidth - 1;
+          scrollPosition.x = Math.max( 0, Math.min( maxX, newX ) );
 
-          int h = diagram.getHeight();
-          int vpH = viewPort.getHeight();
-          int maxY = h - vpH;
-          if ( newY < 0 || h <= vpH )
-            scrollPosition.y = 0;
-          else if ( newY >= maxY )
-            scrollPosition.y = maxY;
-          else
-            scrollPosition.y = newY;
+          int diagramHeight = diagram.getHeight();
+          int viewportHeight = viewPort.getHeight();
+          int maxY = diagramHeight - viewportHeight;
+          scrollPosition.y = Math.max( 0, Math.min( maxY, newY ) );
 
           viewPort.setViewPosition( scrollPosition );
         }
@@ -222,7 +211,6 @@ public class DiagramUI extends ComponentUI
 
       final int channelIdx = diagram.convertPointToChannelIndex( mousePosition );
       updateTooltipText( diagram, mousePosition, channelIdx, null );
-
     }
 
     /**
@@ -306,7 +294,7 @@ public class DiagramUI extends ComponentUI
       else
       {
         // Not handled by us; let other components handle it...
-        final JScrollPane scrollpane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, diagram );
+        final JScrollPane scrollpane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, diagram );
         if ( scrollpane != null )
         {
           scrollpane.dispatchEvent( aEvent );

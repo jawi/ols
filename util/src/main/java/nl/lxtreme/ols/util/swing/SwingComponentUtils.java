@@ -332,6 +332,39 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Convenience method for searching above the given component in the component
+   * hierarchy and returns the first object of the given type it finds, or
+   * <code>null</code> if no such parent was found.
+   * <p>
+   * The reason this method exists is for tidyness of the calling code, as no
+   * longer a explicit cast is needed.
+   * 
+   * @param aType
+   *          the type of the parent to find, cannot be <code>null</code>;
+   * @param aComponent
+   *          the component to search in the hierarchy, cannot be
+   *          <code>null</code>.
+   * @return the requested ancestor, or <code>null</code> if not found.
+   * @see SwingUtilities#getAncestorOfClass(Class, Component)
+   */
+  @SuppressWarnings( "unchecked" )
+  public static <T> T getAncestorOfClass( final Class<T> aType, final Component aComponent )
+  {
+    if ( ( aComponent == null ) || ( aType == null ) )
+    {
+      return null;
+    }
+
+    Container parent = aComponent.getParent();
+    while ( ( parent != null ) && !( aType.isInstance( parent ) ) )
+    {
+      parent = parent.getParent();
+    }
+
+    return ( T )parent;
+  }
+
+  /**
    * Tries to find the current focused window.
    * 
    * @return the current focused window, or <code>null</code> if no such window

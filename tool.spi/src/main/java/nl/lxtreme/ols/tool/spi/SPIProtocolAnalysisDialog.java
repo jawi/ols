@@ -528,7 +528,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     String[] bitarray = new String[13];
     for ( int i = 0; i < bitarray.length; i++ )
     {
-      bitarray[i] = String.format( "%d", ( i + 4 ) );
+      bitarray[i] = String.format( "%d", Integer.valueOf( i + 4 ) );
     }
     this.bits = new JComboBox( bitarray );
     this.bits.setSelectedIndex( 4 );

@@ -29,6 +29,7 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.diagram.laf.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -83,7 +84,8 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     this.corner = new DiagramCorner( this );
 
     setMinimumSize( new Dimension( 25, 1 ) );
-    setAutoscrolls(true); //enable synthetic drag events
+    // enable synthetic drag events
+    setAutoscrolls( true );
 
     aController.addCursorChangeListener( this );
     aController.addCursorChangeListener( this.timeLine );
@@ -375,6 +377,22 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   }
 
   /**
+   * Returns the viewport if this diagram is enclosed in a JScrollPane.
+   * 
+   * @return the viewport of the enclosing JScrollPane, or <code>null</code> if
+   *         this diagram is not enclosed in a JScrollPane.
+   */
+  public JViewport getViewPort()
+  {
+    final JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, this );
+    if ( scrollPane == null )
+    {
+      return null;
+    }
+    return scrollPane.getViewport();
+  }
+
+  /**
    * Sets this Diagram's viewport position
    * 
    * @param aSamplePos
@@ -616,22 +634,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
         scrollPane.setCorner( ScrollPaneConstants.UPPER_LEADING_CORNER, this.corner );
       }
     }
-  }
-
-  /**
-   * Returns the viewport if this diagram is enclosed in a JScrollPane.
-   * 
-   * @return the viewport of the enclosing JScrollPane, or <code>null</code> if
-   *         this diagram is not enclosed in a JScrollPane.
-   */
-  private JViewport getViewPort()
-  {
-    final JScrollPane scrollPane = ( JScrollPane )SwingUtilities.getAncestorOfClass( JScrollPane.class, this );
-    if ( scrollPane == null )
-    {
-      return null;
-    }
-    return scrollPane.getViewport();
   }
 
   /**

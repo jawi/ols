@@ -562,7 +562,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     final String[] bitarray = new String[4];
     for ( int i = 0; i < bitarray.length; i++ )
     {
-      bitarray[i] = String.format( "%d", ( i + 5 ) );
+      bitarray[i] = String.format( "%d", Integer.valueOf( i + 5 ) );
     }
     this.bits = new JComboBox( bitarray );
     this.bits.setSelectedIndex( 3 );
