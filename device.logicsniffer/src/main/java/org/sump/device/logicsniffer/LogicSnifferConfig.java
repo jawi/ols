@@ -23,22 +23,14 @@ package org.sump.device.logicsniffer;
 
 import nl.lxtreme.ols.api.data.*;
 
+import org.sump.device.logicsniffer.profile.DeviceProfile.*;
+
 
 /**
  * @author jawi
  */
 public final class LogicSnifferConfig
 {
-  // INNER TYPES
-
-  /**
-   * Denotes the source where the sample clock comes from.
-   */
-  static enum ClockSource
-  {
-    INTERNAL, EXTERNAL_RISING, EXTERNAL_FALLING;
-  }
-
   // CONSTANTS
 
   /** The number of trigger stages. */
@@ -57,7 +49,7 @@ public final class LogicSnifferConfig
 
   // VARIABLES
 
-  private ClockSource clockSource;
+  private CaptureClockSource clockSource;
   private boolean demux;
   private boolean filterEnabled;
   private boolean triggerEnabled;
@@ -96,7 +88,7 @@ public final class LogicSnifferConfig
     this.triggerEnabled = false;
     this.filterEnabled = false;
     this.demux = false;
-    setClockSource( ClockSource.INTERNAL );
+    setClockSource( CaptureClockSource.INTERNAL );
     this.divider = 0;
     this.ratio = 0.5;
     this.size = 512;
@@ -150,7 +142,7 @@ public final class LogicSnifferConfig
    * 
    * @return the clock source currently used as defined by the CLOCK_ properties
    */
-  public ClockSource getClockSource()
+  public CaptureClockSource getClockSource()
   {
     return this.clockSource;
   }
@@ -393,7 +385,8 @@ public final class LogicSnifferConfig
    */
   public boolean isExternalClock()
   {
-    return ( this.clockSource == ClockSource.EXTERNAL_FALLING ) || ( this.clockSource == ClockSource.EXTERNAL_RISING );
+    return ( this.clockSource == CaptureClockSource.EXTERNAL_FALLING )
+        || ( this.clockSource == CaptureClockSource.EXTERNAL_RISING );
   }
 
   /**
@@ -443,7 +436,7 @@ public final class LogicSnifferConfig
    */
   public boolean isInternalClock()
   {
-    return this.clockSource == ClockSource.INTERNAL;
+    return this.clockSource == CaptureClockSource.INTERNAL;
   }
 
   /**
@@ -508,7 +501,7 @@ public final class LogicSnifferConfig
    * @param aSource
    *          the clock source to use, cannot be <code>null</code>.
    */
-  public void setClockSource( final ClockSource aSource )
+  public void setClockSource( final CaptureClockSource aSource )
   {
     this.clockSource = aSource;
   }

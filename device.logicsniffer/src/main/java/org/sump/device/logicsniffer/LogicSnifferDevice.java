@@ -33,7 +33,7 @@ import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
 import org.osgi.service.io.*;
-import org.sump.device.logicsniffer.LogicSnifferConfig.*;
+import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
 /**
@@ -735,7 +735,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     if ( this.config.isExternalClock() )
     {
       flags |= FLAG_EXTERNAL;
-      if ( ClockSource.EXTERNAL_FALLING == this.config.getClockSource() )
+      if ( CaptureClockSource.EXTERNAL_FALLING == this.config.getClockSource() )
       {
         flags |= FLAG_INVERTED;
       }

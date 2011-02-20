@@ -38,13 +38,13 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
 import nl.lxtreme.rxtx.*;
 
-import org.sump.device.logicsniffer.LogicSnifferConfig.ClockSource;
+import org.sump.device.logicsniffer.profile.*;
+import org.sump.device.logicsniffer.profile.DeviceProfile.*;
 
 
 /**
  * Provides the configuration dialog for the Open Bench Logic Sniffer device.
  */
-@SuppressWarnings( "boxing" )
 public class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable, Closeable
 {
   // INNER TYPES
@@ -79,7 +79,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     {
       String label;
 
-      final ClockSource size = ( ClockSource )aValue;
+      final CaptureClockSource size = ( CaptureClockSource )aValue;
       switch ( size )
       {
         case INTERNAL:
@@ -101,36 +101,56 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   /**
-   * Renders a device type.
+   * Provides a combobox model for device profile types.
    */
-  static final class DeviceTypeComboBoxRenderer extends BasicComboBoxRenderer
+  static final class DeviceProfileTypeComboBoxModel extends AbstractListModel implements ComboBoxModel
   {
+    // CONSTANTS
+
     private static final long serialVersionUID = 1L;
 
+    // VARIABLES
+
+    private volatile Object selected = null;
+
+    // METHODS
+
+    /**
+     * @see javax.swing.ListModel#getElementAt(int)
+     */
     @Override
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-        final boolean aIsSelected, final boolean aCellHasFocus )
+    public Object getElementAt( final int aIndex )
     {
-      String label;
+      final DeviceProfileManager manager = Activator.getDeviceProfileManager();
+      return manager.getProfileTypes().get( aIndex );
+    }
 
-      final DeviceType size = ( DeviceType )aValue;
-      switch ( size )
-      {
-        case BP:
-          label = "BusPirate";
-          break;
-        case OLS:
-          label = "OLS";
-          break;
-        case SUMP:
-          label = "Original SUMP";
-          break;
-        default:
-          label = "Unknown";
-          break;
-      }
+    /**
+     * @see javax.swing.ComboBoxModel#getSelectedItem()
+     */
+    @Override
+    public Object getSelectedItem()
+    {
+      return this.selected;
+    }
 
-      return super.getListCellRendererComponent( aList, label, aIndex, aIsSelected, aCellHasFocus );
+    /**
+     * @see javax.swing.ListModel#getSize()
+     */
+    @Override
+    public int getSize()
+    {
+      final DeviceProfileManager manager = Activator.getDeviceProfileManager();
+      return manager.getProfileTypeCount();
+    }
+
+    /**
+     * @see javax.swing.ComboBoxModel#setSelectedItem(java.lang.Object)
+     */
+    @Override
+    public void setSelectedItem( final Object aItem )
+    {
+      this.selected = aItem;
     }
   }
 
@@ -189,12 +209,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /** The serial port baudrates that can be chosen. */
   private static final String[] BAUDRATES = { "921600bps", "460800bps", "230400bps", "115200bps", "57600bps",
       "38400bps", "19200bps" };
-  /** The capture speeds supported by the OLS. */
-  private static final String[] CAPTURE_SPEEDS = { "200MHz", "100MHz", "50MHz", "20MHz", "10MHz", "5MHz", "2MHz",
-      "1MHz", "500kHz", "200kHz", "100kHz", "50kHz", "20kHz", "10kHz", "1kHz", "500Hz", "200Hz", "100Hz", "50Hz",
-      "20Hz", "10Hz" };
-  /** The capture sizes supported by the OLS. */
-  private static final Integer[] CAPTURE_SIZES = { 24576, 12288, 6144, 3072, 2048, 1024, 512, 256, 128, 64 };
   /** The numbering schemes supported by the OLS. */
   private static final String[] NUMBER_SCHEMES = { "Inside", "Outside", "Test Mode" };
 
@@ -314,13 +328,17 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     {
       JCheckBox jb = ( JCheckBox )o;
       if ( jb.getModel().isSelected() )
+      {
         jb.setText( "Enabled - See tooltip!" );
+      }
       else
+      {
         jb.setText( "Enabled" );
+      }
 
-// TODO:  ?
-//      updateConfig();
-//      updateFields();
+      // TODO: ?
+      // updateConfig();
+      // updateFields();
     }
     else if ( o == this.speedSelect )
     {
@@ -503,14 +521,73 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    *          the device type to update the controls for, cannot be
    *          <code>null</code>.
    */
-  void updateDeviceType( final DeviceType aType )
+  void updateDeviceType( final String aType )
   {
-    final boolean isBusPirate = aType == DeviceType.BP;
+    final DeviceProfileManager manager = Activator.getDeviceProfileManager();
+    final DeviceProfile profile = manager.getProfile( aType );
+    if ( profile == null )
+    {
+      return;
+    }
 
-    // TODO
-    this.triggerEnable.setEnabled( !isBusPirate );
-    this.filterEnable.setEnabled( !isBusPirate );
-    this.rleEnable.setEnabled( !isBusPirate );
+    // Noise filter supported?
+    final boolean noiseFilterSupported = profile.isNoiseFilterSupported();
+    if ( !noiseFilterSupported )
+    {
+      this.filterEnable.setSelected( false );
+    }
+    this.filterEnable.setEnabled( noiseFilterSupported );
+
+    // RLE supported?
+    final boolean rleSupported = profile.isRleSupported();
+    if ( !rleSupported )
+    {
+      this.rleEnable.setSelected( false );
+    }
+    this.rleEnable.setEnabled( rleSupported );
+
+    // Triggers supported at all?
+    final boolean triggerSupported = profile.isTriggerSupported();
+    if ( !triggerSupported )
+    {
+      this.triggerEnable.setSelected( false );
+    }
+    this.triggerEnable.setEnabled( triggerSupported );
+
+    // Complex triggers supported?
+    final boolean complexTriggersSupported = profile.isComplexTriggersSupported();
+    if ( !complexTriggersSupported )
+    {
+      this.triggerTypeSelect.setSelectedItem( TriggerType.SIMPLE );
+    }
+    if ( complexTriggersSupported )
+    {
+      this.triggerTypeSelect.setModel( new DefaultComboBoxModel( TriggerType.values() ) );
+    }
+    else
+    {
+      this.triggerTypeSelect.setModel( new DefaultComboBoxModel( new TriggerType[] { TriggerType.SIMPLE } ) );
+    }
+    this.triggerTypeSelect.setEnabled( triggerSupported );
+
+    // Update the capture sizes...
+    this.sizeSelect.setModel( new DefaultComboBoxModel( profile.getCaptureSizes() ) );
+    // Update the capture speeds...
+    this.speedSelect.setModel( new DefaultComboBoxModel( profile.getSampleRates() ) );
+    // Update the capture clock sources...
+    this.sourceSelect.setModel( new DefaultComboBoxModel( profile.getCaptureClock() ) );
+
+    // Enable the supported number of channel groups...
+    final int channelGroups = profile.getChannelGroupCount();
+    for ( int i = 0; i < this.channelGroup.length; i++ )
+    {
+      final boolean enabled = i < channelGroups;
+      if ( !enabled )
+      {
+        this.channelGroup[i].setSelected( false );
+      }
+      this.channelGroup[i].setEnabled( enabled );
+    }
   }
 
   /**
@@ -754,34 +831,14 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.portRateSelect = new JComboBox( BAUDRATES );
     this.portRateSelect.setSelectedIndex( 3 ); // 115k2
 
-    this.deviceTypeSelect = new JComboBox( DeviceType.values() );
-    this.deviceTypeSelect.setRenderer( new DeviceTypeComboBoxRenderer() );
-    this.deviceTypeSelect.setSelectedIndex( 1 ); // OLS
-    this.deviceTypeSelect.setEnabled( false ); // XXX
-    this.deviceTypeSelect.addItemListener( new ItemListener()
-    {
-      /**
-       * @see java.awt.event.ItemListener#itemStateChanged(java.awt.event.ItemEvent)
-       */
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        final JComboBox combobox = ( JComboBox )aEvent.getSource();
-        final DeviceType selected = ( DeviceType )combobox.getSelectedItem();
-        updateDeviceType( selected );
-      }
-    } );
-
     this.numberSchemeSelect = new JComboBox( NUMBER_SCHEMES );
     this.numberSchemeSelect.setSelectedIndex( 0 );
 
-    this.sourceSelect = new JComboBox( ClockSource.values() );
+    this.sourceSelect = new JComboBox();
     this.sourceSelect.setRenderer( new ClockSourceComboBoxRenderer() );
-    this.sourceSelect.setSelectedIndex( 0 );
     this.sourceSelect.addActionListener( this );
 
-    this.speedSelect = new JComboBox( CAPTURE_SPEEDS );
-    this.speedSelect.setSelectedIndex( 1 );
+    this.speedSelect = new JComboBox();
     this.speedSelect.addActionListener( this );
 
     this.groupsPanel = new JPanel();
@@ -797,9 +854,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       this.groupsPanel.add( this.channelGroup[i] );
     }
 
-    this.sizeSelect = new JComboBox( CAPTURE_SIZES );
+    this.sizeSelect = new JComboBox();
     this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer() );
-    this.sizeSelect.setSelectedIndex( 2 );
 
     this.maxSampleSize = new JCheckBox( "Automatic (maximum)" );
     this.maxSampleSize.setSelected( false );
@@ -810,8 +866,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       {
         final JCheckBox checkbox = ( JCheckBox )aEvent.getSource();
 
-        LogicSnifferConfigDialog.this.sizeSelect.setEnabled( !checkbox.isSelected() );
         LogicSnifferConfigDialog.this.sizeSelect.setSelectedItem( Integer.valueOf( determineMaxSampleCount() ) );
+        LogicSnifferConfigDialog.this.sizeSelect.setEnabled( !checkbox.isSelected() );
       }
     } );
 
@@ -820,7 +876,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.filterEnable.setEnabled( false );
 
     this.rleEnable = new JCheckBox( "Enabled - See tooltip!" );
-    // ugly hack to get consistent layout even when we change the text as warning.
+    // ugly hack to get consistent layout even when we change the text as
+    // warning.
     this.rleEnable.setPreferredSize( this.rleEnable.getPreferredSize() );
     this.rleEnable.setText( "Enabled" );
     this.rleEnable.setToolTipText( rleWarning );
@@ -843,10 +900,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.ratioSlider.setPreferredSize( new Dimension( 300, 50 ) );
     this.ratioSlider.addChangeListener( new TriggerRatioChangeListener( this.ratioLabel ) );
 
-    final String[] types = { "Simple", "Complex" };
-    this.triggerTypeSelect = new JComboBox( types );
-    // Select first item by default...
-    this.triggerTypeSelect.setSelectedIndex( 0 );
+    this.triggerTypeSelect = new JComboBox();
     this.triggerTypeSelect.addActionListener( this );
 
     this.triggerStageTabs = new JTabbedPane();
@@ -901,6 +955,24 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
       this.triggerStageTabs.add( String.format( "Stage %d", Integer.valueOf( i + 1 ) ), stagePane );
     }
+
+    // NOTE: create this component as last component, as it will fire an event
+    // that uses all other components!!!
+    this.deviceTypeSelect = new JComboBox( new DeviceProfileTypeComboBoxModel() );
+    this.deviceTypeSelect.addItemListener( new ItemListener()
+    {
+      /**
+       * @see java.awt.event.ItemListener#itemStateChanged(java.awt.event.ItemEvent)
+       */
+      @Override
+      public void itemStateChanged( final ItemEvent aEvent )
+      {
+        final JComboBox combobox = ( JComboBox )aEvent.getSource();
+        final String selected = ( String )combobox.getSelectedItem();
+        updateDeviceType( selected );
+      }
+    } );
+    this.deviceTypeSelect.setSelectedItem( "OLS" );
   }
 
   /**
@@ -914,7 +986,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   private void setTriggerEnabled( final boolean aEnable )
   {
     final int channels = this.config.getChannelCount();
-    final boolean complex = "Complex".equals( ( String )this.triggerTypeSelect.getSelectedItem() );
+    final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
     if ( !complex )
     {
       this.triggerStageTabs.setSelectedIndex( 0 );
@@ -960,10 +1032,10 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
     // set port + baudrate
     this.config.setPortName( ( String )this.portSelect.getSelectedItem() );
-    this.config.setBaudrate( NumberUtils.smartParseInt( ( String )this.portRateSelect.getSelectedItem() ) );
+    this.config.setBaudrate( NumberUtils.smartParseInt( String.valueOf( this.portRateSelect.getSelectedItem() ) ) );
 
     // set clock source
-    this.config.setClockSource( ( ClockSource )this.sourceSelect.getSelectedItem() );
+    this.config.setClockSource( ( CaptureClockSource )this.sourceSelect.getSelectedItem() );
 
     // set enabled channel groups
     int enabledChannels = 0;
@@ -984,12 +1056,13 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
     // set sample rate; use a default to ensure the internal state remains
     // correct...
-    value = ( String )this.speedSelect.getSelectedItem();
+    value = String.valueOf( this.speedSelect.getSelectedItem() );
     int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, LogicSnifferDevice.CLOCK );
     this.config.setSampleRate( f );
 
     // set sample count
     int sampleCount = ( ( Integer )this.sizeSelect.getSelectedItem() ).intValue();
+
     if ( this.maxSampleSize.isSelected() )
     {
       sampleCount = maxSampleCount;
@@ -1115,7 +1188,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.triggerEnable.setSelected( this.config.isTriggerEnabled() );
     setTriggerEnabled( this.config.isTriggerEnabled() );
 
-    this.filterEnable.setEnabled( this.config.isFilterAvailable() && aEnable );
+    this.filterEnable.setEnabled( aEnable );
 
     final int availableChannelGroups = this.config.getChannelCount() / 8;
     for ( int i = 0; i < this.channelGroup.length; i++ )
