@@ -23,6 +23,8 @@ package nl.lxtreme.ols.client.diagram;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -34,7 +36,7 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 /**
  * Stores the diagram labels and provides a dialog to change them.
- *
+ * 
  * @version 0.7
  * @author Frank Kunz
  */
@@ -92,7 +94,7 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
    * Display the settings dialog. If the user clicks ok, all changes are
    * reflected in the properties of this object. Otherwise changes are
    * discarded.
-   *
+   * 
    * @return <code>true</code> when user accepted changes, <code>false</code>
    *         otherwise.
    */
@@ -136,7 +138,7 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
 
   /**
    * Creates the label editors pane.
-   *
+   * 
    * @return a label editor pane, never <code>null</code>.
    */
   private JPanel createLabelEditorsPane()
@@ -196,7 +198,14 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
 
     final JButton cancel = StandardActionFactory.createCloseButton();
 
-    final JComponent buttonPane = SwingComponentUtils.createButtonPane( ok, cancel, clear );
+    final JButton[] buttons = { ok, cancel, clear };
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( buttons );
+
+    final List<Component> focusComponents = new ArrayList<Component>( this.labelFields.length + buttons.length );
+    Collections.addAll( focusComponents, this.labelFields );
+    Collections.addAll( focusComponents, buttons );
+
+    this.setFocusTraversalPolicy( new ArrayFocusTravelPolicy( focusComponents ) );
 
     SwingComponentUtils.setupDialogContentPane( this, editorsPane, buttonPane, ok );
   }
