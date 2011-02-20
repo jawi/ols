@@ -67,36 +67,49 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   /**
-   * Renders a clock source.
+   * Renders a binary size.
    */
-  static final class ClockSourceComboBoxRenderer extends BasicComboBoxRenderer
+  static final class CaptureSpeedComboBoxRenderer extends BasicComboBoxRenderer
   {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * @see javax.swing.plaf.basic.BasicComboBoxRenderer#getListCellRendererComponent(javax.swing.JList,
+     *      java.lang.Object, int, boolean, boolean)
+     */
     @Override
     public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
         final boolean aIsSelected, final boolean aCellHasFocus )
     {
-      String label;
+      final Integer size = ( Integer )aValue;
+      final String value = DisplayUtils.displayFrequency( size.doubleValue() );
+      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
 
-      final CaptureClockSource size = ( CaptureClockSource )aValue;
-      switch ( size )
+  /**
+   * Renders a clock source.
+   */
+  static final class ClockSourceComboBoxRenderer extends EnumItemRenderer<CaptureClockSource>
+  {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * @see nl.lxtreme.ols.util.swing.component.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final CaptureClockSource aValue )
+    {
+      switch ( aValue )
       {
         case INTERNAL:
-          label = "Internal";
-          break;
+          return "Internal";
         case EXTERNAL_FALLING:
-          label = "External / Rising";
-          break;
+          return "External / Rising";
         case EXTERNAL_RISING:
-          label = "External / Falling";
-          break;
-        default:
-          label = "Unknown";
-          break;
+          return "External / Falling";
       }
-
-      return super.getListCellRendererComponent( aList, label, aIndex, aIsSelected, aCellHasFocus );
+      return super.getDisplayValue( aValue );
     }
   }
 
@@ -839,6 +852,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.sourceSelect.addActionListener( this );
 
     this.speedSelect = new JComboBox();
+    this.speedSelect.setRenderer( new CaptureSpeedComboBoxRenderer() );
     this.speedSelect.addActionListener( this );
 
     this.groupsPanel = new JPanel();

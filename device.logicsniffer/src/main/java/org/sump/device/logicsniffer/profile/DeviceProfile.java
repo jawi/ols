@@ -56,6 +56,36 @@ public final class DeviceProfile
     SIMPLE, COMPLEX;
   }
 
+  /**
+   * Provides a numeric comparator, sorts in decrementing order.
+   */
+  private static class NumericComparator implements Comparator<Number>
+  {
+    /**
+     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+     */
+    @Override
+    public int compare( final Number aO1, final Number aO2 )
+    {
+      if ( aO1 instanceof Integer )
+      {
+        final int value1 = aO1.intValue();
+        final int value2 = aO2.intValue();
+        return ( value2 - value1 );
+      }
+      else if ( aO1 instanceof Long )
+      {
+        final long value1 = aO1.longValue();
+        final long value2 = aO2.longValue();
+        return ( int )( value2 - value1 );
+      }
+
+      final double value1 = aO1.doubleValue();
+      final double value2 = aO2.doubleValue();
+      return ( int )( value2 - value1 );
+    }
+  }
+
   // CONSTANTS
 
   /** The short (single word) type of the device described in this profile */
@@ -150,12 +180,13 @@ public final class DeviceProfile
   {
     final String rawValue = this.properties.get( DEVICE_CAPTURESIZES );
     final String[] values = rawValue.split( ",\\s*" );
-    final Integer[] result = new Integer[values.length];
-    for ( int i = 0; i < values.length; i++ )
+    final List<Integer> result = new ArrayList<Integer>();
+    for ( String value : values )
     {
-      result[i] = Integer.valueOf( values[i].trim() );
+      result.add( Integer.valueOf( value.trim() ) );
     }
-    return result;
+    Collections.sort( result, new NumericComparator() );
+    return result.toArray( new Integer[result.size()] );
   }
 
   /**
@@ -222,12 +253,14 @@ public final class DeviceProfile
   {
     final String rawValue = this.properties.get( DEVICE_SAMPLERATES );
     final String[] values = rawValue.split( ",\\s*" );
-    final Integer[] result = new Integer[values.length];
-    for ( int i = 0; i < values.length; i++ )
+    final List<Integer> result = new ArrayList<Integer>();
+    for ( String value : values )
     {
-      result[i] = Integer.valueOf( values[i].trim() );
+      result.add( Integer.valueOf( value.trim() ) );
     }
-    return result;
+    Collections.sort( result, new NumericComparator() );
+
+    return result.toArray( new Integer[result.size()] );
   }
 
   /**
