@@ -1457,7 +1457,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
     {
-      final boolean enabled = enableCursors && this.dataContainer.isCursorPositionSet( c - 1 );
+      final boolean enabled = enableCursors && this.dataContainer.isCursorPositionSet( c );
       getAction( GotoNthCursorAction.getID( c ) ).setEnabled( enabled );
     }
 
