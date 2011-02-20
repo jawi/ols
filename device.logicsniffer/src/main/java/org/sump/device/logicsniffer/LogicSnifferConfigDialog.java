@@ -1115,7 +1115,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.config.setTriggerEnabled( triggerEnabled );
     if ( triggerEnabled )
     {
-      final boolean complex = "Complex".equals( ( String )this.triggerTypeSelect.getSelectedItem() );
+      final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
       for ( int stage = 0; stage < this.triggerStages; stage++ )
       {
         int m = 0;
