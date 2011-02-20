@@ -20,48 +20,44 @@
  */
 package nl.lxtreme.ols.client.action;
 
-import static nl.lxtreme.ols.client.icons.IconFactory.*;
-
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
+import static nl.lxtreme.ols.client.icons.IconFactory.*;
 
-
-/**
- *
- */
-public class GotoCursor1Action extends BaseAction
+public class GotoNthCursorAction extends BaseAction
 {
-  // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "GotoCursor1";
+  public final String ID;
+  public final int i;
 
-  // CONSTRUCTORS
-
-  /**
-   * @param aDiagramScrollPane
-   */
-  public GotoCursor1Action( final ClientController aController )
+  public GotoNthCursorAction( final ClientController aController, int n )
   {
-    super( ID, aController, createOverlayIcon( ICON_GOTO_CURSOR1, "1" ), "Go to cursor 1",
-        "Go to cursor 1 in diagram" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_1) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_1 ) );
+    super( "GotoCursor" + String.valueOf( n ), aController, createOverlayIcon( ICON_GOTO_CURSOR, String.valueOf( n ) ),
+            "Go to cursor " + String.valueOf( n ), "Go to cursor " + String.valueOf( n ) + " in diagram" );
+    this.ID = "GotoCursor" + String.valueOf( n );
+    this.i = n - 1; // cursors are 0-based
+
+    if ( n < 0 )
+      throw new IllegalArgumentException( "There are no cursors < 0!" );
+
+    if ( n <= 9 )
+    {
+      int event = KeyEvent.VK_0 + n;
+      putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( event ) );
+      putValue( MNEMONIC_KEY, new Integer( event ) );
+
+    }
+    else if ( n == 10 )
+      putValue( MNEMONIC_KEY, KeyEvent.VK_0 ); // ctrl+0 is used for zoom to original, but the mnemonic is free
   }
 
-  // METHODS
-
-  /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-   */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().gotoCursorPosition( 0 );
+    getController().gotoCursorPosition( this.i );
   }
 }
-
-/* EOF */

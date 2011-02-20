@@ -43,8 +43,7 @@ public interface IconLocator
   static final String ICON_ZOOM_OUT = "Gnome-Zoom-Out-32.png";
 
   static final String ICON_GOTO_TRIGGER = "Gnome-Go-Home-32.png";
-  static final String ICON_GOTO_CURSOR1 = "Gnome-Go-Jump-32.png";
-  static final String ICON_GOTO_CURSOR2 = "Gnome-Go-Jump-32.png";
+  static final String ICON_GOTO_CURSOR = "Gnome-Go-Jump-32.png";
   static final String ICON_GOTO_FIRST_CURSOR = "Gnome-Go-First-32.png";
   static final String ICON_GOTO_PREVIOUS_CURSOR = "Gnome-Go-Previous-32.png";
   static final String ICON_GOTO_NEXT_CURSOR = "Gnome-Go-Next-32.png";

@@ -1283,8 +1283,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     aActionManager.add( new ZoomFitAction( this ) ).setEnabled( false );
 
     aActionManager.add( new GotoTriggerAction( this ) ).setEnabled( false );
-    aActionManager.add( new GotoCursor1Action( this ) ).setEnabled( false );
-    aActionManager.add( new GotoCursor2Action( this ) ).setEnabled( false );
+    for ( int i = 1; i <= 10; i++ )
+      aActionManager.add( new GotoNthCursorAction( this, i ) ).setEnabled( false );
     aActionManager.add( new GotoFirstCursorAction( this ) ).setEnabled( false );
     aActionManager.add( new GotoLastCursorAction( this ) ).setEnabled( false );
     aActionManager.add( new ClearCursors( this ) ).setEnabled( false );
@@ -1453,8 +1453,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     // Update the cursor actions accordingly...
     final boolean enableCursors = dataAvailable && this.dataContainer.isCursorsEnabled();
 
-    getAction( GotoCursor1Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 0 ) );
-    getAction( GotoCursor2Action.ID ).setEnabled( enableCursors && this.dataContainer.isCursorPositionSet( 1 ) );
+    for ( int i = 1; i <= 10; i++ )
+      getAction( "GotoCursor" + String.valueOf( i ) ).setEnabled(
+              enableCursors && this.dataContainer.isCursorPositionSet( i - 1 ) );
 
     getAction( GotoFirstCursorAction.ID ).setEnabled( enableCursors );
     getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors );
