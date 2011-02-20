@@ -1,4 +1,7 @@
-<assembly>
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
 	<id>distribution</id>
 	<formats>
 		<format>zip</format>
@@ -20,7 +23,17 @@
 			<includes>
 				<include>*.jar</include>
 			</includes>
+			<lineEnding>keep</lineEnding>
 		</fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources</directory>
+            <outputDirectory>plugins</outputDirectory>
+            <useDefaultExcludes>true</useDefaultExcludes>
+            <includes>
+                <include>*.cfg</include>
+            </includes>
+            <lineEnding>unix</lineEnding>
+        </fileSet>
 		<fileSet>
 			<directory>${project.basedir}/doc</directory>
 			<outputDirectory>doc</outputDirectory>
@@ -28,6 +41,7 @@
 			<includes>
 				<include>**</include>
 			</includes>
+			<lineEnding>dos</lineEnding>
 		</fileSet>
 		<fileSet>
 			<directory>${project.basedir}</directory>
@@ -35,8 +49,19 @@
 				<include>AUTHOR*</include>
 				<include>README*</include>
 				<include>LICENSE*</include>
-				<include>run.*</include>
+				<include>*.bat</include>
 			</includes>
+			<lineEnding>dos</lineEnding>
+			<outputDirectory>/</outputDirectory>
+			<useDefaultExcludes>true</useDefaultExcludes>
+		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}</directory>
+			<includes>
+				<include>*.sh</include>
+			</includes>
+			<lineEnding>unix</lineEnding>
+			<fileMode>0755</fileMode>
 			<outputDirectory>/</outputDirectory>
 			<useDefaultExcludes>true</useDefaultExcludes>
 		</fileSet>

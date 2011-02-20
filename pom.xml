@@ -50,10 +50,9 @@
 		</resources>
 		<plugins>
 			<plugin>
-				<!-- solves a bug in the created tarballs -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2-beta-5</version>
+				<version>2.2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
