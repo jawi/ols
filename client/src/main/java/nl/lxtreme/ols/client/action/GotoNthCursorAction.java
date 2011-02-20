@@ -20,44 +20,82 @@
  */
 package nl.lxtreme.ols.client.action;
 
-import java.awt.event.*;
 
-import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
+import static nl.lxtreme.ols.api.data.CapturedData.*;
 import static nl.lxtreme.ols.client.icons.IconFactory.*;
 
+import java.awt.event.*;
+
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
+
+
+/**
+ * Generic action to go to a specific set cursor in the diagram.
+ * 
+ * @author stefant
+ */
 public class GotoNthCursorAction extends BaseAction
 {
+  // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public final String ID;
-  public final int i;
+  private static final String ID_PREFIX = "GotoCursor";
 
-  public GotoNthCursorAction( final ClientController aController, int n )
+  // VARIABLES
+
+  private final int index;
+
+  // METHODS
+
+  /**
+   * Creates a new GotoNthCursorAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action;
+   * @param aIndex
+   *          the (zero-based) index of the cursor.
+   */
+  public GotoNthCursorAction( final ClientController aController, final int aIndex )
   {
-    super( "GotoCursor" + String.valueOf( n ), aController, createOverlayIcon( ICON_GOTO_CURSOR, String.valueOf( n ) ),
-            "Go to cursor " + String.valueOf( n ), "Go to cursor " + String.valueOf( n ) + " in diagram" );
-    this.ID = "GotoCursor" + String.valueOf( n );
-    this.i = n - 1; // cursors are 0-based
+    super( getID( aIndex ), aController, createOverlayIcon( ICON_GOTO_CURSOR, String.valueOf( aIndex + 1 ) ),
+        "Go to cursor " + String.valueOf( aIndex + 1 ), "Go to the " + DisplayUtils.getOrdinalNumber( aIndex + 1 )
+            + " cursor in the diagram" );
+    this.index = aIndex;
 
-    if ( n < 0 )
-      throw new IllegalArgumentException( "There are no cursors < 0!" );
-
-    if ( n <= 9 )
-    {
-      int event = KeyEvent.VK_0 + n;
-      putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( event ) );
-      putValue( MNEMONIC_KEY, new Integer( event ) );
-
-    }
-    else if ( n == 10 )
-      putValue( MNEMONIC_KEY, KeyEvent.VK_0 ); // ctrl+0 is used for zoom to original, but the mnemonic is free
+    final int keyStroke = KeyEvent.VK_0 + ( aIndex % MAX_CURSORS );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( keyStroke ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( keyStroke ) );
   }
 
+  // METHODS
+
+  /**
+   * Creates an ID for the action to go the cursor with the given index.
+   * 
+   * @param aCursorIdx
+   *          the cursor index to get the action-ID for, >= 0 && <
+   *          {@value CapturedData#MAX_CURSORS}.
+   * @return the action ID for the action, never <code>null</code>.
+   */
+  public static String getID( final int aCursorIdx )
+  {
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= MAX_CURSORS ) )
+    {
+      throw new IllegalArgumentException( "Invalid cursor index, should be between 0 and " + MAX_CURSORS );
+    }
+    return ID_PREFIX + aCursorIdx;
+  }
+
+  /**
+   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().gotoCursorPosition( this.i );
+    getController().gotoCursorPosition( this.index );
   }
 }
