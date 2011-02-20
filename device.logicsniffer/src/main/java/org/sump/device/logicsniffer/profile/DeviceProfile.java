@@ -49,6 +49,14 @@ public final class DeviceProfile
   }
 
   /**
+   * The various numbering schemes.
+   */
+  public static enum NumberingScheme
+  {
+    DEFAULT, INSIDE, OUTSIDE;
+  }
+
+  /**
    * The various types of triggers.
    */
   public static enum TriggerType
@@ -111,6 +119,8 @@ public final class DeviceProfile
   public static final String DEVICE_FEATURE_NOISEFILTER = "device.feature.noisefilter";
   /** Whether or not Run-Length encoding is supported */
   public static final String DEVICE_FEATURE_RLE = "device.feature.rle";
+  /** Whether or not a testing mode is supported. */
+  public static final String DEVICE_FEATURE_TEST_MODE = "device.feature.testmode";
   /** Whether or not triggers are supported */
   public static final String DEVICE_FEATURE_TRIGGERS = "device.feature.triggers";
   /** The number of trigger stages */
@@ -126,13 +136,15 @@ public final class DeviceProfile
   public static final String DEVICE_CHANNEL_GROUPS = "device.channel.groups";
   /** Whether the capture size is limited by the enabled channel groups */
   public static final String DEVICE_CAPTURESIZE_BOUND = "device.capturesize.bound";
+  /** What channel numbering schemes are supported by the device. */
+  public static final String DEVICE_CHANNEL_NUMBERING_SCHEMES = "device.channel.numberingschemes";
 
   /** All the profile keys that are supported. */
   private static final List<String> KNOWN_KEYS = Arrays.asList( new String[] { DEVICE_TYPE, DEVICE_DESCRIPTION,
       DEVICE_INTERFACE, DEVICE_CLOCKSPEED, DEVICE_SUPPORTS_DDR, DEVICE_SAMPLERATES, DEVICE_CAPTURECLOCK,
-      DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TRIGGERS,
-      DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT, DEVICE_CHANNEL_GROUPS,
-      DEVICE_CAPTURESIZE_BOUND } );
+      DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TEST_MODE,
+      DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT,
+      DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES } );
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { "felix.fileinstall.filename",
       "service.pid", "service.factoryPid" } );
 
@@ -209,6 +221,23 @@ public final class DeviceProfile
   {
     final String value = this.properties.get( DEVICE_CHANNEL_GROUPS );
     return Integer.parseInt( value );
+  }
+
+  /**
+   * Returns all supported channel numbering schemes.
+   * 
+   * @return an array of numbering schemes, never <code>null</code>.
+   */
+  public NumberingScheme[] getChannelNumberingSchemes()
+  {
+    final String rawValue = this.properties.get( DEVICE_CHANNEL_NUMBERING_SCHEMES );
+    final String[] values = rawValue.split( ",\\s*" );
+    final NumberingScheme[] result = new NumberingScheme[values.length];
+    for ( int i = 0; i < result.length; i++ )
+    {
+      result[i] = NumberingScheme.valueOf( values[i].trim() );
+    }
+    return result;
   }
 
   /**
@@ -343,6 +372,18 @@ public final class DeviceProfile
   public boolean isRleSupported()
   {
     final String value = this.properties.get( DEVICE_FEATURE_RLE );
+    return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns whether or not the device supports a testing mode.
+   * 
+   * @return <code>true</code> if testing mode is supported by the device,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isTestModeSupported()
+  {
+    final String value = this.properties.get( DEVICE_FEATURE_TEST_MODE );
     return Boolean.parseBoolean( value );
   }
 
