@@ -131,6 +131,7 @@ public class DiagramUI extends ComponentUI
     // VARIABLES
 
     private int currentCursor;
+    private Point lastDragPoint;
 
     // METHODS
 
@@ -183,6 +184,41 @@ public class DiagramUI extends ComponentUI
 
       final int channelIdx = diagram.convertPointToChannelIndex( mousePosition );
       updateTooltipText( diagram, mousePosition, channelIdx, null );
+
+      Container parent = diagram.getParent();
+      if ( parent.getClass() == JViewport.class )
+      {
+        JViewport viewPort = ( JViewport )parent;
+
+        int dx = aEvent.getX() - lastDragPoint.x;
+        int dy = aEvent.getY() - lastDragPoint.y;
+
+        Point scrollPosition = viewPort.getViewPosition();
+        int newX = scrollPosition.x - dx;
+        int newY = scrollPosition.y - dy;
+
+        int w = diagram.getWidth();
+        int vpW = viewPort.getWidth();
+        int maxX = w - vpW - 1;
+        if ( newX < 0 || w <= vpW )
+          scrollPosition.x = 0;
+        else if ( newX >= maxX )
+          scrollPosition.x = maxX;
+        else
+          scrollPosition.x = newX;
+
+        int h = diagram.getHeight();
+        int vpH = viewPort.getHeight();
+        int maxY = h - vpH;
+        if ( newY < 0 || h <= vpH )
+          scrollPosition.y = 0;
+        else if ( newY >= maxY )
+          scrollPosition.y = maxY;
+        else
+          scrollPosition.y = newY;
+
+        viewPort.setViewPosition( scrollPosition );
+      }
     }
 
     /**
@@ -227,6 +263,7 @@ public class DiagramUI extends ComponentUI
     public void mousePressed( final MouseEvent aEvent )
     {
       handlePopupTrigger( aEvent );
+      this.lastDragPoint = aEvent.getPoint();
     }
 
     /**
