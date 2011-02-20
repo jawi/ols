@@ -31,6 +31,7 @@
 			</jarfileset>
 			<javafileset dir="${project.target}">
 				<include name="plugins/*.jar" />
+                <include name="plugins/*.cfg" />
 			</javafileset>
 		</jarbundler>
 	</target>

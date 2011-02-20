@@ -40,7 +40,7 @@ public final class Runner
 {
   // CONSTANTS
 
-  private static final String[] AUTO_START_BUNDLES = { "org.apache.felix.fileinstall" };
+  private static final String[] AUTO_START_BUNDLES = { "org.apache.felix.configadmin", "org.apache.felix.fileinstall" };
   // VARIABLES
 
   private final HostActivator hostActivator;
@@ -81,7 +81,14 @@ public final class Runner
     System.setProperty( "felix.fileinstall.noInitialDelay", Boolean.toString( true ) );
     System.setProperty( "felix.fileinstall.dir", pluginDir );
     System.setProperty( "felix.fileinstall.start.level", "2" );
-    System.setProperty( "felix.fileinstall.log.level", "1" );
+    if ( isDebugMode() )
+    {
+      System.setProperty( "felix.fileinstall.log.level", "4" );
+    }
+    else
+    {
+      System.setProperty( "felix.fileinstall.log.level", "1" );
+    }
 
     try
     {
