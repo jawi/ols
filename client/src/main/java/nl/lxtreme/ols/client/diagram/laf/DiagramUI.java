@@ -178,36 +178,39 @@ public class DiagramUI extends ComponentUI
       final Diagram diagram = ( Diagram )aEvent.getSource();
       final Point mousePosition = aEvent.getPoint();
 
+      // this.currentCursor >= 0 indicates that we are dragging a cursor
       if ( this.currentCursor >= 0 )
       {
         diagram.dragCursor( this.currentCursor, mousePosition );
       }
+      else // if not we are dragging the whole display
+      {
+        final JViewport viewPort = diagram.getViewPort();
+        if ( viewPort != null )
+        {
+          int dx = aEvent.getX() - this.lastDragPoint.x;
+          int dy = aEvent.getY() - this.lastDragPoint.y;
+
+          Point scrollPosition = viewPort.getViewPosition();
+          int newX = scrollPosition.x - dx;
+          int newY = scrollPosition.y - dy;
+
+          int diagramWidth = diagram.getWidth();
+          int viewportWidth = viewPort.getWidth();
+          int maxX = diagramWidth - viewportWidth - 1;
+          scrollPosition.x = Math.max( 0, Math.min( maxX, newX ) );
+
+          int diagramHeight = diagram.getHeight();
+          int viewportHeight = viewPort.getHeight();
+          int maxY = diagramHeight - viewportHeight;
+          scrollPosition.y = Math.max( 0, Math.min( maxY, newY ) );
+
+          viewPort.setViewPosition( scrollPosition );
+        }
+      }
 
       final int channelIdx = diagram.convertPointToChannelIndex( mousePosition );
       updateTooltipText( diagram, mousePosition, channelIdx, null );
-
-      final JViewport viewPort = diagram.getViewPort();
-      if ( viewPort != null )
-      {
-        int dx = aEvent.getX() - this.lastDragPoint.x;
-        int dy = aEvent.getY() - this.lastDragPoint.y;
-
-        Point scrollPosition = viewPort.getViewPosition();
-        int newX = scrollPosition.x - dx;
-        int newY = scrollPosition.y - dy;
-
-        int diagramWidth = diagram.getWidth();
-        int viewportWidth = viewPort.getWidth();
-        int maxX = diagramWidth - viewportWidth - 1;
-        scrollPosition.x = Math.max( 0, Math.min( maxX, newX ) );
-
-        int diagramHeight = diagram.getHeight();
-        int viewportHeight = viewPort.getHeight();
-        int maxY = diagramHeight - viewportHeight;
-        scrollPosition.y = Math.max( 0, Math.min( maxY, newY ) );
-
-        viewPort.setViewPosition( scrollPosition );
-      }
     }
 
     /**
