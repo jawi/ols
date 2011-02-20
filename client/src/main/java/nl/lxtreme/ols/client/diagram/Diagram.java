@@ -83,6 +83,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     this.corner = new DiagramCorner( this );
 
     setMinimumSize( new Dimension( 25, 1 ) );
+    setAutoscrolls(true); //enable synthetic drag events
 
     aController.addCursorChangeListener( this );
     aController.addCursorChangeListener( this.timeLine );
