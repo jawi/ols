@@ -249,16 +249,17 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
               if ( tenBitAddress )
               {
                 slaveAddress |= ( byteValue & 0xFF );
-                tenBitAddress = false;
               }
               else
               {
                 slaveAddress |= ( ( byteValue >> 1 ) & 0xFF );
               }
               startCondFound = false;
-
-              annotation = String.format( "Setup %s slave: 0x%X", ( direction == 1 ) ? "read from" : "write to",
-                  Integer.valueOf( slaveAddress ) );
+              
+              annotation = String.format( tenBitAddress ? "Setup %s slave: 0x%X " : "Setup %s slave: 0x%X [0x%X]", ( direction == 1 ) ? "read from" : "write to",
+              		Integer.valueOf( slaveAddress ), byteValue );
+              
+              tenBitAddress = false;
             }
           }
           else
