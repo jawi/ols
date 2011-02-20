@@ -30,6 +30,32 @@ import java.util.logging.*;
  */
 public final class DeviceProfile
 {
+  // INNER TYPES
+
+  /**
+   * The various capture clock sources.
+   */
+  public static enum CaptureClockSource
+  {
+    INTERNAL, EXTERNAL_FALLING, EXTERNAL_RISING;
+  }
+
+  /**
+   * The various interfaces of the device.
+   */
+  public static enum DeviceInterface
+  {
+    SERIAL, USB;
+  }
+
+  /**
+   * The various types of triggers.
+   */
+  public static enum TriggerType
+  {
+    SIMPLE, COMPLEX;
+  }
+
   // CONSTANTS
 
   /** The short (single word) type of the device described in this profile */
@@ -77,12 +103,14 @@ public final class DeviceProfile
       DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TRIGGERS,
       DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT, DEVICE_CHANNEL_GROUPS,
       DEVICE_CAPTURESIZE_BOUND } );
+  private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { "felix.fileinstall.filename",
+      "service.pid", "service.factoryPid" } );
 
   private static final Logger LOG = Logger.getLogger( DeviceProfile.class.getName() );
 
   // VARIABLES
 
-  private final Map<String, Object> properties;
+  private final Map<String, String> properties;
 
   // CONSTRUCTORS
 
@@ -91,10 +119,77 @@ public final class DeviceProfile
    */
   public DeviceProfile()
   {
-    this.properties = new HashMap<String, Object>();
+    this.properties = new HashMap<String, String>();
   }
 
   // METHODS
+
+  /**
+   * Returns the capture clock sources supported by the device.
+   * 
+   * @return an array of capture clock sources, never <code>null</code>.
+   */
+  public CaptureClockSource[] getCaptureClock()
+  {
+    final String rawValue = this.properties.get( DEVICE_CAPTURECLOCK );
+    final String[] values = rawValue.split( ",\\s*" );
+    final CaptureClockSource[] result = new CaptureClockSource[values.length];
+    for ( int i = 0; i < values.length; i++ )
+    {
+      result[i] = CaptureClockSource.valueOf( values[i].trim() );
+    }
+    return result;
+  }
+
+  /**
+   * Returns all supported capture sizes.
+   * 
+   * @return an array of capture sizes, in bytes, never <code>null</code>.
+   */
+  public Integer[] getCaptureSizes()
+  {
+    final String rawValue = this.properties.get( DEVICE_CAPTURESIZES );
+    final String[] values = rawValue.split( ",\\s*" );
+    final Integer[] result = new Integer[values.length];
+    for ( int i = 0; i < values.length; i++ )
+    {
+      result[i] = Integer.valueOf( values[i].trim() );
+    }
+    return result;
+  }
+
+  /**
+   * Returns the total number of capture channels.
+   * 
+   * @return a capture channel count, greater than 0.
+   */
+  public int getChannelCount()
+  {
+    final String value = this.properties.get( DEVICE_CHANNEL_COUNT );
+    return Integer.parseInt( value );
+  }
+
+  /**
+   * Returns the total number of channel groups.
+   * 
+   * @return a channel group count, greater than 0.
+   */
+  public int getChannelGroupCount()
+  {
+    final String value = this.properties.get( DEVICE_CHANNEL_GROUPS );
+    return Integer.parseInt( value );
+  }
+
+  /**
+   * Returns the (maximum) capture clock of the device.
+   * 
+   * @return a capture clock, in Hertz.
+   */
+  public int getClockspeed()
+  {
+    final String value = this.properties.get( DEVICE_CLOCKSPEED );
+    return Integer.parseInt( value );
+  }
 
   /**
    * Returns the description of the device this profile denotes.
@@ -103,8 +198,47 @@ public final class DeviceProfile
    */
   public String getDescription()
   {
-    final Object result = this.properties.get( DEVICE_DESCRIPTION );
+    final String result = this.properties.get( DEVICE_DESCRIPTION );
     return result == null ? "" : ( String )result;
+  }
+
+  /**
+   * Returns the interface over which the device communicates.
+   * 
+   * @return the device interface, never <code>null</code>.
+   */
+  public DeviceInterface getInterface()
+  {
+    final String value = this.properties.get( DEVICE_INTERFACE );
+    return DeviceInterface.valueOf( value );
+  }
+
+  /**
+   * Returns all supported sample rates.
+   * 
+   * @return an array of sample rates, in Hertz, never <code>null</code>.
+   */
+  public Integer[] getSampleRates()
+  {
+    final String rawValue = this.properties.get( DEVICE_SAMPLERATES );
+    final String[] values = rawValue.split( ",\\s*" );
+    final Integer[] result = new Integer[values.length];
+    for ( int i = 0; i < values.length; i++ )
+    {
+      result[i] = Integer.valueOf( values[i].trim() );
+    }
+    return result;
+  }
+
+  /**
+   * Returns the total number of trigger stages (in the complex trigger mode).
+   * 
+   * @return a trigger stage count, greater than 0.
+   */
+  public int getTriggerStages()
+  {
+    final String value = this.properties.get( DEVICE_TRIGGER_STAGES );
+    return Integer.parseInt( value );
   }
 
   /**
@@ -114,8 +248,81 @@ public final class DeviceProfile
    */
   public String getType()
   {
-    final Object result = this.properties.get( DEVICE_TYPE );
-    return result == null ? "<unknown>" : ( String )result;
+    final String result = this.properties.get( DEVICE_TYPE );
+    return result == null ? "<unknown>" : result;
+  }
+
+  /**
+   * Returns whether or not the capture size is bound to the number of channels.
+   * 
+   * @return <code>true</code> if the capture size is bound to the number of
+   *         channels, <code>false</code> otherwise.
+   */
+  public boolean isCaptureSizeBoundToEnabledChannels()
+  {
+    final String value = this.properties.get( DEVICE_CAPTURESIZE_BOUND );
+    return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns whether or not the device supports "complex" triggers.
+   * 
+   * @return <code>true</code> if complex triggers are supported by the device,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isComplexTriggersSupported()
+  {
+    final String value = this.properties.get( DEVICE_TRIGGER_COMPLEX );
+    return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns whether or not the device supports "double-data rate" sampling,
+   * also known as "demux"-sampling.
+   * 
+   * @return <code>true</code> if DDR is supported by the device,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isDoubleDataRateSupported()
+  {
+    final String value = this.properties.get( DEVICE_SUPPORTS_DDR );
+    return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns whether or not the device supports a noise filter.
+   * 
+   * @return <code>true</code> if a noise filter is present in the device,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isNoiseFilterSupported()
+  {
+    final String value = this.properties.get( DEVICE_FEATURE_NOISEFILTER );
+    return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns whether or not the device supports RLE (Run-Length Encoding).
+   * 
+   * @return <code>true</code> if a RLE encoder is present in the device,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isRleSupported()
+  {
+    final String value = this.properties.get( DEVICE_FEATURE_RLE );
+    return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns whether or not the device supports triggers.
+   * 
+   * @return <code>true</code> if the device supports triggers,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isTriggerSupported()
+  {
+    final String value = this.properties.get( DEVICE_FEATURE_RLE );
+    return Boolean.parseBoolean( value );
   }
 
   /**
@@ -125,26 +332,37 @@ public final class DeviceProfile
   @SuppressWarnings( "rawtypes" )
   final void setProperties( final Dictionary aProperties )
   {
-    final Map<String, Object> newProps = new HashMap<String, Object>();
+    final Map<String, String> newProps = new HashMap<String, String>();
 
     Enumeration keys = aProperties.keys();
     while ( keys.hasMoreElements() )
     {
       final String key = ( String )keys.nextElement();
-      if ( !KNOWN_KEYS.contains( key ) )
+      if ( !KNOWN_KEYS.contains( key ) && !IGNORED_KEYS.contains( key ) )
       {
         LOG.log( Level.WARNING, "Unknown/unsupported profile key: " + key );
         continue;
       }
 
-      final Object value = aProperties.get( key );
+      final String value = ( String )aProperties.get( key );
       newProps.put( key, value );
+    }
+
+    // Verify whether all known keys are defined...
+    final List<String> checkedKeys = new ArrayList<String>( KNOWN_KEYS );
+    checkedKeys.removeAll( newProps.keySet() );
+    if ( !checkedKeys.isEmpty() )
+    {
+      throw new IllegalArgumentException( "Profile settings not complete! Missing keys are: " + checkedKeys.toString() );
     }
 
     synchronized ( this.properties )
     {
       this.properties.clear();
       this.properties.putAll( newProps );
+
+      LOG.log( Level.INFO, "New device profile settings applied for {1} ({0}) ...", //
+          new Object[] { getType(), getDescription() } );
     }
   }
 }

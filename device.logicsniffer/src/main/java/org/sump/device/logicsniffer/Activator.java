@@ -35,9 +35,19 @@ public class Activator implements BundleActivator
 {
   // VARIABLES
 
+  private static DeviceProfileManager deviceProfileManager = new DeviceProfileManager();
+
   private ServiceRegistration serviceRegistration;
 
   // METHODS
+
+  /**
+   * @return
+   */
+  public static DeviceProfileManager getDeviceProfileManager()
+  {
+    return deviceProfileManager;
+  }
 
   /**
    * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -46,10 +56,10 @@ public class Activator implements BundleActivator
   public void start( final BundleContext aContext ) throws Exception
   {
     Dictionary<String, String> props = new Hashtable<String, String>();
-    props.put( Constants.SERVICE_PID, DeviceProfileFactory.SERVICE_PID );
+    props.put( Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
 
-    this.serviceRegistration = aContext.registerService( ManagedServiceFactory.class.getName(),
-        new DeviceProfileFactory(), props );
+    this.serviceRegistration = aContext.registerService( ManagedServiceFactory.class.getName(), deviceProfileManager,
+        props );
 
   }
 
