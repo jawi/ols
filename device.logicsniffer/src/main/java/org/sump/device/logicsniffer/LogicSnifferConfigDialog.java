@@ -39,7 +39,9 @@ import nl.lxtreme.ols.util.swing.component.*;
 import nl.lxtreme.rxtx.*;
 
 import org.sump.device.logicsniffer.profile.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.*;
+import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import org.sump.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
+import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
 
 
 /**
@@ -168,6 +170,36 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   /**
+   * Renders a numbering scheme.
+   */
+  static final class NumberSchemeComboBoxRenderer extends EnumItemRenderer<NumberingScheme>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getDisplayValue( final NumberingScheme aValue )
+    {
+      switch ( aValue )
+      {
+        case DEFAULT:
+          return "Default";
+        case INSIDE:
+          return "Inside";
+        case OUTSIDE:
+          return "Outside";
+      }
+      return super.getDisplayValue( aValue );
+    }
+  }
+
+  /**
    * Listens to the ratio slider and updates a label with the chosen ratio
    * accordingly.
    */
@@ -222,8 +254,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /** The serial port baudrates that can be chosen. */
   private static final String[] BAUDRATES = { "921600bps", "460800bps", "230400bps", "115200bps", "57600bps",
       "38400bps", "19200bps" };
-  /** The numbering schemes supported by the OLS. */
-  private static final String[] NUMBER_SCHEMES = { "Inside", "Outside", "Test Mode" };
 
   // VARIABLES
 
@@ -236,6 +266,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   private JComboBox speedSelect;
   private JComboBox triggerTypeSelect;
   private JCheckBox maxSampleSize;
+  private JCheckBox testModeEnable;
   private JCheckBox filterEnable;
   private JCheckBox rleEnable;
   private JCheckBox triggerEnable;
@@ -255,6 +286,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   private boolean dialogResult;
   private JSlider ratioSlider;
   private JLabel ratioLabel;
+  private JLabel warningLabel;
 
   private transient volatile boolean listening = true;
 
@@ -340,18 +372,14 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     else if ( o == this.rleEnable )
     {
       JCheckBox jb = ( JCheckBox )o;
-      if ( jb.getModel().isSelected() )
+      if ( jb.isSelected() )
       {
-        jb.setText( "Enabled - See tooltip!" );
+        this.warningLabel.setText( rleWarning );
       }
       else
       {
-        jb.setText( "Enabled" );
+        this.warningLabel.setText( "" );
       }
-
-      // TODO: ?
-      // updateConfig();
-      // updateFields();
     }
     else if ( o == this.speedSelect )
     {
@@ -589,6 +617,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.speedSelect.setModel( new DefaultComboBoxModel( profile.getSampleRates() ) );
     // Update the capture clock sources...
     this.sourceSelect.setModel( new DefaultComboBoxModel( profile.getCaptureClock() ) );
+    // Update the numbering schemes...
+    this.numberSchemeSelect.setModel( new DefaultComboBoxModel( profile.getChannelNumberingSchemes() ) );
 
     // Enable the supported number of channel groups...
     final int channelGroups = profile.getChannelGroupCount();
@@ -601,6 +631,14 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       }
       this.channelGroup[i].setEnabled( enabled );
     }
+
+    // Is there a testing mode supported?
+    final boolean testModeSupported = profile.isTestModeSupported();
+    if ( !testModeSupported )
+    {
+      this.testModeEnable.setSelected( false );
+    }
+    this.testModeEnable.setEnabled( complexTriggersSupported );
   }
 
   /**
@@ -657,18 +695,21 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
     SpringLayoutUtils.addSeparator( connectionPane, "Options" );
 
+    connectionPane.add( createRightAlignedLabel( "Test mode" ) );
+    connectionPane.add( this.testModeEnable );
+
     connectionPane.add( createRightAlignedLabel( "Noise Filter" ) );
     connectionPane.add( this.filterEnable );
 
-    final JLabel rleEnableLabel = createRightAlignedLabel( "Run Length Encoding" );
-    rleEnableLabel.setToolTipText( rleWarning );
-    connectionPane.add( rleEnableLabel );
+    connectionPane.add( createRightAlignedLabel( "Run Length Encoding" ) );
     connectionPane.add( this.rleEnable );
 
     SpringLayoutUtils.makeEditorGrid( connectionPane, 10, 10 );
 
     final JPanel result = new JPanel( new GridBagLayout() );
     result.add( connectionPane, new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER,
+        GridBagConstraints.NONE, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
+    result.add( this.warningLabel, new GridBagConstraints( 0, 1, 1, 0, 1.0, 0.0, GridBagConstraints.CENTER,
         GridBagConstraints.NONE, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
     result.add( new JLabel(), new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER,
         GridBagConstraints.BOTH, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
@@ -844,8 +885,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.portRateSelect = new JComboBox( BAUDRATES );
     this.portRateSelect.setSelectedIndex( 3 ); // 115k2
 
-    this.numberSchemeSelect = new JComboBox( NUMBER_SCHEMES );
-    this.numberSchemeSelect.setSelectedIndex( 0 );
+    this.numberSchemeSelect = new JComboBox();
+    this.numberSchemeSelect.setRenderer( new NumberSchemeComboBoxRenderer() );
 
     this.sourceSelect = new JComboBox();
     this.sourceSelect.setRenderer( new ClockSourceComboBoxRenderer() );
@@ -885,17 +926,15 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       }
     } );
 
+    this.testModeEnable = new JCheckBox( "Enabled" );
+    this.testModeEnable.setSelected( true );
+    this.testModeEnable.setEnabled( false );
+
     this.filterEnable = new JCheckBox( "Enabled" );
     this.filterEnable.setSelected( true );
     this.filterEnable.setEnabled( false );
 
-    this.rleEnable = new JCheckBox( "Enabled - See tooltip!" );
-    // ugly hack to get consistent layout even when we change the text as
-    // warning.
-    this.rleEnable.setPreferredSize( this.rleEnable.getPreferredSize() );
-    this.rleEnable.setText( "Enabled" );
-    this.rleEnable.setToolTipText( rleWarning );
-
+    this.rleEnable = new JCheckBox( "Enabled" );
     this.rleEnable.setSelected( false );
     this.rleEnable.setEnabled( true );
     this.rleEnable.addActionListener( this );
@@ -969,6 +1008,9 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
 
       this.triggerStageTabs.add( String.format( "Stage %d", Integer.valueOf( i + 1 ) ), stagePane );
     }
+
+    this.warningLabel = new JLabel();
+    this.warningLabel.setFont( this.warningLabel.getFont().deriveFont( Font.BOLD ) );
 
     // NOTE: create this component as last component, as it will fire an event
     // that uses all other components!!!
@@ -1075,7 +1117,8 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.config.setSampleRate( f );
 
     // set sample count
-    int sampleCount = ( ( Integer )this.sizeSelect.getSelectedItem() ).intValue();
+    value = String.valueOf( this.sizeSelect.getSelectedItem() );
+    int sampleCount = NumberUtils.smartParseInt( value );
 
     if ( this.maxSampleSize.isSelected() )
     {
@@ -1093,22 +1136,18 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.config.setRleEnabled( this.rleEnable.isSelected() );
 
     // set number scheme
-    value = ( String )this.numberSchemeSelect.getSelectedItem();
-    if ( "Inside".equals( value ) )
+    NumberingScheme scheme = ( NumberingScheme )this.numberSchemeSelect.getSelectedItem();
+    if ( NumberingScheme.DEFAULT.equals( scheme ) || NumberingScheme.INSIDE.equals( scheme ) )
     {
-      this.config.setTestModeEnabled( false );
       this.config.setAltNumberSchemeEnabled( false );
     }
-    else if ( "Outside".equals( value ) )
+    else if ( NumberingScheme.OUTSIDE.equals( scheme ) )
     {
-      this.config.setTestModeEnabled( false );
       this.config.setAltNumberSchemeEnabled( true );
     }
-    else if ( "Test Mode".equals( value ) )
-    {
-      this.config.setTestModeEnabled( true );
-      this.config.setAltNumberSchemeEnabled( false );
-    }
+
+    // set testing mode
+    this.config.setTestModeEnabled( this.testModeEnable.isSelected() );
 
     // set trigger
     final boolean triggerEnabled = this.triggerEnable.isSelected();
