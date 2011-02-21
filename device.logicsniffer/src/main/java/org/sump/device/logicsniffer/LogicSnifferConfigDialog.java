@@ -565,17 +565,10 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    *          the device type to update the controls for, cannot be
    *          <code>null</code>.
    */
-  void updateDeviceType( final String aType )
+  void updateDeviceType( final DeviceProfile aProfile )
   {
-    final DeviceProfileManager manager = Activator.getDeviceProfileManager();
-    final DeviceProfile profile = manager.getProfile( aType );
-    if ( profile == null )
-    {
-      return;
-    }
-
     // Noise filter supported?
-    final boolean noiseFilterSupported = profile.isNoiseFilterSupported();
+    final boolean noiseFilterSupported = aProfile.isNoiseFilterSupported();
     if ( !noiseFilterSupported )
     {
       this.filterEnable.setSelected( false );
@@ -583,7 +576,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.filterEnable.setEnabled( noiseFilterSupported );
 
     // RLE supported?
-    final boolean rleSupported = profile.isRleSupported();
+    final boolean rleSupported = aProfile.isRleSupported();
     if ( !rleSupported )
     {
       this.rleEnable.setSelected( false );
@@ -591,7 +584,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.rleEnable.setEnabled( rleSupported );
 
     // Triggers supported at all?
-    final boolean triggerSupported = profile.isTriggerSupported();
+    final boolean triggerSupported = aProfile.isTriggerSupported();
     if ( !triggerSupported )
     {
       this.triggerEnable.setSelected( false );
@@ -599,7 +592,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.triggerEnable.setEnabled( triggerSupported );
 
     // Complex triggers supported?
-    final boolean complexTriggersSupported = profile.isComplexTriggersSupported();
+    final boolean complexTriggersSupported = aProfile.isComplexTriggersSupported();
     if ( !complexTriggersSupported )
     {
       this.triggerTypeSelect.setSelectedItem( TriggerType.SIMPLE );
@@ -617,21 +610,21 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     this.triggerTypeSelect.setEnabled( triggerSupported );
 
     // Update the capture speeds...
-    Vector<Integer> sampleRates = new Vector<Integer>( Arrays.asList( profile.getSampleRates() ) );
-    if ( profile.isDoubleDataRateSupported() )
+    Vector<Integer> sampleRates = new Vector<Integer>( Arrays.asList( aProfile.getSampleRates() ) );
+    if ( aProfile.isDoubleDataRateSupported() )
     {
-      sampleRates.add( 0, Integer.valueOf( 2 * profile.getClockspeed() ) );
+      sampleRates.add( 0, Integer.valueOf( 2 * aProfile.getClockspeed() ) );
     }
-    this.speedSelect.setModel( new DefaultComboBoxModel( profile.getSampleRates() ) );
+    this.speedSelect.setModel( new DefaultComboBoxModel( aProfile.getSampleRates() ) );
     // Update the capture sizes...
-    this.sizeSelect.setModel( new DefaultComboBoxModel( profile.getCaptureSizes() ) );
+    this.sizeSelect.setModel( new DefaultComboBoxModel( aProfile.getCaptureSizes() ) );
     // Update the capture clock sources...
-    this.sourceSelect.setModel( new DefaultComboBoxModel( profile.getCaptureClock() ) );
+    this.sourceSelect.setModel( new DefaultComboBoxModel( aProfile.getCaptureClock() ) );
     // Update the numbering schemes...
-    this.numberSchemeSelect.setModel( new DefaultComboBoxModel( profile.getChannelNumberingSchemes() ) );
+    this.numberSchemeSelect.setModel( new DefaultComboBoxModel( aProfile.getChannelNumberingSchemes() ) );
 
     // Enable the supported number of channel groups...
-    final int channelGroups = profile.getChannelGroupCount();
+    final int channelGroups = aProfile.getChannelGroupCount();
     for ( int i = 0; i < this.channelGroup.length; i++ )
     {
       final boolean enabled = i < channelGroups;
@@ -643,7 +636,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     }
 
     // Is there a testing mode supported?
-    final boolean testModeSupported = profile.isTestModeSupported();
+    final boolean testModeSupported = aProfile.isTestModeSupported();
     if ( !testModeSupported )
     {
       this.testModeEnable.setSelected( false );
@@ -1035,7 +1028,13 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       {
         final JComboBox combobox = ( JComboBox )aEvent.getSource();
         final String selected = ( String )combobox.getSelectedItem();
-        updateDeviceType( selected );
+
+        final DeviceProfileManager manager = Activator.getDeviceProfileManager();
+        final DeviceProfile profile = manager.getProfile( selected );
+        if ( profile != null )
+        {
+          updateDeviceType( profile );
+        }
       }
     } );
     this.deviceTypeSelect.setSelectedItem( "OLS" );

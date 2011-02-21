@@ -26,9 +26,9 @@ import java.util.logging.*;
 
 
 /**
- * @author jawi
+ * Provides a device profile.
  */
-public final class DeviceProfile
+public final class DeviceProfile implements Cloneable
 {
   // INNER TYPES
 
@@ -165,6 +165,27 @@ public final class DeviceProfile
   }
 
   // METHODS
+
+  /**
+   * Returns a deep copy of this device profile, including all properties.
+   * 
+   * @return a deep copy of this device profile, never <code>null</code>.
+   * @see java.lang.Object#clone()
+   */
+  @Override
+  public DeviceProfile clone()
+  {
+    try
+    {
+      DeviceProfile clone = ( DeviceProfile )super.clone();
+      clone.properties.putAll( this.properties );
+      return clone;
+    }
+    catch ( CloneNotSupportedException exception )
+    {
+      throw new IllegalStateException( exception );
+    }
+  }
 
   /**
    * Returns the capture clock sources supported by the device.
