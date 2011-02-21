@@ -15,17 +15,19 @@ echo '
            set the bounds of container window to {400, 100, 885, 430}
            set theViewOptions to the icon view options of container window
            set arrangement of theViewOptions to not arranged
-           set icon size of theViewOptions to 72
+           set icon size of theViewOptions to 96
            set background picture of theViewOptions to file ".background:'background.png'"
            make new alias file at container window to POSIX file "/Applications" with properties {name:"Applications"}
-           set position of item "'${VOLUME_TITLE}'" of container window to {100, 150}
-           set position of item "Applications" of container window to {375, 150}
+           set position of item "'${VOLUME_TITLE}'" of container window to {90, 165}
+           set position of item "Applications" of container window to {395, 165}
            close
            open
            update without registering applications
      end tell
    end tell
 ' | osascript
+
+SetFile -a -C /Volumes/${VOLUME_TITLE}
 
 chmod -Rf go-w /Volumes/${VOLUME_TITLE}/*
 sync
