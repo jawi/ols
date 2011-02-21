@@ -25,7 +25,7 @@
 	</target>
 
 	<target name="package" depends="init" description="Creates the OSX app bundle" if="isMac">
-		<jarbundler dir="${project.targetapp}" bundleid="nl.lxtreme.ols" name="${ols.project.name}" shortname="${ols.project.name}" mainclass="nl.lxtreme.ols.runner.Runner" version="${project.version}" build="1" jvmversion="1.6+" arguments="-Dnl.lxtreme.ols.bundle.dir=$JAVAROOT/plugins" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m">
+		<jarbundler dir="${project.targetapp}" bundleid="nl.lxtreme.ols" name="${ols.project.name}" shortname="${ols.project.name}" mainclass="nl.lxtreme.ols.runner.Runner" version="${project.version}" build="1" jvmversion="1.6+" arguments="-Dnl.lxtreme.ols.bundle.dir=$JAVAROOT/plugins" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m" icon="LogicSniffer.icns">
 			<jarfileset dir="${project.target}">
 				<include name="bin/*.jar" />
 			</jarfileset>
@@ -39,6 +39,11 @@
 	<target name="create-dmg" depends="init" description="Creates the DMG archive" if="isMac">
 		<mkdir dir="${project.targetapp}/.background" />
 		<copy file="background.png" todir="${project.targetapp}/.background" />
+
+		<exec executable="cp">
+			<arg value="Package.icns" />
+			<arg value="${project.targetapp}/.VolumeIcon.icns" />
+		</exec>
 
 		<exec executable="hdiutil">
 			<arg value="create" />
