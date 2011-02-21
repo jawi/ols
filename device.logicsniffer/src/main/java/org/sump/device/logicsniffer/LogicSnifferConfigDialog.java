@@ -604,21 +604,23 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     {
       this.triggerTypeSelect.setSelectedItem( TriggerType.SIMPLE );
     }
+    final DefaultComboBoxModel comboBoxModel;
     if ( complexTriggersSupported )
     {
-      this.triggerTypeSelect.setModel( new DefaultComboBoxModel( TriggerType.values() ) );
+      comboBoxModel = new DefaultComboBoxModel( TriggerType.values() );
     }
     else
     {
-      this.triggerTypeSelect.setModel( new DefaultComboBoxModel( new TriggerType[] { TriggerType.SIMPLE } ) );
+      comboBoxModel = new DefaultComboBoxModel( new TriggerType[] { TriggerType.SIMPLE } );
     }
+    this.triggerTypeSelect.setModel( comboBoxModel );
     this.triggerTypeSelect.setEnabled( triggerSupported );
 
     // Update the capture speeds...
     Vector<Integer> sampleRates = new Vector<Integer>( Arrays.asList( profile.getSampleRates() ) );
     if ( profile.isDoubleDataRateSupported() )
     {
-      sampleRates.add( 0, 2 * profile.getClockspeed() );
+      sampleRates.add( 0, Integer.valueOf( 2 * profile.getClockspeed() ) );
     }
     this.speedSelect.setModel( new DefaultComboBoxModel( profile.getSampleRates() ) );
     // Update the capture sizes...
@@ -646,7 +648,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     {
       this.testModeEnable.setSelected( false );
     }
-    this.testModeEnable.setEnabled( complexTriggersSupported );
+    this.testModeEnable.setEnabled( testModeSupported );
   }
 
   /**
