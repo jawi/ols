@@ -25,6 +25,7 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -62,8 +63,11 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
         final boolean aIsSelected, final boolean aCellHasFocus )
     {
-      final Integer size = ( Integer )aValue;
-      final String value = DisplayUtils.displaySize( size.doubleValue() );
+      Object value = aValue;
+      if ( value instanceof Integer )
+      {
+        value = DisplayUtils.displaySize( ( ( Integer )aValue ).doubleValue() );
+      }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
   }
@@ -75,16 +79,15 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * @see javax.swing.plaf.basic.BasicComboBoxRenderer#getListCellRendererComponent(javax.swing.JList,
-     *      java.lang.Object, int, boolean, boolean)
-     */
     @Override
     public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
         final boolean aIsSelected, final boolean aCellHasFocus )
     {
-      final Integer size = ( Integer )aValue;
-      final String value = DisplayUtils.displayFrequency( size.doubleValue() );
+      Object value = aValue;
+      if ( value instanceof Integer )
+      {
+        value = DisplayUtils.displayFrequency( ( ( Integer )value ).doubleValue() );
+      }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
   }
@@ -611,10 +614,15 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     }
     this.triggerTypeSelect.setEnabled( triggerSupported );
 
+    // Update the capture speeds...
+    Vector<Integer> sampleRates = new Vector<Integer>( Arrays.asList( profile.getSampleRates() ) );
+    if ( profile.isDoubleDataRateSupported() )
+    {
+      sampleRates.add( 0, 2 * profile.getClockspeed() );
+    }
+    this.speedSelect.setModel( new DefaultComboBoxModel( profile.getSampleRates() ) );
     // Update the capture sizes...
     this.sizeSelect.setModel( new DefaultComboBoxModel( profile.getCaptureSizes() ) );
-    // Update the capture speeds...
-    this.speedSelect.setModel( new DefaultComboBoxModel( profile.getSampleRates() ) );
     // Update the capture clock sources...
     this.sourceSelect.setModel( new DefaultComboBoxModel( profile.getCaptureClock() ) );
     // Update the numbering schemes...
