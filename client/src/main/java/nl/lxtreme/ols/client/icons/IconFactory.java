@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.client.icons;
 
 
+import java.awt.*;
 import java.net.*;
 
 import javax.swing.*;
@@ -101,6 +102,20 @@ public final class IconFactory
   {
     final URL url = IconLocator.class.getResource( aIconName );
     return new ImageIcon( url );
+  }
+
+  /**
+   * Creates an image for the resource with the given name.
+   * 
+   * @param aIconName
+   *          the (symbolic) name of the resource to load as image, cannot be
+   *          <code>null</code>.
+   * @return the image for the given resource name, never <code>null</code>.
+   */
+  public static Image createImage( final String aImageName )
+  {
+    final URL url = IconLocator.class.getResource( aImageName );
+    return Toolkit.getDefaultToolkit().createImage( url );
   }
 
   /**

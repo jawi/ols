@@ -30,6 +30,12 @@ public interface IconLocator
 
   static final String LOGO = "logo.png";
 
+  static final String WINDOW_ICON_16x16 = "LogicSniffer_16x16x32.png";
+  static final String WINDOW_ICON_32x32 = "LogicSniffer_32x32x32.png";
+  static final String WINDOW_ICON_48x48 = "LogicSniffer_48x48x32.png";
+  static final String WINDOW_ICON_64x64 = "LogicSniffer_64x64x32.png";
+  static final String WINDOW_ICON_256x256 = "LogicSniffer_256x256x32.png";
+
   static final String ICON_NEW_PROJECT = "Gnome-Folder-New-32.png";
   static final String ICON_OPEN_PROJECT = "Gnome-Document-Open-32.png";
   static final String ICON_SAVE_PROJECT = "Gnome-Document-Save-32.png";

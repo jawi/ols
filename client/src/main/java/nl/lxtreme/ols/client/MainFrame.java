@@ -26,6 +26,7 @@ import java.awt.event.*;
 import java.beans.*;
 import java.net.*;
 import java.text.*;
+import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
@@ -228,6 +229,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     contentPane.add( tools, BorderLayout.PAGE_START );
     contentPane.add( scrollPane, BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
+
+    // Add the window icon...
+    setIconImages( internalGetIconImages() );
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
@@ -761,6 +765,21 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private int determineToolMenuItemIndex( final JMenuItem aMenuItem )
   {
     return determineMenuItemIndex( this.toolsMenu, aMenuItem );
+  }
+
+  /**
+   * Creates a list of icon images that are used to decorate this frame.
+   * 
+   * @return a list of images, never <code>null</code>.
+   */
+  private List<? extends Image> internalGetIconImages()
+  {
+    final Image windowIcon16x16 = IconFactory.createImage( IconLocator.WINDOW_ICON_16x16 );
+    final Image windowIcon32x32 = IconFactory.createImage( IconLocator.WINDOW_ICON_32x32 );
+    final Image windowIcon48x48 = IconFactory.createImage( IconLocator.WINDOW_ICON_48x48 );
+    final Image windowIcon64x64 = IconFactory.createImage( IconLocator.WINDOW_ICON_64x64 );
+    final Image windowIcon256x256 = IconFactory.createImage( IconLocator.WINDOW_ICON_256x256 );
+    return Arrays.asList( windowIcon16x16, windowIcon32x32, windowIcon48x48, windowIcon64x64, windowIcon256x256 );
   }
 
   /**
