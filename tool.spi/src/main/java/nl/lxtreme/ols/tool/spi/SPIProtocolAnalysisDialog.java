@@ -106,6 +106,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     {
       switch ( aValue )
       {
+        case AUTODETECT:
+          return "Auto-detect";
         case MODE_0:
           return "Mode 0";
         case MODE_1:
@@ -115,8 +117,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
         case MODE_3:
           return "Mode 3";
       }
-      // Strange, we shouldn't be here...
-      LOG.warning( "We should not be here actually! Value = " + aValue );
       return super.getDisplayValue( aValue );
     }
 
@@ -126,23 +126,18 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     @Override
     protected String getToolTip( final Object aValue )
     {
-      if ( aValue instanceof SPIMode )
+      switch ( ( SPIMode )aValue )
       {
-        switch ( ( SPIMode )aValue )
-        {
-          case MODE_0:
-            return "CPOL = 0, CPHA = 0";
-          case MODE_1:
-            return "CPOL = 0, CPHA = 1";
-          case MODE_2:
-            return "CPOL = 1, CPHA = 0";
-          case MODE_3:
-            return "CPOL = 1, CPHA = 1";
-        }
-      }
-      else if ( aValue instanceof String )
-      {
-        return "Tries to determine the SPI mode based on the clock polarity (CPOL).";
+        case AUTODETECT:
+          return "Tries to determine the SPI mode based on the clock polarity (CPOL).";
+        case MODE_0:
+          return "CPOL = 0, CPHA = 0";
+        case MODE_1:
+          return "CPOL = 0, CPHA = 1";
+        case MODE_2:
+          return "CPOL = 1, CPHA = 0";
+        case MODE_3:
+          return "CPOL = 1, CPHA = 1";
       }
       // Strange, we shouldn't be here...
       LOG.warning( "We should not be here actually! Value = " + aValue );
@@ -518,8 +513,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     settings.add( this.cs );
 
     settings.add( createRightAlignedLabel( "Mode" ) );
-    this.mode = new JComboBox( new Object[] { SPIMode.MODE_0, SPIMode.MODE_1, SPIMode.MODE_2, SPIMode.MODE_3,
-        "Auto-detect" } );
+    this.mode = new JComboBox( SPIMode.values() );
     this.mode.setSelectedIndex( 2 );
     this.mode.setRenderer( new SPIModeRenderer() );
     settings.add( this.mode );

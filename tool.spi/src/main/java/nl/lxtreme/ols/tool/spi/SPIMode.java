@@ -43,6 +43,12 @@ import nl.lxtreme.ols.api.data.*;
 public enum SPIMode
 {
   /**
+   * Tries to auto-detect the SPI-mode, by determining what the default state of
+   * the clock signal is (either high or low), making it possible to determine
+   * either mode 0 or 2.
+   */
+  AUTODETECT, //
+  /**
    * CPOL = 0, CPHA = 0; data is to be captured on the clock's rising edge
    * (low->high transition) and data are propagated on a falling edge (high->low
    * clock transition).
