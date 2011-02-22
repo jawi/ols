@@ -26,7 +26,7 @@
 			<lineEnding>keep</lineEnding>
 		</fileSet>
         <fileSet>
-            <directory>${project.basedir}/src/main/resources</directory>
+            <directory>${project.basedir}/src/main/profiles</directory>
             <outputDirectory>plugins</outputDirectory>
             <useDefaultExcludes>true</useDefaultExcludes>
             <includes>
