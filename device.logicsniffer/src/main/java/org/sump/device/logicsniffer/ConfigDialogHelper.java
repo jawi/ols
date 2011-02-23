@@ -68,11 +68,7 @@ final class ConfigDialogHelper
     for ( int i = 0; i < aChannelGroups.length; i++ )
     {
       final boolean enabled = i < channelGroups;
-      if ( !enabled )
-      {
-        aChannelGroups[i].setSelected( false );
-      }
-      aChannelGroups[i].setEnabled( enabled );
+      updateCheckBoxState( aChannelGroups[i], enabled );
     }
   }
 
