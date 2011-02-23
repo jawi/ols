@@ -653,15 +653,22 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   }
 
   /**
-   * Opens the connection to the OLS device.
+   * Opens the incoming and outgoing connection to the OLS device.
+   * <p>
+   * This method will directly flush all incoming data, and, if configured,
+   * delay a bit to ensure the device hardware is properly initialized.
+   * </p>
    * 
    * @return <code>true</code> if the attach operation succeeded,
    *         <code>false</code> otherwise.
+   * @throws IOException
+   *           in case of I/O problems during attaching to the device.
    */
   private boolean attach() throws IOException
   {
     final String portName = this.config.getPortName();
     final int baudrate = this.config.getBaudrate();
+    final int openDelay = this.config.getOpenPortDelay();
 
     try
     {
@@ -675,6 +682,17 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       {
         this.outputStream = this.connection.openDataOutputStream();
         this.inputStream = this.connection.openDataInputStream();
+
+        // Some devices need some time to initialize after being opened for the
+        // first time, see issue #34.
+        if ( openDelay > 0 )
+        {
+          Thread.sleep( openDelay );
+        }
+
+        // We don't expect any data, so flush all data pending in the given
+        // input stream. See issue #34.
+        HostUtils.flushInputStream( this.inputStream );
 
         return this.attached = true;
       }

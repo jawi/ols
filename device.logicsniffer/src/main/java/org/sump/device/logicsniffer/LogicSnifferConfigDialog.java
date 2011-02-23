@@ -22,10 +22,10 @@ package org.sump.device.logicsniffer;
 
 
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+import static org.sump.device.logicsniffer.ConfigDialogHelper.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -567,81 +567,34 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
    */
   void updateDeviceType( final DeviceProfile aProfile )
   {
-    // Noise filter supported?
-    final boolean noiseFilterSupported = aProfile.isNoiseFilterSupported();
-    if ( !noiseFilterSupported )
-    {
-      this.filterEnable.setSelected( false );
-    }
-    this.filterEnable.setEnabled( noiseFilterSupported );
+    // "Publish" the device type to the device configuration...
+    this.config.setDeviceProfile( aProfile );
 
+    // Noise filter supported?
+    updateCheckBoxState( this.filterEnable, aProfile.isNoiseFilterSupported() );
     // RLE supported?
-    final boolean rleSupported = aProfile.isRleSupported();
-    if ( !rleSupported )
-    {
-      this.rleEnable.setSelected( false );
-    }
-    this.rleEnable.setEnabled( rleSupported );
+    updateCheckBoxState( this.rleEnable, aProfile.isRleSupported() );
+    // Test mode supported at all?
+    updateCheckBoxState( this.testModeEnable, aProfile.isTestModeSupported() );
 
     // Triggers supported at all?
-    final boolean triggerSupported = aProfile.isTriggerSupported();
-    if ( !triggerSupported )
-    {
-      this.triggerEnable.setSelected( false );
-    }
-    this.triggerEnable.setEnabled( triggerSupported );
-
+    updateCheckBoxState( this.triggerEnable, aProfile.isTriggerSupported() );
     // Complex triggers supported?
-    final boolean complexTriggersSupported = aProfile.isComplexTriggersSupported();
-    if ( !complexTriggersSupported )
-    {
-      this.triggerTypeSelect.setSelectedItem( TriggerType.SIMPLE );
-    }
-    final DefaultComboBoxModel comboBoxModel;
-    if ( complexTriggersSupported )
-    {
-      comboBoxModel = new DefaultComboBoxModel( TriggerType.values() );
-    }
-    else
-    {
-      comboBoxModel = new DefaultComboBoxModel( new TriggerType[] { TriggerType.SIMPLE } );
-    }
-    this.triggerTypeSelect.setModel( comboBoxModel );
-    this.triggerTypeSelect.setEnabled( triggerSupported );
-
-    // Update the capture speeds...
-    Vector<Integer> sampleRates = new Vector<Integer>( Arrays.asList( aProfile.getSampleRates() ) );
-    if ( aProfile.isDoubleDataRateSupported() )
-    {
-      sampleRates.add( 0, Integer.valueOf( 2 * aProfile.getClockspeed() ) );
-    }
-    this.speedSelect.setModel( new DefaultComboBoxModel( aProfile.getSampleRates() ) );
-    // Update the capture sizes...
-    this.sizeSelect.setModel( new DefaultComboBoxModel( aProfile.getCaptureSizes() ) );
-    // Update the capture clock sources...
-    this.sourceSelect.setModel( new DefaultComboBoxModel( aProfile.getCaptureClock() ) );
-    // Update the numbering schemes...
-    this.numberSchemeSelect.setModel( new DefaultComboBoxModel( aProfile.getChannelNumberingSchemes() ) );
+    updateTriggerTypeComboBoxModel( this.triggerTypeSelect, aProfile );
+    // Update trigger mask editors...
+    updateTriggerChannels( this.triggerMask, this.triggerValue, aProfile );
 
     // Enable the supported number of channel groups...
-    final int channelGroups = aProfile.getChannelGroupCount();
-    for ( int i = 0; i < this.channelGroup.length; i++ )
-    {
-      final boolean enabled = i < channelGroups;
-      if ( !enabled )
-      {
-        this.channelGroup[i].setSelected( false );
-      }
-      this.channelGroup[i].setEnabled( enabled );
-    }
+    updateChannelGroups( this.channelGroup, aProfile );
 
-    // Is there a testing mode supported?
-    final boolean testModeSupported = aProfile.isTestModeSupported();
-    if ( !testModeSupported )
-    {
-      this.testModeEnable.setSelected( false );
-    }
-    this.testModeEnable.setEnabled( testModeSupported );
+    // Update the capture speeds...
+    updateCaptureSpeedComboBoxModel( this.speedSelect, aProfile );
+    // Update the capture sizes...
+    updateComboBoxModel( this.sizeSelect, aProfile.getCaptureSizes() );
+    // Update the capture clock sources...
+    updateComboBoxModel( this.sourceSelect, aProfile.getCaptureClock() );
+    // Update the numbering schemes...
+    updateComboBoxModel( this.numberSchemeSelect, aProfile.getChannelNumberingSchemes() );
   }
 
   /**
@@ -1033,7 +986,15 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
         final DeviceProfile profile = manager.getProfile( selected );
         if ( profile != null )
         {
-          updateDeviceType( profile );
+          LogicSnifferConfigDialog.this.listening = false;
+          try
+          {
+            updateDeviceType( profile );
+          }
+          finally
+          {
+            LogicSnifferConfigDialog.this.listening = true;
+          }
         }
       }
     } );

@@ -24,6 +24,8 @@ package org.sump.device.logicsniffer.profile;
 import java.util.*;
 import java.util.logging.*;
 
+import nl.lxtreme.ols.util.*;
+
 
 /**
  * Provides a device profile.
@@ -138,13 +140,29 @@ public final class DeviceProfile implements Cloneable
   public static final String DEVICE_CAPTURESIZE_BOUND = "device.capturesize.bound";
   /** What channel numbering schemes are supported by the device. */
   public static final String DEVICE_CHANNEL_NUMBERING_SCHEMES = "device.channel.numberingschemes";
+  /**
+   * Is a delay after opening the port and device detection needed? (0 = no
+   * delay, >0 = delay in milliseconds)
+   */
+  public static final String DEVICE_OPEN_PORT_DELAY = "device.open.portdelay";
+  /**
+   * Which metadata keys correspond to this device profile? Value is a
+   * comma-separated list of (double quoted) names.
+   */
+  public static final String DEVICE_METADATA_KEYS = "device.metadata.keys";
+  /**
+   * In which order are samples sent back from the device? If <code>true</code>
+   * then last sample first, if <code>false</code> then first sample first.
+   */
+  public static final String DEVICE_SAMPLE_REVERSE_ORDER = "device.samples.reverseOrder";
 
   /** All the profile keys that are supported. */
   private static final List<String> KNOWN_KEYS = Arrays.asList( new String[] { DEVICE_TYPE, DEVICE_DESCRIPTION,
       DEVICE_INTERFACE, DEVICE_CLOCKSPEED, DEVICE_SUPPORTS_DDR, DEVICE_SAMPLERATES, DEVICE_CAPTURECLOCK,
       DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TEST_MODE,
       DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT,
-      DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES } );
+      DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY,
+      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER } );
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { "felix.fileinstall.filename",
       "service.pid", "service.factoryPid" } );
 
@@ -284,6 +302,23 @@ public final class DeviceProfile implements Cloneable
   }
 
   /**
+   * Returns the metadata keys that allow identification of this device profile.
+   * <p>
+   * Note: if the returned array contains an empty string value (not
+   * <code>null</code>, but <code>""</code>!), it means that this profile can be
+   * used for <em>all</em> devices.
+   * </p>
+   * 
+   * @return an array of metadata keys this profile supports, never
+   *         <code>null</code>.
+   */
+  public String[] getDeviceMetadataKeys()
+  {
+    final String rawValue = this.properties.get( DEVICE_METADATA_KEYS );
+    return StringUtils.tokenizeQuotedStrings( rawValue, ", " );
+  }
+
+  /**
    * Returns the interface over which the device communicates.
    * 
    * @return the device interface, never <code>null</code>.
@@ -292,6 +327,18 @@ public final class DeviceProfile implements Cloneable
   {
     final String value = this.properties.get( DEVICE_INTERFACE );
     return DeviceInterface.valueOf( value );
+  }
+
+  /**
+   * Returns the delay between opening the port to the device and starting the
+   * device detection cycle.
+   * 
+   * @return a delay, in milliseconds, >= 0.
+   */
+  public int getOpenPortDelay()
+  {
+    final String value = this.properties.get( DEVICE_OPEN_PORT_DELAY );
+    return Integer.parseInt( value );
   }
 
   /**
@@ -394,6 +441,18 @@ public final class DeviceProfile implements Cloneable
   {
     final String value = this.properties.get( DEVICE_FEATURE_RLE );
     return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns whether the device send its samples in "reverse" order.
+   * 
+   * @return <code>true</code> if samples are send in reverse order (= last
+   *         sample first), <code>false</code> otherwise.
+   */
+  public boolean isSamplesInReverseOrder()
+  {
+    final String rawValue = this.properties.get( DEVICE_SAMPLE_REVERSE_ORDER );
+    return Boolean.parseBoolean( rawValue );
   }
 
   /**
