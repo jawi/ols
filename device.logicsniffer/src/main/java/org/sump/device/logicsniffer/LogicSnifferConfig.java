@@ -23,7 +23,8 @@ package org.sump.device.logicsniffer;
 
 import nl.lxtreme.ols.api.data.*;
 
-import org.sump.device.logicsniffer.profile.DeviceProfile.*;
+import org.sump.device.logicsniffer.profile.*;
+import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
 /**
@@ -68,6 +69,7 @@ public final class LogicSnifferConfig
   private String portName;
   private int baudrate;
   private LogicSnifferMetadata metadata;
+  private DeviceProfile deviceProfile;
 
   // CONSTRUCTORS
 
@@ -148,6 +150,14 @@ public final class LogicSnifferConfig
   }
 
   /**
+   * @return the deviceProfile
+   */
+  public DeviceProfile getDeviceProfile()
+  {
+    return this.deviceProfile;
+  }
+
+  /**
    * Returns the divider, or the value used by the OLS device to take samples at
    * the requested rate.
    * 
@@ -223,6 +233,18 @@ public final class LogicSnifferConfig
   public LogicSnifferMetadata getMetadata()
   {
     return this.metadata;
+  }
+
+  /**
+   * @see DeviceProfile#getOpenPortDelay()
+   */
+  public int getOpenPortDelay()
+  {
+    if ( this.deviceProfile == null )
+    {
+      return -1;
+    }
+    return this.deviceProfile.getOpenPortDelay();
   }
 
   /**
@@ -735,5 +757,16 @@ public final class LogicSnifferConfig
   public void setTriggerEnabled( final boolean enable )
   {
     this.triggerEnabled = enable;
+  }
+
+  /**
+   * Sets the device profile for this configuration.
+   * 
+   * @param aDeviceProfile
+   *          the device profile to set, cannot be <code>null</code>.
+   */
+  final void setDeviceProfile( final DeviceProfile aDeviceProfile )
+  {
+    this.deviceProfile = aDeviceProfile;
   }
 }
