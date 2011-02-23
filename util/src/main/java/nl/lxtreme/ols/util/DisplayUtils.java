@@ -214,7 +214,10 @@ public final class DisplayUtils
    * @param aFieldWidth
    *          number of charakters in field
    * @return a nice string
+   * @deprecated JaWi: use {@link StringUtils#integerToBinString(int, int)}
+   *             instead.
    */
+  @Deprecated
   public static String integerToBinString( final int aValue, final int aFieldWidth )
   {
     // first build a mask to cut off the signed extension
@@ -251,7 +254,10 @@ public final class DisplayUtils
    * @param aFieldWidth
    *          number of charakters in field
    * @return a nice string
+   * @deprecated JaWi: use {@link StringUtils#integerToHexString(int, int)}
+   *             instead.
    */
+  @Deprecated
   public static String integerToHexString( final int aValue, final int aFieldWidth )
   {
     // first build a mask to cut off the signed extension
@@ -285,10 +291,12 @@ public final class DisplayUtils
    *          <code>null</code>.
    * @return <code>true</code> if the given string is empty, <code>false</code>
    *         otherwise.
+   * @deprecated JaWi: use {@link StringUtils#isEmpty(String)} instead.
    */
+  @Deprecated
   public static boolean isEmpty( final String aValue )
   {
-    return ( aValue == null ) || aValue.trim().isEmpty();
+    return StringUtils.isEmpty( aValue );
   }
 
 }
