@@ -22,6 +22,7 @@ package nl.lxtreme.ols.util;
 
 
 import java.nio.*;
+import java.util.*;
 import java.util.regex.*;
 
 
@@ -55,6 +56,46 @@ public final class NumberUtils
   public enum UnitDefinition
   {
     SI, BINARY;
+  }
+
+  /**
+   * Provides a numeric comparator, sorts in decrementing order.
+   * <p>
+   * Yes, this is quite a hacky approach, but unfortunately, it is currently the
+   * only way instead of writing 6 almost equivalent classes.
+   * </p>
+   */
+  private static class NumericComparator<N extends Number> implements Comparator<N>
+  {
+    private final boolean sortAscending;
+
+    /**
+     * Creates a new NumberUtils.NumericComparator instance.
+     */
+    NumericComparator( final boolean aSortAscending )
+    {
+      this.sortAscending = aSortAscending;
+    }
+
+    /**
+     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+     */
+    @Override
+    @SuppressWarnings( { "rawtypes", "unchecked" } )
+    public int compare( final N aO1, final N aO2 )
+    {
+      if ( aO1 instanceof Comparable<?> )
+      {
+        return this.sortAscending ? //
+        ( ( Comparable )aO1 ).compareTo( aO2 )
+            : //
+            ( ( Comparable )aO2 ).compareTo( aO1 );
+      }
+      else
+      {
+        throw new IllegalArgumentException( "Your number instance should implement Comparable!" );
+      }
+    }
   }
 
   // CONSTANTS
@@ -124,6 +165,23 @@ public final class NumberUtils
     buf.position( 0 );
     final int result = buf.getInt();
     return result;
+  }
+
+  /**
+   * Creates a number comparator that can be used to sort a list of numbers in
+   * ascending or descending order.
+   * 
+   * @param <T>
+   *          the exact numeric type to sort on;
+   * @param aSortAscending
+   *          <code>true</code> if the numbers should be sorted ascendingly,
+   *          <code>false</code> if the numbers should be sorted in descending
+   *          order.
+   * @return a comparator instance, never <code>null</code>.
+   */
+  public static <T extends Number> Comparator<T> createNumberComparator( final boolean aSortAscending )
+  {
+    return new NumericComparator<T>( aSortAscending );
   }
 
   /**
