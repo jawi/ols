@@ -348,7 +348,15 @@ public final class Host implements ApplicationCallback
   {
     final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
         IMPLICIT_USER_SETTING_NAME_SUFFIX );
-    UserSettingsManager.loadUserSettings( userSettingsFile, aProjectManager.getCurrentProject() );
+    final Project currentProject = aProjectManager.getCurrentProject();
+    try
+    {
+      UserSettingsManager.loadUserSettings( userSettingsFile, currentProject );
+    }
+    finally
+    {
+      currentProject.setChanged( false );
+    }
   }
 
   /**
@@ -365,7 +373,14 @@ public final class Host implements ApplicationCallback
     {
       final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
           IMPLICIT_USER_SETTING_NAME_SUFFIX );
-      UserSettingsManager.saveUserSettings( userSettingsFile, currentProject );
+      try
+      {
+        UserSettingsManager.saveUserSettings( userSettingsFile, currentProject );
+      }
+      finally
+      {
+        currentProject.setChanged( false );
+      }
     }
   }
 }
