@@ -56,14 +56,14 @@ public class OpenProjectAction extends BaseAction
 
   /**
    * Creates a new OpenProjectAction instance.
-   *
+   * 
    * @param aController
    *          the client controller to use for this action.
    */
   public OpenProjectAction( final ClientController aController )
   {
     super( ID, aController, ICON_OPEN_PROJECT, "Open project ...", "Open an existing project" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_O) );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_O ) );
     putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
   }
 
@@ -83,7 +83,8 @@ public class OpenProjectAction extends BaseAction
     {
       if ( controller.isProjectChanged() )
       {
-        if ( SwingComponentUtils.askConfirmation( parent, "Current project is changed.\nReally loose your changes?" ) )
+        if ( SwingComponentUtils.askConfirmation( parent,
+            "Current project has been changed.\nDo you really want to lose your changes?" ) )
         {
           return;
         }
