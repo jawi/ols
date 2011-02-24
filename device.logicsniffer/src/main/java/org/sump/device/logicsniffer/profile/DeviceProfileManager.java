@@ -61,6 +61,33 @@ public class DeviceProfileManager implements ManagedServiceFactory
   }
 
   /**
+   * Tries to match a device profile to the given identifier. The given
+   * identifier is for example, "BPv3", or "Logic Sniffer".
+   * <p>
+   * This method will use the {@link DeviceProfile#DEVICE_METADATA_KEYS} of each
+   * known device profile to try to find a match with the given identifier.<br/>
+   * Note if one of these metadata keys is the string "*", it will always match.
+   * </p>
+   * 
+   * @param aIdentifier
+   *          the identifier as string, cannot be <code>null</code>.
+   * @return the device profile matching the given identifier, or
+   *         <code>null</code> if none is found.
+   */
+  public synchronized DeviceProfile findProfile( final String aIdentifier )
+  {
+    for ( DeviceProfile profile : this.profiles.values() )
+    {
+      final String[] metadataKeys = profile.getDeviceMetadataKeys();
+      if ( matches( aIdentifier, metadataKeys ) )
+      {
+        return profile;
+      }
+    }
+    return null;
+  }
+
+  /**
    * @see org.osgi.service.cm.ManagedServiceFactory#getName()
    */
   @Override
@@ -137,5 +164,27 @@ public class DeviceProfileManager implements ManagedServiceFactory
       this.profiles.put( aPid, profile );
       profile.setProperties( aProperties );
     }
+  }
+
+  /**
+   * Tries to find the given identifier in the given set of metadata keys.
+   * 
+   * @param aIdentifier
+   *          the identifier to search for;
+   * @param aMetadataKeys
+   *          the metadata keys to search in.
+   * @return <code>true</code> if the given identifier is found,
+   *         <code>false</code> otherwise.
+   */
+  private boolean matches( final String aIdentifier, final String... aMetadataKeys )
+  {
+    for ( String metadataKey : aMetadataKeys )
+    {
+      if ( "*".equals( metadataKey ) || aIdentifier.startsWith( metadataKey ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 }

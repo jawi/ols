@@ -33,6 +33,7 @@ import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
 import org.osgi.service.io.*;
+import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
@@ -104,24 +105,15 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         time++;
       }
 
-      int correction = 1;
+      // XXX JaWi: why is this correction needed?
+      int correction = 2;
       if ( LogicSnifferDevice.this.config.getDivider() <= 3 )
       {
-        correction = ( ( LogicSnifferDevice.this.config.getDivider() == 0 ) ? 5 : 2 );
-      }
-
-      long triggerPos;
-      if ( LogicSnifferDevice.this.config.isDemuxEnabled() )
-      {
-        triggerPos = ( ( this.trigCount * 2 ) - 9 );
-      }
-      else
-      {
-        triggerPos = ( this.trigCount - correction );
+        correction = 1;
       }
 
       // Take the last seen time value as "absolete" length of this trace...
-      this.callback.ready( time, triggerPos );
+      this.callback.ready( time, ( this.trigCount - correction ) );
     }
   }
 
@@ -159,6 +151,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       this.trigCount = aTrigCount;
       this.callback = aCallback;
 
+      // enabled group count is "automatically" corrected for DDR/Demux mode...
       final int width = LogicSnifferDevice.this.config.getEnabledGroupCount() * 8;
       switch ( width )
       {
@@ -197,9 +190,14 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       // if msb set increment time by the count value
       // else save sample check trigger pos and increment time by 1
       // this should work for either dogsbody or rasmus bitstreams
-      this.callback.addValue( 0, time );
 
       final int samples = this.buffer.length;
+
+      // shiftBits needs to be 8 if 8 bit selected and 16 if 16 bit selected
+      final int shiftBits = LogicSnifferDevice.this.config.getEnabledGroupCount() * 8;
+      final boolean ddrMode = LogicSnifferDevice.this.config.isDemuxEnabled()
+          && LogicSnifferDevice.this.config.isInternalClock();
+
       for ( int i = 0; i < samples; i++ )
       {
         final int sampleValue = this.buffer[i];
@@ -208,7 +206,20 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         // if a count just add it to the time
         if ( ( normalizedSampleValue & this.rleCountValue ) != 0 )
         {
-          time += ( normalizedSampleValue & this.rleCountMask );
+          // if demux is on take two samples for count (most significant count
+          // less msb) (least significant count) and double it. Count is 31 bits
+          // wide for 16 bit capture and 15 bits wide for 8 bit capture
+          if ( ddrMode )
+          {
+            int count = ( normalizedSampleValue & this.rleCountMask );
+            count <<= shiftBits;
+            count |= ( normalizeSampleValue( this.buffer[++i] ) );
+            time += ( long )count * 2;
+          }
+          else
+          {
+            time += ( normalizedSampleValue & this.rleCountMask );
+          }
         }
         else
         {
@@ -242,8 +253,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
      */
     private int normalizeSampleValue( final int aSampleValue )
     {
-      final int groupCount = LogicSnifferDevice.this.config.getGroupCount();
-
+      int groupCount = LogicSnifferDevice.this.config.getGroupCount();
       int compdata = 0;
 
       // to enable non contiguous channel groups
@@ -257,7 +267,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         }
         indata >>= 8;
       }
-
       return compdata;
     }
   }
@@ -357,15 +366,15 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   // VARIABLES
 
   private final LogicSnifferConfig config;
+  private final BundleContext bundleContext;
 
   private StreamConnection connection;
   private DataInputStream inputStream;
   private DataOutputStream outputStream;
-  private volatile boolean running;
   private boolean attached;
-
-  private final BundleContext bundleContext;
   private int trigcount;
+
+  private volatile boolean running;
 
   // CONSTRUCTORS
 
@@ -511,13 +520,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       // First try to find the logic sniffer itself...
       detectDevice();
 
-      // Try to obtain the device's metadata and use this for the
-      // remainder of the device configuration...
-      this.config.setMetadata( getMetadata() );
-
-      // Log the read results...
-      LOG.log( Level.INFO, "Metadata = \n{0}", this.config.getMetadata().toString() );
-
       // check if data needs to be multiplexed
       final int channels = this.config.getChannelCount();
       if ( channels < 0 )
@@ -535,7 +537,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       // We need to read all samples first before doing any post-processing on
       // them...
       final int[] buffer = new int[samples];
-
       // configure device
       configureDevice();
 
@@ -550,7 +551,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         try
         {
           buffer[sampleIdx] = readSample( channels );
-
           sampleIdx--;
           waiting = false;
         }
@@ -575,7 +575,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         for ( ; this.running && ( sampleIdx >= 0 ); sampleIdx-- )
         {
           buffer[sampleIdx] = readSample( channels );
-
           setProgress( 100 - ( 100 * sampleIdx ) / buffer.length );
         }
       }
@@ -596,6 +595,13 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       finally
       {
         setProgress( 100 );
+      }
+
+      // In case the device sends its samples in "reverse" order, we need to
+      // revert it now, before processing them further...
+      if ( this.config.isSamplesInReverseOrder() )
+      {
+        HostUtils.reverse( buffer );
       }
 
       final List<Integer> values = new ArrayList<Integer>();
@@ -734,6 +740,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       // device when using the demultiplexer...
       final int maxSize = 0x7fff8;
       size = ( ( ( stopCounter - 8 ) & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
+      this.trigcount = ( size & 0xffff ) * 8 - ( ( size >> 16 ) & 0xffff ) * 8;
     }
     else
     {
@@ -741,13 +748,11 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       // device...
       final int maxSize = 0x3fffc;
       size = ( ( ( stopCounter - 4 ) & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
+      this.trigcount = ( size & 0xffff ) * 4 - ( ( size >> 16 ) & 0xffff ) * 4;
     }
 
     // set the capture size...
     sendCommand( SETSIZE, size );
-
-    // ***DSF use values sent to OLS
-    this.trigcount = ( size & 0xffff ) * 4 - ( ( size >> 16 ) & 0xffff ) * 4;
 
     int flags = 0;
     if ( this.config.isExternalClock() )
@@ -768,15 +773,19 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         enabledChannelGroups |= ( 1 << i );
       }
     }
-    flags |= ~( enabledChannelGroups << 2 ) & 0x3c;
 
     if ( this.config.isDemuxEnabled() && this.config.isInternalClock() )
     {
+      // when DEMUX is selected the groups selected in the upper two channel
+      // groups
+      // must be the same as those selected in the lower two groups
+      enabledChannelGroups &= 0x03;
+      enabledChannelGroups |= ( enabledChannelGroups << 2 ) & 0x0c;
       flags |= FLAG_DEMUX;
       // if the demux bit is set, the filter flag *must* be cleared...
       flags &= ~FLAG_FILTER;
     }
-
+    flags |= ~( enabledChannelGroups << 2 ) & 0x3c;
     if ( this.config.isFilterEnabled() && this.config.isFilterAvailable() )
     {
       flags |= FLAG_FILTER;
@@ -972,6 +981,26 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     { // SLA1
       throw new IOException( "Device not found!" );
     }
+
+    if ( this.config.getDeviceProfile() != null )
+    {
+      // Try to find the metadata of the device, if returned, we can use it to
+      // determine the capacities of the device...
+      final LogicSnifferMetadata metadata = getMetadata();
+      if ( metadata != null )
+      {
+        // Log the read results...
+        LOG.log( Level.INFO, "Metadata = \n{0}", metadata.toString() );
+
+        final String name = metadata.getName();
+        if ( name != null )
+        {
+          final DeviceProfileManager manager = Activator.getDeviceProfileManager();
+          final DeviceProfile profile = manager.findProfile( name );
+          this.config.setDeviceProfile( profile );
+        }
+      }
+    }
   }
 
   /**
@@ -1136,18 +1165,26 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   private int readSample( final int aChannelCount ) throws IOException, InterruptedException
   {
     int v, value = 0;
-
-    final int enabledGroupCount = this.config.getEnabledGroupCount();
-
+    // calculate number of groups expected, less than sChannelCount when Demux
+    // set;
+    final int groupCount = ( int )Math.ceil( aChannelCount / 8.0 );
+    int enabledGroupCount = 0;
+    for ( int i = 0; i < groupCount; i++ )
+    {
+      if ( this.config.isGroupEnabled( i ) )
+      {
+        enabledGroupCount++;
+      }
+    }
     // Wait until there's data available, otherwise we could get 'false'
     // timeouts; do not make the sleep too long, otherwise we might overflow our
     // receiver buffers...
+    // if data not available here client will stall until stop button pressed
     while ( ( this.inputStream.available() < enabledGroupCount ) && !Thread.interrupted() && this.running )
     {
       Thread.sleep( 1L );
     }
 
-    final int groupCount = ( int )Math.ceil( aChannelCount / 8.0 );
     for ( int i = 0; i < groupCount; i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...
@@ -1155,7 +1192,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       if ( this.config.isGroupEnabled( i ) )
       {
         v = this.inputStream.read();
-
         // Any timeouts/interrupts occurred?
         if ( v < 0 )
         {
@@ -1166,10 +1202,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           throw new InterruptedException( "Data readout interrupted." );
         }
       }
-
       value |= v << ( 8 * i );
     }
-
     return value;
   }
 

@@ -354,7 +354,6 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     }
 
     final Object o = aEvent.getSource();
-    final String l = aEvent.getActionCommand();
 
     // ignore all events when dialog is not displayed
     if ( !isVisible() )
@@ -389,7 +388,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       updateConfig();
       updateFields();
     }
-    else if ( l.equals( "Capture" ) )
+    else if ( o == this.captureButton )
     {
       this.dialogResult = updateConfig();
 
@@ -500,7 +499,9 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     return this.dialogResult;
   }
 
-  /** activates / deactivates dialog options according to device status */
+  /**
+   * activates / deactivates dialog options according to device status.
+   */
   public void updateFields()
   {
     updateFields( true );
@@ -965,7 +966,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       this.triggerStageTabs.add( String.format( "Stage %d", Integer.valueOf( i + 1 ) ), stagePane );
     }
 
-    this.warningLabel = new JLabel();
+    this.warningLabel = new JLabel( "" );
     this.warningLabel.setFont( this.warningLabel.getFont().deriveFont( Font.BOLD ) );
 
     // NOTE: create this component as last component, as it will fire an event
