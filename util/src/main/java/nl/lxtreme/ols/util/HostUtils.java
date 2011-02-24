@@ -494,6 +494,54 @@ public final class HostUtils
   }
 
   /**
+   * Reverses the elements in the given array.
+   * 
+   * @param aArray
+   *          the array to reverse, cannot be <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given array was <code>null</code>.
+   */
+  public static final void reverse( final int[] aArray )
+  {
+    if ( aArray == null )
+    {
+      throw new IllegalArgumentException( "Array cannot be null!" );
+    }
+
+    for ( int left = 0, right = aArray.length - 1; left < right; left++, right-- )
+    {
+      // exchange the first and last
+      int temp = aArray[left];
+      aArray[left] = aArray[right];
+      aArray[right] = temp;
+    }
+  }
+
+  /**
+   * Reverses the elements in the given array.
+   * 
+   * @param aArray
+   *          the array to reverse, cannot be <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given array was <code>null</code>.
+   */
+  public static final <T> void reverse( final T[] aArray )
+  {
+    if ( aArray == null )
+    {
+      throw new IllegalArgumentException( "Array cannot be null!" );
+    }
+
+    for ( int left = 0, right = aArray.length - 1; left < right; left++, right-- )
+    {
+      // exchange the first and last
+      T temp = aArray[left];
+      aArray[left] = aArray[right];
+      aArray[right] = temp;
+    }
+  }
+
+  /**
    * Sets the filename to end with the given file extension, if this is not
    * already the case.
    * 
