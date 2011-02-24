@@ -120,7 +120,7 @@ public final class LogicSnifferConfig
   public int getChannelCount()
   {
     int channels;
-    if ( this.demux && isInternalClock() )
+    if ( isDemuxEnabled() && isInternalClock() )
     {
       // When the multiplexer is turned on, the upper two channel blocks are
       // disabled, leaving only 16 channels for capturing...
@@ -131,6 +131,10 @@ public final class LogicSnifferConfig
       channels = 32;
     }
 
+    if ( this.deviceProfile != null )
+    {
+      channels = Math.min( channels, this.deviceProfile.getChannelCount() );
+    }
     if ( this.metadata != null )
     {
       channels = Math.min( channels, this.metadata.getProbeCount( channels ) );
@@ -206,13 +210,23 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Returns the total number of channel groups.
+   * Returns the total number of channel groups, i.e., returns 2 when
+   * {@link #isDemuxEnabled()} is enabled, 4 otherwise.
    * 
    * @return a group count, >= 0 && < 4.
    */
   public int getGroupCount()
   {
-    return getChannelCount() / CapturedData.CHANNELS_PER_BLOCK;
+    int cnt = getChannelCount() / CapturedData.CHANNELS_PER_BLOCK;
+
+    if ( isDemuxEnabled() && isInternalClock() )
+    {
+      // In case the demux is enabled, only a maximum of two channel groups is
+      // allowed...
+      cnt = Math.min( 2, cnt );
+    }
+
+    return cnt;
   }
 
   /**
@@ -223,16 +237,6 @@ public final class LogicSnifferConfig
   public int getMaxTriggerStages()
   {
     return TRIGGER_STAGES;
-  }
-
-  /**
-   * Returns the metadata as obtained from the device.
-   * 
-   * @return the device metadata, might be <code>null</code>.
-   */
-  public LogicSnifferMetadata getMetadata()
-  {
-    return this.metadata;
   }
 
   /**
@@ -417,11 +421,15 @@ public final class LogicSnifferConfig
    * 
    * @return <code>true</code> when noise filter is available,
    *         <code>false</code> otherwise.
-   * @see #isFilterEnabled()
    */
   public boolean isFilterAvailable()
   {
-    return !isDemuxEnabled() && isInternalClock();
+    boolean result = !isDemuxEnabled() && isInternalClock();
+    if ( this.deviceProfile != null )
+    {
+      result &= this.deviceProfile.isNoiseFilterSupported();
+    }
+    return result;
   }
 
   /**
@@ -470,6 +478,21 @@ public final class LogicSnifferConfig
   public boolean isRleEnabled()
   {
     return this.rleEnabled;
+  }
+
+  /**
+   * Returns whether or not the device returns its samples in "reverse" order.
+   * 
+   * @return <code>true</code> if the samples are returned in reverse order,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isSamplesInReverseOrder()
+  {
+    if ( this.deviceProfile != null )
+    {
+      return this.deviceProfile.isSamplesInReverseOrder();
+    }
+    return false;
   }
 
   /**
