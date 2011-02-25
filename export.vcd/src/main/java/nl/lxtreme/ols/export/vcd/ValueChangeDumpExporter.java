@@ -91,22 +91,32 @@ public class ValueChangeDumpExporter implements Exporter
    * @param aContainer
    * @param aTimebase
    */
-  private void writeDataDump( final PrintWriter aWriter, final DataContainer aContainer, final double aTimebase )
+  protected void writeDataDump( final PrintWriter aWriter, final DataContainer aContainer, final double aTimebase )
   {
     final int[] values = aContainer.getValues();
     final long[] timestamps = aContainer.getTimestamps();
     final int channelCount = aContainer.getChannels();
+    final int channelMask = aContainer.getEnabledChannels();
 
+    int oldValue = -1;
     for ( int i = 0, size = values.length; i < size; i++ )
     {
       final int value = values[i];
       final long timestamp = timestamps[i];
 
-      final int time = ( int )( ( timestamp / ( double )aContainer.getSampleRate() ) / aTimebase );
+      final int time = ( int )( timestamp / ( aContainer.getSampleRate() * aTimebase ) );
 
-      writeTime( aWriter, time );
-      writeVariableData( aWriter, value, channelCount );
+      if ( ( i == 0 ) || ( oldValue != value ) )
+      {
+        writeTime( aWriter, time );
+        writeVariableData( aWriter, channelCount, channelMask, value, oldValue, ( i == 0 ) );
+      }
+
+      oldValue = value;
     }
+
+    final int time = ( int )( aContainer.getAbsoluteLength() / ( aContainer.getSampleRate() * aTimebase ) );
+    writeTime( aWriter, time );
   }
 
   /**
@@ -114,7 +124,7 @@ public class ValueChangeDumpExporter implements Exporter
    * @param aContainer
    * @param aTimescale
    */
-  private void writePreamble( final PrintWriter aWriter, final DataContainer aContainer, final double aTimescale )
+  protected void writePreamble( final PrintWriter aWriter, final DataContainer aContainer, final double aTimescale )
   {
     writeDeclaration( aWriter, "comment", ID );
     writeDate( aWriter );
@@ -128,17 +138,55 @@ public class ValueChangeDumpExporter implements Exporter
 
   /**
    * @param aWriter
-   * @param aValue
-   * @param aChannelCount
+   * @param aIndex
    */
-  private void writeVariableData( final PrintWriter aWriter, final int aValue, final int aChannelCount )
+  protected void writeSingleVariableDefinition( final PrintWriter aWriter, final int aIndex )
+  {
+    aWriter.printf( "x%s", getIdentifier( aIndex ) ).println();
+  }
+
+  /**
+   * @param aWriter
+   * @param aTimebase
+   */
+  protected void writeTime( final PrintWriter aWriter, final long aTimebase )
+  {
+    ValueChangeDumpHelper.writeTime( aWriter, aTimebase );
+  }
+
+  /**
+   * @param aWriter
+   *          the writer to write the variable data to;
+   * @param aChannelCount
+   *          the total channel count;
+   * @param aChannelMask
+   *          the enabled channel mask;
+   * @param aValue
+   *          the value to write.
+   */
+  protected void writeVariableData( final PrintWriter aWriter, final int aChannelCount, final int aChannelMask,
+      final int aValue, final int aOldValue, final boolean aAllBits )
   {
     int value = aValue;
+    int oldValue = aOldValue;
+    int mask = aChannelMask;
     for ( int i = 0; i < aChannelCount; i++ )
     {
-      final char id = ( char )( '#' + i );
-      aWriter.printf( "%d%c", Integer.valueOf( value & 1 ), Character.valueOf( id ) ).println();
+      if ( ( mask & ( 1 << i ) ) == 0 )
+      {
+        continue;
+      }
+
+      final int bitValue = ( value & 1 );
+      final int oldBitValue = ( oldValue & 1 );
+
+      if ( aAllBits || ( bitValue != oldBitValue ) )
+      {
+        aWriter.printf( "%d%s", Integer.valueOf( bitValue ), getIdentifier( i ) ).println();
+      }
+
       value >>= 1;
+      oldValue >>= 1;
     }
   }
 
@@ -151,10 +199,18 @@ public class ValueChangeDumpExporter implements Exporter
    *          the data container to take the channel information from, cannot be
    *          <code>null</code>.
    */
-  private void writeVariableDefinitions( final PrintWriter aWriter, final DataContainer aContainer )
+  protected void writeVariableDefinitions( final PrintWriter aWriter, final DataContainer aContainer )
   {
-    for ( int i = 0; i < aContainer.getChannels(); i++ )
+    final int channelCount = aContainer.getChannels();
+    final int channelMask = aContainer.getEnabledChannels();
+
+    for ( int i = 0; i < channelCount; i++ )
     {
+      if ( ( channelMask & ( 1 << i ) ) == 0 )
+      {
+        continue;
+      }
+
       String label = aContainer.getChannelLabel( i );
       if ( StringUtils.isEmpty( label ) )
       {
@@ -169,13 +225,21 @@ public class ValueChangeDumpExporter implements Exporter
    * @param aWriter
    * @param aContainer
    */
-  private void writeVariableDump( final PrintWriter aWriter, final DataContainer aContainer )
+  protected void writeVariableDump( final PrintWriter aWriter, final DataContainer aContainer )
   {
+    final int channelCount = aContainer.getChannels();
+    final int channelMask = aContainer.getEnabledChannels();
+
     writeOpenDeclaration( aWriter, "dumpvars" );
 
-    for ( int i = 0; i < aContainer.getChannels(); i++ )
+    for ( int i = 0; i < channelCount; i++ )
     {
-      aWriter.printf( "x%c", Integer.valueOf( '#' + i ) ).println();
+      if ( ( channelMask & ( 1 << i ) ) == 0 )
+      {
+        continue;
+      }
+
+      writeSingleVariableDefinition( aWriter, i );
     }
 
     writeCloseDeclaration( aWriter );

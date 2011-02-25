@@ -25,8 +25,6 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
-import nl.lxtreme.ols.util.*;
-
 
 /**
  * @author jawi
@@ -46,6 +44,24 @@ public class ValueChangeDumpHelper
   // METHODS
 
   /**
+   * @param aIndex
+   * @return
+   */
+  public static final String getIdentifier( final int aIndex )
+  {
+    if ( aIndex < 0 )
+    {
+      throw new IllegalArgumentException( "Index cannot be negative!" );
+    }
+    if ( aIndex > 90 )
+    {
+      throw new IllegalArgumentException( "More than 90 identifiers are not supported!" );
+    }
+    int id = '!' + aIndex;
+    return String.format( "%c", id );
+  }
+
+  /**
    * Returns the timebase for the given sample rate.
    * <p>
    * The timebase can only be in values of 1, 10 or 100, with units ranging from
@@ -58,23 +74,31 @@ public class ValueChangeDumpHelper
    */
   public static final double getTimebase( final long aSampleRate )
   {
-    double result = 1.0 / aSampleRate;
+    if ( aSampleRate < 0 )
+    {
+      throw new IllegalArgumentException( "Negative sample rates are not supported!" );
+    }
+    // The simple case: a sample rate of 0 yields a timebase of 0
+    if ( aSampleRate == 0L )
+    {
+      return 0.0;
+    }
 
-    final double[] unitVals = { 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12, 1.0e-15 };
+    final double[] unitVals = { 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12, 1.0e-15, 1.0e-18 };
+
+    final double period = 1.0 / aSampleRate;
 
     int i = 0;
     for ( ; i < unitVals.length; i++ )
     {
-      if ( result >= unitVals[i] )
+      if ( period >= unitVals[i] )
       {
         break;
       }
     }
-    i = Math.min( i, unitVals.length - 1 );
+    i = Math.max( 0, Math.min( i, unitVals.length - 1 ) );
 
-    result /= unitVals[i];
-
-    return normalizeTimebase( result ) * unitVals[i];
+    return normalizeTimebase( 1.0 / ( aSampleRate * unitVals[i] ) ) * unitVals[i];
   }
 
   /**
@@ -150,16 +174,41 @@ public class ValueChangeDumpHelper
    */
   public static final void writeVariable( final PrintWriter aWriter, final int aIndex, final String aLabel )
   {
-    aWriter.printf( "$var wire 1 %c %s $end", Integer.valueOf( '#' + aIndex ), aLabel ).println();
+    aWriter.printf( "$var wire 1 %s %s $end", getIdentifier( aIndex ), aLabel ).println();
   }
 
   /**
    * @param aTimebase
    * @return
    */
-  private static final String getTimescale( final double aTimebase )
+  protected static final String getTimescale( final double aTimebase )
   {
-    return DisplayUtils.displayTime( aTimebase, 0, " " );
+    if ( aTimebase < 0 )
+    {
+      throw new IllegalArgumentException( "Negative timebases are not supported!" );
+    }
+    // The simple case: a timebase of 0 yields a value of "0 s".
+    if ( aTimebase == 0.0 )
+    {
+      return "0 s";
+    }
+
+    final String[] unitStrs = { "s", "ms", "us", "ns", "ps", "fs", "as" };
+    final double[] unitVals = { 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12, 1.0e-15, 1.0e-18 };
+
+    double absTime = Math.abs( aTimebase );
+
+    int i = 0;
+    for ( ; i < unitVals.length; i++ )
+    {
+      if ( absTime >= unitVals[i] )
+      {
+        break;
+      }
+    }
+    i = Math.min( i, unitVals.length - 1 );
+
+    return String.format( "%.0f %s", Double.valueOf( aTimebase / unitVals[i] ), unitStrs[i] );
   }
 
   /**
@@ -168,11 +217,16 @@ public class ValueChangeDumpHelper
    */
   private static final int normalizeTimebase( final double aTime )
   {
-    if ( aTime > 100 )
+    if ( Double.isInfinite( aTime ) || Double.isNaN( aTime ) )
+    {
+      return 0;
+    }
+
+    if ( aTime >= 100.0 )
     {
       return 100;
     }
-    else if ( aTime > 10 )
+    else if ( aTime >= 10.0 )
     {
       return 10;
     }
