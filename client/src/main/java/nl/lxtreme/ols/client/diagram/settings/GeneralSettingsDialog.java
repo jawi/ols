@@ -41,7 +41,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 
 /**
  * Stores diagram "mode" settings and provides a dialog for changing them.
- *
+ * 
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
@@ -185,7 +185,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Constructs diagram settings component.
-   *
+   * 
    * @param aParent
    * @param aSettings
    */
@@ -214,7 +214,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     }
 
     final String text = aTextField.getText();
-    if ( DisplayUtils.isEmpty( text ) )
+    if ( StringUtils.isEmpty( text ) )
     {
       return null;
     }
@@ -236,7 +236,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
     }
 
     final String text = aTextField.getText();
-    if ( DisplayUtils.isEmpty( text ) )
+    if ( StringUtils.isEmpty( text ) )
     {
       return -1;
     }
@@ -266,7 +266,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Returns the (mutated) diagram settings.
-   *
+   * 
    * @return the diagram settings, never <code>null</code>.
    */
   public final DiagramSettings getDiagramSettings()
@@ -287,7 +287,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
    * Display the settings dialog. If the user clicks ok, all changes are
    * reflected in the properties of this object. Otherwise changes are
    * discarded.
-   *
+   * 
    * @return <code>OK</code> when user accepted changes, <code>CANCEL</code>
    *         otherwise
    */
@@ -308,7 +308,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Enables/disables all color scheme-related tabs
-   *
+   * 
    * @param aEnable
    *          <code>true</code> to enable all color scheme-related tabs,
    *          <code>false</code> to disable them.
@@ -540,7 +540,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Sets this dialog enabled.
-   *
+   * 
    * @param aEnabled
    *          <code>true</code> to enable the tabbed pane and the "Ok" button,
    *          <code>false</code> to disable these components.
@@ -553,7 +553,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Shows an error message.
-   *
+   * 
    * @param aMessage
    *          the error message to show, cannot be <code>null</code>.
    */
@@ -564,7 +564,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
 
   /**
    * Synchronizes the settings with the values chosen in the UI.
-   *
+   * 
    * @return <code>true</code> if no errors were found in the settings,
    *         <code>false</code> otherwise.
    */

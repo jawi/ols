@@ -22,6 +22,7 @@ package nl.lxtreme.ols.export.vcd;
 
 
 import static nl.lxtreme.ols.export.vcd.ValueChangeDumpHelper.*;
+
 import java.io.*;
 
 import javax.swing.*;
@@ -155,7 +156,7 @@ public class ValueChangeDumpExporter implements Exporter
     for ( int i = 0; i < aContainer.getChannels(); i++ )
     {
       String label = aContainer.getChannelLabel( i );
-      if ( DisplayUtils.isEmpty( label ) )
+      if ( StringUtils.isEmpty( label ) )
       {
         label = "channel" + i;
       }

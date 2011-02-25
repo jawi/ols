@@ -62,7 +62,7 @@ public class EnumItemRenderer<ENUM_TYPE extends Enum<?>> extends DefaultListCell
     if ( renderer instanceof JComponent )
     {
       final String toolTipText = getToolTip( aValue );
-      if ( !DisplayUtils.isEmpty( toolTipText ) )
+      if ( !StringUtils.isEmpty( toolTipText ) )
       {
         ( ( JComponent )renderer ).setToolTipText( toolTipText );
       }

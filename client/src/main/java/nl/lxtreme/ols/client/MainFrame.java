@@ -393,7 +393,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       final String value = ( String )aEvent.getNewValue();
 
       String title = Host.FULL_NAME;
-      if ( !DisplayUtils.isEmpty( value ) )
+      if ( !StringUtils.isEmpty( value ) )
       {
         // Denote the project file in the title of the main window...
         title = title.concat( " :: " ).concat( value );

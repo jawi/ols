@@ -630,8 +630,8 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
               tr.addChild( TD ).addContent( aAnalysisResult.getDisplayTime( data.getStartSampleIndex() ) );
-              tr.addChild( TD ).addContent( "0x" + DisplayUtils.integerToHexString( value, 2 ) );
-              tr.addChild( TD ).addContent( "0b" + DisplayUtils.integerToBinString( value, 8 ) );
+              tr.addChild( TD ).addContent( "0x" + StringUtils.integerToHexString( value, 2 ) );
+              tr.addChild( TD ).addContent( "0b" + StringUtils.integerToBinString( value, 8 ) );
               tr.addChild( TD ).addContent( String.valueOf( value ) );
               tr.addChild( TD ).addContent( String.valueOf( ( char )value ) );
             }

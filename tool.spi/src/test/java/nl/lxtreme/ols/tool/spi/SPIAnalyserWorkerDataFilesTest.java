@@ -22,16 +22,14 @@ package nl.lxtreme.ols.tool.spi;
 
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
-import java.io.*;
 import java.net.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.test.*;
+import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
 
 import org.junit.*;
@@ -93,68 +91,6 @@ public class SPIAnalyserWorkerDataFilesTest
   }
 
   /**
-   * @param aContainer
-   * @return
-   */
-  private static ToolContext createToolContext( final DataContainer aContainer )
-  {
-    final Integer first = Integer.valueOf( Math.max( 0,
-        aContainer.getSampleIndex( aContainer.getTriggerPosition() ) - 1 ) );
-    final Integer last = Integer.valueOf( aContainer.getValues().length - 1 );
-
-    ToolContext toolContext = mock( ToolContext.class );
-    when( toolContext.getStartSampleIndex() ).thenReturn( first );
-    when( toolContext.getEndSampleIndex() ).thenReturn( last );
-    when( toolContext.getLength() ).thenReturn( last - first );
-    return toolContext;
-  }
-
-  /**
-   * Returns the given resource as project with captured data.
-   */
-  private static DataContainer getCapturedData( final String aResourceName ) throws IOException
-  {
-    final URL resource = getResource( aResourceName );
-    assertNotNull( resource );
-
-    InputStream is = resource.openStream();
-    try
-    {
-      final Project project = new ProjectImpl();
-      project.setChannelLabels( new String[32] );
-      OlsDataHelper.read( project, new InputStreamReader( is ) );
-
-      ProjectManager projectMgr = mock( ProjectManager.class );
-      when( projectMgr.getCurrentProject() ).thenReturn( project );
-
-      return new DataContainer( projectMgr );
-    }
-    finally
-    {
-      HostUtils.closeResource( is );
-    }
-  }
-
-  /**
-   * Returns the resource with the given name from the datafiles directory.
-   * 
-   * @param aName
-   *          the resource name, including file extension, cannot be
-   *          <code>null</code>.
-   * @return the URI pointing to the requested resource, never <code>null</code>
-   *         .
-   */
-  private static URL getResource( final String aName )
-  {
-    final URL resource = SPIAnalyserWorkerDataFilesTest.class.getClassLoader().getResource( "datafiles/" + aName );
-    if ( resource == null )
-    {
-      throw new RuntimeException( "Resource not found: " + aName );
-    }
-    return resource;
-  }
-
-  /**
    * Test method for
    * {@link nl.lxtreme.ols.tool.spi.SPIAnalyserWorker#doInBackground()}.
    */
@@ -178,8 +114,9 @@ public class SPIAnalyserWorkerDataFilesTest
    */
   private SPIDataSet analyseDataFile( final String aResourceName ) throws Exception
   {
-    DataContainer container = getCapturedData( aResourceName );
-    ToolContext toolContext = createToolContext( container );
+    URL resource = ResourceUtils.getResource( getClass(), aResourceName );
+    DataContainer container = DataTestUtils.getCapturedData( resource );
+    ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     SPIAnalyserWorker worker = new SPIAnalyserWorker( container, toolContext );
     worker.setBitCount( this.bitCount );
