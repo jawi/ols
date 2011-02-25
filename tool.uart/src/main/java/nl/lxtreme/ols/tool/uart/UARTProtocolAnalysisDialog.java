@@ -762,8 +762,8 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
               {
                 final int rxData = ds.getData();
 
-                rxDataHex = "0x" + DisplayUtils.integerToHexString( rxData, bitCount / 4 + bitAdder );
-                rxDataBin = "0b" + DisplayUtils.integerToBinString( rxData, bitCount );
+                rxDataHex = "0x" + StringUtils.integerToHexString( rxData, bitCount / 4 + bitAdder );
+                rxDataBin = "0b" + StringUtils.integerToBinString( rxData, bitCount );
                 rxDataDec = String.valueOf( rxData );
                 if ( ( rxData >= 32 ) && ( bitCount == 8 ) )
                 {
@@ -775,8 +775,8 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
               {
                 final int txData = ds.getData();
 
-                txDataHex = "0x" + DisplayUtils.integerToHexString( txData, bitCount / 4 + bitAdder );
-                txDataBin = "0b" + DisplayUtils.integerToBinString( txData, bitCount );
+                txDataHex = "0x" + StringUtils.integerToHexString( txData, bitCount / 4 + bitAdder );
+                txDataBin = "0b" + StringUtils.integerToBinString( txData, bitCount );
                 txDataDec = String.valueOf( txData );
                 if ( ( txData >= 32 ) && ( bitCount == 8 ) )
                 {

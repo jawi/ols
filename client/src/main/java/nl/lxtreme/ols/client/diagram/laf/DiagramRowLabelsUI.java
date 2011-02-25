@@ -91,7 +91,7 @@ public class DiagramRowLabelsUI extends ComponentUI
   {
     Font font = LafHelper.getDefaultFont();
     this.labelFont = font.deriveFont( Font.BOLD );
-    this.indexFont = font.deriveFont(font.getSize()*0.75f);
+    this.indexFont = font.deriveFont( font.getSize() * 0.75f );
   }
 
   /**
@@ -167,7 +167,7 @@ public class DiagramRowLabelsUI extends ComponentUI
 
           String indexStr = Integer.toString( labelIdx );
           String label = dataContainer.getChannelLabel( labelIdx );
-          if ( DisplayUtils.isEmpty( label ) )
+          if ( StringUtils.isEmpty( label ) )
           {
             label = indexStr;
           }
@@ -253,7 +253,7 @@ public class DiagramRowLabelsUI extends ComponentUI
     for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
     {
       String label = dataContainer.getChannelLabel( i );
-      if ( DisplayUtils.isEmpty( label ) )
+      if ( StringUtils.isEmpty( label ) )
       {
         label = "W88";
       }

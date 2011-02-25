@@ -123,7 +123,7 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
     for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
     {
       final String newLabel = this.labelFields[i].getText();
-      this.channelLabels[i] = DisplayUtils.isEmpty( newLabel ) ? null : newLabel.trim();
+      this.channelLabels[i] = StringUtils.isEmpty( newLabel ) ? null : newLabel.trim();
     }
   }
 

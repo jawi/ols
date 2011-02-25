@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.spi;
+package nl.lxtreme.ols.test.data.project;
 
 
 import static org.junit.Assert.*;
@@ -32,9 +32,11 @@ import nl.lxtreme.ols.api.data.project.*;
 
 
 /**
- * @author jawi
+ * Provides a "stub" project for testing purposes, that can be modified
+ * externally and provides some additional convenience methods to assist
+ * testing.
  */
-final class ProjectImpl implements Project
+public class StubTestProject implements Project
 {
   // VARIABLES
 

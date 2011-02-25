@@ -738,8 +738,8 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
        */
       private void addDataValues( final Element aTableRow, final int aIdx, final int aSampleIdx, final int aValue )
       {
-        final String mosiDataHex = DisplayUtils.integerToHexString( aValue, bitCount / 4 + bitAdder );
-        final String mosiDataBin = DisplayUtils.integerToBinString( aValue, bitCount );
+        final String mosiDataHex = StringUtils.integerToHexString( aValue, bitCount / 4 + bitAdder );
+        final String mosiDataBin = StringUtils.integerToBinString( aValue, bitCount );
         final String mosiDataDec = String.valueOf( aValue );
         final String mosiDataASCII;
         if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )aValue ) )

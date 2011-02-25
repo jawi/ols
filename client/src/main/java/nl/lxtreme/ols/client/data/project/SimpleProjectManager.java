@@ -229,7 +229,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
       int idx = 0;
       while ( ( ( label = reader.readLine() ) != null ) && ( idx < ( labels.length - 1 ) ) )
       {
-        labels[idx++] = DisplayUtils.isEmpty( label ) ? null : label;
+        labels[idx++] = StringUtils.isEmpty( label ) ? null : label;
       }
     }
     finally
@@ -360,7 +360,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     {
       for ( String label : labels )
       {
-        out.println( DisplayUtils.isEmpty( label ) ? "" : label );
+        out.println( StringUtils.isEmpty( label ) ? "" : label );
       }
     }
     finally

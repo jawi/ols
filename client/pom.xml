@@ -28,9 +28,22 @@
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
 		</dependency>
+
+        <dependency>
+            <groupId>nl.lxtreme.ols</groupId>
+            <artifactId>test.util</artifactId>
+            <type>jar</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <type>jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
             <type>jar</type>
             <scope>test</scope>
         </dependency>
