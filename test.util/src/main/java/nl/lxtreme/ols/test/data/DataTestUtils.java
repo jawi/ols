@@ -51,6 +51,65 @@ public final class DataTestUtils
   // METHODS
 
   /**
+   * Creates a mocked data container with 16 sample/time values.
+   * 
+   * @param aChannelCount
+   *          the number of <em>enabled</em> channels in the returned data
+   *          container, > 0 && < 32.
+   * @return a mocked data container, never <code>null</code>.
+   */
+  public static DataContainer createMockDataContainer( final int aChannelCount )
+  {
+    return createMockDataContainer( 16, aChannelCount );
+  }
+
+  /**
+   * Creates a mocked data container with a given number of sample/time values.
+   * 
+   * @param aDataSize
+   *          the number of sample/time values in the returned data container, >
+   *          0;
+   * @param aChannelCount
+   *          the number of <em>enabled</em> channels in the returned data
+   *          container, > 0 && < 32.
+   * @return a mocked data container, never <code>null</code>.
+   */
+  public static DataContainer createMockDataContainer( final int aDataSize, final int aChannelCount )
+  {
+    final Project project = new StubTestProject();
+    project.setChannelLabels( new String[32] );
+    final ProjectManager pm = mock( ProjectManager.class );
+    doReturn( project ).when( pm ).getCurrentProject();
+
+    final int[] values = new int[aDataSize];
+    final long[] timestamps = new long[aDataSize];
+    final int offset = ( aChannelCount < 2 ) ? 1 : ( aChannelCount / 2 );
+    int value = 0xAA;
+    for ( int i = 0; i < aDataSize; i++ )
+    {
+      if ( i % offset == 0 )
+      {
+        value = ( value == 0xAA ) ? 0x55 : 0xAA;
+      }
+
+      values[i] = value;
+      timestamps[i] = ( i * 2 );
+    }
+
+    final CapturedData data = mock( CapturedData.class );
+    when( data.getChannels() ).thenReturn( CapturedData.MAX_CHANNELS );
+    when( data.getAbsoluteLength() ).thenReturn( ( 2 * aDataSize ) + 1L );
+    when( data.getEnabledChannels() ).thenReturn( NumberUtils.getBitMask( aChannelCount ) );
+    when( data.getSampleRate() ).thenReturn( 1000000 );
+    when( data.getValues() ).thenReturn( values );
+    when( data.getTimestamps() ).thenReturn( timestamps );
+
+    final DataContainer result = new DataContainer( pm );
+    result.setCapturedData( data );
+    return result;
+  }
+
+  /**
    * Creates a (mocked) tool context starting at the given sample index and
    * ending at the last available sample index.
    * 
