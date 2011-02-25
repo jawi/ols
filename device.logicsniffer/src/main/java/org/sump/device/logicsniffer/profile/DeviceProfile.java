@@ -445,7 +445,7 @@ public final class DeviceProfile implements Cloneable
    */
   public boolean isTriggerSupported()
   {
-    final String value = this.properties.get( DEVICE_FEATURE_RLE );
+    final String value = this.properties.get( DEVICE_FEATURE_TRIGGERS );
     return Boolean.parseBoolean( value );
   }
 
