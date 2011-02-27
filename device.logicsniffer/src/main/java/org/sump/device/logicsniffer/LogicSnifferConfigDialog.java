@@ -432,6 +432,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
       this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", this.sourceSelect.getSelectedIndex() ) );
       this.numberSchemeSelect.setSelectedIndex( aSettings.getInt( "numberScheme",
           this.numberSchemeSelect.getSelectedIndex() ) );
+      this.testModeEnable.setSelected( aSettings.getBoolean( "testMode", this.testModeEnable.isSelected() ) );
       this.speedSelect.setSelectedIndex( aSettings.getInt( "speed", this.speedSelect.getSelectedIndex() ) );
       this.sizeSelect.setSelectedIndex( aSettings.getInt( "size", this.sizeSelect.getSelectedIndex() ) );
       this.maxSampleSize.setSelected( aSettings.getBoolean( "autosize", this.maxSampleSize.isSelected() ) );
@@ -516,6 +517,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     aSettings.putInt( "portRate", this.portRateSelect.getSelectedIndex() );
     aSettings.putInt( "source", this.sourceSelect.getSelectedIndex() );
     aSettings.putInt( "numberScheme", this.numberSchemeSelect.getSelectedIndex() );
+    aSettings.putBoolean( "testMode", this.testModeEnable.isSelected() );
     aSettings.putInt( "speed", this.speedSelect.getSelectedIndex() );
     aSettings.putBoolean( "autosize", this.maxSampleSize.isSelected() );
     aSettings.putInt( "size", this.sizeSelect.getSelectedIndex() );
