@@ -210,8 +210,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
           {
             // In case of "double data rate", the RLE-counts are encoded as 16-
             // resp. 32-bit values, so we need to take two samples for each
-            // count
-            // (as they are 8- or 16-bits in DDR mode)...
+            // count (as they are 8- or 16-bits in DDR mode).
+            // This should also solve issue #31...
             count = ( ( normalizedSampleValue & this.rleCountMask ) << shiftBits )
                 | ( normalizeSampleValue( this.buffer[++i] ) & this.rleCountMask );
           }
@@ -740,7 +740,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       // device when using the demultiplexer...
       final int maxSize = 0x7fff8;
       size = ( ( stopCounter & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
-      // A better approximation of (readCounter - stopCounter) - 2...
+      // A better approximation of "(readCounter - stopCounter) - 2". This also
+      // solves issue #31...
       this.trigcount = ( size & 0xffff ) << 3 - ( ( size >> 16 ) & 0xffff ) << 3;
     }
     else
@@ -749,7 +750,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       // device...
       final int maxSize = 0x3fffc;
       size = ( ( stopCounter & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
-      // A better approximation of (readCounter - stopCounter) - 2...
+      // A better approximation of "(readCounter - stopCounter) - 2". This also
+      // solves issue #31...
       this.trigcount = ( size & 0xffff ) << 2 - ( ( size >> 16 ) & 0xffff ) << 2;
     }
 
