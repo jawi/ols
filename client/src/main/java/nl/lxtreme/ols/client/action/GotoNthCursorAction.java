@@ -66,8 +66,12 @@ public class GotoNthCursorAction extends BaseAction
             + " cursor in the diagram" );
     this.index = aIndex;
 
-    final int keyStroke = KeyEvent.VK_0 + ( aIndex % MAX_CURSORS );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( keyStroke ) );
+    int keyStroke = KeyEvent.VK_0 + ( ( aIndex + 1 ) % MAX_CURSORS );
+    if ( keyStroke != KeyEvent.VK_0 )
+    {
+      // Avoid overwriting CTRL/CMD + 0 as accelerator...
+      putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( keyStroke ) );
+    }
     putValue( MNEMONIC_KEY, Integer.valueOf( keyStroke ) );
   }
 
