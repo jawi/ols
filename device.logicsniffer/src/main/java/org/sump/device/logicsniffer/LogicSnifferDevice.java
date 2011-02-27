@@ -152,7 +152,7 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       this.callback = aCallback;
 
       // enabled group count is "automatically" corrected for DDR/Demux mode...
-      final int width = LogicSnifferDevice.this.config.getEnabledGroupCount() * 8;
+      final int width = LogicSnifferDevice.this.config.getRLEDataWidth();
       switch ( width )
       {
         case 32:
@@ -194,9 +194,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       final int samples = this.buffer.length;
 
       // shiftBits needs to be 8 if 8 bit selected and 16 if 16 bit selected
-      final int shiftBits = LogicSnifferDevice.this.config.getEnabledGroupCount() * 8;
-      final boolean ddrMode = LogicSnifferDevice.this.config.isDemuxEnabled()
-          && LogicSnifferDevice.this.config.isInternalClock();
+      final int shiftBits = LogicSnifferDevice.this.config.getRLEDataWidth();
+      final boolean ddrMode = LogicSnifferDevice.this.config.isDoubleDataRateEnabled();
 
       for ( int i = 0; i < samples; i++ )
       {
@@ -206,20 +205,21 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
         // if a count just add it to the time
         if ( ( normalizedSampleValue & this.rleCountValue ) != 0 )
         {
-          // if demux is on take two samples for count (most significant count
-          // less msb) (least significant count) and double it. Count is 31 bits
-          // wide for 16 bit capture and 15 bits wide for 8 bit capture
-          if ( ddrMode )
+          final int count;
+          if ( ddrMode && ( i < ( samples - 1 ) ) )
           {
-            int count = ( normalizedSampleValue & this.rleCountMask );
-            count <<= shiftBits;
-            count |= ( normalizeSampleValue( this.buffer[++i] ) );
-            time += ( long )count * 2;
+            // In case of "double data rate", the RLE-counts are encoded as 16-
+            // resp. 32-bit values, so we need to take two samples for each
+            // count
+            // (as they are 8- or 16-bits in DDR mode)...
+            count = ( ( normalizedSampleValue & this.rleCountMask ) << shiftBits )
+                | ( normalizeSampleValue( this.buffer[++i] ) & this.rleCountMask );
           }
           else
           {
-            time += ( normalizedSampleValue & this.rleCountMask );
+            count = ( normalizedSampleValue & this.rleCountMask );
           }
+          time += count;
         }
         else
         {
@@ -734,21 +734,23 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     final int readCounter = this.config.getReadCounter();
 
     final int size;
-    if ( this.config.isDemuxEnabled() && this.config.isInternalClock() )
+    if ( this.config.isDoubleDataRateEnabled() )
     {
       // 0x7fff8 = 511Kb = the maximum size supported by the original SUMP
       // device when using the demultiplexer...
       final int maxSize = 0x7fff8;
-      size = ( ( ( stopCounter - 8 ) & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
-      this.trigcount = ( size & 0xffff ) * 8 - ( ( size >> 16 ) & 0xffff ) * 8;
+      size = ( ( stopCounter & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
+      // A better approximation of (readCounter - stopCounter) - 2...
+      this.trigcount = ( size & 0xffff ) << 3 - ( ( size >> 16 ) & 0xffff ) << 3;
     }
     else
     {
       // 0x3fffc = 255Kb = the maximum size supported by the original SUMP
       // device...
       final int maxSize = 0x3fffc;
-      size = ( ( ( stopCounter - 4 ) & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
-      this.trigcount = ( size & 0xffff ) * 4 - ( ( size >> 16 ) & 0xffff ) * 4;
+      size = ( ( stopCounter & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
+      // A better approximation of (readCounter - stopCounter) - 2...
+      this.trigcount = ( size & 0xffff ) << 2 - ( ( size >> 16 ) & 0xffff ) << 2;
     }
 
     // set the capture size...
@@ -774,18 +776,19 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       }
     }
 
-    if ( this.config.isDemuxEnabled() && this.config.isInternalClock() )
+    if ( this.config.isDoubleDataRateEnabled() )
     {
-      // when DEMUX is selected the groups selected in the upper two channel
-      // groups
-      // must be the same as those selected in the lower two groups
-      enabledChannelGroups &= 0x03;
-      enabledChannelGroups |= ( enabledChannelGroups << 2 ) & 0x0c;
+      // when DDR is selected, the groups selected in the upper two channel
+      // groups must be the same as those selected in the lower two groups
+      enabledChannelGroups |= ( ( enabledChannelGroups & 0x03 ) << 2 ) & 0x0c;
+
       flags |= FLAG_DEMUX;
       // if the demux bit is set, the filter flag *must* be cleared...
       flags &= ~FLAG_FILTER;
     }
+
     flags |= ~( enabledChannelGroups << 2 ) & 0x3c;
+
     if ( this.config.isFilterEnabled() && this.config.isFilterAvailable() )
     {
       flags |= FLAG_FILTER;
@@ -1167,24 +1170,17 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
     int v, value = 0;
     // calculate number of groups expected, less than sChannelCount when Demux
     // set;
-    final int groupCount = ( int )Math.ceil( aChannelCount / 8.0 );
-    int enabledGroupCount = 0;
-    for ( int i = 0; i < groupCount; i++ )
-    {
-      if ( this.config.isGroupEnabled( i ) )
-      {
-        enabledGroupCount++;
-      }
-    }
     // Wait until there's data available, otherwise we could get 'false'
     // timeouts; do not make the sleep too long, otherwise we might overflow our
     // receiver buffers...
-    // if data not available here client will stall until stop button pressed
-    while ( ( this.inputStream.available() < enabledGroupCount ) && !Thread.interrupted() && this.running )
+    // if data not available here, client will stall until stop button pressed
+    while ( ( this.inputStream.available() < this.config.getEnabledGroupCount() ) && !Thread.interrupted()
+        && this.running )
     {
       Thread.sleep( 1L );
     }
 
+    final int groupCount = aChannelCount / CapturedData.CHANNELS_PER_BLOCK;
     for ( int i = 0; i < groupCount; i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...

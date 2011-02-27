@@ -65,7 +65,7 @@ public final class LogicSnifferConfig
   private int divider;
   private int size;
   private double ratio;
-
+  private int rleDataWidth;
   private String portName;
   private int baudrate;
   private LogicSnifferMetadata metadata;
@@ -120,7 +120,7 @@ public final class LogicSnifferConfig
   public int getChannelCount()
   {
     int channels;
-    if ( isDemuxEnabled() && isInternalClock() )
+    if ( isDoubleDataRateEnabled() )
     {
       // When the multiplexer is turned on, the upper two channel blocks are
       // disabled, leaving only 16 channels for capturing...
@@ -199,7 +199,7 @@ public final class LogicSnifferConfig
       }
     }
 
-    if ( isDemuxEnabled() && isInternalClock() )
+    if ( isDoubleDataRateEnabled() )
     {
       // In case the demux is enabled, only a maximum of two channel groups is
       // allowed...
@@ -211,7 +211,7 @@ public final class LogicSnifferConfig
 
   /**
    * Returns the total number of channel groups, i.e., returns 2 when
-   * {@link #isDemuxEnabled()} is enabled, 4 otherwise.
+   * {@link #isDoubleDataRateEnabled()} is enabled, 4 otherwise.
    * 
    * @return a group count, >= 0 && < 4.
    */
@@ -219,7 +219,7 @@ public final class LogicSnifferConfig
   {
     int cnt = getChannelCount() / CapturedData.CHANNELS_PER_BLOCK;
 
-    if ( isDemuxEnabled() && isInternalClock() )
+    if ( isDoubleDataRateEnabled() )
     {
       // In case the demux is enabled, only a maximum of two channel groups is
       // allowed...
@@ -284,6 +284,16 @@ public final class LogicSnifferConfig
   }
 
   /**
+   * Returns the data width to use for RLE encoded samples.
+   * 
+   * @return a RLE data width, e.g., 8-, 16-, 24-, or 32-bits.
+   */
+  public int getRLEDataWidth()
+  {
+    return this.rleDataWidth;
+  }
+
+  /**
    * Returns the number of samples to be taken in current configuration.
    * 
    * @return number of samples, >= 0.
@@ -291,7 +301,7 @@ public final class LogicSnifferConfig
   public int getSampleCount()
   {
     int samples;
-    if ( isDemuxEnabled() && isInternalClock() )
+    if ( isDoubleDataRateEnabled() )
     {
       // When the multiplexer is turned on, the upper two channel blocks are
       // disabled, leaving only 16 channels for capturing...
@@ -315,7 +325,7 @@ public final class LogicSnifferConfig
     int rate = CapturedData.NOT_AVAILABLE;
     if ( isInternalClock() )
     {
-      if ( isDemuxEnabled() )
+      if ( isDoubleDataRateEnabled() )
       {
         // The sample clock is 200MHz iso 100MHz...
         rate = ( int )( ( 2.0 * LogicSnifferDevice.CLOCK ) / ( getDivider() + 1 ) );
@@ -397,9 +407,9 @@ public final class LogicSnifferConfig
    * @return <code>true</code> if the demultiplexer is enabled,
    *         <code>false</code> otherwise.
    */
-  public boolean isDemuxEnabled()
+  public boolean isDoubleDataRateEnabled()
   {
-    return this.demux;
+    return this.demux && isInternalClock();
   }
 
   /**
@@ -424,7 +434,7 @@ public final class LogicSnifferConfig
    */
   public boolean isFilterAvailable()
   {
-    boolean result = !isDemuxEnabled() && isInternalClock();
+    boolean result = !isDoubleDataRateEnabled();
     if ( this.deviceProfile != null )
     {
       result &= this.deviceProfile.isNoiseFilterSupported();
@@ -560,11 +570,21 @@ public final class LogicSnifferConfig
   public void setEnabledChannels( final int aMask )
   {
     this.enabledChannels = aMask;
+
     // determine enabled groups
-    for ( int i = 0; i < 4; i++ )
+    int newRLEDataWidth = 0;
+    for ( int i = 0; i < this.enabledGroups.length; i++ )
     {
-      this.enabledGroups[i] = ( ( this.enabledChannels >> ( 8 * i ) ) & 0xff ) > 0;
+      final boolean groupEnabled = ( ( this.enabledChannels >> ( 8 * i ) ) & 0xff ) != 0;
+
+      this.enabledGroups[i] = groupEnabled;
+      if ( groupEnabled )
+      {
+        newRLEDataWidth += 8;
+      }
     }
+
+    this.rleDataWidth = newRLEDataWidth;
   }
 
   /**
@@ -617,7 +637,7 @@ public final class LogicSnifferConfig
   public void setParallelTrigger( final int aStage, final int aMask, final int aValue, final int aLevel,
       final int aDelay, final boolean aStartCapture )
   {
-    if ( isDemuxEnabled() )
+    if ( isDoubleDataRateEnabled() )
     {
       this.triggerMask[aStage] = ( aMask & 0xFFFF ) | ( ( aMask & 0xFFFF ) << 16 );
       this.triggerValue[aStage] = ( aValue & 0xFFFF ) | ( ( aValue & 0xFFFF ) << 16 );
@@ -736,7 +756,7 @@ public final class LogicSnifferConfig
   public void setSerialTrigger( final int aStage, final int aChannel, final int aMask, final int aValue,
       final int aLevel, final int aDelay, final boolean aStartCapture )
   {
-    if ( isDemuxEnabled() )
+    if ( isDoubleDataRateEnabled() )
     {
       this.triggerMask[aStage] = ( aMask & 0xFFFF ) | ( ( aMask & 0xFFFF ) << 16 );
       this.triggerValue[aStage] = ( aValue & 0xFFFF ) | ( ( aValue & 0xFFFF ) << 16 );
