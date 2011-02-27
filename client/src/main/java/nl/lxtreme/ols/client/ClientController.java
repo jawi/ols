@@ -1314,18 +1314,18 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   private Tool findToolByName( final String aToolName )
   {
-    Tool tool = null;
+    Tool result = null;
 
     final Collection<Tool> tools = getTools();
-    for ( Tool _tool : tools )
+    for ( Tool tool : tools )
     {
-      if ( aToolName.equals( _tool.getName() ) )
+      if ( aToolName.equals( tool.getName() ) )
       {
-        tool = _tool;
+        result = tool;
         break;
       }
     }
-    return tool;
+    return result;
   }
 
   /**
@@ -1453,20 +1453,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     getAction( GotoTriggerAction.ID ).setEnabled( triggerEnable );
 
     // Update the cursor actions accordingly...
-    final boolean enableCursors = dataAvailable && this.dataContainer.isCursorsEnabled();
-
-    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
-    {
-      final boolean enabled = enableCursors && this.dataContainer.isCursorPositionSet( c );
-      getAction( GotoNthCursorAction.getID( c ) ).setEnabled( enabled );
-    }
-
-    getAction( GotoFirstCursorAction.ID ).setEnabled( enableCursors );
-    getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors );
-
     getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
     getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY,
         Boolean.valueOf( this.dataContainer.isCursorsEnabled() ) );
+
+    final boolean enableCursors = dataAvailable && this.dataContainer.isCursorsEnabled();
 
     boolean anyCursorSet = false;
     for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
@@ -1474,10 +1465,16 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       final boolean cursorPositionSet = this.dataContainer.isCursorPositionSet( c );
       anyCursorSet |= cursorPositionSet;
 
+      final boolean gotoCursorNEnabled = enableCursors && cursorPositionSet;
+      getAction( GotoNthCursorAction.getID( c ) ).setEnabled( gotoCursorNEnabled );
+
       final Action action = getAction( SetCursorAction.getCursorId( c ) );
       action.setEnabled( dataAvailable );
       action.putValue( Action.SELECTED_KEY, Boolean.valueOf( cursorPositionSet ) );
     }
+
+    getAction( GotoFirstCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
+    getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
 
     getAction( ClearCursors.ID ).setEnabled( enableCursors && anyCursorSet );
   }
