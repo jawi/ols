@@ -41,7 +41,7 @@ public class ValueChangeDumpExporter implements Exporter
   // CONSTANTS
 
   private static final String ID = "OLS Java Client";
-  private static final String VERSION = "VCD exporter v1";
+  private static final String VERSION = "VCD exporter v1.1";
 
   // METHODS
 
