@@ -79,6 +79,8 @@ public class UARTAnalyserWorkerDataFilesTest
         // { filename, error count, symbol count, baudrate, (rxd, txd) }
             { "uart_8bit_1.ols", 0, 33, 57600, new int[] { 0, -1 } }, //
             { "uart_8bit_2.ols", 0, 6, 9600, new int[] { 2, -1 } }, //
+            { "uart_8bit_3.ols", 50, 418, 19200, new int[] { 1, 0 } }, // Actually
+                                                                       // 9600...
         } );
   }
 
