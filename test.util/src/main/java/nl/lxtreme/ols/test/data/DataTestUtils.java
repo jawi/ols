@@ -97,10 +97,11 @@ public final class DataTestUtils
     }
 
     final CapturedData data = mock( CapturedData.class );
-    when( data.getChannels() ).thenReturn( CapturedData.MAX_CHANNELS );
-    when( data.getAbsoluteLength() ).thenReturn( ( 2 * aDataSize ) + 1L );
-    when( data.getEnabledChannels() ).thenReturn( NumberUtils.getBitMask( aChannelCount ) );
-    when( data.getSampleRate() ).thenReturn( 1000000 );
+    when( Integer.valueOf( data.getChannels() ) ).thenReturn( Integer.valueOf( CapturedData.MAX_CHANNELS ) );
+    when( Long.valueOf( data.getAbsoluteLength() ) ).thenReturn( Long.valueOf( ( 2 * aDataSize ) + 1L ) );
+    when( Integer.valueOf( data.getEnabledChannels() ) ).thenReturn(
+        Integer.valueOf( NumberUtils.getBitMask( aChannelCount ) ) );
+    when( Integer.valueOf( data.getSampleRate() ) ).thenReturn( Integer.valueOf( 1000000 ) );
     when( data.getValues() ).thenReturn( values );
     when( data.getTimestamps() ).thenReturn( timestamps );
 
@@ -153,9 +154,9 @@ public final class DataTestUtils
     final Integer last = Integer.valueOf( aLastSampleIdx );
 
     ToolContext toolContext = mock( ToolContext.class );
-    when( toolContext.getStartSampleIndex() ).thenReturn( first );
-    when( toolContext.getEndSampleIndex() ).thenReturn( last );
-    when( toolContext.getLength() ).thenReturn( size );
+    when( Integer.valueOf( toolContext.getStartSampleIndex() ) ).thenReturn( first );
+    when( Integer.valueOf( toolContext.getEndSampleIndex() ) ).thenReturn( last );
+    when( Integer.valueOf( toolContext.getLength() ) ).thenReturn( size );
     return toolContext;
   }
 
