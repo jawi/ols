@@ -58,7 +58,7 @@ public class ValueChangeDumpHelper
       throw new IllegalArgumentException( "More than 90 identifiers are not supported!" );
     }
     int id = '!' + aIndex;
-    return String.format( "%c", id );
+    return String.format( "%c", Integer.valueOf( id ) );
   }
 
   /**
