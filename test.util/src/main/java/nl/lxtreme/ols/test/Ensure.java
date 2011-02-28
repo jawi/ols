@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package nl.lxtreme.ols.util;
+package nl.lxtreme.ols.test;
 
 
 import java.io.*;
@@ -93,9 +93,9 @@ public class Ensure
    */
   public void setStream( final PrintStream aOutput )
   {
-    if ( outStream == null )
+    if ( aOutput == null )
     {
-      throw new IllegalArgumentException( "OutStream cannot be null!" );
+      throw new IllegalArgumentException( "Print stream cannot be null!" );
     }
     outStream = aOutput;
   }
