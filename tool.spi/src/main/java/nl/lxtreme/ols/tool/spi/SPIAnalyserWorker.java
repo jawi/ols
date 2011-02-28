@@ -206,7 +206,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
     // Initialize the channel labels + clear any existing annotations...
     prepareResults();
 
-    if ( this.mode == null )
+    if ( ( this.mode == null ) || ( this.mode == SPIMode.AUTODETECT ) )
     {
       LOG.log( Level.INFO, "Detecting which SPI mode is most probably used..." );
       this.mode = detectSPIMode( startOfDecode, endOfDecode );
