@@ -53,6 +53,7 @@ public class SPIAnalyserWorkerDataFilesTest
   private final SPIMode spiMode;
   private final BitOrder bitOrder;
   private final int[] channels;
+  private final boolean honourCS;
 
   // CONSTRUCTORS
 
@@ -61,7 +62,7 @@ public class SPIAnalyserWorkerDataFilesTest
    */
   public SPIAnalyserWorkerDataFilesTest( final String aResourceName, final int aBitCount,
       final int aExpectedMisoSymbolCount, final int aExpectedMosiSymbolCount, final SPIMode aSPIMode,
-      final BitOrder aBitOrder, final int... aChannels )
+      final BitOrder aBitOrder, final boolean aHonourCS, final int[] aChannels )
   {
     this.resourceName = aResourceName;
     this.bitCount = aBitCount;
@@ -69,6 +70,7 @@ public class SPIAnalyserWorkerDataFilesTest
     this.expectedMosiSymbolCount = aExpectedMosiSymbolCount;
     this.spiMode = aSPIMode;
     this.bitOrder = aBitOrder;
+    this.honourCS = aHonourCS;
     this.channels = aChannels;
   }
 
@@ -82,12 +84,32 @@ public class SPIAnalyserWorkerDataFilesTest
   public static Collection<Object[]> getTestData()
   {
     return Arrays.asList( new Object[][] { //
-        // { filename, error count, MiSo symbol count, MoSi symbol count,
-        // (MISO, MOSI, CS, SCLK) }
-            { "spi_8bit_1.ols", 8, 7, 7, SPIMode.MODE_2, BitOrder.MSB_FIRST, new int[] { 0, 1, 3, 2 } }, //
-            { "spi_8bit_2.ols", 8, 195, 195, SPIMode.MODE_2, BitOrder.MSB_FIRST, new int[] { 0, 1, 3, 2 } }, //
-            { "spi_9bit_3.ols", 9, 15, 15, SPIMode.MODE_2, BitOrder.LSB_FIRST, new int[] { 0, 3, 1, 2 } }, //
+        // { filename, datagram size (bits), MiSo symbol count, MoSi symbol
+        // count, (MISO, MOSI, CS, SCLK) }
+            { "spi_8bit_1.ols", 8, 7, 7, SPIMode.MODE_2, BitOrder.MSB_FIRST, true, new int[] { 0, 1, 3, 2 } }, //
+            { "spi_8bit_2.ols", 8, 195, 195, SPIMode.MODE_2, BitOrder.MSB_FIRST, true, new int[] { 0, 1, 3, 2 } }, //
+            { "spi_9bit_3.ols", 9, 17, 17, SPIMode.MODE_2, BitOrder.LSB_FIRST, true, new int[] { 0, 3, 1, 2 } }, //
+            { "spi_8bit_4.ols", 8, 0, 53, SPIMode.MODE_0, BitOrder.MSB_FIRST, false, new int[] { -1, 1, 0, 3 } }, //
         } );
+  }
+
+  /**
+   * @param aDataSet
+   * @param aEventName
+   * @return
+   */
+  private static void assertEventCount( final SPIDataSet aDataSet, final String aEventName,
+      final int aExpectedEventCount )
+  {
+    int count = 0;
+    for ( SPIData data : aDataSet.getData() )
+    {
+      if ( aEventName.equals( data.getDataName() ) )
+      {
+        count++;
+      }
+    }
+    assertEquals( "Not all events were seen?!", aExpectedEventCount, count );
   }
 
   /**
@@ -95,11 +117,11 @@ public class SPIAnalyserWorkerDataFilesTest
    * {@link nl.lxtreme.ols.tool.spi.SPIAnalyserWorker#doInBackground()}.
    */
   @Test
-  public void testDoInBackground() throws Exception
+  public void testAnalyzeDataFile() throws Exception
   {
     SPIDataSet result = analyseDataFile( this.resourceName );
-    assertEquals( this.expectedMisoSymbolCount, countEvents( result, SPIDataSet.SPI_MISO ) );
-    assertEquals( this.expectedMosiSymbolCount, countEvents( result, SPIDataSet.SPI_MOSI ) );
+    assertEventCount( result, SPIDataSet.SPI_MISO, this.expectedMisoSymbolCount );
+    assertEventCount( result, SPIDataSet.SPI_MOSI, this.expectedMosiSymbolCount );
   }
 
   /**
@@ -119,12 +141,11 @@ public class SPIAnalyserWorkerDataFilesTest
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     SPIAnalyserWorker worker = new SPIAnalyserWorker( container, toolContext );
-    worker.setBitCount( this.bitCount );
-    worker.setHonourCS( true );
+    worker.setBitCount( this.bitCount - 1 );
+    worker.setHonourCS( this.honourCS );
     worker.setReportCS( false );
     worker.setMode( this.spiMode );
     worker.setOrder( this.bitOrder );
-    worker.setBitCount( this.bitCount );
     worker.setMisoIndex( this.channels[0] );
     worker.setMosiIndex( this.channels[1] );
     worker.setCSIndex( this.channels[2] );
@@ -133,24 +154,6 @@ public class SPIAnalyserWorkerDataFilesTest
     SPIDataSet result = worker.doInBackground();
     assertNotNull( result );
     return result;
-  }
-
-  /**
-   * @param aDataSet
-   * @param aEventName
-   * @return
-   */
-  private int countEvents( final SPIDataSet aDataSet, final String aEventName )
-  {
-    int count = 0;
-    for ( SPIData data : aDataSet.getData() )
-    {
-      if ( aEventName.equals( data.getDataName() ) )
-      {
-        count++;
-      }
-    }
-    return count;
   }
 
 }
