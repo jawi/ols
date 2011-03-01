@@ -280,7 +280,8 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    // TODO Auto-generated method stub
+    this.settings.readPreferences( aSettings );
+    syncUiWithSettings();
   }
 
   /**
@@ -303,7 +304,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   @Override
   public void writePreferences( final UserSettings aSettings )
   {
-    // TODO Auto-generated method stub
+    this.settings.writePreferences( aSettings );
   }
 
   /**
