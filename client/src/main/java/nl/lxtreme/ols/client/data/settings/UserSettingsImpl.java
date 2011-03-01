@@ -125,7 +125,7 @@ public final class UserSettingsImpl implements UserSettings
   public UserSettingsImpl( final String aName, final Properties aProperties )
   {
     this.name = aName;
-    this.properties = new Properties( aProperties );
+    this.properties = ( Properties )aProperties.clone();
   }
 
   // METHODS
