@@ -21,16 +21,18 @@
 package nl.lxtreme.ols.client.data.settings;
 
 
+import java.awt.*;
 import java.util.*;
 import java.util.Map.Entry;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
  * Provides an implementation of {@link UserSettings}.
  */
-public final class UserSettingsImpl implements UserSettings
+public class UserSettingsImpl implements UserSettings
 {
   // INNER TYPES
 
@@ -121,11 +123,50 @@ public final class UserSettingsImpl implements UserSettings
    * @param aProperties
    *          the (initial) properties of this user settings, cannot be
    *          <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given properties or name was <code>null</code>.
    */
   public UserSettingsImpl( final String aName, final Properties aProperties )
   {
+    if ( aName == null )
+    {
+      throw new IllegalArgumentException( "Name cannot be null!" );
+    }
+    if ( aProperties == null )
+    {
+      throw new IllegalArgumentException( "Properties cannot be null!" );
+    }
     this.name = aName;
     this.properties = ( Properties )aProperties.clone();
+  }
+
+  /**
+   * Creates a new UserSettingsImpl instance.
+   * 
+   * @param aSettings
+   *          the (initial) user settings to use, cannot be <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given settings object was <code>null</code>.
+   */
+  protected UserSettingsImpl( final UserSettings aSettings )
+  {
+    if ( aSettings == null )
+    {
+      throw new IllegalArgumentException( "Settings cannot be null!" );
+    }
+    this.name = aSettings.getName();
+    if ( aSettings instanceof UserSettingsImpl )
+    {
+      this.properties = ( Properties )( ( UserSettingsImpl )aSettings ).getProperties().clone();
+    }
+    else
+    {
+      this.properties = new Properties();
+      for ( Map.Entry<String, Object> entry : aSettings )
+      {
+        this.properties.put( entry.getKey(), entry.getValue() );
+      }
+    }
   }
 
   // METHODS
@@ -246,5 +287,92 @@ public final class UserSettingsImpl implements UserSettings
   public void putLong( final String aName, final long aValue )
   {
     this.properties.put( aName, Long.toString( aValue ) );
+  }
+
+  /**
+   * Removes the value identified by the given name.
+   * 
+   * @param aName
+   *          the name of the value to remove, cannot be <code>null</code>.
+   */
+  protected void delete( final String aName )
+  {
+    this.properties.remove( aName );
+  }
+
+  /**
+   * Convenience method to return the color of a certain property.
+   * 
+   * @param aName
+   * @param aDefaultValue
+   * @return
+   */
+  protected Color getColor( final String aName, final Color aDefaultValue )
+  {
+    String value = this.properties.getProperty( aName );
+    if ( value == null )
+    {
+      return aDefaultValue;
+    }
+
+    return ColorUtils.parseColor( value );
+  }
+
+  /**
+   * Convenience method to add a enum constant to the properties.
+   * 
+   * @param <T>
+   *          the enum type to put into this settings object;
+   * @param aName
+   *          the name of which the enum constant should be retrieved;
+   * @param aDefault
+   *          the default value to return in case the enum constant is not set.
+   * @return the enum value.
+   */
+  @SuppressWarnings( "unchecked" )
+  protected <T extends Enum<T>> T getEnumValue( final String aName, final T aDefault )
+  {
+    String value = this.properties.getProperty( aName );
+    if ( value == null )
+    {
+      return aDefault;
+    }
+
+    return ( T )Enum.valueOf( aDefault.getClass(), value );
+  }
+
+  /**
+   * Convenience method to return the color of a certain property.
+   * 
+   * @param aName
+   * @param aValue
+   */
+  protected void putColor( final String aName, final Color aValue )
+  {
+    if ( aValue == null )
+    {
+      throw new IllegalArgumentException( "Color cannot be null! Use delete() method to delete a key-value pair!" );
+    }
+    final String hexString = ColorUtils.toHexString( aValue );
+    this.properties.put( aName, hexString );
+  }
+
+  /**
+   * Convenience method to add a enum constant to the properties.
+   * 
+   * @param <T>
+   *          the enum type to put into this settings object;
+   * @param aName
+   *          the name under which the enum constant should be stored;
+   * @param aValue
+   *          the enum constant to store.
+   */
+  protected <T extends Enum<T>> void putEnumValue( final String aName, final T aValue )
+  {
+    if ( aValue == null )
+    {
+      throw new IllegalArgumentException( "Enum cannot be null! Use delete() method to delete a key-value pair!" );
+    }
+    this.properties.put( aName, aValue.name() );
   }
 }

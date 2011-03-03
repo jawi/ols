@@ -57,7 +57,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
 
   // VARIABLES
 
-  private DiagramSettings diagramSettings;
   private final DiagramTimeLine timeLine;
   private final DiagramRowLabels rowLabels;
   private final DiagramCorner corner;
@@ -76,8 +75,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
 
     this.controller = aController;
     this.dataContainer = aController.getDataContainer();
-
-    this.diagramSettings = new MutableDiagramSettings();
 
     this.rowLabels = new DiagramRowLabels( this );
     this.timeLine = new DiagramTimeLine( this );
@@ -145,7 +142,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     int height = 0, channelIdx = 0;
     for ( int b = 0; ( height < yPos ) && ( b < CapturedData.MAX_BLOCKS ); b++ )
     {
-      if ( ( height < yPos ) && this.diagramSettings.isShowChannels( b ) )
+      if ( ( height < yPos ) && getDiagramSettings().isShowChannels( b ) )
       {
         channelIdx = ( b * CapturedData.CHANNELS_PER_BLOCK );
         for ( int c = 0; ( height < yPos ) && ( c < CapturedData.CHANNELS_PER_BLOCK ); c++ )
@@ -154,12 +151,12 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
           channelIdx++;
         }
       }
-      if ( ( height < yPos ) && this.diagramSettings.isShowScope( b ) )
+      if ( ( height < yPos ) && getDiagramSettings().isShowScope( b ) )
       {
         height += scopeHeight;
         channelIdx = -b;
       }
-      if ( ( height < yPos ) && this.diagramSettings.isShowByte( b ) )
+      if ( ( height < yPos ) && getDiagramSettings().isShowByte( b ) )
       {
         height += channelHeight;
         channelIdx = -b;
@@ -275,7 +272,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public final DiagramSettings getDiagramSettings()
   {
-    return this.diagramSettings;
+    return this.controller.getDiagramSettings();
   }
 
   /**
@@ -451,15 +448,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     this.timeLine.revalidate();
     this.rowLabels.revalidate();
     revalidate();
-  }
-
-  /**
-   * @param aDiagramSettings
-   *          the diagramSettings to set
-   */
-  public void setDiagramSettings( final DiagramSettings aDiagramSettings )
-  {
-    this.diagramSettings = aDiagramSettings;
   }
 
   /**

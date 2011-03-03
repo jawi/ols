@@ -36,7 +36,6 @@ import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.diagram.*;
-import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -346,16 +345,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Returns the current diagram settings.
-   * 
-   * @return the diagram settings, never <code>null</code>.
-   */
-  public final DiagramSettings getDiagramSettings()
-  {
-    return this.diagram.getDiagramSettings();
-  }
-
-  /**
    * Returns the current zoom scale.
    * 
    * @return a zoom scale, > 0.0
@@ -473,18 +462,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Sets the current diagram settings.
-   * 
-   * @param aDiagramSettings
-   *          the diagram settings to set, cannot be <code>null</code>.
-   */
-  public final void setDiagramSettings( final DiagramSettings aDiagramSettings )
-  {
-    this.diagram.setDiagramSettings( aDiagramSettings );
-    this.diagram.revalidateAll();
-  }
-
-  /**
    * @param aPercentage
    */
   public void setProgress( final int aPercentage )
@@ -549,6 +526,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   public void zoomToFit()
   {
     this.diagram.zoomToFit();
+  }
+
+  /**
+   * Should be called to apply new diagram settings.
+   */
+  final void diagramSettingsUpdated()
+  {
+    this.diagram.revalidateAll();
   }
 
   /**

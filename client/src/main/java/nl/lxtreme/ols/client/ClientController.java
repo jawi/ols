@@ -30,6 +30,7 @@ import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
@@ -464,6 +465,28 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       }
     }
     return tools;
+  }
+
+  /**
+   * Returns the current diagram settings.
+   * 
+   * @return the current diagram settings, can be <code>null</code> if there is
+   *         no main frame to take the settings from.
+   */
+  public final DiagramSettings getDiagramSettings()
+  {
+    final Project currentProject = this.projectManager.getCurrentProject();
+    final UserSettings settings = currentProject.getSettings( MutableDiagramSettings.NAME );
+    if ( settings instanceof DiagramSettings )
+    {
+      return ( DiagramSettings )settings;
+    }
+
+    // Overwrite the default created user settings object with our own...
+    final MutableDiagramSettings diagramSettings = new MutableDiagramSettings( settings );
+    currentProject.setSettings( diagramSettings );
+
+    return diagramSettings;
   }
 
   /**
@@ -1123,7 +1146,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       ModeSettingsDialog dialog = new ModeSettingsDialog( aParent, getDiagramSettings() );
       if ( dialog.showDialog() )
       {
-        updateDiagramSettings( dialog.getDiagramSettings() );
+        final DiagramSettings settings = dialog.getDiagramSettings();
+        this.projectManager.getCurrentProject().setSettings( settings );
+        diagramSettingsUpdated();
       }
 
       dialog.dispose();
@@ -1139,7 +1164,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     GeneralSettingsDialog dialog = new GeneralSettingsDialog( aParent, getDiagramSettings() );
     if ( dialog.showDialog() )
     {
-      updateDiagramSettings( dialog.getDiagramSettings() );
+      final DiagramSettings settings = dialog.getDiagramSettings();
+      this.projectManager.getCurrentProject().setSettings( settings );
+      diagramSettingsUpdated();
     }
 
     dialog.dispose();
@@ -1261,6 +1288,19 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Should be called after the diagram settings are changed. This method will
+   * cause the main frame to be updated.
+   */
+  private void diagramSettingsUpdated()
+  {
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.diagramSettingsUpdated();
+      repaintMainFrame();
+    }
+  }
+
+  /**
    * @param aActionManager
    */
   private void fillActionManager( final ActionManager aActionManager )
@@ -1346,17 +1386,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
         listener.cursorRemoved( aCursorIdx );
       }
     }
-  }
-
-  /**
-   * Returns the current diagram settings.
-   * 
-   * @return the current diagram settings, can be <code>null</code> if there is
-   *         no main frame to take the settings from.
-   */
-  private DiagramSettings getDiagramSettings()
-  {
-    return this.mainFrame != null ? this.mainFrame.getDiagramSettings() : null;
   }
 
   /**
@@ -1477,23 +1506,5 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
 
     getAction( ClearCursors.ID ).setEnabled( enableCursors && anyCursorSet );
-  }
-
-  /**
-   * Should be called after the diagram settings are changed. This method will
-   * cause the settings to be set on the main frame and writes them to the
-   * preference store.
-   * 
-   * @param aSettings
-   *          the (new/changed) diagram settings to set, cannot be
-   *          <code>null</code>.
-   */
-  private void updateDiagramSettings( final DiagramSettings aSettings )
-  {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.setDiagramSettings( aSettings );
-      repaintMainFrame();
-    }
   }
 }
