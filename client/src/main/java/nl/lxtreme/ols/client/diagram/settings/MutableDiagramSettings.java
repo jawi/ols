@@ -22,84 +22,44 @@ package nl.lxtreme.ols.client.diagram.settings;
 
 
 import java.awt.*;
-import java.util.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.client.data.settings.*;
 
 
 /**
  * Provides mutable diagram settings.
  */
-public class MutableDiagramSettings implements DiagramSettings, Configurable
+public class MutableDiagramSettings extends UserSettingsImpl implements DiagramSettings
 {
-  // VARIABLES
+  // CONSTANTS
 
-  private int channelHeight;
-  private int scopeHeight;
-  private int signalHeight;
+  public static final String NAME = "DiagramSettings";
 
-  private boolean showCursorTiming;
+  private static final long serialVersionUID = 1L;
 
-  private EdgeSlope edgeSlope;
-
-  private Color triggerColor;
-  private Color gridColor;
-  private Color backgroundColor;
-  private Color groupBackgroundColor;
-  private Color groupByteColor;
-  private Color scopeColor;
-  private Color signalColor;
-  private Color textColor;
-  private Color timeColor;
-  private Color labelColor;
-
-  private SignalAlignment signalAlignment;
-  private ColorScheme colorScheme;
-
-  private final Color[] cursorColors;
-  private final Color[] channelColors;
-
-  /**
-   * Display settings for each group. Can be any combinations (OR-ed) of the
-   * defined MODE_* values.
-   */
-  private final int[] groupSettings;
+  private static final ColorScheme DEFAULT_COLOR_SCHEME = ColorScheme.DARK;
+  private static final boolean DEFAULT_SHOW_CURSOR_TIMING = true;
+  private static final ColorTarget DEFAULT_COLOR_TARGET = ColorTarget.SIGNALS;
+  private static final int DEFAULT_GROUP_SETTING = DISPLAY_CHANNELS;
+  private static final int DEFAULT_CHANNEL_HEIGHT = 35;
+  private static final int DEFAULT_SIGNAL_HEIGHT = 20;
+  private static final int DEFAULT_SCOPE_HEIGHT = 133;
+  private static final SignalAlignment DEFAULT_SIGNAL_ALIGNMENT = SignalAlignment.CENTER;
+  private static final EdgeSlope DEFAULT_EDGE_SLOPE = EdgeSlope.NON_PERPENDICULAR;
 
   // CONSTRUCTORS
-
-  private ColorTarget colorTarget;
 
   /**
    * Creates a new MutableDiagramSettings instance.
    */
   public MutableDiagramSettings()
   {
-    this.colorScheme = ColorScheme.DARK;
-
-    this.showCursorTiming = true;
-
-    this.cursorColors = new Color[CapturedData.MAX_CURSORS];
-    this.channelColors = new Color[CapturedData.MAX_CHANNELS];
-
-    this.colorTarget = ColorTarget.SIGNALS;
+    super( NAME );
 
     setDefaultColorScheme();
-
-    this.groupSettings = new int[4];
-    for ( int i = 0; i < this.groupSettings.length; i++ )
-    {
-      this.groupSettings[i] = DISPLAY_CHANNELS;
-    }
-
-    setChannelHeight( 35 );
-    setSignalHeight( 20 );
-    setScopeHeight( 133 );
-    setSignalAlignment( SignalAlignment.CENTER );
-    setEdgeSlope( EdgeSlope.NON_PERPENDICULAR );
   }
-
-  // METHODS
 
   /**
    * Creates a new MutableDiagramSettings instance.
@@ -110,51 +70,65 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public MutableDiagramSettings( final DiagramSettings aDiagramSettings )
   {
-    this();
+    super( NAME );
 
     if ( aDiagramSettings != null )
     {
-      setShowCursorTiming( aDiagramSettings.isShowCursorTiming() );
-
-      setColorTarget( aDiagramSettings.getColorTarget() );
       setColorScheme( aDiagramSettings.getColorScheme() );
-
       setBackgroundColor( aDiagramSettings.getBackgroundColor() );
-      setTriggerColor( aDiagramSettings.getTriggerColor() );
-      setGridColor( aDiagramSettings.getGridColor() );
-      setGroupBackgroundColor( aDiagramSettings.getGroupBackgroundColor() );
-      setTextColor( aDiagramSettings.getTextColor() );
-      setTimeColor( aDiagramSettings.getTimeColor() );
-      setLabelColor( aDiagramSettings.getLabelColor() );
-      setGroupByteColor( aDiagramSettings.getGroupByteColor() );
-      setScopeColor( aDiagramSettings.getScopeColor() );
-
-      setColorScheme( aDiagramSettings.getColorScheme() );
-
-      for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
-      {
-        setCursorColor( i, aDiagramSettings.getCursorColor( i ) );
-      }
-
       for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
       {
         setChannelColor( i, aDiagramSettings.getChannelColor( i ) );
       }
-
-      for ( int i = 0; i < 4; i++ )
+      setChannelHeight( aDiagramSettings.getChannelHeight() );
+      setColorTarget( aDiagramSettings.getColorTarget() );
+      for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+      {
+        setCursorColor( i, aDiagramSettings.getCursorColor( i ) );
+      }
+      setEdgeSlope( aDiagramSettings.getEdgeSlope() );
+      setGridColor( aDiagramSettings.getGridColor() );
+      setGroupBackgroundColor( aDiagramSettings.getGroupBackgroundColor() );
+      setGroupByteColor( aDiagramSettings.getGroupByteColor() );
+      setLabelColor( aDiagramSettings.getLabelColor() );
+      setScopeColor( aDiagramSettings.getScopeColor() );
+      setScopeHeight( aDiagramSettings.getScopeHeight() );
+      for ( int i = 0; i < CapturedData.MAX_BLOCKS; i++ )
       {
         setShowByte( i, aDiagramSettings.isShowByte( i ) );
         setShowChannels( i, aDiagramSettings.isShowChannels( i ) );
         setShowScope( i, aDiagramSettings.isShowScope( i ) );
       }
-
-      setChannelHeight( aDiagramSettings.getChannelHeight() );
-      setScopeHeight( aDiagramSettings.getScopeHeight() );
-      setSignalHeight( aDiagramSettings.getSignalHeight() );
+      setShowCursorTiming( aDiagramSettings.isShowCursorTiming() );
       setSignalAlignment( aDiagramSettings.getSignalAlignment() );
-      setEdgeSlope( aDiagramSettings.getEdgeSlope() );
+      setSignalColor( aDiagramSettings.getSignalColor() );
+      setSignalHeight( aDiagramSettings.getSignalHeight() );
+      setTextColor( aDiagramSettings.getTextColor() );
+      setTimeColor( aDiagramSettings.getTimeColor() );
+      setTriggerColor( aDiagramSettings.getTriggerColor() );
     }
   }
+
+  /**
+   * Creates a new MutableDiagramSettings instance.
+   * 
+   * @param aSettings
+   *          the diagram settings to use as default, may be <code>null</code>
+   *          in which case this constructor falls back to the default settings.
+   * @throws IllegalArgumentException
+   *           in case the given settings was <code>null</code> or its name was
+   *           not {@link #NAME}.
+   */
+  public MutableDiagramSettings( final UserSettings aSettings )
+  {
+    super( aSettings );
+    if ( !NAME.equals( getName() ) )
+    {
+      throw new IllegalArgumentException( "User settings name incorrect!" );
+    }
+  }
+
+  // METHODS
 
   /**
    * @see nl.lxtreme.ols.client.diagram.settings.DiagramSettings#getBackgroundColor()
@@ -162,7 +136,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getBackgroundColor()
   {
-    return this.backgroundColor;
+    return getColor( "backgroundColor", getDefaultBackgroundColor() );
   }
 
   /**
@@ -171,15 +145,12 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getChannelColor( final int aChannelIdx )
   {
-    return this.channelColors[aChannelIdx];
-  }
-
-  /**
-   * @return the channelColors
-   */
-  public final Color[] getChannelColors()
-  {
-    return this.channelColors;
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx >= CapturedData.MAX_CHANNELS ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index!" );
+    }
+    String name = "channelColor." + aChannelIdx;
+    return getColor( name, getDefaultChannelColor( aChannelIdx ) );
   }
 
   /**
@@ -188,7 +159,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final int getChannelHeight()
   {
-    return this.channelHeight;
+    return getInt( "channelHeight", DEFAULT_CHANNEL_HEIGHT );
   }
 
   /**
@@ -197,7 +168,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final ColorScheme getColorScheme()
   {
-    return this.colorScheme;
+    return getEnumValue( "colorScheme", DEFAULT_COLOR_SCHEME );
   }
 
   /**
@@ -206,7 +177,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final ColorTarget getColorTarget()
   {
-    return this.colorTarget;
+    return getEnumValue( "colorTarget", DEFAULT_COLOR_TARGET );
   }
 
   /**
@@ -215,15 +186,12 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getCursorColor( final int aCursorIdx )
   {
-    return this.cursorColors[aCursorIdx];
-  }
-
-  /**
-   * @return the cursorColors
-   */
-  public final Color[] getCursorColors()
-  {
-    return this.cursorColors;
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= CapturedData.MAX_CURSORS ) )
+    {
+      throw new IllegalArgumentException( "Invalid cursor index!" );
+    }
+    String name = "cursorColor." + aCursorIdx;
+    return getColor( name, getDefaultCursorColor( aCursorIdx ) );
   }
 
   /**
@@ -232,7 +200,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final EdgeSlope getEdgeSlope()
   {
-    return this.edgeSlope;
+    return getEnumValue( "edgeSlope", DEFAULT_EDGE_SLOPE );
   }
 
   /**
@@ -241,7 +209,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getGridColor()
   {
-    return this.gridColor;
+    return getColor( "gridColor", getDefaultGridColor() );
   }
 
   /**
@@ -250,7 +218,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getGroupBackgroundColor()
   {
-    return this.groupBackgroundColor;
+    return getColor( "groupBackgroundColor", getDefaultGroupBackgroundColor() );
   }
 
   /**
@@ -259,7 +227,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getGroupByteColor()
   {
-    return this.groupByteColor;
+    return getColor( "groupByteColor", getDefaultGroupByteColor() );
   }
 
   /**
@@ -268,7 +236,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getLabelColor()
   {
-    return this.labelColor;
+    return getColor( "labelColor", getDefaultLabelColor() );
   }
 
   /**
@@ -277,7 +245,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getScopeColor()
   {
-    return this.scopeColor;
+    return getColor( "scopeColor", getDefaultScopeColor() );
   }
 
   /**
@@ -286,7 +254,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final int getScopeHeight()
   {
-    return this.scopeHeight;
+    return getInt( "scopeHeight", DEFAULT_SCOPE_HEIGHT );
   }
 
   /**
@@ -295,7 +263,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final SignalAlignment getSignalAlignment()
   {
-    return this.signalAlignment;
+    return getEnumValue( "signalAlignment", DEFAULT_SIGNAL_ALIGNMENT );
   }
 
   /**
@@ -304,7 +272,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public Color getSignalColor()
   {
-    return this.signalColor;
+    return getColor( "signalColor", getDefaultSignalColor() );
   }
 
   /**
@@ -313,7 +281,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final int getSignalHeight()
   {
-    return this.signalHeight;
+    return getInt( "signalHeight", DEFAULT_SIGNAL_HEIGHT );
   }
 
   /**
@@ -322,7 +290,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getTextColor()
   {
-    return this.textColor;
+    return getColor( "textColor", getDefaultTextColor() );
   }
 
   /**
@@ -331,7 +299,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getTimeColor()
   {
-    return this.timeColor;
+    return getColor( "timeColor", getDefaultTimeColor() );
   }
 
   /**
@@ -340,7 +308,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public final Color getTriggerColor()
   {
-    return this.triggerColor;
+    return getColor( "triggerColor", getDefaultTriggerColor() );
   }
 
   /**
@@ -348,7 +316,8 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final boolean isShowByte( final int aGroup )
   {
-    return ( ( this.groupSettings[aGroup] & DiagramSettings.DISPLAY_BYTE ) > 0 );
+    final int groupSetting = getGroupSetting( aGroup );
+    return ( ( groupSetting & DiagramSettings.DISPLAY_BYTE ) > 0 );
   }
 
   /**
@@ -356,7 +325,8 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final boolean isShowChannels( final int aGroup )
   {
-    return ( ( this.groupSettings[aGroup] & DiagramSettings.DISPLAY_CHANNELS ) > 0 );
+    final int groupSetting = getGroupSetting( aGroup );
+    return ( ( groupSetting & DiagramSettings.DISPLAY_CHANNELS ) > 0 );
   }
 
   /**
@@ -365,7 +335,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   @Override
   public boolean isShowCursorTiming()
   {
-    return this.showCursorTiming;
+    return getBoolean( "showCursorTiming", DEFAULT_SHOW_CURSOR_TIMING );
   }
 
   /**
@@ -373,29 +343,8 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final boolean isShowScope( final int aGroup )
   {
-    return ( ( this.groupSettings[aGroup] & DiagramSettings.DISPLAY_SCOPE ) > 0 );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
-   */
-  @Override
-  public void readPreferences( final UserSettings aSettings )
-  {
-    setChannelHeight( aSettings.getInt( "channelHeight", this.channelHeight ) );
-    setSignalHeight( aSettings.getInt( "signalHeight", this.signalHeight ) );
-    setScopeHeight( aSettings.getInt( "scopeHeight", this.scopeHeight ) );
-
-    setShowCursorTiming( aSettings.getBoolean( "showCursorTiming", this.showCursorTiming ) );
-
-    String edgeSlopeName = aSettings.get( "edgeSlope", this.edgeSlope.name() );
-    setEdgeSlope( EdgeSlope.valueOf( edgeSlopeName ) );
-
-    String colorTargetName = aSettings.get( "colorTarget", this.colorTarget.name() );
-    setColorTarget( ColorTarget.valueOf( colorTargetName ) );
-
-    String colorSchemeName = aSettings.get( "colorScheme", this.colorScheme.name() );
-    setColorScheme( ColorScheme.valueOf( colorSchemeName ) );
+    final int groupSetting = getGroupSetting( aGroup );
+    return ( ( groupSetting & DiagramSettings.DISPLAY_SCOPE ) > 0 );
   }
 
   /**
@@ -408,7 +357,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Background color cannot be null!" );
     }
-    this.backgroundColor = aBackgroundColor;
+    putColor( "backgroundColor", aBackgroundColor );
   }
 
   /**
@@ -421,7 +370,12 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Channel color cannot be null!" );
     }
-    this.channelColors[aChannelIdx] = aChannelColor;
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx >= CapturedData.MAX_CHANNELS ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel index!" );
+    }
+    String name = "channelColor." + aChannelIdx;
+    putColor( name, aChannelColor );
   }
 
   /**
@@ -430,7 +384,11 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final void setChannelHeight( final int aChannelHeight )
   {
-    this.channelHeight = aChannelHeight;
+    if ( aChannelHeight <= 0 )
+    {
+      throw new IllegalArgumentException( "Channel height cannot be zero or negative!" );
+    }
+    putInt( "channelHeight", aChannelHeight );
   }
 
   /**
@@ -442,7 +400,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Color scheme cannot be null!" );
     }
-    this.colorScheme = aColorScheme;
+    putEnumValue( "colorScheme", aColorScheme );
 
     if ( ColorScheme.CUSTOM != aColorScheme )
     {
@@ -458,7 +416,11 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final void setColorTarget( final ColorTarget aColorTarget )
   {
-    this.colorTarget = aColorTarget;
+    if ( aColorTarget == null )
+    {
+      throw new IllegalArgumentException( "Color target cannot be null!" );
+    }
+    putEnumValue( "colorTarget", aColorTarget );
   }
 
   /**
@@ -471,7 +433,12 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Cursor color cannot be null!" );
     }
-    this.cursorColors[aCursorIdx] = aCursorColor;
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= CapturedData.MAX_CURSORS ) )
+    {
+      throw new IllegalArgumentException( "Invalid cursor index!" );
+    }
+    String name = "cursorColor." + aCursorIdx;
+    putColor( name, aCursorColor );
   }
 
   /**
@@ -480,13 +447,13 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    * @param aEdgeSlope
    *          the edge slope to set, cannot be <code>null</code>.
    */
-  public void setEdgeSlope( final EdgeSlope aEdgeSlope )
+  public final void setEdgeSlope( final EdgeSlope aEdgeSlope )
   {
     if ( aEdgeSlope == null )
     {
       throw new IllegalArgumentException( "Edge slope cannot be null!" );
     }
-    this.edgeSlope = aEdgeSlope;
+    putEnumValue( "edgeSlope", aEdgeSlope );
   }
 
   /**
@@ -499,7 +466,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Grid color cannot be null!" );
     }
-    this.gridColor = aGridColor;
+    putColor( "gridColor", aGridColor );
   }
 
   /**
@@ -512,7 +479,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Groupbyte background color cannot be null!" );
     }
-    this.groupBackgroundColor = aGroupBackgroundColor;
+    putColor( "groupBackgroundColor", aGroupBackgroundColor );
   }
 
   /**
@@ -525,7 +492,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Groupbyte color cannot be null!" );
     }
-    this.groupByteColor = aGroupByteColor;
+    putColor( "groupByteColor", aGroupByteColor );
   }
 
   /**
@@ -538,7 +505,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Label color cannot be null!" );
     }
-    this.labelColor = aLabelColor;
+    putColor( "labelColor", aLabelColor );
   }
 
   /**
@@ -551,7 +518,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Scope color cannot be null!" );
     }
-    this.scopeColor = aScopeColor;
+    putColor( "scopeColor", aScopeColor );
   }
 
   /**
@@ -560,7 +527,11 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final void setScopeHeight( final int aScopeHeight )
   {
-    this.scopeHeight = aScopeHeight;
+    if ( aScopeHeight <= 0 )
+    {
+      throw new IllegalArgumentException( "Scope height cannot be zero or negative!" );
+    }
+    putInt( "scopeHeight", aScopeHeight );
   }
 
   /**
@@ -569,14 +540,16 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final void setShowByte( final int aGroup, final boolean aShow )
   {
+    int groupSetting = getGroupSetting( aGroup );
     if ( aShow )
     {
-      this.groupSettings[aGroup] |= DiagramSettings.DISPLAY_BYTE;
+      groupSetting |= DiagramSettings.DISPLAY_BYTE;
     }
     else
     {
-      this.groupSettings[aGroup] &= ~DiagramSettings.DISPLAY_BYTE;
+      groupSetting &= ~DiagramSettings.DISPLAY_BYTE;
     }
+    setGroupSetting( aGroup, groupSetting );
   }
 
   /**
@@ -585,14 +558,16 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final void setShowChannels( final int aGroup, final boolean aShow )
   {
+    int groupSetting = getGroupSetting( aGroup );
     if ( aShow )
     {
-      this.groupSettings[aGroup] |= DiagramSettings.DISPLAY_CHANNELS;
+      groupSetting |= DiagramSettings.DISPLAY_CHANNELS;
     }
     else
     {
-      this.groupSettings[aGroup] &= ~DiagramSettings.DISPLAY_CHANNELS;
+      groupSetting &= ~DiagramSettings.DISPLAY_CHANNELS;
     }
+    setGroupSetting( aGroup, groupSetting );
   }
 
   /**
@@ -600,9 +575,9 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    *          <code>true</code> if cursor timings should be shown,
    *          <code>false</code> otherwise.
    */
-  public void setShowCursorTiming( final boolean aShowCursorTiming )
+  public final void setShowCursorTiming( final boolean aShowCursorTiming )
   {
-    this.showCursorTiming = aShowCursorTiming;
+    putBoolean( "showCursorTiming", aShowCursorTiming );
   }
 
   /**
@@ -611,14 +586,16 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final void setShowScope( final int aGroup, final boolean aShow )
   {
+    int groupSetting = getGroupSetting( aGroup );
     if ( aShow )
     {
-      this.groupSettings[aGroup] |= DiagramSettings.DISPLAY_SCOPE;
+      groupSetting |= DiagramSettings.DISPLAY_SCOPE;
     }
     else
     {
-      this.groupSettings[aGroup] &= ~DiagramSettings.DISPLAY_SCOPE;
+      groupSetting &= ~DiagramSettings.DISPLAY_SCOPE;
     }
+    setGroupSetting( aGroup, groupSetting );
   }
 
   /**
@@ -633,15 +610,19 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Signal alignment cannot be null!" );
     }
-    this.signalAlignment = aSignalAlignment;
+    putEnumValue( "signalAlignment", aSignalAlignment );
   }
 
   /**
    * @param aSignalColor
    */
-  public void setSignalColor( final Color aSignalColor )
+  public final void setSignalColor( final Color aSignalColor )
   {
-    this.signalColor = aSignalColor;
+    if ( aSignalColor == null )
+    {
+      throw new IllegalArgumentException( "Signal color cannot be null!" );
+    }
+    putColor( "signalColor", aSignalColor );
   }
 
   /**
@@ -650,7 +631,11 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
    */
   public final void setSignalHeight( final int aSignalHeight )
   {
-    this.signalHeight = aSignalHeight;
+    if ( aSignalHeight <= 0 )
+    {
+      throw new IllegalArgumentException( "Signal height cannot be zero or negative!" );
+    }
+    putInt( "signalHeight", aSignalHeight );
   }
 
   /**
@@ -663,7 +648,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Text color cannot be null!" );
     }
-    this.textColor = aTextColor;
+    putColor( "textColor", aTextColor );
   }
 
   /**
@@ -676,7 +661,7 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Time color cannot be null!" );
     }
-    this.timeColor = aTimeColor;
+    putColor( "timeColor", aTimeColor );
   }
 
   /**
@@ -689,24 +674,167 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
     {
       throw new IllegalArgumentException( "Trigger color cannot be null!" );
     }
-    this.triggerColor = aTriggerColor;
+    putColor( "triggerColor", aTriggerColor );
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
+   * @return
    */
-  @Override
-  public void writePreferences( final UserSettings aSettings )
+  private Color getDefaultBackgroundColor()
   {
-    aSettings.putInt( "channelHeight", this.channelHeight );
-    aSettings.putInt( "signalHeight", this.signalHeight );
-    aSettings.putInt( "scopeHeight", this.scopeHeight );
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return Color.WHITE;
+    }
+    return new Color( 0x10, 0x10, 0x10 );
+  }
 
-    aSettings.putBoolean( "showCursorTiming", this.showCursorTiming );
+  /**
+   * @param aChannelIdx
+   * @return
+   */
+  private Color getDefaultChannelColor( final int aChannelIdx )
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return getDefaultSignalColor();
+    }
+    return makePaletteColor( aChannelIdx, 8 );
+  }
 
-    aSettings.put( "colorTarget", this.colorTarget.name() );
-    aSettings.put( "colorScheme", this.colorScheme.name() );
-    aSettings.put( "edgeSlope", this.edgeSlope.name() );
+  /**
+   * @param aCursorIdx
+   * @return
+   */
+  private Color getDefaultCursorColor( final int aCursorIdx )
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return makePaletteColor( aCursorIdx, CapturedData.MAX_CURSORS );
+    }
+    return getDefaultSignalColor();
+  }
+
+  /**
+   * @return
+   */
+  private Color getDefaultGridColor()
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      new Color( 0xc9, 0xc9, 0xc9 );
+    }
+    return new Color( 0x30, 0x30, 0x30 );
+  }
+
+  /**
+   * @return
+   */
+  private Color getDefaultGroupBackgroundColor()
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return getDefaultGridColor().darker();
+    }
+    return getDefaultGridColor().brighter();
+  }
+
+  /**
+   * @return
+   */
+  private Color getDefaultGroupByteColor()
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return getDefaultSignalColor();
+    }
+    return getDefaultSignalColor();
+  }
+
+  /**
+   * @return
+   */
+  private Color getDefaultLabelColor()
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return new Color( 0x82, 0x87, 0x8f );
+    }
+    return new Color( 0x82, 0x87, 0x8f );
+  }
+
+  /**
+   * @return
+   */
+  private Color getDefaultScopeColor()
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return getDefaultSignalColor();
+    }
+    return getDefaultSignalColor();
+  }
+
+  /**
+   * @return
+   */
+  private Color getDefaultSignalColor()
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return new Color( 0x30, 0x4b, 0x75 );
+    }
+    return new Color( 0xc9, 0xc9, 0xc9 );
+  }
+
+  /**
+   * @return
+   */
+  private Color getDefaultTextColor()
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return new Color( 0x25, 0x25, 0x25 );
+    }
+    return Color.WHITE;
+  }
+
+  /**
+   * @return
+   */
+  private Color getDefaultTimeColor()
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return new Color( 0x25, 0x25, 0x25 );
+    }
+    return new Color( 0x82, 0x87, 0x8f );
+  }
+
+  /**
+   * @return
+   */
+  private Color getDefaultTriggerColor()
+  {
+    if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
+    {
+      return new Color( 0x82, 0x87, 0x8f );
+    }
+    return new Color( 0x82, 0x87, 0x8f );
+  }
+
+  /**
+   * @param aGroup
+   * @return
+   */
+  private int getGroupSetting( final int aGroupIdx )
+  {
+    if ( ( aGroupIdx < 0 ) || ( aGroupIdx >= CapturedData.MAX_BLOCKS ) )
+    {
+      throw new IllegalArgumentException( "Invalid group index!" );
+    }
+    final String name = "groupSetting." + aGroupIdx;
+    return getInt( name, DEFAULT_GROUP_SETTING );
   }
 
   /**
@@ -733,61 +861,52 @@ public class MutableDiagramSettings implements DiagramSettings, Configurable
   /**
    * @return
    */
-  private void makeColorPalette( final Color[] aResult, final int aSteps )
+  private Color makePaletteColor( final int aIndex, final int aSteps )
   {
     final double freq = 2 * Math.PI / aSteps;
-    for ( int i = 0; i < aResult.length; i++ )
-    {
-      // aResult[i] = makeColorGradient( i, freq, freq, freq, 2.7, 2.4, 4.6 );
-      // aResult[i] = makeColorGradient( i, freq, freq, freq, 2.7, 7.4, 3.4 );
-      aResult[i] = makeColorGradient( i, freq, freq, freq, 2.0, 4.0, 6.0 );
-    }
+    return makeColorGradient( aIndex, freq, freq, freq, 2.0, 4.0, 6.0 );
   }
 
   /**
-   * @return
-   */
-  private void makeMonochromaticColorPalette( final Color[] aResult, final Color aColor )
-  {
-    Arrays.fill( aResult, aColor );
-  }
-
-  /**
-   * 
+   * Returns to the default (chosen) color scheme by resetting all available
+   * colors to <code>null</code>.
    */
   private void setDefaultColorScheme()
   {
-    if ( ColorScheme.DARK.equals( this.colorScheme ) )
-    {
-      this.backgroundColor = new Color( 0x10, 0x10, 0x10 );
-      this.gridColor = new Color( 0x30, 0x30, 0x30 );
-      this.groupBackgroundColor = this.gridColor.brighter();
-      this.labelColor = new Color( 0x82, 0x87, 0x8f );
-      this.signalColor = new Color( 0xc9, 0xc9, 0xc9 );
-      this.scopeColor = this.signalColor;
-      this.groupByteColor = this.signalColor;
-      this.textColor = Color.WHITE;
-      this.timeColor = new Color( 0x82, 0x87, 0x8f );
-      this.triggerColor = new Color( 0x82, 0x87, 0x8f );
+    delete( "backgroundColor" );
+    delete( "gridColor" );
+    delete( "groupBackgroundColor" );
+    delete( "groupByteColor" );
+    delete( "labelColor" );
+    delete( "scopeColor" );
+    delete( "signalColor" );
+    delete( "textColor" );
+    delete( "timeColor" );
+    delete( "triggerColor" );
 
-      makeMonochromaticColorPalette( this.cursorColors, this.signalColor );
-      makeColorPalette( this.channelColors, 8 );
-    }
-    else
+    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
     {
-      this.backgroundColor = Color.WHITE;
-      this.gridColor = new Color( 0xc9, 0xc9, 0xc9 );
-      this.groupBackgroundColor = this.gridColor.darker();
-      this.labelColor = new Color( 0x82, 0x87, 0x8f );
-      this.signalColor = new Color( 0x30, 0x4b, 0x75 );
-      this.scopeColor = this.signalColor;
-      this.groupByteColor = this.signalColor;
-      this.textColor = new Color( 0x25, 0x25, 0x25 );
-      this.timeColor = new Color( 0x25, 0x25, 0x25 );
-      this.triggerColor = new Color( 0x82, 0x87, 0x8f );
-
-      makeColorPalette( this.cursorColors, CapturedData.MAX_CURSORS );
-      makeMonochromaticColorPalette( this.channelColors, this.signalColor );
+      String name = "channelColor." + i;
+      delete( name );
     }
+    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    {
+      String name = "cursorColor." + i;
+      delete( name );
+    }
+  }
+
+  /**
+   * @param aGroup
+   * @param aGroupSetting
+   */
+  private void setGroupSetting( final int aGroupIdx, final int aGroupSetting )
+  {
+    if ( ( aGroupIdx < 0 ) || ( aGroupIdx >= CapturedData.MAX_BLOCKS ) )
+    {
+      throw new IllegalArgumentException( "Invalid group index!" );
+    }
+    final String name = "groupSetting." + aGroupIdx;
+    putInt( name, aGroupSetting );
   }
 }

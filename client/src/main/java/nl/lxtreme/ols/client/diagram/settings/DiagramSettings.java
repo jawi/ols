@@ -23,11 +23,13 @@ package nl.lxtreme.ols.client.diagram.settings;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.api.*;
+
 
 /**
  * Denotes the various settings used in the diagram.
  */
-public interface DiagramSettings
+public interface DiagramSettings extends UserSettings
 {
   // INNER TYPES
 

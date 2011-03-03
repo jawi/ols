@@ -11,6 +11,7 @@ import java.util.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.test.data.project.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
@@ -19,12 +20,11 @@ import org.junit.*;
 /**
  * Test cases for {@link UserSettingsManager}.
  */
-@Ignore
 public class UserSettingsManagerTest
 {
   // VARIABLES
 
-  private ProjectImpl project;
+  private StubTestProject project;
   private File baseFolder;
 
   // METHODS
@@ -35,7 +35,7 @@ public class UserSettingsManagerTest
   @Before
   public void setUp() throws Exception
   {
-    this.project = new ProjectImpl();
+    this.project = new StubTestProject();
     this.baseFolder = new File( System.getProperty( "java.io.tmpdir" ) );
   }
 
@@ -79,7 +79,7 @@ public class UserSettingsManagerTest
     UserSettingsManager.saveUserSettings( file, this.project );
 
     // Verify...
-    final ProjectImpl verify = new ProjectImpl();
+    final StubTestProject verify = new StubTestProject();
     UserSettingsManager.loadUserSettings( file, verify );
 
     assertUserSettingsCount();
@@ -99,7 +99,7 @@ public class UserSettingsManagerTest
     UserSettingsManager.saveUserSettings( file, this.project );
 
     // Verify...
-    final ProjectImpl verify = new ProjectImpl();
+    final StubTestProject verify = new StubTestProject();
     UserSettingsManager.loadUserSettings( file, verify );
 
     assertUserSettingsCount( "test" );
@@ -120,7 +120,7 @@ public class UserSettingsManagerTest
     UserSettingsManager.saveUserSettings( file, this.project );
 
     // Verify...
-    final ProjectImpl verify = new ProjectImpl();
+    final StubTestProject verify = new StubTestProject();
     UserSettingsManager.loadUserSettings( file, verify );
 
     assertUserSettingsCount( "test1", "test2" );

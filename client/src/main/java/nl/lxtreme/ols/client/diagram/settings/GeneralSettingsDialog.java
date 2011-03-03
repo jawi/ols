@@ -280,7 +280,6 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    this.settings.readPreferences( aSettings );
     syncUiWithSettings();
   }
 
@@ -304,7 +303,6 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   @Override
   public void writePreferences( final UserSettings aSettings )
   {
-    this.settings.writePreferences( aSettings );
   }
 
   /**
