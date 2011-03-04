@@ -48,7 +48,7 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
 /**
  * Provides the configuration dialog for the Open Bench Logic Sniffer device.
  */
-public class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable, Closeable
+public abstract class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable, Closeable
 {
   // INNER TYPES
 
@@ -121,7 +121,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   /**
    * Provides a combobox model for device profile types.
    */
-  static final class DeviceProfileTypeComboBoxModel extends AbstractListModel implements ComboBoxModel
+  final class DeviceProfileTypeComboBoxModel extends AbstractListModel implements ComboBoxModel
   {
     // CONSTANTS
 
@@ -139,7 +139,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     @Override
     public Object getElementAt( final int aIndex )
     {
-      final DeviceProfileManager manager = Activator.getDeviceProfileManager();
+      final DeviceProfileManager manager = getDeviceProfileManager();
       return manager.getProfileTypes().get( aIndex );
     }
 
@@ -158,7 +158,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
     @Override
     public int getSize()
     {
-      final DeviceProfileManager manager = Activator.getDeviceProfileManager();
+      final DeviceProfileManager manager = getDeviceProfileManager();
       return manager.getProfileTypeCount();
     }
 
@@ -601,6 +601,13 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
   }
 
   /**
+   * Returns the current device profile manager, never <code>null</code>.
+   * 
+   * @return the device profile manager to return, cannot be <code>null</code>.
+   */
+  protected abstract DeviceProfileManager getDeviceProfileManager();
+
+  /**
    * Builds this dialog by adding all components to it.
    */
   private void buildDialog()
@@ -985,7 +992,7 @@ public class LogicSnifferConfigDialog extends JDialog implements ActionListener,
         final JComboBox combobox = ( JComboBox )aEvent.getSource();
         final String selected = ( String )combobox.getSelectedItem();
 
-        final DeviceProfileManager manager = Activator.getDeviceProfileManager();
+        final DeviceProfileManager manager = getDeviceProfileManager();
         final DeviceProfile profile = manager.getProfile( selected );
         if ( profile != null )
         {
