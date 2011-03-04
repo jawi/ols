@@ -235,6 +235,7 @@ final class ProjectImpl implements Project, ProjectProperties
     }
 
     final String[] old = Arrays.copyOf( this.channelLabels, this.channelLabels.length );
+    Arrays.fill( this.channelLabels, null );
     System.arraycopy( aChannelLabels, 0, this.channelLabels, 0, aChannelLabels.length );
 
     this.propertyChangeSupport.firePropertyChange( PROPERTY_CHANNEL_LABELS, old, aChannelLabels );
@@ -255,6 +256,7 @@ final class ProjectImpl implements Project, ProjectProperties
     }
 
     final Long[] old = Arrays.copyOf( this.cursors, this.cursors.length );
+    Arrays.fill( this.cursors, null );
     System.arraycopy( aCursors, 0, this.cursors, 0, aCursors.length );
 
     this.propertyChangeSupport.firePropertyChange( PROPERTY_CURSORS, old, aCursors );

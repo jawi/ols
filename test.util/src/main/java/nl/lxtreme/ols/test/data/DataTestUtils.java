@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.test.data;
 
 
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.*;
@@ -31,6 +33,10 @@ import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.test.data.project.*;
 import nl.lxtreme.ols.util.*;
+
+import org.junit.*;
+import org.mockito.invocation.*;
+import org.mockito.stubbing.*;
 
 
 /**
@@ -49,6 +55,34 @@ public final class DataTestUtils
   }
 
   // METHODS
+
+  /**
+   * @param aExpected
+   * @param aTested
+   */
+  public static void assertEquals( final CapturedData aExpected, final CapturedData aTested )
+  {
+    assertEquals( "Captured data not equal!", aExpected, aTested );
+  }
+
+  /**
+   * @param aExpected
+   * @param aTested
+   */
+  public static void assertEquals( final String aMessage, final CapturedData aExpected, final CapturedData aTested )
+  {
+    assertNotNull( aExpected );
+    assertNotNull( aTested );
+
+    Assert.assertEquals( aMessage, aExpected.getAbsoluteLength(), aTested.getAbsoluteLength() );
+    Assert.assertEquals( aMessage, aExpected.getChannels(), aTested.getChannels() );
+    Assert.assertEquals( aMessage, aExpected.getEnabledChannels(), aTested.getEnabledChannels() );
+    Assert.assertEquals( aMessage, aExpected.getSampleRate(), aTested.getSampleRate() );
+    Assert.assertEquals( aMessage, aExpected.hasTimingData(), aTested.hasTimingData() );
+    Assert.assertEquals( aMessage, aExpected.hasTriggerData(), aTested.hasTriggerData() );
+    assertArrayEquals( aMessage, aExpected.getTimestamps(), aTested.getTimestamps() );
+    assertArrayEquals( aMessage, aExpected.getValues(), aTested.getValues() );
+  }
 
   /**
    * Creates a mocked data container with 16 sample/time values.
@@ -185,5 +219,31 @@ public final class DataTestUtils
     {
       HostUtils.closeResource( is );
     }
+  }
+
+  /**
+   * Returns a mocked captured data result.
+   */
+  public static CapturedData getMockedCapturedData()
+  {
+    CapturedData result = mock( CapturedData.class );
+    when( result.getAbsoluteLength() ).thenReturn( Long.valueOf( 8 ) );
+    when( result.getChannels() ).thenReturn( Integer.valueOf( 8 ) );
+    when( result.getEnabledChannels() ).thenReturn( Integer.valueOf( 255 ) );
+    when( result.getSampleIndex( anyLong() ) ).thenAnswer( new Answer<Integer>()
+    {
+      @Override
+      public Integer answer( final InvocationOnMock aInvocation ) throws Throwable
+      {
+        final Long param = ( Long )aInvocation.getArguments()[0];
+        return param.intValue();
+      }
+    } );
+    when( result.getSampleRate() ).thenReturn( Integer.valueOf( 100 ) );
+    when( result.getTimestamps() ).thenReturn( new long[] { 1L, 2L, 3L, 4L } );
+    when( result.getValues() ).thenReturn( new int[] { 1, 0, 1, 0 } );
+    when( result.hasTimingData() ).thenReturn( Boolean.TRUE );
+    when( result.hasTriggerData() ).thenReturn( Boolean.FALSE );
+    return result;
   }
 }
