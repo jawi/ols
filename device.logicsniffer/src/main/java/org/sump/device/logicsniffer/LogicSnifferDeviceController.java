@@ -28,12 +28,17 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
+import javax.microedition.io.*;
 import javax.swing.SwingWorker.StateValue;
+
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
+import org.osgi.service.cm.*;
+import org.osgi.service.io.*;
+import org.sump.device.logicsniffer.profile.*;
 
 
 /**
@@ -101,7 +106,7 @@ public class LogicSnifferDeviceController implements DeviceController
        * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
        */
       @Override
-      public void propertyChange( final PropertyChangeEvent aEvent )
+      public synchronized void propertyChange( final PropertyChangeEvent aEvent )
       {
         final String propertyName = aEvent.getPropertyName();
 
@@ -129,7 +134,7 @@ public class LogicSnifferDeviceController implements DeviceController
       }
     };
 
-    this.device = new LogicSnifferDevice( this.bundleContext, this.deviceConfig )
+    this.device = new LogicSnifferDevice( this.deviceConfig )
     {
       /**
        * @see javax.swing.SwingWorker#done()
@@ -177,12 +182,61 @@ public class LogicSnifferDeviceController implements DeviceController
       }
 
       /**
+       * {@inheritDoc}
+       */
+      @Override
+      protected synchronized StreamConnection getConnection( final String aPortName, final int aPortRate )
+          throws IOException
+      {
+        final BundleContext context = LogicSnifferDeviceController.this.bundleContext;
+        if ( context == null )
+        {
+          throw new IllegalStateException( "No bundle context obtained?!" );
+        }
+
+        final ServiceReference serviceRef = context.getServiceReference( ConnectorService.class.getName() );
+        if ( serviceRef == null )
+        {
+          throw new IllegalStateException( "No service reference obtained?!" );
+        }
+
+        final ConnectorService connectorService = ( ConnectorService )context.getService( serviceRef );
+
+        try
+        {
+          final String portUri = String.format(
+              "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff", aPortName,
+              Integer.valueOf( aPortRate ) );
+
+          return ( StreamConnection )connectorService.open( portUri, ConnectorService.READ_WRITE, false /* timeouts */);
+        }
+        finally
+        {
+          // Release the connector service, to avoid possible resource
+          // leaks...
+          context.ungetService( serviceRef );
+        }
+      }
+
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      protected synchronized DeviceProfileManager getDeviceProfileManager()
+      {
+        return LogicSnifferDeviceController.this.getDeviceProfileManager();
+      }
+
+      /**
        * @see org.sump.device.logicsniffer.LogicSnifferDevice#process(java.util.List)
        */
       @Override
       protected void process( final List<Sample> aSamples )
       {
-        aCallback.samplesCaptured( aSamples );
+        synchronized ( aCallback )
+        {
+          aCallback.samplesCaptured( aSamples );
+        }
       }
     };
 
@@ -237,11 +291,47 @@ public class LogicSnifferDeviceController implements DeviceController
     // if no valid dialog exists, create one
     if ( this.configDialog == null )
     {
-      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.deviceConfig );
+      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.deviceConfig )
+      {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        protected DeviceProfileManager getDeviceProfileManager()
+        {
+          return LogicSnifferDeviceController.this.getDeviceProfileManager();
+        }
+      };
     }
 
     this.setup = this.configDialog.showDialog();
     return this.setup;
+  }
+
+  /**
+   * Finds the device profile manager.
+   * 
+   * @return a device profile manager instance, never <code>null</code>.
+   */
+  final DeviceProfileManager getDeviceProfileManager()
+  {
+    final String filter = "(".concat( Constants.SERVICE_PID ).concat( "=" ).concat( DeviceProfileManager.SERVICE_PID )
+        .concat( ")" );
+    final String clazz = ManagedServiceFactory.class.getName();
+
+    try
+    {
+      final ServiceReference[] serviceReferences = this.bundleContext.getServiceReferences( clazz, filter );
+      if ( ( serviceReferences == null ) || ( serviceReferences.length < 1 ) )
+      {
+        throw new IllegalStateException( "Failed to find registered device profile manager?!" );
+      }
+
+      return ( DeviceProfileManager )this.bundleContext.getService( serviceReferences[0] );
+    }
+    catch ( InvalidSyntaxException exception )
+    {
+      throw new InternalError( "Filter was incorrect?!" );
+    }
   }
 
   /**

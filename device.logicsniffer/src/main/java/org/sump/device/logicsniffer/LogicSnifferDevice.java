@@ -31,18 +31,16 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
 
-import org.osgi.framework.*;
-import org.osgi.service.io.*;
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
 /**
  * Device provides access to the physical logic analyzer device. It requires the
- * rxtx package from http://www.rxtx.org/ to access the serial port the analyzer
- * is connected to.
+ * rxtx package from {@link http://www.rxtx.org/} to access the serial port the
+ * analyzer is connected to.
  */
-public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
+public abstract class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
 {
   // INNER TYPES
 
@@ -366,7 +364,6 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   // VARIABLES
 
   private final LogicSnifferConfig config;
-  private final BundleContext bundleContext;
 
   private StreamConnection connection;
   private DataInputStream inputStream;
@@ -381,9 +378,8 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   /**
    * Creates a new LogicSnifferDevice instance.
    */
-  public LogicSnifferDevice( final BundleContext aBundleContext, final LogicSnifferConfig aConfig )
+  public LogicSnifferDevice( final LogicSnifferConfig aConfig )
   {
-    this.bundleContext = aBundleContext;
     this.config = aConfig;
   }
 
@@ -659,6 +655,31 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
   }
 
   /**
+   * Queries for a connector service to craft a connection for a given serial
+   * port with a given baudrate.
+   * 
+   * @param aPortName
+   *          the name of the port to create a connection for;
+   * @param aPortRate
+   *          the baudrate of the connection.
+   * @return a connection capable of communicating with the requested serial
+   *         device, never <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems, or in case the requested port is
+   *           <em>not</em> a serial port.
+   */
+  protected abstract StreamConnection getConnection( final String aPortName, final int aPortRate ) throws IOException;
+
+  /**
+   * Finds the device profile manager.
+   * 
+   * @return a device profile manager instance, never <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the device profile manager could not be found/obtained.
+   */
+  protected abstract DeviceProfileManager getDeviceProfileManager();
+
+  /**
    * Opens the incoming and outgoing connection to the OLS device.
    * <p>
    * This method will directly flush all incoming data, and, if configured,
@@ -684,24 +705,26 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { portName, Integer.valueOf( baudrate ) } );
 
       this.connection = getConnection( portName, baudrate );
-      if ( this.connection != null )
+      if ( this.connection == null )
       {
-        this.outputStream = this.connection.openDataOutputStream();
-        this.inputStream = this.connection.openDataInputStream();
-
-        // Some devices need some time to initialize after being opened for the
-        // first time, see issue #34.
-        if ( openDelay > 0 )
-        {
-          Thread.sleep( openDelay );
-        }
-
-        // We don't expect any data, so flush all data pending in the given
-        // input stream. See issue #34.
-        HostUtils.flushInputStream( this.inputStream );
-
-        return this.attached = true;
+        throw new IOException( "Failed to open a valid connection!" );
       }
+
+      this.outputStream = this.connection.openDataOutputStream();
+      this.inputStream = this.connection.openDataInputStream();
+
+      // Some devices need some time to initialize after being opened for the
+      // first time, see issue #34.
+      if ( openDelay > 0 )
+      {
+        Thread.sleep( openDelay );
+      }
+
+      // We don't expect any data, so flush all data pending in the given
+      // input stream. See issue #34.
+      HostUtils.flushInputStream( this.inputStream );
+
+      return this.attached = true;
     }
     catch ( final Exception exception )
     {
@@ -995,59 +1018,18 @@ public class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
       if ( metadata != null )
       {
         // Log the read results...
-        LOG.log( Level.INFO, "Metadata = \n{0}", metadata.toString() );
+        LOG.log( Level.INFO, "Found device '{0}'", metadata.getName() );
+        LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
 
         final String name = metadata.getName();
         if ( name != null )
         {
-          final DeviceProfileManager manager = Activator.getDeviceProfileManager();
+          final DeviceProfileManager manager = getDeviceProfileManager();
           final DeviceProfile profile = manager.findProfile( name );
           this.config.setDeviceProfile( profile );
         }
       }
     }
-  }
-
-  /**
-   * Queries for a connector service to craft a connection for a given serial
-   * port with a given baudrate.
-   * 
-   * @param aPortName
-   *          the name of the port to create a connection for;
-   * @param aPortRate
-   *          the baudrate of the connection.
-   * @return a connection capable of communicating with the requested serial
-   *         device, never <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems, or in case the requested port is
-   *           <em>not</em> a serial port.
-   */
-  private StreamConnection getConnection( final String aPortName, final int aPortRate ) throws IOException
-  {
-    if ( this.bundleContext != null )
-    {
-      final ServiceReference serviceRef = this.bundleContext.getServiceReference( ConnectorService.class.getName() );
-      if ( serviceRef != null )
-      {
-        final ConnectorService connectorService = ( ConnectorService )this.bundleContext.getService( serviceRef );
-
-        try
-        {
-          final String portUri = String.format(
-              "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff", aPortName,
-              Integer.valueOf( aPortRate ) );
-
-          return ( StreamConnection )connectorService.open( portUri, ConnectorService.READ_WRITE, false /* timeouts */);
-        }
-        finally
-        {
-          // Release the connector service, to avoid possible resource leaks...
-          this.bundleContext.ungetService( serviceRef );
-        }
-      }
-    }
-
-    return null;
   }
 
   /**

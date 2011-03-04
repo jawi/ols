@@ -176,6 +176,25 @@ public final class DeviceProfile implements Cloneable
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean equals( final Object aObject )
+  {
+    if ( this == aObject )
+    {
+      return true;
+    }
+    if ( ( aObject == null ) || !( aObject instanceof DeviceProfile ) )
+    {
+      return false;
+    }
+
+    final DeviceProfile other = ( DeviceProfile )aObject;
+    return this.properties.equals( other.properties );
+  }
+
+  /**
    * Returns the capture clock sources supported by the device.
    * 
    * @return an array of capture clock sources, never <code>null</code>.
@@ -353,6 +372,18 @@ public final class DeviceProfile implements Cloneable
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public int hashCode()
+  {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ( ( this.properties == null ) ? 0 : this.properties.hashCode() );
+    return result;
+  }
+
+  /**
    * Returns whether or not the capture size is bound to the number of channels.
    * 
    * @return <code>true</code> if the capture size is bound to the number of
@@ -447,6 +478,14 @@ public final class DeviceProfile implements Cloneable
   {
     final String value = this.properties.get( DEVICE_FEATURE_TRIGGERS );
     return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * @return the properties of this device profile, never <code>null</code>.
+   */
+  final Dictionary<String, String> getProperties()
+  {
+    return new Hashtable<String, String>( this.properties );
   }
 
   /**
