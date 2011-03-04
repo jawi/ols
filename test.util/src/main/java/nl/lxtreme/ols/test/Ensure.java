@@ -38,7 +38,7 @@ public class Ensure
 {
   // CONSTANTS
 
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
   private static final int RESOLUTION = 100;
 
   private static long instance = 0;
@@ -153,9 +153,8 @@ public class Ensure
     }
 
     int timeout = aTimeout;
-    while ( ( this.step < aNr ) && ( aTimeout > 0 ) )
+    while ( ( this.step < aNr ) && ( timeout > 0 ) )
     {
-
       try
       {
         wait( RESOLUTION );

@@ -111,6 +111,11 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
   @Override
   public void loadProject( final InputStream aInput ) throws IOException
   {
+    if ( aInput == null )
+    {
+      throw new IllegalArgumentException( "Input stream cannot be null!" );
+    }
+
     final BufferedInputStream in = new BufferedInputStream( aInput );
     final ZipInputStream zipIS = new ZipInputStream( in );
 
@@ -166,6 +171,11 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
   @Override
   public void saveProject( final OutputStream aOutput ) throws IOException
   {
+    if ( aOutput == null )
+    {
+      throw new IllegalArgumentException( "Output stream cannot be null!" );
+    }
+
     final BufferedOutputStream os = new BufferedOutputStream( aOutput );
     final ZipOutputStream zipOS = new ZipOutputStream( os );
 
@@ -227,7 +237,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     {
       String label = null;
       int idx = 0;
-      while ( ( ( label = reader.readLine() ) != null ) && ( idx < ( labels.length - 1 ) ) )
+      while ( ( ( label = reader.readLine() ) != null ) && ( idx < labels.length ) )
       {
         labels[idx++] = StringUtils.isEmpty( label ) ? null : label;
       }
