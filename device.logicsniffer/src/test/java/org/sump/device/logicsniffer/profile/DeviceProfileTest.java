@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 import java.util.*;
 
 import org.junit.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import org.sump.device.logicsniffer.profile.DeviceProfile.*;
 
 
 /**
@@ -100,14 +100,203 @@ public class DeviceProfileTest
   }
 
   /**
-   * Test method for {@link DeviceProfile#getCaptureClock()}.
+   * Test method for {@link DeviceProfile#getCaptureSizes()}.
    */
   @Test( expected = IllegalArgumentException.class )
-  @Ignore( "does not work yet as expected." )
-  public void testIsCaptureSizeBoundToEnabledChannelsFail()
+  public void testGetCaptureSizesFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_CAPTURESIZE_BOUND, "test" );
-    this.profile.isCaptureSizeBoundToEnabledChannels();
+    mutateProperty( DeviceProfile.DEVICE_CAPTURESIZES, "test" );
+    this.profile.getCaptureSizes();
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getCaptureSizes()}.
+   */
+  @Test
+  @SuppressWarnings( "boxing" )
+  public void testGetCaptureSizesOk()
+  {
+    assertArrayEquals( new Integer[] { 4, 3, 2, 1 }, this.profile.getCaptureSizes() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getChannelCount()}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testGetChannelCountFail()
+  {
+    mutateProperty( DeviceProfile.DEVICE_CHANNEL_COUNT, "test" );
+    this.profile.getChannelCount();
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getCaptureSizes()}.
+   */
+  @Test
+  public void testGetChannelCountOk()
+  {
+    assertEquals( 4, this.profile.getChannelCount() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getChannelGroupCount()}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testGetChannelGroupCountFail()
+  {
+    mutateProperty( DeviceProfile.DEVICE_CHANNEL_GROUPS, "test" );
+    this.profile.getChannelGroupCount();
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getChannelGroupCount()}.
+   */
+  @Test
+  public void testGetChannelGroupCountOk()
+  {
+    assertEquals( 1, this.profile.getChannelGroupCount() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getChannelNumberingSchemes()}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testGetChannelNumberingSchemesFail()
+  {
+    mutateProperty( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "test" );
+    this.profile.getChannelNumberingSchemes();
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getChannelNumberingSchemes()}.
+   */
+  @Test
+  public void testGetChannelNumberingSchemesOk()
+  {
+    assertArrayEquals( new NumberingScheme[] { NumberingScheme.DEFAULT }, this.profile.getChannelNumberingSchemes() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getClockspeed()}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testGetClockspeedFail()
+  {
+    mutateProperty( DeviceProfile.DEVICE_CLOCKSPEED, "test" );
+    this.profile.getClockspeed();
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getClockspeed()}.
+   */
+  @Test
+  public void testGetClockspeedOk()
+  {
+    assertEquals( 1000000, this.profile.getClockspeed() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getDescription()}.
+   */
+  @Test
+  public void testGetDescriptionOk()
+  {
+    assertNotNull( this.profile.getDescription() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getDeviceMetadataKeys()}.
+   */
+  @Test
+  public void testGetDeviceMetadataKeysOk()
+  {
+    assertArrayEquals( new String[] { "a", "b" }, this.profile.getDeviceMetadataKeys() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getInterface()}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testGetIntegerFail()
+  {
+    mutateProperty( DeviceProfile.DEVICE_INTERFACE, "test" );
+    this.profile.getInterface();
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getInterface()}.
+   */
+  @Test
+  public void testGetInterfaceOk()
+  {
+    assertEquals( DeviceInterface.SERIAL, this.profile.getInterface() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getOpenPortDelay()}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testGetOpenPortDelayFail()
+  {
+    mutateProperty( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "test" );
+    this.profile.getOpenPortDelay();
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getOpenPortDelay()}.
+   */
+  @Test
+  public void testGetOpenPortDelayOk()
+  {
+    assertEquals( 10, this.profile.getOpenPortDelay() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getSampleRates()}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testGetSampleRatesFail()
+  {
+    mutateProperty( DeviceProfile.DEVICE_SAMPLERATES, "test" );
+    this.profile.getSampleRates();
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getSampleRates()}.
+   */
+  @Test
+  @SuppressWarnings( "boxing" )
+  public void testGetSampleRatesOk()
+  {
+    assertArrayEquals( new Integer[] { 7, 6, 5 }, this.profile.getSampleRates() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getTriggerStages()}.
+   */
+  @Test( expected = IllegalArgumentException.class )
+  public void testGetTriggerStagesFail()
+  {
+    mutateProperty( DeviceProfile.DEVICE_TRIGGER_STAGES, "test" );
+    this.profile.getTriggerStages();
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getTriggerStages()}.
+   */
+  @Test
+  public void testGetTriggerStagesOk()
+  {
+    assertEquals( 0, this.profile.getTriggerStages() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#getType()}.
+   */
+  @Test
+  public void testGetTypeOk()
+  {
+    assertNotNull( this.profile.getType() );
   }
 
   /**
@@ -115,9 +304,73 @@ public class DeviceProfileTest
    * .
    */
   @Test
+  @SuppressWarnings( "boxing" )
   public void testIsCaptureSizeBoundToEnabledChannelsOk()
   {
     assertEquals( false, this.profile.isCaptureSizeBoundToEnabledChannels() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#isComplexTriggersSupported()}.
+   */
+  @Test
+  public void testIsComplexTriggerSupportedOk()
+  {
+    assertTrue( this.profile.isComplexTriggersSupported() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#isDoubleDataRateSupported()}.
+   */
+  @Test
+  public void testIsDoubleDataRateSupportedOk()
+  {
+    assertTrue( this.profile.isDoubleDataRateSupported() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#isNoiseFilterSupported()}.
+   */
+  @Test
+  public void testIsNoiseFilterSupportedOk()
+  {
+    assertFalse( this.profile.isNoiseFilterSupported() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#isRleSupported()}.
+   */
+  @Test
+  public void testIsRleSupportedOk()
+  {
+    assertFalse( this.profile.isRleSupported() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#isSamplesInReverseOrder()}.
+   */
+  @Test
+  public void testIsSamplesInReverseOrderOk()
+  {
+    assertFalse( this.profile.isSamplesInReverseOrder() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#isTestModeSupported()}.
+   */
+  @Test
+  public void testIsTestModeSupportedOk()
+  {
+    assertTrue( this.profile.isTestModeSupported() );
+  }
+
+  /**
+   * Test method for {@link DeviceProfile#isTriggerSupported()}.
+   */
+  @Test
+  public void testIsTriggerSupportedOk()
+  {
+    assertFalse( this.profile.isTriggerSupported() );
   }
 
   /**
@@ -160,12 +413,12 @@ public class DeviceProfileTest
     properties.put( DeviceProfile.DEVICE_FEATURE_TEST_MODE, "true" );
     properties.put( DeviceProfile.DEVICE_FEATURE_TRIGGERS, "false" );
     properties.put( DeviceProfile.DEVICE_INTERFACE, "SERIAL" );
-    properties.put( DeviceProfile.DEVICE_METADATA_KEYS, "mock" );
-    properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "0" );
+    properties.put( DeviceProfile.DEVICE_METADATA_KEYS, "a,b" );
+    properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "10" );
     properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "false" );
-    properties.put( DeviceProfile.DEVICE_SAMPLERATES, "1000000" );
-    properties.put( DeviceProfile.DEVICE_SUPPORTS_DDR, "false" );
-    properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "false" );
+    properties.put( DeviceProfile.DEVICE_SAMPLERATES, "5,6,7" );
+    properties.put( DeviceProfile.DEVICE_SUPPORTS_DDR, "true" );
+    properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );
     properties.put( DeviceProfile.DEVICE_TRIGGER_STAGES, "0" );
     properties.put( DeviceProfile.DEVICE_TYPE, "MOCK" );
     return properties;
