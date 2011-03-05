@@ -69,6 +69,7 @@ public final class DataTestUtils
    * @param aExpected
    * @param aTested
    */
+  @SuppressWarnings( "boxing" )
   public static void assertEquals( final String aMessage, final CapturedData aExpected, final CapturedData aTested )
   {
     assertNotNull( aExpected );
@@ -224,6 +225,7 @@ public final class DataTestUtils
   /**
    * Returns a mocked captured data result.
    */
+  @SuppressWarnings( "boxing" )
   public static CapturedData getMockedCapturedData()
   {
     CapturedData result = mock( CapturedData.class );
