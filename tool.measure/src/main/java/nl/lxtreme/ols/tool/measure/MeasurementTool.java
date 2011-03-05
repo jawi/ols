@@ -22,6 +22,8 @@ package nl.lxtreme.ols.tool.measure;
 
 
 import java.awt.*;
+
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
@@ -43,12 +45,11 @@ public class MeasurementTool extends BaseTool<MeasurementDialog>
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String)
+   * {@inheritDoc}
    */
   @Override
-  protected MeasurementDialog createDialog( final Window aOwner, final String aName )
+  protected MeasurementDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
   {
-    return new MeasurementDialog( aOwner, aName );
+    return new MeasurementDialog( aOwner, aName, aContext );
   }
 }

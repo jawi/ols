@@ -37,11 +37,11 @@ public interface Project
   // METHODS
 
   /**
-   * Returns the captured data of this project.
+   * Returns the acquisition data of this project.
    * 
    * @return a captured data, can be <code>null</code>.
    */
-  public CapturedData getCapturedData();
+  public AcquisitionResult getCapturedData();
 
   /**
    * Returns the channel labels of this project.
@@ -114,10 +114,10 @@ public interface Project
   /**
    * Sets the captured data of this project.
    * 
-   * @param aCapturedData
+   * @param aData
    *          the captured data, can be <code>null</code>.
    */
-  public void setCapturedData( final CapturedData aCapturedData );
+  public void setCapturedData( final AcquisitionResult aData );
 
   /**
    * Marks this project as "changed".

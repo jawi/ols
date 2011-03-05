@@ -26,7 +26,7 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.diagram.laf.*;
 import nl.lxtreme.ols.util.*;
@@ -75,7 +75,7 @@ public class SetCursorAction extends BaseAction
    */
   public static final String getCursorId( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= CapturedData.MAX_CURSORS ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= Ols.MAX_CURSORS ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx );
     }

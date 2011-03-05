@@ -126,7 +126,7 @@ public class TestDeviceController implements DeviceController
       }
     }
 
-    final CapturedData capturedData = new CapturedDataImpl( data, 23, rate, channels, Integer.MAX_VALUE );
+    final AcquisitionResult capturedData = new CapturedData( data, 23, rate, channels, Integer.MAX_VALUE );
     aCallback.captureComplete( capturedData );
   }
 

@@ -202,7 +202,7 @@ public class ProjectImplTest
   @Test
   public void testSetCapturedData()
   {
-    final CapturedData data = DataTestUtils.getMockedCapturedData();
+    final AcquisitionResult data = DataTestUtils.getMockedCapturedData();
     this.project.setCapturedData( data );
 
     assertSame( data, this.project.getCapturedData() );
@@ -215,7 +215,7 @@ public class ProjectImplTest
   @Test
   public void testSetChannelLabels()
   {
-    final String[] labels = new String[CapturedData.MAX_CHANNELS];
+    final String[] labels = new String[Ols.MAX_CHANNELS];
     labels[0] = "labelA";
     labels[1] = "labelB";
     labels[2] = "labelC";
@@ -232,7 +232,7 @@ public class ProjectImplTest
   @Test
   public void testSetCursorPositions()
   {
-    final Long[] cursors = new Long[CapturedData.MAX_CURSORS];
+    final Long[] cursors = new Long[Ols.MAX_CURSORS];
     cursors[0] = Long.valueOf( 1L );
     cursors[1] = Long.valueOf( 2L );
     cursors[2] = Long.valueOf( 3L );

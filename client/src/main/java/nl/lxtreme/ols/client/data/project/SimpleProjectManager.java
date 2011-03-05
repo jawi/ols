@@ -231,7 +231,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     final InputStreamReader isReader = new InputStreamReader( aZipIS );
     final BufferedReader reader = new BufferedReader( isReader );
 
-    String[] labels = new String[CapturedData.MAX_CHANNELS];
+    String[] labels = new String[Ols.MAX_CHANNELS];
 
     try
     {
@@ -326,8 +326,8 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
    */
   protected void storeCapturedResults( final Project aProject, final ZipOutputStream aZipOS ) throws IOException
   {
-    final CapturedData captureData = aProject.getCapturedData();
-    if ( captureData == null )
+    final AcquisitionResult data = aProject.getCapturedData();
+    if ( data == null )
     {
       return;
     }

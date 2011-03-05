@@ -31,7 +31,7 @@ import nl.lxtreme.ols.tool.base.*;
 /**
  * Provides a state analysis tool (??? not sure what it does though ???).
  */
-public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, CapturedData, StateAnalysisWorker>
+public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, AcquisitionResult, StateAnalysisWorker>
 {
   // CONSTRUCTORS
 
@@ -46,18 +46,16 @@ public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, CapturedDa
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String)
+   * {@inheritDoc}
    */
   @Override
-  protected StateAnalysisDialog createDialog( final Window aOwner, final String aName )
+  protected StateAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
   {
-    return new StateAnalysisDialog( aOwner, getName() );
+    return new StateAnalysisDialog( aOwner, getName(), aContext );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
-   *      ToolContext)
+   * {@inheritDoc}
    */
   @Override
   protected StateAnalysisWorker createToolWorker( final DataContainer aData, final ToolContext aContext )

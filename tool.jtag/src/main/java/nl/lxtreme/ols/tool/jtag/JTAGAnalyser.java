@@ -47,18 +47,16 @@ public class JTAGAnalyser extends BaseAsyncTool<JTAGProtocolAnalysisDialog, JTAG
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String)
+   * {@inheritDoc}
    */
   @Override
-  protected JTAGProtocolAnalysisDialog createDialog( final Window aOwner, final String aName )
+  protected JTAGProtocolAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
   {
-    return new JTAGProtocolAnalysisDialog( aOwner, aName );
+    return new JTAGProtocolAnalysisDialog( aOwner, aName, aContext );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
-   *      ToolContext)
+   * {@inheritDoc}
    */
   @Override
   protected JTAGAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )

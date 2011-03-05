@@ -26,6 +26,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
@@ -44,20 +45,11 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   /** Provides insets (padding) that can be used for components. */
   protected static final Insets COMP_INSETS = new Insets( 4, 2, 4, 4 );
 
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new BaseToolDialog instance that is document modal.
-   * 
-   * @param aOwner
-   *          the owning window of this dialog;
-   * @param aName
-   *          the name of this dialog.
-   */
-  protected BaseToolDialog( final Window aOwner, final String aTitle )
-  {
-    this( aOwner, aTitle, Dialog.ModalityType.MODELESS );
-  }
+  private final ToolContext context;
+
+  // CONSTRUCTORS
 
   /**
    * Creates a new BaseToolDialog instance that is document modal.
@@ -67,11 +59,30 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
    * @param aName
    *          the name of this dialog;
    * @param aModalityType
-   *          the modality type.
+   *          the modality type;
+   * @param aContext
+   *          the tool context to use in this dialog.
    */
-  protected BaseToolDialog( final Window aOwner, final String aTitle, final ModalityType aModalityType )
+  protected BaseToolDialog( final Window aOwner, final String aTitle, final ModalityType aModalityType,
+      final ToolContext aContext )
   {
     super( aOwner, aTitle, aModalityType );
+    this.context = aContext;
+  }
+
+  /**
+   * Creates a new BaseToolDialog instance that is document modal.
+   * 
+   * @param aOwner
+   *          the owning window of this dialog;
+   * @param aName
+   *          the name of this dialog;
+   * @param aContext
+   *          the tool context to use in this dialog.
+   */
+  protected BaseToolDialog( final Window aOwner, final String aTitle, final ToolContext aContext )
+  {
+    this( aOwner, aTitle, Dialog.ModalityType.MODELESS, aContext );
   }
 
   // METHODS
@@ -83,6 +94,15 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   {
     setVisible( false );
     dispose();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public ToolContext getContext()
+  {
+    return this.context;
   }
 
   /**
@@ -103,6 +123,29 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
   protected final JButton createCloseButton()
   {
     return StandardActionFactory.createCloseButton();
+  }
+
+  /**
+   * Returns the channel count.
+   * 
+   * @return the number of channels to expect in the acquisition data, >= 0 && <
+   *         {@value Ols#MAX_CHANNELS}.
+   * @see #getEnabledChannels()
+   */
+  protected final int getChannels()
+  {
+    return getContext().getChannels();
+  }
+
+  /**
+   * Returns the enabled channels.
+   * 
+   * @return a bitmask representing the enabled channels.
+   * @see #getChannels()
+   */
+  protected final int getEnabledChannels()
+  {
+    return getContext().getEnabledChannels();
   }
 
   /**

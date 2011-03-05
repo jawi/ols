@@ -54,7 +54,8 @@ public class ConnectorServiceImpl implements ConnectorService
   // METHODS
 
   /**
-   * Helper method to determine the name of a given URI.
+   * Determines for the given URI the scheme and returns its corresponding
+   * {@link Scheme} object.
    * 
    * @param aURI
    *          the URI to get the scheme name for, cannot be <code>null</code>.
@@ -82,6 +83,44 @@ public class ConnectorServiceImpl implements ConnectorService
   }
 
   /**
+   * Locates the connection factory service instance through OSGi.
+   * 
+   * @param aContext
+   *          the bundle context to use for communication with the OSGi
+   *          framework, cannot be <code>null</code>;
+   * @param aName
+   *          the URI to parse, cannot be <code>null</code>.
+   * @return the connection factory, or <code>null</code> if it could not be
+   *         found.
+   */
+  static final ConnectionFactory getConnectionFactory( final BundleContext aContext, final String aName )
+  {
+    String protocol = determineSchemeName( aName );
+    if ( protocol == null )
+    {
+      return null;
+    }
+
+    final String filter = "(".concat( ConnectionFactory.IO_SCHEME ).concat( "=" ).concat( protocol ).concat( ")" );
+    try
+    {
+      final ServiceReference[] serviceRefs = aContext.getAllServiceReferences( ConnectionFactory.class.getName(),
+          filter );
+      if ( ( serviceRefs != null ) && ( serviceRefs.length > 0 ) )
+      {
+        final ConnectionFactory result = ( ConnectionFactory )aContext.getService( serviceRefs[0] );
+        return result;
+      }
+    }
+    catch ( InvalidSyntaxException exception )
+    {
+      throw new InternalError( "Invalid service filter syntax?!" );
+    }
+
+    return null;
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -105,7 +144,7 @@ public class ConnectorServiceImpl implements ConnectorService
   @Override
   public Connection open( final String aName, final int aMode, final boolean aTimeouts ) throws IOException
   {
-    final ConnectionFactory cf = locateConnectionFactory( aName );
+    final ConnectionFactory cf = getConnectionFactory( this.context, aName );
     if ( cf == null )
     {
       throw new ConnectionNotFoundException( "No connection for: " + aName );
@@ -137,7 +176,7 @@ public class ConnectorServiceImpl implements ConnectorService
   @Override
   public InputStream openInputStream( final String aName ) throws IOException
   {
-    return openStream( aName ).openInputStream();
+    return openStreamConnection( aName ).openInputStream();
   }
 
   /**
@@ -146,7 +185,7 @@ public class ConnectorServiceImpl implements ConnectorService
   @Override
   public OutputStream openOutputStream( final String aName ) throws IOException
   {
-    return openStream( aName ).openOutputStream();
+    return openStreamConnection( aName ).openOutputStream();
   }
 
   /**
@@ -154,43 +193,7 @@ public class ConnectorServiceImpl implements ConnectorService
    */
   public void shutdown()
   {
-    // TODO Auto-generated method stub
-  }
-
-  /**
-   * Determines for the given URI the scheme and returns its corresponding
-   * {@link Scheme} object.
-   * 
-   * @param aName
-   *          the URI to parse, cannot be <code>null</code>.
-   * @return the corresponding Scheme object, or <code>null</code> if no such
-   *         scheme could be found.
-   */
-  final ConnectionFactory locateConnectionFactory( final String aName )
-  {
-    String protocol = determineSchemeName( aName );
-    if ( protocol == null )
-    {
-      return null;
-    }
-
-    final String filter = "(".concat( ConnectionFactory.IO_SCHEME ).concat( "=" ).concat( protocol ).concat( ")" );
-    try
-    {
-      final ServiceReference[] serviceRefs = this.context.getAllServiceReferences( ConnectionFactory.class.getName(),
-          filter );
-      if ( ( serviceRefs != null ) && ( serviceRefs.length > 0 ) )
-      {
-        final ConnectionFactory result = ( ConnectionFactory )this.context.getService( serviceRefs[0] );
-        return result;
-      }
-    }
-    catch ( InvalidSyntaxException exception )
-    {
-      throw new RuntimeException( exception );
-    }
-
-    return null;
+    // NO-op
   }
 
   /**
@@ -204,7 +207,7 @@ public class ConnectorServiceImpl implements ConnectorService
    *           in case the given URI is not supported, or in case of other I/O
    *           problems.
    */
-  private StreamConnection openStream( final String aURI ) throws IOException
+  private StreamConnection openStreamConnection( final String aURI ) throws IOException
   {
     final Connection conn = open( aURI );
     if ( !( conn instanceof StreamConnection ) )

@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.regex.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.util.*;
 
@@ -73,8 +74,8 @@ public final class OlsDataHelper
     // assume 'new' file format is in use, don't support uncompressed ones...
     boolean compressed = true;
 
-    Long[] cursorPositions = new Long[CapturedData.MAX_CURSORS];
-    CapturedData capturedData = null;
+    Long[] cursorPositions = new Long[Ols.MAX_CURSORS];
+    AcquisitionResult result = null;
 
     final BufferedReader br = new BufferedReader( aReader );
     if ( LOG.isLoggable( Level.INFO ) )
@@ -213,12 +214,11 @@ public final class OlsDataHelper
       long absoluteLength = Math.max( absLen, timestamps[size - 1] + ABS_TIME_MARGIN );
 
       // Finally set the captured data, and notify all event listeners...
-      capturedData = new CapturedDataImpl( values, timestamps, triggerPos, rate, channels, enabledChannels,
-          absoluteLength );
+      result = new CapturedData( values, timestamps, triggerPos, rate, channels, enabledChannels, absoluteLength );
     }
     finally
     {
-      aProject.setCapturedData( capturedData );
+      aProject.setCapturedData( result );
       aProject.setCursorPositions( cursorPositions );
       aProject.setCursorsEnabled( cursors );
     }
@@ -237,7 +237,7 @@ public final class OlsDataHelper
   {
     final BufferedWriter bw = new BufferedWriter( aWriter );
 
-    final CapturedData capturedData = aProject.getCapturedData();
+    final AcquisitionResult capturedData = aProject.getCapturedData();
 
     final Long[] cursors = aProject.getCursorPositions();
     final boolean cursorsEnabled = aProject.isCursorsEnabled();

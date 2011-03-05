@@ -47,7 +47,7 @@ public class OneWireDataSet extends BaseDataSet<OneWireData>
    * @param aEndOfDecodeIdx
    * @param aData
    */
-  public OneWireDataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final CapturedData aData )
+  public OneWireDataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final AcquisitionResult aData )
   {
     super( aStartOfDecodeIdx, aEndOfDecodeIdx, aData );
 

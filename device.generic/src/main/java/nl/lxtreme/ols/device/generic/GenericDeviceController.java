@@ -118,7 +118,7 @@ public class GenericDeviceController implements DeviceController
       {
         try
         {
-          final CapturedData data = get();
+          final AcquisitionResult data = get();
 
           aCallback.captureComplete( data );
         }

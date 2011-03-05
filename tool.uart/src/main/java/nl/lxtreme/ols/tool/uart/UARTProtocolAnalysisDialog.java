@@ -34,6 +34,7 @@ import java.util.logging.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
@@ -153,12 +154,18 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   // CONSTRUCTORS
 
   /**
+   * Creates a new UARTProtocolAnalysisDialog instance.
+   * 
    * @param aOwner
+   *          the owner of this dialog;
    * @param aName
+   *          the name of this dialog;
+   * @param aContext
+   *          the tool context.
    */
-  public UARTProtocolAnalysisDialog( final Window aOwner, final String aName )
+  public UARTProtocolAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
   {
-    super( aOwner, aName );
+    super( aOwner, aName, aContext );
 
     initDialog();
 
@@ -501,8 +508,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    */
   private JPanel createSettingsPane()
   {
-    int channelCount = 32; // TODO JaWi: this should reflect the current
-                           // device's capabilities...
+    final int channelCount = getChannels();
 
     final JPanel settings = new JPanel( new SpringLayout() );
 

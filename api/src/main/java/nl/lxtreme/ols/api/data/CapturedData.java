@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ * OpenBench LogicSniffer / SUMP project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,95 +21,331 @@
 package nl.lxtreme.ols.api.data;
 
 
+import java.util.*;
+
+import nl.lxtreme.ols.api.*;
+
+
 /**
- * @author jawi
+ * CapturedData encapsulates the data obtained by the analyzer during a single
+ * run.
+ * <p>
+ * In the java code each transition is represented by an integer together with a
+ * timestamp represented by a long value.
+ * 
+ * @author Michael "Mr. Sump" Poppitz
+ * @author J.W. Janssen
  */
-public interface CapturedData
+public class CapturedData implements AcquisitionResult
 {
-  // CONSTANTS
+  // VARIABLES
 
-  /** indicates that rate or trigger position are not available */
-  public final static int NOT_AVAILABLE = -1;
+  /** captured values */
+  private final int[] values;
 
-  /** The maximum number of cursors that can be set. */
-  public static final int MAX_CURSORS = 10;
-  /** The maximum number of channels. */
-  public static final int MAX_CHANNELS = 32;
-  /** The number of channels per block. */
-  public static final int CHANNELS_PER_BLOCK = 8;
-  /** The maximum number of blocks. */
-  public static final int MAX_BLOCKS = MAX_CHANNELS / CHANNELS_PER_BLOCK;
+  /** timestamp values in samples count from start */
+  private final long[] timestamps;
+
+  /** position of trigger as time value */
+  private final long triggerPosition;
+
+  /** sampling rate in Hz */
+  private final int rate;
+
+  /** number of channels (1-32) */
+  private final int channels;
+
+  /** bit map of enabled channels */
+  private final int enabledChannels;
+
+  /** absolute sample length */
+  private final long absoluteLength;
+
+  // CONSTRUCTORS
+
+  /**
+   * Constructs CapturedData based on the given absolute sampling data.
+   * 
+   * @param values
+   *          32bit values as read from device
+   * @param triggerPosition
+   *          position of trigger as time value
+   * @param rate
+   *          sampling rate (may be set to <code>NOT_AVAILABLE</code>)
+   * @param channels
+   *          number of used channels
+   * @param enabledChannels
+   *          bit mask identifying used channels
+   */
+  public CapturedData( final int[] values, final long triggerPosition, final int rate, final int channels,
+      final int enabledChannels )
+  {
+    this.triggerPosition = triggerPosition;
+    this.rate = rate;
+    this.channels = channels;
+    this.enabledChannels = enabledChannels;
+
+    // calculate transitions
+    int tmp = values[0];
+    int count = 1; // first value is the initial value at time 0
+    for ( final int value : values )
+    {
+      if ( tmp != value )
+      {
+        count++;
+      }
+      tmp = value;
+    }
+
+    this.timestamps = new long[count];
+    this.values = new int[count];
+    this.timestamps[0] = 0;
+    this.values[0] = values[0];
+
+    tmp = values[0];
+    count = 1;
+    for ( int i = 0; i < values.length; i++ )
+    {
+      if ( tmp != values[i] )
+      {
+        // store only transitions
+        this.timestamps[count] = i;
+        this.values[count] = values[i];
+        count++;
+      }
+      tmp = values[i];
+    }
+
+    this.absoluteLength = values.length;
+  }
 
   // METHODS
 
   /**
-   * Returns the absolute length of the captured data.
+   * Constructs CapturedData based on the given compressed sampling data.
    * 
-   * @return the absolute length, >= 0.
+   * @param values
+   *          32bit values as read from device
+   * @param timestamps
+   *          timstamps in number of samples since sample start
+   * @param triggerPosition
+   *          position of trigger as time value
+   * @param rate
+   *          sampling rate (may be set to <code>NOT_AVAILABLE</code>)
+   * @param channels
+   *          number of used channels
+   * @param enabledChannels
+   *          bit mask identifying used channels
+   * @param absLen
+   *          absolute number of samples
    */
-  public abstract long getAbsoluteLength();
+  public CapturedData( final int[] values, final long[] timestamps, final long triggerPosition, final int rate,
+      final int channels, final int enabledChannels, final long absLen )
+  {
+    this.values = values;
+    this.timestamps = timestamps;
+    this.triggerPosition = triggerPosition;
+    this.rate = rate;
+    this.channels = channels;
+    this.enabledChannels = enabledChannels;
+    this.absoluteLength = absLen;
+  }
 
   /**
-   * Returns the number of channels in the sample data.
+   * Constructs CapturedData based on the given compressed sampling data.
    * 
-   * @return the channel count, >= 0.
+   * @param aValues
+   *          32bit values as read from device
+   * @param aTimestamps
+   *          timstamps in number of samples since sample start
+   * @param aTriggerPosition
+   *          position of trigger as time value
+   * @param aRate
+   *          sampling rate (may be set to <code>NOT_AVAILABLE</code>)
+   * @param aChannels
+   *          number of used channels
+   * @param aEnabledChannels
+   *          bit mask identifying used channels
+   * @param aAbsoluteLength
+   *          absolute number of samples
    */
-  public abstract int getChannels();
+  public CapturedData( final List<Integer> aValues, final List<Long> aTimestamps, final long aTriggerPosition,
+      final int aRate, final int aChannels, final int aEnabledChannels, final long aAbsoluteLength )
+  {
+    this.values = new int[aValues.size()];
+    this.timestamps = new long[aTimestamps.size()];
+
+    if ( this.values.length != this.timestamps.length )
+    {
+      throw new IllegalArgumentException( "Values and timestamps size mismatch!" );
+    }
+
+    for ( int i = 0, size = aValues.size(); i < size; i++ )
+    {
+      this.values[i] = aValues.get( i ).intValue();
+      this.timestamps[i] = aTimestamps.get( i ).longValue();
+    }
+
+    this.triggerPosition = aTriggerPosition;
+    this.rate = aRate;
+    this.channels = aChannels;
+    this.enabledChannels = aEnabledChannels;
+    this.absoluteLength = aAbsoluteLength;
+  }
 
   /**
-   * Returns the number of enabled channels in the sample data.
+   * Provides a binary search for arrays of long-values.
+   * <p>
+   * This implementation is directly copied from the JDK
+   * {@link Arrays#binarySearch(long[], long)} implementation, slightly modified
+   * to only perform a single comparison-action.
+   * </p>
    * 
-   * @return the enabled channels, >= 0.
+   * @param aArray
+   *          the array of long values to search in;
+   * @param aFromIndex
+   *          the from index to search from;
+   * @param aToIndex
+   *          the to index to search up and until;
+   * @param aKey
+   *          the value to search for.
+   * @return the index of the given key, which is either the greatest index of
+   *         the value less or equal to the given key.
+   * @see Arrays#binarySearch(long[], long)
    */
-  public abstract int getEnabledChannels();
+  static final int binarySearch( final long[] aArray, final int aFromIndex, final int aToIndex, final Long aKey )
+  {
+    int mid = -1;
+    int low = aFromIndex;
+    int high = aToIndex - 1;
+
+    while ( low <= high )
+    {
+      mid = ( low + high ) >>> 1;
+      final Long midVal = Long.valueOf( aArray[mid] );
+
+      final int c = aKey.compareTo( midVal );
+      if ( c > 0 )
+      {
+        low = mid + 1;
+      }
+      else if ( c < 0 )
+      {
+        high = mid - 1;
+      }
+      else
+      {
+        return mid; // key found
+      }
+    }
+
+    if ( mid < 0 )
+    {
+      return low;
+    }
+
+    // Determine the insertion point, avoid crossing the array boundaries...
+    if ( mid < aToIndex - 1 )
+    {
+      // If the searched value is greater than the value of the found index,
+      // insert it after this value, otherwise before it (= the last return)...
+      if ( aKey.longValue() > aArray[mid] )
+      {
+        return mid + 1;
+      }
+    }
+
+    return mid;
+  }
 
   /**
-   * Returns the sample index from the given absolute time value.
-   * 
-   * @param aTimeValue
-   *          the (absolute) time value to convert to a sample index.
-   * @return the sample number <em>before</b> the selected absolute time.
+   * @see nl.lxtreme.ols.api.data.CapturedData#getAbsoluteLength()
    */
-  public abstract int getSampleIndex( final long aTimeValue );
+  @Override
+  public final long getAbsoluteLength()
+  {
+    return this.absoluteLength;
+  }
 
   /**
-   * Returns the sample rate in which this data was captured.
-   * 
-   * @return a sample rate in hertz (Hz).
+   * @see nl.lxtreme.ols.api.data.CapturedData#getChannels()
    */
-  public abstract int getSampleRate();
+  @Override
+  public final int getChannels()
+  {
+    return this.channels;
+  }
 
   /**
-   * Returns the time stamp data.
-   * 
-   * @return the time stamps, as array of long values.
+   * @see nl.lxtreme.ols.api.data.CapturedData#getEnabledChannels()
    */
-  public abstract long[] getTimestamps();
+  @Override
+  public final int getEnabledChannels()
+  {
+    return this.enabledChannels;
+  }
 
   /**
-   * Returns the trigger position, as (absolute) time-value.
-   * 
-   * @return a value representing the trigger position in time.
+   * @see nl.lxtreme.ols.api.data.CapturedData#getSampleIndex(long)
    */
-  public abstract long getTriggerPosition();
+  @Override
+  public final int getSampleIndex( final long abs )
+  {
+    return binarySearch( this.timestamps, 0, this.timestamps.length, Long.valueOf( abs ) );
+  }
 
   /**
-   * @return the values
+   * @see nl.lxtreme.ols.api.data.CapturedData#getSampleRate()
    */
-  public abstract int[] getValues();
+  @Override
+  public final int getSampleRate()
+  {
+    return this.rate;
+  }
 
   /**
-   * Returns wether or not the object contains timing data
-   * 
-   * @return <code>true</code> when timing data is available
+   * @see nl.lxtreme.ols.api.data.CapturedData#getTimestamps()
    */
-  public abstract boolean hasTimingData();
+  @Override
+  public final long[] getTimestamps()
+  {
+    return this.timestamps;
+  }
 
   /**
-   * Returns wether or not the object contains trigger data
-   * 
-   * @return <code>true</code> when trigger data is available
+   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerPosition()
    */
-  public abstract boolean hasTriggerData();
+  @Override
+  public final long getTriggerPosition()
+  {
+    return this.triggerPosition;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.CapturedData#getValues()
+   */
+  @Override
+  public final int[] getValues()
+  {
+    return this.values;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.CapturedData#hasTimingData()
+   */
+  @Override
+  public final boolean hasTimingData()
+  {
+    return ( this.rate != Ols.NOT_AVAILABLE );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.CapturedData#hasTriggerData()
+   */
+  @Override
+  public final boolean hasTriggerData()
+  {
+    return ( this.triggerPosition != Ols.NOT_AVAILABLE );
+  }
 
 }

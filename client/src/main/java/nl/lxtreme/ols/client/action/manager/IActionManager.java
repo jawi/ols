@@ -58,6 +58,18 @@ public interface IActionManager
   IManagedAction getAction( final String aId ) throws IllegalArgumentException;
 
   /**
+   * Returns all actions of a certain (action-based) class.
+   * 
+   * @param aActionType
+   *          the type of the actions to return, cannot be <code>null</code>.
+   * @return an array of action matching the given type, never <code>null</code>
+   *         .
+   * @throws IllegalArgumentException
+   *           in case the given type was <code>null</code>.
+   */
+  IManagedAction[] getActionByType( Class<? extends IManagedAction> aActionType );
+
+  /**
    * Removes a given action from this manager.
    * 
    * @param aAction

@@ -18,36 +18,29 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.tools;
-
-
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
+package nl.lxtreme.ols.api;
 
 
 /**
- * Denotes a callback for use in {@link Tool}s.
+ * Defines some bare constants, used throughout the rest of the application.
  */
-public interface AnalysisCallback extends ProgressCallback
+public interface Ols
 {
   // METHODS
 
-  /**
-   * Called upon abnormal termination of the analysis.
-   * 
-   * @param aReason
-   *          an optional reason why the analysis might be aborted, can be
-   *          <code>null</code> or empty.
-   */
-  void analysisAborted( final String aReason );
+  /** indicates that rate or trigger position are not available */
+  public final static int NOT_AVAILABLE = -1;
 
-  /**
-   * Called when the analysis is complete.
-   * 
-   * @param aNewCapturedData
-   *          the (optional) new captured data, can be <code>null</code>.
-   */
-  void analysisComplete( final AcquisitionResult aNewCapturedData );
+  /** The maximum number of cursors that can be set. */
+  public static final int MAX_CURSORS = 10;
+
+  /** The maximum number of channels. */
+  public static final int MAX_CHANNELS = 32;
+
+  /** The number of channels per block. */
+  public static final int CHANNELS_PER_BLOCK = 8;
+
+  /** The maximum number of blocks. */
+  public static final int MAX_BLOCKS = MAX_CHANNELS / CHANNELS_PER_BLOCK;
+
 }
-
-/* EOF */

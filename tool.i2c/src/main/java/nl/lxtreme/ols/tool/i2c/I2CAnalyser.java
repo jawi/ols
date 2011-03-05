@@ -47,18 +47,16 @@ public class I2CAnalyser extends BaseAsyncTool<I2CProtocolAnalysisDialog, I2CDat
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String)
+   * {@inheritDoc}
    */
   @Override
-  protected I2CProtocolAnalysisDialog createDialog( final Window aOwner, final String aName )
+  protected I2CProtocolAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
   {
-    return new I2CProtocolAnalysisDialog( aOwner, getName() );
+    return new I2CProtocolAnalysisDialog( aOwner, getName(), aContext );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
-   *      ToolContext)
+   * {@inheritDoc}
    */
   @Override
   protected I2CAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
@@ -67,7 +65,7 @@ public class I2CAnalyser extends BaseAsyncTool<I2CProtocolAnalysisDialog, I2CDat
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onPropertyChange(java.beans.PropertyChangeEvent)
+   * {@inheritDoc}
    */
   @Override
   protected void onPropertyChange( final PropertyChangeEvent aEvent )

@@ -23,6 +23,7 @@ package nl.lxtreme.ols.tool.state;
 
 import java.util.logging.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
@@ -31,7 +32,7 @@ import nl.lxtreme.ols.tool.base.*;
 /**
  * 
  */
-public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
+public class StateAnalysisWorker extends BaseAsyncToolWorker<AcquisitionResult>
 {
   // CONSTANTS
 
@@ -83,7 +84,7 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
-  protected CapturedDataImpl doInBackground() throws Exception
+  protected CapturedData doInBackground() throws Exception
   {
     // obtain data from captured data
     final int[] values = getValues();
@@ -131,7 +132,7 @@ public class StateAnalysisWorker extends BaseAsyncToolWorker<CapturedData>
       last = current;
     }
 
-    final CapturedDataImpl newCapturedData = new CapturedDataImpl( newValues, newTrigger, CapturedData.NOT_AVAILABLE,
+    final CapturedData newCapturedData = new CapturedData( newValues, newTrigger, Ols.NOT_AVAILABLE,
         getChannels(), getEnabledChannels() );
     setCapturedData( newCapturedData );
 

@@ -27,6 +27,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -35,7 +36,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * @author jawi
  */
-public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData, StateAnalysisWorker>
+public final class StateAnalysisDialog extends BaseAsyncToolDialog<AcquisitionResult, StateAnalysisWorker>
 {
   // INNER TYPES
 
@@ -82,12 +83,18 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
   // CONSTRUCTORS
 
   /**
+   * Creates a new StateAnalysisDialog instance.
+   * 
    * @param aOwner
+   *          the owner of this dialog;
    * @param aName
+   *          the name of this dialog;
+   * @param aContext
+   *          the tool context.
    */
-  public StateAnalysisDialog( final Window aOwner, final String aName )
+  public StateAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
   {
-    super( aOwner, aName );
+    super( aOwner, aName, aContext );
 
     initDialog();
 
@@ -166,8 +173,7 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
    */
   private JPanel createContentPane()
   {
-    int channelCount = 32; // TODO JaWi: this should reflect the current
-                           // device's capabilities...
+    final int channelCount = getChannels();
 
     this.channelSelect = SwingComponentUtils.createChannelSelector( channelCount );
     this.channelSelect.setSelectedIndex( 0 );

@@ -25,7 +25,7 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.*;
 
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
@@ -128,9 +128,9 @@ final class ConfigDialogHelper
       final JCheckBox[] triggerValues = aTriggerValues[i];
 
       assert triggerMasks.length == triggerValues.length;
-      assert triggerMasks.length == CapturedData.MAX_CHANNELS;
+      assert triggerMasks.length == Ols.MAX_CHANNELS;
 
-      for ( int j = 0; j < CapturedData.MAX_CHANNELS; j++ )
+      for ( int j = 0; j < Ols.MAX_CHANNELS; j++ )
       {
         final boolean triggerEnabled = stageEnabled && ( j < maxChannels );
         updateCheckBoxState( triggerMasks[j], triggerEnabled );

@@ -26,7 +26,6 @@ import static org.junit.Assert.*;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorScheme;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
@@ -87,7 +86,7 @@ public class MutableDiagramSettingsTest
     final Color[] colors = { Color.BLACK, Color.BLUE, Color.WHITE };
 
     final MutableDiagramSettings settings = new MutableDiagramSettings();
-    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
     {
       final Color color = colors[i % colors.length];
 
@@ -142,7 +141,7 @@ public class MutableDiagramSettingsTest
 
     final MutableDiagramSettings settings = new MutableDiagramSettings();
 
-    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
 
       final Color color = colors[i % colors.length];
@@ -168,7 +167,7 @@ public class MutableDiagramSettingsTest
   public void testGetDefaultChannelColor()
   {
     final MutableDiagramSettings settings = new MutableDiagramSettings();
-    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
     {
       assertNotNull( settings.getChannelColor( i ) );
     }
@@ -209,7 +208,7 @@ public class MutableDiagramSettingsTest
   public void testGetDefaultCursorColor()
   {
     final MutableDiagramSettings settings = new MutableDiagramSettings();
-    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       assertNotNull( settings.getCursorColor( i ) );
     }
@@ -506,7 +505,7 @@ public class MutableDiagramSettingsTest
   {
     final MutableDiagramSettings settings = new MutableDiagramSettings();
 
-    for ( int i = 0; i < CapturedData.MAX_BLOCKS; i++ )
+    for ( int i = 0; i < Ols.MAX_BLOCKS; i++ )
     {
       settings.setShowByte( i, true );
       assertTrue( settings.isShowByte( i ) );
@@ -524,7 +523,7 @@ public class MutableDiagramSettingsTest
   {
     final MutableDiagramSettings settings = new MutableDiagramSettings();
 
-    for ( int i = 0; i < CapturedData.MAX_BLOCKS; i++ )
+    for ( int i = 0; i < Ols.MAX_BLOCKS; i++ )
     {
       settings.setShowChannels( i, true );
       assertTrue( settings.isShowChannels( i ) );
@@ -557,7 +556,7 @@ public class MutableDiagramSettingsTest
   {
     final MutableDiagramSettings settings = new MutableDiagramSettings();
 
-    for ( int i = 0; i < CapturedData.MAX_BLOCKS; i++ )
+    for ( int i = 0; i < Ols.MAX_BLOCKS; i++ )
     {
       settings.setShowScope( i, true );
       assertTrue( settings.isShowScope( i ) );
@@ -606,7 +605,7 @@ public class MutableDiagramSettingsTest
   @Test( expected = IllegalArgumentException.class )
   public void testSetCursorColorWithTooLargeIndexFail()
   {
-    new MutableDiagramSettings().setCursorColor( CapturedData.MAX_CURSORS, Color.BLACK );
+    new MutableDiagramSettings().setCursorColor( Ols.MAX_CURSORS, Color.BLACK );
   }
 
   /**
@@ -815,7 +814,7 @@ public class MutableDiagramSettingsTest
   @Test( expected = IllegalArgumentException.class )
   public void testSetShowByteForTooLargeGroupIndexFail()
   {
-    new MutableDiagramSettings().setShowByte( CapturedData.MAX_BLOCKS, false );
+    new MutableDiagramSettings().setShowByte( Ols.MAX_BLOCKS, false );
   }
 
   /**
@@ -835,7 +834,7 @@ public class MutableDiagramSettingsTest
   @Test( expected = IllegalArgumentException.class )
   public void testSetShowChannelsForTooLargeGroupIndexFail()
   {
-    new MutableDiagramSettings().setShowChannels( CapturedData.MAX_BLOCKS, false );
+    new MutableDiagramSettings().setShowChannels( Ols.MAX_BLOCKS, false );
   }
 
   /**
@@ -853,7 +852,7 @@ public class MutableDiagramSettingsTest
   @Test( expected = IllegalArgumentException.class )
   public void testSetShowScopeForTooLargeGroupIndexFail()
   {
-    new MutableDiagramSettings().setShowScope( CapturedData.MAX_BLOCKS, false );
+    new MutableDiagramSettings().setShowScope( Ols.MAX_BLOCKS, false );
   }
 
   /**
@@ -873,7 +872,7 @@ public class MutableDiagramSettingsTest
   @Test( expected = IllegalArgumentException.class )
   public void testSetTooLargeIndexOfChannelColorFail()
   {
-    new MutableDiagramSettings().setChannelColor( CapturedData.MAX_CHANNELS, Color.BLACK );
+    new MutableDiagramSettings().setChannelColor( Ols.MAX_CHANNELS, Color.BLACK );
   }
 
   /**

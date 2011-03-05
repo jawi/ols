@@ -49,7 +49,7 @@ final class ProjectImpl implements Project, ProjectProperties
   private final String[] channelLabels;
   private final Long[] cursors;
   private final Map<String, UserSettings> settings;
-  private CapturedData capturedData;
+  private AcquisitionResult capturedData;
   private boolean changed;
   private boolean cursorsEnabled;
   private Date lastModified;
@@ -67,8 +67,8 @@ final class ProjectImpl implements Project, ProjectProperties
 
     this.propertyChangeSupport = new PropertyChangeSupport( this );
 
-    this.cursors = new Long[CapturedData.MAX_CURSORS];
-    this.channelLabels = new String[CapturedData.MAX_CHANNELS];
+    this.cursors = new Long[Ols.MAX_CURSORS];
+    this.channelLabels = new String[Ols.MAX_CHANNELS];
 
     this.changed = false;
     this.cursorsEnabled = false;
@@ -90,10 +90,10 @@ final class ProjectImpl implements Project, ProjectProperties
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getCapturedData()
+   * {@inheritDoc}
    */
   @Override
-  public CapturedData getCapturedData()
+  public AcquisitionResult getCapturedData()
   {
     return this.capturedData;
   }
@@ -197,12 +197,12 @@ final class ProjectImpl implements Project, ProjectProperties
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setCapturedData(nl.lxtreme.ols.api.data.CapturedData)
+   * {@inheritDoc}
    */
   @Override
-  public void setCapturedData( final CapturedData aCapturedData )
+  public void setCapturedData( final AcquisitionResult aCapturedData )
   {
-    final CapturedData old = this.capturedData;
+    final AcquisitionResult old = this.capturedData;
     this.capturedData = aCapturedData;
 
     this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA, old, aCapturedData );

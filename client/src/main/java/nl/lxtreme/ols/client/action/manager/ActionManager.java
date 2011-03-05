@@ -34,7 +34,7 @@ public final class ActionManager implements IActionManager
 {
   // VARIABLES
 
-  private final Map<String, IManagedAction> registry;
+  private final ConcurrentMap<String, IManagedAction> registry;
 
   // CONSTRUCTORS
 
@@ -49,7 +49,7 @@ public final class ActionManager implements IActionManager
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.client.action.manager.IActionManager#add(nl.lxtreme.ols.client.action.IManagedAction)
+   * {@inheritDoc}
    */
   @Override
   public IManagedAction add( final IManagedAction aAction ) throws IllegalArgumentException
@@ -75,7 +75,7 @@ public final class ActionManager implements IActionManager
   }
 
   /**
-   * @see nl.lxtreme.ols.client.action.manager.IActionManager#getAction(java.lang.String)
+   * {@inheritDoc}
    */
   @Override
   public IManagedAction getAction( final String aId ) throws IllegalArgumentException
@@ -95,7 +95,24 @@ public final class ActionManager implements IActionManager
   }
 
   /**
-   * @see nl.lxtreme.ols.client.action.manager.IActionManager#remove(nl.lxtreme.ols.client.action.IManagedAction)
+   * {@inheritDoc}
+   */
+  @Override
+  public IManagedAction[] getActionByType( final Class<? extends IManagedAction> aActionType )
+  {
+    final List<IManagedAction> actions = new ArrayList<IManagedAction>();
+    for ( IManagedAction action : this.registry.values() )
+    {
+      if ( aActionType.isAssignableFrom( action.getClass() ) )
+      {
+        actions.add( action );
+      }
+    }
+    return actions.toArray( new IManagedAction[actions.size()] );
+  }
+
+  /**
+   * {@inheritDoc}
    */
   @Override
   public void remove( final IManagedAction aAction ) throws IllegalArgumentException

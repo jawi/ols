@@ -28,7 +28,7 @@ import java.util.List;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
@@ -109,7 +109,7 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
    */
   final void clearAllLabels()
   {
-    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
     {
       this.labelFields[i].setText( "" );
     }
@@ -120,7 +120,7 @@ public class DiagramLabelsDialog extends JDialog implements Closeable
    */
   final void publishAllLabels()
   {
-    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
     {
       final String newLabel = this.labelFields[i].getText();
       this.channelLabels[i] = StringUtils.isEmpty( newLabel ) ? null : newLabel.trim();

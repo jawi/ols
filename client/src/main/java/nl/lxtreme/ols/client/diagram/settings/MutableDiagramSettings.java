@@ -24,7 +24,6 @@ package nl.lxtreme.ols.client.diagram.settings;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.data.settings.*;
 
 
@@ -76,13 +75,13 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
     {
       setColorScheme( aDiagramSettings.getColorScheme() );
       setBackgroundColor( aDiagramSettings.getBackgroundColor() );
-      for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
+      for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
       {
         setChannelColor( i, aDiagramSettings.getChannelColor( i ) );
       }
       setChannelHeight( aDiagramSettings.getChannelHeight() );
       setColorTarget( aDiagramSettings.getColorTarget() );
-      for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+      for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
       {
         setCursorColor( i, aDiagramSettings.getCursorColor( i ) );
       }
@@ -93,7 +92,7 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
       setLabelColor( aDiagramSettings.getLabelColor() );
       setScopeColor( aDiagramSettings.getScopeColor() );
       setScopeHeight( aDiagramSettings.getScopeHeight() );
-      for ( int i = 0; i < CapturedData.MAX_BLOCKS; i++ )
+      for ( int i = 0; i < Ols.MAX_BLOCKS; i++ )
       {
         setShowByte( i, aDiagramSettings.isShowByte( i ) );
         setShowChannels( i, aDiagramSettings.isShowChannels( i ) );
@@ -145,7 +144,7 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
   @Override
   public final Color getChannelColor( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx >= CapturedData.MAX_CHANNELS ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx >= Ols.MAX_CHANNELS ) )
     {
       throw new IllegalArgumentException( "Invalid channel index!" );
     }
@@ -186,7 +185,7 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
   @Override
   public final Color getCursorColor( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= CapturedData.MAX_CURSORS ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= Ols.MAX_CURSORS ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
@@ -370,7 +369,7 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
     {
       throw new IllegalArgumentException( "Channel color cannot be null!" );
     }
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx >= CapturedData.MAX_CHANNELS ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx >= Ols.MAX_CHANNELS ) )
     {
       throw new IllegalArgumentException( "Invalid channel index!" );
     }
@@ -433,7 +432,7 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
     {
       throw new IllegalArgumentException( "Cursor color cannot be null!" );
     }
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= CapturedData.MAX_CURSORS ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= Ols.MAX_CURSORS ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
@@ -710,7 +709,7 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
   {
     if ( ColorScheme.LIGHT.equals( DEFAULT_COLOR_SCHEME ) )
     {
-      return makePaletteColor( aCursorIdx, CapturedData.MAX_CURSORS );
+      return makePaletteColor( aCursorIdx, Ols.MAX_CURSORS );
     }
     return getDefaultSignalColor();
   }
@@ -829,7 +828,7 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
    */
   private int getGroupSetting( final int aGroupIdx )
   {
-    if ( ( aGroupIdx < 0 ) || ( aGroupIdx >= CapturedData.MAX_BLOCKS ) )
+    if ( ( aGroupIdx < 0 ) || ( aGroupIdx >= Ols.MAX_BLOCKS ) )
     {
       throw new IllegalArgumentException( "Invalid group index!" );
     }
@@ -884,12 +883,12 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
     delete( "timeColor" );
     delete( "triggerColor" );
 
-    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
     {
       String name = "channelColor." + i;
       delete( name );
     }
-    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       String name = "cursorColor." + i;
       delete( name );
@@ -902,7 +901,7 @@ public class MutableDiagramSettings extends UserSettingsImpl implements DiagramS
    */
   private void setGroupSetting( final int aGroupIdx, final int aGroupSetting )
   {
-    if ( ( aGroupIdx < 0 ) || ( aGroupIdx >= CapturedData.MAX_BLOCKS ) )
+    if ( ( aGroupIdx < 0 ) || ( aGroupIdx >= Ols.MAX_BLOCKS ) )
     {
       throw new IllegalArgumentException( "Invalid group index!" );
     }
