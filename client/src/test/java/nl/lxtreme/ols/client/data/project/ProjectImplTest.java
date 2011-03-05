@@ -173,7 +173,7 @@ public class ProjectImplTest
     this.project.setChannelLabels( "a", "b", "c" );
     ensure.waitForStep( 2, 500 );
 
-    this.project.setCursorPositions( 100L );
+    this.project.setCursorPositions( Long.valueOf( 100L ) );
     ensure.waitForStep( 3, 500 );
 
     this.project.setCursorsEnabled( true );
@@ -233,10 +233,10 @@ public class ProjectImplTest
   public void testSetCursorPositions()
   {
     final Long[] cursors = new Long[CapturedData.MAX_CURSORS];
-    cursors[0] = 1L;
-    cursors[1] = 2L;
-    cursors[2] = 3L;
-    cursors[3] = 4L;
+    cursors[0] = Long.valueOf( 1L );
+    cursors[1] = Long.valueOf( 2L );
+    cursors[2] = Long.valueOf( 3L );
+    cursors[3] = Long.valueOf( 4L );
     this.project.setCursorPositions( cursors );
 
     assertNotSame( cursors, this.project.getCursorPositions() );
