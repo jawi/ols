@@ -520,9 +520,20 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       return ( DiagramSettings )settings;
     }
 
-    // Overwrite the default created user settings object with our own...
+    // Overwrite the default created user settings object with our own. This
+    // should be done implicitly, so make sure we keep the project's change flag
+    // in the correct state...
     final MutableDiagramSettings diagramSettings = new MutableDiagramSettings( settings );
-    currentProject.setSettings( diagramSettings );
+
+    final boolean oldChangedFlag = currentProject.isChanged();
+    try
+    {
+      currentProject.setSettings( diagramSettings );
+    }
+    finally
+    {
+      currentProject.setChanged( oldChangedFlag );
+    }
 
     return diagramSettings;
   }
