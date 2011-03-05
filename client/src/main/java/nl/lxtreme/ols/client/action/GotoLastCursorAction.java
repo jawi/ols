@@ -40,13 +40,16 @@ public class GotoLastCursorAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * @param aDiagramScrollPane
+   * Creates a new GotoLastCursorAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public GotoLastCursorAction( final ClientController aController )
+  public GotoLastCursorAction( final IClientController aController )
   {
     super( ID, aController, ICON_GOTO_LAST_CURSOR, "Go to highest cursor",
         "Go to the cursor with highest index in diagram" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_L ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_L ) );
   }
 
   // METHODS

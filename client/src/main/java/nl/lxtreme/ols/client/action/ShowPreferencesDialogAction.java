@@ -29,25 +29,29 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- *
+ * Provides a "show preferences" action, allowing the general settings to be
+ * edited.
  */
-public class ShowModeSettingsAction extends BaseAction
+public class ShowPreferencesDialogAction extends BaseAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "ShowModeSettings";
+  public static final String ID = "ShowPreferencesDialogAction";
 
   // CONSTRUCTORS
 
   /**
-   *
+   * Creates a new ShowPreferencesDialogAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public ShowModeSettingsAction( final ClientController aController )
+  public ShowPreferencesDialogAction( final IClientController aController )
   {
-    super( ID, aController, "Diagram mode settings", "Show the mode settings dialog" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_M ) );
+    super( ID, aController, "Preferences", "Show the preferences dialog" );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_P ) );
   }
 
   // METHODS
@@ -59,7 +63,7 @@ public class ShowModeSettingsAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-    getController().showModeSettingsDialog( owner );
+    getController().showPreferencesDialog( owner );
   }
 }
 

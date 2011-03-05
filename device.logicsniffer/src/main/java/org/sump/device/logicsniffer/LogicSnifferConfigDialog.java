@@ -291,7 +291,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   private JLabel ratioLabel;
   private JLabel warningLabel;
 
-  private transient volatile boolean listening = true;
+  private volatile boolean listening = true;
 
   // CONSTRUCTORS
 

@@ -99,7 +99,7 @@ public final class TextElement implements Element
     try
     {
       final TextElement result = ( TextElement )super.clone();
-      result.value = new String( this.value );
+      result.value = this.value;
       return result;
     }
     catch ( CloneNotSupportedException exception )

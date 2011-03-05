@@ -132,7 +132,7 @@ public class ValueChangeDumpHelper
       aWriter.println();
       aWriter.printf( "  %s", value );
     }
-    if ( ( aValues != null ) && ( aValues.length > 0 ) )
+    if ( aValues.length > 0 )
     {
       aWriter.println();
     }

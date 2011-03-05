@@ -76,40 +76,40 @@ public class BundleServiceObserver extends AbstractBundleObserver
   protected void doAdded( final Bundle aBundle, final ManifestHeader... aEntries )
   {
     final String[] values = getManifestHeaderValues( this.serviceKey, aEntries );
-    if ( values != null )
+    if ( values.length == 0 )
     {
-      final BundleContext bundleContext = aBundle.getBundleContext();
+      return;
+    }
 
-      for ( String className : values )
+    final BundleContext bundleContext = aBundle.getBundleContext();
+    for ( String className : values )
+    {
+      try
       {
-        try
-        {
-          final Class<?> clazz = aBundle.loadClass( className );
+        final Class<?> clazz = aBundle.loadClass( className );
 
-          final Object newService = clazz.newInstance();
+        final Object newService = clazz.newInstance();
 
-          bundleContext
-              .registerService( this.serviceClassName, newService, getServiceProperties( aBundle, newService ) );
+        bundleContext.registerService( this.serviceClassName, newService, getServiceProperties( aBundle, newService ) );
 
-          // Give the just registered service to do additional tasks as well...
-          initializeService( newService, bundleContext );
+        // Give the just registered service to do additional tasks as well...
+        initializeService( newService, bundleContext );
 
-          LOG.log( Level.INFO, "New service (" + className + ") registered ..." );
-        }
-        catch ( ClassNotFoundException exception )
-        {
-          LOG.log( Level.WARNING, "Service class not found: " + className + "! Is it included in the bundle?" );
-        }
-        catch ( InstantiationException exception )
-        {
-          LOG.log( Level.WARNING, "Service (" + className
-              + ") could not be instantiated! Is should be a public concrete class (not abstract, nor an interface!)" );
-        }
-        catch ( IllegalAccessException exception )
-        {
-          LOG.log( Level.WARNING, "Service (" + className
-              + ") could not be instantiated! Is the class public and does it have a public default constructor?" );
-        }
+        LOG.log( Level.INFO, "New service (" + className + ") registered ..." );
+      }
+      catch ( ClassNotFoundException exception )
+      {
+        LOG.log( Level.WARNING, "Service class not found: " + className + "! Is it included in the bundle?" );
+      }
+      catch ( InstantiationException exception )
+      {
+        LOG.log( Level.WARNING, "Service (" + className
+            + ") could not be instantiated! Is should be a public concrete class (not abstract, nor an interface!)" );
+      }
+      catch ( IllegalAccessException exception )
+      {
+        LOG.log( Level.WARNING, "Service (" + className
+            + ") could not be instantiated! Is the class public and does it have a public default constructor?" );
       }
     }
   }
@@ -122,12 +122,14 @@ public class BundleServiceObserver extends AbstractBundleObserver
   protected void doRemoved( final Bundle aBundle, final ManifestHeader... aEntries )
   {
     final String[] values = getManifestHeaderValues( this.serviceKey, aEntries );
-    if ( values != null )
+    if ( values.length == 0 )
     {
-      for ( String className : values )
-      {
-        LOG.log( Level.INFO, "Service (" + className + ") unregistered ..." );
-      }
+      return;
+    }
+
+    for ( String className : values )
+    {
+      LOG.log( Level.INFO, "Service (" + className + ") unregistered ..." );
     }
   }
 

@@ -29,7 +29,7 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * @author jawi
+ * Provides an action that shows a dialog with all OSGi bundles.
  */
 public class ShowBundlesAction extends BaseAction
 {
@@ -45,14 +45,14 @@ public class ShowBundlesAction extends BaseAction
 
   /**
    * Creates a new ShowBundlesAction instance.
-   *
+   * 
    * @param aController
-   *          the client controller to use, cannot be <code>null</code>.
+   *          the controller to use, cannot be <code>null</code>.
    */
-  public ShowBundlesAction( final ClientController aController )
+  public ShowBundlesAction( final IClientController aController )
   {
-    super( ID, aController, "Show Bundles", "Show running OSGi bundles" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_B ) );
+    super( ID, aController, "Show Bundles", "Show all available OSGi bundles." );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_B ) );
   }
 
   // METHODS

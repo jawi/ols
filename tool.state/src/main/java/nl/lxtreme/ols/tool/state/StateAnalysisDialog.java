@@ -166,12 +166,10 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
    */
   private JPanel createContentPane()
   {
-    final String[] channels = new String[32];
-    for ( int i = 0; i < channels.length; i++ )
-    {
-      channels[i] = Integer.toString( i );
-    }
-    this.channelSelect = new JComboBox( channels );
+    int channelCount = 32; // TODO JaWi: this should reflect the current
+                           // device's capabilities...
+
+    this.channelSelect = SwingComponentUtils.createChannelSelector( channelCount );
     this.channelSelect.setSelectedIndex( 0 );
 
     this.edgeSelect = new JComboBox( new Edge[] { Edge.RISING, Edge.FALLING } );
@@ -181,10 +179,10 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<CapturedData,
     final JPanel pane = new JPanel( new GridLayout( 2, 2, 5, 5 ) );
     pane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 0 ) );
 
-    pane.add( new JLabel( "Clock Channel:" ) );
+    pane.add( new JLabel( "Clock Channel" ) );
     pane.add( this.channelSelect );
 
-    pane.add( new JLabel( "Clock Edge:" ) );
+    pane.add( new JLabel( "Clock Edge" ) );
     pane.add( this.edgeSelect );
     return pane;
   }

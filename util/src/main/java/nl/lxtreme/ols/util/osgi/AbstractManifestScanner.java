@@ -56,7 +56,7 @@ public abstract class AbstractManifestScanner implements BundleScanner
 
     if ( entries.isEmpty() )
     {
-      return null;
+      return new ManifestHeader[0];
     }
 
     return entries.toArray( new ManifestHeader[entries.size()] );

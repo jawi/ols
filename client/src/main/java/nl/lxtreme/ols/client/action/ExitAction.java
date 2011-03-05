@@ -28,7 +28,7 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * 
+ * Provides an exit action that shuts down the client entirely.
  */
 public class ExitAction extends BaseAction
 {
@@ -42,13 +42,16 @@ public class ExitAction extends BaseAction
 
   /**
    * Creates a new ExitAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public ExitAction( final ClientController aController )
+  public ExitAction( final IClientController aController )
   {
     super( ID, aController, "Quit", "Quit LogicSniffer Client" );
 
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_Q ) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_Q ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_Q ) );
   }
 
   // METHODS

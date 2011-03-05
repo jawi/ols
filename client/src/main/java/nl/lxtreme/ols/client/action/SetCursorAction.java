@@ -33,7 +33,7 @@ import nl.lxtreme.ols.util.*;
 
 
 /**
- *
+ * Provides a "set cursor N" action.
  */
 public class SetCursorAction extends BaseAction
 {
@@ -50,10 +50,14 @@ public class SetCursorAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * @param aName
-   * @param aDescription
+   * Creates a new SetCursorAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action;
+   * @param aCursorIdx
+   *          the index of the cursor to set with this action, >= 0 && < 10.
    */
-  public SetCursorAction( final ClientController aController, final int aCursorIdx )
+  public SetCursorAction( final IClientController aController, final int aCursorIdx )
   {
     super( getCursorId( aCursorIdx ), aController, "Set Cursor " + ( aCursorIdx + 1 ), "Set the "
         + DisplayUtils.getOrdinalNumber( aCursorIdx + 1 ) + " cursor" );
@@ -64,7 +68,7 @@ public class SetCursorAction extends BaseAction
 
   /**
    * Returns the action ID for the given cursor index.
-   *
+   * 
    * @param aCursorIdx
    *          the cursor index, >= 0 && < 10.
    * @return a "set cursor" action ID, never <code>null</code>.
@@ -100,7 +104,7 @@ public class SetCursorAction extends BaseAction
   /**
    * Returns the context menu location client property of the given menu item's
    * popup menu.
-   *
+   * 
    * @param aMenuItem
    *          the menu item to return the client property of, cannot be
    *          <code>null</code>.

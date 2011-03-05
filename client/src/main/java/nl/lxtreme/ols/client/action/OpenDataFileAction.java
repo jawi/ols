@@ -36,7 +36,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
- * 
+ * Provides an "open data file" action.
  */
 public class OpenDataFileAction extends BaseAction
 {
@@ -55,12 +55,15 @@ public class OpenDataFileAction extends BaseAction
   // CONSTRUCTORS
 
   /**
+   * Creates a new OpenDataFileAction instance.
    * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public OpenDataFileAction( final ClientController aController )
+  public OpenDataFileAction( final IClientController aController )
   {
     super( ID, aController, ICON_OPEN_DATAFILE, "Open ...", "Open an existing data file" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_O ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_O ) );
   }
 
   // METHODS
@@ -73,26 +76,23 @@ public class OpenDataFileAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    try
+    final File file = SwingComponentUtils.showFileOpenDialog( owner, OLS_FILEFILTER );
+    if ( file != null )
     {
-      final File file = SwingComponentUtils.showFileOpenDialog( owner, OLS_FILEFILTER );
-      if ( ( file != null ) && file.isFile() )
-      {
-        if ( LOG.isLoggable( Level.INFO ) )
-        {
-          LOG.info( "Loading OLS capture date from file: " + file );
-        }
+      LOG.log( Level.INFO, "Saving capture data from file '{0}'", file );
 
+      try
+      {
         getController().openDataFile( file );
       }
-    }
-    catch ( IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
+      catch ( IOException exception )
       {
-        LOG.log( Level.WARNING, "Loading OLS file failed!", exception );
-        JErrorDialog.showDialog( owner, "Loading OLS file failed!", exception );
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.WARNING, "Loading OLS file failed!", exception );
+          JErrorDialog.showDialog( owner, "Loading the capture data failed!", exception );
+        }
       }
     }
   }

@@ -29,25 +29,29 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- *
+ * Provides a "show channel labels" action showing an editor for the channel
+ * labels.
  */
-public class ShowDiagramLabelsAction extends BaseAction
+public class ShowChannelLabelsDialogAction extends BaseAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "ShowDiagramLabels";
+  public static final String ID = "ShowChannelLabelsDialogAction";
 
   // CONSTRUCTORS
 
   /**
-   *
+   * Creates a new ShowChannelLabelsDialogAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public ShowDiagramLabelsAction( final ClientController aController )
+  public ShowChannelLabelsDialogAction( final IClientController aController )
   {
-    super( ID, aController, "Diagram labels", "Show the diagram labels dialog" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_L ) );
+    super( ID, aController, "Channel labels", "Show the channel labels dialog" );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_L ) );
   }
 
   // METHODS
@@ -59,7 +63,7 @@ public class ShowDiagramLabelsAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-    getController().showLabelsDialog( owner );
+    getController().showChannelLabelsDialog( owner );
   }
 }
 

@@ -307,7 +307,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // We're adding one, so, there's at least one device available...
     this.toolsMenu.remove( this.noToolsItem );
 
-    final JMenuItem menuItem = new JMenuItem( new RunAnalysisToolAction( this.controller, aToolName ) );
+    final JMenuItem menuItem = new JMenuItem( new RunToolAction( this.controller, aToolName ) );
 
     // Determine where in the menu we should add the menu item, this way, we
     // can make the menu appear consistent...
@@ -594,7 +594,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     {
       final JMenu editMenu = bar.add( new JMenu( "Edit" ) );
       editMenu.setMnemonic( 'E' );
-      editMenu.add( this.controller.getAction( ShowGeneralSettingsAction.ID ) );
+      editMenu.add( this.controller.getAction( ShowPreferencesDialogAction.ID ) );
     }
 
     JMenu captureMenu = bar.add( new JMenu( "Capture" ) );
@@ -628,8 +628,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorModeAction.ID ) ) );
     diagramMenu.add( this.controller.getAction( ClearCursors.ID ) );
     diagramMenu.addSeparator();
-    diagramMenu.add( this.controller.getAction( ShowModeSettingsAction.ID ) );
-    diagramMenu.add( this.controller.getAction( ShowDiagramLabelsAction.ID ) );
+    diagramMenu.add( this.controller.getAction( ShowDiagramModeSettingsDialogAction.ID ) );
+    diagramMenu.add( this.controller.getAction( ShowChannelLabelsDialogAction.ID ) );
 
     this.toolsMenu = bar.add( new JMenu( "Tools" ) );
     this.toolsMenu.setMnemonic( 'T' );

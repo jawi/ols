@@ -58,13 +58,13 @@ public class OpenProjectAction extends BaseAction
    * Creates a new OpenProjectAction instance.
    * 
    * @param aController
-   *          the client controller to use for this action.
+   *          the controller to use for this action.
    */
-  public OpenProjectAction( final ClientController aController )
+  public OpenProjectAction( final IClientController aController )
   {
     super( ID, aController, ICON_OPEN_PROJECT, "Open project ...", "Open an existing project" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_O ) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_P ) );
   }
 
   // METHODS
@@ -77,37 +77,34 @@ public class OpenProjectAction extends BaseAction
   {
     final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final ClientController controller = getController();
+    final IClientController controller = getController();
 
-    try
+    if ( controller.isProjectChanged() )
     {
-      if ( controller.isProjectChanged() )
+      if ( SwingComponentUtils.askConfirmation( parent,
+          "Current project has been changed.\nDo you really want to lose your changes?" ) )
       {
-        if ( SwingComponentUtils.askConfirmation( parent,
-            "Current project has been changed.\nDo you really want to lose your changes?" ) )
-        {
-          return;
-        }
-      }
-
-      final File file = SwingComponentUtils.showFileOpenDialog( parent, OLS_PROJECT_FILTER );
-      if ( ( file != null ) && file.isFile() )
-      {
-        if ( LOG.isLoggable( Level.INFO ) )
-        {
-          LOG.info( "Loading OLS project from file: " + file );
-        }
-
-        controller.openProjectFile( file );
+        return;
       }
     }
-    catch ( IOException exception )
+
+    final File file = SwingComponentUtils.showFileOpenDialog( parent, OLS_PROJECT_FILTER );
+    if ( file != null )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
+      LOG.log( Level.INFO, "Loading project data from file: '{0}'", file );
+
+      try
       {
-        LOG.log( Level.WARNING, "Loading OLS project failed!", exception );
-        JErrorDialog.showDialog( parent, "Loading OLS project failed!", exception );
+        controller.openProjectFile( file );
+      }
+      catch ( IOException exception )
+      {
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.WARNING, "Loading OLS project failed!", exception );
+          JErrorDialog.showDialog( parent, "Loading the project data failed!", exception );
+        }
       }
     }
   }

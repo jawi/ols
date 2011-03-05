@@ -42,12 +42,12 @@ public class CancelCaptureAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * @param aID
+   * Creates a new CancelCaptureAction instance.
+   * 
    * @param aController
-   * @param aName
-   * @param aDescription
+   *          the controller to use.
    */
-  public CancelCaptureAction( final ClientController aController )
+  public CancelCaptureAction( final IClientController aController )
   {
     super( ID, aController, ICON_CANCEL_CAPTURE, "Cancel capture", "Cancel the current capture" );
     putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke( KeyEvent.VK_ESCAPE, 0 ) );

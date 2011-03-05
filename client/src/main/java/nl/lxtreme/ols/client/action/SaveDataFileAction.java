@@ -33,7 +33,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
- *
+ * Provides a "save data file" action.
  */
 public class SaveDataFileAction extends BaseAction
 {
@@ -48,12 +48,15 @@ public class SaveDataFileAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   *
+   * Creates a new SaveDataFileAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public SaveDataFileAction( final ClientController aController )
+  public SaveDataFileAction( final IClientController aController )
   {
     super( ID, aController, ICON_SAVE_DATAFILE, "Save ...", "Save data file" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_S ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_S ) );
   }
 
   // METHODS
@@ -66,27 +69,25 @@ public class SaveDataFileAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    try
+    final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenDataFileAction.OLS_FILEFILTER );
+    if ( file != null )
     {
-      final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenDataFileAction.OLS_FILEFILTER );
-      if ( file != null )
-      {
-        final File actualFile = HostUtils.setFileExtension( file, OpenDataFileAction.OLS_FILE_EXTENSION );
-        if ( LOG.isLoggable( Level.INFO ) )
-        {
-          LOG.info( "Saving OLS capture date to file: " + actualFile );
-        }
+      final File actualFile = HostUtils.setFileExtension( file, OpenDataFileAction.OLS_FILE_EXTENSION );
 
+      LOG.log( Level.INFO, "Saving capture data to file '{0}'", actualFile );
+
+      try
+      {
         getController().saveDataFile( actualFile );
       }
-    }
-    catch ( IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
+      catch ( IOException exception )
       {
-        LOG.log( Level.WARNING, "Saving OLS file failed!", exception );
-        JErrorDialog.showDialog( owner, "Saving OLS file failed!", exception );
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.WARNING, "Saving capture data failed!", exception );
+          JErrorDialog.showDialog( owner, "Saving the capture data failed!", exception );
+        }
       }
     }
   }

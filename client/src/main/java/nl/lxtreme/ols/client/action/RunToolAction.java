@@ -29,25 +29,35 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- *
+ * Provides a "run"-action for any analysis/decoder tool.
  */
-public class ShowGeneralSettingsAction extends BaseAction
+public class RunToolAction extends BaseAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "ShowGeneralSettings";
+  private static final String ID = "RunTool.";
+
+  // VARIABLES
+
+  private final String toolName;
 
   // CONSTRUCTORS
 
   /**
-   *
+   * Creates a new RunAnalysisToolAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action;
+   * @param aToolName
+   *          the name of the tool to invoke in this action.
    */
-  public ShowGeneralSettingsAction( final ClientController aController )
+  public RunToolAction( final ClientController aController, final String aToolName )
   {
-    super( ID, aController, "Preferences", "Show the preferences dialog" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_P ) );
+    super( ID + aToolName, aController, aToolName, "Run ".concat( aToolName ) );
+
+    this.toolName = aToolName;
   }
 
   // METHODS
@@ -59,7 +69,7 @@ public class ShowGeneralSettingsAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-    getController().showPreferencesDialog( owner );
+    getController().runTool( this.toolName, owner );
   }
 }
 

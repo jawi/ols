@@ -450,6 +450,9 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private Component createMeasurementPane( final String[] aCursorNames )
   {
+    int channelCount = 32; // TODO JaWi: this should reflect the current
+                           // device's capabilities...
+
     this.frequencyLabel = new JLabel( EMPTY_TEXT );
     this.distanceLabel = new JLabel( EMPTY_TEXT );
 
@@ -480,12 +483,7 @@ public class MeasurementDialog extends BaseToolDialog
 
     final MeasureClockFrequencyAction measureAction = new MeasureClockFrequencyAction();
 
-    final String[] channelNames = new String[CapturedData.MAX_CHANNELS];
-    for ( int i = 0; i < channelNames.length; i++ )
-    {
-      channelNames[i] = String.format( "Channel %d", Integer.valueOf( i ) );
-    }
-    this.clockChannelChooser = new JComboBox( channelNames );
+    this.clockChannelChooser = SwingComponentUtils.createChannelSelector( channelCount );
     this.clockChannelChooser.addItemListener( new ItemListener()
     {
       @Override

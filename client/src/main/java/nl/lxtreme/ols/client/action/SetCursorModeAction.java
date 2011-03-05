@@ -29,7 +29,7 @@ import nl.lxtreme.ols.client.*;
 
 
 /**
- *
+ * Provides an action that either shows or hides all set cursors.
  */
 public class SetCursorModeAction extends BaseAction
 {
@@ -42,12 +42,15 @@ public class SetCursorModeAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   *
+   * Creates a new SetCursorModeAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public SetCursorModeAction( final ClientController aController )
+  public SetCursorModeAction( final IClientController aController )
   {
     super( ID, aController, "Toggle visibility of all cursors", "Toggle visibility of all cursors in the diagram" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_C ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_C ) );
   }
 
   // METHODS

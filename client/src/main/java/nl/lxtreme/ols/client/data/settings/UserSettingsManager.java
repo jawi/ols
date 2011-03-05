@@ -51,11 +51,12 @@ public final class UserSettingsManager
     if ( aUserSettingsFile.exists() )
     {
       InputStream is = null;
+      ZipInputStream zipIS = null;
 
       try
       {
         is = new BufferedInputStream( new FileInputStream( aUserSettingsFile ) );
-        final ZipInputStream zipIS = new ZipInputStream( is );
+        zipIS = new ZipInputStream( is );
 
         ZipEntry ze = null;
         while ( ( ze = zipIS.getNextEntry() ) != null )
@@ -82,6 +83,7 @@ public final class UserSettingsManager
       }
       finally
       {
+        HostUtils.closeResource( zipIS );
         HostUtils.closeResource( is );
       }
     }

@@ -316,7 +316,7 @@ public class SPIAnalyserWorker extends BaseAsyncToolWorker<SPIDataSet>
         clockEdgeIdx = ( clockEdgeIdx + 1 ) % clockEdgeCount;
         // When CPHA is '1', we should sample at the even numbered clock edges,
         // when CPHA is '0' we should sample at the odd numbered clock edges...
-        sampleEdgeSeen = ( ( clockEdgeIdx + aMode.getCPHA() ) % 2 ) == 1;
+        sampleEdgeSeen = ( ( clockEdgeIdx + aMode.getCPHA() ) % 2 ) != 0;
 
         // First clock edge we've seen? If so, we should keep this index as our
         // start of data index...

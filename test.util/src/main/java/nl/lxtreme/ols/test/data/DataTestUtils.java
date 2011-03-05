@@ -133,7 +133,7 @@ public final class DataTestUtils
 
     final CapturedData data = mock( CapturedData.class );
     when( Integer.valueOf( data.getChannels() ) ).thenReturn( Integer.valueOf( CapturedData.MAX_CHANNELS ) );
-    when( Long.valueOf( data.getAbsoluteLength() ) ).thenReturn( Long.valueOf( ( 2 * aDataSize ) + 1L ) );
+    when( Long.valueOf( data.getAbsoluteLength() ) ).thenReturn( Long.valueOf( ( 2L * aDataSize ) + 1L ) );
     when( Integer.valueOf( data.getEnabledChannels() ) ).thenReturn(
         Integer.valueOf( NumberUtils.getBitMask( aChannelCount ) ) );
     when( Integer.valueOf( data.getSampleRate() ) ).thenReturn( Integer.valueOf( 1000000 ) );

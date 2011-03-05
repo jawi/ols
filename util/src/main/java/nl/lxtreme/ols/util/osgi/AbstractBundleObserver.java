@@ -132,7 +132,8 @@ public abstract class AbstractBundleObserver implements BundleObserver
    *          the manifest header key to look for, cannot be <code>null</code>;
    * @param aEntries
    *          the manifest headers to look in.
-   * @return the manifest header values, can be <code>null</code> if not found.
+   * @return the manifest header values, never <code>null</code>, but an empty
+   *         array if not found.
    */
   protected final String[] getManifestHeaderValues( final String aKey, final ManifestHeader... aEntries )
   {
@@ -143,7 +144,7 @@ public abstract class AbstractBundleObserver implements BundleObserver
         return entry.splitValue();
       }
     }
-    return null;
+    return new String[0];
   }
 
   /**
