@@ -64,7 +64,7 @@ public class ConnectorServiceImplTest
   /**
    * @author jawi
    */
-  final class MyConnectionFactory implements ConnectionFactory
+  static final class MyConnectionFactory implements ConnectionFactory
   {
     // VARIABLES
 
@@ -211,7 +211,7 @@ public class ConnectorServiceImplTest
     final DataOutputStream dout = this.connectorService.openDataOutputStream( Protocols.HTTP.url() );
     dout.write( 0 );
 
-    semaphore.tryAcquire( 1, TimeUnit.SECONDS );
+    assertTrue( "DataOutputStream.write never called?!", semaphore.tryAcquire( 1, TimeUnit.SECONDS ) );
   }
 
   /**
@@ -278,7 +278,7 @@ public class ConnectorServiceImplTest
     final OutputStream dout = this.connectorService.openOutputStream( Protocols.HTTP.url() );
     dout.write( 0 );
 
-    semaphore.tryAcquire( 1, TimeUnit.SECONDS );
+    assertTrue( "OpenOutputStream.write never called?!", semaphore.tryAcquire( 1, TimeUnit.SECONDS ) );
   }
 
   /**

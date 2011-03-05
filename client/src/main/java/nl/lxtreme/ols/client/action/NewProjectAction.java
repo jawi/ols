@@ -43,15 +43,15 @@ public class NewProjectAction extends BaseAction
 
   /**
    * Creates a new NewProjectAction instance.
-   *
+   * 
    * @param aController
    *          the client controller to use.
    */
-  public NewProjectAction( final ClientController aController )
+  public NewProjectAction( final IClientController aController )
   {
     super( ID, aController, "New project ...", "Create a new project" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_N) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_N ) );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_N ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_N ) );
   }
 
   // METHODS
@@ -62,7 +62,7 @@ public class NewProjectAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final ClientController controller = getController();
+    final IClientController controller = getController();
     if ( controller.isProjectChanged() )
     {
       final Window parent = SwingComponentUtils.getOwningWindow( aEvent );

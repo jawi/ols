@@ -42,16 +42,15 @@ public class SaveProjectAsAction extends SaveProjectAction
 
   /**
    * Creates a new SaveProjectAsAction instance.
-   *
+   * 
    * @param aController
    *          the controller to use.
    */
-  public SaveProjectAsAction( final ClientController aController )
+  public SaveProjectAsAction( final IClientController aController )
   {
-    super( ID, aController, ICON_SAVE_PROJECT, "Save project as ...",
-        "Save the current project under a different name" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_S, KeyEvent.SHIFT_MASK) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
+    super( ID, aController, ICON_SAVE_PROJECT, "Save project as ...", "Save the current project under a different name" );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_S, InputEvent.SHIFT_MASK ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
   }
 
   // METHODS

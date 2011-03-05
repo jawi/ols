@@ -134,7 +134,7 @@ final class I2CGenerator
    */
   private int getClock()
   {
-    final double nextTickMultiple = this.tickSize * Math.floor( this.idx / this.tickSize );
+    final double nextTickMultiple = this.tickSize * Math.floor( this.idx / ( double )this.tickSize );
     final double tickIdx = ( nextTickMultiple == 0.0 ) ? this.idx : Math.ceil( this.idx / nextTickMultiple );
     return ( ( tickIdx % 2 ) == 0 ) ? 1 : 0;
   }

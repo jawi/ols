@@ -46,20 +46,20 @@ public class CaptureAction extends BaseAction
 
   /**
    * Creates a new CaptureAction instance.
-   *
-   * @param aFrame
-   *          the frame this action belongs to.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public CaptureAction( final ClientController aController )
+  public CaptureAction( final IClientController aController )
   {
     this( ID, ICON_CAPTURE_DATA, "Begin capture", "Start capturing data from the logic analyser", aController );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_B) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_B ) );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_B ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_B ) );
   }
 
   /**
    * Creates a new CaptureAction instance.
-   *
+   * 
    * @param aID
    *          the ID of this action;
    * @param aIconName
@@ -68,11 +68,11 @@ public class CaptureAction extends BaseAction
    *          the name of this action;
    * @param aDescription
    *          the description (tooltip) to use for this action;
-   * @param aFrame
-   *          the frame this action belongs to.
+   * @param aController
+   *          the controller to use for this action.
    */
   protected CaptureAction( final String aID, final String aIconName, final String aName, final String aDescription,
-      final ClientController aController )
+      final IClientController aController )
   {
     super( aID, aController, aIconName, aName, aDescription );
   }
@@ -89,7 +89,8 @@ public class CaptureAction extends BaseAction
 
     if ( !getController().isDeviceSelected() )
     {
-      JOptionPane.showMessageDialog( owner, "No capturing device found!", "Capture error", JOptionPane.ERROR_MESSAGE );
+      JOptionPane.showMessageDialog( owner, "No capturing device was set!", "Acquisition error",
+          JOptionPane.ERROR_MESSAGE );
       return;
     }
 

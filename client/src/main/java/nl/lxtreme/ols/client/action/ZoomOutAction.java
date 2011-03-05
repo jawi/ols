@@ -28,7 +28,8 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- *
+ * Provides a "zoom out" action, that zooms out the diagram with a constant
+ * factor.
  */
 public class ZoomOutAction extends BaseAction
 {
@@ -41,13 +42,16 @@ public class ZoomOutAction extends BaseAction
   // CONSTRUCTORS
 
   /**
+   * Creates a new ZoomOutAction instance.
+   * 
    * @param aController
+   *          the controller to use for this action.
    */
-  public ZoomOutAction( final ClientController aController )
+  public ZoomOutAction( final IClientController aController )
   {
     super( ID, aController, ICON_ZOOM_OUT, "Zoom out", "Zoom out" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_MINUS) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_O ) );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_MINUS ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_O ) );
   }
 
   // METHODS

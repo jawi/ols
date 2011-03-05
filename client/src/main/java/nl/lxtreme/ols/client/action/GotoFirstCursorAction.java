@@ -40,13 +40,16 @@ public class GotoFirstCursorAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * @param aDiagramScrollPane
+   * Creates a new GotoFirstCursorAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public GotoFirstCursorAction( final ClientController aController )
+  public GotoFirstCursorAction( final IClientController aController )
   {
     super( ID, aController, ICON_GOTO_FIRST_CURSOR, "Go to lowest cursor",
         "Go to the cursor with lowest index in diagram" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_F ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_F ) );
   }
 
   // METHODS

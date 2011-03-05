@@ -23,6 +23,8 @@ package nl.lxtreme.ols.runner;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.*;
+import java.util.logging.Logger;
 
 import nl.lxtreme.ols.util.*;
 
@@ -41,6 +43,9 @@ public final class Runner
   // CONSTANTS
 
   private static final String[] AUTO_START_BUNDLES = { "org.apache.felix.configadmin", "org.apache.felix.fileinstall" };
+
+  private static final Logger LOG = Logger.getLogger( Runner.class.getName() );
+
   // VARIABLES
 
   private final HostActivator hostActivator;
@@ -104,11 +109,11 @@ public final class Runner
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
-        System.err.println( "Failed to start OSGi framework! Possible reason: " + exception.getMessage() );
-        exception.printStackTrace();
+        LOG.log( Level.SEVERE, "Failed to start OSGi framework! Possible reason: " + exception.getMessage() );
+        LOG.log( Level.FINE, "Details: ", exception );
       }
 
-      System.exit( -1 );
+      throw exception;
     }
   }
 

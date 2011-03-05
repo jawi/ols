@@ -475,40 +475,30 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    */
   private JPanel createSettingsPane()
   {
-    final String channels[] = new String[32];
-    for ( int i = 0; i < 32; i++ )
-    {
-      channels[i] = new String( "Channel " + i );
-    }
-
-    final String dataChannels[] = new String[33];
-    dataChannels[0] = "Unused";
-    for ( int i = 0; i < 32; i++ )
-    {
-      dataChannels[i + 1] = new String( "Channel " + i );
-    }
+    int channelCount = 32; // TODO JaWi: this should reflect the current
+                           // device's capabilities...
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
 
     settings.add( createRightAlignedLabel( "SCK" ) );
-    this.sck = new JComboBox( channels );
+    this.sck = SwingComponentUtils.createChannelSelector( channelCount );
     this.sck.setSelectedIndex( 0 );
     settings.add( this.sck );
 
     settings.add( createRightAlignedLabel( "MISO" ) );
-    this.miso = new JComboBox( dataChannels );
+    this.miso = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     this.miso.setSelectedIndex( 2 );
     settings.add( this.miso );
 
     settings.add( createRightAlignedLabel( "MOSI" ) );
-    this.mosi = new JComboBox( dataChannels );
+    this.mosi = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     this.mosi.setSelectedIndex( 3 );
     settings.add( this.mosi );
 
     settings.add( createRightAlignedLabel( "/CS" ) );
-    this.cs = new JComboBox( channels );
+    this.cs = SwingComponentUtils.createChannelSelector( channelCount );
     this.cs.setSelectedIndex( 3 );
     settings.add( this.cs );
 

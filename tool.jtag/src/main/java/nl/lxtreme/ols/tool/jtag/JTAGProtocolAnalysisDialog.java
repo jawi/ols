@@ -338,40 +338,30 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
    */
   private JPanel createSettingsPane()
   {
-    final String channels[] = new String[32];
-    for ( int i = 0; i < 32; i++ )
-    {
-      channels[i] = new String( "Channel " + i );
-    }
-
-    final String dataChannels[] = new String[33];
-    dataChannels[0] = "Unused";
-    for ( int i = 0; i < 32; i++ )
-    {
-      dataChannels[i + 1] = new String( "Channel " + i );
-    }
+    int channelCount = 32; // TODO JaWi: this should reflect the current
+                           // device's capabilities...
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
 
     settings.add( createRightAlignedLabel( "TCK" ) );
-    this.tck = new JComboBox( channels );
+    this.tck = SwingComponentUtils.createChannelSelector( channelCount );
     this.tck.setSelectedIndex( 0 );
     settings.add( this.tck );
 
     settings.add( createRightAlignedLabel( "TMS" ) );
-    this.tms = new JComboBox( channels );
+    this.tms = SwingComponentUtils.createChannelSelector( channelCount );
     this.tms.setSelectedIndex( 1 );
     settings.add( this.tms );
 
     settings.add( createRightAlignedLabel( "TDI" ) );
-    this.tdi = new JComboBox( dataChannels );
+    this.tdi = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     this.tdi.setSelectedIndex( 3 );
     settings.add( this.tdi );
 
     settings.add( createRightAlignedLabel( "TDO" ) );
-    this.tdo = new JComboBox( dataChannels );
+    this.tdo = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     this.tdo.setSelectedIndex( 4 );
     settings.add( this.tdo );
 

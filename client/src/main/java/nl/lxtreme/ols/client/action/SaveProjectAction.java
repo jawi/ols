@@ -49,18 +49,18 @@ public class SaveProjectAction extends BaseAction
 
   /**
    * Creates a new SaveProjectAction instance.
-   *
+   * 
    * @param aController
    *          the controller to use in this action.
    */
-  public SaveProjectAction( final ClientController aController )
+  public SaveProjectAction( final IClientController aController )
   {
     this( ID, aController, ICON_SAVE_PROJECT, "Save project", "Save the current project" );
   }
 
   /**
    * Creates a new SaveProjectAction instance.
-   *
+   * 
    * @param aID
    *          the ID of this action;
    * @param aController
@@ -72,12 +72,12 @@ public class SaveProjectAction extends BaseAction
    * @param aDescription
    *          the description/tooltip of this action.
    */
-  protected SaveProjectAction( final String aID, final ClientController aController, final String aIconName,
+  protected SaveProjectAction( final String aID, final IClientController aController, final String aIconName,
       final String aName, final String aDescription )
   {
     super( aID, aController, aIconName, aName, aDescription );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_S) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_S ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
   }
 
   // METHODS
@@ -107,7 +107,7 @@ public class SaveProjectAction extends BaseAction
 
   /**
    * Asks the user to specify a filename.
-   *
+   * 
    * @param owner
    *          the parent/owner window of the file chooser dialog, can be
    *          <code>null</code>.
@@ -126,19 +126,18 @@ public class SaveProjectAction extends BaseAction
 
   /**
    * Returns the project's filename.
-   *
+   * 
    * @return a file object denoting the project file to save the project to, can
    *         be <code>null</code> if no name is yet defined for the project.
    */
   protected File getProjectFilename()
   {
-    final File filename = getController().getProjectFilename();
-    return filename;
+    return getController().getProjectFilename();
   }
 
   /**
    * Saves the project file.
-   *
+   * 
    * @param aOwner
    *          the owning/parent window;
    * @param aFile
@@ -146,14 +145,14 @@ public class SaveProjectAction extends BaseAction
    */
   protected void saveProjectFile( final Window aOwner, final File aFile )
   {
+    LOG.log( Level.INFO, "Saving project data to file: '{0}'", aFile );
+
+    // Strip any "known" file extensions from the given value...
+    final String projectName = HostUtils.stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
+        OpenProjectAction.OLS_PROJECT_EXTENSION );
+
     try
     {
-      LOG.log( Level.INFO, "Saving OLS project to file: {0} ...", aFile );
-
-      // Strip any "known" file extensions from the given value...
-      final String projectName = HostUtils.stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
-          OpenProjectAction.OLS_PROJECT_EXTENSION );
-
       getController().saveProjectFile( projectName, aFile );
     }
     catch ( IOException exception )
@@ -162,14 +161,14 @@ public class SaveProjectAction extends BaseAction
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
         LOG.log( Level.WARNING, "Saving OLS project failed!", exception );
-        JErrorDialog.showDialog( aOwner, "Saving OLS project failed!", exception );
+        JErrorDialog.showDialog( aOwner, "Saving the project data failed!", exception );
       }
     }
   }
 
   /**
    * Returns whether or not a file chooser dialog is to be shown.
-   *
+   * 
    * @return <code>true</code> if a file chooser dialog should be shown,
    *         <code>false</code> otherwise.
    */

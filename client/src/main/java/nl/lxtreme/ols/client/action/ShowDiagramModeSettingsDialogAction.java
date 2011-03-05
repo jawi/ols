@@ -21,31 +21,36 @@
 package nl.lxtreme.ols.client.action;
 
 
+import java.awt.*;
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- *
+ * Provides a "show diagram mode settings" action.
  */
-public class GotoNextCursorAction extends BaseAction
+public class ShowDiagramModeSettingsDialogAction extends BaseAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String ID = "GotoFirstCursor";
+  public static final String ID = "ShowDiagramModeSettingsDialogAction";
 
   // CONSTRUCTORS
 
   /**
-   * @param aDiagramScrollPane
+   * Creates a new ShowDiagramModeSettingsDialogAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public GotoNextCursorAction( final ClientController aController )
+  public ShowDiagramModeSettingsDialogAction( final IClientController aController )
   {
-    super( ID, aController, ICON_GOTO_NEXT_CURSOR, "Go to next cursor", "Go to the next available cursor in diagram" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_N ) );
+    super( ID, aController, "Diagram mode settings", "Show the diagram mode settings dialog" );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_M ) );
   }
 
   // METHODS
@@ -56,7 +61,8 @@ public class GotoNextCursorAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().gotoCursorPosition( 1 );
+    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+    getController().showDiagramModeSettingsDialog( owner );
   }
 }
 

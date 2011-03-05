@@ -132,7 +132,7 @@ public class DiagramUI extends ComponentUI
     // VARIABLES
 
     private int currentCursor;
-    private Point lastDragPoint;
+    private volatile Point lastDragPoint;
 
     // METHODS
 
@@ -183,8 +183,9 @@ public class DiagramUI extends ComponentUI
       {
         diagram.dragCursor( this.currentCursor, mousePosition );
       }
-      else // if not we are dragging the whole display
+      else
       {
+        // if not we are dragging the whole display
         final JViewport viewPort = diagram.getViewPort();
         if ( viewPort != null )
         {

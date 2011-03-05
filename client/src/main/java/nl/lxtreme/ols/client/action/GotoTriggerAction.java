@@ -29,7 +29,8 @@ import nl.lxtreme.ols.client.*;
 
 
 /**
- *
+ * Provides an action that goes to the trigger point in the captured data, if
+ * present.
  */
 public class GotoTriggerAction extends BaseAction
 {
@@ -42,13 +43,16 @@ public class GotoTriggerAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * @param aDiagramScrollPane
+   * Creates a new GotoTriggerAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public GotoTriggerAction( final ClientController aController )
+  public GotoTriggerAction( final IClientController aController )
   {
     super( ID, aController, ICON_GOTO_TRIGGER, "Go to Trigger", "Go to trigger moment in diagram" );
-    putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke ( KeyEvent.VK_HOME, 0 ) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_0 ) );
+    putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke( KeyEvent.VK_HOME, 0 ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_0 ) );
   }
 
   // METHODS

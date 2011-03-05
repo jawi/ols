@@ -221,7 +221,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
       }
     }
 
-    startOfDecode = Math.max( 0, getContext().getStartSampleIndex() - 10 );
+    startOfDecode = Math.max( 0, startOfDecode - 10 );
 
     // Make sure we've got a valid range to decode..
     if ( startOfDecode >= endOfDecode )

@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.util;
 
 
+import java.io.*;
 import java.nio.*;
 import java.util.*;
 import java.util.regex.*;
@@ -65,8 +66,10 @@ public final class NumberUtils
    * only way instead of writing 6 almost equivalent classes.
    * </p>
    */
-  private static class NumericComparator<N extends Number> implements Comparator<N>
+  private static class NumericComparator<N extends Number> implements Serializable, Comparator<N>
   {
+    private static final long serialVersionUID = 1L;
+
     private final boolean sortAscending;
 
     /**

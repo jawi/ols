@@ -69,10 +69,6 @@ public class StackLayout implements LayoutManager2
       {
         this.components.add( 0, aComp );
       }
-      else if ( TOP.equals( aConstraints ) )
-      {
-        this.components.add( aComp );
-      }
       else
       {
         this.components.add( aComp );

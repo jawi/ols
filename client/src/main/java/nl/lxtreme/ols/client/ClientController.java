@@ -48,7 +48,7 @@ import org.osgi.framework.*;
 /**
  * Denotes a front-end controller for the client.
  */
-public final class ClientController implements ActionProvider, CaptureCallback, AnalysisCallback
+public final class ClientController implements ActionProvider, CaptureCallback, AnalysisCallback, IClientController
 {
   // INNER TYPES
 
@@ -112,12 +112,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
   // VARIABLES
 
-  private final ActionManager actionManager;
+  private final IActionManager actionManager;
   private final BundleContext bundleContext;
   private final DataContainer dataContainer;
   private final EventListenerList evenListeners;
   private final ProjectManager projectManager;
-  private final Host host;
+  private final IHost host;
 
   private MainFrame mainFrame;
 
@@ -127,18 +127,23 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
   /**
    * Creates a new ClientController instance.
+   * 
+   * @param aBundleContext
+   *          the bundle context to use for interaction with the OSGi framework;
+   * @param aHost
+   *          the current host to use, cannot be <code>null</code>;
+   * @param aProjectManager
+   *          the project manager to use, cannot be <code>null</code>.
    */
-  public ClientController( final BundleContext aBundleContext, final Host aHost, final ProjectManager aProjectManager )
+  public ClientController( final BundleContext aBundleContext, final IHost aHost, final ProjectManager aProjectManager )
   {
     this.bundleContext = aBundleContext;
     this.host = aHost;
     this.projectManager = aProjectManager;
 
     this.dataContainer = new DataContainer( this.projectManager );
-    this.actionManager = new ActionManager();
     this.evenListeners = new EventListenerList();
-
-    fillActionManager( this.actionManager );
+    this.actionManager = ActionManagerFactory.createActionManager( this );
   }
 
   // METHODS
@@ -236,7 +241,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Cancels the current capturing (if in progress).
+   * @see nl.lxtreme.ols.client.IClientController#cancelCapture()
    */
   public void cancelCapture()
   {
@@ -273,14 +278,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Captures the data of the current device controller.
-   * 
-   * @param aParent
-   *          the parent window to use, can be <code>null</code>.
-   * @return <code>true</code> if the capture succeeded, <code>false</code>
-   *         otherwise.
-   * @throws IOException
-   *           in case of I/O problems.
+   * {@inheritDoc}
    */
   public boolean captureData( final Window aParent )
   {
@@ -347,7 +345,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Clears all current cursors.
+   * {@inheritDoc}
    */
   public void clearAllCursors()
   {
@@ -361,16 +359,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Clears the current device controller.
+   * {@inheritDoc}
    */
-  public void clearDeviceController()
+  public synchronized void clearDeviceController()
   {
     this.currentDevCtrl = null;
   }
 
   /**
-   * Clears the current project, and start over as it were a new project, in
-   * which no captured data is shown.
+   * {@inheritDoc}
    */
   public void createNewProject()
   {
@@ -385,7 +382,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Exits the client application.
+   * {@inheritDoc}
    */
   public void exit()
   {
@@ -396,21 +393,29 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Exports the current diagram to the given exporter.
-   * 
-   * @param aExporter
-   *          the exporter to export to, cannot be <code>null</code>.
-   * @param aOutputStream
-   *          the output stream to write the export to, cannot be
-   *          <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
+   * {@inheritDoc}
    */
-  public void exportTo( final Exporter aExporter, final OutputStream aOutputStream ) throws IOException
+  public void exportTo( final String aExporterName, final File aExportFile ) throws IOException
   {
-    if ( this.mainFrame != null )
+    if ( this.mainFrame == null )
     {
-      aExporter.export( this.dataContainer, this.mainFrame.getDiagramScrollPane(), aOutputStream );
+      return;
+    }
+
+    OutputStream writer = null;
+
+    try
+    {
+      writer = new FileOutputStream( aExportFile );
+
+      final Exporter exporter = getExporter( aExporterName );
+      exporter.export( this.dataContainer, this.mainFrame.getDiagramScrollPane(), writer );
+
+      setStatus( "Export to {0} succesful ...", aExporterName );
+    }
+    finally
+    {
+      HostUtils.closeResource( writer );
     }
   }
 
@@ -423,7 +428,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * @return the dataContainer
+   * {@inheritDoc}
    */
   public DataContainer getDataContainer()
   {
@@ -435,7 +440,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * 
    * @return the current device controller, can be <code>null</code>.
    */
-  public DeviceController getDeviceController()
+  public synchronized DeviceController getDeviceController()
   {
     return this.currentDevCtrl;
   }
@@ -490,82 +495,21 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Returns the exporter with the given name.
-   * 
-   * @param aName
-   *          the name of the exporter to return, cannot be <code>null</code>.
-   * @return the exporter with the given name, can be <code>null</code> if no
-   *         such exporter is found.
-   * @throws IllegalArgumentException
-   *           in case the given name was <code>null</code> or empty.
+   * {@inheritDoc}
    */
-  public Exporter getExporter( final String aName ) throws IllegalArgumentException
+  @Override
+  public String[] getExportExtensions( final String aExporterName )
   {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
+    final Exporter exporter = getExporter( aExporterName );
+    if ( exporter == null )
     {
-      throw new IllegalArgumentException( "Name cannot be null or empty!" );
+      return new String[0];
     }
-
-    try
-    {
-      final ServiceReference[] serviceRefs = this.bundleContext
-          .getAllServiceReferences( Exporter.class.getName(), null );
-      final int count = ( serviceRefs == null ) ? 0 : serviceRefs.length;
-
-      for ( int i = 0; i < count; i++ )
-      {
-        final Exporter exporter = ( Exporter )this.bundleContext.getService( serviceRefs[i] );
-
-        if ( aName.equals( exporter.getName() ) )
-        {
-          return exporter;
-        }
-      }
-
-      return null;
-    }
-    catch ( InvalidSyntaxException exception )
-    {
-      throw new RuntimeException( "getExporter failed!", exception );
-    }
+    return exporter.getFilenameExtentions();
   }
 
   /**
-   * Returns the names of all current available exporters.
-   * 
-   * @return an array of exporter names, never <code>null</code>, but can be
-   *         empty.
-   */
-  public String[] getExporterNames()
-  {
-    try
-    {
-      final ServiceReference[] serviceRefs = this.bundleContext
-          .getAllServiceReferences( Exporter.class.getName(), null );
-      final int count = serviceRefs == null ? 0 : serviceRefs.length;
-
-      final String[] result = new String[count];
-
-      for ( int i = 0; i < count; i++ )
-      {
-        final Exporter exporter = ( Exporter )this.bundleContext.getService( serviceRefs[i] );
-
-        result[i] = exporter.getName();
-        this.bundleContext.ungetService( serviceRefs[i] );
-      }
-
-      return result;
-    }
-    catch ( InvalidSyntaxException exception )
-    {
-      throw new RuntimeException( "getAllExporterNames failed!", exception );
-    }
-  }
-
-  /**
-   * Returns the current project's filename.
-   * 
-   * @return a project filename, as file object, can be <code>null</code>.
+   * {@inheritDoc}
    */
   public File getProjectFilename()
   {
@@ -599,10 +543,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Goes to the current cursor position of the cursor with the given index.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to go to, >= 0 && < 10.
+   * {@inheritDoc}
    */
   public void gotoCursorPosition( final int aCursorIdx )
   {
@@ -617,7 +558,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Goes to the current cursor position of the first available cursor.
+   * {@inheritDoc}
    */
   public void gotoFirstAvailableCursor()
   {
@@ -639,7 +580,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Goes to the current cursor position of the last available cursor.
+   * {@inheritDoc}
    */
   public void gotoLastAvailableCursor()
   {
@@ -661,7 +602,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Goes to the position of the trigger.
+   * {@inheritDoc}
    */
   public void gotoTriggerPosition()
   {
@@ -673,10 +614,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Returns whether there is a device selected or not.
-   * 
-   * @return <code>true</code> if there is a device selected, <code>false</code>
-   *         if no device is selected.
+   * {@inheritDoc}
    */
   public synchronized boolean isDeviceSelected()
   {
@@ -684,22 +622,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Returns whether the current device is setup at least once.
-   * 
-   * @return <code>true</code> if the current device is setup,
-   *         <code>false</code> otherwise.
-   * @see #isDeviceSelected()
+   * {@inheritDoc}
    */
   public synchronized boolean isDeviceSetup()
   {
-    return ( this.currentDevCtrl != null ) && this.currentDevCtrl.isSetup();
+    return isDeviceSelected() && this.currentDevCtrl.isSetup();
   }
 
   /**
-   * Returns whether or not the current project is changed.
-   * 
-   * @return <code>true</code> if the current project is changed,
-   *         <code>false</code> if the current project is not changed.
+   * {@inheritDoc}
    */
   public boolean isProjectChanged()
   {
@@ -707,12 +638,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Loads an OLS data file from the given file.
-   * 
-   * @param aFile
-   *          the file to load as OLS data, cannot be <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
+   * {@inheritDoc}
    */
   public void openDataFile( final File aFile ) throws IOException
   {
@@ -726,6 +652,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       setChannelLabels( tempProject.getChannelLabels() );
       setCapturedData( tempProject.getCapturedData() );
       setCursorData( tempProject.getCursorPositions(), tempProject.isCursorsEnabled() );
+
+      setStatus( "Capture data loaded from '{0}' ...", aFile.getName() );
     }
     finally
     {
@@ -738,30 +666,33 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Opens the project denoted by the given file.
-   * 
-   * @param aFile
-   *          the project file to open, cannot be <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
+   * {@inheritDoc}
    */
   public void openProjectFile( final File aFile ) throws IOException
   {
-    FileInputStream fis = new FileInputStream( aFile );
+    FileInputStream fis = null;
 
-    this.projectManager.loadProject( fis );
+    try
+    {
+      fis = new FileInputStream( aFile );
 
-    final Project project = this.projectManager.getCurrentProject();
-    project.setFilename( aFile );
+      this.projectManager.loadProject( fis );
 
-    zoomToFit();
+      final Project project = this.projectManager.getCurrentProject();
+      project.setFilename( aFile );
+
+      zoomToFit();
+
+      setStatus( "Project '{0}' loaded ...", project.getName() );
+    }
+    finally
+    {
+      HostUtils.closeResource( fis );
+    }
   }
 
   /**
-   * Removes the cursor denoted by the given cursor index.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to remove, >= 0 && < 10.
+   * {@inheritDoc}
    */
   public void removeCursor( final int aCursorIdx )
   {
@@ -839,10 +770,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Repeats the capture with the current settings.
-   * 
-   * @param aParent
-   *          the parent window to use, can be <code>null</code>.
+   * {@inheritDoc}
    */
   public boolean repeatCaptureData( final Window aParent )
   {
@@ -921,12 +849,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Saves an OLS data file to the given file.
-   * 
-   * @param aFile
-   *          the file to save the OLS data to, cannot be <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
+   * {@inheritDoc}
    */
   public void saveDataFile( final File aFile ) throws IOException
   {
@@ -937,6 +860,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       tempProject.setCapturedData( this.dataContainer );
 
       OlsDataHelper.write( tempProject, writer );
+
+      setStatus( "Capture data saved to '{0}' ...", aFile.getName() );
     }
     finally
     {
@@ -946,13 +871,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Saves the current project to the given file.
-   * 
-   * @param aFile
-   *          the file to save the project information to, cannot be
-   *          <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
+   * {@inheritDoc}
    */
   public void saveProjectFile( final String aName, final File aFile ) throws IOException
   {
@@ -965,6 +884,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
       out = new FileOutputStream( aFile );
       this.projectManager.saveProject( out );
+
+      setStatus( "Project '{0}' saved ...", aName );
     }
     finally
     {
@@ -989,13 +910,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Sets the cursor position of the cursor with the given index.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to set, >= 0 && < 10;
-   * @param aLocation
-   *          the mouse location on screen where the cursor should become,
-   *          cannot be <code>null</code>.
+   * {@inheritDoc}
    */
   public void setCursorPosition( final int aCursorIdx, final Point aLocation )
   {
@@ -1018,11 +933,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Sets the current device controller to the given value.
-   * 
-   * @param aDeviceName
-   *          the name of the device controller to set, cannot be
-   *          <code>null</code>.
+   * {@inheritDoc}
    */
   public synchronized void setDeviceController( final String aDeviceName )
   {
@@ -1063,12 +974,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Sets a status message.
-   * 
-   * @param aMessage
-   *          the message to set;
-   * @param aMessageArgs
-   *          the (optional) message arguments.
+   * {@inheritDoc}
    */
   public final void setStatus( final String aMessage, final Object... aMessageArgs )
   {
@@ -1088,10 +994,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Shows a dialog with all running OSGi bundles.
-   * 
-   * @param aOwner
-   *          the owning window to use, can be <code>null</code>.
+   * {@inheritDoc}
    */
   public void showBundlesDialog( final Window aOwner )
   {
@@ -1099,21 +1002,13 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     if ( dialog.showDialog() )
     {
       dialog.dispose();
-      dialog = null;
     }
   }
 
   /**
-   * Shows the label-editor dialog on screen.
-   * <p>
-   * Display the diagram labels dialog. Will block until the dialog is closed
-   * again.
-   * </p>
-   * 
-   * @param aParent
-   *          the parent window to use, can be <code>null</code>.
+   * {@inheritDoc}
    */
-  public void showLabelsDialog( final Window aParent )
+  public void showChannelLabelsDialog( final Window aParent )
   {
     if ( this.mainFrame != null )
     {
@@ -1125,21 +1020,13 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       }
 
       dialog.dispose();
-      dialog = null;
     }
   }
 
   /**
-   * Shows the settings-editor dialog on screen.
-   * <p>
-   * Display the diagram settings dialog. Will block until the dialog is closed
-   * again.
-   * </p>
-   * 
-   * @param aParent
-   *          the parent window to use, can be <code>null</code>.
+   * {@inheritDoc}
    */
-  public void showModeSettingsDialog( final Window aParent )
+  public void showDiagramModeSettingsDialog( final Window aParent )
   {
     if ( this.mainFrame != null )
     {
@@ -1152,12 +1039,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       }
 
       dialog.dispose();
-      dialog = null;
     }
   }
 
   /**
-   * @param aOwner
+   * {@inheritDoc}
    */
   public void showPreferencesDialog( final Window aParent )
   {
@@ -1170,7 +1056,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
 
     dialog.dispose();
-    dialog = null;
   }
 
   /**
@@ -1186,7 +1071,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Zooms in to the maximum zoom level.
+   * {@inheritDoc}
    */
   public void zoomDefault()
   {
@@ -1199,7 +1084,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Zooms in with a factor of 2.0.
+   * {@inheritDoc}
    */
   public void zoomIn()
   {
@@ -1212,7 +1097,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Zooms out with a factor of 2.0.
+   * {@inheritDoc}
    */
   public void zoomOut()
   {
@@ -1225,7 +1110,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Zooms to fit the diagram to the current window dimensions.
+   * {@inheritDoc}
    */
   public void zoomToFit()
   {
@@ -1301,50 +1186,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * @param aActionManager
-   */
-  private void fillActionManager( final ActionManager aActionManager )
-  {
-    aActionManager.add( new NewProjectAction( this ) );
-    aActionManager.add( new OpenProjectAction( this ) );
-    aActionManager.add( new SaveProjectAction( this ) ).setEnabled( false );
-    aActionManager.add( new SaveProjectAsAction( this ) ).setEnabled( false );
-    aActionManager.add( new OpenDataFileAction( this ) );
-    aActionManager.add( new SaveDataFileAction( this ) ).setEnabled( false );
-    aActionManager.add( new ExitAction( this ) );
-
-    aActionManager.add( new CaptureAction( this ) );
-    aActionManager.add( new CancelCaptureAction( this ) ).setEnabled( false );
-    aActionManager.add( new RepeatCaptureAction( this ) ).setEnabled( false );
-
-    aActionManager.add( new ZoomInAction( this ) ).setEnabled( false );
-    aActionManager.add( new ZoomOutAction( this ) ).setEnabled( false );
-    aActionManager.add( new ZoomDefaultAction( this ) ).setEnabled( false );
-    aActionManager.add( new ZoomFitAction( this ) ).setEnabled( false );
-
-    aActionManager.add( new GotoTriggerAction( this ) ).setEnabled( false );
-    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
-    {
-      aActionManager.add( new GotoNthCursorAction( this, c ) ).setEnabled( false );
-    }
-    aActionManager.add( new GotoFirstCursorAction( this ) ).setEnabled( false );
-    aActionManager.add( new GotoLastCursorAction( this ) ).setEnabled( false );
-    aActionManager.add( new ClearCursors( this ) ).setEnabled( false );
-    aActionManager.add( new SetCursorModeAction( this ) );
-    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
-    {
-      aActionManager.add( new SetCursorAction( this, c ) );
-    }
-
-    aActionManager.add( new ShowGeneralSettingsAction( this ) );
-    aActionManager.add( new ShowModeSettingsAction( this ) );
-    aActionManager.add( new ShowDiagramLabelsAction( this ) );
-
-    aActionManager.add( new HelpAboutAction( this ) );
-    aActionManager.add( new ShowBundlesAction( this ) );
-  }
-
-  /**
    * Searches for the tool with the given name.
    * 
    * @param aToolName
@@ -1385,6 +1226,40 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       {
         listener.cursorRemoved( aCursorIdx );
       }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  private Exporter getExporter( final String aName ) throws IllegalArgumentException
+  {
+    if ( ( aName == null ) || aName.trim().isEmpty() )
+    {
+      throw new IllegalArgumentException( "Name cannot be null or empty!" );
+    }
+
+    try
+    {
+      final ServiceReference[] serviceRefs = this.bundleContext
+          .getAllServiceReferences( Exporter.class.getName(), null );
+      final int count = ( serviceRefs == null ) ? 0 : serviceRefs.length;
+
+      for ( int i = 0; i < count; i++ )
+      {
+        final Exporter exporter = ( Exporter )this.bundleContext.getService( serviceRefs[i] );
+
+        if ( aName.equals( exporter.getName() ) )
+        {
+          return exporter;
+        }
+      }
+
+      return null;
+    }
+    catch ( InvalidSyntaxException exception )
+    {
+      throw new RuntimeException( "getExporter failed!", exception );
     }
   }
 

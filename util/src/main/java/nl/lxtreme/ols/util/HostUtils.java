@@ -92,7 +92,7 @@ public final class HostUtils
     public void actionPerformed( final ActionEvent aEvent )
     {
       final JOptionPane optionPane = ( JOptionPane )aEvent.getSource();
-      optionPane.setValue( new Integer( JOptionPane.CLOSED_OPTION ) );
+      optionPane.setValue( Integer.valueOf( JOptionPane.CLOSED_OPTION ) );
     }
   }
 

@@ -501,55 +501,43 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    */
   private JPanel createSettingsPane()
   {
-    final String channels[] = new String[33];
-    channels[0] = "Unused";
-    for ( int i = 0; i < 32; i++ )
-    {
-      channels[i + 1] = new String( "Channel " + i );
-    }
+    int channelCount = 32; // TODO JaWi: this should reflect the current
+                           // device's capabilities...
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
 
     settings.add( createRightAlignedLabel( "RxD" ) );
-    this.rxd = new JComboBox( channels );
-    this.rxd.setSelectedIndex( 0 );
+    this.rxd = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.rxd );
 
     settings.add( createRightAlignedLabel( "TxD" ) );
-    this.txd = new JComboBox( channels );
-    this.txd.setSelectedIndex( 0 );
+    this.txd = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.txd );
 
     settings.add( createRightAlignedLabel( "CTS" ) );
-    this.cts = new JComboBox( channels );
-    this.cts.setSelectedIndex( 0 );
+    this.cts = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.cts );
 
     settings.add( createRightAlignedLabel( "RTS" ) );
-    this.rts = new JComboBox( channels );
-    this.rts.setSelectedIndex( 0 );
+    this.rts = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.rts );
 
     settings.add( createRightAlignedLabel( "DTR" ) );
-    this.dtr = new JComboBox( channels );
-    this.dtr.setSelectedIndex( 0 );
+    this.dtr = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.dtr );
 
     settings.add( createRightAlignedLabel( "DSR" ) );
-    this.dsr = new JComboBox( channels );
-    this.dsr.setSelectedIndex( 0 );
+    this.dsr = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.dsr );
 
     settings.add( createRightAlignedLabel( "DCD" ) );
-    this.dcd = new JComboBox( channels );
-    this.dcd.setSelectedIndex( 0 );
+    this.dcd = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.dcd );
 
     settings.add( createRightAlignedLabel( "RI" ) );
-    this.ri = new JComboBox( channels );
-    this.ri.setSelectedIndex( 0 );
+    this.ri = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.ri );
 
     settings.add( createRightAlignedLabel( "Parity" ) );

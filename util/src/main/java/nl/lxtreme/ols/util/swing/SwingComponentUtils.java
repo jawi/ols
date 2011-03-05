@@ -26,8 +26,6 @@ import java.io.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.util.*;
-
 import org.osgi.service.prefs.*;
 
 
@@ -146,6 +144,36 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Creates a channel selector combobox.
+   * 
+   * @param aAddUnusedOption
+   *          <code>true</code> to add "unused" as first option,
+   *          <code>false</code> to omit this option.
+   * @return a combobox with channel selector options.
+   * @deprecated JaWi 05/03/2011: only used as intermediary solution, use
+   *             {@link #internalCreateChannelSelector(int, boolean)} instead
+   *             with the proper number of channels.
+   */
+  @Deprecated
+  public static JComboBox createChannelSelector( final boolean aAddUnusedOption )
+  {
+    return internalCreateChannelSelector( 32, aAddUnusedOption );
+  }
+
+  /**
+   * Creates a channel selector combobox, where only a valid channel can be
+   * selected.
+   * 
+   * @param aChannelCount
+   *          the number of channels to include in the combobox options;
+   * @return a combobox with channel selector options.
+   */
+  public static JComboBox createChannelSelector( final int aChannelCount )
+  {
+    return internalCreateChannelSelector( aChannelCount, false /* aAddUnusedOption */);
+  }
+
+  /**
    * Convenience method to create a key mask.
    * 
    * @param aKeyStroke
@@ -181,6 +209,22 @@ public final class SwingComponentUtils
       modifiers |= aMask;
     }
     return KeyStroke.getKeyStroke( aKeyStroke, modifiers );
+  }
+
+  /**
+   * Creates a channel selector combobox, where optionally a channel can be
+   * selected.
+   * 
+   * @param aChannelCount
+   *          the number of channels to include in the combobox options;
+   * @param aAddUnusedOption
+   *          <code>true</code> to add "unused" as first option,
+   *          <code>false</code> to omit this option.
+   * @return a combobox with channel selector options.
+   */
+  public static JComboBox createOptionalChannelSelector( final int aChannelCount )
+  {
+    return internalCreateChannelSelector( aChannelCount, true /* aAddUnusedOption */);
   }
 
   /**
@@ -661,16 +705,20 @@ public final class SwingComponentUtils
   public static final File showFileOpenDialog( final Window aOwner, final String aCurrentDirectory,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    if ( HostUtils.isMacOS() )
+    if ( isMacOS() )
     {
       final FileDialog dialog;
       if ( aOwner instanceof Dialog )
       {
         dialog = new FileDialog( ( Dialog )aOwner, "Open file", FileDialog.LOAD );
       }
-      else
+      else if ( aOwner instanceof Frame )
       {
         dialog = new FileDialog( ( Frame )aOwner, "Open file", FileDialog.LOAD );
+      }
+      else
+      {
+        throw new InternalError( "Unknown owner window type!" );
       }
       dialog.setDirectory( aCurrentDirectory );
 
@@ -739,16 +787,20 @@ public final class SwingComponentUtils
   public static final File showFileSaveDialog( final Window aOwner, final String aCurrentDirectory,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    if ( HostUtils.isMacOS() )
+    if ( isMacOS() )
     {
       final FileDialog dialog;
       if ( aOwner instanceof Dialog )
       {
         dialog = new FileDialog( ( Dialog )aOwner, "Save file", FileDialog.SAVE );
       }
-      else
+      else if ( aOwner instanceof Frame )
       {
         dialog = new FileDialog( ( Frame )aOwner, "Save file", FileDialog.SAVE );
+      }
+      else
+      {
+        throw new InternalError( "Unknown owner window type!" );
       }
       dialog.setDirectory( aCurrentDirectory );
 
@@ -816,16 +868,20 @@ public final class SwingComponentUtils
   public static final File showFileSelectionDialog( final Window aOwner, final String aCurrentDirectory,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    if ( HostUtils.isMacOS() )
+    if ( isMacOS() )
     {
       final FileDialog dialog;
       if ( aOwner instanceof Dialog )
       {
         dialog = new FileDialog( ( Dialog )aOwner );
       }
-      else
+      else if ( aOwner instanceof Frame )
       {
         dialog = new FileDialog( ( Frame )aOwner );
+      }
+      else
+      {
+        throw new InternalError( "Unknown owner window type!" );
       }
       dialog.setDirectory( aCurrentDirectory );
 
@@ -883,6 +939,52 @@ public final class SwingComponentUtils
       }
     }
     return result;
+  }
+
+  /**
+   * Creates a channel selector combobox.
+   * 
+   * @param aChannelCount
+   *          the number of channels to include in the combobox options;
+   * @param aAddUnusedOption
+   *          <code>true</code> to add "unused" as first option,
+   *          <code>false</code> to omit this option.
+   * @return a combobox with channel selector options.
+   */
+  private static JComboBox internalCreateChannelSelector( final int aChannelCount, final boolean aAddUnusedOption )
+  {
+    final int modelSize = aAddUnusedOption ? 33 : 32;
+    final String dataChannels[] = new String[modelSize];
+
+    int i = 0;
+    if ( aAddUnusedOption )
+    {
+      dataChannels[i++] = "Unused";
+    }
+    for ( ; i < modelSize; i++ )
+    {
+      final int index = aAddUnusedOption ? i - 1 : i;
+      dataChannels[i] = String.format( "Channel %d", Integer.valueOf( index ) );
+    }
+
+    final JComboBox result = new JComboBox( dataChannels );
+    if ( aAddUnusedOption )
+    {
+      result.setSelectedIndex( 0 );
+    }
+    return result;
+  }
+
+  /**
+   * Returns whether the current host's operating system is Mac OS.
+   * 
+   * @return <code>true</code> if running on Mac OS, <code>false</code>
+   *         otherwise.
+   */
+  private static boolean isMacOS()
+  {
+    final String osName = System.getProperty( "os.name", "" ).toLowerCase();
+    return osName.startsWith( "mac os" );
   }
 
   /**

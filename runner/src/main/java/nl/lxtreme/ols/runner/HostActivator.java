@@ -38,7 +38,8 @@ public class HostActivator implements BundleActivator
   /**
    * Returns the current set of deployed bundles.
    * 
-   * @return an array of bundles, can be <code>null</code>.
+   * @return an array of bundles, can never be <code>null</code>, but an empty
+   *         array is possible.
    */
   public final Bundle[] getBundles()
   {
@@ -46,7 +47,7 @@ public class HostActivator implements BundleActivator
     {
       return this.context.getBundles();
     }
-    return null;
+    return new Bundle[0];
   }
 
   /**

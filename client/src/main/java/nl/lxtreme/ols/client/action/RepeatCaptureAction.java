@@ -46,15 +46,15 @@ public class RepeatCaptureAction extends BaseAction
 
   /**
    * Creates a new RepeatCaptureAction instance.
-   *
-   * @param aFrame
-   *          the frame this action belongs to.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public RepeatCaptureAction( final ClientController aController )
+  public RepeatCaptureAction( final IClientController aController )
   {
     super( ID, aController, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat capture with current device settings" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_R) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_R ) );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_R ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_R ) );
   }
 
   // METHODS

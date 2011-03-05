@@ -20,6 +20,7 @@
  */
 package nl.lxtreme.ols.client.action;
 
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -29,9 +30,10 @@ import javax.swing.*;
 import javax.swing.filechooser.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 
 /**
@@ -55,16 +57,15 @@ public class ExportAction extends BaseAction
 
   /**
    * Creates a new ExportAction instance.
-   *
+   * 
    * @param aController
    *          the client controller to use;
    * @param aExporterName
    *          the name of the exporter to invoke in this action.
    */
-  public ExportAction( final ClientController aController, final String aExporterName )
+  public ExportAction( final IClientController aController, final String aExporterName )
   {
-    super( ID + aExporterName, aController, aExporterName, "Export the current diagram to a " + aExporterName
-        + " file" );
+    super( ID + aExporterName, aController, aExporterName, "Export the current diagram to a " + aExporterName + " file" );
 
     this.exporterName = aExporterName;
   }
@@ -79,7 +80,7 @@ public class ExportAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final ClientController controller = getController();
+    final IClientController controller = getController();
     final DataContainer dataContainer = controller.getDataContainer();
 
     if ( !dataContainer.hasCapturedData() )
@@ -88,65 +89,33 @@ public class ExportAction extends BaseAction
       return;
     }
 
-    final Exporter exporter = controller.getExporter( this.exporterName );
+    final String[] extensions = controller.getExportExtensions( this.exporterName );
+    final String preferredExtension = ( extensions.length == 0 ) ? "" : extensions[0];
 
-    final File exportFileName = getExportFileName( owner, exporter );
+    final File exportFileName = SwingComponentUtils.showFileSaveDialog( owner, //
+        new FileNameExtensionFilter( "Valid export format(s)", extensions ) );
+
     if ( exportFileName != null )
     {
-      OutputStream writer = null;
+      final File actualFile = HostUtils.setFileExtension( exportFileName, preferredExtension );
+      if ( LOG.isLoggable( Level.INFO ) )
+      {
+        LOG.info( "Exporting capture data to file: " + actualFile );
+      }
 
       try
       {
-        writer = new FileOutputStream( exportFileName );
-
-        controller.exportTo( exporter, writer );
-
-        controller.setStatus( "Export to {0} succesful ...", this.exporterName );
+        controller.exportTo( this.exporterName, actualFile );
       }
       catch ( IOException exception )
       {
-        controller.setStatus( "Export to {0} failed! Reason: " + exception.getMessage(), this.exporterName );
-      }
-      finally
-      {
-        try
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
         {
-          writer.flush();
-        }
-        catch ( IOException exception )
-        {
-          LOG.log( Level.FINE, "Flushing (file) writer failed?!", exception );
-        }
-
-        try
-        {
-          writer.close();
-          writer = null;
-        }
-        catch ( IOException exception )
-        {
-          LOG.log( Level.FINE, "Closing (file) writer failed?!", exception );
+          LOG.log( Level.WARNING, "Export with '" + this.exporterName + "' failed!", exception );
+          JErrorDialog.showDialog( owner, "Export capture data failed!", exception );
         }
       }
     }
-  }
-
-  /**
-   * Returns the exporter file name.
-   *
-   * @param aOwner
-   *          the parent window;
-   * @param aExporter
-   *          the export to use.
-   * @return a export filename, can be <code>null</code> in case no file is
-   *         selected by the user.
-   */
-  private File getExportFileName( final Window aOwner, final Exporter aExporter )
-  {
-    final FileNameExtensionFilter fileFilter = new FileNameExtensionFilter( "Valid export format(s)",
-        aExporter.getFilenameExtentions() );
-
-    final File exportFileName = SwingComponentUtils.showFileSaveDialog( aOwner, fileFilter );
-    return exportFileName;
   }
 }

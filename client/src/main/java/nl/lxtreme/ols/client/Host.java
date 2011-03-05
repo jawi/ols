@@ -42,7 +42,7 @@ import org.osgi.framework.*;
 /**
  * Denotes the client host.
  */
-public final class Host implements ApplicationCallback
+public final class Host implements ApplicationCallback, IHost
 {
   // CONSTANT
 
@@ -122,8 +122,9 @@ public final class Host implements ApplicationCallback
   }
 
   /**
-   * Exits this host by stopping the framework bundle.
+   * {@inheritDoc}
    */
+  @Override
   public void exit()
   {
     try
@@ -158,10 +159,9 @@ public final class Host implements ApplicationCallback
   }
 
   /**
-   * Returns this client's version.
-   * 
-   * @return a version String, never <code>null</code>.
+   * {@inheritDoc}
    */
+  @Override
   public final String getVersion()
   {
     return String.valueOf( this.clientProperties.get( "client.version" ) );

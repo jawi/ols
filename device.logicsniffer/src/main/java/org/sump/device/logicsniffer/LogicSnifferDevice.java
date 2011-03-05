@@ -829,14 +829,14 @@ public abstract class LogicSnifferDevice extends SwingWorker<CapturedData, Sampl
       final int rleMode = determineRleMode();
       switch ( rleMode )
       {
-        case 0:
-          flags |= FLAG_RLE_MODE_0;
+        case 3:
+          flags |= FLAG_RLE_MODE_3;
           break;
         case 2:
           flags |= FLAG_RLE_MODE_2;
           break;
-        case 3:
-          flags |= FLAG_RLE_MODE_3;
+        case 0:
+          flags |= FLAG_RLE_MODE_0;
           break;
         default:
           flags |= FLAG_RLE_MODE_1;

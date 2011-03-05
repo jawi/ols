@@ -28,7 +28,8 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- *
+ * Provides a "zoom fit" action, that zooms the diagram to fit entirely in the
+ * current viewport dimensions.
  */
 public class ZoomFitAction extends BaseAction
 {
@@ -41,13 +42,16 @@ public class ZoomFitAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * @param aDiagramScrollPane
+   * Creates a new ZoomFitAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public ZoomFitAction( final ClientController aController )
+  public ZoomFitAction( final IClientController aController )
   {
     super( ID, aController, ICON_ZOOM_FIT_BEST, "Zoom to fit", "Zoom to best fit" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_F) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_F ) );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_F ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_F ) );
   }
 
   // METHODS

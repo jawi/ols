@@ -108,7 +108,7 @@ public final class StringUtils
       zeros[i] = '0';
     }
     String ldz = new String( zeros );
-    return ( new String( ldz + str ) );
+    return ldz.concat( str );
   }
 
   /**

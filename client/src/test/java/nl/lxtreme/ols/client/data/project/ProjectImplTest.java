@@ -262,7 +262,7 @@ public class ProjectImplTest
   @Test
   public void testSetFilename()
   {
-    final File filename = new File( "/tmp" );
+    final File filename = new File( "." );
     this.project.setFilename( filename );
 
     assertEquals( filename, this.project.getFilename() );

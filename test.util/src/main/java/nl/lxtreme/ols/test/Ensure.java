@@ -38,15 +38,15 @@ public class Ensure
 {
   // CONSTANTS
 
-  private static final boolean DEBUG = false;
   private static final int RESOLUTION = 100;
 
   private static long instance = 0;
-  private static PrintStream outStream = System.out;
 
   // VARIABLES
 
+  private final boolean debug;
   private int step = 0;
+  private PrintStream outStream = System.out;
 
   // CONSTRUCTORS
 
@@ -55,10 +55,20 @@ public class Ensure
    */
   public Ensure()
   {
-    if ( DEBUG )
-    {
-      instance++;
-    }
+    this( false /* aDebug */);
+  }
+
+  /**
+   * Creates a new Ensure object.
+   * 
+   * @param aDebug
+   *          <code>true</code> to output more information about the steps this
+   *          class enters/waits for, <code>false</code> otherwise.
+   */
+  public Ensure( final boolean aDebug )
+  {
+    this.debug = aDebug;
+    instance++;
   }
 
   // METHODS
@@ -91,13 +101,13 @@ public class Ensure
    * @throws IllegalArgumentException
    *           in case the given stream was <code>null</code>.
    */
-  public void setStream( final PrintStream aOutput )
+  public synchronized void setStream( final PrintStream aOutput )
   {
     if ( aOutput == null )
     {
       throw new IllegalArgumentException( "Print stream cannot be null!" );
     }
-    outStream = aOutput;
+    this.outStream = aOutput;
   }
 
   /**
@@ -106,9 +116,9 @@ public class Ensure
   public synchronized void step()
   {
     this.step++;
-    if ( DEBUG )
+    if ( this.debug )
     {
-      outStream.println( "[Ensure " + instance + "] next step " + this.step );
+      this.outStream.println( "[Ensure " + instance + "] next step " + this.step );
     }
     notifyAll();
   }
@@ -123,9 +133,9 @@ public class Ensure
   {
     this.step++;
     Assert.assertEquals( aNr, this.step );
-    if ( DEBUG )
+    if ( this.debug )
     {
-      outStream.println( "[Ensure " + instance + "] step " + this.step );
+      this.outStream.println( "[Ensure " + instance + "] step " + this.step );
     }
     notifyAll();
   }
@@ -147,9 +157,9 @@ public class Ensure
   {
     final int initialTimeout = aTimeout;
 
-    if ( DEBUG )
+    if ( this.debug )
     {
-      outStream.println( "[Ensure " + instance + "] waiting for step " + aNr );
+      this.outStream.println( "[Ensure " + instance + "] waiting for step " + aNr );
     }
 
     int timeout = aTimeout;
@@ -173,9 +183,9 @@ public class Ensure
           + ", we are still at step " + this.step );
     }
 
-    if ( DEBUG )
+    if ( this.debug )
     {
-      outStream.println( "[Ensure " + instance + "] arrived at step " + aNr );
+      this.outStream.println( "[Ensure " + instance + "] arrived at step " + aNr );
     }
   }
 }

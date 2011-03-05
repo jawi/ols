@@ -28,7 +28,8 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- *
+ * Provides a "zoom default" action, zooming the diagram to the "original"
+ * level.
  */
 public class ZoomDefaultAction extends BaseAction
 {
@@ -41,13 +42,16 @@ public class ZoomDefaultAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * @param aDiagramScrollPane
+   * Creates a new ZoomDefaultAction instance.
+   * 
+   * @param aController
+   *          the controller to use for this action.
    */
-  public ZoomDefaultAction( final ClientController aController )
+  public ZoomDefaultAction( final IClientController aController )
   {
     super( ID, aController, ICON_ZOOM_DEFAULT, "Zoom original", "Zoom to original level" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_0 ) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_R ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_R ) );
   }
 
   // METHODS

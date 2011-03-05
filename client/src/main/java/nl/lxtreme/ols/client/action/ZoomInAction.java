@@ -28,7 +28,8 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- *
+ * Provides a "zoom in" action, that zooms into the diagram with a constant
+ * factor.
  */
 public class ZoomInAction extends BaseAction
 {
@@ -41,13 +42,16 @@ public class ZoomInAction extends BaseAction
   // CONSTRUCTORS
 
   /**
+   * Creates a new ZoomInAction instance.
+   * 
    * @param aController
+   *          the controller to use for this action.
    */
-  public ZoomInAction( final ClientController aController )
+  public ZoomInAction( final IClientController aController )
   {
     super( ID, aController, ICON_ZOOM_IN, "Zoom in", "Zoom in" );
-    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask ( KeyEvent.VK_PLUS) );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_I ) );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_PLUS ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_I ) );
   }
 
   // METHODS

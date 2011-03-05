@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project
+ * OpenBench LogicSniffer / SUMP project 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,43 +18,25 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.action;
-
-
-import java.awt.event.*;
-
-import nl.lxtreme.ols.client.*;
+package nl.lxtreme.ols.client;
 
 
 /**
- * Clears all cursors.
+ * 
  */
-public class ClearCursors extends BaseAction
+public interface IHost
 {
-  // CONSTANTS
-
-  private static final long serialVersionUID = 1L;
-
-  public static final String ID = "ClearCursors";
-
-  // CONSTRUCTORS
 
   /**
-   * @param aController
+   * Exits this host by stopping the framework bundle.
    */
-  public ClearCursors( final IClientController aController )
-  {
-    super( ID, aController, "Clear all cursors", "Clear all cursors" );
-  }
-
-  // METHODS
+  public abstract void exit();
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * Returns this client's version.
+   * 
+   * @return a version String, never <code>null</code>.
    */
-  @Override
-  public void actionPerformed( final ActionEvent aEvent )
-  {
-    getController().clearAllCursors();
-  }
+  public abstract String getVersion();
+
 }

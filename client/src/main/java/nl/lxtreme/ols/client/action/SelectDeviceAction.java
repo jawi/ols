@@ -29,7 +29,7 @@ import nl.lxtreme.ols.client.*;
 
 
 /**
- *
+ * Provides an action that selects a particular capturing device.
  */
 public class SelectDeviceAction extends BaseAction
 {
@@ -47,7 +47,7 @@ public class SelectDeviceAction extends BaseAction
 
   /**
    * Creates a new SelectDeviceAction instance.
-   *
+   * 
    * @param aController
    *          the controller to use;
    * @param aDeviceName
@@ -60,11 +60,11 @@ public class SelectDeviceAction extends BaseAction
     this.deviceName = aDeviceName;
     // if the first character of the name isAlpha, use it as mnemonic
     // (there is no direct conversion between char and KeyEvent available yet)
-    char mnemonic = aDeviceName.charAt( 0 );
-    if ( mnemonic >= 'a' || mnemonic <= 'z' )
-      mnemonic = Character.toUpperCase( mnemonic );
-    if ( mnemonic >= 'A' || mnemonic <= 'Z' )
-      putValue( MNEMONIC_KEY, new Integer ( mnemonic ) );
+    char mnemonic = Character.toUpperCase( aDeviceName.charAt( 0 ) );
+    if ( Character.isLetterOrDigit( mnemonic ) )
+    {
+      putValue( MNEMONIC_KEY, Integer.valueOf( mnemonic ) );
+    }
   }
 
   // METHODS

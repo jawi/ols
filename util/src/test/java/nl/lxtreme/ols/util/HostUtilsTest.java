@@ -42,6 +42,7 @@ public class HostUtilsTest
    * @see HostUtils#getFileExtension(java.io.File)
    */
   @Test
+  @edu.umd.cs.findbugs.annotations.SuppressWarnings( value = "DMI_HARDCODED_ABSOLUTE_FILENAME", justification = "this is a test!" )
   public void testGetFileExtension()
   {
     File f = new File( System.getProperty( "user.home" ) );
@@ -88,6 +89,7 @@ public class HostUtilsTest
    * @see HostUtils#setFileExtension(java.io.File, String)
    */
   @Test
+  @edu.umd.cs.findbugs.annotations.SuppressWarnings( value = "DMI_HARDCODED_ABSOLUTE_FILENAME", justification = "this is a test!" )
   public void testSetFileExtension()
   {
     File f = new File( System.getProperty( "user.home" ) );

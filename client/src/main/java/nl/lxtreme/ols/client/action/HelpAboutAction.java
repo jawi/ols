@@ -46,10 +46,10 @@ public class HelpAboutAction extends BaseAction
    * @param aController
    *          the client controller to use, cannot be <code>null</code>.
    */
-  public HelpAboutAction( final ClientController aController )
+  public HelpAboutAction( final IClientController aController )
   {
     super( ID, aController, "About " + Host.SHORT_NAME, "" );
-    putValue( MNEMONIC_KEY, new Integer( KeyEvent.VK_A ) );
+    putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
   }
 
   // METHODS

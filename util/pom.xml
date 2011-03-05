@@ -27,6 +27,13 @@
 			<artifactId>org.osgi.compendium</artifactId>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>findbugs</groupId>
+			<artifactId>annotations</artifactId>
+			<version>1.0.0</version>
+			<type>jar</type>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
