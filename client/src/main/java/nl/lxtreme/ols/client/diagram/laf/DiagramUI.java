@@ -30,6 +30,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
@@ -475,7 +476,7 @@ public class DiagramUI extends ComponentUI
     final int blockCnt = dataContainer.getBlockCount();
     for ( int block = 0; block < blockCnt; block++ )
     {
-      if ( ( ( enabledChannels >> ( CapturedData.CHANNELS_PER_BLOCK * block ) ) & 0xff ) != 0 )
+      if ( ( ( enabledChannels >> ( Ols.CHANNELS_PER_BLOCK * block ) ) & 0xff ) != 0 )
       {
         if ( settings.isShowChannels( block ) )
         {
@@ -610,7 +611,7 @@ public class DiagramUI extends ComponentUI
       final int y1 = aClipArea.y;
       final int y2 = y1 + aClipArea.height;
 
-      for ( int i = 0, size = CapturedData.MAX_CURSORS; i < size; i++ )
+      for ( int i = 0, size = Ols.MAX_CURSORS; i < size; i++ )
       {
         final Long cursorPosition = dataContainer.getCursorPosition( i );
         if ( cursorPosition == null )
@@ -732,7 +733,7 @@ public class DiagramUI extends ComponentUI
     final int blockCnt = dataContainer.getBlockCount();
     for ( int block = 0; block < blockCnt; block++ )
     {
-      final int channelsOffset = CapturedData.CHANNELS_PER_BLOCK * block;
+      final int channelsOffset = Ols.CHANNELS_PER_BLOCK * block;
       final boolean blockEnabled = ( ( enabled >> channelsOffset ) & 0xff ) != 0;
       if ( !blockEnabled )
       {
@@ -860,7 +861,7 @@ public class DiagramUI extends ComponentUI
 
           paintGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + yofs + ( channelHeight - 1 ) );
         }
-        yofs += ( channelHeight * CapturedData.CHANNELS_PER_BLOCK );
+        yofs += ( channelHeight * Ols.CHANNELS_PER_BLOCK );
       }
 
       if ( settings.isShowScope( block ) )

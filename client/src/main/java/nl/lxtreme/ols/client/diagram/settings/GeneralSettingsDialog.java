@@ -29,7 +29,6 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorScheme;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.EdgeSlope;
@@ -330,7 +329,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   {
     if ( this.channelColor == null )
     {
-      this.channelColor = new JTextField[CapturedData.MAX_CHANNELS];
+      this.channelColor = new JTextField[Ols.MAX_CHANNELS];
     }
     // Keep track of the numbers of channels we're creating editors for...
     this.channelColorCount = Math.max( this.channelColorCount, ( aBlockNr + 1 ) * CHANNELS_PER_BLOCK );
@@ -414,7 +413,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
   {
     final JPanel editorsPane = new JPanel( new SpringLayout() );
 
-    this.cursorColor = new JTextField[CapturedData.MAX_CURSORS];
+    this.cursorColor = new JTextField[Ols.MAX_CURSORS];
 
     for ( int i = 0; i < this.cursorColor.length; i++ )
     {
@@ -425,7 +424,7 @@ public class GeneralSettingsDialog extends JDialog implements Configurable, Clos
       editorsPane.add( this.cursorColor[i] );
     }
 
-    SpringLayoutUtils.makeCompactGrid( editorsPane, CapturedData.MAX_CURSORS, 2, 6, 6, 6, 6 );
+    SpringLayoutUtils.makeCompactGrid( editorsPane, Ols.MAX_CURSORS, 2, 6, 6, 6, 6 );
 
     final JPanel result = new JPanel( new GridBagLayout() );
 

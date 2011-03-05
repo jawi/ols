@@ -144,23 +144,6 @@ public final class SwingComponentUtils
   }
 
   /**
-   * Creates a channel selector combobox.
-   * 
-   * @param aAddUnusedOption
-   *          <code>true</code> to add "unused" as first option,
-   *          <code>false</code> to omit this option.
-   * @return a combobox with channel selector options.
-   * @deprecated JaWi 05/03/2011: only used as intermediary solution, use
-   *             {@link #internalCreateChannelSelector(int, boolean)} instead
-   *             with the proper number of channels.
-   */
-  @Deprecated
-  public static JComboBox createChannelSelector( final boolean aAddUnusedOption )
-  {
-    return internalCreateChannelSelector( 32, aAddUnusedOption );
-  }
-
-  /**
    * Creates a channel selector combobox, where only a valid channel can be
    * selected.
    * 
@@ -953,7 +936,12 @@ public final class SwingComponentUtils
    */
   private static JComboBox internalCreateChannelSelector( final int aChannelCount, final boolean aAddUnusedOption )
   {
-    final int modelSize = aAddUnusedOption ? 33 : 32;
+    int modelSize = Math.max( 0, Math.min( 32, aChannelCount ) );
+    if ( aAddUnusedOption )
+    {
+      modelSize++;
+    }
+
     final String dataChannels[] = new String[modelSize];
 
     int i = 0;

@@ -43,7 +43,7 @@ import nl.lxtreme.ols.api.tools.*;
  * @see SwingWorker
  * @see CapturedData
  */
-public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> implements CapturedData
+public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> implements AcquisitionResult
 {
   // VARIABLES
 
@@ -284,7 +284,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   /**
    * @see nl.lxtreme.ols.api.data.CapturedData#setCapturedData(CapturedData)
    */
-  protected final void setCapturedData( final CapturedData aCapturedData )
+  protected final void setCapturedData( final AcquisitionResult aCapturedData )
   {
     if ( aCapturedData == this )
     {

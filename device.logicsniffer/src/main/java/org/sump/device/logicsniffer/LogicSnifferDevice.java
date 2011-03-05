@@ -28,6 +28,7 @@ import java.util.logging.*;
 import javax.microedition.io.*;
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
 
@@ -40,7 +41,7 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
  * rxtx package from {@link http://www.rxtx.org/} to access the serial port the
  * analyzer is connected to.
  */
-public abstract class LogicSnifferDevice extends SwingWorker<CapturedData, Sample>
+public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, Sample>
 {
   // INNER TYPES
 
@@ -500,7 +501,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<CapturedData, Sampl
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
-  protected CapturedData doInBackground() throws Exception
+  protected AcquisitionResult doInBackground() throws Exception
   {
     LOG.info( "Starting capture ..." );
 
@@ -606,7 +607,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<CapturedData, Sampl
       // collect additional information for CapturedData; we use arrays here,
       // as their values are to be filled from anonymous inner classes...
       final long[] absoluteLength = { 0L };
-      final long[] triggerPos = { CapturedData.NOT_AVAILABLE };
+      final long[] triggerPos = { Ols.NOT_AVAILABLE };
       final int rate = this.config.getSampleRate();
 
       final SampleProcessorCallback callback = new SampleProcessorCallback()
@@ -642,7 +643,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<CapturedData, Sampl
       // Process the actual samples...
       processor.process();
 
-      return new CapturedDataImpl( values, timestamps, triggerPos[0], rate, channels,
+      return new CapturedData( values, timestamps, triggerPos[0], rate, channels,
           this.config.getEnabledChannelsMask(), absoluteLength[0] );
     }
     finally
@@ -1164,7 +1165,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<CapturedData, Sampl
       Thread.sleep( 1L );
     }
 
-    final int groupCount = aChannelCount / CapturedData.CHANNELS_PER_BLOCK;
+    final int groupCount = aChannelCount / Ols.CHANNELS_PER_BLOCK;
     for ( int i = 0; i < groupCount; i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...

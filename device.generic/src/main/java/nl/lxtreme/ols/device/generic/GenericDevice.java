@@ -26,6 +26,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
 
@@ -33,7 +34,7 @@ import nl.lxtreme.ols.util.*;
 /**
  * @author jawi
  */
-public class GenericDevice extends SwingWorker<CapturedData, Sample>
+public class GenericDevice extends SwingWorker<AcquisitionResult, Sample>
 {
   // CONSTANTS
 
@@ -88,7 +89,7 @@ public class GenericDevice extends SwingWorker<CapturedData, Sample>
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
-  protected CapturedData doInBackground() throws Exception
+  protected AcquisitionResult doInBackground() throws Exception
   {
     this.running = true;
 
@@ -119,7 +120,8 @@ public class GenericDevice extends SwingWorker<CapturedData, Sample>
         idx++;
       }
 
-      return new CapturedDataImpl( values, timestamps, CapturedData.NOT_AVAILABLE, rate, channels, channels, idx );
+      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels,
+          channels, idx );
     }
     finally
     {

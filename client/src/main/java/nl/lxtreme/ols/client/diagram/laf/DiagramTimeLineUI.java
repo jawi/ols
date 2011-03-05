@@ -26,6 +26,7 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
@@ -234,7 +235,7 @@ public class DiagramTimeLineUI extends ComponentUI
     final int textHeight = fm.getHeight();
     final int flagHeight = textHeight;
 
-    for ( int i = 0, size = CapturedData.MAX_CURSORS; i < size; i++ )
+    for ( int i = 0, size = Ols.MAX_CURSORS; i < size; i++ )
     {
       final Long cursorPosition = aDataContainer.getCursorPosition( i );
       if ( cursorPosition == null )

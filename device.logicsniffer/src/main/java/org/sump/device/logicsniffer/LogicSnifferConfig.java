@@ -21,8 +21,7 @@
 package org.sump.device.logicsniffer;
 
 
-import nl.lxtreme.ols.api.data.*;
-
+import nl.lxtreme.ols.api.*;
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
@@ -217,7 +216,7 @@ public final class LogicSnifferConfig
    */
   public int getGroupCount()
   {
-    int cnt = getChannelCount() / CapturedData.CHANNELS_PER_BLOCK;
+    int cnt = getChannelCount() / Ols.CHANNELS_PER_BLOCK;
 
     if ( isDoubleDataRateEnabled() )
     {
@@ -322,7 +321,7 @@ public final class LogicSnifferConfig
    */
   public int getSampleRate()
   {
-    int rate = CapturedData.NOT_AVAILABLE;
+    int rate = Ols.NOT_AVAILABLE;
     if ( isInternalClock() )
     {
       if ( isDoubleDataRateEnabled() )

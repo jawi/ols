@@ -174,10 +174,10 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
           }
           else
           {
-            CapturedData newData = null;
-            if ( analysisResults instanceof CapturedData )
+            AcquisitionResult newData = null;
+            if ( analysisResults instanceof AcquisitionResult )
             {
-              newData = ( CapturedData )analysisResults;
+              newData = ( AcquisitionResult )analysisResults;
             }
 
             this.callback.analysisComplete( newData );

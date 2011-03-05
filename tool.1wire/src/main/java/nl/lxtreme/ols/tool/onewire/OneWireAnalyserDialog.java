@@ -33,6 +33,7 @@ import java.util.List;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -63,12 +64,18 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
   // CONSTRUCTORS
 
   /**
+   * Creates a new OneWireAnalyserDialog instance.
+   * 
    * @param aOwner
+   *          the owner of this dialog;
    * @param aName
+   *          the name of this dialog;
+   * @param aContext
+   *          the tool context.
    */
-  public OneWireAnalyserDialog( final Window aOwner, final String aName )
+  public OneWireAnalyserDialog( final Window aOwner, final String aName, final ToolContext aContext )
   {
-    super( aOwner, aName );
+    super( aOwner, aName, aContext );
 
     initDialog();
 
@@ -256,11 +263,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
    */
   private JComponent createSettingsPane()
   {
-    final String channels[] = new String[32];
-    for ( int i = 0; i < 32; i++ )
-    {
-      channels[i] = "Channel " + i;
-    }
+    final int channelCount = getChannels();
 
     final String modes[] = new String[] { "Standard", "Overdrive" };
 
@@ -269,7 +272,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
     SpringLayoutUtils.addSeparator( panel, "Settings" );
 
     panel.add( createRightAlignedLabel( "1-Wire Line" ) );
-    this.owLine = new JComboBox( channels );
+    this.owLine = SwingComponentUtils.createChannelSelector( channelCount );
     this.owLine.setSelectedIndex( 0 );
     panel.add( this.owLine );
 

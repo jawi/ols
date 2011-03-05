@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.client.action.manager;
 
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
 
@@ -86,7 +86,7 @@ public final class ActionManagerFactory
     aActionManager.add( new ZoomFitAction( aController ) ).setEnabled( false );
 
     aActionManager.add( new GotoTriggerAction( aController ) ).setEnabled( false );
-    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
+    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
     {
       aActionManager.add( new GotoNthCursorAction( aController, c ) ).setEnabled( false );
     }
@@ -94,7 +94,7 @@ public final class ActionManagerFactory
     aActionManager.add( new GotoLastCursorAction( aController ) ).setEnabled( false );
     aActionManager.add( new ClearCursors( aController ) ).setEnabled( false );
     aActionManager.add( new SetCursorModeAction( aController ) );
-    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
+    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
     {
       aActionManager.add( new SetCursorAction( aController, c ) );
     }

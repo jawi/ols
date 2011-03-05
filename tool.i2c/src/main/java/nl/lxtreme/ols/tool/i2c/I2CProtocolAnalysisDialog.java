@@ -35,6 +35,7 @@ import java.util.logging.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
@@ -80,12 +81,18 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   // CONSTRUCTORS
 
   /**
-   * @param aFrame
+   * Creates a new I2CProtocolAnalysisDialog instance.
+   * 
+   * @param aOwner
+   *          the owner of this dialog;
    * @param aName
+   *          the name of this dialog;
+   * @param aContext
+   *          the tool context.
    */
-  public I2CProtocolAnalysisDialog( final Window aOwner, final String aName )
+  public I2CProtocolAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
   {
-    super( aOwner, aName );
+    super( aOwner, aName, aContext );
 
     initDialog();
 
@@ -407,11 +414,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    */
   private JPanel createSettingsPane()
   {
-    final String channels[] = new String[32];
-    for ( int i = 0; i < 32; i++ )
-    {
-      channels[i] = "Channel " + i;
-    }
+    final int channelCount = getChannels();
 
     this.busSetSCL = new JLabel( "<autodetect>" );
     this.busSetSDA = new JLabel( "<autodetect>" );
@@ -424,12 +427,12 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     this.lineBLabel = createRightAlignedLabel( "Line B" );
 
     panel.add( this.lineALabel );
-    this.lineA = new JComboBox( channels );
+    this.lineA = SwingComponentUtils.createChannelSelector( channelCount );
     this.lineA.setSelectedIndex( 0 );
     panel.add( this.lineA );
 
     panel.add( this.lineBLabel );
-    this.lineB = new JComboBox( channels );
+    this.lineB = SwingComponentUtils.createChannelSelector( channelCount );
     this.lineB.setSelectedIndex( 1 );
     panel.add( this.lineB );
 

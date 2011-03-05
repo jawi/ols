@@ -37,7 +37,7 @@ public final class ProjectImpl implements Project
 {
   // VARIABLES
 
-  private CapturedData capturedData;
+  private AcquisitionResult capturedData;
   private boolean cursorsEnabled;
   private Long[] cursors;
   private String[] labels;
@@ -115,10 +115,10 @@ public final class ProjectImpl implements Project
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getCapturedData()
+   * {@inheritDoc}
    */
   @Override
-  public CapturedData getCapturedData()
+  public AcquisitionResult getCapturedData()
   {
     return this.capturedData;
   }
@@ -205,10 +205,10 @@ public final class ProjectImpl implements Project
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setCapturedData(nl.lxtreme.ols.api.data.CapturedData)
+   * {@inheritDoc}
    */
   @Override
-  public void setCapturedData( final CapturedData aCapturedData )
+  public void setCapturedData( final AcquisitionResult aCapturedData )
   {
     this.capturedData = aCapturedData;
   }

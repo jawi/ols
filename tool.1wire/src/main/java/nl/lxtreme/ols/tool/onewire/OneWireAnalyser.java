@@ -37,6 +37,7 @@ public class OneWireAnalyser extends BaseAsyncTool<OneWireAnalyserDialog, OneWir
   // CONSTRUCTORS
 
   /**
+   * Creates a new OneWireAnalyser instance.
    */
   public OneWireAnalyser()
   {
@@ -46,18 +47,16 @@ public class OneWireAnalyser extends BaseAsyncTool<OneWireAnalyserDialog, OneWir
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String)
+   * {@inheritDoc}
    */
   @Override
-  protected OneWireAnalyserDialog createDialog( final Window aOwner, final String aName )
+  protected OneWireAnalyserDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
   {
-    return new OneWireAnalyserDialog( aOwner, aName );
+    return new OneWireAnalyserDialog( aOwner, aName, aContext );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
-   *      nl.lxtreme.ols.api.tools.ToolContext)
+   * {@inheritDoc}
    */
   @Override
   protected OneWireAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
@@ -66,7 +65,7 @@ public class OneWireAnalyser extends BaseAsyncTool<OneWireAnalyserDialog, OneWir
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onPropertyChange(java.beans.PropertyChangeEvent)
+   * {@inheritDoc}
    */
   @Override
   protected void onPropertyChange( final PropertyChangeEvent aEvent )

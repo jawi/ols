@@ -47,18 +47,16 @@ public class SPIAnalyser extends BaseAsyncTool<SPIProtocolAnalysisDialog, SPIDat
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String)
+   * {@inheritDoc}
    */
   @Override
-  protected SPIProtocolAnalysisDialog createDialog( final Window aOwner, final String aName )
+  protected SPIProtocolAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
   {
-    return new SPIProtocolAnalysisDialog( aOwner, aName );
+    return new SPIProtocolAnalysisDialog( aOwner, aName, aContext );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
-   *      ToolContext)
+   * {@inheritDoc}
    */
   @Override
   protected SPIAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
@@ -67,7 +65,7 @@ public class SPIAnalyser extends BaseAsyncTool<SPIProtocolAnalysisDialog, SPIDat
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#onPropertyChange(java.beans.PropertyChangeEvent)
+   * {@inheritDoc}
    */
   @Override
   protected void onPropertyChange( final PropertyChangeEvent aEvent )

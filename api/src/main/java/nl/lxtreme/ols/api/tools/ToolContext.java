@@ -33,6 +33,21 @@ public interface ToolContext
   // METHODS
 
   /**
+   * Returns the number of channels in the sample data.
+   * 
+   * @return the channel count, >= 0.
+   */
+  int getChannels();
+
+  /**
+   * Returns a bitmask of enabled channels in the sample data.
+   * 
+   * @return a bitmask of enabled channels, for example, 0xFF for the first 8
+   *         channels.
+   */
+  int getEnabledChannels();
+
+  /**
    * Returns the ending sample index on which the decoding should end.
    * 
    * @return a end sample index, >= 0.

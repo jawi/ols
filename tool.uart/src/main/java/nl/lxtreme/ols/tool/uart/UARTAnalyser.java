@@ -46,18 +46,16 @@ public class UARTAnalyser extends BaseAsyncTool<UARTProtocolAnalysisDialog, UART
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseTool#createDialog(java.awt.Window,
-   *      java.lang.String)
+   * {@inheritDoc}
    */
   @Override
-  protected UARTProtocolAnalysisDialog createDialog( final Window aOwner, final String aName )
+  protected UARTProtocolAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
   {
-    return new UARTProtocolAnalysisDialog( aOwner, getName() );
+    return new UARTProtocolAnalysisDialog( aOwner, getName(), aContext );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncTool#createToolWorker(nl.lxtreme.ols.api.data.DataContainer,
-   *      ToolContext)
+   * {@inheritDoc}
    */
   @Override
   protected UARTAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )

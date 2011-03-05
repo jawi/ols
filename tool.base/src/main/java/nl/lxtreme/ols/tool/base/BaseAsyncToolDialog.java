@@ -32,6 +32,7 @@ import javax.swing.*;
 import javax.swing.SwingWorker.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.BaseAsyncTool.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -264,19 +265,6 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
   // CONSTRUCTORS
 
   /**
-   * Creates a new modal BaseAsyncToolDialog instance.
-   * 
-   * @param aOwner
-   *          the owning window;
-   * @param aName
-   *          the title/name of this dialog.
-   */
-  protected BaseAsyncToolDialog( final Window aOwner, final String aName )
-  {
-    super( aOwner, aName );
-  }
-
-  /**
    * Creates a new BaseAsyncToolDialog instance.
    * 
    * @param aOwner
@@ -284,11 +272,29 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
    * @param aName
    *          the title/name of this dialog;
    * @param aModality
-   *          the modality of this dialog.
+   *          the modality of this dialog;
+   * @param aContext
+   *          the tool context of this dialog.
    */
-  protected BaseAsyncToolDialog( final Window aOwner, final String aName, final ModalityType aModality )
+  protected BaseAsyncToolDialog( final Window aOwner, final String aName, final ModalityType aModality,
+      final ToolContext aContext )
   {
-    super( aOwner, aName, aModality );
+    super( aOwner, aName, aModality, aContext );
+  }
+
+  /**
+   * Creates a new modal BaseAsyncToolDialog instance.
+   * 
+   * @param aOwner
+   *          the owning window;
+   * @param aName
+   *          the title/name of this dialog;
+   * @param aContext
+   *          the tool context of this dialog.
+   */
+  protected BaseAsyncToolDialog( final Window aOwner, final String aName, final ToolContext aContext )
+  {
+    super( aOwner, aName, aContext );
   }
 
   // METHODS

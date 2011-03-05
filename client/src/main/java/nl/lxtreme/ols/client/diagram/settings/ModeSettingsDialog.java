@@ -33,7 +33,7 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 /**
  * Stores diagram "mode" settings and provides a dialog for changing them.
- *
+ * 
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
@@ -87,7 +87,7 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
 
   /**
    * Constructs diagram settings component.
-   *
+   * 
    * @param aParent
    * @param aSettings
    */
@@ -114,7 +114,7 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
 
   /**
    * Returns the (mutated) diagram settings.
-   *
+   * 
    * @return the diagram settings, never <code>null</code>.
    */
   public final DiagramSettings getDiagramSettings()
@@ -128,14 +128,14 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    // TODO Auto-generated method stub
+    // NO-op
   }
 
   /**
    * Display the settings dialog. If the user clicks ok, all changes are
    * reflected in the properties of this object. Otherwise changes are
    * discarded.
-   *
+   * 
    * @return <code>OK</code> when user accepted changes, <code>CANCEL</code>
    *         otherwise
    */
@@ -151,7 +151,7 @@ public class ModeSettingsDialog extends JDialog implements Configurable, Closeab
   @Override
   public void writePreferences( final UserSettings aSettings )
   {
-    // TODO Auto-generated method stub
+    // NO-op
   }
 
   /**

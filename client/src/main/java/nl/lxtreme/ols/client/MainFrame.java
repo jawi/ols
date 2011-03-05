@@ -31,8 +31,8 @@ import java.util.List;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.diagram.*;
@@ -249,14 +249,19 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * @param aDevController
+   * Adds a new menu item to the devices-menu for the given device controller.
+   * 
+   * @param aDeviceName
+   *          the name of the device controller to add, cannot be
+   *          <code>null</code>.
+   * @return the action of the added menu item, never <code>null</code>.
    */
-  public final boolean addDeviceMenuItem( final DeviceController aDeviceController )
+  public final IManagedAction addDeviceMenuItem( final String aDeviceName )
   {
     // We're adding one, so, there's at least one device available...
     this.deviceMenu.remove( this.noDevicesItem );
 
-    final SelectDeviceAction action = new SelectDeviceAction( this.controller, aDeviceController.getName() );
+    final SelectDeviceAction action = new SelectDeviceAction( this.controller, aDeviceName );
     final JMenuItem menuItem = new JRadioButtonMenuItem( action );
 
     // Determine where in the menu we should add the menu item, this way, we
@@ -266,29 +271,25 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.deviceGroup.add( menuItem );
     this.deviceMenu.add( menuItem, idx );
 
-    // Hacker-dy-hack: if the device controller is of a class starting with
-    // 'org.sump.', we're going to select it by default...
-    boolean result = false;
-    if ( aDeviceController.getClass().getName().startsWith( "org.sump" ) )
-    {
-      menuItem.setSelected( true );
-      result = true;
-    }
-
     updateMenuState( this.deviceMenu, this.noDevicesItem );
 
-    return result;
+    return action;
   }
 
   /**
+   * Adds a new menu item to the export-menu for the given exporter name.
+   * 
    * @param aExporterName
+   *          the name of the exporter to add, cannot be <code>null</code>.
+   * @return the action of the added menu item, never <code>null</code>.
    */
-  public final void addExportMenuItem( final String aExporterName )
+  public final IManagedAction addExportMenuItem( final String aExporterName )
   {
     // We're adding one, so, there's at least one device available...
     this.exportMenu.remove( this.noExportersItem );
 
-    final JMenuItem menuItem = new JMenuItem( new ExportAction( this.controller, aExporterName ) );
+    final ExportAction exportAction = new ExportAction( this.controller, aExporterName );
+    final JMenuItem menuItem = new JMenuItem( exportAction );
 
     // Determine where in the menu we should add the menu item, this way, we
     // can make the menu appear consistent...
@@ -297,17 +298,24 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.exportMenu.add( menuItem, idx );
 
     updateMenuState( this.exportMenu, this.noExportersItem );
+
+    return exportAction;
   }
 
   /**
-   * @param aTool
+   * Adds a new menu item to the tools-menu for the given tool name.
+   * 
+   * @param aToolName
+   *          the name of the tool to add, cannot be <code>null</code>.
+   * @return the action of the added menu item, never <code>null</code>.
    */
-  public final void addToolMenuItem( final String aToolName )
+  public final IManagedAction addToolMenuItem( final String aToolName )
   {
     // We're adding one, so, there's at least one device available...
     this.toolsMenu.remove( this.noToolsItem );
 
-    final JMenuItem menuItem = new JMenuItem( new RunToolAction( this.controller, aToolName ) );
+    final RunToolAction toolAction = new RunToolAction( this.controller, aToolName );
+    final JMenuItem menuItem = new JMenuItem( toolAction );
 
     // Determine where in the menu we should add the menu item, this way, we
     // can make the menu appear consistent...
@@ -316,6 +324,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.toolsMenu.add( menuItem, idx );
 
     updateMenuState( this.toolsMenu, this.noToolsItem );
+
+    return toolAction;
   }
 
   /**
@@ -397,8 +407,10 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * @param aDeviceName
    *          the name of the device to remove as menu item from the menu,
    *          cannot be <code>null</code>.
+   * @return the managed action of the removed menu item, can be
+   *         <code>null</code>.
    */
-  public final void removeDeviceMenuItem( final String aDeviceName )
+  public final IManagedAction removeDeviceMenuItem( final String aDeviceName )
   {
     final JMenuItem menuItem = removeMenuItem( this.deviceMenu, aDeviceName );
     if ( menuItem != null )
@@ -406,7 +418,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       this.deviceGroup.remove( menuItem );
 
       updateMenuState( this.deviceMenu, this.noDevicesItem );
+      return ( IManagedAction )menuItem.getAction();
     }
+    return null;
   }
 
   /**
@@ -415,14 +429,18 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * @param aExporterName
    *          the name of the exporter to remove as menu item from the menu,
    *          cannot be <code>null</code>.
+   * @return the managed action of the removed menu item, can be
+   *         <code>null</code>.
    */
-  public final void removeExportMenuItem( final String aExporterName )
+  public final IManagedAction removeExportMenuItem( final String aExporterName )
   {
     final JMenuItem menuItem = removeMenuItem( this.exportMenu, aExporterName );
     if ( menuItem != null )
     {
       updateMenuState( this.exportMenu, this.noExportersItem );
+      return ( IManagedAction )menuItem.getAction();
     }
+    return null;
   }
 
   /**
@@ -431,14 +449,18 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * @param aToolName
    *          the name of the tool to remove as menu item from the menu, cannot
    *          be <code>null</code>.
+   * @return the managed action of the removed menu item, can be
+   *         <code>null</code>.
    */
-  public final void removeToolMenuItem( final String aToolName )
+  public final IManagedAction removeToolMenuItem( final String aToolName )
   {
     final JMenuItem menuItem = removeMenuItem( this.toolsMenu, aToolName );
     if ( menuItem != null )
     {
       updateMenuState( this.toolsMenu, this.noToolsItem );
+      return ( IManagedAction )menuItem.getAction();
     }
+    return null;
   }
 
   /**
@@ -620,7 +642,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     diagramMenu.add( this.controller.getAction( GotoTriggerAction.ID ) );
     diagramMenu.add( this.controller.getAction( GotoFirstCursorAction.ID ) );
     diagramMenu.add( this.controller.getAction( GotoLastCursorAction.ID ) );
-    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
+    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
     {
       diagramMenu.add( this.controller.getAction( GotoNthCursorAction.getID( c ) ) );
     }
@@ -673,7 +695,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     toolbar.addSeparator();
 
     toolbar.add( this.controller.getAction( GotoTriggerAction.ID ) );
-    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
+    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
     {
       toolbar.add( this.controller.getAction( GotoNthCursorAction.getID( c ) ) );
     }

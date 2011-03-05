@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.base;
 
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.tools.*;
 
 
 /**
@@ -30,6 +31,14 @@ import nl.lxtreme.ols.api.data.*;
 public interface ToolDialog
 {
   // METHODS
+
+  /**
+   * Returns the tool context in which this tool should run, providing
+   * information like, the number of channels and so on.
+   * 
+   * @return a tool context, never <code>null</code>.
+   */
+  public ToolContext getContext();
 
   /**
    * Resets the dialog, will be called if the dialog is shown at least once and
@@ -46,4 +55,5 @@ public interface ToolDialog
    *          <code>null</code>.
    */
   public void showDialog( final DataContainer aData );
+
 }

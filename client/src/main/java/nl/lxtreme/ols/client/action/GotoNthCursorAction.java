@@ -21,12 +21,11 @@
 package nl.lxtreme.ols.client.action;
 
 
-import static nl.lxtreme.ols.api.data.CapturedData.*;
 import static nl.lxtreme.ols.client.icons.IconFactory.*;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -66,7 +65,7 @@ public class GotoNthCursorAction extends BaseAction
             + " cursor in the diagram" );
     this.index = aIndex;
 
-    int keyStroke = KeyEvent.VK_0 + ( ( aIndex + 1 ) % MAX_CURSORS );
+    int keyStroke = KeyEvent.VK_0 + ( ( aIndex + 1 ) % Ols.MAX_CURSORS );
     if ( keyStroke != KeyEvent.VK_0 )
     {
       // Avoid overwriting CTRL/CMD + 0 as accelerator...
@@ -87,9 +86,9 @@ public class GotoNthCursorAction extends BaseAction
    */
   public static String getID( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= MAX_CURSORS ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= Ols.MAX_CURSORS ) )
     {
-      throw new IllegalArgumentException( "Invalid cursor index, should be between 0 and " + MAX_CURSORS );
+      throw new IllegalArgumentException( "Invalid cursor index, should be between 0 and " + Ols.MAX_CURSORS );
     }
     return ID_PREFIX + aCursorIdx;
   }

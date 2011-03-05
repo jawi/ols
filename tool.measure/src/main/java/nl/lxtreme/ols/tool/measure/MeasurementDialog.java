@@ -92,6 +92,24 @@ public class MeasurementDialog extends BaseToolDialog
         final ToolContext context = new ToolContext()
         {
           /**
+           * {@inheritDoc}
+           */
+          @Override
+          public int getChannels()
+          {
+            return container.getChannels();
+          }
+
+          /**
+           * {@inheritDoc}
+           */
+          @Override
+          public int getEnabledChannels()
+          {
+            return container.getEnabledChannels();
+          }
+
+          /**
            * @see nl.lxtreme.ols.api.tools.ToolContext#getEndSampleIndex()
            */
           @Override
@@ -277,14 +295,12 @@ public class MeasurementDialog extends BaseToolDialog
    *          the owning window;
    * @param aTitle
    *          the title of this dialog;
-   * @param aData
-   *          the data to show in this dialog;
    * @param aContext
    *          the tool context.
    */
-  public MeasurementDialog( final Window aOwner, final String aTitle )
+  public MeasurementDialog( final Window aOwner, final String aTitle, final ToolContext aContext )
   {
-    super( aOwner, aTitle, Dialog.ModalityType.MODELESS );
+    super( aOwner, aTitle, Dialog.ModalityType.MODELESS, aContext );
 
     initDialog();
 
@@ -361,7 +377,7 @@ public class MeasurementDialog extends BaseToolDialog
    */
   final void updateMeasurement()
   {
-    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       final String text = getCursorTimeDisplayValue( i );
       this.cursorValueLabels[i].setText( text );
@@ -401,8 +417,8 @@ public class MeasurementDialog extends BaseToolDialog
 
     SpringLayoutUtils.addSeparator( cursorListing, "Cursors" );
 
-    this.cursorValueLabels = new JLabel[CapturedData.MAX_CURSORS];
-    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    this.cursorValueLabels = new JLabel[Ols.MAX_CURSORS];
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       cursorListing.add( createRightAlignedLabel( aCursorNames[i] ) );
 
@@ -425,7 +441,7 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private JComponent createDialogContent()
   {
-    final String[] cursorNames = new String[CapturedData.MAX_CURSORS];
+    final String[] cursorNames = new String[Ols.MAX_CURSORS];
     for ( int i = 0; i < cursorNames.length; i++ )
     {
       cursorNames[i] = String.format( "Cursor %d", Integer.valueOf( i + 1 ) );
@@ -450,8 +466,7 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private Component createMeasurementPane( final String[] aCursorNames )
   {
-    int channelCount = 32; // TODO JaWi: this should reflect the current
-                           // device's capabilities...
+    final int channelCount = getChannels();
 
     this.frequencyLabel = new JLabel( EMPTY_TEXT );
     this.distanceLabel = new JLabel( EMPTY_TEXT );

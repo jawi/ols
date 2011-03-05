@@ -48,10 +48,10 @@ public interface CaptureCallback extends ProgressCallback
   /**
    * Called upon completion of the capture process.
    * 
-   * @param aCapturedData
+   * @param aData
    *          the captured data, never <code>null</code>.
    */
-  public void captureComplete( final CapturedData aCapturedData );
+  public void captureComplete( final AcquisitionResult aData );
 
   /**
    * Called when the capture is just started.

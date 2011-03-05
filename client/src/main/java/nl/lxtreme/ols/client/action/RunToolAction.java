@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -55,12 +56,44 @@ public class RunToolAction extends BaseAction
    */
   public RunToolAction( final ClientController aController, final String aToolName )
   {
-    super( ID + aToolName, aController, aToolName, "Run ".concat( aToolName ) );
+    super( getID( aToolName ), aController, aToolName, "Run ".concat( aToolName ) );
 
     this.toolName = aToolName;
   }
 
   // METHODS
+
+  /**
+   * Returns the action identifier for the given tool name.
+   * 
+   * @param aToolName
+   *          a tool name, cannot be <code>null</code>.
+   * @return a tool action identifier, never <code>null</code>.
+   */
+  public static final String getID( final String aToolName )
+  {
+    if ( aToolName == null )
+    {
+      throw new IllegalArgumentException( "Tool name cannot be null!" );
+    }
+    return ID.concat( aToolName );
+  }
+
+  /**
+   * Returns the action identifier for the given tool.
+   * 
+   * @param aTool
+   *          a tool instance, cannot be <code>null</code>.
+   * @return a tool action identifier, never <code>null</code>.
+   */
+  public static final String getID( final Tool aTool )
+  {
+    if ( aTool == null )
+    {
+      throw new IllegalArgumentException( "Tool cannot be null!" );
+    }
+    return getID( aTool.getName() );
+  }
 
   /**
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)

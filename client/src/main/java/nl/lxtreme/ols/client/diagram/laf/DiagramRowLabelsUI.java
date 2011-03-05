@@ -26,6 +26,7 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
@@ -142,7 +143,7 @@ public class DiagramRowLabelsUI extends ComponentUI
     final int blockCnt = dataContainer.getBlockCount();
     for ( int block = 0; block < blockCnt; block++ )
     {
-      final int channelsOffset = CapturedData.CHANNELS_PER_BLOCK * block;
+      final int channelsOffset = Ols.CHANNELS_PER_BLOCK * block;
       final boolean blockEnabled = ( ( enabledChannels >> channelsOffset ) & 0xff ) != 0;
       if ( !blockEnabled )
       {
@@ -186,7 +187,7 @@ public class DiagramRowLabelsUI extends ComponentUI
           canvas.setFont( this.labelFont );
         }
 
-        yofs += channelHeight * CapturedData.CHANNELS_PER_BLOCK;
+        yofs += channelHeight * Ols.CHANNELS_PER_BLOCK;
       }
 
       // Draw scope-thingie (if available)
@@ -250,7 +251,7 @@ public class DiagramRowLabelsUI extends ComponentUI
     int minWidth = -1;
 
     final FontMetrics fm = aRowLabels.getFontMetrics( this.labelFont );
-    for ( int i = 0; i < CapturedData.MAX_CHANNELS; i++ )
+    for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
     {
       String label = dataContainer.getChannelLabel( i );
       if ( StringUtils.isEmpty( label ) )

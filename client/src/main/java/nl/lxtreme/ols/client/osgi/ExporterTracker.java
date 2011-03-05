@@ -93,7 +93,6 @@ public class ExporterTracker extends ServiceTracker
       }
     } );
 
-    // TODO Auto-generated method stub
     super.removedService( aReference, aService );
   }
 }

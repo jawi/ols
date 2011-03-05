@@ -61,6 +61,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     private final int startSampleIdx;
     private final int endSampleIdx;
+    private final int channels;
+    private final int enabledChannels;
 
     // CONSTRUCTORS
 
@@ -70,16 +72,41 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
      * @param aStartSampleIdx
      *          the starting sample index;
      * @param aEndSampleIdx
-     *          the ending sample index.
+     *          the ending sample index;
+     * @param aChannels
+     *          the available channels in the acquisition result;
+     * @param aEnabledChannels
+     *          the enabled channels in the acquisition result.
      */
-    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx )
+    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final int aChannels,
+        final int aEnabledChannels )
     {
       this.startSampleIdx = aStartSampleIdx;
       this.endSampleIdx = aEndSampleIdx;
+      this.channels = aChannels;
+      this.enabledChannels = aEnabledChannels;
     }
 
     /**
-     * @see nl.lxtreme.ols.api.tools.ToolContext#getEndSampleIndex()
+     * {@inheritDoc}
+     */
+    @Override
+    public int getChannels()
+    {
+      return this.channels;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getEnabledChannels()
+    {
+      return this.enabledChannels;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int getEndSampleIndex()
@@ -88,7 +115,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
 
     /**
-     * @see nl.lxtreme.ols.api.tools.ToolContext#getLength()
+     * {@inheritDoc}
      */
     @Override
     public int getLength()
@@ -97,7 +124,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
 
     /**
-     * @see nl.lxtreme.ols.api.tools.ToolContext#getStartSampleIndex()
+     * {@inheritDoc}
      */
     @Override
     public int getStartSampleIndex()
@@ -169,8 +196,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      if ( this.mainFrame.addDeviceMenuItem( aDeviceController ) )
+      final IManagedAction deviceAction = this.mainFrame.addDeviceMenuItem( aDeviceController.getName() );
+      this.actionManager.add( deviceAction );
+      // TODO ehm, yes... a hack...
+      if ( aDeviceController.getClass().getName().startsWith( "org.sump" ) )
       {
+        deviceAction.putValue( Action.SELECTED_KEY, Boolean.TRUE );
         this.currentDevCtrl = aDeviceController;
       }
     }
@@ -188,7 +219,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      this.mainFrame.addExportMenuItem( aExporter.getName() );
+      final IManagedAction exporterAction = this.mainFrame.addExportMenuItem( aExporter.getName() );
+      this.actionManager.add( exporterAction );
     }
 
     updateActions();
@@ -204,7 +236,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      this.mainFrame.addToolMenuItem( aTool.getName() );
+      final IManagedAction toolAction = this.mainFrame.addToolMenuItem( aTool.getName() );
+      this.actionManager.add( toolAction );
     }
 
     updateActions();
@@ -222,14 +255,14 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisComplete(nl.lxtreme.ols.api.data.CapturedData)
+   * {@inheritDoc}
    */
   @Override
-  public void analysisComplete( final CapturedData aNewCapturedData )
+  public void analysisComplete( final AcquisitionResult aNewData )
   {
-    if ( aNewCapturedData != null )
+    if ( aNewData != null )
     {
-      this.dataContainer.setCapturedData( aNewCapturedData );
+      this.dataContainer.setCapturedData( aNewData );
     }
     if ( this.mainFrame != null )
     {
@@ -265,12 +298,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureComplete(nl.lxtreme.ols.api.data.CapturedData)
+   * {@inheritDoc}
    */
   @Override
-  public void captureComplete( final CapturedData aCapturedData )
+  public void captureComplete( final AcquisitionResult aCapturedData )
   {
-    setCapturedData( aCapturedData );
+    setAcquisitionResult( aCapturedData );
 
     setStatus( "Capture finished at {0,date,medium} {0,time,medium}.", new Date() );
 
@@ -349,7 +382,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void clearAllCursors()
   {
-    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       this.dataContainer.setCursorPosition( i, null );
     }
@@ -564,7 +597,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
     {
-      for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
+      for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
       {
         if ( this.dataContainer.isCursorPositionSet( c ) )
         {
@@ -586,7 +619,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
     {
-      for ( int c = CapturedData.MAX_CURSORS - 1; c >= 0; c-- )
+      for ( int c = Ols.MAX_CURSORS - 1; c >= 0; c-- )
       {
         if ( this.dataContainer.isCursorPositionSet( c ) )
         {
@@ -650,7 +683,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       OlsDataHelper.read( tempProject, reader );
 
       setChannelLabels( tempProject.getChannelLabels() );
-      setCapturedData( tempProject.getCapturedData() );
+      setAcquisitionResult( tempProject.getCapturedData() );
       setCursorData( tempProject.getCursorPositions(), tempProject.isCursorsEnabled() );
 
       setStatus( "Capture data loaded from '{0}' ...", aFile.getName() );
@@ -747,7 +780,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      this.mainFrame.removeExportMenuItem( aExporter.getName() );
+      final IManagedAction exportAction = this.mainFrame.removeExportMenuItem( aExporter.getName() );
+      if ( exportAction != null )
+      {
+        this.actionManager.remove( exportAction );
+      }
     }
 
     updateActions();
@@ -763,7 +800,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      this.mainFrame.removeToolMenuItem( aTool.getName() );
+      final IManagedAction toolAction = this.mainFrame.removeToolMenuItem( aTool.getName() );
+      if ( toolAction != null )
+      {
+        this.actionManager.remove( toolAction );
+      }
     }
 
     updateActions();
@@ -1169,7 +1210,19 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       endOfDecode = dataLength - 1;
     }
 
-    return new DefaultToolContext( startOfDecode, endOfDecode );
+    int channels = this.dataContainer.getChannels();
+    if ( channels == Ols.NOT_AVAILABLE )
+    {
+      channels = Ols.MAX_CHANNELS;
+    }
+
+    int enabledChannels = this.dataContainer.getEnabledChannels();
+    if ( enabledChannels == Ols.NOT_AVAILABLE )
+    {
+      enabledChannels = NumberUtils.getBitMask( channels );
+    }
+
+    return new DefaultToolContext( startOfDecode, endOfDecode, channels, enabledChannels );
   }
 
   /**
@@ -1281,12 +1334,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   /**
    * Sets the captured data and zooms the view to show all the data.
    * 
-   * @param aCapturedData
+   * @param aData
    *          the new captured data to set, cannot be <code>null</code>.
    */
-  private void setCapturedData( final CapturedData aCapturedData )
+  private void setAcquisitionResult( final AcquisitionResult aData )
   {
-    this.dataContainer.setCapturedData( aCapturedData );
+    this.dataContainer.setCapturedData( aData );
 
     if ( this.mainFrame != null )
     {
@@ -1319,7 +1372,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   private void setCursorData( final Long[] aCursorData, final boolean aCursorsEnabled )
   {
     this.dataContainer.setCursorEnabled( aCursorsEnabled );
-    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       this.dataContainer.setCursorPosition( i, aCursorData[i] );
     }
@@ -1364,7 +1417,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     final boolean enableCursors = dataAvailable && this.dataContainer.isCursorsEnabled();
 
     boolean anyCursorSet = false;
-    for ( int c = 0; c < CapturedData.MAX_CURSORS; c++ )
+    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
     {
       final boolean cursorPositionSet = this.dataContainer.isCursorPositionSet( c );
       anyCursorSet |= cursorPositionSet;
@@ -1381,5 +1434,19 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
 
     getAction( ClearCursors.ID ).setEnabled( enableCursors && anyCursorSet );
+
+    // Update the tools...
+    final IManagedAction[] toolActions = this.actionManager.getActionByType( RunToolAction.class );
+    for ( IManagedAction toolAction : toolActions )
+    {
+      toolAction.setEnabled( dataAvailable );
+    }
+
+    // Update the exporters...
+    final IManagedAction[] exportActions = this.actionManager.getActionByType( ExportAction.class );
+    for ( IManagedAction exportAction : exportActions )
+    {
+      exportAction.setEnabled( dataAvailable );
+    }
   }
 }

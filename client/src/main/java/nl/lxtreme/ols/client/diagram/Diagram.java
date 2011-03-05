@@ -25,6 +25,7 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.diagram.laf.*;
@@ -95,7 +96,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    *          horizontal position (in pixels).
    * @return sample index
    */
-  static final long xToIndex( final CapturedData aData, final Point aPoint, final double aScale )
+  static final long xToIndex( final AcquisitionResult aData, final Point aPoint, final double aScale )
   {
     long index = ( long )Math.rint( Math.max( 0.0, ( aPoint.getX() / aScale ) ) );
 
@@ -140,12 +141,12 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     final int scopeHeight = getDiagramSettings().getScopeHeight();
 
     int height = 0, channelIdx = 0;
-    for ( int b = 0; ( height < yPos ) && ( b < CapturedData.MAX_BLOCKS ); b++ )
+    for ( int b = 0; ( height < yPos ) && ( b < Ols.MAX_BLOCKS ); b++ )
     {
       if ( ( height < yPos ) && getDiagramSettings().isShowChannels( b ) )
       {
-        channelIdx = ( b * CapturedData.CHANNELS_PER_BLOCK );
-        for ( int c = 0; ( height < yPos ) && ( c < CapturedData.CHANNELS_PER_BLOCK ); c++ )
+        channelIdx = ( b * Ols.CHANNELS_PER_BLOCK );
+        for ( int c = 0; ( height < yPos ) && ( c < Ols.CHANNELS_PER_BLOCK ); c++ )
         {
           height += channelHeight;
           channelIdx++;
@@ -242,7 +243,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   {
     final long idx = convertPointToSampleIndex( aMousePosition );
     final double threshold = CURSOR_HOVER / this.scale;
-    for ( int i = 0; i < CapturedData.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       final Long cursorPosition = this.dataContainer.getCursorPosition( i );
       if ( cursorPosition == null )

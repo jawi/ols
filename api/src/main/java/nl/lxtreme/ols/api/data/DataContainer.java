@@ -23,6 +23,7 @@ package nl.lxtreme.ols.api.data;
 
 import java.util.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.project.*;
 
 
@@ -39,7 +40,7 @@ import nl.lxtreme.ols.api.data.project.*;
  * the class is the same. A value is 32bits long. The value is encoded in hex
  * and each value is followed by a new line.
  */
-public final class DataContainer implements CapturedData
+public final class DataContainer implements AcquisitionResult
 {
   // VARIABLES
 
@@ -79,10 +80,10 @@ public final class DataContainer implements CapturedData
    */
   public void addChannelAnnotation( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final Object aData )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + MAX_CHANNELS );
+          + Ols.MAX_CHANNELS );
     }
     ChannelAnnotations annotations = this.annotations.get( Integer.valueOf( aChannelIdx ) );
     if ( annotations == null )
@@ -115,10 +116,10 @@ public final class DataContainer implements CapturedData
    */
   public void clearChannelAnnotations( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + MAX_CHANNELS );
+          + Ols.MAX_CHANNELS );
     }
     this.annotations.remove( Integer.valueOf( aChannelIdx ) );
   }
@@ -129,19 +130,19 @@ public final class DataContainer implements CapturedData
   @Override
   public long getAbsoluteLength()
   {
-    return hasCapturedData() ? getCapturedData().getAbsoluteLength() : NOT_AVAILABLE;
+    return hasCapturedData() ? getAcquisitionData().getAbsoluteLength() : Ols.NOT_AVAILABLE;
   }
 
   /**
    * Returns the number of channel blocks that are available in the data.
    * 
-   * @return a block count, >= 0 && < {@value #MAX_BLOCKS}.
-   * @see #MAX_BLOCKS
-   * @see #CHANNELS_PER_BLOCK
+   * @return a block count, >= 0 && < {@value Ols#MAX_BLOCKS}.
+   * @see Ols#MAX_BLOCKS
+   * @see Ols#CHANNELS_PER_BLOCK
    */
   public int getBlockCount()
   {
-    return ( int )Math.min( MAX_BLOCKS, Math.ceil( getChannels() / ( double )CHANNELS_PER_BLOCK ) );
+    return ( int )Math.min( Ols.MAX_BLOCKS, Math.ceil( getChannels() / ( double )Ols.CHANNELS_PER_BLOCK ) );
   }
 
   /**
@@ -154,10 +155,10 @@ public final class DataContainer implements CapturedData
    */
   public ChannelAnnotation getChannelAnnotation( final int aChannelIdx, final int aTimeIndex )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + MAX_CHANNELS );
+          + Ols.MAX_CHANNELS );
     }
 
     final ChannelAnnotations channelAnnotations = this.annotations.get( Integer.valueOf( aChannelIdx ) );
@@ -179,10 +180,10 @@ public final class DataContainer implements CapturedData
   public Iterator<ChannelAnnotation> getChannelAnnotations( final int aChannelIdx, final int aStartIdx,
       final int aEndIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + MAX_CHANNELS );
+          + Ols.MAX_CHANNELS );
     }
 
     final ChannelAnnotations channelAnnotations = this.annotations.get( Integer.valueOf( aChannelIdx ) );
@@ -202,10 +203,10 @@ public final class DataContainer implements CapturedData
    */
   public String getChannelLabel( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + MAX_CHANNELS );
+          + Ols.MAX_CHANNELS );
     }
     return getChannelLabels()[aChannelIdx];
   }
@@ -226,7 +227,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int getChannels()
   {
-    return hasCapturedData() ? getCapturedData().getChannels() : NOT_AVAILABLE;
+    return hasCapturedData() ? getAcquisitionData().getChannels() : Ols.NOT_AVAILABLE;
   }
 
   /**
@@ -234,12 +235,12 @@ public final class DataContainer implements CapturedData
    * number.
    * <p>
    * It is assumed that only the last block can contain less than
-   * {@value #CHANNELS_PER_BLOCK} channels. All preceeding blocks (if available)
+   * {@value Ols#CHANNELS_PER_BLOCK} channels. All preceeding blocks (if available)
    * are considered to be "complete" blocks.
    * </p>
    * 
    * @param aBlockNr
-   *          the block number, >= 0 && < {@value #MAX_BLOCKS}.
+   *          the block number, >= 0 && < {@value Ols#MAX_BLOCKS}.
    * @return the number of channels for the given block, >= 0 && <
    *         {@link #getBlockCount()}.
    * @throws IllegalArgumentException
@@ -253,10 +254,10 @@ public final class DataContainer implements CapturedData
       throw new IllegalArgumentException( "Invalid block number: " + aBlockNr + "!" );
     }
 
-    int result = CHANNELS_PER_BLOCK;
+    int result = Ols.CHANNELS_PER_BLOCK;
     if ( aBlockNr == ( blockCount - 1 ) )
     {
-      final int remainder = getChannels() % CHANNELS_PER_BLOCK;
+      final int remainder = getChannels() % Ols.CHANNELS_PER_BLOCK;
       if ( remainder != 0 )
       {
         result = remainder;
@@ -277,10 +278,10 @@ public final class DataContainer implements CapturedData
    */
   public Long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > MAX_CURSORS - 1 ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > Ols.MAX_CURSORS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
-          + MAX_CURSORS );
+          + Ols.MAX_CURSORS );
     }
     final Long[] cursorPositions = getCursorPositions();
     if ( ( cursorPositions == null ) || ( cursorPositions[aCursorIdx] == null ) )
@@ -309,7 +310,7 @@ public final class DataContainer implements CapturedData
     }
 
     Long cursorPos = getCursorPosition( aCursorIdx );
-    return Double.valueOf( calculateTimeOffset( cursorPos.longValue() ) / ( double )getCapturedData().getSampleRate() );
+    return Double.valueOf( calculateTimeOffset( cursorPos.longValue() ) / ( double )getAcquisitionData().getSampleRate() );
   }
 
   /**
@@ -318,7 +319,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int getEnabledChannels()
   {
-    return hasCapturedData() ? getCapturedData().getEnabledChannels() : NOT_AVAILABLE;
+    return hasCapturedData() ? getAcquisitionData().getEnabledChannels() : Ols.NOT_AVAILABLE;
   }
 
   /**
@@ -327,7 +328,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int getSampleIndex( final long aAbs )
   {
-    return hasCapturedData() ? getCapturedData().getSampleIndex( aAbs ) : NOT_AVAILABLE;
+    return hasCapturedData() ? getAcquisitionData().getSampleIndex( aAbs ) : Ols.NOT_AVAILABLE;
   }
 
   /**
@@ -336,7 +337,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int getSampleRate()
   {
-    return hasCapturedData() ? getCapturedData().getSampleRate() : NOT_AVAILABLE;
+    return hasCapturedData() ? getAcquisitionData().getSampleRate() : Ols.NOT_AVAILABLE;
   }
 
   /**
@@ -345,7 +346,7 @@ public final class DataContainer implements CapturedData
   @Override
   public long[] getTimestamps()
   {
-    return hasCapturedData() ? getCapturedData().getTimestamps() : new long[0];
+    return hasCapturedData() ? getAcquisitionData().getTimestamps() : new long[0];
   }
 
   /**
@@ -354,7 +355,7 @@ public final class DataContainer implements CapturedData
   @Override
   public long getTriggerPosition()
   {
-    return hasCapturedData() && hasTriggerData() ? getCapturedData().getTriggerPosition() : CapturedData.NOT_AVAILABLE;
+    return hasCapturedData() && hasTriggerData() ? getAcquisitionData().getTriggerPosition() : Ols.NOT_AVAILABLE;
   }
 
   /**
@@ -363,7 +364,7 @@ public final class DataContainer implements CapturedData
   @Override
   public int[] getValues()
   {
-    return hasCapturedData() ? getCapturedData().getValues() : new int[0];
+    return hasCapturedData() ? getAcquisitionData().getValues() : new int[0];
   }
 
   /**
@@ -374,7 +375,7 @@ public final class DataContainer implements CapturedData
    */
   public boolean hasCapturedData()
   {
-    return getCapturedData() != null;
+    return getAcquisitionData() != null;
   }
 
   /**
@@ -383,7 +384,7 @@ public final class DataContainer implements CapturedData
   @Override
   public boolean hasTimingData()
   {
-    return hasCapturedData() ? getCapturedData().hasTimingData() : false;
+    return hasCapturedData() ? getAcquisitionData().hasTimingData() : false;
   }
 
   /**
@@ -392,7 +393,7 @@ public final class DataContainer implements CapturedData
   @Override
   public boolean hasTriggerData()
   {
-    return hasCapturedData() ? getCapturedData().hasTriggerData() : false;
+    return hasCapturedData() ? getAcquisitionData().hasTriggerData() : false;
   }
 
   /**
@@ -405,10 +406,10 @@ public final class DataContainer implements CapturedData
    */
   public boolean isChannelLabelSet( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + MAX_CHANNELS );
+          + Ols.MAX_CHANNELS );
     }
     final String label = getChannelLabels()[aChannelIdx];
     return ( label != null ) && !label.trim().isEmpty();
@@ -425,10 +426,10 @@ public final class DataContainer implements CapturedData
    */
   public boolean isCursorPositionSet( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > MAX_CURSORS - 1 ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > Ols.MAX_CURSORS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
-          + MAX_CURSORS );
+          + Ols.MAX_CURSORS );
     }
     final Long[] cursorPositions = getCursorPositions();
     if ( cursorPositions == null )
@@ -453,12 +454,12 @@ public final class DataContainer implements CapturedData
   /**
    * Sets the captured data.
    * 
-   * @param aCapturedData
+   * @param aData
    *          the captured data to set, may be <code>null</code>.
    */
-  public void setCapturedData( final CapturedData aCapturedData )
+  public void setCapturedData( final AcquisitionResult aData )
   {
-    this.projectManager.getCurrentProject().setCapturedData( aCapturedData );
+    this.projectManager.getCurrentProject().setCapturedData( aData );
     this.annotations.clear();
   }
 
@@ -469,10 +470,10 @@ public final class DataContainer implements CapturedData
    */
   public void setChannelAnnotations( final int aChannelIdx, final ChannelAnnotations aAnnotations )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + MAX_CHANNELS );
+          + Ols.MAX_CHANNELS );
     }
     this.annotations.put( Integer.valueOf( aChannelIdx ), aAnnotations );
   }
@@ -487,10 +488,10 @@ public final class DataContainer implements CapturedData
    */
   public void setChannelLabel( final int aChannelIdx, final String aLabel )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
-          + MAX_CHANNELS );
+          + Ols.MAX_CHANNELS );
     }
     getChannelLabels()[aChannelIdx] = aLabel;
   }
@@ -503,11 +504,11 @@ public final class DataContainer implements CapturedData
    */
   public void setChannelLabels( final String[] aLabels )
   {
-    if ( aLabels.length != MAX_CHANNELS )
+    if ( aLabels.length != Ols.MAX_CHANNELS )
     {
-      throw new IllegalArgumentException( "Invalid channel labels! Should have exact " + MAX_CHANNELS + " items!" );
+      throw new IllegalArgumentException( "Invalid channel labels! Should have exact " + Ols.MAX_CHANNELS + " items!" );
     }
-    System.arraycopy( aLabels, 0, getChannelLabels(), 0, MAX_CHANNELS );
+    System.arraycopy( aLabels, 0, getChannelLabels(), 0, Ols.MAX_CHANNELS );
   }
 
   /**
@@ -534,9 +535,9 @@ public final class DataContainer implements CapturedData
    */
   public void setCursorPosition( final int aCursorIdx, final Long aCursorPosition ) throws IllegalArgumentException
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > MAX_CURSORS - 1 ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > Ols.MAX_CURSORS - 1 ) )
     {
-      throw new IllegalArgumentException( "Invalid cursor index! Should be between 0 and " + MAX_CURSORS );
+      throw new IllegalArgumentException( "Invalid cursor index! Should be between 0 and " + Ols.MAX_CURSORS );
     }
     final Long[] cursorPositions = getCursorPositions();
     if ( cursorPositions != null )
@@ -561,7 +562,7 @@ public final class DataContainer implements CapturedData
    */
   protected long calculateTimeOffset( final long aTime )
   {
-    final CapturedData capturedData = getCapturedData();
+    final AcquisitionResult capturedData = getAcquisitionData();
     if ( capturedData.hasTriggerData() )
     {
       return aTime - capturedData.getTriggerPosition();
@@ -571,11 +572,11 @@ public final class DataContainer implements CapturedData
   }
 
   /**
-   * XXX
+   * Returns the current acquisition results.
    * 
-   * @return
+   * @return the captured data, never <code>null</code>.
    */
-  private CapturedData getCapturedData()
+  private AcquisitionResult getAcquisitionData()
   {
     return this.projectManager.getCurrentProject().getCapturedData();
   }

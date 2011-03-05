@@ -34,6 +34,7 @@ import java.util.logging.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
@@ -75,12 +76,18 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
   // CONSTRUCTORS
 
   /**
+   * Creates a new JTAGProtocolAnalysisDialog instance.
+   * 
    * @param aOwner
+   *          the owner of this dialog;
    * @param aName
+   *          the name of this dialog;
+   * @param aContext
+   *          the tool context.
    */
-  public JTAGProtocolAnalysisDialog( final Window aOwner, final String aName )
+  public JTAGProtocolAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
   {
-    super( aOwner, aName );
+    super( aOwner, aName, aContext );
 
     initDialog();
 
@@ -133,10 +140,10 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    this.tck.setSelectedIndex( aSettings.getInt( "TCK", this.tck.getSelectedIndex() ) );
-    this.tms.setSelectedIndex( aSettings.getInt( "TMS", this.tms.getSelectedIndex() ) );
-    this.tdi.setSelectedIndex( aSettings.getInt( "TDI", this.tdi.getSelectedIndex() ) );
-    this.tdo.setSelectedIndex( aSettings.getInt( "TDO", this.tdo.getSelectedIndex() ) );
+    this.tck.setSelectedIndex( aSettings.getInt( "tck", this.tck.getSelectedIndex() ) );
+    this.tms.setSelectedIndex( aSettings.getInt( "tms", this.tms.getSelectedIndex() ) );
+    this.tdi.setSelectedIndex( aSettings.getInt( "tdi", this.tdi.getSelectedIndex() ) );
+    this.tdo.setSelectedIndex( aSettings.getInt( "tdo", this.tdo.getSelectedIndex() ) );
   }
 
   /**
@@ -338,8 +345,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
    */
   private JPanel createSettingsPane()
   {
-    int channelCount = 32; // TODO JaWi: this should reflect the current
-                           // device's capabilities...
+    final int channelCount = getChannels();
 
     final JPanel settings = new JPanel( new SpringLayout() );
 

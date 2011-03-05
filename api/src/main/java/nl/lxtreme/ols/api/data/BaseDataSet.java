@@ -49,7 +49,7 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
    * @param aEndOfDecode
    * @param aData
    */
-  public BaseDataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final CapturedData aData )
+  public BaseDataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final AcquisitionResult aData )
   {
     this.data = new ArrayList<DATA>();
 

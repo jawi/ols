@@ -457,7 +457,7 @@ public class OlsDataHelperTest
   @Test
   public void testSimpleWriteOk() throws Exception
   {
-    this.project.setCapturedData( new CapturedDataImpl( new int[] { 1 }, new long[] { 2L }, -1, 100, 2, 2, 1 ) );
+    this.project.setCapturedData( new CapturedData( new int[] { 1 }, new long[] { 2L }, -1, 100, 2, 2, 1 ) );
 
     final StringWriter writer = new StringWriter();
     OlsDataHelper.write( this.project, writer );
@@ -475,7 +475,7 @@ public class OlsDataHelperTest
   @Test
   public void testWriteInvalidSampleValueOk() throws Exception
   {
-    this.project.setCapturedData( new CapturedDataImpl( new int[] { -1 }, new long[] { 1L }, -1, 100, 2, 2, 1 ) );
+    this.project.setCapturedData( new CapturedData( new int[] { -1 }, new long[] { 1L }, -1, 100, 2, 2, 1 ) );
 
     final StringWriter writer = new StringWriter();
     OlsDataHelper.write( this.project, writer );
@@ -490,7 +490,7 @@ public class OlsDataHelperTest
   @Test
   public void testWriteInvalidTimestampOk() throws Exception
   {
-    this.project.setCapturedData( new CapturedDataImpl( new int[] { 1 }, new long[] { -1L }, -1, 100, 2, 2, 1 ) );
+    this.project.setCapturedData( new CapturedData( new int[] { 1 }, new long[] { -1L }, -1, 100, 2, 2, 1 ) );
 
     final StringWriter writer = new StringWriter();
     OlsDataHelper.write( this.project, writer );

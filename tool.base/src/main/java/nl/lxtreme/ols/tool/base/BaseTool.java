@@ -70,7 +70,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   // METHODS
 
   /**
-   * @see java.lang.Object#equals(java.lang.Object)
+   * {@inheritDoc}
    */
   @Override
   public boolean equals( final Object aObject )
@@ -101,7 +101,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   }
 
   /**
-   * @see nl.lxtreme.ols.api.tools.Tool#getCategory()
+   * {@inheritDoc}
    */
   @Override
   public final Category getCategory()
@@ -110,7 +110,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   }
 
   /**
-   * @see nl.lxtreme.ols.api.tools.Tool#getName()
+   * {@inheritDoc}
    */
   @Override
   public final String getName()
@@ -119,7 +119,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   }
 
   /**
-   * @see java.lang.Object#hashCode()
+   * {@inheritDoc}
    */
   @Override
   public int hashCode()
@@ -131,17 +131,14 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   }
 
   /**
-   * @see nl.lxtreme.ols.api.tools.Tool#process(java.awt.Frame,
-   *      nl.lxtreme.ols.api.data.DataContainer,
-   *      nl.lxtreme.ols.api.tools.ToolContext,
-   *      nl.lxtreme.ols.api.tools.AnalysisCallback)
+   * {@inheritDoc}
    */
   @Override
   public final void process( final Window aOwner, final DataContainer aData, final ToolContext aContext,
       final AnalysisCallback aCallback )
   {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.dialog != null ) && ( this.dialog.getOwner() != aOwner ) )
+    // check if dialog exists with different owner and dispose if so...
+    if ( this.dialog != null )
     {
       this.dialog.dispose();
       this.dialog = null;
@@ -150,7 +147,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
     // if no valid dialog exists, create one
     if ( this.dialog == null )
     {
-      this.dialog = createDialog( aOwner, getName() );
+      this.dialog = createDialog( aOwner, aContext, getName() );
     }
     else
     {
@@ -167,11 +164,14 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
    * @param aOwner
    *          the owning window of the newly created tool dialog, can be
    *          <code>null</code>;
+   * @param aContext
+   *          the tool context in which this tool is to be called, never
+   *          <code>null</code>;
    * @param aName
    *          the name of the tool dialog to create, never <code>null</code>.
    * @return a new tool dialog, never <code>null</code>.
    */
-  protected abstract DIALOG createDialog( final Window aOwner, final String aName );
+  protected abstract DIALOG createDialog( final Window aOwner, ToolContext aContext, final String aName );
 
   /**
    * Does the actual processing of data.

@@ -104,7 +104,7 @@ public class SimpleProjectManagerTest
   @Test
   public void testSaveProjectStoresCaptureResultsOk() throws IOException
   {
-    final CapturedData mockedCapturedData = DataTestUtils.getMockedCapturedData();
+    final AcquisitionResult mockedCapturedData = DataTestUtils.getMockedCapturedData();
 
     final Project project = this.projectManager.getCurrentProject();
     project.setCapturedData( mockedCapturedData );

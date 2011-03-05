@@ -40,7 +40,7 @@ public class StubTestProject implements Project
 {
   // VARIABLES
 
-  private CapturedData capturedData;
+  private AcquisitionResult capturedData;
   private boolean cursorsEnabled;
   private Long[] cursors;
   private String[] labels;
@@ -121,7 +121,7 @@ public class StubTestProject implements Project
    * @see nl.lxtreme.ols.api.data.project.Project#getCapturedData()
    */
   @Override
-  public CapturedData getCapturedData()
+  public AcquisitionResult getCapturedData()
   {
     return this.capturedData;
   }
@@ -211,7 +211,7 @@ public class StubTestProject implements Project
    * @see nl.lxtreme.ols.api.data.project.Project#setCapturedData(nl.lxtreme.ols.api.data.CapturedData)
    */
   @Override
-  public void setCapturedData( final CapturedData aCapturedData )
+  public void setCapturedData( final AcquisitionResult aCapturedData )
   {
     this.capturedData = aCapturedData;
   }

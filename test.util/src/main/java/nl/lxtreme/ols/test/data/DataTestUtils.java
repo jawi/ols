@@ -28,6 +28,7 @@ import static org.mockito.Mockito.*;
 import java.io.*;
 import java.net.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.tools.*;
@@ -60,7 +61,7 @@ public final class DataTestUtils
    * @param aExpected
    * @param aTested
    */
-  public static void assertEquals( final CapturedData aExpected, final CapturedData aTested )
+  public static void assertEquals( final AcquisitionResult aExpected, final AcquisitionResult aTested )
   {
     assertEquals( "Captured data not equal!", aExpected, aTested );
   }
@@ -70,7 +71,8 @@ public final class DataTestUtils
    * @param aTested
    */
   @SuppressWarnings( "boxing" )
-  public static void assertEquals( final String aMessage, final CapturedData aExpected, final CapturedData aTested )
+  public static void assertEquals( final String aMessage, final AcquisitionResult aExpected,
+      final AcquisitionResult aTested )
   {
     assertNotNull( aExpected );
     assertNotNull( aTested );
@@ -131,8 +133,9 @@ public final class DataTestUtils
       timestamps[i] = ( i * 2 );
     }
 
-    final CapturedData data = mock( CapturedData.class );
-    when( Integer.valueOf( data.getChannels() ) ).thenReturn( Integer.valueOf( CapturedData.MAX_CHANNELS ) );
+    final AcquisitionResult data = mock( AcquisitionResult.class );
+    when( Integer.valueOf( data.getChannels() ) ).thenReturn(
+        Integer.valueOf( Ols.MAX_CHANNELS ) );
     when( Long.valueOf( data.getAbsoluteLength() ) ).thenReturn( Long.valueOf( ( 2L * aDataSize ) + 1L ) );
     when( Integer.valueOf( data.getEnabledChannels() ) ).thenReturn(
         Integer.valueOf( NumberUtils.getBitMask( aChannelCount ) ) );
@@ -226,9 +229,9 @@ public final class DataTestUtils
    * Returns a mocked captured data result.
    */
   @SuppressWarnings( "boxing" )
-  public static CapturedData getMockedCapturedData()
+  public static AcquisitionResult getMockedCapturedData()
   {
-    CapturedData result = mock( CapturedData.class );
+    AcquisitionResult result = mock( AcquisitionResult.class );
     when( result.getAbsoluteLength() ).thenReturn( Long.valueOf( 8 ) );
     when( result.getChannels() ).thenReturn( Integer.valueOf( 8 ) );
     when( result.getEnabledChannels() ).thenReturn( Integer.valueOf( 255 ) );
