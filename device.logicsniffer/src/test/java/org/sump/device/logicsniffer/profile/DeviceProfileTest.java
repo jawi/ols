@@ -210,7 +210,7 @@ public class DeviceProfileTest
   @Test
   public void testGetDeviceMetadataKeysOk()
   {
-    assertArrayEquals( new String[] { "a", "b" }, this.profile.getDeviceMetadataKeys() );
+    assertArrayEquals( new String[] { "a", "b", "a b c" }, this.profile.getDeviceMetadataKeys() );
   }
 
   /**
@@ -413,7 +413,7 @@ public class DeviceProfileTest
     properties.put( DeviceProfile.DEVICE_FEATURE_TEST_MODE, "true" );
     properties.put( DeviceProfile.DEVICE_FEATURE_TRIGGERS, "false" );
     properties.put( DeviceProfile.DEVICE_INTERFACE, "SERIAL" );
-    properties.put( DeviceProfile.DEVICE_METADATA_KEYS, "a,b" );
+    properties.put( DeviceProfile.DEVICE_METADATA_KEYS, "a,b,\"a b c\"" );
     properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "10" );
     properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "false" );
     properties.put( DeviceProfile.DEVICE_SAMPLERATES, "5,6,7" );

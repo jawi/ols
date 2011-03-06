@@ -319,6 +319,41 @@ public final class DeviceProfile implements Cloneable
   }
 
   /**
+   * Returns the maximum capture size for the given number of <em>enabled</em>
+   * channel groups.
+   * <p>
+   * If the maximum capture size is bound to the number of enabled
+   * channel(group)s, this method will divide the maximum possible capture size
+   * by the given group count, otherwise the maximum capture size will be
+   * returned.
+   * </p>
+   * 
+   * @param aChannelGroups
+   *          the number of channel groups that should be enabled, > 0 && <
+   *          channel group count.
+   * @return a maximum capture size, in bytes, or -1 if no maximum could be
+   *         determined, or the given parameter was <tt>0</tt>.
+   * @see #isCaptureSizeBoundToEnabledChannels()
+   * @see #getChannelGroupCount()
+   */
+  public int getMaximumCaptureSizeFor( final int aChannelGroups )
+  {
+    final Integer[] sizes = getCaptureSizes();
+    if ( ( sizes == null ) || ( sizes.length == 0 ) || ( aChannelGroups == 0 ) )
+    {
+      return -1;
+    }
+
+    final int maxSize = sizes[0].intValue();
+    if ( isCaptureSizeBoundToEnabledChannels() )
+    {
+      return maxSize / aChannelGroups;
+    }
+
+    return maxSize;
+  }
+
+  /**
    * Returns the delay between opening the port to the device and starting the
    * device detection cycle.
    * 

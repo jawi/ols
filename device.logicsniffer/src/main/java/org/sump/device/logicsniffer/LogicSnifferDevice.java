@@ -643,8 +643,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       // Process the actual samples...
       processor.process();
 
-      return new CapturedData( values, timestamps, triggerPos[0], rate, channels,
-          this.config.getEnabledChannelsMask(), absoluteLength[0] );
+      return new CapturedData( values, timestamps, triggerPos[0], rate, channels, this.config.getEnabledChannelsMask(),
+          absoluteLength[0] );
     }
     finally
     {
@@ -975,7 +975,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         }
         else if ( id == SLA_V1 )
         {
-          LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer ...", Integer.toHexString( id ) );
+          LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer compatible device ...", Integer.toHexString( id ) );
         }
         else
         {
@@ -1019,7 +1019,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       if ( metadata != null )
       {
         // Log the read results...
-        LOG.log( Level.INFO, "Found device '{0}'", metadata.getName() );
+        LOG.log( Level.INFO, "Detected device type: {0}", metadata.getName() );
         LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
 
         final String name = metadata.getName();
@@ -1027,6 +1027,9 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         {
           final DeviceProfileManager manager = getDeviceProfileManager();
           final DeviceProfile profile = manager.findProfile( name );
+
+          LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
+
           this.config.setDeviceProfile( profile );
         }
       }
