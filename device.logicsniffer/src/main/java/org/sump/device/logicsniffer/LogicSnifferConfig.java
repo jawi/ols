@@ -33,9 +33,6 @@ public final class LogicSnifferConfig
 {
   // CONSTANTS
 
-  /** The number of trigger stages. */
-  private final static int TRIGGER_STAGES = 4;
-
   // mask for delay value
   private final static int TRIGGER_DELAYMASK = 0x0000ffff;
   // mask for level value
@@ -44,8 +41,13 @@ public final class LogicSnifferConfig
   private final static int TRIGGER_CHANNELMASK = 0x01f00000;
   // trigger operates in serial mode
   private final static int TRIGGER_SERIAL = 0x04000000;
+  /** The number of trigger stages. */
+  final static int TRIGGER_STAGES = 4;
   // trigger will start capture when fired
   final static int TRIGGER_CAPTURE = 0x08000000;
+
+  static final int MIN_CHANNEL_GROUPS = 1;
+  static final int MAX_CHANNEL_GROUPS_DDR = 2;
 
   // VARIABLES
 
@@ -118,16 +120,13 @@ public final class LogicSnifferConfig
    */
   public int getChannelCount()
   {
-    int channels;
+    int channels = 32;
+
     if ( isDoubleDataRateEnabled() )
     {
       // When the multiplexer is turned on, the upper two channel blocks are
       // disabled, leaving only 16 channels for capturing...
       channels = 16;
-    }
-    else
-    {
-      channels = 32;
     }
 
     if ( this.deviceProfile != null )
@@ -202,27 +201,31 @@ public final class LogicSnifferConfig
     {
       // In case the demux is enabled, only a maximum of two channel groups is
       // allowed...
-      cnt = Math.min( 2, cnt );
+      cnt = Math.min( MAX_CHANNEL_GROUPS_DDR, cnt );
     }
 
     return cnt;
   }
 
   /**
-   * Returns the total number of channel groups, i.e., returns 2 when
-   * {@link #isDoubleDataRateEnabled()} is enabled, 4 otherwise.
+   * Returns the total number of channel groups.
+   * <p>
+   * This method will divide the number of available channels by 8 (assuming a
+   * group is <em>always</em> 8-bits/channels wide). If the channel count is
+   * less than 8 this method will always yield 1. If double-data rate is
+   * supported, then the maximum number of available groups is limited to 2.
+   * </p>
    * 
-   * @return a group count, >= 0 && < 4.
+   * @return a group count (zero-based), >= 1 && < 4.
    */
   public int getGroupCount()
   {
-    int cnt = getChannelCount() / Ols.CHANNELS_PER_BLOCK;
-
+    int cnt = Math.max( MIN_CHANNEL_GROUPS, getChannelCount() / Ols.CHANNELS_PER_BLOCK );
     if ( isDoubleDataRateEnabled() )
     {
       // In case the demux is enabled, only a maximum of two channel groups is
       // allowed...
-      cnt = Math.min( 2, cnt );
+      cnt = Math.min( MAX_CHANNEL_GROUPS_DDR, cnt );
     }
 
     return cnt;
@@ -245,7 +248,7 @@ public final class LogicSnifferConfig
   {
     if ( this.deviceProfile == null )
     {
-      return -1;
+      return 0;
     }
     return this.deviceProfile.getOpenPortDelay();
   }
