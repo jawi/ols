@@ -67,6 +67,12 @@ public class StringUtilsTest
 
     tokens = StringUtils.tokenizeQuotedStrings( "\"hello, world\", \"foo   bar\", 'bar'", ", " );
     assertArrayEquals( new String[] { "hello, world", "foo   bar", "'bar'" }, tokens );
+
+    tokens = StringUtils.tokenizeQuotedStrings( "\"hello world of darkness\", \"foo   bar\", 'bar'", ", " );
+    assertArrayEquals( new String[] { "hello world of darkness", "foo   bar", "'bar'" }, tokens );
+
+    tokens = StringUtils.tokenizeQuotedStrings( "\"hello , darkness\", \"foo \t bar\", 'bar'", ", " );
+    assertArrayEquals( new String[] { "hello , darkness", "foo \t bar", "'bar'" }, tokens );
   }
 
   /**

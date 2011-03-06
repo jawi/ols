@@ -178,35 +178,33 @@ public final class StringUtils
 
     final List<String> result = new ArrayList<String>();
 
-    String lastDelimiter = "";
+    String lookback = "";
+    boolean inQuotedString = false;
 
     final StringTokenizer tokenizer = new StringTokenizer( aInput, aDelimiters, true /* returnDelims */);
     while ( tokenizer.hasMoreTokens() )
     {
       String token = tokenizer.nextToken();
 
-      if ( isDelimiter( token, aDelimiters ) )
+      if ( !inQuotedString && token.startsWith( "\"" ) && !token.endsWith( "\"" ) )
       {
-        lastDelimiter = lastDelimiter.concat( token );
-        continue;
+        inQuotedString = true;
+        lookback = token;
       }
-
-      if ( !result.isEmpty() && token.endsWith( "\"" ) )
+      else if ( inQuotedString )
       {
-        // Hmm, maybe a broken token? Check the previous one...
-        final int lastIdx = result.size() - 1;
-        String previous = result.get( lastIdx );
-        if ( previous.startsWith( "\"" ) && !previous.endsWith( "\"" ) )
+        lookback = lookback.concat( token );
+        if ( token.endsWith( "\"" ) )
         {
-          // Yes, broken token! Concat it...
-          previous = previous.concat( lastDelimiter ).concat( token );
-          result.set( lastIdx, previous );
-          continue;
+          inQuotedString = false;
+          token = lookback;
         }
       }
 
-      result.add( token );
-      lastDelimiter = "";
+      if ( !inQuotedString && !isDelimiter( token, aDelimiters ) )
+      {
+        result.add( token );
+      }
     }
 
     // Last step is to unquote all results...
