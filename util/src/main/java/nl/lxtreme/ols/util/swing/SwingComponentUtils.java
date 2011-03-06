@@ -90,7 +90,7 @@ public final class SwingComponentUtils
   public static boolean askConfirmation( final Window aWindow, final String aMessage, final String aTitle )
   {
     return JOptionPane.showConfirmDialog( aWindow, aMessage, aTitle, JOptionPane.YES_NO_OPTION,
-        JOptionPane.WARNING_MESSAGE ) != JOptionPane.YES_OPTION;
+        JOptionPane.WARNING_MESSAGE ) == JOptionPane.YES_OPTION;
   }
 
   /**
