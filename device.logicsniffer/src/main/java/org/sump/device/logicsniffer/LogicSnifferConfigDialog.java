@@ -21,6 +21,7 @@
 package org.sump.device.logicsniffer;
 
 
+import static nl.lxtreme.ols.api.Ols.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import static org.sump.device.logicsniffer.ConfigDialogHelper.*;
 
@@ -348,49 +349,17 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
    */
   public void actionPerformed( final ActionEvent aEvent )
   {
-    if ( !this.listening )
+    // ignore all events when dialog is not displayed or we're not supposed to
+    // listen to events...
+    if ( !this.listening || !isVisible() )
     {
       return;
     }
 
-    final Object o = aEvent.getSource();
-
-    // ignore all events when dialog is not displayed
-    if ( !isVisible() )
+    final Object source = aEvent.getSource();
+    if ( source == this.captureButton )
     {
-      return;
-    }
-
-    if ( o == this.triggerEnable )
-    {
-      updateConfig();
-      updateFields();
-    }
-    else if ( o == this.sourceSelect )
-    {
-      updateConfig();
-      updateFields();
-    }
-    else if ( o == this.rleEnable )
-    {
-      JCheckBox jb = ( JCheckBox )o;
-      if ( jb.isSelected() )
-      {
-        this.warningLabel.setText( rleWarning );
-      }
-      else
-      {
-        this.warningLabel.setText( "" );
-      }
-    }
-    else if ( o == this.speedSelect )
-    {
-      updateConfig();
-      updateFields();
-    }
-    else if ( o == this.captureButton )
-    {
-      this.dialogResult = updateConfig();
+      this.dialogResult = updateConfig( true /* aWarnUserIfConfigIncorrect */);
 
       if ( this.dialogResult )
       {
@@ -399,6 +368,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     }
     else
     {
+      updateConfig( false /* aWarnUserIfConfigIncorrect */);
       updateFields();
     }
   }
@@ -462,13 +432,13 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
             this.triggerChannel[stage].getSelectedIndex() ) );
 
         final String mask = aSettings.get( prefix + ".mask", "" );
-        for ( int i = 0; ( i < 32 ) && ( i < mask.length() ); i++ )
+        for ( int i = 0; ( i < MAX_CHANNELS ) && ( i < mask.length() ); i++ )
         {
           this.triggerMask[stage][i].setSelected( mask.charAt( i ) == '1' );
         }
 
         final String value = aSettings.get( prefix + ".value", "" );
-        for ( int i = 0; ( i < 32 ) && ( i < value.length() ); i++ )
+        for ( int i = 0; ( i < MAX_CHANNELS ) && ( i < value.length() ); i++ )
         {
           this.triggerValue[stage][i].setSelected( value.charAt( i ) == '1' );
         }
@@ -478,12 +448,12 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       }
 
       final String group = aSettings.get( "channelGroup", "" );
-      for ( int i = 0; ( i < 4 ) && ( i < group.length() ); i++ )
+      for ( int i = 0; ( i < MAX_BLOCKS ) && ( i < group.length() ); i++ )
       {
         this.channelGroup[i].setSelected( group.charAt( i ) == '1' );
       }
 
-      updateConfig();
+      updateConfig( false /* aWarnUserIfConfigIncorrect */);
       updateFields();
     }
     finally
@@ -503,14 +473,6 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
     setVisible( true );
     return this.dialogResult;
-  }
-
-  /**
-   * activates / deactivates dialog options according to device status.
-   */
-  public void updateFields()
-  {
-    updateFields( true );
   }
 
   /**
@@ -543,14 +505,14 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       aSettings.putInt( prefix + ".channel", this.triggerChannel[stage].getSelectedIndex() );
 
       final StringBuffer mask = new StringBuffer();
-      for ( int i = 0; i < 32; i++ )
+      for ( int i = 0; i < MAX_CHANNELS; i++ )
       {
         mask.append( this.triggerMask[stage][i].isSelected() ? "1" : "0" );
       }
       aSettings.put( prefix + ".mask", mask.toString() );
 
       final StringBuffer value = new StringBuffer();
-      for ( int i = 0; i < 32; i++ )
+      for ( int i = 0; i < MAX_CHANNELS; i++ )
       {
         value.append( this.triggerValue[stage][i].isSelected() ? "1" : "0" );
       }
@@ -560,7 +522,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     }
 
     final StringBuffer group = new StringBuffer();
-    for ( int i = 0; i < 4; i++ )
+    for ( int i = 0; i < MAX_BLOCKS; i++ )
     {
       group.append( this.channelGroup[i].isSelected() ? "1" : "0" );
     }
@@ -679,9 +641,9 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     SpringLayoutUtils.makeEditorGrid( connectionPane, 10, 10 );
 
     final JPanel result = new JPanel( new GridBagLayout() );
-    result.add( connectionPane, new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER,
+    result.add( connectionPane, new GridBagConstraints( 0, 0, 1, 1, 0.0, 1.0, GridBagConstraints.CENTER,
         GridBagConstraints.NONE, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
-    result.add( this.warningLabel, new GridBagConstraints( 0, 1, 1, 0, 1.0, 0.0, GridBagConstraints.CENTER,
+    result.add( this.warningLabel, new GridBagConstraints( 0, 1, 1, 0, 1.0, 0.1, GridBagConstraints.CENTER,
         GridBagConstraints.NONE, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
     result.add( new JLabel(), new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER,
         GridBagConstraints.BOTH, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
@@ -730,10 +692,10 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   {
     final JPanel maskValuePanel = new JPanel( new SpringLayout() );
 
-    final JLabel[] channelLabels = new JLabel[32];
+    final JLabel[] channelLabels = new JLabel[MAX_CHANNELS];
 
     maskValuePanel.add( new JLabel( " " ) );
-    for ( int j = 32; j > 0; j-- )
+    for ( int j = MAX_CHANNELS; j > 0; j-- )
     {
       final String channel = ( ( j % 8 ) == 0 ) || ( ( j % 8 ) == 1 ) ? String.format( "%2d", Integer.valueOf( j - 1 ) )
           : "";
@@ -742,8 +704,8 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     }
 
     maskValuePanel.add( createRightAlignedLabel( "Mask" ) );
-    this.triggerMask[aStage] = new JCheckBox[32];
-    for ( int j = 32; j > 0; j-- )
+    this.triggerMask[aStage] = new JCheckBox[MAX_CHANNELS];
+    for ( int j = MAX_CHANNELS; j > 0; j-- )
     {
       final JCheckBox triggerEnabled = new JCheckBox();
       triggerEnabled.setBorder( BorderFactory.createEmptyBorder() );
@@ -755,8 +717,8 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
     maskValuePanel.add( createRightAlignedLabel( "Value" ) );
 
-    this.triggerValue[aStage] = new JCheckBox[32];
-    for ( int j = 32; j > 0; j-- )
+    this.triggerValue[aStage] = new JCheckBox[MAX_CHANNELS];
+    for ( int j = MAX_CHANNELS; j > 0; j-- )
     {
       final JCheckBox valueEnabled = new JCheckBox();
       valueEnabled.setBorder( BorderFactory.createEmptyBorder() );
@@ -811,24 +773,47 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
    * 
    * @return a maximum sample count, or -1 if no maximum could be determined.
    */
-  private int determineMaxSampleCount()
+  private int determineMaxSampleCount( final int aEnabledChannelGroups )
   {
     final DeviceProfile deviceProfile = this.config.getDeviceProfile();
     if ( deviceProfile != null )
     {
-      int enabledChannelGroups = 0;
-      for ( JCheckBox element : this.channelGroup )
-      {
-        if ( element.isSelected() )
-        {
-          enabledChannelGroups++;
-        }
-      }
-
-      return deviceProfile.getMaximumCaptureSizeFor( enabledChannelGroups );
+      return deviceProfile.getMaximumCaptureSizeFor( aEnabledChannelGroups );
     }
 
     return -1;
+  }
+
+  /**
+   * "Forces" the capture size combobox to the given sample count.
+   * <p>
+   * This method will search for the "best" matching capture size for the given
+   * sample count. It could well be that the given sample count is not available
+   * directly, so take the closest match.
+   * </p>
+   * 
+   * @param aSampleCount
+   *          the sample count that should be set.
+   */
+  private void forceCaptureSizeTo( final Integer aSampleCount )
+  {
+    // this is needed as it appears a combobox doesn't update itself when its
+    // disabled...
+    final ComboBoxModel model = this.sizeSelect.getModel();
+    Integer selectedObject = null;
+    for ( int i = model.getSize() - 1; i >= 0; i-- )
+    {
+      final Integer value = ( Integer )model.getElementAt( i );
+      if ( ( value != null ) && ( value.compareTo( aSampleCount ) <= 0 ) )
+      {
+        selectedObject = value;
+      }
+    }
+    //
+    if ( selectedObject != null )
+    {
+      this.sizeSelect.setSelectedItem( selectedObject );
+    }
   }
 
   /**
@@ -852,6 +837,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
     this.numberSchemeSelect = new JComboBox();
     this.numberSchemeSelect.setRenderer( new NumberSchemeComboBoxRenderer() );
+    this.numberSchemeSelect.addActionListener( this );
 
     this.sourceSelect = new JComboBox();
     this.sourceSelect.setRenderer( new ClockSourceComboBoxRenderer() );
@@ -864,40 +850,32 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     this.groupsPanel = new JPanel();
     this.groupsPanel.setLayout( new GridLayout( 1, 4 ) );
 
-    this.channelGroup = new JCheckBox[4];
+    this.channelGroup = new JCheckBox[MAX_BLOCKS];
     for ( int i = 0; i < this.channelGroup.length; i++ )
     {
       this.channelGroup[i] = new JCheckBox( Integer.toString( i ) );
-      this.channelGroup[i].setSelected( true );
+      this.channelGroup[i].setSelected( ( i == 0 ) );
       this.channelGroup[i].addActionListener( this );
-      this.channelGroup[i].setActionCommand( "channel" );
       this.groupsPanel.add( this.channelGroup[i] );
     }
 
     this.sizeSelect = new JComboBox();
     this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer() );
+    this.sizeSelect.addActionListener( this );
 
     this.maxSampleSize = new JCheckBox( "Automatic (maximum)" );
     this.maxSampleSize.setSelected( false );
-    this.maxSampleSize.addItemListener( new ItemListener()
-    {
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        final JCheckBox checkbox = ( JCheckBox )aEvent.getSource();
-
-        LogicSnifferConfigDialog.this.sizeSelect.setSelectedItem( Integer.valueOf( determineMaxSampleCount() ) );
-        LogicSnifferConfigDialog.this.sizeSelect.setEnabled( !checkbox.isSelected() );
-      }
-    } );
+    this.maxSampleSize.addActionListener( this );
 
     this.testModeEnable = new JCheckBox( "Enabled" );
     this.testModeEnable.setSelected( true );
     this.testModeEnable.setEnabled( false );
+    this.testModeEnable.addActionListener( this );
 
     this.filterEnable = new JCheckBox( "Enabled" );
     this.filterEnable.setSelected( true );
     this.filterEnable.setEnabled( false );
+    this.filterEnable.addActionListener( this );
 
     this.rleEnable = new JCheckBox( "Enabled" );
     this.rleEnable.setSelected( false );
@@ -923,13 +901,13 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
     this.triggerStageTabs = new JTabbedPane();
     this.triggerStages = this.config.getMaxTriggerStages();
-    this.triggerMask = new JCheckBox[4][];
-    this.triggerValue = new JCheckBox[4][];
-    this.triggerLevel = new JComboBox[4];
-    this.triggerDelay = new JTextField[4];
-    this.triggerMode = new JComboBox[4];
-    this.triggerChannel = new JComboBox[4];
-    this.triggerStart = new JCheckBox[4];
+    this.triggerMask = new JCheckBox[LogicSnifferConfig.TRIGGER_STAGES][];
+    this.triggerValue = new JCheckBox[LogicSnifferConfig.TRIGGER_STAGES][];
+    this.triggerLevel = new JComboBox[LogicSnifferConfig.TRIGGER_STAGES];
+    this.triggerDelay = new JTextField[LogicSnifferConfig.TRIGGER_STAGES];
+    this.triggerMode = new JComboBox[LogicSnifferConfig.TRIGGER_STAGES];
+    this.triggerChannel = new JComboBox[LogicSnifferConfig.TRIGGER_STAGES];
+    this.triggerStart = new JCheckBox[LogicSnifferConfig.TRIGGER_STAGES];
     for ( int i = 0; i < this.triggerStages; i++ )
     {
       final JPanel stagePane = new JPanel( new GridBagLayout() );
@@ -1007,6 +985,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
         }
       }
     } );
+    // By default, select the "OLS" device, if available...
     this.deviceTypeSelect.setSelectedItem( "OLS" );
   }
 
@@ -1020,7 +999,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
    */
   private void setTriggerEnabled( final boolean aEnable )
   {
-    final int channels = this.config.getChannelCount();
+    final int channelCount = this.config.getChannelCount();
     final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
     if ( !complex )
     {
@@ -1031,12 +1010,12 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
     for ( int stage = 0; stage < this.triggerStages; stage++ )
     {
-      for ( int i = 0; i < channels; i++ )
+      for ( int i = 0; i < channelCount; i++ )
       {
         this.triggerMask[stage][i].setEnabled( aEnable );
         this.triggerValue[stage][i].setEnabled( aEnable );
       }
-      for ( int i = channels; i < 32; i++ )
+      for ( int i = channelCount; i < MAX_CHANNELS; i++ )
       {
         this.triggerMask[stage][i].setEnabled( false );
         this.triggerValue[stage][i].setEnabled( false );
@@ -1058,9 +1037,17 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   }
 
   /**
-   * writes the dialog settings to the device configuration.
+   * Synchronizes the configuration settings in the UI with the device
+   * configuration object.
+   * 
+   * @param aWarnUserIfConfigIncorrect
+   *          <code>true</code> if the user should be warned when an "incorrect"
+   *          configuration is present, <code>false</code> to not warn the user,
+   *          but only return the state in the return value.
+   * @return <code>true</code> if the configuration is correct,
+   *         <code>false</code> if the configuration is incorrect.
    */
-  private boolean updateConfig()
+  private boolean updateConfig( final boolean aWarnUserIfConfigIncorrect )
   {
     String value;
     boolean result = true;
@@ -1086,8 +1073,9 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     this.config.setEnabledChannels( enabledChannels );
 
     // The OLS is capable of "auto" selecting the maximum capture size itself,
-    // and does this based on the number of enabled channel groups...
-    final int maxSampleCount = determineMaxSampleCount();
+    // and does this based on chosen device type and the number of enabled
+    // channel groups...
+    final int maxSampleCount = determineMaxSampleCount( enabledChannelGroups );
 
     // set sample rate; use a default to ensure the internal state remains
     // correct...
@@ -1102,7 +1090,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     if ( this.maxSampleSize.isSelected() )
     {
       sampleCount = maxSampleCount;
-      this.sizeSelect.setSelectedItem( Integer.valueOf( maxSampleCount ) );
+      forceCaptureSizeTo( Integer.valueOf( sampleCount ) );
     }
     this.config.setSampleCount( sampleCount );
 
@@ -1138,7 +1126,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       {
         int m = 0;
         int v = 0;
-        for ( int i = 0; i < 32; i++ )
+        for ( int i = 0; i < MAX_CHANNELS; i++ )
         {
           if ( this.triggerMask[stage][i].isSelected() )
           {
@@ -1151,11 +1139,12 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
         }
         final int level = this.triggerLevel[stage].getSelectedIndex();
         final int delay = NumberUtils.smartParseInt( this.triggerDelay[stage].getText() );
-        if ( result && ( delay > 65535 ) )
+
+        result &= ( delay <= 65535 );
+        if ( !result && aWarnUserIfConfigIncorrect )
         {
-          result = ( JOptionPane.showConfirmDialog( this, //
-              "Trigger delay for stage " + stage + " is larger than 65535 cycles! Continue capture?", //
-              "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE ) == JOptionPane.YES_OPTION );
+          result = SwingComponentUtils.askConfirmation( this, "Trigger delay for stage " + stage
+              + " is larger than 65535 cycles! Continue capture?" );
         }
 
         final int channel = this.triggerChannel[stage].getSelectedIndex();
@@ -1193,20 +1182,37 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       }
     }
 
+    // Determine whether the chosen device type matches the one found...
+    DeviceProfile deviceProfile = this.config.getDeviceProfile();
+    if ( ( deviceProfile != null ) && result )
+    {
+      final String selectedDeviceType = ( String )this.deviceTypeSelect.getSelectedItem();
+      if ( !deviceProfile.getType().equals( selectedDeviceType ) )
+      {
+        result = SwingComponentUtils.askConfirmation( this,
+            "Device type does not match selected type! Continue capture?" );
+      }
+    }
+
     // Determine whether the chosen sample count is larger than the OLS can
     // provide us in the chosen channel group-selection...
-    if ( result && ( maxSampleCount >= 0 ) && ( sampleCount > maxSampleCount ) )
+    if ( ( maxSampleCount >= 0 ) && result )
     {
-      result = ( JOptionPane.showConfirmDialog( this, //
-          "Sample count too large for chosen channel groups! Continue capture?", //
-          "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE ) == JOptionPane.YES_OPTION );
+      result = ( sampleCount <= maxSampleCount );
+      if ( !result && aWarnUserIfConfigIncorrect )
+      {
+        result = SwingComponentUtils.askConfirmation( this,
+            "Sample count too large for chosen channel groups! Continue capture?" );
+      }
     }
     // When no channel groups are enabled, the capture won't be very useful...
-    if ( result && ( enabledChannelGroups == 0 ) )
+    if ( result )
     {
-      result = ( JOptionPane.showConfirmDialog( this, //
-          "No channel groups are enabled! Continue capture?", //
-          "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE ) == JOptionPane.YES_OPTION );
+      result = ( enabledChannelGroups > 0 );
+      if ( !result && aWarnUserIfConfigIncorrect )
+      {
+        result = SwingComponentUtils.askConfirmation( this, "No channel groups are enabled! Continue capture?" );
+      }
     }
 
     return result;
@@ -1215,21 +1221,33 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   /**
    * activates / deactivates dialog options according to device status
    */
-  private void updateFields( final boolean aEnable )
+  private void updateFields()
   {
-    this.triggerEnable.setSelected( this.config.isTriggerEnabled() );
-    setTriggerEnabled( this.config.isTriggerEnabled() );
-
-    this.filterEnable.setEnabled( aEnable );
-
-    final int availableChannelGroups = this.config.getChannelCount() / 8;
+    int availableChannelGroups = this.config.getGroupCount();
+    if ( this.config.isDoubleDataRateEnabled() && ( availableChannelGroups > LogicSnifferConfig.MAX_CHANNEL_GROUPS_DDR ) )
+    {
+      availableChannelGroups = LogicSnifferConfig.MAX_CHANNEL_GROUPS_DDR;
+    }
     for ( int i = 0; i < this.channelGroup.length; i++ )
     {
-      final boolean enabled = aEnable && ( i < availableChannelGroups );
+      final boolean enabled = ( i < availableChannelGroups );
       this.channelGroup[i].setEnabled( enabled );
     }
 
+    this.triggerEnable.setSelected( this.config.isTriggerEnabled() );
+    setTriggerEnabled( this.config.isTriggerEnabled() );
+
+    this.filterEnable.setEnabled( this.config.isFilterAvailable() );
+
     this.speedSelect.setEnabled( this.config.isInternalClock() );
+
+    this.sizeSelect.setEnabled( !this.maxSampleSize.isSelected() );
+
+    this.warningLabel.setText( "" );
+    if ( this.rleEnable.isSelected() )
+    {
+      this.warningLabel.setText( rleWarning );
+    }
   }
 
 }

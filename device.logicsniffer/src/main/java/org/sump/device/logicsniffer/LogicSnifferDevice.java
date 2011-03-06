@@ -518,36 +518,34 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       detectDevice();
 
       // check if data needs to be multiplexed
-      final int channels = this.config.getChannelCount();
-      if ( channels < 0 )
+      final int channelCount = this.config.getChannelCount();
+      if ( channelCount <= 0 )
       {
-        throw new IllegalStateException( "Internal error: did not obtain correct number of channels (" + channels
-            + ")?!" );
+        throw new InternalError( "Internal error: did not obtain correct number of channels (" + channelCount + ")?!" );
       }
 
       final int samples = this.config.getSampleCount();
-      if ( samples < 0 )
+      if ( samples <= 0 )
       {
-        throw new IllegalStateException( "Internal error: did not obtain correct number of samples (" + samples + ")?!" );
+        throw new InternalError( "Internal error: did not obtain correct number of samples (" + samples + ")?!" );
       }
 
-      // We need to read all samples first before doing any post-processing on
-      // them...
-      final int[] buffer = new int[samples];
-      // configure device
+      // Setup/configure the device with the UI-settings...
       configureDevice();
 
+      // We're ready to process the samples from the device...
       sendCommand( CMD_RUN );
 
+      final int[] buffer = new int[samples];
       int sampleIdx = samples - 1;
       boolean waiting = ( sampleIdx >= 0 );
 
-      // wait for first byte forever (trigger could cause long delay)
+      // wait for first byte forever (trigger could cause long initial delays)
       while ( this.running && waiting )
       {
         try
         {
-          buffer[sampleIdx] = readSample( channels );
+          buffer[sampleIdx] = readSample();
           sampleIdx--;
           waiting = false;
         }
@@ -571,7 +569,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       {
         for ( ; this.running && ( sampleIdx >= 0 ); sampleIdx-- )
         {
-          buffer[sampleIdx] = readSample( channels );
+          buffer[sampleIdx] = readSample();
           setProgress( 100 - ( 100 * sampleIdx ) / buffer.length );
         }
       }
@@ -643,8 +641,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       // Process the actual samples...
       processor.process();
 
-      return new CapturedData( values, timestamps, triggerPos[0], rate, channels, this.config.getEnabledChannelsMask(),
-          absoluteLength[0] );
+      return new CapturedData( values, timestamps, triggerPos[0], rate, channelCount,
+          this.config.getEnabledChannelsMask(), absoluteLength[0] );
     }
     finally
     {
@@ -1144,20 +1142,20 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
-   * Reads <code>channels</code> / 8 bytes from stream and compiles them into a
-   * single integer.
+   * Reads a single sample from the serial input stream.
+   * <p>
+   * This method will take the enabled channel groups into consideration, making
+   * it possible that the returned value contains "gaps".
+   * </p>
    * 
-   * @param aChannelCount
-   *          number of channels to read (must be multiple of 8)
-   * @return integer containing four bytes read
+   * @return the integer sample value containing up to four read bytes, not
+   *         aligned.
    * @throws IOException
-   *           if stream reading fails
+   *           if stream reading fails.
    */
-  private int readSample( final int aChannelCount ) throws IOException, InterruptedException
+  private int readSample() throws IOException, InterruptedException
   {
     int v, value = 0;
-    // calculate number of groups expected, less than sChannelCount when Demux
-    // set;
     // Wait until there's data available, otherwise we could get 'false'
     // timeouts; do not make the sleep too long, otherwise we might overflow our
     // receiver buffers...
@@ -1168,7 +1166,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       Thread.sleep( 1L );
     }
 
-    final int groupCount = aChannelCount / Ols.CHANNELS_PER_BLOCK;
+    final int groupCount = this.config.getGroupCount();
     for ( int i = 0; i < groupCount; i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...
