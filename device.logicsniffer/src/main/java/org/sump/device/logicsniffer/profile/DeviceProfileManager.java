@@ -76,13 +76,19 @@ public class DeviceProfileManager implements ManagedServiceFactory
    */
   public synchronized DeviceProfile findProfile( final String aIdentifier )
   {
-    for ( DeviceProfile profile : this.profiles.values() )
+    boolean allowWildcardMatch = false;
+    for ( int tries = 0; tries < 2; tries++ )
     {
-      final String[] metadataKeys = profile.getDeviceMetadataKeys();
-      if ( matches( aIdentifier, metadataKeys ) )
+      for ( DeviceProfile profile : this.profiles.values() )
       {
-        return profile;
+        final String[] metadataKeys = profile.getDeviceMetadataKeys();
+        if ( matches( aIdentifier, allowWildcardMatch, metadataKeys ) )
+        {
+          return profile;
+        }
       }
+      // None of the device profiles matched exactly, so try with wildcards...
+      allowWildcardMatch = true;
     }
     return null;
   }
@@ -176,11 +182,15 @@ public class DeviceProfileManager implements ManagedServiceFactory
    * @return <code>true</code> if the given identifier is found,
    *         <code>false</code> otherwise.
    */
-  private boolean matches( final String aIdentifier, final String... aMetadataKeys )
+  private boolean matches( final String aIdentifier, final boolean aAllowWildcard, final String... aMetadataKeys )
   {
     for ( String metadataKey : aMetadataKeys )
     {
-      if ( "*".equals( metadataKey ) || aIdentifier.startsWith( metadataKey ) )
+      if ( aIdentifier.startsWith( metadataKey ) )
+      {
+        return true;
+      }
+      else if ( aAllowWildcard && "*".equals( metadataKey ) )
       {
         return true;
       }

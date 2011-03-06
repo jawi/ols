@@ -428,6 +428,11 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       {
         this.portSelect.setSelectedItem( preferredPortName );
       }
+      final String preferredDeviceType = aSettings.get( "deviceType", null );
+      if ( ( preferredDeviceType != null ) && !"null".equals( preferredDeviceType ) )
+      {
+        this.deviceTypeSelect.setSelectedItem( preferredDeviceType );
+      }
       this.portRateSelect.setSelectedIndex( aSettings.getInt( "portRate", this.portRateSelect.getSelectedIndex() ) );
       this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", this.sourceSelect.getSelectedIndex() ) );
       this.numberSchemeSelect.setSelectedIndex( aSettings.getInt( "numberScheme",
@@ -514,6 +519,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   public void writePreferences( final UserSettings aSettings )
   {
     aSettings.put( "port", String.valueOf( this.portSelect.getSelectedItem() ) );
+    aSettings.put( "deviceType", String.valueOf( this.deviceTypeSelect.getSelectedItem() ) );
     aSettings.putInt( "portRate", this.portRateSelect.getSelectedIndex() );
     aSettings.putInt( "source", this.sourceSelect.getSelectedIndex() );
     aSettings.putInt( "numberScheme", this.numberSchemeSelect.getSelectedIndex() );
@@ -807,26 +813,19 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
    */
   private int determineMaxSampleCount()
   {
-    int enabledChannelGroups = 0;
-    for ( JCheckBox element : this.channelGroup )
+    final DeviceProfile deviceProfile = this.config.getDeviceProfile();
+    if ( deviceProfile != null )
     {
-      if ( element.isSelected() )
+      int enabledChannelGroups = 0;
+      for ( JCheckBox element : this.channelGroup )
       {
-        enabledChannelGroups++;
+        if ( element.isSelected() )
+        {
+          enabledChannelGroups++;
+        }
       }
-    }
 
-    if ( enabledChannelGroups == 1 )
-    {
-      return 24576;
-    }
-    else if ( enabledChannelGroups == 2 )
-    {
-      return 12288;
-    }
-    else if ( ( enabledChannelGroups == 3 ) || ( enabledChannelGroups == 4 ) )
-    {
-      return 6144;
+      return deviceProfile.getMaximumCaptureSizeFor( enabledChannelGroups );
     }
 
     return -1;
