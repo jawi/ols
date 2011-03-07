@@ -661,13 +661,16 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    *          the name of the port to create a connection for;
    * @param aPortRate
    *          the baudrate of the connection.
+   * @param aDtrValue
+   *          TODO
    * @return a connection capable of communicating with the requested serial
    *         device, never <code>null</code>.
    * @throws IOException
    *           in case of I/O problems, or in case the requested port is
    *           <em>not</em> a serial port.
    */
-  protected abstract StreamConnection getConnection( final String aPortName, final int aPortRate ) throws IOException;
+  protected abstract StreamConnection getConnection( final String aPortName, final int aPortRate, boolean aDtrValue )
+      throws IOException;
 
   /**
    * Finds the device profile manager.
@@ -695,15 +698,17 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     final String portName = this.config.getPortName();
     final int baudrate = this.config.getBaudrate();
     final int openDelay = this.config.getOpenPortDelay();
+    final boolean dtrValue = this.config.isOpenPortDtr();
 
     try
     {
       // Make sure we release the device if it was still attached...
       detach();
 
-      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps ...", new Object[] { portName, Integer.valueOf( baudrate ) } );
+      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps (DTR = {2}) ...",
+          new Object[] { portName, Integer.valueOf( baudrate ), dtrValue ? "high" : "low" } );
 
-      this.connection = getConnection( portName, baudrate );
+      this.connection = getConnection( portName, baudrate, dtrValue );
       if ( this.connection == null )
       {
         throw new IOException( "Failed to open a valid connection!" );
