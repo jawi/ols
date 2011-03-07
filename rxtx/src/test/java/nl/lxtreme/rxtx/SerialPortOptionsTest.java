@@ -59,7 +59,7 @@ public class SerialPortOptionsTest
   public void testParseFullUriOk() throws Exception
   {
     final SerialPortOptions options = new SerialPortOptions(
-    "comm:COM13;baudrate=2400;bitsperchar=5;stopbits=1.5;parity=odd" );
+        "comm:COM13;baudrate=2400;bitsperchar=5;stopbits=1.5;parity=odd;flowcontrol=xon_xoff;dtr=on" );
 
     assertNotNull( options );
     assertEquals( "COM13", options.getPortName() );
@@ -67,6 +67,8 @@ public class SerialPortOptionsTest
     assertEquals( SerialPort.DATABITS_5, options.getDatabits() );
     assertEquals( SerialPort.PARITY_ODD, options.getParityMode() );
     assertEquals( SerialPort.STOPBITS_1_5, options.getStopbits() );
+    assertEquals( SerialPort.FLOWCONTROL_XONXOFF_IN, options.getFlowControl() );
+    assertTrue( options.isDTR() );
   }
 
   /**

@@ -28,15 +28,76 @@ import java.util.regex.*;
 
 /**
  * Provides a convenience class for accessing the serial port properties.
+ * <p>
+ * Based on documentation from <a href=
+ * "http://java.sun.com/javame/reference/apis/jsr218/javax/microedition/io/CommConnection.html"
+ * >http://java.sun.com/javame/reference/apis/jsr218/javax/microedition/io/
+ * CommConnection.html</a>:
+ * </p>
+ * <table>
+ * <tr>
+ * <th>Parameter</th>
+ * <th>Default</th>
+ * <th>Description</th>
+ * </tr>
+ * <tr>
+ * <td>baudrate</td>
+ * <td>platform dependent</td>
+ * <td>The speed of the port.</td>
+ * </tr>
+ * <tr>
+ * <td>bitsperchar</td>
+ * <td>8</td>
+ * <td>The number bits per character (7 or 8).</td>
+ * </tr>
+ * <tr>
+ * <td>stopbits</td>
+ * <td>1</td>
+ * <td>The number of stop bits per char (1, 1.5 or 2).</td>
+ * </tr>
+ * <tr>
+ * <td>parity</td>
+ * <td>none</td>
+ * <td>The parity can be "odd", "even", or "none".</td>
+ * </tr>
+ * <tr>
+ * <td>blocking</td>
+ * <td>on</td>
+ * <td>If on, wait for a full buffer when reading.</td>
+ * </tr>
+ * <tr>
+ * <td>autocts</td>
+ * <td>on</td>
+ * <td>If on, wait for the CTS line to be on before writing (not used in this
+ * bundle).</td>
+ * </tr>
+ * <tr>
+ * <td>autorts</td>
+ * <td>on</td>
+ * <td>If on, turn on the RTS line when the input buffer is not full. If off,
+ * the RTS line is always on (not used in this bundle).</td>
+ * </tr>
+ * <tr>
+ * <td>flowcontrol</td>
+ * <td>off</td>
+ * <td>The flow control to use, can be "off", "xon_xoff", "rts_cts".</td>
+ * </tr>
+ * <tr>
+ * <td>dtr</td>
+ * <td>off</td>
+ * <td>If on, turn on the DTR line. If off (the default), the DTR is turned low.
+ * </td>
+ * </tr>
+ * </table>
  */
 final class SerialPortOptions
 {
   // CONSTANTS
 
   private static final Pattern SCHEMA_REGEX = Pattern.compile( "^comm:([^;]+)(?:;([^\r\n]+))*$" );
-  private static final Pattern OPTION_REGEX = Pattern
-      .compile( "(baudrate|bitsperchar|stopbits|parity|blocking|autocts|autorts|flowcontrol)=([.\\w]+)",
-          Pattern.CASE_INSENSITIVE );
+  private static final Pattern OPTION_REGEX = Pattern.compile(
+      "(baudrate|bitsperchar|stopbits|parity|blocking|autocts|autorts|flowcontrol|dtr)=([\\.\\d\\w_-]+)",
+      Pattern.CASE_INSENSITIVE );
 
   // VARIABLES
 
@@ -47,6 +108,7 @@ final class SerialPortOptions
   private int parityMode;
   private int flowControl;
   private boolean blocking;
+  private boolean dtr;
 
   // CONSTRUCTORS
 
@@ -78,6 +140,9 @@ final class SerialPortOptions
 
     // Default to blocking I/O...
     this.blocking = true;
+
+    // Default to a low DTR signal...
+    this.dtr = false;
 
     parseURI( aURI );
   }
@@ -138,6 +203,14 @@ final class SerialPortOptions
   public boolean isBlocking()
   {
     return this.blocking;
+  }
+
+  /**
+   * @return the dtr
+   */
+  public boolean isDTR()
+  {
+    return this.dtr;
   }
 
   /**
@@ -347,6 +420,10 @@ final class SerialPortOptions
         {
           this.flowControl = SerialPort.FLOWCONTROL_RTSCTS_OUT;
         }
+      }
+      else if ( "dtr".equals( key ) )
+      {
+        this.dtr = "on".equalsIgnoreCase( value );
       }
     }
   }
