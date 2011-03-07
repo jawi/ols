@@ -433,34 +433,38 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    */
   public void stop()
   {
-    if ( this.config.isRleEnabled() )
+    final boolean isRleEnabled = this.config.isRleEnabled();
+    final Runnable runner = new Runnable()
     {
-      try
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      public void run()
       {
-        sendCommand( CMD_RLE_FINISH_NOW );
-      }
-      catch ( IOException exception )
-      {
-        if ( !HostUtils.handleInterruptedException( exception ) )
+        try
         {
-          LOG.log( Level.WARNING, "RLE 'finish now' failed?!", exception );
+          if ( isRleEnabled )
+          {
+            sendCommand( CMD_RLE_FINISH_NOW );
+          }
+          else
+          {
+            resetDevice();
+          }
+          cancel( false );
+        }
+        catch ( IOException exception )
+        {
+          if ( !HostUtils.handleInterruptedException( exception ) )
+          {
+            LOG.log( Level.WARNING, "Stopping capture failed?!", exception );
+          }
         }
       }
-    }
-    else
-    {
-      try
-      {
-        resetDevice();
-      }
-      catch ( IOException exception )
-      {
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.WARNING, "Device reset failed?!", exception );
-        }
-      }
-    }
+    };
+    // Invoke this *asynchronously* otherwise we're blocking ourselves...
+    runner.run();
   }
 
   /**
@@ -933,6 +937,12 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     int id = -1;
     while ( ( tries-- >= 0 ) && ( id != SLA_V0 ) && ( id != SLA_V1 ) )
     {
+      // make sure we're not blocking longer than strictly necessary...
+      if ( isCancelled() )
+      {
+        return;
+      }
+
       // Make sure nothing is left in our input buffer...
       HostUtils.flushInputStream( this.inputStream );
 
@@ -1104,7 +1114,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
           }
         }
       }
-      while ( result > 0x00 );
+      while ( ( result > 0x00 ) && !isCancelled() );
 
       return metadata;
     }
@@ -1138,13 +1148,20 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     // timeouts; do not make the sleep too long, otherwise we might overflow our
     // receiver buffers...
     // if data not available here, client will stall until stop button pressed
-    while ( ( this.inputStream.available() < this.config.getEnabledGroupCount() ) && !isCancelled() )
+    int timeout = 500;
+    while ( ( this.inputStream.available() < this.config.getEnabledGroupCount() ) && !isCancelled()
+        && ( timeout-- >= 0 ) )
     {
       Thread.sleep( 1L );
     }
+    // Is there a timeout occurred?
+    if ( timeout < 0 )
+    {
+      throw new InterruptedException();
+    }
 
     final int groupCount = this.config.getGroupCount();
-    for ( int i = 0; i < groupCount; i++ )
+    for ( int i = 0; !isCancelled() && ( i < groupCount ); i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...
 
@@ -1194,7 +1211,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         throw new InterruptedException( "Data readout interrupted!" );
       }
     }
-    while ( read > 0x00 );
+    while ( ( read > 0x00 ) && !isCancelled() );
 
     return sb.toString();
   }
@@ -1232,8 +1249,11 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
           new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ) } );
     }
 
-    this.outputStream.writeByte( aOpcode );
-    this.outputStream.flush();
+    if ( this.outputStream != null )
+    {
+      this.outputStream.writeByte( aOpcode );
+      this.outputStream.flush();
+    }
   }
 
   /**
@@ -1268,7 +1288,10 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       shift += 8;
     }
 
-    this.outputStream.write( raw );
-    this.outputStream.flush();
+    if ( this.outputStream != null )
+    {
+      this.outputStream.write( raw );
+      this.outputStream.flush();
+    }
   }
 }
