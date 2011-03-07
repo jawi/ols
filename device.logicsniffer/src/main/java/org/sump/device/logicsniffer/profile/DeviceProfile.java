@@ -125,6 +125,11 @@ public final class DeviceProfile implements Cloneable
    * then last sample first, if <code>false</code> then first sample first.
    */
   public static final String DEVICE_SAMPLE_REVERSE_ORDER = "device.samples.reverseOrder";
+  /**
+   * In case of a serial port, does the DTR-line need to be high (= true) or low
+   * (= false)?
+   */
+  public static final String DEVICE_OPEN_PORT_DTR = "device.open.portdtr";
 
   /** All the profile keys that are supported. */
   private static final List<String> KNOWN_KEYS = Arrays.asList( new String[] { DEVICE_TYPE, DEVICE_DESCRIPTION,
@@ -132,7 +137,7 @@ public final class DeviceProfile implements Cloneable
       DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TEST_MODE,
       DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT,
       DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY,
-      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER } );
+      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR } );
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { "felix.fileinstall.filename",
       "service.pid", "service.factoryPid" } );
 
@@ -464,6 +469,24 @@ public final class DeviceProfile implements Cloneable
   public boolean isNoiseFilterSupported()
   {
     final String value = this.properties.get( DEVICE_FEATURE_NOISEFILTER );
+    return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns whether upon opening the DTR line needs to be high (=
+   * <code>true</code>) or low (= <code>false</code>).
+   * <p>
+   * This method has no meaning if the used interface is <em>not</em>
+   * {@link DeviceInterface#SERIAL}.
+   * </p>
+   * 
+   * @return <code>true</code> if the DTR line needs to be set upon opening the
+   *         serial port, <code>false</code> if the DTR line needs to be reset
+   *         upon opening the serial port.
+   */
+  public boolean isOpenPortDtr()
+  {
+    final String value = this.properties.get( DEVICE_OPEN_PORT_DTR );
     return Boolean.parseBoolean( value );
   }
 

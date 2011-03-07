@@ -26,7 +26,9 @@ import static org.junit.Assert.*;
 import java.util.*;
 
 import org.junit.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.*;
+import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import org.sump.device.logicsniffer.profile.DeviceProfile.DeviceInterface;
+import org.sump.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
 
 
 /**
@@ -338,6 +340,15 @@ public class DeviceProfileTest
   }
 
   /**
+   * Test method for {@link DeviceProfile#isOpenPortDtr()}.
+   */
+  @Test
+  public void testIsOpenPortDtrOk()
+  {
+    assertTrue( this.profile.isOpenPortDtr() );
+  }
+
+  /**
    * Test method for {@link DeviceProfile#isRleSupported()}.
    */
   @Test
@@ -415,6 +426,7 @@ public class DeviceProfileTest
     properties.put( DeviceProfile.DEVICE_INTERFACE, "SERIAL" );
     properties.put( DeviceProfile.DEVICE_METADATA_KEYS, "a,b,\"a b c\"" );
     properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "10" );
+    properties.put( DeviceProfile.DEVICE_OPEN_PORT_DTR, "true" );
     properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "false" );
     properties.put( DeviceProfile.DEVICE_SAMPLERATES, "5,6,7" );
     properties.put( DeviceProfile.DEVICE_SUPPORTS_DDR, "true" );

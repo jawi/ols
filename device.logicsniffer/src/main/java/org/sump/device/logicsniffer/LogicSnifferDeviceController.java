@@ -185,8 +185,8 @@ public class LogicSnifferDeviceController implements DeviceController
        * {@inheritDoc}
        */
       @Override
-      protected synchronized StreamConnection getConnection( final String aPortName, final int aPortRate )
-          throws IOException
+      protected synchronized StreamConnection getConnection( final String aPortName, final int aPortRate,
+          final boolean aDtrValue ) throws IOException
       {
         final BundleContext context = LogicSnifferDeviceController.this.bundleContext;
         if ( context == null )
@@ -205,8 +205,8 @@ public class LogicSnifferDeviceController implements DeviceController
         try
         {
           final String portUri = String.format(
-              "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff", aPortName,
-              Integer.valueOf( aPortRate ) );
+              "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff;dtr=%s", aPortName,
+              Integer.valueOf( aPortRate ), ( aDtrValue ? "on" : "off" ) );
 
           return ( StreamConnection )connectorService.open( portUri, ConnectorService.READ_WRITE, false /* timeouts */);
         }

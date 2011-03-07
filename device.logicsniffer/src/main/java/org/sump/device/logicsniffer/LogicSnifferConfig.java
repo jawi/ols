@@ -22,6 +22,7 @@ package org.sump.device.logicsniffer;
 
 
 import nl.lxtreme.ols.api.*;
+
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
@@ -479,6 +480,26 @@ public final class LogicSnifferConfig
   public boolean isInternalClock()
   {
     return this.clockSource == CaptureClockSource.INTERNAL;
+  }
+
+  /**
+   * Returns whether the device we're talking to need a high or low DTR-line to
+   * operate correctly.
+   * <p>
+   * For Arduino devices, the DTR line is used for auto-reset purposes, which
+   * should be set to high. No other devices make use of the DTR line (as far as
+   * I know).
+   * </p>
+   * 
+   * @see DeviceProfile#isOpenPortDtr()
+   */
+  public boolean isOpenPortDtr()
+  {
+    if ( this.deviceProfile == null )
+    {
+      return false;
+    }
+    return this.deviceProfile.isOpenPortDtr();
   }
 
   /**
