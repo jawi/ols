@@ -261,7 +261,7 @@ public class LogicSnifferDeviceController implements DeviceController
   @Override
   public boolean isCapturing()
   {
-    return ( this.device != null ) && this.device.isRunning();
+    return ( this.device != null ) && !this.device.isDone() && !this.device.isCancelled();
   }
 
   /**
