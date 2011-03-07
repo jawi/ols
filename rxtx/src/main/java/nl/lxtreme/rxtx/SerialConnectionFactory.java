@@ -91,8 +91,7 @@ public class SerialConnectionFactory implements ConnectionFactory
    */
   public SerialConnectionFactory()
   {
-    final RXTXCommDriver driver = new RXTXCommDriver();
-    driver.initialize();
+    // NO-op
   }
 
   // METHODS
@@ -104,6 +103,9 @@ public class SerialConnectionFactory implements ConnectionFactory
   @Override
   public Connection createConnection( final String aName, final int aMode, final boolean aTimeouts ) throws IOException
   {
+    final RXTXCommDriver driver = new RXTXCommDriver();
+    driver.initialize();
+
     final SerialPortOptions options = new SerialPortOptions( aName );
 
     try
