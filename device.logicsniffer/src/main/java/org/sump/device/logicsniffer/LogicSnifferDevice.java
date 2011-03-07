@@ -372,8 +372,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   private boolean attached;
   private int trigcount;
 
-  private volatile boolean running;
-
   // CONSTRUCTORS
 
   /**
@@ -411,18 +409,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
-   * Returns wether or not the device is currently running. It is running, when
-   * another thread is inside the run() method reading data from the serial
-   * port.
-   * 
-   * @return <code>true</code> when running, <code>false</code> otherwise
-   */
-  public boolean isRunning()
-  {
-    return this.running;
-  }
-
-  /**
    * Performs a self-test on the OLS device.
    * <p>
    * Note: not all versions of the OLS device firmware support a selftest!
@@ -433,15 +419,12 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    */
   public void selfTest() throws IOException
   {
-    if ( !this.running )
-    {
-      attach();
+    attach();
 
-      sendCommand( CMD_SELFTEST );
-      // TODO read selftest result...
+    sendCommand( CMD_SELFTEST );
+    // TODO read selftest result...
 
-      detach();
-    }
+    detach();
   }
 
   /**
@@ -450,38 +433,31 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    */
   public void stop()
   {
-    if ( this.running )
+    if ( this.config.isRleEnabled() )
     {
-      if ( this.config.isRleEnabled() )
+      try
       {
-        try
+        sendCommand( CMD_RLE_FINISH_NOW );
+      }
+      catch ( IOException exception )
+      {
+        if ( !HostUtils.handleInterruptedException( exception ) )
         {
-          sendCommand( CMD_RLE_FINISH_NOW );
-        }
-        catch ( IOException exception )
-        {
-          if ( !HostUtils.handleInterruptedException( exception ) )
-          {
-            LOG.log( Level.WARNING, "RLE 'finish now' failed?!", exception );
-          }
+          LOG.log( Level.WARNING, "RLE 'finish now' failed?!", exception );
         }
       }
-      else
+    }
+    else
+    {
+      try
       {
-        try
+        resetDevice();
+      }
+      catch ( IOException exception )
+      {
+        if ( !HostUtils.handleInterruptedException( exception ) )
         {
-          resetDevice();
-        }
-        catch ( IOException exception )
-        {
-          if ( !HostUtils.handleInterruptedException( exception ) )
-          {
-            LOG.log( Level.WARNING, "Device reset failed?!", exception );
-          }
-        }
-        finally
-        {
-          this.running = false;
+          LOG.log( Level.WARNING, "Device reset failed?!", exception );
         }
       }
     }
@@ -509,8 +485,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     {
       throw new IOException( "Unable to open port " + this.config.getPortName() + ". No specific reason..." );
     }
-
-    this.running = true;
 
     try
     {
@@ -541,7 +515,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       boolean waiting = ( sampleIdx >= 0 );
 
       // wait for first byte forever (trigger could cause long initial delays)
-      while ( this.running && waiting )
+      while ( waiting && !isCancelled() )
       {
         try
         {
@@ -553,7 +527,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         {
           // When running, we simply have a timeout; this could be that the
           // trigger is not fired yet... We keep waiting...
-          if ( !this.running )
+          if ( isCancelled() )
           {
             // Make sure to handle IO-interrupted exceptions properly!
             if ( !HostUtils.handleInterruptedException( exception ) )
@@ -567,7 +541,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       // read all other samples
       try
       {
-        for ( ; this.running && ( sampleIdx >= 0 ); sampleIdx-- )
+        for ( ; ( sampleIdx >= 0 ) && !isCancelled(); sampleIdx-- )
         {
           buffer[sampleIdx] = readSample();
           setProgress( 100 - ( 100 * sampleIdx ) / buffer.length );
@@ -647,9 +621,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     finally
     {
       detach();
-
-      // We're done; let's wrap it up...
-      this.running = false;
     }
   }
 
@@ -660,9 +631,11 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    * @param aPortName
    *          the name of the port to create a connection for;
    * @param aPortRate
-   *          the baudrate of the connection.
+   *          the baudrate of the connection;
    * @param aDtrValue
-   *          TODO
+   *          the value of the DTR-line, <code>true</code> means this line will
+   *          be set to a high-level, <code>false</code> means it will be set to
+   *          a low-level.
    * @return a connection capable of communicating with the requested serial
    *         device, never <code>null</code>.
    * @throws IOException
@@ -1165,8 +1138,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     // timeouts; do not make the sleep too long, otherwise we might overflow our
     // receiver buffers...
     // if data not available here, client will stall until stop button pressed
-    while ( ( this.inputStream.available() < this.config.getEnabledGroupCount() ) && !Thread.interrupted()
-        && this.running )
+    while ( ( this.inputStream.available() < this.config.getEnabledGroupCount() ) && !isCancelled() )
     {
       Thread.sleep( 1L );
     }
