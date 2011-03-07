@@ -119,8 +119,8 @@ public class SerialConnectionFactory implements ConnectionFactory
       port.enableReceiveTimeout( 50 );
       // Taken from
       // <http://mailman.qbang.org/pipermail/rxtx/2010-September/7821768.html>
-      port.setDTR( false );
       port.setRTS( true );
+      port.setDTR( options.isDTR() );
 
       return new SerialConnection( port );
     }
