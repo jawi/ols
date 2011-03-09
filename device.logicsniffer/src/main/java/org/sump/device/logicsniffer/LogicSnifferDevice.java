@@ -342,23 +342,33 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   private static final int CMD_RLE_FINISH_NOW = 0x05;
 
   // demultiplex
-  private static final int FLAG_DEMUX = 0x00000001;
+  static final int FLAG_DEMUX = 0x00000001;
   // noise filter
-  private static final int FLAG_FILTER = 0x00000002;
+  static final int FLAG_FILTER = 0x00000002;
+  // channel group 1 enabled?
+  static final int FLAG_GROUP1_DISABLED = 0x00000004;
+  // channel group 2 enabled?
+  static final int FLAG_GROUP2_DISABLED = 0x00000008;
+  // channel group 3 enabled?
+  static final int FLAG_GROUP3_DISABLED = 0x00000010;
+  // channel group 4 enabled?
+  static final int FLAG_GROUP4_DISABLED = 0x00000020;
   // external trigger?
-  private static final int FLAG_EXTERNAL = 0x00000040;
+  static final int FLAG_EXTERNAL = 0x00000040;
   // inverted
-  private static final int FLAG_INVERTED = 0x00000080;
+  static final int FLAG_INVERTED = 0x00000080;
   // run length encoding
-  private static final int FLAG_RLE = 0x00000100;
-  private static final int FLAG_RLE_MODE_0 = 0x00000000;
-  private static final int FLAG_RLE_MODE_1 = 0x00004000;
-  private static final int FLAG_RLE_MODE_2 = 0x00008000;
-  private static final int FLAG_RLE_MODE_3 = 0x0000C000;
+  static final int FLAG_RLE = 0x00000100;
+  static final int FLAG_RLE_MODE_0 = 0x00000000;
+  static final int FLAG_RLE_MODE_1 = 0x00004000;
+  static final int FLAG_RLE_MODE_2 = 0x00008000;
+  static final int FLAG_RLE_MODE_3 = 0x0000C000;
   // Number Scheme
-  private static final int FLAG_NUMBER_SCHEME = 0x00000200;
-  // Testing mode
-  private static final int FLAG_TEST_MODE = 0x00000400;
+  static final int FLAG_NUMBER_SCHEME = 0x00000200;
+  // Testing mode (external, bits 16:32)
+  static final int FLAG_EXTERNAL_TEST_MODE = 0x00000400;
+  // Testing mode (internal)
+  static final int FLAG_INTERNAL_TEST_MODE = 0x00000800;
 
   private static final Logger LOG = Logger.getLogger( LogicSnifferDevice.class.getName() );
 
@@ -518,6 +528,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       int sampleIdx = samples - 1;
       boolean waiting = ( sampleIdx >= 0 );
 
+      LOG.log( Level.FINE, "Awaiting trigger ..." );
+
       // wait for first byte forever (trigger could cause long initial delays)
       while ( waiting && !isCancelled() )
       {
@@ -542,6 +554,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         }
       }
 
+      LOG.log( Level.FINE, "Trigger(s) fired! Reading {0} samples ...", samples );
+
       // read all other samples
       try
       {
@@ -553,11 +567,14 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       }
       catch ( InterruptedException exception )
       {
-        LOG.log( Level.INFO, "Capture interrupted! Only {0} samples read ...", Integer.valueOf( samples - sampleIdx ) );
+        LOG.log( Level.WARNING, "Capture interrupted! Only {0} samples read ...", Integer.valueOf( samples - sampleIdx ) );
 
-        // Make sure the device is in a state were we can do something with
-        // it after this method is completed...
-        resetDevice();
+        if ( isCancelled() )
+        {
+          // Make sure the device is in a state were we can do something with
+          // it after this method is completed...
+          resetDevice();
+        }
 
         // Make sure to handle IO-interrupted exceptions properly!
         if ( !HostUtils.handleInterruptedException( exception ) )
@@ -569,6 +586,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       {
         setProgress( 100 );
       }
+
+      LOG.log( Level.FINE, "Samples read. Starting post processing...", samples );
 
       // In case the device sends its samples in "reverse" order, we need to
       // revert it now, before processing them further...
@@ -626,6 +645,16 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     {
       detach();
     }
+  }
+
+  /**
+   * Returns the configuration as used for this device.
+   * 
+   * @return a device configuration, never <code>null</code>.
+   */
+  protected final LogicSnifferConfig getConfig()
+  {
+    return this.config;
   }
 
   /**
@@ -832,7 +861,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
 
     if ( this.config.isTestModeEnabled() )
     {
-      flags |= FLAG_TEST_MODE;
+      flags |= FLAG_EXTERNAL_TEST_MODE;
     }
 
     LOG.log( Level.FINE, "Flags: 0b{0}", Integer.toBinaryString( flags ) );
@@ -1006,7 +1035,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       {
         // Log the read results...
         LOG.log( Level.INFO, "Detected device type: {0}", metadata.getName() );
-        LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
+        LOG.log( Level.INFO, "Device metadata = \n{0}", metadata.toString() );
 
         final String name = metadata.getName();
         if ( name != null )
@@ -1014,7 +1043,14 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
           final DeviceProfileManager manager = getDeviceProfileManager();
           final DeviceProfile profile = manager.findProfile( name );
 
-          LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
+          if ( profile != null )
+          {
+            LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
+          }
+          else
+          {
+            LOG.log( Level.INFO, "No device profile found matching: {0}", name );
+          }
 
           this.config.setDeviceProfile( profile );
         }
@@ -1148,16 +1184,10 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     // timeouts; do not make the sleep too long, otherwise we might overflow our
     // receiver buffers...
     // if data not available here, client will stall until stop button pressed
-    int timeout = 500;
-    while ( ( this.inputStream.available() < this.config.getEnabledGroupCount() ) && !isCancelled()
-        && ( timeout-- >= 0 ) )
+    final int enabledGroupCount = this.config.getEnabledGroupCount();
+    while ( ( this.inputStream.available() < enabledGroupCount ) && !isCancelled() )
     {
       Thread.sleep( 1L );
-    }
-    // Is there a timeout occurred?
-    if ( timeout < 0 )
-    {
-      throw new InterruptedException();
     }
 
     final int groupCount = this.config.getGroupCount();

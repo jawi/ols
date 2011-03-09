@@ -181,7 +181,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
     final Integer key = Integer.valueOf( aKey );
     if ( this.values.containsKey( key ) )
     {
-      throw new IllegalStateException( "Duplicate key: " + aKey + "!" );
+      throw new IllegalStateException( "Duplicate key: 0x" + Integer.toHexString( aKey ) + "!" );
     }
     this.values.put( key, aValue );
   }
