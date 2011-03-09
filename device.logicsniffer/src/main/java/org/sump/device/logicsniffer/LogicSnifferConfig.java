@@ -153,6 +153,21 @@ public final class LogicSnifferConfig
   }
 
   /**
+   * Returns the (maximum) clockspeed the device runs at.
+   * 
+   * @return a clockspeed, in Hertz (Hz).
+   */
+  public int getClockspeed()
+  {
+    int result = LogicSnifferDevice.CLOCK;
+    if ( this.deviceProfile != null )
+    {
+      result = Math.min( result, this.deviceProfile.getClockspeed() );
+    }
+    return result;
+  }
+
+  /**
    * @return the deviceProfile
    */
   public DeviceProfile getDeviceProfile()
@@ -331,11 +346,11 @@ public final class LogicSnifferConfig
       if ( isDoubleDataRateEnabled() )
       {
         // The sample clock is 200MHz iso 100MHz...
-        rate = ( int )( ( 2.0 * LogicSnifferDevice.CLOCK ) / ( getDivider() + 1 ) );
+        rate = ( int )( ( 2.0 * getClockspeed() ) / ( getDivider() + 1 ) );
       }
       else
       {
-        rate = ( int )( ( 1.0 * LogicSnifferDevice.CLOCK ) / ( getDivider() + 1 ) );
+        rate = ( int )( ( 1.0 * getClockspeed() ) / ( getDivider() + 1 ) );
       }
     }
     return rate;
@@ -735,8 +750,8 @@ public final class LogicSnifferConfig
    */
   public void setSampleRate( final int aRate )
   {
-    final int clock = LogicSnifferDevice.CLOCK;
-    if ( aRate > clock )
+    final int clock = getClockspeed();
+    if ( ( aRate > clock ) && isDoubleDataRateSupported() )
     {
       this.demux = true;
       this.divider = ( int )( ( 2.0 * clock / aRate ) - 1 );
@@ -834,5 +849,23 @@ public final class LogicSnifferConfig
   final void setDeviceProfile( final DeviceProfile aDeviceProfile )
   {
     this.deviceProfile = aDeviceProfile;
+  }
+
+  /**
+   * Returns whether the demultiplexer is supported by the current device type.
+   * If the demultiplexer is enabled, the sampling frequency is doubled.
+   * 
+   * @return <code>true</code> if the demultiplexer is supported (the default),
+   *         <code>false</code> otherwise.
+   */
+  private boolean isDoubleDataRateSupported()
+  {
+    boolean result = true;
+    if ( this.deviceProfile != null )
+    {
+      result = this.deviceProfile.isDoubleDataRateSupported();
+    }
+
+    return result;
   }
 }
