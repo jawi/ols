@@ -248,11 +248,14 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
             {
               if ( tenBitAddress )
               {
+                // 10-bit address needs the first few bits of the previous slave
+                // address, so OR-ing is needed here...
                 slaveAddress |= ( byteValue & 0xFF );
               }
               else
               {
-                slaveAddress |= ( ( byteValue >> 1 ) & 0xFF );
+                // 7-bit address, directly available. See issue #51
+                slaveAddress = ( ( byteValue >> 1 ) & 0xFF );
               }
               startCondFound = false;
 
