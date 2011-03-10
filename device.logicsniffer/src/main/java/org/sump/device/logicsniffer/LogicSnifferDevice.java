@@ -529,7 +529,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       int sampleIdx = samples - 1;
       boolean waiting = ( sampleIdx >= 0 );
 
-      LOG.log( Level.INFO, "Awaiting trigger ..." );
+      LOG.log( Level.FINE, "Awaiting trigger ..." );
 
       // wait for first byte forever (trigger could cause long initial delays)
       while ( waiting && !isCancelled() )
@@ -555,8 +555,11 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         }
       }
 
-      LOG.log( Level.INFO, "Trigger(s) fired! Reading {0} samples of {1} bytes ...",
-          new Object[] { Integer.valueOf( samples ), Integer.valueOf( this.config.getEnabledGroupCount() ) } );
+      if ( LOG.isLoggable( Level.FINE ) )
+      {
+        LOG.log( Level.FINE, "Trigger(s) fired! Reading {0} samples of {1} bytes ...",
+            new Object[] { Integer.valueOf( samples ), Integer.valueOf( this.config.getEnabledGroupCount() ) } );
+      }
 
       // read all other samples
       try
@@ -589,7 +592,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         setProgress( 100 );
       }
 
-      LOG.log( Level.INFO, "{0} samples read. Starting post processing...", Integer.valueOf( samples - sampleIdx - 1 ) );
+      LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( samples - sampleIdx - 1 ) );
 
       // In case the device sends its samples in "reverse" order, we need to
       // revert it now, before processing them further...
@@ -1037,7 +1040,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       {
         // Log the read results...
         LOG.log( Level.INFO, "Detected device type: {0}", metadata.getName() );
-        LOG.log( Level.INFO, "Device metadata = \n{0}", metadata.toString() );
+        LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
 
         final String name = metadata.getName();
         if ( name != null )
@@ -1051,7 +1054,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
           }
           else
           {
-            LOG.log( Level.INFO, "No device profile found matching: {0}", name );
+            LOG.log( Level.SEVERE, "No device profile found matching: {0}", name );
           }
 
           this.config.setDeviceProfile( profile );
@@ -1291,11 +1294,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
           new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ) } );
     }
 
-    if ( this.outputStream != null )
-    {
-      this.outputStream.writeByte( aOpcode );
-      this.outputStream.flush();
-    }
+    this.outputStream.writeByte( aOpcode );
+    this.outputStream.flush();
   }
 
   /**
@@ -1330,10 +1330,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       shift += 8;
     }
 
-    if ( this.outputStream != null )
-    {
-      this.outputStream.write( raw );
-      this.outputStream.flush();
-    }
+    this.outputStream.write( raw );
+    this.outputStream.flush();
   }
 }
