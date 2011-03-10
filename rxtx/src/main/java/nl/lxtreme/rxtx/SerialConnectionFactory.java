@@ -91,7 +91,11 @@ public class SerialConnectionFactory implements ConnectionFactory
    */
   public SerialConnectionFactory()
   {
-    // NO-op
+    // TODO: this will force the user to have its device(s) connected at
+    // startup. However, it will ensure everything is quick and responsive in
+    // case the device ports are requested... Stupid RXTX library...
+    final RXTXCommDriver driver = new RXTXCommDriver();
+    driver.initialize();
   }
 
   // METHODS
@@ -103,9 +107,6 @@ public class SerialConnectionFactory implements ConnectionFactory
   @Override
   public Connection createConnection( final String aName, final int aMode, final boolean aTimeouts ) throws IOException
   {
-    final RXTXCommDriver driver = new RXTXCommDriver();
-    driver.initialize();
-
     final SerialPortOptions options = new SerialPortOptions( aName );
 
     try
