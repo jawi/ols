@@ -138,6 +138,19 @@ public class NumberUtilsTest
     assertEquals( 100, getPercentage( 11, 10 ) );
   }
 
+  @Test
+  public void testPackBytes()
+  {
+    assertEquals( 0x1234, packBytes( 0x00001234 ) );
+    assertEquals( 0x1234, packBytes( 0x12003400 ) );
+    assertEquals( 0x1234, packBytes( 0x00120034 ) );
+    assertEquals( 0x1234, packBytes( 0x12003400 ) );
+
+    assertEquals( 0x12, packBytes( 0x00120000 ) );
+    assertEquals( 0x123456, packBytes( 0x12003456 ) );
+    assertEquals( 0x12345678, packBytes( 0x12345678 ) );
+  }
+
   /**
    * 
    */
