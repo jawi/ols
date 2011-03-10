@@ -336,6 +336,36 @@ public final class NumberUtils
   }
 
   /**
+   * "Packs" a given value according to the given byte mask by removing all zero
+   * bytes from the given integer value and shifting all non-zero bytes to
+   * consecutive places.
+   * <p>
+   * For example: given <tt>aValue</tt> == 0x12003400, the result would be
+   * 0x00001234.
+   * </p>
+   * 
+   * @param aValue
+   *          the 4-byte (32-bit) value to pack.
+   * @return the packed representation of the given value.
+   */
+  public static int packBytes( final int aValue )
+  {
+    int mask = 0xFF000000;
+    int result = 0;
+    for ( int i = 0, j = 3; i < 4; i++, j-- )
+    {
+      int tmp = ( aValue & mask ) >> ( j * 8 );
+      if ( tmp != 0 )
+      {
+        result <<= 8;
+        result |= tmp;
+      }
+      mask >>>= 8;
+    }
+    return result;
+  }
+
+  /**
    * Converts the bits of a byte into a desired order.
    * 
    * @param aValue
