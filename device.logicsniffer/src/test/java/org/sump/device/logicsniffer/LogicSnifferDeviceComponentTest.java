@@ -22,7 +22,6 @@ package org.sump.device.logicsniffer;
 
 
 import java.util.*;
-import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
 
@@ -40,10 +39,6 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 @RunWith( Parameterized.class )
 public class LogicSnifferDeviceComponentTest
 {
-  // CONSTRUCTORS
-
-  private static final Logger LOG = Logger.getAnonymousLogger();
-
   // VARIABLES
 
   private VirtualLogicSnifferDevice device;
@@ -135,11 +130,6 @@ public class LogicSnifferDeviceComponentTest
     config.setSampleCount( this.readCounter );
     config.setSampleRate( this.sampleRate );
     config.setTriggerEnabled( this.triggerEnabled );
-
-    LOG.log( Level.INFO, "Sample rate: {0}Hz; Read counter: {1}; Delay counter: {2}; Ratio: {3}; "
-        + "Trigger: {4}; Enabled channels: {5}; Use RLE: {6}", new Object[] { this.sampleRate, this.readCounter,
-        this.delayCounter, this.ratio, this.triggerEnabled, Integer.toHexString( this.enabledChannelsMask ),
-        this.useRLE } );
   }
 
   /**

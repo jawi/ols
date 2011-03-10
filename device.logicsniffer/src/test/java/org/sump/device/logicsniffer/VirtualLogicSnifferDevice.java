@@ -45,6 +45,26 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
   // INNER TYPES
 
   /**
+   * Provides samples to the {@link IOHelper}.
+   */
+  public static interface SampleProvider
+  {
+    // METHODS
+
+    /**
+     * Writes the samples.
+     * 
+     * @param aOs
+     * @param aSampleWidth
+     * @param aSampleCount
+     * @param aRleMode
+     * @param aDdrMode
+     */
+    void write( OutputStream aOs, int aSampleWidth, int aSampleCount, boolean aRleMode, boolean aDdrMode )
+        throws IOException;
+  }
+
+  /**
    * IOHelper provides an asynchronous reader for streams...
    */
   final class IOHelper extends Thread
@@ -53,8 +73,9 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
 
     private final InputStream is;
     private final OutputStream os;
-    private volatile boolean running;
+    private final SampleProvider sampleProvider;
 
+    private volatile boolean running;
     private volatile int sizeValue;
     private volatile int sampleWidth;
     private volatile int enabledGroups;
@@ -66,11 +87,12 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
     /**
      * Creates a new StreamReader instance.
      */
-    public IOHelper( final InputStream aIS, final OutputStream aOS )
+    public IOHelper( final InputStream aIS, final OutputStream aOS, final SampleProvider aSampleProvider )
     {
       super( "IOHelper" );
       this.is = aIS;
       this.os = aOS;
+      this.sampleProvider = aSampleProvider;
     }
 
     // METHODS
@@ -133,28 +155,28 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
               break;
             case 0x05:
               // Finish now... XXX
-              LOG.info( "Received RLE FINISH NOW request..." );
+              // LOG.info( "Received RLE FINISH NOW request..." );
               break;
             case 0xC0:
             case 0xC4:
             case 0xC8:
             case 0xCC:
               // Set Trigger Masks, trigger 0, 1, 2 & 3...
-              LOG.info( "Received SET TRIGGER MASK..." );
+              // LOG.info( "Received SET TRIGGER MASK..." );
               break;
             case 0xC1:
             case 0xC5:
             case 0xC9:
             case 0xCD:
               // Set Trigger Values, trigger 0, 1, 2 & 3...
-              LOG.info( "Received SET TRIGGER VALUE..." );
+              // LOG.info( "Received SET TRIGGER VALUE..." );
               break;
             case 0xC2:
             case 0xC6:
             case 0xCA:
             case 0xCE:
               // Set Trigger Configuration, trigger 0, 1, 2 & 3...
-              LOG.info( "Received SET TRIGGER CONFIGURATION..." );
+              // LOG.info( "Received SET TRIGGER CONFIGURATION..." );
               break;
             case 0x80:
               // Set divider...
@@ -278,19 +300,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
       }
       setReadAndDelay( readCount, delayCount );
 
-      final byte[] sample = new byte[this.sampleWidth];
-      Arrays.fill( sample, ( byte )( this.rleMode ? 0x7F : 0xFF ) );
-
-      int sampleCount = readCount;
-      LOG.info( "Responding with " + sampleCount + " samples of " + this.sampleWidth + " bytes wide!" );
-
-      for ( int i = 0; i <= sampleCount; i++ )
-      {
-        this.os.write( sample );
-      }
-      this.os.flush();
-
-      LOG.info( "Responded with all samples!" );
+      this.sampleProvider.write( this.os, this.sampleWidth, readCount, this.rleMode, this.ddrMode );
     }
 
     /**
@@ -303,9 +313,33 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
     }
   }
 
+  /**
+   * Default implementation of {@link SampleProvider}.
+   */
+  static final class SimpleSampleProvider implements SampleProvider
+  {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void write( final OutputStream aOs, final int aSampleWidth, final int aSampleCount, final boolean aRleMode,
+        final boolean aDdrMode ) throws IOException
+    {
+      final byte[] sample = new byte[aSampleWidth];
+      Arrays.fill( sample, ( byte )( aRleMode ? 0x7F : 0xFF ) );
+
+      for ( int i = 0; i <= aSampleCount; i++ )
+      {
+        aOs.write( sample );
+      }
+      aOs.flush();
+
+    }
+  }
+
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getAnonymousLogger();
+  static final Logger LOG = Logger.getAnonymousLogger();
 
   // VARIABLES
 
@@ -326,17 +360,26 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
    */
   public VirtualLogicSnifferDevice( final LogicSnifferConfig aConfig ) throws IOException
   {
+    this( aConfig, new SimpleSampleProvider() );
+  }
+
+  /**
+   * Creates a new VirtualLogicSnifferDevice instance.
+   */
+  public VirtualLogicSnifferDevice( final LogicSnifferConfig aConfig, final SampleProvider aSampleProvider )
+      throws IOException
+  {
     super( aConfig );
 
     this.manager = new DeviceProfileManager();
 
-    PipedInputStream pipeIn = new PipedInputStream();
+    PipedInputStream pipeIn = new PipedInputStream( 16 * 1024 );
     PipedOutputStream pipeOut = new PipedOutputStream();
 
     this.outputStream = new PipedOutputStream( pipeIn );
     this.inputStream = new PipedInputStream( pipeOut );
 
-    this.streamReader = new IOHelper( pipeIn, pipeOut );
+    this.streamReader = new IOHelper( pipeIn, pipeOut, aSampleProvider );
     this.streamReader.start();
   }
 
@@ -365,7 +408,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
     properties.put( DeviceProfile.DEVICE_METADATA_KEYS, aMetadataKeys );
     properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "0" );
     properties.put( DeviceProfile.DEVICE_OPEN_PORT_DTR, "false" );
-    properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "false" );
+    properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "true" );
     properties.put( DeviceProfile.DEVICE_SAMPLERATES, "1000000" );
     properties.put( DeviceProfile.DEVICE_SUPPORTS_DDR, "true" );
     properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );

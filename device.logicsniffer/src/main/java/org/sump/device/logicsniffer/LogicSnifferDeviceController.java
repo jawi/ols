@@ -86,7 +86,7 @@ public class LogicSnifferDeviceController implements DeviceController
   @Override
   public void cancel() throws IllegalStateException
   {
-    if ( ( this.device != null ) && isCapturing() )
+    if ( ( this.device != null ) && !this.device.isDone() )
     {
       // TODO this is not entirely correct...
       this.device.stop();
@@ -102,6 +102,8 @@ public class LogicSnifferDeviceController implements DeviceController
     // Listen to various properties for reporting it to our callback...
     final PropertyChangeListener propertyChangeListener = new PropertyChangeListener()
     {
+      private final LogicSnifferConfig config = LogicSnifferDeviceController.this.deviceConfig;
+
       /**
        * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
        */
@@ -123,9 +125,9 @@ public class LogicSnifferDeviceController implements DeviceController
           final StateValue state = ( StateValue )aEvent.getNewValue();
           if ( StateValue.STARTED.equals( state ) )
           {
-            final int sampleRate = LogicSnifferDeviceController.this.deviceConfig.getSampleRate();
-            final int channelCount = LogicSnifferDeviceController.this.deviceConfig.getChannelCount();
-            final int channelMask = LogicSnifferDeviceController.this.deviceConfig.getEnabledChannelsMask();
+            final int sampleRate = this.config.getSampleRate();
+            final int channelCount = this.config.getChannelCount();
+            final int channelMask = this.config.getEnabledChannelsMask();
 
             // Notify our caller that we're started capturing...
             aCallback.captureStarted( sampleRate, channelCount, channelMask );
@@ -233,10 +235,7 @@ public class LogicSnifferDeviceController implements DeviceController
       @Override
       protected void process( final List<Sample> aSamples )
       {
-        synchronized ( aCallback )
-        {
-          aCallback.samplesCaptured( aSamples );
-        }
+        aCallback.samplesCaptured( aSamples );
       }
     };
 
@@ -261,7 +260,7 @@ public class LogicSnifferDeviceController implements DeviceController
   @Override
   public boolean isCapturing()
   {
-    return ( this.device != null ) && !this.device.isDone() && !this.device.isCancelled();
+    return ( this.device != null ) && !this.device.isDone();
   }
 
   /**
