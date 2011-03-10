@@ -205,21 +205,15 @@ public final class LogicSnifferConfig
   public int getEnabledGroupCount()
   {
     int cnt = 0;
-    for ( boolean enabledGroup : this.enabledGroups )
+    // Important: #getGroupCount take care of DDR-mode for us, so we only have
+    // to assume the enabled groups booleans are set symmetrically...
+    for ( int i = getGroupCount() - 1; i >= 0; i-- )
     {
-      if ( enabledGroup )
+      if ( this.enabledGroups[i] )
       {
         cnt++;
       }
     }
-
-    if ( isDoubleDataRateEnabled() )
-    {
-      // In case the demux is enabled, only a maximum of two channel groups is
-      // allowed...
-      cnt = Math.min( MAX_CHANNEL_GROUPS_DDR, cnt );
-    }
-
     return cnt;
   }
 

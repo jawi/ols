@@ -29,8 +29,11 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
+import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
 
+import org.junit.*;
 import org.sump.device.logicsniffer.profile.*;
 
 
@@ -52,9 +55,11 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
     private final OutputStream os;
     private volatile boolean running;
 
-    private int readCount;
-    private int delayCount;
-    private int sampleWidth;
+    private volatile int sizeValue;
+    private volatile int sampleWidth;
+    private volatile int enabledGroups;
+    private volatile boolean ddrMode;
+    private volatile boolean rleMode;
 
     // CONSTRUCTORS
 
@@ -157,28 +162,17 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
               break;
             case 0x81:
               // Set Read & Delay Count...
-              this.readCount = ( ( parameterValue & 0xFFFF ) + 1 ) << 2;
-              this.delayCount = ( ( parameterValue >> 16 ) & 0xFFFF ) << 2;
-              setReadAndDelay( this.readCount, this.delayCount );
+              this.sizeValue = parameterValue;
               break;
             case 0x82:
               // Set Flags...
-              this.sampleWidth = 4;
-              if ( ( parameterValue & LogicSnifferDevice.FLAG_GROUP1_DISABLED ) != 0 )
+              this.ddrMode = ( ( parameterValue & LogicSnifferDevice.FLAG_DEMUX ) != 0 );
+              this.rleMode = ( ( parameterValue & LogicSnifferDevice.FLAG_RLE ) != 0 );
+              this.enabledGroups = ( ( parameterValue & 0x3C ) >> 2 );
+              this.sampleWidth = Ols.MAX_BLOCKS - Integer.bitCount( this.enabledGroups );
+              if ( this.ddrMode )
               {
-                this.sampleWidth--;
-              }
-              if ( ( parameterValue & LogicSnifferDevice.FLAG_GROUP2_DISABLED ) != 0 )
-              {
-                this.sampleWidth--;
-              }
-              if ( ( parameterValue & LogicSnifferDevice.FLAG_GROUP3_DISABLED ) != 0 )
-              {
-                this.sampleWidth--;
-              }
-              if ( ( parameterValue & LogicSnifferDevice.FLAG_GROUP4_DISABLED ) != 0 )
-              {
-                this.sampleWidth--;
+                this.sampleWidth >>= 1;
               }
               setFlags( parameterValue );
               break;
@@ -187,7 +181,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
               break;
           }
         }
-        catch ( IOException exception )
+        catch ( Exception exception )
         {
           this.running = false;
           throw new RuntimeException( exception );
@@ -271,16 +265,30 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
      */
     final void respondWithSampleData() throws IOException
     {
-      final byte[] sample = new byte[this.sampleWidth];
+      int readCount, delayCount;
+      if ( this.ddrMode )
+      {
+        readCount = ( ( this.sizeValue & 0xFFFF ) + 1 ) << 3;
+        delayCount = ( ( this.sizeValue >> 16 ) & 0xFFFF ) << 3;
+      }
+      else
+      {
+        readCount = ( ( this.sizeValue & 0xFFFF ) + 1 ) << 2;
+        delayCount = ( ( this.sizeValue >> 16 ) & 0xFFFF ) << 2;
+      }
+      setReadAndDelay( readCount, delayCount );
 
-      int sampleCount = this.readCount;
+      final byte[] sample = new byte[this.sampleWidth];
+      Arrays.fill( sample, ( byte )( this.rleMode ? 0x7F : 0xFF ) );
+
+      int sampleCount = readCount;
       LOG.info( "Responding with " + sampleCount + " samples of " + this.sampleWidth + " bytes wide!" );
 
-      while ( sampleCount-- > 0 )
+      for ( int i = 0; i <= sampleCount; i++ )
       {
         this.os.write( sample );
-        this.os.flush();
       }
+      this.os.flush();
 
       LOG.info( "Responded with all samples!" );
     }
@@ -306,10 +314,10 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
   private final IOHelper streamReader;
   private final DeviceProfileManager manager;
 
-  private int dividerValue;
-  private int delayCount;
-  private int readCount;
-  private int flags;
+  private volatile int dividerValue;
+  private volatile int delayCount;
+  private volatile int readCount;
+  private volatile int flags;
 
   // CONSTRUCTORS
 
@@ -370,6 +378,29 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
   }
 
   /**
+   * @param aExpectedCount
+   * @param aExpectedValue
+   * @throws IOException
+   */
+  public void assertConstantDataStream( final AcquisitionResult aResult, final int aExpectedValue,
+      final long aExpectedLength ) throws IOException
+  {
+    final int[] expectedValues = new int[1];
+    Arrays.fill( expectedValues, aExpectedValue );
+
+    final int[] actualValues = aResult.getValues();
+    Assert.assertArrayEquals( "Sample values not as expected?!", expectedValues, actualValues );
+
+    final long[] expectedTimestamps = new long[1];
+    Arrays.fill( expectedTimestamps, 0L );
+
+    final long[] actualTimestamps = aResult.getTimestamps();
+    Assert.assertArrayEquals( "Timestamps not as expected?!", expectedTimestamps, actualTimestamps );
+
+    assertEquals( "Absolute length not equal?!", aExpectedLength, aResult.getAbsoluteLength() );
+  }
+
+  /**
    * @param aFlagMask
    * @param aExpectedState
    */
@@ -384,19 +415,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
    */
   public void assertReadAndDelayCount( final int aExpectedReadCount, final int aExpectedDelayCount )
   {
-    final LogicSnifferConfig config = getConfig();
-
-    int expectedReadCount = aExpectedReadCount;
-    int expectedDelayCount = aExpectedDelayCount;
-
-    if ( config.isDoubleDataRateEnabled() )
-    {
-      expectedReadCount >>= 1;
-      expectedDelayCount >>= 1;
-    }
-
-    assertEquals( "Read count not as expected!", expectedReadCount, this.readCount );
-    assertEquals( "Delay count not as expected!", expectedDelayCount, this.delayCount );
+    assertEquals( "Read count not as expected!", aExpectedReadCount, this.readCount );
+    assertEquals( "Delay count not as expected!", aExpectedDelayCount, this.delayCount );
   }
 
   /**

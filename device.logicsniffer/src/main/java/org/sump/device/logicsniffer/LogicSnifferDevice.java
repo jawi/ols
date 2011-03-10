@@ -23,6 +23,7 @@ package org.sump.device.logicsniffer;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
@@ -528,7 +529,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       int sampleIdx = samples - 1;
       boolean waiting = ( sampleIdx >= 0 );
 
-      LOG.log( Level.FINE, "Awaiting trigger ..." );
+      LOG.log( Level.INFO, "Awaiting trigger ..." );
 
       // wait for first byte forever (trigger could cause long initial delays)
       while ( waiting && !isCancelled() )
@@ -554,7 +555,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         }
       }
 
-      LOG.log( Level.FINE, "Trigger(s) fired! Reading {0} samples ...", samples );
+      LOG.log( Level.INFO, "Trigger(s) fired! Reading {0} samples of {1} bytes ...",
+          new Object[] { Integer.valueOf( samples ), Integer.valueOf( this.config.getEnabledGroupCount() ) } );
 
       // read all other samples
       try
@@ -587,7 +589,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         setProgress( 100 );
       }
 
-      LOG.log( Level.FINE, "Samples read. Starting post processing...", samples );
+      LOG.log( Level.INFO, "{0} samples read. Starting post processing...", Integer.valueOf( samples - sampleIdx - 1 ) );
 
       // In case the device sends its samples in "reverse" order, we need to
       // revert it now, before processing them further...
@@ -1179,15 +1181,25 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    */
   private int readSample() throws IOException, InterruptedException
   {
+    final int baseTimeout = 10000;
+
     int v, value = 0;
-    // Wait until there's data available, otherwise we could get 'false'
-    // timeouts; do not make the sleep too long, otherwise we might overflow our
-    // receiver buffers...
+    int timeout = 4 * baseTimeout;
+
     // if data not available here, client will stall until stop button pressed
     final int enabledGroupCount = this.config.getEnabledGroupCount();
-    while ( ( this.inputStream.available() < enabledGroupCount ) && !isCancelled() )
+    while ( !isCancelled() && ( this.inputStream.available() < enabledGroupCount ) && ( timeout-- >= 0 ) )
     {
-      Thread.sleep( 1L );
+      // Wait until there's data available, otherwise we could get 'false'
+      // timeouts; do not make the sleep too long, otherwise we might overflow
+      // our
+      // receiver buffers...
+      TimeUnit.MICROSECONDS.sleep( 25L );
+    }
+    if ( timeout < 0 )
+    {
+      // Flag this read as
+      throw new InterruptedIOException( "Device did not respond within " + baseTimeout + " milliseconds!" );
     }
 
     final int groupCount = this.config.getGroupCount();
