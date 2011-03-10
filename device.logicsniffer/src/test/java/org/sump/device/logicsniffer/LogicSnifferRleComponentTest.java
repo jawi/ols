@@ -27,8 +27,12 @@ import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
+import org.junit.runner.*;
+import org.junit.runners.*;
+import org.junit.runners.Parameterized.*;
 import org.osgi.service.cm.*;
 import org.sump.device.logicsniffer.VirtualLogicSnifferDevice.SampleProvider;
 import org.sump.device.logicsniffer.profile.*;
@@ -38,31 +42,85 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 /**
  * RLE-specific test cases for {@link LogicSnifferDevice}.
  */
-@Ignore
+@RunWith( Parameterized.class )
 public class LogicSnifferRleComponentTest
 {
   // INNER TYPES
 
+  /**
+   * 
+   */
   static final class RleSampleProvider implements SampleProvider
   {
     // VARIABLES
 
-    private final int highCount;
-    private final int lowCount;
+    private final int highTime;
+    private final int lowTime;
+    private final int sampleHighValue;
+    private final int sampleLowValue;
+    private final int packedHighValue;
+    private final int packedLowValue;
 
     // CONSTRUCTORS
 
     /**
      * Creates a new LogicSnifferRleComponentTest.RleSampleProvider instance.
      */
-    public RleSampleProvider( final int aWidth, final double aRatio )
+    public RleSampleProvider( final int aWidth, final double aRatio, final int aMask )
     {
-      final int temp = ( 1 << ( aWidth - 1 ) ) - 1;
-      this.highCount = ( int )( aRatio * temp );
-      this.lowCount = temp - this.highCount;
+      final int pulseWidth = ( 1 << ( aWidth - 1 ) ) - 1;
+      this.highTime = ( int )( aRatio * pulseWidth );
+      this.lowTime = pulseWidth - this.highTime;
+
+      final long baseValue = 0x55555555;
+      this.sampleHighValue = ( int )( baseValue & aMask );
+      this.sampleLowValue = ( ( this.sampleHighValue >> 1 ) & aMask );
+
+      this.packedHighValue = NumberUtils.packBytes( this.sampleHighValue );
+      this.packedLowValue = NumberUtils.packBytes( this.sampleLowValue );
     }
 
     // METHODS
+
+    /**
+     * Returns the time the RLE-encoded pulse is "high".
+     * 
+     * @return the high time, > 0.
+     */
+    public int getHighTime()
+    {
+      return this.highTime;
+    }
+
+    /**
+     * Returns the value of when the sample is supposed to be "high".
+     * 
+     * @return the high value.
+     */
+    public int getHighValue()
+    {
+      return this.sampleHighValue;
+    }
+
+    /**
+     * Returns the time the RLE-encoded pulse is "low".
+     * 
+     * @return the low time, > 0.
+     */
+    public int getLowTime()
+    {
+      return this.lowTime;
+    }
+
+    /**
+     * Returns the value of when the sample is supposed to be "low".
+     * 
+     * @return the low value.
+     */
+    public int getLowValue()
+    {
+      return this.sampleLowValue;
+    }
 
     /**
      * {@inheritDoc}
@@ -74,19 +132,19 @@ public class LogicSnifferRleComponentTest
       byte[] buf = new byte[aSampleWidth];
 
       // write three leading zero's...
-      aOs.write( createSample( buf, aSampleWidth, 0 ) );
-      aOs.write( createRleCount( buf, aSampleWidth, 2 ) );
+      aOs.write( createSample( buf, aSampleWidth, this.packedLowValue ) );
+      aOs.write( createRleCount( buf, aSampleWidth, PADDING_START - 1 ) );
 
-      for ( int i = 0; i < aSampleCount - 4; i++ )
+      for ( int i = 0; i < ( aSampleCount / 2 ); i++ )
       {
         final boolean sampleLevel = ( ( i % 2 ) == 0 );
 
-        int sampleValue = sampleLevel ? 1 : 0;
-        int countValue = sampleLevel ? this.highCount - 1 : this.lowCount - 1;
-
         try
         {
+          int sampleValue = sampleLevel ? this.packedHighValue : this.packedLowValue;
           aOs.write( createSample( buf, aSampleWidth, sampleValue ) );
+
+          int countValue = ( sampleLevel ? this.highTime : this.lowTime ) - 1;
           aOs.write( createRleCount( buf, aSampleWidth, countValue ) );
         }
         catch ( IOException exception )
@@ -129,140 +187,149 @@ public class LogicSnifferRleComponentTest
     }
   }
 
+  // CONSTANTS
+
+  static final int PADDING_START = 3;
+  static final double PWM_RATIO = 0.74;
+
+  // VARIABLES
+
+  private final RleSampleProvider provider;
+  private final int enabledChannelMask;
+  private final boolean ddrMode;
+
+  private VirtualLogicSnifferDevice device;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new LogicSnifferRleComponentTest instance.
+   */
+  public LogicSnifferRleComponentTest( final int aWidth, final int aChannelMask, final boolean aDdrMode )
+  {
+    this.enabledChannelMask = aChannelMask;
+    this.ddrMode = aDdrMode;
+
+    this.provider = new RleSampleProvider( aWidth, PWM_RATIO, aChannelMask );
+  }
+
   // METHODS
 
   /**
-   * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
+   * @return a collection of test data.
    */
-  @Test
-  public void test08bitRleWithDdrOk() throws Exception
+  @Parameters
+  @SuppressWarnings( "boxing" )
+  public static Collection<Object[]> getTestData()
   {
-    fail();
+    return Arrays.asList( new Object[][] { //
+        // width, channel mask, ddr?
+            { 8, 0x000000FF, false }, // 0
+            { 8, 0x0000FF00, false }, // 1
+            { 8, 0x00FF0000, false }, // 2
+            { 8, 0xFF000000, false }, // 3
+
+            { 16, 0x0000FFFF, false }, // 4
+            { 16, 0x00FFFF00, false }, // 5
+            { 16, 0xFFFF0000, false }, // 6
+            { 16, 0x00FF00FF, false }, // 7
+            { 16, 0xFF00FF00, false }, // 8
+            { 16, 0xFF0000FF, false }, // 9
+
+            { 24, 0xFFFFFF00, false }, // 10
+            { 24, 0xFFFF00FF, false }, // 11
+            { 24, 0xFF00FFFF, false }, // 12
+            { 24, 0x00FFFFFF, false }, // 13
+
+            { 32, 0xFFFFFFFF, false }, //
+        } );
   }
 
   /**
-   * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
+   * @throws IOException
+   * @throws ConfigurationException
    */
-  @Test
-  public void test08bitRleWithoutDdrOk() throws Exception
-  {
-    VirtualLogicSnifferDevice device = setupDevice( 8, false /* aDdr */, 0xFF );
-
-    AcquisitionResult result = device.doInBackground();
-    assertNotNull( result );
-
-    final int[] values = result.getValues();
-    final long[] timestamps = result.getTimestamps();
-
-    assertEquals( values.length, timestamps.length );
-
-    final int temp = ( 1 << 7 ) - 1;
-    final int highCount = ( int )( 0.74 * temp );
-    final int lowCount = temp - highCount;
-
-    int expectedTimeStamp = 0, expectedSampleValue;
-    for ( int i = 0; i < values.length; i++ )
-    {
-      expectedSampleValue = ( i % 2 );
-      assertEquals( expectedSampleValue, values[i] );
-      assertEquals( expectedTimeStamp, timestamps[i] );
-
-      if ( i == 0 )
-      {
-        expectedTimeStamp += 3;
-      }
-      else
-      {
-        if ( expectedSampleValue == 1 )
-        {
-          expectedTimeStamp += highCount;
-        }
-        else
-        {
-          expectedTimeStamp += lowCount;
-        }
-      }
-    }
-  }
-
-  /**
-   * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
-   */
-  @Test
-  public void test16bitRleWithDdrOk() throws Exception
-  {
-    fail();
-  }
-
-  /**
-   * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
-   */
-  @Test
-  public void test16bitRleWithoutDdrOk() throws Exception
-  {
-    VirtualLogicSnifferDevice device = setupDevice( 16, false /* aDdr */, 0xFFFF );
-
-    AcquisitionResult result = device.doInBackground();
-    assertNotNull( result );
-  }
-
-  /**
-   * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
-   */
-  @Test
-  public void test24bitRleWithoutDdrOk() throws Exception
-  {
-    fail();
-  }
-
-  /**
-   * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
-   */
-  @Test
-  public void test32bitRleWithoutDdrOk() throws Exception
-  {
-    fail();
-  }
-
-  /**
-   * @param aSampleRate
-   * @param aTriggerEnabled
-   * @param aRatio
-   * @param aReadCounter
-   * @param aDelayCounter
-   * @param aEnabledChannelsMask
-   * @return
-   */
-  private VirtualLogicSnifferDevice setupDevice( final int aSampleWidth, final boolean aDdr,
-      final int aEnabledChannelsMask ) throws IOException, ConfigurationException
+  @Before
+  public void setupDevice() throws IOException, ConfigurationException
   {
     final LogicSnifferConfig config = new LogicSnifferConfig();
+    this.device = new VirtualLogicSnifferDevice( config, this.provider );
 
-    VirtualLogicSnifferDevice device = new VirtualLogicSnifferDevice( config,
-        new RleSampleProvider( aSampleWidth, 0.74 ) );
-
-    final DeviceProfile deviceProfile = device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );
+    final DeviceProfile deviceProfile = this.device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );
     config.setDeviceProfile( deviceProfile );
 
     config.setAltNumberSchemeEnabled( false ); // don't care
     config.setBaudrate( 9600 ); // don't care
     config.setPortName( "/dev/virtual" ); // don't care
     config.setClockSource( CaptureClockSource.INTERNAL ); // don't care
-    config.setFilterEnabled( true ); // don't care
+    config.setFilterEnabled( false ); // don't care
     config.setTestModeEnabled( false ); // don't care
-    config.setEnabledChannels( aEnabledChannelsMask );
+    config.setEnabledChannels( this.enabledChannelMask );
     config.setRatio( 0.5 );
     config.setRleEnabled( true );
-    config.setSampleCount( 512 );
-    config.setSampleRate( aDdr ? 200000000 : 100000000 );
-    config.setTriggerEnabled( true );
+    config.setSampleCount( 4096 );
+    config.setSampleRate( this.ddrMode ? 200000000 : 100000000 );
+    config.setTriggerEnabled( false );
+  }
 
-    return device;
+  /**
+   * @throws Exception
+   */
+  @After
+  public void tearDown() throws Exception
+  {
+    this.device.close();
+  }
+
+  /**
+   * Test method for
+   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
+   */
+  @Test( timeout = 10000 )
+  public void testRleOk() throws Exception
+  {
+    final AcquisitionResult result = this.device.doInBackground();
+
+    verifyDecodedRleData( result );
+  }
+
+  /**
+   * @param aValues
+   * @param aTimestamps
+   */
+  private void verifyDecodedRleData( final AcquisitionResult aResult )
+  {
+    assertNotNull( aResult );
+
+    final int[] values = aResult.getValues();
+    final long[] timestamps = aResult.getTimestamps();
+
+    assertEquals( values.length, timestamps.length );
+
+    final int highTime = this.provider.getHighTime();
+    final int highValue = this.provider.getHighValue();
+    final int lowTime = this.provider.getLowTime();
+    final int lowValue = this.provider.getLowValue();
+
+    int expectedSampleValue;
+    long expectedTimeStamp = 0;
+    for ( int i = 0; i < values.length; i++ )
+    {
+      final boolean sampleLevel = ( ( i % 2 ) != 0 );
+
+      expectedSampleValue = sampleLevel ? highValue : lowValue;
+
+      assertEquals( "sample value(" + i + "): ", expectedSampleValue, values[i] );
+      assertEquals( "timestamp value(" + i + "): ", expectedTimeStamp, timestamps[i] );
+
+      if ( i == 0 )
+      {
+        expectedTimeStamp += PADDING_START;
+      }
+      else
+      {
+        expectedTimeStamp += ( sampleLevel ) ? highTime : lowTime;
+      }
+    }
   }
 }

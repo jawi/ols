@@ -373,11 +373,15 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
 
     this.manager = new DeviceProfileManager();
 
-    PipedInputStream pipeIn = new PipedInputStream( 16 * 1024 );
+    // Quite a lot of data can be pumped from this device, so we need some room
+    // for it to store it all...
+    final int pipeSize = 32 * 1024;
+
+    PipedInputStream pipeIn = new PipedInputStream( pipeSize );
     PipedOutputStream pipeOut = new PipedOutputStream();
 
     this.outputStream = new PipedOutputStream( pipeIn );
-    this.inputStream = new PipedInputStream( pipeOut );
+    this.inputStream = new PipedInputStream( pipeOut, pipeSize );
 
     this.streamReader = new IOHelper( pipeIn, pipeOut, aSampleProvider );
     this.streamReader.start();
@@ -450,7 +454,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
   public void assertFlagState( final int aFlagMask, final boolean aExpectedState )
   {
     final boolean state = ( this.flags & aFlagMask ) != 0;
-    assertEquals( "Flag (" + Integer.toHexString( aFlagMask ) + ") not as expected!", aExpectedState, state );
+    assertEquals( "Flag (" + Integer.toHexString( aFlagMask ) + ") not as expected!",
+        Boolean.valueOf( aExpectedState ), Boolean.valueOf( state ) );
   }
 
   /**
