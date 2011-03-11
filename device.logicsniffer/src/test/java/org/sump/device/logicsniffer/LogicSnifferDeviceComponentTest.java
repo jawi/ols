@@ -103,6 +103,12 @@ public class LogicSnifferDeviceComponentTest
             { 100000000, true, 1.00, 1024, 1024, 0xFFFFFFFF, true, 0x7F7F7F7F }, // 17
             { 200000000, true, 0.25, 1024, 256, 0xFF00FF00, true, 0x00007F00 }, // 18
             { 200000000, true, 0.25, 1024, 256, 0xFFFFFFFF, true, 0x00007F7F }, // 19
+
+            { 100000000, true, 0.00, 1024, 0, 0x000000FF, false, 0x000000FF }, // 20
+            { 100000000, true, 0.01, 1024, 8, 0x000000FF, false, 0x000000FF }, // 21
+            { 100000000, true, 1.00, 512, 512, 0x000000FF, false, 0x000000FF }, // 22
+            { 100000000, true, 1.00, 262144, 262140, 0x000000FF, false, 0x000000FF }, // 23
+            { 200000000, true, 1.00, 262144, 262144, 0x00FF00FF, false, 0x000000FF }, // 24
         } );
   }
 
@@ -145,7 +151,7 @@ public class LogicSnifferDeviceComponentTest
    * Test method for
    * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
    */
-  @Test( timeout = 6000 )
+  @Test( timeout = 10000 )
   public void testVerifyFlags() throws Exception
   {
     final boolean ddrMode = ( this.sampleRate > this.device.getConfig().getClockspeed() );
@@ -170,14 +176,14 @@ public class LogicSnifferDeviceComponentTest
     this.device.assertFlagState( LogicSnifferDevice.FLAG_EXTERNAL_TEST_MODE, false );
     this.device.assertFlagState( LogicSnifferDevice.FLAG_INTERNAL_TEST_MODE, false );
     this.device.assertFlagState( LogicSnifferDevice.FLAG_NUMBER_SCHEME, false );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_FILTER, false );
+    this.device.assertFlagState( LogicSnifferDevice.FLAG_FILTER, !ddrMode );
   }
 
   /**
    * Test method for
    * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
    */
-  @Test( timeout = 6000 )
+  @Test( timeout = 10000 )
   public void testVerifySentData() throws Exception
   {
     final AcquisitionResult result = this.device.doInBackground();

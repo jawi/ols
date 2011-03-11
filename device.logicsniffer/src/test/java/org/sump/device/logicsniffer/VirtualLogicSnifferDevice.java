@@ -375,7 +375,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
 
     // Quite a lot of data can be pumped from this device, so we need some room
     // for it to store it all...
-    final int pipeSize = 32 * 1024;
+    final int pipeSize = 768 * 1024;
 
     PipedInputStream pipeIn = new PipedInputStream( pipeSize );
     PipedOutputStream pipeOut = new PipedOutputStream();
@@ -404,7 +404,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
     properties.put( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
     properties.put( DeviceProfile.DEVICE_CLOCKSPEED, "100000000" );
     properties.put( DeviceProfile.DEVICE_DESCRIPTION, aType.concat( " Device Profile" ) );
-    properties.put( DeviceProfile.DEVICE_FEATURE_NOISEFILTER, "false" );
+    properties.put( DeviceProfile.DEVICE_FEATURE_NOISEFILTER, "true" );
     properties.put( DeviceProfile.DEVICE_FEATURE_RLE, "true" );
     properties.put( DeviceProfile.DEVICE_FEATURE_TEST_MODE, "true" );
     properties.put( DeviceProfile.DEVICE_FEATURE_TRIGGERS, "true" );
