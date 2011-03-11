@@ -140,20 +140,11 @@ public class LogicSnifferRleComponentTest
       {
         final boolean sampleLevel = ( ( i % 2 ) == 0 );
 
-        try
-        {
-          int sampleValue = sampleLevel ? this.packedHighValue : this.packedLowValue;
-          aOs.write( createSample( buf, aSampleWidth, sampleValue ) );
+        int sampleValue = sampleLevel ? this.packedHighValue : this.packedLowValue;
+        aOs.write( createSample( buf, aSampleWidth, sampleValue ) );
 
-          int countValue = ( sampleLevel ? this.highTime : this.lowTime ) - 1;
-          aOs.write( createRleCount( buf, aSampleWidth, countValue ) );
-        }
-        catch ( IOException exception )
-        {
-          System.out
-              .println( "!!! ONLY WRITTEN " + ( aSampleCount - i ) + " SAMPLES! (" + exception.getMessage() + ")" );
-          throw exception;
-        }
+        int countValue = ( sampleLevel ? this.highTime : this.lowTime ) - 1;
+        aOs.write( createRleCount( buf, aSampleWidth, countValue ) );
       }
       //
       aOs.flush();
