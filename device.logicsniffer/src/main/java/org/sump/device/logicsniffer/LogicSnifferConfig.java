@@ -28,7 +28,7 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
 /**
- * @author jawi
+ * Provides the configuration options for the LogicSniffer device.
  */
 public final class LogicSnifferConfig
 {
@@ -53,7 +53,6 @@ public final class LogicSnifferConfig
   // VARIABLES
 
   private CaptureClockSource clockSource;
-  private boolean demux;
   private boolean filterEnabled;
   private boolean triggerEnabled;
   private boolean rleEnabled;
@@ -64,7 +63,6 @@ public final class LogicSnifferConfig
   private final int triggerConfig[];
   private int enabledChannels;
   private final boolean enabledGroups[];
-  private int divider;
   private int size;
   private double ratio;
   private int rleDataWidth;
@@ -72,6 +70,7 @@ public final class LogicSnifferConfig
   private int baudrate;
   private LogicSnifferMetadata metadata;
   private DeviceProfile deviceProfile;
+  private int sampleRate;
 
   // CONSTRUCTORS
 
@@ -91,13 +90,10 @@ public final class LogicSnifferConfig
     }
     this.triggerEnabled = false;
     this.filterEnabled = false;
-    this.demux = false;
     setClockSource( CaptureClockSource.INTERNAL );
-    this.divider = 0;
     this.ratio = 0.5;
     this.size = 512;
-    this.enabledGroups = new boolean[4];
-    setEnabledChannels( -1 ); // enable all channels
+    this.enabledGroups = new boolean[] { true, true, true, true };
 
     this.metadata = new LogicSnifferMetadata();
   }
@@ -122,7 +118,6 @@ public final class LogicSnifferConfig
   public int getChannelCount()
   {
     int channels = 32;
-
     if ( isDoubleDataRateEnabled() )
     {
       // When the multiplexer is turned on, the upper two channel blocks are
@@ -180,10 +175,16 @@ public final class LogicSnifferConfig
    * the requested rate.
    * 
    * @return the divider as integer.
+   * @see #setSampleRate(int)
    */
   public int getDivider()
   {
-    return this.divider;
+    double clock = getClockspeed();
+    if ( isDoubleDataRateEnabled() )
+    {
+      clock *= 2.0;
+    }
+    return ( int )Math.max( 0.0, ( ( clock / this.sampleRate ) - 1.0 ) );
   }
 
   /**
@@ -248,7 +249,12 @@ public final class LogicSnifferConfig
    */
   public int getMaxTriggerStages()
   {
-    return TRIGGER_STAGES;
+    int result = TRIGGER_STAGES;
+    if ( this.deviceProfile != null )
+    {
+      result = Math.min( result, this.deviceProfile.getTriggerStages() );
+    }
+    return result;
   }
 
   /**
@@ -334,20 +340,7 @@ public final class LogicSnifferConfig
    */
   public int getSampleRate()
   {
-    int rate = Ols.NOT_AVAILABLE;
-    if ( isInternalClock() )
-    {
-      if ( isDoubleDataRateEnabled() )
-      {
-        // The sample clock is 200MHz iso 100MHz...
-        rate = ( int )( ( 2.0 * getClockspeed() ) / ( getDivider() + 1 ) );
-      }
-      else
-      {
-        rate = ( int )( ( 1.0 * getClockspeed() ) / ( getDivider() + 1 ) );
-      }
-    }
-    return rate;
+    return this.sampleRate;
   }
 
   /**
@@ -372,6 +365,10 @@ public final class LogicSnifferConfig
    */
   public int getTriggerConfig( final int aStage )
   {
+    if ( ( aStage < 0 ) || ( aStage >= TRIGGER_STAGES ) )
+    {
+      throw new IllegalArgumentException( "Invalid trigger stage: " + aStage + "!" );
+    }
     return this.triggerConfig[aStage];
   }
 
@@ -385,6 +382,10 @@ public final class LogicSnifferConfig
    */
   public int getTriggerMask( final int aStage )
   {
+    if ( ( aStage < 0 ) || ( aStage >= TRIGGER_STAGES ) )
+    {
+      throw new IllegalArgumentException( "Invalid trigger stage: " + aStage + "!" );
+    }
     return this.triggerMask[aStage];
   }
 
@@ -398,6 +399,10 @@ public final class LogicSnifferConfig
    */
   public int getTriggerValue( final int aStage )
   {
+    if ( ( aStage < 0 ) || ( aStage >= TRIGGER_STAGES ) )
+    {
+      throw new IllegalArgumentException( "Invalid trigger stage: " + aStage + "!" );
+    }
     return this.triggerValue[aStage];
   }
 
@@ -418,10 +423,17 @@ public final class LogicSnifferConfig
    * 
    * @return <code>true</code> if the demultiplexer is enabled,
    *         <code>false</code> otherwise.
+   * @see #setSampleRate(int)
    */
   public boolean isDoubleDataRateEnabled()
   {
-    return this.demux && isInternalClock();
+    if ( !isInternalClock() || !isDoubleDataRateSupported() )
+    {
+      return false;
+    }
+
+    final int clock = getClockspeed();
+    return ( this.sampleRate > clock );
   }
 
   /**
@@ -447,9 +459,9 @@ public final class LogicSnifferConfig
   public boolean isFilterAvailable()
   {
     boolean result = !isDoubleDataRateEnabled();
-    if ( this.deviceProfile != null )
+    if ( result && ( this.deviceProfile != null ) )
     {
-      result &= this.deviceProfile.isNoiseFilterSupported();
+      result = this.deviceProfile.isNoiseFilterSupported();
     }
     return result;
   }
@@ -476,6 +488,11 @@ public final class LogicSnifferConfig
    */
   public boolean isGroupEnabled( final int aGroupNr )
   {
+    if ( ( aGroupNr < 0 ) || ( aGroupNr >= Ols.MAX_BLOCKS ) )
+    {
+      throw new IllegalArgumentException( "Invalid channel group: " + aGroupNr + "!" );
+    }
+
     return this.enabledGroups[aGroupNr];
   }
 
@@ -601,22 +618,31 @@ public final class LogicSnifferConfig
    */
   public void setEnabledChannels( final int aMask )
   {
-    this.enabledChannels = aMask;
+    this.enabledChannels = ( aMask & 0xFFFFFFFF );
 
     // determine enabled groups
-    int newRLEDataWidth = 0;
+    int newRLEDataBytes = 0;
+    int mask = this.enabledChannels;
     for ( int i = 0; i < this.enabledGroups.length; i++ )
     {
-      final boolean groupEnabled = ( ( this.enabledChannels >> ( 8 * i ) ) & 0xff ) != 0;
+      final boolean groupEnabled = ( mask & 0xff ) != 0x00;
 
       this.enabledGroups[i] = groupEnabled;
       if ( groupEnabled )
       {
-        newRLEDataWidth += 8;
+        newRLEDataBytes++;
       }
+
+      mask >>= 8;
     }
 
-    this.rleDataWidth = newRLEDataWidth;
+    // keep DDR into consideration...
+    if ( isDoubleDataRateEnabled() )
+    {
+      newRLEDataBytes = Math.min( MAX_CHANNEL_GROUPS_DDR, newRLEDataBytes );
+    }
+
+    this.rleDataWidth = 8 * newRLEDataBytes;
   }
 
   /**
@@ -669,6 +695,11 @@ public final class LogicSnifferConfig
   public void setParallelTrigger( final int aStage, final int aMask, final int aValue, final int aLevel,
       final int aDelay, final boolean aStartCapture )
   {
+    if ( ( aStage < 0 ) || ( aStage >= TRIGGER_STAGES ) )
+    {
+      throw new IllegalArgumentException( "Invalid trigger stage: " + aStage + "!" );
+    }
+
     if ( isDoubleDataRateEnabled() )
     {
       this.triggerMask[aStage] = ( aMask & 0xFFFF ) | ( ( aMask & 0xFFFF ) << 16 );
@@ -706,9 +737,19 @@ public final class LogicSnifferConfig
    * 
    * @param aRatio
    *          value between 0 and 1; 0 means all before start, 1 all after
+   * @throws IllegalArgumentException
+   *           in case the given ratio was less than 0.0, or more than 1.0.
    */
   public void setRatio( final double aRatio )
   {
+    if ( aRatio < 0.0 )
+    {
+      throw new IllegalArgumentException( "Ratio cannot be negative!" );
+    }
+    if ( aRatio > 1.0 )
+    {
+      throw new IllegalArgumentException( "Ratio cannot be more than one!" );
+    }
     this.ratio = aRatio;
   }
 
@@ -729,32 +770,38 @@ public final class LogicSnifferConfig
    * 
    * @param aCount
    *          the number of samples to take, must be between 4 and 256*1024.
+   * @throws IllegalArgumentException
+   *           in case the given count was zero.
    */
-  public void setSampleCount( final int aCount )
+  public void setSampleCount( final int aCount ) throws IllegalArgumentException
   {
-    this.size = aCount;
+    if ( aCount == 0 )
+    {
+      throw new IllegalArgumentException( "Sample count cannot be zero!" );
+    }
+    this.size = aCount & 0xFFFFF;
   }
 
   /**
    * Set the sampling rate. All rates must be a divisor of 200.000.000. Other
    * rates will be adjusted to a matching divisor.
    * 
-   * @param aRate
+   * @param aSampleRate
    *          the sampling rate in Hertz (Hz).
+   * @throws IllegalArgumentException
+   *           in case the given rate was 0.
+   * @see #getDivider()
+   * @see #isDoubleDataRateEnabled()
    */
-  public void setSampleRate( final int aRate )
+  public void setSampleRate( final int aSampleRate ) throws IllegalArgumentException
   {
-    final int clock = getClockspeed();
-    if ( ( aRate > clock ) && isDoubleDataRateSupported() )
+    if ( aSampleRate == 0 )
     {
-      this.demux = true;
-      this.divider = ( int )( ( 2.0 * clock / aRate ) - 1 );
+      throw new IllegalArgumentException( "Sample rate cannot be zero!" );
     }
-    else
-    {
-      this.demux = false;
-      this.divider = ( int )( ( 1.0 * clock / aRate ) - 1 );
-    }
+
+    // Limit the maximum sample rate to 268435455 (0xFFFFFFF)...
+    this.sampleRate = aSampleRate & 0xFFFFFFF;
   }
 
   /**
@@ -788,6 +835,11 @@ public final class LogicSnifferConfig
   public void setSerialTrigger( final int aStage, final int aChannel, final int aMask, final int aValue,
       final int aLevel, final int aDelay, final boolean aStartCapture )
   {
+    if ( ( aStage < 0 ) || ( aStage >= TRIGGER_STAGES ) )
+    {
+      throw new IllegalArgumentException( "Invalid trigger stage: " + aStage + "!" );
+    }
+
     if ( isDoubleDataRateEnabled() )
     {
       this.triggerMask[aStage] = ( aMask & 0xFFFF ) | ( ( aMask & 0xFFFF ) << 16 );

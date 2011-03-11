@@ -285,7 +285,6 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   private JCheckBox[] channelGroup;
   private JButton captureButton;
   private JComponent groupsPanel;
-  private int triggerStages;
   private final LogicSnifferConfig config;
   private boolean dialogResult;
   private JSlider ratioSlider;
@@ -418,7 +417,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       this.triggerTypeSelect.setSelectedIndex( aSettings.getInt( "triggerType",
           this.triggerTypeSelect.getSelectedIndex() ) );
 
-      for ( int stage = 0; stage < this.triggerStages; stage++ )
+      for ( int stage = 0; stage < LogicSnifferConfig.TRIGGER_STAGES; stage++ )
       {
         final String prefix = "triggerStage." + stage;
 
@@ -495,7 +494,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     aSettings.putBoolean( "trigger", this.triggerEnable.isSelected() );
     aSettings.putInt( "triggerType", this.triggerTypeSelect.getSelectedIndex() );
 
-    for ( int stage = 0; stage < this.triggerStages; stage++ )
+    for ( int stage = 0; stage < LogicSnifferConfig.TRIGGER_STAGES; stage++ )
     {
       final String prefix = "triggerStage." + stage;
 
@@ -900,7 +899,6 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     this.triggerTypeSelect.addActionListener( this );
 
     this.triggerStageTabs = new JTabbedPane();
-    this.triggerStages = this.config.getMaxTriggerStages();
     this.triggerMask = new JCheckBox[LogicSnifferConfig.TRIGGER_STAGES][];
     this.triggerValue = new JCheckBox[LogicSnifferConfig.TRIGGER_STAGES][];
     this.triggerLevel = new JComboBox[LogicSnifferConfig.TRIGGER_STAGES];
@@ -908,7 +906,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     this.triggerMode = new JComboBox[LogicSnifferConfig.TRIGGER_STAGES];
     this.triggerChannel = new JComboBox[LogicSnifferConfig.TRIGGER_STAGES];
     this.triggerStart = new JCheckBox[LogicSnifferConfig.TRIGGER_STAGES];
-    for ( int i = 0; i < this.triggerStages; i++ )
+    for ( int i = 0; i < LogicSnifferConfig.TRIGGER_STAGES; i++ )
     {
       final JPanel stagePane = new JPanel( new GridBagLayout() );
       stagePane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
@@ -977,6 +975,9 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
           try
           {
             updateDeviceType( profile );
+
+            updateConfig( false /* aWarnUserIfConfigIncorrect */);
+            updateFields();
           }
           finally
           {
@@ -995,11 +996,15 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
    * 
    * @param aEnable
    *          <code>true</code> to enable trigger configuration fields,
-   *          <code>false</code> to disable them
+   *          <code>false</code> to disable them;
+   * @param aAvailableTriggerStages
+   *          the number of available trigger stages, according to our device
+   *          configuration.
    */
-  private void setTriggerEnabled( final boolean aEnable )
+  private void setTriggerEnabled( final boolean aEnable, final int aAvailableTriggerStages )
   {
     final int channelCount = this.config.getChannelCount();
+
     final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
     if ( !complex )
     {
@@ -1008,22 +1013,21 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     this.triggerTypeSelect.setEnabled( aEnable );
     this.ratioSlider.setEnabled( aEnable );
 
-    for ( int stage = 0; stage < this.triggerStages; stage++ )
+    for ( int stage = 0; stage < LogicSnifferConfig.TRIGGER_STAGES; stage++ )
     {
-      for ( int i = 0; i < channelCount; i++ )
+      final boolean stageEnabled = aEnable && ( stage < aAvailableTriggerStages );
+      for ( int i = 0; i < MAX_CHANNELS; i++ )
       {
-        this.triggerMask[stage][i].setEnabled( aEnable );
-        this.triggerValue[stage][i].setEnabled( aEnable );
+        final boolean enabled = stageEnabled && ( i < channelCount );
+        updateCheckBoxState( this.triggerMask[stage][i], enabled );
+        updateCheckBoxState( this.triggerValue[stage][i], enabled );
       }
-      for ( int i = channelCount; i < MAX_CHANNELS; i++ )
-      {
-        this.triggerMask[stage][i].setEnabled( false );
-        this.triggerValue[stage][i].setEnabled( false );
-      }
-      this.triggerStageTabs.setEnabledAt( stage, aEnable && ( ( stage == 0 ) || complex ) );
-      this.triggerLevel[stage].setEnabled( aEnable && complex );
-      this.triggerDelay[stage].setEnabled( aEnable );
-      this.triggerMode[stage].setEnabled( aEnable );
+
+      this.triggerStageTabs.setEnabledAt( stage, stageEnabled && ( ( stage == 0 ) || complex ) );
+
+      this.triggerLevel[stage].setEnabled( stageEnabled && complex );
+      this.triggerDelay[stage].setEnabled( stageEnabled );
+      this.triggerMode[stage].setEnabled( stageEnabled );
       if ( aEnable && ( this.triggerMode[stage].getSelectedIndex() == 1 ) )
       {
         this.triggerChannel[stage].setEnabled( true );
@@ -1032,7 +1036,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       {
         this.triggerChannel[stage].setEnabled( false );
       }
-      this.triggerStart[stage].setEnabled( aEnable && complex );
+      this.triggerStart[stage].setEnabled( stageEnabled && complex );
     }
   }
 
@@ -1104,14 +1108,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
     // set number scheme
     NumberingScheme scheme = ( NumberingScheme )this.numberSchemeSelect.getSelectedItem();
-    if ( NumberingScheme.DEFAULT.equals( scheme ) || NumberingScheme.INSIDE.equals( scheme ) )
-    {
-      this.config.setAltNumberSchemeEnabled( false );
-    }
-    else if ( NumberingScheme.OUTSIDE.equals( scheme ) )
-    {
-      this.config.setAltNumberSchemeEnabled( true );
-    }
+    this.config.setAltNumberSchemeEnabled( NumberingScheme.OUTSIDE.equals( scheme ) );
 
     // set testing mode
     this.config.setTestModeEnabled( this.testModeEnable.isSelected() );
@@ -1122,7 +1119,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     if ( triggerEnabled )
     {
       final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
-      for ( int stage = 0; stage < this.triggerStages; stage++ )
+      for ( int stage = 0; stage < LogicSnifferConfig.TRIGGER_STAGES; stage++ )
       {
         int m = 0;
         int v = 0;
@@ -1147,11 +1144,13 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
               + " is larger than 65535 cycles! Continue capture?" );
         }
 
+        final boolean parallelTriggerStage = this.triggerMode[stage].getSelectedIndex() == 0;
         final int channel = this.triggerChannel[stage].getSelectedIndex();
         final boolean startCapture = this.triggerStart[stage].isSelected();
+
         if ( complex )
         {
-          if ( this.triggerMode[stage].getSelectedIndex() == 0 )
+          if ( parallelTriggerStage )
           {
             this.config.setParallelTrigger( stage, m, v, level, delay, startCapture );
           }
@@ -1164,7 +1163,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
         {
           if ( stage == 0 )
           {
-            if ( this.triggerMode[stage].getSelectedIndex() == 0 )
+            if ( parallelTriggerStage )
             {
               this.config.setParallelTrigger( stage, m, v, 0, delay, true );
             }
@@ -1223,11 +1222,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
    */
   private void updateFields()
   {
-    int availableChannelGroups = this.config.getGroupCount();
-    if ( this.config.isDoubleDataRateEnabled() && ( availableChannelGroups > LogicSnifferConfig.MAX_CHANNEL_GROUPS_DDR ) )
-    {
-      availableChannelGroups = LogicSnifferConfig.MAX_CHANNEL_GROUPS_DDR;
-    }
+    final int availableChannelGroups = this.config.getGroupCount();
     for ( int i = 0; i < this.channelGroup.length; i++ )
     {
       final boolean enabled = ( i < availableChannelGroups );
@@ -1235,7 +1230,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     }
 
     this.triggerEnable.setSelected( this.config.isTriggerEnabled() );
-    setTriggerEnabled( this.config.isTriggerEnabled() );
+    setTriggerEnabled( this.config.isTriggerEnabled(), this.config.getMaxTriggerStages() );
 
     this.filterEnable.setEnabled( this.config.isFilterAvailable() );
 
@@ -1243,7 +1238,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
     this.sizeSelect.setEnabled( !this.maxSampleSize.isSelected() );
 
-    this.warningLabel.setText( "" );
+    this.warningLabel.setText( " " );
     if ( this.rleEnable.isSelected() )
     {
       this.warningLabel.setText( rleWarning );

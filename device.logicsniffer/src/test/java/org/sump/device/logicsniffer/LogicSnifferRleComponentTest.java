@@ -32,7 +32,7 @@ import nl.lxtreme.ols.util.*;
 import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
-import org.junit.runners.Parameterized.*;
+import org.junit.runners.Parameterized.Parameters;
 import org.osgi.service.cm.*;
 import org.sump.device.logicsniffer.VirtualLogicSnifferDevice.SampleProvider;
 import org.sump.device.logicsniffer.profile.*;
@@ -130,6 +130,7 @@ public class LogicSnifferRleComponentTest
         final boolean aRleMode, final boolean aDdrMode ) throws IOException
     {
       byte[] buf = new byte[aSampleWidth];
+      assertTrue( aSampleWidth > 0 );
 
       // write three leading zero's...
       aOs.write( createSample( buf, aSampleWidth, this.packedLowValue ) );
@@ -197,6 +198,7 @@ public class LogicSnifferRleComponentTest
   private final RleSampleProvider provider;
   private final int enabledChannelMask;
   private final boolean ddrMode;
+  private final Class<? extends Exception> exceptionClass;
 
   private VirtualLogicSnifferDevice device;
 
@@ -205,10 +207,12 @@ public class LogicSnifferRleComponentTest
   /**
    * Creates a new LogicSnifferRleComponentTest instance.
    */
-  public LogicSnifferRleComponentTest( final int aWidth, final int aChannelMask, final boolean aDdrMode )
+  public LogicSnifferRleComponentTest( final int aWidth, final int aChannelMask, final boolean aDdrMode,
+      final Class<? extends Exception> aExceptionClass )
   {
     this.enabledChannelMask = aChannelMask;
     this.ddrMode = aDdrMode;
+    this.exceptionClass = aExceptionClass;
 
     this.provider = new RleSampleProvider( aWidth, PWM_RATIO, aChannelMask );
   }
@@ -224,24 +228,36 @@ public class LogicSnifferRleComponentTest
   {
     return Arrays.asList( new Object[][] { //
         // width, channel mask, ddr?
-            { 8, 0x000000FF, false }, // 0
-            { 8, 0x0000FF00, false }, // 1
-            { 8, 0x00FF0000, false }, // 2
-            { 8, 0xFF000000, false }, // 3
+            { 8, 0x000000FF, false, null }, // 0
+            { 8, 0x0000FF00, false, null }, // 1
+            { 8, 0x00FF0000, false, null }, // 2
+            { 8, 0xFF000000, false, null }, // 3
 
-            { 16, 0x0000FFFF, false }, // 4
-            { 16, 0x00FFFF00, false }, // 5
-            { 16, 0xFFFF0000, false }, // 6
-            { 16, 0x00FF00FF, false }, // 7
-            { 16, 0xFF00FF00, false }, // 8
-            { 16, 0xFF0000FF, false }, // 9
+            { 16, 0x0000FFFF, false, null }, // 4
+            { 16, 0x00FFFF00, false, null }, // 5
+            { 16, 0xFFFF0000, false, null }, // 6
+            { 16, 0x00FF00FF, false, null }, // 7
+            { 16, 0xFF00FF00, false, null }, // 8
+            { 16, 0xFF0000FF, false, null }, // 9
 
-            { 24, 0xFFFFFF00, false }, // 10
-            { 24, 0xFFFF00FF, false }, // 11
-            { 24, 0xFF00FFFF, false }, // 12
-            { 24, 0x00FFFFFF, false }, // 13
+            { 24, 0xFFFFFF00, false, null }, // 10
+            { 24, 0xFFFF00FF, false, null }, // 11
+            { 24, 0xFF00FFFF, false, null }, // 12
+            { 24, 0x00FFFFFF, false, null }, // 13
 
-            { 32, 0xFFFFFFFF, false }, //
+            { 32, 0xFFFFFFFF, false, null }, // 14
+
+            { 8, 0x000000FF, true, null }, // 15
+            { 8, 0x0000FF00, true, null }, // 16
+            { 8, 0x00FF0000, true, AssertionError.class }, // 17
+            { 8, 0xFF000000, true, AssertionError.class }, // 18
+
+            { 16, 0x0000FFFF, true, null }, // 19
+            { 16, 0x00FFFF00, true, AssertionError.class }, // 20
+            { 16, 0xFFFF0000, true, AssertionError.class }, // 21
+            { 16, 0x00FF00FF, true, AssertionError.class }, // 22
+            { 16, 0xFF00FF00, true, AssertionError.class }, // 23
+            { 16, 0xFF0000FF, true, AssertionError.class }, // 24
         } );
   }
 
@@ -288,9 +304,24 @@ public class LogicSnifferRleComponentTest
   @Test( timeout = 10000 )
   public void testRleOk() throws Exception
   {
-    final AcquisitionResult result = this.device.doInBackground();
+    try
+    {
+      final AcquisitionResult result = this.device.doInBackground();
 
-    verifyDecodedRleData( result );
+      verifyDecodedRleData( result );
+
+      if ( this.exceptionClass != null )
+      {
+        fail( "Exception expected!" );
+      }
+    }
+    catch ( Error exception )
+    {
+      if ( this.exceptionClass != null )
+      {
+        assertTrue( "Expected exception not thrown?!", this.exceptionClass.isInstance( exception ) );
+      }
+    }
   }
 
   /**
@@ -307,9 +338,10 @@ public class LogicSnifferRleComponentTest
     assertEquals( values.length, timestamps.length );
 
     final int highTime = this.provider.getHighTime();
-    final int highValue = this.provider.getHighValue();
     final int lowTime = this.provider.getLowTime();
-    final int lowValue = this.provider.getLowValue();
+
+    int highValue = this.provider.getHighValue();
+    int lowValue = this.provider.getLowValue();
 
     int expectedSampleValue;
     long expectedTimeStamp = 0;
