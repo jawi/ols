@@ -213,7 +213,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
             // count (as they are 8- or 16-bits in DDR mode).
             // This should also solve issue #31...
             count = ( ( normalizedSampleValue & this.rleCountMask ) << shiftBits )
-                | ( normalizeSampleValue( this.buffer[++i] ) & this.rleCountMask );
+            | ( normalizeSampleValue( this.buffer[++i] ) & this.rleCountMask );
           }
           else
           {
@@ -472,15 +472,14 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   {
     final boolean isRleEnabled = this.config.isRleEnabled();
 
-    Callable<Void> callable = new Callable<Void>()
+    Runnable stopTask = new Runnable()
     {
-
       @Override
-      public Void call() throws Exception
+      public void run()
       {
         try
         {
-          if ( !LogicSnifferDevice.this.stopped )
+          if ( !isCancelledOrStopped() )
           {
             if ( isRleEnabled )
             {
@@ -509,25 +508,12 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
             LOG.log( Level.WARNING, "Stopping capture failed?!", exception );
           }
         }
-        return null;
-      }
-    };
-
-    FutureTask<Void> future = new FutureTask<Void>( callable )
-    {
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      protected void done()
-      {
-        LOG.info( "Capture finished prematurely ..." );
       }
     };
 
     // Invoke this *asynchronously* otherwise we're blocking ourselves...
     final ExecutorService executor = Executors.newSingleThreadExecutor();
-    executor.execute( future );
+    executor.execute( stopTask );
 
     try
     {
@@ -543,8 +529,12 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     }
     finally
     {
-      LOG.info( "Shutting down stop-executor..." );
       executor.shutdown();
+      while ( !executor.isTerminated() )
+      {
+
+      }
+      LOG.info( "Shutting down stop-executor..." );
     }
   }
 
@@ -754,7 +744,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    *           <em>not</em> a serial port.
    */
   protected abstract StreamConnection getConnection( final String aPortName, final int aPortRate, boolean aDtrValue )
-      throws IOException;
+  throws IOException;
 
   /**
    * Finds the device profile manager.
@@ -777,7 +767,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    * @throws IOException
    *           in case of I/O problems during attaching to the device.
    */
-  private boolean attach() throws IOException
+  private synchronized boolean attach() throws IOException
   {
     final String portName = this.config.getPortName();
     final int baudrate = this.config.getBaudrate();
@@ -984,7 +974,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    * Detaches the currently attached port, if one exists. This will close the
    * serial port.
    */
-  private void detach()
+  private synchronized void detach()
   {
     // We're definitely no longer attached...
     this.attached = false;
@@ -996,7 +986,11 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         // try to make sure device is reset...
         if ( this.outputStream != null )
         {
-          resetDevice();
+          // XXX it seems that after a RLE abort command, the OLS device no
+          // longer is able to process a full 5x reset command. However, we're
+          // also resetting the thing right after we've started an acquisition,
+          // so it might not be that bad...
+          sendCommand( CMD_RESET );
         }
       }
       catch ( final IOException exception )
@@ -1179,30 +1173,30 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
             gotResponse = true;
 
             final int type = ( result & 0xE0 ) >> 5;
-            if ( type == 0x00 )
-            {
-              // key value is a null-terminated string...
-              final String value = readString();
-              metadata.put( result, value );
-            }
-            else if ( type == 0x01 )
-            {
-              // key value is a 32-bit integer; least significant byte first...
-              // final Integer value = NumberUtils.convertByteOrder(
-              // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
-              final int value = this.inputStream.readInt();
-              metadata.put( result, Integer.valueOf( value ) );
-            }
-            else if ( type == 0x02 )
-            {
-              // key value is a 8-bit integer...
-              final int value = this.inputStream.read();
-              metadata.put( result, Integer.valueOf( value ) );
-            }
-            else
-            {
-              LOG.log( Level.INFO, "Ignoring unknown metadata type: {0}", Integer.valueOf( type ) );
-            }
+    if ( type == 0x00 )
+    {
+      // key value is a null-terminated string...
+      final String value = readString();
+      metadata.put( result, value );
+    }
+    else if ( type == 0x01 )
+    {
+      // key value is a 32-bit integer; least significant byte first...
+      // final Integer value = NumberUtils.convertByteOrder(
+      // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
+      final int value = this.inputStream.readInt();
+      metadata.put( result, Integer.valueOf( value ) );
+    }
+    else if ( type == 0x02 )
+    {
+      // key value is a 8-bit integer...
+      final int value = this.inputStream.read();
+      metadata.put( result, Integer.valueOf( value ) );
+    }
+    else
+    {
+      LOG.log( Level.INFO, "Ignoring unknown metadata type: {0}", Integer.valueOf( type ) );
+    }
           }
         }
         catch ( final IOException exception )
@@ -1399,7 +1393,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       final byte opcode = ( byte )( aOpcode & 0xFF );
       LOG.log( Level.FINE, "Sending long command: {0} ({1}) with data {2} ({3})",
           new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ), //
-              Integer.toHexString( aData ), Integer.toBinaryString( aData ) } );
+          Integer.toHexString( aData ), Integer.toBinaryString( aData ) } );
     }
 
     final byte[] raw = new byte[5];
