@@ -79,7 +79,7 @@ public class OpenDataFileAction extends BaseAction
     final File file = SwingComponentUtils.showFileOpenDialog( owner, OLS_FILEFILTER );
     if ( file != null )
     {
-      LOG.log( Level.INFO, "Saving capture data from file '{0}'", file );
+      LOG.log( Level.INFO, "Saving capture data from file {0}", file );
 
       try
       {
