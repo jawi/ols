@@ -498,6 +498,9 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
             // Hmm, really abort this upon request of the user...
             cancel( true );
           }
+
+          // Flag we're being cancelled...
+          LogicSnifferDevice.this.stopped = true;
         }
         catch ( IOException exception )
         {
@@ -519,8 +522,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       protected void done()
       {
         LOG.info( "Capture finished prematurely ..." );
-        // Flag we're being cancelled...
-        LogicSnifferDevice.this.stopped = true;
       }
     };
 
