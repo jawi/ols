@@ -88,7 +88,6 @@ public class LogicSnifferDeviceController implements DeviceController
   {
     if ( ( this.device != null ) && !this.device.isDone() )
     {
-      // TODO this is not entirely correct...
       this.device.stop();
     }
   }

@@ -21,6 +21,7 @@
 package org.sump.device.logicsniffer.profile;
 
 
+import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -131,15 +132,22 @@ public final class DeviceProfile implements Cloneable
    */
   public static final String DEVICE_OPEN_PORT_DTR = "device.open.portdtr";
 
+  /** Filename of the actual file picked up by Felix's FileInstall. */
+  public static final String FELIX_FILEINSTALL_FILENAME = "felix.fileinstall.filename";
+  /** Service PID of this device profile. */
+  private static final String FELIX_SERVICE_PID = "service.pid";
+  /** Factory Service PID of this device profile. */
+  private static final String FELIX_SERVICE_FACTORY_PID = "service.factoryPid";
+
   /** All the profile keys that are supported. */
   private static final List<String> KNOWN_KEYS = Arrays.asList( new String[] { DEVICE_TYPE, DEVICE_DESCRIPTION,
       DEVICE_INTERFACE, DEVICE_CLOCKSPEED, DEVICE_SUPPORTS_DDR, DEVICE_SAMPLERATES, DEVICE_CAPTURECLOCK,
       DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TEST_MODE,
       DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT,
       DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY,
-      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR } );
-  private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { "felix.fileinstall.filename",
-      "service.pid", "service.factoryPid" } );
+      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR, FELIX_FILEINSTALL_FILENAME } );
+  private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { FELIX_SERVICE_PID,
+      FELIX_SERVICE_FACTORY_PID } );
 
   private static final Logger LOG = Logger.getLogger( DeviceProfile.class.getName() );
 
@@ -158,6 +166,19 @@ public final class DeviceProfile implements Cloneable
   }
 
   // METHODS
+
+  /**
+   * @param aFilename
+   * @return
+   */
+  static final File createFile( final String aFilename )
+  {
+    if ( aFilename == null )
+    {
+      throw new IllegalArgumentException( "Filename cannot be null!" );
+    }
+    return new File( aFilename.replaceAll( "^file:", "" ) );
+  }
 
   /**
    * Returns a deep copy of this device profile, including all properties.
@@ -536,6 +557,18 @@ public final class DeviceProfile implements Cloneable
   {
     final String value = this.properties.get( DEVICE_FEATURE_TRIGGERS );
     return Boolean.parseBoolean( value );
+  }
+
+  /**
+   * Returns the configuration file picked up by Felix's FileInstall bundle.
+   * 
+   * @return a configuration file, never <code>null</code>.
+   */
+  final File getConfigurationFile()
+  {
+    final String value = this.properties.get( FELIX_FILEINSTALL_FILENAME );
+    assert value != null : "Internal error: no fileinstall filename?!";
+    return createFile( value );
   }
 
   /**
