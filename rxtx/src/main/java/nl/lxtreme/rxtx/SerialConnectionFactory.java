@@ -154,7 +154,7 @@ public class SerialConnectionFactory implements ConnectionFactory
       IOException
   {
     final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( aOptions.getPortName() );
-    if ( commPortId.isCurrentlyOwned() )
+    if ( commPortId.isCurrentlyOwned() && ( commPortId.getCurrentOwner() != CONNECT_ID ) )
     {
       throw new PortInUseException();
     }
