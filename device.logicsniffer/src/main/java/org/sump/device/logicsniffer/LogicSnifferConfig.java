@@ -179,7 +179,8 @@ public final class LogicSnifferConfig
    */
   public int getDivider()
   {
-    double clock = getClockspeed();
+    // double clock = getClockspeed();
+    double clock = LogicSnifferDevice.CLOCK;
     if ( isDoubleDataRateEnabled() )
     {
       clock *= 2.0;
