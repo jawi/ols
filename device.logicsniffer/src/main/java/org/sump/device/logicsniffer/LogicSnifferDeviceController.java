@@ -143,41 +143,51 @@ public class LogicSnifferDeviceController implements DeviceController
       @Override
       protected void done()
       {
-        try
-        {
-          final AcquisitionResult data = get();
-
-          aCallback.captureComplete( data );
-        }
-        catch ( CancellationException exception )
+        if ( isCancelled() || isStopped() )
         {
           LOG.log( Level.INFO, "Capture cancelled by user..." );
 
           // simply canceled by user...
           aCallback.captureAborted( "" );
         }
-        catch ( ExecutionException exception )
+        else
         {
-          final Throwable actualCause = exception.getCause();
-          if ( actualCause == null )
+          // Assume we're done, so try to get the capture results...
+          try
           {
-            LOG.log( Level.SEVERE, "Exception during capture, but no real cause found?!" );
+            aCallback.captureComplete( get() );
           }
+          catch ( InterruptedException exception )
+          {
+            // Make sure to handle IO-interrupted exceptions properly!
+            if ( !HostUtils.handleInterruptedException( exception ) )
+            {
+              LOG.log( Level.WARNING, "Interrupted during capture, details:", exception );
+              aCallback.captureAborted( exception.getMessage() );
+            }
+            else
+            {
+              aCallback.captureAborted( "" );
+            }
+          }
+          catch ( ExecutionException exception )
+          {
+            final Throwable actualCause = exception.getCause();
+            if ( actualCause == null )
+            {
+              LOG.log( Level.SEVERE, "Exception during capture, but no real cause found?!" );
+            }
 
-          // Make sure to handle IO-interrupted exceptions properly!
-          if ( !HostUtils.handleInterruptedException( actualCause ) )
-          {
-            LOG.log( Level.WARNING, "Exception during capture, details:", actualCause );
-            aCallback.captureAborted( actualCause.getMessage() );
-          }
-        }
-        catch ( InterruptedException exception )
-        {
-          // Make sure to handle IO-interrupted exceptions properly!
-          if ( !HostUtils.handleInterruptedException( exception ) )
-          {
-            LOG.log( Level.WARNING, "Interrupted during capture, details:", exception );
-            aCallback.captureAborted( exception.getMessage() );
+            // Make sure to handle IO-interrupted exceptions properly!
+            if ( !HostUtils.handleInterruptedException( actualCause ) )
+            {
+              LOG.log( Level.WARNING, "Exception during capture, details:", actualCause );
+              aCallback.captureAborted( actualCause.getMessage() );
+            }
+            else
+            {
+              aCallback.captureAborted( "" );
+            }
           }
         }
       }
