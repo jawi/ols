@@ -418,6 +418,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
     properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );
     properties.put( DeviceProfile.DEVICE_TRIGGER_STAGES, "4" );
     properties.put( DeviceProfile.DEVICE_TYPE, aType );
+    properties.put( DeviceProfile.FELIX_FILEINSTALL_FILENAME, "" );
     // Update the properties of a 'virtual' PID...
     this.manager.updated( "PID-" + aType, properties );
 

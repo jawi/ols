@@ -112,6 +112,7 @@ public class DeviceProfileManagerTest
     properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );
     properties.put( DeviceProfile.DEVICE_TRIGGER_STAGES, "0" );
     properties.put( DeviceProfile.DEVICE_TYPE, aType );
+    properties.put( DeviceProfile.FELIX_FILEINSTALL_FILENAME, "" );
     return properties;
   }
 

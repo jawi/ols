@@ -383,6 +383,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   private boolean attached;
   private int trigcount;
 
+  private volatile boolean stopped;
+
   // CONSTRUCTORS
 
   /**
@@ -420,6 +422,22 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
+   * Returns whether or not this device is 'stopped' by the user.
+   * <p>
+   * NOTE: this method is to be expected to yield an indication of the device
+   * state, it cannot give any guarantees about the actual state of the device
+   * itself!
+   * </p>
+   * 
+   * @return <code>true</code> if the device was 'stopped' by the user,
+   *         <code>false</code> otherwise.
+   */
+  public final boolean isStopped()
+  {
+    return this.stopped;
+  }
+
+  /**
    * Performs a self-test on the OLS device.
    * <p>
    * Note: not all versions of the OLS device firmware support a selftest!
@@ -445,25 +463,33 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   public void stop()
   {
     final boolean isRleEnabled = this.config.isRleEnabled();
-    final Runnable runner = new Runnable()
+
+    Callable<Void> callable = new Callable<Void>()
     {
-      /**
-       * {@inheritDoc}
-       */
+
       @Override
-      public void run()
+      public Void call() throws Exception
       {
         try
         {
-          if ( isRleEnabled )
+          if ( !LogicSnifferDevice.this.stopped )
           {
-            sendCommand( CMD_RLE_FINISH_NOW );
+            if ( isRleEnabled )
+            {
+              LOG.info( "Prematurely finishing RLE-enabled capture ..." );
+              sendCommand( CMD_RLE_FINISH_NOW );
+            }
+            else
+            {
+              LOG.info( "Prematurely finishing normal capture ..." );
+              resetDevice();
+            }
           }
           else
           {
-            resetDevice();
+            // Hmm, really abort this upon request of the user...
+            cancel( true );
           }
-          cancel( false );
         }
         catch ( IOException exception )
         {
@@ -472,10 +498,45 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
             LOG.log( Level.WARNING, "Stopping capture failed?!", exception );
           }
         }
+        return null;
       }
     };
+
+    FutureTask<Void> future = new FutureTask<Void>( callable )
+    {
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      protected void done()
+      {
+        LOG.info( "Capture finished prematurely ..." );
+        // Flag we're being cancelled...
+        LogicSnifferDevice.this.stopped = true;
+      }
+    };
+
     // Invoke this *asynchronously* otherwise we're blocking ourselves...
-    runner.run();
+    final ExecutorService executor = Executors.newSingleThreadExecutor();
+    executor.execute( future );
+
+    try
+    {
+      executor.awaitTermination( 500L, TimeUnit.MILLISECONDS );
+    }
+    catch ( InterruptedException exception )
+    {
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        Thread.currentThread().interrupt();
+        exception.printStackTrace();
+      }
+    }
+    finally
+    {
+      LOG.info( "Shutting down stop-executor..." );
+      executor.shutdown();
+    }
   }
 
   /**
@@ -495,6 +556,9 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   protected AcquisitionResult doInBackground() throws Exception
   {
     LOG.info( "Starting capture ..." );
+
+    // We're just started, so we cannot be cancelled...
+    this.stopped = false;
 
     if ( !attach() )
     {
@@ -532,7 +596,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       LOG.log( Level.FINE, "Awaiting trigger ..." );
 
       // wait for first byte forever (trigger could cause long initial delays)
-      while ( waiting && !isCancelled() )
+      while ( waiting && !isCancelledOrStopped() )
       {
         try
         {
@@ -564,7 +628,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       // read all other samples
       try
       {
-        for ( ; ( sampleIdx >= 0 ) && !isCancelled(); sampleIdx-- )
+        for ( ; ( sampleIdx >= 0 ) && !isCancelledOrStopped(); sampleIdx-- )
         {
           buffer[sampleIdx] = readSample();
           setProgress( 100 - ( 100 * sampleIdx ) / buffer.length );
@@ -1171,6 +1235,17 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
+   * Returns whether this device is either cancelled or stopped.
+   * 
+   * @return <code>true</code> if either stopped or cancelled,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isCancelledOrStopped()
+  {
+    return isCancelled() || this.stopped;
+  }
+
+  /**
    * Reads a single sample from the serial input stream.
    * <p>
    * This method will take the enabled channel groups into consideration, making
@@ -1191,7 +1266,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
 
     // if data not available here, client will stall until stop button pressed
     final int enabledGroupCount = this.config.getEnabledGroupCount();
-    while ( !isCancelled() && ( this.inputStream.available() < enabledGroupCount ) && ( timeout-- >= 0 ) )
+    while ( !isCancelledOrStopped() && ( this.inputStream.available() < enabledGroupCount ) && ( timeout-- >= 0 ) )
     {
       // Wait until there's data available, otherwise we could get 'false'
       // timeouts; do not make the sleep too long, otherwise we might overflow
@@ -1206,7 +1281,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     }
 
     final int groupCount = this.config.getGroupCount();
-    for ( int i = 0; !isCancelled() && ( i < groupCount ); i++ )
+    for ( int i = 0; !isCancelledOrStopped() && ( i < groupCount ); i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...
 
@@ -1256,7 +1331,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         throw new InterruptedException( "Data readout interrupted!" );
       }
     }
-    while ( ( read > 0x00 ) && !isCancelled() );
+    while ( ( read > 0x00 ) && !isCancelledOrStopped() );
 
     return sb.toString();
   }

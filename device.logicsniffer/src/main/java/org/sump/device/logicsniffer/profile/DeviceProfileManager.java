@@ -158,7 +158,7 @@ public class DeviceProfileManager implements ManagedServiceFactory
   @Override
   @SuppressWarnings( "rawtypes" )
   public synchronized void updated( final String aPid, final Dictionary aProperties ) throws ConfigurationException
-  {
+  {// felix.fileinstall.filename,
     if ( this.profiles.containsKey( aPid ) )
     {
       DeviceProfile profile = this.profiles.get( aPid );
