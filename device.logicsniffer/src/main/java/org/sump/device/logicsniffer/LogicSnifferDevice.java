@@ -219,7 +219,14 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
           {
             count = ( normalizedSampleValue & this.rleCountMask );
           }
-          time += count;
+          if ( oldSample > 0 ) // XXX
+          {
+            time += count;
+          }
+          else
+          {
+            LOG.warning( "Ignoring RLE count without preceeding sample value: " + Integer.toHexString( count ) );
+          }
         }
         else
         {
@@ -231,6 +238,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
             {
               rleTrigPos = time;
             }
+
             // add the read sample & add a timestamp value as well...
             this.callback.addValue( sampleValue, time );
             oldSample = sampleValue;
@@ -844,7 +852,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       size = ( ( stopCounter & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
       // A better approximation of "(readCounter - stopCounter) - 2". This also
       // solves issue #31...
-      this.trigcount = ( size & 0xffff ) << 3 - ( ( size >> 16 ) & 0xffff ) << 3;
+      this.trigcount = ( ( ( size & 0xffff ) << 3 ) - ( ( ( size >> 16 ) & 0xffff ) << 3 ) );
     }
     else
     {
@@ -854,7 +862,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       size = ( ( stopCounter & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
       // A better approximation of "(readCounter - stopCounter) - 2". This also
       // solves issue #31...
-      this.trigcount = ( size & 0xffff ) << 2 - ( ( size >> 16 ) & 0xffff ) << 2;
+      this.trigcount = ( ( ( size & 0xffff ) << 2 ) - ( ( ( size >> 16 ) & 0xffff ) << 2 ) );
     }
 
     // set the capture size...
