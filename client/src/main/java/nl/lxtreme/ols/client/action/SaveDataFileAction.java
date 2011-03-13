@@ -74,7 +74,7 @@ public class SaveDataFileAction extends BaseAction
     {
       final File actualFile = HostUtils.setFileExtension( file, OpenDataFileAction.OLS_FILE_EXTENSION );
 
-      LOG.log( Level.INFO, "Saving capture data to file '{0}'", actualFile );
+      LOG.log( Level.INFO, "Saving capture data to file {0}", actualFile );
 
       try
       {

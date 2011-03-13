@@ -697,7 +697,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       setAcquisitionResult( tempProject.getCapturedData() );
       setCursorData( tempProject.getCursorPositions(), tempProject.isCursorsEnabled() );
 
-      setStatus( "Capture data loaded from '{0}' ...", aFile.getName() );
+      setStatus( "Capture data loaded from {0} ...", aFile.getName() );
     }
     finally
     {
@@ -727,7 +727,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
       zoomToFit();
 
-      setStatus( "Project '{0}' loaded ...", project.getName() );
+      setStatus( "Project {0} loaded ...", project.getName() );
     }
     finally
     {
@@ -913,7 +913,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
       OlsDataHelper.write( tempProject, writer );
 
-      setStatus( "Capture data saved to '{0}' ...", aFile.getName() );
+      setStatus( "Capture data saved to {0} ...", aFile.getName() );
     }
     finally
     {
@@ -937,7 +937,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       out = new FileOutputStream( aFile );
       this.projectManager.saveProject( out );
 
-      setStatus( "Project '{0}' saved ...", aName );
+      setStatus( "Project {0} saved ...", aName );
     }
     finally
     {

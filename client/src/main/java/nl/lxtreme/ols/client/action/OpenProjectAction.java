@@ -91,7 +91,7 @@ public class OpenProjectAction extends BaseAction
     final File file = SwingComponentUtils.showFileOpenDialog( parent, OLS_PROJECT_FILTER );
     if ( file != null )
     {
-      LOG.log( Level.INFO, "Loading project data from file: '{0}'", file );
+      LOG.log( Level.INFO, "Loading project data from file: {0}", file );
 
       try
       {

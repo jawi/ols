@@ -145,7 +145,7 @@ public class SaveProjectAction extends BaseAction
    */
   protected void saveProjectFile( final Window aOwner, final File aFile )
   {
-    LOG.log( Level.INFO, "Saving project data to file: '{0}'", aFile );
+    LOG.log( Level.INFO, "Saving project data to file: {0}", aFile );
 
     // Strip any "known" file extensions from the given value...
     final String projectName = HostUtils.stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
