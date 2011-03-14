@@ -23,6 +23,7 @@ package org.sump.device.logicsniffer.profile;
 
 import static org.junit.Assert.*;
 
+import java.io.*;
 import java.util.*;
 
 import org.junit.*;
@@ -385,6 +386,33 @@ public class DeviceProfileTest
   }
 
   /**
+   * Tests whether Unicode escapes are interpreted correctly.
+   * 
+   * @see http
+   *      ://download.oracle.com/javase/6/docs/api/java/util/Properties.html#
+   *      load(java.io.Reader)
+   */
+  @Test
+  public void testReadUnicodeEscapedValueOk() throws IOException
+  {
+    final StringWriter writer = new StringWriter( 1024 );
+
+    final Properties props = getMockedProperties();
+    props.store( writer, null );
+
+    final String tmp = writer.toString().replaceAll( "Device", "\u2039\u00a2" );
+    final StringReader reader = new StringReader( tmp );
+
+    final Properties readProps = new Properties();
+    readProps.load( reader );
+
+    DeviceProfile profile = new DeviceProfile();
+    profile.setProperties( readProps );
+
+    assertEquals( "Mocked \u2039\u00a2 Profile", profile.getDescription() );
+  }
+
+  /**
    * Test method for {@link DeviceProfile#setProperties(java.util.Dictionary)} .
    */
   @Test
@@ -403,6 +431,20 @@ public class DeviceProfileTest
     final Properties props = getMockedProperties();
     props.remove( DeviceProfile.DEVICE_CAPTURECLOCK );
     new DeviceProfile().setProperties( props );
+  }
+
+  /**
+   * Tests whether Unicode escapes are interpreted correctly.
+   * 
+   * @see http
+   *      ://download.oracle.com/javase/6/docs/api/java/util/Properties.html#
+   *      load(java.io.Reader)
+   */
+  @Test
+  public void testUnicodeEscapedValueOk()
+  {
+    mutateProperty( DeviceProfile.DEVICE_DESCRIPTION, "Test \u2039\u00a2 description" );
+    assertEquals( "Test \u2039\u00a2 description", this.profile.getDescription() );
   }
 
   /**
