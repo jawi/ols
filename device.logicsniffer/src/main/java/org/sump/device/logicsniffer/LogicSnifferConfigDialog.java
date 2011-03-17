@@ -132,6 +132,8 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
     private volatile Object selected = null;
 
+    // CONSTRUCTORS
+
     // METHODS
 
     /**
@@ -140,8 +142,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     @Override
     public Object getElementAt( final int aIndex )
     {
-      final DeviceProfileManager manager = getDeviceProfileManager();
-      return manager.getProfileTypes().get( aIndex );
+      return getDeviceProfileManager().getProfiles().get( aIndex );
     }
 
     /**
@@ -159,8 +160,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     @Override
     public int getSize()
     {
-      final DeviceProfileManager manager = getDeviceProfileManager();
-      return manager.getProfileTypeCount();
+      return getDeviceProfileManager().getSize();
     }
 
     /**
@@ -170,6 +170,31 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     public void setSelectedItem( final Object aItem )
     {
       this.selected = aItem;
+    }
+  }
+
+  /**
+   * Provides a combobox renderer for device profiles.
+   */
+  static final class DeviceProfileTypeComboBoxRenderer extends BasicComboBoxRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      Object value = aValue;
+      if ( value instanceof DeviceProfile )
+      {
+        final DeviceProfile profile = ( DeviceProfile )value;
+        value = profile.getDescription();
+        if ( ( value == null ) || ( String.valueOf( value ).isEmpty() ) )
+        {
+          value = profile.getType();
+        }
+      }
+      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
   }
 
@@ -950,12 +975,13 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       this.triggerStageTabs.add( String.format( "Stage %d", Integer.valueOf( i + 1 ) ), stagePane );
     }
 
-    this.warningLabel = new JLabel( "" );
+    this.warningLabel = new JLabel( " " );
     this.warningLabel.setFont( this.warningLabel.getFont().deriveFont( Font.BOLD ) );
 
     // NOTE: create this component as last component, as it will fire an event
     // that uses all other components!!!
     this.deviceTypeSelect = new JComboBox( new DeviceProfileTypeComboBoxModel() );
+    this.deviceTypeSelect.setRenderer( new DeviceProfileTypeComboBoxRenderer() );
     this.deviceTypeSelect.addItemListener( new ItemListener()
     {
       /**
@@ -965,10 +991,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       public void itemStateChanged( final ItemEvent aEvent )
       {
         final JComboBox combobox = ( JComboBox )aEvent.getSource();
-        final String selected = ( String )combobox.getSelectedItem();
-
-        final DeviceProfileManager manager = getDeviceProfileManager();
-        final DeviceProfile profile = manager.getProfile( selected );
+        final DeviceProfile profile = ( DeviceProfile )combobox.getSelectedItem();
         if ( profile != null )
         {
           LogicSnifferConfigDialog.this.listening = false;
@@ -987,7 +1010,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       }
     } );
     // By default, select the "OLS" device, if available...
-    this.deviceTypeSelect.setSelectedItem( "OLS" );
+    this.deviceTypeSelect.setSelectedItem( getDeviceProfileManager().getDefaultProfile() );
   }
 
   /**
@@ -1096,7 +1119,10 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       sampleCount = maxSampleCount;
       forceCaptureSizeTo( Integer.valueOf( sampleCount ) );
     }
-    this.config.setSampleCount( sampleCount );
+    if ( sampleCount > 0 )
+    {
+      this.config.setSampleCount( sampleCount );
+    }
 
     // set before / after ratio
     double r = 1.0 - ( this.ratioSlider.getValue() / ( double )this.ratioSlider.getMaximum() );
@@ -1185,8 +1211,8 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     DeviceProfile deviceProfile = this.config.getDeviceProfile();
     if ( ( deviceProfile != null ) && result )
     {
-      final String selectedDeviceType = ( String )this.deviceTypeSelect.getSelectedItem();
-      if ( !deviceProfile.getType().equals( selectedDeviceType ) )
+      final DeviceProfile selectedProfile = ( DeviceProfile )this.deviceTypeSelect.getSelectedItem();
+      if ( !deviceProfile.equals( selectedProfile ) )
       {
         result = SwingComponentUtils.askConfirmation( this,
             "Device type does not match selected type! Continue capture?" );
