@@ -22,6 +22,7 @@ package org.sump.device.logicsniffer.profile;
 
 
 import java.util.*;
+import java.util.concurrent.*;
 
 import org.osgi.service.cm.*;
 
@@ -35,9 +36,12 @@ public class DeviceProfileManager implements ManagedServiceFactory
 
   public static final String SERVICE_PID = "ols.profile";
 
+  /** The default profile type to use. See {@link #getProfile(String)}. */
+  private static final String DEFAULT_PROFILE_TYPE = "OLS";
+
   // VARIABLES
 
-  private final Map<String, DeviceProfile> profiles;
+  private final ConcurrentMap<String, DeviceProfile> profiles;
 
   // CONSTRUCTORS
 
@@ -46,7 +50,7 @@ public class DeviceProfileManager implements ManagedServiceFactory
    */
   public DeviceProfileManager()
   {
-    this.profiles = new HashMap<String, DeviceProfile>();
+    this.profiles = new ConcurrentHashMap<String, DeviceProfile>();
   }
 
   // METHODS
@@ -55,9 +59,12 @@ public class DeviceProfileManager implements ManagedServiceFactory
    * @see org.osgi.service.cm.ManagedServiceFactory#deleted(java.lang.String)
    */
   @Override
-  public synchronized void deleted( final String aPid )
+  public void deleted( final String aPid )
   {
-    this.profiles.remove( aPid );
+    synchronized ( this.profiles )
+    {
+      this.profiles.remove( aPid );
+    }
   }
 
   /**
@@ -74,12 +81,14 @@ public class DeviceProfileManager implements ManagedServiceFactory
    * @return the device profile matching the given identifier, or
    *         <code>null</code> if none is found.
    */
-  public synchronized DeviceProfile findProfile( final String aIdentifier )
+  public DeviceProfile findProfile( final String aIdentifier )
   {
+    final Collection<DeviceProfile> allProfiles = getProfiles();
+
     boolean allowWildcardMatch = false;
     for ( int tries = 0; tries < 2; tries++ )
     {
-      for ( DeviceProfile profile : this.profiles.values() )
+      for ( DeviceProfile profile : allProfiles )
       {
         final String[] metadataKeys = profile.getDeviceMetadataKeys();
         if ( matches( aIdentifier, allowWildcardMatch, metadataKeys ) )
@@ -90,7 +99,20 @@ public class DeviceProfileManager implements ManagedServiceFactory
       // None of the device profiles matched exactly, so try with wildcards...
       allowWildcardMatch = true;
     }
+
     return null;
+  }
+
+  /**
+   * Returns the "default" profile, as convenience.
+   * 
+   * @return a default profile (the OpenBench LogicSniffer), or
+   *         <code>null</code> if this profile does not exist.
+   * @see #getProfile(String)
+   */
+  public DeviceProfile getDefaultProfile()
+  {
+    return getProfile( DEFAULT_PROFILE_TYPE );
   }
 
   /**
@@ -111,9 +133,11 @@ public class DeviceProfileManager implements ManagedServiceFactory
    * @return the device profile, can be <code>null</code> if no such profile is
    *         found.
    */
-  public synchronized DeviceProfile getProfile( final String aType )
+  public DeviceProfile getProfile( final String aType )
   {
-    for ( DeviceProfile profile : this.profiles.values() )
+    final Collection<DeviceProfile> allProfiles = getProfiles();
+
+    for ( DeviceProfile profile : allProfiles )
     {
       if ( aType.equals( profile.getType() ) )
       {
@@ -124,31 +148,35 @@ public class DeviceProfileManager implements ManagedServiceFactory
   }
 
   /**
+   * Returns the device profile for the device type.
+   * 
+   * @param aType
+   *          the device type to get the profile for, cannot be
+   *          <code>null</code>.
+   * @return the device profile, can be <code>null</code> if no such profile is
+   *         found.
+   */
+  public List<DeviceProfile> getProfiles()
+  {
+    List<DeviceProfile> result = new ArrayList<DeviceProfile>();
+    synchronized ( this.profiles )
+    {
+      result.addAll( this.profiles.values() );
+    }
+    return result;
+  }
+
+  /**
    * Returns the number of available profile types.
    * 
    * @return a number profile types.
    */
-  public synchronized int getProfileTypeCount()
+  public int getSize()
   {
-    return this.profiles.size();
-  }
-
-  /**
-   * Returns the available profile types.
-   * 
-   * @return a collection of profile types, never <code>null</code>.
-   */
-  public synchronized List<String> getProfileTypes()
-  {
-    final List<String> result = new ArrayList<String>( this.profiles.size() );
-    for ( DeviceProfile profile : this.profiles.values() )
+    synchronized ( this.profiles )
     {
-      result.add( profile.getType() );
+      return this.profiles.size();
     }
-    // Sort alphabetically...
-    Collections.sort( result );
-
-    return result;
   }
 
   /**
@@ -157,18 +185,21 @@ public class DeviceProfileManager implements ManagedServiceFactory
    */
   @Override
   @SuppressWarnings( "rawtypes" )
-  public synchronized void updated( final String aPid, final Dictionary aProperties ) throws ConfigurationException
-  {// felix.fileinstall.filename,
-    if ( this.profiles.containsKey( aPid ) )
+  public void updated( final String aPid, final Dictionary aProperties ) throws ConfigurationException
+  {
+    synchronized ( this.profiles )
     {
-      DeviceProfile profile = this.profiles.get( aPid );
-      profile.setProperties( aProperties );
-    }
-    else
-    {
-      DeviceProfile profile = new DeviceProfile();
-      this.profiles.put( aPid, profile );
-      profile.setProperties( aProperties );
+      if ( this.profiles.containsKey( aPid ) )
+      {
+        DeviceProfile profile = this.profiles.get( aPid );
+        profile.setProperties( aProperties );
+      }
+      else
+      {
+        DeviceProfile profile = new DeviceProfile();
+        profile.setProperties( aProperties );
+        this.profiles.put( aPid, profile );
+      }
     }
   }
 
