@@ -194,7 +194,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       final int samples = this.buffer.length;
 
       // shiftBits needs to be 8 if 8 bit selected and 16 if 16 bit selected
-      final int shiftBits = LogicSnifferDevice.this.config.getRLEDataWidth();
+      final int rleShiftBits = LogicSnifferDevice.this.config.getRLEDataWidth();
       final boolean ddrMode = LogicSnifferDevice.this.config.isDoubleDataRateEnabled();
 
       for ( int i = 0; i < samples; i++ )
@@ -205,21 +205,18 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         // if a count just add it to the time
         if ( ( normalizedSampleValue & this.rleCountValue ) != 0 )
         {
-          final int count;
+          int count = ( normalizedSampleValue & this.rleCountMask );
           if ( ddrMode && ( i < ( samples - 1 ) ) )
           {
             // In case of "double data rate", the RLE-counts are encoded as 16-
             // resp. 32-bit values, so we need to take two samples for each
             // count (as they are 8- or 16-bits in DDR mode).
             // This should also solve issue #31...
-            count = ( ( normalizedSampleValue & this.rleCountMask ) << shiftBits )
-            | ( normalizeSampleValue( this.buffer[++i] ) & this.rleCountMask );
+            // XXX should be multiplied by two, as suggested by DavidFrancis?!
+            count = ( count << rleShiftBits ) | normalizeSampleValue( this.buffer[++i] );
           }
-          else
-          {
-            count = ( normalizedSampleValue & this.rleCountMask );
-          }
-          if ( oldSample > 0 ) // XXX
+
+          if ( oldSample >= 0 ) // XXX
           {
             time += count;
           }
@@ -744,7 +741,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    *           <em>not</em> a serial port.
    */
   protected abstract StreamConnection getConnection( final String aPortName, final int aPortRate, boolean aDtrValue )
-  throws IOException;
+      throws IOException;
 
   /**
    * Finds the device profile manager.
@@ -1173,30 +1170,30 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
             gotResponse = true;
 
             final int type = ( result & 0xE0 ) >> 5;
-    if ( type == 0x00 )
-    {
-      // key value is a null-terminated string...
-      final String value = readString();
-      metadata.put( result, value );
-    }
-    else if ( type == 0x01 )
-    {
-      // key value is a 32-bit integer; least significant byte first...
-      // final Integer value = NumberUtils.convertByteOrder(
-      // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
-      final int value = this.inputStream.readInt();
-      metadata.put( result, Integer.valueOf( value ) );
-    }
-    else if ( type == 0x02 )
-    {
-      // key value is a 8-bit integer...
-      final int value = this.inputStream.read();
-      metadata.put( result, Integer.valueOf( value ) );
-    }
-    else
-    {
-      LOG.log( Level.INFO, "Ignoring unknown metadata type: {0}", Integer.valueOf( type ) );
-    }
+            if ( type == 0x00 )
+            {
+              // key value is a null-terminated string...
+              final String value = readString();
+              metadata.put( result, value );
+            }
+            else if ( type == 0x01 )
+            {
+              // key value is a 32-bit integer; least significant byte first...
+              // final Integer value = NumberUtils.convertByteOrder(
+              // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
+              final int value = this.inputStream.readInt();
+              metadata.put( result, Integer.valueOf( value ) );
+            }
+            else if ( type == 0x02 )
+            {
+              // key value is a 8-bit integer...
+              final int value = this.inputStream.read();
+              metadata.put( result, Integer.valueOf( value ) );
+            }
+            else
+            {
+              LOG.log( Level.INFO, "Ignoring unknown metadata type: {0}", Integer.valueOf( type ) );
+            }
           }
         }
         catch ( final IOException exception )
@@ -1393,7 +1390,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       final byte opcode = ( byte )( aOpcode & 0xFF );
       LOG.log( Level.FINE, "Sending long command: {0} ({1}) with data {2} ({3})",
           new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ), //
-          Integer.toHexString( aData ), Integer.toBinaryString( aData ) } );
+              Integer.toHexString( aData ), Integer.toBinaryString( aData ) } );
     }
 
     final byte[] raw = new byte[5];
