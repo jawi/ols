@@ -23,6 +23,7 @@ package nl.lxtreme.ols.tool.i2c;
 
 import static org.junit.Assert.*;
 
+import java.beans.*;
 import java.net.*;
 import java.util.*;
 
@@ -52,6 +53,9 @@ public class I2CAnalyserWorkerDataFilesTest
   private final int expectedDatagramCount;
   private final int expectedBusErrorCount;
 
+  protected int sclIdx;
+  protected int sdaIdx;
+
   // CONSTRUCTORS
 
   /**
@@ -78,10 +82,12 @@ public class I2CAnalyserWorkerDataFilesTest
   public static Collection<Object[]> getTestData()
   {
     return Arrays.asList( new Object[][] { //
-        // { LineA/SDA, LineB/SCL, auto-detect SDA? }
+        // { filename, LineA/SDA, LineB/SCL, auto-detect SDA?, datagram count,
+        // error count }
             { "i2c_1.ols", 0, 1, false, 5, 0 }, //
-            { "i2c_2.ols", 1, 0, false, 240, 4 }, //
+            { "i2c_2.ols", 1, 0, false, 239, 2 }, //
             { "i2c_5KHz.ols", 0, 1, false, 11, 0 }, //
+            { "i2c_3.ols", 0, 1, false, 475, 1 }, //
         } );
   }
 
@@ -131,6 +137,11 @@ public class I2CAnalyserWorkerDataFilesTest
     I2CDataSet result = analyseDataFile( this.resourceName );
     assertDataCount( result, this.expectedDatagramCount );
     assertBusErrorCount( result, this.expectedBusErrorCount );
+    if ( this.autoDetectSDA )
+    {
+      assertEquals( "SDA not correctly detected?!", this.lineAidx, this.sdaIdx );
+      assertEquals( "SCL not correctly detected?!", this.lineBidx, this.sclIdx );
+    }
   }
 
   /**
@@ -150,6 +161,38 @@ public class I2CAnalyserWorkerDataFilesTest
     ToolContext toolContext = DataTestUtils.createToolContext( 0, container.getValues().length );
 
     I2CAnalyserWorker worker = new I2CAnalyserWorker( container, toolContext );
+    worker.addPropertyChangeListener( new PropertyChangeListener()
+    {
+      @Override
+      public void propertyChange( final PropertyChangeEvent aEvent )
+      {
+        final String name = aEvent.getPropertyName();
+        if ( I2CAnalyserWorker.PROPERTY_AUTO_DETECT_SCL.equals( name ) )
+        {
+          String value = ( String )aEvent.getNewValue();
+          if ( I2CAnalyserWorker.LINE_A.equals( value ) )
+          {
+            I2CAnalyserWorkerDataFilesTest.this.sclIdx = I2CAnalyserWorkerDataFilesTest.this.lineAidx;
+          }
+          else
+          {
+            I2CAnalyserWorkerDataFilesTest.this.sclIdx = I2CAnalyserWorkerDataFilesTest.this.lineBidx;
+          }
+        }
+        else if ( I2CAnalyserWorker.PROPERTY_AUTO_DETECT_SDA.equals( name ) )
+        {
+          String value = ( String )aEvent.getNewValue();
+          if ( I2CAnalyserWorker.LINE_A.equals( value ) )
+          {
+            I2CAnalyserWorkerDataFilesTest.this.sdaIdx = I2CAnalyserWorkerDataFilesTest.this.lineAidx;
+          }
+          else
+          {
+            I2CAnalyserWorkerDataFilesTest.this.sdaIdx = I2CAnalyserWorkerDataFilesTest.this.lineBidx;
+          }
+        }
+      }
+    } );
     worker.setLineAIndex( this.lineAidx );
     worker.setLineBIndex( this.lineBidx );
     worker.setDetectSDA_SCL( this.autoDetectSDA );
