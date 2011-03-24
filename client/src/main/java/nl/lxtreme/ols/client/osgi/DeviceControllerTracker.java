@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.client.osgi;
 
 
-import javax.swing.*;
+import java.util.logging.*;
 
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.client.*;
@@ -31,10 +31,14 @@ import org.osgi.util.tracker.*;
 
 
 /**
- * @author jawi
+ * Provides an OSGi service tracker for device controllers.
  */
 public class DeviceControllerTracker extends ServiceTracker
 {
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( DeviceControllerTracker.class.getName() );
+
   // VARIABLES
 
   private final ClientController controller;
@@ -42,8 +46,12 @@ public class DeviceControllerTracker extends ServiceTracker
   // CONSTRUCTORS
 
   /**
+   * Creates a new DeviceControllerTracker instance.
+   * 
    * @param aContext
-   * @param aWindow
+   *          the bundle context to use;
+   * @param aController
+   *          the client controller to use.
    */
   public DeviceControllerTracker( final BundleContext aContext, final ClientController aController )
   {
@@ -60,18 +68,19 @@ public class DeviceControllerTracker extends ServiceTracker
   @Override
   public Object addingService( final ServiceReference aReference )
   {
-    final DeviceController devCtrl = ( DeviceController )this.context.getService( aReference );
+    DeviceController devCtrl = null;
 
-    final Runnable addDeviceTask = new Runnable()
+    try
     {
-      private final ClientController controller = DeviceControllerTracker.this.controller;
+      devCtrl = ( DeviceController )this.context.getService( aReference );
 
-      public void run()
-      {
-        this.controller.addDevice( devCtrl );
-      }
-    };
-    SwingUtilities.invokeLater( addDeviceTask );
+      this.controller.addDevice( devCtrl );
+    }
+    catch ( Exception exception )
+    {
+      LOG.log( Level.WARNING, "Device controller service not added! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
+    }
 
     return devCtrl;
   }
@@ -83,17 +92,18 @@ public class DeviceControllerTracker extends ServiceTracker
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )
   {
-    final DeviceController devCtrl = ( DeviceController )aService;
-
-    final Runnable removeDeviceTask = new Runnable()
+    try
     {
-      private final ClientController controller = DeviceControllerTracker.this.controller;
+      final DeviceController devCtrl = ( DeviceController )aService;
 
-      public void run()
-      {
-        this.controller.removeDevice( devCtrl );
-      }
-    };
-    SwingUtilities.invokeLater( removeDeviceTask );
+      super.removedService( aReference, devCtrl );
+
+      this.controller.removeDevice( devCtrl );
+    }
+    catch ( Exception exception )
+    {
+      LOG.log( Level.WARNING, "Device controller service not removed! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
+    }
   }
 }

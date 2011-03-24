@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.client.osgi;
 
 
-import javax.swing.*;
+import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.client.*;
@@ -31,10 +31,14 @@ import org.osgi.util.tracker.*;
 
 
 /**
- * @author jawi
+ * Provides an OSGi service tracker for exporters.
  */
 public class ExporterTracker extends ServiceTracker
 {
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( ExporterTracker.class.getName() );
+
   // VARIABLES
 
   private final ClientController controller;
@@ -61,16 +65,18 @@ public class ExporterTracker extends ServiceTracker
   @Override
   public Object addingService( final ServiceReference aReference )
   {
-    final Exporter exporter = ( Exporter )this.context.getService( aReference );
+    Exporter exporter = null;
 
-    SwingUtilities.invokeLater( new Runnable()
+    try
     {
-      @Override
-      public void run()
-      {
-        ExporterTracker.this.controller.addExporter( exporter );
-      }
-    } );
+      exporter = ( Exporter )this.context.getService( aReference );
+      this.controller.addExporter( exporter );
+    }
+    catch ( Exception exception )
+    {
+      LOG.log( Level.WARNING, "Exporer service not added! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
+    }
 
     return exporter;
   }
@@ -82,17 +88,18 @@ public class ExporterTracker extends ServiceTracker
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )
   {
-    final Exporter exporter = ( Exporter )aService;
-
-    SwingUtilities.invokeLater( new Runnable()
+    try
     {
-      @Override
-      public void run()
-      {
-        ExporterTracker.this.controller.removeExporter( exporter );
-      }
-    } );
+      final Exporter exporter = ( Exporter )aService;
 
-    super.removedService( aReference, aService );
+      super.removedService( aReference, exporter );
+
+      this.controller.removeExporter( exporter );
+    }
+    catch ( Exception exception )
+    {
+      LOG.log( Level.WARNING, "Exporter service not removed! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
+    }
   }
 }
