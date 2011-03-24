@@ -147,8 +147,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   private final ProjectManager projectManager;
   private final IHost host;
 
-  private MainFrame mainFrame;
-
+  private volatile MainFrame mainFrame;
   private volatile DeviceController currentDevCtrl;
 
   // CONSTRUCTORS
@@ -450,7 +449,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   /**
    * {@inheritDoc}
    */
-  public synchronized void clearDeviceController()
+  public void clearDeviceController()
   {
     this.currentDevCtrl = null;
   }
@@ -529,7 +528,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * 
    * @return the current device controller, can be <code>null</code>.
    */
-  public synchronized DeviceController getDeviceController()
+  public DeviceController getDeviceController()
   {
     return this.currentDevCtrl;
   }
@@ -724,7 +723,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   /**
    * {@inheritDoc}
    */
-  public synchronized boolean isDeviceSetup()
+  public boolean isDeviceSetup()
   {
     return isDeviceSelected() && this.currentDevCtrl.isSetup();
   }
@@ -1097,7 +1096,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   /**
    * {@inheritDoc}
    */
-  public synchronized void setDeviceController( final String aDeviceName )
+  public void setDeviceController( final String aDeviceName )
   {
     if ( LOG.isLoggable( Level.INFO ) )
     {
