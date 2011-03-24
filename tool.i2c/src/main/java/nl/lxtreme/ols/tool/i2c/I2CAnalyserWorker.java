@@ -139,6 +139,22 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
   }
 
   /**
+   * @return the sclIdx
+   */
+  final int getSclIdx()
+  {
+    return this.sclIdx;
+  }
+
+  /**
+   * @return the sdaIdx
+   */
+  final int getSdaIdx()
+  {
+    return this.sdaIdx;
+  }
+
+  /**
    * This is the I2C protocol decoder core The decoder scans for a decode start
    * event when one of the two lines is going low (start condition). After this
    * the decoder starts to decode the data.
