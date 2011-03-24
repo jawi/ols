@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.client.osgi;
 
 
-import javax.swing.*;
+import java.util.logging.*;
 
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.*;
@@ -31,10 +31,14 @@ import org.osgi.util.tracker.*;
 
 
 /**
- * 
+ * Provides an OSGi service tracker for tools.
  */
 public class ToolTracker extends ServiceTracker
 {
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( ToolTracker.class.getName() );
+
   // VARIABLES
 
   private final ClientController controller;
@@ -42,9 +46,12 @@ public class ToolTracker extends ServiceTracker
   // CONSTRUCTORS
 
   /**
+   * Creates a new ToolTracker instance.
+   * 
    * @param aContext
-   * @param aReference
-   * @param aCustomizer
+   *          the bundle context to use;
+   * @param aController
+   *          the client controller to use.
    */
   public ToolTracker( final BundleContext aContext, final ClientController aController )
   {
@@ -61,8 +68,20 @@ public class ToolTracker extends ServiceTracker
   @Override
   public Object addingService( final ServiceReference aReference )
   {
-    final Tool tool = ( Tool )this.context.getService( aReference );
-    registerTool( tool );
+    Tool tool = null;
+
+    try
+    {
+      tool = ( Tool )this.context.getService( aReference );
+
+      this.controller.addTool( tool );
+    }
+    catch ( Exception exception )
+    {
+      LOG.log( Level.WARNING, "Tool service not added! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
+    }
+
     return tool;
   }
 
@@ -73,37 +92,18 @@ public class ToolTracker extends ServiceTracker
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )
   {
-    final Tool tool = ( Tool )aService;
-    unregisterTool( tool );
-  }
-
-  /**
-   * @param aTool
-   */
-  private void registerTool( final Tool aTool )
-  {
-    SwingUtilities.invokeLater( new Runnable()
+    try
     {
-      public void run()
-      {
-        ToolTracker.this.controller.addTool( aTool );
-      }
-    } );
-  }
+      final Tool tool = ( Tool )aService;
 
-  /**
-   * @param aTool
-   */
-  private void unregisterTool( final Tool aTool )
-  {
-    SwingUtilities.invokeLater( new Runnable()
+      super.removedService( aReference, tool );
+
+      this.controller.removeTool( tool );
+    }
+    catch ( Exception exception )
     {
-      public void run()
-      {
-        ToolTracker.this.controller.removeTool( aTool );
-      }
-    } );
+      LOG.log( Level.WARNING, "Tool service not removed! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
+    }
   }
 }
-
-/* EOF */

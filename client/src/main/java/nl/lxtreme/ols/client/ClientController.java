@@ -36,6 +36,7 @@ import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.diagram.*;
@@ -187,7 +188,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Adds the given device controller to this controller.
+   * Adds the given device controller to this controller, and does this
+   * synchronously on the EDT.
    * 
    * @param aDeviceController
    *          the device controller to add, cannot be <code>null</code>.
@@ -196,21 +198,32 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      final IManagedAction deviceAction = this.mainFrame.addDeviceMenuItem( aDeviceController.getName() );
-      this.actionManager.add( deviceAction );
-      // TODO ehm, yes... a hack...
-      if ( aDeviceController.getClass().getName().startsWith( "org.sump" ) )
+      SwingUtilities.invokeLater( new Runnable()
       {
-        deviceAction.putValue( Action.SELECTED_KEY, Boolean.TRUE );
-        this.currentDevCtrl = aDeviceController;
-      }
-    }
+        @Override
+        public void run()
+        {
+          final IManagedAction deviceAction = ClientController.this.mainFrame.addDeviceMenuItem( aDeviceController
+              .getName() );
 
-    updateActions();
+          ClientController.this.actionManager.add( deviceAction );
+
+          // TODO ehm, yes... a hack...
+          if ( aDeviceController.getClass().getName().startsWith( "org.sump" ) )
+          {
+            deviceAction.putValue( Action.SELECTED_KEY, Boolean.TRUE );
+            ClientController.this.currentDevCtrl = aDeviceController;
+          }
+
+          updateActions();
+        }
+      } );
+    }
   }
 
   /**
-   * Adds the given exporter to this controller.
+   * Adds the given exporter to this controller, and does this synchronously on
+   * the EDT..
    * 
    * @param aExporter
    *          the exporter to add, cannot be <code>null</code>.
@@ -219,15 +232,51 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      final IManagedAction exporterAction = this.mainFrame.addExportMenuItem( aExporter.getName() );
-      this.actionManager.add( exporterAction );
-    }
+      SwingUtilities.invokeLater( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          final IManagedAction exporterAction = ClientController.this.mainFrame.addExportMenuItem( aExporter.getName() );
+          ClientController.this.actionManager.add( exporterAction );
 
-    updateActions();
+          updateActions();
+        }
+      } );
+    }
   }
 
   /**
-   * Adds the given tool to this controller.
+   * Adds the menu component of the given provider to this controller, and does
+   * this synchronously on the EDT.
+   * 
+   * @param aProvider
+   *          the menu component provider, cannot be <code>null</code>.
+   */
+  public void addMenu( final ComponentProvider aProvider )
+  {
+    if ( this.mainFrame != null )
+    {
+      SwingUtilities.invokeLater( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          final JMenu menu = ( JMenu )aProvider.getComponent();
+          final JMenuBar menuBar = ClientController.this.mainFrame.getJMenuBar();
+          menuBar.add( menu );
+          aProvider.addedToContainer();
+
+          menuBar.revalidate();
+          menuBar.repaint();
+        }
+      } );
+    }
+  }
+
+  /**
+   * Adds the given tool to this controller, and does this synchronously on the
+   * EDT..
    * 
    * @param aTool
    *          the tool to add, cannot be <code>null</code>.
@@ -236,11 +285,18 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   {
     if ( this.mainFrame != null )
     {
-      final IManagedAction toolAction = this.mainFrame.addToolMenuItem( aTool.getName() );
-      this.actionManager.add( toolAction );
-    }
+      SwingUtilities.invokeLater( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          final IManagedAction toolAction = ClientController.this.mainFrame.addToolMenuItem( aTool.getName() );
+          ClientController.this.actionManager.add( toolAction );
 
-    updateActions();
+          updateActions();
+        }
+      } );
+    }
   }
 
   /**
@@ -761,64 +817,118 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Removes the given device from the list of devices.
+   * Removes the given device from the list of devices, and does this
+   * synchronously on the EDT.
    * 
    * @param aDeviceController
    *          the device to remove, cannot be <code>null</code>.
    */
   public void removeDevice( final DeviceController aDeviceController )
   {
-    if ( this.currentDevCtrl == aDeviceController )
+    SwingUtilities.invokeLater( new Runnable()
     {
-      this.currentDevCtrl = null;
-    }
+      @Override
+      public void run()
+      {
+        if ( ClientController.this.currentDevCtrl == aDeviceController )
+        {
+          ClientController.this.currentDevCtrl = null;
+        }
 
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.removeDeviceMenuItem( aDeviceController.getName() );
-    }
+        if ( ClientController.this.mainFrame != null )
+        {
+          ClientController.this.mainFrame.removeDeviceMenuItem( aDeviceController.getName() );
+        }
 
-    updateActions();
+        updateActions();
+      }
+    } );
   }
 
   /**
-   * Removes the given exporter from the list of exporters.
+   * Removes the given exporter from the list of exporters, and does this
+   * synchronously on the EDT.
    * 
    * @param aExporter
    *          the exporter to remove, cannot be <code>null</code>.
    */
   public void removeExporter( final Exporter aExporter )
   {
-    if ( this.mainFrame != null )
+    SwingUtilities.invokeLater( new Runnable()
     {
-      final IManagedAction exportAction = this.mainFrame.removeExportMenuItem( aExporter.getName() );
-      if ( exportAction != null )
+      @Override
+      public void run()
       {
-        this.actionManager.remove( exportAction );
-      }
-    }
+        if ( ClientController.this.mainFrame != null )
+        {
+          final IManagedAction exportAction = ClientController.this.mainFrame.removeExportMenuItem( aExporter.getName() );
+          if ( exportAction != null )
+          {
+            ClientController.this.actionManager.remove( exportAction );
+          }
+        }
 
-    updateActions();
+        updateActions();
+      }
+    } );
   }
 
   /**
-   * Removes the given tool from the list of tools.
+   * Removes the menu from the given provider from this controller, and does
+   * this synchronously on the EDT.
+   * 
+   * @param aProvider
+   *          the menu component provider, cannot be <code>null</code>.
+   */
+  public void removeMenu( final ComponentProvider aProvider )
+  {
+    SwingUtilities.invokeLater( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        if ( ClientController.this.mainFrame != null )
+        {
+          final JMenu menu = ( JMenu )aProvider.getComponent();
+
+          final JMenuBar menuBar = ClientController.this.mainFrame.getJMenuBar();
+          menuBar.remove( menu );
+
+          aProvider.removedFromContainer();
+
+          menuBar.revalidate();
+          menuBar.repaint();
+        }
+      }
+    } );
+  }
+
+  /**
+   * Removes the given tool from the list of tools, and does this synchronously
+   * on the EDT.
    * 
    * @param aTool
    *          the tool to remove, cannot be <code>null</code>.
    */
   public void removeTool( final Tool aTool )
   {
-    if ( this.mainFrame != null )
+    SwingUtilities.invokeLater( new Runnable()
     {
-      final IManagedAction toolAction = this.mainFrame.removeToolMenuItem( aTool.getName() );
-      if ( toolAction != null )
+      @Override
+      public void run()
       {
-        this.actionManager.remove( toolAction );
-      }
-    }
+        if ( ClientController.this.mainFrame != null )
+        {
+          final IManagedAction toolAction = ClientController.this.mainFrame.removeToolMenuItem( aTool.getName() );
+          if ( toolAction != null )
+          {
+            ClientController.this.actionManager.remove( toolAction );
+          }
+        }
 
-    updateActions();
+        updateActions();
+      }
+    } );
   }
 
   /**
@@ -1394,11 +1504,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   private void updateActions()
   {
-    final DeviceController currentDeviceController = getDeviceController();
-
-    final boolean deviceControllerSet = currentDeviceController != null;
-    final boolean deviceCapturing = deviceControllerSet && currentDeviceController.isCapturing();
-    final boolean deviceSetup = deviceControllerSet && !deviceCapturing && currentDeviceController.isSetup();
+    final boolean deviceControllerSet = this.currentDevCtrl != null;
+    final boolean deviceCapturing = deviceControllerSet && this.currentDevCtrl.isCapturing();
+    final boolean deviceSetup = deviceControllerSet && !deviceCapturing && this.currentDevCtrl.isSetup();
 
     getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
     getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );

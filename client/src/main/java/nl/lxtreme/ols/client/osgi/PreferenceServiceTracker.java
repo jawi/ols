@@ -39,7 +39,7 @@ import org.osgi.util.tracker.*;
 
 
 /**
- * @author jawi
+ * Provides an OSGi service tracker for preference services.
  */
 public class PreferenceServiceTracker extends ServiceTracker
 {
@@ -303,14 +303,23 @@ public class PreferenceServiceTracker extends ServiceTracker
   @Override
   public Object addingService( final ServiceReference aReference )
   {
-    this.preferenceService = ( PreferencesService )this.context.getService( aReference );
-    final String userName = System.getProperty( "user.name", "default" );
-
-    if ( this.windowStateListener == null )
+    try
     {
-      this.windowStateListener = new WindowStateListener( this.preferenceService, this.projectManager, userName );
-      // Install a global window state listener...
-      Toolkit.getDefaultToolkit().addAWTEventListener( this.windowStateListener, AWTEvent.WINDOW_EVENT_MASK );
+      this.preferenceService = ( PreferencesService )this.context.getService( aReference );
+
+      final String userName = System.getProperty( "user.name", "default" );
+
+      if ( this.windowStateListener == null )
+      {
+        this.windowStateListener = new WindowStateListener( this.preferenceService, this.projectManager, userName );
+        // Install a global window state listener...
+        Toolkit.getDefaultToolkit().addAWTEventListener( this.windowStateListener, AWTEvent.WINDOW_EVENT_MASK );
+      }
+    }
+    catch ( Exception exception )
+    {
+      LOG.log( Level.WARNING, "Preferences service not added! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
     }
 
     return this.preferenceService;
@@ -323,20 +332,21 @@ public class PreferenceServiceTracker extends ServiceTracker
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )
   {
-    if ( this.windowStateListener != null )
-    {
-      Toolkit.getDefaultToolkit().removeAWTEventListener( this.windowStateListener );
-
-      this.windowStateListener = null;
-    }
-
     try
     {
+      if ( this.windowStateListener != null )
+      {
+        Toolkit.getDefaultToolkit().removeAWTEventListener( this.windowStateListener );
+
+        this.windowStateListener = null;
+      }
+
       this.context.ungetService( aReference );
     }
-    catch ( IllegalStateException exception )
+    catch ( Exception exception )
     {
-      LOG.log( Level.FINE, "Ungetting service failed! Bundle context no longer valid!" );
+      LOG.log( Level.WARNING, "Preferences service not removed! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
     }
   }
 }

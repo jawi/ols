@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.osgi;
 import java.io.*;
 import java.text.*;
 import java.util.*;
+import java.util.logging.*;
 
 import org.osgi.framework.*;
 import org.osgi.service.log.*;
@@ -31,7 +32,7 @@ import org.osgi.util.tracker.*;
 
 
 /**
- * @author jawi
+ * Provides an OSGi service tracker for log readers.
  */
 public class LogReaderTracker extends ServiceTracker
 {
@@ -177,6 +178,10 @@ public class LogReaderTracker extends ServiceTracker
     }
   }
 
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( LogReaderTracker.class.getName() );
+
   // VARIABLES
 
   private LogListener logListener;
@@ -199,12 +204,22 @@ public class LogReaderTracker extends ServiceTracker
   @Override
   public Object addingService( final ServiceReference aReference )
   {
-    final LogReaderService logReaderService = ( LogReaderService )super.addingService( aReference );
-    if ( this.logListener == null )
+    LogReaderService logReaderService = null;
+    try
     {
-      this.logListener = new SimpleLogWriter();
+      logReaderService = ( LogReaderService )this.context.getService( aReference );
+      if ( this.logListener == null )
+      {
+        this.logListener = new SimpleLogWriter();
+      }
+      logReaderService.addLogListener( this.logListener );
     }
-    logReaderService.addLogListener( this.logListener );
+    catch ( Exception exception )
+    {
+      LOG.log( Level.WARNING, "Log reader service not added! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
+    }
+
     return logReaderService;
   }
 
@@ -225,10 +240,18 @@ public class LogReaderTracker extends ServiceTracker
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )
   {
-    if ( this.logListener != null )
+    try
     {
-      ( ( LogReaderService )aService ).removeLogListener( this.logListener );
+      if ( this.logListener != null )
+      {
+        ( ( LogReaderService )aService ).removeLogListener( this.logListener );
+      }
+      super.removedService( aReference, aService );
     }
-    super.removedService( aReference, aService );
+    catch ( Exception exception )
+    {
+      LOG.log( Level.WARNING, "Log reader service not removed! Reason: {0}", exception.getMessage() );
+      LOG.log( Level.FINE, "Details:", exception );
+    }
   }
 }
