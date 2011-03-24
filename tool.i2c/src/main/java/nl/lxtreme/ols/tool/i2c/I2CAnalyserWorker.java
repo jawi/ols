@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.i2c;
 
 
 import static nl.lxtreme.ols.util.NumberUtils.*;
+
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -44,6 +45,8 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
 
   private static final String CHANNEL_SCL_NAME = "SCL";
   private static final String CHANNEL_SDA_NAME = "SDA";
+
+  private static final int I2C_BITCOUNT = 8;
 
   private static final Logger LOG = Logger.getLogger( I2CAnalyserWorker.class.getName() );
 
@@ -192,7 +195,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     oldSCL = values[idx] & sclMask;
     oldSDA = values[idx] & sdaMask;
 
-    bitCount = 8;
+    bitCount = I2C_BITCOUNT;
     byteValue = 0;
 
     boolean startCondFound = false;
@@ -213,14 +216,14 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
     {
       final int dataValue = values[idx];
 
-      final int sda = dataValue & sdaMask;
-      final int scl = dataValue & sclMask;
+      final int sda = ( dataValue & sdaMask );
+      final int scl = ( dataValue & sclMask );
 
       // detect SCL fall/rise
       if ( oldSCL > scl )
       {
         // SCL falls
-        if ( ( prevIdx < 0 ) || ( bitCount == 8 ) )
+        if ( ( prevIdx < 0 ) || ( bitCount == I2C_BITCOUNT ) )
         {
           prevIdx = idx;
         }
@@ -234,7 +237,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
           if ( startCondFound )
           {
             // This is the (7- or 10-bit) address part...
-            direction = byteValue & 0x01;
+            direction = ( byteValue & 0x01 );
 
             if ( ( byteValue & 0xf8 ) == 0xf0 )
             {
@@ -314,7 +317,8 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
             }
 
             // next byte
-            bitCount = 8;
+            bitCount = I2C_BITCOUNT;
+            byteValue = 0;
           }
         }
       }
@@ -323,7 +327,7 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
       if ( ( scl == sclMask ) && ( sda != oldSDA ) )
       {
         // SDA changes here
-        if ( bitCount < 7 )
+        if ( ( bitCount > 0 ) && ( bitCount < ( I2C_BITCOUNT - 1 ) ) )
         {
           // bus error, no complete byte detected
           reportBusError( i2cDataSet, idx );
@@ -349,8 +353,10 @@ public class I2CAnalyserWorker extends BaseAsyncToolWorker<I2CDataSet>
 
             startCondFound = true;
           }
+
           // new byte
-          bitCount = 8;
+          bitCount = I2C_BITCOUNT;
+          byteValue = 0;
         }
       }
 
