@@ -595,7 +595,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       LOG.log( Level.FINE, "Awaiting trigger ..." );
 
       // wait for first byte forever (trigger could cause long initial delays)
-      while ( waiting && !isCancelledOrStopped() )
+      while ( waiting && !isCancelled() )
       {
         try
         {
@@ -627,7 +627,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       // read all other samples
       try
       {
-        for ( ; ( sampleIdx >= 0 ) && !isCancelledOrStopped(); sampleIdx-- )
+        for ( ; ( sampleIdx >= 0 ) && !isCancelled(); sampleIdx-- )
         {
           buffer[sampleIdx] = readSample();
           setProgress( 100 - ( 100 * sampleIdx ) / buffer.length );
@@ -1262,7 +1262,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    */
   private int readSample() throws IOException, InterruptedException
   {
-    final int baseTimeout = 10000;
+    final int baseTimeout = 1000; // 1 second
 
     int v, value = 0;
     int timeout = 4 * baseTimeout;
@@ -1279,8 +1279,11 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     }
     if ( timeout < 0 )
     {
-      // Flag this read as
-      throw new InterruptedIOException( "Device did not respond within " + baseTimeout + " milliseconds!" );
+      // Flag this read as incomplete...
+      LOG.log( Level.INFO,
+          "Read sample timeout occurred (no response within {0} milliseconds)! Capture will continue...",
+          Integer.valueOf( baseTimeout ) );
+      throw new InterruptedException();
     }
 
     final int groupCount = this.config.getGroupCount();

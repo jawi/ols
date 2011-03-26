@@ -143,7 +143,7 @@ public class LogicSnifferDeviceController implements DeviceController
       @Override
       protected void done()
       {
-        if ( isCancelled() || isStopped() )
+        if ( isCancelled() )
         {
           LOG.log( Level.INFO, "Capture cancelled by user..." );
 
