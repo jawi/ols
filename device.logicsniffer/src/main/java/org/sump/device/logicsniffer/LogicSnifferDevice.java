@@ -212,11 +212,14 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
             // resp. 32-bit values, so we need to take two samples for each
             // count (as they are 8- or 16-bits in DDR mode).
             // This should also solve issue #31...
+
             // XXX should be multiplied by two, as suggested by DavidFrancis?!
+            // Tests with a 25MHz crystal show good results, without
+            // multiplication...
             count = ( count << rleShiftBits ) | normalizeSampleValue( this.buffer[++i] );
           }
 
-          if ( oldSample >= 0 ) // XXX
+          if ( oldSample >= 0 )
           {
             time += count;
           }
