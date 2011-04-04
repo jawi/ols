@@ -92,13 +92,13 @@ public class ClockFrequencyMeasureWorkerTest
         long timestamp = i * TIME_INTERVAL;
 
         final double nextGaussianTimeInterval = timestampRnd.nextGaussian();
-        if ( nextGaussianTimeInterval < this.jitterPercentage )
+        if ( nextGaussianTimeInterval > this.jitterPercentage )
         {
           timestamp += nextGaussianTimeInterval;
         }
 
         final double nextGaussianSampleValue = valueRnd.nextGaussian();
-        if ( nextGaussianSampleValue < ( this.jitterPercentage / 4.0 ) )
+        if ( nextGaussianSampleValue > ( this.jitterPercentage / 4.0 ) )
         {
           int mask = 1 << valueRnd.nextInt( 8 );
           if ( ( sampleValue & mask ) != 0 )
