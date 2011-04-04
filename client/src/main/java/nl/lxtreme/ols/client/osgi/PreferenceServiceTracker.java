@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.osgi;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.swing.*;
@@ -83,7 +84,7 @@ public class PreferenceServiceTracker extends ServiceTracker
       this.projectManager = aProjectManager;
       this.preferenceService = aPreferenceService;
 
-      this.prefsLoaded = new HashMap<String, Boolean>();
+      this.prefsLoaded = new ConcurrentHashMap<String, Boolean>();
     }
 
     // METHODS
@@ -106,16 +107,13 @@ public class PreferenceServiceTracker extends ServiceTracker
 
       if ( ( id == WindowEvent.WINDOW_OPENED ) || ( id == WindowEvent.WINDOW_ACTIVATED ) )
       {
-        synchronized ( new Object() )
+        // When we've already set the preferences once; don't do this again...
+        if ( arePreferencesLoaded( namespace ) )
         {
-          // When we've already set the preferences once; don't do this again...
-          if ( arePreferencesLoaded( namespace ) )
-          {
-            return;
-          }
-
-          loadPreferences( component, namespace );
+          return;
         }
+
+        loadPreferences( component, namespace );
       }
       else if ( id == WindowEvent.WINDOW_CLOSED )
       {
@@ -253,6 +251,10 @@ public class PreferenceServiceTracker extends ServiceTracker
       {
         LOG.log( Level.WARNING, "Writing dialog properties failed!", exception );
       }
+      finally
+      {
+        unregisterPreferencesLoaded( aNamespace );
+      }
     }
 
     /**
@@ -265,6 +267,17 @@ public class PreferenceServiceTracker extends ServiceTracker
     private void setUserSettings( final UserSettings aUserSettings )
     {
       this.projectManager.getCurrentProject().setSettings( aUserSettings );
+    }
+
+    /**
+     * Removes the flag that the preferences are loaded for the given namespace.
+     * 
+     * @param aNamespace
+     *          the namespace key to check.
+     */
+    private void unregisterPreferencesLoaded( final String aNamespace )
+    {
+      this.prefsLoaded.remove( aNamespace );
     }
   }
 
