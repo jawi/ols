@@ -27,7 +27,7 @@ import java.util.*;
 /**
  * Provides a frequency distribution.
  */
-public final class Frequency<TYPE extends Comparable<TYPE>>
+public final class Frequency<TYPE extends Number & Comparable<TYPE>>
 {
   // VARIABLES
 
@@ -185,6 +185,28 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
       }
     }
 
+    return result;
+  }
+
+  /**
+   * Returns the number of unique values in this frequency distribution map.
+   * 
+   * @return a unique value count, >= 0.
+   */
+  public int getUniqueValueCount()
+  {
+    return this.distribution.keySet().size();
+  }
+
+  /**
+   * Returns an iterator for the values in this frequency distribution map.
+   * 
+   * @return an iterator with all values, sorted in natural order.
+   */
+  public Iterable<TYPE> values()
+  {
+    final List<TYPE> result = new ArrayList<TYPE>( this.distribution.keySet() );
+    Collections.sort( result );
     return result;
   }
 }
