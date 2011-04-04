@@ -47,13 +47,13 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     /**
      * 
      */
-    ClockStats( final long aRising, final long aFalling, final long aSampleRate )
+    ClockStats( final long aBestRising, final long aBestFalling, final long aSampleRate )
     {
-      this.rising = aRising;
-      this.falling = aFalling;
+      this.rising = aBestRising;
+      this.falling = aBestFalling;
 
-      this.period = ( this.rising + this.falling );
-      this.frequency = aSampleRate / ( double )( this.rising + this.falling );
+      this.period = this.rising + this.falling;
+      this.frequency = aSampleRate / this.period;
     }
 
     /**
@@ -131,9 +131,61 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     // Populate with empty distribution maps...
     this.stats.put( Edge.RISING, new Frequency<Long>() );
     this.stats.put( Edge.FALLING, new Frequency<Long>() );
+    this.stats.put( Edge.NONE, new Frequency<Long>() );
   }
 
   // METHODS
+
+  /**
+   * @param aFrequencyDistribution
+   * @return
+   */
+  private static double getMean( final Frequency<Long> aFrequencyDistribution )
+  {
+    double mean = 0;
+    for ( Long value : aFrequencyDistribution.values() )
+    {
+      if ( value != null )
+      {
+        mean += value.longValue();
+      }
+    }
+    mean /= aFrequencyDistribution.getUniqueValueCount();
+    return mean;
+  }
+
+  /**
+   * @param aFrequencyDistribution
+   * @return
+   */
+  private static double getVariance( final Frequency<Long> aFrequencyDistribution, final double aMean )
+  {
+    double variance = 0;
+    for ( Long value : aFrequencyDistribution.values() )
+    {
+      if ( value != null )
+      {
+        final double d = value.doubleValue() - aMean;
+        variance += ( d * d );
+      }
+    }
+    variance /= aFrequencyDistribution.getUniqueValueCount();
+    return variance;
+  }
+
+  /**
+   * @param aValue
+   * @param aDefault
+   * @return
+   */
+  private static long nvl( final Long aValue, final long aDefault )
+  {
+    if ( aValue == null )
+    {
+      return aDefault;
+    }
+    return aValue.longValue();
+  }
 
   /**
    * @see javax.swing.SwingWorker#doInBackground()
@@ -148,13 +200,14 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     int start = context.getStartSampleIndex();
     int end = context.getEndSampleIndex();
 
-    // Make sure no other stuff from previous runs keep lingering...
-    this.stats.get( Edge.RISING ).clear();
-    this.stats.get( Edge.FALLING ).clear();
-
     int i = Math.max( 0, start - 1 );
     long lastTransition = 0;
     int lastBitValue = values[i] & this.channelMask;
+
+    long prevTime = -1L;
+    Edge edge = null;
+
+    final double sr = getSampleRate();
 
     for ( ; i < end; i++ )
     {
@@ -162,7 +215,6 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
       if ( lastBitValue != bitValue )
       {
-        final Edge edge;
         if ( lastBitValue > bitValue )
         {
           // rising edge
@@ -174,8 +226,22 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
           edge = Edge.FALLING;
         }
 
+        final long time = timestamps[i] - lastTransition;
+
         final Frequency<Long> edgeStats = this.stats.get( edge );
-        edgeStats.addValue( Long.valueOf( ( timestamps[i] - lastTransition ) ) );
+        edgeStats.addValue( Long.valueOf( time ) );
+
+        if ( prevTime >= 0 )
+        {
+          long diff = time + prevTime;
+          System.out.printf( "p = %f, dc = %.3f\n", ( sr / diff ), ( ( time / ( double )diff ) * 100.0 ) );
+          this.stats.get( Edge.NONE ).addValue( Long.valueOf( diff ) );
+          prevTime = -1L;
+        }
+        else
+        {
+          prevTime = time;
+        }
 
         lastTransition = timestamps[i];
       }
@@ -183,10 +249,14 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
       lastBitValue = bitValue;
     }
 
-    final Long bestRising = this.stats.get( Edge.RISING ).getHighestRanked();
-    final Long bestFalling = this.stats.get( Edge.FALLING ).getHighestRanked();
+    final Frequency<Long> risingEdgeStats = this.stats.get( Edge.RISING );
+    final long bestRising = nvl( risingEdgeStats.getHighestRanked(), 0L );
 
-    return new ClockStats( ( bestRising == null ) ? 0 : bestRising.longValue(), //
-        ( bestFalling == null ) ? 0 : bestFalling.longValue(), getSampleRate() );
+    final Frequency<Long> fallingEdgeStats = this.stats.get( Edge.FALLING );
+    final long bestFalling = nvl( fallingEdgeStats.getHighestRanked(), 0L );
+
+    System.out.println( "" );
+
+    return new ClockStats( bestRising, bestFalling, getSampleRate() );
   }
 }

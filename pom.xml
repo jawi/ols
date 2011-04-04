@@ -29,7 +29,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<ols.version>0.9.4-rc1</ols.version>
+		<ols.version>0.9.4-rc2</ols.version>
 	</properties>
 	<modules>
 		<module>api</module>
