@@ -27,7 +27,7 @@ import java.util.*;
 /**
  * Provides a frequency distribution.
  */
-public final class Frequency<TYPE extends Number & Comparable<TYPE>>
+public final class Frequency<TYPE extends Comparable<TYPE>>
 {
   // VARIABLES
 
