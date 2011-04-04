@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * 
  * Copyright (C) 2010-2011 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.test.data;
@@ -65,18 +65,33 @@ public final class DataTestUtils
    */
   static class DefaultTestDataProvider implements TestDataProvider
   {
+    private final int channelCount;
+
+    /**
+     * Creates a new DataTestUtils.DefaultTestDataProvider instance.
+     */
+    public DefaultTestDataProvider( final int aChannelCount )
+    {
+      this.channelCount = aChannelCount;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void fillData( final int[] aValues, final long[] aTimestamps, final int aDataSize )
     {
+      final int offset = ( this.channelCount < 2 ) ? 1 : ( this.channelCount / 2 );
       int value = 0xAA;
       for ( int i = 0; i < aDataSize; i++ )
       {
+        if ( i % offset == 0 )
+        {
+          value = ( value == 0xAA ) ? 0x55 : 0xAA;
+        }
+
         aValues[i] = value;
-        aTimestamps[i] = ( i * 2L );
-        value = ( value == 0xAA ) ? 0x55 : 0xAA;
+        aTimestamps[i] = ( i * 2 );
       }
     }
   }
@@ -168,7 +183,7 @@ public final class DataTestUtils
   public static DataContainer createMockDataContainer( final int aDataSize, final int aChannelCount,
       final int aSampleRate )
   {
-    return createMockDataContainer( aDataSize, aChannelCount, aSampleRate, new DefaultTestDataProvider() );
+    return createMockDataContainer( aDataSize, aChannelCount, aSampleRate, new DefaultTestDataProvider( aChannelCount ) );
   }
 
   /**
