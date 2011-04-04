@@ -71,7 +71,7 @@ public class ClockFrequencyMeasureWorkerTest
      */
     public JitteredTestDataProvider( final double aJitterPercentage )
     {
-      this.jitterPercentage = aJitterPercentage * -10.0;
+      this.jitterPercentage = aJitterPercentage / 100.00;
     }
 
     // METHODS
@@ -84,7 +84,6 @@ public class ClockFrequencyMeasureWorkerTest
     {
       Random valueRnd = new Random();
       Random timestampRnd = new Random();
-      Random miscRnd = new Random();
 
       int value = 0xAA;
       for ( int i = 0; i < aDataSize; i++ )
@@ -101,14 +100,14 @@ public class ClockFrequencyMeasureWorkerTest
         final double nextGaussianSampleValue = valueRnd.nextGaussian();
         if ( nextGaussianSampleValue < ( this.jitterPercentage / 4.0 ) )
         {
-          int mask = 1 << miscRnd.nextInt( 8 );
-          if ( ( sampleValue & mask ) == 0 )
+          int mask = 1 << valueRnd.nextInt( 8 );
+          if ( ( sampleValue & mask ) != 0 )
           {
-            sampleValue |= mask;
+            sampleValue &= ~mask;
           }
           else
           {
-            sampleValue &= ~mask;
+            sampleValue |= mask;
           }
         }
 
@@ -186,10 +185,10 @@ public class ClockFrequencyMeasureWorkerTest
             { 256 /* samples */, 33333333 /* Hz */, 0.15 }, // 25
             { 256 /* samples */, 100000003 /* Hz */, 0.15 }, // 26
 
-            { 64 /* samples */, 3 /* Hz */, 0.05 }, // 27
-            { 64 /* samples */, 33 /* Hz */, 0.05 }, // 28
-            { 64 /* samples */, 111 /* Hz */, 0.05 }, // 29
-            { 64 /* samples */, 333 /* Hz */, 0.05 }, // 30
+            { 256 /* samples */, 3 /* Hz */, 0.05 }, // 27
+            { 256 /* samples */, 33 /* Hz */, 0.05 }, // 28
+            { 256 /* samples */, 111 /* Hz */, 0.05 }, // 29
+            { 256 /* samples */, 333 /* Hz */, 0.05 }, // 30
         } );
   }
 
@@ -215,7 +214,7 @@ public class ClockFrequencyMeasureWorkerTest
     ClockStats result = this.worker.doInBackground();
 
     assertNotNull( result );
-    assertEquals( 0.5, result.getDutyCycle(), 0.1 );
-    assertEquals( this.sampleRate, result.getFrequency(), 1.0 );
+    assertEquals( 0.5, result.getDutyCycle(), 0.001 );
+    assertEquals( this.sampleRate, result.getFrequency(), 0.0001 );
   }
 }

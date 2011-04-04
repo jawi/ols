@@ -21,8 +21,6 @@
 package nl.lxtreme.ols.tool.measure;
 
 
-import java.util.*;
-
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
@@ -102,10 +100,138 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     }
   }
 
+  /**
+   * 
+   */
+  static class ClockPeriodStats implements Comparable<ClockPeriodStats>
+  {
+    // VARIABLES
+
+    private final long period1;
+    private final long period2;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new ClockFrequencyMeasureWorker.ClockPeriodStats instance.
+     */
+    public ClockPeriodStats( final long aPeriod1, final long aPeriod2 )
+    {
+      this.period1 = aPeriod1;
+      this.period2 = aPeriod2;
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int compareTo( final ClockPeriodStats aOtherStats )
+    {
+      long p1 = getTotalPeriod();
+      long p2 = aOtherStats.getTotalPeriod();
+      int result = ( int )( p1 - p2 );
+      if ( result == 0 )
+      {
+        p1 = getPeriod1();
+        p2 = aOtherStats.getPeriod1();
+        result = ( int )( p1 - p2 );
+        if ( result == 0 )
+        {
+          p1 = getPeriod2();
+          p2 = aOtherStats.getPeriod2();
+          result = ( int )( p1 - p2 );
+        }
+      }
+      return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals( final Object aObject )
+    {
+      if ( this == aObject )
+      {
+        return true;
+      }
+      if ( ( aObject == null ) || !( aObject instanceof ClockPeriodStats ) )
+      {
+        return false;
+      }
+
+      final ClockPeriodStats other = ( ClockPeriodStats )aObject;
+      if ( this.period1 != other.period1 )
+      {
+        return false;
+      }
+      if ( this.period2 != other.period2 )
+      {
+        return false;
+      }
+      return true;
+    }
+
+    /**
+     * Returns the current value of period1.
+     * 
+     * @return the period1
+     */
+    public long getPeriod1()
+    {
+      return this.period1;
+    }
+
+    /**
+     * Returns the current value of period2.
+     * 
+     * @return the period2
+     */
+    public long getPeriod2()
+    {
+      return this.period2;
+    }
+
+    /**
+     * Returns the total period value.
+     * 
+     * @return the value of period1 + period2.
+     */
+    public long getTotalPeriod()
+    {
+      return this.period1 + this.period2;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode()
+    {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ( int )( this.period1 ^ ( this.period1 >>> 32 ) );
+      result = prime * result + ( int )( this.period2 ^ ( this.period2 >>> 32 ) );
+      return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString()
+    {
+      return String.format( "[%d, %d] => (%.3f)", Long.valueOf( this.period1 ), Long.valueOf( this.period2 ),
+          Double.valueOf( this.period1 / ( double )( this.period2 + this.period1 ) ) );
+    }
+  }
+
   // VARIABLES
 
   private final int channelMask;
-  private final Map<Edge, Frequency<Long>> stats;
+  private final Frequency<ClockPeriodStats> periodStats;
 
   // CONSTRUCTORS
 
@@ -127,65 +253,10 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
     this.channelMask = ( 1 << aChannel );
 
-    this.stats = new HashMap<Edge, Frequency<Long>>( 2 );
-    // Populate with empty distribution maps...
-    this.stats.put( Edge.RISING, new Frequency<Long>() );
-    this.stats.put( Edge.FALLING, new Frequency<Long>() );
-    this.stats.put( Edge.NONE, new Frequency<Long>() );
+    this.periodStats = new Frequency<ClockPeriodStats>();
   }
 
   // METHODS
-
-  /**
-   * @param aFrequencyDistribution
-   * @return
-   */
-  private static double getMean( final Frequency<Long> aFrequencyDistribution )
-  {
-    double mean = 0;
-    for ( Long value : aFrequencyDistribution.values() )
-    {
-      if ( value != null )
-      {
-        mean += value.longValue();
-      }
-    }
-    mean /= aFrequencyDistribution.getUniqueValueCount();
-    return mean;
-  }
-
-  /**
-   * @param aFrequencyDistribution
-   * @return
-   */
-  private static double getVariance( final Frequency<Long> aFrequencyDistribution, final double aMean )
-  {
-    double variance = 0;
-    for ( Long value : aFrequencyDistribution.values() )
-    {
-      if ( value != null )
-      {
-        final double d = value.doubleValue() - aMean;
-        variance += ( d * d );
-      }
-    }
-    variance /= aFrequencyDistribution.getUniqueValueCount();
-    return variance;
-  }
-
-  /**
-   * @param aValue
-   * @param aDefault
-   * @return
-   */
-  private static long nvl( final Long aValue, final long aDefault )
-  {
-    if ( aValue == null )
-    {
-      return aDefault;
-    }
-    return aValue.longValue();
-  }
 
   /**
    * @see javax.swing.SwingWorker#doInBackground()
@@ -202,12 +273,9 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
     int i = Math.max( 0, start - 1 );
     long lastTransition = 0;
-    int lastBitValue = values[i] & this.channelMask;
+    int lastBitValue = values[i++] & this.channelMask;
 
-    long prevTime = -1L;
-    Edge edge = null;
-
-    final double sr = getSampleRate();
+    Long prevPeriodTime = null;
 
     for ( ; i < end; i++ )
     {
@@ -215,32 +283,18 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
       if ( lastBitValue != bitValue )
       {
-        if ( lastBitValue > bitValue )
+        final long periodTime = timestamps[i] - lastTransition;
+
+        if ( prevPeriodTime != null )
         {
-          // rising edge
-          edge = Edge.RISING;
+          final ClockPeriodStats stats = new ClockPeriodStats( prevPeriodTime.longValue(), periodTime );
+          this.periodStats.addValue( stats );
+
+          prevPeriodTime = null;
         }
         else
         {
-          // falling edge
-          edge = Edge.FALLING;
-        }
-
-        final long time = timestamps[i] - lastTransition;
-
-        final Frequency<Long> edgeStats = this.stats.get( edge );
-        edgeStats.addValue( Long.valueOf( time ) );
-
-        if ( prevTime >= 0 )
-        {
-          long diff = time + prevTime;
-          System.out.printf( "p = %f, dc = %.3f\n", ( sr / diff ), ( ( time / ( double )diff ) * 100.0 ) );
-          this.stats.get( Edge.NONE ).addValue( Long.valueOf( diff ) );
-          prevTime = -1L;
-        }
-        else
-        {
-          prevTime = time;
+          prevPeriodTime = Long.valueOf( periodTime );
         }
 
         lastTransition = timestamps[i];
@@ -249,14 +303,10 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
       lastBitValue = bitValue;
     }
 
-    final Frequency<Long> risingEdgeStats = this.stats.get( Edge.RISING );
-    final long bestRising = nvl( risingEdgeStats.getHighestRanked(), 0L );
+    final ClockPeriodStats best = this.periodStats.getHighestRanked();
 
-    final Frequency<Long> fallingEdgeStats = this.stats.get( Edge.FALLING );
-    final long bestFalling = nvl( fallingEdgeStats.getHighestRanked(), 0L );
+    System.out.println( "" + best );
 
-    System.out.println( "" );
-
-    return new ClockStats( bestRising, bestFalling, getSampleRate() );
+    return new ClockStats( best.getPeriod1(), best.getPeriod2(), getSampleRate() );
   }
 }
