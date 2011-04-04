@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.osgi;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.swing.*;
@@ -83,7 +84,7 @@ public class PreferenceServiceTracker extends ServiceTracker
       this.projectManager = aProjectManager;
       this.preferenceService = aPreferenceService;
 
-      this.prefsLoaded = new HashMap<String, Boolean>();
+      this.prefsLoaded = new ConcurrentHashMap<String, Boolean>();
     }
 
     // METHODS
@@ -106,19 +107,24 @@ public class PreferenceServiceTracker extends ServiceTracker
 
       if ( ( id == WindowEvent.WINDOW_OPENED ) || ( id == WindowEvent.WINDOW_ACTIVATED ) )
       {
-        synchronized ( new Object() )
+        // When we've already loaded the preferences once; don't do this
+        // again...
+        if ( arePreferencesLoaded( namespace ) )
         {
-          // When we've already set the preferences once; don't do this again...
-          if ( arePreferencesLoaded( namespace ) )
-          {
-            return;
-          }
-
-          loadPreferences( component, namespace );
+          return;
         }
+
+        loadPreferences( component, namespace );
       }
       else if ( id == WindowEvent.WINDOW_CLOSED )
       {
+        // When we've already written the preferences once; don't do this
+        // again...
+        if ( arePreferencesSaved( namespace ) )
+        {
+          return;
+        }
+
         savePreferences( component, namespace );
       }
     }
@@ -136,6 +142,20 @@ public class PreferenceServiceTracker extends ServiceTracker
     {
       Boolean result = this.prefsLoaded.get( aNamespace );
       return Boolean.TRUE.equals( result );
+    }
+
+    /**
+     * Returns whether or not the preferences are saved for the given namespace.
+     * 
+     * @param aNamespace
+     *          the namespace key to check.
+     * @return <code>true</code> if the (Window) preferences of the given
+     *         namespace are already saved once, <code>false</code> otherwise.
+     */
+    private boolean arePreferencesSaved( final String aNamespace )
+    {
+      Boolean result = this.prefsLoaded.get( aNamespace );
+      return Boolean.FALSE.equals( result );
     }
 
     /**
@@ -217,6 +237,17 @@ public class PreferenceServiceTracker extends ServiceTracker
     }
 
     /**
+     * Removes the flag that the preferences are loaded for the given namespace.
+     * 
+     * @param aNamespace
+     *          the namespace key to check.
+     */
+    private void registerPreferencesSaved( final String aNamespace )
+    {
+      this.prefsLoaded.put( aNamespace, Boolean.FALSE );
+    }
+
+    /**
      * Saves the preferences for the given window using the given namespace.
      * 
      * @param aComponent
@@ -252,6 +283,10 @@ public class PreferenceServiceTracker extends ServiceTracker
       catch ( RuntimeException exception )
       {
         LOG.log( Level.WARNING, "Writing dialog properties failed!", exception );
+      }
+      finally
+      {
+        registerPreferencesSaved( aNamespace );
       }
     }
 

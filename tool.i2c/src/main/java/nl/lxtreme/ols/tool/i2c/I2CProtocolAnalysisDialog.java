@@ -149,6 +149,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     this.lineA.setSelectedIndex( aSettings.getInt( "lineA", this.lineA.getSelectedIndex() ) );
     this.lineB.setSelectedIndex( aSettings.getInt( "lineB", this.lineB.getSelectedIndex() ) );
 
+    this.detectSDA_SCL.setSelected( aSettings.getBoolean( "detectSDA_SCL", this.detectSDA_SCL.isSelected() ) );
     this.detectSTART.setSelected( aSettings.getBoolean( "detectStart", this.detectSTART.isSelected() ) );
     this.detectSTOP.setSelected( aSettings.getBoolean( "detectStop", this.detectSTOP.isSelected() ) );
     this.detectNACK.setSelected( aSettings.getBoolean( "detectNack", this.detectNACK.isSelected() ) );
@@ -229,6 +230,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     aSettings.putInt( "lineA", this.lineA.getSelectedIndex() );
     aSettings.putInt( "lineB", this.lineB.getSelectedIndex() );
 
+    aSettings.putBoolean( "detectSDA_SCL", this.detectSDA_SCL.isSelected() );
     aSettings.putBoolean( "detectStart", this.detectSTART.isSelected() );
     aSettings.putBoolean( "detectStop", this.detectSTOP.isSelected() );
     aSettings.putBoolean( "detectNack", this.detectNACK.isSelected() );
