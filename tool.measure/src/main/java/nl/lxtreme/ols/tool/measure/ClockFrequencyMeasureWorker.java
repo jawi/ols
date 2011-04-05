@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.tool.measure;
 
 
+import java.util.logging.*;
+
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
@@ -228,6 +230,10 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
     }
   }
 
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( ClockFrequencyMeasureWorker.class.getName() );
+
   // VARIABLES
 
   private final int channelMask;
@@ -305,7 +311,8 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
     final ClockPeriodStats best = this.periodStats.getHighestRanked();
 
-    System.out.println( "" + best );
+    LOG.info( String.format( "Choose period: %s (%d occurrences, %d unique values)", best,
+        this.periodStats.getCount( best ), this.periodStats.getUniqueValueCount() ) );
 
     return new ClockStats( best.getPeriod1(), best.getPeriod2(), getSampleRate() );
   }
