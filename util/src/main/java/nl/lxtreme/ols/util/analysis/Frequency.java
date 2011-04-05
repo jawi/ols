@@ -22,6 +22,7 @@ package nl.lxtreme.ols.util.analysis;
 
 
 import java.util.*;
+import java.util.concurrent.*;
 
 
 /**
@@ -31,7 +32,7 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
 {
   // VARIABLES
 
-  private final NavigableMap<TYPE, Long> distribution;
+  private final ConcurrentNavigableMap<TYPE, Long> distribution;
 
   // CONSTRUCTORS
 
@@ -40,7 +41,7 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
    */
   public Frequency()
   {
-    this.distribution = new TreeMap<TYPE, Long>();
+    this.distribution = new ConcurrentSkipListMap<TYPE, Long>();
   }
 
   /**
@@ -59,7 +60,7 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
     {
       throw new IllegalArgumentException( "Comparator cannot be null!" );
     }
-    this.distribution = new TreeMap<TYPE, Long>( aComparator );
+    this.distribution = new ConcurrentSkipListMap<TYPE, Long>( aComparator );
   }
 
   // METHODS
@@ -99,10 +100,7 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
    */
   public void clear()
   {
-    synchronized ( this.distribution )
-    {
-      this.distribution.clear();
-    }
+    this.distribution.clear();
   }
 
   /**
@@ -122,13 +120,10 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
 
     long result = 0L;
 
-    synchronized ( this.distribution )
+    Long count = this.distribution.get( aValue );
+    if ( count != null )
     {
-      Long count = this.distribution.get( aValue );
-      if ( count != null )
-      {
-        result = count.longValue();
-      }
+      result = count.longValue();
     }
 
     return result;
@@ -144,17 +139,14 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
   {
     TYPE result = null;
 
-    synchronized ( this.distribution )
-    {
-      Long rank = null;
+    Long rank = null;
 
-      for ( final Map.Entry<TYPE, Long> entry : this.distribution.entrySet() )
+    for ( final Map.Entry<TYPE, Long> entry : this.distribution.entrySet() )
+    {
+      if ( ( rank == null ) || ( rank.compareTo( entry.getValue() ) < 0 ) )
       {
-        if ( ( rank == null ) || ( rank.compareTo( entry.getValue() ) < 0 ) )
-        {
-          rank = entry.getValue();
-          result = entry.getKey();
-        }
+        rank = entry.getValue();
+        result = entry.getKey();
       }
     }
 
@@ -171,21 +163,38 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
   {
     TYPE result = null;
 
-    synchronized ( this.distribution )
-    {
-      Long rank = null;
+    Long rank = null;
 
-      for ( final Map.Entry<TYPE, Long> entry : this.distribution.entrySet() )
+    for ( final Map.Entry<TYPE, Long> entry : this.distribution.entrySet() )
+    {
+      if ( ( rank == null ) || ( rank.compareTo( entry.getValue() ) > 0 ) )
       {
-        if ( ( rank == null ) || ( rank.compareTo( entry.getValue() ) > 0 ) )
-        {
-          rank = entry.getValue();
-          result = entry.getKey();
-        }
+        rank = entry.getValue();
+        result = entry.getKey();
       }
     }
 
     return result;
+  }
+
+  /**
+   * Returns the number of entries in this frequency distribution map.
+   * 
+   * @return a size, >= 0.
+   */
+  public long getTotalCount()
+  {
+    long totalCount = 0L;
+
+    for ( final Long count : this.distribution.values() )
+    {
+      if ( count != null )
+      {
+        totalCount += count.longValue();
+      }
+    }
+
+    return totalCount;
   }
 
   /**
@@ -195,7 +204,11 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
    */
   public int getUniqueValueCount()
   {
-    return this.distribution.keySet().size();
+    int size = 0;
+
+    size = this.distribution.keySet().size();
+
+    return size;
   }
 
   /**
@@ -205,7 +218,10 @@ public final class Frequency<TYPE extends Comparable<TYPE>>
    */
   public Iterable<TYPE> values()
   {
-    final List<TYPE> result = new ArrayList<TYPE>( this.distribution.keySet() );
+    final List<TYPE> result = new ArrayList<TYPE>();
+
+    result.addAll( this.distribution.keySet() );
+
     Collections.sort( result );
     return result;
   }

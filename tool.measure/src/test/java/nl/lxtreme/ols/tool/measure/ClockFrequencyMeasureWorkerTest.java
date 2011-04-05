@@ -53,7 +53,6 @@ public class ClockFrequencyMeasureWorkerTest
     // VARIABLES
 
     private final double jitterPercentage;
-    private final int sampleRate;
 
     // CONSTRUCTORS
 
@@ -61,18 +60,8 @@ public class ClockFrequencyMeasureWorkerTest
      * Creates a new ClockFrequencyMeasureWorkerTest.JitteredTestDataProvider
      * instance.
      */
-    public JitteredTestDataProvider( final int aSampleRate )
+    public JitteredTestDataProvider( final double aJitterPercentage )
     {
-      this( aSampleRate, 0.2 );
-    }
-
-    /**
-     * Creates a new ClockFrequencyMeasureWorkerTest.JitteredTestDataProvider
-     * instance.
-     */
-    public JitteredTestDataProvider( final int aSampleRate, final double aJitterPercentage )
-    {
-      this.sampleRate = aSampleRate;
       this.jitterPercentage = aJitterPercentage;
     }
 
@@ -98,8 +87,8 @@ public class ClockFrequencyMeasureWorkerTest
         if ( miscRnd.nextDouble() < this.jitterPercentage )
         {
           final double nextGaussianTimeInterval = timestampRnd.nextGaussian();
-          final int j = ( int )( ( 0.5 * TIME_INTERVAL ) * nextGaussianTimeInterval );
-          interval += j;
+          final int jitterValue = ( int )( ( 0.5 * TIME_INTERVAL ) * nextGaussianTimeInterval );
+          interval += jitterValue;
         }
         timestamp += interval;
 
@@ -121,8 +110,6 @@ public class ClockFrequencyMeasureWorkerTest
 
         value = ( value == 0xAA ) ? 0x55 : 0xAA;
       }
-
-      System.out.println( "Timestamps: " + Arrays.toString( aTimestamps ) );
     }
   }
 
@@ -136,6 +123,8 @@ public class ClockFrequencyMeasureWorkerTest
   private final int dataSize;
   private final int sampleRate;
   private final TestDataProvider dataProvider;
+  private final double allowedDutyCycleTolerance;
+  private final double allowedFrequencyTolerance;
 
   private ClockFrequencyMeasureWorker worker;
 
@@ -144,11 +133,14 @@ public class ClockFrequencyMeasureWorkerTest
   /**
    * Creates a new ClockFrequencyMeasureWorkerTest instance.
    */
-  public ClockFrequencyMeasureWorkerTest( final int aDataSize, final int aSampleRate, final double aJitterFactor )
+  public ClockFrequencyMeasureWorkerTest( final int aDataSize, final int aSampleRate, final double aJitterFactor,
+      final double aDutyCycleTolerance, final double aFrequencyTolerance )
   {
     this.dataSize = aDataSize;
     this.sampleRate = aSampleRate;
-    this.dataProvider = new JitteredTestDataProvider( aSampleRate, aJitterFactor );
+    this.dataProvider = new JitteredTestDataProvider( aJitterFactor );
+    this.allowedDutyCycleTolerance = aDutyCycleTolerance;
+    this.allowedFrequencyTolerance = aFrequencyTolerance;
   }
 
   // METHODS
@@ -162,40 +154,48 @@ public class ClockFrequencyMeasureWorkerTest
   {
     return Arrays.asList( new Object[][] { //
         // { datasize, sample rate }
-            { 256 /* samples */, 1 /* Hz */, 0.1 }, // 0
-            { 256 /* samples */, 10 /* Hz */, 0.1 }, // 1
-            { 256 /* samples */, 100 /* Hz */, 0.1 }, // 2
-            { 256 /* samples */, 1000 /* Hz */, 0.1 }, // 3
-            { 256 /* samples */, 10000 /* Hz */, 0.1 }, // 4
-            { 256 /* samples */, 100000 /* Hz */, 0.1 }, // 5
-            { 256 /* samples */, 1000000 /* Hz */, 0.1 }, // 6
-            { 256 /* samples */, 10000000 /* Hz */, 0.1 }, // 7
-            { 256 /* samples */, 100000000 /* Hz */, 0.1 }, // 8
+            { 256 /* samples */, 1 /* Hz */, 0.1, 0.0001, 0.0001 }, // 0
+            { 256 /* samples */, 10 /* Hz */, 0.1, 0.0001, 0.0001 }, // 1
+            { 256 /* samples */, 100 /* Hz */, 0.1, 0.0001, 0.0001 }, // 2
+            { 256 /* samples */, 1000 /* Hz */, 0.1, 0.0001, 0.0001 }, // 3
+            { 256 /* samples */, 10000 /* Hz */, 0.1, 0.0001, 0.0001 }, // 4
+            { 256 /* samples */, 100000 /* Hz */, 0.1, 0.0001, 0.0001 }, // 5
+            { 256 /* samples */, 1000000 /* Hz */, 0.1, 0.0001, 0.0001 }, // 6
+            { 256 /* samples */, 10000000 /* Hz */, 0.1, 0.0001, 0.0001 }, // 7
+            { 256 /* samples */, 100000000 /* Hz */, 0.1, 0.0001, 0.0001 }, // 8
 
-            { 256 /* samples */, 5 /* Hz */, 0.2 }, // 9
-            { 256 /* samples */, 50 /* Hz */, 0.2 }, // 10
-            { 256 /* samples */, 500 /* Hz */, 0.2 }, // 11
-            { 256 /* samples */, 5000 /* Hz */, 0.2 }, // 12
-            { 256 /* samples */, 50000 /* Hz */, 0.2 }, // 13
-            { 256 /* samples */, 500000 /* Hz */, 0.2 }, // 14
-            { 256 /* samples */, 5000000 /* Hz */, 0.2 }, // 15
-            { 256 /* samples */, 50000000 /* Hz */, 0.2 }, // 16
-            { 256 /* samples */, 100000000 /* Hz */, 0.2 }, // 17
+            { 256 /* samples */, 5 /* Hz */, 0.2, 0.0001, 0.0001 }, // 9
+            { 256 /* samples */, 50 /* Hz */, 0.2, 0.0001, 0.0001 }, // 10
+            { 256 /* samples */, 500 /* Hz */, 0.2, 0.0001, 0.0001 }, // 11
+            { 256 /* samples */, 5000 /* Hz */, 0.2, 0.0001, 0.0001 }, // 12
+            { 256 /* samples */, 50000 /* Hz */, 0.2, 0.0001, 0.0001 }, // 13
+            { 256 /* samples */, 500000 /* Hz */, 0.2, 0.0001, 0.0001 }, // 14
+            { 256 /* samples */, 5000000 /* Hz */, 0.2, 0.0001, 0.0001 }, // 15
+            { 256 /* samples */, 50000000 /* Hz */, 0.2, 0.0001, 0.0001 }, // 16
+            { 256 /* samples */, 100000000 /* Hz */, 0.2, 0.0001, 0.0001 }, // 17
 
-            { 256 /* samples */, 3 /* Hz */, 0.15 }, // 18
-            { 256 /* samples */, 33 /* Hz */, 0.15 }, // 19
-            { 256 /* samples */, 333 /* Hz */, 0.15 }, // 20
-            { 256 /* samples */, 3333 /* Hz */, 0.15 }, // 21
-            { 256 /* samples */, 33333 /* Hz */, 0.15 }, // 22
-            { 256 /* samples */, 333333 /* Hz */, 0.15 }, // 23
-            { 256 /* samples */, 3333333 /* Hz */, 0.15 }, // 24
-            { 256 /* samples */, 33333333 /* Hz */, 0.15 }, // 25
-            { 256 /* samples */, 100000003 /* Hz */, 0.15 }, // 26
+            { 256 /* samples */, 3 /* Hz */, 0.15, 0.0001, 0.0001 }, // 18
+            { 256 /* samples */, 33 /* Hz */, 0.15, 0.0001, 0.0001 }, // 19
+            { 256 /* samples */, 333 /* Hz */, 0.15, 0.0001, 0.0001 }, // 20
+            { 256 /* samples */, 3333 /* Hz */, 0.15, 0.0001, 0.0001 }, // 21
+            { 256 /* samples */, 33333 /* Hz */, 0.15, 0.0001, 0.0001 }, // 22
+            { 256 /* samples */, 333333 /* Hz */, 0.15, 0.0001, 0.0001 }, // 23
+            { 256 /* samples */, 3333333 /* Hz */, 0.15, 0.0001, 0.0001 }, // 24
+            { 256 /* samples */, 33333333 /* Hz */, 0.15, 0.0001, 0.0001 }, // 25
+            { 256 /* samples */, 100000003 /* Hz */, 0.15, 0.0001, 0.0001 }, // 26
 
-            { 64 /* samples */, 3 /* Hz */, 0.05 }, // 27
-            { 64 /* samples */, 33 /* Hz */, 0.05 }, // 28
-            { 64 /* samples */, 111 /* Hz */, 0.05 }, // 29
-            { 64 /* samples */, 333 /* Hz */, 0.05 }, // 30
+            { 64 /* samples */, 3 /* Hz */, 0.05, 0.0001, 0.0001 }, // 27
+            { 64 /* samples */, 33 /* Hz */, 0.05, 0.0001, 0.0001 }, // 28
+            { 64 /* samples */, 111 /* Hz */, 0.05, 0.0001, 0.0001 }, // 29
+            { 64 /* samples */, 333 /* Hz */, 0.05, 0.0001, 0.0001 }, // 30
+
+            { 32 /* samples */, 3 /* Hz */, 0.5, 0.1, 1.0 }, // 31
+            { 32 /* samples */, 33 /* Hz */, 0.5, 0.1, 1.0 }, // 32
+            { 32 /* samples */, 111 /* Hz */, 0.5, 0.1, 1.0 }, // 33
+            { 32 /* samples */, 666666 /* Hz */, 0.5, 0.1, 1.0 }, // 34
+
+            { 16 /* samples */, 1000 /* Hz */, 0.5, 1.0, 1.0 }, // 35
+            { 8 /* samples */, 1000 /* Hz */, 0.5, 1.0, 1.0 }, // 36
         } );
   }
 
@@ -221,7 +221,7 @@ public class ClockFrequencyMeasureWorkerTest
     ClockStats result = this.worker.doInBackground();
 
     assertNotNull( result );
-    assertEquals( 0.5, result.getDutyCycle(), 0.001 );
-    assertEquals( this.sampleRate, result.getFrequency(), 0.0001 );
+    assertEquals( 0.5, result.getDutyCycle(), this.allowedDutyCycleTolerance );
+    assertEquals( this.sampleRate, result.getFrequency(), this.allowedFrequencyTolerance );
   }
 }

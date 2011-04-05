@@ -39,21 +39,25 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
   public static class ClockStats
   {
-    private final long rising;
-    private final long falling;
-    private final double period;
-    private final double frequency;
+    private final ClockPeriodStats periodStats;
+    private final double sampleRate;
+    private final double percentage;
 
     /**
+     * Creates a new ClockStats instance.
      * 
+     * @param aPeriodStats
+     *          the (best) period statistics;
+     * @param aPercentage
+     *          the percentage of occurrences for the best period statistics;
+     * @param aSampleRate
+     *          the sample rate to use.
      */
-    ClockStats( final long aBestRising, final long aBestFalling, final long aSampleRate )
+    ClockStats( final ClockPeriodStats aPeriodStats, final double aPercentage, final long aSampleRate )
     {
-      this.rising = aBestRising;
-      this.falling = aBestFalling;
-
-      this.period = this.rising + this.falling;
-      this.frequency = aSampleRate / this.period;
+      this.periodStats = aPeriodStats;
+      this.percentage = aPercentage;
+      this.sampleRate = aSampleRate;
     }
 
     /**
@@ -61,11 +65,13 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
      */
     public double getDutyCycle()
     {
-      if ( this.period == 0.0 )
+      final double totalPeriod = this.periodStats.getTotalPeriod();
+      final double period = Math.max( this.periodStats.getPeriod1(), this.periodStats.getPeriod2() );
+      if ( totalPeriod == 0.0 )
       {
         return 0.0;
       }
-      return this.rising / this.period;
+      return period / totalPeriod;
     }
 
     /**
@@ -86,7 +92,8 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
      */
     public double getFrequency()
     {
-      return this.frequency;
+      final double totalPeriod = this.periodStats.getTotalPeriod();
+      return this.sampleRate / totalPeriod;
     }
 
     /**
@@ -94,18 +101,19 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
      */
     public String getFrequencyDisplayText()
     {
-      if ( this.period == 0.0 )
+      final double totalPeriod = this.periodStats.getTotalPeriod();
+      if ( totalPeriod == 0.0 )
       {
         return MeasurementDialog.EMPTY_TEXT;
       }
-      return DisplayUtils.displayFrequency( this.frequency );
+      return DisplayUtils.displayFrequency( getFrequency() );
     }
   }
 
   /**
-   * 
+   * Container for the period statistics.
    */
-  static class ClockPeriodStats implements Comparable<ClockPeriodStats>
+  private static class ClockPeriodStats implements Comparable<ClockPeriodStats>
   {
     // VARIABLES
 
@@ -311,9 +319,15 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
     final ClockPeriodStats best = this.periodStats.getHighestRanked();
 
-    LOG.info( String.format( "Choose period: %s (%d occurrences, %d unique values)", best,
-        this.periodStats.getCount( best ), this.periodStats.getUniqueValueCount() ) );
+    final long periodCount = this.periodStats.getCount( best );
+    final int uniqueValues = this.periodStats.getUniqueValueCount();
+    final long totalCount = this.periodStats.getTotalCount();
+    final double percentage = 100.0 * periodCount / totalCount;
 
-    return new ClockStats( best.getPeriod1(), best.getPeriod2(), getSampleRate() );
+    LOG.info( String.format( "Choosing period: %s (%d occurrences in %d values; %d unique: %.2f%%)", best,
+        Long.valueOf( periodCount ), Long.valueOf( totalCount ), Integer.valueOf( uniqueValues ),
+        Double.valueOf( percentage ) ) );
+
+    return new ClockStats( best, percentage, getSampleRate() );
   }
 }
