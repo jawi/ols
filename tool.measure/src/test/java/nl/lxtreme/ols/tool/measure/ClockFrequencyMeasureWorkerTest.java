@@ -53,6 +53,7 @@ public class ClockFrequencyMeasureWorkerTest
     // VARIABLES
 
     private final double jitterPercentage;
+    private final int sampleRate;
 
     // CONSTRUCTORS
 
@@ -60,18 +61,19 @@ public class ClockFrequencyMeasureWorkerTest
      * Creates a new ClockFrequencyMeasureWorkerTest.JitteredTestDataProvider
      * instance.
      */
-    public JitteredTestDataProvider()
+    public JitteredTestDataProvider( final int aSampleRate )
     {
-      this( 0.2 );
+      this( aSampleRate, 0.2 );
     }
 
     /**
      * Creates a new ClockFrequencyMeasureWorkerTest.JitteredTestDataProvider
      * instance.
      */
-    public JitteredTestDataProvider( final double aJitterPercentage )
+    public JitteredTestDataProvider( final int aSampleRate, final double aJitterPercentage )
     {
-      this.jitterPercentage = aJitterPercentage / 100.00;
+      this.sampleRate = aSampleRate;
+      this.jitterPercentage = aJitterPercentage;
     }
 
     // METHODS
@@ -82,23 +84,26 @@ public class ClockFrequencyMeasureWorkerTest
     @Override
     public void fillData( final int[] aValues, final long[] aTimestamps, final int aDataSize )
     {
+      Random miscRnd = new Random();
       Random valueRnd = new Random();
       Random timestampRnd = new Random();
 
       int value = 0xAA;
+      long timestamp = 0;
       for ( int i = 0; i < aDataSize; i++ )
       {
         int sampleValue = value;
-        long timestamp = i * TIME_INTERVAL;
 
-        final double nextGaussianTimeInterval = timestampRnd.nextGaussian();
-        if ( nextGaussianTimeInterval > this.jitterPercentage )
+        int interval = TIME_INTERVAL;
+        if ( miscRnd.nextDouble() < this.jitterPercentage )
         {
-          timestamp += nextGaussianTimeInterval;
+          final double nextGaussianTimeInterval = timestampRnd.nextGaussian();
+          final int j = ( int )( ( 0.5 * TIME_INTERVAL ) * nextGaussianTimeInterval );
+          interval += j;
         }
+        timestamp += interval;
 
-        final double nextGaussianSampleValue = valueRnd.nextGaussian();
-        if ( nextGaussianSampleValue > ( this.jitterPercentage / 4.0 ) )
+        if ( miscRnd.nextDouble() < this.jitterPercentage )
         {
           int mask = 1 << valueRnd.nextInt( 8 );
           if ( ( sampleValue & mask ) != 0 )
@@ -116,6 +121,8 @@ public class ClockFrequencyMeasureWorkerTest
 
         value = ( value == 0xAA ) ? 0x55 : 0xAA;
       }
+
+      System.out.println( "Timestamps: " + Arrays.toString( aTimestamps ) );
     }
   }
 
@@ -141,7 +148,7 @@ public class ClockFrequencyMeasureWorkerTest
   {
     this.dataSize = aDataSize;
     this.sampleRate = aSampleRate;
-    this.dataProvider = new JitteredTestDataProvider( aJitterFactor );
+    this.dataProvider = new JitteredTestDataProvider( aSampleRate, aJitterFactor );
   }
 
   // METHODS
@@ -185,10 +192,10 @@ public class ClockFrequencyMeasureWorkerTest
             { 256 /* samples */, 33333333 /* Hz */, 0.15 }, // 25
             { 256 /* samples */, 100000003 /* Hz */, 0.15 }, // 26
 
-            { 256 /* samples */, 3 /* Hz */, 0.05 }, // 27
-            { 256 /* samples */, 33 /* Hz */, 0.05 }, // 28
-            { 256 /* samples */, 111 /* Hz */, 0.05 }, // 29
-            { 256 /* samples */, 333 /* Hz */, 0.05 }, // 30
+            { 64 /* samples */, 3 /* Hz */, 0.05 }, // 27
+            { 64 /* samples */, 33 /* Hz */, 0.05 }, // 28
+            { 64 /* samples */, 111 /* Hz */, 0.05 }, // 29
+            { 64 /* samples */, 333 /* Hz */, 0.05 }, // 30
         } );
   }
 
