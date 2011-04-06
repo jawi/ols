@@ -209,15 +209,16 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
           throw new RuntimeException( exception );
         }
       }
-      while ( this.running );
+      while ( this.running && !isInterrupted() );
     }
 
     /**
      * Stops this runnable.
      */
-    public void terminate()
+    public synchronized void terminate()
     {
       this.running = false;
+      interrupt();
     }
 
     /**
@@ -345,8 +346,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
 
   private final OutputStream outputStream;
   private final InputStream inputStream;
-  private final IOHelper streamReader;
   private final DeviceProfileManager manager;
+  private final IOHelper streamReader;
 
   private volatile int dividerValue;
   private volatile int delayCount;
@@ -487,10 +488,11 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
   /**
    * Closes this virtual device.
    */
-  public void close()
+  public synchronized void close()
   {
     this.streamReader.terminate();
-    while ( this.streamReader.isAlive() )
+
+    do
     {
       try
       {
@@ -498,9 +500,10 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
       }
       catch ( InterruptedException exception )
       {
-        this.streamReader.interrupt();
+        Thread.currentThread().interrupt();
       }
     }
+    while ( this.streamReader.isAlive() );
   }
 
   /**

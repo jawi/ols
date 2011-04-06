@@ -51,6 +51,8 @@ public class LogicSnifferConfigTest
 
     this.profile = device.addDeviceProfile( "MOCK", "MockedDevice" );
     this.config.setDeviceProfile( this.profile );
+
+    device.close();
   }
 
   /**
