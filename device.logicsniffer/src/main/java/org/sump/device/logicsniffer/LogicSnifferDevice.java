@@ -828,7 +828,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
 
     // if data not available here, client will stall until stop button pressed
     final int enabledGroupCount = this.config.getEnabledGroupCount();
-    while ( !isCancelledOrStopped() && ( this.inputStream.available() < enabledGroupCount ) && ( timeout-- >= 0 ) )
+    while ( !isCancelled() && ( this.inputStream.available() < enabledGroupCount ) && ( timeout-- >= 0 ) )
     {
       // Wait until there's data available, otherwise we could get 'false'
       // timeouts; do not make the sleep too long, otherwise we might overflow
@@ -846,7 +846,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     }
 
     final int groupCount = this.config.getGroupCount();
-    for ( int i = 0; !isCancelledOrStopped() && ( i < groupCount ); i++ )
+    for ( int i = 0; !isCancelled() && ( i < groupCount ); i++ )
     {
       v = 0; // in case the group is disabled, simply set it to zero...
 
@@ -896,7 +896,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         throw new InterruptedException( "Data readout interrupted!" );
       }
     }
-    while ( ( read > 0x00 ) && !isCancelledOrStopped() );
+    while ( ( read > 0x00 ) && !isCancelled() );
 
     return sb.toString();
   }
