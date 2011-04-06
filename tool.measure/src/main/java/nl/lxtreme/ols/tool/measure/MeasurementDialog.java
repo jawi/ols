@@ -202,8 +202,7 @@ public class MeasurementDialog extends BaseToolDialog
           {
             final ClockStats stats = worker.get();
 
-            MeasurementDialog.this.clockFrequencyLabel.setText( stats.getFrequencyDisplayText() );
-            MeasurementDialog.this.clockDutyCycleLabel.setText( stats.getDutyCycleDisplayText() );
+            updateClockStats( stats );
           }
           catch ( CancellationException exception )
           {
@@ -373,6 +372,24 @@ public class MeasurementDialog extends BaseToolDialog
   }
 
   /**
+   * Updates this dialog with the given clock statistics.
+   * 
+   * @param aClockStats
+   *          the clock statistics, never <code>null</code>.
+   */
+  final void updateClockStats( final ClockStats aClockStats )
+  {
+    StringBuilder freqText = new StringBuilder();
+    freqText.append( DisplayUtils.displayFrequency( aClockStats.getFrequency() ) );
+    freqText.append( " (\u00b1 " ).append( DisplayUtils.displayFrequency( aClockStats.getError() ) ).append( ")" );
+
+    this.clockFrequencyLabel.setText( freqText.toString() );
+    this.clockDutyCycleLabel.setText( DisplayUtils.displayPercentage( aClockStats.getDutyCycle() ) );
+
+    getRootPane().revalidate();
+  }
+
+  /**
    * Updates the measurement.
    */
   final void updateMeasurement()
@@ -449,11 +466,11 @@ public class MeasurementDialog extends BaseToolDialog
 
     final JPanel result = new JPanel( new GridBagLayout() );
 
-    result.add( createCursorListingPane( cursorNames ), //
-        new GridBagConstraints( 1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.NONE,
-            new Insets( 0, 0, 0, 0 ), 0, 0 ) );
     result.add( createMeasurementPane( cursorNames ), //
-        new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.NONE,
+        new GridBagConstraints( 0, 0, 1, 1, 0.6, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.HORIZONTAL,
+            new Insets( 0, 0, 0, 0 ), 0, 0 ) );
+    result.add( createCursorListingPane( cursorNames ), //
+        new GridBagConstraints( 1, 0, 1, 1, 0.4, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
             new Insets( 0, 0, 0, 0 ), 0, 0 ) );
 
     return result;

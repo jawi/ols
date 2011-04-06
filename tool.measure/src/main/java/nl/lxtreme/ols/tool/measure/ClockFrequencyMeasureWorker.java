@@ -31,82 +31,172 @@ import nl.lxtreme.ols.util.analysis.*;
 
 
 /**
- * @author jajans
+ * Provides a background worker for measuring the clock frequency of a signal
+ * channel.
  */
 public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFrequencyMeasureWorker.ClockStats>
 {
   // INNER TYPES
 
+  /**
+   * Provides some statistics on a measured clock frequency.
+   */
   public static class ClockStats
   {
+    // CONSTANTS
+
+    /** Denotes a half sampling period (unitless). */
+    private static final double HALF_PERIOD = 0.5;
+
+    // VARIABLES
+
     private final ClockPeriodStats periodStats;
     private final double sampleRate;
-    private final double percentage;
 
     /**
      * Creates a new ClockStats instance.
      * 
      * @param aPeriodStats
      *          the (best) period statistics;
-     * @param aPercentage
-     *          the percentage of occurrences for the best period statistics;
      * @param aSampleRate
      *          the sample rate to use.
      */
-    ClockStats( final ClockPeriodStats aPeriodStats, final double aPercentage, final long aSampleRate )
+    private ClockStats( final ClockPeriodStats aPeriodStats, final long aSampleRate )
     {
       this.periodStats = aPeriodStats;
-      this.percentage = aPercentage;
       this.sampleRate = aSampleRate;
     }
 
+    // METHODS
+
     /**
-     * @return
+     * Returns the duty cycle of the measured clock signal, meaning the
+     * percentage of "active" part of the pulse with respect to the total pulse
+     * width.
+     * 
+     * @return a duty cycle, as percentage between 0.0 and 1.0.
      */
     public double getDutyCycle()
     {
+      if ( this.periodStats == null )
+      {
+        return 0.0;
+      }
+
       final double totalPeriod = this.periodStats.getTotalPeriod();
-      final double period = Math.max( this.periodStats.getPeriod1(), this.periodStats.getPeriod2() );
       if ( totalPeriod == 0.0 )
       {
         return 0.0;
       }
+
+      final double period = Math.max( this.periodStats.getPeriod1(), this.periodStats.getPeriod2() );
       return period / totalPeriod;
     }
 
     /**
-     * @return
+     * Returns the error of the measured frequency meaning that the
+     * <em>actual</em> frequency is somewhere between the measured frequency
+     * plus or minus this error.
+     * <p>
+     * The error is determined by
+     * <tt>(F<sub>upper</sub> - F<sub>lower</sub>) / 2.0</tt>, where
+     * <tt>F<sub>upper</sub></tt> is the upper frequency bound, and
+     * <tt>F<sub>lower</sub></tt> is the lower frequency bound.
+     * </p>
+     * 
+     * @return the measured error, in Hertz.
+     * @see #getLowerBoundFrequency()
+     * @see #getUpperBoundFrequency()
      */
-    public String getDutyCycleDisplayText()
+    public double getError()
     {
-      final double dutycycle = getDutyCycle();
-      if ( dutycycle == 0.0 )
+      if ( this.periodStats == null )
       {
-        return MeasurementDialog.EMPTY_TEXT;
+        return 0.0;
       }
-      return String.format( "%.1f%%", Double.valueOf( getDutyCycle() * 100.0 ) );
+
+      final double tau = this.periodStats.getTotalPeriod();
+      // Simplified version of expression denoted in JavaDoc...
+      return this.sampleRate / ( ( 2 * tau * tau ) - 0.5 );
     }
 
     /**
-     * @return the frequency
+     * Returns the measured frequency.
+     * 
+     * @return the measured frequency, in Hertz.
      */
     public double getFrequency()
     {
-      final double totalPeriod = this.periodStats.getTotalPeriod();
+      if ( this.periodStats == null )
+      {
+        return 0.0;
+      }
+
+      final long totalPeriod = this.periodStats.getTotalPeriod();
+      if ( totalPeriod == 0 )
+      {
+        return 0.0;
+      }
+
       return this.sampleRate / totalPeriod;
     }
 
     /**
-     * @return
+     * Returns the "lower bound" of the measured frequency.
+     * <p>
+     * The measured frequency has a certain uncertainty, due to the discrete
+     * sampling of the original signal. This uncertainty can be represented by a
+     * lower and upper bound.
+     * </p>
+     * <p>
+     * The lower bound is calculated by making the measured signal period
+     * "slightly" larger, and divide this by the sample frequency. The upper
+     * bound is calculated similarly, making the measured period "slightly"
+     * shorter. Note that these calculated frequencies are optimistic values, as
+     * the period is enlarged/shortened by <em>half</em> the sampling period.
+     * </p>
+     * 
+     * @return a lower bound frequency, in Hertz.
      */
-    public String getFrequencyDisplayText()
+    public double getLowerBoundFrequency()
     {
-      final double totalPeriod = this.periodStats.getTotalPeriod();
-      if ( totalPeriod == 0.0 )
+      if ( this.periodStats == null )
       {
-        return MeasurementDialog.EMPTY_TEXT;
+        return 0.0;
       }
-      return DisplayUtils.displayFrequency( getFrequency() );
+
+      final double period = this.periodStats.getTotalPeriod() + HALF_PERIOD;
+      return this.sampleRate / period;
+    }
+
+    /**
+     * Returns the "upper bound" of the measured frequency.
+     * 
+     * @return a upper bound frequency, in Hertz.
+     * @see #getLowerBoundFrequency()
+     */
+    public double getUpperBoundFrequency()
+    {
+      if ( this.periodStats == null )
+      {
+        return 0.0;
+      }
+
+      final double period = this.periodStats.getTotalPeriod() - HALF_PERIOD;
+      return this.sampleRate / period;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString()
+    {
+      StringBuilder sb = new StringBuilder();
+      sb.append( "Clock statistics: " ).append( DisplayUtils.displayFrequency( getFrequency() ) );
+      sb.append( " (" ).append( DisplayUtils.displayPercentage( getDutyCycle() ) ).append( "), " );
+      sb.append( "error = \u00b1" ).append( DisplayUtils.displayFrequency( getError() ) );
+      return sb.toString();
     }
   }
 
@@ -319,15 +409,18 @@ public class ClockFrequencyMeasureWorker extends BaseAsyncToolWorker<ClockFreque
 
     final ClockPeriodStats best = this.periodStats.getHighestRanked();
 
-    final long periodCount = this.periodStats.getCount( best );
-    final int uniqueValues = this.periodStats.getUniqueValueCount();
-    final long totalCount = this.periodStats.getTotalCount();
-    final double percentage = 100.0 * periodCount / totalCount;
+    if ( LOG.isLoggable( Level.INFO ) && ( best != null ) )
+    {
+      final long periodCount = this.periodStats.getCount( best );
+      final int uniqueValues = this.periodStats.getUniqueValueCount();
+      final long totalCount = this.periodStats.getTotalCount();
+      final double percentage = 100.0 * periodCount / totalCount;
 
-    LOG.info( String.format( "Choosing period: %s (%d occurrences in %d values; %d unique: %.2f%%)", best,
-        Long.valueOf( periodCount ), Long.valueOf( totalCount ), Integer.valueOf( uniqueValues ),
-        Double.valueOf( percentage ) ) );
+      LOG.info( String.format( "Choosing period: %s (%d occurrences in %d values; %d unique: %.2f%%)", best,
+          Long.valueOf( periodCount ), Long.valueOf( totalCount ), Integer.valueOf( uniqueValues ),
+          Double.valueOf( percentage ) ) );
+    }
 
-    return new ClockStats( best, percentage, getSampleRate() );
+    return new ClockStats( best, getSampleRate() );
   }
 }

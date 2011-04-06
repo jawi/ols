@@ -38,10 +38,11 @@ import org.junit.runners.Parameterized.Parameters;
 
 
 /**
- * @author jawi
+ * Provides test cases for the {@link ClockFrequencyMeasureWorker} based on
+ * generated data.
  */
 @RunWith( Parameterized.class )
-public class ClockFrequencyMeasureWorkerTest
+public class ClockFrequencyMeasureWorkerGeneratedDataTest
 {
   // INNER TYPES
 
@@ -133,8 +134,8 @@ public class ClockFrequencyMeasureWorkerTest
   /**
    * Creates a new ClockFrequencyMeasureWorkerTest instance.
    */
-  public ClockFrequencyMeasureWorkerTest( final int aDataSize, final int aSampleRate, final double aJitterFactor,
-      final double aDutyCycleTolerance, final double aFrequencyTolerance )
+  public ClockFrequencyMeasureWorkerGeneratedDataTest( final int aDataSize, final int aSampleRate,
+      final double aJitterFactor, final double aDutyCycleTolerance, final double aFrequencyTolerance )
   {
     this.dataSize = aDataSize;
     this.sampleRate = aSampleRate;
@@ -188,14 +189,6 @@ public class ClockFrequencyMeasureWorkerTest
             { 64 /* samples */, 33 /* Hz */, 0.05, 0.0001, 0.0001 }, // 28
             { 64 /* samples */, 111 /* Hz */, 0.05, 0.0001, 0.0001 }, // 29
             { 64 /* samples */, 333 /* Hz */, 0.05, 0.0001, 0.0001 }, // 30
-
-            { 32 /* samples */, 3 /* Hz */, 0.5, 0.1, 1.0 }, // 31
-            { 32 /* samples */, 33 /* Hz */, 0.5, 0.1, 1.0 }, // 32
-            { 32 /* samples */, 111 /* Hz */, 0.5, 0.1, 1.0 }, // 33
-            { 32 /* samples */, 666666 /* Hz */, 0.5, 0.1, 1.0 }, // 34
-
-            { 16 /* samples */, 1000 /* Hz */, 0.5, 1.0, 1.0 }, // 35
-            { 8 /* samples */, 1000 /* Hz */, 0.5, 1.0, 1.0 }, // 36
         } );
   }
 
