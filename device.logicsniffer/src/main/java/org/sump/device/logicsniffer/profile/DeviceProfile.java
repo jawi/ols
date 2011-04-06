@@ -373,7 +373,19 @@ public final class DeviceProfile implements Cloneable
     final int maxSize = sizes[0].intValue();
     if ( isCaptureSizeBoundToEnabledChannels() )
     {
-      return maxSize / aChannelGroups;
+      int indication = maxSize / aChannelGroups;
+
+      // Issue #58: Search the best matching value...
+      Integer result = null;
+      for ( int i = sizes.length - 1; i >= 0; i-- )
+      {
+        if ( sizes[i].compareTo( Integer.valueOf( indication ) ) <= 0 )
+        {
+          result = sizes[i];
+        }
+      }
+
+      return ( result == null ) ? indication : result.intValue();
     }
 
     return maxSize;
