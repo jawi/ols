@@ -119,7 +119,7 @@ public class DeviceProfileTest
   @SuppressWarnings( "boxing" )
   public void testGetCaptureSizesOk()
   {
-    assertArrayEquals( new Integer[] { 4, 3, 2, 1 }, this.profile.getCaptureSizes() );
+    assertArrayEquals( new Integer[] { 24576, 12288, 6144, 4096, 3072, 2048 }, this.profile.getCaptureSizes() );
   }
 
   /**
@@ -236,6 +236,21 @@ public class DeviceProfileTest
   }
 
   /**
+   * Test method for {@link DeviceProfile#getMaximumCaptureSizeFor(int)}.
+   */
+  @Test
+  public void testGetMaximumCaptureSizeForOk()
+  {
+    assertEquals( 24576, this.profile.getMaximumCaptureSizeFor( 1 ) );
+    assertEquals( 12288, this.profile.getMaximumCaptureSizeFor( 2 ) );
+    assertEquals( 6144, this.profile.getMaximumCaptureSizeFor( 3 ) );
+    assertEquals( 6144, this.profile.getMaximumCaptureSizeFor( 4 ) );
+    assertEquals( 4096, this.profile.getMaximumCaptureSizeFor( 5 ) );
+    assertEquals( 4096, this.profile.getMaximumCaptureSizeFor( 6 ) );
+    assertEquals( 3072, this.profile.getMaximumCaptureSizeFor( 7 ) );
+  }
+
+  /**
    * Test method for {@link DeviceProfile#getOpenPortDelay()}.
    */
   @Test( expected = IllegalArgumentException.class )
@@ -310,7 +325,7 @@ public class DeviceProfileTest
   @SuppressWarnings( "boxing" )
   public void testIsCaptureSizeBoundToEnabledChannelsOk()
   {
-    assertEquals( false, this.profile.isCaptureSizeBoundToEnabledChannels() );
+    assertEquals( true, this.profile.isCaptureSizeBoundToEnabledChannels() );
   }
 
   /**
@@ -388,7 +403,7 @@ public class DeviceProfileTest
   /**
    * Tests whether Unicode escapes are interpreted correctly.
    * 
-   * @see http
+   * @see http 
    *      ://download.oracle.com/javase/6/docs/api/java/util/Properties.html#
    *      load(java.io.Reader)
    */
@@ -436,7 +451,7 @@ public class DeviceProfileTest
   /**
    * Tests whether Unicode escapes are interpreted correctly.
    * 
-   * @see http
+   * @see http 
    *      ://download.oracle.com/javase/6/docs/api/java/util/Properties.html#
    *      load(java.io.Reader)
    */
@@ -454,8 +469,8 @@ public class DeviceProfileTest
   {
     Properties properties = new Properties();
     properties.put( DeviceProfile.DEVICE_CAPTURECLOCK, "INTERNAL" );
-    properties.put( DeviceProfile.DEVICE_CAPTURESIZE_BOUND, "false" );
-    properties.put( DeviceProfile.DEVICE_CAPTURESIZES, "1,2,3,4" );
+    properties.put( DeviceProfile.DEVICE_CAPTURESIZE_BOUND, "true" );
+    properties.put( DeviceProfile.DEVICE_CAPTURESIZES, "2048, 3072, 4096, 6144, 12288, 24576" );
     properties.put( DeviceProfile.DEVICE_CHANNEL_COUNT, "4" );
     properties.put( DeviceProfile.DEVICE_CHANNEL_GROUPS, "1" );
     properties.put( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );

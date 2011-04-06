@@ -821,23 +821,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
    */
   private void forceCaptureSizeTo( final Integer aSampleCount )
   {
-    // this is needed as it appears a combobox doesn't update itself when its
-    // disabled...
-    final ComboBoxModel model = this.sizeSelect.getModel();
-    Integer selectedObject = null;
-    for ( int i = model.getSize() - 1; i >= 0; i-- )
-    {
-      final Integer value = ( Integer )model.getElementAt( i );
-      if ( ( value != null ) && ( value.compareTo( aSampleCount ) <= 0 ) )
-      {
-        selectedObject = value;
-      }
-    }
-    //
-    if ( selectedObject != null )
-    {
-      this.sizeSelect.setSelectedItem( selectedObject );
-    }
+    this.sizeSelect.setSelectedItem( aSampleCount );
   }
 
   /**
