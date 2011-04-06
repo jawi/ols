@@ -236,7 +236,7 @@ public final class DataTestUtils
    */
   public static ToolContext createToolContext( final DataContainer aContainer )
   {
-    final int startSampleIdx = aContainer.getSampleIndex( aContainer.getTriggerPosition() ) - 1;
+    final int startSampleIdx = Math.max( 0, aContainer.getSampleIndex( aContainer.getTriggerPosition() ) - 1 );
     final int lastSampleIdx = aContainer.getValues().length - 1;
     return createToolContext( startSampleIdx, lastSampleIdx );
   }
