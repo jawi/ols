@@ -539,6 +539,428 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
+   * Opens the incoming and outgoing connection to the OLS device.
+   * <p>
+   * This method will directly flush all incoming data, and, if configured,
+   * delay a bit to ensure the device hardware is properly initialized.
+   * </p>
+   * 
+   * @return <code>true</code> if the attach operation succeeded,
+   *         <code>false</code> otherwise.
+   * @throws IOException
+   *           in case of I/O problems during attaching to the device.
+   */
+  synchronized boolean attach() throws IOException
+  {
+    final String portName = this.config.getPortName();
+    final int baudrate = this.config.getBaudrate();
+    final int openDelay = this.config.getOpenPortDelay();
+    final boolean dtrValue = this.config.isOpenPortDtr();
+
+    try
+    {
+      // Make sure we release the device if it was still attached...
+      detach();
+
+      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps (DTR = {2}) ...",
+          new Object[] { portName, Integer.valueOf( baudrate ), dtrValue ? "high" : "low" } );
+
+      this.connection = getConnection( portName, baudrate, dtrValue );
+      if ( this.connection == null )
+      {
+        throw new IOException( "Failed to open a valid connection!" );
+      }
+
+      this.outputStream = this.connection.openDataOutputStream();
+      this.inputStream = this.connection.openDataInputStream();
+
+      // Some devices need some time to initialize after being opened for the
+      // first time, see issue #34.
+      if ( openDelay > 0 )
+      {
+        Thread.sleep( openDelay );
+      }
+
+      // We don't expect any data, so flush all data pending in the given
+      // input stream. See issue #34.
+      HostUtils.flushInputStream( this.inputStream );
+
+      return this.attached = true;
+    }
+    catch ( final Exception exception )
+    {
+      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
+          new Object[] { portName, exception.getMessage() } );
+      LOG.log( Level.FINE, "Detailed stack trace:", exception );
+
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        throw new IOException( "Failed to open/use " + portName + "! Possible reason: " + exception.getMessage() );
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Configures the OLS device by sending all configuration commands.
+   * 
+   * @throws IOException
+   *           in case of I/O problems.
+   */
+  final void configureDevice() throws IOException
+  {
+    // set the sampling frequency...
+    sendCommand( SETDIVIDER, this.config.getDivider() );
+
+    final int stopCounter = configureTriggers();
+    final int readCounter = this.config.getReadCounter();
+
+    final int size;
+    if ( this.config.isDoubleDataRateEnabled() )
+    {
+      // 0x7fff8 = 511Kb = the maximum size supported by the original SUMP
+      // device when using the demultiplexer...
+      final int maxSize = 0x7fff8;
+      size = ( ( stopCounter & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
+      // A better approximation of "(readCounter - stopCounter) - 2". This also
+      // solves issue #31...
+      this.trigcount = ( ( ( size & 0xffff ) << 3 ) - ( ( ( size >> 16 ) & 0xffff ) << 3 ) );
+    }
+    else
+    {
+      // 0x3fffc = 255Kb = the maximum size supported by the original SUMP
+      // device...
+      final int maxSize = 0x3fffc;
+      size = ( ( stopCounter & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
+      // A better approximation of "(readCounter - stopCounter) - 2". This also
+      // solves issue #31...
+      this.trigcount = ( ( ( size & 0xffff ) << 2 ) - ( ( ( size >> 16 ) & 0xffff ) << 2 ) );
+    }
+
+    // set the capture size...
+    sendCommand( SETSIZE, size );
+
+    int flags = 0;
+    if ( this.config.isExternalClock() )
+    {
+      flags |= FLAG_EXTERNAL;
+      if ( CaptureClockSource.EXTERNAL_FALLING == this.config.getClockSource() )
+      {
+        flags |= FLAG_INVERTED;
+      }
+    }
+
+    // determine which channel groups are to be disabled...
+    int enabledChannelGroups = 0;
+    for ( int i = 0; i < this.config.getGroupCount(); i++ )
+    {
+      if ( this.config.isGroupEnabled( i ) )
+      {
+        enabledChannelGroups |= ( 1 << i );
+      }
+    }
+
+    if ( this.config.isDoubleDataRateEnabled() )
+    {
+      // when DDR is selected, the groups selected in the upper two channel
+      // groups must be the same as those selected in the lower two groups
+      enabledChannelGroups |= ( ( enabledChannelGroups & 0x03 ) << 2 ) & 0x0c;
+
+      flags |= FLAG_DEMUX;
+      // if the demux bit is set, the filter flag *must* be cleared...
+      flags &= ~FLAG_FILTER;
+    }
+
+    flags |= ~( enabledChannelGroups << 2 ) & 0x3c;
+
+    if ( this.config.isFilterEnabled() && this.config.isFilterAvailable() )
+    {
+      flags |= FLAG_FILTER;
+      // if the filter bit is set, the demux flag *must* be cleared...
+      flags &= ~FLAG_DEMUX;
+    }
+
+    if ( this.config.isRleEnabled() )
+    {
+      flags |= FLAG_RLE;
+
+      // Ian 'dogsbody''s Verilog understands four different RLE-modes...
+      final int rleMode = determineRleMode();
+      switch ( rleMode )
+      {
+        case 3:
+          flags |= FLAG_RLE_MODE_3;
+          break;
+        case 2:
+          flags |= FLAG_RLE_MODE_2;
+          break;
+        case 0:
+          flags |= FLAG_RLE_MODE_0;
+          break;
+        default:
+          flags |= FLAG_RLE_MODE_1;
+          break;
+      }
+    }
+
+    if ( this.config.isAltNumberSchemeEnabled() )
+    {
+      flags |= FLAG_NUMBER_SCHEME;
+    }
+
+    if ( this.config.isTestModeEnabled() )
+    {
+      flags |= FLAG_EXTERNAL_TEST_MODE;
+    }
+
+    LOG.log( Level.FINE, "Flags: 0b{0}", Integer.toBinaryString( flags ) );
+
+    // finally set the device flags...
+    sendCommand( SETFLAGS, flags );
+  }
+
+  /**
+   * Sends the trigger mask, value and configuration to the OLS device.
+   * 
+   * @return the stop counter that is used for the trigger configuration.
+   * @throws IOException
+   *           in case of I/O problems.
+   */
+  final int configureTriggers() throws IOException
+  {
+    final int effectiveStopCounter;
+    if ( this.config.isTriggerEnabled() )
+    {
+      for ( int i = 0; i < this.config.getMaxTriggerStages(); i++ )
+      {
+        final int indexMask = 4 * i;
+        sendCommand( SETTRIGMASK | indexMask, this.config.getTriggerMask( i ) );
+        sendCommand( SETTRIGVAL | indexMask, this.config.getTriggerValue( i ) );
+        sendCommand( SETTRIGCFG | indexMask, this.config.getTriggerConfig( i ) );
+      }
+      effectiveStopCounter = this.config.getStopCounter();
+    }
+    else
+    {
+      sendCommand( SETTRIGMASK, 0 );
+      sendCommand( SETTRIGVAL, 0 );
+      sendCommand( SETTRIGCFG, LogicSnifferConfig.TRIGGER_CAPTURE );
+      effectiveStopCounter = this.config.getReadCounter();
+    }
+
+    return effectiveStopCounter;
+  }
+
+  /**
+   * Detaches the currently attached port, if one exists. This will close the
+   * serial port.
+   */
+  synchronized void detach()
+  {
+    // We're definitely no longer attached...
+    this.attached = false;
+
+    if ( this.connection != null )
+    {
+      try
+      {
+        // try to make sure device is reset...
+        if ( this.outputStream != null )
+        {
+          // XXX it seems that after a RLE abort command, the OLS device no
+          // longer is able to process a full 5x reset command. However, we're
+          // also resetting the thing right after we've started an acquisition,
+          // so it might not be that bad...
+          sendCommand( CMD_RESET );
+        }
+      }
+      catch ( final IOException exception )
+      {
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.WARNING, "Detaching failed!", exception );
+        }
+      }
+      finally
+      {
+        HostUtils.closeResource( this.outputStream );
+        HostUtils.closeResource( this.inputStream );
+
+        try
+        {
+          this.connection.close();
+        }
+        catch ( IOException exception )
+        {
+          LOG.log( Level.FINE, "Closing connection failed!", exception );
+        }
+        finally
+        {
+          this.connection = null;
+          this.outputStream = null;
+          this.inputStream = null;
+        }
+      }
+    }
+  }
+
+  /**
+   * Reads a single sample from the serial input stream.
+   * <p>
+   * This method will take the enabled channel groups into consideration, making
+   * it possible that the returned value contains "gaps".
+   * </p>
+   * 
+   * @return the integer sample value containing up to four read bytes, not
+   *         aligned.
+   * @throws IOException
+   *           if stream reading fails.
+   */
+  final int readSample() throws IOException, InterruptedException
+  {
+    final int baseTimeout = 1000; // 1 second
+
+    int v, value = 0;
+    int timeout = 4 * baseTimeout;
+
+    // if data not available here, client will stall until stop button pressed
+    final int enabledGroupCount = this.config.getEnabledGroupCount();
+    while ( !isCancelledOrStopped() && ( this.inputStream.available() < enabledGroupCount ) && ( timeout-- >= 0 ) )
+    {
+      // Wait until there's data available, otherwise we could get 'false'
+      // timeouts; do not make the sleep too long, otherwise we might overflow
+      // our
+      // receiver buffers...
+      TimeUnit.MICROSECONDS.sleep( 25L );
+    }
+    if ( timeout < 0 )
+    {
+      // Flag this read as incomplete...
+      LOG.log( Level.INFO,
+          "Read sample timeout occurred (no response within {0} milliseconds)! Capture will continue...",
+          Integer.valueOf( baseTimeout ) );
+      throw new InterruptedException();
+    }
+
+    final int groupCount = this.config.getGroupCount();
+    for ( int i = 0; !isCancelledOrStopped() && ( i < groupCount ); i++ )
+    {
+      v = 0; // in case the group is disabled, simply set it to zero...
+
+      if ( this.config.isGroupEnabled( i ) )
+      {
+        v = this.inputStream.read();
+        // Any timeouts/interrupts occurred?
+        if ( v < 0 )
+        {
+          throw new InterruptedException( "Data readout interrupted: EOF." );
+        }
+        else if ( Thread.interrupted() )
+        {
+          throw new InterruptedException( "Data readout interrupted." );
+        }
+      }
+      value |= v << ( 8 * i );
+    }
+    return value;
+  }
+
+  /**
+   * Reads a zero-terminated ASCII-string from the current input stream.
+   * 
+   * @return the read string, can be empty but never <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems during the string read;
+   * @throws InterruptedException
+   *           in case this thread was interrupted during the string read.
+   */
+  final String readString() throws IOException, InterruptedException
+  {
+    StringBuilder sb = new StringBuilder();
+
+    int read = -1;
+    do
+    {
+      read = this.inputStream.read();
+      if ( read > 0x00 )
+      {
+        // no additional conversion to UTF-8 is needed, as the ASCII character
+        // set is a subset of UTF-8...
+        sb.append( ( char )read );
+      }
+      else if ( Thread.interrupted() )
+      {
+        throw new InterruptedException( "Data readout interrupted!" );
+      }
+    }
+    while ( ( read > 0x00 ) && !isCancelledOrStopped() );
+
+    return sb.toString();
+  }
+
+  /**
+   * Sends a short command to the given stream. This method is intended to be
+   * used for short commands, but can also be called with long command opcodes
+   * if the data portion is to be set to 0.
+   * 
+   * @param aOpcode
+   *          one byte operation code
+   * @throws IOException
+   *           if writing to stream fails
+   */
+  final void sendCommand( final int aOpcode ) throws IOException
+  {
+    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
+    {
+      final byte opcode = ( byte )( aOpcode & 0xFF );
+      LOG.log( Level.FINE, "Sending short command: {0} ({1})",
+          new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ) } );
+    }
+
+    this.outputStream.writeByte( aOpcode );
+    this.outputStream.flush();
+  }
+
+  /**
+   * Sends a long command to the given stream.
+   * 
+   * @param aOpcode
+   *          one byte operation code
+   * @param aData
+   *          four byte data portion
+   * @throws IOException
+   *           if writing to stream fails
+   */
+  final void sendCommand( final int aOpcode, final int aData ) throws IOException
+  {
+    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
+    {
+      final byte opcode = ( byte )( aOpcode & 0xFF );
+      LOG.log( Level.FINE, "Sending long command: {0} ({1}) with data {2} ({3})",
+          new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ), //
+              Integer.toHexString( aData ), Integer.toBinaryString( aData ) } );
+    }
+
+    final byte[] raw = new byte[5];
+    int mask = 0xff;
+    int shift = 0;
+
+    raw[0] = ( byte )aOpcode;
+    for ( int i = 1; i < 5; i++ )
+    {
+      raw[i] = ( byte )( ( aData & mask ) >> shift );
+      mask = mask << 8;
+      shift += 8;
+    }
+
+    this.outputStream.write( raw );
+    this.outputStream.flush();
+  }
+
+  /**
    * Sends the configuration to the device, starts it, reads the captured data
    * and returns a CapturedData object containing the data read as well as
    * device configuration information.
@@ -754,275 +1176,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    *           in case the device profile manager could not be found/obtained.
    */
   protected abstract DeviceProfileManager getDeviceProfileManager();
-
-  /**
-   * Opens the incoming and outgoing connection to the OLS device.
-   * <p>
-   * This method will directly flush all incoming data, and, if configured,
-   * delay a bit to ensure the device hardware is properly initialized.
-   * </p>
-   * 
-   * @return <code>true</code> if the attach operation succeeded,
-   *         <code>false</code> otherwise.
-   * @throws IOException
-   *           in case of I/O problems during attaching to the device.
-   */
-  private synchronized boolean attach() throws IOException
-  {
-    final String portName = this.config.getPortName();
-    final int baudrate = this.config.getBaudrate();
-    final int openDelay = this.config.getOpenPortDelay();
-    final boolean dtrValue = this.config.isOpenPortDtr();
-
-    try
-    {
-      // Make sure we release the device if it was still attached...
-      detach();
-
-      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps (DTR = {2}) ...",
-          new Object[] { portName, Integer.valueOf( baudrate ), dtrValue ? "high" : "low" } );
-
-      this.connection = getConnection( portName, baudrate, dtrValue );
-      if ( this.connection == null )
-      {
-        throw new IOException( "Failed to open a valid connection!" );
-      }
-
-      this.outputStream = this.connection.openDataOutputStream();
-      this.inputStream = this.connection.openDataInputStream();
-
-      // Some devices need some time to initialize after being opened for the
-      // first time, see issue #34.
-      if ( openDelay > 0 )
-      {
-        Thread.sleep( openDelay );
-      }
-
-      // We don't expect any data, so flush all data pending in the given
-      // input stream. See issue #34.
-      HostUtils.flushInputStream( this.inputStream );
-
-      return this.attached = true;
-    }
-    catch ( final Exception exception )
-    {
-      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
-          new Object[] { portName, exception.getMessage() } );
-      LOG.log( Level.FINE, "Detailed stack trace:", exception );
-
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        throw new IOException( "Failed to open/use " + portName + "! Possible reason: " + exception.getMessage() );
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Configures the OLS device by sending all configuration commands.
-   * 
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  private void configureDevice() throws IOException
-  {
-    // set the sampling frequency...
-    sendCommand( SETDIVIDER, this.config.getDivider() );
-
-    final int stopCounter = configureTriggers();
-    final int readCounter = this.config.getReadCounter();
-
-    final int size;
-    if ( this.config.isDoubleDataRateEnabled() )
-    {
-      // 0x7fff8 = 511Kb = the maximum size supported by the original SUMP
-      // device when using the demultiplexer...
-      final int maxSize = 0x7fff8;
-      size = ( ( stopCounter & maxSize ) << 13 ) | ( ( ( readCounter & maxSize ) >> 3 ) - 1 );
-      // A better approximation of "(readCounter - stopCounter) - 2". This also
-      // solves issue #31...
-      this.trigcount = ( ( ( size & 0xffff ) << 3 ) - ( ( ( size >> 16 ) & 0xffff ) << 3 ) );
-    }
-    else
-    {
-      // 0x3fffc = 255Kb = the maximum size supported by the original SUMP
-      // device...
-      final int maxSize = 0x3fffc;
-      size = ( ( stopCounter & maxSize ) << 14 ) | ( ( ( readCounter & maxSize ) >> 2 ) - 1 );
-      // A better approximation of "(readCounter - stopCounter) - 2". This also
-      // solves issue #31...
-      this.trigcount = ( ( ( size & 0xffff ) << 2 ) - ( ( ( size >> 16 ) & 0xffff ) << 2 ) );
-    }
-
-    // set the capture size...
-    sendCommand( SETSIZE, size );
-
-    int flags = 0;
-    if ( this.config.isExternalClock() )
-    {
-      flags |= FLAG_EXTERNAL;
-      if ( CaptureClockSource.EXTERNAL_FALLING == this.config.getClockSource() )
-      {
-        flags |= FLAG_INVERTED;
-      }
-    }
-
-    // determine which channel groups are to be disabled...
-    int enabledChannelGroups = 0;
-    for ( int i = 0; i < 4; i++ )
-    {
-      if ( this.config.isGroupEnabled( i ) )
-      {
-        enabledChannelGroups |= ( 1 << i );
-      }
-    }
-
-    if ( this.config.isDoubleDataRateEnabled() )
-    {
-      // when DDR is selected, the groups selected in the upper two channel
-      // groups must be the same as those selected in the lower two groups
-      enabledChannelGroups |= ( ( enabledChannelGroups & 0x03 ) << 2 ) & 0x0c;
-
-      flags |= FLAG_DEMUX;
-      // if the demux bit is set, the filter flag *must* be cleared...
-      flags &= ~FLAG_FILTER;
-    }
-
-    flags |= ~( enabledChannelGroups << 2 ) & 0x3c;
-
-    if ( this.config.isFilterEnabled() && this.config.isFilterAvailable() )
-    {
-      flags |= FLAG_FILTER;
-      // if the filter bit is set, the demux flag *must* be cleared...
-      flags &= ~FLAG_DEMUX;
-    }
-
-    if ( this.config.isRleEnabled() )
-    {
-      flags |= FLAG_RLE;
-
-      // Ian 'dogsbody''s Verilog understands four different RLE-modes...
-      final int rleMode = determineRleMode();
-      switch ( rleMode )
-      {
-        case 3:
-          flags |= FLAG_RLE_MODE_3;
-          break;
-        case 2:
-          flags |= FLAG_RLE_MODE_2;
-          break;
-        case 0:
-          flags |= FLAG_RLE_MODE_0;
-          break;
-        default:
-          flags |= FLAG_RLE_MODE_1;
-          break;
-      }
-    }
-
-    if ( this.config.isAltNumberSchemeEnabled() )
-    {
-      flags |= FLAG_NUMBER_SCHEME;
-    }
-
-    if ( this.config.isTestModeEnabled() )
-    {
-      flags |= FLAG_EXTERNAL_TEST_MODE;
-    }
-
-    LOG.log( Level.FINE, "Flags: 0b{0}", Integer.toBinaryString( flags ) );
-
-    // finally set the device flags...
-    sendCommand( SETFLAGS, flags );
-  }
-
-  /**
-   * Sends the trigger mask, value and configuration to the OLS device.
-   * 
-   * @return the stop counter that is used for the trigger configuration.
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  private int configureTriggers() throws IOException
-  {
-    final int effectiveStopCounter;
-    if ( this.config.isTriggerEnabled() )
-    {
-      for ( int i = 0; i < this.config.getMaxTriggerStages(); i++ )
-      {
-        final int indexMask = 4 * i;
-        sendCommand( SETTRIGMASK | indexMask, this.config.getTriggerMask( i ) );
-        sendCommand( SETTRIGVAL | indexMask, this.config.getTriggerValue( i ) );
-        sendCommand( SETTRIGCFG | indexMask, this.config.getTriggerConfig( i ) );
-      }
-      effectiveStopCounter = this.config.getStopCounter();
-    }
-    else
-    {
-      sendCommand( SETTRIGMASK, 0 );
-      sendCommand( SETTRIGVAL, 0 );
-      sendCommand( SETTRIGCFG, LogicSnifferConfig.TRIGGER_CAPTURE );
-      effectiveStopCounter = this.config.getReadCounter();
-    }
-
-    return effectiveStopCounter;
-  }
-
-  /**
-   * Detaches the currently attached port, if one exists. This will close the
-   * serial port.
-   */
-  private synchronized void detach()
-  {
-    // We're definitely no longer attached...
-    this.attached = false;
-
-    if ( this.connection != null )
-    {
-      try
-      {
-        // try to make sure device is reset...
-        if ( this.outputStream != null )
-        {
-          // XXX it seems that after a RLE abort command, the OLS device no
-          // longer is able to process a full 5x reset command. However, we're
-          // also resetting the thing right after we've started an acquisition,
-          // so it might not be that bad...
-          sendCommand( CMD_RESET );
-        }
-      }
-      catch ( final IOException exception )
-      {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.WARNING, "Detaching failed!", exception );
-        }
-      }
-      finally
-      {
-        HostUtils.closeResource( this.outputStream );
-        HostUtils.closeResource( this.inputStream );
-
-        try
-        {
-          this.connection.close();
-        }
-        catch ( IOException exception )
-        {
-          LOG.log( Level.FINE, "Closing connection failed!", exception );
-        }
-        finally
-        {
-          this.connection = null;
-          this.outputStream = null;
-          this.inputStream = null;
-        }
-      }
-    }
-  }
 
   /**
    * Tries to detect the LogicSniffer device.
@@ -1249,100 +1402,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
-   * Reads a single sample from the serial input stream.
-   * <p>
-   * This method will take the enabled channel groups into consideration, making
-   * it possible that the returned value contains "gaps".
-   * </p>
-   * 
-   * @return the integer sample value containing up to four read bytes, not
-   *         aligned.
-   * @throws IOException
-   *           if stream reading fails.
-   */
-  private int readSample() throws IOException, InterruptedException
-  {
-    final int baseTimeout = 1000; // 1 second
-
-    int v, value = 0;
-    int timeout = 4 * baseTimeout;
-
-    // if data not available here, client will stall until stop button pressed
-    final int enabledGroupCount = this.config.getEnabledGroupCount();
-    while ( !isCancelledOrStopped() && ( this.inputStream.available() < enabledGroupCount ) && ( timeout-- >= 0 ) )
-    {
-      // Wait until there's data available, otherwise we could get 'false'
-      // timeouts; do not make the sleep too long, otherwise we might overflow
-      // our
-      // receiver buffers...
-      TimeUnit.MICROSECONDS.sleep( 25L );
-    }
-    if ( timeout < 0 )
-    {
-      // Flag this read as incomplete...
-      LOG.log( Level.INFO,
-          "Read sample timeout occurred (no response within {0} milliseconds)! Capture will continue...",
-          Integer.valueOf( baseTimeout ) );
-      throw new InterruptedException();
-    }
-
-    final int groupCount = this.config.getGroupCount();
-    for ( int i = 0; !isCancelledOrStopped() && ( i < groupCount ); i++ )
-    {
-      v = 0; // in case the group is disabled, simply set it to zero...
-
-      if ( this.config.isGroupEnabled( i ) )
-      {
-        v = this.inputStream.read();
-        // Any timeouts/interrupts occurred?
-        if ( v < 0 )
-        {
-          throw new InterruptedException( "Data readout interrupted: EOF." );
-        }
-        else if ( Thread.interrupted() )
-        {
-          throw new InterruptedException( "Data readout interrupted." );
-        }
-      }
-      value |= v << ( 8 * i );
-    }
-    return value;
-  }
-
-  /**
-   * Reads a zero-terminated ASCII-string from the current input stream.
-   * 
-   * @return the read string, can be empty but never <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems during the string read;
-   * @throws InterruptedException
-   *           in case this thread was interrupted during the string read.
-   */
-  private String readString() throws IOException, InterruptedException
-  {
-    StringBuilder sb = new StringBuilder();
-
-    int read = -1;
-    do
-    {
-      read = this.inputStream.read();
-      if ( read > 0x00 )
-      {
-        // no additional conversion to UTF-8 is needed, as the ASCII character
-        // set is a subset of UTF-8...
-        sb.append( ( char )read );
-      }
-      else if ( Thread.interrupted() )
-      {
-        throw new InterruptedException( "Data readout interrupted!" );
-      }
-    }
-    while ( ( read > 0x00 ) && !isCancelledOrStopped() );
-
-    return sb.toString();
-  }
-
-  /**
    * Resets the OLS device by sending 5 consecutive 'reset' commands.
    * 
    * @throws IOException
@@ -1354,64 +1413,5 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     {
       sendCommand( CMD_RESET );
     }
-  }
-
-  /**
-   * Sends a short command to the given stream. This method is intended to be
-   * used for short commands, but can also be called with long command opcodes
-   * if the data portion is to be set to 0.
-   * 
-   * @param aOpcode
-   *          one byte operation code
-   * @throws IOException
-   *           if writing to stream fails
-   */
-  private void sendCommand( final int aOpcode ) throws IOException
-  {
-    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
-    {
-      final byte opcode = ( byte )( aOpcode & 0xFF );
-      LOG.log( Level.FINE, "Sending short command: {0} ({1})",
-          new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ) } );
-    }
-
-    this.outputStream.writeByte( aOpcode );
-    this.outputStream.flush();
-  }
-
-  /**
-   * Sends a long command to the given stream.
-   * 
-   * @param aOpcode
-   *          one byte operation code
-   * @param aData
-   *          four byte data portion
-   * @throws IOException
-   *           if writing to stream fails
-   */
-  private void sendCommand( final int aOpcode, final int aData ) throws IOException
-  {
-    if ( LOG.isLoggable( Level.ALL ) || LOG.isLoggable( Level.FINE ) )
-    {
-      final byte opcode = ( byte )( aOpcode & 0xFF );
-      LOG.log( Level.FINE, "Sending long command: {0} ({1}) with data {2} ({3})",
-          new Object[] { Integer.toHexString( opcode ), Integer.toBinaryString( opcode ), //
-              Integer.toHexString( aData ), Integer.toBinaryString( aData ) } );
-    }
-
-    final byte[] raw = new byte[5];
-    int mask = 0xff;
-    int shift = 0;
-
-    raw[0] = ( byte )aOpcode;
-    for ( int i = 1; i < 5; i++ )
-    {
-      raw[i] = ( byte )( ( aData & mask ) >> shift );
-      mask = mask << 8;
-      shift += 8;
-    }
-
-    this.outputStream.write( raw );
-    this.outputStream.flush();
   }
 }
