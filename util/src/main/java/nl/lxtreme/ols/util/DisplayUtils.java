@@ -73,6 +73,18 @@ public final class DisplayUtils
   }
 
   /**
+   * Returns a percentage as string value.
+   * 
+   * @param aPercentage
+   *          the percentage, >= 0.0 and <= 1.0.
+   * @return a percentage display value, like "59.3%", neer <code>null</code>.
+   */
+  public static String displayPercentage( final double aPercentage )
+  {
+    return String.format( "%.1f%%", Double.valueOf( aPercentage * 100.0 ) );
+  }
+
+  /**
    * Converts a given time first by scaling it down with a given scale, and
    * returns it as something readable for the user.
    * 
