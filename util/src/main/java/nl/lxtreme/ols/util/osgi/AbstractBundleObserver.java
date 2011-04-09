@@ -148,6 +148,27 @@ public abstract class AbstractBundleObserver implements BundleObserver
   }
 
   /**
+   * Returns whether the value of the given manifest header entry matches the
+   * given magic value.
+   * <p>
+   * By default, this method simply performs a string compare on the value, and
+   * returns <code>true</code> if it matches.
+   * </p>
+   * 
+   * @param aHeaderEntry
+   *          the header entry whose value should be tested, never
+   *          <code>null</code>;
+   * @param aMagicValue
+   *          the magic value to search for, never <code>null</code>.
+   * @return <code>true</code> if the given entry matches the "magic" value,
+   *         <code>false</code> otherwise.
+   */
+  protected boolean matchesMagicValue( final ManifestHeader aHeaderEntry, final String aMagicValue )
+  {
+    return aMagicValue.equals( aHeaderEntry.getValue() );
+  }
+
+  /**
    * Returns whether the given set of manifest headers contains the "magic"
    * token.
    * 
@@ -160,12 +181,11 @@ public abstract class AbstractBundleObserver implements BundleObserver
   {
     for ( ManifestHeader entry : aEntries )
     {
-      if ( this.magicKey.equals( entry.getKey() ) && this.magicValue.equals( entry.getValue() ) )
+      if ( this.magicKey.equals( entry.getKey() ) && matchesMagicValue( entry, this.magicValue ) )
       {
         return true;
       }
     }
     return false;
   }
-
 }

@@ -90,7 +90,8 @@ public class BundleServiceObserver extends AbstractBundleObserver
 
         final Object newService = clazz.newInstance();
 
-        bundleContext.registerService( this.serviceClassName, newService, getServiceProperties( aBundle, newService ) );
+        bundleContext.registerService( this.serviceClassName, newService,
+            getServiceProperties( aBundle, newService, aEntries ) );
 
         // Give the just registered service to do additional tasks as well...
         initializeService( newService, bundleContext );
@@ -143,7 +144,8 @@ public class BundleServiceObserver extends AbstractBundleObserver
    *          the service to register.
    * @return the service properties, may be <code>null</code>.
    */
-  protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService )
+  protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
+      final ManifestHeader... aEntries )
   {
     return null;
   }
