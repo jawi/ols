@@ -79,13 +79,13 @@ public class OpenProjectAction extends BaseAction
 
     final IClientController controller = getController();
 
-    if ( controller.isProjectChanged() )
+    // Issue #62: in case the user does NOT confirm to lose its changes, we
+    // should bail out immediately, otherwise continue normally...
+    if ( controller.isProjectChanged() && //
+        !SwingComponentUtils.askConfirmation( parent,
+            "Current project has been changed.\nDo you really want to lose your changes?" ) )
     {
-      if ( SwingComponentUtils.askConfirmation( parent,
-          "Current project has been changed.\nDo you really want to lose your changes?" ) )
-      {
-        return;
-      }
+      return;
     }
 
     final File file = SwingComponentUtils.showFileOpenDialog( parent, OLS_PROJECT_FILTER );

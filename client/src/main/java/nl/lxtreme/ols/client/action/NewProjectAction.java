@@ -62,14 +62,17 @@ public class NewProjectAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
+    final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
+
     final IClientController controller = getController();
-    if ( controller.isProjectChanged() )
+
+    // Issue #62: in case the user does NOT confirm to lose its changes, we
+    // should bail out immediately, otherwise continue normally...
+    if ( controller.isProjectChanged() && //
+        !SwingComponentUtils.askConfirmation( parent,
+            "Current project has been changed.\nDo you really want to lose your changes?" ) )
     {
-      final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
-      if ( SwingComponentUtils.askConfirmation( parent, "Current project is changed.\nReally lose your changes?" ) )
-      {
-        return;
-      }
+      return;
     }
 
     controller.createNewProject();
