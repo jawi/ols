@@ -25,48 +25,68 @@ import javax.swing.*;
 
 
 /**
- * Service interface which provides an added function when the component is
- * used.
+ * Service interface which provides new components at runtime.
+ * <p>
+ * For now, the only components that can be provided are {@link JMenu}
+ * instances, which are added in and removed from the main dialog's menu bar.
+ * Other kinds of components can/will be supported in the future.
+ * </p>
+ * <p>
+ * If the implementing class of this interface contains a method with the
+ * signature <tt>#init(org.osgi.framework.BundleContext)</tt> (any access
+ * modifier), it will be called automatically upon registration of this service.
+ * This allows implementors to obtain the <tt>BundleContext</tt> of this service
+ * and access other OSGi services in a low-level manner.
+ * </p>
  */
 public interface ComponentProvider
 {
   // CONSTANTS
 
-  /**
-   * Constant to identify ComponentProvider services.
-   */
+  /** Constant to identify ComponentProvider services. */
   public static final String COMPONENT_ID_KEY = "component.id";
 
   /** Constant to provide a menu component. */
-  public static final String MENU_COMPONENT = "MenuComponent";
+  public static final String MENU_COMPONENT = "Menu";
 
   // METHODS
 
   /**
-   * This function should always be called from the EDT. The implementor may
-   * assume that this function is called once and before
-   * {@link #addedToContainer()}
-   * 
-   * @return the implementors (Swing) component which it provides.
-   */
-  public JComponent getComponent();
-
-  /**
    * Triggered when the component is added to a container. The implementation
-   * can validate some stuff. This function must be called on the EDT.<br/>
-   * Implementors may assume this function is called after
+   * can validate some stuff. This function <b>must</b> be called on the EDT.<br/>
+   * Implementors may assume this function is called <em>after</em>
    * {@link #getComponent()}.
+   * <p>
+   * Implementors can use this method to initialize listeners and/or other
+   * components in context of the (parent) container.
+   * </p>
    */
   public void addedToContainer();
 
   /**
+   * This function should always be called from the EDT. The implementor may
+   * assume that this function is called <em>once</em> and before
+   * {@link #addedToContainer()}.
+   * <p>
+   * Implementors of this interface should keep track of the returned components
+   * themselves to access their context (e.g.: their parent).
+   * </p>
+   * 
+   * @return the (Swing) component provided by this service, cannot be
+   *         <code>null</code>.
+   */
+  public JComponent getComponent();
+
+  /**
    * Triggered when the component is removed from a container. The
-   * implementation can validate some stuff. This function must be called on the
-   * EDT.<br/>
-   * Implementors may assume this function is called after
+   * implementation can validate some stuff. This function <b>must</b> be called
+   * on the EDT.<br/>
+   * Implementors may assume this function is called <em>after</em>
    * {@link #getComponent()}.
+   * <p>
+   * Implementors can use this method to remove listeners and/or other
+   * components in context of the (parent) container.
+   * </p>
    */
   public void removedFromContainer();
 }
-
-/* EOF */
