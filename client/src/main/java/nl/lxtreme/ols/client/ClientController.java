@@ -886,12 +886,10 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       @Override
       public void run()
       {
-        if ( ClientController.this.mainFrame != null )
+        final JMenuBar menuBar = getMainMenuBar();
+        if ( menuBar != null )
         {
-          final JMenu menu = ( JMenu )aProvider.getComponent();
-
-          final JMenuBar menuBar = ClientController.this.mainFrame.getJMenuBar();
-          menuBar.remove( menu );
+          menuBar.remove( aProvider.getComponent() );
 
           aProvider.removedFromContainer();
 
@@ -1291,6 +1289,21 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   final MainFrame getMainFrame()
   {
     return this.mainFrame;
+  }
+
+  /**
+   * Returns the main menu bar.
+   * 
+   * @return the main menu bar, can be <code>null</code>.
+   */
+  final JMenuBar getMainMenuBar()
+  {
+    JMenuBar result = null;
+    if ( this.mainFrame != null )
+    {
+      result = this.mainFrame.getJMenuBar();
+    }
+    return result;
   }
 
   /**
