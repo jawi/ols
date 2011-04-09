@@ -31,13 +31,13 @@ import org.osgi.util.tracker.*;
 
 
 /**
- * Provides a tracker for generic menu items.
+ * Provides a tracker for generic component providers.
  */
-public class MenuTracker extends ServiceTracker
+public class ComponentProviderTracker extends ServiceTracker
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( MenuTracker.class.getName() );
+  private static final Logger LOG = Logger.getLogger( ComponentProviderTracker.class.getName() );
 
   // VARIABLES
 
@@ -46,12 +46,14 @@ public class MenuTracker extends ServiceTracker
   // CONSTRUCTORS
 
   /**
-   * Creates a new MenuTracker instance.
+   * Creates a new ComponentProviderTracker instance.
    * 
    * @param aContext
-   * @param aMenuBar
+   *          the OSGi bundle context to use;
+   * @param aController
+   *          the client controller to use.
    */
-  public MenuTracker( final BundleContext aContext, final ClientController aController )
+  public ComponentProviderTracker( final BundleContext aContext, final ClientController aController )
   {
     super( aContext, ComponentProvider.class.getName(), null );
     this.controller = aController;
@@ -65,10 +67,7 @@ public class MenuTracker extends ServiceTracker
   @Override
   public Object addingService( final ServiceReference aReference )
   {
-    if ( !ComponentProvider.MENU_COMPONENT.equals( aReference.getProperty( ComponentProvider.COMPONENT_ID_KEY ) ) )
-    {
-      return null;
-    }
+    final Object componentId = aReference.getProperty( ComponentProvider.COMPONENT_ID_KEY );
 
     ComponentProvider provider = null;
 
@@ -76,7 +75,10 @@ public class MenuTracker extends ServiceTracker
     {
       provider = ( ComponentProvider )this.context.getService( aReference );
 
-      this.controller.addMenu( provider );
+      if ( ComponentProvider.MENU_COMPONENT.equals( componentId ) )
+      {
+        this.controller.addMenu( provider );
+      }
     }
     catch ( Exception exception )
     {
@@ -94,23 +96,32 @@ public class MenuTracker extends ServiceTracker
   @Override
   public void removedService( final ServiceReference aReference, final Object aService )
   {
-    if ( !ComponentProvider.MENU_COMPONENT.equals( aReference.getProperty( ComponentProvider.COMPONENT_ID_KEY ) ) )
-    {
-      return;
-    }
+    final Object componentId = aReference.getProperty( ComponentProvider.COMPONENT_ID_KEY );
 
     try
     {
       final ComponentProvider provider = ( ComponentProvider )aService;
 
-      super.removedService( aReference, provider );
-
-      this.controller.removeMenu( provider );
+      if ( ComponentProvider.MENU_COMPONENT.equals( componentId ) )
+      {
+        this.controller.removeMenu( provider );
+      }
     }
     catch ( Exception exception )
     {
       LOG.log( Level.WARNING, "Component provider service not removed! Reason: {0}", exception.getMessage() );
       LOG.log( Level.FINE, "Details:", exception );
+    }
+    finally
+    {
+      try
+      {
+        this.context.ungetService( aReference );
+      }
+      catch ( IllegalStateException exception )
+      {
+        LOG.log( Level.WARNING, "Failed to unget component provider service! Reason: {0}", exception.getMessage() );
+      }
     }
   }
 }

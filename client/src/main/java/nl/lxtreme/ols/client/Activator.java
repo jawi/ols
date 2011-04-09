@@ -21,8 +21,11 @@
 package nl.lxtreme.ols.client;
 
 
+import java.util.*;
+
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.osgi.*;
@@ -31,7 +34,8 @@ import org.osgi.framework.*;
 
 
 /**
- * 
+ * Provides the client bundle activator, which is responsible for starting the
+ * entire client UI.
  */
 public class Activator implements BundleActivator
 {
@@ -49,17 +53,51 @@ public class Activator implements BundleActivator
   private static final String OLS_EXPORTER_MAGIC_VALUE = "1.0";
   private static final String OLS_EXPORTER_CLASS_KEY = "OLS-ExporterClass";
 
+  private static final String OLS_COMPONENT_PROVIDER_MAGIC_KEY = "OLS-ComponentProvider";
+  private static final String OLS_COMPONENT_PROVIDER_CLASS_KEY = "OLS-ComponentProviderClass";
+  /** a RegEx for the supported components. */
+  private static final String OLS_COMPONENT_PROVIDER_MAGIC_VALUE = "(Menu)";
+
   // VARIABLES
 
-  private BundleWatcher bundleWatcher = null;
-  private Host host = null;
-
+  private BundleWatcher bundleWatcher;
+  private Host host;
   private LogReaderTracker logReaderTracker;
 
   // METHODS
 
   /**
-   * @return
+   * Creats the bundle observer for component providers.
+   * 
+   * @return a bundle observer, never <code>null</code>.
+   */
+  private static BundleObserver createComponentProviderBundleObserver()
+  {
+    return new BundleServiceObserver( OLS_COMPONENT_PROVIDER_MAGIC_KEY, OLS_COMPONENT_PROVIDER_MAGIC_VALUE,
+        OLS_COMPONENT_PROVIDER_CLASS_KEY, nl.lxtreme.ols.api.ui.ComponentProvider.class.getName() )
+    {
+      @Override
+      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
+          final ManifestHeader... aEntries )
+      {
+        final Properties properties = new Properties();
+        final String componentKind = getManifestHeaderValue( OLS_COMPONENT_PROVIDER_MAGIC_KEY, aEntries );
+        properties.put( ComponentProvider.COMPONENT_ID_KEY, componentKind );
+        return properties;
+      }
+
+      @Override
+      protected boolean matchesMagicValue( final ManifestHeader aHeaderEntry, final String aMagicValue )
+      {
+        return aHeaderEntry.getValue().matches( aMagicValue );
+      }
+    };
+  }
+
+  /**
+   * Creates the bundle observer for device(-controller)s.
+   * 
+   * @return a bundle observer, never <code>null</code>.
    */
   private static BundleObserver createDeviceBundleObserver()
   {
@@ -68,7 +106,9 @@ public class Activator implements BundleActivator
   }
 
   /**
-   * @return
+   * Creates the bundle observer for exporters.
+   * 
+   * @return a bundle observer, never <code>null</code>.
    */
   private static BundleObserver createExporterBundleObserver()
   {
@@ -77,7 +117,9 @@ public class Activator implements BundleActivator
   }
 
   /**
-   * @return
+   * Creates the bundle observer for tools.
+   * 
+   * @return a bundle observer, never <code>null</code>.
    */
   private static BundleObserver createToolBundleObserver()
   {
@@ -120,7 +162,8 @@ public class Activator implements BundleActivator
     this.bundleWatcher //
         .add( createToolBundleObserver() ) //
         .add( createDeviceBundleObserver() ) //
-        .add( createExporterBundleObserver() );
+        .add( createExporterBundleObserver() ) //
+        .add( createComponentProviderBundleObserver() );
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...

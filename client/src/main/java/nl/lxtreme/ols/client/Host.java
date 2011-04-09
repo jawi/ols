@@ -61,7 +61,7 @@ public final class Host implements ApplicationCallback, IHost
   private final Properties clientProperties;
 
   private DeviceControllerTracker deviceControllerTracker;
-  private MenuTracker menuTracker;
+  private ComponentProviderTracker menuTracker;
   private PreferenceServiceTracker preferencesServiceTracker;
   private ExporterTracker exporterTracker;
   private ToolTracker toolTracker;
@@ -242,7 +242,7 @@ public final class Host implements ApplicationCallback, IHost
     this.preferencesServiceTracker = new PreferenceServiceTracker( this.context, this.projectManager );
     this.deviceControllerTracker = new DeviceControllerTracker( this.context, this.controller );
     this.exporterTracker = new ExporterTracker( this.context, this.controller );
-    this.menuTracker = new MenuTracker( this.context, this.controller );
+    this.menuTracker = new ComponentProviderTracker( this.context, this.controller );
     this.toolTracker = new ToolTracker( this.context, this.controller );
 
     LOG.log( Level.FINE, "{0} initialized ...", SHORT_NAME );
