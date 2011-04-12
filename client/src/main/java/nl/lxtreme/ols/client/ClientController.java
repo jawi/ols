@@ -889,9 +889,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
         final JMenuBar menuBar = getMainMenuBar();
         if ( menuBar != null )
         {
-          menuBar.remove( aProvider.getComponent() );
-
           aProvider.removedFromContainer();
+
+          menuBar.remove( aProvider.getComponent() );
 
           menuBar.revalidate();
           menuBar.repaint();
