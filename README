@@ -3,7 +3,7 @@ OpenBench LogicSniffer repository
 This is the public GIT repository for the OpenBench LogicSniffer (short name:
 ols) written by J.W. Janssen.
 
-For more information about this software, see <http://www.lxtreme.nl/ols> and
+For more information about this software, see <http://ols.lxtreme.nl> and
 <http://dangerousprototypes.com/open-logic-sniffer>.
 
 == COMPILING THE SOURCES ==
@@ -18,7 +18,7 @@ Maven2 installed. For developing, I can recommend Eclipse as development
 environment.
 
   $ cd ols/
-	$ mvn clean install
+  $ mvn clean install
 
 After this, you should find the latest binary ZIP or tarball in
 "ols.distribution/target".
