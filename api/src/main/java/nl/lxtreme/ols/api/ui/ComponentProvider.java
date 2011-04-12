@@ -52,24 +52,34 @@ public interface ComponentProvider
   // METHODS
 
   /**
-   * Triggered when the component is added to a container. The implementation
-   * can validate some stuff. This function <b>must</b> be called on the EDT.<br/>
-   * Implementors may assume this function is called <em>after</em>
-   * {@link #getComponent()}.
+   * Triggered when the component is added to a container.
    * <p>
    * Implementors can use this method to initialize listeners and/or other
    * components in context of the (parent) container.
+   * </p>
+   * <p>
+   * The implementation can validate some stuff. This function is always called
+   * on the <em>Event Dispatch Thread</em> (EDT).<br/>
+   * Implementors may assume this function is called once <em>after</em>
+   * {@link #getComponent()}.
    * </p>
    */
   public void addedToContainer();
 
   /**
-   * This function should always be called from the EDT. The implementor may
-   * assume that this function is called <em>once</em> and before
-   * {@link #addedToContainer()}.
+   * Returns the actual instance of the component provided by this
+   * implementation.
    * <p>
    * Implementors of this interface should keep track of the returned components
-   * themselves to access their context (e.g.: their parent).
+   * themselves to access their context (e.g.: their parent). In other words,
+   * implementors should return exactly <em>one</em> instance of the component
+   * provided by their implementation.
+   * </p>
+   * <p>
+   * This function is always be called on the <em>Event Dispatch Thread</em>
+   * (EDT). The implementor may assume that this function is called once before
+   * {@link #addedToContainer()} , but afterwards, this method can be called
+   * multiple times.
    * </p>
    * 
    * @return the (Swing) component provided by this service, cannot be
@@ -78,14 +88,16 @@ public interface ComponentProvider
   public JComponent getComponent();
 
   /**
-   * Triggered when the component is removed from a container. The
-   * implementation can validate some stuff. This function <b>must</b> be called
-   * on the EDT.<br/>
-   * Implementors may assume this function is called <em>after</em>
-   * {@link #getComponent()}.
+   * Triggered when the component is about to get removed from a container.
    * <p>
    * Implementors can use this method to remove listeners and/or other
    * components in context of the (parent) container.
+   * </p>
+   * <p>
+   * The implementation can validate some stuff. This function <b>must</b> be
+   * called on the <em>Event Dispatch Thread</em> (EDT).<br/>
+   * Implementors may assume this function is called once <em>after</em>
+   * {@link #getComponent()}.
    * </p>
    */
   public void removedFromContainer();

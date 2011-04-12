@@ -9,7 +9,7 @@
 	<groupId>nl.lxtreme.ols</groupId>
 	<artifactId>api</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.4-SNAPSHOT</version>
+	<version>1.0.4</version>
 	<name>OLS Framework API</name>
 	<dependencies>
 		<dependency>
@@ -56,6 +56,18 @@
 					</instructions>
 				</configuration>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
 </project>
