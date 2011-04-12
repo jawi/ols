@@ -8,6 +8,8 @@
 	</formats>
 	<dependencySets>
 		<dependencySet>
+            <!-- exclude the (non-existing) project artifacts of *this* project. -->
+            <useProjectArtifact>false</useProjectArtifact>
 			<outputDirectory>lib</outputDirectory>
 			<includes>
 				<include>nl.lxtreme.ols:api</include>
