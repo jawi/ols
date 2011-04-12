@@ -9,7 +9,7 @@
 	<groupId>nl.lxtreme.ols</groupId>
 	<artifactId>util</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.5-SNAPSHOT</version>
+	<version>1.0.5</version>
 	<name>OLS Utilities</name>
 	<dependencies>
 		<dependency>
@@ -56,6 +56,18 @@
 						<Private-Package>nl.lxtreme.ols.util.export</Private-Package>
 					</instructions>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<phase>process-resources</phase>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
