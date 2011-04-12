@@ -124,7 +124,10 @@ public class JStatusBar extends JPanel
   // METHODS
 
   /**
+   * Adds a component to this status bar.
+   * 
    * @param aComponent
+   *          the component to add to the right side of this status bar.
    */
   public void addRightComponent( final JComponent aComponent )
   {
@@ -144,7 +147,11 @@ public class JStatusBar extends JPanel
   }
 
   /**
+   * Sets the main component of this status bar.
+   * 
    * @param aComponent
+   *          the component to set as main component on the left side of this
+   *          status bar.
    */
   public void setMainLeftComponent( final JComponent aComponent )
   {

@@ -52,6 +52,10 @@ public final class DataContainer implements AcquisitionResult
 
   /**
    * Creates a new DataContainer instance.
+   * 
+   * @param aProjectManager
+   *          the project manager to use for this container, cannot be
+   *          <code>null</code>.
    */
   public DataContainer( final ProjectManager aProjectManager )
   {
@@ -136,9 +140,8 @@ public final class DataContainer implements AcquisitionResult
   /**
    * Returns the number of channel blocks that are available in the data.
    * 
-   * @return a block count, >= 0 && < {@value Ols#MAX_BLOCKS}.
-   * @see Ols#MAX_BLOCKS
-   * @see Ols#CHANNELS_PER_BLOCK
+   * @return a block count, >= 0 && < {@value nl.lxtreme.ols.api.Ols#MAX_BLOCKS}
+   *         .
    */
   public int getBlockCount()
   {
@@ -151,6 +154,8 @@ public final class DataContainer implements AcquisitionResult
    * @param aChannelIdx
    *          the index of the channel to retrieve the annotations for, >= 0 &&
    *          < 32.
+   * @param aTimeIndex
+   *          the time index to get the channel annotation for, >= 0.
    * @return the channel annotations, can be <code>null</code>.
    */
   public ChannelAnnotation getChannelAnnotation( final int aChannelIdx, final int aTimeIndex )
@@ -175,6 +180,12 @@ public final class DataContainer implements AcquisitionResult
    * @param aChannelIdx
    *          the index of the channel to retrieve the annotations for, >= 0 &&
    *          < 32.
+   * @param aStartIdx
+   *          the start time/sample index to retrieve the channel annotations
+   *          for, >= 0;
+   * @param aEndIdx
+   *          the end time/sample index to retrieve the channel annotations for,
+   *          >= 0.
    * @return the channel annotations, can be <code>null</code>.
    */
   public Iterator<ChannelAnnotation> getChannelAnnotations( final int aChannelIdx, final int aStartIdx,
@@ -198,7 +209,8 @@ public final class DataContainer implements AcquisitionResult
    * Returns the channel label.
    * 
    * @param aChannelIdx
-   *          the index of the channel to retrieve the label for, >= 0 && < 32.
+   *          the index of the channel to retrieve the label for, >= 0 && <
+   *          {@value nl.lxtreme.ols.api.Ols#MAX_CHANNELS}.
    * @return the channel's label, can be <code>null</code>.
    */
   public String getChannelLabel( final int aChannelIdx )
@@ -235,12 +247,13 @@ public final class DataContainer implements AcquisitionResult
    * number.
    * <p>
    * It is assumed that only the last block can contain less than
-   * {@value Ols#CHANNELS_PER_BLOCK} channels. All preceeding blocks (if available)
-   * are considered to be "complete" blocks.
+   * {@value nl.lxtreme.ols.api.Ols#CHANNELS_PER_BLOCK} channels. All preceeding
+   * blocks (if available) are considered to be "complete" blocks.
    * </p>
    * 
    * @param aBlockNr
-   *          the block number, >= 0 && < {@value Ols#MAX_BLOCKS}.
+   *          the block number, >= 0 && <
+   *          {@value nl.lxtreme.ols.api.Ols#MAX_BLOCKS}.
    * @return the number of channels for the given block, >= 0 && <
    *         {@link #getBlockCount()}.
    * @throws IllegalArgumentException
@@ -310,7 +323,8 @@ public final class DataContainer implements AcquisitionResult
     }
 
     Long cursorPos = getCursorPosition( aCursorIdx );
-    return Double.valueOf( calculateTimeOffset( cursorPos.longValue() ) / ( double )getAcquisitionData().getSampleRate() );
+    return Double.valueOf( calculateTimeOffset( cursorPos.longValue() )
+        / ( double )getAcquisitionData().getSampleRate() );
   }
 
   /**
@@ -420,7 +434,6 @@ public final class DataContainer implements AcquisitionResult
    * 
    * @param aCursorIdx
    *          the index of the cursor to check, should be >= 0 and < 10.
-   * @return a cursor position, or Long.MIN_VALUE if not set.
    * @return <code>true</code> if the cursor with the given index is set,
    *         <code>false</code> otherwise.
    */
@@ -467,6 +480,7 @@ public final class DataContainer implements AcquisitionResult
    * @param aChannelIdx
    *          the index of the channel to set the label for, >= 0 && < 32;
    * @param aAnnotations
+   *          the annotation for the given channel, cannot be <code>null</code>.
    */
   public void setChannelAnnotations( final int aChannelIdx, final ChannelAnnotations aAnnotations )
   {
@@ -556,8 +570,8 @@ public final class DataContainer implements AcquisitionResult
   /**
    * Calculates the time offset
    * 
-   * @param time
-   *          absolute sample number
+   * @param aTime
+   *          the absolute sample number, >= 0.
    * @return time relative to data
    */
   protected long calculateTimeOffset( final long aTime )

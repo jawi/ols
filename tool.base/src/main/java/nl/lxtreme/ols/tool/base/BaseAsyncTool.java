@@ -25,7 +25,7 @@ import java.beans.*;
 import java.util.concurrent.*;
 
 import javax.swing.*;
-import javax.swing.SwingWorker.*;
+import javax.swing.SwingWorker.StateValue;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
@@ -105,7 +105,13 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
     // CONSTRUCTORS
 
     /**
+     * Creates a new ToolWorkerPropertyChangeListener instance.
+     * 
+     * @param aToolWorker
+     *          the tool worker to listen to, cannot be <code>null</code>;
      * @param aCallback
+     *          the callback to invoke for certain property events of the tool
+     *          worker, cannot be <code>null</code>.
      */
     public ToolWorkerPropertyChangeListener( final WORKER aToolWorker, final AnalysisCallback aCallback )
     {

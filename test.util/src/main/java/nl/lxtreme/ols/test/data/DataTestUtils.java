@@ -109,8 +109,12 @@ public final class DataTestUtils
   // METHODS
 
   /**
+   * Asserts that the given acquisition results are equal to each other.
+   * 
    * @param aExpected
+   *          the expected acquisition result, cannot be <code>null</code>;
    * @param aTested
+   *          the acquisition result to test.
    */
   public static void assertEquals( final AcquisitionResult aExpected, final AcquisitionResult aTested )
   {
@@ -118,8 +122,14 @@ public final class DataTestUtils
   }
 
   /**
+   * Asserts that the given acquisition results are equal to each other.
+   * 
+   * @param aMessage
+   *          the message to display when the assertion fails;
    * @param aExpected
+   *          the expected acquisition result, cannot be <code>null</code>;
    * @param aTested
+   *          the acquisition result to test.
    */
   @SuppressWarnings( "boxing" )
   public static void assertEquals( final String aMessage, final AcquisitionResult aExpected,

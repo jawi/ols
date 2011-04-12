@@ -24,7 +24,9 @@ package nl.lxtreme.ols.util.export;
 import java.util.*;
 import java.util.regex.*;
 
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Attribute;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 
 
 /**
@@ -44,7 +46,10 @@ public final class TextElement implements Element
   // CONSTRUCTORS
 
   /**
+   * Creates a new {@link TextElement} instance.
    * 
+   * @param aValue
+   *          the value of this text element, may be <code>null</code>.
    */
   public TextElement( final String aValue )
   {
@@ -54,8 +59,7 @@ public final class TextElement implements Element
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#addAttribute(java.lang.String,
-   *      java.lang.String)
+   * {@inheritDoc}
    */
   @Override
   public Element addAttribute( final String aName, final String aValue )
@@ -64,7 +68,7 @@ public final class TextElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#addChild(nl.lxtreme.ols.util.ExportUtils.Element)
+   * {@inheritDoc}
    */
   @Override
   public Element addChild( final Element aChild )
@@ -73,7 +77,7 @@ public final class TextElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#addChild(java.lang.String)
+   * {@inheritDoc}
    */
   @Override
   public Element addChild( final String aName )
@@ -82,7 +86,7 @@ public final class TextElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element#addContent(java.lang.String[])
+   * {@inheritDoc}
    */
   @Override
   public Element addContent( final String... aValue )
@@ -91,7 +95,7 @@ public final class TextElement implements Element
   }
 
   /**
-   * @see java.lang.Object#clone()
+   * {@inheritDoc}
    */
   @Override
   public Element clone()
@@ -109,7 +113,7 @@ public final class TextElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#getAttributes()
+   * {@inheritDoc}
    */
   @Override
   public Collection<Attribute> getAttributes()
@@ -118,7 +122,7 @@ public final class TextElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#getChildByName(java.lang.String)
+   * {@inheritDoc}
    */
   @Override
   public Element getChildByName( final String aName )
@@ -127,7 +131,7 @@ public final class TextElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#getChildren()
+   * {@inheritDoc}
    */
   @Override
   public Collection<Element> getChildren()
@@ -136,7 +140,7 @@ public final class TextElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#getName()
+   * {@inheritDoc}
    */
   @Override
   public String getName()

@@ -22,6 +22,7 @@ package nl.lxtreme.ols.util.swing;
 
 
 import java.lang.ref.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.*;
@@ -33,7 +34,7 @@ import nl.lxtreme.ols.util.*;
  * on the EDT.
  * <p>
  * Code originates from the SwingHelper project, for more information see:
- * {@link https://swinghelper.dev.java.net/}.
+ * {@link "https://swinghelper.dev.java.net/"}.
  * </p>
  */
 public final class ThreadViolationDetectionRepaintManager extends RepaintManager

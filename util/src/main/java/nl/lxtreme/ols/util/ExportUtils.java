@@ -148,7 +148,7 @@ public final class ExportUtils
       /**
        * Adds a new child element to this element.
        * 
-       * @param aChild
+       * @param aName
        *          the name of the child element to add, cannot be
        *          <code>null</code>.
        * @return the added child element.
@@ -359,8 +359,6 @@ public final class ExportUtils
    * Creates a HTML exporter.
    * 
    * @return a HTML exporter, never <code>null</code>.
-   * @throws IOException
-   *           in case of I/O errors.
    */
   public static HtmlExporter createHtmlExporter()
   {

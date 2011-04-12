@@ -29,11 +29,11 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.swing.*;
-import javax.swing.SwingWorker.*;
+import javax.swing.SwingWorker.StateValue;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.BaseAsyncTool.*;
+import nl.lxtreme.ols.tool.base.BaseAsyncTool.ToolWorkerFactory;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -455,7 +455,6 @@ public abstract class BaseAsyncToolDialog<RESULT_TYPE, WORKER extends BaseAsyncT
    *          the tool worker that is queried for, never <code>null</code>.
    * @return <code>true</code> if the worker is valid and can be used to work,
    *         <code>false</code> otherwise.
-   * @see #startToolWorker()
    */
   protected boolean isWorkerValid( final WORKER aWorker )
   {

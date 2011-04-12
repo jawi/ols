@@ -57,7 +57,10 @@ public class JTextStatusBar extends JStatusBar
   // METHODS
 
   /**
+   * Sets the progress of the progress indicator to the given percentage.
+   * 
    * @param aPercentage
+   *          the percentage to set, >= 0 && < 100.
    */
   public void setProgress( final int aPercentage )
   {
@@ -66,7 +69,10 @@ public class JTextStatusBar extends JStatusBar
   }
 
   /**
+   * Sets the text of this status bar.
+   * 
    * @param aText
+   *          the text to set, may be <code>null</code>.
    */
   public void setText( final String aText )
   {
@@ -74,7 +80,11 @@ public class JTextStatusBar extends JStatusBar
   }
 
   /**
+   * Sets whether or not the progress bar is shown.
+   * 
    * @param aVisible
+   *          <code>true</code> if the progress bar is to be shown,
+   *          <code>false</code> to hide it.
    */
   public void showProgressBar( final boolean aVisible )
   {

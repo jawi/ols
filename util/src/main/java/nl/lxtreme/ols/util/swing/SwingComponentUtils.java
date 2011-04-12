@@ -199,10 +199,7 @@ public final class SwingComponentUtils
    * selected.
    * 
    * @param aChannelCount
-   *          the number of channels to include in the combobox options;
-   * @param aAddUnusedOption
-   *          <code>true</code> to add "unused" as first option,
-   *          <code>false</code> to omit this option.
+   *          the number of channels to include in the combobox options.
    * @return a combobox with channel selector options.
    */
   public static JComboBox createOptionalChannelSelector( final int aChannelCount )
@@ -488,8 +485,6 @@ public final class SwingComponentUtils
   /**
    * Tries to load/restore the window state of the given window.
    * 
-   * @param aNamespace
-   *          the namespace to use for the window state;
    * @param aProperties
    *          the properties to read from;
    * @param aWindow
@@ -584,8 +579,6 @@ public final class SwingComponentUtils
   /**
    * Saves the window state to the given properties map.
    * 
-   * @param aNamespace
-   *          the namespace to use for the window state;
    * @param aProperties
    *          the properties to fill;
    * @param aWindow

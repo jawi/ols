@@ -36,6 +36,13 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
 
   /**
    * Creates a new ChannelAnnotation instance.
+   * 
+   * @param aStartIndex
+   *          the sample index on which this annotation starts;
+   * @param aEndIndex
+   *          the end index on which this annotation ends;
+   * @param aData
+   *          the actual annotated data.
    */
   public ChannelAnnotation( final int aStartIndex, final int aEndIndex, final Object aData )
   {

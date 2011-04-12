@@ -23,6 +23,9 @@ package nl.lxtreme.ols.api.data;
 
 /**
  * Provides a base data implementation.
+ * 
+ * @param <TYPE>
+ *          the actual content type of this base data entity.
  */
 public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements Comparable<TYPE>
 {
@@ -72,7 +75,7 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
    */
   public int compareTo( final TYPE aComparable )
   {
-    return ( this.idx - ( (nl.lxtreme.ols.api.data.BaseData<?> )aComparable ).getIndex() );
+    return ( this.idx - ( ( nl.lxtreme.ols.api.data.BaseData<?> )aComparable ).getIndex() );
   }
 
   /**
@@ -90,7 +93,7 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
       return false;
     }
 
-    final BaseData<?> other = (nl.lxtreme.ols.api.data.BaseData<?> )aObject;
+    final BaseData<?> other = ( nl.lxtreme.ols.api.data.BaseData<?> )aObject;
     if ( this.idx != other.idx )
     {
       return false;

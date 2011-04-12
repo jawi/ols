@@ -85,8 +85,6 @@ public interface DeviceController
    * @return <code>true</code> if the setup is successfully completed (the user
    *         acknowledged the setup), <code>false</code> if the setup is aborted
    *         by the user.
-   * @throws IOException
-   *           in case of I/O problems.
    */
   public boolean setupCapture( final java.awt.Window aParent );
 }

@@ -21,11 +21,13 @@
 package nl.lxtreme.ols.util.export;
 
 
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 
 
 /**
- * @author jawi
+ * Provides a macro resolver that returns always <code>null</code> for each
+ * given macro.
  */
 public class NullMacroResolver implements MacroResolver
 {
@@ -40,5 +42,4 @@ public class NullMacroResolver implements MacroResolver
   {
     return null;
   }
-
 }

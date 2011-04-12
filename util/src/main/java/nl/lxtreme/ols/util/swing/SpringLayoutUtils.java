@@ -91,9 +91,14 @@ public final class SpringLayoutUtils
   }
 
   /**
+   * Adds a constant value to a given edge of a given constraints.
+   * 
    * @param aConstraints
+   *          the constraints to mutate;
    * @param aEdgeName
+   *          the name of the edge to mutate;
    * @param aConstant
+   *          the new value to set.
    */
   public static void addToConstraint( final SpringLayout.Constraints aConstraints, final String aEdgeName,
       final int aConstant )

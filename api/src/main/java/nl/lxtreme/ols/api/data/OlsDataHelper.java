@@ -228,6 +228,8 @@ public final class OlsDataHelper
    * Writes the data to the given writer.
    * 
    * @param aProject
+   *          the project to write the settings for, cannot be <code>null</code>
+   *          ;
    * @param aWriter
    *          the writer to write the data to, cannot be <code>null</code>.
    * @throws IOException

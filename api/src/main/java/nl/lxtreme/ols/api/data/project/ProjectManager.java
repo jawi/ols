@@ -65,7 +65,6 @@ public interface ProjectManager
    * 
    * @param aInput
    *          the input to read the project from, cannot be <code>null</code>.
-   * @return the loaded project, never <code>null</code>.
    * @throws IOException
    *           in case of I/O problems during the read of the project.
    */
@@ -82,8 +81,6 @@ public interface ProjectManager
   /**
    * Stores a project to the given output stream.
    * 
-   * @param aProject
-   *          the project to store, cannot be <code>null</code>;
    * @param aOutput
    *          the output to write the project to, cannot be <code>null</code>.
    * @throws IOException

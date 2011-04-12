@@ -50,7 +50,10 @@ public class JPopdownButton extends JToggleButton
   // CONSTRUCTORS
 
   /**
+   * Creates a new {@link JPopdownButton} instance.
+   * 
    * @param aIcon
+   *          the icon of this popdown button.
    */
   public JPopdownButton( final Icon aIcon )
   {
@@ -58,8 +61,12 @@ public class JPopdownButton extends JToggleButton
   }
 
   /**
+   * Creates a new {@link JPopdownButton} instance.
+   * 
    * @param aDefaultIcon
+   *          the default icon of this popdown button;
    * @param aPressedAndSelectedIcon
+   *          the pressed and selected icon of this popdown button.
    */
   public JPopdownButton( final Icon aDefaultIcon, final Icon aPressedAndSelectedIcon )
   {
@@ -86,7 +93,9 @@ public class JPopdownButton extends JToggleButton
   }
 
   /**
-   * @return
+   * Returns the popup menu.
+   * 
+   * @return the popup menu, never <code>null</code>.
    */
   public JPopupMenu getPopupMenu()
   {

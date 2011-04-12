@@ -49,13 +49,10 @@ public class TextOverlayIcon extends ImageIcon
    * Creates a new TextOverlayIcon instance, placing the text in the center of
    * the icon.
    * 
-   * @param aIconName
-   *          the (symbolic) name of the icon;
+   * @param aIcon
+   *          the icon that should be overlayed;
    * @param aTextOverlay
    *          the text that is to overlayed;
-   * @param aPosition
-   *          on of the {@link SwingConstants} values that denotes the overlay
-   *          position.
    */
   public TextOverlayIcon( final Icon aIcon, final String aTextOverlay )
   {
@@ -66,8 +63,8 @@ public class TextOverlayIcon extends ImageIcon
    * Creates a new TextOverlayIcon instance, placing the text at the given
    * position.
    * 
-   * @param aIconName
-   *          the (symbolic) name of the icon;
+   * @param aIcon
+   *          the icon that should be overlayed;
    * @param aTextOverlay
    *          the text that is to overlayed;
    * @param aPosition
