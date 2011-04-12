@@ -17,8 +17,10 @@
 				<include>org.osgi:org.osgi.core</include>
 				<include>org.osgi:org.osgi.compendium</include>
 			</includes>
+            <directoryMode>0755</directoryMode>
 		</dependencySet>
 	</dependencySets>
+	
 	<fileSets>
 		<fileSet>
 			<directory>${project.basedir}/target/apidocs</directory>
@@ -40,6 +42,8 @@
 				<include>install-to-maven.bat</include>
 			</includes>
 			<lineEnding>dos</lineEnding>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0644</fileMode>
 		</fileSet>
 		<fileSet>
 			<directory>${project.basedir}</directory>
@@ -49,6 +53,7 @@
 				<include>install-to-maven.sh</include>
 			</includes>
 			<lineEnding>unix</lineEnding>
+            <directoryMode>0755</directoryMode>
 			<fileMode>0755</fileMode>
 		</fileSet>
 	</fileSets>
