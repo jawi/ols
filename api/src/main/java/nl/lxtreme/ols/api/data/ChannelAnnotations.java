@@ -38,6 +38,10 @@ public class ChannelAnnotations
 
   /**
    * Creates a new ChannelAnnotations instance.
+   * 
+   * @param aChannel
+   *          the index of the sample channel, >= 0 && <
+   *          {@value nl.lxtreme.ols.api.Ols#MAX_CHANNELS}.
    */
   public ChannelAnnotations( final int aChannel )
   {
@@ -48,9 +52,14 @@ public class ChannelAnnotations
   // METHODS
 
   /**
+   * Adds a new annotation to this container.
+   * 
    * @param aStartIdx
+   *          the start sample index of the annotation to add;
    * @param aEndIdx
+   *          the end sample index of the annotation to add;
    * @param aData
+   *          the actual annotation data of the annotation to add.
    */
   public void addAnnotation( final int aStartIdx, final int aEndIdx, final Object aData )
   {
@@ -82,8 +91,12 @@ public class ChannelAnnotations
   }
 
   /**
+   * Returns the annotation at the given time index.
+   * 
    * @param aTimeIndex
-   * @return
+   *          the index of the timestamps to return the annotation for, >= 0.
+   * @return a channel annotation valid at the given time index, or
+   *         <code>null</code> if no such annotation was present.
    */
   public ChannelAnnotation getAnnotation( final int aTimeIndex )
   {

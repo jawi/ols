@@ -87,7 +87,11 @@ public class JLazyComboBox extends JComboBox
     // CONSTRUCTORS
 
     /**
+     * Creates a new ComboboxPopupListener instance.
+     * 
      * @param aItemProvider
+     *          the item provider to use to provide the individual items to this
+     *          combobox listener.
      */
     public ComboboxPopupListener( final ItemProvider aItemProvider )
     {

@@ -605,8 +605,12 @@ public final class HostUtils
    * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
    * given file.
    * 
-   * @param aFile
-   *          the file to return the extension for, cannot be <code>null</code>.
+   * @param aFilename
+   *          the name of the file to strip the extension from, cannot be
+   *          <code>null</code>;
+   * @param aExtensions
+   *          the (optional) extensions that should be stripped. If omitted,
+   *          everything behind the last dot will be removed.
    * @return the file extension (always in lower case), never <code>null</code>
    *         but can be empty if the given file has <em>no</em> file extension.
    */

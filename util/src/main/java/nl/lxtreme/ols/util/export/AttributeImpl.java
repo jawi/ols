@@ -21,7 +21,8 @@
 package nl.lxtreme.ols.util.export;
 
 
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Attribute;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 
 
 /**
@@ -37,7 +38,11 @@ public class AttributeImpl implements Attribute
   // CONSTRUCTORS
 
   /**
+   * Creates a new {@link AttributeImpl} instance.
+   * 
    * @param aName
+   *          the name of this attribute, which will also be its value, cannot
+   *          be <code>null</code>.
    */
   public AttributeImpl( final String aName )
   {
@@ -45,8 +50,12 @@ public class AttributeImpl implements Attribute
   }
 
   /**
+   * Creates a new {@link AttributeImpl} instance.
+   * 
    * @param aName
+   *          the name of this attribute, cannot be <code>null</code>;
    * @param aValue
+   *          the value of this attribute, cannot be <code>null</code>.
    */
   public AttributeImpl( final String aName, final String aValue )
   {
@@ -57,7 +66,7 @@ public class AttributeImpl implements Attribute
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.util.Attribute#clone()
+   * {@inheritDoc}
    */
   @Override
   public Attribute clone()
@@ -105,7 +114,9 @@ public class AttributeImpl implements Attribute
   }
 
   /**
-   * @see nl.lxtreme.ols.util.Attribute#getName()
+   * Returns the name of this attribute.
+   * 
+   * @return the name of this attribute, never <code>null</code>.
    */
   public String getName()
   {
@@ -113,7 +124,9 @@ public class AttributeImpl implements Attribute
   }
 
   /**
-   * @see nl.lxtreme.ols.util.Attribute#getValue()
+   * Returns the value of this attribute.
+   * 
+   * @return the value of this attribute, never <code>null</code>.
    */
   public String getValue()
   {

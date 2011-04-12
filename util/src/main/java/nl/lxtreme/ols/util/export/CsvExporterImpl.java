@@ -24,7 +24,7 @@ package nl.lxtreme.ols.util.export;
 import java.io.*;
 import java.util.logging.*;
 
-import nl.lxtreme.ols.util.ExportUtils.*;
+import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 
 
 /**
@@ -46,8 +46,12 @@ public class CsvExporterImpl implements CsvExporter
   // CONSTRUCTORS
 
   /**
+   * Creates a new {@link CsvExporterImpl} instance.
+   * 
    * @param aFile
+   *          the file to export to, cannot be <code>null</code>.
    * @throws IOException
+   *           in case of I/O exceptions.
    */
   public CsvExporterImpl( final File aFile ) throws IOException
   {
@@ -55,9 +59,14 @@ public class CsvExporterImpl implements CsvExporter
   }
 
   /**
+   * Creates a new {@link CsvExporterImpl} instance.
+   * 
    * @param aFile
+   *          the file to export to, cannot be <code>null</code>;
    * @param aDelimiter
+   *          the CSV delimiter to use.
    * @throws IOException
+   *           in case of I/O exceptions.
    */
   public CsvExporterImpl( final File aFile, final char aDelimiter ) throws IOException
   {
@@ -68,8 +77,9 @@ public class CsvExporterImpl implements CsvExporter
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.util.CsvExporter#addRow(java.lang.Object)
+   * {@inheritDoc}
    */
+  @Override
   public void addRow( final Object... aValues ) throws IOException
   {
     if ( aValues.length != this.headerCount )
@@ -96,8 +106,9 @@ public class CsvExporterImpl implements CsvExporter
   }
 
   /**
-   * @see nl.lxtreme.ols.util.CsvExporter#close()
+   * {@inheritDoc}
    */
+  @Override
   public void close() throws IOException
   {
     try
@@ -112,8 +123,9 @@ public class CsvExporterImpl implements CsvExporter
   }
 
   /**
-   * @see nl.lxtreme.ols.util.CsvExporter#setHeaders(java.lang.String)
+   * {@inheritDoc}
    */
+  @Override
   public void setHeaders( final String... aHeaders ) throws IOException
   {
     this.headerCount = aHeaders.length;

@@ -23,7 +23,9 @@ package nl.lxtreme.ols.util.export;
 
 import java.util.*;
 
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Attribute;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 
 
 /**
@@ -41,8 +43,10 @@ public final class TagElement implements Element
   // CONSTRUCTORS
 
   /**
+   * Creates a new {@link TagElement} instance.
+   * 
    * @param aName
-   * @param aAttributes
+   *          the name of this tag element, cannot be <code>null</code>.
    */
   public TagElement( final String aName )
   {
@@ -50,8 +54,13 @@ public final class TagElement implements Element
   }
 
   /**
+   * Creates a new {@link TagElement} instance.
+   * 
    * @param aName
-   * @param aAttributes
+   *          the name of this tag element, cannot be <code>null</code>;
+   * @param aNeedsCloseTag
+   *          <code>true</code> if a separate closing tag is needed,
+   *          <code>false</code> if this tag can be closed in an inline manner.
    */
   public TagElement( final String aName, final boolean aNeedsCloseTag )
   {
@@ -64,8 +73,7 @@ public final class TagElement implements Element
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#addAttribute(java.lang.String,
-   *      java.lang.String)
+   * {@inheritDoc}
    */
   @Override
   public Element addAttribute( final String aName, final String aValue )
@@ -76,7 +84,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#addChild(nl.lxtreme.ols.util.ExportUtils.Element)
+   * {@inheritDoc}
    */
   @Override
   public Element addChild( final Element aChild )
@@ -91,7 +99,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#addChild(java.lang.String)
+   * {@inheritDoc}
    */
   @Override
   public Element addChild( final String aName )
@@ -106,7 +114,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element#addContent(java.lang.String[])
+   * {@inheritDoc}
    */
   @Override
   public Element addContent( final String... aValue )
@@ -125,7 +133,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see java.lang.Object#clone()
+   * {@inheritDoc}
    */
   @Override
   public Element clone()
@@ -159,7 +167,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#getAttributes()
+   * {@inheritDoc}
    */
   @Override
   public Collection<Attribute> getAttributes()
@@ -168,7 +176,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#getChildByName(java.lang.String)
+   * {@inheritDoc}
    */
   @Override
   public Element getChildByName( final String aName )
@@ -184,7 +192,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#getChildren()
+   * {@inheritDoc}
    */
   @Override
   public Collection<Element> getChildren()
@@ -193,7 +201,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.Element#getName()
+   * {@inheritDoc}
    */
   @Override
   public String getName()
@@ -202,7 +210,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see java.lang.Object#toString()
+   * {@inheritDoc}
    */
   @Override
   public String toString()
@@ -211,7 +219,7 @@ public final class TagElement implements Element
   }
 
   /**
-   * @see nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element#toString(nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver)
+   * {@inheritDoc}
    */
   @Override
   public String toString( final MacroResolver aResolver )

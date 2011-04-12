@@ -25,18 +25,15 @@ package nl.lxtreme.ols.api;
  * This interface defines the methods required to make (UI) object states
  * controllable by the project mechanism.
  * <p>
- * Its methods are called by {@link Project} when storing or loading the project
- * state. A project state is the collection of states of all user configurable
- * items.
+ * Its methods are called by {@link nl.lxtreme.ols.api.data.project.Project}
+ * when storing or loading the project state. A project state is the collection
+ * of states of all user configurable items.
  * <p>
  * Note: When defining property values it should be kept in mind that the
  * project configuration file should be understandable and editable by users.
  * Use common sense to determine wheter a particular setting should be part of
  * the project configuration or not. For key naming conventions please look at
  * an actual configuration file.
- * 
- * @version 0.7
- * @author Michael "Mr. Sump" Poppitz
  */
 public interface Configurable
 {

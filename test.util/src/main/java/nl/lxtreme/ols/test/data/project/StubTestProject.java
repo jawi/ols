@@ -56,7 +56,8 @@ public class StubTestProject implements Project
   /**
    * Asserts the given absolute lengths is defined in the captured data.
    * 
-   * @param aTimestamps
+   * @param aAbsLength
+   *          the absolute length that is expected.
    */
   public void assertAbsoluteLength( final long aAbsLength )
   {
@@ -69,7 +70,10 @@ public class StubTestProject implements Project
   /**
    * Asserts the cursor with the given index occur in the captured data.
    * 
-   * @param aTimestamps
+   * @param aCursorIdx
+   *          the index of the cursor to assert;
+   * @param aCursorValue
+   *          the expected value of the cursor to assert.
    */
   public void assertCursorSet( final int aCursorIdx, final long aCursorValue )
   {
@@ -82,7 +86,8 @@ public class StubTestProject implements Project
    * Asserts the cursor with the given index does NOT occur in the captured
    * data.
    * 
-   * @param aTimestamps
+   * @param aCursorIdx
+   *          the index of the cursor that should be unset.
    */
   public void assertCursorUnset( final int aCursorIdx )
   {
@@ -95,6 +100,8 @@ public class StubTestProject implements Project
    * Asserts the given timestamps occur in the captured data.
    * 
    * @param aTimestamps
+   *          the timestamps that are to be expected, starting at the first
+   *          timestamp.
    */
   public void assertTimeStamps( final long... aTimestamps )
   {
@@ -107,7 +114,9 @@ public class StubTestProject implements Project
   /**
    * Asserts the given values occur in the captured data.
    * 
-   * @param aTimestamps
+   * @param aValues
+   *          the sample values that are to be expected, starting at the first
+   *          value.
    */
   public void assertValues( final int... aValues )
   {
@@ -208,7 +217,7 @@ public class StubTestProject implements Project
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setCapturedData(nl.lxtreme.ols.api.data.CapturedData)
+   * @see nl.lxtreme.ols.api.data.project.Project#setCapturedData(AcquisitionResult)
    */
   @Override
   public void setCapturedData( final AcquisitionResult aCapturedData )

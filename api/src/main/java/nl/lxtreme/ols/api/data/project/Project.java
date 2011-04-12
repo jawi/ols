@@ -84,6 +84,9 @@ public interface Project
   /**
    * Returns the other user settings, like UI-settings, and such.
    * 
+   * @param aName
+   *          the name of the user settings to retrieve, cannot be
+   *          <code>null</code>.
    * @return a user settings object, never <code>null</code>.
    */
   public UserSettings getSettings( final String aName );

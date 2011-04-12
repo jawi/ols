@@ -23,7 +23,8 @@ package nl.lxtreme.ols.util.export;
 
 import java.io.*;
 
-import nl.lxtreme.ols.util.ExportUtils.*;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 
 
 /**
@@ -62,8 +63,8 @@ public class HtmlFileExporterImpl extends HtmlExporterImpl implements HtmlFileEx
   {
     super( true /* aIncludeDTD */);
     // Ensure for HTML files the content type is set...
-    getHead().addChild( HtmlExporter.META ).addAttribute( "http-equiv", "Content-type" ).addAttribute( "content",
-        "text/html;charset=UTF-8" );
+    getHead().addChild( HtmlExporter.META ).addAttribute( "http-equiv", "Content-type" )
+        .addAttribute( "content", "text/html;charset=UTF-8" );
 
     this.writer = aWriter;
   }
@@ -71,8 +72,9 @@ public class HtmlFileExporterImpl extends HtmlExporterImpl implements HtmlFileEx
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.util.export.HtmlExporter#close()
+   * {@inheritDoc}
    */
+  @Override
   public void close() throws IOException
   {
     try
@@ -88,6 +90,7 @@ public class HtmlFileExporterImpl extends HtmlExporterImpl implements HtmlFileEx
   /**
    * @see nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter#write(nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver)
    */
+  @Override
   public void write( final MacroResolver aResolver ) throws IOException
   {
     this.writer.write( toString( aResolver ) );

@@ -67,8 +67,8 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#addChannelAnnotation(int, long,
-   *      long, Object)
+   * @see nl.lxtreme.ols.api.data.DataContainer#addChannelAnnotation(int, int,
+   *      int, Object)
    */
   public final void addChannelAnnotation( final int aChannelIdx, final int aStartIdx, final int aEndIdx,
       final Object aData )
@@ -77,7 +77,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#clearChannelAnnotations(int)
+   * @see nl.lxtreme.ols.api.data.DataContainer#clearChannelAnnotations(int)
    */
   public final void clearChannelAnnotations( final int aChannelIdx )
   {
@@ -105,7 +105,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getChannelLabel(int)
+   * @see nl.lxtreme.ols.api.data.DataContainer#getChannelLabel(int)
    */
   public final String getChannelLabel( final int aChannelIdx )
   {
@@ -120,7 +120,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
    *          the index of the channel to return the label for, >= 0 && < 32;
    * @param aDefault
    *          the default label to use in case the channel label is not set.
-   * @see nl.lxtreme.ols.api.data.CapturedData#getChannelLabel(int)
+   * @see nl.lxtreme.ols.api.data.DataContainer#getChannelLabel(int)
    */
   public final String getChannelLabel( final int aChannelIdx, final String aDefault )
   {
@@ -152,7 +152,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getCursorPosition(int)
+   * @see nl.lxtreme.ols.api.data.DataContainer#getCursorPosition(int)
    */
   public final Long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
   {
@@ -160,7 +160,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getEnabledChannels()
+   * @see nl.lxtreme.ols.api.data.DataContainer#getEnabledChannels()
    */
   @Override
   public final int getEnabledChannels()
@@ -169,7 +169,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getSampleIndex(long)
+   * @see nl.lxtreme.ols.api.data.DataContainer#getSampleIndex(long)
    */
   @Override
   public final int getSampleIndex( final long aAbs )
@@ -178,7 +178,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getSampleRate()
+   * @see nl.lxtreme.ols.api.data.DataContainer#getSampleRate()
    */
   @Override
   public final int getSampleRate()
@@ -187,7 +187,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getTimestamps()
+   * @see nl.lxtreme.ols.api.data.DataContainer#getTimestamps()
    */
   @Override
   public final long[] getTimestamps()
@@ -196,7 +196,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getTriggerPosition()
+   * @see nl.lxtreme.ols.api.data.DataContainer#getTriggerPosition()
    */
   @Override
   public long getTriggerPosition()
@@ -205,7 +205,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getValues()
+   * @see nl.lxtreme.ols.api.data.DataContainer#getValues()
    */
   @Override
   public final int[] getValues()
@@ -214,7 +214,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#hasCapturedData()
+   * @see nl.lxtreme.ols.api.data.DataContainer#hasCapturedData()
    */
   public final boolean hasCapturedData()
   {
@@ -222,7 +222,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#hasTimingData()
+   * @see nl.lxtreme.ols.api.data.DataContainer#hasTimingData()
    */
   @Override
   public final boolean hasTimingData()
@@ -231,7 +231,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#hasTriggerData()
+   * @see nl.lxtreme.ols.api.data.DataContainer#hasTriggerData()
    */
   @Override
   public final boolean hasTriggerData()
@@ -240,7 +240,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#isChannelLabelSet(int)
+   * @see nl.lxtreme.ols.api.data.DataContainer#isChannelLabelSet(int)
    */
   public final boolean isChannelLabelSet( final int aChannelIdx )
   {
@@ -248,7 +248,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#isCursorPositionSet(int)
+   * @see nl.lxtreme.ols.api.data.DataContainer#isCursorPositionSet(int)
    */
   public final boolean isCursorPositionSet( final int aCursorIdx )
   {
@@ -256,7 +256,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#isCursorsEnabled()
+   * @see nl.lxtreme.ols.api.data.DataContainer#isCursorsEnabled()
    */
   public final boolean isCursorsEnabled()
   {
@@ -264,7 +264,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#setChannelLabel(int, String)
+   * @see nl.lxtreme.ols.api.data.DataContainer#setChannelLabel(int, String)
    */
   public final void setChannelLabel( final int aChannelIdx, final String aLabel )
   {
@@ -272,7 +272,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#setChannelLabel(int, String)
+   * @see nl.lxtreme.ols.api.data.DataContainer#setChannelLabel(int, String)
    */
   public final String updateChannelLabel( final int aChannelIdx, final String aLabel )
   {
@@ -282,7 +282,7 @@ public abstract class BaseAsyncToolWorker<T> extends SwingWorker<T, Integer> imp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#setCapturedData(CapturedData)
+   * @see nl.lxtreme.ols.api.data.DataContainer#setCapturedData(AcquisitionResult)
    */
   protected final void setCapturedData( final AcquisitionResult aCapturedData )
   {

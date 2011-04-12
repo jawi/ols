@@ -26,6 +26,9 @@ import java.util.*;
 
 /**
  * Provides a base data set implementation.
+ * 
+ * @param <DATA>
+ *          the actual data entity of this base data set.
  */
 public class BaseDataSet<DATA extends BaseData<DATA>>
 {
@@ -45,9 +48,12 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
   /**
    * Creates a new BaseDataSet.
    * 
-   * @param aStartOfDecode
-   * @param aEndOfDecode
+   * @param aStartOfDecodeIdx
+   *          the sample index denoting the start of this data set;
+   * @param aEndOfDecodeIdx
+   *          the sample index denoting the end of this data set;
    * @param aData
+   *          the actual acquisition results used in this data set.
    */
   public BaseDataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final AcquisitionResult aData )
   {

@@ -24,7 +24,7 @@ package nl.lxtreme.ols.util.swing.component;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.lang.Thread.*;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.*;
 
 import javax.swing.*;
@@ -60,27 +60,32 @@ public class JErrorDialog extends JDialog implements Closeable
     /**
      * Short string that will be used as a error header
      */
-    private String header;
+    private final String header;
     /**
      * Basic message that describes incident
      */
-    private String basicErrorMessage;
+    private final String basicErrorMessage;
     /**
      * Message that will fully describe the incident with all the available
      * details
      */
-    private String detailedErrorMessage;
+    private final String detailedErrorMessage;
     /**
      * Optional Throwable that will be used
      */
-    private Throwable errorException;
+    private final Throwable errorException;
 
     // CONSTRUCTORS
 
     /**
+     * Creates a new IncidentInfo instance.
+     * 
      * @param aHeader
+     *          the header of this incident;
      * @param aBasicErrorMessage
+     *          the short/human readable version of this incident;
      * @param aDetailedErrorMessage
+     *          the detailed version of this incident (stack trace).
      */
     public IncidentInfo( final String aHeader, final String aBasicErrorMessage, final String aDetailedErrorMessage )
     {
@@ -89,13 +94,17 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Main constructor that adds all the information to IncidentInfo
-     *
+     * 
      * @param aHeader
+     *          the header of this incident;
      * @param aBasicErrorMessage
-     * @param aDetailedErrorMesage
+     *          the short/human readable version of this incident;
+     * @param aDetailedErrorMessage
+     *          the detailed version of this incident (stack trace);
      * @param aErrorException
+     *          the exception to show in this incident.
      */
-    public IncidentInfo( final String aHeader, final String aBasicErrorMessage, final String aDetailedErrorMesage,
+    public IncidentInfo( final String aHeader, final String aBasicErrorMessage, final String aDetailedErrorMessage,
         final Throwable aErrorException )
     {
       this.header = aHeader;
@@ -114,13 +123,17 @@ public class JErrorDialog extends JDialog implements Closeable
           this.basicErrorMessage = "";
         }
       }
-      this.detailedErrorMessage = aDetailedErrorMesage;
+      this.detailedErrorMessage = aDetailedErrorMessage;
       this.errorException = aErrorException;
     }
 
     /**
+     * Creates a new IncidentInfo instance.
+     * 
      * @param aHeader
+     *          the header of this incident;
      * @param aErrorException
+     *          the exception to show in this incident.
      */
     public IncidentInfo( final String aHeader, final Throwable aErrorException )
     {
@@ -129,7 +142,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Get the basic error description
-     *
+     * 
      * @return basic error description
      */
     public String getBasicErrorMessage()
@@ -139,7 +152,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Get the detailed error description
-     *
+     * 
      * @return detailed description
      */
     public String getDetailedErrorMessage()
@@ -150,7 +163,7 @@ public class JErrorDialog extends JDialog implements Closeable
     /**
      * Get an exception that contains some additional information about the
      * error if provided.
-     *
+     * 
      * @return exception or null if no exception provided
      */
     public Throwable getErrorException()
@@ -160,53 +173,12 @@ public class JErrorDialog extends JDialog implements Closeable
 
     /**
      * Get the current header string
-     *
+     * 
      * @return header string
      */
     public String getHeader()
     {
       return this.header;
-    }
-
-    /**
-     * Set the current basic error description
-     *
-     * @param basicErrorMessage
-     */
-    public void setBasicErrorMessage( final String basicErrorMessage )
-    {
-      this.basicErrorMessage = basicErrorMessage;
-    }
-
-    /**
-     * Set the detailed description for this error
-     *
-     * @param detailedErrorMessage
-     */
-    public void setDetailedErrorMessage( final String detailedErrorMessage )
-    {
-      this.detailedErrorMessage = detailedErrorMessage;
-    }
-
-    /**
-     * Set the exception that may contain additional information about the
-     * error.
-     *
-     * @param errorException
-     */
-    public void setErrorException( final Throwable errorException )
-    {
-      this.errorException = errorException;
-    }
-
-    /**
-     * Set the current header string
-     *
-     * @param header
-     */
-    public void setHeader( final String header )
-    {
-      this.header = header;
     }
   }
 
@@ -240,7 +212,11 @@ public class JErrorDialog extends JDialog implements Closeable
     // METHODS
 
     /**
+     * Reports a given incident by mail.
+     * 
      * @param aIncident
+     *          the incident to report through mail, cannot be <code>null</code>
+     *          .
      */
     public void reportIncident( final IncidentInfo aIncident ) throws IOException
     {
@@ -391,10 +367,11 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Create a new JErrorDialog with the given window as the owner.
-   *
+   * 
    * @param aOwner
-   *          Owner of this error dialog.
+   *          the Owner of this error dialog;
    * @param aInfo
+   *          the incident information to show, cannot be <code>null</code>.
    */
   protected JErrorDialog( final Window aOwner, final IncidentInfo aInfo )
   {
@@ -423,7 +400,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Show the error dialog.
-   *
+   * 
    * @param aOwner
    *          Owner of this error dialog.
    * @param aInfo
@@ -464,17 +441,17 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Show the error dialog.
-   *
-   * @param owner
-   *          Owner of this error dialog
-   * @param title
-   *          Title of the error dialog
-   * @param errorMessage
-   *          Message for the error dialog
-   * @param details
-   *          Details to be shown in the detail section of the dialog. This can
-   *          be null if you do not want to display the details section of the
-   *          dialog.
+   * 
+   * @param aOwner
+   *          the owner of this error dialog
+   * @param aTitle
+   *          the title of the error dialog
+   * @param aErrorMessage
+   *          the error message for the error dialog
+   * @param aDetails
+   *          the details to be shown in the detail section of the dialog. This
+   *          can be <code>null</code> if you do not want to display the details
+   *          section of the dialog.
    */
   public static void showDialog( final Window aOwner, final String aTitle, final String aErrorMessage,
       final String aDetails )
@@ -486,7 +463,7 @@ public class JErrorDialog extends JDialog implements Closeable
    * Constructs and shows the error dialog for the given exception. The
    * exceptions message will be the errorMessage, and the stacktrace will be the
    * details.
-   *
+   * 
    * @param aOwner
    *          Owner of this error dialog.
    * @param aTitle
@@ -530,7 +507,7 @@ public class JErrorDialog extends JDialog implements Closeable
   /**
    * Set the details section to be either visible or invisible. Set the text of
    * the Details button accordingly.
-   *
+   * 
    * @param aVisible
    *          if true details section will be visible
    */
@@ -552,7 +529,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Get curent dialog's IncidentInfo
-   *
+   * 
    * @return <code>IncidentInfo</code> assigned to this dialog
    */
   protected IncidentInfo getIncidentInfo()
@@ -592,7 +569,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Returns the email address to report incidents to.
-   *
+   * 
    * @return the report incident email address, can be <code>null</code> if this
    *         address is not defined.
    */
@@ -625,7 +602,8 @@ public class JErrorDialog extends JDialog implements Closeable
         catch ( IOException exception )
         {
           final Window parent1 = SwingComponentUtils.getOwningWindow( aEvent );
-          JOptionPane.showMessageDialog( parent1, exception.getMessage(), "Reporting failed!", JOptionPane.ERROR_MESSAGE );
+          JOptionPane.showMessageDialog( parent1, exception.getMessage(), "Reporting failed!",
+              JOptionPane.ERROR_MESSAGE );
         }
       }
     } );
@@ -656,7 +634,7 @@ public class JErrorDialog extends JDialog implements Closeable
    * Set the details section of the error dialog. If the details are either null
    * or an empty string, then hide the details button and hide the detail scroll
    * pane. Otherwise, just set the details section.
-   *
+   * 
    * @param aDetails
    *          Details to be shown in the detail section of the dialog. This can
    *          be null if you do not want to display the details section of the
@@ -678,7 +656,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Set the error message for the dialog box
-   *
+   * 
    * @param aErrorMessage
    *          Message for the error dialog
    */
@@ -689,7 +667,7 @@ public class JErrorDialog extends JDialog implements Closeable
 
   /**
    * Sets the incident information.
-   *
+   * 
    * @param aIncident
    *          the incident information to show, cannot be <code>null</code>.
    */

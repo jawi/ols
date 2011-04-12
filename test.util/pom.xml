@@ -9,7 +9,7 @@
 	<groupId>nl.lxtreme.ols</groupId>
 	<artifactId>test.util</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 	<name>OLS Testing Utilities</name>
 	<dependencies>
 		<dependency>

@@ -22,12 +22,14 @@ package nl.lxtreme.ols.tool.base;
 
 
 import java.awt.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 
@@ -56,8 +58,8 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
    * 
    * @param aOwner
    *          the owning window of this dialog;
-   * @param aName
-   *          the name of this dialog;
+   * @param aTitle
+   *          the title of this dialog;
    * @param aModalityType
    *          the modality type;
    * @param aContext
@@ -75,8 +77,8 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
    * 
    * @param aOwner
    *          the owning window of this dialog;
-   * @param aName
-   *          the name of this dialog;
+   * @param aTitle
+   *          the title of this dialog;
    * @param aContext
    *          the tool context to use in this dialog.
    */
@@ -129,7 +131,7 @@ public abstract class BaseToolDialog extends JDialog implements ToolDialog, Conf
    * Returns the channel count.
    * 
    * @return the number of channels to expect in the acquisition data, >= 0 && <
-   *         {@value Ols#MAX_CHANNELS}.
+   *         {@value nl.lxtreme.ols.api.Ols#MAX_CHANNELS}.
    * @see #getEnabledChannels()
    */
   protected final int getChannels()

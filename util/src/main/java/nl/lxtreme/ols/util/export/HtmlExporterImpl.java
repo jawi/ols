@@ -23,7 +23,7 @@ package nl.lxtreme.ols.util.export;
 
 import java.util.logging.*;
 
-import nl.lxtreme.ols.util.ExportUtils.*;
+import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
 
 
 /**
@@ -47,8 +47,9 @@ public class HtmlExporterImpl implements HtmlExporter
   /**
    * Creates a new HtmlExporter instance.
    * 
-   * @param aFile
-   *          the file to write the HTML output to, cannot be <code>null</code>.
+   * @param aIncludeDTD
+   *          whether or not a HTML DTD clause should be prepended to the
+   *          output.
    */
   public HtmlExporterImpl( final boolean aIncludeDTD )
   {
@@ -67,8 +68,9 @@ public class HtmlExporterImpl implements HtmlExporter
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.util.export.HtmlExporter#addCssStyle(java.lang.String)
+   * {@inheritDoc}
    */
+  @Override
   public void addCssStyle( final String aStyleClause )
   {
     HtmlExporter.Element style = getHead().getChildByName( "style" );
@@ -82,24 +84,27 @@ public class HtmlExporterImpl implements HtmlExporter
   }
 
   /**
-   * @see nl.lxtreme.ols.util.export.HtmlExporter#getBody()
+   * {@inheritDoc}
    */
+  @Override
   public HtmlExporter.Element getBody()
   {
     return this.body;
   }
 
   /**
-   * @see nl.lxtreme.ols.util.export.HtmlExporter#getHead()
+   * {@inheritDoc}
    */
+  @Override
   public HtmlExporter.Element getHead()
   {
     return this.head;
   }
 
   /**
-   * @see nl.lxtreme.ols.util.export.HtmlExporter#setTitle(java.lang.String)
+   * {@inheritDoc}
    */
+  @Override
   public void setTitle( final String aTitle )
   {
     HtmlExporter.Element title = getHead().getChildByName( "title" );
