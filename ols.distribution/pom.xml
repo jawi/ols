@@ -11,6 +11,137 @@
 	<packaging>pom</packaging>
 	<name>OLS Main Distribution</name>
 	<version>${ols.version}</version>
+	<dependencies>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>runner</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>logging</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>service.io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>util</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>test.util</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>org.rxtx</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.device</groupId>
+			<artifactId>test</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.device</groupId>
+			<artifactId>generic</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.device</groupId>
+			<artifactId>logicsniffer</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>base</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>i2c</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>measure</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>spi</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>state</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>uart</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>1wire</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>jtag</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.export</groupId>
+			<artifactId>image</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.export</groupId>
+			<artifactId>vcd</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.compendium</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.main</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.prefs</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.log</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.fileinstall</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.configadmin</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.jgoodies</groupId>
+			<artifactId>looks</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+		</dependency>
+	</dependencies>
 	<build>
 		<plugins>
 			<plugin>
@@ -18,7 +149,6 @@
 				<executions>
 					<execution>
 						<id>copy-resources</id>
-						<!-- here the phase you need -->
 						<phase>generate-resources</phase>
 						<goals>
 							<goal>copy-resources</goal>
@@ -62,13 +192,13 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.basedir}/target/bin</outputDirectory>
 								</artifactItem>
-                                <artifactItem>
-                                    <groupId>org.apache.felix</groupId>
-                                    <artifactId>org.apache.felix.configadmin</artifactId>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.basedir}/target/bin</outputDirectory>
-                                </artifactItem>
+								<artifactItem>
+									<groupId>org.apache.felix</groupId>
+									<artifactId>org.apache.felix.configadmin</artifactId>
+									<type>jar</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.basedir}/target/bin</outputDirectory>
+								</artifactItem>
 								<artifactItem>
 									<groupId>com.jgoodies</groupId>
 									<artifactId>looks</artifactId>
@@ -240,6 +370,35 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.basedir}/target/plugins</outputDirectory>
 								</artifactItem>
+
+								<artifactItem>
+									<groupId>nl.lxtreme.ols</groupId>
+									<artifactId>api</artifactId>
+									<type>javadoc</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.basedir}/target/apidocs</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>nl.lxtreme.ols</groupId>
+									<artifactId>util</artifactId>
+									<type>javadoc</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.basedir}/target/apidocs</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>nl.lxtreme.ols</groupId>
+									<artifactId>test.util</artifactId>
+									<type>javadoc</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.basedir}/target/apidocs</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>nl.lxtreme.ols.tool</groupId>
+									<artifactId>base</artifactId>
+									<type>javadoc</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.basedir}/target/apidocs</outputDirectory>
+								</artifactItem>
 							</artifactItems>
 						</configuration>
 					</execution>
@@ -249,16 +408,17 @@
 				<artifactId>maven-assembly-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>assemble</id>
+						<id>make-assembly</id>
 						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
 						<configuration>
 							<descriptors>
+								<descriptor>api-assembly.xml</descriptor>
 								<descriptor>assembly.xml</descriptor>
 							</descriptors>
-							<appendAssemblyId>false</appendAssemblyId>
+							<appendAssemblyId>true</appendAssemblyId>
 							<finalName>ols-${ols.version}</finalName>
 						</configuration>
 					</execution>
