@@ -80,8 +80,13 @@
 				<version>2.2.1</version>
 				<inherited>true</inherited>
 				<configuration>
-				  <skip>true</skip>
+					<skip>true</skip>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>osxappbundle-maven-plugin</artifactId>
+				<version>1.0-alpha-2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
