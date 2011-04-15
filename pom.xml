@@ -79,14 +79,11 @@
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.2.1</version>
 				<inherited>true</inherited>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>osxappbundle-maven-plugin</artifactId>
-				<version>1.0-alpha-2</version>
+				<version>1.0-alpha-3-SNAPSHOT</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -115,6 +112,15 @@
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.6</version>
 				<inherited>true</inherited>
+				<!-- use Ant 1.8.2 *explicitly* to ensure we've got the version that 
+					supports 'cutdirsmapper' -->
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.ant</groupId>
+						<artifactId>ant</artifactId>
+						<version>1.8.2</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
@@ -141,17 +147,6 @@
 				<inherited>true</inherited>
 				<configuration>
 					<forkMode>once</forkMode>
-					<includes>
-						<include>**/*Test.java</include>
-					</includes>
-					<excludes>
-						<!-- exclude the component-tests -->
-						<exclude>**/*ComponentTest.java</exclude>
-						<!-- exclude the integration-tests -->
-						<exclude>**/*IntegrationTest.java</exclude>
-						<!-- exclude the system-tests -->
-						<exclude>**/*SystemTest.java</exclude>
-					</excludes>
 				</configuration>
 			</plugin>
 			<plugin>

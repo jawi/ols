@@ -29,7 +29,13 @@
       <key>WorkingDirectory</key>
       <string>$APP_PACKAGE/Contents/Resources/Java</string>
       <key>ClassPath</key>
-      ${classpath}
+      <array>
+        <string>$JAVAROOT/bin/looks-2.2.2.jar</string>
+        <string>$JAVAROOT/bin/org.apache.felix.configadmin-1.2.8.jar</string>
+        <string>$JAVAROOT/bin/org.apache.felix.fileinstall-3.1.10.jar</string>
+        <string>$JAVAROOT/bin/org.apache.felix.main-3.0.9.jar</string>
+        <string>$JAVAROOT/bin/runner-1.1.1.jar</string>
+      </array>
       <key>VMOptions</key>
       <string>-Xmx1024m</string>
       <key>Properties</key>
