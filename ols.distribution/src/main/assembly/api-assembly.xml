@@ -34,13 +34,13 @@
 			<fileMode>0644</fileMode>
 		</fileSet>
 		<fileSet>
-			<directory>${project.basedir}</directory>
+			<directory>${project.basedir}/src/main/resources</directory>
 			<outputDirectory>/</outputDirectory>
 			<useDefaultExcludes>true</useDefaultExcludes>
 			<includes>
-				<include>AUTHOR*</include>
-				<include>README*</include>
-				<include>LICENSE*</include>
+				<include>AUTHOR</include>
+				<include>README</include>
+				<include>LICENSE</include>
 				<include>install-to-maven.bat</include>
 			</includes>
 			<lineEnding>dos</lineEnding>
@@ -48,7 +48,7 @@
             <fileMode>0644</fileMode>
 		</fileSet>
 		<fileSet>
-			<directory>${project.basedir}</directory>
+			<directory>${project.basedir}/src/main/resources</directory>
 			<outputDirectory>/</outputDirectory>
 			<useDefaultExcludes>true</useDefaultExcludes>
 			<includes>
