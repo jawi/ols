@@ -10,136 +10,149 @@
 	<artifactId>ols.distribution</artifactId>
 	<packaging>pom</packaging>
 	<name>OLS Main Distribution</name>
-	<version>${ols.version}</version>
+	<version>1.0.0</version>
 	<dependencies>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>runner</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.main</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.fileinstall</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.configadmin</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.jgoodies</groupId>
+			<artifactId>looks</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.compendium</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.prefs</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.log</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>api</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>client</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>logging</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>service.io</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>util</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>test.util</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>org.rxtx</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.device</groupId>
 			<artifactId>test</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.device</groupId>
 			<artifactId>generic</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.device</groupId>
 			<artifactId>logicsniffer</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>base</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>i2c</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>measure</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>spi</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>state</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>uart</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>1wire</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>jtag</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.export</groupId>
 			<artifactId>image</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.export</groupId>
 			<artifactId>vcd</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.compendium</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.main</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.prefs</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.log</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.fileinstall</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.configadmin</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.jgoodies</groupId>
-			<artifactId>looks</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
 	<build>
@@ -210,26 +223,6 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>osxappbundle-maven-plugin</artifactId>
-				<configuration>
-					<mainClass>nl.lxtreme.ols.runner.Runner</mainClass>
-					<iconFile>${basedir}/LogicSniffer.icns</iconFile>
-					<version>${ols.version}</version>
-				</configuration>
-<!-- 
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>bundle</goal>
-						</goals>
-					</execution>
-				</executions>
- -->
-			</plugin>
-<!-- 
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
@@ -250,7 +243,6 @@
 					</execution>
 				</executions>
 			</plugin>
- -->
 		</plugins>
 		<resources>
 			<resource>
