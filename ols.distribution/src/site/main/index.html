@@ -115,8 +115,10 @@ dl.faq dd {
 	  Welcome to the project page of <em>Logic Sniffer</em> alternative Java client. This page will 
 	  provide some documentation and, of course, download links. 
 	</p>
+	
 	<h3>Table of contents</h3>
 	<div id="toc"></div>
+	
 	<h3 class="content">Introduction</h3>
 	<p>
 	  The alternative OLS-client provides a software client for the <a
@@ -132,8 +134,11 @@ dl.faq dd {
 	  and working quite well, it was no longer actively developed and maintained. Being a developer and loving Open 
 	  Source, I immediately started hacking and tweaking it. The result? <em>An alternative SUMP client</em>.
 	</p>
+	
     <h3 class="content">News</h3>
     <ul>
+      <li>April 20th, 2011, OLS version 0.9.4 released. Major highlights: better support for BusPirate, LogicShrimp, IRToy and other SUMP-compatible devices,
+        several improvements to the user interface;</li>
       <li>February 7th, 2011, OLS version 0.9.3 SP1 released. This service pack fixes some severe bugs that crept into the
         last release. <em>Use this release instead of the 0.9.3 release!</em>;</li>
       <li>February 6th, 2011, OLS version 0.9.3 released. Major highlights: better support for RLE encoding, JTAG decoder tool added, generic device added;</li>
@@ -141,6 +146,7 @@ dl.faq dd {
       <li>November 1st, 2010, OLS version 0.9.1 released. Major highlights: several bugfixes regarding image exporting on Linux and Windows platforms;</li>
       <li>October 23rd, 2010: OLS version 0.9.0 released. Major highlights: added export to image and VCD.</li>
     </ul>
+    
     <h3 class="content">What other people say about...</h3>
     <blockquote>
       <p>I had to rock some intense LAing today, and I just wanted to say that the latest version is fantastic! I've completely 
@@ -153,81 +159,41 @@ dl.faq dd {
       days troubleshooting some SPI output from the AVR8 Soft Processor core project and your client didn't miss a beat <span>&#8212; 
       Jack Gasset (Gadget Factory)</span></p>
     </blockquote>
+    
 	<h3 class="content">Features</h3>
 	<p>
 	  The alternative Java client provides the following features:
 	</p>
 	<ul>
-	  <li><em>Cross platform</em>: the client runs on Mac OSX (32/64-bit), Windows (32/64 bit) and Linux (32/64 bit);</li>
+	  <li><em>Cross platform</em>: the client runs on Mac OSX (32/64-bit), Windows (32/64 bit), Linux (32/64 bit) and 
+	  Solaris (32 bit);</li>
 	  <li><em>Simple installation</em>: no longer fiddling with the serial libraries (RXTX) in order to get the client
 	  up and running. The client embeds the suitable serial libraries for several operating systems;</li>
 	  <li><em>Pluggable</em>: adding new functionality on the fly is possible and as easy as copying files to a single
 	  directory;</li>
 	  <li><em>Look good, and feel good</em>: the client has a good look and feel, aiming at being as usable as 
-	  possible.</li>
+	  possible and adhering to the human interface guidelines of the platform it is running on.</li>
 	</ul>
+	
 	<h3 class="content">Documentation</h3>
 	<p>
-	  <em>TO DO...</em>
+	  All documentation is maintained on the <a href="https://github.com/jawi/ols/wiki">wiki</a>.
 	</p>
+	
 	<h3 class="content">FAQ</h3>
 	<p>
-	  Some frequently asked questions, as found in the <a href="http://dangerousprototypes.com/forum/index.php?board=23.0">support forums</a>.
+	  The FAQ is moved and is maintained on the <a href="https://github.com/jawi/ols/wiki">wiki</a>. For additional 
+	  information, see the <a href="http://dangerousprototypes.com/forum/viewforum.php?f=57">OLS client</a> and the 
+	  <a href="http://dangerousprototypes.com/forum/viewforum.php?f=23">OLS hardware</a> support forums.
 	</p>
-	<h4>Software</h4>
-	<dl class="faq">
-	  <dt>Your client does not run. It cannot find the classes and/or complaints about incorrect version numbers!</dt>
-	  <dd>The OLS client is written in and for Java 6. Ensure you have installed the latest Java 6 version on your system.
-	  For Windows/Linux, see <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">http://www.oracle.com/technetwork/java/javase/downloads/index.html</a>; 
-	  for OSX, see <a href="http://support.apple.com/kb/DL972">http://support.apple.com/kb/DL972</a> and 
-	  <a href="http://support.apple.com/kb/DL971">http://support.apple.com/kb/DL971</a>, or use your regular Software 
-	  Update mechanism.</dd>
-
-	  <dt>Your client crashes with an OutOfMemoryException: heap space!</dt>
-	  <dd>If you're performing large captures (e.g. with RLE turned on) it can be that the client hasn't enough memory
-	  by default to store all samples. For now, you can enlarge the memory settings by adding <tt>-Xmx1024m</tt> to the 
-	  Java command in the <tt>run.bat</tt>, <tt>run.sh</tt>, or the 
-	  <a href="http://developer.apple.com/library/mac/#documentation/Java/Reference/Java_InfoplistRef/Articles/JavaDictionaryInfo.plistKeys.html"><tt>VMOptions</tt> option in your <tt>Info.plist</tt></a>.<br/>
-	  As of 0.9.2, these options are added by default!</dd>
-
-      <dt>I get a warning about RXTX version mismatches!</dt>
-      <dd>While the message is not really nice, you can consider it harmless. The reason for this message is that the
-      client uses an "unofficial" version of the RXTX library.</dd>
-	</dl>
-	<h4>Hardware</h4>
-	<dl class="faq">
-	  <dt>I cannot capture anything; nothing happens (perhaps exceptions in the console)!</dt>
-	  <dd>If you've played with the original SUMP client, you installed the RXTX libraries separately. Try deleting the 
-	  RXTX libraries from your Java installation as they might interfere with the libraries included with this client.</dd>
-	  
-	  <dt>My OLS-device isn't recognized by your client. It does not appear in the list of devices!</dt>
-	  <dd>Try entering the device name of your device (e.g. <tt>/dev/ttyACM0</tt>, <tt>/dev/tty.usbmodemfd142</tt>, 
-	  <tt>COM13</tt>) directly as port name.</dd>
-	  
-	  <dt>I've got multiple serial devices that go mad when/no longer react after opening the device list!</dt>
-	  <dd>The RXTX library shortly opens and closes each port in its detection routines. Try entering the device
-	  name directly as port name.</dd>
-	  
-	  <dt>Opening the device list takes a <em>very</em> long time!</dt>
-	  <dd>The RXTX library probes lists of possible devices, for example, on Windows, it tries to open <tt>COM1</tt> through 
-	  <tt>COM256</tt>(!). Try entring the device name directly as port name.</dd>
-	</dl>
-	<h4>Tools and user interface</h4>
-	<dl class="faq">
-	  <dt>How can I decode only parts of my captured signal(s)?</dt>
-	  <dd>Mark the area you want to decode with cursors 1 and 2; this will cause most decoding tools to decode only that 
-	  part of your signals.</dd>
-	  
-	  <dt>How can I remove (all) cursors?</dt>
-	  <dd>Removing a cursor is done by opening the context menu, and selecting the cursor again. This will remove the cursor.
-	  To remove all cursors, use the "remove all cursors" option from the context menu.</dd>
-	</dl>
+	
     <h3 class="content">Download</h3>
     <p>
-      The current release of Logic Sniffer is <strong><a href="ols-0.9.3.1.tar.gz">0.9.3 SP1</a></strong>.
+      The current release of Logic Sniffer is <strong><a href="ols-0.9.4-full.tar.gz">0.9.4</a></strong>.
       Older releases, for historical reasons:
     </p>
     <ul id="releases">
+    <li>ols-0.9.4 [<a href="ols-0.9.4-full.tar.gz">tar.gz</a>] [<a href="ols-0.9.4-full.zip">zip</a>] [<a href="ols-0.9.4-full.dmg">dmg</a>] <span>released <em>April 20th, 2011</em>, 2.6M;</span></li>
     <li>ols-0.9.3 SP1 [<a href="ols-0.9.3.1.tar.gz">tar.gz</a>] [<a href="ols-0.9.3.1.zip">zip</a>] [<a href="ols-0.9.3.1.dmg">dmg</a>] <span>released <em>February 7th, 2011</em>, 2.3M;</span></li>
     <li><strike>ols-0.9.3 [tar.gz] [zip] [dmg] <span>released <em>February 6th, 2011</em>, 2.3M;</span></strike></li>
     <li>ols-0.9.2 [<a href="ols-0.9.2.tar.gz">tar.gz</a>] [<a href="ols-0.9.2.zip">zip</a>] [<a href="ols-0.9.2.dmg">dmg</a>] <span>released <em>December 19th, 2010</em>, 2.3M;</span></li>
@@ -241,10 +207,12 @@ dl.faq dd {
 	  <li>ols-0.8.0 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.0.tar.gz">tar.gz</a>] <span>released <em>August 24th 2010</em>, 1.4M;</span></li>
 	  <li>ols-0.7.0 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.7.0.tar.gz">tar.gz</a>] <span>released <em>August 9th 2010</em>, 1.3M.</span></li>
     </ul>
+    
     <h3 class="content">Changelog</h3>
     <p>
       The most recent list of changes can always be found on <a href="http://github.com/jawi/ols/blob/master/ChangeLog">GitHub</a>.
     </p>
+    
 	<h3 class="content">Screenshots</h3>
     <p>
       Screenshots of the 0.8.5 release, running on Mac OSX (10.6, 64-bit):
@@ -258,6 +226,7 @@ dl.faq dd {
       <li><a href="img/ols_config_triggers.png"><img src="img/ols_config_triggers.png" alt="OLS trigger settings." /></a></li>
       <li><a href="img/preferences.png"><img src="img/preferences.png" alt="General preferences." /></a></li>
     </ul>
+    
     <h3 class="content">Development</h3>
     <p>
       Currently, the project is developed by me, Jan Willem. If you want to contribute, drop me <a 
@@ -268,12 +237,14 @@ dl.faq dd {
         href="http://www.github.com">GitHub</a>, and the main repository can be found on
         <tt><a href="http://github.com/jawi/ols">http://github.com/jawi/ols</a></tt>.
     </p>
+    
     <h3 class="content">License</h3>
     <p>
       The alternative Java client is developed and released under the <em>General Public License, version 2</em>.
       For the license details, see the full <a href="http://www.gnu.org/licenses/gpl-2.0-standalone.html">license 
       text</a>.
     </p>
+    
     <h3 class="content">Links</h3>
     <ul>
       <li><a href="http://www.sump.org/projects/analyzer/">http://www.sump.org/projects/analyzer/</a> <span>the 
@@ -289,6 +260,7 @@ dl.faq dd {
       <li><a href="http://gadgetfactory.net/">http://gadgetfactory.net/</a> 
        <span>the other projects of Gadget Factory</span>.</li>
     </ul>
+    
     <h3 class="content">Tip jar</h3>
     <p>
       This project is open source, and written in my (sparse) free time. You can use it free of charge 

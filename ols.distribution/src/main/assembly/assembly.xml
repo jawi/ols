@@ -58,7 +58,7 @@
 
 	<fileSets>
 		<fileSet>
-			<directory>${project.basedir}/src/main/profiles</directory>
+			<directory>${project.basedir}/src/main/config</directory>
 			<outputDirectory>plugins</outputDirectory>
 			<useDefaultExcludes>true</useDefaultExcludes>
 			<includes>
@@ -80,33 +80,26 @@
 			<fileMode>0644</fileMode>
 		</fileSet>
 		<fileSet>
-			<directory>${project.basedir}</directory>
+			<directory>${project.basedir}/src/main/resources</directory>
 			<outputDirectory>/</outputDirectory>
 			<useDefaultExcludes>true</useDefaultExcludes>
 			<includes>
-				<include>AUTHOR*</include>
-				<include>README*</include>
-				<include>LICENSE*</include>
-				<include>*.bat</include>
+				<include>AUTHOR</include>
+				<include>README</include>
+				<include>LICENSE</include>
+				<include>run.bat</include>
 			</includes>
-			<excludes>
-				<exclude>install-to-maven.bat</exclude>
-			</excludes>
 			<lineEnding>dos</lineEnding>
 			<directoryMode>0755</directoryMode>
 			<fileMode>0644</fileMode>
 		</fileSet>
 		<fileSet>
-			<directory>${project.basedir}</directory>
+			<directory>${project.basedir}/src/main/resources</directory>
 			<outputDirectory>/</outputDirectory>
 			<useDefaultExcludes>true</useDefaultExcludes>
 			<includes>
-				<include>*.sh</include>
+				<include>run.sh</include>
 			</includes>
-			<excludes>
-				<exclude>app-bundle-osx.sh</exclude>
-				<exclude>install-to-maven.sh</exclude>
-			</excludes>
 			<lineEnding>unix</lineEnding>
 			<directoryMode>0755</directoryMode>
 			<fileMode>0755</fileMode>

@@ -213,8 +213,8 @@
 						</goals>
 						<configuration>
 							<descriptors>
-								<descriptor>api-assembly.xml</descriptor>
-								<descriptor>assembly.xml</descriptor>
+								<descriptor>${basedir}/src/main/assembly/api-assembly.xml</descriptor>
+								<descriptor>${basedir}/src/main/assembly/assembly.xml</descriptor>
 							</descriptors>
 							<appendAssemblyId>true</appendAssemblyId>
 							<finalName>ols-${ols.version}</finalName>
@@ -234,7 +234,7 @@
 						</goals>
 						<configuration>
 							<target>
-								<ant antfile="${basedir}/app-bundle.xml" inheritAll="true">
+								<ant antfile="${basedir}/src/main/assembly/ext/app-bundle.xml" inheritAll="false">
 									<property name="project.version" value="${ols.version}" />
 									<target name="all" />
 								</ant>
