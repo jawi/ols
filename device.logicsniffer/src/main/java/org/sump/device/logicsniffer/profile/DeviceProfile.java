@@ -572,6 +572,15 @@ public final class DeviceProfile implements Cloneable
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String toString()
+  {
+    return getType();
+  }
+
+  /**
    * Returns the configuration file picked up by Felix's FileInstall bundle.
    * 
    * @return a configuration file, never <code>null</code>.
