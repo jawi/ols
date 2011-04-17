@@ -76,10 +76,6 @@ public final class Runner
     config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.eawt,javax.swing,javax.media.jai" );
     config.put( AutoProcessor.AUTO_DEPLOY_ACTION_PROPERY, "install,start" );
     config.put( AutoProcessor.AUTO_START_PROP, autoStartBundles );
-    if ( isDebugMode() )
-    {
-      config.put( Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT );
-    }
     // Issue #36: explicitly set the location to the bundle cache directory,
     // otherwise it is created /relatively/ to the current working directory,
     // which is problematic when you start the client with a relative path...
@@ -95,14 +91,8 @@ public final class Runner
     // <https://issues.apache.org/jira/browse/FELIX-2763> for more
     // information...
     System.setProperty( "felix.fileinstall.disableConfigSave", Boolean.toString( false ) );
-    if ( isDebugMode() )
-    {
-      System.setProperty( "felix.fileinstall.log.level", "4" );
-    }
-    else
-    {
-      System.setProperty( "felix.fileinstall.log.level", "1" );
-    }
+    final String logLevel = isDebugMode() ? "4" : "1";
+    System.setProperty( "felix.fileinstall.log.level", logLevel );
 
     try
     {
