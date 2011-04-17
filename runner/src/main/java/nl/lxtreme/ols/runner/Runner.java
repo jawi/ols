@@ -62,6 +62,7 @@ public final class Runner
 
     final String pluginDir = getPluginDir();
     final String binaryDir = getBinaryDir();
+    final String bundleCacheDir = getBundleCacheDir();
 
     // We only start a single bundle: the file install bundle; this bundle will
     // be responsible for starting all other bundles...
@@ -79,6 +80,10 @@ public final class Runner
     {
       config.put( Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT );
     }
+    // Issue #36: explicitly set the location to the bundle cache directory,
+    // otherwise it is created /relatively/ to the current working directory,
+    // which is problematic when you start the client with a relative path...
+    config.put( Constants.FRAMEWORK_STORAGE, bundleCacheDir );
     config.put( Constants.FRAMEWORK_BEGINNING_STARTLEVEL, "4" );
     config.put( FelixConstants.BUNDLE_STARTLEVEL_PROP, "1" );
     config.put( FelixConstants.LOG_LEVEL_PROP, "1" );
@@ -107,6 +112,13 @@ public final class Runner
       AutoProcessor.process( config, this.framework.getBundleContext() );
 
       this.framework.start();
+
+      LOG.log( Level.INFO, "Bootstrap complete ..." );
+      // Issue #36: log something about where we're trying to read/store stuff,
+      // makes offline debugging a bit easier...
+      LOG.log( Level.INFO, "  plugin dir: {0}", pluginDir );
+      LOG.log( Level.FINE, "  binary dir: {0}", binaryDir );
+      LOG.log( Level.FINE, "  cache dir : {0}", bundleCacheDir );
     }
     catch ( Exception exception )
     {
@@ -198,6 +210,21 @@ public final class Runner
   {
     final File pluginDir = new File( getPluginDir() );
     return new File( pluginDir.getParentFile(), "bin" ).getCanonicalPath();
+  }
+
+  /**
+   * Determines the bundle cache directory.
+   * 
+   * @return the fully qualified path to the directory with 'bundle caches',
+   *         never <code>null</code>.
+   * @throws IOException
+   *           in case an I/O problem occurred during determining the cache
+   *           path.
+   */
+  private static String getBundleCacheDir() throws IOException
+  {
+    final File pluginDir = new File( getPluginDir() );
+    return new File( pluginDir.getParentFile(), "felix-cache" ).getCanonicalPath();
   }
 
   /**
