@@ -132,9 +132,20 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
     private volatile Object selected = null;
 
-    // CONSTRUCTORS
-
     // METHODS
+
+    /**
+     * Finds the element with a given type.
+     * 
+     * @param aType
+     *          the identifying type of the element to find.
+     * @return the element with the given identifying type, or <code>null</code>
+     *         if no such type could be found.
+     */
+    public Object findElementByType( final String aType )
+    {
+      return getDeviceProfileManager().getProfile( aType );
+    }
 
     /**
      * @see javax.swing.ListModel#getElementAt(int)
@@ -425,7 +436,12 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       final String preferredDeviceType = aSettings.get( "deviceType", null );
       if ( ( preferredDeviceType != null ) && !"null".equals( preferredDeviceType ) )
       {
-        this.deviceTypeSelect.setSelectedItem( preferredDeviceType );
+        final Object element = ( ( DeviceProfileTypeComboBoxModel )this.deviceTypeSelect.getModel() )
+            .findElementByType( preferredDeviceType );
+        if ( element != null )
+        {
+          this.deviceTypeSelect.setSelectedItem( element );
+        }
       }
       this.portRateSelect.setSelectedIndex( aSettings.getInt( "portRate", this.portRateSelect.getSelectedIndex() ) );
       this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", this.sourceSelect.getSelectedIndex() ) );
