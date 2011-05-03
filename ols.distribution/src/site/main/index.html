@@ -2,337 +2,362 @@
         "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
-<title>OLS - alternative Java client</title>
+<title>OLS - An OpenBench Logic Sniffer Client</title>
 <link rel="icon" href="favicon.ico">
 <style type="text/css">
 body {
-  padding: 0em 0em 0em 20em;
-  margin: 0;
-  width: 50em;
-  font-family: georgia,serif;
-  font-size: 12pt;
+	padding: 0em 0em 0em 20em;
+	margin: 0;
+	width: 50em;
+	font-family: georgia, serif;
+	font-size: 12pt;
 }
+
 .title {
-  position: relative;
-  top: -30px;
+	position: relative;
+	top: -30px;
 }
+
 .title h1 {
-  font-size: 2.13em;
+	font-size: 2.13em;
 }
+
 .title h2 {
-  position: relative;
-  font-size: 1.1em;
-  top: -0.75em;
+	position: relative;
+	font-size: 1.1em;
+	top: -0.75em;
 }
+
 h3 {
-  margin-top: 2em;
+	margin-top: 2em;
 }
+
 ul {
-  list-style-type: circle;
-  list-style-position: outside;
-  padding-left: 0em;
-  margin-left: 1em;
+	list-style-type: circle;
+	list-style-position: outside;
+	padding-left: 0em;
+	margin-left: 1em;
 }
+
 ul li span {
-  color: gray;
+	color: gray;
 }
-a,
-a:visited {
-  color: #47a;
+
+a,a:visited {
+	color: #47a;
 }
+
 q {
-  quotes: "\2018" "\2019" "\201C" "\201D" 
+	quotes: "\2018" "\2019" "\201C" "\201D"
 }
+
 blockquote {
-  display: block;
-  padding: 0 20px;
-  width: 40em;
-  
-  font-style: oblique;
+	display: block;
+	padding: 0 20px;
+	width: 40em;
+	font-style: oblique;
 }
-blockquote:before, blockquote:after {
-  color: #69c;
-  display: block;
-  font-size: 700%;
-  font-style: normal;
+
+blockquote:before,blockquote:after {
+	color: #69c;
+	display: block;
+	font-size: 700%;
+	font-style: normal;
 }
+
 blockquote:before {
-  content: open-quote;
-  height: 0;
-  margin-left: -0.45em;
+	content: open-quote;
+	height: 0;
+	margin-left: -0.45em;
 }
+
 blockquote:after {
-  content: no-close-quote;
+	content: no-close-quote;
 }
+
 blockquote span {
-  color: #69c;
-  font-style: normal;
+	color: #69c;
+	font-style: normal;
 }
-dl.faq {
-  width: 40em;
-}
-dl.faq dt {
-  font-style: italic;
-}
-dl.faq dd {
-  font-style: normal;
-  margin-bottom: 1.5em;
-}
+
 #toc {
-  font-size: 0.9em;
+	font-size: 0.9em;
 }
+
 #toc ul {
-  list-style-type: decimal;
+	list-style-type: decimal;
 }
+
 .x-small {
-  font-size: 8pt;
+	font-size: 8pt;
 }
+
 .right {
-  text-align: right;
+	text-align: right;
 }
+
 .inline {
-  display: inline;
+	display: inline;
 }
+
 .no-style {
-  list-style: none;
-  margin-left: 0em;
+	list-style: none;
+	margin-left: 0em;
 }
+
 .no-style li {
-  display: block;
-  height: 2.5em;
-  vertical-align: top;
+	display: block;
+	height: 2.5em;
+	vertical-align: top;
 }
 </style>
 </head>
 
 <body>
-    <p class="logo"><img id="reflect" src="img/logo.png" /></p>
-    <div class="title">
-        <h1>Logic Sniffer</h1>
-        <h2>An <strike>alternative</strike> OLS client</h2>
-    </div>
+	<p class="logo">
+		<img id="reflect" src="img/logo.png" />
+	</p>
+	<div class="title">
+		<h1>Logic Sniffer</h1>
+		<h2>
+			An <strike>alternative</strike> OLS client
+		</h2>
+	</div>
 	<p>
-	  Welcome to the project page of <em>Logic Sniffer</em> alternative Java client. This page will 
-	  provide some documentation and, of course, download links. 
+		Welcome to the project page of <em>Logic Sniffer</em> alternative Java client. This page will provide some
+		documentation and, of course, download links.
 	</p>
 	<h3>Table of contents</h3>
 	<div id="toc"></div>
 	<h3 class="content">Introduction</h3>
 	<p>
-	  The alternative OLS-client provides a software client for the <a
-	  href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">Open Bench Logic Sniffer</a> logic 
-	  analyser hardware.
+		The alternative OLS-client provides a software client for the <a
+			href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">Open Bench Logic Sniffer</a> logic analyser
+		hardware.
 	</p>
 	<p>
-	  The Open Bench Logic Sniffer is the result of a collaboration between <a 
-	  href="http://www.gadgetfactory.net/">Gadget Factory</a> and <a href="http://dangerousprototypes.com/">Dangerous 
-	  Prototypes</a>. They created a cheap custom implementation of the <a href="http://www.sump.org/projects/analyzer/">SUMP 
-	  client</a> (developed by Michael Poppitz), and released it as Open Source project.<br/>
-	  The original SUMP project already contained a workable client of its own. While this client was feature complete
-	  and working quite well, it was no longer actively developed and maintained. Being a developer and loving Open 
-	  Source, I immediately started hacking and tweaking it. The result? <em>An alternative SUMP client</em>.
+		The Open Bench Logic Sniffer is the result of a collaboration between <a href="http://www.gadgetfactory.net/">Gadget
+			Factory</a> and <a href="http://dangerousprototypes.com/">Dangerous Prototypes</a>. They created a cheap custom
+		implementation of the <a href="http://www.sump.org/projects/analyzer/">SUMP client</a> (developed by Michael Poppitz),
+		and released it as Open Source project.<br /> The original SUMP project already contained a workable client of its
+		own. While this client was feature complete and working quite well, it was no longer actively developed and
+		maintained. Being a developer and loving Open Source, I immediately started hacking and tweaking it. The result? <em>An
+			alternative SUMP client</em>.
 	</p>
-    <h3 class="content">News</h3>
-    <ul>
-      <li>February 7th, 2011, OLS version 0.9.3 SP1 released. This service pack fixes some severe bugs that crept into the
-        last release. <em>Use this release instead of the 0.9.3 release!</em>;</li>
-      <li>February 6th, 2011, OLS version 0.9.3 released. Major highlights: better support for RLE encoding, JTAG decoder tool added, generic device added;</li>
-      <li>December 19th, 2010, OLS version 0.9.2 released. Major highlights: 1-Wire decoder tool added, better support for OS X Leopard;</li>
-      <li>November 1st, 2010, OLS version 0.9.1 released. Major highlights: several bugfixes regarding image exporting on Linux and Windows platforms;</li>
-      <li>October 23rd, 2010: OLS version 0.9.0 released. Major highlights: added export to image and VCD.</li>
-    </ul>
-    <h3 class="content">What other people say about...</h3>
-    <blockquote>
-      <p>I had to rock some intense LAing today, and I just wanted to say that the latest version is fantastic! I've completely 
-      abandoned the old version for yours, and moved it to the top of the wiki software list :) It's a joy to use and it doesn't
-      <q>feel like Java</q>. In my opinion this is nicer and richer than the Saleae client (I use the Saleae a lot too).<br/>
-      Great work! Thank you so much! <span>&#8212; Ian (Dangerous Prototypes)</span></p>
-    </blockquote>
-    <blockquote>
-      <p>It keeps getting better and better! I've officially started using your client exclusively, I just spent the last couple 
-      days troubleshooting some SPI output from the AVR8 Soft Processor core project and your client didn't miss a beat <span>&#8212; 
-      Jack Gasset (Gadget Factory)</span></p>
-    </blockquote>
-	<h3 class="content">Features</h3>
-	<p>
-	  The alternative Java client provides the following features:
-	</p>
+	<h3 class="content">News</h3>
 	<ul>
-	  <li><em>Cross platform</em>: the client runs on Mac OSX (32/64-bit), Windows (32/64 bit) and Linux (32/64 bit);</li>
-	  <li><em>Simple installation</em>: no longer fiddling with the serial libraries (RXTX) in order to get the client
-	  up and running. The client embeds the suitable serial libraries for several operating systems;</li>
-	  <li><em>Pluggable</em>: adding new functionality on the fly is possible and as easy as copying files to a single
-	  directory;</li>
-	  <li><em>Look good, and feel good</em>: the client has a good look and feel, aiming at being as usable as 
-	  possible.</li>
+		<li>May 3rd, 2011, OLS version 0.9.4 released. Major highlights: proper support for <em>original</em> SUMP
+			hardware, as well for other SUMP-compatible devices like <em>LogicShrimp</em>, <em>BusPirate</em>, <em>IRToy</em> and
+			<a href="https://github.com/jawi/ols/wiki/OLS-Device-Profiles">possibly others</a>. Starting from this release, an <a
+			href="#downloads">API package</a> will be released with each version, to allow people to develop add ons for the OLS
+			client. See <a href="https://github.com/jawi/ols/wiki/Extending-the-client">the Wiki</a> for more information;</li>
+		<li>February 7th, 2011, OLS version 0.9.3 SP1 released. This service pack fixes some severe bugs that crept into
+			the last release. <em>Use this release instead of the 0.9.3 release!</em>;</li>
+		<li>February 6th, 2011, OLS version 0.9.3 released. Major highlights: better support for RLE encoding, JTAG
+			decoder tool added, generic device added;</li>
+		<li>December 19th, 2010, OLS version 0.9.2 released. Major highlights: 1-Wire decoder tool added, better support
+			for OS X Leopard;</li>
+		<li>November 1st, 2010, OLS version 0.9.1 released. Major highlights: several bugfixes regarding image exporting
+			on Linux and Windows platforms;</li>
+		<li>October 23rd, 2010: OLS version 0.9.0 released. Major highlights: added export to image and VCD.</li>
 	</ul>
+	<h3 class="content">What other people say about...</h3>
+	<blockquote>
+		<p>
+			I had to rock some intense LAing today, and I just wanted to say that the latest version is fantastic! I've
+			completely abandoned the old version for yours, and moved it to the top of the wiki software list :) It's a joy to
+			use and it doesn't <q>feel like Java</q>. In my opinion this is nicer and richer than the Saleae client (I use the
+			Saleae a lot too).<br /> Great work! Thank you so much! <span>&#8212; Ian (Dangerous Prototypes)</span>
+		</p>
+	</blockquote>
+	<blockquote>
+		<p>
+			It keeps getting better and better! I've officially started using your client exclusively, I just spent the last
+			couple days troubleshooting some SPI output from the AVR8 Soft Processor core project and your client didn't miss a
+			beat <span>&#8212; Jack Gasset (Gadget Factory)</span>
+		</p>
+	</blockquote>
+	<h3 class="content">Features</h3>
+	<p>The alternative Java client provides the following features:</p>
+	<ul>
+		<li><em>Cross platform</em>: the client runs on Mac OSX (32/64-bit), Windows (32/64 bit), Linux (32/64 bit) and
+			Solaris (32 bit);</li>
+		<li><em>Simple installation</em>: no longer fiddling with the serial libraries (RXTX) in order to get the client
+			up and running. The client embeds the suitable serial libraries for several operating systems;</li>
+		<li><em>Pluggable</em>: adding new functionality on the fly is possible and as easy as copying files to a single
+			directory;</li>
+		<li><em>Look good, and feel good</em>: the client has a good look and feel, aiming at being as usable as possible
+			and adhering to the human interface guidelines of the platform it is running on.</li>
+	</ul>
+
 	<h3 class="content">Documentation</h3>
 	<p>
-	  <em>TO DO...</em>
+		All documentation is maintained on the <a href="https://github.com/jawi/ols/wiki">wiki</a>.
 	</p>
+
 	<h3 class="content">FAQ</h3>
 	<p>
-	  Some frequently asked questions, as found in the <a href="http://dangerousprototypes.com/forum/index.php?board=23.0">support forums</a>.
+		The FAQ is moved and is maintained on the <a href="https://github.com/jawi/ols/wiki">wiki</a>. For additional
+		information, see the <a href="http://dangerousprototypes.com/forum/viewforum.php?f=57">OLS client</a> and the <a
+			href="http://dangerousprototypes.com/forum/viewforum.php?f=23">OLS hardware</a> support forums.
 	</p>
-	<h4>Software</h4>
-	<dl class="faq">
-	  <dt>Your client does not run. It cannot find the classes and/or complaints about incorrect version numbers!</dt>
-	  <dd>The OLS client is written in and for Java 6. Ensure you have installed the latest Java 6 version on your system.
-	  For Windows/Linux, see <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">http://www.oracle.com/technetwork/java/javase/downloads/index.html</a>; 
-	  for OSX, see <a href="http://support.apple.com/kb/DL972">http://support.apple.com/kb/DL972</a> and 
-	  <a href="http://support.apple.com/kb/DL971">http://support.apple.com/kb/DL971</a>, or use your regular Software 
-	  Update mechanism.</dd>
 
-	  <dt>Your client crashes with an OutOfMemoryException: heap space!</dt>
-	  <dd>If you're performing large captures (e.g. with RLE turned on) it can be that the client hasn't enough memory
-	  by default to store all samples. For now, you can enlarge the memory settings by adding <tt>-Xmx1024m</tt> to the 
-	  Java command in the <tt>run.bat</tt>, <tt>run.sh</tt>, or the 
-	  <a href="http://developer.apple.com/library/mac/#documentation/Java/Reference/Java_InfoplistRef/Articles/JavaDictionaryInfo.plistKeys.html"><tt>VMOptions</tt> option in your <tt>Info.plist</tt></a>.<br/>
-	  As of 0.9.2, these options are added by default!</dd>
 
-      <dt>I get a warning about RXTX version mismatches!</dt>
-      <dd>While the message is not really nice, you can consider it harmless. The reason for this message is that the
-      client uses an "unofficial" version of the RXTX library.</dd>
-	</dl>
-	<h4>Hardware</h4>
-	<dl class="faq">
-	  <dt>I cannot capture anything; nothing happens (perhaps exceptions in the console)!</dt>
-	  <dd>If you've played with the original SUMP client, you installed the RXTX libraries separately. Try deleting the 
-	  RXTX libraries from your Java installation as they might interfere with the libraries included with this client.</dd>
-	  
-	  <dt>My OLS-device isn't recognized by your client. It does not appear in the list of devices!</dt>
-	  <dd>Try entering the device name of your device (e.g. <tt>/dev/ttyACM0</tt>, <tt>/dev/tty.usbmodemfd142</tt>, 
-	  <tt>COM13</tt>) directly as port name.</dd>
-	  
-	  <dt>I've got multiple serial devices that go mad when/no longer react after opening the device list!</dt>
-	  <dd>The RXTX library shortly opens and closes each port in its detection routines. Try entering the device
-	  name directly as port name.</dd>
-	  
-	  <dt>Opening the device list takes a <em>very</em> long time!</dt>
-	  <dd>The RXTX library probes lists of possible devices, for example, on Windows, it tries to open <tt>COM1</tt> through 
-	  <tt>COM256</tt>(!). Try entring the device name directly as port name.</dd>
-	</dl>
-	<h4>Tools and user interface</h4>
-	<dl class="faq">
-	  <dt>How can I decode only parts of my captured signal(s)?</dt>
-	  <dd>Mark the area you want to decode with cursors 1 and 2; this will cause most decoding tools to decode only that 
-	  part of your signals.</dd>
-	  
-	  <dt>How can I remove (all) cursors?</dt>
-	  <dd>Removing a cursor is done by opening the context menu, and selecting the cursor again. This will remove the cursor.
-	  To remove all cursors, use the "remove all cursors" option from the context menu.</dd>
-	</dl>
-    <h3 class="content">Download</h3>
-    <p>
-      The current release of Logic Sniffer is <strong><a href="ols-0.9.3.1.tar.gz">0.9.3 SP1</a></strong>.
-      Older releases, for historical reasons:
-    </p>
-    <ul id="releases">
-    <li>ols-0.9.3 SP1 [<a href="ols-0.9.3.1.tar.gz">tar.gz</a>] [<a href="ols-0.9.3.1.zip">zip</a>] [<a href="ols-0.9.3.1.dmg">dmg</a>] <span>released <em>February 7th, 2011</em>, 2.3M;</span></li>
-    <li><strike>ols-0.9.3 [tar.gz] [zip] [dmg] <span>released <em>February 6th, 2011</em>, 2.3M;</span></strike></li>
-    <li>ols-0.9.2 [<a href="ols-0.9.2.tar.gz">tar.gz</a>] [<a href="ols-0.9.2.zip">zip</a>] [<a href="ols-0.9.2.dmg">dmg</a>] <span>released <em>December 19th, 2010</em>, 2.3M;</span></li>
-    <li>ols-0.9.1 [<a href="ols-0.9.1.tar.gz">tar.gz</a>] [<a href="ols-0.9.1.zip">zip</a>] [<a href="ols-0.9.1.dmg">dmg</a>] <span>released <em>November 1st, 2010</em>, 2.2M;</span></li>
-    <li>ols-0.9.0 [<a href="ols-0.9.0.tar.gz">tar.gz</a>] [<a href="ols-0.9.0.zip">zip</a>] [<a href="ols-0.9.0.dmg">dmg</a>] <span>released <em>October 23rd, 2010</em>, 2.2M;</span></li>
-    <li>ols-0.8.5 [<a href="ols-0.8.5.tar.gz">tar.gz</a>] <span>released <em>October 1st, 2010</em>, 2.1M;</span></li>
-	  <li>ols-0.8.4 [<a href="ols-0.8.4.tar.gz">tar.gz</a>] <span>released <em>September 9th 2010</em>, 1.5M;</span></li>
-	  <li>ols-0.8.3 [<a href="ols-0.8.3.tar.gz">tar.gz</a>] <span>released <em>August 26th 2010</em>, 1.5M;</span></li>
-	  <li>ols-0.8.2 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.2.tar.gz">tar.gz</a>] <span>released <em>August 22nd 2010</em>, 1.5M;</span></li>
-	  <li>ols-0.8.1 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.1.tar.gz">tar.gz</a>] <span>released <em>August 07th 2010</em>, 1.4M;</span></li>
-	  <li>ols-0.8.0 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.0.tar.gz">tar.gz</a>] <span>released <em>August 24th 2010</em>, 1.4M;</span></li>
-	  <li>ols-0.7.0 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.7.0.tar.gz">tar.gz</a>] <span>released <em>August 9th 2010</em>, 1.3M.</span></li>
-    </ul>
-    <h3 class="content">Changelog</h3>
-    <p>
-      The most recent list of changes can always be found on <a href="http://github.com/jawi/ols/blob/master/ChangeLog">GitHub</a>.
-    </p>
+	<h3 class="content" id="downloads">Download</h3>
+	<p>The current release of Logic Sniffer is:</p>
+	<ul id="releases">
+		<li>ols-0.9.4 [<a href="ols-0.9.4-full.tar.gz">tar.gz</a>] [<a href="ols-0.9.4-full.zip">zip</a>] [<a
+			href="ols-0.9.4.dmg">dmg</a>] [<a href="ols-0.9.4-api.zip">API</a>] <span>released <em>May 3rd, 2011</em>,
+				2.5M;</span>
+		</li>
+	</ul>
+	<p>Older releases, for historical reasons:</p>
+	<ul id="historical_releases">
+		<li>ols-0.9.3 SP1 [<a href="ols-0.9.3.1.tar.gz">tar.gz</a>] [<a href="ols-0.9.3.1.zip">zip</a>] [<a
+			href="ols-0.9.3.1.dmg">dmg</a>] <span>released <em>February 7th, 2011</em>, 2.3M;</span>
+		</li>
+		<li><strike>ols-0.9.3 [tar.gz] [zip] [dmg] <span>released <em>February 6th, 2011</em>, 2.3M;</span> </strike>
+		</li>
+		<li>ols-0.9.2 [<a href="ols-0.9.2.tar.gz">tar.gz</a>] [<a href="ols-0.9.2.zip">zip</a>] [<a href="ols-0.9.2.dmg">dmg</a>]
+			<span>released <em>December 19th, 2010</em>, 2.3M;</span>
+		</li>
+		<li>ols-0.9.1 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.9.1.tar.gz">tar.gz</a>] [<a
+			href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.9.1.zip">zip</a>] [<a
+			href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.9.1.dmg">dmg</a>] <span>released <em>November 1st, 2010</em>,
+				2.2M;</span>
+		</li>
+		<li>ols-0.9.0 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.9.0.tar.gz">tar.gz</a>] [<a
+			href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.9.0.zip">zip</a>] [<a
+			href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.9.0.dmg">dmg</a>] <span>released <em>October 23rd, 2010</em>,
+				2.2M;</span>
+		</li>
+		<li>ols-0.8.5 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.5.tar.gz">tar.gz</a>] <span>released <em>October
+					1st, 2010</em>, 2.1M;</span>
+		</li>
+		<li>ols-0.8.4 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.4.tar.gz">tar.gz</a>] <span>released <em>September
+					9th 2010</em>, 1.5M;</span>
+		</li>
+		<li>ols-0.8.3 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.3.tar.gz">tar.gz</a>] <span>released <em>August
+					26th 2010</em>, 1.5M;</span>
+		</li>
+		<li>ols-0.8.2 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.2.tar.gz">tar.gz</a>] <span>released <em>August
+					22nd 2010</em>, 1.5M;</span>
+		</li>
+		<li>ols-0.8.1 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.1.tar.gz">tar.gz</a>] <span>released <em>August
+					07th 2010</em>, 1.4M;</span>
+		</li>
+		<li>ols-0.8.0 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.8.0.tar.gz">tar.gz</a>] <span>released <em>August
+					24th 2010</em>, 1.4M;</span>
+		</li>
+		<li>ols-0.7.0 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.7.0.tar.gz">tar.gz</a>] <span>released <em>August
+					9th 2010</em>, 1.3M.</span>
+		</li>
+	</ul>
+	<h3 class="content">Changelog</h3>
+	<p>
+		The most recent list of changes can always be found on <a href="http://github.com/jawi/ols/blob/master/ChangeLog">GitHub</a>.
+	</p>
 	<h3 class="content">Screenshots</h3>
-    <p>
-      Screenshots of the 0.8.5 release, running on Mac OSX (10.6, 64-bit):
-    </p>
-    <ul class="screenshots">
-      <li><a href="img/main_window_scope.png"><img src="img/main_window_scope.png" alt="Main window (light theme) with scope." /></a></li>
-      <li><a href="img/main_window_tooltip.png"><img src="img/main_window_tooltip.png" alt="Main window (light theme) with measure tooltip." /></a></li>
-      <li><a href="img/main_window.png"><img src="img/main_window.png" alt="Main window (dark theme)." /></a></li>
-      <li><a href="img/measure_tool.png"><img src="img/measure_tool.png" alt="Measurement tool." /></a></li>
-      <li><a href="img/ols_config_general.png"><img src="img/ols_config_general.png" alt="OLS general settings." /></a></li>
-      <li><a href="img/ols_config_triggers.png"><img src="img/ols_config_triggers.png" alt="OLS trigger settings." /></a></li>
-      <li><a href="img/preferences.png"><img src="img/preferences.png" alt="General preferences." /></a></li>
-    </ul>
-    <h3 class="content">Development</h3>
-    <p>
-      Currently, the project is developed by me, Jan Willem. If you want to contribute, drop me <a 
-      href="http://www.lxtreme.nl/index.pl/main/contact">a line</a>.
-    </p>
-    <p>
-      All development of this project is shared through <a 
-        href="http://www.github.com">GitHub</a>, and the main repository can be found on
-        <tt><a href="http://github.com/jawi/ols">http://github.com/jawi/ols</a></tt>.
-    </p>
-    <h3 class="content">License</h3>
-    <p>
-      The alternative Java client is developed and released under the <em>General Public License, version 2</em>.
-      For the license details, see the full <a href="http://www.gnu.org/licenses/gpl-2.0-standalone.html">license 
-      text</a>.
-    </p>
-    <h3 class="content">Links</h3>
-    <ul>
-      <li><a href="http://www.sump.org/projects/analyzer/">http://www.sump.org/projects/analyzer/</a> <span>the 
-       original SUMP hardware and client</span>;</li>
-      <li><a href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer</a>
-       <span>the Open Bench Logic Sniffer project page at Dangerous Prototypes</span>;</li>
-      <li><a href="http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/">http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/</a> 
-       <span>the Butterfly Logic board on which the Open Bench Logic Sniffer is based</span>.</li>
-    </ul>
-    <ul>
-      <li><a href="http://dangerousprototypes.com/category/Prototypes/">http://dangerousprototypes.com/category/Prototypes/</a>
-       <span>the other projects of Dangerous Prototypes</span>;</li>
-      <li><a href="http://gadgetfactory.net/">http://gadgetfactory.net/</a> 
-       <span>the other projects of Gadget Factory</span>.</li>
-    </ul>
-    <h3 class="content">Tip jar</h3>
-    <p>
-      This project is open source, and written in my (sparse) free time. You can use it free of charge 
-      and without any fees. However, if you want to, you can show your appreciation on this project by 
-      making a small donation. You can do this by clicking one of the following buttons: 
-    </p>
-    <ul class="no-style">
-      <li><a href="http://www.flattr.com">Flattr</a>: <a class="FlattrButton" style="display:none;" rev="flattr;button:compact;" href="http://www.lxtreme.nl/ols/" title="flatter link"></a></li>
-      <li><a href="http://www.paypal.com">PayPal</a>: <form class="inline" action="https://www.paypal.com/cgi-bin/webscr" method="post">
-<input type="hidden" name="cmd" value="_s-xclick">
-<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----">
-<input type="image" src="https://www.paypal.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online.">
-</form>
-      </li> 
-    </ul>
-	<hr/>
-	<p class="x-small right">
-	  &copy; Copyright 2010, 2011 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
+	<p>Screenshots of the 0.8.5 release, running on Mac OSX (10.6, 64-bit):</p>
+	<ul class="screenshots">
+		<li><a href="img/main_window_scope.png"><img src="img/main_window_scope.png"
+				alt="Main window (light theme) with scope." /> </a>
+		</li>
+		<li><a href="img/main_window_tooltip.png"><img src="img/main_window_tooltip.png"
+				alt="Main window (light theme) with measure tooltip." /> </a>
+		</li>
+		<li><a href="img/main_window.png"><img src="img/main_window.png" alt="Main window (dark theme)." /> </a>
+		</li>
+		<li><a href="img/measure_tool.png"><img src="img/measure_tool.png" alt="Measurement tool." /> </a>
+		</li>
+		<li><a href="img/ols_config_general.png"><img src="img/ols_config_general.png" alt="OLS general settings." />
+		</a>
+		</li>
+		<li><a href="img/ols_config_triggers.png"><img src="img/ols_config_triggers.png" alt="OLS trigger settings." />
+		</a>
+		</li>
+		<li><a href="img/preferences.png"><img src="img/preferences.png" alt="General preferences." /> </a>
+		</li>
+	</ul>
+	<h3 class="content">Development</h3>
+	<p>
+		Currently, the project is developed by me, Jan Willem. If you want to contribute, drop me <a
+			href="http://www.lxtreme.nl/index.pl/main/contact">a line</a>.
 	</p>
-<!-- optimized for loading. -->
-<script type="text/javascript">
-/* <![CDATA[ */
-    (function() {
-        var s = document.createElement('script'), t = document.getElementsByTagName('script')[0];
-        
-        s.type = 'text/javascript';
-        s.async = true;
-        s.src = 'http://api.flattr.com/js/0.5.0/load.js?mode=auto';
-        
-        t.parentNode.insertBefore(s, t);
-    })();
-/* ]]> */
-</script>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-<script type="text/javascript" src="js/jquery.toc-0.1.js"></script>
-<script type="text/javascript" src="js/reflection.js"></script>
-<script type="text/javascript" src="js/galleria.js"></script>
-<script type="text/javascript" src="js/dots/galleria.dots.js"></script>
-<script type="text/javascript">
-/* <![CDATA[ */
-    $('.screenshots').galleria({transition: 'fade', popup_links: true});
-    $("#reflect").reflect({});
-    $.toc('h3.content').prependTo('#toc');
-/* ]]> */
-</script>
+	<p>
+		All development of this project is shared through <a href="http://www.github.com">GitHub</a>, and the main repository
+		can be found on <a href="http://github.com/jawi/ols">http://github.com/jawi/ols</a>. Development documentation and
+		tutorials can be found on the <a href="https://github.com/jawi/ols/wiki">wiki</a>.
+	</p>
+	<h3 class="content">License</h3>
+	<p>
+		The alternative Java client is developed and released under the <em>General Public License, version 2</em>. For the
+		license details, see the full <a href="http://www.gnu.org/licenses/gpl-2.0-standalone.html">license text</a>.
+	</p>
+	<h3 class="content">Links</h3>
+	<ul>
+		<li><a href="http://www.sump.org/projects/analyzer/">http://www.sump.org/projects/analyzer/</a> <span>the
+				original SUMP hardware and client</span>;</li>
+		<li><a href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer</a>
+			<span>the Open Bench Logic Sniffer project page at Dangerous Prototypes</span>;</li>
+		<li><a href="http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/">http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/</a>
+			<span>the Butterfly Logic board on which the Open Bench Logic Sniffer is based</span>.</li>
+	</ul>
+	<ul>
+		<li><a href="http://dangerousprototypes.com/category/Prototypes/">http://dangerousprototypes.com/category/Prototypes/</a>
+			<span>the other projects of Dangerous Prototypes</span>;</li>
+		<li><a href="http://gadgetfactory.net/">http://gadgetfactory.net/</a> <span>the other projects of Gadget
+				Factory</span>.</li>
+	</ul>
+	<h3 class="content">Tip jar</h3>
+	<p>This project is open source, and written in my (sparse) free time. You can use it free of charge and without any
+		fees. However, if you want to, you can show your appreciation on this project by making a small donation. You can do
+		this by clicking one of the following buttons:</p>
+	<ul class="no-style">
+		<li><a href="http://www.flattr.com">Flattr</a>: <a class="FlattrButton" style="display: none;"
+			rev="flattr;button:compact;" href="http://www.lxtreme.nl/ols/" title="flatter link"></a>
+		</li>
+		<li><a href="http://www.paypal.com">PayPal</a>:
+			<form class="inline" action="https://www.paypal.com/cgi-bin/webscr" method="post">
+				<input type="hidden" name="cmd" value="_s-xclick"> <input type="hidden" name="encrypted"
+					value="-----BEGIN PKCS7-----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-----END PKCS7-----">
+				<input type="image" src="https://www.paypal.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit"
+					alt="PayPal - The safer, easier way to pay online.">
+			</form></li>
+	</ul>
+	<hr />
+	<p class="x-small right">
+		&copy; Copyright 2010, 2011 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
+	</p>
+	<!-- optimized for loading. -->
+	<script type="text/javascript">
+		/*           */
+		(function() {
+			var s = document.createElement('script'), t = document
+					.getElementsByTagName('script')[0];
+
+			s.type = 'text/javascript';
+			s.async = true;
+			s.src = 'http://api.flattr.com/js/0.5.0/load.js?mode=auto';
+
+			t.parentNode.insertBefore(s, t);
+		})();
+		/*     */
+	</script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript" src="js/jquery.toc-0.1.js"></script>
+	<script type="text/javascript" src="js/reflection.js"></script>
+	<script type="text/javascript" src="js/galleria.js"></script>
+	<script type="text/javascript" src="js/dots/galleria.dots.js"></script>
+	<script type="text/javascript">
+		/*           */
+		$('.screenshots').galleria({
+			transition : 'fade',
+			popup_links : true
+		});
+		$("#reflect").reflect({});
+		$.toc('h3.content').prependTo('#toc');
+		/*     */
+	</script>
 </body>
 </html>
