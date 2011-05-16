@@ -8,10 +8,11 @@
 	</parent>
 	<groupId>nl.lxtreme.ols</groupId>
 	<artifactId>org.rxtx</artifactId>
-	<version>2.2.0-9</version>
+	<version>3.7.5</version>
 	<packaging>bundle</packaging>
-	<name>RxTx Serial library</name>
+	<name>RxTx Serial library (NRJavaSerial version)</name>
 	<dependencies>
+<!-- 
 		<dependency>
 			<groupId>org.rxtx</groupId>
 			<artifactId>rxtx</artifactId>
@@ -19,6 +20,14 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/RXTXcomm.jar</systemPath>
 		</dependency>
+ -->
+        <dependency>
+            <groupId>org.rxtx</groupId>
+            <artifactId>nrjavaserial</artifactId>
+            <version>3.7.5</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/nrjavaserial-3.7.5.jar</systemPath>
+        </dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>util</artifactId>
