@@ -1,5 +1,6 @@
 */felix-cache/
 */target/
+eclipse/run/
 */.DS_Store/
 **/.project
 **/.classpath
