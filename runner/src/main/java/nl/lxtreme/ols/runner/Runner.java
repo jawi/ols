@@ -240,15 +240,22 @@ public final class Runner
       return pluginDir.getCanonicalPath();
     }
 
-    pluginDir = new File( "./plugins" );
+    String pluginProperty = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
+    pluginDir = new File( pluginProperty );
     if ( pluginDir.exists() && pluginDir.isDirectory() )
     {
       return pluginDir.getCanonicalPath();
     }
+    else
+    {
+      pluginDir = new File( pluginDir, "plugins" );
+      if ( pluginDir.exists() && pluginDir.isDirectory() )
+      {
+        return pluginDir.getCanonicalPath();
+      }
+    }
 
-    String pluginProperty = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
-    pluginDir = new File( pluginProperty );
-    return pluginDir.getCanonicalPath();
+    throw new RuntimeException( "Failed to find plugins folder! Is '-Dnl.lxtreme.ols.bundle.dir' specified?" );
   }
 
   /**

@@ -31,85 +31,16 @@
 			<artifactId>org.apache.felix.configadmin</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.log</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.prefs</artifactId>
-			<scope>runtime</scope>
-		</dependency>
 		<dependency>
 			<groupId>com.jgoodies</groupId>
 			<artifactId>looks</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols</groupId>
-			<artifactId>api</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols</groupId>
-			<artifactId>client</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols</groupId>
-			<artifactId>logging</artifactId>
-			<scope>runtime</scope>
-		</dependency>
         <dependency>
             <groupId>nl.lxtreme.ols</groupId>
-            <artifactId>service.io</artifactId>
-            <scope>runtime</scope>
+            <artifactId>util</artifactId>
+            <scope>provided</scope>
         </dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols</groupId>
-			<artifactId>org.rxtx</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols</groupId>
-			<artifactId>util</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols.device</groupId>
-			<artifactId>test</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols.device</groupId>
-			<artifactId>logicsniffer</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols.tool</groupId>
-			<artifactId>base</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols.tool</groupId>
-			<artifactId>i2c</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols.tool</groupId>
-			<artifactId>spi</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols.tool</groupId>
-			<artifactId>state</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols.tool</groupId>
-			<artifactId>uart</artifactId>
-			<scope>runtime</scope>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
