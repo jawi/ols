@@ -81,11 +81,6 @@
 				<inherited>true</inherited>
 			</plugin>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>osxappbundle-maven-plugin</artifactId>
-				<version>1.0-alpha-3-SNAPSHOT</version>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-eclipse-plugin</artifactId>
 				<version>2.6</version>
