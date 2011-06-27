@@ -111,15 +111,18 @@ public class SerialConnectionFactory implements ConnectionFactory
 
     try
     {
-      final SerialPort port = obtainSerialPort( options );
+      final RXTXPort port = obtainSerialPort( options );
 
       port.setSerialPortParams( options.getBaudrate(), options.getDatabits(), options.getStopbits(),
           options.getParityMode() );
 
       port.setFlowControlMode( options.getFlowControl() );
-      // A receive timeout allows us to better control blocking I/O, such as
-      // read() from the serial port...
-      port.enableReceiveTimeout( 50 );
+      if ( aTimeouts )
+      {
+        // A receive timeout allows us to better control blocking I/O, such as
+        // read() from the serial port...
+        port.enableReceiveTimeout( 100 );
+      }
       // Taken from
       // <http://mailman.qbang.org/pipermail/rxtx/2010-September/7821768.html>
       port.setRTS( true );
@@ -150,7 +153,7 @@ public class SerialConnectionFactory implements ConnectionFactory
    * @throws IOException
    *           in case of other I/O problems.
    */
-  private SerialPort getSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
+  private RXTXPort getSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
       IOException
   {
     final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( aOptions.getPortName() );
@@ -160,12 +163,12 @@ public class SerialConnectionFactory implements ConnectionFactory
     }
 
     final CommPort commPort = commPortId.open( CONNECT_ID, 2000 );
-    if ( !( commPort instanceof SerialPort ) )
+    if ( !( commPort instanceof RXTXPort ) )
     {
       throw new IOException( "Not a serial port?!" );
     }
 
-    return ( SerialPort )commPort;
+    return ( RXTXPort )commPort;
   }
 
   /**
@@ -186,10 +189,10 @@ public class SerialConnectionFactory implements ConnectionFactory
    * @throws IOException
    *           in case of other I/O problems.
    */
-  private SerialPort obtainSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, IOException
+  private RXTXPort obtainSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, IOException
   {
     int tries = MAX_TRIES;
-    SerialPort port = null;
+    RXTXPort port = null;
 
     while ( ( tries-- >= 0 ) && ( port == null ) )
     {
