@@ -219,7 +219,7 @@ public class LogicSnifferDeviceController implements DeviceController
               "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff;dtr=%s", aPortName,
               Integer.valueOf( aPortRate ), ( aDtrValue ? "on" : "off" ) );
 
-          return ( StreamConnection )connectorService.open( portUri, ConnectorService.READ_WRITE, false /* timeouts */);
+          return ( StreamConnection )connectorService.open( portUri, ConnectorService.READ_WRITE, true /* timeouts */);
         }
         finally
         {

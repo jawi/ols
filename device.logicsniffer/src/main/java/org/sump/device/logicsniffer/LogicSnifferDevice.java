@@ -23,7 +23,6 @@ package org.sump.device.logicsniffer;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
@@ -471,70 +470,36 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   public void stop()
   {
     final boolean isRleEnabled = this.config.isRleEnabled();
-
-    Runnable stopTask = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        try
-        {
-          if ( !isCancelledOrStopped() )
-          {
-            if ( isRleEnabled )
-            {
-              LOG.info( "Prematurely finishing RLE-enabled capture ..." );
-              sendCommand( CMD_RLE_FINISH_NOW );
-            }
-            else
-            {
-              LOG.info( "Prematurely finishing normal capture ..." );
-              resetDevice();
-            }
-          }
-          else
-          {
-            // Hmm, really abort this upon request of the user...
-            cancel( true );
-          }
-
-          // Flag we're being cancelled...
-          LogicSnifferDevice.this.stopped = true;
-        }
-        catch ( IOException exception )
-        {
-          if ( !HostUtils.handleInterruptedException( exception ) )
-          {
-            LOG.log( Level.WARNING, "Stopping capture failed?!", exception );
-          }
-        }
-      }
-    };
-
-    // Invoke this *asynchronously* otherwise we're blocking ourselves...
-    final ExecutorService executor = Executors.newSingleThreadExecutor();
-    executor.execute( stopTask );
-
     try
     {
-      executor.awaitTermination( 500L, TimeUnit.MILLISECONDS );
+      if ( !isCancelledOrStopped() )
+      {
+        if ( isRleEnabled )
+        {
+          LOG.info( "Prematurely finishing RLE-enabled capture ..." );
+          sendCommand( CMD_RLE_FINISH_NOW );
+        }
+        else
+        {
+          LOG.info( "Prematurely finishing normal capture ..." );
+          resetDevice();
+        }
+      }
+      else
+      {
+        // Hmm, really abort this upon request of the user...
+        cancel( true );
+      }
+
+      // Flag we're being cancelled...
+      this.stopped = true;
     }
-    catch ( InterruptedException exception )
+    catch ( IOException exception )
     {
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
-        Thread.currentThread().interrupt();
-        exception.printStackTrace();
+        LOG.log( Level.WARNING, "Stopping capture failed?!", exception );
       }
-    }
-    finally
-    {
-      executor.shutdown();
-      while ( !executor.isTerminated() )
-      {
-
-      }
-      LOG.info( "Shutting down stop-executor..." );
     }
   }
 
@@ -795,7 +760,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         }
         catch ( IOException exception )
         {
-          LOG.log( Level.FINE, "Closing connection failed!", exception );
+          LOG.log( Level.WARNING, "Closing connection failed!", exception );
         }
         finally
         {
@@ -808,7 +773,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
-   * Reads a single sample from the serial input stream.
+   * Reads a single sample (= 1..4 bytes) from the serial input stream.
    * <p>
    * This method will take the enabled channel groups into consideration, making
    * it possible that the returned value contains "gaps".
@@ -821,50 +786,41 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    */
   final int readSample() throws IOException, InterruptedException
   {
-    final int baseTimeout = 1000; // 1 second
-
-    int v, value = 0;
-    int timeout = 4 * baseTimeout;
-
-    // if data not available here, client will stall until stop button pressed
-    final int enabledGroupCount = this.config.getEnabledGroupCount();
-    while ( !isCancelled() && ( this.inputStream.available() < enabledGroupCount ) && ( timeout-- >= 0 ) )
-    {
-      // Wait until there's data available, otherwise we could get 'false'
-      // timeouts; do not make the sleep too long, otherwise we might overflow
-      // our
-      // receiver buffers...
-      TimeUnit.MICROSECONDS.sleep( 25L );
-    }
-    if ( timeout < 0 )
-    {
-      // Flag this read as incomplete...
-      LOG.log( Level.INFO,
-          "Read sample timeout occurred (no response within {0} milliseconds)! Capture will continue...",
-          Integer.valueOf( baseTimeout ) );
-      throw new InterruptedException();
-    }
-
     final int groupCount = this.config.getGroupCount();
-    for ( int i = 0; !isCancelled() && ( i < groupCount ); i++ )
-    {
-      v = 0; // in case the group is disabled, simply set it to zero...
+    byte[] buf = new byte[groupCount];
 
+    final int enabledGroupCount = this.config.getEnabledGroupCount();
+    assert enabledGroupCount > 0 : "Internal error: enabled group count should be at least 1!";
+    assert enabledGroupCount <= groupCount : "Internal error: enabled group count be at most " + groupCount;
+
+    int read, offset = 0;
+    do
+    {
+      read = this.inputStream.read( buf, offset, enabledGroupCount );
+      if ( read < 0 )
+      {
+        throw new IOException( "Data readout interrupted: EOF." );
+      }
+      if ( Thread.interrupted() )
+      {
+        throw new InterruptedException( "Data readout interrupted." );
+      }
+      offset += read;
+    }
+    while ( offset < enabledGroupCount );
+
+    // "Expand" the read sample-bytes into a single sample value...
+    int value = 0;
+
+    for ( int i = 0, j = 0; i < groupCount; i++ )
+    {
+      // in case the group is disabled, simply set it to zero...
       if ( this.config.isGroupEnabled( i ) )
       {
-        v = this.inputStream.read();
-        // Any timeouts/interrupts occurred?
-        if ( v < 0 )
-        {
-          throw new InterruptedException( "Data readout interrupted: EOF." );
-        }
-        else if ( Thread.interrupted() )
-        {
-          throw new InterruptedException( "Data readout interrupted." );
-        }
+        value |= ( ( buf[j++] & 0xff ) << ( 8 * i ) );
       }
-      value |= v << ( 8 * i );
     }
+
     return value;
   }
 
@@ -891,7 +847,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         // set is a subset of UTF-8...
         sb.append( ( char )read );
       }
-      else if ( Thread.interrupted() )
+      if ( Thread.interrupted() )
       {
         throw new InterruptedException( "Data readout interrupted!" );
       }
@@ -1052,7 +1008,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         for ( ; ( sampleIdx >= 0 ) && !isCancelled(); sampleIdx-- )
         {
           buffer[sampleIdx] = readSample();
-          setProgress( 100 - ( 100 * sampleIdx ) / buffer.length );
+          setProgress( 100 - ( ( 100 * sampleIdx ) / buffer.length ) );
         }
       }
       catch ( InterruptedException exception )
