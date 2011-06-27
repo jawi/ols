@@ -6,13 +6,11 @@
 		<artifactId>parent</artifactId>
 		<version>1.0.0</version>
 	</parent>
-	<groupId>nl.lxtreme.ols</groupId>
 	<artifactId>org.rxtx</artifactId>
-	<version>3.7.5</version>
+	<version>2.2.0-10</version>
 	<packaging>bundle</packaging>
-	<name>RxTx Serial library (NRJavaSerial version)</name>
+	<name>RxTx Serial library (RxTx version)</name>
 	<dependencies>
-<!-- 
 		<dependency>
 			<groupId>org.rxtx</groupId>
 			<artifactId>rxtx</artifactId>
@@ -20,7 +18,7 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/RXTXcomm.jar</systemPath>
 		</dependency>
- -->
+<!-- 
         <dependency>
             <groupId>org.rxtx</groupId>
             <artifactId>nrjavaserial</artifactId>
@@ -28,6 +26,7 @@
             <scope>system</scope>
             <systemPath>${basedir}/nrjavaserial-3.7.5.jar</systemPath>
         </dependency>
+ -->
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>util</artifactId>
