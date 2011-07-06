@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="OLS IDE integration" default="noop" basedir=".">
+	<description>
+            provides some integration for IDEs like Eclipse
+    </description>
+
+	<property name="ols.base.dir" value="${basedir}/.." />
+	<property name="ols.ide.base.dir" value="${basedir}/run" />
+	<property name="ols.ide.plugin.target.dir" value="${ols.ide.base.dir}/plugins" />
+	<property name="ols.ide.fw.target.dir" value="${ols.ide.base.dir}/bin" />
+
+	<!-- PUBLIC TARGETS -->
+
+	<target name="build" depends="init" description="Sets up a project structure for running OLS">
+		<!-- extract distribution file to target directory -->
+		<unzip dest="${ols.ide.base.dir}">
+			<fileset refid="ols.distribution.tarball" />
+			<patternset>
+				<include name="**/bin/*.jar" />
+				<include name="**/plugins/*.jar" />
+			</patternset>
+			<cutdirsmapper dirs="1" />
+		</unzip>
+		<!-- copy the individual bundles as well -->
+		<copy todir="${ols.ide.plugin.target.dir}">
+			<fileset refid="ols.plugins" />
+			<cutdirsmapper dirs="2" />
+		</copy>
+		<!-- copy the configuration files as well -->
+		<copy todir="${ols.ide.plugin.target.dir}">
+			<fileset refid="ols.configfiles" />
+			<cutdirsmapper dirs="4" />
+		</copy>
+	</target>
+
+
+	<target name="run" description="Runs the client from the created structure.">
+		<java classname="nl.lxtreme.ols.runner.Runner" fork="true" failonerror="true">
+			<sysproperty key="nl.lxtreme.ols.bundle.dir" value="${ols.ide.plugin.target.dir}" />
+			<classpath>
+				<fileset dir="${ols.ide.fw.target.dir}">
+					<include name="*.jar" />
+				</fileset>
+			</classpath>
+		</java>
+	</target>
+
+
+	<target name="clean" description="Cleans the mess made earlier">
+		<delete dir="${ols.ide.base.dir}" failonerror="false" />
+	</target>
+
+	<!-- PRIVATE TARGETS -->
+
+	<target name="init">
+		<!-- searches for all latest greatest bundle files -->
+		<fileset dir="${ols.base.dir}" id="ols.plugins">
+			<include name="**/target/*.jar" />
+		</fileset>
+		<!-- searches for all configuration files -->
+		<fileset dir="${ols.base.dir}" id="ols.configfiles">
+			<include name="**/src/main/config/*.cfg" />
+		</fileset>
+		<!-- searches for the latest tarball matching '*.tar.gz' -->
+		<fileset dir="${ols.base.dir}/ols.distribution/target" id="ols.distribution.tarball">
+			<include name="*-full.zip" />
+		</fileset>
+		<!-- create target directories -->
+		<mkdir dir="${ols.ide.plugin.target.dir}" />
+		<mkdir dir="${ols.ide.fw.target.dir}" />
+	</target>
+
+	<target name="noop">
+	</target>
+
+</project>

@@ -6,11 +6,10 @@
 		<artifactId>parent</artifactId>
 		<version>1.0.0</version>
 	</parent>
-	<groupId>nl.lxtreme.ols</groupId>
 	<artifactId>org.rxtx</artifactId>
-	<version>2.2.0-9</version>
+	<version>2.2.0-10</version>
 	<packaging>bundle</packaging>
-	<name>RxTx Serial library</name>
+	<name>RxTx Serial library (RxTx version)</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.rxtx</groupId>
@@ -19,6 +18,15 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/RXTXcomm.jar</systemPath>
 		</dependency>
+<!-- 
+        <dependency>
+            <groupId>org.rxtx</groupId>
+            <artifactId>nrjavaserial</artifactId>
+            <version>3.7.5</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/nrjavaserial-3.7.5.jar</systemPath>
+        </dependency>
+ -->
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>util</artifactId>
@@ -38,12 +46,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<type>jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
 			<type>jar</type>
 			<scope>test</scope>
 		</dependency>

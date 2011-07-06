@@ -81,11 +81,6 @@
 				<inherited>true</inherited>
 			</plugin>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>osxappbundle-maven-plugin</artifactId>
-				<version>1.0-alpha-3-SNAPSHOT</version>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-eclipse-plugin</artifactId>
 				<version>2.6</version>
@@ -222,7 +217,7 @@
 			<dependency>
 				<groupId>nl.lxtreme.ols</groupId>
 				<artifactId>org.rxtx</artifactId>
-				<version>2.2.0-9</version>
+				<version>3.7.5</version>
 			</dependency>
 			<dependency>
 				<groupId>nl.lxtreme.ols.device</groupId>
