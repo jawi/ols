@@ -545,7 +545,6 @@ public class DiagramUI extends ComponentUI
     }
 
     final long start = System.currentTimeMillis();
-    LOG.log( Level.FINE, "Start diagram rendering = {0}ms.", Long.valueOf( start ) );
     final Graphics2D canvas = ( Graphics2D )aCanvas;
 
     // obtain portion of graphics that needs to be drawn
@@ -683,7 +682,7 @@ public class DiagramUI extends ComponentUI
       signalOffset = 1;
     }
 
-    final double scopeScaleFactor = ( 256.0 / ( scopeHeight - 2 * PADDING_Y ) );
+    final double scopeScaleFactor = ( 256.0 / ( scopeHeight - ( 2 * PADDING_Y ) ) );
 
     final double scale = aDiagram.getScale();
 
@@ -754,7 +753,7 @@ public class DiagramUI extends ComponentUI
           final Color newBrighterColor = signalColor.brighter();
           final Color newDarkerColor = signalColor.darker().darker().darker();
 
-          final int py1 = channelHeight * bit + yofs;
+          final int py1 = ( channelHeight * bit ) + yofs;
           // Paint the (optional) channel background...
           paintChannelBackground( aCanvas, settings, aClipArea, channelIdx, py1 );
 
@@ -779,7 +778,7 @@ public class DiagramUI extends ComponentUI
             final long nextSample;
 
             final int currentValue = ( values[dataIndex] >> channelIdx ) & 0x01;
-            if ( dataIndex >= values.length - 1 )
+            if ( dataIndex >= ( values.length - 1 ) )
             {
               nextSample = aToIndex + 1;
             }
@@ -826,7 +825,7 @@ public class DiagramUI extends ComponentUI
 
             final int x1 = ( int )( scale * startIdx );
             final int x2 = ( int )( scale * endIdx );
-            final int y1 = yofs + channelHeight * channelIdx;
+            final int y1 = yofs + ( channelHeight * channelIdx );
 
             final int textWidth = fm.stringWidth( data );
 
@@ -859,7 +858,7 @@ public class DiagramUI extends ComponentUI
             }
           }
 
-          paintGridLine( aCanvas, aDiagram, aClipArea, channelHeight * bit + yofs + ( channelHeight - 1 ) );
+          paintGridLine( aCanvas, aDiagram, aClipArea, ( channelHeight * bit ) + yofs + ( channelHeight - 1 ) );
         }
         yofs += ( channelHeight * Ols.CHANNELS_PER_BLOCK );
       }
@@ -919,7 +918,7 @@ public class DiagramUI extends ComponentUI
           final long nextSample;
 
           final int currentValue = ( values[dataIndex] >> channelsOffset ) & 0xff;
-          if ( dataIndex >= values.length - 1 )
+          if ( dataIndex >= ( values.length - 1 ) )
           {
             nextSample = aToIndex + 1;
           }
@@ -929,12 +928,12 @@ public class DiagramUI extends ComponentUI
           }
 
           // Calculate display coordinates...
-          final int x1 = ( int )( scale * currentSample - edgeX );
-          final int x2 = ( int )( scale * ( nextSample - 1 ) + edgeX );
+          final int x1 = ( int )( ( scale * currentSample ) - edgeX );
+          final int x2 = ( int )( ( scale * ( nextSample - 1 ) ) + edgeX );
 
           final int bit = ( dataIndex % 2 );
-          final int y1 = yofs + signalHeight * ( 1 - bit ) + signalOffset;
-          final int y2 = yofs + signalHeight * bit + signalOffset;
+          final int y1 = yofs + ( signalHeight * ( 1 - bit ) ) + signalOffset;
+          final int y2 = yofs + ( signalHeight * bit ) + signalOffset;
 
           bytePolyline.x[pIdx] = x1;
           bytePolyline.y1[pIdx] = y1;
@@ -950,7 +949,7 @@ public class DiagramUI extends ComponentUI
 
           if ( ( x2 - x1 ) > labelWidth )
           {
-            final int labelXpos = ( int )( ( x1 + x2 - labelWidth ) / 2.0 );
+            final int labelXpos = ( int )( ( ( x1 + x2 ) - labelWidth ) / 2.0 );
 
             aCanvas.setColor( settings.getTextColor() );
             aCanvas.drawString( byteValue, labelXpos, yofs + ( fontHeight + signalOffset ) );
