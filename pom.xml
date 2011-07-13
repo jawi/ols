@@ -217,7 +217,7 @@
 			<dependency>
 				<groupId>nl.lxtreme.ols</groupId>
 				<artifactId>org.rxtx</artifactId>
-				<version>3.7.5</version>
+				<version>2.2.0-10</version>
 			</dependency>
 			<dependency>
 				<groupId>nl.lxtreme.ols.device</groupId>
