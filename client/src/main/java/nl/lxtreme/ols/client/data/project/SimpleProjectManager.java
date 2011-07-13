@@ -119,40 +119,54 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     final BufferedInputStream in = new BufferedInputStream( aInput );
     final ZipInputStream zipIS = new ZipInputStream( in );
 
-    final ProjectImpl newProject = setProject( new ProjectImpl() );
+    final ProjectImpl newProject = new ProjectImpl();
 
     try
     {
       ZipEntry ze = null;
+      boolean entriesSeen = false;
       while ( ( ze = zipIS.getNextEntry() ) != null )
       {
+
         final String name = ze.getName();
         if ( FILENAME_PROJECT_METADATA.equals( name ) )
         {
           loadProjectMetadata( newProject, zipIS );
+          entriesSeen = true;
         }
         else if ( FILENAME_CHANNEL_LABELS.equals( name ) )
         {
           loadChannelLabels( newProject, zipIS );
+          entriesSeen = true;
         }
         else if ( FILENAME_CAPTURE_RESULTS.equals( name ) )
         {
           loadCapturedResults( newProject, zipIS );
+          entriesSeen = true;
         }
         else if ( name.startsWith( FILENAME_PROJECT_SETTINGS ) )
         {
           final String userSettingsName = name.substring( FILENAME_PROJECT_SETTINGS.length() );
           loadProjectSettings( newProject, userSettingsName, zipIS );
+          entriesSeen = true;
         }
 
         zipIS.closeEntry();
       }
+
+      if ( !entriesSeen )
+      {
+        throw new IOException( "Invalid project file!" );
+      }
+
+      // Publish the newly loaded project...
+      setProject( newProject );
+
+      // Mark the project as no longer changed...
+      newProject.setChanged( false );
     }
     finally
     {
-      // Mark the project as no longer changed...
-      newProject.setChanged( false );
-
       HostUtils.closeResource( zipIS );
     }
   }

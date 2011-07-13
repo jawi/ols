@@ -81,6 +81,18 @@ public class SimpleProjectManagerTest
    * Test method for
    * {@link SimpleProjectManager#loadProject(java.io.InputStream)}.
    */
+  @Test( expected = IOException.class )
+  public void testLoadInvalidProjectFail() throws IOException
+  {
+    final ByteArrayInputStream bais = new ByteArrayInputStream( "hello world!".getBytes() );
+
+    this.projectManager.loadProject( bais );
+  }
+
+  /**
+   * Test method for
+   * {@link SimpleProjectManager#loadProject(java.io.InputStream)}.
+   */
   @Test( expected = IllegalArgumentException.class )
   public void testLoadNullProjectFail() throws IOException
   {

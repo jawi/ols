@@ -334,7 +334,7 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
     final int mask = ( 1 << aChannelIndex );
     final BaudRateAnalyzer baudrateAnalyzer = new BaudRateAnalyzer( getSampleRate(), getValues(), getTimestamps(), mask );
 
-    LOG.log( Level.FINE, "Baudrate = {0}bps", baudrateAnalyzer.getBestBitLength() );
+    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( baudrateAnalyzer.getBestBitLength() ) );
 
     final int bitLength = baudrateAnalyzer.getBestBitLength();
     if ( bitLength <= 0 )
