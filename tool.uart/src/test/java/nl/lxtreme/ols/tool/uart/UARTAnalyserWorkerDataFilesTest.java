@@ -77,10 +77,10 @@ public class UARTAnalyserWorkerDataFilesTest
   {
     return Arrays.asList( new Object[][] { //
         // { filename, error count, symbol count, baudrate, (rxd, txd) }
-            { "uart_8bit_1.ols", 0, 33, 57600, new int[] { 0, -1 } }, //
+            { "uart_8bit_1.ols", 0, 33, 38400, new int[] { 0, -1 } }, //
             { "uart_8bit_2.ols", 0, 6, 9600, new int[] { 2, -1 } }, //
-            { "uart_8bit_3.ols", 50, 418, 19200, new int[] { 1, 0 } }, // Actually
-                                                                       // 9600...
+            { "uart_8bit_3.ols", 50, 418, 9600, new int[] { 1, 0 } }, //
+            { "uart_8bit_4_38400bps.ols", 0, 22, 38400, new int[] { 0, -1 } }, //
         } );
   }
 
