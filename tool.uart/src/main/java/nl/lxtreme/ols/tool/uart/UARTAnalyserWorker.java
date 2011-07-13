@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.uart;
 
 
 import static nl.lxtreme.ols.util.NumberUtils.*;
+
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -331,14 +332,11 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
   private void decodeData( final UARTDataSet aDataSet, final int aChannelIndex, final int aEventType )
   {
     final int mask = ( 1 << aChannelIndex );
-    final BaudRateAnalyzer baudrate = new BaudRateAnalyzer( getValues(), getTimestamps(), mask );
+    final BaudRateAnalyzer baudrateAnalyzer = new BaudRateAnalyzer( getSampleRate(), getValues(), getTimestamps(), mask );
 
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.fine( baudrate.toString() );
-    }
+    LOG.log( Level.FINE, "Baudrate = {0}bps", baudrateAnalyzer.getBestBitLength() );
 
-    final int bitLength = baudrate.getBestBitLength();
+    final int bitLength = baudrateAnalyzer.getBestBitLength();
     if ( bitLength <= 0 )
     {
       LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",
@@ -349,6 +347,9 @@ public class UARTAnalyserWorker extends BaseAsyncToolWorker<UARTDataSet>
       // We know the avg. bitlength, so we can use it for calculating the
       // baudrate...
       aDataSet.setSampledBitLength( bitLength );
+
+      aDataSet.setBaudRateExact( baudrateAnalyzer.getBaudRateExact() );
+      aDataSet.setBaudRate( baudrateAnalyzer.getBaudRate() );
 
       if ( LOG.isLoggable( Level.FINE ) )
       {

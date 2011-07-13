@@ -653,7 +653,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   private String toHtmlPage( final File aFile, final UARTDataSet aDataSet ) throws IOException
   {
     final int bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
-    final int bitAdder = ( bitCount % 4 != 0 ) ? 1 : 0;
+    final int bitAdder = ( ( bitCount % 4 ) != 0 ) ? 1 : 0;
 
     final MacroResolver macroResolver = new MacroResolver()
     {
@@ -676,7 +676,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
         else if ( "baudrate".equals( aMacro ) )
         {
           final String baudrate;
-          if ( aDataSet.getBitLength() <= 0 )
+          if ( aDataSet.getBaudRate() <= 0 )
           {
             baudrate = "<span class='error'>Baudrate calculation failed!</span>";
           }
@@ -684,7 +684,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
           {
             baudrate = String.format( "%d (exact: %d)", Integer.valueOf( aDataSet.getBaudRate() ),
                 Integer.valueOf( aDataSet.getBaudRateExact() ) );
-            if ( aDataSet.getBitLength() < 15 )
+            if ( !aDataSet.isBitLengthUsable() )
             {
               return baudrate
                   .concat( " <span class='warning'>The baudrate may be wrong, use a higher samplerate to avoid this!</span>" );
@@ -756,7 +756,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
               {
                 final int rxData = ds.getData();
 
-                rxDataHex = "0x" + StringUtils.integerToHexString( rxData, bitCount / 4 + bitAdder );
+                rxDataHex = "0x" + StringUtils.integerToHexString( rxData, ( bitCount / 4 ) + bitAdder );
                 rxDataBin = "0b" + StringUtils.integerToBinString( rxData, bitCount );
                 rxDataDec = String.valueOf( rxData );
                 if ( ( rxData >= 32 ) && ( bitCount == 8 ) )
@@ -769,7 +769,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
               {
                 final int txData = ds.getData();
 
-                txDataHex = "0x" + StringUtils.integerToHexString( txData, bitCount / 4 + bitAdder );
+                txDataHex = "0x" + StringUtils.integerToHexString( txData, ( bitCount / 4 ) + bitAdder );
                 txDataBin = "0b" + StringUtils.integerToBinString( txData, bitCount );
                 txDataDec = String.valueOf( txData );
                 if ( ( txData >= 32 ) && ( bitCount == 8 ) )
