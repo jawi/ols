@@ -121,6 +121,8 @@ final class OneWireTiming
    */
   public boolean isOne( final double aTimeValue )
   {
+    // Issue #76: we should take the master sample time into account, otherwise
+    // we're too relaxed for devices with strict timing...
     return ( aTimeValue >= this.aMin ) && ( aTimeValue < ( ( this.aMax + this.eMax ) - 1 ) );
   }
 
@@ -150,7 +152,9 @@ final class OneWireTiming
    */
   public boolean isSlavePresencePulse( final double aTimeValue )
   {
-    return ( aTimeValue >= this.iMin ) && ( aTimeValue <= this.iMax );
+    // Issue #77: we're looking for a presence pulse that is at *most* iMax
+    // uSecs, not between iMin and iMax uSecs...
+    return ( aTimeValue <= this.iMax );
   }
 
   /**
@@ -163,6 +167,8 @@ final class OneWireTiming
    */
   public boolean isZero( final double aTimeValue )
   {
+    // Issue #76: we should take the master sample time into account, otherwise
+    // we're too relaxed for devices with strict timing...
     return ( aTimeValue >= ( this.aMax + this.eMax ) ) && ( aTimeValue <= this.cMax );
   }
 }

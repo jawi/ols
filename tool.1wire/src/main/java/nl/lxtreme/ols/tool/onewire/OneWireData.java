@@ -59,10 +59,11 @@ public class OneWireData extends BaseData<OneWireData>
    * @param aSampleIdx
    * @param aEventName
    */
-  public OneWireData( final int aIdx, final int aChannelIdx, final int aSampleIdx, final String aEventName )
+  public OneWireData( final int aIdx, final int aChannelIdx, final int aSampleIdx, final String aEventName,
+      final boolean aSlavePresent )
   {
     super( aIdx, aChannelIdx, aSampleIdx, aEventName );
-    this.value = 0;
+    this.value = aSlavePresent ? 1 : 0;
   }
 
   // METHODS
@@ -109,7 +110,7 @@ public class OneWireData extends BaseData<OneWireData>
   {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + this.value;
+    result = ( prime * result ) + this.value;
     return result;
   }
 }

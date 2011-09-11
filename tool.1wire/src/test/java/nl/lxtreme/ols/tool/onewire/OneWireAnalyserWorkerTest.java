@@ -49,6 +49,7 @@ public class OneWireAnalyserWorkerTest
   private final int channelIdx;
   private final int datagramCount;
   private final int errorCount;
+  private final int slavePresentPulseCount;
 
   // CONSTRUCTORS
 
@@ -56,13 +57,14 @@ public class OneWireAnalyserWorkerTest
    * Creates a new OneWireAnalyserWorkerTest instance.
    */
   public OneWireAnalyserWorkerTest( final String aResourceFile, final OneWireBusMode aBusMode, final int aChannelIdx,
-      final int aDatagramCount, final int aErrorCount )
+      final int aDatagramCount, final int aErrorCount, final int aSlavePresentPulseCount )
   {
     this.resourceFile = aResourceFile;
     this.busMode = aBusMode;
     this.channelIdx = aChannelIdx;
     this.datagramCount = aDatagramCount;
     this.errorCount = aErrorCount;
+    this.slavePresentPulseCount = aSlavePresentPulseCount;
   }
 
   // METHODS
@@ -76,8 +78,8 @@ public class OneWireAnalyserWorkerTest
   {
     return Arrays.asList( new Object[][] { //
         // { resource name, bus-mode, data-line, datagram count, error count }
-            { "ds18b20_1.ols", OneWireBusMode.STANDARD, 0, 40, 0 }, // 0
-            { "ow_minimal.ols", OneWireBusMode.STANDARD, 2, 48, 0 }, // 1
+            { "ds18b20_1.ols", OneWireBusMode.STANDARD, 0, 40, 0, 13 }, // 0
+            { "ow_minimal.ols", OneWireBusMode.STANDARD, 2, 48, 0, 1 }, // 1
         } );
   }
 
@@ -118,6 +120,24 @@ public class OneWireAnalyserWorkerTest
   }
 
   /**
+   * @param aDataSet
+   * @param aEventName
+   * @return
+   */
+  private static void assertSlavePresentPulseCount( final OneWireDataSet aDataSet, final int aExpectedCount )
+  {
+    int count = 0;
+    for ( OneWireData data : aDataSet.getData() )
+    {
+      if ( data.isEvent() && ( data.getValue() == 1 ) )
+      {
+        count++;
+      }
+    }
+    assertEquals( "Not all data datagrams were seen?!", aExpectedCount, count );
+  }
+
+  /**
    * Test method for
    * {@link nl.lxtreme.ols.tool.onewire.OneWireAnalyserWorker#doInBackground()}.
    */
@@ -128,6 +148,7 @@ public class OneWireAnalyserWorkerTest
 
     assertBusErrorCount( dataSet, this.errorCount );
     assertDatagramCount( dataSet, this.datagramCount );
+    assertSlavePresentPulseCount( dataSet, this.slavePresentPulseCount );
   }
 
   /**
