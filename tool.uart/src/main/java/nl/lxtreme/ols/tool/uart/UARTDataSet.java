@@ -45,14 +45,14 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
 
   private static final Logger LOG = Logger.getLogger( UARTDataSet.class.getName() );
 
-  private static final int[] COMMON_BAUDRATES = { 150, 300, 600, 1200, 2400, 4800, 9600, 19200, 28800, 38400, 57600,
-      115200, 230400, 460800, 921600 };
-
   // VARIABLES
 
   private int decodedSymbols;
   private int bitLength;
   private int detectedErrors;
+
+  private int baudRateExact;
+  private int baudRate;
 
   // CONSTRUCTORS
 
@@ -77,19 +77,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    */
   public int getBaudRate()
   {
-    final int roundedBaudRate = getRoundedBaudRate();
-
-    int baudRateExact = -1;
-    // Try to find the common baudrate that belongs to the exact one...
-    for ( int idx = 1; ( baudRateExact < 0 ) && ( idx < COMMON_BAUDRATES.length ); idx++ )
-    {
-      if ( ( roundedBaudRate > COMMON_BAUDRATES[idx - 1] ) && ( roundedBaudRate <= COMMON_BAUDRATES[idx] ) )
-      {
-        baudRateExact = COMMON_BAUDRATES[idx];
-      }
-    }
-
-    return baudRateExact;
+    return this.baudRate;
   }
 
   /**
@@ -99,12 +87,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    */
   public int getBaudRateExact()
   {
-    if ( this.bitLength == 0 )
-    {
-      // Avoid division by zero...
-      return 0;
-    }
-    return getSampleRate() / this.bitLength;
+    return this.baudRateExact;
   }
 
   /**
@@ -147,6 +130,18 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   public String getDisplayTime( final int aSampleIdx )
   {
     return DisplayUtils.displayTime( getTime( aSampleIdx ) );
+  }
+
+  /**
+   * Returns whether or not the bitlength is usable.
+   * 
+   * @return <code>true</code> if a usable bitlength has been decoded,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isBitLengthUsable()
+  {
+    // TODO where does the 15 come from?!
+    return getBitLength() > 15;
   }
 
   /**
@@ -216,6 +211,28 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   }
 
   /**
+   * Sets the baudRate.
+   * 
+   * @param aBaudRate
+   *          the baudRate to set
+   */
+  public void setBaudRate( final int aBaudRate )
+  {
+    this.baudRate = aBaudRate;
+  }
+
+  /**
+   * Sets the baudRateExact.
+   * 
+   * @param aBaudRateExact
+   *          the baudRateExact to set
+   */
+  public void setBaudRateExact( final int aBaudRateExact )
+  {
+    this.baudRateExact = aBaudRateExact;
+  }
+
+  /**
    * Sets the (average) bit length for this data set.
    * <p>
    * A bit length is used to determine the baudrate of this data set. If there
@@ -265,17 +282,5 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   public void sort()
   {
     super.sort();
-  }
-
-  /**
-   * Returns the rounded baud rate, which means that it is rounded to the
-   * nearest multiple of 300.
-   * 
-   * @return a rounded baud rate, >= 0.
-   */
-  private int getRoundedBaudRate()
-  {
-    int baudRateExact = getBaudRateExact();
-    return ( baudRateExact - ( baudRateExact % 300 ) );
   }
 }

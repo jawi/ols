@@ -188,7 +188,7 @@ public class OneWireAnalyserWorker extends BaseAsyncToolWorker<OneWireDataSet>
 
         // Check for the existence of a "slave present" symbol...
         final boolean slavePresent = isSlavePresent( fallingEdge, time, timingCorrection );
-        LOG.log( Level.INFO, "Master bus reset; slave is {0}present...", ( slavePresent ? "" : "NOT " ) );
+        LOG.log( Level.FINE, "Master bus reset; slave is {0}present...", ( slavePresent ? "" : "NOT " ) );
 
         reportReset( aDataSet, fallingEdge, time, slavePresent );
       }

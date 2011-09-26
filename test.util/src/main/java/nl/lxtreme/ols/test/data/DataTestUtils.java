@@ -85,7 +85,7 @@ public final class DataTestUtils
       int value = 0xAA;
       for ( int i = 0; i < aDataSize; i++ )
       {
-        if ( i % offset == 0 )
+        if ( ( i % offset ) == 0 )
         {
           value = ( value == 0xAA ) ? 0x55 : 0xAA;
         }
@@ -304,8 +304,8 @@ public final class DataTestUtils
       project.setChannelLabels( new String[32] );
       OlsDataHelper.read( project, new InputStreamReader( is ) );
 
-      ProjectManager projectMgr = mock( ProjectManager.class );
-      when( projectMgr.getCurrentProject() ).thenReturn( project );
+      StubTestProjectManager projectMgr = new StubTestProjectManager();
+      projectMgr.setCurrentProject( project );
 
       return new DataContainer( projectMgr );
     }

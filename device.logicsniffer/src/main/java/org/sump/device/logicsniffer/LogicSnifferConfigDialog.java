@@ -327,6 +327,13 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   private JLabel ratioLabel;
   private JLabel warningLabel;
 
+  // @@@
+  private JTextField[] triggerHexMask;
+  private JTextField[] triggerHexValue;
+  private JButton[] applyHexMaskButton;
+  private JButton[] applyHexValueButton;
+  private JCheckBox[] invertHexValue;
+
   private volatile boolean listening = true;
 
   // CONSTRUCTORS
@@ -380,6 +387,20 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   }
 
   /**
+   * Converts a given bitmask to a hexadecimal representation.
+   * 
+   * @param aMask
+   *          the bitmask to convert to a hexadecimal representation, cannot be
+   *          <code>null</code>.
+   * @return a hexadecimal representation, never <code>null</code>.
+   */
+  private static String maskToHexString( final String aMask )
+  {
+    final int value = ( int )Long.parseLong( aMask, 2 );
+    return Integer.toHexString( Integer.reverse( value ) );
+  }
+
+  /**
    * Handles all action events for this component.
    */
   public void actionPerformed( final ActionEvent aEvent )
@@ -391,6 +412,8 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       return;
     }
 
+    final int stage = this.triggerStageTabs.getSelectedIndex();
+
     final Object source = aEvent.getSource();
     if ( source == this.captureButton )
     {
@@ -399,6 +422,49 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       if ( this.dialogResult )
       {
         close();
+      }
+    }
+    else if ( source == this.applyHexMaskButton[stage] )
+    {
+      try
+      {
+        final long hexMask = Long.parseLong( this.triggerHexMask[stage].getText(), 16 );
+        for ( int i = 0; i < MAX_CHANNELS; i++ )
+        {
+          boolean value = ( ( hexMask >>> i ) & 0x01 ) != 0;
+          this.triggerMask[stage][i].setSelected( value );
+        }
+
+        updateConfig( false /* aWarnUserIfConfigIncorrect */);
+        updateFields();
+      }
+      catch ( NumberFormatException e )
+      {
+        JOptionPane.showMessageDialog( this, "Illegal number format!\nPlease enter a hexadecimal value." );
+      }
+    }
+    else if ( source == this.applyHexValueButton[stage] )
+    {
+      try
+      {
+        long hexValue = Long.parseLong( this.triggerHexValue[stage].getText(), 16 );
+        if ( this.invertHexValue[stage].isSelected() )
+        {
+          hexValue = ~hexValue;
+        }
+
+        for ( int i = 0; i < MAX_CHANNELS; i++ )
+        {
+          boolean value = ( ( hexValue >>> i ) & 0x01 ) != 0;
+          this.triggerValue[stage][i].setSelected( value );
+        }
+
+        updateConfig( false /* aWarnUserIfConfigIncorrect */);
+        updateFields();
+      }
+      catch ( NumberFormatException e )
+      {
+        JOptionPane.showMessageDialog( this, "Illegal number format!\nPlease enter a hexadecimal value." );
       }
     }
     else
@@ -485,6 +551,14 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
         this.triggerStart[stage].setSelected( aSettings.getBoolean( prefix + ".startCapture",
             this.triggerStart[stage].isSelected() ) );
+
+        String hexMask = maskToHexString( mask );
+        this.triggerHexMask[stage].setText( hexMask );
+
+        String hexValue = maskToHexString( value );
+        this.triggerHexValue[stage].setText( hexValue );
+
+        // this.invertHexValue[stage].setSelected( false );
       }
 
       final String group = aSettings.get( "channelGroup", "" );
@@ -931,6 +1005,14 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     this.triggerMode = new JComboBox[LogicSnifferConfig.TRIGGER_STAGES];
     this.triggerChannel = new JComboBox[LogicSnifferConfig.TRIGGER_STAGES];
     this.triggerStart = new JCheckBox[LogicSnifferConfig.TRIGGER_STAGES];
+
+    // @@@
+    this.triggerHexMask = new JTextField[LogicSnifferConfig.TRIGGER_STAGES];
+    this.triggerHexValue = new JTextField[LogicSnifferConfig.TRIGGER_STAGES];
+    this.applyHexMaskButton = new JButton[LogicSnifferConfig.TRIGGER_STAGES];
+    this.applyHexValueButton = new JButton[LogicSnifferConfig.TRIGGER_STAGES];
+    this.invertHexValue = new JCheckBox[LogicSnifferConfig.TRIGGER_STAGES];
+
     for ( int i = 0; i < LogicSnifferConfig.TRIGGER_STAGES; i++ )
     {
       final JPanel stagePane = new JPanel( new GridBagLayout() );
@@ -962,15 +1044,37 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
       final JPanel maskValueEditor = createMaskValueEditor( i );
       stagePane.add( maskValueEditor, createConstraints( 0, 1, 6, 1, 1.0, 1.0 ) );
 
-      stagePane.add( createRightAlignedLabel( "Action" ), createConstraints( 0, 4, 1, 1, 1.0, 1.0 ) );
+      // @@@
+      stagePane.add( createRightAlignedLabel( "Hex Mask" ), createConstraints( 0, 4, 1, 1, 0.5, 1.0 ) );
+      this.triggerHexMask[i] = new JTextField( "0" );
+      this.triggerHexMask[i].setToolTipText( "hexadecimal trigger mask." );
+      stagePane.add( this.triggerHexMask[i], createConstraints( 1, 4, 1, 1, 0.5, 1.0 ) );
+
+      stagePane.add( createRightAlignedLabel( "Hex Value" ), createConstraints( 2, 4, 1, 1, 0.5, 1.0 ) );
+      this.triggerHexValue[i] = new JTextField( "0" );
+      this.triggerHexValue[i].setToolTipText( "hexadecimal trigger value." );
+      stagePane.add( this.triggerHexValue[i], createConstraints( 3, 4, 1, 1, 0.5, 1.0 ) );
+
+      this.invertHexValue[i] = new JCheckBox( "Invert" );
+      stagePane.add( this.invertHexValue[i], createConstraints( 4, 4, 1, 1, 1.0, 1.0 ) );
+
+      this.applyHexMaskButton[i] = new JButton( "Apply Hex Mask" );
+      stagePane.add( this.applyHexMaskButton[i], createConstraints( 1, 5, 1, 1, 1.0, 1.0 ) );
+      this.applyHexMaskButton[i].addActionListener( this );
+
+      this.applyHexValueButton[i] = new JButton( "Apply Hex Value" );
+      stagePane.add( this.applyHexValueButton[i], createConstraints( 3, 5, 1, 1, 1.0, 1.0 ) );
+      this.applyHexValueButton[i].addActionListener( this );
+
+      stagePane.add( createRightAlignedLabel( "Action" ), createConstraints( 0, 6, 1, 1, 1.0, 1.0 ) );
 
       this.triggerStart[i] = new JCheckBox( "Start Capture    (otherwise trigger level will rise by one)" );
-      stagePane.add( this.triggerStart[i], createConstraints( 1, 4, 3, 1, 1.0, 1.0 ) );
+      stagePane.add( this.triggerStart[i], createConstraints( 1, 6, 3, 1, 1.0, 1.0 ) );
 
-      stagePane.add( createRightAlignedLabel( "Delay" ), createConstraints( 4, 4, 1, 1, 0.5, 1.0 ) );
+      stagePane.add( createRightAlignedLabel( "Delay" ), createConstraints( 4, 6, 1, 1, 0.5, 1.0 ) );
       this.triggerDelay[i] = new JTextField( "0" );
       this.triggerDelay[i].setToolTipText( "Delays trigger # samples after its condition is met." );
-      stagePane.add( this.triggerDelay[i], createConstraints( 5, 4, 1, 1, 0.5, 1.0 ) );
+      stagePane.add( this.triggerDelay[i], createConstraints( 5, 6, 1, 1, 0.5, 1.0 ) );
 
       this.triggerStageTabs.add( String.format( "Stage %d", Integer.valueOf( i + 1 ) ), stagePane );
     }
@@ -1060,6 +1164,14 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
         this.triggerChannel[stage].setEnabled( false );
       }
       this.triggerStart[stage].setEnabled( stageEnabled && complex );
+
+      // @@@
+      this.triggerHexMask[stage].setEnabled( stageEnabled );
+      this.triggerHexValue[stage].setEnabled( stageEnabled );
+      this.applyHexMaskButton[stage].setEnabled( stageEnabled );
+      this.applyHexValueButton[stage].setEnabled( stageEnabled );
+      this.invertHexValue[stage].setEnabled( stageEnabled );
+
     }
   }
 

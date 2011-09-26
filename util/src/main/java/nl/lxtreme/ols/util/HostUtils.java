@@ -275,7 +275,7 @@ public final class HostUtils
     String filename = aFile.getName();
     int idx = filename.lastIndexOf( '.' );
 
-    if ( ( idx >= 0 ) && ( idx < filename.length() - 1 ) )
+    if ( ( idx >= 0 ) && ( idx < ( filename.length() - 1 ) ) )
     {
       ext = filename.substring( idx + 1 ).toLowerCase();
     }
@@ -432,7 +432,7 @@ public final class HostUtils
   public static final boolean isMacOS()
   {
     final String osName = System.getProperty( "os.name" );
-    return ( "Mac OS X".equalsIgnoreCase( osName ) );
+    return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
   }
 
   /**
@@ -619,7 +619,7 @@ public final class HostUtils
     String result = "";
 
     int idx = aFilename.lastIndexOf( '.' );
-    if ( ( idx >= 0 ) && ( idx < aFilename.length() - 1 ) )
+    if ( ( idx >= 0 ) && ( idx < ( aFilename.length() - 1 ) ) )
     {
       result = aFilename.substring( 0, idx );
 
