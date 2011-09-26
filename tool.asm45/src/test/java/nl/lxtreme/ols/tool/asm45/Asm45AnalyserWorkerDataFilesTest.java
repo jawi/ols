@@ -99,9 +99,9 @@ public class Asm45AnalyserWorkerDataFilesTest
         // { resource name, SMC/, STM/, EBG, BYTE, BL, WRT/, SYNC,
         // decodeInstructions?, decodeDataTransfers?, decodeBusGrants?, expected
         // event count }
-            { "Asm45_test.ols", 22, 23, 25, 26, 27, 29, 30, true, false, false, 177 }, // 0
-            { "Asm45_test.ols", 22, 23, 25, 26, 27, 29, 30, true, true, false, 356 }, // 1
-            { "Asm45_test.ols", 22, 23, 25, 26, 27, 29, 30, true, true, true, 357 }, // 2
+            { "asm45_test.ols", 22, 23, 25, 26, 27, 29, 30, true, false, false, 177 }, // 0
+            { "asm45_test.ols", 22, 23, 25, 26, 27, 29, 30, true, true, false, 356 }, // 1
+            { "asm45_test.ols", 22, 23, 25, 26, 27, 29, 30, true, true, true, 357 }, // 2
         } );
   }
 
