@@ -50,6 +50,7 @@
 		<module>tool.measure</module>
 		<module>tool.1wire</module>
 		<module>tool.jtag</module>
+		<module>tool.asm45</module>
 		<module>export.image</module>
 		<module>export.vcd</module>
 		<module>runner</module>
@@ -272,6 +273,11 @@
 			<dependency>
 				<groupId>nl.lxtreme.ols.tool</groupId>
 				<artifactId>jtag</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+			<dependency>
+				<groupId>nl.lxtreme.ols.tool</groupId>
+				<artifactId>asm45</artifactId>
 				<version>1.0.0</version>
 			</dependency>
 			<dependency>
