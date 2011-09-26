@@ -101,7 +101,7 @@ public class OneWireDataSet extends BaseDataSet<OneWireData>
   {
     final int idx = size();
     this.busErrors++;
-    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, OW_BUS_ERROR ) );
+    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, OW_BUS_ERROR, false /* aSlavePresent */) );
   }
 
   /**
@@ -141,6 +141,6 @@ public class OneWireDataSet extends BaseDataSet<OneWireData>
       final boolean aSlaveIsPresent )
   {
     final int idx = size();
-    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, OW_RESET ) );
+    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, OW_RESET, aSlaveIsPresent ) );
   }
 }
