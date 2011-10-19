@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.util.*;
 

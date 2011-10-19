@@ -41,7 +41,7 @@ public class Asm45Analyser extends BaseAsyncTool<Asm45ProtocolAnalysisDialog, As
    */
   public Asm45Analyser()
   {
-    super( Category.DECODER, "Asm45 bus analyser ..." );
+    super( ToolCategory.DECODER, "Asm45 bus analyser ..." );
   }
 
   // METHODS

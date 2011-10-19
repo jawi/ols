@@ -22,6 +22,7 @@ package nl.lxtreme.ols.api.tools;
 
 
 import java.awt.*;
+
 import nl.lxtreme.ols.api.data.*;
 
 
@@ -37,21 +38,6 @@ import nl.lxtreme.ols.api.data.*;
  */
 public interface Tool
 {
-  // INNER TYPES
-
-  /**
-   * Provides a category for pluggable tools.
-   */
-  public static enum Category
-  {
-    /** Denotes a tool that decodes something. */
-    DECODER,
-    /** Denotes a tool that measures something. */
-    MEASURE,
-    /** For tools that neither decode nor measure something. */
-    OTHER;
-  }
-
   // METHODS
 
   /**
@@ -63,7 +49,7 @@ public interface Tool
    * 
    * @return a category, cannot be <code>null</code>.
    */
-  Category getCategory();
+  ToolCategory getCategory();
 
   /**
    * Is called to get the name for the menu entry.
@@ -100,4 +86,13 @@ public interface Tool
    */
   void process( final Window aOwner, final DataContainer aData, final ToolContext aContext,
       final AnalysisCallback aCallback );
+
+  // /**
+  // * Called when the tool is invoked to do its job.
+  // *
+  // * @param aContext
+  // * the tool context to use, cannot be <code>null</code>.
+  // */
+  // void invoke( ToolContext aContext );
+
 }

@@ -30,7 +30,7 @@ import java.util.logging.*;
 import javax.microedition.io.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
@@ -315,6 +315,21 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
   }
 
   /**
+   * An {@link AcquisitionProgressListener} that does nothing.
+   */
+  static final class NullAcquisitionProgressListener implements AcquisitionProgressListener
+  {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void acquisitionInProgress( final int aPercentage )
+    {
+      // No-op
+    }
+  }
+
+  /**
    * Default implementation of {@link SampleProvider}.
    */
   static final class SimpleSampleProvider implements SampleProvider
@@ -346,7 +361,6 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
 
   private final OutputStream outputStream;
   private final InputStream inputStream;
-  private final DeviceProfileManager manager;
   private final IOHelper streamReader;
 
   private volatile int dividerValue;
@@ -370,9 +384,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
   public VirtualLogicSnifferDevice( final LogicSnifferConfig aConfig, final SampleProvider aSampleProvider )
       throws IOException
   {
-    super( aConfig );
-
-    this.manager = new DeviceProfileManager();
+    super( aConfig, null /* aConnection */, new DeviceProfileManager(), new NullAcquisitionProgressListener() );
 
     // Quite a lot of data can be pumped from this device, so we need some room
     // for it to store it all...
@@ -421,9 +433,9 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
     properties.put( DeviceProfile.DEVICE_TYPE, aType );
     properties.put( DeviceProfile.FELIX_FILEINSTALL_FILENAME, "" );
     // Update the properties of a 'virtual' PID...
-    this.manager.updated( "PID-" + aType, properties );
+    getDeviceProfileManager().updated( "PID-" + aType, properties );
 
-    return this.manager.getProfile( aType );
+    return getDeviceProfileManager().getProfile( aType );
   }
 
   /**
@@ -486,8 +498,26 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public AcquisitionResult call() throws IOException, InterruptedException
+  {
+    super.open();
+    try
+    {
+      return super.call();
+    }
+    finally
+    {
+      super.close();
+    }
+  }
+
+  /**
    * Closes this virtual device.
    */
+  @Override
   public synchronized void close()
   {
     this.streamReader.terminate();
@@ -546,8 +576,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
    * {@inheritDoc}
    */
   @Override
-  protected StreamConnection getConnection( final String aPortName, final int aPortRate, final boolean aDtrValue )
-      throws IOException
+  protected StreamConnection getStreamConnection()
   {
     final StreamConnection connection = new StreamConnection()
     {
@@ -591,14 +620,5 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
     };
 
     return connection;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected DeviceProfileManager getDeviceProfileManager()
-  {
-    return this.manager;
   }
 }

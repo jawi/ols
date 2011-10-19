@@ -41,7 +41,7 @@ public class SPIAnalyser extends BaseAsyncTool<SPIProtocolAnalysisDialog, SPIDat
    */
   public SPIAnalyser()
   {
-    super( Category.DECODER, "SPI analyser ..." );
+    super( ToolCategory.DECODER, "SPI analyser ..." );
   }
 
   // METHODS

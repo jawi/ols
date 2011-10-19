@@ -76,14 +76,7 @@ public class SelectDeviceAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JMenuItem menuItem = ( JMenuItem )aEvent.getSource();
-    if ( menuItem.isSelected() )
-    {
-      getController().setDeviceController( this.deviceName );
-    }
-    else
-    {
-      getController().clearDeviceController();
-    }
+    getController().selectDevice( menuItem.isSelected() ? this.deviceName : null );
   }
 
 }

@@ -24,7 +24,10 @@ package nl.lxtreme.ols.api;
 /**
  * Provides a callback interface for reporting back the progress of any process
  * (capture, tool analysis).
+ * 
+ * @deprecated
  */
+@Deprecated
 public interface ProgressCallback
 {
   // METHODS

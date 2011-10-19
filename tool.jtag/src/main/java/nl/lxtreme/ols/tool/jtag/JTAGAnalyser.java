@@ -41,7 +41,7 @@ public class JTAGAnalyser extends BaseAsyncTool<JTAGProtocolAnalysisDialog, JTAG
    */
   public JTAGAnalyser()
   {
-    super( Category.DECODER, "JTAG analyser ..." );
+    super( ToolCategory.DECODER, "JTAG analyser ..." );
   }
 
   // METHODS

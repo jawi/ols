@@ -55,11 +55,6 @@ public interface IClientController
   public void clearAllCursors();
 
   /**
-   * Clears the current device controller.
-   */
-  public void clearDeviceController();
-
-  /**
    * Clears the current project, and start over as it were a new project, in
    * which no captured data is shown.
    */
@@ -225,6 +220,14 @@ public interface IClientController
   public void saveProjectFile( final String aName, final File aFile ) throws IOException;
 
   /**
+   * Sets the device to the one given.
+   * 
+   * @param aDeviceName
+   *          the name of the device to select.
+   */
+  public void selectDevice( String aDeviceName );
+
+  /**
    * Sets whether or not cursors are enabled.
    * 
    * @param aState
@@ -243,15 +246,6 @@ public interface IClientController
    *          cannot be <code>null</code>.
    */
   public void setCursorPosition( final int aCursorIdx, final Point aLocation );
-
-  /**
-   * Sets the current device controller to the given value.
-   * 
-   * @param aDeviceName
-   *          the name of the device controller to set, cannot be
-   *          <code>null</code>.
-   */
-  public void setDeviceController( final String aDeviceName );
 
   /**
    * Sets a status message.

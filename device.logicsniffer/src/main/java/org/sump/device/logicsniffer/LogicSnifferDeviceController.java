@@ -22,22 +22,14 @@ package org.sump.device.logicsniffer;
 
 
 import java.awt.*;
-import java.beans.*;
 import java.io.*;
-import java.util.List;
-import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
-import javax.swing.SwingWorker.StateValue;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.util.*;
-
 import org.osgi.framework.*;
-import org.osgi.service.cm.*;
-import org.osgi.service.io.*;
 import org.sump.device.logicsniffer.profile.*;
 
 
@@ -61,11 +53,12 @@ public class LogicSnifferDeviceController implements DeviceController
   // VARIABLES
 
   private final LogicSnifferConfig deviceConfig;
-  private LogicSnifferDevice device;
+
+  private DeviceProfileManagerTracker deviceProfileManagerTracker;
+  private StreamConnectionFactory streamConnectionFactory;
+
   private LogicSnifferConfigDialog configDialog;
   private boolean setup;
-
-  private BundleContext bundleContext;
 
   // CONSTRUCTORS
 
@@ -81,178 +74,13 @@ public class LogicSnifferDeviceController implements DeviceController
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.devices.DeviceController#cancel()
+   * {@inheritDoc}
    */
   @Override
-  public void cancel() throws IllegalStateException
+  public Device createDevice( final AcquisitionProgressListener aProgressListener ) throws IOException
   {
-    if ( ( this.device != null ) && !this.device.isDone() )
-    {
-      this.device.stop();
-    }
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.DeviceController#captureData(nl.lxtreme.ols.api.devices.CaptureCallback)
-   */
-  @Override
-  public void captureData( final CaptureCallback aCallback ) throws IOException
-  {
-    // Listen to various properties for reporting it to our callback...
-    final PropertyChangeListener propertyChangeListener = new PropertyChangeListener()
-    {
-      private final LogicSnifferConfig config = LogicSnifferDeviceController.this.deviceConfig;
-
-      /**
-       * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-       */
-      @Override
-      public synchronized void propertyChange( final PropertyChangeEvent aEvent )
-      {
-        final String propertyName = aEvent.getPropertyName();
-
-        if ( LogicSnifferDevice.PROP_CAPTURE_PROGRESS.equals( propertyName ) )
-        {
-          final Integer progress = ( Integer )aEvent.getNewValue();
-
-          LOG.log( Level.FINE, "Progress {0}%", progress );
-
-          aCallback.updateProgress( progress.intValue() );
-        }
-        else if ( LogicSnifferDevice.PROP_CAPTURE_STATE.equals( propertyName ) )
-        {
-          final StateValue state = ( StateValue )aEvent.getNewValue();
-          if ( StateValue.STARTED.equals( state ) )
-          {
-            final int sampleRate = this.config.getSampleRate();
-            final int channelCount = this.config.getChannelCount();
-            final int channelMask = this.config.getEnabledChannelsMask();
-
-            // Notify our caller that we're started capturing...
-            aCallback.captureStarted( sampleRate, channelCount, channelMask );
-          }
-        }
-      }
-    };
-
-    this.device = new LogicSnifferDevice( this.deviceConfig )
-    {
-      /**
-       * @see javax.swing.SwingWorker#done()
-       */
-      @Override
-      protected void done()
-      {
-        if ( isCancelled() )
-        {
-          LOG.log( Level.INFO, "Capture cancelled by user..." );
-
-          // simply canceled by user...
-          aCallback.captureAborted( "" );
-        }
-        else
-        {
-          // Assume we're done, so try to get the capture results...
-          try
-          {
-            aCallback.captureComplete( get() );
-          }
-          catch ( InterruptedException exception )
-          {
-            // Make sure to handle IO-interrupted exceptions properly!
-            if ( !HostUtils.handleInterruptedException( exception ) )
-            {
-              LOG.log( Level.WARNING, "Interrupted during capture, details:", exception );
-              aCallback.captureAborted( exception.getMessage() );
-            }
-            else
-            {
-              aCallback.captureAborted( "" );
-            }
-          }
-          catch ( ExecutionException exception )
-          {
-            final Throwable actualCause = exception.getCause();
-            if ( actualCause == null )
-            {
-              LOG.log( Level.SEVERE, "Exception during capture, but no real cause found?!" );
-            }
-
-            // Make sure to handle IO-interrupted exceptions properly!
-            if ( !HostUtils.handleInterruptedException( actualCause ) )
-            {
-              LOG.log( Level.WARNING, "Exception during capture, details:", actualCause );
-              aCallback.captureAborted( actualCause.getMessage() );
-            }
-            else
-            {
-              aCallback.captureAborted( "" );
-            }
-          }
-        }
-      }
-
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      protected synchronized StreamConnection getConnection( final String aPortName, final int aPortRate,
-          final boolean aDtrValue ) throws IOException
-      {
-        final BundleContext context = LogicSnifferDeviceController.this.bundleContext;
-        if ( context == null )
-        {
-          throw new IllegalStateException( "No bundle context obtained?!" );
-        }
-
-        final ServiceReference serviceRef = context.getServiceReference( ConnectorService.class.getName() );
-        if ( serviceRef == null )
-        {
-          throw new IllegalStateException( "No service reference obtained?!" );
-        }
-
-        final ConnectorService connectorService = ( ConnectorService )context.getService( serviceRef );
-
-        try
-        {
-          final String portUri = String.format(
-              "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff;dtr=%s", aPortName,
-              Integer.valueOf( aPortRate ), ( aDtrValue ? "on" : "off" ) );
-
-          return ( StreamConnection )connectorService.open( portUri, ConnectorService.READ_WRITE, true /* timeouts */);
-        }
-        finally
-        {
-          // Release the connector service, to avoid possible resource
-          // leaks...
-          context.ungetService( serviceRef );
-        }
-      }
-
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      protected synchronized DeviceProfileManager getDeviceProfileManager()
-      {
-        return LogicSnifferDeviceController.this.getDeviceProfileManager();
-      }
-
-      /**
-       * @see org.sump.device.logicsniffer.LogicSnifferDevice#process(java.util.List)
-       */
-      @Override
-      protected void process( final List<Sample> aSamples )
-      {
-        aCallback.samplesCaptured( aSamples );
-      }
-    };
-
-    // Tell the device on what port & what rate to do its job...
-    this.device.addPropertyChangeListener( propertyChangeListener );
-
-    // Let the capturing take place in a background thread...
-    this.device.execute();
+    return new LogicSnifferDevice( this.deviceConfig, getStreamConnection(), getDeviceProfileManager(),
+        aProgressListener );
   }
 
   /**
@@ -261,15 +89,6 @@ public class LogicSnifferDeviceController implements DeviceController
   public String getName()
   {
     return NAME;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.DeviceController#isCapturing()
-   */
-  @Override
-  public boolean isCapturing()
-  {
-    return ( this.device != null ) && !this.device.isDone();
   }
 
   /**
@@ -299,16 +118,7 @@ public class LogicSnifferDeviceController implements DeviceController
     // if no valid dialog exists, create one
     if ( this.configDialog == null )
     {
-      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.deviceConfig )
-      {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        protected DeviceProfileManager getDeviceProfileManager()
-        {
-          return LogicSnifferDeviceController.this.getDeviceProfileManager();
-        }
-      };
+      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.deviceConfig, this.deviceProfileManagerTracker );
     }
 
     this.setup = this.configDialog.showDialog();
@@ -316,30 +126,12 @@ public class LogicSnifferDeviceController implements DeviceController
   }
 
   /**
-   * Finds the device profile manager.
-   * 
-   * @return a device profile manager instance, never <code>null</code>.
+   * Called when this class is unregistered as OSGi service.
    */
-  final DeviceProfileManager getDeviceProfileManager()
+  protected void destroy()
   {
-    final String filter = "(".concat( Constants.SERVICE_PID ).concat( "=" ).concat( DeviceProfileManager.SERVICE_PID )
-        .concat( ")" );
-    final String clazz = ManagedServiceFactory.class.getName();
-
-    try
-    {
-      final ServiceReference[] serviceReferences = this.bundleContext.getServiceReferences( clazz, filter );
-      if ( ( serviceReferences == null ) || ( serviceReferences.length < 1 ) )
-      {
-        throw new IllegalStateException( "Failed to find registered device profile manager?!" );
-      }
-
-      return ( DeviceProfileManager )this.bundleContext.getService( serviceReferences[0] );
-    }
-    catch ( InvalidSyntaxException exception )
-    {
-      throw new InternalError( "Filter was incorrect?!" );
-    }
+    this.streamConnectionFactory.close();
+    this.deviceProfileManagerTracker.close();
   }
 
   /**
@@ -347,12 +139,39 @@ public class LogicSnifferDeviceController implements DeviceController
    * 
    * @param aBundleContext
    *          the bundle context to use, cannot be <code>null</code>.
-   * @throws Exception
-   *           in case of errors.
    */
-  protected void init( final BundleContext aBundleContext ) throws Exception
+  protected void init( final BundleContext aBundleContext )
   {
     // Keep for later use...
-    this.bundleContext = aBundleContext;
+    this.deviceProfileManagerTracker = new DeviceProfileManagerTracker( aBundleContext );
+    this.deviceProfileManagerTracker.open();
+
+    this.streamConnectionFactory = new StreamConnectionFactory( aBundleContext );
+    this.streamConnectionFactory.open();
+  }
+
+  /**
+   * @return
+   */
+  private DeviceProfileManager getDeviceProfileManager()
+  {
+    return this.deviceProfileManagerTracker.getService();
+  }
+
+  /**
+   * @return
+   * @throws IOException
+   */
+  private StreamConnection getStreamConnection() throws IOException
+  {
+    final String portName = this.deviceConfig.getPortName();
+    final int baudrate = this.deviceConfig.getBaudrate();
+    final boolean dtrValue = this.deviceConfig.isOpenPortDtr();
+
+    // Make sure we release the device if it was still attached...
+    LOG.log( Level.INFO, "Attaching to {0} @ {1}bps (DTR = {2}) ...",
+        new Object[] { portName, Integer.valueOf( baudrate ), dtrValue ? "high" : "low" } );
+
+    return this.streamConnectionFactory.getConnection( portName, baudrate, dtrValue );
   }
 }

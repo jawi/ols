@@ -26,14 +26,16 @@ import java.util.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
-import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.util.*;
 
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import org.sump.device.logicsniffer.sampleprocessor.*;
 
 
 /**
@@ -41,275 +43,8 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
  * rxtx package from {@link http://www.rxtx.org/} to access the serial port the
  * analyzer is connected to.
  */
-public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, Sample>
+public class LogicSnifferDevice implements Device
 {
-  // INNER TYPES
-
-  /**
-   * Processes all samples and only returns the actual changed sample values.
-   */
-  final class EqualityFilter implements SampleProcessor
-  {
-    // VARIABLES
-
-    private final int[] buffer;
-    private final int trigCount;
-    private final SampleProcessorCallback callback;
-
-    // CONSTRUCTORS
-
-    /**
-     * @param aBuffer
-     *          the buffer with sample data to decode.
-     * @param aTrigCount
-     *          the trigcount value;
-     * @param aCallback
-     *          the callback to use.
-     */
-    public EqualityFilter( final int[] aBuffer, final int aTrigCount, final SampleProcessorCallback aCallback )
-    {
-      if ( aBuffer == null )
-      {
-        throw new IllegalArgumentException( "Buffer cannot be null!" );
-      }
-      this.buffer = aBuffer;
-      this.trigCount = aTrigCount;
-      this.callback = aCallback;
-    }
-
-    // METHODS
-
-    /**
-     * @see org.sump.device.logicsniffer.LogicSnifferDevice.SampleProcessor#process()
-     */
-    @Override
-    public final void process()
-    {
-      long time = 0;
-
-      final int samples = this.buffer.length;
-
-      int oldSample = 0; // first value doesn't really matter
-      for ( int i = 0; i < samples; i++ )
-      {
-        final int newSample = this.buffer[i];
-
-        if ( ( i == 0 ) || ( oldSample != newSample ) )
-        {
-          // add the read sample & add a timestamp value as well...
-          this.callback.addValue( newSample, time );
-        }
-
-        oldSample = newSample;
-        time++;
-      }
-
-      // XXX JaWi: why is this correction needed?
-      int correction = 2;
-      if ( LogicSnifferDevice.this.config.getDivider() <= 3 )
-      {
-        correction = 1;
-      }
-
-      // Take the last seen time value as "absolete" length of this trace...
-      this.callback.ready( time, ( this.trigCount - correction ) );
-    }
-  }
-
-  /**
-   * Provides a RLE decoder.
-   */
-  final class RleDecoder implements SampleProcessor
-  {
-    // VARIABLES
-
-    private final int[] buffer;
-    private final int trigCount;
-    private final SampleProcessorCallback callback;
-
-    private final int rleCountValue;
-    private final int rleCountMask;
-
-    // CONSTRUCTORS
-
-    /**
-     * @param aBuffer
-     *          the buffer with sample data to decode.
-     * @param aTrigCount
-     *          the trigcount value;
-     * @param aCallback
-     *          the callback to use.
-     */
-    public RleDecoder( final int[] aBuffer, final int aTrigCount, final SampleProcessorCallback aCallback )
-    {
-      if ( aBuffer == null )
-      {
-        throw new IllegalArgumentException( "Buffer cannot be null!" );
-      }
-      this.buffer = aBuffer;
-      this.trigCount = aTrigCount;
-      this.callback = aCallback;
-
-      // enabled group count is "automatically" corrected for DDR/Demux mode...
-      final int width = LogicSnifferDevice.this.config.getRLEDataWidth();
-      switch ( width )
-      {
-        case 32:
-          this.rleCountValue = 0x80000000;
-          this.rleCountMask = this.rleCountValue - 1;
-          break;
-        case 24:
-          this.rleCountValue = 0x800000;
-          this.rleCountMask = this.rleCountValue - 1;
-          break;
-        case 16:
-          this.rleCountValue = 0x8000;
-          this.rleCountMask = this.rleCountValue - 1;
-          break;
-        case 8:
-          this.rleCountValue = 0x80;
-          this.rleCountMask = this.rleCountValue - 1;
-          break;
-        default:
-          throw new IllegalArgumentException( "Illegal RLE width! Should be 8, 16, 24 or 32!" );
-      }
-    }
-
-    // METHODS
-
-    /**
-     * @see org.sump.device.logicsniffer.LogicSnifferDevice.SampleProcessor#process()
-     */
-    public void process()
-    {
-      long time = 0;
-      long rleTrigPos = 0;
-      int oldSample = -1;
-
-      // if msb set increment time by the count value
-      // else save sample check trigger pos and increment time by 1
-      // this should work for either dogsbody or rasmus bitstreams
-
-      final int samples = this.buffer.length;
-
-      // shiftBits needs to be 8 if 8 bit selected and 16 if 16 bit selected
-      final int rleShiftBits = LogicSnifferDevice.this.config.getRLEDataWidth();
-      final boolean ddrMode = LogicSnifferDevice.this.config.isDoubleDataRateEnabled();
-
-      for ( int i = 0; i < samples; i++ )
-      {
-        final int sampleValue = this.buffer[i];
-        final int normalizedSampleValue = normalizeSampleValue( sampleValue );
-
-        // if a count just add it to the time
-        if ( ( normalizedSampleValue & this.rleCountValue ) != 0 )
-        {
-          int count = ( normalizedSampleValue & this.rleCountMask );
-          if ( ddrMode && ( i < ( samples - 1 ) ) )
-          {
-            // In case of "double data rate", the RLE-counts are encoded as 16-
-            // resp. 32-bit values, so we need to take two samples for each
-            // count (as they are 8- or 16-bits in DDR mode).
-            // This should also solve issue #31...
-
-            // XXX should be multiplied by two, as suggested by DavidFrancis?!
-            // Tests with a 25MHz crystal show good results, without
-            // multiplication...
-            count = ( count << rleShiftBits ) | normalizeSampleValue( this.buffer[++i] );
-          }
-
-          if ( oldSample >= 0 )
-          {
-            time += count;
-          }
-          else
-          {
-            LOG.warning( "Ignoring RLE count without preceeding sample value: " + Integer.toHexString( count ) );
-          }
-        }
-        else
-        {
-          // this is a data value only save data if different to last
-          if ( sampleValue != oldSample )
-          {
-            // set the trigger position as a time value
-            if ( ( i >= this.trigCount ) && ( rleTrigPos == 0 ) )
-            {
-              rleTrigPos = time;
-            }
-
-            // add the read sample & add a timestamp value as well...
-            this.callback.addValue( sampleValue, time );
-            oldSample = sampleValue;
-          }
-          time++;
-        }
-      }
-
-      // Take the last seen time value as "absolete" length of this trace...
-      this.callback.ready( time, rleTrigPos - 1 );
-    }
-
-    /**
-     * Normalizes the given sample value to mask out the unused channel groups
-     * and get a sample value in the correct width.
-     * 
-     * @param aSampleValue
-     *          the original sample to normalize.
-     * @return the normalized sample value.
-     */
-    private int normalizeSampleValue( final int aSampleValue )
-    {
-      int groupCount = LogicSnifferDevice.this.config.getGroupCount();
-      int compdata = 0;
-
-      // to enable non contiguous channel groups
-      // need to remove zero data from unused groups
-      int indata = aSampleValue;
-      for ( int j = 0, outcount = 0; j < groupCount; j++ )
-      {
-        if ( LogicSnifferDevice.this.config.isGroupEnabled( j ) )
-        {
-          compdata |= ( ( indata & 0xff ) << ( 8 * outcount++ ) );
-        }
-        indata >>= 8;
-      }
-      return compdata;
-    }
-  }
-
-  /**
-   * Denotes a sample processor, which performs a transformation function (such
-   * as uncompressing) on a set of samples.
-   */
-  static interface SampleProcessor
-  {
-    /**
-     * Processes the samples.
-     */
-    void process();
-  }
-
-  /**
-   * Provides a callback for the processed samples.
-   * 
-   * @see SampleProcessor
-   */
-  static interface SampleProcessorCallback
-  {
-    /**
-     * @param aSampleValue
-     * @param aTimestamp
-     */
-    void addValue( final int aSampleValue, final long aTimestamp );
-
-    /**
-     * @param aAbsoluteLength
-     * @param aTriggerPosition
-     */
-    void ready( final long aAbsoluteLength, final long aTriggerPosition );
-  }
-
   // CONSTANTS
 
   public static final String PROP_CAPTURE_PROGRESS = "progress";
@@ -382,24 +117,27 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
 
   // VARIABLES
 
+  private final DeviceProfileManager deviceProfileManager;
+  private final AcquisitionProgressListener acquisitionProgressListener;
   private final LogicSnifferConfig config;
 
-  private StreamConnection connection;
+  private StreamConnection connection1;
   private DataInputStream inputStream;
   private DataOutputStream outputStream;
-  private boolean attached;
   private int trigcount;
-
-  private volatile boolean stopped;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new LogicSnifferDevice instance.
    */
-  public LogicSnifferDevice( final LogicSnifferConfig aConfig )
+  public LogicSnifferDevice( final LogicSnifferConfig aConfig, final StreamConnection aConnection,
+      final DeviceProfileManager aDeviceProfileManager, final AcquisitionProgressListener aProgressListener )
   {
     this.config = aConfig;
+    this.connection1 = aConnection;
+    this.deviceProfileManager = aDeviceProfileManager;
+    this.acquisitionProgressListener = aProgressListener;
   }
 
   // METHODS
@@ -429,76 +167,232 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
-   * Returns whether or not this device is 'stopped' by the user.
-   * <p>
-   * NOTE: this method is to be expected to yield an indication of the device
-   * state, it cannot give any guarantees about the actual state of the device
-   * itself!
-   * </p>
+   * Sends the configuration to the device, starts it, reads the captured data
+   * and returns a CapturedData object containing the data read as well as
+   * device configuration information.
    * 
-   * @return <code>true</code> if the device was 'stopped' by the user,
-   *         <code>false</code> otherwise.
-   */
-  public final boolean isStopped()
-  {
-    return this.stopped;
-  }
-
-  /**
-   * Performs a self-test on the OLS device.
-   * <p>
-   * Note: not all versions of the OLS device firmware support a selftest!
-   * </p>
-   * 
+   * @return the captured results, never <code>null</code>.
    * @throws IOException
-   *           in case of I/O problems.
+   *           when writing to or reading from device fails
+   * @throws InterruptedException
+   *           if a read time out occurs after trigger match or stop() was
+   *           called before trigger match
    */
-  public void selfTest() throws IOException
+  @Override
+  public AcquisitionResult call() throws IOException, InterruptedException
   {
-    attach();
+    LOG.info( "Starting capture ..." );
 
-    sendCommand( CMD_SELFTEST );
-    // TODO read selftest result...
+    // First try to find the logic sniffer itself...
+    detectDevice();
 
-    detach();
+    // check if data needs to be multiplexed
+    final int channelCount = this.config.getChannelCount();
+    if ( channelCount <= 0 )
+    {
+      throw new InternalError( "Internal error: did not obtain correct number of channels (" + channelCount + ")?!" );
+    }
+
+    final int samples = this.config.getSampleCount();
+    if ( samples <= 0 )
+    {
+      throw new InternalError( "Internal error: did not obtain correct number of samples (" + samples + ")?!" );
+    }
+
+    // Setup/configure the device with the UI-settings...
+    configureDevice();
+
+    // We're ready to process the samples from the device...
+    sendCommand( CMD_RUN );
+
+    final int[] buffer = new int[samples];
+    int sampleIdx = samples - 1;
+    boolean waiting = ( sampleIdx >= 0 );
+
+    LOG.log( Level.FINE, "Awaiting trigger ..." );
+
+    // wait for first byte forever (trigger could cause long initial delays)
+    while ( waiting && !Thread.currentThread().isInterrupted() )
+    {
+      try
+      {
+        buffer[sampleIdx] = readSample();
+        sampleIdx--;
+        waiting = false;
+      }
+      catch ( final InterruptedException exception )
+      {
+        // When running, we simply have a timeout; this could be that the
+        // trigger is not fired yet... We keep waiting...
+        if ( Thread.currentThread().isInterrupted() )
+        {
+          // Make sure to handle IO-interrupted exceptions properly!
+          if ( !HostUtils.handleInterruptedException( exception ) )
+          {
+            throw exception;
+          }
+        }
+      }
+    }
+
+    if ( LOG.isLoggable( Level.FINE ) )
+    {
+      LOG.log( Level.FINE, "Trigger(s) fired! Reading {0} samples of {1} bytes ...",
+          new Object[] { Integer.valueOf( samples ), Integer.valueOf( this.config.getEnabledGroupCount() ) } );
+    }
+
+    // read all other samples
+    try
+    {
+      for ( ; ( sampleIdx >= 0 ) && !Thread.currentThread().isInterrupted(); sampleIdx-- )
+      {
+        buffer[sampleIdx] = readSample();
+        this.acquisitionProgressListener
+            .acquisitionInProgress( ( int )( 100.0 - ( ( 100.0 * sampleIdx ) / buffer.length ) ) );
+      }
+    }
+    catch ( InterruptedException exception )
+    {
+      LOG.log( Level.WARNING, "Capture interrupted! Only {0} samples read ...", Integer.valueOf( samples - sampleIdx ) );
+
+      if ( Thread.currentThread().isInterrupted() )
+      {
+        // Make sure the device is in a state were we can do something with
+        // it after this method is completed...
+        resetDevice();
+      }
+
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        throw exception;
+      }
+    }
+    finally
+    {
+      this.acquisitionProgressListener.acquisitionInProgress( 100 );
+    }
+
+    LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( samples - sampleIdx - 1 ) );
+
+    // In case the device sends its samples in "reverse" order, we need to
+    // revert it now, before processing them further...
+    if ( this.config.isSamplesInReverseOrder() )
+    {
+      HostUtils.reverse( buffer );
+    }
+
+    final List<Integer> values = new ArrayList<Integer>();
+    final List<Long> timestamps = new ArrayList<Long>();
+
+    // collect additional information for CapturedData; we use arrays here,
+    // as their values are to be filled from anonymous inner classes...
+    final long[] absoluteLength = { 0L };
+    final long[] triggerPos = { Ols.NOT_AVAILABLE };
+    final int rate = this.config.getSampleRate();
+
+    final SampleProcessorCallback callback = new SampleProcessorCallback()
+    {
+      public void addValue( final int aSampleValue, final long aTimestamp )
+      {
+        values.add( Integer.valueOf( aSampleValue ) );
+        timestamps.add( Long.valueOf( aTimestamp ) );
+      }
+
+      public void ready( final long aAbsoluteLength, final long aTriggerPosition )
+      {
+        absoluteLength[0] = aAbsoluteLength;
+        if ( LogicSnifferDevice.this.config.isTriggerEnabled() )
+        {
+          triggerPos[0] = aTriggerPosition;
+        }
+      }
+    };
+    // Process the actual samples...
+    createSampleProcessor( samples, buffer, callback ).process();
+
+    return new CapturedData( values, timestamps, triggerPos[0], rate, channelCount,
+        this.config.getEnabledChannelsMask(), absoluteLength[0] );
   }
 
   /**
    * Informs the thread in run() that it is supposed to stop reading data and
    * return.
    */
-  public void stop()
+  public void cancel()
   {
     final boolean isRleEnabled = this.config.isRleEnabled();
     try
     {
-      if ( !isCancelledOrStopped() )
+      if ( isRleEnabled )
       {
-        if ( isRleEnabled )
-        {
-          LOG.info( "Prematurely finishing RLE-enabled capture ..." );
-          sendCommand( CMD_RLE_FINISH_NOW );
-        }
-        else
-        {
-          LOG.info( "Prematurely finishing normal capture ..." );
-          resetDevice();
-        }
+        LOG.info( "Prematurely finishing RLE-enabled capture ..." );
+        sendCommand( CMD_RLE_FINISH_NOW );
       }
       else
       {
-        // Hmm, really abort this upon request of the user...
-        cancel( true );
+        LOG.info( "Prematurely finishing normal capture ..." );
+        resetDevice();
       }
-
-      // Flag we're being cancelled...
-      this.stopped = true;
     }
     catch ( IOException exception )
     {
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
         LOG.log( Level.WARNING, "Stopping capture failed?!", exception );
+      }
+    }
+  }
+
+  /**
+   * Detaches the currently attached port, if one exists. This will close the
+   * serial port.
+   */
+  @Override
+  public void close()
+  {
+    StreamConnection conn = getStreamConnection();
+    if ( conn != null )
+    {
+      try
+      {
+        // try to make sure device is reset...
+        if ( this.outputStream != null )
+        {
+          // XXX it seems that after a RLE abort command, the OLS device no
+          // longer is able to process a full 5x reset command. However, we're
+          // also resetting the thing right after we've started an acquisition,
+          // so it might not be that bad...
+          sendCommand( CMD_RESET );
+        }
+      }
+      catch ( final IOException exception )
+      {
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.WARNING, "Detaching failed!", exception );
+        }
+      }
+      finally
+      {
+        HostUtils.closeResource( this.outputStream );
+        HostUtils.closeResource( this.inputStream );
+
+        try
+        {
+          conn.close();
+        }
+        catch ( IOException exception )
+        {
+          LOG.log( Level.WARNING, "Closing connection failed!", exception );
+        }
+        finally
+        {
+          this.connection1 = null;
+          this.outputStream = null;
+          this.inputStream = null;
+        }
       }
     }
   }
@@ -515,29 +409,22 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    * @throws IOException
    *           in case of I/O problems during attaching to the device.
    */
-  synchronized boolean attach() throws IOException
+  @Override
+  public void open() throws IOException
   {
+    final StreamConnection conn = getStreamConnection();
     final String portName = this.config.getPortName();
-    final int baudrate = this.config.getBaudrate();
     final int openDelay = this.config.getOpenPortDelay();
-    final boolean dtrValue = this.config.isOpenPortDtr();
 
     try
     {
-      // Make sure we release the device if it was still attached...
-      detach();
-
-      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps (DTR = {2}) ...",
-          new Object[] { portName, Integer.valueOf( baudrate ), dtrValue ? "high" : "low" } );
-
-      this.connection = getConnection( portName, baudrate, dtrValue );
-      if ( this.connection == null )
+      if ( conn == null )
       {
         throw new IOException( "Failed to open a valid connection!" );
       }
 
-      this.outputStream = this.connection.openDataOutputStream();
-      this.inputStream = this.connection.openDataInputStream();
+      this.outputStream = conn.openDataOutputStream();
+      this.inputStream = conn.openDataInputStream();
 
       // Some devices need some time to initialize after being opened for the
       // first time, see issue #34.
@@ -549,8 +436,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       // We don't expect any data, so flush all data pending in the given
       // input stream. See issue #34.
       HostUtils.flushInputStream( this.inputStream );
-
-      return this.attached = true;
     }
     catch ( final Exception exception )
     {
@@ -564,8 +449,21 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         throw new IOException( "Failed to open/use " + portName + "! Possible reason: " + exception.getMessage() );
       }
     }
+  }
 
-    return false;
+  /**
+   * Performs a self-test on the OLS device.
+   * <p>
+   * Note: not all versions of the OLS device firmware support a selftest!
+   * </p>
+   * 
+   * @throws IOException
+   *           in case of I/O problems.
+   */
+  public void selfTest() throws IOException
+  {
+    sendCommand( CMD_SELFTEST );
+    // TODO read selftest result...
   }
 
   /**
@@ -719,60 +617,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
-   * Detaches the currently attached port, if one exists. This will close the
-   * serial port.
-   */
-  synchronized void detach()
-  {
-    // We're definitely no longer attached...
-    this.attached = false;
-
-    if ( this.connection != null )
-    {
-      try
-      {
-        // try to make sure device is reset...
-        if ( this.outputStream != null )
-        {
-          // XXX it seems that after a RLE abort command, the OLS device no
-          // longer is able to process a full 5x reset command. However, we're
-          // also resetting the thing right after we've started an acquisition,
-          // so it might not be that bad...
-          sendCommand( CMD_RESET );
-        }
-      }
-      catch ( final IOException exception )
-      {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.WARNING, "Detaching failed!", exception );
-        }
-      }
-      finally
-      {
-        HostUtils.closeResource( this.outputStream );
-        HostUtils.closeResource( this.inputStream );
-
-        try
-        {
-          this.connection.close();
-        }
-        catch ( IOException exception )
-        {
-          LOG.log( Level.WARNING, "Closing connection failed!", exception );
-        }
-        finally
-        {
-          this.connection = null;
-          this.outputStream = null;
-          this.inputStream = null;
-        }
-      }
-    }
-  }
-
-  /**
    * Reads a single sample (= 1..4 bytes) from the serial input stream.
    * <p>
    * This method will take the enabled channel groups into consideration, making
@@ -799,9 +643,9 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
       read = this.inputStream.read( buf, offset, enabledGroupCount );
       if ( read < 0 )
       {
-        throw new IOException( "Data readout interrupted: EOF." );
+        throw new EOFException( "Data readout interrupted: EOF." );
       }
-      if ( Thread.interrupted() )
+      if ( Thread.currentThread().isInterrupted() )
       {
         throw new InterruptedException( "Data readout interrupted." );
       }
@@ -829,11 +673,9 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    * 
    * @return the read string, can be empty but never <code>null</code>.
    * @throws IOException
-   *           in case of I/O problems during the string read;
-   * @throws InterruptedException
-   *           in case this thread was interrupted during the string read.
+   *           in case of I/O problems during the string read.
    */
-  final String readString() throws IOException, InterruptedException
+  final String readString() throws IOException
   {
     StringBuilder sb = new StringBuilder();
 
@@ -847,12 +689,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         // set is a subset of UTF-8...
         sb.append( ( char )read );
       }
-      if ( Thread.interrupted() )
-      {
-        throw new InterruptedException( "Data readout interrupted!" );
-      }
     }
-    while ( ( read > 0x00 ) && !isCancelled() );
+    while ( ( read > 0x00 ) && !Thread.currentThread().isInterrupted() );
 
     return sb.toString();
   }
@@ -917,183 +755,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
-   * Sends the configuration to the device, starts it, reads the captured data
-   * and returns a CapturedData object containing the data read as well as
-   * device configuration information.
-   * 
-   * @return the captured results, never <code>null</code>.
-   * @throws IOException
-   *           when writing to or reading from device fails
-   * @throws InterruptedException
-   *           if a read time out occurs after trigger match or stop() was
-   *           called before trigger match
-   * @see javax.swing.SwingWorker#doInBackground()
-   */
-  @Override
-  protected AcquisitionResult doInBackground() throws Exception
-  {
-    LOG.info( "Starting capture ..." );
-
-    // We're just started, so we cannot be cancelled...
-    this.stopped = false;
-
-    if ( !attach() )
-    {
-      throw new IOException( "Unable to open port " + this.config.getPortName() + ". No specific reason..." );
-    }
-
-    try
-    {
-      // First try to find the logic sniffer itself...
-      detectDevice();
-
-      // check if data needs to be multiplexed
-      final int channelCount = this.config.getChannelCount();
-      if ( channelCount <= 0 )
-      {
-        throw new InternalError( "Internal error: did not obtain correct number of channels (" + channelCount + ")?!" );
-      }
-
-      final int samples = this.config.getSampleCount();
-      if ( samples <= 0 )
-      {
-        throw new InternalError( "Internal error: did not obtain correct number of samples (" + samples + ")?!" );
-      }
-
-      // Setup/configure the device with the UI-settings...
-      configureDevice();
-
-      // We're ready to process the samples from the device...
-      sendCommand( CMD_RUN );
-
-      final int[] buffer = new int[samples];
-      int sampleIdx = samples - 1;
-      boolean waiting = ( sampleIdx >= 0 );
-
-      LOG.log( Level.FINE, "Awaiting trigger ..." );
-
-      // wait for first byte forever (trigger could cause long initial delays)
-      while ( waiting && !isCancelled() )
-      {
-        try
-        {
-          buffer[sampleIdx] = readSample();
-          sampleIdx--;
-          waiting = false;
-        }
-        catch ( final InterruptedException exception )
-        {
-          // When running, we simply have a timeout; this could be that the
-          // trigger is not fired yet... We keep waiting...
-          if ( isCancelled() )
-          {
-            // Make sure to handle IO-interrupted exceptions properly!
-            if ( !HostUtils.handleInterruptedException( exception ) )
-            {
-              throw exception;
-            }
-          }
-        }
-      }
-
-      if ( LOG.isLoggable( Level.FINE ) )
-      {
-        LOG.log( Level.FINE, "Trigger(s) fired! Reading {0} samples of {1} bytes ...",
-            new Object[] { Integer.valueOf( samples ), Integer.valueOf( this.config.getEnabledGroupCount() ) } );
-      }
-
-      // read all other samples
-      try
-      {
-        for ( ; ( sampleIdx >= 0 ) && !isCancelled(); sampleIdx-- )
-        {
-          buffer[sampleIdx] = readSample();
-          setProgress( 100 - ( ( 100 * sampleIdx ) / buffer.length ) );
-        }
-      }
-      catch ( InterruptedException exception )
-      {
-        LOG.log( Level.WARNING, "Capture interrupted! Only {0} samples read ...", Integer.valueOf( samples - sampleIdx ) );
-
-        if ( isCancelled() )
-        {
-          // Make sure the device is in a state were we can do something with
-          // it after this method is completed...
-          resetDevice();
-        }
-
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          throw exception;
-        }
-      }
-      finally
-      {
-        setProgress( 100 );
-      }
-
-      LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( samples - sampleIdx - 1 ) );
-
-      // In case the device sends its samples in "reverse" order, we need to
-      // revert it now, before processing them further...
-      if ( this.config.isSamplesInReverseOrder() )
-      {
-        HostUtils.reverse( buffer );
-      }
-
-      final List<Integer> values = new ArrayList<Integer>();
-      final List<Long> timestamps = new ArrayList<Long>();
-
-      // collect additional information for CapturedData; we use arrays here,
-      // as their values are to be filled from anonymous inner classes...
-      final long[] absoluteLength = { 0L };
-      final long[] triggerPos = { Ols.NOT_AVAILABLE };
-      final int rate = this.config.getSampleRate();
-
-      final SampleProcessorCallback callback = new SampleProcessorCallback()
-      {
-        public void addValue( final int aSampleValue, final long aTimestamp )
-        {
-          values.add( Integer.valueOf( aSampleValue ) );
-          timestamps.add( Long.valueOf( aTimestamp ) );
-        }
-
-        public void ready( final long aAbsoluteLength, final long aTriggerPosition )
-        {
-          absoluteLength[0] = aAbsoluteLength;
-          if ( LogicSnifferDevice.this.config.isTriggerEnabled() )
-          {
-            triggerPos[0] = aTriggerPosition;
-          }
-        }
-      };
-
-      final SampleProcessor processor;
-      if ( this.config.isRleEnabled() )
-      {
-        LOG.log( Level.INFO, "Decoding Run Length Encoded data, sample count: {0}", Integer.valueOf( samples ) );
-        processor = new RleDecoder( buffer, this.trigcount, callback );
-      }
-      else
-      {
-        LOG.log( Level.INFO, "Decoding unencoded data, sample count: {0}", Integer.valueOf( samples ) );
-        processor = new EqualityFilter( buffer, this.trigcount, callback );
-      }
-
-      // Process the actual samples...
-      processor.process();
-
-      return new CapturedData( values, timestamps, triggerPos[0], rate, channelCount,
-          this.config.getEnabledChannelsMask(), absoluteLength[0] );
-    }
-    finally
-    {
-      detach();
-    }
-  }
-
-  /**
    * Returns the configuration as used for this device.
    * 
    * @return a device configuration, never <code>null</code>.
@@ -1104,34 +765,47 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
   }
 
   /**
-   * Queries for a connector service to craft a connection for a given serial
-   * port with a given baudrate.
-   * 
-   * @param aPortName
-   *          the name of the port to create a connection for;
-   * @param aPortRate
-   *          the baudrate of the connection;
-   * @param aDtrValue
-   *          the value of the DTR-line, <code>true</code> means this line will
-   *          be set to a high-level, <code>false</code> means it will be set to
-   *          a low-level.
-   * @return a connection capable of communicating with the requested serial
-   *         device, never <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems, or in case the requested port is
-   *           <em>not</em> a serial port.
-   */
-  protected abstract StreamConnection getConnection( final String aPortName, final int aPortRate, boolean aDtrValue )
-      throws IOException;
-
-  /**
    * Finds the device profile manager.
    * 
    * @return a device profile manager instance, never <code>null</code>.
    * @throws IllegalArgumentException
    *           in case the device profile manager could not be found/obtained.
    */
-  protected abstract DeviceProfileManager getDeviceProfileManager();
+  protected DeviceProfileManager getDeviceProfileManager()
+  {
+    return this.deviceProfileManager;
+  }
+
+  /**
+   * @return
+   */
+  protected StreamConnection getStreamConnection()
+  {
+    return this.connection1;
+  }
+
+  /**
+   * @param aSamples
+   * @param aBuffer
+   * @param aCallback
+   * @return
+   */
+  private SampleProcessor createSampleProcessor( final int aSamples, final int[] aBuffer,
+      final SampleProcessorCallback aCallback )
+  {
+    final SampleProcessor processor;
+    if ( this.config.isRleEnabled() )
+    {
+      LOG.log( Level.INFO, "Decoding Run Length Encoded data, sample count: {0}", Integer.valueOf( aSamples ) );
+      processor = new RleDecoder( this.config, aBuffer, this.trigcount, aCallback );
+    }
+    else
+    {
+      LOG.log( Level.INFO, "Decoding unencoded data, sample count: {0}", Integer.valueOf( aSamples ) );
+      processor = new EqualityFilter( this.config, aBuffer, this.trigcount, aCallback );
+    }
+    return processor;
+  }
 
   /**
    * Tries to detect the LogicSniffer device.
@@ -1148,7 +822,7 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
     while ( ( tries-- >= 0 ) && ( id != SLA_V0 ) && ( id != SLA_V1 ) )
     {
       // make sure we're not blocking longer than strictly necessary...
-      if ( isCancelled() )
+      if ( Thread.currentThread().isInterrupted() )
       {
         return;
       }
@@ -1251,11 +925,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
    */
   private LogicSnifferMetadata getMetadata() throws IOException, IllegalStateException
   {
-    if ( !this.attached )
-    {
-      throw new IllegalStateException( "Cannot fetch metadata from device: not attached!" );
-    }
-
     // Make sure nothing is left in our input buffer...
     HostUtils.flushInputStream( this.inputStream );
 
@@ -1319,19 +988,8 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
             LOG.log( Level.INFO, "I/O exception", exception );
           }
         }
-        catch ( final InterruptedException exception )
-        {
-          /* don't care */
-          result = -1;
-
-          // Make sure to handle IO-interrupted exceptions properly!
-          if ( !HostUtils.handleInterruptedException( exception ) )
-          {
-            LOG.log( Level.INFO, "Port timeout!", exception );
-          }
-        }
       }
-      while ( ( result > 0x00 ) && !isCancelled() );
+      while ( ( result > 0x00 ) && !Thread.currentThread().isInterrupted() );
 
       return metadata;
     }
@@ -1344,17 +1002,6 @@ public abstract class LogicSnifferDevice extends SwingWorker<AcquisitionResult, 
         resetDevice();
       }
     }
-  }
-
-  /**
-   * Returns whether this device is either cancelled or stopped.
-   * 
-   * @return <code>true</code> if either stopped or cancelled,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isCancelledOrStopped()
-  {
-    return isCancelled() || this.stopped;
   }
 
   /**
