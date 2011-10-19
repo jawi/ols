@@ -27,7 +27,11 @@ import java.net.*;
 import java.util.*;
 import java.util.logging.*;
 
+import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.client.acquisition.*;
 import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
@@ -37,6 +41,7 @@ import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
+import org.osgi.util.tracker.*;
 
 
 /**
@@ -44,6 +49,69 @@ import org.osgi.framework.*;
  */
 public final class Host implements ApplicationCallback, IHost
 {
+  // INNER TYPES
+
+  /**
+   * 
+   */
+  static final class DataAcquisitionServiceTracker extends ServiceTracker implements DataAcquisitionService
+  {
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new DataAcquisitionServiceTracker instance.
+     * 
+     * @param aContext
+     *          the bundle context to use.
+     */
+    public DataAcquisitionServiceTracker( final BundleContext aContext )
+    {
+      super( aContext, DataAcquisitionService.class.getName(), null /* aCustomizer */);
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void acquireData( final DeviceController aDeviceController ) throws IOException
+    {
+      final DataAcquisitionService dataAcquisitionService = ( DataAcquisitionService )getService();
+      if ( dataAcquisitionService != null )
+      {
+        dataAcquisitionService.acquireData( aDeviceController );
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cancelAcquisition() throws IllegalStateException
+    {
+      final DataAcquisitionService dataAcquisitionService = ( DataAcquisitionService )getService();
+      if ( dataAcquisitionService != null )
+      {
+        dataAcquisitionService.cancelAcquisition();
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isAcquiring()
+    {
+      final DataAcquisitionService dataAcquisitionService = ( DataAcquisitionService )getService();
+      if ( dataAcquisitionService != null )
+      {
+        return dataAcquisitionService.isAcquiring();
+      }
+      return false;
+    }
+  }
+
   // CONSTANT
 
   private static final Logger LOG = Logger.getLogger( Host.class.getName() );
@@ -67,6 +135,7 @@ public final class Host implements ApplicationCallback, IHost
   private ToolTracker toolTracker;
   private ClientController controller;
   private ProjectManager projectManager;
+  private BackgroundDataAcquisitionService dataAcquisitionService;
 
   // CONSTRUCTORS
 
@@ -131,6 +200,8 @@ public final class Host implements ApplicationCallback, IHost
     {
       // Store the implicit user settings...
       saveImplicitUserSettings( this.projectManager );
+
+      stop();
 
       // Stop the framework bundle; which should stop all other bundles as
       // well...
@@ -234,7 +305,7 @@ public final class Host implements ApplicationCallback, IHost
     // Restore the implicit user settings...
     loadImplicitUserSettings( this.projectManager );
 
-    this.controller = new ClientController( this.context, this, this.projectManager );
+    this.controller = new ClientController( this.context, this, this.projectManager, this.dataAcquisitionService );
 
     final MainFrame mainFrame = new MainFrame( this.controller );
     this.controller.setMainFrame( mainFrame );
@@ -244,6 +315,13 @@ public final class Host implements ApplicationCallback, IHost
     this.exporterTracker = new ExporterTracker( this.context, this.controller );
     this.menuTracker = new ComponentProviderTracker( this.context, this.controller );
     this.toolTracker = new ToolTracker( this.context, this.controller );
+    this.dataAcquisitionService = new BackgroundDataAcquisitionService( this.context );
+
+    this.context.registerService( DataAcquisitionService.class.getName(), this.dataAcquisitionService, null );
+    this.context
+        .registerService(
+            new String[] { AcquisitionDataListener.class.getName(), AcquisitionProgressListener.class.getName(),
+                AcquisitionStatusListener.class.getName() }, this.controller, null );
 
     LOG.log( Level.FINE, "{0} initialized ...", SHORT_NAME );
   }
@@ -271,6 +349,7 @@ public final class Host implements ApplicationCallback, IHost
     this.exporterTracker.open();
     this.toolTracker.open();
     this.menuTracker.open();
+    this.dataAcquisitionService.open();
 
     final MainFrame mainFrame = this.controller.getMainFrame();
     if ( mainFrame != null )
@@ -302,6 +381,7 @@ public final class Host implements ApplicationCallback, IHost
     this.deviceControllerTracker.close();
     this.toolTracker.close();
     this.menuTracker.close();
+    this.dataAcquisitionService.close();
 
     MainFrame mainFrame = this.controller.getMainFrame();
     if ( mainFrame != null )

@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 import java.io.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
@@ -278,7 +278,7 @@ public class LogicSnifferRleTimingComponentTest
   @Test( /* timeout = 10000 */)
   public void testRleOk() throws Exception
   {
-    final AcquisitionResult result = this.device.doInBackground();
+    final AcquisitionResult result = this.device.call();
 
     verifyDecodedRleData( result );
   }

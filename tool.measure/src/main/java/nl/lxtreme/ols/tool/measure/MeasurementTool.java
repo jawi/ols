@@ -39,7 +39,7 @@ public class MeasurementTool extends BaseTool<MeasurementDialog>
    */
   public MeasurementTool()
   {
-    super( Category.MEASURE, "Measure ..." );
+    super( ToolCategory.MEASURE, "Measure ..." );
   }
 
   // METHODS

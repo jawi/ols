@@ -36,7 +36,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
   // VARIABLES
 
   private final String name;
-  private final Category category;
+  private final ToolCategory category;
   private DIALOG dialog;
 
   // CONSTRUCTORS
@@ -52,7 +52,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
    *           in case the given category was <code>null</code> or the given
    *           name was <code>null</code> or empty.
    */
-  protected BaseTool( final Category aCategory, final String aName )
+  protected BaseTool( final ToolCategory aCategory, final String aName )
   {
     if ( aCategory == null )
     {
@@ -104,7 +104,7 @@ public abstract class BaseTool<DIALOG extends JDialog & ToolDialog> implements T
    * {@inheritDoc}
    */
   @Override
-  public final Category getCategory()
+  public final ToolCategory getCategory()
   {
     return this.category;
   }

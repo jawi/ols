@@ -23,6 +23,8 @@ package nl.lxtreme.ols.api.data;
 
 import java.util.*;
 
+import nl.lxtreme.ols.api.acquisition.*;
+
 
 /**
  * Provides a base data set implementation.

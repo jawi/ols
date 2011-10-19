@@ -25,6 +25,9 @@ import java.util.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.data.export.*;
+import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
@@ -102,7 +105,17 @@ public class Activator implements BundleActivator
   private static BundleObserver createDeviceBundleObserver()
   {
     return new BundleServiceObserver( OLS_DEVICE_MAGIC_KEY, OLS_DEVICE_MAGIC_VALUE, OLS_DEVICE_CLASS_KEY,
-        nl.lxtreme.ols.api.devices.DeviceController.class.getName() );
+        DeviceController.class.getName() )
+    {
+      @Override
+      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
+          final ManifestHeader... aEntries )
+      {
+        Properties result = new Properties();
+        result.put( Action.NAME, ( ( DeviceController )aService ).getName() );
+        return result;
+      }
+    };
   }
 
   /**
@@ -113,7 +126,17 @@ public class Activator implements BundleActivator
   private static BundleObserver createExporterBundleObserver()
   {
     return new BundleServiceObserver( OLS_EXPORTER_MAGIC_KEY, OLS_EXPORTER_MAGIC_VALUE, OLS_EXPORTER_CLASS_KEY,
-        nl.lxtreme.ols.api.data.export.Exporter.class.getName() );
+        Exporter.class.getName() )
+    {
+      @Override
+      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
+          final ManifestHeader... aEntries )
+      {
+        Properties result = new Properties();
+        result.put( Action.NAME, ( ( Exporter )aService ).getName() );
+        return result;
+      }
+    };
   }
 
   /**
@@ -124,7 +147,17 @@ public class Activator implements BundleActivator
   private static BundleObserver createToolBundleObserver()
   {
     return new BundleServiceObserver( OLS_TOOL_MAGIC_KEY, OLS_TOOL_MAGIC_VALUE, OLS_TOOL_CLASS_KEY,
-        nl.lxtreme.ols.api.tools.Tool.class.getName() );
+        Tool.class.getName() )
+    {
+      @Override
+      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
+          final ManifestHeader... aEntries )
+      {
+        Properties result = new Properties();
+        result.put( Action.NAME, ( ( Tool )aService ).getName() );
+        return result;
+      }
+    };
   }
 
   /**
@@ -165,13 +198,13 @@ public class Activator implements BundleActivator
         .add( createExporterBundleObserver() ) //
         .add( createComponentProviderBundleObserver() );
 
-    // Make sure we're running on the EDT to ensure the Swing threading model is
-    // correctly defined...
-    SwingUtilities.invokeLater( startTask );
-
     this.logReaderTracker.open();
     // Start watching all bundles for extenders...
     this.bundleWatcher.start();
+
+    // Make sure we're running on the EDT to ensure the Swing threading model is
+    // correctly defined...
+    SwingUtilities.invokeLater( startTask );
   }
 
   /**
@@ -188,8 +221,8 @@ public class Activator implements BundleActivator
         final Host _host = getHost();
         if ( _host != null )
         {
-          _host.shutdown();
           _host.stop();
+          _host.shutdown();
         }
       }
     };

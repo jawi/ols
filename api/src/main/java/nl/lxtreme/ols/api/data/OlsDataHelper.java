@@ -29,6 +29,7 @@ import java.util.logging.*;
 import java.util.regex.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.util.*;
 

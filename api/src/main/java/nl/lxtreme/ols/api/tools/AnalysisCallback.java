@@ -22,12 +22,15 @@ package nl.lxtreme.ols.api.tools;
 
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
 
 
 /**
  * Denotes a callback for use in {@link Tool}s.
+ * 
+ * @deprecated
  */
+@Deprecated
 public interface AnalysisCallback extends ProgressCallback
 {
   // METHODS

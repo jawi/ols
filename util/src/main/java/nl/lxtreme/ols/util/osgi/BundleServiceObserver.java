@@ -23,7 +23,10 @@ package nl.lxtreme.ols.util.osgi;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.*;
+
+import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
 
@@ -42,6 +45,8 @@ public class BundleServiceObserver extends AbstractBundleObserver
 
   private final String serviceKey;
   private final String serviceClassName;
+
+  private final Map<Long, List<Pair<ServiceRegistration, Object>>> registry;
 
   // CONSTRUCTROS
 
@@ -62,11 +67,55 @@ public class BundleServiceObserver extends AbstractBundleObserver
   {
     super( aMagicKey, aMagicValue );
 
+    this.registry = new ConcurrentHashMap<Long, List<Pair<ServiceRegistration, Object>>>();
+
     this.serviceKey = aServiceKey;
     this.serviceClassName = aServiceClassName;
   }
 
   // METHODS
+
+  /**
+   * Destroys the given service by searching for an <tt>destroy()</tt> method,
+   * and if found, invokes this method. If the destroy-method is not found, this
+   * method will not do anything.
+   * 
+   * @param aService
+   *          the service to destroy.
+   */
+  protected final void destroyService( final Object aService )
+  {
+    final Class<?> serviceClazz = aService.getClass();
+    try
+    {
+      final Method initMethod = serviceClazz.getDeclaredMethod( "destroy" );
+      if ( initMethod != null )
+      {
+        initMethod.setAccessible( true );
+        initMethod.invoke( aService );
+      }
+    }
+    catch ( SecurityException exception )
+    {
+      LOG.log( Level.INFO, "Security exception while initializing service...", exception );
+    }
+    catch ( NoSuchMethodException exception )
+    {
+      LOG.log( Level.FINE, "No init-method found; not initializing service!" );
+    }
+    catch ( IllegalArgumentException exception )
+    {
+      LOG.log( Level.FINE, "Illegal argument found; not initializing service!", exception );
+    }
+    catch ( IllegalAccessException exception )
+    {
+      LOG.log( Level.FINE, "Illegal access to init-method; not initializing service!", exception );
+    }
+    catch ( InvocationTargetException exception )
+    {
+      LOG.log( Level.WARNING, "Service initialization failed!", exception.getCause() );
+    }
+  }
 
   /**
    * @see nl.lxtreme.ols.util.osgi.AbstractBundleObserver#doAdded(org.osgi.framework.Bundle,
@@ -81,6 +130,13 @@ public class BundleServiceObserver extends AbstractBundleObserver
       return;
     }
 
+    List<Pair<ServiceRegistration, Object>> pairs = this.registry.get( Long.valueOf( aBundle.getBundleId() ) );
+    if ( pairs == null )
+    {
+      pairs = new ArrayList<Pair<ServiceRegistration, Object>>();
+      this.registry.put( Long.valueOf( aBundle.getBundleId() ), pairs );
+    }
+
     final BundleContext bundleContext = aBundle.getBundleContext();
     for ( String className : values )
     {
@@ -90,8 +146,10 @@ public class BundleServiceObserver extends AbstractBundleObserver
 
         final Object newService = clazz.newInstance();
 
-        bundleContext.registerService( this.serviceClassName, newService,
-            getServiceProperties( aBundle, newService, aEntries ) );
+        final ServiceRegistration serviceRegistration = bundleContext.registerService( this.serviceClassName,
+            newService, getServiceProperties( aBundle, newService, aEntries ) );
+
+        pairs.add( Pair.of( serviceRegistration, newService ) );
 
         // Give the just registered service to do additional tasks as well...
         initializeService( newService, bundleContext );
@@ -122,15 +180,19 @@ public class BundleServiceObserver extends AbstractBundleObserver
   @Override
   protected void doRemoved( final Bundle aBundle, final ManifestHeader... aEntries )
   {
-    final String[] values = getManifestHeaderValues( this.serviceKey, aEntries );
-    if ( values.length == 0 )
+    List<Pair<ServiceRegistration, Object>> pairs = this.registry.get( Long.valueOf( aBundle.getBundleId() ) );
+    if ( pairs != null )
     {
-      return;
-    }
+      for ( Pair<ServiceRegistration, Object> pair : pairs )
+      {
+        final Object service = pair.getRight();
 
-    for ( String className : values )
-    {
-      LOG.log( Level.INFO, "Service (" + className + ") unregistered ..." );
+        destroyService( service );
+
+        LOG.log( Level.INFO, "Service (" + service.getClass().getName() + ") unregistered ..." );
+
+        pair.getLeft().unregister();
+      }
     }
   }
 

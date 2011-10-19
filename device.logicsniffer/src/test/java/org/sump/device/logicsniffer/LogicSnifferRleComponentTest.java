@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 import java.io.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
@@ -297,7 +297,7 @@ public class LogicSnifferRleComponentTest
   {
     try
     {
-      final AcquisitionResult result = this.device.doInBackground();
+      final AcquisitionResult result = this.device.call();
 
       verifyDecodedRleData( result );
 

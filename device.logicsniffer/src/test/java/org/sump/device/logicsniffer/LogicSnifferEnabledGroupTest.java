@@ -134,7 +134,7 @@ public class LogicSnifferEnabledGroupTest
     this.config.setSampleRate( this.enableDdrMode ? 200000000 : 100000000 );
     this.config.setEnabledChannels( this.enabledGroupMask );
 
-    this.device.attach();
+    this.device.open();
     this.device.configureDevice();
 
     TimeUnit.MILLISECONDS.sleep( 10L );

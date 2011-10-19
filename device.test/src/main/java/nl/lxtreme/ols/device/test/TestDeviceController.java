@@ -21,18 +21,15 @@
 package nl.lxtreme.ols.device.test;
 
 
-import static nl.lxtreme.ols.device.test.TestDeviceDialog.*;
-
 import java.awt.*;
 import java.io.*;
-import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.devices.*;
 
 
 /**
- * 
+ * The device controller for the testing device.
  */
 public class TestDeviceController implements DeviceController
 {
@@ -54,80 +51,12 @@ public class TestDeviceController implements DeviceController
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.devices.DeviceController#cancel()
+   * {@inheritDoc}
    */
   @Override
-  public void cancel() throws IllegalStateException
+  public Device createDevice( final AcquisitionProgressListener aProgressListener ) throws IOException
   {
-    throw new IllegalStateException( "Cannot be cancelled!" );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.DeviceController#captureData(nl.lxtreme.ols.api.devices.CaptureCallback)
-   */
-  @Override
-  public void captureData( final CaptureCallback aCallback ) throws IOException
-  {
-    final String dataFunction = this.configDialog.getDataFunction();
-    final int dataLength = this.configDialog.getDataLength();
-    final int channels = this.configDialog.getChannels();
-
-    final int[] data;
-    int rate = 1000000000;
-
-    final double halfWidth = ( 1L << ( channels - 1 ) ) / 2.0;
-
-    if ( DATA_FUNCTIONS[6].equals( dataFunction ) )
-    {
-      final I2CGenerator generator = new I2CGenerator();
-      generator.writeBitStream( "Hello World, this is a sample I2C bit stream!" );
-      data = generator.getData();
-      rate = generator.getRate();
-    }
-    else if ( DATA_FUNCTIONS[7].equals( dataFunction ) )
-    {
-      final OneWireGenerator generator = new OneWireGenerator( true /* aStandard */);
-      generator.writeBitStream( "Hello World, this is a sample 1-wire bit stream!" );
-      data = generator.getData();
-      rate = generator.getRate();
-    }
-    else
-    {
-      final Random rnd = new Random();
-
-      data = new int[dataLength];
-      for ( int i = 0; i < data.length; i++ )
-      {
-        if ( DATA_FUNCTIONS[0].equals( dataFunction ) )
-        {
-          final int v = ( i / 8 ) & 0xff;
-          data[i] = ( 255 - v ) | ( v << 8 ) | ( ( 255 - v ) << 16 ) | ( v << 24 );
-        }
-        else if ( DATA_FUNCTIONS[1].equals( dataFunction ) )
-        {
-          data[i] = 0x00;
-        }
-        else if ( DATA_FUNCTIONS[2].equals( dataFunction ) )
-        {
-          data[i] = ( int )( halfWidth + halfWidth * Math.sin( i / ( data.length / ( double )channels ) ) );
-        }
-        else if ( DATA_FUNCTIONS[3].equals( dataFunction ) )
-        {
-          data[i] = ( i % 2 == 0 ) ? 0x55 : 0xAA;
-        }
-        else if ( DATA_FUNCTIONS[4].equals( dataFunction ) )
-        {
-          data[i] = ( i % 4 == 0 ) ? 0x55 : 0xAA;
-        }
-        else if ( DATA_FUNCTIONS[5].equals( dataFunction ) )
-        {
-          data[i] = rnd.nextInt();
-        }
-      }
-    }
-
-    final AcquisitionResult capturedData = new CapturedData( data, 23, rate, channels, Integer.MAX_VALUE );
-    aCallback.captureComplete( capturedData );
+    return new TestDevice( this.configDialog, aProgressListener );
   }
 
   /**
@@ -137,16 +66,6 @@ public class TestDeviceController implements DeviceController
   public String getName()
   {
     return "Test Device";
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.DeviceController#isCapturing()
-   */
-  @Override
-  public boolean isCapturing()
-  {
-    // Never mark this controller as being capturing...
-    return false;
   }
 
   /**

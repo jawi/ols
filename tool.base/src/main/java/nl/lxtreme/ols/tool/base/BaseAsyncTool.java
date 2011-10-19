@@ -27,6 +27,7 @@ import java.util.concurrent.*;
 import javax.swing.*;
 import javax.swing.SwingWorker.StateValue;
 
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.util.*;
@@ -211,7 +212,7 @@ public abstract class BaseAsyncTool<DIALOG extends JDialog & ToolDialog & AsyncT
    * @param aName
    *          the name of the tool as it should appear in the main UI.
    */
-  protected BaseAsyncTool( final Category aCategory, final String aName )
+  protected BaseAsyncTool( final ToolCategory aCategory, final String aName )
   {
     super( aCategory, aName );
   }

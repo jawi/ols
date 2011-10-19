@@ -24,75 +24,55 @@ package nl.lxtreme.ols.device.generic;
 import java.io.*;
 import java.util.logging.*;
 
-import javax.swing.*;
-
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.util.*;
 
 
 /**
- * @author jawi
+ * Provides a generic device that can read from any file-based source.
  */
-public class GenericDevice extends SwingWorker<AcquisitionResult, Sample>
+public final class GenericDevice implements Device
 {
   // CONSTANTS
-
-  public static final String PROP_CAPTURE_PROGRESS = "progress";
-  public static final String PROP_CAPTURE_STATE = "state";
 
   private static final Logger LOG = Logger.getLogger( GenericDevice.class.getName() );
 
   // VARIABLES
 
+  private final AcquisitionProgressListener progressListener;
   private final GenericDeviceConfigDialog deviceConfig;
 
   private InputStream inputStream;
 
-  private volatile boolean running;
-
   // CONSTRUCTORS
 
   /**
+   * Creates a new GenericDevice instance.
+   * 
+   * @param aContext
+   *          the bundle context to use;
    * @param aDeviceConfig
+   *          the device configuration to use.
    */
-  public GenericDevice( final GenericDeviceConfigDialog aDeviceConfig )
+  public GenericDevice( final GenericDeviceConfigDialog aDeviceConfig,
+      final AcquisitionProgressListener aProgressListener )
   {
     this.deviceConfig = aDeviceConfig;
+    this.progressListener = aProgressListener;
+
   }
 
   // METHODS
 
   /**
-   * Returns whether or not this device is capturing samples.
-   * 
-   * @return <code>true</code> if this device is capturing, <code>false</code>
-   *         otherwise.
-   */
-  public boolean isRunning()
-  {
-    return this.running;
-  }
-
-  /**
-   * Stops the capture (if possible).
-   */
-  public void stop()
-  {
-    if ( this.running )
-    {
-      this.running = false;
-    }
-  }
-
-  /**
-   * @see javax.swing.SwingWorker#doInBackground()
+   * {@inheritDoc}
    */
   @Override
-  protected AcquisitionResult doInBackground() throws Exception
+  public AcquisitionResult call() throws IOException
   {
-    this.running = true;
-
     final int width = this.deviceConfig.getSampleWidth();
     final int depth = this.deviceConfig.getSampleDepth();
     final int rate = this.deviceConfig.getSampleRate();
@@ -105,31 +85,48 @@ public class GenericDevice extends SwingWorker<AcquisitionResult, Sample>
 
     try
     {
-      this.inputStream = new FileInputStream( this.deviceConfig.getDevicePath() );
-
       int idx = 0;
-      while ( idx < count )
+      while ( !Thread.currentThread().isInterrupted() && ( idx < count ) )
       {
         final int sample = readSample( width );
 
-        LOG.log( Level.FINE, "Read: 0x{0}", Integer.toHexString( sample ) );
+        if ( LOG.isLoggable( Level.FINE ) )
+        {
+          LOG.log( Level.FINE, "Read: 0x{0}", Integer.toHexString( sample ) );
+        }
 
         values[idx] = sample;
         timestamps[idx] = idx;
 
-        idx++;
+        // Update the progress...
+        this.progressListener.acquisitionInProgress( ( int )( ( idx++ * 100.0 ) / count ) );
       }
 
-      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels,
-          channels, idx );
+      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels, channels, idx );
     }
-    finally
+    catch ( IOException exception )
     {
-      HostUtils.closeResource( this.inputStream );
-
-      this.running = false;
-      this.inputStream = null;
+      // Rethrow the caught exception...
+      throw exception;
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void close() throws IOException
+  {
+    HostUtils.closeResource( this.inputStream );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void open() throws IOException
+  {
+    this.inputStream = new FileInputStream( this.deviceConfig.getDevicePath() );
   }
 
   /**
@@ -142,22 +139,18 @@ public class GenericDevice extends SwingWorker<AcquisitionResult, Sample>
    * @throws IOException
    *           if stream reading fails
    */
-  private int readSample( final int aSampleWidth ) throws IOException, InterruptedException
+  private int readSample( final int aSampleWidth ) throws IOException
   {
     int v, value = 0;
 
-    for ( int i = 0; i < aSampleWidth; i++ )
+    for ( int i = 0; !Thread.currentThread().isInterrupted() && ( i < aSampleWidth ); i++ )
     {
       v = this.inputStream.read();
 
       // Any timeouts/interrupts occurred?
       if ( v < 0 )
       {
-        throw new InterruptedException( "Data readout interrupted: EOF." );
-      }
-      else if ( Thread.interrupted() )
-      {
-        throw new InterruptedException( "Data readout interrupted." );
+        throw new EOFException( "Data readout interrupted: EOF." );
       }
 
       value |= v << ( 8 * i );

@@ -23,6 +23,8 @@ package nl.lxtreme.ols.api.devices;
 
 import java.io.*;
 
+import nl.lxtreme.ols.api.acquisition.*;
+
 
 /**
  * Interface for implementing device controllers. Each supported device must
@@ -33,39 +35,22 @@ public interface DeviceController
   // METHODS
 
   /**
-   * Signals that the capture should be aborted.
+   * Tells the device to start acquiring data.
    * 
-   * @throws IllegalStateException
-   *           in case no capture is in progress.
-   */
-  public void cancel() throws IllegalStateException;
-
-  /**
-   * Reads the captured device data.
-   * 
-   * @param aCallback
-   *          the callback to use for publishing the captured data or
-   *          <code>null</code> if no data available.
+   * @param aProgressListener
+   *          the acquisition progress listener the device can use to report its
+   *          progress, cannot be <code>null</code>.
    * @throws IOException
    *           in case of I/O problems during the capturing of data.
    */
-  public void captureData( final CaptureCallback aCallback ) throws IOException;
+  public Device createDevice( AcquisitionProgressListener aProgressListener ) throws IOException;
 
   /**
-   * Returns the device controller identification string.
+   * Returns a descriptive name of this device controller.
    * 
    * @return name of the controller, cannot be <code>null</code>.
    */
   public String getName();
-
-  /**
-   * Returns whether or not this device controller is in progress of a capture.
-   * 
-   * @return <code>true</code> if this device controller is currently capturing
-   *         data (or waiting to start capturing due to a trigger),
-   *         <code>false</code> otherwise.
-   */
-  public boolean isCapturing();
 
   /**
    * Returns whether this device is already set up or not.

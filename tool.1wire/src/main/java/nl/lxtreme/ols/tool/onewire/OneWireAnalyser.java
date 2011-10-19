@@ -41,7 +41,7 @@ public class OneWireAnalyser extends BaseAsyncTool<OneWireAnalyserDialog, OneWir
    */
   public OneWireAnalyser()
   {
-    super( Category.DECODER, "1-Wire protocol analyser ..." );
+    super( ToolCategory.DECODER, "1-Wire protocol analyser ..." );
   }
 
   // METHODS

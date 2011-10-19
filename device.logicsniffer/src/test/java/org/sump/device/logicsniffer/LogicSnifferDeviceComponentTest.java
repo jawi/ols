@@ -23,8 +23,7 @@ package org.sump.device.logicsniffer;
 
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
-
+import nl.lxtreme.ols.api.acquisition.*;
 import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
@@ -162,7 +161,7 @@ public class LogicSnifferDeviceComponentTest
     final boolean isGroup4disabled = ( ( this.enabledChannelsMask & 0xFF000000 ) == 0 )
         || ( ddrMode && isGroup2disabled );
 
-    this.device.doInBackground();
+    this.device.call();
 
     this.device.assertFlagState( LogicSnifferDevice.FLAG_DEMUX, ddrMode );
     this.device.assertFlagState( LogicSnifferDevice.FLAG_GROUP1_DISABLED, isGroup1disabled );
@@ -186,7 +185,7 @@ public class LogicSnifferDeviceComponentTest
   @Test( timeout = 10000 )
   public void testVerifySentData() throws Exception
   {
-    final AcquisitionResult result = this.device.doInBackground();
+    final AcquisitionResult result = this.device.call();
 
     this.device.assertSampleRate( this.sampleRate );
     this.device.assertReadAndDelayCount( this.readCounter, this.delayCounter );

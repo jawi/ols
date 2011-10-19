@@ -32,7 +32,6 @@ import java.util.List;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.diagram.*;
@@ -461,17 +460,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       return ( IManagedAction )menuItem.getAction();
     }
     return null;
-  }
-
-  /**
-   * Called to update the sample indicator during (continuous) sampling.
-   * 
-   * @param aSamples
-   *          the latest list of samples, cannot be <code>null</code>.
-   */
-  public void sampleCaptured( final List<Sample> aSamples )
-  {
-    // NO-op
   }
 
   /**

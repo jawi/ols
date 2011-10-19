@@ -24,13 +24,13 @@ package nl.lxtreme.ols.client;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
-import java.util.List;
 import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
@@ -49,7 +49,8 @@ import org.osgi.framework.*;
 /**
  * Denotes a front-end controller for the client.
  */
-public final class ClientController implements ActionProvider, CaptureCallback, AnalysisCallback, IClientController
+public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
+    AcquisitionDataListener, AnalysisCallback, IClientController
 {
   // INNER TYPES
 
@@ -145,10 +146,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   private final DataContainer dataContainer;
   private final EventListenerList evenListeners;
   private final ProjectManager projectManager;
+  private final DataAcquisitionService dataAcquisitionService;
   private final IHost host;
 
   private volatile MainFrame mainFrame;
-  private volatile DeviceController currentDevCtrl;
+  private volatile String selectedDevice;
 
   // CONSTRUCTORS
 
@@ -162,7 +164,8 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * @param aProjectManager
    *          the project manager to use, cannot be <code>null</code>.
    */
-  public ClientController( final BundleContext aBundleContext, final IHost aHost, final ProjectManager aProjectManager )
+  public ClientController( final BundleContext aBundleContext, final IHost aHost, final ProjectManager aProjectManager,
+      final DataAcquisitionService aDataAcquisitionService )
   {
     this.bundleContext = aBundleContext;
     this.host = aHost;
@@ -171,9 +174,65 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     this.dataContainer = new DataContainer( this.projectManager );
     this.evenListeners = new EventListenerList();
     this.actionManager = ActionManagerFactory.createActionManager( this );
+
+    this.dataAcquisitionService = aDataAcquisitionService;
   }
 
   // METHODS
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void acquisitionComplete( final AcquisitionResult aData )
+  {
+    setAcquisitionResult( aData );
+
+    updateActionsOnEDT();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void acquisitionEnded( final AcquisitionResultStatus aStatus )
+  {
+    if ( aStatus.isAborted() )
+    {
+      setStatus( "Capture aborted! " + aStatus.getMessage() );
+    }
+    else if ( aStatus.isFailed() )
+    {
+      setStatus( "Capture failed! " + aStatus.getMessage() );
+    }
+    else
+    {
+      setStatus( "Capture finished at {0,date,medium} {0,time,medium}.", new Date() );
+    }
+
+    updateActionsOnEDT();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void acquisitionInProgress( final int aPercentage )
+  {
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.setProgress( aPercentage );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void acquisitionStarted()
+  {
+    updateActionsOnEDT();
+  }
 
   /**
    * Adds a cursor change listener.
@@ -211,7 +270,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
           if ( aDeviceController.getClass().getName().startsWith( "org.sump" ) )
           {
             deviceAction.putValue( Action.SELECTED_KEY, Boolean.TRUE );
-            ClientController.this.currentDevCtrl = aDeviceController;
           }
 
           updateActions();
@@ -333,34 +391,11 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public void cancelCapture()
   {
-    final DeviceController deviceController = getDeviceController();
-    if ( deviceController == null )
+    final DataAcquisitionService acquisitionService = getDataAcquisitionService();
+    if ( acquisitionService != null )
     {
-      return;
+      acquisitionService.cancelAcquisition();
     }
-
-    deviceController.cancel();
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureAborted(java.lang.String)
-   */
-  @Override
-  public void captureAborted( final String aReason )
-  {
-    setStatus( "Capture aborted! " + aReason );
-    updateActions();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void captureComplete( final AcquisitionResult aCapturedData )
-  {
-    setAcquisitionResult( aCapturedData );
-
-    setStatus( "Capture finished at {0,date,medium} {0,time,medium}.", new Date() );
 
     updateActions();
   }
@@ -370,8 +405,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public boolean captureData( final Window aParent )
   {
+    final DataAcquisitionService acquisitionService = getDataAcquisitionService();
     final DeviceController devCtrl = getDeviceController();
-    if ( devCtrl == null )
+    if ( ( devCtrl == null ) || ( acquisitionService == null ) )
     {
       return false;
     }
@@ -382,7 +418,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       {
         setStatus( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(), new Date() );
 
-        devCtrl.captureData( this );
+        acquisitionService.acquireData( devCtrl );
         return true;
       }
 
@@ -390,7 +426,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     }
     catch ( IOException exception )
     {
-      captureAborted( "I/O problem: " + exception.getMessage() );
+      setStatus( "I/O problem: " + exception.getMessage() );
 
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
@@ -407,32 +443,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * @see nl.lxtreme.ols.api.devices.CaptureCallback#captureStarted(int, int,
-   *      int)
-   */
-  @Override
-  public synchronized void captureStarted( final int aSampleRate, final int aChannelCount, final int aChannelMask )
-  {
-    final Runnable runner = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        updateActions();
-      }
-    };
-
-    if ( SwingUtilities.isEventDispatchThread() )
-    {
-      runner.run();
-    }
-    else
-    {
-      SwingUtilities.invokeLater( runner );
-    }
-  }
-
-  /**
    * {@inheritDoc}
    */
   public void clearAllCursors()
@@ -444,14 +454,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     fireCursorChangedEvent( 0, -1 ); // removed...
 
     updateActions();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void clearDeviceController()
-  {
-    this.currentDevCtrl = null;
   }
 
   /**
@@ -528,36 +530,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    * 
    * @return the current device controller, can be <code>null</code>.
    */
-  public DeviceController getDeviceController()
+  public final DeviceController getDeviceController()
   {
-    return this.currentDevCtrl;
-  }
-
-  /**
-   * Returns all current tools known to the OSGi framework.
-   * 
-   * @return a collection of tools, never <code>null</code>.
-   */
-  public final Collection<DeviceController> getDevices()
-  {
-    final List<DeviceController> tools = new ArrayList<DeviceController>();
-    synchronized ( this.bundleContext )
-    {
-      try
-      {
-        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences(
-            DeviceController.class.getName(), null );
-        for ( ServiceReference serviceRef : serviceRefs )
-        {
-          tools.add( ( DeviceController )this.bundleContext.getService( serviceRef ) );
-        }
-      }
-      catch ( InvalidSyntaxException exception )
-      {
-        throw new RuntimeException( exception );
-      }
-    }
-    return tools;
+    return getDeviceController( this.selectedDevice );
   }
 
   /**
@@ -613,32 +588,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   public File getProjectFilename()
   {
     return this.projectManager.getCurrentProject().getFilename();
-  }
-
-  /**
-   * Returns all current tools known to the OSGi framework.
-   * 
-   * @return a collection of tools, never <code>null</code>.
-   */
-  public final Collection<Tool> getTools()
-  {
-    final List<Tool> tools = new ArrayList<Tool>();
-    synchronized ( this.bundleContext )
-    {
-      try
-      {
-        final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences( Tool.class.getName(), null );
-        for ( ServiceReference serviceRef : serviceRefs )
-        {
-          tools.add( ( Tool )this.bundleContext.getService( serviceRef ) );
-        }
-      }
-      catch ( InvalidSyntaxException exception )
-      {
-        throw new RuntimeException( exception );
-      }
-    }
-    return tools;
   }
 
   /**
@@ -715,9 +664,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   /**
    * {@inheritDoc}
    */
-  public synchronized boolean isDeviceSelected()
+  public boolean isDeviceSelected()
   {
-    return this.currentDevCtrl != null;
+    return this.selectedDevice != null;
   }
 
   /**
@@ -725,7 +674,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public boolean isDeviceSetup()
   {
-    return isDeviceSelected() && this.currentDevCtrl.isSetup();
+    return isDeviceSelected() && getDeviceController().isSetup();
   }
 
   /**
@@ -829,11 +778,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       @Override
       public void run()
       {
-        if ( ClientController.this.currentDevCtrl == aDeviceController )
-        {
-          ClientController.this.currentDevCtrl = null;
-        }
-
         if ( ClientController.this.mainFrame != null )
         {
           ClientController.this.mainFrame.removeDeviceMenuItem( aDeviceController.getName() );
@@ -933,8 +877,9 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   public boolean repeatCaptureData( final Window aParent )
   {
+    final DataAcquisitionService acquisitionService = getDataAcquisitionService();
     final DeviceController devCtrl = getDeviceController();
-    if ( devCtrl == null )
+    if ( ( devCtrl == null ) || ( acquisitionService == null ) )
     {
       return false;
     }
@@ -943,13 +888,13 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     {
       setStatus( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(), new Date() );
 
-      devCtrl.captureData( this );
+      acquisitionService.acquireData( devCtrl );
 
       return true;
     }
     catch ( IOException exception )
     {
-      captureAborted( "I/O problem: " + exception.getMessage() );
+      setStatus( "I/O problem: " + exception.getMessage() );
 
       exception.printStackTrace();
 
@@ -979,7 +924,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       LOG.log( Level.INFO, "Running tool: \"{0}\" ...", aToolName );
     }
 
-    final Tool tool = findToolByName( aToolName );
+    final Tool tool = getTool( aToolName );
     if ( tool == null )
     {
       JOptionPane.showMessageDialog( aParent, "No such tool found: " + aToolName, "Error ...",
@@ -991,19 +936,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       tool.process( aParent, this.dataContainer, context, this );
     }
 
-    updateActions();
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.devices.CaptureCallback#samplesCaptured(java.util.List)
-   */
-  @Override
-  public void samplesCaptured( final List<Sample> aSamples )
-  {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.sampleCaptured( aSamples );
-    }
     updateActions();
   }
 
@@ -1053,6 +985,15 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void selectDevice( final String aDeviceName )
+  {
+    this.selectedDevice = aDeviceName;
+  }
+
+  /**
    * Sets whether or not cursors are enabled.
    * 
    * @param aState
@@ -1086,29 +1027,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
       this.dataContainer.setCursorPosition( aCursorIdx, Long.valueOf( sampleIdx ) );
 
       fireCursorChangedEvent( aCursorIdx, aLocation.x );
-    }
-
-    updateActions();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void setDeviceController( final String aDeviceName )
-  {
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      final String name = ( aDeviceName == null ) ? "no device" : aDeviceName;
-      LOG.log( Level.INFO, "Setting current device controller to: \"{0}\" ...", name );
-    }
-
-    final Collection<DeviceController> devices = getDevices();
-    for ( DeviceController device : devices )
-    {
-      if ( aDeviceName.equals( device.getName() ) )
-      {
-        this.currentDevCtrl = device;
-      }
     }
 
     updateActions();
@@ -1223,10 +1141,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   @Override
   public void updateProgress( final int aPercentage )
   {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.setProgress( aPercentage );
-    }
+    acquisitionInProgress( aPercentage );
   }
 
   /**
@@ -1372,30 +1287,6 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
-   * Searches for the tool with the given name.
-   * 
-   * @param aToolName
-   *          the name of the tool to search for, cannot be <code>null</code>.
-   * @return the tool with the given name, can be <code>null</code> if no such
-   *         tool can be found.
-   */
-  private Tool findToolByName( final String aToolName )
-  {
-    Tool result = null;
-
-    final Collection<Tool> tools = getTools();
-    for ( Tool tool : tools )
-    {
-      if ( aToolName.equals( tool.getName() ) )
-      {
-        result = tool;
-        break;
-      }
-    }
-    return result;
-  }
-
-  /**
    * @param aCursorIdx
    * @param aMouseXpos
    */
@@ -1416,6 +1307,44 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
   }
 
   /**
+   * Returns the data acquisition service.
+   * 
+   * @return a data acquisition service, never <code>null</code>.
+   */
+  private DataAcquisitionService getDataAcquisitionService()
+  {
+    return this.dataAcquisitionService;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  private DeviceController getDeviceController( final String aName ) throws IllegalArgumentException
+  {
+    if ( ( aName == null ) || aName.trim().isEmpty() )
+    {
+      throw new IllegalArgumentException( "Name cannot be null or empty!" );
+    }
+
+    try
+    {
+      final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences(
+          DeviceController.class.getName(), String.format( "(%s=%s)", Action.NAME, aName ) );
+
+      if ( ( serviceRefs != null ) && ( serviceRefs.length > 0 ) )
+      {
+        return ( DeviceController )this.bundleContext.getService( serviceRefs[0] );
+      }
+
+      return null;
+    }
+    catch ( InvalidSyntaxException exception )
+    {
+      throw new RuntimeException( "getDeviceController failed!", exception );
+    }
+  }
+
+  /**
    * {@inheritDoc}
    */
   private Exporter getExporter( final String aName ) throws IllegalArgumentException
@@ -1427,18 +1356,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     try
     {
-      final ServiceReference[] serviceRefs = this.bundleContext
-          .getAllServiceReferences( Exporter.class.getName(), null );
-      final int count = ( serviceRefs == null ) ? 0 : serviceRefs.length;
+      final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences( Exporter.class.getName(),
+          String.format( "(%s=%s)", Action.NAME, aName ) );
 
-      for ( int i = 0; i < count; i++ )
+      if ( ( serviceRefs != null ) && ( serviceRefs.length > 0 ) )
       {
-        final Exporter exporter = ( Exporter )this.bundleContext.getService( serviceRefs[i] );
-
-        if ( aName.equals( exporter.getName() ) )
-        {
-          return exporter;
-        }
+        return ( Exporter )this.bundleContext.getService( serviceRefs[0] );
       }
 
       return null;
@@ -1446,6 +1369,34 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     catch ( InvalidSyntaxException exception )
     {
       throw new RuntimeException( "getExporter failed!", exception );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  private Tool getTool( final String aName ) throws IllegalArgumentException
+  {
+    if ( ( aName == null ) || aName.trim().isEmpty() )
+    {
+      throw new IllegalArgumentException( "Name cannot be null or empty!" );
+    }
+
+    try
+    {
+      final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences( Tool.class.getName(),
+          String.format( "(%s=%s)", Action.NAME, aName ) );
+
+      if ( ( serviceRefs != null ) && ( serviceRefs.length > 0 ) )
+      {
+        return ( Tool )this.bundleContext.getService( serviceRefs[0] );
+      }
+
+      return null;
+    }
+    catch ( InvalidSyntaxException exception )
+    {
+      throw new RuntimeException( "getTool failed!", exception );
     }
   }
 
@@ -1476,7 +1427,7 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
 
     if ( this.mainFrame != null )
     {
-      this.mainFrame.zoomToFit();
+      this.mainFrame.zoomDefault();
     }
   }
 
@@ -1516,9 +1467,12 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
    */
   private void updateActions()
   {
-    final boolean deviceControllerSet = this.currentDevCtrl != null;
-    final boolean deviceCapturing = deviceControllerSet && this.currentDevCtrl.isCapturing();
-    final boolean deviceSetup = deviceControllerSet && !deviceCapturing && this.currentDevCtrl.isSetup();
+    final DataAcquisitionService acquisitionService = getDataAcquisitionService();
+    final DeviceController deviceCtrl = getDeviceController();
+
+    final boolean deviceCapturing = ( acquisitionService != null ) && acquisitionService.isAcquiring();
+    final boolean deviceControllerSet = deviceCtrl != null;
+    final boolean deviceSetup = deviceControllerSet && !deviceCapturing && deviceCtrl.isSetup();
 
     getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
     getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );
@@ -1578,6 +1532,28 @@ public final class ClientController implements ActionProvider, CaptureCallback, 
     for ( IManagedAction exportAction : exportActions )
     {
       exportAction.setEnabled( dataAvailable );
+    }
+  }
+
+  /**
+   * Updates the actions on the EventDispatchThread (EDT).
+   */
+  private void updateActionsOnEDT()
+  {
+    final Runnable runner = new Runnable()
+    {
+      public void run()
+      {
+        updateActions();
+      }
+    };
+    if ( SwingUtilities.isEventDispatchThread() )
+    {
+      runner.run();
+    }
+    else
+    {
+      SwingUtilities.invokeLater( runner );
     }
   }
 }
