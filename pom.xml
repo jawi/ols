@@ -38,6 +38,7 @@
 		<module>logging</module>
 		<module>rxtx</module>
 		<module>service.io</module>
+		<module>service.acquisition</module>
 		<module>client</module>
 		<module>device.test</module>
 		<module>device.generic</module>
@@ -204,6 +205,11 @@
 				<groupId>nl.lxtreme.ols</groupId>
 				<artifactId>service.io</artifactId>
 				<version>1.0.1</version>
+			</dependency>
+			<dependency>
+				<groupId>nl.lxtreme.ols</groupId>
+				<artifactId>service.acquisition</artifactId>
+				<version>1.0.0</version>
 			</dependency>
 			<dependency>
 				<groupId>nl.lxtreme.ols</groupId>

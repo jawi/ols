@@ -33,6 +33,7 @@ import java.util.List;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.Configurable;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.data.project.*;
 
 import org.junit.*;
@@ -62,7 +63,8 @@ public class WindowStateListenerTest
     ServiceReference mockedServiceRef = mock( ServiceReference.class );
     PreferencesService mockedPreferenceService = mock( PreferencesService.class );
 
-    this.projectManager = new SimpleProjectManager( "JUNIT" );
+    ClientProperties mockProperties = mock( ClientProperties.class );
+    this.projectManager = new SimpleProjectManager( mockProperties );
 
     PreferenceServiceTracker preferenceServiceTracker = new PreferenceServiceTracker( bundleContext,
         this.projectManager );

@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.action.*;
@@ -63,7 +64,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     /**
      * Creates a new AboutBox instance.
      */
-    public AboutBox( final String aVersion )
+    public AboutBox( final String aName, final String aVersion )
     {
       super( SwingComponentUtils.getCurrentWindow(), "About ...", ModalityType.APPLICATION_MODAL );
 
@@ -78,7 +79,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
           + "<li>&lt;http://dangerousprototypes.com/open-logic-sniffer/&gt;</li>" //
           + "<li>&lt;http://www.gadgetfactory.net/gf/project/butterflylogic/&gt;</li>" //
           + "<li>&lt;http://www.sump.org/projects/analyzer/&gt;</li>" //
-          + "</ul></p></body></html>", Host.FULL_NAME, aVersion );
+          + "</ul></p></body></html>", aName, aVersion );
 
       final JLabel messageLabel = new JLabel( message );
 
@@ -140,6 +141,217 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
+   * Provides an adapter class for {@link MenuListener}.
+   */
+  static abstract class AbstractMenuBuilder implements MenuListener
+  {
+    protected final ClientController controller;
+
+    private final ButtonGroup group = new ButtonGroup();
+
+    /**
+     * Creates a new MainFrame.AbstractMenuBuilder instance.
+     */
+    public AbstractMenuBuilder( final ClientController aController )
+    {
+      this.controller = aController;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void menuCanceled( final MenuEvent aEvent )
+    {
+      // No-op
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void menuDeselected( final MenuEvent aEvent )
+    {
+      // No-op
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void menuSelected( final MenuEvent aEvent )
+    {
+      // Build the menu dynamically...
+      final JMenu menu = ( JMenu )aEvent.getSource();
+
+      String[] names = getMenuItemNames();
+      if ( names.length == 0 )
+      {
+        for ( int i = 0, size = menu.getItemCount(); i < size; i++ )
+        {
+          final JMenuItem item = menu.getItem( i );
+          if ( item instanceof AbstractButton )
+          {
+            this.group.remove( item );
+          }
+          menu.remove( item );
+        }
+
+        JMenuItem noDevicesItem = new JMenuItem( getNoItemsName() );
+        noDevicesItem.setEnabled( false );
+
+        menu.add( noDevicesItem );
+      }
+      else
+      {
+        names = removeObsoleteMenuItems( menu, names );
+        for ( String name : names )
+        {
+          final JMenuItem menuItem = createMenuItem( name );
+
+          this.group.add( menuItem );
+          menu.add( menuItem );
+        }
+      }
+
+      // Make sure the action reflect the current situation...
+      this.controller.updateActionsOnEDT();
+    }
+
+    /**
+     * Factory method for creating a menu item for the given name.
+     * 
+     * @param aName
+     *          the name of the menu item, never <code>null</code>.
+     * @return a new menu item instance, never <code>null</code>.
+     */
+    protected abstract JMenuItem createMenuItem( String aName );
+
+    /**
+     * Returns all names of menu items.
+     * 
+     * @return an array of menu item names, never <code>null</code>.
+     */
+    protected abstract String[] getMenuItemNames();
+
+    /**
+     * Returns the name to display in case no other menu items are available.
+     * 
+     * @return a 'no items' menu item name, never <code>null</code>.
+     */
+    protected abstract String getNoItemsName();
+
+    /**
+     * @param aMenu
+     * @param aMenuItems
+     * @return
+     */
+    private String[] removeObsoleteMenuItems( final JMenu aMenu, final String[] aMenuItems )
+    {
+      List<String> result = new ArrayList<String>( Arrays.asList( aMenuItems ) );
+      // Remove all obsolete menu items from the menu...
+      for ( int i = aMenu.getItemCount() - 1; i >= 0; i-- )
+      {
+        final String itemText = aMenu.getItem( i ).getText();
+        if ( !result.contains( itemText ) )
+        {
+          // remove this menu item; it is obsolete...
+          aMenu.remove( i );
+        }
+        else
+        {
+          result.remove( itemText );
+        }
+      }
+
+      return result.toArray( new String[result.size()] );
+    }
+  }
+
+  /**
+   * Provides a builder for building the devices menu upon selection of the
+   * menu.
+   */
+  static class DeviceMenuBuilder extends AbstractMenuBuilder
+  {
+    /**
+     * Creates a new MainFrame.DeviceMenuBuilder instance.
+     */
+    public DeviceMenuBuilder( final ClientController aController )
+    {
+      super( aController );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected JMenuItem createMenuItem( final String aDeviceName )
+    {
+      return new JRadioButtonMenuItem( new SelectDeviceAction( this.controller, aDeviceName ) );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String[] getMenuItemNames()
+    {
+      return this.controller.getDeviceNames();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getNoItemsName()
+    {
+      return "No devices.";
+    }
+  }
+
+  /**
+   * Provides a builder for building the export menu upon selection of the menu.
+   */
+  static class ExportMenuBuilder extends AbstractMenuBuilder
+  {
+    /**
+     * Creates a new MainFrame.ExportMenuBuilder instance.
+     */
+    public ExportMenuBuilder( final ClientController aController )
+    {
+      super( aController );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected JMenuItem createMenuItem( final String aExporterName )
+    {
+      return new JMenuItem( new ExportAction( this.controller, aExporterName ) );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String[] getMenuItemNames()
+    {
+      return this.controller.getExporterNames();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getNoItemsName()
+    {
+      return "No exporters.";
+    }
+  }
+
+  /**
    * Listens to window-close events for our main frame, explicitly invoking code
    * to close it on all platforms.
    */
@@ -153,6 +365,47 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     {
       final MainFrame mainFrame = ( MainFrame )aEvent.getSource();
       mainFrame.close();
+    }
+  }
+
+  /**
+   * Provides a builder for building the tools menu upon selection of the menu.
+   */
+  static class ToolMenuBuilder extends AbstractMenuBuilder
+  {
+    /**
+     * Creates a new MainFrame.ToolMenuBuilder instance.
+     */
+    public ToolMenuBuilder( final ClientController aController )
+    {
+      super( aController );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected JMenuItem createMenuItem( final String aToolName )
+    {
+      return new JMenuItem( new RunToolAction( this.controller, aToolName ) );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String[] getMenuItemNames()
+    {
+      return this.controller.getToolNames();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getNoItemsName()
+    {
+      return "No tools.";
     }
   }
 
@@ -170,11 +423,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private JMenu windowMenu;
   private JMenu exportMenu;
 
-  private final JMenuItem noExportersItem;
-  private final JMenuItem noDevicesItem;
-  private final JMenuItem noToolsItem;
-  private final ButtonGroup deviceGroup;
-
+  private final ClientProperties clientProperties;
   private final ClientController controller;
 
   // CONSTRUCTORS
@@ -185,26 +434,16 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * @param aController
    *          the client controller to use, cannot be <code>null</code>.
    */
-  public MainFrame( final ClientController aController )
+  public MainFrame( final ClientProperties aClientProperties, final ClientController aController )
   {
-    super( Host.FULL_NAME );
+    super( aClientProperties.getFullName() );
 
     // Let the host platform determine where this diagram should be displayed;
     // gives it more or less a native feel...
     setLocationByPlatform( true );
 
+    this.clientProperties = aClientProperties;
     this.controller = aController;
-
-    this.noExportersItem = new JMenuItem( "No Exporters." );
-    this.noExportersItem.setEnabled( false );
-
-    this.noDevicesItem = new JMenuItem( "No Devices." );
-    this.noDevicesItem.setEnabled( false );
-
-    this.noToolsItem = new JMenuItem( "No Tools." );
-    this.noToolsItem.setEnabled( false );
-
-    this.deviceGroup = new ButtonGroup();
 
     this.diagram = new Diagram( this.controller );
     this.status = new JTextStatusBar();
@@ -215,8 +454,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     final JToolBar tools = createMenuBars();
 
     // !!! Always add these after the toolbar/menubar is created !!!
-    this.deviceMenu.add( this.noDevicesItem );
-    this.toolsMenu.add( this.noToolsItem );
+    this.deviceMenu.addMenuListener( new DeviceMenuBuilder( aController ) );
+    this.toolsMenu.addMenuListener( new ToolMenuBuilder( aController ) );
+    this.exportMenu.addMenuListener( new ExportMenuBuilder( aController ) );
 
     // Create a scrollpane for the diagram...
     final JScrollPane scrollPane = new JScrollPane( this.diagram );
@@ -233,98 +473,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
-  }
 
-  /**
-   * Shows the main about box.
-   * 
-   * @param aVersion
-   *          the version to display in this about box.
-   */
-  public static void showAboutBox( final String aVersion )
-  {
-    final AboutBox aboutDialog = new AboutBox( aVersion );
-    aboutDialog.showDialog();
-  }
-
-  /**
-   * Adds a new menu item to the devices-menu for the given device controller.
-   * 
-   * @param aDeviceName
-   *          the name of the device controller to add, cannot be
-   *          <code>null</code>.
-   * @return the action of the added menu item, never <code>null</code>.
-   */
-  public final IManagedAction addDeviceMenuItem( final String aDeviceName )
-  {
-    // We're adding one, so, there's at least one device available...
-    this.deviceMenu.remove( this.noDevicesItem );
-
-    final SelectDeviceAction action = new SelectDeviceAction( this.controller, aDeviceName );
-    final JMenuItem menuItem = new JRadioButtonMenuItem( action );
-
-    // Determine where in the menu we should add the menu item, this way, we
-    // can make the menu appear consistent...
-    final int idx = determineDeviceMenuItemIndex( menuItem );
-
-    this.deviceGroup.add( menuItem );
-    this.deviceMenu.add( menuItem, idx );
-
-    updateMenuState( this.deviceMenu, this.noDevicesItem );
-
-    return action;
-  }
-
-  /**
-   * Adds a new menu item to the export-menu for the given exporter name.
-   * 
-   * @param aExporterName
-   *          the name of the exporter to add, cannot be <code>null</code>.
-   * @return the action of the added menu item, never <code>null</code>.
-   */
-  public final IManagedAction addExportMenuItem( final String aExporterName )
-  {
-    // We're adding one, so, there's at least one device available...
-    this.exportMenu.remove( this.noExportersItem );
-
-    final ExportAction exportAction = new ExportAction( this.controller, aExporterName );
-    final JMenuItem menuItem = new JMenuItem( exportAction );
-
-    // Determine where in the menu we should add the menu item, this way, we
-    // can make the menu appear consistent...
-    final int idx = determineExporterMenuItemIndex( menuItem );
-
-    this.exportMenu.add( menuItem, idx );
-
-    updateMenuState( this.exportMenu, this.noExportersItem );
-
-    return exportAction;
-  }
-
-  /**
-   * Adds a new menu item to the tools-menu for the given tool name.
-   * 
-   * @param aToolName
-   *          the name of the tool to add, cannot be <code>null</code>.
-   * @return the action of the added menu item, never <code>null</code>.
-   */
-  public final IManagedAction addToolMenuItem( final String aToolName )
-  {
-    // We're adding one, so, there's at least one device available...
-    this.toolsMenu.remove( this.noToolsItem );
-
-    final RunToolAction toolAction = new RunToolAction( this.controller, aToolName );
-    final JMenuItem menuItem = new JMenuItem( toolAction );
-
-    // Determine where in the menu we should add the menu item, this way, we
-    // can make the menu appear consistent...
-    final int idx = determineToolMenuItemIndex( menuItem );
-
-    this.toolsMenu.add( menuItem, idx );
-
-    updateMenuState( this.toolsMenu, this.noToolsItem );
-
-    return toolAction;
+    setStatus( "{0} v{1} ready ...", this.clientProperties.getShortName(), this.clientProperties.getVersion() );
   }
 
   /**
@@ -390,7 +540,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     {
       final String value = ( String )aEvent.getNewValue();
 
-      String title = Host.FULL_NAME;
+      String title = this.clientProperties.getFullName();
       if ( !StringUtils.isEmpty( value ) )
       {
         // Denote the project file in the title of the main window...
@@ -398,68 +548,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       }
       setTitle( title );
     }
-  }
-
-  /**
-   * Removes the menu item from the device menu with the given name.
-   * 
-   * @param aDeviceName
-   *          the name of the device to remove as menu item from the menu,
-   *          cannot be <code>null</code>.
-   * @return the managed action of the removed menu item, can be
-   *         <code>null</code>.
-   */
-  public final IManagedAction removeDeviceMenuItem( final String aDeviceName )
-  {
-    final JMenuItem menuItem = removeMenuItem( this.deviceMenu, aDeviceName );
-    if ( menuItem != null )
-    {
-      this.deviceGroup.remove( menuItem );
-
-      updateMenuState( this.deviceMenu, this.noDevicesItem );
-      return ( IManagedAction )menuItem.getAction();
-    }
-    return null;
-  }
-
-  /**
-   * Removes the menu item from the export menu with the given name.
-   * 
-   * @param aExporterName
-   *          the name of the exporter to remove as menu item from the menu,
-   *          cannot be <code>null</code>.
-   * @return the managed action of the removed menu item, can be
-   *         <code>null</code>.
-   */
-  public final IManagedAction removeExportMenuItem( final String aExporterName )
-  {
-    final JMenuItem menuItem = removeMenuItem( this.exportMenu, aExporterName );
-    if ( menuItem != null )
-    {
-      updateMenuState( this.exportMenu, this.noExportersItem );
-      return ( IManagedAction )menuItem.getAction();
-    }
-    return null;
-  }
-
-  /**
-   * Removes the menu item from the tools menu with the given name.
-   * 
-   * @param aToolName
-   *          the name of the tool to remove as menu item from the menu, cannot
-   *          be <code>null</code>.
-   * @return the managed action of the removed menu item, can be
-   *         <code>null</code>.
-   */
-  public final IManagedAction removeToolMenuItem( final String aToolName )
-  {
-    final JMenuItem menuItem = removeMenuItem( this.toolsMenu, aToolName );
-    if ( menuItem != null )
-    {
-      updateMenuState( this.toolsMenu, this.noToolsItem );
-      return ( IManagedAction )menuItem.getAction();
-    }
-    return null;
   }
 
   /**
@@ -496,6 +584,18 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     }
     this.status.setText( message );
     this.status.setProgress( 0 );
+  }
+
+  /**
+   * Shows the main about box.
+   * 
+   * @param aVersion
+   *          the version to display in this about box.
+   */
+  public void showAboutBox()
+  {
+    final AboutBox aboutDialog = new AboutBox( this.clientProperties.getShortName(), this.clientProperties.getVersion() );
+    aboutDialog.showDialog();
   }
 
   /**
@@ -692,77 +792,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Determines the index in the menu where the given menu item should be
-   * inserted.
-   * 
-   * @param aMenuItem
-   *          the menu item to add, cannot be <code>null</code>.
-   * @return the position in the menu to add the given menu item, -1 if the menu
-   *         item should be added as last item.
-   */
-  private int determineDeviceMenuItemIndex( final JMenuItem aMenuItem )
-  {
-    return determineMenuItemIndex( this.deviceMenu, aMenuItem );
-  }
-
-  /**
-   * Determines the index in the menu where the given menu item should be
-   * inserted.
-   * 
-   * @param aMenuItem
-   *          the menu item to add, cannot be <code>null</code>.
-   * @return the position in the menu to add the given menu item, -1 if the menu
-   *         item should be added as last item.
-   */
-  private int determineExporterMenuItemIndex( final JMenuItem aMenuItem )
-  {
-    return determineMenuItemIndex( this.exportMenu, aMenuItem );
-  }
-
-  /**
-   * Determines the index in the menu where the given menu item should be
-   * inserted.
-   * 
-   * @param aMenu
-   *          the menu to determine the given items' index of, cannot be
-   *          <code>null</code>;
-   * @param aMenuItem
-   *          the menu item to add, cannot be <code>null</code>.
-   * @return the position in the menu to add the given menu item, -1 if the menu
-   *         item should be added as last item.
-   */
-  private int determineMenuItemIndex( final JMenu aMenu, final JMenuItem aMenuItem )
-  {
-    final String newMenuItem = aMenuItem.getText();
-
-    int idx = -1;
-    for ( int i = 0; ( idx < 0 ) && ( i < aMenu.getItemCount() ); i++ )
-    {
-      final String nameA = aMenu.getItem( i ).getText();
-      final int comparison = newMenuItem.compareTo( nameA );
-      if ( comparison < 0 )
-      {
-        idx = i;
-      }
-    }
-    return idx;
-  }
-
-  /**
-   * Determines the index in the menu where the given menu item should be
-   * inserted.
-   * 
-   * @param aMenuItem
-   *          the menu item to add, cannot be <code>null</code>.
-   * @return the position in the menu to add the given menu item, -1 if the menu
-   *         item should be added as last item.
-   */
-  private int determineToolMenuItemIndex( final JMenuItem aMenuItem )
-  {
-    return determineMenuItemIndex( this.toolsMenu, aMenuItem );
-  }
-
-  /**
    * Creates a list of icon images that are used to decorate this frame.
    * 
    * @return a list of images, never <code>null</code>.
@@ -775,54 +804,5 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     final Image windowIcon64x64 = IconFactory.createImage( IconLocator.WINDOW_ICON_64x64 );
     final Image windowIcon256x256 = IconFactory.createImage( IconLocator.WINDOW_ICON_256x256 );
     return Arrays.asList( windowIcon16x16, windowIcon32x32, windowIcon48x48, windowIcon64x64, windowIcon256x256 );
-  }
-
-  /**
-   * Removes a menu item with a given name from the given menu.
-   * 
-   * @param aMenu
-   *          the menu to remove the item from, cannot be <code>null</code>;
-   * @param aMenuItemName
-   *          the name of the menu item to remove, cannot be <code>null</code>.
-   */
-  private JMenuItem removeMenuItem( final JMenu aMenu, final String aMenuItemName )
-  {
-    JMenuItem menuItem = null;
-    for ( int i = 0; ( menuItem == null ) && ( i < aMenu.getItemCount() ); i++ )
-    {
-      final JMenuItem comp = aMenu.getItem( i );
-      if ( aMenuItemName.equals( comp.getName() ) )
-      {
-        menuItem = comp;
-        break;
-      }
-    }
-
-    if ( menuItem != null )
-    {
-      aMenu.remove( menuItem );
-    }
-
-    return menuItem;
-  }
-
-  /**
-   * Updates the given menu, adding the given default menu item if its item
-   * count drops to zero.
-   * 
-   * @param aMenu
-   *          the menu to update, cannot be <code>null</code>;
-   * @param aDefaultMenuItem
-   *          the default menu item to add in case the given menu is empty.
-   */
-  private void updateMenuState( final JMenu aMenu, final JMenuItem aDefaultMenuItem )
-  {
-    if ( aMenu.getItemCount() == 0 )
-    {
-      aMenu.add( aDefaultMenuItem );
-    }
-
-    aMenu.revalidate();
-    aMenu.repaint();
   }
 }

@@ -48,7 +48,7 @@ public class HelpAboutAction extends BaseAction
    */
   public HelpAboutAction( final IClientController aController )
   {
-    super( ID, aController, "About " + Host.SHORT_NAME, "" );
+    super( ID, aController, "About OLS", "" ); // XXX
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
   }
 

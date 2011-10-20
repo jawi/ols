@@ -28,6 +28,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.data.project.*;
 
 import org.junit.*;
@@ -62,7 +63,8 @@ public class PreferenceServiceTrackerTest
     this.mockedServiceRef = mock( ServiceReference.class );
     this.mockedPreferenceService = mock( PreferencesService.class );
 
-    this.projectManager = new SimpleProjectManager( "JUNIT" );
+    ClientProperties mockProperties = mock( ClientProperties.class );
+    this.projectManager = new SimpleProjectManager( mockProperties );
 
     this.preferenceServiceTracker = new PreferenceServiceTracker( this.bundleContext, this.projectManager );
 

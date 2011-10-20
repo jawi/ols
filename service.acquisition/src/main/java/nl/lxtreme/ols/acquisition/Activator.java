@@ -18,33 +18,24 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.acquisition;
+package nl.lxtreme.ols.acquisition;
 
 
-import nl.lxtreme.ols.api.acquisition.*;
+import java.util.*;
 
+import nl.lxtreme.ols.api.*;
 import org.osgi.framework.*;
-import org.osgi.util.tracker.*;
 
 
 /**
- * Provides a helper class for passing events to any interested
- * {@link AcquisitionDataListener}.
+ * Provides a bundle activator for the acquisition service.
  */
-final class AcquisitionDataListenerHelper extends ServiceTracker implements AcquisitionDataListener
+public class Activator implements BundleActivator
 {
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new AcquisitionDataListenerHelper instance.
-   * 
-   * @param aContext
-   *          the bundle context to use, cannot be <code>null</code>.
-   */
-  public AcquisitionDataListenerHelper( final BundleContext aContext )
-  {
-    super( aContext, AcquisitionDataListener.class.getName(), null /* aCustomizer */);
-  }
+  private BackgroundDataAcquisitionService service;
+  private AcquisitionListenerHelper acquisitionListenerHelper;
 
   // METHODS
 
@@ -52,15 +43,26 @@ final class AcquisitionDataListenerHelper extends ServiceTracker implements Acqu
    * {@inheritDoc}
    */
   @Override
-  public void acquisitionComplete( final AcquisitionResult aData )
+  public void start( final BundleContext aContext ) throws Exception
   {
-    final Object[] services = getServices();
-    if ( services != null )
-    {
-      for ( Object service : services )
-      {
-        ( ( AcquisitionDataListener )service ).acquisitionComplete( aData );
-      }
-    }
+    this.acquisitionListenerHelper = new AcquisitionListenerHelper( aContext );
+    this.acquisitionListenerHelper.open();
+
+    this.service = new BackgroundDataAcquisitionService( this.acquisitionListenerHelper );
+
+    final Properties props = new Properties();
+    props.put( "invocation", "asynchonous" );
+
+    aContext.registerService( DataAcquisitionService.class.getName(), this.service, props );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void stop( final BundleContext aContext ) throws Exception
+  {
+    this.acquisitionListenerHelper.close();
+    this.service.close();
   }
 }

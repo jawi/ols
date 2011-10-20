@@ -46,7 +46,7 @@ public class BundleServiceObserver extends AbstractBundleObserver
   private final String serviceKey;
   private final String serviceClassName;
 
-  private final Map<Long, List<Pair<ServiceRegistration, Object>>> registry;
+  private final ConcurrentMap<Long, List<Pair<ServiceRegistration, Object>>> registry;
 
   // CONSTRUCTROS
 
@@ -97,23 +97,23 @@ public class BundleServiceObserver extends AbstractBundleObserver
     }
     catch ( SecurityException exception )
     {
-      LOG.log( Level.INFO, "Security exception while initializing service...", exception );
+      LOG.log( Level.INFO, "Security exception while trying to destroy service...", exception );
     }
     catch ( NoSuchMethodException exception )
     {
-      LOG.log( Level.FINE, "No init-method found; not initializing service!" );
+      LOG.log( Level.FINE, "No destory-method found!" );
     }
     catch ( IllegalArgumentException exception )
     {
-      LOG.log( Level.FINE, "Illegal argument found; not initializing service!", exception );
+      LOG.log( Level.FINE, "Illegal argument while trying to destroy service!", exception );
     }
     catch ( IllegalAccessException exception )
     {
-      LOG.log( Level.FINE, "Illegal access to init-method; not initializing service!", exception );
+      LOG.log( Level.FINE, "Illegal access to destroy-method!", exception );
     }
     catch ( InvocationTargetException exception )
     {
-      LOG.log( Level.WARNING, "Service initialization failed!", exception.getCause() );
+      LOG.log( Level.WARNING, "Service destruction failed!", exception.getCause() );
     }
   }
 
@@ -133,7 +133,7 @@ public class BundleServiceObserver extends AbstractBundleObserver
     List<Pair<ServiceRegistration, Object>> pairs = this.registry.get( Long.valueOf( aBundle.getBundleId() ) );
     if ( pairs == null )
     {
-      pairs = new ArrayList<Pair<ServiceRegistration, Object>>();
+      pairs = new CopyOnWriteArrayList<Pair<ServiceRegistration, Object>>();
       this.registry.put( Long.valueOf( aBundle.getBundleId() ), pairs );
     }
 
@@ -180,7 +180,7 @@ public class BundleServiceObserver extends AbstractBundleObserver
   @Override
   protected void doRemoved( final Bundle aBundle, final ManifestHeader... aEntries )
   {
-    List<Pair<ServiceRegistration, Object>> pairs = this.registry.get( Long.valueOf( aBundle.getBundleId() ) );
+    List<Pair<ServiceRegistration, Object>> pairs = this.registry.remove( Long.valueOf( aBundle.getBundleId() ) );
     if ( pairs != null )
     {
       for ( Pair<ServiceRegistration, Object> pair : pairs )
@@ -189,9 +189,16 @@ public class BundleServiceObserver extends AbstractBundleObserver
 
         destroyService( service );
 
-        LOG.log( Level.INFO, "Service (" + service.getClass().getName() + ") unregistered ..." );
+        try
+        {
+          pair.getLeft().unregister();
 
-        pair.getLeft().unregister();
+          LOG.log( Level.INFO, "Service (" + service.getClass().getName() + ") unregistered ..." );
+        }
+        catch ( IllegalStateException exception )
+        {
+          LOG.log( Level.FINE, "Service (" + service.getClass().getName() + ") was already unregistered!" );
+        }
       }
     }
   }
@@ -240,15 +247,15 @@ public class BundleServiceObserver extends AbstractBundleObserver
     }
     catch ( NoSuchMethodException exception )
     {
-      LOG.log( Level.FINE, "No init-method found; not initializing service!" );
+      LOG.log( Level.FINE, "No init-method found!" );
     }
     catch ( IllegalArgumentException exception )
     {
-      LOG.log( Level.FINE, "Illegal argument found; not initializing service!", exception );
+      LOG.log( Level.FINE, "Illegal argument while initializing service!", exception );
     }
     catch ( IllegalAccessException exception )
     {
-      LOG.log( Level.FINE, "Illegal access to init-method; not initializing service!", exception );
+      LOG.log( Level.FINE, "Illegal access to init-method!", exception );
     }
     catch ( InvocationTargetException exception )
     {
