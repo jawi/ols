@@ -53,7 +53,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
 
   // VARIABLES
 
-  private final String hostVersion;
+  private final ClientProperties clientProperties;
   private ProjectImpl project;
 
   // CONSTRUCTORS
@@ -61,13 +61,13 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
   /**
    * Creates a new SimpleProjectManager instance.
    * 
-   * @param aHostVersion
+   * @param aClientProperties
    *          the host version this project manager instantiated, cannot be
    *          <code>null</code>.
    */
-  public SimpleProjectManager( final String aHostVersion )
+  public SimpleProjectManager( final ClientProperties aClientProperties )
   {
-    this.hostVersion = aHostVersion;
+    this.clientProperties = aClientProperties;
     this.project = new ProjectImpl();
   }
 
@@ -194,7 +194,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     final BufferedOutputStream os = new BufferedOutputStream( aOutput );
     final ZipOutputStream zipOS = new ZipOutputStream( os );
 
-    zipOS.setComment( Host.FULL_NAME.concat( " project file" ) );
+    zipOS.setComment( this.clientProperties.getFullName().concat( " project file" ) );
 
     try
     {
@@ -426,7 +426,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     try
     {
       out.println( name );
-      out.println( this.hostVersion );
+      out.println( this.clientProperties.getVersion() );
       out.println( System.currentTimeMillis() );
     }
     finally

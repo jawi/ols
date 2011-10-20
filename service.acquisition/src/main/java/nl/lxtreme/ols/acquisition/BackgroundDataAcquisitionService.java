@@ -18,14 +18,12 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.acquisition;
+package nl.lxtreme.ols.acquisition;
 
 
 import java.io.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-
-import org.osgi.framework.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
@@ -88,23 +86,23 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
   private volatile Future<?> future;
   private volatile Device device;
 
-  private final ExecutorService executorService;
-  private final AcquisitionDataListenerHelper acquisitionDataListenerHelper;
-  private final AcquisitionStatusListenerHelper acquisitionStatusListenerHelper;
-  private final AcquisitionProgressListenerHelper acquisitionProgressListenerHelper;
+  private final AcquisitionListenerHelper acquisitionListenerHelper;
+
+  final ExecutorService executorService;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new BackgroundDataAcquisitionService instance.
+   * 
+   * @param aAcquisitionListenerHelper
+   *          the helper class for delegating events to interested listeners,
+   *          cannot be <code>null</code>.
    */
-  public BackgroundDataAcquisitionService( final BundleContext aBundleContext )
+  public BackgroundDataAcquisitionService( final AcquisitionListenerHelper aAcquisitionListenerHelper )
   {
-    this.executorService = Executors.newSingleThreadExecutor();
-
-    this.acquisitionDataListenerHelper = new AcquisitionDataListenerHelper( aBundleContext );
-    this.acquisitionStatusListenerHelper = new AcquisitionStatusListenerHelper( aBundleContext );
-    this.acquisitionProgressListenerHelper = new AcquisitionProgressListenerHelper( aBundleContext );
+    this.acquisitionListenerHelper = aAcquisitionListenerHelper;
+    this.executorService = Executors.newCachedThreadPool();
   }
 
   // METHODS
@@ -124,10 +122,10 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
       throw new IllegalStateException( "Capture already in progress!" );
     }
 
-    this.device = aDeviceController.createDevice( this.acquisitionProgressListenerHelper );
+    this.device = aDeviceController.createDevice( this.acquisitionListenerHelper );
 
     final FutureTask<AcquisitionResult> acquisitionWrapper = new FutureTask<AcquisitionResult>( new DeviceWrapper(
-        this.device, this.acquisitionStatusListenerHelper ) )
+        this.device, this.acquisitionListenerHelper ) )
     {
       @Override
       protected void done()
@@ -145,7 +143,18 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
         }
         catch ( ExecutionException exception )
         {
-          status = AcquisitionResultStatus.create( exception.getCause() );
+          final Throwable cause = exception.getCause();
+          // The inner future can also be cancelled, causing it to abort its
+          // execution, so we should also check the cause of the execution
+          // exception to differentiate between aborts and failures...
+          if ( cause instanceof InterruptedException )
+          {
+            status = new AcquisitionResultStatus( ResultStatus.ABORTED, "Cancelled by user!" );
+          }
+          else
+          {
+            status = AcquisitionResultStatus.create( cause );
+          }
         }
 
         finalizeAcquisition( status, acquisitionResult );
@@ -165,8 +174,15 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
     {
       if ( !this.future.cancel( true /* mayInterruptIfRunning */) )
       {
-        throw new IllegalStateException();
+        if ( !this.future.isDone() )
+        {
+          throw new InternalError( "Failed to cancel ongoing task. Possible resource leak!" );
+        }
       }
+    }
+    else
+    {
+      throw new IllegalStateException( "No acquisition in progress!" );
     }
   }
 
@@ -175,13 +191,39 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
    */
   public void close()
   {
-    this.acquisitionDataListenerHelper.close();
-    this.acquisitionStatusListenerHelper.close();
-    this.acquisitionProgressListenerHelper.close();
+    try
+    {
+      // Make sure we're cancelling any ongoing acquisitions...
+      cancelAcquisition();
+    }
+    finally
+    {
+      if ( !this.executorService.isShutdown() )
+      {
+        // Always invoke this method; even when an exception is thrown during
+        // cancellation!
+        this.executorService.shutdown();
 
-    this.executorService.shutdown();
+        int tries = 3;
+        while ( !this.executorService.isTerminated() && ( tries-- >= 0 ) )
+        {
+          try
+          {
+            if ( this.executorService.awaitTermination( 100L, TimeUnit.MILLISECONDS ) )
+            {
+              LOG.fine( "All running threads are terminated ..." );
+            }
+          }
+          catch ( InterruptedException exception )
+          {
+            // Make sure our thread administration is correct...
+            Thread.currentThread().interrupt();
+          }
+        }
 
-    LOG.info( "Background data acquisition service closed ..." );
+        LOG.info( "Background data acquisition service closed ..." );
+      }
+    }
   }
 
   /**
@@ -191,18 +233,6 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
   public boolean isAcquiring()
   {
     return ( this.future != null ) && !this.future.isDone();
-  }
-
-  /**
-   * Opens this data acquisition service for business.
-   */
-  public void open()
-  {
-    this.acquisitionDataListenerHelper.open( true /* trackAllServices */);
-    this.acquisitionStatusListenerHelper.open( true /* trackAllServices */);
-    this.acquisitionProgressListenerHelper.open( true /* trackAllServices */);
-
-    LOG.info( "Background data acquisition service opened ..." );
   }
 
   /**
@@ -221,10 +251,10 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
     {
       if ( aAcquisitionResult != null )
       {
-        this.acquisitionDataListenerHelper.acquisitionComplete( aAcquisitionResult );
+        this.acquisitionListenerHelper.acquisitionComplete( aAcquisitionResult );
       }
 
-      this.acquisitionStatusListenerHelper.acquisitionEnded( aStatus );
+      this.acquisitionListenerHelper.acquisitionEnded( aStatus );
     }
     finally
     {

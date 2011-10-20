@@ -22,13 +22,14 @@ package nl.lxtreme.ols.client.data.project;
 
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.io.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.test.data.*;
 
 import org.junit.*;
@@ -51,7 +52,9 @@ public class SimpleProjectManagerTest
   @Before
   public void setUp() throws Exception
   {
-    this.projectManager = new SimpleProjectManager( "JUNIT" );
+    ClientProperties mockProperties = mock( ClientProperties.class );
+    when( mockProperties.getFullName() ).thenReturn( "OLS" );
+    this.projectManager = new SimpleProjectManager( mockProperties );
   }
 
   /**

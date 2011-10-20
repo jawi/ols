@@ -112,6 +112,202 @@ public final class HostUtils
     }
   }
 
+  /**
+   * An OSX about handler.
+   */
+  static class OSXAboutHandler implements InvocationHandler
+  {
+    // CONSTANTS
+
+    private static final String ABOUT_HANDLER_CLASS_NAME = "com.apple.eawt.AboutHandler";
+
+    // VARIABLES
+
+    private final ApplicationCallback callback;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new HostUtils.OSXAboutHandler instance.
+     */
+    OSXAboutHandler( final ApplicationCallback aCallback )
+    {
+      this.callback = aCallback;
+    }
+
+    // METHODS
+
+    /**
+     * @param aCallback
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public static Object createInstance( final ApplicationCallback aCallback ) throws ClassNotFoundException
+    {
+      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      return Proxy
+          .newProxyInstance( classLoader, new Class<?>[] { getHandlerClass() }, new OSXAboutHandler( aCallback ) );
+    }
+
+    /**
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public static Class<?> getHandlerClass() throws ClassNotFoundException
+    {
+      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      return classLoader.loadClass( ABOUT_HANDLER_CLASS_NAME );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
+    {
+      if ( "handleAbout".equals( aMethod.getName() ) )
+      {
+        this.callback.handleAbout();
+      }
+      return null;
+    }
+  }
+
+  /**
+   * An OSX preferences handler.
+   */
+  static class OSXPreferencesHandler implements InvocationHandler
+  {
+    // CONSTANTS
+
+    private static final String PREFS_HANDLER_CLASS_NAME = "com.apple.eawt.PreferencesHandler";
+
+    // VARIABLES
+
+    private final ApplicationCallback callback;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new HostUtils.OSXPreferencesHandler instance.
+     */
+    OSXPreferencesHandler( final ApplicationCallback aCallback )
+    {
+      this.callback = aCallback;
+    }
+
+    // METHODS
+
+    /**
+     * @param aCallback
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public static Object createInstance( final ApplicationCallback aCallback ) throws ClassNotFoundException
+    {
+      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      return Proxy.newProxyInstance( classLoader, new Class<?>[] { getHandlerClass() }, new OSXPreferencesHandler(
+          aCallback ) );
+    }
+
+    /**
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public static Class<?> getHandlerClass() throws ClassNotFoundException
+    {
+      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      return classLoader.loadClass( PREFS_HANDLER_CLASS_NAME );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
+    {
+      if ( "handlePreferences".equals( aMethod.getName() ) )
+      {
+        this.callback.handlePreferences();
+      }
+      return null;
+    }
+  }
+
+  /**
+   * An OSX quit handler.
+   */
+  static class OSXQuitHandler implements InvocationHandler
+  {
+    // CONSTANTS
+
+    private static final String QUIT_HANDLER_CLASS_NAME = "com.apple.eawt.QuitHandler";
+
+    // VARIABLES
+
+    private final ApplicationCallback callback;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new HostUtils.OSXQuitHandler instance.
+     */
+    OSXQuitHandler( final ApplicationCallback aCallback )
+    {
+      this.callback = aCallback;
+    }
+
+    // METHODS
+
+    /**
+     * @param aCallback
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public static Object createInstance( final ApplicationCallback aCallback ) throws ClassNotFoundException
+    {
+      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      return Proxy
+          .newProxyInstance( classLoader, new Class<?>[] { getHandlerClass() }, new OSXQuitHandler( aCallback ) );
+    }
+
+    /**
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public static Class<?> getHandlerClass() throws ClassNotFoundException
+    {
+      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      return classLoader.loadClass( QUIT_HANDLER_CLASS_NAME );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
+    {
+      if ( "handleQuitRequestWith".equals( aMethod.getName() ) )
+      {
+        final boolean confirmQuit = this.callback.handleQuit();
+
+        final Object quitResponseObj = aArgs[1];
+        final Class<?> quitResponseClass = quitResponseObj.getClass();
+        if ( confirmQuit )
+        {
+          final Method performQuitMethod = quitResponseClass.getMethod( "performQuit" );
+          performQuitMethod.invoke( quitResponseObj );
+        }
+        else
+        {
+          final Method cancelQuitMethod = quitResponseClass.getMethod( "cancelQuit" );
+          cancelQuitMethod.invoke( quitResponseObj );
+        }
+      }
+      return null;
+    }
+  }
+
   // CONSTRUCTORS
 
   /**
@@ -366,6 +562,7 @@ public final class HostUtils
       System.setProperty( "com.apple.mrj.application.growbox.intrudes", "false" );
       System.setProperty( "com.apple.mrj.application.live-resize", "false" );
       System.setProperty( "com.apple.macos.smallTabs", "true" );
+      System.setProperty( "apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS" );
 
       // Install an additional accelerator (Cmd+W) for closing option panes...
       ActionMap map = ( ActionMap )UIManager.get( "OptionPane.actionMap" );
@@ -653,101 +850,35 @@ public final class HostUtils
   private static void installApplicationCallback( final ApplicationCallback aApplicationCallback )
   {
     final String applicationClassName = "com.apple.eawt.Application";
-    final String applicationListenerClassName = "com.apple.eawt.ApplicationListener";
 
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
     try
     {
+      final Object aboutHandler = OSXAboutHandler.createInstance( aApplicationCallback );
+      final Object prefsHandler = OSXPreferencesHandler.createInstance( aApplicationCallback );
+      final Object quitHandler = OSXQuitHandler.createInstance( aApplicationCallback );
+
       final Class<?> appClass = classLoader.loadClass( applicationClassName );
-      final Class<?> appAdapterClass = classLoader.loadClass( applicationListenerClassName );
 
-      if ( ( appClass != null ) && ( appAdapterClass != null ) )
+      if ( appClass != null )
       {
-        final Object proxy = Proxy.newProxyInstance( classLoader, new Class<?>[] { appAdapterClass },
-            new InvocationHandler()
-            {
-              @Override
-              public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
-              {
-                final String name = aMethod.getName();
-                if ( "handleQuit".equals( name ) )
-                {
-                  if ( aApplicationCallback.handleQuit() )
-                  {
-                    handleEventParameter( aArgs );
-                  }
-                }
-                else if ( "handleAbout".equals( name ) )
-                {
-                  if ( aApplicationCallback.handleAbout() )
-                  {
-                    handleEventParameter( aArgs );
-                  }
-                }
-                else if ( "handlePreferences".equals( name ) )
-                {
-                  if ( aApplicationCallback.handlePreferences() )
-                  {
-                    handleEventParameter( aArgs );
-                  }
-                }
-                return null;
-              }
-
-              /**
-               * @param aArgs
-               */
-              private void handleEventParameter( final Object[] aArgs )
-              {
-                if ( ( aArgs == null ) || ( aArgs.length == 0 ) )
-                {
-                  return;
-                }
-
-                final Object event = aArgs[0];
-
-                final Class<?> eventClass = event.getClass();
-                if ( !"com.apple.eawt.ApplicationEvent".equals( eventClass.getName() ) )
-                {
-                  return;
-                }
-
-                try
-                {
-                  final Method setHandledMethod = eventClass.getMethod( "setHandled", Boolean.TYPE );
-                  setHandledMethod.invoke( event, Boolean.TRUE );
-                }
-                catch ( Exception exception )
-                {
-                  // Make sure to handle IO-interrupted exceptions properly!
-                  if ( !HostUtils.handleInterruptedException( exception ) )
-                  {
-                    Logger.getAnonymousLogger().log( Level.ALL, "Event handling in callback failed!", exception );
-                  }
-                }
-              }
-            } );
-
         // Call Application#getApplication() ...
         final Method getAppMethod = appClass.getMethod( "getApplication" );
         final Object app = getAppMethod.invoke( null );
 
-        // Call Application#addAboutMenuItem() ...
-        final Method addAboutMenuItemMethod = appClass.getMethod( "addAboutMenuItem" );
-        addAboutMenuItemMethod.invoke( app );
+        // Call Application#setAboutHandler() ...
+        final Method setAboutHandlerMethod = appClass.getMethod( "setAboutHandler", OSXAboutHandler.getHandlerClass() );
+        setAboutHandlerMethod.invoke( app, aboutHandler );
 
-        // Call Application#addPreferencesMenuItem() ...
-        final Method addPrefsMenuItemMethod = appClass.getMethod( "addPreferencesMenuItem" );
-        addPrefsMenuItemMethod.invoke( app );
+        // Call Application#setPreferencesHandler() ...
+        final Method setPreferencesHandlerMethod = appClass.getMethod( "setPreferencesHandler",
+            OSXPreferencesHandler.getHandlerClass() );
+        setPreferencesHandlerMethod.invoke( app, prefsHandler );
 
-        // Call Application#setEnabledPreferencesMenu(true) ...
-        final Method setEnabledPrefsMenuMethod = appClass.getMethod( "setEnabledPreferencesMenu", Boolean.TYPE );
-        setEnabledPrefsMenuMethod.invoke( app, Boolean.valueOf( aApplicationCallback.hasPreferences() ) );
-
-        // Call Application#addApplicationListener(...) ...
-        final Method addAppListenerMethod = appClass.getMethod( "addApplicationListener", appAdapterClass );
-        addAppListenerMethod.invoke( app, proxy );
+        // Call Application#setQuitHandler() ...
+        final Method setQuitHandlerMethod = appClass.getMethod( "setQuitHandler", OSXQuitHandler.getHandlerClass() );
+        setQuitHandlerMethod.invoke( app, quitHandler );
       }
     }
     catch ( Exception exception )

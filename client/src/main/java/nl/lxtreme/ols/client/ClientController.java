@@ -41,6 +41,7 @@ import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
+import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
@@ -141,13 +142,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   // VARIABLES
 
-  private final IActionManager actionManager;
+  private final OsgiHelper osgiHelper;
+
   private final BundleContext bundleContext;
-  private final DataContainer dataContainer;
+  private final IActionManager actionManager;
+
+  private DataContainer dataContainer;
+  private ProjectManager projectManager;
+  private DataAcquisitionService dataAcquisitionService;
+
   private final EventListenerList evenListeners;
-  private final ProjectManager projectManager;
-  private final DataAcquisitionService dataAcquisitionService;
-  private final IHost host;
 
   private volatile MainFrame mainFrame;
   private volatile String selectedDevice;
@@ -164,18 +168,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @param aProjectManager
    *          the project manager to use, cannot be <code>null</code>.
    */
-  public ClientController( final BundleContext aBundleContext, final IHost aHost, final ProjectManager aProjectManager,
-      final DataAcquisitionService aDataAcquisitionService )
+  public ClientController( final BundleContext aBundleContext )
   {
     this.bundleContext = aBundleContext;
-    this.host = aHost;
-    this.projectManager = aProjectManager;
 
-    this.dataContainer = new DataContainer( this.projectManager );
+    this.osgiHelper = new OsgiHelper( aBundleContext );
+
     this.evenListeners = new EventListenerList();
     this.actionManager = ActionManagerFactory.createActionManager( this );
-
-    this.dataAcquisitionService = aDataAcquisitionService;
   }
 
   // METHODS
@@ -246,64 +246,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Adds the given device controller to this controller, and does this
-   * synchronously on the EDT.
-   * 
-   * @param aDeviceController
-   *          the device controller to add, cannot be <code>null</code>.
-   */
-  public void addDevice( final DeviceController aDeviceController )
-  {
-    if ( this.mainFrame != null )
-    {
-      SwingUtilities.invokeLater( new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          final IManagedAction deviceAction = ClientController.this.mainFrame.addDeviceMenuItem( aDeviceController
-              .getName() );
-
-          ClientController.this.actionManager.add( deviceAction );
-
-          // TODO ehm, yes... a hack...
-          if ( aDeviceController.getClass().getName().startsWith( "org.sump" ) )
-          {
-            deviceAction.putValue( Action.SELECTED_KEY, Boolean.TRUE );
-          }
-
-          updateActions();
-        }
-      } );
-    }
-  }
-
-  /**
-   * Adds the given exporter to this controller, and does this synchronously on
-   * the EDT..
-   * 
-   * @param aExporter
-   *          the exporter to add, cannot be <code>null</code>.
-   */
-  public void addExporter( final Exporter aExporter )
-  {
-    if ( this.mainFrame != null )
-    {
-      SwingUtilities.invokeLater( new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          final IManagedAction exporterAction = ClientController.this.mainFrame.addExportMenuItem( aExporter.getName() );
-          ClientController.this.actionManager.add( exporterAction );
-
-          updateActions();
-        }
-      } );
-    }
-  }
-
-  /**
    * Adds the menu component of the given provider to this controller, and does
    * this synchronously on the EDT.
    * 
@@ -326,31 +268,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
           menuBar.revalidate();
           menuBar.repaint();
-        }
-      } );
-    }
-  }
-
-  /**
-   * Adds the given tool to this controller, and does this synchronously on the
-   * EDT..
-   * 
-   * @param aTool
-   *          the tool to add, cannot be <code>null</code>.
-   */
-  public void addTool( final Tool aTool )
-  {
-    if ( this.mainFrame != null )
-    {
-      SwingUtilities.invokeLater( new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          final IManagedAction toolAction = ClientController.this.mainFrame.addToolMenuItem( aTool.getName() );
-          ClientController.this.actionManager.add( toolAction );
-
-          updateActions();
         }
       } );
     }
@@ -476,9 +393,26 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void exit()
   {
-    if ( this.host != null )
+    try
     {
-      this.host.exit();
+      // Stop the framework bundle; which should stop all other bundles as
+      // well; the STOP_TRANSIENT option ensures the bundle is restarted the
+      // next time...
+      this.bundleContext.getBundle( 0 ).stop( Bundle.STOP_TRANSIENT );
+    }
+    catch ( IllegalStateException ex )
+    {
+      LOG.warning( "Bundle context no longer valid while shutting down client?!" );
+
+      // The bundle context is no longer valid; we're going to exit anyway, so
+      // lets ignore this exception for now...
+      System.exit( -1 );
+    }
+    catch ( BundleException be )
+    {
+      LOG.warning( "Bundle context no longer valid while shutting down client?!" );
+
+      System.exit( -1 );
     }
   }
 
@@ -532,7 +466,22 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public final DeviceController getDeviceController()
   {
-    return getDeviceController( this.selectedDevice );
+    if ( this.selectedDevice != null )
+    {
+      return getDeviceController( this.selectedDevice );
+    }
+    return null;
+  }
+
+  /**
+   * Returns all available device controllers.
+   * 
+   * @return an array of device controller names, never <code>null</code>, but
+   *         an empty array is possible.
+   */
+  public String[] getDeviceNames()
+  {
+    return getAllServiceNamesFor( DeviceController.class );
   }
 
   /**
@@ -569,6 +518,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Returns all available exporters.
+   * 
+   * @return an array of exporter names, never <code>null</code>, but an empty
+   *         array is possible.
+   */
+  public String[] getExporterNames()
+  {
+    return getAllServiceNamesFor( Exporter.class );
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -588,6 +548,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public File getProjectFilename()
   {
     return this.projectManager.getCurrentProject().getFilename();
+  }
+
+  /**
+   * Returns all available tools.
+   * 
+   * @return an array of tool names, never <code>null</code>, but an empty array
+   *         is possible.
+   */
+  public String[] getToolNames()
+  {
+    return getAllServiceNamesFor( Tool.class );
   }
 
   /**
@@ -765,58 +736,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Removes the given device from the list of devices, and does this
-   * synchronously on the EDT.
-   * 
-   * @param aDeviceController
-   *          the device to remove, cannot be <code>null</code>.
-   */
-  public void removeDevice( final DeviceController aDeviceController )
-  {
-    SwingUtilities.invokeLater( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        if ( ClientController.this.mainFrame != null )
-        {
-          ClientController.this.mainFrame.removeDeviceMenuItem( aDeviceController.getName() );
-        }
-
-        updateActions();
-      }
-    } );
-  }
-
-  /**
-   * Removes the given exporter from the list of exporters, and does this
-   * synchronously on the EDT.
-   * 
-   * @param aExporter
-   *          the exporter to remove, cannot be <code>null</code>.
-   */
-  public void removeExporter( final Exporter aExporter )
-  {
-    SwingUtilities.invokeLater( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        if ( ClientController.this.mainFrame != null )
-        {
-          final IManagedAction exportAction = ClientController.this.mainFrame.removeExportMenuItem( aExporter.getName() );
-          if ( exportAction != null )
-          {
-            ClientController.this.actionManager.remove( exportAction );
-          }
-        }
-
-        updateActions();
-      }
-    } );
-  }
-
-  /**
    * Removes the menu from the given provider from this controller, and does
    * this synchronously on the EDT.
    * 
@@ -840,34 +759,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
           menuBar.revalidate();
           menuBar.repaint();
         }
-      }
-    } );
-  }
-
-  /**
-   * Removes the given tool from the list of tools, and does this synchronously
-   * on the EDT.
-   * 
-   * @param aTool
-   *          the tool to remove, cannot be <code>null</code>.
-   */
-  public void removeTool( final Tool aTool )
-  {
-    SwingUtilities.invokeLater( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        if ( ClientController.this.mainFrame != null )
-        {
-          final IManagedAction toolAction = ClientController.this.mainFrame.removeToolMenuItem( aTool.getName() );
-          if ( toolAction != null )
-          {
-            ClientController.this.actionManager.remove( toolAction );
-          }
-        }
-
-        updateActions();
       }
     } );
   }
@@ -991,6 +882,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public void selectDevice( final String aDeviceName )
   {
     this.selectedDevice = aDeviceName;
+    // Make sure the action reflect the current situation...
+    updateActionsOnEDT();
   }
 
   /**
@@ -1067,7 +960,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void showAboutBox()
   {
-    MainFrame.showAboutBox( this.host.getVersion() );
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.showAboutBox();
+    }
   }
 
   /**
@@ -1222,6 +1118,51 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Sets dataAcquisitionService to the given value.
+   * 
+   * @param aDataAcquisitionService
+   *          the dataAcquisitionService to set.
+   */
+  final void setDataAcquisitionService( final DataAcquisitionService aDataAcquisitionService )
+  {
+    this.dataAcquisitionService = aDataAcquisitionService;
+  }
+
+  /**
+   * Sets projectManager to the given value.
+   * 
+   * @param aProjectManager
+   *          the projectManager to set.
+   */
+  final void setProjectManager( final ProjectManager aProjectManager )
+  {
+    this.projectManager = aProjectManager;
+    this.dataContainer = new DataContainer( this.projectManager );
+  }
+
+  /**
+   * Updates the actions on the EventDispatchThread (EDT).
+   */
+  final void updateActionsOnEDT()
+  {
+    final Runnable runner = new Runnable()
+    {
+      public void run()
+      {
+        updateActions();
+      }
+    };
+    if ( SwingUtilities.isEventDispatchThread() )
+    {
+      runner.run();
+    }
+    else
+    {
+      SwingUtilities.invokeLater( runner );
+    }
+  }
+
+  /**
    * Creates the tool context denoting the range of samples that should be
    * analysed by a tool.
    * 
@@ -1307,6 +1248,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * @param aServiceClass
+   * @return
+   */
+  private String[] getAllServiceNamesFor( final Class<?> aServiceClass )
+  {
+    String[] result = this.osgiHelper.getAllServicePropertiesFor( Action.NAME, aServiceClass );
+    Arrays.sort( result );
+    return result;
+  }
+
+  /**
    * Returns the data acquisition service.
    * 
    * @return a data acquisition service, never <code>null</code>.
@@ -1321,27 +1273,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private DeviceController getDeviceController( final String aName ) throws IllegalArgumentException
   {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
-    {
-      throw new IllegalArgumentException( "Name cannot be null or empty!" );
-    }
-
-    try
-    {
-      final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences(
-          DeviceController.class.getName(), String.format( "(%s=%s)", Action.NAME, aName ) );
-
-      if ( ( serviceRefs != null ) && ( serviceRefs.length > 0 ) )
-      {
-        return ( DeviceController )this.bundleContext.getService( serviceRefs[0] );
-      }
-
-      return null;
-    }
-    catch ( InvalidSyntaxException exception )
-    {
-      throw new RuntimeException( "getDeviceController failed!", exception );
-    }
+    return this.osgiHelper.getService( DeviceController.class, Action.NAME, aName );
   }
 
   /**
@@ -1349,27 +1281,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private Exporter getExporter( final String aName ) throws IllegalArgumentException
   {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
-    {
-      throw new IllegalArgumentException( "Name cannot be null or empty!" );
-    }
-
-    try
-    {
-      final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences( Exporter.class.getName(),
-          String.format( "(%s=%s)", Action.NAME, aName ) );
-
-      if ( ( serviceRefs != null ) && ( serviceRefs.length > 0 ) )
-      {
-        return ( Exporter )this.bundleContext.getService( serviceRefs[0] );
-      }
-
-      return null;
-    }
-    catch ( InvalidSyntaxException exception )
-    {
-      throw new RuntimeException( "getExporter failed!", exception );
-    }
+    return this.osgiHelper.getService( Exporter.class, Action.NAME, aName );
   }
 
   /**
@@ -1377,27 +1289,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private Tool getTool( final String aName ) throws IllegalArgumentException
   {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
-    {
-      throw new IllegalArgumentException( "Name cannot be null or empty!" );
-    }
-
-    try
-    {
-      final ServiceReference[] serviceRefs = this.bundleContext.getAllServiceReferences( Tool.class.getName(),
-          String.format( "(%s=%s)", Action.NAME, aName ) );
-
-      if ( ( serviceRefs != null ) && ( serviceRefs.length > 0 ) )
-      {
-        return ( Tool )this.bundleContext.getService( serviceRefs[0] );
-      }
-
-      return null;
-    }
-    catch ( InvalidSyntaxException exception )
-    {
-      throw new RuntimeException( "getTool failed!", exception );
-    }
+    return this.osgiHelper.getService( Tool.class, Action.NAME, aName );
   }
 
   /**
@@ -1532,28 +1424,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     for ( IManagedAction exportAction : exportActions )
     {
       exportAction.setEnabled( dataAvailable );
-    }
-  }
-
-  /**
-   * Updates the actions on the EventDispatchThread (EDT).
-   */
-  private void updateActionsOnEDT()
-  {
-    final Runnable runner = new Runnable()
-    {
-      public void run()
-      {
-        updateActions();
-      }
-    };
-    if ( SwingUtilities.isEventDispatchThread() )
-    {
-      runner.run();
-    }
-    else
-    {
-      SwingUtilities.invokeLater( runner );
     }
   }
 }
