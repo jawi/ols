@@ -29,7 +29,6 @@ import java.util.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;

@@ -229,7 +229,7 @@ public class JErrorDialog extends JDialog implements Closeable
       {
         final URI mailURI;
 
-        if ( HostUtils.isWindows() && ( uriStr.length() > MAGIC_WINDOWS_URI_LIMIT ) )
+        if ( HostUtils.getHostInfo().isWindows() && ( uriStr.length() > MAGIC_WINDOWS_URI_LIMIT ) )
         {
           mailURI = new URI( "mailto", uriStr.substring( 0, MAGIC_WINDOWS_URI_LIMIT ), null );
           uriStr = null;

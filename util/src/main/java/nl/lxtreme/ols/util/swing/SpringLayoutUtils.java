@@ -81,7 +81,7 @@ public final class SpringLayoutUtils
     final JSeparator separator = new JSeparator();
     // Apparently, on Mac OSX, the height of a separator is slightly different
     // than on other OSs...
-    separator.setAlignmentY( HostUtils.isMacOS() ? 0.25f : Component.CENTER_ALIGNMENT );
+    separator.setAlignmentY( HostUtils.getHostInfo().isMacOS() ? 0.25f : Component.CENTER_ALIGNMENT );
     setSeparatorProperty( separator );
 
     aContainer.add( label );
@@ -336,7 +336,7 @@ public final class SpringLayoutUtils
     for ( int i = 0; i < max; i++ )
     {
       final SpringLayout.Constraints cons = layout.getConstraints( aContainer.getComponent( i ) );
-      if ( i % aCols == 0 )
+      if ( ( i % aCols ) == 0 )
       { // start of new row
         lastRowCons = lastCons;
         cons.setX( initialXSpring );
@@ -346,7 +346,7 @@ public final class SpringLayoutUtils
         cons.setX( Spring.sum( lastCons.getConstraint( SpringLayout.EAST ), xPadSpring ) );
       }
 
-      if ( i / aCols == 0 )
+      if ( ( i / aCols ) == 0 )
       { // first row
         cons.setY( initialYSpring );
       }
@@ -394,7 +394,7 @@ public final class SpringLayoutUtils
    */
   private static Component getCellComponent( final Container aContainer, final int aCols, final int aRow, final int aCol )
   {
-    return aContainer.getComponent( aRow * aCols + aCol );
+    return aContainer.getComponent( ( aRow * aCols ) + aCol );
   }
 
   /**
@@ -431,7 +431,7 @@ public final class SpringLayoutUtils
   {
     if ( selectionColor == null )
     {
-      if ( HostUtils.isMacOS() )
+      if ( HostUtils.getHostInfo().isMacOS() )
       {
         selectionColor = UIManager.getColor( "List.selectionBackground" );
       }

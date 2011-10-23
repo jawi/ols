@@ -23,8 +23,8 @@ package nl.lxtreme.rxtx;
 
 import static org.hamcrest.core.IsInstanceOf.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import static org.ops4j.pax.exam.CoreOptions.*;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.*;
 
 import java.io.*;
 
@@ -49,10 +49,8 @@ public class SerialConnectionFactoryTest
 {
   // VARIABLES
 
-  private ConnectionFactory connectionFactory;
-
   @Inject
-  private final BundleContext bundleContext = null;
+  private BundleContext context;
 
   // METHODS
 
@@ -67,209 +65,183 @@ public class SerialConnectionFactoryTest
     return options( //
         cleanCaches(), //
         localRepository( env ), //
+        junitBundles(), //
         mavenBundle().groupId( "org.osgi" ).artifactId( "org.osgi.compendium" ).version( "4.2.0" ), //
         mavenBundle().groupId( "nl.lxtreme.ols" ).artifactId( "service.io" ).version( "1.0.1" ), //
-        mavenBundle().groupId( "nl.lxtreme.ols" ).artifactId( "util" ).version( "1.0.5-SNAPSHOT" ), //
-        mavenBundle().groupId( "nl.lxtreme.ols" ).artifactId( "org.rxtx" ).version( "2.2.0-8" ) //
+        mavenBundle().groupId( "nl.lxtreme.ols" ).artifactId( "util" ).version( "1.1.0-SNAPSHOT" ), //
+        mavenBundle().groupId( "nl.lxtreme.ols" ).artifactId( "org.rxtx" ).version( "2.2.0-10" ) //
+
+        , vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5006" ), systemTimeout( 10000 ) //
     );
+  }
+
+  /**
+   * Tests that creating a serial connection works on Linux/Unix platforms.
+   */
+  @Test
+  public void testCreateExistingConnectionLinux( final BundleContext aContext ) throws IOException,
+      InvalidSyntaxException
+  {
+    assumeTrue( HostUtils.getHostInfo().isUnix() );
+
+    try
+    {
+      final Connection connection = getConnectionFactory( aContext ).createConnection( "comm:/dev/ttyACM0", 0, false );
+      assertNotNull( connection );
+    }
+    catch ( IOException exception )
+    {
+      assumeNoException( exception );
+    }
+  }
+
+  /**
+   * Tests that creating a serial connection works on Mac OS platforms.
+   */
+  @Test
+  public void testCreateExistingConnectionMacOS( final BundleContext aContext ) throws IOException,
+      InvalidSyntaxException
+  {
+    assumeTrue( HostUtils.getHostInfo().isMacOS() );
+
+    try
+    {
+      final Connection connection = getConnectionFactory( aContext ).createConnection( "comm:/dev/tty.usbmodemfd131",
+          0, false );
+      assertNotNull( "Failed to obtain a valid connection!", connection );
+    }
+    catch ( IOException exception )
+    {
+      assumeNoException( exception );
+    }
+  }
+
+  /**
+   * Tests that creating a serial connection works on Solaris platforms.
+   */
+  @Test
+  public void testCreateExistingConnectionSolaris( final BundleContext aContext ) throws IOException,
+      InvalidSyntaxException
+  {
+    assumeTrue( HostUtils.getHostInfo().isSolaris() );
+
+    try
+    {
+      final Connection connection = getConnectionFactory( aContext ).createConnection( "comm:/dev/term/A", 0, false );
+      assertNotNull( connection );
+    }
+    catch ( IOException exception )
+    {
+      assumeNoException( exception );
+    }
+  }
+
+  /**
+   * Tests that creating a serial connection works on Windows platforms.
+   */
+  @Test
+  public void testCreateExistingConnectionWin32( final BundleContext aContext ) throws IOException,
+      InvalidSyntaxException
+  {
+    assumeTrue( HostUtils.getHostInfo().isWindows() );
+
+    try
+    {
+      final Connection connection = getConnectionFactory( aContext ).createConnection( "comm:com3", 0, false );
+      assertNotNull( connection );
+    }
+    catch ( IOException exception )
+    {
+      assumeNoException( exception );
+    }
+  }
+
+  /**
+   * Tests that creating a serial connection works on Linux/Unix platforms.
+   */
+  @Test
+  public void testCreateNonExistingConnectionLinux( final BundleContext aContext ) throws IOException
+  {
+    assumeTrue( HostUtils.getHostInfo().isUnix() );
+
+    try
+    {
+      getConnectionFactory( aContext ).createConnection( "comm:/dev/ttyS99", 0, false );
+      fail( "I/O exception expected!" );
+    }
+    catch ( Exception exception )
+    {
+      assertThat( exception, instanceOf( IOException.class ) );
+    }
+  }
+
+  /**
+   * Tests that creating a serial connection works on Mac OS platforms.
+   */
+  @Test
+  public void testCreateNonExistingConnectionMacOS( final BundleContext aContext ) throws IOException
+  {
+    assumeTrue( HostUtils.getHostInfo().isMacOS() );
+
+    try
+    {
+      getConnectionFactory( aContext ).createConnection( "comm:/dev/tty.usbserial", 0, false );
+      fail( "I/O exception expected!" );
+    }
+    catch ( Exception exception )
+    {
+      assertThat( exception, instanceOf( IOException.class ) );
+    }
+  }
+
+  /**
+   * Tests that creating a serial connection works on Solaris platforms.
+   */
+  @Test
+  public void testCreateNonExistingConnectionSolaris( final BundleContext aContext ) throws IOException
+  {
+    assumeTrue( HostUtils.getHostInfo().isUnix() );
+
+    try
+    {
+      getConnectionFactory( aContext ).createConnection( "comm:/dev/term/XYZ", 0, false );
+      fail( "I/O exception expected!" );
+    }
+    catch ( Exception exception )
+    {
+      assertThat( exception, instanceOf( IOException.class ) );
+    }
+  }
+
+  /**
+   * Tests that creating a serial connection works on Windows platforms.
+   */
+  @Test
+  public void testCreateNonExistingConnectionWin32( final BundleContext aContext ) throws IOException
+  {
+    assumeTrue( HostUtils.getHostInfo().isWindows() );
+
+    try
+    {
+      getConnectionFactory( aContext ).createConnection( "comm:COM255", 0, false );
+      fail( "I/O exception expected!" );
+    }
+    catch ( Exception exception )
+    {
+      assertThat( exception, instanceOf( IOException.class ) );
+    }
   }
 
   /**
    * Sets up the test cases.
    */
-  @Before
-  public void setUp() throws Exception
+  private ConnectionFactory getConnectionFactory( final BundleContext aContext ) throws InvalidSyntaxException
   {
     final String filter = "(" + ConnectionFactory.IO_SCHEME + "=" + SerialConnectionFactory.SCHEME + ")";
-    final ServiceReference[] serviceRefs = this.bundleContext.getServiceReferences( ConnectionFactory.class.getName(),
-        filter );
+    final ServiceReference[] serviceRefs = aContext.getServiceReferences( ConnectionFactory.class.getName(), filter );
     assertNotNull( serviceRefs );
     assertTrue( serviceRefs.length == 1 );
 
-    this.connectionFactory = ( ConnectionFactory )this.bundleContext.getService( serviceRefs[0] );
-  }
-
-  /**
-   * Tests that creating a serial connection works on Linux/Unix platforms.
-   */
-  @Test
-  public void testCreateExistingConnectionLinux() throws IOException
-  {
-    // XXX this does not work correctly with PAX-Exam...
-    // assumeTrue( HostUtils.isUnix() );
-
-    if ( HostUtils.isLinux() )
-    {
-      try
-      {
-        final Connection connection = this.connectionFactory.createConnection( "comm:/dev/ttyACM0", 0, false );
-        assertNotNull( connection );
-      }
-      catch ( IOException exception )
-      {
-        Assume.assumeNoException( exception );
-      }
-    }
-  }
-
-  /**
-   * Tests that creating a serial connection works on Mac OS platforms.
-   */
-  @Test
-  public void testCreateExistingConnectionMacOS() throws IOException
-  {
-    // XXX this does not work correctly with PAX-Exam...
-    // assumeTrue( HostUtils.isMacOS() );
-
-    if ( HostUtils.isMacOS() )
-    {
-      try
-      {
-        final Connection connection = this.connectionFactory.createConnection( "comm:/dev/tty.usbmodemfd131", 0, false );
-        assertNotNull( connection );
-      }
-      catch ( IOException exception )
-      {
-        Assume.assumeNoException( exception );
-      }
-    }
-  }
-
-  /**
-   * Tests that creating a serial connection works on Solaris platforms.
-   */
-  @Test
-  public void testCreateExistingConnectionSolaris() throws IOException
-  {
-    // XXX this does not work correctly with PAX-Exam...
-    // assumeTrue( HostUtils.isUnix() );
-
-    if ( HostUtils.isUnix() )
-    {
-      try
-      {
-        final Connection connection = this.connectionFactory.createConnection( "comm:/dev/term/A", 0, false );
-        assertNotNull( connection );
-      }
-      catch ( IOException exception )
-      {
-        Assume.assumeNoException( exception );
-      }
-    }
-  }
-
-  /**
-   * Tests that creating a serial connection works on Windows platforms.
-   */
-  @Test
-  public void testCreateExistingConnectionWin32() throws IOException
-  {
-    // XXX this does not work correctly with PAX-Exam...
-    // assumeTrue( HostUtils.isWindows() );
-
-    if ( HostUtils.isWindows() )
-    {
-      try
-      {
-        final Connection connection = this.connectionFactory.createConnection( "comm:com3", 0, false );
-        assertNotNull( connection );
-      }
-      catch ( IOException exception )
-      {
-        Assume.assumeNoException( exception );
-      }
-    }
-  }
-
-  /**
-   * Tests that creating a serial connection works on Linux/Unix platforms.
-   */
-  @Test
-  public void testCreateNonExistingConnectionLinux() throws IOException
-  {
-    // XXX this does not work correctly with PAX-Exam...
-    // assumeTrue( HostUtils.isUnix() );
-
-    if ( HostUtils.isLinux() )
-    {
-      try
-      {
-        this.connectionFactory.createConnection( "comm:/dev/ttyS99", 0, false );
-        fail( "I/O exception expected!" );
-      }
-      catch ( Exception exception )
-      {
-        assertThat( exception, instanceOf( IOException.class ) );
-      }
-    }
-  }
-
-  /**
-   * Tests that creating a serial connection works on Mac OS platforms.
-   */
-  @Test
-  public void testCreateNonExistingConnectionMacOS() throws IOException
-  {
-    // XXX this does not work correctly with PAX-Exam...
-    // assumeTrue( HostUtils.isMacOS() );
-
-    if ( HostUtils.isMacOS() )
-    {
-      try
-      {
-        this.connectionFactory.createConnection( "comm:/dev/tty.usbserial", 0, false );
-        fail( "I/O exception expected!" );
-      }
-      catch ( Exception exception )
-      {
-        assertThat( exception, instanceOf( IOException.class ) );
-      }
-    }
-  }
-
-  /**
-   * Tests that creating a serial connection works on Solaris platforms.
-   */
-  @Test
-  public void testCreateNonExistingConnectionSolaris() throws IOException
-  {
-    // XXX this does not work correctly with PAX-Exam...
-    // assumeTrue( HostUtils.isUnix() );
-
-    if ( HostUtils.isLinux() )
-    {
-      try
-      {
-        this.connectionFactory.createConnection( "comm:/dev/term/XYZ", 0, false );
-        fail( "I/O exception expected!" );
-      }
-      catch ( Exception exception )
-      {
-        assertThat( exception, instanceOf( IOException.class ) );
-      }
-    }
-  }
-
-  /**
-   * Tests that creating a serial connection works on Windows platforms.
-   */
-  @Test
-  public void testCreateNonExistingConnectionWin32() throws IOException
-  {
-    // XXX this does not work correctly with PAX-Exam...
-    // assumeTrue( HostUtils.isWindows() );
-
-    if ( HostUtils.isWindows() )
-    {
-      try
-      {
-        this.connectionFactory.createConnection( "comm:COM255", 0, false );
-        fail( "I/O exception expected!" );
-      }
-      catch ( Exception exception )
-      {
-        assertThat( exception, instanceOf( IOException.class ) );
-      }
-    }
+    return ( ConnectionFactory )aContext.getService( serviceRefs[0] );
   }
 }
