@@ -34,7 +34,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Provides some host/OS specific utilities.
  */
-public final class HostUtils
+public final class HostUtils implements HostInfo
 {
   // INNER TYPES
 
@@ -45,7 +45,7 @@ public final class HostUtils
    * Mac OSX. On other operating systems, this interface has no real value.
    * </p>
    */
-  public interface ApplicationCallback
+  public static interface ApplicationCallback
   {
     /**
      * Called upon receiving a "about" event from the host operating system.
@@ -81,6 +81,9 @@ public final class HostUtils
     public boolean hasPreferences();
   }
 
+  /**
+   * Provides an {@link Action} for closing a {@link JOptionPane}.
+   */
   static final class CloseOptionPaneAction extends AbstractAction
   {
     private static final long serialVersionUID = 1L;
@@ -291,22 +294,32 @@ public final class HostUtils
       {
         final boolean confirmQuit = this.callback.handleQuit();
 
-        final Object quitResponseObj = aArgs[1];
-        final Class<?> quitResponseClass = quitResponseObj.getClass();
-        if ( confirmQuit )
+        if ( ( aArgs.length > 1 ) && ( aArgs[1] != null ) )
         {
-          final Method performQuitMethod = quitResponseClass.getMethod( "performQuit" );
-          performQuitMethod.invoke( quitResponseObj );
-        }
-        else
-        {
-          final Method cancelQuitMethod = quitResponseClass.getMethod( "cancelQuit" );
-          cancelQuitMethod.invoke( quitResponseObj );
+          final Object quitResponseObj = aArgs[1];
+          final Class<?> quitResponseClass = quitResponseObj.getClass();
+          if ( "com.apple.eawt.QuitResponse".equals( quitResponseClass.getName() ) )
+          {
+            if ( confirmQuit )
+            {
+              final Method performQuitMethod = quitResponseClass.getMethod( "performQuit" );
+              performQuitMethod.invoke( quitResponseObj );
+            }
+            else
+            {
+              final Method cancelQuitMethod = quitResponseClass.getMethod( "cancelQuit" );
+              cancelQuitMethod.invoke( quitResponseObj );
+            }
+          }
         }
       }
       return null;
     }
   }
+
+  // CONSTANTS
+
+  private static final HostInfo HOSTINFO = new HostUtils();
 
   // CONSTRUCTORS
 
@@ -386,13 +399,13 @@ public final class HostUtils
     final String extension = ( aExtension.startsWith( "." ) ? "" : "." ) + aExtension;
 
     String dirName;
-    if ( isMacOS() )
+    if ( HOSTINFO.isMacOS() )
     {
       // This is the location where to store data on MacOS...
       dirName = System.getProperty( "user.home" ) + "/Library/Preferences";
       fileName = aName + ".Application";
     }
-    else if ( isUnix() )
+    else if ( HOSTINFO.isUnix() )
     {
       // The home folder is the 'default' location on Unix flavors...
       dirName = System.getProperty( "user.home" );
@@ -479,6 +492,16 @@ public final class HostUtils
   }
 
   /**
+   * Returns the current value of hostinfo.
+   * 
+   * @return the host information, never <code>null</code>.
+   */
+  public static HostInfo getHostInfo()
+  {
+    return HOSTINFO;
+  }
+
+  /**
    * This method calls Thread.currentThread().interrupt() if any exception in
    * the hierarchy (including all parent causes) is either an
    * {@link InterruptedIOException} or {@link InterruptedException}. This method
@@ -553,7 +576,7 @@ public final class HostUtils
   public static final void initOSSpecifics( final String aApplicationName,
       final ApplicationCallback aApplicationCallback )
   {
-    if ( isMacOS() )
+    if ( HOSTINFO.isMacOS() )
     {
       // Moves the main menu bar to the screen menu bar location...
       System.setProperty( "apple.laf.useScreenMenuBar", "true" );
@@ -581,7 +604,7 @@ public final class HostUtils
         installApplicationCallback( aApplicationCallback );
       }
     }
-    else if ( isUnix() )
+    else if ( HOSTINFO.isUnix() )
     {
       try
       {
@@ -593,7 +616,7 @@ public final class HostUtils
         Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
       }
     }
-    else if ( isWindows() )
+    else if ( HOSTINFO.isWindows() )
     {
       try
       {
@@ -605,89 +628,6 @@ public final class HostUtils
         Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
       }
     }
-  }
-
-  /**
-   * Returns whether the current host's operating system is Linux or any other
-   * UNIX-like operating system, such as Solaris (SunOS).
-   * 
-   * @return <code>true</code> if running on Linux or any other UNIX system,
-   *         <code>false</code> otherwise.
-   */
-  public static boolean isLinux()
-  {
-    String osName = System.getProperty( "os.name" ).toLowerCase();
-    return ( osName.indexOf( "linux" ) >= 0 );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Mac OS X.
-   * 
-   * @return <code>true</code> if running on Mac OS X, <code>false</code>
-   *         otherwise.
-   */
-  public static final boolean isMacOS()
-  {
-    final String osName = System.getProperty( "os.name" );
-    return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Sun/Open Solaris.
-   * 
-   * @return <code>true</code> if running on Sun/Open Solaris system,
-   *         <code>false</code> otherwise.
-   */
-  public static boolean isSolaris()
-  {
-    String osName = System.getProperty( "os.name" ).toLowerCase();
-    return ( osName.indexOf( "solaris" ) >= 0 ) || //
-        ( osName.indexOf( "sunos" ) >= 0 );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Linux or any other
-   * UNIX-like operating system, such as Solaris (SunOS).
-   * 
-   * @return <code>true</code> if running on Linux or any other UNIX system,
-   *         <code>false</code> otherwise.
-   */
-  public static boolean isUnix()
-  {
-    String osName = System.getProperty( "os.name" ).toLowerCase();
-    return ( osName.indexOf( "nix" ) >= 0 ) || //
-        // linux
-        isLinux() ||
-        // solaris
-        isSolaris();
-  }
-
-  /**
-   * Returns whether the current host's operating system is Windows.
-   * 
-   * @return <code>true</code> if running on Windows, <code>false</code>
-   *         otherwise.
-   */
-  public static boolean isWindows()
-  {
-    final String osName = System.getProperty( "os.name" ).toLowerCase();
-    return osName.indexOf( "win" ) >= 0;
-  }
-
-  /**
-   * Returns whether the host OS needs an explicit exit menu item or not.
-   * <p>
-   * For example, on Mac OS, you don't need an explicit exit menu, since it is
-   * by default provided. On Linux or Windows machines, you do need an explicit
-   * exit function.
-   * </p>
-   * 
-   * @return <code>true</code> if this host needs an explicit exit menu item,
-   *         <code>false</code> otherwise.
-   */
-  public static final boolean needsExitMenuItem()
-  {
-    return !isMacOS();
   }
 
   /**
@@ -918,6 +858,99 @@ public final class HostUtils
     {
       Thread.currentThread().setContextClassLoader( oldCL );
     }
+  }
+
+  /**
+   * Returns whether the current host's operating system is Linux or any other
+   * UNIX-like operating system, such as Solaris (SunOS).
+   * 
+   * @return <code>true</code> if running on Linux or any other UNIX system,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isLinux()
+  {
+    String osName = System.getProperty( "os.name" ).toLowerCase();
+    return ( osName.indexOf( "linux" ) >= 0 );
+  }
+
+  /**
+   * Returns whether the current host's operating system is Mac OS X.
+   * 
+   * @return <code>true</code> if running on Mac OS X, <code>false</code>
+   *         otherwise.
+   */
+  public boolean isMacOS()
+  {
+    final String osName = System.getProperty( "os.name" );
+    return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
+  }
+
+  /**
+   * Returns whether the current host's operating system is Sun/Open Solaris.
+   * 
+   * @return <code>true</code> if running on Sun/Open Solaris system,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isSolaris()
+  {
+    String osName = System.getProperty( "os.name" ).toLowerCase();
+    return ( osName.indexOf( "solaris" ) >= 0 ) || //
+        ( osName.indexOf( "sunos" ) >= 0 );
+  }
+
+  /**
+   * Returns whether the current host's operating system is Linux or any other
+   * UNIX-like operating system, such as Solaris (SunOS).
+   * 
+   * @return <code>true</code> if running on Linux or any other UNIX system,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isUnix()
+  {
+    String osName = System.getProperty( "os.name" ).toLowerCase();
+    return ( osName.indexOf( "nix" ) >= 0 ) || //
+        // linux
+        isLinux() ||
+        // solaris
+        isSolaris();
+  }
+
+  /**
+   * Returns whether the current host's operating system is Windows.
+   * 
+   * @return <code>true</code> if running on Windows, <code>false</code>
+   *         otherwise.
+   */
+  public boolean isWindows()
+  {
+    final String osName = System.getProperty( "os.name" ).toLowerCase();
+    return osName.indexOf( "win" ) >= 0;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean needsAboutMenuItem()
+  {
+    return !isMacOS();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public final boolean needsExitMenuItem()
+  {
+    return !isMacOS();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean needsPreferencesMenuItem()
+  {
+    return !isMacOS();
   }
 }
 

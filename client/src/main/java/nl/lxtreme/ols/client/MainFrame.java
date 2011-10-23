@@ -694,13 +694,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     fileMenu.addSeparator();
     fileMenu.add( this.exportMenu );
 
-    if ( HostUtils.needsExitMenuItem() )
+    final HostInfo hostInfo = HostUtils.getHostInfo();
+    if ( hostInfo.needsExitMenuItem() )
     {
       fileMenu.add( new JSeparator() );
       fileMenu.add( this.controller.getAction( ExitAction.ID ) );
     }
 
-    if ( !HostUtils.isMacOS() )
+    if ( hostInfo.needsPreferencesMenuItem() )
     {
       final JMenu editMenu = bar.add( new JMenu( "Edit" ) );
       editMenu.setMnemonic( 'E' );
@@ -744,7 +745,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.toolsMenu = bar.add( new JMenu( "Tools" ) );
     this.toolsMenu.setMnemonic( 'T' );
 
-    if ( HostUtils.isMacOS() )
+    if ( hostInfo.isMacOS() )
     {
       this.windowMenu = bar.add( new JMenu( "Window" ) );
       this.windowMenu.setMnemonic( 'W' );
@@ -761,8 +762,12 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     final JMenu helpMenu = bar.add( new JMenu( "Help" ) );
     helpMenu.setMnemonic( 'H' );
     helpMenu.add( this.controller.getAction( ShowBundlesAction.ID ) );
-    helpMenu.addSeparator();
-    helpMenu.add( this.controller.getAction( HelpAboutAction.ID ) );
+
+    if ( hostInfo.needsAboutMenuItem() )
+    {
+      helpMenu.addSeparator();
+      helpMenu.add( this.controller.getAction( HelpAboutAction.ID ) );
+    }
 
     final JToolBar toolbar = new JToolBar();
     toolbar.setRollover( true );

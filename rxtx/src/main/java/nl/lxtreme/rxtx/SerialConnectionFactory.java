@@ -217,7 +217,7 @@ public class SerialConnectionFactory implements ConnectionFactory
     // name is not in the list of searched port-names, so we should try whether
     // the port itself can be opened directly. We should consider this a
     // best-effort strategy...
-    if ( ( port == null ) && !HostUtils.isWindows() )
+    if ( ( port == null ) && !HostUtils.getHostInfo().isWindows() )
     {
       try
       {

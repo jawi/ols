@@ -85,19 +85,20 @@ public final class CommPortUtils
   static final String enumerateDevices()
   {
     final StringBuilder result = new StringBuilder();
+    final HostInfo hostInfo = HostUtils.getHostInfo();
 
     final String deviceRegEx;
-    if ( HostUtils.isUnix() || HostUtils.isMacOS() )
+    if ( hostInfo.isUnix() || hostInfo.isMacOS() )
     {
-      if ( HostUtils.isLinux() || HostUtils.isUnix() )
+      if ( hostInfo.isLinux() || hostInfo.isUnix() )
       {
         deviceRegEx = "tty\\w+\\d+";
       }
-      else if ( HostUtils.isMacOS() )
+      else if ( hostInfo.isMacOS() )
       {
         deviceRegEx = "tty\\..+";
       }
-      else if ( HostUtils.isSolaris() )
+      else if ( hostInfo.isSolaris() )
       {
         deviceRegEx = "[\\d\\w]+";
       }
@@ -108,7 +109,7 @@ public final class CommPortUtils
 
       final Pattern pattern = Pattern.compile( deviceRegEx );
 
-      final File basePath = new File( getDevicePath() );
+      final File basePath = new File( getDevicePath( hostInfo ) );
       for ( String fileName : basePath.list() )
       {
         final Matcher matcher = pattern.matcher( fileName );
@@ -137,17 +138,17 @@ public final class CommPortUtils
    * 
    * @return
    */
-  private static final String getDevicePath()
+  private static final String getDevicePath( final HostInfo aHostInfo )
   {
-    if ( HostUtils.isSolaris() )
+    if ( aHostInfo.isSolaris() )
     {
       return "/dev/term";
     }
-    else if ( HostUtils.isUnix() || HostUtils.isMacOS() )
+    else if ( aHostInfo.isUnix() || aHostInfo.isMacOS() )
     {
       return "/dev";
     }
-    else if ( HostUtils.isWindows() )
+    else if ( aHostInfo.isWindows() )
     {
       throw new UnsupportedOperationException( "GetDevicePath should not be called on Windows platforms!" );
     }

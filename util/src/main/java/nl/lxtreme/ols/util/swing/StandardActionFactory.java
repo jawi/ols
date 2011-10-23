@@ -70,7 +70,7 @@ public final class StandardActionFactory
       super( "Close" );
       putValue( SHORT_DESCRIPTION, "Closes this dialog" );
 
-      if ( HostUtils.isMacOS() )
+      if ( HostUtils.getHostInfo().isMacOS() )
       {
         // On Mac OS, the default Window-close accelerator is CMD + W
         putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ) );

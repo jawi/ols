@@ -283,7 +283,7 @@ public class DiagramUI extends ComponentUI
       final boolean isCtrlDown = aEvent.isControlDown();
       // On Mac OSX the mouse wheel events are also generated for all kinds of
       // other scrolling events which only confuses the user...
-      final boolean isZoomEvent = !HostUtils.isMacOS() && isCtrlDown;
+      final boolean isZoomEvent = !HostUtils.getHostInfo().isMacOS() && isCtrlDown;
 
       if ( isZoomEvent && ( notches < 0 ) )
       {
