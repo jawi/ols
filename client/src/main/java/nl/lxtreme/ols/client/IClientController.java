@@ -248,16 +248,6 @@ public interface IClientController
   public void setCursorPosition( final int aCursorIdx, final Point aLocation );
 
   /**
-   * Sets a status message.
-   * 
-   * @param aMessage
-   *          the message to set;
-   * @param aMessageArgs
-   *          the (optional) message arguments.
-   */
-  public void setStatus( final String aMessage, final Object... aMessageArgs );
-
-  /**
    * Shows the "about OLS" dialog on screen. the parent window to use, can be
    * <code>null</code>.
    */

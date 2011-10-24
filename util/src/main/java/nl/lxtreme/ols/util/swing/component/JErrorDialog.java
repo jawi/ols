@@ -299,6 +299,20 @@ public class JErrorDialog extends JDialog implements Closeable
     // METHODS
 
     /**
+     * Called by the EDT in case an exception occurs on it. See
+     * <http://stackoverflow.com/questions/4448523/how-can-i-catch-event-
+     * dispatch-thread-edt-exceptions/4448569#4448569> for more
+     * information/rationale.
+     * 
+     * @param aException
+     *          the exception thrown.
+     */
+    public void handle( final Throwable aException )
+    {
+      uncaughtException( Thread.currentThread(), aException );
+    }
+
+    /**
      * @see java.lang.Thread.UncaughtExceptionHandler#uncaughtException(java.lang.Thread,
      *      java.lang.Throwable)
      */

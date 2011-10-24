@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.osgi;
 
 
 import java.io.*;
+import java.util.logging.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.devices.*;
@@ -35,6 +36,10 @@ import org.osgi.util.tracker.*;
  */
 public class DataAcquisitionServiceTracker extends ServiceTracker implements DataAcquisitionService
 {
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( DataAcquisitionServiceTracker.class.getName() );
+
   // CONSTRUCTORS
 
   /**
@@ -61,6 +66,10 @@ public class DataAcquisitionServiceTracker extends ServiceTracker implements Dat
     {
       dataAcquisitionService.acquireData( aDeviceController );
     }
+    else
+    {
+      LOG.warning( "No data acquisition service found!" );
+    }
   }
 
   /**
@@ -74,6 +83,10 @@ public class DataAcquisitionServiceTracker extends ServiceTracker implements Dat
     {
       dataAcquisitionService.cancelAcquisition();
     }
+    else
+    {
+      LOG.warning( "No data acquisition service found!" );
+    }
   }
 
   /**
@@ -86,6 +99,10 @@ public class DataAcquisitionServiceTracker extends ServiceTracker implements Dat
     if ( dataAcquisitionService != null )
     {
       return dataAcquisitionService.isAcquiring();
+    }
+    else
+    {
+      LOG.warning( "No data acquisition service found!" );
     }
     return false;
   }
