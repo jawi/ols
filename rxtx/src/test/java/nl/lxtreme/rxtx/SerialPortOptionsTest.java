@@ -22,9 +22,10 @@ package nl.lxtreme.rxtx;
 
 
 import static org.junit.Assert.*;
-import gnu.io.*;
 
 import org.junit.*;
+
+import purejavacomm.*;
 
 
 /**

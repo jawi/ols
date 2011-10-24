@@ -21,14 +21,12 @@
 package nl.lxtreme.rxtx;
 
 
-import gnu.io.*;
+import purejavacomm.*;
 
 import java.io.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
-
-import nl.lxtreme.ols.util.*;
 
 import org.osgi.service.io.*;
 
@@ -94,8 +92,8 @@ public class SerialConnectionFactory implements ConnectionFactory
     // TODO: this will force the user to have its device(s) connected at
     // startup. However, it will ensure everything is quick and responsive in
     // case the device ports are requested... Stupid RXTX library...
-    final RXTXCommDriver driver = new RXTXCommDriver();
-    driver.initialize();
+    // final CommDriver driver = new RXTXCommDriver();
+    // driver.initialize();
   }
 
   // METHODS
@@ -111,7 +109,7 @@ public class SerialConnectionFactory implements ConnectionFactory
 
     try
     {
-      final RXTXPort port = obtainSerialPort( options );
+      final SerialPort port = obtainSerialPort( options );
 
       port.setSerialPortParams( options.getBaudrate(), options.getDatabits(), options.getStopbits(),
           options.getParityMode() );
@@ -153,7 +151,7 @@ public class SerialConnectionFactory implements ConnectionFactory
    * @throws IOException
    *           in case of other I/O problems.
    */
-  private RXTXPort getSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
+  private SerialPort getSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
       IOException
   {
     final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( aOptions.getPortName() );
@@ -163,12 +161,12 @@ public class SerialConnectionFactory implements ConnectionFactory
     }
 
     final CommPort commPort = commPortId.open( CONNECT_ID, 2000 );
-    if ( !( commPort instanceof RXTXPort ) )
+    if ( !( commPort instanceof SerialPort ) )
     {
       throw new IOException( "Not a serial port?!" );
     }
 
-    return ( RXTXPort )commPort;
+    return ( SerialPort )commPort;
   }
 
   /**
@@ -189,10 +187,10 @@ public class SerialConnectionFactory implements ConnectionFactory
    * @throws IOException
    *           in case of other I/O problems.
    */
-  private RXTXPort obtainSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, IOException
+  private SerialPort obtainSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, IOException
   {
     int tries = MAX_TRIES;
-    RXTXPort port = null;
+    SerialPort port = null;
 
     while ( ( tries-- >= 0 ) && ( port == null ) )
     {
@@ -217,17 +215,17 @@ public class SerialConnectionFactory implements ConnectionFactory
     // name is not in the list of searched port-names, so we should try whether
     // the port itself can be opened directly. We should consider this a
     // best-effort strategy...
-    if ( ( port == null ) && !HostUtils.getHostInfo().isWindows() )
-    {
-      try
-      {
-        port = new RXTXPort( aOptions.getPortName() );
-      }
-      catch ( PortInUseException exception )
-      {
-        LOG.log( Level.FINE, "Port (still) in use!", exception );
-      }
-    }
+    // if ( ( port == null ) && !HostUtils.getHostInfo().isWindows() )
+    // {
+    // try
+    // {
+    // port = new RXTXPort( aOptions.getPortName() );
+    // }
+    // catch ( PortInUseException exception )
+    // {
+    // LOG.log( Level.FINE, "Port (still) in use!", exception );
+    // }
+    // }
 
     if ( port == null )
     {

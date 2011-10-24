@@ -15,6 +15,7 @@
         <paxrunnerversion>1.7.4</paxrunnerversion>
     </properties>
 	<dependencies>
+<!-- 
 		<dependency>
 			<groupId>org.rxtx</groupId>
 			<artifactId>rxtx</artifactId>
@@ -22,7 +23,6 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/RXTXcomm.jar</systemPath>
 		</dependency>
-<!-- 
         <dependency>
             <groupId>org.rxtx</groupId>
             <artifactId>nrjavaserial</artifactId>
@@ -31,6 +31,22 @@
             <systemPath>${basedir}/nrjavaserial-3.7.5.jar</systemPath>
         </dependency>
  -->
+        <dependency>
+            <groupId>purejavacomm</groupId>
+            <artifactId>purejavacomm</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/purejavacomm.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>purejavacomm</groupId>
+            <artifactId>jna</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/jna.jar</systemPath>
+        </dependency>
+        <!-- 
+         -->
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>util</artifactId>
@@ -113,6 +129,7 @@
 							nl.lxtreme.ols.util</Import-Package>
 						<Export-Package>nl.lxtreme.rxtx;version="2.2.0"</Export-Package>
 						<Embed-Dependency>*;scope=system</Embed-Dependency>
+<!-- 
 						<Bundle-NativeCode>
 						    native/SunOS/x86/librxtxSerial.so; osname=SunOS; processor=x86,
 							native/Mac_OS_X/librxtxSerial.jnilib; osname=MacOSX; processor=x86; processor=x86-64; processor=ppc,
@@ -121,6 +138,7 @@
 							native/Windows/x86/rxtxSerial.dll; osname=Win32; processor=x86,
 							native/Windows/x86_64/rxtxSerial.dll; osname=Win32; processor=x86-64
 					</Bundle-NativeCode>
+ -->
 					</instructions>
 				</configuration>
 			</plugin>
