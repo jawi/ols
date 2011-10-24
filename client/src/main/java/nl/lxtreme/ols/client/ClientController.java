@@ -43,6 +43,7 @@ import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
 
@@ -199,15 +200,15 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     if ( aStatus.isAborted() )
     {
-      setStatus( "Capture aborted! " + aStatus.getMessage() );
+      setStatusOnEDT( "Capture aborted! {0}", aStatus.getMessage() );
     }
     else if ( aStatus.isFailed() )
     {
-      setStatus( "Capture failed! " + aStatus.getMessage() );
+      setStatusOnEDT( "Capture failed! {0}", aStatus.getMessage() );
     }
     else
     {
-      setStatus( "Capture finished at {0,date,medium} {0,time,medium}.", new Date() );
+      setStatusOnEDT( "Capture finished at {0,date,medium} {0,time,medium}.", new Date() );
     }
 
     updateActionsOnEDT();
@@ -219,10 +220,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void acquisitionInProgress( final int aPercentage )
   {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.setProgress( aPercentage );
-    }
+    setProgressOnEDT( aPercentage );
+    updateActionsOnEDT();
   }
 
   /**
@@ -256,7 +255,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     if ( this.mainFrame != null )
     {
-      SwingUtilities.invokeLater( new Runnable()
+      SwingComponentUtils.invokeOnEDT( new Runnable()
       {
         @Override
         public void run()
@@ -279,9 +278,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void analysisAborted( final String aReason )
   {
-    setStatus( "Analysis aborted! " + aReason );
+    setStatusOnEDT( "Analysis aborted! {0}", aReason );
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -299,8 +298,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       repaintMainFrame();
     }
 
-    setStatus( "" );
-    updateActions();
+    setStatusOnEDT( "" );
+    updateActionsOnEDT();
   }
 
   /**
@@ -314,7 +313,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       acquisitionService.cancelAcquisition();
     }
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -333,7 +332,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       if ( devCtrl.setupCapture( aParent ) )
       {
-        setStatus( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(), new Date() );
+        setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(),
+            new Date() );
 
         acquisitionService.acquireData( devCtrl );
         return true;
@@ -343,7 +343,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     catch ( IOException exception )
     {
-      setStatus( "I/O problem: " + exception.getMessage() );
+      setStatusOnEDT( "I/O problem: " + exception.getMessage() );
 
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
@@ -355,7 +355,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     finally
     {
-      updateActions();
+      updateActionsOnEDT();
     }
   }
 
@@ -370,7 +370,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     fireCursorChangedEvent( 0, -1 ); // removed...
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -385,7 +385,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.mainFrame.repaint();
     }
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -435,11 +435,13 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       final Exporter exporter = getExporter( aExporterName );
       exporter.export( this.dataContainer, this.mainFrame.getDiagramScrollPane(), writer );
 
-      setStatus( "Export to {0} succesful ...", aExporterName );
+      setStatusOnEDT( "Export to {0} succesful ...", aExporterName );
     }
     finally
     {
       HostUtils.closeResource( writer );
+
+      updateActionsOnEDT();
     }
   }
 
@@ -470,6 +472,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       return getDeviceController( this.selectedDevice );
     }
+
     return null;
   }
 
@@ -672,15 +675,15 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       setAcquisitionResult( tempProject.getCapturedData() );
       setCursorData( tempProject.getCursorPositions(), tempProject.isCursorsEnabled() );
 
-      setStatus( "Capture data loaded from {0} ...", aFile.getName() );
+      setStatusOnEDT( "Capture data loaded from {0} ...", aFile.getName() );
     }
     finally
     {
-      reader.close();
+      HostUtils.closeResource( reader );
 
       zoomToFit();
 
-      updateActions();
+      updateActionsOnEDT();
     }
   }
 
@@ -702,7 +705,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
       zoomToFit();
 
-      setStatus( "Project {0} loaded ...", project.getName() );
+      setStatusOnEDT( "Project {0} loaded ...", project.getName() );
     }
     finally
     {
@@ -721,7 +724,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       fireCursorChangedEvent( aCursorIdx, -1 ); // removed...
     }
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -744,7 +747,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void removeMenu( final ComponentProvider aProvider )
   {
-    SwingUtilities.invokeLater( new Runnable()
+    SwingComponentUtils.invokeOnEDT( new Runnable()
     {
       @Override
       public void run()
@@ -777,7 +780,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
     try
     {
-      setStatus( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(), new Date() );
+      setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(), new Date() );
 
       acquisitionService.acquireData( devCtrl );
 
@@ -785,7 +788,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     catch ( IOException exception )
     {
-      setStatus( "I/O problem: " + exception.getMessage() );
+      setStatusOnEDT( "I/O problem: " + exception.getMessage() );
 
       exception.printStackTrace();
 
@@ -796,7 +799,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     finally
     {
-      updateActions();
+      updateActionsOnEDT();
     }
   }
 
@@ -827,7 +830,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       tool.process( aParent, this.dataContainer, context, this );
     }
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -843,12 +846,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
       OlsDataHelper.write( tempProject, writer );
 
-      setStatus( "Capture data saved to {0} ...", aFile.getName() );
+      setStatusOnEDT( "Capture data saved to {0} ...", aFile.getName() );
     }
     finally
     {
-      writer.flush();
-      writer.close();
+      HostUtils.closeResource( writer );
     }
   }
 
@@ -867,7 +869,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       out = new FileOutputStream( aFile );
       this.projectManager.saveProject( out );
 
-      setStatus( "Project {0} saved ...", aName );
+      setStatusOnEDT( "Project {0} saved ...", aName );
     }
     finally
     {
@@ -899,7 +901,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     // Reflect the change directly on the diagram...
     repaintMainFrame();
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -922,7 +924,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       fireCursorChangedEvent( aCursorIdx, aLocation.x );
     }
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -941,17 +943,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
 
     this.mainFrame = aMainFrame;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public final void setStatus( final String aMessage, final Object... aMessageArgs )
-  {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.setStatus( aMessage, aMessageArgs );
-    }
   }
 
   /**
@@ -1037,7 +1028,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void updateProgress( final int aPercentage )
   {
-    acquisitionInProgress( aPercentage );
+    setProgressOnEDT( aPercentage );
+    updateActionsOnEDT();
   }
 
   /**
@@ -1050,7 +1042,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.mainFrame.zoomDefault();
     }
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -1063,7 +1055,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.mainFrame.zoomIn();
     }
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -1076,7 +1068,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.mainFrame.zoomOut();
     }
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -1089,7 +1081,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.mainFrame.zoomToFit();
     }
 
-    updateActions();
+    updateActionsOnEDT();
   }
 
   /**
@@ -1129,6 +1121,23 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Updates the progress on the EventDispatchThread (EDT).
+   */
+  final void setProgressOnEDT( final int aPercentage )
+  {
+    if ( this.mainFrame != null )
+    {
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        public void run()
+        {
+          ClientController.this.mainFrame.setProgress( aPercentage );
+        }
+      } );
+    }
+  }
+
+  /**
    * Sets projectManager to the given value.
    * 
    * @param aProjectManager
@@ -1141,25 +1150,101 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * @param aMessage
+   * @param aMessageArgs
+   */
+  void setStatusOnEDT( final String aMessage, final Object... aMessageArgs )
+  {
+    if ( this.mainFrame != null )
+    {
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          ClientController.this.mainFrame.setStatus( aMessage, aMessageArgs );
+        }
+      } );
+    }
+  }
+
+  /**
    * Updates the actions on the EventDispatchThread (EDT).
    */
   final void updateActionsOnEDT()
   {
-    final Runnable runner = new Runnable()
+    SwingComponentUtils.invokeOnEDT( new Runnable()
     {
       public void run()
       {
-        updateActions();
+        final DataAcquisitionService acquisitionService = getDataAcquisitionService();
+        final DeviceController deviceCtrl = getDeviceController();
+
+        final boolean deviceControllerSet = deviceCtrl != null;
+        final boolean deviceCapturing = ( acquisitionService != null ) && acquisitionService.isAcquiring();
+        final boolean deviceSetup = deviceControllerSet && !deviceCapturing && deviceCtrl.isSetup();
+
+        getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
+        getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );
+        getAction( RepeatCaptureAction.ID ).setEnabled( deviceSetup );
+
+        final boolean projectChanged = ClientController.this.projectManager.getCurrentProject().isChanged();
+        final boolean projectSavedBefore = ClientController.this.projectManager.getCurrentProject().getFilename() != null;
+        final boolean dataAvailable = ClientController.this.dataContainer.hasCapturedData();
+
+        getAction( SaveProjectAction.ID ).setEnabled( projectChanged );
+        getAction( SaveProjectAsAction.ID ).setEnabled( projectSavedBefore && projectChanged );
+        getAction( SaveDataFileAction.ID ).setEnabled( dataAvailable );
+
+        getAction( ZoomInAction.ID ).setEnabled( dataAvailable );
+        getAction( ZoomOutAction.ID ).setEnabled( dataAvailable );
+        getAction( ZoomDefaultAction.ID ).setEnabled( dataAvailable );
+        getAction( ZoomFitAction.ID ).setEnabled( dataAvailable );
+
+        final boolean triggerEnable = dataAvailable && ClientController.this.dataContainer.hasTriggerData();
+        getAction( GotoTriggerAction.ID ).setEnabled( triggerEnable );
+
+        // Update the cursor actions accordingly...
+        getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
+        getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY,
+            Boolean.valueOf( ClientController.this.dataContainer.isCursorsEnabled() ) );
+
+        final boolean enableCursors = dataAvailable && ClientController.this.dataContainer.isCursorsEnabled();
+
+        boolean anyCursorSet = false;
+        for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
+        {
+          final boolean cursorPositionSet = ClientController.this.dataContainer.isCursorPositionSet( c );
+          anyCursorSet |= cursorPositionSet;
+
+          final boolean gotoCursorNEnabled = enableCursors && cursorPositionSet;
+          getAction( GotoNthCursorAction.getID( c ) ).setEnabled( gotoCursorNEnabled );
+
+          final Action action = getAction( SetCursorAction.getCursorId( c ) );
+          action.setEnabled( dataAvailable );
+          action.putValue( Action.SELECTED_KEY, Boolean.valueOf( cursorPositionSet ) );
+        }
+
+        getAction( GotoFirstCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
+        getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
+
+        getAction( ClearCursors.ID ).setEnabled( enableCursors && anyCursorSet );
+
+        // Update the tools...
+        final IManagedAction[] toolActions = ClientController.this.actionManager.getActionByType( RunToolAction.class );
+        for ( IManagedAction toolAction : toolActions )
+        {
+          toolAction.setEnabled( dataAvailable );
+        }
+
+        // Update the exporters...
+        final IManagedAction[] exportActions = ClientController.this.actionManager.getActionByType( ExportAction.class );
+        for ( IManagedAction exportAction : exportActions )
+        {
+          exportAction.setEnabled( dataAvailable );
+        }
       }
-    };
-    if ( SwingUtilities.isEventDispatchThread() )
-    {
-      runner.run();
-    }
-    else
-    {
-      SwingUtilities.invokeLater( runner );
-    }
+    } );
   }
 
   /**
@@ -1297,14 +1382,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private void repaintMainFrame()
   {
-    SwingUtilities.invokeLater( new Runnable()
+    if ( this.mainFrame != null )
     {
-      @Override
-      public void run()
+      SwingComponentUtils.invokeOnEDT( new Runnable()
       {
-        ClientController.this.mainFrame.repaint();
-      }
-    } );
+        @Override
+        public void run()
+        {
+          ClientController.this.mainFrame.repaint();
+        }
+      } );
+    }
   }
 
   /**
@@ -1351,79 +1439,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       this.dataContainer.setCursorPosition( i, aCursorData[i] );
-    }
-  }
-
-  /**
-   * Synchronizes the state of the actions to the current state of this host.
-   */
-  private void updateActions()
-  {
-    final DataAcquisitionService acquisitionService = getDataAcquisitionService();
-    final DeviceController deviceCtrl = getDeviceController();
-
-    final boolean deviceCapturing = ( acquisitionService != null ) && acquisitionService.isAcquiring();
-    final boolean deviceControllerSet = deviceCtrl != null;
-    final boolean deviceSetup = deviceControllerSet && !deviceCapturing && deviceCtrl.isSetup();
-
-    getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
-    getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );
-    getAction( RepeatCaptureAction.ID ).setEnabled( deviceSetup );
-
-    final boolean projectChanged = this.projectManager.getCurrentProject().isChanged();
-    final boolean projectSavedBefore = this.projectManager.getCurrentProject().getFilename() != null;
-    final boolean dataAvailable = this.dataContainer.hasCapturedData();
-
-    getAction( SaveProjectAction.ID ).setEnabled( projectChanged );
-    getAction( SaveProjectAsAction.ID ).setEnabled( projectSavedBefore && projectChanged );
-    getAction( SaveDataFileAction.ID ).setEnabled( dataAvailable );
-
-    getAction( ZoomInAction.ID ).setEnabled( dataAvailable );
-    getAction( ZoomOutAction.ID ).setEnabled( dataAvailable );
-    getAction( ZoomDefaultAction.ID ).setEnabled( dataAvailable );
-    getAction( ZoomFitAction.ID ).setEnabled( dataAvailable );
-
-    final boolean triggerEnable = dataAvailable && this.dataContainer.hasTriggerData();
-    getAction( GotoTriggerAction.ID ).setEnabled( triggerEnable );
-
-    // Update the cursor actions accordingly...
-    getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
-    getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY,
-        Boolean.valueOf( this.dataContainer.isCursorsEnabled() ) );
-
-    final boolean enableCursors = dataAvailable && this.dataContainer.isCursorsEnabled();
-
-    boolean anyCursorSet = false;
-    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
-    {
-      final boolean cursorPositionSet = this.dataContainer.isCursorPositionSet( c );
-      anyCursorSet |= cursorPositionSet;
-
-      final boolean gotoCursorNEnabled = enableCursors && cursorPositionSet;
-      getAction( GotoNthCursorAction.getID( c ) ).setEnabled( gotoCursorNEnabled );
-
-      final Action action = getAction( SetCursorAction.getCursorId( c ) );
-      action.setEnabled( dataAvailable );
-      action.putValue( Action.SELECTED_KEY, Boolean.valueOf( cursorPositionSet ) );
-    }
-
-    getAction( GotoFirstCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
-    getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
-
-    getAction( ClearCursors.ID ).setEnabled( enableCursors && anyCursorSet );
-
-    // Update the tools...
-    final IManagedAction[] toolActions = this.actionManager.getActionByType( RunToolAction.class );
-    for ( IManagedAction toolAction : toolActions )
-    {
-      toolAction.setEnabled( dataAvailable );
-    }
-
-    // Update the exporters...
-    final IManagedAction[] exportActions = this.actionManager.getActionByType( ExportAction.class );
-    for ( IManagedAction exportAction : exportActions )
-    {
-      exportAction.setEnabled( dataAvailable );
     }
   }
 }
