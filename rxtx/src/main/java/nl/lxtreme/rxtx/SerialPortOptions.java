@@ -21,7 +21,7 @@
 package nl.lxtreme.rxtx;
 
 
-import gnu.io.*;
+import purejavacomm.*;
 
 import java.util.regex.*;
 

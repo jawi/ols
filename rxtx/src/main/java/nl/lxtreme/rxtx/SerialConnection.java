@@ -21,7 +21,7 @@
 package nl.lxtreme.rxtx;
 
 
-import gnu.io.*;
+import purejavacomm.*;
 
 import java.io.*;
 import java.util.logging.*;
@@ -30,7 +30,11 @@ import javax.microedition.io.*;
 
 
 /**
- * Provides a serial port connection.
+ * Provides a serial port connection, making use the JavaComm API as defined by
+ * Sun/Oracle.
+ * 
+ * @see http://download.oracle.com/docs/cd/E17802_01/products/products/javacomm/
+ *      reference/api/index.html
  */
 final class SerialConnection implements CommConnection
 {
@@ -40,7 +44,10 @@ final class SerialConnection implements CommConnection
 
   // VARIABLES
 
-  private RXTXPort port;
+  private volatile InputStream is;
+  private volatile OutputStream os;
+
+  private SerialPort port;
 
   // CONSTRUCTORS
 
@@ -52,7 +59,7 @@ final class SerialConnection implements CommConnection
    * @throws IllegalArgumentException
    *           in case the given port was <code>null</code>.
    */
-  public SerialConnection( final RXTXPort aPort ) throws IllegalArgumentException, IOException
+  public SerialConnection( final SerialPort aPort ) throws IllegalArgumentException, IOException
   {
     if ( aPort == null )
     {
@@ -118,11 +125,19 @@ final class SerialConnection implements CommConnection
   @Override
   public void close() throws IOException
   {
-    closeResource( this.port.getInputStream() );
-    closeResource( this.port.getOutputStream() );
+    try
+    {
+      closeResource( this.is );
+      closeResource( this.os );
 
-    this.port.close();
-    this.port = null;
+      this.port.close();
+    }
+    finally
+    {
+      this.is = null;
+      this.os = null;
+      this.port = null;
+    }
   }
 
   /**
@@ -158,7 +173,11 @@ final class SerialConnection implements CommConnection
   @Override
   public InputStream openInputStream() throws IOException
   {
-    return this.port.getInputStream();
+    if ( this.is != null )
+    {
+      return this.is;
+    }
+    return this.is = this.port.getInputStream();
   }
 
   /**
@@ -167,7 +186,11 @@ final class SerialConnection implements CommConnection
   @Override
   public OutputStream openOutputStream() throws IOException
   {
-    return this.port.getOutputStream();
+    if ( this.os != null )
+    {
+      return this.os;
+    }
+    return this.os = this.port.getOutputStream();
   }
 
   /**
@@ -177,20 +200,7 @@ final class SerialConnection implements CommConnection
   public int setBaudRate( final int aBaudRate )
   {
     final int oldBaudRate = getBaudRate();
-    try
-    {
-      this.port.setBaudBase( aBaudRate );
-    }
-    catch ( UnsupportedCommOperationException exception )
-    {
-      // Ignore...
-      LOG.log( Level.WARNING, "Setting the baud rate failed; baudrate is NOT changed!", exception );
-    }
-    catch ( IOException exception )
-    {
-      // Ignore...
-      LOG.log( Level.WARNING, "Setting the baud rate failed; baudrate is NOT changed!", exception );
-    }
+    // this.port.setBaud( aBaudRate ); XXX
     return oldBaudRate;
   }
 }
