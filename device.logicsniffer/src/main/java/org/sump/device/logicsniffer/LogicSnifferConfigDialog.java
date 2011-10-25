@@ -399,8 +399,15 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    */
   private static String maskToHexString( final String aMask )
   {
-    final int value = ( int )Long.parseLong( aMask, 2 );
-    return Integer.toHexString( Integer.reverse( value ) );
+    try
+    {
+      final int value = ( int )Long.parseLong( aMask, 2 );
+      return Integer.toHexString( Integer.reverse( value ) );
+    }
+    catch ( NumberFormatException exception )
+    {
+      return "";
+    }
   }
 
   /**
