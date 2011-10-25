@@ -418,6 +418,84 @@ public class BackgroundDataAcquisitionServiceTest
   }
 
   /**
+   * Tests that we can acquire again successful after an earlier acquisition is
+   * cancelled.
+   */
+  @Test
+  public void testReacquireCancelledDataCompleteOk() throws Exception
+  {
+    final DeviceController deviceController = createMockDeviceController( 200 );
+
+    // Test whether the callback methods are called in the correct order...
+    InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
+    ArgumentCaptor<AcquisitionResultStatus> captor = ArgumentCaptor.forClass( AcquisitionResultStatus.class );
+
+    this.service.acquireData( deviceController );
+
+    sleep( 10 ); // sleep just long enough for the thread to be started...
+
+    this.service.cancelAcquisition();
+
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionStarted();
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionEnded( captor.capture() );
+    inOrder.verifyNoMoreInteractions();
+
+    assertEquals( ResultStatus.ABORTED, captor.getValue().getStatus() );
+    assertNotNull( captor.getValue().getMessage() );
+
+    // Reacquire again...
+    this.service.acquireData( deviceController );
+
+    sleep( 200 ); // sleep long enough for the entire method to complete...
+
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionStarted();
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionComplete( any( AcquisitionResult.class ) );
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionEnded( captor.capture() );
+    inOrder.verifyNoMoreInteractions();
+
+    assertEquals( ResultStatus.NORMAL, captor.getValue().getStatus() );
+    assertNull( captor.getValue().getMessage() );
+  }
+
+  /**
+   * Tests that we can acquire again successful after an earlier acquisition is
+   * completed.
+   */
+  @Test
+  public void testReacquireDataCompleteOk() throws Exception
+  {
+    final DeviceController deviceController = createMockDeviceController( 100 );
+
+    // Test whether the callback methods are called in the correct order...
+    InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
+    ArgumentCaptor<AcquisitionResultStatus> captor = ArgumentCaptor.forClass( AcquisitionResultStatus.class );
+
+    this.service.acquireData( deviceController );
+
+    sleep( 200 ); // sleep long enough for the entire method to complete...
+
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionStarted();
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionComplete( any( AcquisitionResult.class ) );
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionEnded( captor.capture() );
+    inOrder.verifyNoMoreInteractions();
+
+    assertEquals( ResultStatus.NORMAL, captor.getValue().getStatus() );
+    assertNull( captor.getValue().getMessage() );
+
+    this.service.acquireData( deviceController );
+
+    sleep( 200 ); // sleep long enough for the entire method to complete...
+
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionStarted();
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionComplete( any( AcquisitionResult.class ) );
+    inOrder.verify( this.mockAcquisitionListenerHelper ).acquisitionEnded( captor.capture() );
+    inOrder.verifyNoMoreInteractions();
+
+    assertEquals( ResultStatus.NORMAL, captor.getValue().getStatus() );
+    assertNull( captor.getValue().getMessage() );
+  }
+
+  /**
    * @throws Exception
    * @throws IOException
    */

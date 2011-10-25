@@ -137,27 +137,23 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
         {
           acquisitionResult = get();
         }
-        catch ( InterruptedException exception )
+        catch ( Throwable exception )
         {
-          status = new AcquisitionResultStatus( ResultStatus.ABORTED, "Cancelled by user!" );
-        }
-        catch ( ExecutionException exception )
-        {
-          final Throwable cause = exception.getCause();
-          // The inner future can also be cancelled, causing it to abort its
-          // execution, so we should also check the cause of the execution
-          // exception to differentiate between aborts and failures...
-          if ( cause instanceof InterruptedException )
+          InterruptedException ie = unwrapInterruptedException( exception );
+          if ( ie != null )
           {
             status = new AcquisitionResultStatus( ResultStatus.ABORTED, "Cancelled by user!" );
           }
           else
           {
-            status = AcquisitionResultStatus.create( cause );
+            Throwable t = unwrapExecutionException( exception );
+            status = AcquisitionResultStatus.create( t );
           }
         }
-
-        finalizeAcquisition( status, acquisitionResult );
+        finally
+        {
+          finalizeAcquisition( status, acquisitionResult );
+        }
       }
     };
 
@@ -170,31 +166,48 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
   @Override
   public void cancelAcquisition() throws IllegalStateException
   {
-    if ( this.future != null )
+    try
     {
-      if ( !this.future.cancel( true /* mayInterruptIfRunning */) )
+      if ( this.future != null )
       {
-        if ( !this.future.isDone() )
+        if ( !this.future.cancel( true /* mayInterruptIfRunning */) )
         {
-          throw new InternalError( "Failed to cancel ongoing task. Possible resource leak!" );
+          if ( !this.future.isDone() )
+          {
+            throw new InternalError( "Failed to cancel ongoing task. Possible resource leak!" );
+          }
         }
       }
+      else
+      {
+        throw new IllegalStateException( "No acquisition in progress!" );
+      }
     }
-    else
+    finally
     {
-      throw new IllegalStateException( "No acquisition in progress!" );
+      cleanResources();
     }
   }
 
   /**
-   * Closes this data acquisition service.
+   * Closes this data acquisition service, cancelling any ongoing acquisitions
+   * if needed.
+   * <p>
+   * After calling this method, this instance should <em>no longer</em> be used.
+   * </p>
    */
   public void close()
   {
     try
     {
-      // Make sure we're cancelling any ongoing acquisitions...
-      cancelAcquisition();
+      if ( this.future != null )
+      {
+        // Make sure we're cancelling any ongoing acquisitions...
+        cancelAcquisition();
+      }
+
+      // Make sure to leave no garbage behind...
+      cleanResources();
     }
     finally
     {
@@ -258,11 +271,68 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
     }
     finally
     {
-      // Close the device...
-      HostUtils.closeResource( this.device );
-
-      this.device = null;
-      this.future = null;
+      cleanResources();
     }
+  }
+
+  /**
+   * Closes the device and sets it and the future to <code>null</code>.
+   */
+  private void cleanResources()
+  {
+    // Close the device (at best effort)...
+    HostUtils.closeResource( this.device );
+
+    this.device = null;
+    this.future = null;
+  }
+
+  /**
+   * Unwraps a given exception to an {@link InterruptedException} in case it is
+   * either the given exception, or any cause-exception wrapped in the given
+   * exception.
+   * 
+   * @param aException
+   *          the exception to unwrap, may be <code>null</code>.
+   * @return the unwrapped interrupted exception, or <code>null</code> if no
+   *         such exception was wrapped.
+   */
+  private Throwable unwrapExecutionException( final Throwable aException )
+  {
+    Throwable ptr = aException;
+    if ( ptr != null )
+    {
+      if ( ptr instanceof ExecutionException )
+      {
+        return ptr.getCause();
+      }
+    }
+
+    return ptr;
+  }
+
+  /**
+   * Unwraps a given exception to an {@link InterruptedException} in case it is
+   * either the given exception, or any cause-exception wrapped in the given
+   * exception.
+   * 
+   * @param aException
+   *          the exception to unwrap, may be <code>null</code>.
+   * @return the unwrapped interrupted exception, or <code>null</code> if no
+   *         such exception was wrapped.
+   */
+  private InterruptedException unwrapInterruptedException( final Throwable aException )
+  {
+    Throwable ptr = aException;
+    while ( ptr != null )
+    {
+      if ( ptr instanceof InterruptedException )
+      {
+        return ( InterruptedException )ptr;
+      }
+      ptr = ptr.getCause();
+    }
+
+    return null;
   }
 }
