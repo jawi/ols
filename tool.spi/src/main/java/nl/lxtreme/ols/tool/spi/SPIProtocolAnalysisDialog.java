@@ -25,6 +25,7 @@ import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
+import java.beans.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
@@ -36,6 +37,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -46,6 +48,8 @@ import nl.lxtreme.ols.util.NumberUtils.BitOrder;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
+import org.osgi.framework.*;
+
 
 /**
  * The Dialog Class
@@ -54,7 +58,8 @@ import nl.lxtreme.ols.util.swing.component.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIDataSet, SPIAnalyserWorker>
+public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> implements ExportAware<SPIDataSet>,
+    PropertyChangeListener
 {
   // INNER TYPES
 
@@ -178,14 +183,17 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aName
-   *          the name of this dialog;
+   * @param aToolContext
+   *          the tool context;
    * @param aContext
-   *          the tool context.
+   *          the OSGi bundle context to use;
+   * @param aTool
+   *          the {@link SPIAnalyser} tool.
    */
-  public SPIProtocolAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
+  public SPIProtocolAnalysisDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
+      final SPIAnalyser aTool )
   {
-    super( aOwner, aName, aContext );
+    super( aOwner, aToolContext, aContext, aTool );
 
     initDialog();
 
@@ -195,43 +203,41 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   // METHODS
 
   /**
-   * This is the SPI protocol decoder core The decoder scans for a decode start
-   * event like CS high to low edge or the trigger of the captured data. After
-   * this the decoder starts to decode the data by the selected mode, number of
-   * bits and bit order. The decoded data are put to a JTable object directly.
+   * {@inheritDoc}
    */
   @Override
-  public void onToolWorkerReady( final SPIDataSet aAnalysisResult )
+  public void exportToFile( final File aOutputFile, final ExportFormat aFormat ) throws IOException
   {
-    super.onToolWorkerReady( aAnalysisResult );
-
-    try
+    if ( ExportFormat.HTML.equals( aFormat ) )
     {
-      final String htmlPage;
-      if ( aAnalysisResult != null )
-      {
-        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
-        this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-      }
-      else
-      {
-        htmlPage = getEmptyHtmlPage();
-        this.exportAction.setEnabled( false );
-      }
-
-      this.outText.setText( htmlPage );
-      this.outText.setEditable( false );
-
-      this.runAnalysisAction.restore();
+      storeToHtmlFile( aOutputFile, getLastResult() );
     }
-    catch ( final IOException exception )
+    else if ( ExportFormat.CSV.equals( aFormat ) )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
+      storeToCsvFile( aOutputFile, getLastResult() );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void propertyChange( final PropertyChangeEvent aEvent )
+  {
+    final String name = aEvent.getPropertyName();
+
+    if ( SPIAnalyserTask.PROPERTY_AUTO_DETECT_MODE.equals( name ) )
+    {
+      SwingComponentUtils.invokeOnEDT( new Runnable()
       {
-        // Should not happen in this situation!
-        throw new RuntimeException( exception );
-      }
+        @Override
+        public void run()
+        {
+          final Object value = aEvent.getNewValue();
+
+          setAutoDetectSPIMode( ( SPIMode )value );
+        }
+      } );
     }
   }
 
@@ -297,6 +303,73 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolEnded( final SPIDataSet aAnalysisResult )
+  {
+    try
+    {
+      final String htmlPage;
+      if ( aAnalysisResult != null )
+      {
+        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
+        this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+      }
+      else
+      {
+        htmlPage = getEmptyHtmlPage();
+        this.exportAction.setEnabled( false );
+      }
+
+      this.outText.setText( htmlPage );
+      this.outText.setEditable( false );
+
+      this.runAnalysisAction.restore();
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        // Should not happen in this situation!
+        throw new RuntimeException( exception );
+      }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolStarted()
+  {
+    // No-op
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void prepareToolTask( final ToolTask<SPIDataSet> aToolTask )
+  {
+    SPIAnalyserTask toolTask = ( SPIAnalyserTask )aToolTask;
+
+    toolTask.setBitCount( Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1 );
+    toolTask.setCSIndex( this.cs.getSelectedIndex() );
+    toolTask.setSCKIndex( this.sck.getSelectedIndex() );
+    toolTask.setMisoIndex( this.miso.getSelectedIndex() - 1 );
+    toolTask.setMosiIndex( this.mosi.getSelectedIndex() - 1 );
+    toolTask.setReportCS( this.reportCS.isSelected() );
+    toolTask.setHonourCS( this.honourCS.isSelected() );
+    toolTask.setOrder( ( BitOrder )this.order.getSelectedItem() );
+    toolTask.setMode( ( SPIMode )this.mode.getSelectedItem() );
+
+    // Register ourselves as property change listener...
+    toolTask.addPropertyChangeListener( this );
+  }
+
+  /**
    * set the controls of the dialog enabled/disabled
    * 
    * @param aEnable
@@ -316,87 +389,6 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     this.order.setEnabled( aEnable );
 
     this.closeAction.setEnabled( aEnable );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
-   */
-  @Override
-  protected void setupToolWorker( final SPIAnalyserWorker aToolWorker )
-  {
-    aToolWorker.setBitCount( Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1 );
-    aToolWorker.setCSIndex( this.cs.getSelectedIndex() );
-    aToolWorker.setSCKIndex( this.sck.getSelectedIndex() );
-    aToolWorker.setMisoIndex( this.miso.getSelectedIndex() - 1 );
-    aToolWorker.setMosiIndex( this.mosi.getSelectedIndex() - 1 );
-    aToolWorker.setReportCS( this.reportCS.isSelected() );
-    aToolWorker.setHonourCS( this.honourCS.isSelected() );
-    aToolWorker.setOrder( ( BitOrder )this.order.getSelectedItem() );
-    aToolWorker.setMode( ( SPIMode )this.mode.getSelectedItem() );
-  }
-
-  /**
-   * exports the table data to a CSV file
-   * 
-   * @param aFile
-   *          File object
-   */
-  @Override
-  protected void storeToCsvFile( final File aFile, final SPIDataSet aDataSet )
-  {
-    try
-    {
-      final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
-
-      exporter.setHeaders( "index", "start-time", "end-time", "event?", "event-type", "MOSI data", "MISO data" );
-
-      final List<SPIData> decodedData = aDataSet.getData();
-      for ( int i = 0; i < decodedData.size(); i++ )
-      {
-        final SPIData ds = decodedData.get( i );
-
-        final String startTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
-        final String endTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
-        final String mosiDataValue = ds.isMosiData() ? Integer.toString( ds.getDataValue() ) : null;
-        final String misoDataValue = ds.isMisoData() ? Integer.toString( ds.getDataValue() ) : null;
-
-        exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), ds.getEventName(),
-            mosiDataValue, misoDataValue );
-      }
-
-      exporter.close();
-    }
-    catch ( final IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
-      }
-    }
-  }
-
-  /**
-   * stores the data to a HTML file
-   * 
-   * @param aFile
-   *          file object
-   */
-  @Override
-  protected void storeToHtmlFile( final File aFile, final SPIDataSet aDataSet )
-  {
-    try
-    {
-      toHtmlPage( aFile, aDataSet );
-    }
-    catch ( final IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
-    }
   }
 
   /**
@@ -482,7 +474,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getChannels();
+    final int channelCount = getData().getChannels();
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
@@ -586,19 +578,81 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
     contentPane.add( previewPane, new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH,
         GridBagConstraints.BOTH, new Insets( 2, 0, 2, 0 ), 0, 0 ) );
 
-    final JButton runAnalysisButton = createRunAnalysisButton();
+    final JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    final JButton exportButton = createExportButton();
+    final JButton exportButton = ToolUtils.createExportButton( this );
     this.exportAction = exportButton.getAction();
     this.exportAction.setEnabled( false );
 
-    final JButton closeButton = createCloseButton();
+    final JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
+  }
+
+  /**
+   * exports the table data to a CSV file
+   * 
+   * @param aFile
+   *          File object
+   */
+  private void storeToCsvFile( final File aFile, final SPIDataSet aDataSet )
+  {
+    try
+    {
+      final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
+
+      exporter.setHeaders( "index", "start-time", "end-time", "event?", "event-type", "MOSI data", "MISO data" );
+
+      final List<SPIData> decodedData = aDataSet.getData();
+      for ( int i = 0; i < decodedData.size(); i++ )
+      {
+        final SPIData ds = decodedData.get( i );
+
+        final String startTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
+        final String endTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
+        final String mosiDataValue = ds.isMosiData() ? Integer.toString( ds.getDataValue() ) : null;
+        final String misoDataValue = ds.isMisoData() ? Integer.toString( ds.getDataValue() ) : null;
+
+        exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), ds.getEventName(),
+            mosiDataValue, misoDataValue );
+      }
+
+      exporter.close();
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "CSV export failed!", exception );
+      }
+    }
+  }
+
+  /**
+   * stores the data to a HTML file
+   * 
+   * @param aFile
+   *          file object
+   */
+  private void storeToHtmlFile( final File aFile, final SPIDataSet aDataSet )
+  {
+    try
+    {
+      toHtmlPage( aFile, aDataSet );
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "HTML export failed!", exception );
+      }
+    }
   }
 
   /**
@@ -612,7 +666,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
   private String toHtmlPage( final File aFile, final SPIDataSet aDataSet ) throws IOException
   {
     final int bitCount = Integer.parseInt( ( String )this.bits.getSelectedItem() );
-    final int bitAdder = ( bitCount % 4 != 0 ) ? 1 : 0;
+    final int bitAdder = ( ( bitCount % 4 ) != 0 ) ? 1 : 0;
 
     final MacroResolver macroResolver = new MacroResolver()
     {
@@ -734,7 +788,7 @@ public final class SPIProtocolAnalysisDialog extends BaseAsyncToolDialog<SPIData
        */
       private void addDataValues( final Element aTableRow, final int aIdx, final int aSampleIdx, final int aValue )
       {
-        final String mosiDataHex = StringUtils.integerToHexString( aValue, bitCount / 4 + bitAdder );
+        final String mosiDataHex = StringUtils.integerToHexString( aValue, ( bitCount / 4 ) + bitAdder );
         final String mosiDataBin = StringUtils.integerToBinString( aValue, bitCount );
         final String mosiDataDec = String.valueOf( aValue );
         final String mosiDataASCII;

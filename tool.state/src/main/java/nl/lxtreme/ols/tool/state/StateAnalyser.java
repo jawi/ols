@@ -23,26 +23,20 @@ package nl.lxtreme.ols.tool.state;
 
 import java.awt.*;
 
+import org.osgi.framework.*;
+
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * Provides a state analysis tool (??? not sure what it does though ???).
  */
-public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, AcquisitionResult, StateAnalysisWorker>
+public class StateAnalyser implements Tool<AcquisitionResult>
 {
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new StateAnalyser instance.
-   */
-  public StateAnalyser()
-  {
-    super( ToolCategory.OTHER, "State analyser ..." );
-  }
+  private BundleContext context;
 
   // METHODS
 
@@ -50,18 +44,48 @@ public class StateAnalyser extends BaseAsyncTool<StateAnalysisDialog, Acquisitio
    * {@inheritDoc}
    */
   @Override
-  protected StateAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
+  public StateAnalysisTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
+      final AnnotationListener aAnnotationListener )
   {
-    return new StateAnalysisDialog( aOwner, getName(), aContext );
+    return new StateAnalysisTask( aContext );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected StateAnalysisWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
+  public ToolCategory getCategory()
   {
-    return new StateAnalysisWorker( aData, aContext );
+    return ToolCategory.OTHER;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return "State analyser ...";
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void invoke( final Window aParent, final ToolContext aContext )
+  {
+    new StateAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+  }
+
+  /**
+   * Called when this tool is initialized by the client framework.
+   * 
+   * @param aContext
+   *          the bundle context to use, never <code>null</code>.
+   */
+  protected void init( final BundleContext aContext )
+  {
+    this.context = aContext;
   }
 }
 

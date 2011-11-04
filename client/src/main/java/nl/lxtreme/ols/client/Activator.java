@@ -85,7 +85,7 @@ public class Activator implements BundleActivator
   private LogReaderTracker logReaderTracker;
   private ComponentProviderTracker menuTracker;
   private PreferenceServiceTracker preferencesServiceTracker;
-  private DataAcquisitionServiceTracker dataAcquisitionServiceTracker;
+  private SimpleDataAcquisitionService dataAcquisitionServiceTracker;
   private ClientController clientController;
 
   // METHODS
@@ -126,14 +126,14 @@ public class Activator implements BundleActivator
   private static BundleObserver createDeviceBundleObserver()
   {
     return new BundleServiceObserver( OLS_DEVICE_MAGIC_KEY, OLS_DEVICE_MAGIC_VALUE, OLS_DEVICE_CLASS_KEY,
-        DeviceController.class.getName() )
+        Device.class.getName() )
     {
       @Override
       protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
           final ManifestHeader... aEntries )
       {
         Properties result = new Properties();
-        result.put( Action.NAME, ( ( DeviceController )aService ).getName() );
+        result.put( Action.NAME, ( ( Device )aService ).getName() );
         return result;
       }
     };
@@ -175,7 +175,7 @@ public class Activator implements BundleActivator
           final ManifestHeader... aEntries )
       {
         Properties result = new Properties();
-        result.put( Action.NAME, ( ( Tool )aService ).getName() );
+        result.put( Action.NAME, ( ( Tool<?> )aService ).getName() );
         return result;
       }
     };
@@ -194,7 +194,7 @@ public class Activator implements BundleActivator
     // Restore the implicit user settings...
     loadImplicitUserSettings( this.projectManager );
 
-    this.dataAcquisitionServiceTracker = new DataAcquisitionServiceTracker( aContext );
+    this.dataAcquisitionServiceTracker = new SimpleDataAcquisitionService( aContext );
     this.dataAcquisitionServiceTracker.open();
 
     this.clientController = new ClientController( aContext );
@@ -222,7 +222,8 @@ public class Activator implements BundleActivator
     // Register the client controller as listener for many events...
     aContext.registerService(
         new String[] { AcquisitionDataListener.class.getName(), AcquisitionProgressListener.class.getName(),
-            AcquisitionStatusListener.class.getName() }, this.clientController, null );
+            AcquisitionStatusListener.class.getName(), AnnotationListener.class.getName() }, this.clientController,
+        null );
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...

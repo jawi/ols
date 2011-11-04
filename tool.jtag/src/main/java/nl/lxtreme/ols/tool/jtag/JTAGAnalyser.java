@@ -22,9 +22,10 @@ package nl.lxtreme.ols.tool.jtag;
 
 
 import java.awt.*;
-import nl.lxtreme.ols.api.data.*;
+
+import org.osgi.framework.*;
+
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.*;
 
 
 /**
@@ -32,17 +33,11 @@ import nl.lxtreme.ols.tool.base.*;
  * 
  * @author Mario Schrenk
  */
-public class JTAGAnalyser extends BaseAsyncTool<JTAGProtocolAnalysisDialog, JTAGDataSet, JTAGAnalyserWorker>
+public class JTAGAnalyser implements Tool<JTAGDataSet>
 {
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new JTAGAnalyser instance.
-   */
-  public JTAGAnalyser()
-  {
-    super( ToolCategory.DECODER, "JTAG analyser ..." );
-  }
+  private BundleContext context;
 
   // METHODS
 
@@ -50,20 +45,49 @@ public class JTAGAnalyser extends BaseAsyncTool<JTAGProtocolAnalysisDialog, JTAG
    * {@inheritDoc}
    */
   @Override
-  protected JTAGProtocolAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
+  public JTAGAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
+      final AnnotationListener aAnnotationListener )
   {
-    return new JTAGProtocolAnalysisDialog( aOwner, aName, aContext );
+    return new JTAGAnalyserTask( aContext, aProgressListener, aAnnotationListener );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected JTAGAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
+  public ToolCategory getCategory()
   {
-    return new JTAGAnalyserWorker( aData, aContext );
+    return ToolCategory.DECODER;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return "JTAG analyser ...";
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void invoke( final Window aParent, final ToolContext aContext )
+  {
+    new JTAGProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+  }
+
+  /**
+   * Called when this tool is initialized by the client framework.
+   * 
+   * @param aContext
+   *          the bundle context to use, never <code>null</code>.
+   */
+  protected void init( final BundleContext aContext )
+  {
+    this.context = aContext;
+  }
 }
 
 /* EOF */

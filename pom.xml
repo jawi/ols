@@ -38,20 +38,20 @@
 		<module>logging</module>
 		<module>rxtx</module>
 		<module>service.io</module>
-		<module>service.acquisition</module>
+		<module>service.taskexecution</module>
 		<module>client</module>
 		<module>device.test</module>
 		<module>device.generic</module>
 		<module>device.logicsniffer</module>
 		<module>tool.base</module>
+		<module>tool.1wire</module>
+		<module>tool.asm45</module>
 		<module>tool.i2c</module>
+		<module>tool.jtag</module>
+		<module>tool.measure</module>
 		<module>tool.spi</module>
 		<module>tool.state</module>
 		<module>tool.uart</module>
-		<module>tool.measure</module>
-		<module>tool.1wire</module>
-		<module>tool.jtag</module>
-		<module>tool.asm45</module>
 		<module>export.image</module>
 		<module>export.vcd</module>
 		<module>runner</module>
@@ -208,7 +208,7 @@
 			</dependency>
 			<dependency>
 				<groupId>nl.lxtreme.ols</groupId>
-				<artifactId>service.acquisition</artifactId>
+				<artifactId>service.taskexecution</artifactId>
 				<version>1.0.0</version>
 			</dependency>
 			<dependency>

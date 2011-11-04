@@ -21,49 +21,26 @@
 package nl.lxtreme.ols.device.generic;
 
 
+import java.awt.*;
 import java.io.*;
-import java.util.logging.*;
-
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
- * Provides a generic device that can read from any file-based source.
+ * Provides a device that can read from any file-based source and use this as
+ * capture device.
  */
-public final class GenericDevice implements Device
+public class GenericDevice implements Device
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( GenericDevice.class.getName() );
+  private static final String NAME = "Generic I/O";
 
   // VARIABLES
 
-  private final AcquisitionProgressListener progressListener;
-  private final GenericDeviceConfigDialog deviceConfig;
-
-  private InputStream inputStream;
-
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new GenericDevice instance.
-   * 
-   * @param aContext
-   *          the bundle context to use;
-   * @param aDeviceConfig
-   *          the device configuration to use.
-   */
-  public GenericDevice( final GenericDeviceConfigDialog aDeviceConfig,
-      final AcquisitionProgressListener aProgressListener )
-  {
-    this.deviceConfig = aDeviceConfig;
-    this.progressListener = aProgressListener;
-
-  }
+  private GenericDeviceConfigDialog deviceConfig = null;
+  private boolean setup = false;
 
   // METHODS
 
@@ -71,92 +48,47 @@ public final class GenericDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionResult call() throws IOException
+  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener ) throws IOException
   {
-    final int width = this.deviceConfig.getSampleWidth();
-    final int depth = this.deviceConfig.getSampleDepth();
-    final int rate = this.deviceConfig.getSampleRate();
-    final int channels = this.deviceConfig.getChannelCount();
-
-    final int count = depth * width;
-
-    final int[] values = new int[count];
-    final long[] timestamps = new long[count];
-
-    try
-    {
-      int idx = 0;
-      while ( !Thread.currentThread().isInterrupted() && ( idx < count ) )
-      {
-        final int sample = readSample( width );
-
-        if ( LOG.isLoggable( Level.FINE ) )
-        {
-          LOG.log( Level.FINE, "Read: 0x{0}", Integer.toHexString( sample ) );
-        }
-
-        values[idx] = sample;
-        timestamps[idx] = idx;
-
-        // Update the progress...
-        this.progressListener.acquisitionInProgress( ( int )( ( idx++ * 100.0 ) / count ) );
-      }
-
-      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels, channels, idx );
-    }
-    catch ( IOException exception )
-    {
-      // Rethrow the caught exception...
-      throw exception;
-    }
+    return new GenericDeviceAcquisitionTask( this.deviceConfig, aProgressListener );
   }
 
   /**
-   * {@inheritDoc}
+   * @see nl.lxtreme.ols.api.devices.Device#getName()
    */
   @Override
-  public void close() throws IOException
+  public String getName()
   {
-    HostUtils.closeResource( this.inputStream );
+    return NAME;
   }
 
   /**
-   * {@inheritDoc}
+   * @see nl.lxtreme.ols.api.devices.Device#isSetup()
    */
   @Override
-  public void open() throws IOException
+  public boolean isSetup()
   {
-    this.inputStream = new FileInputStream( this.deviceConfig.getDevicePath() );
+    return this.setup;
   }
 
   /**
-   * Reads <code>channels</code> / 8 bytes from stream and compiles them into a
-   * single integer.
-   * 
-   * @param aChannelCount
-   *          number of channels to read (must be multiple of 8)
-   * @return integer containing four bytes read
-   * @throws IOException
-   *           if stream reading fails
+   * @see nl.lxtreme.ols.api.devices.Device#setupCapture(java.awt.Window)
    */
-  private int readSample( final int aSampleWidth ) throws IOException
+  @Override
+  public boolean setupCapture( final Window aParent )
   {
-    int v, value = 0;
-
-    for ( int i = 0; !Thread.currentThread().isInterrupted() && ( i < aSampleWidth ); i++ )
+    // check if dialog exists with different owner and dispose if so
+    if ( ( this.deviceConfig != null ) && ( this.deviceConfig.getOwner() != aParent ) )
     {
-      v = this.inputStream.read();
-
-      // Any timeouts/interrupts occurred?
-      if ( v < 0 )
-      {
-        throw new EOFException( "Data readout interrupted: EOF." );
-      }
-
-      value |= v << ( 8 * i );
+      this.deviceConfig.dispose();
+      this.deviceConfig = null;
+    }
+    // if no valid dialog exists, create one
+    if ( this.deviceConfig == null )
+    {
+      this.deviceConfig = new GenericDeviceConfigDialog( aParent );
     }
 
-    return value;
+    return ( this.setup = this.deviceConfig.showDialog() );
   }
-
 }

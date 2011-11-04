@@ -29,7 +29,7 @@ import java.util.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.test.data.DataTestUtils.TestDataProvider;
-import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureWorker.ClockStats;
+import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureTask.ClockStats;
 
 import org.junit.*;
 import org.junit.runner.*;
@@ -38,7 +38,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 
 /**
- * Provides test cases for the {@link ClockFrequencyMeasureWorker} based on
+ * Provides test cases for the {@link ClockFrequencyMeasureTask} based on
  * generated data.
  */
 @RunWith( Parameterized.class )
@@ -127,7 +127,7 @@ public class ClockFrequencyMeasureWorkerGeneratedDataTest
   private final double allowedDutyCycleTolerance;
   private final double allowedFrequencyTolerance;
 
-  private ClockFrequencyMeasureWorker worker;
+  private ClockFrequencyMeasureTask worker;
 
   // CONSTRUCTORS
 
@@ -202,16 +202,17 @@ public class ClockFrequencyMeasureWorkerGeneratedDataTest
         this.dataProvider );
     ToolContext toolContext = createToolContext( container );
 
-    this.worker = new ClockFrequencyMeasureWorker( container, toolContext, 1 );
+    this.worker = new ClockFrequencyMeasureTask( toolContext );
+    this.worker.setChannel( 0 );
   }
 
   /**
-   * Test method for {@link ClockFrequencyMeasureWorker#doInBackground()}.
+   * Test method for {@link ClockFrequencyMeasureTask#doInBackground()}.
    */
   @Test
   public void testDoInBackground() throws Exception
   {
-    ClockStats result = this.worker.doInBackground();
+    ClockStats result = this.worker.call();
 
     assertNotNull( result );
     assertEquals( 0.5, result.getDutyCycle(), this.allowedDutyCycleTolerance );

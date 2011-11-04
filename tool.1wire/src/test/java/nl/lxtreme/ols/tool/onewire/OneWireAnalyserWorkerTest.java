@@ -34,6 +34,7 @@ import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
 import org.junit.runners.Parameterized.*;
+import org.mockito.*;
 
 
 /**
@@ -139,7 +140,7 @@ public class OneWireAnalyserWorkerTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.onewire.OneWireAnalyserWorker#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.onewire.OneWireAnalyserTask#doInBackground()}.
    */
   @Test
   public void testAnalyzeDataFile() throws Exception
@@ -165,15 +166,18 @@ public class OneWireAnalyserWorkerTest
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     DataContainer container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( 0, container.getValues().length );
+    ToolContext toolContext = DataTestUtils.createToolContext( container );
 
-    OneWireAnalyserWorker worker = new OneWireAnalyserWorker( container, toolContext );
+    ToolProgressListener toolProgressListener = Mockito.mock( ToolProgressListener.class );
+    AnnotationListener annotationListener = Mockito.mock( AnnotationListener.class );
+
+    OneWireAnalyserTask worker = new OneWireAnalyserTask( toolContext, toolProgressListener, annotationListener );
     worker.setOneWireLineIndex( this.channelIdx );
     worker.setOneWireBusMode( this.busMode );
 
     // Simulate we're running in a separate thread by directly calling the main
     // working routine...
-    OneWireDataSet result = worker.doInBackground();
+    OneWireDataSet result = worker.call();
     assertNotNull( result );
 
     return result;

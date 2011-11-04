@@ -25,30 +25,35 @@ package nl.lxtreme.ols.api.tools;
  * Can be used to create a service that listens for the addition/removal of
  * annotation on channel data.
  */
-public interface AnnotationListener<TYPE>
+public interface AnnotationListener
 {
   // METHODS
 
   /**
-   * Adds a single annotation.
+   * Called when all annotations for all channels need to be cleared.
+   * <p>
+   * Called <em>before</em> any annotation is added.
+   * </p>
+   */
+  void clearAnnotations();
+
+  /**
+   * Called when the annotations for a single channel need to be cleared.
+   * <p>
+   * Called <em>before</em> any annotation is added.
+   * </p>
    * 
    * @param aChannelIdx
-   * @param aStartIndex
-   * @param aEndIndex
-   * @param aAnnotation
+   *          the channel index to clear the annotation for, >= 0 && < 32.
    */
-  void addAnnotation( int aChannelIdx, int aStartIdx, int aEndIdx, TYPE aAnnotation );
+  void clearAnnotations( int aChannelIdx );
 
   /**
-   * @param aChannelIdx
-   * @param aStartIdx
-   * @param aEndIdx
-   */
-  void removeAnnotation( int aChannelIdx, int aStartIdx, int aEndIdx );
-
-  /**
+   * Called for each annotation.
+   * 
    * @param aAnnotation
-   * @return
+   *          the (new) annotation, cannot be <code>null</code>.
    */
-  boolean supportsAnnotation( Object aAnnotation );
+  void onAnnotation( Annotation<?> aAnnotation );
+
 }

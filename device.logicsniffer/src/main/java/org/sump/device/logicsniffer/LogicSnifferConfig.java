@@ -154,7 +154,7 @@ public final class LogicSnifferConfig
    */
   public int getClockspeed()
   {
-    int result = LogicSnifferDevice.CLOCK;
+    int result = LogicSnifferAcquisitionTask.CLOCK;
     if ( this.deviceProfile != null )
     {
       result = Math.min( result, this.deviceProfile.getClockspeed() );
@@ -180,7 +180,7 @@ public final class LogicSnifferConfig
   public int getDivider()
   {
     // double clock = getClockspeed();
-    double clock = LogicSnifferDevice.CLOCK;
+    double clock = LogicSnifferAcquisitionTask.CLOCK;
     if ( isDoubleDataRateEnabled() )
     {
       clock *= 2.0;

@@ -32,6 +32,7 @@ import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
 
 import org.junit.*;
+import org.mockito.*;
 
 
 /**
@@ -102,7 +103,7 @@ public class Asm45AnalyserWorkerContentTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.asm45.Asm45AnalyserWorker#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.asm45.Asm45AnalyserTask#doInBackground()}.
    */
   @Test
   public void testKopterDecodingOk() throws Exception
@@ -202,9 +203,12 @@ public class Asm45AnalyserWorkerContentTest
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     DataContainer container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( 0, container.getValues().length );
+    ToolContext toolContext = DataTestUtils.createToolContext( container );
 
-    Asm45AnalyserWorker worker = new Asm45AnalyserWorker( container, toolContext );
+    ToolProgressListener toolProgressListener = Mockito.mock( ToolProgressListener.class );
+    AnnotationListener annotationListener = Mockito.mock( AnnotationListener.class );
+
+    Asm45AnalyserTask worker = new Asm45AnalyserTask( toolContext, toolProgressListener, annotationListener );
     worker.setLineSMCIndex( aLineSMCIndex );
     worker.setLineSTMIndex( aLineSTMIndex );
     worker.setLineEBGIndex( aLineEBGIndex );
@@ -218,7 +222,7 @@ public class Asm45AnalyserWorkerContentTest
 
     // Simulate we're running in a separate thread by directly calling the main
     // working routine...
-    Asm45DataSet result = worker.doInBackground();
+    Asm45DataSet result = worker.call();
     assertNotNull( result );
 
     return result;

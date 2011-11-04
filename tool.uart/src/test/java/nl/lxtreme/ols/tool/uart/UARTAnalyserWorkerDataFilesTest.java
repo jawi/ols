@@ -35,10 +35,11 @@ import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.*;
 
 
 /**
- * (Parameterized) tests cases for {@link UARTAnalyserWorker}.
+ * (Parameterized) tests cases for {@link UARTAnalyserTask}.
  */
 @RunWith( Parameterized.class )
 public class UARTAnalyserWorkerDataFilesTest
@@ -86,7 +87,7 @@ public class UARTAnalyserWorkerDataFilesTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.uart.UARTAnalyserWorker#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.uart.UARTAnalyserTask#doInBackground()}.
    */
   @Test
   public void testUartAnalysisOk() throws Exception
@@ -113,14 +114,17 @@ public class UARTAnalyserWorkerDataFilesTest
     DataContainer container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
-    UARTAnalyserWorker worker = new UARTAnalyserWorker( container, toolContext );
+    ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
+    AnnotationListener al = Mockito.mock( AnnotationListener.class );
+
+    UARTAnalyserTask worker = new UARTAnalyserTask( toolContext, tpl, al );
     worker.setStopBits( UARTStopBits.STOP_1 );
     worker.setParity( UARTParity.NONE );
     worker.setBitCount( 8 );
     worker.setRxdIndex( this.channels[0] );
     worker.setTxdIndex( this.channels[1] );
 
-    UARTDataSet result = worker.doInBackground();
+    UARTDataSet result = worker.call();
     assertNotNull( result );
     return result;
   }

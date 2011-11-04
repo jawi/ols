@@ -21,10 +21,6 @@
 package nl.lxtreme.ols.tool.base;
 
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.*;
-
-
 /**
  * Provides a common interface for all tool dialogs.
  */
@@ -33,12 +29,20 @@ public interface ToolDialog
   // METHODS
 
   /**
-   * Returns the tool context in which this tool should run, providing
-   * information like, the number of channels and so on.
+   * Called to cancel the tool (if it is running).
    * 
-   * @return a tool context, never <code>null</code>.
+   * @throws IllegalStateException
+   *           in case the tool isn't running.
    */
-  public ToolContext getContext();
+  public void cancelTool() throws IllegalStateException;
+
+  /**
+   * Called to invoke the actual tool.
+   * 
+   * @throws IllegalStateException
+   *           in case the tool is already running.
+   */
+  public void invokeTool() throws IllegalStateException;
 
   /**
    * Resets the dialog, will be called if the dialog is shown at least once and
@@ -49,11 +53,7 @@ public interface ToolDialog
 
   /**
    * Shows the dialog with the given capture results.
-   * 
-   * @param aData
-   *          the capture results to use in the tool's dialog, cannot be
-   *          <code>null</code>.
    */
-  public void showDialog( final DataContainer aData );
+  public void showDialog();
 
 }

@@ -76,7 +76,7 @@ public final class ActionManagerFactory
     aActionManager.add( new SaveDataFileAction( aController ) ).setEnabled( false );
     aActionManager.add( new ExitAction( aController ) );
 
-    aActionManager.add( new CaptureAction( aController ) );
+    aActionManager.add( new CaptureAction( aController ) ).setEnabled( false );
     aActionManager.add( new CancelCaptureAction( aController ) ).setEnabled( false );
     aActionManager.add( new RepeatCaptureAction( aController ) ).setEnabled( false );
 

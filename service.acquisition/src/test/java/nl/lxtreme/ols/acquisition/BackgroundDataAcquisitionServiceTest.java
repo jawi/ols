@@ -105,7 +105,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testAcquireDataCompleteOk() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( 100 );
+    final Device deviceController = createMockDeviceController( 100 );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -131,7 +131,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testAcquireDataFail() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( THROW_EXCEPTION );
+    final Device deviceController = createMockDeviceController( THROW_EXCEPTION );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -166,7 +166,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testAcquireDataOngoingOk() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( 100 );
+    final Device deviceController = createMockDeviceController( 100 );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -193,7 +193,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testCancelOngoingAcquisitionOk() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( 200 );
+    final Device deviceController = createMockDeviceController( 200 );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -223,7 +223,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testCancelOngoingBlockingAcquisitionFail() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( INFINITE_BLOCKING_CALL );
+    final Device deviceController = createMockDeviceController( INFINITE_BLOCKING_CALL );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -248,7 +248,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testCancelOngoingBlockingAcquisitionOk() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( INTERRUPTABLE_BLOCKING_CALL );
+    final Device deviceController = createMockDeviceController( INTERRUPTABLE_BLOCKING_CALL );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -287,7 +287,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testCloseCancelsOngoingBlockingAcquisitionFail() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( INFINITE_BLOCKING_CALL );
+    final Device deviceController = createMockDeviceController( INFINITE_BLOCKING_CALL );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -318,7 +318,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testCloseCancelsOngoingBlockingAcquisitionOk() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( INTERRUPTABLE_BLOCKING_CALL );
+    final Device deviceController = createMockDeviceController( INTERRUPTABLE_BLOCKING_CALL );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -351,7 +351,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testCloseCancelsOngoingInterruptableAcquisitionOk() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( 200 );
+    final Device deviceController = createMockDeviceController( 200 );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -387,7 +387,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test( expected = IllegalStateException.class )
   public void testDoubleAcquireDataFail() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( 100 );
+    final Device deviceController = createMockDeviceController( 100 );
 
     this.service.acquireData( deviceController );
 
@@ -403,7 +403,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testIsAcquiring() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( 100 );
+    final Device deviceController = createMockDeviceController( 100 );
 
     this.service.acquireData( deviceController );
 
@@ -424,7 +424,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testReacquireCancelledDataCompleteOk() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( 200 );
+    final Device deviceController = createMockDeviceController( 200 );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -464,7 +464,7 @@ public class BackgroundDataAcquisitionServiceTest
   @Test
   public void testReacquireDataCompleteOk() throws Exception
   {
-    final DeviceController deviceController = createMockDeviceController( 100 );
+    final Device deviceController = createMockDeviceController( 100 );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockAcquisitionListenerHelper );
@@ -499,9 +499,9 @@ public class BackgroundDataAcquisitionServiceTest
    * @throws Exception
    * @throws IOException
    */
-  private DeviceController createMockDeviceController( final int aTimeout ) throws Exception
+  private Device createMockDeviceController( final int aTimeout ) throws Exception
   {
-    final Device mockDevice = mock( Device.class );
+    final AcquisitionTask mockDevice = mock( AcquisitionTask.class );
     final AcquisitionResult mockResult = mock( AcquisitionResult.class );
 
     when( mockDevice.call() ).thenAnswer( new Answer<AcquisitionResult>()
@@ -544,8 +544,8 @@ public class BackgroundDataAcquisitionServiceTest
       }
     } );
 
-    final DeviceController mockDeviceController = mock( DeviceController.class );
-    when( mockDeviceController.createDevice( any( AcquisitionProgressListener.class ) ) ).thenReturn( mockDevice );
+    final Device mockDeviceController = mock( Device.class );
+    when( mockDeviceController.createAcquisitionTask( any( AcquisitionProgressListener.class ) ) ).thenReturn( mockDevice );
 
     return mockDeviceController;
   }
