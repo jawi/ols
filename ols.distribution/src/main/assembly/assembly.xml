@@ -35,21 +35,21 @@
 				<include>nl.lxtreme.ols:client</include>
 				<include>nl.lxtreme.ols:logging</include>
 				<include>nl.lxtreme.ols:service.io</include>
-				<include>nl.lxtreme.ols:service.acquisition</include>
+				<include>nl.lxtreme.ols:service.taskexecution</include>
 				<include>nl.lxtreme.ols:util</include>
 				<include>nl.lxtreme.ols:org.rxtx</include>
 				<include>nl.lxtreme.ols.device:test</include>
 				<include>nl.lxtreme.ols.device:generic</include>
 				<include>nl.lxtreme.ols.device:logicsniffer</include>
+				<include>nl.lxtreme.ols.tool:1wire</include>
+				<include>nl.lxtreme.ols.tool:asm45</include>
 				<include>nl.lxtreme.ols.tool:base</include>
 				<include>nl.lxtreme.ols.tool:i2c</include>
+				<include>nl.lxtreme.ols.tool:jtag</include>
 				<include>nl.lxtreme.ols.tool:measure</include>
 				<include>nl.lxtreme.ols.tool:spi</include>
 				<include>nl.lxtreme.ols.tool:state</include>
 				<include>nl.lxtreme.ols.tool:uart</include>
-				<include>nl.lxtreme.ols.tool:1wire</include>
-				<include>nl.lxtreme.ols.tool:jtag</include>
-				<include>nl.lxtreme.ols.tool:asm45</include>
 				<include>nl.lxtreme.ols.export:image</include>
 				<include>nl.lxtreme.ols.export:vcd</include>
 			</includes>

@@ -40,7 +40,7 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
 /**
- * Some RLE-timing test cases for {@link LogicSnifferDevice}.
+ * Some RLE-timing test cases for {@link LogicSnifferAcquisitionTask}.
  */
 @RunWith( Parameterized.class )
 public class LogicSnifferRleTimingComponentTest
@@ -273,7 +273,7 @@ public class LogicSnifferRleTimingComponentTest
 
   /**
    * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
+   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}.
    */
   @Test( /* timeout = 10000 */)
   public void testRleOk() throws Exception

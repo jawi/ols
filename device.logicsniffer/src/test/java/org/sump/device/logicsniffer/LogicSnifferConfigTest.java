@@ -64,10 +64,10 @@ public class LogicSnifferConfigTest
     this.config.setSampleRate( 1 );
     assertEquals( 32, this.config.getChannelCount() );
 
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK );
     assertEquals( 32, this.config.getChannelCount() );
 
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK + 1 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
     assertEquals( 16, this.config.getChannelCount() );
   }
 
@@ -77,7 +77,7 @@ public class LogicSnifferConfigTest
   @Test
   public void testGetClockspeed()
   {
-    assertEquals( LogicSnifferDevice.CLOCK, this.config.getClockspeed() );
+    assertEquals( LogicSnifferAcquisitionTask.CLOCK, this.config.getClockspeed() );
   }
 
   /**
@@ -98,13 +98,13 @@ public class LogicSnifferConfigTest
     this.config.setSampleRate( Integer.MAX_VALUE );
     assertEquals( 0, this.config.getDivider() );
 
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK );
     assertEquals( 0, this.config.getDivider() );
 
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK >> 1 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK >> 1 );
     assertEquals( 1, this.config.getDivider() );
 
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK >> 2 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK >> 2 );
     assertEquals( 3, this.config.getDivider() );
   }
 
@@ -115,7 +115,7 @@ public class LogicSnifferConfigTest
   public void testGetEnabledGroupCountWithDDR()
   {
     // With DDR...
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK + 1 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
 
     this.config.setEnabledChannels( 0 );
     assertEquals( 0, this.config.getEnabledGroupCount() );
@@ -165,7 +165,7 @@ public class LogicSnifferConfigTest
   public void testGetGroupCountWithDDR()
   {
     // With DDR...
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK + 1 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
 
     assertEquals( 2, this.config.getGroupCount() );
   }
@@ -189,7 +189,7 @@ public class LogicSnifferConfigTest
   public void testGetRLEDataWidthWithDDR()
   {
     // With DDR...
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK + 1 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
 
     this.config.setEnabledChannels( 0 );
     assertEquals( 0, this.config.getRLEDataWidth() );
@@ -239,7 +239,7 @@ public class LogicSnifferConfigTest
   public void testGetSampleCountWithDDR()
   {
     // With DDR...
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK + 1 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
 
     this.config.setSampleCount( 7 );
     assertEquals( 0, this.config.getSampleCount() );
@@ -331,10 +331,10 @@ public class LogicSnifferConfigTest
     this.config.setSampleRate( 1 );
     assertFalse( this.config.isDoubleDataRateEnabled() );
 
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK );
     assertFalse( this.config.isDoubleDataRateEnabled() );
 
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK + 1 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
     assertTrue( this.config.isDoubleDataRateEnabled() );
   }
 
@@ -345,7 +345,7 @@ public class LogicSnifferConfigTest
   public void testIsFilterAvailableWithDDR()
   {
     // With DDR...
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK + 1 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
 
     assertFalse( this.config.isFilterAvailable() );
   }
@@ -369,7 +369,7 @@ public class LogicSnifferConfigTest
   public void testIsGroupEnabledWithDDR()
   {
     // With DDR...
-    this.config.setSampleRate( LogicSnifferDevice.CLOCK + 1 );
+    this.config.setSampleRate( LogicSnifferAcquisitionTask.CLOCK + 1 );
 
     // One channel group...
     this.config.setEnabledChannels( 0x000000FF );

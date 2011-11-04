@@ -40,7 +40,7 @@ import org.sump.device.logicsniffer.profile.*;
 /**
  * Provides a "virtual" LogicSniffer device.
  */
-public class VirtualLogicSnifferDevice extends LogicSnifferDevice
+public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
 {
   // INNER TYPES
 
@@ -188,8 +188,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferDevice
               break;
             case 0x82:
               // Set Flags...
-              this.ddrMode = ( ( parameterValue & LogicSnifferDevice.FLAG_DEMUX ) != 0 );
-              this.rleMode = ( ( parameterValue & LogicSnifferDevice.FLAG_RLE ) != 0 );
+              this.ddrMode = ( ( parameterValue & LogicSnifferAcquisitionTask.FLAG_DEMUX ) != 0 );
+              this.rleMode = ( ( parameterValue & LogicSnifferAcquisitionTask.FLAG_RLE ) != 0 );
               this.enabledGroups = ( ( parameterValue & 0x3C ) >> 2 );
               this.sampleWidth = Ols.MAX_BLOCKS - Integer.bitCount( this.enabledGroups );
               if ( this.ddrMode )

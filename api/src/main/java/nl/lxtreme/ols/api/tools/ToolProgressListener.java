@@ -21,9 +21,6 @@
 package nl.lxtreme.ols.api.tools;
 
 
-import java.util.concurrent.*;
-
-
 /**
  * Can be used to listen to the progress of the invocation of a tool.
  */
@@ -32,24 +29,7 @@ public interface ToolProgressListener
   // METHODS
 
   /**
-   * Called when the tool is invoked and has ended its work.
-   * 
-   * @param aTool
-   *          the tool that is ended, cannot be <code>null</code>;
-   * @param aFuture
-   *          the future that contains the execution status of the tool, cannot
-   *          be <code>null</code>.
+   * @param aPercentage
    */
-  void toolEnded( Tool aTool, Future<Void> aFuture );
-
-  /**
-   * Called when the tool is invoked and is about to starts its work.
-   * 
-   * @param aTool
-   *          the tool that is started, cannot be <code>null</code>;
-   * @param aFuture
-   *          the future that contains the execution status of the tool, cannot
-   *          be <code>null</code>.
-   */
-  void toolStarted( Tool aTool, Future<Void> aFuture );
+  void setProgress( int aPercentage );
 }

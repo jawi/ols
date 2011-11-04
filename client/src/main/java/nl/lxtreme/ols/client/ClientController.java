@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 import java.util.logging.*;
 
 import javax.swing.*;
@@ -52,9 +53,24 @@ import org.osgi.framework.*;
  * Denotes a front-end controller for the client.
  */
 public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
-    AcquisitionDataListener, AnalysisCallback, IClientController
+    AcquisitionDataListener, AnnotationListener, IClientController
 {
   // INNER TYPES
+
+  /**
+   * 
+   */
+  final class AccumulatingRepaintingRunnable extends AccumulatingRunnable<Void>
+  {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void run( final List<Void> aArgs )
+    {
+      repaintMainFrame();
+    }
+  }
 
   /**
    * Provides a default tool context implementation.
@@ -63,10 +79,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     // VARIABLES
 
+    private final DataContainer data;
     private final int startSampleIdx;
     private final int endSampleIdx;
-    private final int channels;
-    private final int enabledChannels;
 
     // CONSTRUCTORS
 
@@ -77,18 +92,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
      *          the starting sample index;
      * @param aEndSampleIdx
      *          the ending sample index;
-     * @param aChannels
-     *          the available channels in the acquisition result;
-     * @param aEnabledChannels
-     *          the enabled channels in the acquisition result.
+     * @param aData
+     *          the acquisition result.
      */
-    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final int aChannels,
-        final int aEnabledChannels )
+    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final DataContainer aData )
     {
       this.startSampleIdx = aStartSampleIdx;
       this.endSampleIdx = aEndSampleIdx;
-      this.channels = aChannels;
-      this.enabledChannels = aEnabledChannels;
+      this.data = aData;
     }
 
     /**
@@ -97,7 +108,25 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public int getChannels()
     {
-      return this.channels;
+      return this.data.getChannels();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Long getCursorPosition( final int aIndex )
+    {
+      return this.data.getCursorPosition( aIndex );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AcquisitionResult getData()
+    {
+      return this.data;
     }
 
     /**
@@ -106,7 +135,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public int getEnabledChannels()
     {
-      return this.enabledChannels;
+      return this.data.getEnabledChannels();
     }
 
     /**
@@ -137,6 +166,24 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
   }
 
+  /**
+   * A runnable implementation that accumulates several calls to avoid an
+   * avalanche of events on the EDT.
+   */
+  final class ProgressUpdatingRunnable extends AccumulatingRunnable<Integer>
+  {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void run( final List<Integer> aArgs )
+    {
+      final Integer percentage = aArgs.get( aArgs.size() - 1 );
+      setProgressOnEDT( percentage.intValue() );
+      updateActionsOnEDT();
+    }
+  }
+
   // CONSTANTS
 
   private static final Logger LOG = Logger.getLogger( ClientController.class.getName() );
@@ -153,6 +200,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private DataAcquisitionService dataAcquisitionService;
 
   private final EventListenerList evenListeners;
+  private final ProgressUpdatingRunnable progressAccumulatingRunnable;
+  private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
 
   private volatile MainFrame mainFrame;
   private volatile String selectedDevice;
@@ -177,6 +226,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
     this.evenListeners = new EventListenerList();
     this.actionManager = ActionManagerFactory.createActionManager( this );
+
+    this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
+    this.repaintAccumulatingRunnable = new AccumulatingRepaintingRunnable();
   }
 
   // METHODS
@@ -220,8 +272,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void acquisitionInProgress( final int aPercentage )
   {
-    setProgressOnEDT( aPercentage );
-    updateActionsOnEDT();
+    this.progressAccumulatingRunnable.add( Integer.valueOf( aPercentage ) );
   }
 
   /**
@@ -273,38 +324,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * @see nl.lxtreme.ols.api.tools.AnalysisCallback#analysisAborted(java.lang.String)
-   */
-  @Override
-  public void analysisAborted( final String aReason )
-  {
-    setStatusOnEDT( "Analysis aborted! {0}", aReason );
-
-    updateActionsOnEDT();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void analysisComplete( final AcquisitionResult aNewData )
-  {
-    if ( aNewData != null )
-    {
-      this.dataContainer.setCapturedData( aNewData );
-    }
-    if ( this.mainFrame != null )
-    {
-      repaintMainFrame();
-    }
-
-    setStatusOnEDT( "" );
-    updateActionsOnEDT();
-  }
-
-  /**
    * @see nl.lxtreme.ols.client.IClientController#cancelCapture()
    */
+  @Override
   public void cancelCapture()
   {
     final DataAcquisitionService acquisitionService = getDataAcquisitionService();
@@ -319,29 +341,29 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean captureData( final Window aParent )
   {
     final DataAcquisitionService acquisitionService = getDataAcquisitionService();
-    final DeviceController devCtrl = getDeviceController();
-    if ( ( devCtrl == null ) || ( acquisitionService == null ) )
+    final Device device = getDevice();
+    if ( ( device == null ) || ( acquisitionService == null ) )
     {
       return false;
     }
 
     try
     {
-      if ( devCtrl.setupCapture( aParent ) )
+      if ( device.setupCapture( aParent ) )
       {
-        setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(),
-            new Date() );
+        setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", device.getName(), new Date() );
 
-        acquisitionService.acquireData( devCtrl );
+        acquisitionService.acquireData( device );
         return true;
       }
 
       return false;
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       setStatusOnEDT( "I/O problem: " + exception.getMessage() );
 
@@ -362,6 +384,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void clearAllCursors()
   {
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
@@ -376,6 +399,28 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
+  public void clearAnnotations()
+  {
+    for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
+    {
+      clearAnnotations( i );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void clearAnnotations( final int aChannelIdx )
+  {
+    this.dataContainer.clearChannelAnnotations( aChannelIdx );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void createNewProject()
   {
     this.projectManager.createNewProject();
@@ -391,6 +436,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void exit()
   {
     try
@@ -400,7 +446,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       // next time...
       this.bundleContext.getBundle( 0 ).stop( Bundle.STOP_TRANSIENT );
     }
-    catch ( IllegalStateException ex )
+    catch ( final IllegalStateException ex )
     {
       LOG.warning( "Bundle context no longer valid while shutting down client?!" );
 
@@ -408,7 +454,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       // lets ignore this exception for now...
       System.exit( -1 );
     }
-    catch ( BundleException be )
+    catch ( final BundleException be )
     {
       LOG.warning( "Bundle context no longer valid while shutting down client?!" );
 
@@ -419,6 +465,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void exportTo( final String aExporterName, final File aExportFile ) throws IOException
   {
     if ( this.mainFrame == null )
@@ -448,6 +495,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * @see nl.lxtreme.ols.client.ActionProvider#getAction(java.lang.String)
    */
+  @Override
   public Action getAction( final String aID )
   {
     return this.actionManager.getAction( aID );
@@ -456,6 +504,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public DataContainer getDataContainer()
   {
     return this.dataContainer;
@@ -466,7 +515,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * 
    * @return the current device controller, can be <code>null</code>.
    */
-  public final DeviceController getDeviceController()
+  public final Device getDevice()
   {
     if ( this.selectedDevice != null )
     {
@@ -484,7 +533,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public String[] getDeviceNames()
   {
-    return getAllServiceNamesFor( DeviceController.class );
+    return getAllServiceNamesFor( Device.class );
   }
 
   /**
@@ -548,6 +597,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public File getProjectFilename()
   {
     return this.projectManager.getCurrentProject().getFilename();
@@ -567,6 +617,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void gotoCursorPosition( final int aCursorIdx )
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
@@ -582,6 +633,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void gotoFirstAvailableCursor()
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
@@ -604,6 +656,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void gotoLastAvailableCursor()
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
@@ -626,6 +679,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void gotoTriggerPosition()
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.hasTriggerData() )
@@ -638,6 +692,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean isDeviceSelected()
   {
     return this.selectedDevice != null;
@@ -646,14 +701,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean isDeviceSetup()
   {
-    return isDeviceSelected() && getDeviceController().isSetup();
+    return isDeviceSelected() && getDevice().isSetup();
   }
 
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean isProjectChanged()
   {
     return this.projectManager.getCurrentProject().isChanged();
@@ -662,6 +719,29 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
+  public void onAnnotation( final Annotation<?> aAnnotation )
+  {
+    if ( aAnnotation instanceof DataAnnotation )
+    {
+      final DataAnnotation<?> dataAnnotation = ( DataAnnotation<?> )aAnnotation;
+
+      this.dataContainer.addChannelAnnotation( dataAnnotation.getChannel(), dataAnnotation.getStartSampleIndex(),
+          dataAnnotation.getEndSampleIndex(), dataAnnotation.getAnnotation() );
+
+      // Accumulate repaint events to avoid an avalanche of events on the EDT...
+      this.repaintAccumulatingRunnable.add( ( Void )null );
+    }
+    else
+    {
+      this.dataContainer.setChannelLabel( aAnnotation.getChannel(), aAnnotation.toString() );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void openDataFile( final File aFile ) throws IOException
   {
     final FileReader reader = new FileReader( aFile );
@@ -690,6 +770,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void openProjectFile( final File aFile ) throws IOException
   {
     FileInputStream fis = null;
@@ -716,6 +797,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void removeCursor( final int aCursorIdx )
   {
     if ( this.mainFrame != null )
@@ -769,10 +851,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean repeatCaptureData( final Window aParent )
   {
     final DataAcquisitionService acquisitionService = getDataAcquisitionService();
-    final DeviceController devCtrl = getDeviceController();
+    final Device devCtrl = getDevice();
     if ( ( devCtrl == null ) || ( acquisitionService == null ) )
     {
       return false;
@@ -786,7 +869,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
       return true;
     }
-    catch ( IOException exception )
+    catch ( final IOException exception )
     {
       setStatusOnEDT( "I/O problem: " + exception.getMessage() );
 
@@ -811,6 +894,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @param aParent
    *          the parent window to use, can be <code>null</code>.
    */
+  @Override
   public void runTool( final String aToolName, final Window aParent )
   {
     if ( LOG.isLoggable( Level.INFO ) )
@@ -818,7 +902,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       LOG.log( Level.INFO, "Running tool: \"{0}\" ...", aToolName );
     }
 
-    final Tool tool = getTool( aToolName );
+    final Tool<?> tool = getTool( aToolName );
     if ( tool == null )
     {
       JOptionPane.showMessageDialog( aParent, "No such tool found: " + aToolName, "Error ...",
@@ -827,7 +911,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     else
     {
       final ToolContext context = createToolContext();
-      tool.process( aParent, this.dataContainer, context, this );
+      tool.invoke( aParent, context );
     }
 
     updateActionsOnEDT();
@@ -836,6 +920,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void saveDataFile( final File aFile ) throws IOException
   {
     final FileWriter writer = new FileWriter( aFile );
@@ -857,6 +942,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void saveProjectFile( final String aName, final File aFile ) throws IOException
   {
     FileOutputStream out = null;
@@ -895,6 +981,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    *          <code>true</code> if the cursors should be enabled,
    *          <code>false</code> otherwise.
    */
+  @Override
   public void setCursorMode( final boolean aState )
   {
     this.dataContainer.setCursorEnabled( aState );
@@ -907,6 +994,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void setCursorPosition( final int aCursorIdx, final Point aLocation )
   {
     // Implicitly enable cursor mode, the user already had made its
@@ -949,6 +1037,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * Shows the "about OLS" dialog on screen. the parent window to use, can be
    * <code>null</code>.
    */
+  @Override
   public void showAboutBox()
   {
     if ( this.mainFrame != null )
@@ -960,9 +1049,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void showBundlesDialog( final Window aOwner )
   {
-    BundlesDialog dialog = new BundlesDialog( aOwner, this.bundleContext );
+    final BundlesDialog dialog = new BundlesDialog( aOwner, this.bundleContext );
     if ( dialog.showDialog() )
     {
       dialog.dispose();
@@ -972,11 +1062,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void showChannelLabelsDialog( final Window aParent )
   {
     if ( this.mainFrame != null )
     {
-      DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, this.dataContainer.getChannelLabels() );
+      final DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, this.dataContainer.getChannelLabels() );
       if ( dialog.showDialog() )
       {
         final String[] channelLabels = dialog.getChannelLabels();
@@ -990,11 +1081,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void showDiagramModeSettingsDialog( final Window aParent )
   {
     if ( this.mainFrame != null )
     {
-      ModeSettingsDialog dialog = new ModeSettingsDialog( aParent, getDiagramSettings() );
+      final ModeSettingsDialog dialog = new ModeSettingsDialog( aParent, getDiagramSettings() );
       if ( dialog.showDialog() )
       {
         final DiagramSettings settings = dialog.getDiagramSettings();
@@ -1009,9 +1101,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void showPreferencesDialog( final Window aParent )
   {
-    GeneralSettingsDialog dialog = new GeneralSettingsDialog( aParent, getDiagramSettings() );
+    final GeneralSettingsDialog dialog = new GeneralSettingsDialog( aParent, getDiagramSettings() );
     if ( dialog.showDialog() )
     {
       final DiagramSettings settings = dialog.getDiagramSettings();
@@ -1023,18 +1116,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * @see nl.lxtreme.ols.api.ProgressCallback#updateProgress(int)
-   */
-  @Override
-  public void updateProgress( final int aPercentage )
-  {
-    setProgressOnEDT( aPercentage );
-    updateActionsOnEDT();
-  }
-
-  /**
    * {@inheritDoc}
    */
+  @Override
   public void zoomDefault()
   {
     if ( this.mainFrame != null )
@@ -1048,6 +1132,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void zoomIn()
   {
     if ( this.mainFrame != null )
@@ -1061,6 +1146,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void zoomOut()
   {
     if ( this.mainFrame != null )
@@ -1074,6 +1160,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Override
   public void zoomToFit()
   {
     if ( this.mainFrame != null )
@@ -1129,6 +1216,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
+        @Override
         public void run()
         {
           ClientController.this.mainFrame.setProgress( aPercentage );
@@ -1175,14 +1263,15 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
+      @Override
       public void run()
       {
         final DataAcquisitionService acquisitionService = getDataAcquisitionService();
-        final DeviceController deviceCtrl = getDeviceController();
+        final Device device = getDevice();
 
-        final boolean deviceControllerSet = deviceCtrl != null;
+        final boolean deviceControllerSet = ( device != null );
         final boolean deviceCapturing = ( acquisitionService != null ) && acquisitionService.isAcquiring();
-        final boolean deviceSetup = deviceControllerSet && !deviceCapturing && deviceCtrl.isSetup();
+        final boolean deviceSetup = deviceControllerSet && !deviceCapturing && device.isSetup();
 
         getAction( CaptureAction.ID ).setEnabled( deviceControllerSet );
         getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );
@@ -1232,14 +1321,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
         // Update the tools...
         final IManagedAction[] toolActions = ClientController.this.actionManager.getActionByType( RunToolAction.class );
-        for ( IManagedAction toolAction : toolActions )
+        for ( final IManagedAction toolAction : toolActions )
         {
           toolAction.setEnabled( dataAvailable );
         }
 
         // Update the exporters...
         final IManagedAction[] exportActions = ClientController.this.actionManager.getActionByType( ExportAction.class );
-        for ( IManagedAction exportAction : exportActions )
+        for ( final IManagedAction exportAction : exportActions )
         {
           exportAction.setEnabled( dataAvailable );
         }
@@ -1296,7 +1385,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       enabledChannels = NumberUtils.getBitMask( channels );
     }
 
-    return new DefaultToolContext( startOfDecode, endOfDecode, channels, enabledChannels );
+    return new DefaultToolContext( startOfDecode, endOfDecode, this.dataContainer );
   }
 
   /**
@@ -1338,7 +1427,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private String[] getAllServiceNamesFor( final Class<?> aServiceClass )
   {
-    String[] result = this.osgiHelper.getAllServicePropertiesFor( Action.NAME, aServiceClass );
+    final String[] result = this.osgiHelper.getAllServicePropertiesFor( Action.NAME, aServiceClass );
     Arrays.sort( result );
     return result;
   }
@@ -1356,9 +1445,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  private DeviceController getDeviceController( final String aName ) throws IllegalArgumentException
+  private Device getDeviceController( final String aName ) throws IllegalArgumentException
   {
-    return this.osgiHelper.getService( DeviceController.class, Action.NAME, aName );
+    return this.osgiHelper.getService( Device.class, Action.NAME, aName );
   }
 
   /**
@@ -1372,7 +1461,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  private Tool getTool( final String aName ) throws IllegalArgumentException
+  private Tool<?> getTool( final String aName ) throws IllegalArgumentException
   {
     return this.osgiHelper.getService( Tool.class, Action.NAME, aName );
   }

@@ -61,5 +61,5 @@ public interface DataAcquisitionService
    * @throws IllegalArgumentException
    *           in case the given device was <code>null</code>.
    */
-  void acquireData( DeviceController aDeviceController ) throws IOException;
+  void acquireData( Device aDeviceController ) throws IOException;
 }

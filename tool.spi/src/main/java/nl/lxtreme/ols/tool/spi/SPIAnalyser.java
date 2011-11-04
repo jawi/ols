@@ -22,27 +22,20 @@ package nl.lxtreme.ols.tool.spi;
 
 
 import java.awt.*;
-import java.beans.*;
 
-import nl.lxtreme.ols.api.data.*;
+import org.osgi.framework.*;
+
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * Provides a SPI analyser tool.
  */
-public class SPIAnalyser extends BaseAsyncTool<SPIProtocolAnalysisDialog, SPIDataSet, SPIAnalyserWorker>
+public class SPIAnalyser implements Tool<SPIDataSet>
 {
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new SPIAnalyser instance.
-   */
-  public SPIAnalyser()
-  {
-    super( ToolCategory.DECODER, "SPI analyser ..." );
-  }
+  private BundleContext context;
 
   // METHODS
 
@@ -50,33 +43,48 @@ public class SPIAnalyser extends BaseAsyncTool<SPIProtocolAnalysisDialog, SPIDat
    * {@inheritDoc}
    */
   @Override
-  protected SPIProtocolAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
+  public ToolTask<SPIDataSet> createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
+      final AnnotationListener aAnnotationListener )
   {
-    return new SPIProtocolAnalysisDialog( aOwner, aName, aContext );
+    return new SPIAnalyserTask( aContext, aProgressListener, aAnnotationListener );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected SPIAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
+  public ToolCategory getCategory()
   {
-    return new SPIAnalyserWorker( aData, aContext );
+    return ToolCategory.DECODER;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected void onPropertyChange( final PropertyChangeEvent aEvent )
+  public String getName()
   {
-    final String name = aEvent.getPropertyName();
-    final Object value = aEvent.getNewValue();
+    return "SPI analyser ...";
+  }
 
-    if ( SPIAnalyserWorker.PROPERTY_AUTO_DETECT_MODE.equals( name ) )
-    {
-      getDialog().setAutoDetectSPIMode( ( SPIMode )value );
-    }
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void invoke( final Window aParent, final ToolContext aContext )
+  {
+    new SPIProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+  }
+
+  /**
+   * Called when this tool is initialized by the client framework.
+   * 
+   * @param aContext
+   *          the bundle context to use, never <code>null</code>.
+   */
+  protected void init( final BundleContext aContext )
+  {
+    this.context = aContext;
   }
 }
 

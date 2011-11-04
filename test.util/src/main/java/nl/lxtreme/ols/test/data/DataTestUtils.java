@@ -240,6 +240,31 @@ public final class DataTestUtils
   }
 
   /**
+   * Creates a (mocked) tool context starting and ending at the given sample
+   * indexes.
+   * 
+   * @param aStartSampleIdx
+   *          the starting sample index of the returned tool context;
+   * @param aLastSampleIdx
+   *          the ending sample index of the returned tool context.
+   * @return a mocked tool context, never <code>null</code>.
+   */
+  public static ToolContext createToolContext( final AcquisitionResult aData, final int aStartSampleIdx,
+      final int aLastSampleIdx )
+  {
+    final Integer size = Integer.valueOf( aLastSampleIdx - Math.max( 0, aStartSampleIdx ) );
+    final Integer first = Integer.valueOf( Math.max( 0, aStartSampleIdx ) );
+    final Integer last = Integer.valueOf( aLastSampleIdx );
+
+    ToolContext toolContext = mock( ToolContext.class );
+    when( Integer.valueOf( toolContext.getStartSampleIndex() ) ).thenReturn( first );
+    when( Integer.valueOf( toolContext.getEndSampleIndex() ) ).thenReturn( last );
+    when( Integer.valueOf( toolContext.getLength() ) ).thenReturn( size );
+    when( toolContext.getData() ).thenReturn( aData );
+    return toolContext;
+  }
+
+  /**
    * Creates a (mocked) tool context starting at the given sample index and
    * ending at the last available sample index.
    * 
@@ -249,7 +274,7 @@ public final class DataTestUtils
   {
     final int startSampleIdx = Math.max( 0, aContainer.getSampleIndex( aContainer.getTriggerPosition() ) - 1 );
     final int lastSampleIdx = aContainer.getValues().length - 1;
-    return createToolContext( startSampleIdx, lastSampleIdx );
+    return createToolContext( aContainer, startSampleIdx, lastSampleIdx );
   }
 
   /**
@@ -263,30 +288,7 @@ public final class DataTestUtils
   public static ToolContext createToolContext( final DataContainer aContainer, final int aStartSampleIdx )
   {
     final int lastSampleIdx = aContainer.getValues().length - 1;
-    return createToolContext( aStartSampleIdx, lastSampleIdx );
-  }
-
-  /**
-   * Creates a (mocked) tool context starting and ending at the given sample
-   * indexes.
-   * 
-   * @param aStartSampleIdx
-   *          the starting sample index of the returned tool context;
-   * @param aLastSampleIdx
-   *          the ending sample index of the returned tool context.
-   * @return a mocked tool context, never <code>null</code>.
-   */
-  public static ToolContext createToolContext( final int aStartSampleIdx, final int aLastSampleIdx )
-  {
-    final Integer size = Integer.valueOf( aLastSampleIdx - Math.max( 0, aStartSampleIdx ) );
-    final Integer first = Integer.valueOf( Math.max( 0, aStartSampleIdx ) );
-    final Integer last = Integer.valueOf( aLastSampleIdx );
-
-    ToolContext toolContext = mock( ToolContext.class );
-    when( Integer.valueOf( toolContext.getStartSampleIndex() ) ).thenReturn( first );
-    when( Integer.valueOf( toolContext.getEndSampleIndex() ) ).thenReturn( last );
-    when( Integer.valueOf( toolContext.getLength() ) ).thenReturn( size );
-    return toolContext;
+    return createToolContext( aContainer, aStartSampleIdx, lastSampleIdx );
   }
 
   /**

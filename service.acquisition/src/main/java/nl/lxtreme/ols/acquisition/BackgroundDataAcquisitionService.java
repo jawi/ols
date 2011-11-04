@@ -41,13 +41,13 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
   // INNER TYPES
 
   /**
-   * Wrapper for {@link Device#call()}.
+   * Wrapper for {@link AcquisitionTask#call()}.
    */
   static final class DeviceWrapper implements Callable<AcquisitionResult>
   {
     // VARIABLES
 
-    private final Device device;
+    private final AcquisitionTask device;
     private final AcquisitionStatusListener statusListener;
 
     // CONSTRUCTORS
@@ -55,7 +55,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
     /**
      * Creates a new BackgroundDataAcquisitionService.DeviceWrapper instance.
      */
-    public DeviceWrapper( final Device aDevice, final AcquisitionStatusListener aStatusListener )
+    public DeviceWrapper( final AcquisitionTask aDevice, final AcquisitionStatusListener aStatusListener )
     {
       this.device = aDevice;
       this.statusListener = aStatusListener;
@@ -84,7 +84,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
   // VARIABLES
 
   private volatile Future<?> future;
-  private volatile Device device;
+  private volatile AcquisitionTask device;
 
   private final AcquisitionListenerHelper acquisitionListenerHelper;
 
@@ -111,7 +111,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
    * {@inheritDoc}
    */
   @Override
-  public void acquireData( final DeviceController aDeviceController ) throws IOException
+  public void acquireData( final Device aDeviceController ) throws IOException
   {
     if ( aDeviceController == null )
     {
@@ -122,7 +122,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService
       throw new IllegalStateException( "Capture already in progress!" );
     }
 
-    this.device = aDeviceController.createDevice( this.acquisitionListenerHelper );
+    this.device = aDeviceController.createAcquisitionTask( this.acquisitionListenerHelper );
 
     final FutureTask<AcquisitionResult> acquisitionWrapper = new FutureTask<AcquisitionResult>( new DeviceWrapper(
         this.device, this.acquisitionListenerHelper ) )

@@ -54,6 +54,7 @@
 							nl.lxtreme.ols.api.data.export,
 							nl.lxtreme.ols.api.data.project,
 							nl.lxtreme.ols.api.devices,
+                            nl.lxtreme.ols.api.task,
 							nl.lxtreme.ols.api.tools,
 							nl.lxtreme.ols.api.ui</Export-Package>
 					</instructions>

@@ -22,27 +22,19 @@ package nl.lxtreme.ols.tool.i2c;
 
 
 import java.awt.*;
-import java.beans.*;
+import org.osgi.framework.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * Provides an I2C analyser tool.
  */
-public class I2CAnalyser extends BaseAsyncTool<I2CProtocolAnalysisDialog, I2CDataSet, I2CAnalyserWorker>
+public class I2CAnalyser implements Tool<I2CDataSet>
 {
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new I2CAnalyser instance.
-   */
-  public I2CAnalyser()
-  {
-    super( ToolCategory.DECODER, "I2C protocol analyser ..." );
-  }
+  private BundleContext context;
 
   // METHODS
 
@@ -50,37 +42,48 @@ public class I2CAnalyser extends BaseAsyncTool<I2CProtocolAnalysisDialog, I2CDat
    * {@inheritDoc}
    */
   @Override
-  protected I2CProtocolAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
+  public ToolTask<I2CDataSet> createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
+      final AnnotationListener aAnnotationListener )
   {
-    return new I2CProtocolAnalysisDialog( aOwner, getName(), aContext );
+    return new I2CAnalyserTask( aContext, aProgressListener, aAnnotationListener );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected I2CAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
+  public ToolCategory getCategory()
   {
-    return new I2CAnalyserWorker( aData, aContext );
+    return ToolCategory.DECODER;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected void onPropertyChange( final PropertyChangeEvent aEvent )
+  public String getName()
   {
-    final String name = aEvent.getPropertyName();
-    final Object value = aEvent.getNewValue();
+    return "I2C protocol analyser ...";
+  }
 
-    if ( I2CAnalyserWorker.PROPERTY_AUTO_DETECT_SCL.equals( name ) )
-    {
-      getDialog().setAutoDetectSCL( ( String )value );
-    }
-    else if ( I2CAnalyserWorker.PROPERTY_AUTO_DETECT_SDA.equals( name ) )
-    {
-      getDialog().setAutoDetectSDA( ( String )value );
-    }
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void invoke( final Window aParent, final ToolContext aContext )
+  {
+    new I2CProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+  }
+
+  /**
+   * Called when this tool is initialized by the client framework.
+   * 
+   * @param aContext
+   *          the bundle context to use, never <code>null</code>.
+   */
+  protected void init( final BundleContext aContext )
+  {
+    this.context = aContext;
   }
 }
 

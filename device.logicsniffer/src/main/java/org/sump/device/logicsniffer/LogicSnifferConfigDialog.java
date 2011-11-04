@@ -1232,7 +1232,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
     // set sample rate; use a default to ensure the internal state remains
     // correct...
     value = String.valueOf( this.speedSelect.getSelectedItem() );
-    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, LogicSnifferDevice.CLOCK );
+    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, LogicSnifferAcquisitionTask.CLOCK );
     this.config.setSampleRate( f );
 
     // set sample count

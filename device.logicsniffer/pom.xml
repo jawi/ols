@@ -64,7 +64,6 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Activator>org.sump.device.logicsniffer.Activator</Bundle-Activator>
 						<Bundle-Description>A OLS-device driver for the OLS client.</Bundle-Description>
 						<Bundle-Copyright>Michael Poppitz (sump.org), J.W. Janssen
 							(lxtreme.nl) (C) 2010-2011</Bundle-Copyright>
@@ -73,8 +72,9 @@
 							javax.microedition.io;version="1.0.0",
 							nl.lxtreme.rxtx;version="2.2.0", *</Import-Package>
 						<Private-Package>org.sump.device.logicsniffer.profile</Private-Package>
+						<Bundle-Activator>org.sump.device.logicsniffer.Activator</Bundle-Activator>
 						<OLS-Device>1.0</OLS-Device>
-						<OLS-DeviceClass>org.sump.device.logicsniffer.LogicSnifferDeviceController</OLS-DeviceClass>
+						<OLS-DeviceClass>org.sump.device.logicsniffer.LogicSnifferDevice</OLS-DeviceClass>
 					</instructions>
 				</configuration>
 			</plugin>
