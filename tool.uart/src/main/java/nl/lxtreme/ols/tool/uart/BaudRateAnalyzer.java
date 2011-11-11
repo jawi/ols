@@ -29,11 +29,12 @@ import nl.lxtreme.ols.util.analysis.*;
  * allows to evaluate each detected bit length. The bit length with the highest
  * occurrence is used for baudrate calculation.
  */
+@SuppressWarnings( "boxing" )
 final class BaudRateAnalyzer
 {
   // CONSTANTS
 
-  private static final int[] COMMON_BAUDRATES = { 150, 300, 600, 1200, 2400, 4800, 9600, 19200, 28800, 38400, 57600,
+  public static final int[] COMMON_BAUDRATES = { 150, 300, 600, 1200, 2400, 4800, 9600, 19200, 28800, 38400, 57600,
       115200, 230400, 460800, 921600 };
 
   // VARIABLES
@@ -42,6 +43,25 @@ final class BaudRateAnalyzer
   private final Frequency<Integer> statData;
 
   // CONSTRUCTORS
+
+  /**
+   * Creates a new BaudRateAnalyzer instance.
+   * 
+   * @param aSampleRate
+   *          the sample rate at which the incoming data was sampled;
+   * @param aFixedBaudRate
+   *          the fixed baud rate that this analyzer should return.
+   */
+  public BaudRateAnalyzer( final int aSampleRate, final int aFixedBaudRate )
+  {
+    this.sampleRate = aSampleRate;
+    this.statData = new Frequency<Integer>();
+
+    // We already know our baudrate, so lets put a single value for the
+    // corresponding bitlength in our frequency mapping to let it be used...
+    final int bitLength = ( int )( aSampleRate / ( double )aFixedBaudRate );
+    this.statData.addValue( bitLength );
+  }
 
   /**
    * Creates a new BaudRateAnalyzer instance.
@@ -70,7 +90,7 @@ final class BaudRateAnalyzer
       if ( lastBitValue != bitValue )
       {
         final int bitLength = ( int )( aTimestamps[i] - lastTransition );
-        this.statData.addValue( Integer.valueOf( bitLength ) );
+        this.statData.addValue( bitLength );
 
         lastTransition = aTimestamps[i];
       }

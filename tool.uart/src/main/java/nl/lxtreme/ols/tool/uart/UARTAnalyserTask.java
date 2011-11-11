@@ -58,6 +58,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   private UARTStopBits stopBits;
   private UARTParity parity;
   private int bitCount;
+  private int baudRate;
 
   // CONSTRUCTORS
 
@@ -80,6 +81,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     this.riIndex = -1;
     this.dsrIndex = -1;
     this.dtrIndex = -1;
+    this.baudRate = -1;
   }
 
   // METHODS
@@ -180,6 +182,17 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   public boolean isInverted()
   {
     return this.inverted;
+  }
+
+  /**
+   * Sets baudRate to the given value.
+   * 
+   * @param aBaudRate
+   *          the baudRate to set.
+   */
+  public void setBaudRate( final int aBaudRate )
+  {
+    this.baudRate = aBaudRate;
   }
 
   /**
@@ -287,6 +300,27 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
+   * Factory method for creating the baud rate analyzer for the given
+   * acquisition results & bit mask.
+   * 
+   * @param aData
+   *          the acquisition results to use;
+   * @param aMask
+   *          the bit mask of the data to use.
+   * @return a {@link BaudRateAnalyzer} instance, never <code>null</code>.
+   */
+  private BaudRateAnalyzer createBaudRateAnalyzer( final AcquisitionResult aData, final int aMask )
+  {
+    if ( this.baudRate <= 0 )
+    {
+      // Auto detect the baud rate...
+      return new BaudRateAnalyzer( aData.getSampleRate(), aData.getValues(), aData.getTimestamps(), aMask );
+    }
+    // Use a fixed baud rate...
+    return new BaudRateAnalyzer( aData.getSampleRate(), this.baudRate );
+  }
+
+  /**
    * Decodes a control line.
    * 
    * @param aDataSet
@@ -347,12 +381,12 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     final AcquisitionResult data = this.context.getData();
 
     final int mask = ( 1 << aChannelIndex );
-    final BaudRateAnalyzer baudrateAnalyzer = new BaudRateAnalyzer( data.getSampleRate(), data.getValues(),
-        data.getTimestamps(), mask );
-
-    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( baudrateAnalyzer.getBestBitLength() ) );
+    final BaudRateAnalyzer baudrateAnalyzer = createBaudRateAnalyzer( data, mask );
 
     final int bitLength = baudrateAnalyzer.getBestBitLength();
+
+    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( bitLength ) );
+
     if ( bitLength <= 0 )
     {
       LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",
