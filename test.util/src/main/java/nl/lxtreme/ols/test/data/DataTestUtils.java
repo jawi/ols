@@ -22,7 +22,6 @@ package nl.lxtreme.ols.test.data;
 
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.*;
@@ -37,8 +36,6 @@ import nl.lxtreme.ols.test.data.project.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
-import org.mockito.invocation.*;
-import org.mockito.stubbing.*;
 
 
 /**
@@ -256,12 +253,52 @@ public final class DataTestUtils
     final Integer first = Integer.valueOf( Math.max( 0, aStartSampleIdx ) );
     final Integer last = Integer.valueOf( aLastSampleIdx );
 
-    ToolContext toolContext = mock( ToolContext.class );
-    when( Integer.valueOf( toolContext.getStartSampleIndex() ) ).thenReturn( first );
-    when( Integer.valueOf( toolContext.getEndSampleIndex() ) ).thenReturn( last );
-    when( Integer.valueOf( toolContext.getLength() ) ).thenReturn( size );
-    when( toolContext.getData() ).thenReturn( aData );
-    return toolContext;
+    // Do NOT use Mockito#mock for this; it appears to slow things down *really*
+    // much...
+    return new ToolContext()
+    {
+      @Override
+      public int getChannels()
+      {
+        return aData.getChannels();
+      }
+
+      @Override
+      public Long getCursorPosition( final int aSelectedIndex )
+      {
+        return null;
+      }
+
+      @Override
+      public AcquisitionResult getData()
+      {
+        return aData;
+      }
+
+      @Override
+      public int getEnabledChannels()
+      {
+        return aData.getEnabledChannels();
+      }
+
+      @Override
+      public int getEndSampleIndex()
+      {
+        return last.intValue();
+      }
+
+      @Override
+      public int getLength()
+      {
+        return size.intValue();
+      }
+
+      @Override
+      public int getStartSampleIndex()
+      {
+        return first.intValue();
+      }
+    };
   }
 
   /**
@@ -321,27 +358,69 @@ public final class DataTestUtils
   /**
    * Returns a mocked captured data result.
    */
-  @SuppressWarnings( "boxing" )
   public static AcquisitionResult getMockedCapturedData()
   {
-    AcquisitionResult result = mock( AcquisitionResult.class );
-    when( result.getAbsoluteLength() ).thenReturn( Long.valueOf( 8 ) );
-    when( result.getChannels() ).thenReturn( Integer.valueOf( 8 ) );
-    when( result.getEnabledChannels() ).thenReturn( Integer.valueOf( 255 ) );
-    when( result.getSampleIndex( anyLong() ) ).thenAnswer( new Answer<Integer>()
+    return new AcquisitionResult()
     {
       @Override
-      public Integer answer( final InvocationOnMock aInvocation ) throws Throwable
+      public long getAbsoluteLength()
       {
-        final Long param = ( Long )aInvocation.getArguments()[0];
-        return param.intValue();
+        return 8L;
       }
-    } );
-    when( result.getSampleRate() ).thenReturn( Integer.valueOf( 100 ) );
-    when( result.getTimestamps() ).thenReturn( new long[] { 1L, 2L, 3L, 4L } );
-    when( result.getValues() ).thenReturn( new int[] { 1, 0, 1, 0 } );
-    when( result.hasTimingData() ).thenReturn( Boolean.TRUE );
-    when( result.hasTriggerData() ).thenReturn( Boolean.FALSE );
-    return result;
+
+      @Override
+      public int getChannels()
+      {
+        return 8;
+      }
+
+      @Override
+      public int getEnabledChannels()
+      {
+        return 0xFF;
+      }
+
+      @Override
+      public int getSampleIndex( final long aTimeValue )
+      {
+        return ( int )aTimeValue;
+      }
+
+      @Override
+      public int getSampleRate()
+      {
+        return 100;
+      }
+
+      @Override
+      public long[] getTimestamps()
+      {
+        return new long[] { 1L, 2L, 3L, 4L };
+      }
+
+      @Override
+      public long getTriggerPosition()
+      {
+        return -1L;
+      }
+
+      @Override
+      public int[] getValues()
+      {
+        return new int[] { 1, 0, 1, 0 };
+      }
+
+      @Override
+      public boolean hasTimingData()
+      {
+        return true;
+      }
+
+      @Override
+      public boolean hasTriggerData()
+      {
+        return false;
+      }
+    };
   }
 }
