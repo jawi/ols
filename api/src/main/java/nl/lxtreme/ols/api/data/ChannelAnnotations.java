@@ -22,6 +22,7 @@ package nl.lxtreme.ols.api.data;
 
 
 import java.util.*;
+import java.util.concurrent.*;
 
 
 /**
@@ -46,7 +47,7 @@ public class ChannelAnnotations
   public ChannelAnnotations( final int aChannel )
   {
     this.channel = aChannel;
-    this.annotations = new TreeSet<ChannelAnnotation>();
+    this.annotations = new ConcurrentSkipListSet<ChannelAnnotation>();
   }
 
   // METHODS
@@ -162,7 +163,7 @@ public class ChannelAnnotations
   {
     final int prime = 31;
     int result = 1;
-    result = prime * result + this.channel;
+    result = ( prime * result ) + this.channel;
     return result;
   }
 }
