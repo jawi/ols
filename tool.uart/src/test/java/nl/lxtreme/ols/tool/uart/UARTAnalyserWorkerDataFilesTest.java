@@ -47,6 +47,7 @@ public class UARTAnalyserWorkerDataFilesTest
   // VARIABLES
 
   private final String resourceName;
+  private final int baudrate;
   private final int expectedErrorCount;
   private final int expectedSymbolCount;
   private final int expectedBaudrate;
@@ -58,9 +59,10 @@ public class UARTAnalyserWorkerDataFilesTest
    * Creates a new UARTAnalyserWorkerTest instance.
    */
   public UARTAnalyserWorkerDataFilesTest( final String aResourceName, final int aExpectedErrorCount,
-      final int aExpectedSymbolCount, final int aExpectedBaudrate, final int... aChannels )
+      final int aExpectedSymbolCount, final int aBaudrate, final int aExpectedBaudrate, final int... aChannels )
   {
     this.resourceName = aResourceName;
+    this.baudrate = aBaudrate;
     this.expectedErrorCount = aExpectedErrorCount;
     this.expectedSymbolCount = aExpectedSymbolCount;
     this.expectedBaudrate = aExpectedBaudrate;
@@ -78,10 +80,11 @@ public class UARTAnalyserWorkerDataFilesTest
   {
     return Arrays.asList( new Object[][] { //
         // { filename, error count, symbol count, baudrate, (rxd, txd) }
-            { "uart_8bit_1.ols", 0, 33, 38400, new int[] { 0, -1 } }, //
-            { "uart_8bit_2.ols", 0, 6, 9600, new int[] { 2, -1 } }, //
-            { "uart_8bit_3.ols", 50, 418, 9600, new int[] { 1, 0 } }, //
-            { "uart_8bit_4_38400bps.ols", 0, 22, 38400, new int[] { 0, -1 } }, //
+            { "uart_8bit_1.ols", 0, 33, -1, 38400, new int[] { 0, -1 } }, //
+            { "uart_8bit_2.ols", 0, 6, -1, 9600, new int[] { 2, -1 } }, //
+            { "uart_8bit_3.ols", 50, 418, -1, 9600, new int[] { 1, 0 } }, //
+            { "uart_8bit_4_38400bps.ols", 0, 22, -1, 38400, new int[] { 0, -1 } }, //
+            { "uart_8bit_5_115200bps.ols", 0, 306, 115200, 115200, new int[] { 0, -1 } }, //
         } );
   }
 
@@ -121,6 +124,7 @@ public class UARTAnalyserWorkerDataFilesTest
     worker.setStopBits( UARTStopBits.STOP_1 );
     worker.setParity( UARTParity.NONE );
     worker.setBitCount( 8 );
+    worker.setBaudRate( this.baudrate );
     worker.setRxdIndex( this.channels[0] );
     worker.setTxdIndex( this.channels[1] );
 
