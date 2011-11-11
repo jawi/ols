@@ -241,6 +241,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.parity.setSelectedIndex( aSettings.getInt( "parity", this.parity.getSelectedIndex() ) );
     this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
     this.stop.setSelectedIndex( aSettings.getInt( "stop", this.stop.getSelectedIndex() ) );
+    this.baudrate.setSelectedIndex( aSettings.getInt( "baudrate", this.baudrate.getSelectedIndex() ) );
     this.inv.setSelected( aSettings.getBoolean( "inverted", this.inv.isSelected() ) );
   }
 
@@ -273,6 +274,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     aSettings.putInt( "parity", this.parity.getSelectedIndex() );
     aSettings.putInt( "bits", this.bits.getSelectedIndex() );
     aSettings.putInt( "stop", this.stop.getSelectedIndex() );
+    aSettings.putInt( "baudrate", this.baudrate.getSelectedIndex() );
     aSettings.putBoolean( "inverted", this.inv.isSelected() );
   }
 
