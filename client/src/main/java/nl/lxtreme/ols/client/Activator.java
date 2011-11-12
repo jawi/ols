@@ -225,6 +225,9 @@ public class Activator implements BundleActivator
             AcquisitionStatusListener.class.getName(), AnnotationListener.class.getName() }, this.clientController,
         null );
 
+    final Host host = new Host( Activator.this.clientController );
+    aContext.registerService( ApplicationCallback.class.getName(), host, null );
+
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
     SwingUtilities.invokeLater( new Runnable()
@@ -235,10 +238,6 @@ public class Activator implements BundleActivator
         // Use the defined email address...
         System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS,
             clientProperties.getReportIncidentAddress() );
-
-        // This has to be done *before* any other Swing related code is executed
-        // so this also means the #invokeLater call done below...
-        HostUtils.initOSSpecifics( clientProperties.getShortName(), new Host( Activator.this.clientController ) );
 
         if ( clientProperties.isDebugMode() )
         {
