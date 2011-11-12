@@ -46,6 +46,7 @@
 						<Bundle-Description>Common utility classes for the OLS client.</Bundle-Description>
 						<Bundle-Copyright>J.W. Janssen (lxtreme.nl) (C) 2010-2011</Bundle-Copyright>
 						<Bundle-License>GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html</Bundle-License>
+						<Bundle-Activator>nl.lxtreme.ols.util.internal.Activator</Bundle-Activator>
 						<Export-Package>nl.lxtreme.ols.util, nl.lxtreme.ols.util.analysis,
 							nl.lxtreme.ols.util.osgi,
 							nl.lxtreme.ols.util.swing,
@@ -53,7 +54,7 @@
 							nl.lxtreme.ols.util.swing.component.icon,
 							nl.lxtreme.ols.util.swing.validation
 						</Export-Package>
-						<Private-Package>nl.lxtreme.ols.util.export</Private-Package>
+						<Private-Package>nl.lxtreme.ols.util.export,nl.lxtreme.ols.util.internal</Private-Package>
 					</instructions>
 				</configuration>
 			</plugin>
@@ -82,15 +83,9 @@
 							<pluginExecutions>
 								<pluginExecution>
 									<pluginExecutionFilter>
-										<groupId>
-											org.apache.maven.plugins
-										</groupId>
-										<artifactId>
-											maven-javadoc-plugin
-										</artifactId>
-										<versionRange>
-											[2.7,)
-										</versionRange>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-javadoc-plugin</artifactId>
+										<versionRange>[2.7,)</versionRange>
 										<goals>
 											<goal>jar</goal>
 										</goals>
