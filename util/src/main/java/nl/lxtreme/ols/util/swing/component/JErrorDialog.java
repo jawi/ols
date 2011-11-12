@@ -26,7 +26,6 @@ import java.awt.event.*;
 import java.io.*;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.*;
@@ -319,6 +318,9 @@ public class JErrorDialog extends JDialog implements Closeable
     @Override
     public void uncaughtException( final Thread aThread, final Throwable aException )
     {
+      // Make sure we dump the exception on the console...
+      aException.printStackTrace( System.err );
+
       final Window owner = SwingComponentUtils.getCurrentWindow();
       final IncidentInfo incident = new IncidentInfo( "Uncaught exception...", //
           "<html><b>Something unexpected happened!</b><br><br>"
