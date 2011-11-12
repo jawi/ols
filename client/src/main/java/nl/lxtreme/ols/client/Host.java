@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.client;
 
 
-import nl.lxtreme.ols.util.HostUtils.ApplicationCallback;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -50,7 +50,7 @@ final class Host implements ApplicationCallback
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.util.HostUtils.ApplicationCallback#handleAbout()
+   * @see nl.lxtreme.ols.util.ApplicationCallback#handleAbout()
    */
   @Override
   public boolean handleAbout()
@@ -60,7 +60,7 @@ final class Host implements ApplicationCallback
   }
 
   /**
-   * @see nl.lxtreme.ols.util.HostUtils.ApplicationCallback#handlePreferences()
+   * @see nl.lxtreme.ols.util.ApplicationCallback#handlePreferences()
    */
   @Override
   public boolean handlePreferences()
@@ -70,7 +70,7 @@ final class Host implements ApplicationCallback
   }
 
   /**
-   * @see nl.lxtreme.ols.util.HostUtils.ApplicationCallback#handleQuit()
+   * @see nl.lxtreme.ols.util.ApplicationCallback#handleQuit()
    */
   @Override
   public boolean handleQuit()
@@ -84,7 +84,7 @@ final class Host implements ApplicationCallback
   }
 
   /**
-   * @see nl.lxtreme.ols.util.HostUtils.ApplicationCallback#hasPreferences()
+   * @see nl.lxtreme.ols.util.ApplicationCallback#hasPreferences()
    */
   @Override
   public boolean hasPreferences()
