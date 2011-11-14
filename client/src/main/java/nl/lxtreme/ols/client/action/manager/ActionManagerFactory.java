@@ -50,7 +50,7 @@ public final class ActionManagerFactory
    *          the controller to use for the actions, cannot be <code>null</code>
    *          .
    */
-  public static IActionManager createActionManager( final IClientController aController )
+  public static IActionManager createActionManager( final ClientController aController )
   {
     final ActionManager actionManager = new ActionManager();
     fillActionManager( actionManager, aController );
@@ -66,7 +66,7 @@ public final class ActionManagerFactory
    *          the controller to use for the actions, cannot be <code>null</code>
    *          .
    */
-  private static void fillActionManager( final ActionManager aActionManager, final IClientController aController )
+  private static void fillActionManager( final ActionManager aActionManager, final ClientController aController )
   {
     aActionManager.add( new NewProjectAction( aController ) );
     aActionManager.add( new OpenProjectAction( aController ) );

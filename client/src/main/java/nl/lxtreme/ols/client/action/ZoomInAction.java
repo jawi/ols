@@ -47,7 +47,7 @@ public class ZoomInAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public ZoomInAction( final IClientController aController )
+  public ZoomInAction( final ClientController aController )
   {
     super( ID, aController, ICON_ZOOM_IN, "Zoom in", "Zoom in" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_PLUS ) );

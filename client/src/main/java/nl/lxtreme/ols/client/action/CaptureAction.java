@@ -50,7 +50,7 @@ public class CaptureAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public CaptureAction( final IClientController aController )
+  public CaptureAction( final ClientController aController )
   {
     this( ID, ICON_CAPTURE_DATA, "Begin capture", "Start capturing data from the logic analyser", aController );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_B ) );
@@ -72,7 +72,7 @@ public class CaptureAction extends BaseAction
    *          the controller to use for this action.
    */
   protected CaptureAction( final String aID, final String aIconName, final String aName, final String aDescription,
-      final IClientController aController )
+      final ClientController aController )
   {
     super( aID, aController, aIconName, aName, aDescription );
   }

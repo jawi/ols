@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client;
+package nl.lxtreme.ols.util.internal;
 
 
 import java.io.*;
@@ -34,11 +34,11 @@ import org.osgi.framework.*;
  * Provides a class that holds some client properties, such as the version and
  * so on.
  */
-public class ClientProperties
+public class HostResourceProperties implements HostProperties
 {
   // CONSTANTS
 
-  private static final String CLIENT_PROPERTIES = "/client.properties";
+  private static final String HOST_PROPERTIES = "/host.properties";
 
   private static final String SHORT_NAME = "LogicSniffer";
   private static final String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
@@ -55,12 +55,12 @@ public class ClientProperties
    * @param aContext
    *          the bundle context to use.
    */
-  ClientProperties( final BundleContext aContext )
+  HostResourceProperties( final BundleContext aContext )
   {
     this.properties = new Properties();
 
     // Try to load the embedded properties...
-    URL resource = aContext.getBundle().getResource( CLIENT_PROPERTIES );
+    URL resource = aContext.getBundle().getResource( HOST_PROPERTIES );
     if ( resource != null )
     {
       InputStream is = null;
@@ -98,86 +98,81 @@ public class ClientProperties
   // METHODS
 
   /**
-   * @return
+   * {@inheritDoc}
    */
+  @Override
   public String getExecutionEnvironment()
   {
     return System.getProperty( "java.vendor" ) + ", v" + System.getProperty( "java.version" );
   }
 
   /**
-   * Returns the current value of fullName.
-   * 
-   * @return the fullName
+   * {@inheritDoc}
    */
+  @Override
   public String getFullName()
   {
     return FULL_NAME;
   }
 
   /**
-   * @return
+   * {@inheritDoc}
    */
+  @Override
   public String getOSName()
   {
     return this.properties.getProperty( Constants.FRAMEWORK_OS_NAME );
   }
 
   /**
-   * @return
+   * {@inheritDoc}
    */
+  @Override
   public String getOSVersion()
   {
     return this.properties.getProperty( Constants.FRAMEWORK_OS_VERSION );
   }
 
   /**
-   * @return
+   * {@inheritDoc}
    */
+  @Override
   public String getProcessor()
   {
     return this.properties.getProperty( Constants.FRAMEWORK_PROCESSOR );
   }
 
   /**
-   * Returns the email address to use for reporting incidents.
-   * 
-   * @return a report incident email address, never <code>null</code>.
+   * {@inheritDoc}
    */
+  @Override
   public String getReportIncidentAddress()
   {
     return this.properties.getProperty( "client.incidentAddress", "info+ols@lxtreme.nl" );
   }
 
   /**
-   * Returns the current value of shortName.
-   * 
-   * @return the shortName
+   * {@inheritDoc}
    */
+  @Override
   public String getShortName()
   {
     return SHORT_NAME;
   }
 
   /**
-   * Returns the version of the client.
-   * 
-   * @return a version string, never <code>null</code>.
+   * {@inheritDoc}
    */
+  @Override
   public String getVersion()
   {
     return this.properties.getProperty( "client.version", "<NO VERSION>" );
   }
 
   /**
-   * Returns whether or not debugging is enabled.
-   * <p>
-   * Useful for additional checks, logging and so on.
-   * </p>
-   * 
-   * @return <code>true</code> if debug mode is enabled, <code>false</code>
-   *         otherwise.
+   * {@inheritDoc}
    */
+  @Override
   public boolean isDebugMode()
   {
     return Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );

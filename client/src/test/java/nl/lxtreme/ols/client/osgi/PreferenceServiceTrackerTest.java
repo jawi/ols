@@ -27,9 +27,8 @@ import static org.mockito.Mockito.*;
 import java.awt.*;
 import java.awt.event.*;
 
-import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.data.project.*;
+import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
 import org.osgi.framework.*;
@@ -46,7 +45,7 @@ public class PreferenceServiceTrackerTest
   private PreferenceServiceTracker preferenceServiceTracker;
 
   private BundleContext bundleContext;
-  private ProjectManager projectManager;
+  private SimpleProjectManager projectManager;
 
   private ServiceReference mockedServiceRef;
   private PreferencesService mockedPreferenceService;
@@ -63,8 +62,10 @@ public class PreferenceServiceTrackerTest
     this.mockedServiceRef = mock( ServiceReference.class );
     this.mockedPreferenceService = mock( PreferencesService.class );
 
-    ClientProperties mockProperties = mock( ClientProperties.class );
-    this.projectManager = new SimpleProjectManager( mockProperties );
+    HostProperties mockProperties = mock( HostProperties.class );
+
+    this.projectManager = new SimpleProjectManager();
+    this.projectManager.setHostProperties( mockProperties );
 
     this.preferenceServiceTracker = new PreferenceServiceTracker( this.bundleContext, this.projectManager );
 

@@ -53,7 +53,7 @@ import org.osgi.framework.*;
  * Denotes a front-end controller for the client.
  */
 public final class ClientController implements ActionProvider, AcquisitionProgressListener, AcquisitionStatusListener,
-    AcquisitionDataListener, AnnotationListener, IClientController
+    AcquisitionDataListener, AnnotationListener, ApplicationCallback
 {
   // INNER TYPES
 
@@ -205,6 +205,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   private volatile MainFrame mainFrame;
   private volatile String selectedDevice;
+  private volatile HostProperties hostProperties;
 
   // CONSTRUCTORS
 
@@ -326,7 +327,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * @see nl.lxtreme.ols.client.IClientController#cancelCapture()
    */
-  @Override
   public void cancelCapture()
   {
     final DataAcquisitionService acquisitionService = getDataAcquisitionService();
@@ -341,7 +341,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public boolean captureData( final Window aParent )
   {
     final DataAcquisitionService acquisitionService = getDataAcquisitionService();
@@ -384,7 +383,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void clearAllCursors()
   {
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
@@ -420,7 +418,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void createNewProject()
   {
     this.projectManager.createNewProject();
@@ -436,7 +433,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void exit()
   {
     try
@@ -465,7 +461,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void exportTo( final String aExporterName, final File aExportFile ) throws IOException
   {
     if ( this.mainFrame == null )
@@ -504,7 +499,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public DataContainer getDataContainer()
   {
     return this.dataContainer;
@@ -583,7 +577,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public String[] getExportExtensions( final String aExporterName )
   {
     final Exporter exporter = getExporter( aExporterName );
@@ -595,9 +588,18 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Returns the current value of hostProperties.
+   * 
+   * @return the host properties, can be <code>null</code>.
+   */
+  public HostProperties getHostProperties()
+  {
+    return this.hostProperties;
+  }
+
+  /**
    * {@inheritDoc}
    */
-  @Override
   public File getProjectFilename()
   {
     return this.projectManager.getCurrentProject().getFilename();
@@ -617,7 +619,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void gotoCursorPosition( final int aCursorIdx )
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
@@ -633,7 +634,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void gotoFirstAvailableCursor()
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
@@ -656,7 +656,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void gotoLastAvailableCursor()
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
@@ -679,7 +678,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void gotoTriggerPosition()
   {
     if ( ( this.mainFrame != null ) && this.dataContainer.hasTriggerData() )
@@ -693,6 +691,48 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * {@inheritDoc}
    */
   @Override
+  public final boolean handleAbout()
+  {
+    showAboutBox();
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public final boolean handlePreferences()
+  {
+    showPreferencesDialog( getMainFrame() );
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public final boolean handleQuit()
+  {
+    exit();
+    // On Mac OS, it appears that if we acknowledge this event, the system
+    // shuts down our application for us, thereby not calling our stop/shutdown
+    // hooks... By returning false, we're not acknowledging the quit action to
+    // the system, but instead do it all on our own...
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public final boolean hasPreferences()
+  {
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public boolean isDeviceSelected()
   {
     return this.selectedDevice != null;
@@ -701,7 +741,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public boolean isDeviceSetup()
   {
     return isDeviceSelected() && getDevice().isSetup();
@@ -710,7 +749,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public boolean isProjectChanged()
   {
     return this.projectManager.getCurrentProject().isChanged();
@@ -741,7 +779,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void openDataFile( final File aFile ) throws IOException
   {
     final FileReader reader = new FileReader( aFile );
@@ -770,7 +807,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void openProjectFile( final File aFile ) throws IOException
   {
     FileInputStream fis = null;
@@ -797,7 +833,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void removeCursor( final int aCursorIdx )
   {
     if ( this.mainFrame != null )
@@ -851,7 +886,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public boolean repeatCaptureData( final Window aParent )
   {
     final DataAcquisitionService acquisitionService = getDataAcquisitionService();
@@ -894,7 +928,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @param aParent
    *          the parent window to use, can be <code>null</code>.
    */
-  @Override
   public void runTool( final String aToolName, final Window aParent )
   {
     if ( LOG.isLoggable( Level.INFO ) )
@@ -920,7 +953,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void saveDataFile( final File aFile ) throws IOException
   {
     final FileWriter writer = new FileWriter( aFile );
@@ -942,7 +974,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void saveProjectFile( final String aName, final File aFile ) throws IOException
   {
     FileOutputStream out = null;
@@ -966,7 +997,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void selectDevice( final String aDeviceName )
   {
     this.selectedDevice = aDeviceName;
@@ -981,7 +1011,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    *          <code>true</code> if the cursors should be enabled,
    *          <code>false</code> otherwise.
    */
-  @Override
   public void setCursorMode( final boolean aState )
   {
     this.dataContainer.setCursorEnabled( aState );
@@ -994,7 +1023,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void setCursorPosition( final int aCursorIdx, final Point aLocation )
   {
     // Implicitly enable cursor mode, the user already had made its
@@ -1037,7 +1065,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * Shows the "about OLS" dialog on screen. the parent window to use, can be
    * <code>null</code>.
    */
-  @Override
   public void showAboutBox()
   {
     if ( this.mainFrame != null )
@@ -1049,7 +1076,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void showBundlesDialog( final Window aOwner )
   {
     final BundlesDialog dialog = new BundlesDialog( aOwner, this.bundleContext );
@@ -1062,7 +1088,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void showChannelLabelsDialog( final Window aParent )
   {
     if ( this.mainFrame != null )
@@ -1081,7 +1106,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void showDiagramModeSettingsDialog( final Window aParent )
   {
     if ( this.mainFrame != null )
@@ -1101,7 +1125,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void showPreferencesDialog( final Window aParent )
   {
     final GeneralSettingsDialog dialog = new GeneralSettingsDialog( aParent, getDiagramSettings() );
@@ -1118,7 +1141,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void zoomDefault()
   {
     if ( this.mainFrame != null )
@@ -1132,7 +1154,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void zoomIn()
   {
     if ( this.mainFrame != null )
@@ -1146,7 +1167,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void zoomOut()
   {
     if ( this.mainFrame != null )
@@ -1160,7 +1180,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Override
   public void zoomToFit()
   {
     if ( this.mainFrame != null )
@@ -1530,4 +1549,5 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.dataContainer.setCursorPosition( i, aCursorData[i] );
     }
   }
+
 }

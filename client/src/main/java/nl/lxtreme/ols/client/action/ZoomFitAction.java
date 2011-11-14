@@ -47,7 +47,7 @@ public class ZoomFitAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public ZoomFitAction( final IClientController aController )
+  public ZoomFitAction( final ClientController aController )
   {
     super( ID, aController, ICON_ZOOM_FIT_BEST, "Zoom to fit", "Zoom to best fit" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_F ) );

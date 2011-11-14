@@ -46,7 +46,7 @@ public class SaveProjectAsAction extends SaveProjectAction
    * @param aController
    *          the controller to use.
    */
-  public SaveProjectAsAction( final IClientController aController )
+  public SaveProjectAsAction( final ClientController aController )
   {
     super( ID, aController, ICON_SAVE_PROJECT, "Save project as ...", "Save the current project under a different name" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_S, InputEvent.SHIFT_MASK ) );

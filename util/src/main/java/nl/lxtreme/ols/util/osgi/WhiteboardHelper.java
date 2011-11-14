@@ -133,4 +133,14 @@ public class WhiteboardHelper<T> extends ServiceTracker
       aVisitor.visit( ( T )serviceObj );
     }
   }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  @SuppressWarnings( "unchecked" )
+  public T getService()
+  {
+    return ( T )super.getService();
+  }
 }
