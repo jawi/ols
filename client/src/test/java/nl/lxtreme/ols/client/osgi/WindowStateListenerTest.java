@@ -32,9 +32,8 @@ import java.util.List;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.Configurable;
-import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.data.project.*;
+import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
 import org.osgi.framework.*;
@@ -48,7 +47,7 @@ public class WindowStateListenerTest
 {
   // VARIABLES
 
-  private ProjectManager projectManager;
+  private SimpleProjectManager projectManager;
   private AWTEventListener windowStateListener;
 
   // METHODS
@@ -63,8 +62,9 @@ public class WindowStateListenerTest
     ServiceReference mockedServiceRef = mock( ServiceReference.class );
     PreferencesService mockedPreferenceService = mock( PreferencesService.class );
 
-    ClientProperties mockProperties = mock( ClientProperties.class );
-    this.projectManager = new SimpleProjectManager( mockProperties );
+    HostProperties mockProperties = mock( HostProperties.class );
+    this.projectManager = new SimpleProjectManager();
+    this.projectManager.setHostProperties( mockProperties );
 
     PreferenceServiceTracker preferenceServiceTracker = new PreferenceServiceTracker( bundleContext,
         this.projectManager );

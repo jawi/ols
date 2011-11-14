@@ -48,7 +48,7 @@ public class GotoTriggerAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public GotoTriggerAction( final IClientController aController )
+  public GotoTriggerAction( final ClientController aController )
   {
     super( ID, aController, ICON_GOTO_TRIGGER, "Go to Trigger", "Go to trigger moment in diagram" );
     putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke( KeyEvent.VK_HOME, 0 ) );

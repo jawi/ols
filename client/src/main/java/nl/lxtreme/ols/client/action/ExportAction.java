@@ -63,7 +63,7 @@ public class ExportAction extends BaseAction
    * @param aExporterName
    *          the name of the exporter to invoke in this action.
    */
-  public ExportAction( final IClientController aController, final String aExporterName )
+  public ExportAction( final ClientController aController, final String aExporterName )
   {
     super( ID + aExporterName, aController, aExporterName, "Export the current diagram to a " + aExporterName + " file" );
 
@@ -80,7 +80,7 @@ public class ExportAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final IClientController controller = getController();
+    final ClientController controller = getController();
     final DataContainer dataContainer = controller.getDataContainer();
 
     if ( !dataContainer.hasCapturedData() )

@@ -53,7 +53,7 @@ public class SaveProjectAction extends BaseAction
    * @param aController
    *          the controller to use in this action.
    */
-  public SaveProjectAction( final IClientController aController )
+  public SaveProjectAction( final ClientController aController )
   {
     this( ID, aController, ICON_SAVE_PROJECT, "Save project", "Save the current project" );
   }
@@ -72,7 +72,7 @@ public class SaveProjectAction extends BaseAction
    * @param aDescription
    *          the description/tooltip of this action.
    */
-  protected SaveProjectAction( final String aID, final IClientController aController, final String aIconName,
+  protected SaveProjectAction( final String aID, final ClientController aController, final String aIconName,
       final String aName, final String aDescription )
   {
     super( aID, aController, aIconName, aName, aDescription );

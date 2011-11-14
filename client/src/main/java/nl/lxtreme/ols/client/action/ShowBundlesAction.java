@@ -49,7 +49,7 @@ public class ShowBundlesAction extends BaseAction
    * @param aController
    *          the controller to use, cannot be <code>null</code>.
    */
-  public ShowBundlesAction( final IClientController aController )
+  public ShowBundlesAction( final ClientController aController )
   {
     super( ID, aController, "Show Bundles", "Show all available OSGi bundles." );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_B ) );

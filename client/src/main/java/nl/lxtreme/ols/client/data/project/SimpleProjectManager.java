@@ -31,7 +31,6 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.util.*;
 
@@ -53,21 +52,16 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
 
   // VARIABLES
 
-  private final ClientProperties clientProperties;
+  private volatile HostProperties hostProperties;
   private ProjectImpl project;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new SimpleProjectManager instance.
-   * 
-   * @param aClientProperties
-   *          the host version this project manager instantiated, cannot be
-   *          <code>null</code>.
    */
-  public SimpleProjectManager( final ClientProperties aClientProperties )
+  public SimpleProjectManager()
   {
-    this.clientProperties = aClientProperties;
     this.project = new ProjectImpl();
   }
 
@@ -194,7 +188,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     final BufferedOutputStream os = new BufferedOutputStream( aOutput );
     final ZipOutputStream zipOS = new ZipOutputStream( os );
 
-    zipOS.setComment( this.clientProperties.getFullName().concat( " project file" ) );
+    zipOS.setComment( this.hostProperties.getFullName().concat( " project file" ) );
 
     try
     {
@@ -214,6 +208,17 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
       HostUtils.closeResource( zipOS );
       HostUtils.closeResource( os );
     }
+  }
+
+  /**
+   * Sets hostProperties to the given value.
+   * 
+   * @param aHostProperties
+   *          the hostProperties to set.
+   */
+  public void setHostProperties( final HostProperties aHostProperties )
+  {
+    this.hostProperties = aHostProperties;
   }
 
   /**
@@ -426,7 +431,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     try
     {
       out.println( name );
-      out.println( this.clientProperties.getVersion() );
+      out.println( this.hostProperties.getVersion() );
       out.println( System.currentTimeMillis() );
     }
     finally

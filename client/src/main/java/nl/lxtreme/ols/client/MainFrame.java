@@ -423,7 +423,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private JMenu windowMenu;
   private JMenu exportMenu;
 
-  private final ClientProperties clientProperties;
   private final ClientController controller;
 
   // CONSTRUCTORS
@@ -434,15 +433,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * @param aController
    *          the client controller to use, cannot be <code>null</code>.
    */
-  public MainFrame( final ClientProperties aClientProperties, final ClientController aController )
+  private MainFrame( final ClientController aController )
   {
-    super( aClientProperties.getFullName() );
+    super();
 
     // Let the host platform determine where this diagram should be displayed;
     // gives it more or less a native feel...
     setLocationByPlatform( true );
 
-    this.clientProperties = aClientProperties;
     this.controller = aController;
 
     this.diagram = new Diagram( this.controller );
@@ -474,7 +472,32 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
 
-    setStatus( "{0} v{1} ready ...", this.clientProperties.getShortName(), this.clientProperties.getVersion() );
+    // Set the window title and the status bar denoting our state...
+    HostProperties hostProperties = this.controller.getHostProperties();
+    if ( hostProperties != null )
+    {
+      setTitle( hostProperties.getFullName() );
+      setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
+    }
+  }
+
+  // METHODS
+
+  /**
+   * Factory method for creating a new main frame using the given properties and
+   * controller.
+   * 
+   * @param aClientProperties
+   *          the client properties;
+   * @param aController
+   *          the controller.
+   * @return a new {@link MainFrame} instance, never <code>null</code>.
+   */
+  public static MainFrame createMainFrame( final ClientController aController )
+  {
+    final MainFrame result = new MainFrame( aController );
+    aController.setMainFrame( result );
+    return result;
   }
 
   /**
@@ -540,7 +563,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     {
       final String value = ( String )aEvent.getNewValue();
 
-      String title = this.clientProperties.getFullName();
+      String title = this.controller.getHostProperties().getFullName();
       if ( !StringUtils.isEmpty( value ) )
       {
         // Denote the project file in the title of the main window...
@@ -594,7 +617,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public void showAboutBox()
   {
-    final AboutBox aboutDialog = new AboutBox( this.clientProperties.getShortName(), this.clientProperties.getVersion() );
+    final HostProperties hostProperties = this.controller.getHostProperties();
+    final AboutBox aboutDialog = new AboutBox( hostProperties.getShortName(), hostProperties.getVersion() );
     aboutDialog.showDialog();
   }
 

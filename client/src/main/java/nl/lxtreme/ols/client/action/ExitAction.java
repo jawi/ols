@@ -46,7 +46,7 @@ public class ExitAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public ExitAction( final IClientController aController )
+  public ExitAction( final ClientController aController )
   {
     super( ID, aController, "Quit", "Quit LogicSniffer Client" );
 

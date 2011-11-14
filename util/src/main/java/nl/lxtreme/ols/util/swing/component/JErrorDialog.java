@@ -366,6 +366,10 @@ public class JErrorDialog extends JDialog implements Closeable
    */
   private static final String REPORT = "Report";
   /**
+   * Text representing the quit button of this dialog.
+   */
+  private static final String QUIT = "Quit";
+  /**
    * Icon for the error dialog (stop sign, etc)
    */
   private static final Icon ICON = UIManager.getIcon( "OptionPane.warningIcon" );
@@ -629,9 +633,6 @@ public class JErrorDialog extends JDialog implements Closeable
     this.detailButton = new JButton( MORE_DETAILS );
     this.detailButton.addActionListener( new ActionListener()
     {
-      /**
-       * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-       */
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
@@ -639,7 +640,21 @@ public class JErrorDialog extends JDialog implements Closeable
       }
     } );
 
-    final JComponent buttonPane = SwingComponentUtils.createButtonPane( this.reportButton, this.detailButton, cancel );
+    final JButton quit = new JButton( QUIT );
+    quit.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        // Abort the VM; do *not* try to use any OSGi hooks or whatever to go
+        // down gracefully; we're in a situation that might be very hairy to get
+        // out of...
+        System.exit( 1 );
+      }
+    } );
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( quit, this.reportButton, this.detailButton,
+        cancel );
 
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, cancel );
 

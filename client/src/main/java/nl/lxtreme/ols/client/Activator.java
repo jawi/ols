@@ -39,9 +39,9 @@ import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.osgi.*;
-import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 
 
@@ -49,7 +49,7 @@ import org.osgi.framework.*;
  * Provides the client bundle activator, which is responsible for starting the
  * entire client UI.
  */
-public class Activator implements BundleActivator
+public class Activator extends DependencyActivatorBase
 {
   // CONSTANTS
 
@@ -182,89 +182,10 @@ public class Activator implements BundleActivator
   }
 
   /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+   * {@inheritDoc}
    */
   @Override
-  public void start( final BundleContext aContext ) throws Exception
-  {
-    final ClientProperties clientProperties = new ClientProperties( aContext );
-    logEnvironment( clientProperties );
-
-    this.projectManager = new SimpleProjectManager( clientProperties );
-    // Restore the implicit user settings...
-    loadImplicitUserSettings( this.projectManager );
-
-    this.dataAcquisitionServiceTracker = new SimpleDataAcquisitionService( aContext );
-    this.dataAcquisitionServiceTracker.open();
-
-    this.clientController = new ClientController( aContext );
-    this.clientController.setProjectManager( this.projectManager );
-    this.clientController.setDataAcquisitionService( this.dataAcquisitionServiceTracker );
-
-    this.preferencesServiceTracker = new PreferenceServiceTracker( aContext, this.projectManager );
-    this.preferencesServiceTracker.open();
-
-    this.menuTracker = new ComponentProviderTracker( aContext, this.clientController );
-    this.menuTracker.open( true /* trackAllServices */);
-
-    this.logReaderTracker = new LogReaderTracker( aContext );
-    this.logReaderTracker.open();
-
-    this.bundleWatcher = BundleWatcher.createRegExBundleWatcher( aContext, "^OLS-.*" );
-    this.bundleWatcher //
-        .add( createToolBundleObserver() ) //
-        .add( createDeviceBundleObserver() ) //
-        .add( createExporterBundleObserver() ) //
-        .add( createComponentProviderBundleObserver() );
-    // Start watching all bundles for extenders...
-    this.bundleWatcher.start();
-
-    // Register the client controller as listener for many events...
-    aContext.registerService(
-        new String[] { AcquisitionDataListener.class.getName(), AcquisitionProgressListener.class.getName(),
-            AcquisitionStatusListener.class.getName(), AnnotationListener.class.getName() }, this.clientController,
-        null );
-
-    final Host host = new Host( Activator.this.clientController );
-    aContext.registerService( ApplicationCallback.class.getName(), host, null );
-
-    // Make sure we're running on the EDT to ensure the Swing threading model is
-    // correctly defined...
-    SwingUtilities.invokeLater( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        // Use the defined email address...
-        System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS,
-            clientProperties.getReportIncidentAddress() );
-
-        if ( clientProperties.isDebugMode() )
-        {
-          // Install a custom repaint manager that detects whether Swing
-          // components are created outside the EDT; if so, it will yield a
-          // stack trace to the offending parts of the code...
-          ThreadViolationDetectionRepaintManager.install();
-        }
-
-        // Cause exceptions to be shown in a more user-friendly way...
-        JErrorDialog.installSwingExceptionHandler();
-
-        final MainFrame mainFrame = new MainFrame( clientProperties, Activator.this.clientController );
-        Activator.this.clientController.setMainFrame( mainFrame );
-
-        mainFrame.setVisible( true );
-
-        LOG.info( "Client started ..." );
-      }
-    } );
-  }
-
-  /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-   */
-  @Override
-  public void stop( final BundleContext aContext ) throws Exception
+  public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
@@ -277,8 +198,7 @@ public class Activator implements BundleActivator
         if ( mainFrame != null )
         {
           // Safety guard: also loop through all unclosed frames and close them
-          // as
-          // well...
+          // as well...
           final Window[] openWindows = Window.getWindows();
           for ( Window window : openWindows )
           {
@@ -308,6 +228,84 @@ public class Activator implements BundleActivator
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
+  {
+    this.projectManager = new SimpleProjectManager();
+    // Restore the implicit user settings...
+    loadImplicitUserSettings( this.projectManager );
+
+    this.dataAcquisitionServiceTracker = new SimpleDataAcquisitionService( aContext );
+    this.dataAcquisitionServiceTracker.open();
+
+    this.clientController = new ClientController( aContext );
+    this.clientController.setProjectManager( this.projectManager );
+    this.clientController.setDataAcquisitionService( this.dataAcquisitionServiceTracker );
+
+    this.preferencesServiceTracker = new PreferenceServiceTracker( aContext, this.projectManager );
+    this.preferencesServiceTracker.open();
+
+    this.menuTracker = new ComponentProviderTracker( aContext, this.clientController );
+    this.menuTracker.open( true /* trackAllServices */);
+
+    this.logReaderTracker = new LogReaderTracker( aContext );
+    this.logReaderTracker.open();
+
+    this.bundleWatcher = BundleWatcher.createRegExBundleWatcher( aContext, "^OLS-.*" );
+    this.bundleWatcher //
+        .add( createToolBundleObserver() ) //
+        .add( createDeviceBundleObserver() ) //
+        .add( createExporterBundleObserver() ) //
+        .add( createComponentProviderBundleObserver() );
+    // Start watching all bundles for extenders...
+    this.bundleWatcher.start();
+
+    aManager.add( //
+        createComponent() //
+            .setInterface( ProjectManager.class.getName(), null ) //
+            .setImplementation( this.projectManager ) //
+            .add( createServiceDependency() //
+                .setService( HostProperties.class ) //
+                .setRequired( true ) //
+            ) //
+        );
+
+    // All the interfaces we're registering the client controller under...
+    final String[] interfaceNames = new String[] { AcquisitionDataListener.class.getName(),
+        AcquisitionProgressListener.class.getName(), AcquisitionStatusListener.class.getName(),
+        AnnotationListener.class.getName(), ApplicationCallback.class.getName() };
+
+    aManager.add( //
+        createComponent() //
+            .setInterface( interfaceNames, null ) //
+            .setImplementation( this.clientController ) //
+            .add( createServiceDependency() //
+                .setService( HostProperties.class ) //
+                .setRequired( true ) //
+            ) //
+        );
+
+    // Make sure we're running on the EDT to ensure the Swing threading model is
+    // correctly defined...
+    SwingUtilities.invokeLater( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        // Cause exceptions to be shown in a more user-friendly way...
+        JErrorDialog.installSwingExceptionHandler();
+
+        final MainFrame mainFrame = MainFrame.createMainFrame( Activator.this.clientController );
+        mainFrame.setVisible( true );
+
+        LOG.info( "Client started ..." );
+      }
+    } );
+  }
+
+  /**
    * Loads the implicit user settings for the given project manager.
    * 
    * @param aProjectManager
@@ -327,24 +325,6 @@ public class Activator implements BundleActivator
     {
       currentProject.setChanged( false );
     }
-  }
-
-  /**
-   * @param aContext
-   */
-  private void logEnvironment( final ClientProperties aProperties )
-  {
-    final String name = aProperties.getShortName();
-    final String osName = aProperties.getOSName();
-    final String osVersion = aProperties.getOSVersion();
-    final String processor = aProperties.getProcessor();
-    final String javaVersion = aProperties.getExecutionEnvironment();
-
-    StringBuilder sb = new StringBuilder();
-    sb.append( name ).append( " running on " ).append( osName ).append( ", " ).append( osVersion ).append( " (" )
-        .append( processor ).append( "); " ).append( javaVersion ).append( "." );
-
-    LOG.info( sb.toString() );
   }
 
   /**
@@ -371,7 +351,6 @@ public class Activator implements BundleActivator
       }
     }
   }
-
 }
 
 /* EOF */

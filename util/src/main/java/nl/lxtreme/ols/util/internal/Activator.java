@@ -22,113 +22,24 @@ package nl.lxtreme.ols.util.internal;
 
 
 import java.awt.event.*;
-import java.io.*;
-import java.lang.reflect.*;
 import java.util.logging.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.osgi.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 
 
 /**
  * Bundle activator.
  */
-public class Activator implements BundleActivator
+public class Activator extends DependencyActivatorBase
 {
   // INNER TYPES
-
-  /**
-   * 
-   */
-  static class ApplicationCallbackServiceHelper implements ApplicationCallback, Closeable
-  {
-    // VARIABLES
-
-    private final WhiteboardHelper<ApplicationCallback> serviceHelper;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new Activator.ApplicationCallbackServiceHelper instance.
-     */
-    public ApplicationCallbackServiceHelper( final BundleContext aContext )
-    {
-      this.serviceHelper = new WhiteboardHelper<ApplicationCallback>( aContext, ApplicationCallback.class );
-      this.serviceHelper.open();
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void close() throws IOException
-    {
-      this.serviceHelper.close();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean handleAbout()
-    {
-      final ApplicationCallback service = ( ApplicationCallback )this.serviceHelper.getService();
-      if ( service != null )
-      {
-        return service.handleAbout();
-      }
-      return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean handlePreferences()
-    {
-      final ApplicationCallback service = ( ApplicationCallback )this.serviceHelper.getService();
-      if ( service != null )
-      {
-        return service.handlePreferences();
-      }
-      return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean handleQuit()
-    {
-      final ApplicationCallback service = ( ApplicationCallback )this.serviceHelper.getService();
-      if ( service != null )
-      {
-        return service.handleQuit();
-      }
-      return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasPreferences()
-    {
-      final ApplicationCallback service = ( ApplicationCallback )this.serviceHelper.getService();
-      if ( service != null )
-      {
-        return service.hasPreferences();
-      }
-      return false;
-    }
-  }
 
   /**
    * Provides an {@link Action} for closing a {@link JOptionPane}.
@@ -160,215 +71,9 @@ public class Activator implements BundleActivator
     public @Override
     ClassLoader createValue( final UIDefaults aDefaults )
     {
-      return HostUtils.class.getClassLoader();
+      return Activator.class.getClassLoader();
     }
   }
-
-  /**
-   * An OSX about handler.
-   */
-  static class OSXAboutHandler implements InvocationHandler
-  {
-    // CONSTANTS
-
-    private static final String ABOUT_HANDLER_CLASS_NAME = "com.apple.eawt.AboutHandler";
-
-    // VARIABLES
-
-    private final ApplicationCallback callback;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new HostUtils.OSXAboutHandler instance.
-     */
-    OSXAboutHandler( final ApplicationCallback aCallback )
-    {
-      this.callback = aCallback;
-    }
-
-    // METHODS
-
-    /**
-     * @param aCallback
-     * @return
-     * @throws ClassNotFoundException
-     */
-    public static Object createInstance( final ApplicationCallback aCallback ) throws ClassNotFoundException
-    {
-      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      return Proxy
-          .newProxyInstance( classLoader, new Class<?>[] { getHandlerClass() }, new OSXAboutHandler( aCallback ) );
-    }
-
-    /**
-     * @return
-     * @throws ClassNotFoundException
-     */
-    public static Class<?> getHandlerClass() throws ClassNotFoundException
-    {
-      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      return classLoader.loadClass( ABOUT_HANDLER_CLASS_NAME );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
-    {
-      if ( "handleAbout".equals( aMethod.getName() ) )
-      {
-        this.callback.handleAbout();
-      }
-      return null;
-    }
-  }
-
-  /**
-   * An OSX preferences handler.
-   */
-  static class OSXPreferencesHandler implements InvocationHandler
-  {
-    // CONSTANTS
-
-    private static final String PREFS_HANDLER_CLASS_NAME = "com.apple.eawt.PreferencesHandler";
-
-    // VARIABLES
-
-    private final ApplicationCallback callback;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new HostUtils.OSXPreferencesHandler instance.
-     */
-    OSXPreferencesHandler( final ApplicationCallback aCallback )
-    {
-      this.callback = aCallback;
-    }
-
-    // METHODS
-
-    /**
-     * @param aCallback
-     * @return
-     * @throws ClassNotFoundException
-     */
-    public static Object createInstance( final ApplicationCallback aCallback ) throws ClassNotFoundException
-    {
-      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      return Proxy.newProxyInstance( classLoader, new Class<?>[] { getHandlerClass() }, new OSXPreferencesHandler(
-          aCallback ) );
-    }
-
-    /**
-     * @return
-     * @throws ClassNotFoundException
-     */
-    public static Class<?> getHandlerClass() throws ClassNotFoundException
-    {
-      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      return classLoader.loadClass( PREFS_HANDLER_CLASS_NAME );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
-    {
-      if ( "handlePreferences".equals( aMethod.getName() ) )
-      {
-        this.callback.handlePreferences();
-      }
-      return null;
-    }
-  }
-
-  /**
-   * An OSX quit handler.
-   */
-  static class OSXQuitHandler implements InvocationHandler
-  {
-    // CONSTANTS
-
-    private static final String QUIT_HANDLER_CLASS_NAME = "com.apple.eawt.QuitHandler";
-
-    // VARIABLES
-
-    private final ApplicationCallback callback;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new HostUtils.OSXQuitHandler instance.
-     */
-    OSXQuitHandler( final ApplicationCallback aCallback )
-    {
-      this.callback = aCallback;
-    }
-
-    // METHODS
-
-    /**
-     * @param aCallback
-     * @return
-     * @throws ClassNotFoundException
-     */
-    public static Object createInstance( final ApplicationCallback aCallback ) throws ClassNotFoundException
-    {
-      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      return Proxy
-          .newProxyInstance( classLoader, new Class<?>[] { getHandlerClass() }, new OSXQuitHandler( aCallback ) );
-    }
-
-    /**
-     * @return
-     * @throws ClassNotFoundException
-     */
-    public static Class<?> getHandlerClass() throws ClassNotFoundException
-    {
-      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      return classLoader.loadClass( QUIT_HANDLER_CLASS_NAME );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
-    {
-      if ( "handleQuitRequestWith".equals( aMethod.getName() ) )
-      {
-        final boolean confirmQuit = this.callback.handleQuit();
-
-        if ( ( aArgs.length > 1 ) && ( aArgs[1] != null ) )
-        {
-          final Object quitResponseObj = aArgs[1];
-          final Class<?> quitResponseClass = quitResponseObj.getClass();
-          if ( "com.apple.eawt.QuitResponse".equals( quitResponseClass.getName() ) )
-          {
-            if ( confirmQuit )
-            {
-              final Method performQuitMethod = quitResponseClass.getMethod( "performQuit" );
-              performQuitMethod.invoke( quitResponseObj );
-            }
-            else
-            {
-              final Method cancelQuitMethod = quitResponseClass.getMethod( "cancelQuit" );
-              cancelQuitMethod.invoke( quitResponseObj );
-            }
-          }
-        }
-      }
-      return null;
-    }
-  }
-
-  // VARIABLES
-
-  private ApplicationCallbackServiceHelper serviceHelper;
 
   // METHODS
 
@@ -376,20 +81,46 @@ public class Activator implements BundleActivator
    * {@inheritDoc}
    */
   @Override
-  public void start( final BundleContext aContext ) throws Exception
+  public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    this.serviceHelper = new ApplicationCallbackServiceHelper( aContext );
-
-    initOSSpecifics( "TEST!", this.serviceHelper );
+    // No-op
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void stop( final BundleContext aContext ) throws Exception
+  public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    this.serviceHelper.close();
+    final HostProperties hostProperties = new HostResourceProperties( aContext );
+
+    initOSSpecifics( hostProperties.getShortName() );
+
+    logEnvironment( hostProperties );
+
+    aManager.add( createComponent() //
+        .setInterface( HostProperties.class.getName(), null ) //
+        .setImplementation( hostProperties ) //
+        );
+
+    aManager.add( createComponent() //
+        .setImplementation( ApplicationCallbackFacade.class ) //
+        .add( //
+            createServiceDependency() //
+                .setService( ApplicationCallback.class ) //
+                .setRequired( false ) ) //
+        );
+
+    // Use the defined email address...
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, hostProperties.getReportIncidentAddress() );
+
+    if ( hostProperties.isDebugMode() )
+    {
+      // Install a custom repaint manager that detects whether Swing
+      // components are created outside the EDT; if so, it will yield a
+      // stack trace to the offending parts of the code...
+      ThreadViolationDetectionRepaintManager.install();
+    }
   }
 
   /**
@@ -402,7 +133,7 @@ public class Activator implements BundleActivator
    *          the application callback used to report application events on some
    *          platforms (Mac OS), may be <code>null</code>.
    */
-  private void initOSSpecifics( final String aApplicationName, final ApplicationCallback aApplicationCallback )
+  private void initOSSpecifics( final String aApplicationName )
   {
     final HostInfo hostInfo = HostUtils.getHostInfo();
     if ( hostInfo.isMacOS() )
@@ -427,11 +158,6 @@ public class Activator implements BundleActivator
 
       UIManager.put( "OptionPane.windowBindings", //
           new Object[] { SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ), "close", "ESCAPE", "close" } );
-
-      if ( aApplicationCallback != null )
-      {
-        installApplicationCallback( aApplicationCallback );
-      }
     }
     else if ( hostInfo.isUnix() )
     {
@@ -460,50 +186,21 @@ public class Activator implements BundleActivator
   }
 
   /**
-   * @param aApplicationCallback
+   * @param aContext
    */
-  private void installApplicationCallback( final ApplicationCallback aApplicationCallback )
+  private void logEnvironment( final HostProperties aProperties )
   {
-    final String applicationClassName = "com.apple.eawt.Application";
+    final String name = aProperties.getShortName();
+    final String osName = aProperties.getOSName();
+    final String osVersion = aProperties.getOSVersion();
+    final String processor = aProperties.getProcessor();
+    final String javaVersion = aProperties.getExecutionEnvironment();
 
-    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    StringBuilder sb = new StringBuilder();
+    sb.append( name ).append( " running on " ).append( osName ).append( ", " ).append( osVersion ).append( " (" )
+        .append( processor ).append( "); " ).append( javaVersion ).append( "." );
 
-    try
-    {
-      final Object aboutHandler = OSXAboutHandler.createInstance( aApplicationCallback );
-      final Object prefsHandler = OSXPreferencesHandler.createInstance( aApplicationCallback );
-      final Object quitHandler = OSXQuitHandler.createInstance( aApplicationCallback );
-
-      final Class<?> appClass = classLoader.loadClass( applicationClassName );
-
-      if ( appClass != null )
-      {
-        // Call Application#getApplication() ...
-        final Method getAppMethod = appClass.getMethod( "getApplication" );
-        final Object app = getAppMethod.invoke( null );
-
-        // Call Application#setAboutHandler() ...
-        final Method setAboutHandlerMethod = appClass.getMethod( "setAboutHandler", OSXAboutHandler.getHandlerClass() );
-        setAboutHandlerMethod.invoke( app, aboutHandler );
-
-        // Call Application#setPreferencesHandler() ...
-        final Method setPreferencesHandlerMethod = appClass.getMethod( "setPreferencesHandler",
-            OSXPreferencesHandler.getHandlerClass() );
-        setPreferencesHandlerMethod.invoke( app, prefsHandler );
-
-        // Call Application#setQuitHandler() ...
-        final Method setQuitHandlerMethod = appClass.getMethod( "setQuitHandler", OSXQuitHandler.getHandlerClass() );
-        setQuitHandlerMethod.invoke( app, quitHandler );
-      }
-    }
-    catch ( Exception exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        Logger.getAnonymousLogger().log( Level.ALL, "Install application callback failed!", exception );
-      }
-    }
+    Logger.getLogger( getClass().getName() ).info( sb.toString() );
   }
 
   /**
@@ -518,7 +215,7 @@ public class Activator implements BundleActivator
     final ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
     try
     {
-      Thread.currentThread().setContextClassLoader( HostUtils.class.getClassLoader() );
+      Thread.currentThread().setContextClassLoader( Activator.class.getClassLoader() );
       UIManager.setLookAndFeel( aLookAndFeelClassName );
     }
     catch ( Exception exception )
@@ -534,5 +231,4 @@ public class Activator implements BundleActivator
       Thread.currentThread().setContextClassLoader( oldCL );
     }
   }
-
 }

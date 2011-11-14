@@ -45,7 +45,7 @@ public class GotoLastCursorAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public GotoLastCursorAction( final IClientController aController )
+  public GotoLastCursorAction( final ClientController aController )
   {
     super( ID, aController, ICON_GOTO_LAST_CURSOR, "Go to highest cursor",
         "Go to the cursor with highest index in diagram" );

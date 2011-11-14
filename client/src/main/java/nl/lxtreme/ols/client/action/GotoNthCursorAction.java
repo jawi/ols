@@ -58,7 +58,7 @@ public class GotoNthCursorAction extends BaseAction
    * @param aIndex
    *          the (zero-based) index of the cursor.
    */
-  public GotoNthCursorAction( final IClientController aController, final int aIndex )
+  public GotoNthCursorAction( final ClientController aController, final int aIndex )
   {
     super( getID( aIndex ), aController, createOverlayIcon( ICON_GOTO_CURSOR, String.valueOf( aIndex + 1 ) ),
         "Go to cursor " + String.valueOf( aIndex + 1 ), "Go to the " + DisplayUtils.getOrdinalNumber( aIndex + 1 )
