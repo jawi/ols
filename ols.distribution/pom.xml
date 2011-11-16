@@ -74,9 +74,14 @@
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
-			<artifactId>service.io</artifactId>
+			<artifactId>service.acquisition</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+        <dependency>
+            <groupId>nl.lxtreme.ols</groupId>
+            <artifactId>service.io</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>service.taskexecution</artifactId>

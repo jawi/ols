@@ -36,7 +36,6 @@ import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
-import org.osgi.framework.*;
 import org.osgi.service.prefs.*;
 
 
@@ -58,22 +57,19 @@ public class WindowStateListenerTest
   @Before
   public void setUp() throws Exception
   {
-    BundleContext bundleContext = mock( BundleContext.class );
-    ServiceReference mockedServiceRef = mock( ServiceReference.class );
     PreferencesService mockedPreferenceService = mock( PreferencesService.class );
 
     HostProperties mockProperties = mock( HostProperties.class );
     this.projectManager = new SimpleProjectManager();
     this.projectManager.setHostProperties( mockProperties );
 
-    PreferenceServiceTracker preferenceServiceTracker = new PreferenceServiceTracker( bundleContext,
-        this.projectManager );
-
-    when( bundleContext.getService( mockedServiceRef ) ).thenReturn( mockedPreferenceService );
+    UserSessionManager userSessionManager = new UserSessionManager();
+    userSessionManager.setPreferenceService( mockedPreferenceService );
+    userSessionManager.setProjectManager( this.projectManager );
 
     final AWTEventListener[] awtEventListenersBefore = Toolkit.getDefaultToolkit().getAWTEventListeners();
 
-    preferenceServiceTracker.addingService( mockedServiceRef );
+    userSessionManager.start();
 
     final List<AWTEventListener> temp = new ArrayList<AWTEventListener>();
     temp.addAll( Arrays.asList( Toolkit.getDefaultToolkit().getAWTEventListeners() ) );

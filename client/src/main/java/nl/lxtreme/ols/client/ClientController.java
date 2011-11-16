@@ -45,6 +45,7 @@ import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
 
@@ -195,14 +196,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private final BundleContext bundleContext;
   private final IActionManager actionManager;
 
-  private DataContainer dataContainer;
-  private ProjectManager projectManager;
-  private DataAcquisitionService dataAcquisitionService;
-
   private final EventListenerList evenListeners;
   private final ProgressUpdatingRunnable progressAccumulatingRunnable;
   private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
 
+  private DataContainer dataContainer;
+
+  private volatile ProjectManager projectManager;
+  private volatile DataAcquisitionService dataAcquisitionService;
   private volatile MainFrame mainFrame;
   private volatile String selectedDevice;
   private volatile HostProperties hostProperties;
@@ -1049,11 +1050,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void setMainFrame( final MainFrame aMainFrame )
   {
-    if ( this.mainFrame != null )
-    {
-      this.projectManager.removePropertyChangeListener( this.mainFrame );
-    }
-    if ( aMainFrame != null )
+    if ( ( this.projectManager != null ) && ( aMainFrame != null ) )
     {
       this.projectManager.addPropertyChangeListener( aMainFrame );
     }
@@ -1139,6 +1136,69 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Called by the dependency manager when this component is about to be
+   * started.
+   */
+  public void start()
+  {
+    // Make sure we're running on the EDT to ensure the Swing threading model is
+    // correctly defined...
+    SwingUtilities.invokeLater( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        // Cause exceptions to be shown in a more user-friendly way...
+        JErrorDialog.installSwingExceptionHandler();
+
+        final MainFrame mainFrame = MainFrame.createMainFrame( ClientController.this );
+        setMainFrame( mainFrame );
+
+        mainFrame.setVisible( true );
+
+        LOG.info( "Client started ..." );
+      }
+    } );
+  }
+
+  /**
+   * Called by the dependency manager when this component is about to be
+   * stopped.
+   */
+  public void stop()
+  {
+    // Make sure we're running on the EDT to ensure the Swing threading model is
+    // correctly defined...
+    SwingUtilities.invokeLater( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        final MainFrame mainFrame = getMainFrame();
+        if ( mainFrame != null )
+        {
+          // Safety guard: also loop through all unclosed frames and close them
+          // as well...
+          final Window[] openWindows = Window.getWindows();
+          for ( Window window : openWindows )
+          {
+            LOG.log( Level.FINE, "(Forced) closing window {0} ...", window );
+
+            window.setVisible( false );
+            window.dispose();
+          }
+
+          setMainFrame( null );
+        }
+
+        JErrorDialog.uninstallSwingExceptionHandler();
+
+        LOG.info( "Client stopped ..." );
+      }
+    } );
+  }
+
+  /**
    * {@inheritDoc}
    */
   public void zoomDefault()
@@ -1216,14 +1276,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Sets dataAcquisitionService to the given value.
-   * 
-   * @param aDataAcquisitionService
-   *          the dataAcquisitionService to set.
+   * @param aProjectManager
    */
-  final void setDataAcquisitionService( final DataAcquisitionService aDataAcquisitionService )
+  final void removeProjectManager( final ProjectManager aProjectManager )
   {
-    this.dataAcquisitionService = aDataAcquisitionService;
+    if ( ( this.projectManager != null ) && ( this.mainFrame != null ) )
+    {
+      this.projectManager.removePropertyChangeListener( this.mainFrame );
+    }
+
+    this.projectManager = null;
+    this.dataContainer = null;
   }
 
   /**
@@ -1252,6 +1315,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   final void setProjectManager( final ProjectManager aProjectManager )
   {
+    if ( ( this.projectManager != null ) && ( this.mainFrame != null ) )
+    {
+      this.projectManager.removePropertyChangeListener( this.mainFrame );
+    }
     this.projectManager = aProjectManager;
     this.dataContainer = new DataContainer( this.projectManager );
   }

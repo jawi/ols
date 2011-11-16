@@ -35,7 +35,8 @@
 				<include>nl.lxtreme.ols:api</include>
 				<include>nl.lxtreme.ols:client</include>
 				<include>nl.lxtreme.ols:logging</include>
-				<include>nl.lxtreme.ols:service.io</include>
+				<include>nl.lxtreme.ols:service.acquisition</include>
+                <include>nl.lxtreme.ols:service.io</include>
 				<include>nl.lxtreme.ols:service.taskexecution</include>
 				<include>nl.lxtreme.ols:util</include>
 				<include>nl.lxtreme.ols:org.rxtx</include>

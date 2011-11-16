@@ -252,8 +252,15 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       // Remove all obsolete menu items from the menu...
       for ( int i = aMenu.getItemCount() - 1; i >= 0; i-- )
       {
-        final String itemText = aMenu.getItem( i ).getText();
-        if ( !result.contains( itemText ) )
+        final JMenuItem menuItem = aMenu.getItem( i );
+        if ( menuItem == null )
+        {
+          continue;
+        }
+        final String itemText = menuItem.getText();
+        final Object isPersistent = menuItem.getClientProperty( PERSISTENT_MENU_ITEM_KEY );
+
+        if ( !result.contains( itemText ) && !Boolean.TRUE.equals( isPersistent ) )
         {
           // remove this menu item; it is obsolete...
           aMenu.remove( i );
@@ -409,9 +416,58 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     }
   }
 
+  /**
+   * Provides a builder for building the window menu upon selection of the menu.
+   */
+  static class WindowMenuBuilder extends AbstractMenuBuilder
+  {
+    /**
+     * Creates a new MainFrame.WindowMenuBuilder instance.
+     */
+    public WindowMenuBuilder( final ClientController aController )
+    {
+      super( aController );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected JMenuItem createMenuItem( final String aWindowName )
+    {
+      return new JCheckBoxMenuItem( new FocusWindowAction( aWindowName ) );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String[] getMenuItemNames()
+    {
+      final Window[] windows = Window.getWindows();
+      final String[] titles = new String[windows.length];
+      for ( int i = 0; i < titles.length; i++ )
+      {
+        titles[i] = FocusWindowAction.getTitle( windows[i] );
+      }
+      return titles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getNoItemsName()
+    {
+      return "No windows.";
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
+
+  private static final String PERSISTENT_MENU_ITEM_KEY = "persistentMenuItem";
 
   // VARIABLES
 
@@ -450,11 +506,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     setSize( 1200, 600 );
 
     final JToolBar tools = createMenuBars();
-
-    // !!! Always add these after the toolbar/menubar is created !!!
-    this.deviceMenu.addMenuListener( new DeviceMenuBuilder( aController ) );
-    this.toolsMenu.addMenuListener( new ToolMenuBuilder( aController ) );
-    this.exportMenu.addMenuListener( new ExportMenuBuilder( aController ) );
 
     // Create a scrollpane for the diagram...
     final JScrollPane scrollPane = new JScrollPane( this.diagram );
@@ -707,6 +758,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     this.exportMenu = new JMenu( "Export ..." );
     this.exportMenu.setMnemonic( 'e' );
+    this.exportMenu.addMenuListener( new ExportMenuBuilder( this.controller ) );
 
     fileMenu.add( this.controller.getAction( NewProjectAction.ID ) );
     fileMenu.add( this.controller.getAction( OpenProjectAction.ID ) );
@@ -737,6 +789,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     this.deviceMenu = new JMenu( "Device" );
     this.deviceMenu.setMnemonic( 'D' );
+    this.deviceMenu.addMenuListener( new DeviceMenuBuilder( this.controller ) );
 
     captureMenu.add( this.controller.getAction( CaptureAction.ID ) );
     captureMenu.add( this.controller.getAction( RepeatCaptureAction.ID ) );
@@ -768,19 +821,23 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     this.toolsMenu = bar.add( new JMenu( "Tools" ) );
     this.toolsMenu.setMnemonic( 'T' );
+    this.toolsMenu.addMenuListener( new ToolMenuBuilder( this.controller ) );
 
     if ( hostInfo.isMacOS() )
     {
       this.windowMenu = bar.add( new JMenu( "Window" ) );
       this.windowMenu.setMnemonic( 'W' );
 
-      this.windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) );
+      // Add two items that remain constant for the remainder of the lifetime of
+      // this client...
+      this.windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) ) //
+          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+      this.windowMenu.add( new JMenuItem( new MinimizeWindowAction() ) ) //
+          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+
       this.windowMenu.addSeparator();
 
-      for ( Window window : Window.getWindows() )
-      {
-        this.windowMenu.add( new JMenuItem( new FocusWindowAction( window ) ) );
-      }
+      this.windowMenu.addMenuListener( new WindowMenuBuilder( this.controller ) );
     }
 
     final JMenu helpMenu = bar.add( new JMenu( "Help" ) );
