@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client.osgi;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
@@ -30,19 +31,18 @@ import java.util.logging.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.Configurable;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.data.settings.*;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
-import org.osgi.framework.*;
 import org.osgi.service.prefs.*;
-import org.osgi.util.tracker.*;
 
 
 /**
  * Provides an OSGi service tracker for preference services.
  */
-public class PreferenceServiceTracker extends ServiceTracker
+public class UserSessionManager
 {
   // INNER TYPES
 
@@ -305,83 +305,121 @@ public class PreferenceServiceTracker extends ServiceTracker
 
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( PreferenceServiceTracker.class.getName() );
+  /** The name of the implicit user settings properties file name. */
+  private static final String IMPLICIT_USER_SETTING_NAME_PREFIX = "nl.lxtreme.ols.client";
+  private static final String IMPLICIT_USER_SETTING_NAME_SUFFIX = "settings";
+
+  private static final Logger LOG = Logger.getLogger( UserSessionManager.class.getName() );
 
   // VARIABLES
 
-  private final ProjectManager projectManager;
-  private PreferencesService preferenceService = null;
+  private volatile ProjectManager projectManager;
+  private volatile PreferencesService preferenceService = null;
   private WindowStateListener windowStateListener = null;
-
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new PreferenceServiceTracker instance.
-   * 
-   * @param aContext
-   *          the bundle context to use;
-   * @param aController
-   *          the host to use.
-   */
-  public PreferenceServiceTracker( final BundleContext aContext, final ProjectManager aProjectManager )
-  {
-    super( aContext, PreferencesService.class.getName(), null );
-
-    this.projectManager = aProjectManager;
-  }
 
   // METHODS
 
   /**
-   * @see org.osgi.util.tracker.ServiceTracker#addingService(org.osgi.framework.ServiceReference)
+   * Called by the dependency manager when the preference service becomes
+   * available.
+   * 
+   * @param aPreferenceService
    */
-  @Override
-  public Object addingService( final ServiceReference aReference )
+  public void setPreferenceService( final PreferencesService aPreferenceService )
   {
-    try
-    {
-      this.preferenceService = ( PreferencesService )this.context.getService( aReference );
-
-      final String userName = System.getProperty( "user.name", "default" );
-
-      if ( this.windowStateListener == null )
-      {
-        this.windowStateListener = new WindowStateListener( this.preferenceService, this.projectManager, userName );
-        // Install a global window state listener...
-        Toolkit.getDefaultToolkit().addAWTEventListener( this.windowStateListener, AWTEvent.WINDOW_EVENT_MASK );
-      }
-    }
-    catch ( Exception exception )
-    {
-      LOG.log( Level.WARNING, "Preferences service not added! Reason: {0}", exception.getMessage() );
-      LOG.log( Level.FINE, "Details:", exception );
-    }
-
-    return this.preferenceService;
+    this.preferenceService = aPreferenceService;
   }
 
   /**
-   * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference,
-   *      java.lang.Object)
+   * Called by the dependency manager when the project manager service becomes
+   * available.
+   * 
+   * @param aProjectManager
    */
-  @Override
-  public void removedService( final ServiceReference aReference, final Object aService )
+  public void setProjectManager( final ProjectManager aProjectManager )
   {
+    this.projectManager = aProjectManager;
+  }
+
+  /**
+   * Called by the dependency manager when all dependencies are satisfied, and
+   * this component can be started.
+   */
+  public void start()
+  {
+    // Restore any implicit user settings from our previous session...
+    loadImplicitUserSettings();
+
+    if ( this.windowStateListener == null )
+    {
+      final String userName = System.getProperty( "user.name", "default" );
+
+      this.windowStateListener = new WindowStateListener( this.preferenceService, this.projectManager, userName );
+      // Install a global window state listener...
+      Toolkit.getDefaultToolkit().addAWTEventListener( this.windowStateListener, AWTEvent.WINDOW_EVENT_MASK );
+
+      LOG.fine( "AWT Window state listener installed..." );
+    }
+  }
+
+  /**
+   * Called by the dependency manager when it is shutting down this component.
+   */
+  public void stop()
+  {
+    // Store all implicit user settings for our next session...
+    saveImplicitUserSettings();
+
+    if ( this.windowStateListener != null )
+    {
+      Toolkit.getDefaultToolkit().removeAWTEventListener( this.windowStateListener );
+
+      this.windowStateListener = null;
+
+      LOG.fine( "AWT Window state listener removed..." );
+    }
+  }
+
+  /**
+   * Loads the implicit user settings for the given project manager.
+   */
+  private void loadImplicitUserSettings()
+  {
+    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
+        IMPLICIT_USER_SETTING_NAME_SUFFIX );
+    final Project currentProject = this.projectManager.getCurrentProject();
     try
     {
-      if ( this.windowStateListener != null )
-      {
-        Toolkit.getDefaultToolkit().removeAWTEventListener( this.windowStateListener );
+      UserSettingsManager.loadUserSettings( userSettingsFile, currentProject );
 
-        this.windowStateListener = null;
-      }
-
-      this.context.ungetService( aReference );
+      LOG.fine( "Implicit user settings restored ..." );
     }
-    catch ( Exception exception )
+    finally
     {
-      LOG.log( Level.WARNING, "Preferences service not removed! Reason: {0}", exception.getMessage() );
-      LOG.log( Level.FINE, "Details:", exception );
+      currentProject.setChanged( false );
+    }
+  }
+
+  /**
+   * Saves the implicit user settings for the given project manager.
+   */
+  private void saveImplicitUserSettings()
+  {
+    final Project currentProject = this.projectManager.getCurrentProject();
+    if ( currentProject.isChanged() )
+    {
+      final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
+          IMPLICIT_USER_SETTING_NAME_SUFFIX );
+      try
+      {
+        UserSettingsManager.saveUserSettings( userSettingsFile, currentProject );
+
+        LOG.fine( "Implicit user settings stored ..." );
+      }
+      finally
+      {
+        currentProject.setChanged( false );
+      }
     }
   }
 }

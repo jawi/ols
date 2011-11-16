@@ -21,13 +21,10 @@
 package nl.lxtreme.ols.client;
 
 
-import java.awt.*;
-import java.io.*;
 import java.util.*;
-import java.util.logging.*;
-
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
@@ -35,14 +32,12 @@ import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.client.data.project.*;
-import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.osgi.*;
-import nl.lxtreme.ols.util.swing.component.*;
-
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.prefs.*;
 
 
 /**
@@ -70,23 +65,12 @@ public class Activator extends DependencyActivatorBase
   /** a RegEx for the supported components. */
   private static final String OLS_COMPONENT_PROVIDER_MAGIC_VALUE = "(Menu)";
 
-  /** The name of the implicit user settings properties file name. */
-  private static final String IMPLICIT_USER_SETTING_NAME_PREFIX = "nl.lxtreme.ols.client";
-  private static final String IMPLICIT_USER_SETTING_NAME_SUFFIX = "settings";
-
-  private static final Logger LOG = Logger.getLogger( Activator.class.getName() );
-
   // VARIABLES
-
-  private ProjectManager projectManager;
 
   private BundleWatcher bundleWatcher;
 
   private LogReaderTracker logReaderTracker;
   private ComponentProviderTracker menuTracker;
-  private PreferenceServiceTracker preferencesServiceTracker;
-  private SimpleDataAcquisitionService dataAcquisitionServiceTracker;
-  private ClientController clientController;
 
   // METHODS
 
@@ -187,41 +171,6 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    // Make sure we're running on the EDT to ensure the Swing threading model is
-    // correctly defined...
-    SwingUtilities.invokeLater( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        final MainFrame mainFrame = Activator.this.clientController.getMainFrame();
-        if ( mainFrame != null )
-        {
-          // Safety guard: also loop through all unclosed frames and close them
-          // as well...
-          final Window[] openWindows = Window.getWindows();
-          for ( Window window : openWindows )
-          {
-            LOG.log( Level.FINE, "(Forced) closing window {0} ...", window );
-
-            window.setVisible( false );
-            window.dispose();
-          }
-
-          Activator.this.clientController.setMainFrame( null );
-        }
-
-        JErrorDialog.uninstallSwingExceptionHandler();
-
-        LOG.info( "Client stopped ..." );
-      }
-    } );
-
-    // Store the implicit user settings...
-    saveImplicitUserSettings( this.projectManager );
-
-    this.preferencesServiceTracker.close();
-    this.dataAcquisitionServiceTracker.close();
     this.menuTracker.close();
     this.bundleWatcher.stop();
     this.logReaderTracker.close();
@@ -233,21 +182,11 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    this.projectManager = new SimpleProjectManager();
-    // Restore the implicit user settings...
-    loadImplicitUserSettings( this.projectManager );
+    final ProjectManager projectManager = new SimpleProjectManager();
 
-    this.dataAcquisitionServiceTracker = new SimpleDataAcquisitionService( aContext );
-    this.dataAcquisitionServiceTracker.open();
+    final ClientController clientController = new ClientController( aContext );
 
-    this.clientController = new ClientController( aContext );
-    this.clientController.setProjectManager( this.projectManager );
-    this.clientController.setDataAcquisitionService( this.dataAcquisitionServiceTracker );
-
-    this.preferencesServiceTracker = new PreferenceServiceTracker( aContext, this.projectManager );
-    this.preferencesServiceTracker.open();
-
-    this.menuTracker = new ComponentProviderTracker( aContext, this.clientController );
+    this.menuTracker = new ComponentProviderTracker( aContext, clientController );
     this.menuTracker.open( true /* trackAllServices */);
 
     this.logReaderTracker = new LogReaderTracker( aContext );
@@ -262,12 +201,26 @@ public class Activator extends DependencyActivatorBase
     // Start watching all bundles for extenders...
     this.bundleWatcher.start();
 
+    // Project manager...
     aManager.add( //
         createComponent() //
             .setInterface( ProjectManager.class.getName(), null ) //
-            .setImplementation( this.projectManager ) //
+            .setImplementation( projectManager ) //
             .add( createServiceDependency() //
                 .setService( HostProperties.class ) //
+                .setRequired( true ) //
+            ) //
+        );
+
+    // User session manager...
+    aManager.add( //
+        createComponent() //
+            .setImplementation( new UserSessionManager() ) //
+            .add( createServiceDependency() //
+                .setService( ProjectManager.class ) //
+                .setRequired( true ) ) //
+            .add( createServiceDependency() //
+                .setService( PreferencesService.class ) //
                 .setRequired( true ) //
             ) //
         );
@@ -277,79 +230,25 @@ public class Activator extends DependencyActivatorBase
         AcquisitionProgressListener.class.getName(), AcquisitionStatusListener.class.getName(),
         AnnotationListener.class.getName(), ApplicationCallback.class.getName() };
 
+    // Client controller...
     aManager.add( //
         createComponent() //
             .setInterface( interfaceNames, null ) //
-            .setImplementation( this.clientController ) //
+            .setImplementation( clientController ) //
             .add( createServiceDependency() //
                 .setService( HostProperties.class ) //
                 .setRequired( true ) //
             ) //
+            .add( createServiceDependency() //
+                .setService( ProjectManager.class ) //
+                .setRequired( true ) //
+                .setCallbacks( "setProjectManager", "removeProjectManager" ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( DataAcquisitionService.class ) //
+                .setRequired( true ) //
+            ) //
         );
-
-    // Make sure we're running on the EDT to ensure the Swing threading model is
-    // correctly defined...
-    SwingUtilities.invokeLater( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        // Cause exceptions to be shown in a more user-friendly way...
-        JErrorDialog.installSwingExceptionHandler();
-
-        final MainFrame mainFrame = MainFrame.createMainFrame( Activator.this.clientController );
-        mainFrame.setVisible( true );
-
-        LOG.info( "Client started ..." );
-      }
-    } );
-  }
-
-  /**
-   * Loads the implicit user settings for the given project manager.
-   * 
-   * @param aProjectManager
-   *          the project manager to load the implicit user settings for, cannot
-   *          be <code>null</code>.
-   */
-  private void loadImplicitUserSettings( final ProjectManager aProjectManager )
-  {
-    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
-        IMPLICIT_USER_SETTING_NAME_SUFFIX );
-    final Project currentProject = aProjectManager.getCurrentProject();
-    try
-    {
-      UserSettingsManager.loadUserSettings( userSettingsFile, currentProject );
-    }
-    finally
-    {
-      currentProject.setChanged( false );
-    }
-  }
-
-  /**
-   * Saves the implicit user settings for the given project manager.
-   * 
-   * @param aProjectManager
-   *          the project manager to save the implicit user settings for, cannot
-   *          be <code>null</code>.
-   */
-  private void saveImplicitUserSettings( final ProjectManager aProjectManager )
-  {
-    final Project currentProject = aProjectManager.getCurrentProject();
-    if ( currentProject.isChanged() )
-    {
-      final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
-          IMPLICIT_USER_SETTING_NAME_SUFFIX );
-      try
-      {
-        UserSettingsManager.saveUserSettings( userSettingsFile, currentProject );
-      }
-      finally
-      {
-        currentProject.setChanged( false );
-      }
-    }
   }
 }
 

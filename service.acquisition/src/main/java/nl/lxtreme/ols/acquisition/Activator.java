@@ -21,48 +21,58 @@
 package nl.lxtreme.ols.acquisition;
 
 
-import java.util.*;
-
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.task.*;
+
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 
 
 /**
  * Provides a bundle activator for the acquisition service.
  */
-public class Activator implements BundleActivator
+public class Activator extends DependencyActivatorBase
 {
-  // VARIABLES
-
-  private BackgroundDataAcquisitionService service;
-  private AcquisitionListenerHelper acquisitionListenerHelper;
-
   // METHODS
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void start( final BundleContext aContext ) throws Exception
+  public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    this.acquisitionListenerHelper = new AcquisitionListenerHelper( aContext );
-    this.acquisitionListenerHelper.open();
-
-    this.service = new BackgroundDataAcquisitionService( this.acquisitionListenerHelper );
-
-    final Properties props = new Properties();
-    props.put( "invocation", "asynchonous" );
-
-    aContext.registerService( DataAcquisitionService.class.getName(), this.service, props );
+    // No-op
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void stop( final BundleContext aContext ) throws Exception
+  public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    this.acquisitionListenerHelper.close();
-    this.service.close();
+    final String[] interfaces = new String[] { DataAcquisitionService.class.getName(),
+        TaskStatusListener.class.getName() };
+
+    aManager.add( createComponent() //
+        .setInterface( interfaces, null ) //
+        .setImplementation( BackgroundDataAcquisitionService.class ) //
+        .add( createServiceDependency() //
+            .setService( TaskExecutionService.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( AcquisitionProgressListener.class ) //
+            .setCallbacks( "addAcquisitionProgressListener", "removeAcquisitionProgressListener" ) //
+            .setRequired( false ) ) //
+        .add( createServiceDependency() //
+            .setService( AcquisitionStatusListener.class ) //
+            .setCallbacks( "addAcquisitionStatusListener", "removeAcquisitionStatusListener" ) //
+            .setRequired( false ) ) //
+        .add( createServiceDependency() //
+            .setService( AcquisitionDataListener.class ) //
+            .setCallbacks( "addAcquisitionDataListener", "removeAcquisitionDataListener" ) //
+            .setRequired( false ) ) //
+        );
+
   }
 }

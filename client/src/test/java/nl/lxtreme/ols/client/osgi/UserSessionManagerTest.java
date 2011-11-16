@@ -31,23 +31,19 @@ import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
-import org.osgi.framework.*;
 import org.osgi.service.prefs.*;
 
 
 /**
  * @author jawi
  */
-public class PreferenceServiceTrackerTest
+public class UserSessionManagerTest
 {
   // VARIABLES
 
-  private PreferenceServiceTracker preferenceServiceTracker;
+  private UserSessionManager userSessionManager;
 
-  private BundleContext bundleContext;
   private SimpleProjectManager projectManager;
-
-  private ServiceReference mockedServiceRef;
   private PreferencesService mockedPreferenceService;
 
   // METHODS
@@ -58,8 +54,6 @@ public class PreferenceServiceTrackerTest
   @Before
   public void setUp() throws Exception
   {
-    this.bundleContext = mock( BundleContext.class );
-    this.mockedServiceRef = mock( ServiceReference.class );
     this.mockedPreferenceService = mock( PreferencesService.class );
 
     HostProperties mockProperties = mock( HostProperties.class );
@@ -67,21 +61,35 @@ public class PreferenceServiceTrackerTest
     this.projectManager = new SimpleProjectManager();
     this.projectManager.setHostProperties( mockProperties );
 
-    this.preferenceServiceTracker = new PreferenceServiceTracker( this.bundleContext, this.projectManager );
-
-    when( this.bundleContext.getService( this.mockedServiceRef ) ).thenReturn( this.mockedPreferenceService );
+    this.userSessionManager = new UserSessionManager();
+    this.userSessionManager.setProjectManager( this.projectManager );
+    this.userSessionManager.setPreferenceService( this.mockedPreferenceService );
   }
 
   /**
-   * @throws Exception
+   * Tears down the test cases.
    */
   @After
-  public void tearDown() throws Exception
+  public void tearDown()
   {
-    if ( this.preferenceServiceTracker != null )
-    {
-      this.preferenceServiceTracker.removedService( this.mockedServiceRef, this.mockedPreferenceService );
-    }
+    this.userSessionManager.stop();
+  }
+
+  /**
+   * Tests that adding a preference service instance also installs an AWT window
+   * listener.
+   */
+  @Test
+  public void testAddingMultipleServicesInstallsSingleWindowListenerOk() throws Exception
+  {
+    final AWTEventListener[] awtEventListenersBefore = Toolkit.getDefaultToolkit().getAWTEventListeners();
+
+    this.userSessionManager.start();
+    this.userSessionManager.start();
+    this.userSessionManager.start();
+
+    final AWTEventListener[] awtEventListenersAfter = Toolkit.getDefaultToolkit().getAWTEventListeners();
+    assertEquals( awtEventListenersBefore.length + 1, awtEventListenersAfter.length );
   }
 
   /**
@@ -93,8 +101,7 @@ public class PreferenceServiceTrackerTest
   {
     final AWTEventListener[] awtEventListenersBefore = Toolkit.getDefaultToolkit().getAWTEventListeners();
 
-    final Object addedService = this.preferenceServiceTracker.addingService( this.mockedServiceRef );
-    assertNotNull( addedService );
+    this.userSessionManager.start();
 
     final AWTEventListener[] awtEventListenersAfter = Toolkit.getDefaultToolkit().getAWTEventListeners();
     assertEquals( awtEventListenersBefore.length + 1, awtEventListenersAfter.length );
@@ -109,13 +116,12 @@ public class PreferenceServiceTrackerTest
   {
     final AWTEventListener[] awtEventListenersBefore = Toolkit.getDefaultToolkit().getAWTEventListeners();
 
-    final Object addedService = this.preferenceServiceTracker.addingService( this.mockedServiceRef );
-    assertNotNull( addedService );
+    this.userSessionManager.start();
 
     final AWTEventListener[] awtEventListenersAfterAdd = Toolkit.getDefaultToolkit().getAWTEventListeners();
     assertEquals( awtEventListenersBefore.length + 1, awtEventListenersAfterAdd.length );
 
-    this.preferenceServiceTracker.removedService( this.mockedServiceRef, this.mockedPreferenceService );
+    this.userSessionManager.stop();
 
     final AWTEventListener[] awtEventListenersAfterRemove = Toolkit.getDefaultToolkit().getAWTEventListeners();
     assertEquals( awtEventListenersBefore.length, awtEventListenersAfterRemove.length );
@@ -130,7 +136,7 @@ public class PreferenceServiceTrackerTest
   {
     final AWTEventListener[] awtEventListenersBefore = Toolkit.getDefaultToolkit().getAWTEventListeners();
 
-    this.preferenceServiceTracker.removedService( this.mockedServiceRef, this.mockedPreferenceService );
+    this.userSessionManager.stop();
 
     final AWTEventListener[] awtEventListenersAfterRemove = Toolkit.getDefaultToolkit().getAWTEventListeners();
     assertEquals( awtEventListenersBefore.length, awtEventListenersAfterRemove.length );
