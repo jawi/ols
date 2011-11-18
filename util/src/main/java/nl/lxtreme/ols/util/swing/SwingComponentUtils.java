@@ -475,7 +475,7 @@ public final class SwingComponentUtils
    */
   public static void invokeOnEDT( final Runnable aRunnable )
   {
-    System.out.println( "invokeOnEDT called with " + aRunnable );
+    // System.out.println( "invokeOnEDT called with " + aRunnable );
     if ( SwingUtilities.isEventDispatchThread() )
     {
       aRunnable.run();

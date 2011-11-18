@@ -1000,7 +1000,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       final String deviceName = aDevice.getName();
 
       // Make sure the internal state remains correct...
-      if ( this.selectedDevice.equals( deviceName ) )
+      if ( deviceName.equals( this.selectedDevice ) )
       {
         this.selectedDevice = null;
       }
