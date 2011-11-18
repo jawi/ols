@@ -51,7 +51,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
 
   private volatile TaskExecutionService taskExecutionService;
   private volatile Future<?> acquisitionFutureTask;
-  private volatile AcquisitionTask acquisitionTask;
+  private volatile Task<AcquisitionResult> acquisitionTask;
 
   // CONSTRUCTORS
 
@@ -73,7 +73,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   @Override
   public void acquireData( final Device aDevice ) throws IOException
   {
-    this.acquisitionTask = aDevice.createAcquisitionTask( new AcquisitionProgressListener()
+    final AcquisitionTask innerTask = aDevice.createAcquisitionTask( new AcquisitionProgressListener()
     {
       @Override
       public void acquisitionInProgress( final int aPercentage )
@@ -81,6 +81,25 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
         fireAcquisitionInProgressEvent( aPercentage );
       }
     } );
+
+    // Wrap the actual acquisition task in order to get a kind of "auto"
+    // closable behavior...
+    this.acquisitionTask = new Task<AcquisitionResult>()
+    {
+      @Override
+      public AcquisitionResult call() throws Exception
+      {
+        innerTask.open();
+        try
+        {
+          return innerTask.call();
+        }
+        finally
+        {
+          innerTask.close();
+        }
+      }
+    };
 
     this.acquisitionFutureTask = this.taskExecutionService.execute( this.acquisitionTask );
   }
@@ -255,7 +274,10 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   @Override
   public <RT> void taskStarted( final Task<RT> aTask )
   {
-    fireAcquisitionStartedEvent();
+    if ( this.acquisitionTask == aTask )
+    {
+      fireAcquisitionStartedEvent();
+    }
   }
 
   /**
