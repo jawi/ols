@@ -28,6 +28,7 @@ import java.net.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
+import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -141,13 +142,22 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Provides an adapter class for {@link MenuListener}.
+   * Provides an adapter class for {@link MenuListener} allowing a menu to be
+   * recreated each time it is selected.
    */
   static abstract class AbstractMenuBuilder implements MenuListener
   {
+    // CONSTANTS
+
+    private static final Logger LOG = Logger.getLogger( AbstractMenuBuilder.class.getName() );
+
+    // VARIABLES
+
     protected final ClientController controller;
 
     private final ButtonGroup group = new ButtonGroup();
+
+    // CONSTRUCTORS
 
     /**
      * Creates a new MainFrame.AbstractMenuBuilder instance.
@@ -156,6 +166,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     {
       this.controller = aController;
     }
+
+    // METHODS
 
     /**
      * {@inheritDoc}
@@ -207,10 +219,17 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
         names = removeObsoleteMenuItems( menu, names );
         for ( String name : names )
         {
-          final JMenuItem menuItem = createMenuItem( name );
+          try
+          {
+            final JMenuItem menuItem = createMenuItem( name );
 
-          this.group.add( menuItem );
-          menu.add( menuItem );
+            this.group.add( menuItem );
+            menu.add( menuItem );
+          }
+          catch ( Exception exception )
+          {
+            LOG.log( Level.FINE, "Exception thrown while creating menu item!", exception );
+          }
         }
       }
 
@@ -242,9 +261,31 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     protected abstract String getNoItemsName();
 
     /**
+     * Returns whether or not the given menu item is "persistent", i.e., it
+     * should not be removed automagically from the menu.
+     * 
+     * @param aMenuItem
+     *          the menu item to test, cannot be <code>null</code>.
+     * @return <code>true</code> if the menu item is persistent,
+     *         <code>false</code> otherwise.
+     */
+    private boolean isPersistentMenuItem( final JMenuItem aMenuItem )
+    {
+      final Object isPersistent = aMenuItem.getClientProperty( PERSISTENT_MENU_ITEM_KEY );
+      return Boolean.TRUE.equals( isPersistent );
+    }
+
+    /**
+     * Removes all obsolete menu items from the given menu, meaning that all
+     * items that are not persistent and are not contained in the given list of
+     * menu items are removed.
+     * 
      * @param aMenu
+     *          the menu to remove the obsolete items from;
      * @param aMenuItems
-     * @return
+     *          the menu items that should either remain or be added to the
+     *          menu.
+     * @return an array of menu items that are to be added to the given menu.
      */
     private String[] removeObsoleteMenuItems( final JMenu aMenu, final String[] aMenuItems )
     {
@@ -255,18 +296,19 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
         final JMenuItem menuItem = aMenu.getItem( i );
         if ( menuItem == null )
         {
+          // Not a menu item; simply ignore it and continue...
           continue;
         }
-        final String itemText = menuItem.getText();
-        final Object isPersistent = menuItem.getClientProperty( PERSISTENT_MENU_ITEM_KEY );
 
-        if ( !result.contains( itemText ) && !Boolean.TRUE.equals( isPersistent ) )
+        final String itemText = menuItem.getText();
+        if ( !result.contains( itemText ) && !isPersistentMenuItem( menuItem ) )
         {
-          // remove this menu item; it is obsolete...
+          // Remove this menu item from the menu; it is obsolete...
           aMenu.remove( i );
         }
         else
         {
+          // Remove the checked item; it should not be (re)added to the menu...
           result.remove( itemText );
         }
       }
@@ -295,7 +337,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     @Override
     protected JMenuItem createMenuItem( final String aDeviceName )
     {
-      return new JRadioButtonMenuItem( new SelectDeviceAction( this.controller, aDeviceName ) );
+      return new JRadioButtonMenuItem( this.controller.getAction( SelectDeviceAction.getID( aDeviceName ) ) );
     }
 
     /**
@@ -394,7 +436,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     @Override
     protected JMenuItem createMenuItem( final String aToolName )
     {
-      return new JMenuItem( new RunToolAction( this.controller, aToolName ) );
+      return new JMenuItem( this.controller.getAction( RunToolAction.getID( aToolName ) ) );
     }
 
     /**
@@ -489,7 +531,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * @param aController
    *          the client controller to use, cannot be <code>null</code>.
    */
-  private MainFrame( final ClientController aController )
+  public MainFrame( final ClientController aController )
   {
     super();
 
@@ -522,34 +564,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
-
-    // Set the window title and the status bar denoting our state...
-    HostProperties hostProperties = this.controller.getHostProperties();
-    if ( hostProperties != null )
-    {
-      setTitle( hostProperties.getFullName() );
-      setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
-    }
   }
 
   // METHODS
-
-  /**
-   * Factory method for creating a new main frame using the given properties and
-   * controller.
-   * 
-   * @param aClientProperties
-   *          the client properties;
-   * @param aController
-   *          the controller.
-   * @return a new {@link MainFrame} instance, never <code>null</code>.
-   */
-  public static MainFrame createMainFrame( final ClientController aController )
-  {
-    final MainFrame result = new MainFrame( aController );
-    aController.setMainFrame( result );
-    return result;
-  }
 
   /**
    * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
@@ -752,13 +769,13 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     final JMenuBar bar = new JMenuBar();
     setJMenuBar( bar );
 
-    final JMenu fileMenu = new JMenu( "File" );
-    fileMenu.setMnemonic( 'F' );
-    bar.add( fileMenu );
-
     this.exportMenu = new JMenu( "Export ..." );
     this.exportMenu.setMnemonic( 'e' );
     this.exportMenu.addMenuListener( new ExportMenuBuilder( this.controller ) );
+
+    final JMenu fileMenu = new JMenu( "File" );
+    fileMenu.setMnemonic( 'F' );
+    bar.add( fileMenu );
 
     fileMenu.add( this.controller.getAction( NewProjectAction.ID ) );
     fileMenu.add( this.controller.getAction( OpenProjectAction.ID ) );
