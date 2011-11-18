@@ -57,7 +57,7 @@ public class SetCursorAction extends BaseAction
    * @param aCursorIdx
    *          the index of the cursor to set with this action, >= 0 && < 10.
    */
-  public SetCursorAction( final IClientController aController, final int aCursorIdx )
+  public SetCursorAction( final ClientController aController, final int aCursorIdx )
   {
     super( getCursorId( aCursorIdx ), aController, "Set Cursor " + ( aCursorIdx + 1 ), "Set the "
         + DisplayUtils.getOrdinalNumber( aCursorIdx + 1 ) + " cursor" );

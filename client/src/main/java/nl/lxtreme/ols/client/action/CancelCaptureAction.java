@@ -47,7 +47,7 @@ public class CancelCaptureAction extends BaseAction
    * @param aController
    *          the controller to use.
    */
-  public CancelCaptureAction( final IClientController aController )
+  public CancelCaptureAction( final ClientController aController )
   {
     super( ID, aController, ICON_CANCEL_CAPTURE, "Cancel capture", "Cancel the current capture" );
     putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke( KeyEvent.VK_ESCAPE, 0 ) );

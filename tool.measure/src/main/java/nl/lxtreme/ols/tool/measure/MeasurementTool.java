@@ -23,24 +23,20 @@ package nl.lxtreme.ols.tool.measure;
 
 import java.awt.*;
 
+import org.osgi.framework.*;
+
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureTask.*;
 
 
 /**
  * Provides a tool for measuring frequency, time(period)s, and so on.
  */
-public class MeasurementTool extends BaseTool<MeasurementDialog>
+public class MeasurementTool implements Tool<ClockFrequencyMeasureTask.ClockStats>
 {
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new MeasurementTool instance.
-   */
-  public MeasurementTool()
-  {
-    super( Category.MEASURE, "Measure ..." );
-  }
+  private BundleContext context;
 
   // METHODS
 
@@ -48,8 +44,47 @@ public class MeasurementTool extends BaseTool<MeasurementDialog>
    * {@inheritDoc}
    */
   @Override
-  protected MeasurementDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
+  public ToolTask<ClockStats> createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
+      final AnnotationListener aAnnotationListener )
   {
-    return new MeasurementDialog( aOwner, aName, aContext );
+    return new ClockFrequencyMeasureTask( aContext );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public ToolCategory getCategory()
+  {
+    return ToolCategory.MEASURE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return "Measure ...";
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void invoke( final Window aParent, final ToolContext aContext )
+  {
+    new MeasurementDialog( aParent, aContext, this.context, this ).showDialog();
+  }
+
+  /**
+   * Called when this tool is initialized by the client framework.
+   * 
+   * @param aContext
+   *          the bundle context to use, never <code>null</code>.
+   */
+  protected void init( final BundleContext aContext )
+  {
+    this.context = aContext;
   }
 }

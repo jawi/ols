@@ -22,27 +22,20 @@ package nl.lxtreme.ols.tool.onewire;
 
 
 import java.awt.*;
-import java.beans.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.*;
+
+import org.osgi.framework.*;
 
 
 /**
  * Provides a 1-wire analyser tool.
  */
-public class OneWireAnalyser extends BaseAsyncTool<OneWireAnalyserDialog, OneWireDataSet, OneWireAnalyserWorker>
+public class OneWireAnalyser implements Tool<OneWireDataSet>
 {
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new OneWireAnalyser instance.
-   */
-  public OneWireAnalyser()
-  {
-    super( Category.DECODER, "1-Wire protocol analyser ..." );
-  }
+  private BundleContext context;
 
   // METHODS
 
@@ -50,27 +43,48 @@ public class OneWireAnalyser extends BaseAsyncTool<OneWireAnalyserDialog, OneWir
    * {@inheritDoc}
    */
   @Override
-  protected OneWireAnalyserDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
+  public OneWireAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
+      final AnnotationListener aAnnotationListener )
   {
-    return new OneWireAnalyserDialog( aOwner, aName, aContext );
+    return new OneWireAnalyserTask( aContext, aProgressListener, aAnnotationListener );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected OneWireAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
+  public ToolCategory getCategory()
   {
-    return new OneWireAnalyserWorker( aData, aContext );
+    return ToolCategory.DECODER;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected void onPropertyChange( final PropertyChangeEvent aEvent )
+  public String getName()
   {
-    // NO-op
+    return "1-Wire protocol analyser ...";
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void invoke( final Window aParent, final ToolContext aToolContext )
+  {
+    new OneWireAnalyserDialog( aParent, aToolContext, this.context, this ).showDialog();
+  }
+
+  /**
+   * Called when this tool is initialized by the client framework.
+   * 
+   * @param aContext
+   *          the bundle context to use, never <code>null</code>.
+   */
+  protected void init( final BundleContext aContext )
+  {
+    this.context = aContext;
   }
 }
 

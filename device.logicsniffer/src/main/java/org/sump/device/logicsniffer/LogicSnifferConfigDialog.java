@@ -49,7 +49,7 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
 /**
  * Provides the configuration dialog for the Open Bench Logic Sniffer device.
  */
-public abstract class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable, Closeable
+public final class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable, Closeable
 {
   // INNER TYPES
 
@@ -297,6 +297,8 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
 
   // VARIABLES
 
+  private final DeviceProfileManagerTracker deviceProfileManagerTracker;
+
   private JComboBox deviceTypeSelect;
   private JComboBox numberSchemeSelect;
   private JComboBox portSelect;
@@ -327,7 +329,6 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   private JLabel ratioLabel;
   private JLabel warningLabel;
 
-  // @@@
   private JTextField[] triggerHexMask;
   private JTextField[] triggerHexValue;
   private JButton[] applyHexMaskButton;
@@ -346,10 +347,12 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
    * @param aConfig
    *          the logic sniffer device to configure.
    */
-  public LogicSnifferConfigDialog( final Window aParent, final LogicSnifferConfig aConfig )
+  public LogicSnifferConfigDialog( final Window aParent, final LogicSnifferConfig aConfig,
+      final DeviceProfileManagerTracker aDeviceProfileManagerTracker )
   {
     super( aParent, "OLS Capture settings", ModalityType.DOCUMENT_MODAL );
 
+    this.deviceProfileManagerTracker = aDeviceProfileManagerTracker;
     this.config = aConfig;
 
     initDialog();
@@ -396,8 +399,15 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
    */
   private static String maskToHexString( final String aMask )
   {
-    final int value = ( int )Long.parseLong( aMask, 2 );
-    return Integer.toHexString( Integer.reverse( value ) );
+    try
+    {
+      final int value = ( int )Long.parseLong( aMask, 2 );
+      return Integer.toHexString( Integer.reverse( value ) );
+    }
+    catch ( NumberFormatException exception )
+    {
+      return "";
+    }
   }
 
   /**
@@ -683,13 +693,6 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   }
 
   /**
-   * Returns the current device profile manager, never <code>null</code>.
-   * 
-   * @return the device profile manager to return, cannot be <code>null</code>.
-   */
-  protected abstract DeviceProfileManager getDeviceProfileManager();
-
-  /**
    * Builds this dialog by adding all components to it.
    */
   private void buildDialog()
@@ -912,6 +915,16 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
   private void forceCaptureSizeTo( final Integer aSampleCount )
   {
     this.sizeSelect.setSelectedItem( aSampleCount );
+  }
+
+  /**
+   * Returns the current device profile manager, never <code>null</code>.
+   * 
+   * @return the device profile manager to return, cannot be <code>null</code>.
+   */
+  private DeviceProfileManager getDeviceProfileManager()
+  {
+    return this.deviceProfileManagerTracker.getService();
   }
 
   /**
@@ -1219,7 +1232,7 @@ public abstract class LogicSnifferConfigDialog extends JDialog implements Action
     // set sample rate; use a default to ensure the internal state remains
     // correct...
     value = String.valueOf( this.speedSelect.getSelectedItem() );
-    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, LogicSnifferDevice.CLOCK );
+    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, LogicSnifferAcquisitionTask.CLOCK );
     this.config.setSampleRate( f );
 
     // set sample count

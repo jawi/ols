@@ -36,10 +36,11 @@ import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.*;
 
 
 /**
- * (Parameterized) tests cases for {@link SPIAnalyserWorker}.
+ * (Parameterized) tests cases for {@link SPIAnalyserTask}.
  */
 @RunWith( Parameterized.class )
 public class SPIAnalyserWorkerDataFilesTest
@@ -114,7 +115,7 @@ public class SPIAnalyserWorkerDataFilesTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.spi.SPIAnalyserWorker#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.spi.SPIAnalyserTask#doInBackground()}.
    */
   @Test
   public void testAnalyzeDataFile() throws Exception
@@ -140,7 +141,10 @@ public class SPIAnalyserWorkerDataFilesTest
     DataContainer container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
-    SPIAnalyserWorker worker = new SPIAnalyserWorker( container, toolContext );
+    ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
+    AnnotationListener al = Mockito.mock( AnnotationListener.class );
+
+    SPIAnalyserTask worker = new SPIAnalyserTask( toolContext, tpl, al );
     worker.setBitCount( this.bitCount - 1 );
     worker.setHonourCS( this.honourCS );
     worker.setReportCS( false );
@@ -151,7 +155,7 @@ public class SPIAnalyserWorkerDataFilesTest
     worker.setCSIndex( this.channels[2] );
     worker.setSCKIndex( this.channels[3] );
 
-    SPIDataSet result = worker.doInBackground();
+    SPIDataSet result = worker.call();
     assertNotNull( result );
     return result;
   }

@@ -45,13 +45,15 @@ public class FocusWindowAction extends AbstractAction
   /**
    * Creates a new FocusWindowAction instance.
    * 
-   * @param aWindow
-   *          the window to give focus, cannot be <code>null</code>.
+   * @param aWindowTitle
+   *          the title of the window to give focus, cannot be <code>null</code>
+   *          or empty.
    */
-  public FocusWindowAction( final Window aWindow )
+  public FocusWindowAction( final String aWindowTitle )
   {
-    super( ID_PREFIX + getTitle( aWindow ) );
-    putValue( NAME, getTitle( aWindow ) );
+    super( ID_PREFIX.concat( aWindowTitle ) );
+    putValue( NAME, aWindowTitle );
+    putValue( SELECTED_KEY, hasFocus( aWindowTitle ) );
   }
 
   // METHODS
@@ -64,7 +66,7 @@ public class FocusWindowAction extends AbstractAction
    *          .
    * @return a title, can be <code>null</code>.
    */
-  static final String getTitle( final Window aWindow )
+  public static final String getTitle( final Window aWindow )
   {
     if ( aWindow instanceof Frame )
     {
@@ -78,31 +80,6 @@ public class FocusWindowAction extends AbstractAction
   }
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-   */
-  @Override
-  public void actionPerformed( final ActionEvent aEvent )
-  {
-    final Window window = findWindow( getValue( NAME ) );
-
-    if ( ( window != null ) && !SwingComponentUtils.isActivelyShown( window ) )
-    {
-      if ( window instanceof Frame )
-      {
-        final Frame frame = ( Frame )window;
-        int state = frame.getExtendedState();
-        if ( ( state & Frame.ICONIFIED ) != 0 )
-        {
-          state &= ~Frame.ICONIFIED;
-          frame.setExtendedState( state );
-        }
-      }
-      window.toFront();
-      window.requestFocus();
-    }
-  }
-
-  /**
    * Finds the window with the given name/title.
    * 
    * @param aName
@@ -110,7 +87,7 @@ public class FocusWindowAction extends AbstractAction
    * @return the window matching the given name, or <code>null</code> if no such
    *         window could be found.
    */
-  private Window findWindow( final Object aName )
+  private static Window findWindow( final Object aName )
   {
     final String name = String.valueOf( aName );
     for ( Window window : Window.getWindows() )
@@ -121,6 +98,66 @@ public class FocusWindowAction extends AbstractAction
       }
     }
     return null;
+  }
+
+  /**
+   * Finds the window with the given name and returns whether it has the current
+   * focus.
+   * 
+   * @param aName
+   * @return
+   */
+  private static Boolean hasFocus( final Object aName )
+  {
+    final Window window = findWindow( aName );
+    if ( window != null )
+    {
+      return Boolean.valueOf( window.hasFocus() );
+    }
+    return Boolean.FALSE;
+  }
+
+  /**
+   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   */
+  @Override
+  public void actionPerformed( final ActionEvent aEvent )
+  {
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        final Window window = findWindow( getValue( NAME ) );
+
+        if ( ( window != null ) && !SwingComponentUtils.isActivelyShown( window ) )
+        {
+          if ( window instanceof Frame )
+          {
+            deiconifyWindow( ( Frame )window );
+          }
+          window.toFront();
+          window.requestFocus();
+        }
+      }
+    } );
+  }
+
+  /**
+   * Deiconifies the given window/frame.
+   * 
+   * @param aWindow
+   *          the window to deiconify, if it is not iconified, it will do
+   *          nothing.
+   */
+  void deiconifyWindow( final Frame aWindow )
+  {
+    int state = aWindow.getExtendedState();
+    if ( ( state & Frame.ICONIFIED ) != 0 )
+    {
+      state &= ~Frame.ICONIFIED;
+      aWindow.setExtendedState( state );
+    }
   }
 
 }

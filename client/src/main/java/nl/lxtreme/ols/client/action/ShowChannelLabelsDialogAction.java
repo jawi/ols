@@ -48,7 +48,7 @@ public class ShowChannelLabelsDialogAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public ShowChannelLabelsDialogAction( final IClientController aController )
+  public ShowChannelLabelsDialogAction( final ClientController aController )
   {
     super( ID, aController, "Channel labels", "Show the channel labels dialog" );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_L ) );

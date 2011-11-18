@@ -23,25 +23,19 @@ package nl.lxtreme.ols.tool.uart;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.data.*;
+import org.osgi.framework.*;
+
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.*;
 
 
 /**
  * Provides an UART/RS-232 analysis tool.
  */
-public class UARTAnalyser extends BaseAsyncTool<UARTProtocolAnalysisDialog, UARTDataSet, UARTAnalyserWorker>
+public class UARTAnalyser implements Tool<UARTDataSet>
 {
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new UARTAnalyser instance.
-   */
-  public UARTAnalyser()
-  {
-    super( Category.DECODER, "UART analyser ..." );
-  }
+  private BundleContext context;
 
   // METHODS
 
@@ -49,18 +43,48 @@ public class UARTAnalyser extends BaseAsyncTool<UARTProtocolAnalysisDialog, UART
    * {@inheritDoc}
    */
   @Override
-  protected UARTProtocolAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext, final String aName )
+  public UARTAnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
+      final AnnotationListener aAnnotationListener )
   {
-    return new UARTProtocolAnalysisDialog( aOwner, getName(), aContext );
+    return new UARTAnalyserTask( aContext, aProgressListener, aAnnotationListener );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected UARTAnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
+  public ToolCategory getCategory()
   {
-    return new UARTAnalyserWorker( aData, aContext );
+    return ToolCategory.DECODER;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return "UART analyser ...";
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void invoke( final Window aParent, final ToolContext aContext )
+  {
+    new UARTProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+  }
+
+  /**
+   * Called when this tool is initialized by the client framework.
+   * 
+   * @param aContext
+   *          the bundle context to use, never <code>null</code>.
+   */
+  protected void init( final BundleContext aContext )
+  {
+    this.context = aContext;
   }
 }
 

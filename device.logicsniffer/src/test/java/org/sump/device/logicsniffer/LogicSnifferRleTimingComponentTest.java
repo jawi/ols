@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 import java.io.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
@@ -40,7 +40,7 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
 /**
- * Some RLE-timing test cases for {@link LogicSnifferDevice}.
+ * Some RLE-timing test cases for {@link LogicSnifferAcquisitionTask}.
  */
 @RunWith( Parameterized.class )
 public class LogicSnifferRleTimingComponentTest
@@ -273,12 +273,12 @@ public class LogicSnifferRleTimingComponentTest
 
   /**
    * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
+   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}.
    */
   @Test( /* timeout = 10000 */)
   public void testRleOk() throws Exception
   {
-    final AcquisitionResult result = this.device.doInBackground();
+    final AcquisitionResult result = this.device.call();
 
     verifyDecodedRleData( result );
   }

@@ -41,7 +41,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
   // VARIABLES
 
   private final String id;
-  private final IClientController controller;
+  private final ClientController controller;
 
   // CONSTRUCTORS
 
@@ -61,7 +61,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
    * @param aDescription
    *          the description/tooltip of this action.
    */
-  protected BaseAction( final String aID, final IClientController aController, final Icon aIcon, final String aName,
+  protected BaseAction( final String aID, final ClientController aController, final Icon aIcon, final String aName,
       final String aDescription )
   {
     super( aID );
@@ -91,7 +91,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
    * @param aDescription
    *          the description/tooltip of this action.
    */
-  protected BaseAction( final String aID, final IClientController aController, final String aName,
+  protected BaseAction( final String aID, final ClientController aController, final String aName,
       final String aDescription )
   {
     this( aID, aController, ( String )null /* aIconName */, aName, aDescription );
@@ -113,7 +113,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
    * @param aDescription
    *          the description/tooltip of this action.
    */
-  protected BaseAction( final String aID, final IClientController aController, final String aIconName,
+  protected BaseAction( final String aID, final ClientController aController, final String aIconName,
       final String aName, final String aDescription )
   {
     super( aID );
@@ -147,7 +147,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
    * 
    * @return a client controller, never <code>null</code>.
    */
-  protected final IClientController getController()
+  protected final ClientController getController()
   {
     return this.controller;
   }

@@ -36,6 +36,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -44,13 +45,16 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 
+import org.osgi.framework.*;
+
 
 /**
  * Provides a main dialog for the Asm45 analyser.
  * 
  * @author Ansgar Kueckes
  */
-public final class Asm45ProtocolAnalysisDialog extends BaseAsyncToolDialog<Asm45DataSet, Asm45AnalyserWorker>
+public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataSet> implements
+    ExportAware<Asm45DataSet>
 {
   // CONSTANTS
 
@@ -83,7 +87,6 @@ public final class Asm45ProtocolAnalysisDialog extends BaseAsyncToolDialog<Asm45
   private JCheckBox showBusGrants;
   private JEditorPane outText;
   private RestorableAction runAnalysisAction;
-  private Action exportAction;
   private Action closeAction;
 
   // CONSTRUCTORS
@@ -98,9 +101,10 @@ public final class Asm45ProtocolAnalysisDialog extends BaseAsyncToolDialog<Asm45
    * @param aContext
    *          the tool context.
    */
-  public Asm45ProtocolAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
+  public Asm45ProtocolAnalysisDialog( final Window aOwner, final ToolContext aToolContext,
+      final BundleContext aContext, final Asm45Analyser aTool )
   {
-    super( aOwner, aName, aContext );
+    super( aOwner, aToolContext, aContext, aTool );
 
     initDialog();
 
@@ -108,40 +112,18 @@ public final class Asm45ProtocolAnalysisDialog extends BaseAsyncToolDialog<Asm45
   }
 
   /**
-   *
+   * {@inheritDoc}
    */
   @Override
-  public void onToolWorkerReady( final Asm45DataSet aAnalysisResult )
+  public void exportToFile( final File aOutputFile, final ExportFormat aFormat ) throws IOException
   {
-    super.onToolWorkerReady( aAnalysisResult );
-
-    try
+    if ( ExportFormat.CSV.equals( aFormat ) )
     {
-      final String htmlPage;
-      if ( aAnalysisResult != null )
-      {
-        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
-        this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-      }
-      else
-      {
-        htmlPage = getEmptyHtmlPage();
-        this.exportAction.setEnabled( false );
-      }
-
-      this.outText.setText( htmlPage );
-      this.outText.setEditable( false );
-
-      this.runAnalysisAction.restore();
+      storeToCsvFile( aOutputFile, getLastResult() );
     }
-    catch ( final IOException exception )
+    else if ( ExportFormat.HTML.equals( aFormat ) )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        // This should not happen for the no-file exports!
-        throw new RuntimeException( exception );
-      }
+      storeToHtmlFile( aOutputFile, getLastResult() );
     }
   }
 
@@ -172,34 +154,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseAsyncToolDialog<Asm45
     this.outText.setText( emptyHtmlPage );
     this.outText.setEditable( false );
 
-    this.exportAction.setEnabled( false );
-
     this.runAnalysisAction.restore();
-
-    setControlsEnabled( true );
-  }
-
-  /**
-   * Set the controls of the dialog enabled/disabled
-   * 
-   * @param aEnabled
-   *          status of the controls
-   */
-  @Override
-  public void setControlsEnabled( final boolean aEnabled )
-  {
-    this.lineSMC.setEnabled( aEnabled );
-    this.lineSTM.setEnabled( aEnabled );
-    this.lineEBG.setEnabled( aEnabled );
-    this.lineBYTE.setEnabled( aEnabled );
-    this.lineBL.setEnabled( aEnabled );
-    this.lineWRT.setEnabled( aEnabled );
-    this.lineSYNC.setEnabled( aEnabled );
-    this.showInst.setEnabled( aEnabled );
-    this.showData.setEnabled( aEnabled );
-    this.showBusGrants.setEnabled( aEnabled );
-
-    this.closeAction.setEnabled( aEnabled );
   }
 
   /**
@@ -220,77 +175,86 @@ public final class Asm45ProtocolAnalysisDialog extends BaseAsyncToolDialog<Asm45
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   * {@inheritDoc}
    */
   @Override
-  protected void setupToolWorker( final Asm45AnalyserWorker aToolWorker )
-  {
-    aToolWorker.setLineSMCIndex( this.lineSMC.getSelectedIndex() );
-    aToolWorker.setLineSTMIndex( this.lineSTM.getSelectedIndex() );
-    aToolWorker.setLineEBGIndex( this.lineEBG.getSelectedIndex() );
-    aToolWorker.setLineBYTEIndex( this.lineBYTE.getSelectedIndex() );
-    aToolWorker.setLineBLIndex( this.lineBL.getSelectedIndex() );
-    aToolWorker.setLineWRTIndex( this.lineWRT.getSelectedIndex() );
-    aToolWorker.setLineSYNCIndex( this.lineSYNC.getSelectedIndex() );
-    aToolWorker.setReportInst( this.showInst.isSelected() );
-    aToolWorker.setReportData( this.showData.isSelected() );
-    aToolWorker.setReportBusGrants( this.showBusGrants.isSelected() );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToCsvFile(java.io.File,
-   *      java.lang.Object)
-   */
-  @Override
-  protected void storeToCsvFile( final File aSelectedFile, final Asm45DataSet aAnalysisResult )
+  protected void onToolEnded( final Asm45DataSet aAnalysisResult )
   {
     try
     {
-      final CsvExporter exporter = ExportUtils.createCsvExporter( aSelectedFile );
-
-      exporter.setHeaders( "index", "clocks", "block", "address", "value", "bus grant", "type", "event" );
-
-      final List<Asm45Data> dataSet = aAnalysisResult.getData();
-      for ( int i = 0; i < dataSet.size(); i++ )
+      final String htmlPage;
+      if ( aAnalysisResult != null )
       {
-        final Asm45Data ds = dataSet.get( i );
-        exporter.addRow( Integer.valueOf( i ), Integer.valueOf( ds.getClocks() ),
-            StringUtils.integerToHexString( ds.getBlock(), 2 ), StringUtils.integerToHexString( ds.getAddress(), 4 ),
-            StringUtils.integerToHexString( ds.getValue(), 4 ), ds.getBusGrant() ? "X" : "-", ds.getType(),
-            ds.getEvent() );
+        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
+      }
+      else
+      {
+        htmlPage = getEmptyHtmlPage();
       }
 
-      exporter.close();
+      this.outText.setText( htmlPage );
+      this.outText.setEditable( false );
+
+      this.runAnalysisAction.restore();
     }
     catch ( final IOException exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
+        // This should not happen for the no-file exports!
+        throw new RuntimeException( exception );
       }
     }
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToHtmlFile(java.io.File,
-   *      java.lang.Object)
+   * {@inheritDoc}
    */
   @Override
-  protected void storeToHtmlFile( final File aSelectedFile, final Asm45DataSet aAnalysisResult )
+  protected void onToolStarted()
   {
-    try
-    {
-      toHtmlPage( aSelectedFile, aAnalysisResult );
-    }
-    catch ( final IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
-    }
+    // NO-op
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void prepareToolTask( final ToolTask<Asm45DataSet> aToolTask )
+  {
+    final Asm45AnalyserTask toolTask = ( Asm45AnalyserTask )aToolTask;
+
+    toolTask.setLineSMCIndex( this.lineSMC.getSelectedIndex() );
+    toolTask.setLineSTMIndex( this.lineSTM.getSelectedIndex() );
+    toolTask.setLineEBGIndex( this.lineEBG.getSelectedIndex() );
+    toolTask.setLineBYTEIndex( this.lineBYTE.getSelectedIndex() );
+    toolTask.setLineBLIndex( this.lineBL.getSelectedIndex() );
+    toolTask.setLineWRTIndex( this.lineWRT.getSelectedIndex() );
+    toolTask.setLineSYNCIndex( this.lineSYNC.getSelectedIndex() );
+    toolTask.setReportInst( this.showInst.isSelected() );
+    toolTask.setReportData( this.showData.isSelected() );
+    toolTask.setReportBusGrants( this.showBusGrants.isSelected() );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void setControlsEnabled( final boolean aEnabled )
+  {
+    this.lineSMC.setEnabled( aEnabled );
+    this.lineSTM.setEnabled( aEnabled );
+    this.lineEBG.setEnabled( aEnabled );
+    this.lineBYTE.setEnabled( aEnabled );
+    this.lineBL.setEnabled( aEnabled );
+    this.lineWRT.setEnabled( aEnabled );
+    this.lineSYNC.setEnabled( aEnabled );
+    this.showInst.setEnabled( aEnabled );
+    this.showData.setEnabled( aEnabled );
+    this.showBusGrants.setEnabled( aEnabled );
+
+    this.closeAction.setEnabled( aEnabled );
   }
 
   /**
@@ -399,7 +363,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseAsyncToolDialog<Asm45
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getChannels();
+    final int channelCount = getData().getChannels();
 
     final JPanel panel = new JPanel( new SpringLayout() );
 
@@ -552,14 +516,12 @@ public final class Asm45ProtocolAnalysisDialog extends BaseAsyncToolDialog<Asm45
         new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets( 2,
             0, 2, 0 ), 0, 0 ) );
 
-    final JButton runAnalysisButton = createRunAnalysisButton();
+    final JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    final JButton exportButton = createExportButton();
-    this.exportAction = exportButton.getAction();
-    this.exportAction.setEnabled( false );
+    final JButton exportButton = ToolUtils.createExportButton( this );
 
-    final JButton closeButton = createCloseButton();
+    final JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
@@ -567,6 +529,64 @@ public final class Asm45ProtocolAnalysisDialog extends BaseAsyncToolDialog<Asm45
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, runAnalysisButton );
 
     pack();
+  }
+
+  /**
+   * Stores the given analysis results to the given file in CSV format.
+   * 
+   * @param aSelectedFile
+   * @param aAnalysisResult
+   */
+  private void storeToCsvFile( final File aSelectedFile, final Asm45DataSet aAnalysisResult )
+  {
+    try
+    {
+      final CsvExporter exporter = ExportUtils.createCsvExporter( aSelectedFile );
+
+      exporter.setHeaders( "index", "clocks", "block", "address", "value", "bus grant", "type", "event" );
+
+      final List<Asm45Data> dataSet = aAnalysisResult.getData();
+      for ( int i = 0; i < dataSet.size(); i++ )
+      {
+        final Asm45Data ds = dataSet.get( i );
+        exporter.addRow( Integer.valueOf( i ), Integer.valueOf( ds.getClocks() ),
+            StringUtils.integerToHexString( ds.getBlock(), 2 ), StringUtils.integerToHexString( ds.getAddress(), 4 ),
+            StringUtils.integerToHexString( ds.getValue(), 4 ), ds.getBusGrant() ? "X" : "-", ds.getType(),
+            ds.getEvent() );
+      }
+
+      exporter.close();
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "CSV export failed!", exception );
+      }
+    }
+  }
+
+  /**
+   * Stores the given analysis results to the given file as HTML.
+   * 
+   * @param aSelectedFile
+   * @param aAnalysisResult
+   */
+  private void storeToHtmlFile( final File aSelectedFile, final Asm45DataSet aAnalysisResult )
+  {
+    try
+    {
+      toHtmlPage( aSelectedFile, aAnalysisResult );
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "HTML export failed!", exception );
+      }
+    }
   }
 
   /**

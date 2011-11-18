@@ -25,19 +25,28 @@ import java.util.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.export.*;
+import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.ui.*;
+import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.osgi.*;
 
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.prefs.*;
 
 
 /**
  * Provides the client bundle activator, which is responsible for starting the
  * entire client UI.
  */
-public class Activator implements BundleActivator
+public class Activator extends DependencyActivatorBase
 {
   // CONSTANTS
 
@@ -61,20 +70,19 @@ public class Activator implements BundleActivator
   // VARIABLES
 
   private BundleWatcher bundleWatcher;
-  private Host host;
   private LogReaderTracker logReaderTracker;
 
   // METHODS
 
   /**
-   * Creats the bundle observer for component providers.
+   * Creates the bundle observer for component providers.
    * 
    * @return a bundle observer, never <code>null</code>.
    */
   private static BundleObserver createComponentProviderBundleObserver()
   {
     return new BundleServiceObserver( OLS_COMPONENT_PROVIDER_MAGIC_KEY, OLS_COMPONENT_PROVIDER_MAGIC_VALUE,
-        OLS_COMPONENT_PROVIDER_CLASS_KEY, nl.lxtreme.ols.api.ui.ComponentProvider.class.getName() )
+        OLS_COMPONENT_PROVIDER_CLASS_KEY, ComponentProvider.class.getName() )
     {
       @Override
       protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
@@ -102,7 +110,17 @@ public class Activator implements BundleActivator
   private static BundleObserver createDeviceBundleObserver()
   {
     return new BundleServiceObserver( OLS_DEVICE_MAGIC_KEY, OLS_DEVICE_MAGIC_VALUE, OLS_DEVICE_CLASS_KEY,
-        nl.lxtreme.ols.api.devices.DeviceController.class.getName() );
+        Device.class.getName() )
+    {
+      @Override
+      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
+          final ManifestHeader... aEntries )
+      {
+        Properties result = new Properties();
+        result.put( Action.NAME, ( ( Device )aService ).getName() );
+        return result;
+      }
+    };
   }
 
   /**
@@ -113,7 +131,17 @@ public class Activator implements BundleActivator
   private static BundleObserver createExporterBundleObserver()
   {
     return new BundleServiceObserver( OLS_EXPORTER_MAGIC_KEY, OLS_EXPORTER_MAGIC_VALUE, OLS_EXPORTER_CLASS_KEY,
-        nl.lxtreme.ols.api.data.export.Exporter.class.getName() );
+        Exporter.class.getName() )
+    {
+      @Override
+      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
+          final ManifestHeader... aEntries )
+      {
+        Properties result = new Properties();
+        result.put( Action.NAME, ( ( Exporter )aService ).getName() );
+        return result;
+      }
+    };
   }
 
   /**
@@ -124,39 +152,41 @@ public class Activator implements BundleActivator
   private static BundleObserver createToolBundleObserver()
   {
     return new BundleServiceObserver( OLS_TOOL_MAGIC_KEY, OLS_TOOL_MAGIC_VALUE, OLS_TOOL_CLASS_KEY,
-        nl.lxtreme.ols.api.tools.Tool.class.getName() );
+        Tool.class.getName() )
+    {
+      @Override
+      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
+          final ManifestHeader... aEntries )
+      {
+        Properties result = new Properties();
+        result.put( Action.NAME, ( ( Tool<?> )aService ).getName() );
+        return result;
+      }
+    };
   }
 
   /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+   * {@inheritDoc}
    */
   @Override
-  public void start( final BundleContext aContext ) throws Exception
+  public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    final Runnable startTask = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        final Host _host = getHost();
-        if ( _host != null )
-        {
-          // First let the host initialize itself...
-          _host.initialize();
+    this.bundleWatcher.stop();
+    this.logReaderTracker.close();
+  }
 
-          // Then start it...
-          _host.start();
-        }
-      }
-    };
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
+  {
+    final ProjectManager projectManager = new SimpleProjectManager();
 
-    this.host = new Host( aContext );
+    final ClientController clientController = new ClientController( aContext );
 
     this.logReaderTracker = new LogReaderTracker( aContext );
-
-    // This has to be done *before* any other Swing related code is executed
-    // so this also means the #invokeLater call done below...
-    HostUtils.initOSSpecifics( Host.getShortName(), this.host );
+    this.logReaderTracker.open();
 
     this.bundleWatcher = BundleWatcher.createRegExBundleWatcher( aContext, "^OLS-.*" );
     this.bundleWatcher //
@@ -164,59 +194,77 @@ public class Activator implements BundleActivator
         .add( createDeviceBundleObserver() ) //
         .add( createExporterBundleObserver() ) //
         .add( createComponentProviderBundleObserver() );
-
-    // Make sure we're running on the EDT to ensure the Swing threading model is
-    // correctly defined...
-    SwingUtilities.invokeLater( startTask );
-
-    this.logReaderTracker.open();
     // Start watching all bundles for extenders...
     this.bundleWatcher.start();
-  }
 
-  /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-   */
-  @Override
-  public void stop( final BundleContext aContext ) throws Exception
-  {
-    final Runnable shutdownTask = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        final Host _host = getHost();
-        if ( _host != null )
-        {
-          _host.shutdown();
-          _host.stop();
-        }
-      }
-    };
+    // Project manager...
+    aManager.add( //
+        createComponent() //
+            .setInterface( ProjectManager.class.getName(), null ) //
+            .setImplementation( projectManager ) //
+            .add( createServiceDependency() //
+                .setService( HostProperties.class ) //
+                .setRequired( true ) //
+            ) //
+        );
 
-    if ( this.bundleWatcher != null )
-    {
-      this.bundleWatcher.stop();
-      this.bundleWatcher = null;
-    }
+    // User session manager...
+    aManager.add( //
+        createComponent() //
+            .setImplementation( new UserSessionManager() ) //
+            .add( createServiceDependency() //
+                .setService( ProjectManager.class ) //
+                .setRequired( true ) ) //
+            .add( createServiceDependency() //
+                .setService( PreferencesService.class ) //
+                .setRequired( true ) //
+            ) //
+        );
 
-    SwingUtilities.invokeLater( shutdownTask );
+    // All the interfaces we're registering the client controller under...
+    final String[] interfaceNames = new String[] { AcquisitionDataListener.class.getName(),
+        AcquisitionProgressListener.class.getName(), AcquisitionStatusListener.class.getName(),
+        AnnotationListener.class.getName(), ApplicationCallback.class.getName() };
 
-    if ( this.logReaderTracker != null )
-    {
-      this.logReaderTracker.close();
-      this.logReaderTracker = null;
-    }
-  }
-
-  /**
-   * Returns the actual Swing-host.
-   * 
-   * @return the host, can be <code>null</code>.
-   */
-  final Host getHost()
-  {
-    return this.host;
+    // Client controller...
+    aManager.add( //
+        createComponent() //
+            .setInterface( interfaceNames, null ) //
+            .setImplementation( clientController ) //
+            .add( createServiceDependency() //
+                .setService( HostProperties.class ) //
+                .setRequired( true ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( ProjectManager.class ) //
+                .setRequired( true ) //
+                .setCallbacks( "setProjectManager", "removeProjectManager" ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( DataAcquisitionService.class ) //
+                .setRequired( true ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( ComponentProvider.class, "(component.id=Menu)" ) //
+                .setCallbacks( "addMenu", "removeMenu" ) //
+                .setRequired( false ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( Device.class ) //
+                .setCallbacks( "addDevice", "removeDevice" ) //
+                .setRequired( false ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( Tool.class ) //
+                .setCallbacks( "addTool", "removeTool" ) //
+                .setRequired( false ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( Exporter.class ) //
+                .setCallbacks( "addExporter", "removeExporter" ) //
+                .setRequired( false ) //
+            ) //
+        );
   }
 }
 

@@ -32,6 +32,7 @@ import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
 
 import org.junit.*;
+import org.mockito.*;
 
 
 /**
@@ -65,7 +66,7 @@ public class I2CAnalyserWorkerContentTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.i2c.I2CAnalyserWorker#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.i2c.I2CAnalyserTask#doInBackground()}.
    */
   @Test
   public void testKopterDecodingOk() throws Exception
@@ -91,9 +92,12 @@ public class I2CAnalyserWorkerContentTest
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     DataContainer container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( 0, container.getValues().length );
+    ToolContext toolContext = DataTestUtils.createToolContext( container );
 
-    I2CAnalyserWorker worker = new I2CAnalyserWorker( container, toolContext );
+    ToolProgressListener progressListener = Mockito.mock( ToolProgressListener.class );
+    AnnotationListener annotationListener = Mockito.mock( AnnotationListener.class );
+
+    I2CAnalyserTask worker = new I2CAnalyserTask( toolContext, progressListener, annotationListener );
     worker.setLineAIndex( aSclIndex );
     worker.setLineBIndex( aSdaIndex );
     worker.setDetectSDA_SCL( false );
@@ -104,7 +108,7 @@ public class I2CAnalyserWorkerContentTest
 
     // Simulate we're running in a separate thread by directly calling the main
     // working routine...
-    I2CDataSet result = worker.doInBackground();
+    I2CDataSet result = worker.call();
     assertNotNull( result );
 
     return result;

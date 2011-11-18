@@ -35,10 +35,11 @@ import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.*;
 
 
 /**
- * (Parameterized) tests cases for {@link I2CAnalyserWorker}.
+ * (Parameterized) tests cases for {@link I2CAnalyserTask}.
  */
 @RunWith( Parameterized.class )
 public class I2CAnalyserWorkerDataFilesTest
@@ -130,7 +131,7 @@ public class I2CAnalyserWorkerDataFilesTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.i2c.I2CAnalyserWorker#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.i2c.I2CAnalyserTask#doInBackground()}.
    */
   @Test
   public void testAnalyzeDataFile() throws Exception
@@ -159,9 +160,12 @@ public class I2CAnalyserWorkerDataFilesTest
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     DataContainer container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( 0, container.getValues().length );
+    ToolContext toolContext = DataTestUtils.createToolContext( container );
 
-    I2CAnalyserWorker worker = new I2CAnalyserWorker( container, toolContext );
+    ToolProgressListener progressListener = Mockito.mock( ToolProgressListener.class );
+    AnnotationListener annotationListener = Mockito.mock( AnnotationListener.class );
+
+    I2CAnalyserTask worker = new I2CAnalyserTask( toolContext, progressListener, annotationListener );
     worker.setLineAIndex( this.lineAidx );
     worker.setLineBIndex( this.lineBidx );
     worker.setDetectSDA_SCL( this.autoDetectSDA );
@@ -172,7 +176,7 @@ public class I2CAnalyserWorkerDataFilesTest
 
     // Simulate we're running in a separate thread by directly calling the main
     // working routine...
-    I2CDataSet result = worker.doInBackground();
+    I2CDataSet result = worker.call();
     assertNotNull( result );
 
     this.sclIdx = worker.getSclIdx();

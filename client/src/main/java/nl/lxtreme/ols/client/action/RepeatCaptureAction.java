@@ -50,7 +50,7 @@ public class RepeatCaptureAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public RepeatCaptureAction( final IClientController aController )
+  public RepeatCaptureAction( final ClientController aController )
   {
     super( ID, aController, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat capture with current device settings" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_R ) );

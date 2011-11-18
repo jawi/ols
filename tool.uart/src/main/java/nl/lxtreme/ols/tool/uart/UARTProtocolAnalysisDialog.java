@@ -36,6 +36,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -45,6 +46,8 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
+import org.osgi.framework.*;
+
 
 /**
  * The Dialog Class
@@ -53,9 +56,36 @@ import nl.lxtreme.ols.util.swing.component.*;
  *         layout. The dialog consists of three main parts. A settings panel, a
  *         table panel and three buttons.
  */
-public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDataSet, UARTAnalyserWorker>
+public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet> implements ExportAware<UARTDataSet>
 {
   // INNER TYPES
+
+  /**
+   * Cell item renderer for baud rates.
+   */
+  static final class BaudrateItemRenderer extends DefaultListCellRenderer
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      String text = ( aValue == null ) ? "" : aValue.toString();
+      if ( "-1".equals( text ) )
+      {
+        text = "Auto detect";
+      }
+      return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
 
   /**
    * Provides a combobox renderer for {@link UARTParity} values.
@@ -145,10 +175,10 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   private JComboBox bits;
   private JComboBox stop;
   private JCheckBox inv;
+  private JComboBox baudrate;
   private JEditorPane outText;
 
   private RestorableAction runAnalysisAction;
-  private Action exportAction;
   private Action closeAction;
 
   // CONSTRUCTORS
@@ -158,14 +188,17 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aName
-   *          the name of this dialog;
+   * @param aToolContext
+   *          the tool context;
    * @param aContext
-   *          the tool context.
+   *          the OSGi bundle context to use;
+   * @param aTool
+   *          the {@link UARTAnalyser} tool.
    */
-  public UARTProtocolAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
+  public UARTProtocolAnalysisDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
+      final UARTAnalyser aTool )
   {
-    super( aOwner, aName, aContext );
+    super( aOwner, aToolContext, aContext, aTool );
 
     initDialog();
 
@@ -175,48 +208,24 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
   // METHODS
 
   /**
-   * This is the UART protocol decoder core The decoder scans for a decode start
-   * event like CS high to low edge or the trigger of the captured data. After
-   * this the decoder starts to decode the data by the selected mode, number of
-   * bits and bit order. The decoded data are put to a JTable object directly.
+   * {@inheritDoc}
    */
   @Override
-  public void onToolWorkerReady( final UARTDataSet aAnalysisResult )
+  public void exportToFile( final File aOutputFile, final nl.lxtreme.ols.tool.base.ExportAware.ExportFormat aFormat )
+      throws IOException
   {
-    super.onToolWorkerReady( aAnalysisResult );
-
-    try
+    if ( ExportFormat.HTML.equals( aFormat ) )
     {
-      final String htmlPage;
-      if ( aAnalysisResult != null )
-      {
-        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
-        this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-      }
-      else
-      {
-        htmlPage = getEmptyHtmlPage();
-        this.exportAction.setEnabled( false );
-      }
-
-      this.outText.setText( htmlPage );
-      this.outText.setEditable( false );
-
-      this.runAnalysisAction.restore();
+      storeToHtmlFile( aOutputFile, getLastResult() );
     }
-    catch ( final IOException exception )
+    else if ( ExportFormat.CSV.equals( aFormat ) )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        // Should not happen in this situation!
-        throw new RuntimeException( exception );
-      }
+      storeToCsvFile( aOutputFile, getLastResult() );
     }
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
+   * {@inheritDoc}
    */
   @Override
   public void readPreferences( final UserSettings aSettings )
@@ -232,11 +241,12 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     this.parity.setSelectedIndex( aSettings.getInt( "parity", this.parity.getSelectedIndex() ) );
     this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
     this.stop.setSelectedIndex( aSettings.getInt( "stop", this.stop.getSelectedIndex() ) );
+    this.baudrate.setSelectedIndex( aSettings.getInt( "baudrate", this.baudrate.getSelectedIndex() ) );
     this.inv.setSelected( aSettings.getBoolean( "inverted", this.inv.isSelected() ) );
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.ToolDialog#reset()
+   * {@inheritDoc}
    */
   @Override
   public void reset()
@@ -244,11 +254,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     this.outText.setText( getEmptyHtmlPage() );
     this.outText.setEditable( false );
 
-    this.exportAction.setEnabled( false );
-
     this.runAnalysisAction.restore();
-
-    setControlsEnabled( true );
   }
 
   /**
@@ -268,7 +274,79 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     aSettings.putInt( "parity", this.parity.getSelectedIndex() );
     aSettings.putInt( "bits", this.bits.getSelectedIndex() );
     aSettings.putInt( "stop", this.stop.getSelectedIndex() );
+    aSettings.putInt( "baudrate", this.baudrate.getSelectedIndex() );
     aSettings.putBoolean( "inverted", this.inv.isSelected() );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolEnded( final UARTDataSet aAnalysisResult )
+  {
+    try
+    {
+      final String htmlPage;
+      if ( aAnalysisResult != null )
+      {
+        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
+      }
+      else
+      {
+        htmlPage = getEmptyHtmlPage();
+      }
+
+      this.outText.setText( htmlPage );
+      this.outText.setEditable( false );
+
+      this.runAnalysisAction.restore();
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        // Should not happen in this situation!
+        throw new RuntimeException( exception );
+      }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolStarted()
+  {
+    // NO-op
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void prepareToolTask( final ToolTask<UARTDataSet> aToolTask )
+  {
+    final UARTAnalyserTask toolTask = ( UARTAnalyserTask )aToolTask;
+
+    // The value at index zero is "Unused", so extracting one of all items
+    // causes all "unused" values to be equivalent to -1, which is interpreted
+    // as not used...
+    toolTask.setRxdIndex( this.rxd.getSelectedIndex() - 1 );
+    toolTask.setTxdIndex( this.txd.getSelectedIndex() - 1 );
+    toolTask.setCtsIndex( this.cts.getSelectedIndex() - 1 );
+    toolTask.setRtsIndex( this.rts.getSelectedIndex() - 1 );
+    toolTask.setDcdIndex( this.dcd.getSelectedIndex() - 1 );
+    toolTask.setRiIndex( this.ri.getSelectedIndex() - 1 );
+    toolTask.setDsrIndex( this.dsr.getSelectedIndex() - 1 );
+    toolTask.setDtrIndex( this.dtr.getSelectedIndex() - 1 );
+    toolTask.setBaudRate( ( ( Integer )this.baudrate.getSelectedItem() ).intValue() );
+
+    // Other properties...
+    toolTask.setInverted( this.inv.isSelected() );
+    toolTask.setParity( ( UARTParity )this.parity.getSelectedItem() );
+    toolTask.setStopBits( ( UARTStopBits )this.stop.getSelectedItem() );
+    toolTask.setBitCount( NumberUtils.smartParseInt( ( String )this.bits.getSelectedItem(), 8 ) );
   }
 
   /**
@@ -294,126 +372,6 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     this.inv.setEnabled( aEnable );
 
     this.closeAction.setEnabled( aEnable );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
-   */
-  @Override
-  protected void setupToolWorker( final UARTAnalyserWorker aToolWorker )
-  {
-    // The value at index zero is "Unused", so extracting one of all items
-    // causes all "unused" values to be equivalent to -1, which is interpreted
-    // as not used...
-    aToolWorker.setRxdIndex( this.rxd.getSelectedIndex() - 1 );
-    aToolWorker.setTxdIndex( this.txd.getSelectedIndex() - 1 );
-    aToolWorker.setCtsIndex( this.cts.getSelectedIndex() - 1 );
-    aToolWorker.setRtsIndex( this.rts.getSelectedIndex() - 1 );
-    aToolWorker.setDcdIndex( this.dcd.getSelectedIndex() - 1 );
-    aToolWorker.setRiIndex( this.ri.getSelectedIndex() - 1 );
-    aToolWorker.setDsrIndex( this.dsr.getSelectedIndex() - 1 );
-    aToolWorker.setDtrIndex( this.dtr.getSelectedIndex() - 1 );
-
-    // Other properties...
-    aToolWorker.setInverted( this.inv.isSelected() );
-    aToolWorker.setParity( ( UARTParity )this.parity.getSelectedItem() );
-    aToolWorker.setStopBits( ( UARTStopBits )this.stop.getSelectedItem() );
-    aToolWorker.setBitCount( NumberUtils.smartParseInt( ( String )this.bits.getSelectedItem(), 8 ) );
-  }
-
-  /**
-   * exports the data to a CSV file
-   * 
-   * @param aFile
-   *          File object
-   */
-  @Override
-  protected void storeToCsvFile( final File aFile, final UARTDataSet aDataSet )
-  {
-    try
-    {
-      final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
-
-      exporter.setHeaders( "index", "start-time", "end-time", "event?", "event-type", "RxD event", "TxD event",
-          "RxD data", "TxD data" );
-
-      final List<UARTData> decodedData = aDataSet.getData();
-      for ( int i = 0; i < decodedData.size(); i++ )
-      {
-        final UARTData ds = decodedData.get( i );
-
-        final String startTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
-        final String endTime = aDataSet.getDisplayTime( ds.getEndSampleIndex() );
-
-        String eventType = null;
-        String rxdEvent = null;
-        String txdEvent = null;
-        String rxdData = null;
-        String txdData = null;
-
-        switch ( ds.getType() )
-        {
-          case UARTData.UART_TYPE_EVENT:
-            eventType = ds.getEventName();
-            break;
-
-          case UARTData.UART_TYPE_RXEVENT:
-            rxdEvent = ds.getEventName();
-            break;
-
-          case UARTData.UART_TYPE_TXEVENT:
-            txdEvent = ds.getEventName();
-            break;
-
-          case UARTData.UART_TYPE_RXDATA:
-            rxdData = Integer.toString( ds.getData() );
-            break;
-
-          case UARTData.UART_TYPE_TXDATA:
-            txdData = Integer.toString( ds.getData() );
-            break;
-
-          default:
-            break;
-        }
-
-        exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), eventType,
-            rxdEvent, txdEvent, rxdData, txdData );
-      }
-
-      exporter.close();
-    }
-    catch ( final IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
-      }
-    }
-  }
-
-  /**
-   * stores the data to a HTML file
-   * 
-   * @param aFile
-   *          file object
-   */
-  @Override
-  protected void storeToHtmlFile( final File aFile, final UARTDataSet aDataSet )
-  {
-    try
-    {
-      toHtmlPage( aFile, aDataSet );
-    }
-    catch ( final IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
-    }
   }
 
   /**
@@ -508,7 +466,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getChannels();
+    final int channelCount = getData().getChannels();
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
@@ -546,6 +504,19 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     this.ri = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.ri );
 
+    final Integer[] baudrates = new Integer[BaudRateAnalyzer.COMMON_BAUDRATES.length + 1];
+    baudrates[0] = Integer.valueOf( -1 );
+    int i = 1;
+    for ( int baudrate : BaudRateAnalyzer.COMMON_BAUDRATES )
+    {
+      baudrates[i++] = Integer.valueOf( baudrate );
+    }
+    this.baudrate = new JComboBox( baudrates );
+    this.baudrate.setSelectedIndex( 0 );
+    this.baudrate.setRenderer( new BaudrateItemRenderer() );
+    settings.add( createRightAlignedLabel( "Baudrate" ) );
+    settings.add( this.baudrate );
+
     settings.add( createRightAlignedLabel( "Parity" ) );
     this.parity = new JComboBox( UARTParity.values() );
     this.parity.setSelectedIndex( 0 );
@@ -555,7 +526,7 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     settings.add( createRightAlignedLabel( "Bits" ) );
     final String[] bitarray = new String[10];
     // allow word lengths between 5 and 14 bits...
-    for ( int i = 0; i < bitarray.length; i++ )
+    for ( i = 0; i < bitarray.length; i++ )
     {
       bitarray[i] = String.format( "%d", Integer.valueOf( i + 5 ) );
     }
@@ -629,19 +600,110 @@ public final class UARTProtocolAnalysisDialog extends BaseAsyncToolDialog<UARTDa
     contentPane.add( previewPane, new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH,
         GridBagConstraints.BOTH, new Insets( 2, 0, 2, 0 ), 0, 0 ) );
 
-    final JButton runAnalysisButton = createRunAnalysisButton();
+    final JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    final JButton exportButton = createExportButton();
-    this.exportAction = exportButton.getAction();
-    this.exportAction.setEnabled( false );
+    final JButton exportButton = ToolUtils.createExportButton( this );
 
-    final JButton closeButton = createCloseButton();
+    final JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
+  }
+
+  /**
+   * exports the data to a CSV file
+   * 
+   * @param aFile
+   *          File object
+   */
+  private void storeToCsvFile( final File aFile, final UARTDataSet aDataSet )
+  {
+    try
+    {
+      final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
+
+      exporter.setHeaders( "index", "start-time", "end-time", "event?", "event-type", "RxD event", "TxD event",
+          "RxD data", "TxD data" );
+
+      final List<UARTData> decodedData = aDataSet.getData();
+      for ( int i = 0; i < decodedData.size(); i++ )
+      {
+        final UARTData ds = decodedData.get( i );
+
+        final String startTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
+        final String endTime = aDataSet.getDisplayTime( ds.getEndSampleIndex() );
+
+        String eventType = null;
+        String rxdEvent = null;
+        String txdEvent = null;
+        String rxdData = null;
+        String txdData = null;
+
+        switch ( ds.getType() )
+        {
+          case UARTData.UART_TYPE_EVENT:
+            eventType = ds.getEventName();
+            break;
+
+          case UARTData.UART_TYPE_RXEVENT:
+            rxdEvent = ds.getEventName();
+            break;
+
+          case UARTData.UART_TYPE_TXEVENT:
+            txdEvent = ds.getEventName();
+            break;
+
+          case UARTData.UART_TYPE_RXDATA:
+            rxdData = Integer.toString( ds.getData() );
+            break;
+
+          case UARTData.UART_TYPE_TXDATA:
+            txdData = Integer.toString( ds.getData() );
+            break;
+
+          default:
+            break;
+        }
+
+        exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), eventType,
+            rxdEvent, txdEvent, rxdData, txdData );
+      }
+
+      exporter.close();
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "CSV export failed!", exception );
+      }
+    }
+  }
+
+  /**
+   * stores the data to a HTML file
+   * 
+   * @param aFile
+   *          file object
+   */
+  private void storeToHtmlFile( final File aFile, final UARTDataSet aDataSet )
+  {
+    try
+    {
+      toHtmlPage( aFile, aDataSet );
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "HTML export failed!", exception );
+      }
+    }
   }
 
   /**

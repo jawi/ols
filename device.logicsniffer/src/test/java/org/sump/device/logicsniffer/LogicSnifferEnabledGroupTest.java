@@ -21,7 +21,7 @@
 package org.sump.device.logicsniffer;
 
 
-import static org.sump.device.logicsniffer.LogicSnifferDevice.*;
+import static org.sump.device.logicsniffer.LogicSnifferAcquisitionTask.*;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -35,7 +35,7 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
 /**
- * Test cases for {@link LogicSnifferDevice}.
+ * Test cases for {@link LogicSnifferAcquisitionTask}.
  */
 @RunWith( Parameterized.class )
 public class LogicSnifferEnabledGroupTest
@@ -134,7 +134,7 @@ public class LogicSnifferEnabledGroupTest
     this.config.setSampleRate( this.enableDdrMode ? 200000000 : 100000000 );
     this.config.setEnabledChannels( this.enabledGroupMask );
 
-    this.device.attach();
+    this.device.open();
     this.device.configureDevice();
 
     TimeUnit.MILLISECONDS.sleep( 10L );

@@ -45,7 +45,7 @@ public class GotoFirstCursorAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public GotoFirstCursorAction( final IClientController aController )
+  public GotoFirstCursorAction( final ClientController aController )
   {
     super( ID, aController, ICON_GOTO_FIRST_CURSOR, "Go to lowest cursor",
         "Go to the cursor with lowest index in diagram" );

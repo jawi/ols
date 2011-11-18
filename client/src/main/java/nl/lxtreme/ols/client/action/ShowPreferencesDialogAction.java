@@ -48,7 +48,7 @@ public class ShowPreferencesDialogAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public ShowPreferencesDialogAction( final IClientController aController )
+  public ShowPreferencesDialogAction( final ClientController aController )
   {
     super( ID, aController, "Preferences", "Show the preferences dialog" );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_P ) );

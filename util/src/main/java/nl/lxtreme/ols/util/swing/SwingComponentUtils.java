@@ -464,6 +464,29 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Similar as to {@link SwingUtilities#invokeLater(Runnable)}, but does a
+   * check first if the current running thread is already the EDT. If so, it
+   * will directly call the {@link Runnable#run()} method, otherwise leave it up
+   * to {@link SwingUtilities#invokeLater(Runnable)} to invoke it on a later
+   * moment.
+   * 
+   * @param aRunnable
+   *          the runnable to call on the EDT, cannot be <code>null</code>.
+   */
+  public static void invokeOnEDT( final Runnable aRunnable )
+  {
+    // System.out.println( "invokeOnEDT called with " + aRunnable );
+    if ( SwingUtilities.isEventDispatchThread() )
+    {
+      aRunnable.run();
+    }
+    else
+    {
+      SwingUtilities.invokeLater( aRunnable );
+    }
+  }
+
+  /**
    * Returns whether the given component is "actively" shown in screen, that is,
    * it or any of its ancestors is focused.
    * 

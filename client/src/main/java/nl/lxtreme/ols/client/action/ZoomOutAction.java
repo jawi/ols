@@ -47,7 +47,7 @@ public class ZoomOutAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public ZoomOutAction( final IClientController aController )
+  public ZoomOutAction( final ClientController aController )
   {
     super( ID, aController, ICON_ZOOM_OUT, "Zoom out", "Zoom out" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_MINUS ) );

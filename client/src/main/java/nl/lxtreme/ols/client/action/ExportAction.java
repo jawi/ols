@@ -63,14 +63,29 @@ public class ExportAction extends BaseAction
    * @param aExporterName
    *          the name of the exporter to invoke in this action.
    */
-  public ExportAction( final IClientController aController, final String aExporterName )
+  public ExportAction( final ClientController aController, final String aExporterName )
   {
-    super( ID + aExporterName, aController, aExporterName, "Export the current diagram to a " + aExporterName + " file" );
+    super( getID( aExporterName ), aController, aExporterName, "Export the current diagram to a " + aExporterName
+        + " file" );
 
     this.exporterName = aExporterName;
   }
 
   // METHODS
+
+  /**
+   * Creates an ID for an action that represents the "export" action for the
+   * exporter with the given name.
+   * 
+   * @param aExporterName
+   *          the name of the exporter to create the ID for, cannot be
+   *          <code>null</code>.
+   * @return a ID, never <code>null</code>.
+   */
+  public static final String getID( final String aExporterName )
+  {
+    return ID.concat( aExporterName );
+  }
 
   /**
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
@@ -80,7 +95,7 @@ public class ExportAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final IClientController controller = getController();
+    final ClientController controller = getController();
     final DataContainer dataContainer = controller.getDataContainer();
 
     if ( !dataContainer.hasCapturedData() )

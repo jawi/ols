@@ -26,6 +26,7 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
@@ -37,6 +38,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -45,6 +47,8 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 
+import org.osgi.framework.*;
+
 
 /**
  * Provides a main dialog for the I2C analyser.
@@ -52,7 +56,8 @@ import nl.lxtreme.ols.util.swing.*;
  * @author Frank Kunz
  * @author J.W. Janssen
  */
-public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CDataSet, I2CAnalyserWorker>
+public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> implements ExportAware<I2CDataSet>,
+    PropertyChangeListener
 {
   // CONSTANTS
 
@@ -85,61 +90,76 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aName
-   *          the name of this dialog;
+   * @param aToolContext
+   *          the tool context;
    * @param aContext
-   *          the tool context.
+   *          the OSGi bundle context to use;
+   * @param aTool
+   *          the {@link I2CAnalyser} tool.
    */
-  public I2CProtocolAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
+  public I2CProtocolAnalysisDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
+      final I2CAnalyser aTool )
   {
-    super( aOwner, aName, aContext );
+    super( aOwner, aToolContext, aContext, aTool );
 
     initDialog();
 
     setLocationRelativeTo( getOwner() );
   }
 
+  // METHODS
+
   /**
-   * This is the I2C protocol decoder core The decoder scans for a decode start
-   * event when one of the two lines is going low (start condition). After this
-   * the decoder starts to decode the data.
+   * {@inheritDoc}
    */
   @Override
-  public void onToolWorkerReady( final I2CDataSet aAnalysisResult )
+  public void exportToFile( final File aOutputFile, final ExportFormat aFormat ) throws IOException
   {
-    super.onToolWorkerReady( aAnalysisResult );
-
-    try
+    if ( ExportFormat.CSV.equals( aFormat ) )
     {
-      final String htmlPage;
-      if ( aAnalysisResult != null )
-      {
-        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
-        this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-      }
-      else
-      {
-        htmlPage = getEmptyHtmlPage();
-        this.exportAction.setEnabled( false );
-      }
-
-      this.outText.setText( htmlPage );
-      this.outText.setEditable( false );
-
-      this.runAnalysisAction.restore();
+      storeToCsvFile( aOutputFile, getLastResult() );
     }
-    catch ( final IOException exception )
+    else if ( ExportFormat.HTML.equals( aFormat ) )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        // This should not happen for the no-file exports!
-        throw new RuntimeException( exception );
-      }
+      storeToHtmlFile( aOutputFile, getLastResult() );
     }
   }
 
-  // CONSTRUCTORS
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void propertyChange( final PropertyChangeEvent aEvent )
+  {
+    final String propertyName = aEvent.getPropertyName();
+    final Object lineValue = aEvent.getNewValue();
+
+    final JLabel label;
+    if ( I2CAnalyserTask.PROPERTY_AUTO_DETECT_SCL.equals( propertyName ) )
+    {
+      label = this.busSetSCL;
+    }
+    else
+    /* if (I2CAnalyserTask.PROPERTY_AUTO_DETECT_SDA.equals(propertyName)) */{
+      label = this.busSetSDA;
+    }
+
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        if ( I2CAnalyserTask.LINE_A.equals( lineValue ) )
+        {
+          label.setText( ( String )I2CProtocolAnalysisDialog.this.lineA.getSelectedItem() );
+        }
+        else if ( I2CAnalyserTask.LINE_B.equals( lineValue ) )
+        {
+          label.setText( ( String )I2CProtocolAnalysisDialog.this.lineB.getSelectedItem() );
+        }
+      }
+    } );
+  }
 
   /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
@@ -171,36 +191,6 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     this.runAnalysisAction.restore();
 
     setControlsEnabled( true );
-  }
-
-  /**
-   * @param aSCLValue
-   */
-  public void setAutoDetectSCL( final String aSCLValue )
-  {
-    if ( I2CAnalyserWorker.LINE_A.equals( aSCLValue ) )
-    {
-      this.busSetSCL.setText( ( String )this.lineA.getSelectedItem() );
-    }
-    else if ( I2CAnalyserWorker.LINE_B.equals( aSCLValue ) )
-    {
-      this.busSetSCL.setText( ( String )this.lineB.getSelectedItem() );
-    }
-  }
-
-  /**
-   * @param aSCLValue
-   */
-  public void setAutoDetectSDA( final String aSDAValue )
-  {
-    if ( I2CAnalyserWorker.LINE_A.equals( aSDAValue ) )
-    {
-      this.busSetSDA.setText( ( String )this.lineA.getSelectedItem() );
-    }
-    else if ( I2CAnalyserWorker.LINE_B.equals( aSDAValue ) )
-    {
-      this.busSetSDA.setText( ( String )this.lineB.getSelectedItem() );
-    }
   }
 
   /**
@@ -255,79 +245,70 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   * {@inheritDoc}
    */
   @Override
-  protected void setupToolWorker( final I2CAnalyserWorker aToolWorker )
-  {
-    aToolWorker.setLineAIndex( this.lineA.getSelectedIndex() );
-    aToolWorker.setLineBIndex( this.lineB.getSelectedIndex() );
-
-    aToolWorker.setDetectSDA_SCL( this.detectSDA_SCL.isSelected() );
-
-    aToolWorker.setReportACK( this.detectACK.isSelected() );
-    aToolWorker.setReportNACK( this.detectNACK.isSelected() );
-    aToolWorker.setReportStart( this.detectSTART.isSelected() );
-    aToolWorker.setReportStop( this.detectSTOP.isSelected() );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToCsvFile(java.io.File,
-   *      java.lang.Object)
-   */
-  @Override
-  protected void storeToCsvFile( final File aSelectedFile, final I2CDataSet aAnalysisResult )
+  protected void onToolEnded( final I2CDataSet aAnalysisResult )
   {
     try
     {
-      final CsvExporter exporter = ExportUtils.createCsvExporter( aSelectedFile );
-
-      exporter.setHeaders( "index", "start-time", "end-time", "event?", "event-type", "data" );
-
-      final List<I2CData> dataSet = aAnalysisResult.getData();
-      for ( int i = 0; i < dataSet.size(); i++ )
+      final String htmlPage;
+      if ( aAnalysisResult != null )
       {
-        final I2CData ds = dataSet.get( i );
-
-        final String startTime = aAnalysisResult.getDisplayTime( ds.getStartSampleIndex() );
-        final String endTime = aAnalysisResult.getDisplayTime( ds.getEndSampleIndex() );
-        final String data = ds.isEvent() ? "" : Character.toString( ( char )ds.getValue() );
-
-        exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), ds.getEventName(),
-            data );
+        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
+        this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
+      }
+      else
+      {
+        htmlPage = getEmptyHtmlPage();
+        this.exportAction.setEnabled( false );
       }
 
-      exporter.close();
+      this.outText.setText( htmlPage );
+      this.outText.setEditable( false );
+
+      this.runAnalysisAction.restore();
     }
     catch ( final IOException exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
+        // This should not happen for the no-file exports!
+        throw new RuntimeException( exception );
       }
     }
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#storeToHtmlFile(java.io.File,
-   *      java.lang.Object)
+   * {@inheritDoc}
    */
   @Override
-  protected void storeToHtmlFile( final File aSelectedFile, final I2CDataSet aAnalysisResult )
+  protected void onToolStarted()
   {
-    try
-    {
-      toHtmlPage( aSelectedFile, aAnalysisResult );
-    }
-    catch ( final IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
-    }
+    // NO-op
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void prepareToolTask( final ToolTask<I2CDataSet> aToolTask )
+  {
+    I2CAnalyserTask toolTask = ( I2CAnalyserTask )aToolTask;
+
+    toolTask.setLineAIndex( this.lineA.getSelectedIndex() );
+    toolTask.setLineBIndex( this.lineB.getSelectedIndex() );
+
+    toolTask.setDetectSDA_SCL( this.detectSDA_SCL.isSelected() );
+
+    toolTask.setReportACK( this.detectACK.isSelected() );
+    toolTask.setReportNACK( this.detectNACK.isSelected() );
+    toolTask.setReportStart( this.detectSTART.isSelected() );
+    toolTask.setReportStop( this.detectSTOP.isSelected() );
+
+    // Register ourselves as property change listener...
+    toolTask.addPropertyChangeListener( this );
   }
 
   /**
@@ -416,7 +397,7 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getChannels();
+    final int channelCount = getData().getChannels();
 
     this.busSetSCL = new JLabel( "<autodetect>" );
     this.busSetSDA = new JLabel( "<autodetect>" );
@@ -535,14 +516,14 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
         new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets( 2,
             0, 2, 0 ), 0, 0 ) );
 
-    final JButton runAnalysisButton = createRunAnalysisButton();
+    final JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    final JButton exportButton = createExportButton();
+    final JButton exportButton = ToolUtils.createExportButton( this );
     this.exportAction = exportButton.getAction();
     this.exportAction.setEnabled( false );
 
-    final JButton closeButton = createCloseButton();
+    final JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
@@ -550,6 +531,67 @@ public final class I2CProtocolAnalysisDialog extends BaseAsyncToolDialog<I2CData
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, runAnalysisButton );
 
     pack();
+  }
+
+  /**
+   * Stores the given analysis results to the given file in CSV format.
+   * 
+   * @param aSelectedFile
+   * @param aAnalysisResult
+   */
+  private void storeToCsvFile( final File aSelectedFile, final I2CDataSet aAnalysisResult )
+  {
+    try
+    {
+      final CsvExporter exporter = ExportUtils.createCsvExporter( aSelectedFile );
+
+      exporter.setHeaders( "index", "start-time", "end-time", "event?", "event-type", "data" );
+
+      final List<I2CData> dataSet = aAnalysisResult.getData();
+      for ( int i = 0; i < dataSet.size(); i++ )
+      {
+        final I2CData ds = dataSet.get( i );
+
+        final String startTime = aAnalysisResult.getDisplayTime( ds.getStartSampleIndex() );
+        final String endTime = aAnalysisResult.getDisplayTime( ds.getEndSampleIndex() );
+        final String data = ds.isEvent() ? "" : Character.toString( ( char )ds.getValue() );
+
+        exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), ds.getEventName(),
+            data );
+      }
+
+      exporter.close();
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "CSV export failed!", exception );
+      }
+    }
+  }
+
+  /**
+   * Stores the given analysis results to the given file as HTML.
+   * 
+   * @param aSelectedFile
+   * @param aAnalysisResult
+   */
+  private void storeToHtmlFile( final File aSelectedFile, final I2CDataSet aAnalysisResult )
+  {
+    try
+    {
+      toHtmlPage( aSelectedFile, aAnalysisResult );
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "HTML export failed!", exception );
+      }
+    }
   }
 
   /**

@@ -21,96 +21,22 @@
 package nl.lxtreme.ols.util;
 
 
-import java.awt.event.*;
 import java.io.*;
-import java.lang.reflect.*;
 import java.util.logging.*;
-
-import javax.swing.*;
-
-import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * Provides some host/OS specific utilities.
  */
-public final class HostUtils
+public final class HostUtils implements HostInfo
 {
   // INNER TYPES
 
-  /**
-   * Denotes a callback for some "main events" in an application.
-   * <p>
-   * This interface is merely used for retrieving the proper system events on
-   * Mac OSX. On other operating systems, this interface has no real value.
-   * </p>
-   */
-  public interface ApplicationCallback
-  {
-    /**
-     * Called upon receiving a "about" event from the host operating system.
-     * 
-     * @return <code>true</code> if the event is being handled,
-     *         <code>false</code> (the default) if this event is ignored.
-     */
-    public boolean handleAbout();
+  
 
-    /**
-     * Called upon receiving a "set preferenes" event from the host operating
-     * system.
-     * 
-     * @return <code>true</code> if the event is being handled,
-     *         <code>false</code> (the default) if this event is ignored.
-     */
-    public boolean handlePreferences();
+  // CONSTANTS
 
-    /**
-     * Called upon receiving a quit event from the host operating system.
-     * 
-     * @return <code>true</code> if the event is being handled,
-     *         <code>false</code> (the default) if this event is ignored.
-     */
-    public boolean handleQuit();
-
-    /**
-     * Returns whether the are preferences to configure.
-     * 
-     * @return <code>true</code> if there are preferences to configure,
-     *         <code>false</code> otherwise.
-     */
-    public boolean hasPreferences();
-  }
-
-  static final class CloseOptionPaneAction extends AbstractAction
-  {
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      final JOptionPane optionPane = ( JOptionPane )aEvent.getSource();
-      optionPane.setValue( Integer.valueOf( JOptionPane.CLOSED_OPTION ) );
-    }
-  }
-
-  /**
-   * Provides a hack to ensure the system class loader is used at all times when
-   * loading UI classes/resources/...
-   */
-  static final class CLValue implements UIDefaults.ActiveValue
-  {
-    /**
-     * @see javax.swing.UIDefaults.ActiveValue#createValue(javax.swing.UIDefaults)
-     */
-    public @Override
-    ClassLoader createValue( final UIDefaults aDefaults )
-    {
-      return HostUtils.class.getClassLoader();
-    }
-  }
+  private static final HostInfo HOSTINFO = new HostUtils();
 
   // CONSTRUCTORS
 
@@ -190,13 +116,13 @@ public final class HostUtils
     final String extension = ( aExtension.startsWith( "." ) ? "" : "." ) + aExtension;
 
     String dirName;
-    if ( isMacOS() )
+    if ( HOSTINFO.isMacOS() )
     {
       // This is the location where to store data on MacOS...
       dirName = System.getProperty( "user.home" ) + "/Library/Preferences";
       fileName = aName + ".Application";
     }
-    else if ( isUnix() )
+    else if ( HOSTINFO.isUnix() )
     {
       // The home folder is the 'default' location on Unix flavors...
       dirName = System.getProperty( "user.home" );
@@ -283,6 +209,16 @@ public final class HostUtils
   }
 
   /**
+   * Returns the current value of hostinfo.
+   * 
+   * @return the host information, never <code>null</code>.
+   */
+  public static HostInfo getHostInfo()
+  {
+    return HOSTINFO;
+  }
+
+  /**
    * This method calls Thread.currentThread().interrupt() if any exception in
    * the hierarchy (including all parent causes) is either an
    * {@link InterruptedIOException} or {@link InterruptedException}. This method
@@ -342,155 +278,6 @@ public final class HostUtils
     {
       Thread.currentThread().setContextClassLoader( cl );
     }
-  }
-
-  /**
-   * Initializes the OS-specific stuff.
-   * 
-   * @param aApplicationName
-   *          the name of the application (when this needs to be passed to the
-   *          guest OS);
-   * @param aApplicationCallback
-   *          the application callback used to report application events on some
-   *          platforms (Mac OS), may be <code>null</code>.
-   */
-  public static final void initOSSpecifics( final String aApplicationName,
-      final ApplicationCallback aApplicationCallback )
-  {
-    if ( isMacOS() )
-    {
-      // Moves the main menu bar to the screen menu bar location...
-      System.setProperty( "apple.laf.useScreenMenuBar", "true" );
-      System.setProperty( "apple.awt.graphics.EnableQ2DX", "true" );
-      System.setProperty( "com.apple.mrj.application.apple.menu.about.name", aApplicationName );
-      System.setProperty( "com.apple.mrj.application.growbox.intrudes", "false" );
-      System.setProperty( "com.apple.mrj.application.live-resize", "false" );
-      System.setProperty( "com.apple.macos.smallTabs", "true" );
-
-      // Install an additional accelerator (Cmd+W) for closing option panes...
-      ActionMap map = ( ActionMap )UIManager.get( "OptionPane.actionMap" );
-      if ( map == null )
-      {
-        map = new ActionMap();
-        UIManager.put( "OptionPane.actionMap", map );
-      }
-      map.put( "close", new CloseOptionPaneAction() );
-
-      UIManager.put( "OptionPane.windowBindings", //
-          new Object[] { SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ), "close", "ESCAPE", "close" } );
-
-      if ( aApplicationCallback != null )
-      {
-        installApplicationCallback( aApplicationCallback );
-      }
-    }
-    else if ( isUnix() )
-    {
-      try
-      {
-        UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
-        setLookAndFeel( "com.jgoodies.looks.plastic.Plastic3DLookAndFeel" );
-      }
-      catch ( Exception exception )
-      {
-        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
-      }
-    }
-    else if ( isWindows() )
-    {
-      try
-      {
-        UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
-        setLookAndFeel( "com.jgoodies.looks.plastic.PlasticXPLookAndFeel" );
-      }
-      catch ( Exception exception )
-      {
-        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
-      }
-    }
-  }
-
-  /**
-   * Returns whether the current host's operating system is Linux or any other
-   * UNIX-like operating system, such as Solaris (SunOS).
-   * 
-   * @return <code>true</code> if running on Linux or any other UNIX system,
-   *         <code>false</code> otherwise.
-   */
-  public static boolean isLinux()
-  {
-    String osName = System.getProperty( "os.name" ).toLowerCase();
-    return ( osName.indexOf( "linux" ) >= 0 );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Mac OS X.
-   * 
-   * @return <code>true</code> if running on Mac OS X, <code>false</code>
-   *         otherwise.
-   */
-  public static final boolean isMacOS()
-  {
-    final String osName = System.getProperty( "os.name" );
-    return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Sun/Open Solaris.
-   * 
-   * @return <code>true</code> if running on Sun/Open Solaris system,
-   *         <code>false</code> otherwise.
-   */
-  public static boolean isSolaris()
-  {
-    String osName = System.getProperty( "os.name" ).toLowerCase();
-    return ( osName.indexOf( "solaris" ) >= 0 ) || //
-        ( osName.indexOf( "sunos" ) >= 0 );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Linux or any other
-   * UNIX-like operating system, such as Solaris (SunOS).
-   * 
-   * @return <code>true</code> if running on Linux or any other UNIX system,
-   *         <code>false</code> otherwise.
-   */
-  public static boolean isUnix()
-  {
-    String osName = System.getProperty( "os.name" ).toLowerCase();
-    return ( osName.indexOf( "nix" ) >= 0 ) || //
-        // linux
-        isLinux() ||
-        // solaris
-        isSolaris();
-  }
-
-  /**
-   * Returns whether the current host's operating system is Windows.
-   * 
-   * @return <code>true</code> if running on Windows, <code>false</code>
-   *         otherwise.
-   */
-  public static boolean isWindows()
-  {
-    final String osName = System.getProperty( "os.name" ).toLowerCase();
-    return osName.indexOf( "win" ) >= 0;
-  }
-
-  /**
-   * Returns whether the host OS needs an explicit exit menu item or not.
-   * <p>
-   * For example, on Mac OS, you don't need an explicit exit menu, since it is
-   * by default provided. On Linux or Windows machines, you do need an explicit
-   * exit function.
-   * </p>
-   * 
-   * @return <code>true</code> if this host needs an explicit exit menu item,
-   *         <code>false</code> otherwise.
-   */
-  public static final boolean needsExitMenuItem()
-  {
-    return !isMacOS();
   }
 
   /**
@@ -648,145 +435,96 @@ public final class HostUtils
   }
 
   /**
-   * @param aApplicationCallback
+   * Returns whether the current host's operating system is Linux or any other
+   * UNIX-like operating system, such as Solaris (SunOS).
+   * 
+   * @return <code>true</code> if running on Linux or any other UNIX system,
+   *         <code>false</code> otherwise.
    */
-  private static void installApplicationCallback( final ApplicationCallback aApplicationCallback )
+  public boolean isLinux()
   {
-    final String applicationClassName = "com.apple.eawt.Application";
-    final String applicationListenerClassName = "com.apple.eawt.ApplicationListener";
-
-    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-    try
-    {
-      final Class<?> appClass = classLoader.loadClass( applicationClassName );
-      final Class<?> appAdapterClass = classLoader.loadClass( applicationListenerClassName );
-
-      if ( ( appClass != null ) && ( appAdapterClass != null ) )
-      {
-        final Object proxy = Proxy.newProxyInstance( classLoader, new Class<?>[] { appAdapterClass },
-            new InvocationHandler()
-            {
-              @Override
-              public Object invoke( final Object aProxy, final Method aMethod, final Object[] aArgs ) throws Throwable
-              {
-                final String name = aMethod.getName();
-                if ( "handleQuit".equals( name ) )
-                {
-                  if ( aApplicationCallback.handleQuit() )
-                  {
-                    handleEventParameter( aArgs );
-                  }
-                }
-                else if ( "handleAbout".equals( name ) )
-                {
-                  if ( aApplicationCallback.handleAbout() )
-                  {
-                    handleEventParameter( aArgs );
-                  }
-                }
-                else if ( "handlePreferences".equals( name ) )
-                {
-                  if ( aApplicationCallback.handlePreferences() )
-                  {
-                    handleEventParameter( aArgs );
-                  }
-                }
-                return null;
-              }
-
-              /**
-               * @param aArgs
-               */
-              private void handleEventParameter( final Object[] aArgs )
-              {
-                if ( ( aArgs == null ) || ( aArgs.length == 0 ) )
-                {
-                  return;
-                }
-
-                final Object event = aArgs[0];
-
-                final Class<?> eventClass = event.getClass();
-                if ( !"com.apple.eawt.ApplicationEvent".equals( eventClass.getName() ) )
-                {
-                  return;
-                }
-
-                try
-                {
-                  final Method setHandledMethod = eventClass.getMethod( "setHandled", Boolean.TYPE );
-                  setHandledMethod.invoke( event, Boolean.TRUE );
-                }
-                catch ( Exception exception )
-                {
-                  // Make sure to handle IO-interrupted exceptions properly!
-                  if ( !HostUtils.handleInterruptedException( exception ) )
-                  {
-                    Logger.getAnonymousLogger().log( Level.ALL, "Event handling in callback failed!", exception );
-                  }
-                }
-              }
-            } );
-
-        // Call Application#getApplication() ...
-        final Method getAppMethod = appClass.getMethod( "getApplication" );
-        final Object app = getAppMethod.invoke( null );
-
-        // Call Application#addAboutMenuItem() ...
-        final Method addAboutMenuItemMethod = appClass.getMethod( "addAboutMenuItem" );
-        addAboutMenuItemMethod.invoke( app );
-
-        // Call Application#addPreferencesMenuItem() ...
-        final Method addPrefsMenuItemMethod = appClass.getMethod( "addPreferencesMenuItem" );
-        addPrefsMenuItemMethod.invoke( app );
-
-        // Call Application#setEnabledPreferencesMenu(true) ...
-        final Method setEnabledPrefsMenuMethod = appClass.getMethod( "setEnabledPreferencesMenu", Boolean.TYPE );
-        setEnabledPrefsMenuMethod.invoke( app, Boolean.valueOf( aApplicationCallback.hasPreferences() ) );
-
-        // Call Application#addApplicationListener(...) ...
-        final Method addAppListenerMethod = appClass.getMethod( "addApplicationListener", appAdapterClass );
-        addAppListenerMethod.invoke( app, proxy );
-      }
-    }
-    catch ( Exception exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        Logger.getAnonymousLogger().log( Level.ALL, "Install application callback failed!", exception );
-      }
-    }
+    String osName = System.getProperty( "os.name" ).toLowerCase();
+    return ( osName.indexOf( "linux" ) >= 0 );
   }
 
   /**
-   * @param aLookAndFeelClass
+   * Returns whether the current host's operating system is Mac OS X.
+   * 
+   * @return <code>true</code> if running on Mac OS X, <code>false</code>
+   *         otherwise.
    */
-  private static final void setLookAndFeel( final String aLookAndFeelClassName )
+  public boolean isMacOS()
   {
-    final UIDefaults defaults = UIManager.getDefaults();
-    // to make sure we always use system class loader
-    defaults.put( "ClassLoader", new CLValue() );
+    final String osName = System.getProperty( "os.name" );
+    return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
+  }
 
-    final ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
-    try
-    {
-      Thread.currentThread().setContextClassLoader( HostUtils.class.getClassLoader() );
-      UIManager.setLookAndFeel( aLookAndFeelClassName );
-    }
-    catch ( Exception exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
-      }
-    }
-    finally
-    {
-      Thread.currentThread().setContextClassLoader( oldCL );
-    }
+  /**
+   * Returns whether the current host's operating system is Sun/Open Solaris.
+   * 
+   * @return <code>true</code> if running on Sun/Open Solaris system,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isSolaris()
+  {
+    String osName = System.getProperty( "os.name" ).toLowerCase();
+    return ( osName.indexOf( "solaris" ) >= 0 ) || //
+        ( osName.indexOf( "sunos" ) >= 0 );
+  }
+
+  /**
+   * Returns whether the current host's operating system is Linux or any other
+   * UNIX-like operating system, such as Solaris (SunOS).
+   * 
+   * @return <code>true</code> if running on Linux or any other UNIX system,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isUnix()
+  {
+    String osName = System.getProperty( "os.name" ).toLowerCase();
+    return ( osName.indexOf( "nix" ) >= 0 ) || //
+        // linux
+        isLinux() ||
+        // solaris
+        isSolaris();
+  }
+
+  /**
+   * Returns whether the current host's operating system is Windows.
+   * 
+   * @return <code>true</code> if running on Windows, <code>false</code>
+   *         otherwise.
+   */
+  public boolean isWindows()
+  {
+    final String osName = System.getProperty( "os.name" ).toLowerCase();
+    return osName.indexOf( "win" ) >= 0;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean needsAboutMenuItem()
+  {
+    return !isMacOS();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public final boolean needsExitMenuItem()
+  {
+    return !isMacOS();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean needsPreferencesMenuItem()
+  {
+    return !isMacOS();
   }
 }
 

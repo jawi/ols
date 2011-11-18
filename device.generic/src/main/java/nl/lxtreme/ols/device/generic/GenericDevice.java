@@ -21,149 +21,74 @@
 package nl.lxtreme.ols.device.generic;
 
 
+import java.awt.*;
 import java.io.*;
-import java.util.logging.*;
-
-import javax.swing.*;
-
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.devices.*;
 
 
 /**
- * @author jawi
+ * Provides a device that can read from any file-based source and use this as
+ * capture device.
  */
-public class GenericDevice extends SwingWorker<AcquisitionResult, Sample>
+public class GenericDevice implements Device
 {
   // CONSTANTS
 
-  public static final String PROP_CAPTURE_PROGRESS = "progress";
-  public static final String PROP_CAPTURE_STATE = "state";
-
-  private static final Logger LOG = Logger.getLogger( GenericDevice.class.getName() );
+  private static final String NAME = "Generic I/O";
 
   // VARIABLES
 
-  private final GenericDeviceConfigDialog deviceConfig;
-
-  private InputStream inputStream;
-
-  private volatile boolean running;
-
-  // CONSTRUCTORS
-
-  /**
-   * @param aDeviceConfig
-   */
-  public GenericDevice( final GenericDeviceConfigDialog aDeviceConfig )
-  {
-    this.deviceConfig = aDeviceConfig;
-  }
+  private GenericDeviceConfigDialog deviceConfig = null;
+  private boolean setup = false;
 
   // METHODS
 
   /**
-   * Returns whether or not this device is capturing samples.
-   * 
-   * @return <code>true</code> if this device is capturing, <code>false</code>
-   *         otherwise.
-   */
-  public boolean isRunning()
-  {
-    return this.running;
-  }
-
-  /**
-   * Stops the capture (if possible).
-   */
-  public void stop()
-  {
-    if ( this.running )
-    {
-      this.running = false;
-    }
-  }
-
-  /**
-   * @see javax.swing.SwingWorker#doInBackground()
+   * {@inheritDoc}
    */
   @Override
-  protected AcquisitionResult doInBackground() throws Exception
+  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener ) throws IOException
   {
-    this.running = true;
-
-    final int width = this.deviceConfig.getSampleWidth();
-    final int depth = this.deviceConfig.getSampleDepth();
-    final int rate = this.deviceConfig.getSampleRate();
-    final int channels = this.deviceConfig.getChannelCount();
-
-    final int count = depth * width;
-
-    final int[] values = new int[count];
-    final long[] timestamps = new long[count];
-
-    try
-    {
-      this.inputStream = new FileInputStream( this.deviceConfig.getDevicePath() );
-
-      int idx = 0;
-      while ( idx < count )
-      {
-        final int sample = readSample( width );
-
-        LOG.log( Level.FINE, "Read: 0x{0}", Integer.toHexString( sample ) );
-
-        values[idx] = sample;
-        timestamps[idx] = idx;
-
-        idx++;
-      }
-
-      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels,
-          channels, idx );
-    }
-    finally
-    {
-      HostUtils.closeResource( this.inputStream );
-
-      this.running = false;
-      this.inputStream = null;
-    }
+    return new GenericDeviceAcquisitionTask( this.deviceConfig, aProgressListener );
   }
 
   /**
-   * Reads <code>channels</code> / 8 bytes from stream and compiles them into a
-   * single integer.
-   * 
-   * @param aChannelCount
-   *          number of channels to read (must be multiple of 8)
-   * @return integer containing four bytes read
-   * @throws IOException
-   *           if stream reading fails
+   * @see nl.lxtreme.ols.api.devices.Device#getName()
    */
-  private int readSample( final int aSampleWidth ) throws IOException, InterruptedException
+  @Override
+  public String getName()
   {
-    int v, value = 0;
-
-    for ( int i = 0; i < aSampleWidth; i++ )
-    {
-      v = this.inputStream.read();
-
-      // Any timeouts/interrupts occurred?
-      if ( v < 0 )
-      {
-        throw new InterruptedException( "Data readout interrupted: EOF." );
-      }
-      else if ( Thread.interrupted() )
-      {
-        throw new InterruptedException( "Data readout interrupted." );
-      }
-
-      value |= v << ( 8 * i );
-    }
-
-    return value;
+    return NAME;
   }
 
+  /**
+   * @see nl.lxtreme.ols.api.devices.Device#isSetup()
+   */
+  @Override
+  public boolean isSetup()
+  {
+    return this.setup;
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.devices.Device#setupCapture(java.awt.Window)
+   */
+  @Override
+  public boolean setupCapture( final Window aParent )
+  {
+    // check if dialog exists with different owner and dispose if so
+    if ( ( this.deviceConfig != null ) && ( this.deviceConfig.getOwner() != aParent ) )
+    {
+      this.deviceConfig.dispose();
+      this.deviceConfig = null;
+    }
+    // if no valid dialog exists, create one
+    if ( this.deviceConfig == null )
+    {
+      this.deviceConfig = new GenericDeviceConfigDialog( aParent );
+    }
+
+    return ( this.setup = this.deviceConfig.showDialog() );
+  }
 }

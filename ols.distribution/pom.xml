@@ -6,11 +6,9 @@
 		<artifactId>parent</artifactId>
 		<version>1.0.0</version>
 	</parent>
-	<groupId>nl.lxtreme.ols</groupId>
 	<artifactId>ols.distribution</artifactId>
 	<packaging>pom</packaging>
 	<name>OLS Main Distribution</name>
-	<version>1.0.0</version>
 	<dependencies>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
@@ -32,6 +30,11 @@
 			<artifactId>org.apache.felix.configadmin</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.dependencymanager</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 		<dependency>
 			<groupId>com.jgoodies</groupId>
 			<artifactId>looks</artifactId>
@@ -71,7 +74,17 @@
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
-			<artifactId>service.io</artifactId>
+			<artifactId>service.acquisition</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+        <dependency>
+            <groupId>nl.lxtreme.ols</groupId>
+            <artifactId>service.io</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>service.taskexecution</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -142,6 +155,11 @@
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>jtag</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>asm45</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -234,7 +252,8 @@
 						</goals>
 						<configuration>
 							<target>
-								<ant antfile="${basedir}/src/main/assembly/ext/app-bundle.xml" inheritAll="false">
+								<ant antfile="${basedir}/src/main/assembly/ext/app-bundle.xml"
+									inheritAll="false">
 									<property name="project.version" value="${ols.version}" />
 									<target name="all" />
 								</ant>
