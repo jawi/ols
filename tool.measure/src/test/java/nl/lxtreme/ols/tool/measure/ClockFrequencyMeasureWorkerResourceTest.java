@@ -32,7 +32,7 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
-import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureWorker.ClockStats;
+import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureTask.ClockStats;
 
 import org.junit.*;
 import org.junit.runner.*;
@@ -41,7 +41,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 
 /**
- * Provides test cases for {@link ClockFrequencyMeasureWorker} based on actual
+ * Provides test cases for {@link ClockFrequencyMeasureTask} based on actual
  * capture results.
  */
 @RunWith( Parameterized.class )
@@ -111,16 +111,17 @@ public class ClockFrequencyMeasureWorkerResourceTest
 
     this.sampleRate = container.getSampleRate();
 
-    ClockFrequencyMeasureWorker worker = new ClockFrequencyMeasureWorker( container, toolContext, 0 );
+    ClockFrequencyMeasureTask worker = new ClockFrequencyMeasureTask( toolContext );
+    worker.setChannel( 0 );
 
-    this.result = worker.doInBackground();
+    this.result = worker.call();
     assertNotNull( this.result );
 
     LOG.info( "Set up complete!\n" + this.result );
   }
 
   /**
-   * Test method for {@link ClockFrequencyMeasureWorker#doInBackground()}.
+   * Test method for {@link ClockFrequencyMeasureTask#doInBackground()}.
    */
   @Test
   public void testExpectedFrequencyWithinBoundaries() throws Exception
@@ -133,7 +134,7 @@ public class ClockFrequencyMeasureWorkerResourceTest
   }
 
   /**
-   * Test method for {@link ClockFrequencyMeasureWorker#doInBackground()}.
+   * Test method for {@link ClockFrequencyMeasureTask#doInBackground()}.
    */
   @Test
   public void testLowerFrequencyBoundOk() throws Exception
@@ -147,7 +148,7 @@ public class ClockFrequencyMeasureWorkerResourceTest
   }
 
   /**
-   * Test method for {@link ClockFrequencyMeasureWorker#doInBackground()}.
+   * Test method for {@link ClockFrequencyMeasureTask#doInBackground()}.
    */
   @Test
   public void testUpperFrequencyBoundOk() throws Exception

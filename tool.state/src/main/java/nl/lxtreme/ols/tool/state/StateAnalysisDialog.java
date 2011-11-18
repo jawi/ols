@@ -25,10 +25,15 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import org.osgi.framework.*;
+
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
+import nl.lxtreme.ols.util.osgi.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -36,7 +41,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * @author jawi
  */
-public final class StateAnalysisDialog extends BaseAsyncToolDialog<AcquisitionResult, StateAnalysisWorker>
+public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionResult>
 {
   // INNER TYPES
 
@@ -76,6 +81,8 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<AcquisitionRe
 
   // VARIABLES
 
+  private final WhiteboardHelper<AcquisitionDataListener> acquisitionDataListenerHelper;
+
   private JComboBox edgeSelect;
   private JComboBox channelSelect;
   private RestorableAction runAction;
@@ -87,14 +94,20 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<AcquisitionRe
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aName
-   *          the name of this dialog;
+   * @param aToolContext
+   *          the tool context;
    * @param aContext
-   *          the tool context.
+   *          the OSGi bundle context to use;
+   * @param aTool
+   *          the {@link StateAnalyser} tool.
    */
-  public StateAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
+  public StateAnalysisDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
+      final StateAnalyser aTool )
   {
-    super( aOwner, aName, aContext );
+    super( aOwner, aToolContext, aContext, aTool );
+
+    this.acquisitionDataListenerHelper = new WhiteboardHelper<AcquisitionDataListener>( aContext,
+        AcquisitionDataListener.class );
 
     initDialog();
 
@@ -133,16 +146,73 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<AcquisitionRe
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#onToolWorkerStarted()
+   * {@inheritDoc}
    */
   @Override
-  protected void onToolWorkerStarted()
+  protected void onBeforeCloseDialog()
   {
-    setVisible( false );
+    this.acquisitionDataListenerHelper.close();
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setControlsEnabled(boolean)
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onBeforeShowDialog()
+  {
+    this.acquisitionDataListenerHelper.open( true /* trackAllServices */);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolEnded( final AcquisitionResult aResult )
+  {
+    this.acquisitionDataListenerHelper.accept( new WhiteboardHelper.Visitor<AcquisitionDataListener>()
+    {
+      @Override
+      public void visit( final AcquisitionDataListener aService )
+      {
+        aService.acquisitionComplete( aResult );
+      }
+    } );
+
+    // Close this dialog & dispose everything...
+    close();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolStarted()
+  {
+    // NO-op
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void prepareToolTask( final ToolTask<AcquisitionResult> aToolTask )
+  {
+    final StateAnalysisTask toolTask = ( StateAnalysisTask )aToolTask;
+
+    toolTask.setNumber( this.channelSelect.getSelectedIndex() );
+
+    if ( Edge.RISING == this.edgeSelect.getSelectedItem() )
+    {
+      toolTask.setLevel( 0 );
+    }
+    else
+    {
+      toolTask.setLevel( 1 );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
    */
   @Override
   protected void setControlsEnabled( final boolean aEnabled )
@@ -151,29 +221,11 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<AcquisitionRe
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
-   */
-  @Override
-  protected void setupToolWorker( final StateAnalysisWorker aToolWorker )
-  {
-    aToolWorker.setNumber( this.channelSelect.getSelectedIndex() );
-
-    if ( Edge.RISING == this.edgeSelect.getSelectedItem() )
-    {
-      aToolWorker.setLevel( 0 );
-    }
-    else
-    {
-      aToolWorker.setLevel( 1 );
-    }
-  }
-
-  /**
    * @return
    */
   private JPanel createContentPane()
   {
-    final int channelCount = getChannels();
+    final int channelCount = getData().getChannels();
 
     this.channelSelect = SwingComponentUtils.createChannelSelector( channelCount );
     this.channelSelect.setSelectedIndex( 0 );
@@ -201,10 +253,10 @@ public final class StateAnalysisDialog extends BaseAsyncToolDialog<AcquisitionRe
     setResizable( false );
 
     final JComponent pane = createContentPane();
-    final JButton runAnalysisButton = createRunAnalysisButton();
+    final JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
     this.runAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    final JButton closeButton = createCloseButton();
+    final JButton closeButton = ToolUtils.createCloseButton();
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, closeButton );
 

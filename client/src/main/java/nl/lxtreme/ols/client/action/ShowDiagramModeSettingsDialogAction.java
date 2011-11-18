@@ -47,7 +47,7 @@ public class ShowDiagramModeSettingsDialogAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public ShowDiagramModeSettingsDialogAction( final IClientController aController )
+  public ShowDiagramModeSettingsDialogAction( final ClientController aController )
   {
     super( ID, aController, "Diagram mode settings", "Show the diagram mode settings dialog" );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_M ) );

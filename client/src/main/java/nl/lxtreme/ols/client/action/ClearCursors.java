@@ -42,7 +42,7 @@ public class ClearCursors extends BaseAction
   /**
    * @param aController
    */
-  public ClearCursors( final IClientController aController )
+  public ClearCursors( final ClientController aController )
   {
     super( ID, aController, "Clear all cursors", "Clear all cursors" );
   }

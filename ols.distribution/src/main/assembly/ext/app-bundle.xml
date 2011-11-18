@@ -42,7 +42,7 @@
 	</target>
 
 	<target name="package" depends="init" description="Creates the OSX app bundle" if="isMac">
-		<jarbundler dir="${project.targetapp}" bundleid="nl.lxtreme.ols" name="${ols.project.name}" shortname="${ols.project.name}" mainclass="nl.lxtreme.ols.runner.Runner" version="${project.version}" build="1" jvmversion="1.6+" arguments="-Dnl.lxtreme.ols.bundle.dir=$JAVAROOT/plugins" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m" icon="${basedir}/../resources/LogicSniffer.icns">
+		<jarbundler dir="${project.targetapp}" bundleid="nl.lxtreme.ols" name="${ols.project.name}" shortname="${ols.project.name}" mainclass="nl.lxtreme.ols.runner.Runner" version="${project.version}" build="1" jvmversion="1.6+" arguments="-Dnl.lxtreme.ols.bundle.dir=$JAVAROOT/plugins" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m" icon="${basedir}/../../resources/LogicSniffer.icns">
 			<!-- put all bin/*.jar files on the class path -->
 			<jarfileset dir="${project.targetapp-tmp}">
 				<include name="bin/*.jar" />

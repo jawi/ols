@@ -73,7 +73,7 @@ public final class Runner
     activators.add( this.hostActivator );
 
     config.put( FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, activators );
-    config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.eawt,javax.swing,javax.media.jai" );
+    config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.mrj,com.apple.eawt,javax.swing,javax.media.jai" );
     config.put( AutoProcessor.AUTO_DEPLOY_ACTION_PROPERY, "install,start" );
     config.put( AutoProcessor.AUTO_START_PROP, autoStartBundles );
     // Issue #36: explicitly set the location to the bundle cache directory,

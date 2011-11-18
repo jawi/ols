@@ -33,6 +33,7 @@ import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
 
 import org.junit.*;
+import org.mockito.*;
 
 
 /**
@@ -65,7 +66,7 @@ public class SPIAnalyserWorkerContentTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.spi.SPIAnalyserWorker#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.spi.SPIAnalyserTask#doInBackground()}.
    */
   @Test
   public void testAnalyzeDataFile1() throws Exception
@@ -80,7 +81,7 @@ public class SPIAnalyserWorkerContentTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.spi.SPIAnalyserWorker#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.spi.SPIAnalyserTask#doInBackground()}.
    */
   @Test
   public void testAnalyzeDataFile2() throws Exception
@@ -106,9 +107,12 @@ public class SPIAnalyserWorkerContentTest
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     DataContainer container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( 0, container.getValues().length - 1 );
+    ToolContext toolContext = DataTestUtils.createToolContext( container, 0, container.getValues().length - 1 );
 
-    SPIAnalyserWorker worker = new SPIAnalyserWorker( container, toolContext );
+    ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
+    AnnotationListener al = Mockito.mock( AnnotationListener.class );
+
+    SPIAnalyserTask worker = new SPIAnalyserTask( toolContext, tpl, al );
     worker.setBitCount( aBitCount - 1 );
     worker.setHonourCS( aHonourCS );
     worker.setReportCS( false );
@@ -131,6 +135,6 @@ public class SPIAnalyserWorkerContentTest
       worker.setSCKIndex( aChannels[3] );
     }
 
-    return worker.doInBackground();
+    return worker.call();
   }
 }

@@ -35,10 +35,11 @@ import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.*;
 
 
 /**
- * (Parameterized) tests cases for {@link Asm45AnalyserWorker}.
+ * (Parameterized) tests cases for {@link Asm45AnalyserTask}.
  * 
  * @author Ansgar Kueckes
  */
@@ -118,7 +119,7 @@ public class Asm45AnalyserWorkerDataFilesTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.asm45.Asm45AnalyserWorker#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.asm45.Asm45AnalyserTask#doInBackground()}.
    */
   @Test
   public void testAnalyzeDataFile() throws Exception
@@ -141,9 +142,12 @@ public class Asm45AnalyserWorkerDataFilesTest
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     DataContainer container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( 0, container.getValues().length );
+    ToolContext toolContext = DataTestUtils.createToolContext( container );
 
-    Asm45AnalyserWorker worker = new Asm45AnalyserWorker( container, toolContext );
+    ToolProgressListener toolProgressListener = Mockito.mock( ToolProgressListener.class );
+    AnnotationListener annotationListener = Mockito.mock( AnnotationListener.class );
+
+    Asm45AnalyserTask worker = new Asm45AnalyserTask( toolContext, toolProgressListener, annotationListener );
     worker.setLineSMCIndex( this.lineSMCidx );
     worker.setLineSTMIndex( this.lineSTMidx );
     worker.setLineEBGIndex( this.lineEBGidx );
@@ -157,7 +161,7 @@ public class Asm45AnalyserWorkerDataFilesTest
 
     // Simulate we're running in a separate thread by directly calling the main
     // working routine...
-    Asm45DataSet result = worker.doInBackground();
+    Asm45DataSet result = worker.call();
     assertNotNull( result );
 
     return result;

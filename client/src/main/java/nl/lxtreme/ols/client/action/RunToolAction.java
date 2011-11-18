@@ -86,7 +86,7 @@ public class RunToolAction extends BaseAction
    *          a tool instance, cannot be <code>null</code>.
    * @return a tool action identifier, never <code>null</code>.
    */
-  public static final String getID( final Tool aTool )
+  public static final String getID( final Tool<?> aTool )
   {
     if ( aTool == null )
     {

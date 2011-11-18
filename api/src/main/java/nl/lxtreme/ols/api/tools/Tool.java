@@ -22,7 +22,6 @@ package nl.lxtreme.ols.api.tools;
 
 
 import java.awt.*;
-import nl.lxtreme.ols.api.data.*;
 
 
 /**
@@ -35,24 +34,22 @@ import nl.lxtreme.ols.api.data.*;
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
-public interface Tool
+public interface Tool<RESULT_TYPE>
 {
-  // INNER TYPES
+  // METHODS
 
   /**
-   * Provides a category for pluggable tools.
+   * Factory method for creating a new {@link ToolTask} instance.
+   * 
+   * @param aContext
+   *          the tool context to use within the tool taks, cannot be
+   *          <code>null</code>;
+   * @param aProgressListener
+   *          the tool progress listener the tool can use to report its
+   *          progress, cannot be <code>null</code>.
    */
-  public static enum Category
-  {
-    /** Denotes a tool that decodes something. */
-    DECODER,
-    /** Denotes a tool that measures something. */
-    MEASURE,
-    /** For tools that neither decode nor measure something. */
-    OTHER;
-  }
-
-  // METHODS
+  ToolTask<RESULT_TYPE> createToolTask( ToolContext aContext, ToolProgressListener aProgressListener,
+      final AnnotationListener aAnnotationListener );
 
   /**
    * Returns the category for this tool.
@@ -63,7 +60,7 @@ public interface Tool
    * 
    * @return a category, cannot be <code>null</code>.
    */
-  Category getCategory();
+  ToolCategory getCategory();
 
   /**
    * Is called to get the name for the menu entry.
@@ -77,27 +74,19 @@ public interface Tool
   String getName();
 
   /**
-   * This method is invoked when the tool is selected from the Tools menu. It
-   * should request any missing information using a dialog and perform the
-   * tool's actual task.
-   * <p>
-   * This method is to be called from the Event Dispatch Thread! It should be
-   * able to make use of normal Swing components without having to take care
-   * about which Thread it is called from.
-   * </p>
+   * Allows this tool controller to set up the tool by means of presenting an
+   * UI.
    * 
-   * @param aOwner
-   *          the "owner" window that can be used when showing dialogs, can be
-   *          <code>null</code>;
-   * @param aData
-   *          currently displayed capture results, cannot be <code>null</code>;
+   * @param aParent
+   *          the parent window that can be used to display (modal) dialogs, can
+   *          be <code>null</code>;
    * @param aContext
-   *          the tool context, can be <code>null</code> if no context is
-   *          available;
-   * @param aCallback
-   *          the callback to report the status of the tool to, cannot be
-   *          <code>null</code>.
+   *          the context in which the tool should be run, cannot be
+   *          <code>null</code>;
+   * @return <code>true</code> if the setup is successfully completed (the user
+   *         acknowledged the setup), <code>false</code> if the setup is aborted
+   *         by the user.
    */
-  void process( final Window aOwner, final DataContainer aData, final ToolContext aContext,
-      final AnalysisCallback aCallback );
+  void invoke( final Window aParent, final ToolContext aContext );
+
 }

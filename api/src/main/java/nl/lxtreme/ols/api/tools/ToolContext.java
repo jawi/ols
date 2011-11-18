@@ -21,6 +21,9 @@
 package nl.lxtreme.ols.api.tools;
 
 
+import nl.lxtreme.ols.api.acquisition.*;
+
+
 /**
  * Denotes the context in which a tool is to be run.
  * <p>
@@ -38,6 +41,19 @@ public interface ToolContext
    * @return the channel count, >= 0.
    */
   int getChannels();
+
+  /**
+   * @param aSelectedIndex
+   * @return
+   */
+  Long getCursorPosition( int aSelectedIndex );
+
+  /**
+   * Returns the acquisition result for use in the tool.
+   * 
+   * @return the data to be analyzed, never <code>null</code>.
+   */
+  AcquisitionResult getData();
 
   /**
    * Returns a bitmask of enabled channels in the sample data.

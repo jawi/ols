@@ -33,9 +33,12 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import org.osgi.framework.*;
+
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -46,14 +49,11 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * The Dialog Class
+ * The Dialog Class for configuring the JTAG protocol analysis settings.
  * 
- * @author Frank Kunz The dialog class draws the basic dialog with a grid
- *         layout. The dialog consists of three main parts. A settings panel, a
- *         table panel and three buttons.
  * @author Mario Schrenk
  */
-public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDataSet, JTAGAnalyserWorker>
+public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet> implements ExportAware<JTAGDataSet>
 {
   // CONSTANTS
 
@@ -80,14 +80,17 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aName
-   *          the name of this dialog;
+   * @param aToolContext
+   *          the tool context;
    * @param aContext
-   *          the tool context.
+   *          the OSGi bundle context to use;
+   * @param aTool
+   *          the {@link JTAGAnalyser} tool.
    */
-  public JTAGProtocolAnalysisDialog( final Window aOwner, final String aName, final ToolContext aContext )
+  public JTAGProtocolAnalysisDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
+      final JTAGAnalyser aTool )
   {
-    super( aOwner, aName, aContext );
+    super( aOwner, aToolContext, aContext, aTool );
 
     initDialog();
 
@@ -97,14 +100,62 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
   // METHODS
 
   /**
-   * This is the JTAG protocol decoder core. The decoded data are put to a
-   * JTable object directly.
+   * {@inheritDoc}
+   */
+  public void exportToFile( final File aOutputFile, final ExportFormat aFormat ) throws IOException
+  {
+    if ( ExportFormat.HTML.equals( aFormat ) )
+    {
+      storeToHtmlFile( aOutputFile, getLastResult() );
+    }
+    else if ( ExportFormat.CSV.equals( aFormat ) )
+    {
+      storeToCsvFile( aOutputFile, getLastResult() );
+    }
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
+   */
+  public void readPreferences( final UserSettings aSettings )
+  {
+    this.tck.setSelectedIndex( aSettings.getInt( "tck", this.tck.getSelectedIndex() ) );
+    this.tms.setSelectedIndex( aSettings.getInt( "tms", this.tms.getSelectedIndex() ) );
+    this.tdi.setSelectedIndex( aSettings.getInt( "tdi", this.tdi.getSelectedIndex() ) );
+    this.tdo.setSelectedIndex( aSettings.getInt( "tdo", this.tdo.getSelectedIndex() ) );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.tool.base.ToolDialog#reset()
    */
   @Override
-  public void onToolWorkerReady( final JTAGDataSet aAnalysisResult )
+  public void reset()
   {
-    super.onToolWorkerReady( aAnalysisResult );
+    this.outText.setText( getEmptyHtmlPage() );
+    this.outText.setEditable( false );
 
+    this.exportAction.setEnabled( false );
+
+    this.runAnalysisAction.restore();
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
+   */
+  public void writePreferences( final UserSettings aSettings )
+  {
+    aSettings.putInt( "tck", this.tck.getSelectedIndex() );
+    aSettings.putInt( "tms", this.tms.getSelectedIndex() );
+    aSettings.putInt( "tdi", this.tdi.getSelectedIndex() );
+    aSettings.putInt( "tdo", this.tdo.getSelectedIndex() );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolEnded( final JTAGDataSet aAnalysisResult )
+  {
     try
     {
       final String htmlPage;
@@ -136,41 +187,26 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
-   */
-  public void readPreferences( final UserSettings aSettings )
-  {
-    this.tck.setSelectedIndex( aSettings.getInt( "tck", this.tck.getSelectedIndex() ) );
-    this.tms.setSelectedIndex( aSettings.getInt( "tms", this.tms.getSelectedIndex() ) );
-    this.tdi.setSelectedIndex( aSettings.getInt( "tdi", this.tdi.getSelectedIndex() ) );
-    this.tdo.setSelectedIndex( aSettings.getInt( "tdo", this.tdo.getSelectedIndex() ) );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.ToolDialog#reset()
+   * {@inheritDoc}
    */
   @Override
-  public void reset()
+  protected void onToolStarted()
   {
-    this.outText.setText( getEmptyHtmlPage() );
-    this.outText.setEditable( false );
-
-    this.exportAction.setEnabled( false );
-
-    this.runAnalysisAction.restore();
-
-    setControlsEnabled( true );
+    // NO-op
   }
 
   /**
-   * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
+   * {@inheritDoc}
    */
-  public void writePreferences( final UserSettings aSettings )
+  @Override
+  protected void prepareToolTask( final ToolTask<JTAGDataSet> aToolTask )
   {
-    aSettings.putInt( "tck", this.tck.getSelectedIndex() );
-    aSettings.putInt( "tms", this.tms.getSelectedIndex() );
-    aSettings.putInt( "tdi", this.tdi.getSelectedIndex() );
-    aSettings.putInt( "tdo", this.tdo.getSelectedIndex() );
+    JTAGAnalyserTask toolTask = ( JTAGAnalyserTask )aToolTask;
+
+    toolTask.setTmsIndex( this.tms.getSelectedIndex() );
+    toolTask.setTckIndex( this.tck.getSelectedIndex() );
+    toolTask.setTdoIndex( this.tdo.getSelectedIndex() - 1 );
+    toolTask.setTdiIndex( this.tdi.getSelectedIndex() - 1 );
   }
 
   /**
@@ -188,81 +224,6 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
     this.tdo.setEnabled( aEnable );
 
     this.closeAction.setEnabled( aEnable );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
-   */
-  @Override
-  protected void setupToolWorker( final JTAGAnalyserWorker aToolWorker )
-  {
-    aToolWorker.setTmsIndex( this.tms.getSelectedIndex() );
-    aToolWorker.setTckIndex( this.tck.getSelectedIndex() );
-    aToolWorker.setTdoIndex( this.tdo.getSelectedIndex() - 1 );
-    aToolWorker.setTdiIndex( this.tdi.getSelectedIndex() - 1 );
-  }
-
-  /**
-   * exports the table data to a CSV file
-   * 
-   * @param aFile
-   *          File object
-   */
-  @Override
-  protected void storeToCsvFile( final File aFile, final JTAGDataSet aDataSet )
-  {
-    try
-    {
-      final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
-
-      exporter.setHeaders( "index", "time", "state", "TDI data", "TDO data" );
-
-      final List<JTAGData> dataSet = aDataSet.getData();
-      for ( int i = 0; i < dataSet.size(); i++ )
-      {
-        final JTAGData data = dataSet.get( i );
-
-        final String Time = aDataSet.getDisplayTime( data.getStartSampleIndex() );
-        final String Event = data.isEvent() ? data.getEventName() : data.getDataValue().getDisplayText();
-        final String tdiDataValue = data.isTdiData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
-        final String tdoDataValue = data.isTdoData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
-
-        exporter.addRow( Integer.valueOf( i ), Time, Event, tdiDataValue, tdoDataValue );
-      }
-
-      exporter.close();
-    }
-    catch ( final IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
-      }
-    }
-  }
-
-  /**
-   * stores the data to a HTML file
-   * 
-   * @param aFile
-   *          file object
-   */
-  @Override
-  protected void storeToHtmlFile( final File aFile, final JTAGDataSet aDataSet )
-  {
-    try
-    {
-      toHtmlPage( aFile, aDataSet );
-    }
-    catch ( final IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
-    }
   }
 
   /**
@@ -345,7 +306,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getChannels();
+    final int channelCount = getData().getChannels();
 
     final JPanel settings = new JPanel( new SpringLayout() );
 
@@ -415,19 +376,80 @@ public final class JTAGProtocolAnalysisDialog extends BaseAsyncToolDialog<JTAGDa
     contentPane.add( previewPane, new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH,
         GridBagConstraints.BOTH, new Insets( 2, 0, 2, 0 ), 0, 0 ) );
 
-    final JButton runAnalysisButton = createRunAnalysisButton();
+    final JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    final JButton exportButton = createExportButton();
+    final JButton exportButton = ToolUtils.createExportButton( this );
     this.exportAction = exportButton.getAction();
     this.exportAction.setEnabled( false );
 
-    final JButton closeButton = createCloseButton();
+    final JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
+  }
+
+  /**
+   * exports the table data to a CSV file
+   * 
+   * @param aFile
+   *          File object
+   */
+  private void storeToCsvFile( final File aFile, final JTAGDataSet aDataSet )
+  {
+    try
+    {
+      final CsvExporter exporter = ExportUtils.createCsvExporter( aFile );
+
+      exporter.setHeaders( "index", "time", "state", "TDI data", "TDO data" );
+
+      final List<JTAGData> dataSet = aDataSet.getData();
+      for ( int i = 0; i < dataSet.size(); i++ )
+      {
+        final JTAGData data = dataSet.get( i );
+
+        final String Time = aDataSet.getDisplayTime( data.getStartSampleIndex() );
+        final String Event = data.isEvent() ? data.getEventName() : data.getDataValue().getDisplayText();
+        final String tdiDataValue = data.isTdiData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
+        final String tdoDataValue = data.isTdoData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
+
+        exporter.addRow( Integer.valueOf( i ), Time, Event, tdiDataValue, tdoDataValue );
+      }
+
+      exporter.close();
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "CSV export failed!", exception );
+      }
+    }
+  }
+
+  /**
+   * stores the data to a HTML file
+   * 
+   * @param aFile
+   *          file object
+   */
+  private void storeToHtmlFile( final File aFile, final JTAGDataSet aDataSet )
+  {
+    try
+    {
+      toHtmlPage( aFile, aDataSet );
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        LOG.log( Level.WARNING, "HTML export failed!", exception );
+      }
+    }
   }
 
   /**

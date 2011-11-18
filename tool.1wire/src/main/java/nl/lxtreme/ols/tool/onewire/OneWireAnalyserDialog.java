@@ -35,6 +35,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
@@ -42,11 +43,13 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 
+import org.osgi.framework.*;
+
 
 /**
  * @author jawi
  */
-public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, OneWireAnalyserWorker>
+public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implements ExportAware<OneWireDataSet>
 {
   // CONSTANTS
 
@@ -58,7 +61,6 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
   private JComboBox owMode;
   private JEditorPane outText;
   private RestorableAction runAnalysisAction;
-  private Action exportAction;
   private Action closeAction;
 
   // CONSTRUCTORS
@@ -68,14 +70,17 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
    * 
    * @param aOwner
    *          the owner of this dialog;
-   * @param aName
-   *          the name of this dialog;
+   * @param aToolContext
+   *          the tool context;
    * @param aContext
-   *          the tool context.
+   *          the OSGi bundle context to use;
+   * @param aTool
+   *          the {@link OneWireAnalyser} tool.
    */
-  public OneWireAnalyserDialog( final Window aOwner, final String aName, final ToolContext aContext )
+  public OneWireAnalyserDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
+      final OneWireAnalyser aTool )
   {
-    super( aOwner, aName, aContext );
+    super( aOwner, aToolContext, aContext, aTool );
 
     initDialog();
 
@@ -85,40 +90,19 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#onToolWorkerReady(java.lang.Object)
+   * {@inheritDoc}
    */
   @Override
-  public void onToolWorkerReady( final OneWireDataSet aAnalysisResult )
+  public void exportToFile( final File aOutputFile, final ExportFormat aFormat ) throws IOException
   {
-    super.onToolWorkerReady( aAnalysisResult );
-
-    try
+    final OneWireDataSet lastResult = getLastResult();
+    if ( ExportFormat.HTML.equals( aFormat ) )
     {
-      final String htmlPage;
-      if ( aAnalysisResult != null )
-      {
-        htmlPage = toHtmlPage( null /* aFile */, aAnalysisResult );
-        this.exportAction.setEnabled( !aAnalysisResult.isEmpty() );
-      }
-      else
-      {
-        htmlPage = getEmptyHtmlPage();
-        this.exportAction.setEnabled( false );
-      }
-
-      this.outText.setText( htmlPage );
-      this.outText.setEditable( false );
-
-      this.runAnalysisAction.restore();
+      toHtmlPage( aOutputFile, lastResult );
     }
-    catch ( final IOException exception )
+    else if ( ExportFormat.CSV.equals( aFormat ) )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        // This should not happen for the no-file exports!
-        throw new RuntimeException( exception );
-      }
+      // TODO!
     }
   }
 
@@ -142,26 +126,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
     this.outText.setText( emptyHtmlPage );
     this.outText.setEditable( false );
 
-    this.exportAction.setEnabled( false );
-
     this.runAnalysisAction.restore();
-
-    setControlsEnabled( true );
-  }
-
-  /**
-   * set the controls of the dialog enabled/disabled
-   * 
-   * @param aEnabled
-   *          status of the controls
-   */
-  @Override
-  public void setControlsEnabled( final boolean aEnabled )
-  {
-    this.owLine.setEnabled( aEnabled );
-    this.owMode.setEnabled( aEnabled );
-
-    this.closeAction.setEnabled( aEnabled );
   }
 
   /**
@@ -175,14 +140,70 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseAsyncToolDialog#setupToolWorker(nl.lxtreme.ols.tool.base.BaseAsyncToolWorker)
+   * {@inheritDoc}
    */
   @Override
-  protected void setupToolWorker( final OneWireAnalyserWorker aToolWorker )
+  protected void onToolEnded( final OneWireDataSet aResult )
   {
-    aToolWorker.setOneWireLineIndex( this.owLine.getSelectedIndex() );
-    aToolWorker.setOneWireBusMode( ( this.owMode.getSelectedIndex() == 0 ) ? OneWireBusMode.STANDARD
+    try
+    {
+      final String htmlPage;
+      if ( aResult != null )
+      {
+        htmlPage = toHtmlPage( null /* aFile */, aResult );
+      }
+      else
+      {
+        htmlPage = getEmptyHtmlPage();
+      }
+
+      this.outText.setText( htmlPage );
+      this.outText.setEditable( false );
+
+      this.runAnalysisAction.restore();
+    }
+    catch ( final IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        // This should not happen for the no-file exports!
+        throw new RuntimeException( exception );
+      }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolStarted()
+  {
+    // NO-op
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void prepareToolTask( final ToolTask<OneWireDataSet> aToolTask )
+  {
+    OneWireAnalyserTask toolTask = ( OneWireAnalyserTask )aToolTask;
+    toolTask.setOneWireLineIndex( this.owLine.getSelectedIndex() );
+    toolTask.setOneWireBusMode( ( this.owMode.getSelectedIndex() == 0 ) ? OneWireBusMode.STANDARD
         : OneWireBusMode.OVERDRIVE );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void setControlsEnabled( final boolean aEnabled )
+  {
+    this.owLine.setEnabled( aEnabled );
+    this.owMode.setEnabled( aEnabled );
+
+    this.closeAction.setEnabled( aEnabled );
   }
 
   /**
@@ -263,7 +284,7 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
    */
   private JComponent createSettingsPane()
   {
-    final int channelCount = getChannels();
+    final int channelCount = getData().getChannels();
 
     final String modes[] = new String[] { "Standard", "Overdrive" };
 
@@ -336,14 +357,12 @@ public class OneWireAnalyserDialog extends BaseAsyncToolDialog<OneWireDataSet, O
         new GridBagConstraints( 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets( 2,
             0, 2, 0 ), 0, 0 ) );
 
-    final JButton runAnalysisButton = createRunAnalysisButton();
+    final JButton runAnalysisButton = ToolUtils.createRunAnalysisButton( this );
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
-    final JButton exportButton = createExportButton();
-    this.exportAction = exportButton.getAction();
-    this.exportAction.setEnabled( false );
+    final JButton exportButton = ToolUtils.createExportButton( this );
 
-    final JButton closeButton = createCloseButton();
+    final JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );

@@ -47,7 +47,7 @@ public class NewProjectAction extends BaseAction
    * @param aController
    *          the client controller to use.
    */
-  public NewProjectAction( final IClientController aController )
+  public NewProjectAction( final ClientController aController )
   {
     super( ID, aController, "New project ...", "Create a new project" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_N ) );
@@ -64,7 +64,7 @@ public class NewProjectAction extends BaseAction
   {
     final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final IClientController controller = getController();
+    final ClientController controller = getController();
 
     // Issue #62: in case the user does NOT confirm to lose its changes, we
     // should bail out immediately, otherwise continue normally...

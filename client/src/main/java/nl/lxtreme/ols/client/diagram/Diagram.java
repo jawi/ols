@@ -26,6 +26,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.diagram.laf.*;
@@ -63,7 +64,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   private final DiagramCorner corner;
   private double scale;
   private final ClientController controller;
-  private final DataContainer dataContainer;
 
   // CONSTRUCTORS
 
@@ -75,7 +75,6 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     super();
 
     this.controller = aController;
-    this.dataContainer = aController.getDataContainer();
 
     this.rowLabels = new DiagramRowLabels( this );
     this.timeLine = new DiagramTimeLine( this );
@@ -136,7 +135,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   {
     final int yPos = aPoint.y;
 
-    final int maxChannels = this.dataContainer.getChannels();
+    final int maxChannels = getDataContainer().getChannels();
     final int channelHeight = getDiagramSettings().getChannelHeight();
     final int scopeHeight = getDiagramSettings().getScopeHeight();
 
@@ -179,7 +178,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public long convertPointToSampleIndex( final Point aPoint )
   {
-    return Diagram.xToIndex( this.dataContainer, aPoint, this.scale );
+    return Diagram.xToIndex( getDataContainer(), aPoint, this.scale );
   }
 
   /**
@@ -211,7 +210,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public final void dragCursor( final int aCursorIdx, final Point aMousePosition )
   {
-    if ( !this.dataContainer.isCursorsEnabled() )
+    if ( !getDataContainer().isCursorsEnabled() )
     {
       return;
     }
@@ -226,8 +225,9 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public final ChannelAnnotation getAnnotationHover( final int aChannelIdx, final Point aMousePosition )
   {
-    final int sampleIdx = this.dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) );
-    return this.dataContainer.getChannelAnnotation( aChannelIdx, sampleIdx );
+    final DataContainer dataContainer = getDataContainer();
+    final int sampleIdx = dataContainer.getSampleIndex( convertPointToSampleIndex( aMousePosition ) );
+    return dataContainer.getChannelAnnotation( aChannelIdx, sampleIdx );
   }
 
   /**
@@ -241,11 +241,12 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public final int getCursorHover( final Point aMousePosition )
   {
+    final DataContainer dataContainer = getDataContainer();
     final long idx = convertPointToSampleIndex( aMousePosition );
     final double threshold = CURSOR_HOVER / this.scale;
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
-      final Long cursorPosition = this.dataContainer.getCursorPosition( i );
+      final Long cursorPosition = dataContainer.getCursorPosition( i );
       if ( cursorPosition == null )
       {
         continue;
@@ -263,7 +264,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public final DataContainer getDataContainer()
   {
-    return this.dataContainer;
+    return this.controller.getDataContainer();
   }
 
   /**
@@ -352,12 +353,12 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     // and the nearest tick mark in the indicated direction.
     if ( aDirection < 0 )
     {
-      final int newPosition = currentPosition - ( currentPosition / maxUnitIncrement ) * maxUnitIncrement;
+      final int newPosition = currentPosition - ( ( currentPosition / maxUnitIncrement ) * maxUnitIncrement );
       return ( newPosition == 0 ) ? maxUnitIncrement : newPosition;
     }
     else
     {
-      return ( ( currentPosition / maxUnitIncrement ) + 1 ) * maxUnitIncrement - currentPosition;
+      return ( ( ( currentPosition / maxUnitIncrement ) + 1 ) * maxUnitIncrement ) - currentPosition;
     }
   }
 
@@ -408,7 +409,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
 
     // do nothing if the zoom factor is nearly the viewport size
     final Dimension dim = getPreferredSize();
-    if ( dim.width < width * 2 )
+    if ( dim.width < ( width * 2 ) )
     {
       return;
     }
@@ -518,7 +519,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public final void zoomIn( final Point aPoint )
   {
-    if ( !this.dataContainer.hasCapturedData() )
+    if ( !getDataContainer().hasCapturedData() )
     {
       return;
     }
@@ -554,7 +555,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public final void zoomOut( final Point aPoint )
   {
-    if ( !this.dataContainer.hasCapturedData() )
+    if ( !getDataContainer().hasCapturedData() )
     {
       return;
     }
@@ -579,7 +580,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
   public void zoomToFit()
   {
     // avoid null pointer exception when no data available
-    if ( this.dataContainer == null )
+    if ( getDataContainer() == null )
     {
       return;
     }
@@ -646,7 +647,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     }
 
     final int width = Math.max( 1, visibleWidth );
-    final double fitScaleFactor = width / ( double )this.dataContainer.getAbsoluteLength();
+    final double fitScaleFactor = width / ( double )getDataContainer().getAbsoluteLength();
     return fitScaleFactor;
   }
 
@@ -732,7 +733,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
         // we only zoom in width, never in height...
         // XXX works in general OK for zooming in, for zooming out it has some
         // issues...
-        locX = ( int )( ( location.x * aScaleFactor ) + zoomDir * ( vpWidth / 2.0 ) );
+        locX = ( int )( ( location.x * aScaleFactor ) + ( zoomDir * ( vpWidth / 2.0 ) ) );
       }
 
       setLocation( locX, location.y );

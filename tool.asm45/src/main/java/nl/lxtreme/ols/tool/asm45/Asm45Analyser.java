@@ -22,9 +22,10 @@ package nl.lxtreme.ols.tool.asm45;
 
 
 import java.awt.*;
-import nl.lxtreme.ols.api.data.*;
+
+import org.osgi.framework.*;
+
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.*;
 
 
 /**
@@ -32,17 +33,11 @@ import nl.lxtreme.ols.tool.base.*;
  * 
  * @author Ansgar Kueckes
  */
-public class Asm45Analyser extends BaseAsyncTool<Asm45ProtocolAnalysisDialog, Asm45DataSet, Asm45AnalyserWorker>
+public class Asm45Analyser implements Tool<Asm45DataSet>
 {
-  // CONSTRUCTORS
+  // VARIABLES
 
-  /**
-   * Creates a new Asm45Analyser instance.
-   */
-  public Asm45Analyser()
-  {
-    super( Category.DECODER, "Asm45 bus analyser ..." );
-  }
+  private BundleContext context;
 
   // METHODS
 
@@ -50,19 +45,48 @@ public class Asm45Analyser extends BaseAsyncTool<Asm45ProtocolAnalysisDialog, As
    * {@inheritDoc}
    */
   @Override
-  protected Asm45ProtocolAnalysisDialog createDialog( final Window aOwner, final ToolContext aContext,
-      final String aName )
+  public Asm45AnalyserTask createToolTask( final ToolContext aContext, final ToolProgressListener aProgressListener,
+      final AnnotationListener aAnnotationListener )
   {
-    return new Asm45ProtocolAnalysisDialog( aOwner, getName(), aContext );
+    return new Asm45AnalyserTask( aContext, aProgressListener, aAnnotationListener );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected Asm45AnalyserWorker createToolWorker( final DataContainer aData, final ToolContext aContext )
+  public ToolCategory getCategory()
   {
-    return new Asm45AnalyserWorker( aData, aContext );
+    return ToolCategory.DECODER;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getName()
+  {
+    return "Asm45 bus analyser ...";
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void invoke( final Window aParent, final ToolContext aContext )
+  {
+    new Asm45ProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
+  }
+
+  /**
+   * Called when this tool is initialized by the client framework.
+   * 
+   * @param aContext
+   *          the bundle context to use, never <code>null</code>.
+   */
+  protected void init( final BundleContext aContext )
+  {
+    this.context = aContext;
   }
 }
 

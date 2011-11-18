@@ -37,7 +37,7 @@ public class SelectDeviceAction extends BaseAction
 
   private static final long serialVersionUID = 1L;
 
-  private static final String ID = "SelectDevice";
+  private static final String ID = "SelectDevice.";
 
   // VARIABLES
 
@@ -55,7 +55,7 @@ public class SelectDeviceAction extends BaseAction
    */
   public SelectDeviceAction( final ClientController aController, final String aDeviceName )
   {
-    super( ID + aDeviceName, aController, aDeviceName, "Selects ".concat( aDeviceName ).concat(
+    super( getID( aDeviceName ), aController, aDeviceName, "Selects ".concat( aDeviceName ).concat(
         " as current capturing device" ) );
     this.deviceName = aDeviceName;
     // if the first character of the name isAlpha, use it as mnemonic
@@ -70,20 +70,27 @@ public class SelectDeviceAction extends BaseAction
   // METHODS
 
   /**
+   * Creates an ID for an action that represents the "select device" action for
+   * the device with the given name.
+   * 
+   * @param aDeviceName
+   *          the name of the device to create the ID for, cannot be
+   *          <code>null</code>.
+   * @return a ID, never <code>null</code>.
+   */
+  public static final String getID( final String aDeviceName )
+  {
+    return ID.concat( aDeviceName );
+  }
+
+  /**
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JMenuItem menuItem = ( JMenuItem )aEvent.getSource();
-    if ( menuItem.isSelected() )
-    {
-      getController().setDeviceController( this.deviceName );
-    }
-    else
-    {
-      getController().clearDeviceController();
-    }
+    getController().selectDevice( menuItem.isSelected() ? this.deviceName : null );
   }
 
 }

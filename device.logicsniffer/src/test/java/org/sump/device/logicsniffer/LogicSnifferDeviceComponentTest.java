@@ -23,8 +23,7 @@ package org.sump.device.logicsniffer;
 
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
-
+import nl.lxtreme.ols.api.acquisition.*;
 import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
@@ -34,7 +33,7 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
 /**
- * Test cases for {@link LogicSnifferDevice}.
+ * Test cases for {@link LogicSnifferAcquisitionTask}.
  */
 @RunWith( Parameterized.class )
 public class LogicSnifferDeviceComponentTest
@@ -149,7 +148,7 @@ public class LogicSnifferDeviceComponentTest
 
   /**
    * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
+   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}.
    */
   @Test( timeout = 10000 )
   public void testVerifyFlags() throws Exception
@@ -162,31 +161,31 @@ public class LogicSnifferDeviceComponentTest
     final boolean isGroup4disabled = ( ( this.enabledChannelsMask & 0xFF000000 ) == 0 )
         || ( ddrMode && isGroup2disabled );
 
-    this.device.doInBackground();
+    this.device.call();
 
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_DEMUX, ddrMode );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_GROUP1_DISABLED, isGroup1disabled );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_GROUP2_DISABLED, isGroup2disabled );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_GROUP3_DISABLED, isGroup3disabled );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_GROUP4_DISABLED, isGroup4disabled );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_RLE, this.useRLE );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_DEMUX, ddrMode );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_GROUP1_DISABLED, isGroup1disabled );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_GROUP2_DISABLED, isGroup2disabled );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_GROUP3_DISABLED, isGroup3disabled );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_GROUP4_DISABLED, isGroup4disabled );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_RLE, this.useRLE );
     // The following values are static/not used...
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_INVERTED, false );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_EXTERNAL, false );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_EXTERNAL_TEST_MODE, false );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_INTERNAL_TEST_MODE, false );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_NUMBER_SCHEME, false );
-    this.device.assertFlagState( LogicSnifferDevice.FLAG_FILTER, !ddrMode );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_INVERTED, false );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_EXTERNAL, false );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_EXTERNAL_TEST_MODE, false );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_INTERNAL_TEST_MODE, false );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_NUMBER_SCHEME, false );
+    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_FILTER, !ddrMode );
   }
 
   /**
    * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferDevice#doInBackground()}.
+   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}.
    */
   @Test( timeout = 10000 )
   public void testVerifySentData() throws Exception
   {
-    final AcquisitionResult result = this.device.doInBackground();
+    final AcquisitionResult result = this.device.call();
 
     this.device.assertSampleRate( this.sampleRate );
     this.device.assertReadAndDelayCount( this.readCounter, this.delayCounter );

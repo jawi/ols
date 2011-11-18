@@ -16,24 +16,24 @@
 			<artifactId>org.osgi.compendium</artifactId>
 			<scope>compile</scope>
 		</dependency>
-        <dependency>
-            <groupId>nl.lxtreme.ols</groupId>
-            <artifactId>util</artifactId>
-            <scope>compile</scope>
-        </dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>util</artifactId>
+			<scope>compile</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <type>jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <type>jar</type>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<type>jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<type>jar</type>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -46,31 +46,37 @@
 						<Bundle-Description>The common API for the OLS client.</Bundle-Description>
 						<Bundle-Copyright>J.W. Janssen (lxtreme.nl) (C) 2010-2011</Bundle-Copyright>
 						<Bundle-License>GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html</Bundle-License>
-						<Import-Package>javax.swing,org.osgi.service.prefs;version="1.1",nl.lxtreme.ols.util</Import-Package>
-						<Export-Package>nl.lxtreme.ols.api, nl.lxtreme.ols.api.data,
+						<Import-Package>javax.swing,
+							org.osgi.service.prefs;version="1.1",
+							nl.lxtreme.ols.util</Import-Package>
+						<Export-Package>nl.lxtreme.ols.api,
+							nl.lxtreme.ols.api.acquisition, nl.lxtreme.ols.api.data,
 							nl.lxtreme.ols.api.data.export,
-                            nl.lxtreme.ols.api.data.project,
+							nl.lxtreme.ols.api.data.project,
 							nl.lxtreme.ols.api.devices,
-							nl.lxtreme.ols.api.tools, nl.lxtreme.ols.api.ui</Export-Package>
+                            nl.lxtreme.ols.api.task,
+							nl.lxtreme.ols.api.tools,
+							nl.lxtreme.ols.api.ui</Export-Package>
 					</instructions>
 				</configuration>
 			</plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <phase>process-resources</phase>
-                    </execution>
-                </executions>
-            </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<phase>process-resources</phase>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>

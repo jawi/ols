@@ -25,18 +25,16 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.*;
-import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.swing.*;
-import javax.swing.SwingWorker.StateValue;
+import org.osgi.framework.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
-import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureWorker.ClockStats;
+import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureTask.ClockStats;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -44,22 +42,19 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * @author jajans
  */
-public class MeasurementDialog extends BaseToolDialog
+public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.ClockStats>
 {
   // INNER TYPES
 
   /**
    * Action for measuring the clock frequency between two cursors.
    */
-  final class MeasureClockFrequencyAction extends AbstractAction implements PropertyChangeListener
+  final class MeasureClockFrequencyAction extends AbstractAction
   {
     private static final long serialVersionUID = 1L;
 
-    private int channel = 0;
-    private ClockFrequencyMeasureWorker worker = null;
-
     /**
-     *
+     * Creates a new MeasureClockFrequencyAction instance.
      */
     public MeasureClockFrequencyAction()
     {
@@ -73,169 +68,15 @@ public class MeasurementDialog extends BaseToolDialog
     @Override
     public void actionPerformed( final ActionEvent aEvent )
     {
-      if ( this.worker != null )
+      if ( getData().getValues().length <= 0 )
       {
-        if ( !this.worker.isDone() )
-        {
-          this.worker.cancel( true /* mayInterruptIfRunning */);
-        }
-        this.worker.removePropertyChangeListener( this );
-        this.worker = null;
+        ToolUtils.showErrorMessage( MeasurementDialog.this,
+            "There is no data available to measure. Please perform a capture first..." );
       }
-
-      if ( this.worker == null )
+      else
       {
-        final DataContainer container = MeasurementDialog.this.data;
-        final int cursorAidx = MeasurementDialog.this.cursorA.getSelectedIndex();
-        final int cursorBidx = MeasurementDialog.this.cursorB.getSelectedIndex();
-
-        final ToolContext context = new ToolContext()
-        {
-          /**
-           * {@inheritDoc}
-           */
-          @Override
-          public int getChannels()
-          {
-            return container.getChannels();
-          }
-
-          /**
-           * {@inheritDoc}
-           */
-          @Override
-          public int getEnabledChannels()
-          {
-            return container.getEnabledChannels();
-          }
-
-          /**
-           * @see nl.lxtreme.ols.api.tools.ToolContext#getEndSampleIndex()
-           */
-          @Override
-          public int getEndSampleIndex()
-          {
-            if ( container.hasCapturedData() )
-            {
-              if ( container.isCursorPositionSet( cursorBidx ) )
-              {
-                final Long cursorPosition = container.getCursorPosition( cursorBidx );
-                return container.getSampleIndex( cursorPosition.longValue() );
-              }
-
-              return container.getValues().length - 1;
-            }
-            return -1;
-          }
-
-          /**
-           * @see nl.lxtreme.ols.api.tools.ToolContext#getLength()
-           */
-          @Override
-          public int getLength()
-          {
-            return getEndSampleIndex() - getStartSampleIndex();
-          }
-
-          /**
-           * @see nl.lxtreme.ols.api.tools.ToolContext#getStartSampleIndex()
-           */
-          @Override
-          public int getStartSampleIndex()
-          {
-            if ( container.hasCapturedData() )
-            {
-              if ( container.isCursorPositionSet( cursorAidx ) )
-              {
-                final Long cursorPosition = container.getCursorPosition( cursorAidx );
-                return container.getSampleIndex( cursorPosition.longValue() );
-              }
-
-              return 0;
-            }
-            return -1;
-          }
-        };
-
-        this.worker = new ClockFrequencyMeasureWorker( MeasurementDialog.this.data, context, this.channel );
-
-        if ( !this.worker.containsData() )
-        {
-          showErrorMessage( "There is no data available to measure. Please perform a capture first..." );
-        }
-        else
-        {
-          this.worker.addPropertyChangeListener( this );
-          this.worker.execute();
-        }
+        invokeTool();
       }
-    }
-
-    /**
-     * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-     */
-    @Override
-    public void propertyChange( final PropertyChangeEvent aEvent )
-    {
-      final String name = aEvent.getPropertyName();
-      final Object value = aEvent.getNewValue();
-
-      if ( "state".equals( name ) )
-      {
-        // State change...
-        final StateValue state = ( StateValue )value;
-        if ( StateValue.STARTED.equals( state ) )
-        {
-          // Set the "wait" cursor...
-          setCursor( new Cursor( Cursor.WAIT_CURSOR ) );
-          setEnabled( false );
-        }
-        else if ( StateValue.DONE.equals( state ) )
-        {
-          // Restore the original cursor...
-          setCursor( new Cursor( Cursor.DEFAULT_CURSOR ) );
-          setEnabled( true );
-
-          final ClockFrequencyMeasureWorker worker = ( ClockFrequencyMeasureWorker )aEvent.getSource();
-
-          try
-          {
-            final ClockStats stats = worker.get();
-
-            updateClockStats( stats );
-          }
-          catch ( CancellationException exception )
-          {
-            LOG.log( Level.WARNING, "Dialog exception!", exception );
-          }
-          catch ( ExecutionException exception )
-          {
-            // Make sure to handle IO-interrupted exceptions properly!
-            if ( !HostUtils.handleInterruptedException( exception.getCause() ) )
-            {
-              LOG.log( Level.WARNING, "Dialog exception!", exception );
-            }
-          }
-          catch ( InterruptedException exception )
-          {
-            // Make sure to handle IO-interrupted exceptions properly!
-            if ( !HostUtils.handleInterruptedException( exception ) )
-            {
-              LOG.log( Level.WARNING, "Dialog exception!", exception );
-            }
-          }
-        }
-      }
-    }
-
-    /**
-     * Sets the channel on which the clock-frequency should be determined.
-     * 
-     * @param aChannel
-     */
-    public void setChannel( final int aChannel )
-    {
-      this.channel = aChannel;
     }
   }
 
@@ -273,7 +114,6 @@ public class MeasurementDialog extends BaseToolDialog
   // VARIABLES
 
   private final Timer updateTimer;
-  private volatile DataContainer data;
 
   private JLabel[] cursorValueLabels;
   private JComboBox cursorB;
@@ -291,15 +131,18 @@ public class MeasurementDialog extends BaseToolDialog
    * Creates a new MeasurementDialog instance (non modal).
    * 
    * @param aOwner
-   *          the owning window;
-   * @param aTitle
-   *          the title of this dialog;
+   *          the owner of this dialog;
+   * @param aToolContext
+   *          the tool context;
    * @param aContext
-   *          the tool context.
+   *          the OSGi bundle context to use;
+   * @param aTool
+   *          the {@link MeasurementTool} tool.
    */
-  public MeasurementDialog( final Window aOwner, final String aTitle, final ToolContext aContext )
+  public MeasurementDialog( final Window aOwner, final ToolContext aToolContext, final BundleContext aContext,
+      final MeasurementTool aTool )
   {
-    super( aOwner, aTitle, Dialog.ModalityType.MODELESS, aContext );
+    super( aOwner, ModalityType.MODELESS, aToolContext, aContext, aTool );
 
     initDialog();
 
@@ -309,6 +152,8 @@ public class MeasurementDialog extends BaseToolDialog
 
     setLocationRelativeTo( getOwner() );
   }
+
+  // METHODS
 
   /**
    * @see java.awt.Window#dispose()
@@ -325,8 +170,6 @@ public class MeasurementDialog extends BaseToolDialog
     }
     super.dispose();
   }
-
-  // METHODS
 
   /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(nl.lxtreme.ols.api.UserSettings)
@@ -352,16 +195,6 @@ public class MeasurementDialog extends BaseToolDialog
   }
 
   /**
-   * @see nl.lxtreme.ols.tool.base.BaseToolDialog#showDialog(nl.lxtreme.ols.api.data.DataContainer)
-   */
-  @Override
-  public void showDialog( final DataContainer aData )
-  {
-    this.data = aData;
-    super.showDialog( aData );
-  }
-
-  /**
    * @see nl.lxtreme.ols.api.Configurable#writePreferences(nl.lxtreme.ols.api.UserSettings)
    */
   public void writePreferences( final UserSettings aSettings )
@@ -369,24 +202,6 @@ public class MeasurementDialog extends BaseToolDialog
     aSettings.putInt( "selectedCursorA", this.cursorA.getSelectedIndex() );
     aSettings.putInt( "selectedCursorB", this.cursorB.getSelectedIndex() );
     aSettings.putInt( "selectedClockChannel", this.clockChannelChooser.getSelectedIndex() );
-  }
-
-  /**
-   * Updates this dialog with the given clock statistics.
-   * 
-   * @param aClockStats
-   *          the clock statistics, never <code>null</code>.
-   */
-  final void updateClockStats( final ClockStats aClockStats )
-  {
-    StringBuilder freqText = new StringBuilder();
-    freqText.append( DisplayUtils.displayFrequency( aClockStats.getFrequency() ) );
-    freqText.append( " (\u00b1 " ).append( DisplayUtils.displayFrequency( aClockStats.getError() ) ).append( ")" );
-
-    this.clockFrequencyLabel.setText( freqText.toString() );
-    this.clockDutyCycleLabel.setText( DisplayUtils.displayPercentage( aClockStats.getDutyCycle() ) );
-
-    getRootPane().revalidate();
   }
 
   /**
@@ -400,10 +215,13 @@ public class MeasurementDialog extends BaseToolDialog
       this.cursorValueLabels[i].setText( text );
     }
 
-    final double rate = this.data.getSampleRate();
+    final AcquisitionResult data = getData();
+    final ToolContext context = getContext();
 
-    final Long cursorApos = this.data.getCursorPosition( this.cursorA.getSelectedIndex() );
-    final Long cursorBpos = this.data.getCursorPosition( this.cursorB.getSelectedIndex() );
+    final double rate = data.getSampleRate();
+
+    final Long cursorApos = context.getCursorPosition( this.cursorA.getSelectedIndex() );
+    final Long cursorBpos = context.getCursorPosition( this.cursorB.getSelectedIndex() );
 
     String distanceText = EMPTY_TEXT;
     String frequencyText = EMPTY_TEXT;
@@ -421,6 +239,41 @@ public class MeasurementDialog extends BaseToolDialog
 
     this.distanceLabel.setText( distanceText );
     this.frequencyLabel.setText( frequencyText );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolEnded( final ClockStats aClockStats )
+  {
+    StringBuilder freqText = new StringBuilder();
+    freqText.append( DisplayUtils.displayFrequency( aClockStats.getFrequency() ) );
+    freqText.append( " (\u00b1 " ).append( DisplayUtils.displayFrequency( aClockStats.getError() ) ).append( ")" );
+
+    this.clockFrequencyLabel.setText( freqText.toString() );
+    this.clockDutyCycleLabel.setText( DisplayUtils.displayPercentage( aClockStats.getDutyCycle() ) );
+
+    getRootPane().revalidate();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void onToolStarted()
+  {
+    // NO-op
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void prepareToolTask( final ToolTask<ClockStats> aToolTask )
+  {
+    ClockFrequencyMeasureTask toolTask = ( ClockFrequencyMeasureTask )aToolTask;
+    toolTask.setChannel( this.clockChannelChooser.getSelectedIndex() );
   }
 
   /**
@@ -483,7 +336,7 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private Component createMeasurementPane( final String[] aCursorNames )
   {
-    final int channelCount = getChannels();
+    final int channelCount = getData().getChannels();
 
     this.frequencyLabel = new JLabel( EMPTY_TEXT );
     this.distanceLabel = new JLabel( EMPTY_TEXT );
@@ -516,15 +369,6 @@ public class MeasurementDialog extends BaseToolDialog
     final MeasureClockFrequencyAction measureAction = new MeasureClockFrequencyAction();
 
     this.clockChannelChooser = SwingComponentUtils.createChannelSelector( channelCount );
-    this.clockChannelChooser.addItemListener( new ItemListener()
-    {
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        final JComboBox combobox = ( JComboBox )aEvent.getSource();
-        measureAction.setChannel( combobox.getSelectedIndex() );
-      }
-    } );
 
     this.clockFrequencyLabel = new JLabel( EMPTY_TEXT );
     this.clockDutyCycleLabel = new JLabel( EMPTY_TEXT );
@@ -556,12 +400,15 @@ public class MeasurementDialog extends BaseToolDialog
    */
   private String getCursorTimeDisplayValue( final int aIndex )
   {
-    if ( this.data != null )
+    final AcquisitionResult data = getData();
+    if ( data != null )
     {
-      final Double cursorTimeValue = this.data.getCursorTimeValue( aIndex );
-      if ( cursorTimeValue != null )
+      final ToolContext context = getContext();
+
+      final Long cursorPosition = context.getCursorPosition( aIndex );
+      if ( cursorPosition != null )
       {
-        return DisplayUtils.displayTime( cursorTimeValue.doubleValue() );
+        return DisplayUtils.displayTime( cursorPosition.doubleValue() / data.getSampleRate() );
       }
     }
     return "<not set>";
@@ -573,7 +420,7 @@ public class MeasurementDialog extends BaseToolDialog
   private void initDialog()
   {
     final JComponent contentPane = createDialogContent();
-    final JButton closeButton = createCloseButton();
+    final JButton closeButton = ToolUtils.createCloseButton();
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( closeButton );
 
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, closeButton );

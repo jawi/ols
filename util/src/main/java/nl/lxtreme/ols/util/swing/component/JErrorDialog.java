@@ -26,7 +26,6 @@ import java.awt.event.*;
 import java.io.*;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.*;
@@ -229,7 +228,7 @@ public class JErrorDialog extends JDialog implements Closeable
       {
         final URI mailURI;
 
-        if ( HostUtils.isWindows() && ( uriStr.length() > MAGIC_WINDOWS_URI_LIMIT ) )
+        if ( HostUtils.getHostInfo().isWindows() && ( uriStr.length() > MAGIC_WINDOWS_URI_LIMIT ) )
         {
           mailURI = new URI( "mailto", uriStr.substring( 0, MAGIC_WINDOWS_URI_LIMIT ), null );
           uriStr = null;
@@ -299,12 +298,29 @@ public class JErrorDialog extends JDialog implements Closeable
     // METHODS
 
     /**
+     * Called by the EDT in case an exception occurs on it. See
+     * <http://stackoverflow.com/questions/4448523/how-can-i-catch-event-
+     * dispatch-thread-edt-exceptions/4448569#4448569> for more
+     * information/rationale.
+     * 
+     * @param aException
+     *          the exception thrown.
+     */
+    public void handle( final Throwable aException )
+    {
+      uncaughtException( Thread.currentThread(), aException );
+    }
+
+    /**
      * @see java.lang.Thread.UncaughtExceptionHandler#uncaughtException(java.lang.Thread,
      *      java.lang.Throwable)
      */
     @Override
     public void uncaughtException( final Thread aThread, final Throwable aException )
     {
+      // Make sure we dump the exception on the console...
+      aException.printStackTrace( System.err );
+
       final Window owner = SwingComponentUtils.getCurrentWindow();
       final IncidentInfo incident = new IncidentInfo( "Uncaught exception...", //
           "<html><b>Something unexpected happened!</b><br><br>"
@@ -349,6 +365,10 @@ public class JErrorDialog extends JDialog implements Closeable
    * Text representing the reporting button of this dialog.
    */
   private static final String REPORT = "Report";
+  /**
+   * Text representing the quit button of this dialog.
+   */
+  private static final String QUIT = "Quit";
   /**
    * Icon for the error dialog (stop sign, etc)
    */
@@ -613,9 +633,6 @@ public class JErrorDialog extends JDialog implements Closeable
     this.detailButton = new JButton( MORE_DETAILS );
     this.detailButton.addActionListener( new ActionListener()
     {
-      /**
-       * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-       */
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
@@ -623,7 +640,21 @@ public class JErrorDialog extends JDialog implements Closeable
       }
     } );
 
-    final JComponent buttonPane = SwingComponentUtils.createButtonPane( this.reportButton, this.detailButton, cancel );
+    final JButton quit = new JButton( QUIT );
+    quit.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        // Abort the VM; do *not* try to use any OSGi hooks or whatever to go
+        // down gracefully; we're in a situation that might be very hairy to get
+        // out of...
+        System.exit( 1 );
+      }
+    } );
+
+    final JComponent buttonPane = SwingComponentUtils.createButtonPane( quit, this.reportButton, this.detailButton,
+        cancel );
 
     SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, cancel );
 

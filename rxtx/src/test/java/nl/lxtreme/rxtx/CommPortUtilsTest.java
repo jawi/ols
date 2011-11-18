@@ -42,7 +42,7 @@ public class CommPortUtilsTest
   @Test
   public void testEnumerateDevicesLinux()
   {
-    assumeTrue( HostUtils.isUnix() );
+    assumeTrue( HostUtils.getHostInfo().isUnix() );
 
     String enumeratedDevices = CommPortUtils.enumerateDevices();
     assertNotNull( enumeratedDevices );
@@ -54,7 +54,7 @@ public class CommPortUtilsTest
   @Test
   public void testEnumerateDevicesMacOS()
   {
-    assumeTrue( HostUtils.isMacOS() );
+    assumeTrue( HostUtils.getHostInfo().isMacOS() );
 
     String enumeratedDevices = CommPortUtils.enumerateDevices();
     assertNotNull( enumeratedDevices );
@@ -66,7 +66,7 @@ public class CommPortUtilsTest
   @Test
   public void testEnumerateDevicesWindows() throws AssumptionViolatedException
   {
-    assumeTrue( HostUtils.isWindows() );
+    assumeTrue( HostUtils.getHostInfo().isWindows() );
 
     try
     {
