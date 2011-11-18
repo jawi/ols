@@ -42,7 +42,6 @@ import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
-import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -191,10 +190,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   // VARIABLES
 
-  private final OsgiHelper osgiHelper;
-
   private final BundleContext bundleContext;
   private final IActionManager actionManager;
+
+  private final List<Device> devices;
+  private final List<Tool<?>> tools;
+  private final List<Exporter> exporters;
 
   private final EventListenerList evenListeners;
   private final ProgressUpdatingRunnable progressAccumulatingRunnable;
@@ -224,13 +225,24 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     this.bundleContext = aBundleContext;
 
-    this.osgiHelper = new OsgiHelper( aBundleContext );
+    this.devices = new ArrayList<Device>();
+    this.tools = new ArrayList<Tool<?>>();
+    this.exporters = new ArrayList<Exporter>();
 
     this.evenListeners = new EventListenerList();
     this.actionManager = ActionManagerFactory.createActionManager( this );
 
     this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
     this.repaintAccumulatingRunnable = new AccumulatingRepaintingRunnable();
+
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        ClientController.this.mainFrame = new MainFrame( ClientController.this );
+      }
+    } );
   }
 
   // METHODS
@@ -298,30 +310,92 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Adds the menu component of the given provider to this controller, and does
-   * this synchronously on the EDT.
+   * Adds a given device to this controller.
+   * <p>
+   * This method is called by the dependency manager.
+   * </p>
+   * 
+   * @param aDevice
+   *          the device to add, cannot be <code>null</code>.
+   */
+  public void addDevice( final Device aDevice )
+  {
+    synchronized ( this.devices )
+    {
+      this.devices.add( aDevice );
+
+      this.actionManager.add( new SelectDeviceAction( this, aDevice.getName() ) );
+    }
+  }
+
+  /**
+   * Adds a given exporter to this controller.
+   * <p>
+   * This method is called by the dependency manager.
+   * </p>
+   * 
+   * @param aExporter
+   *          the exporter to add, cannot be <code>null</code>.
+   */
+  public void addExporter( final Exporter aExporter )
+  {
+    synchronized ( this.exporters )
+    {
+      this.exporters.add( aExporter );
+
+      this.actionManager.add( new ExportAction( this, aExporter.getName() ) );
+    }
+  }
+
+  /**
+   * Adds the given component provider to this controller, and does this
+   * synchronously on the EDT.
+   * <p>
+   * This method is called by the Dependency Manager.
+   * </p>
    * 
    * @param aProvider
-   *          the menu component provider, cannot be <code>null</code>.
+   *          the component provider, cannot be <code>null</code>.
    */
   public void addMenu( final ComponentProvider aProvider )
   {
-    if ( this.mainFrame != null )
+    SwingComponentUtils.invokeOnEDT( new Runnable()
     {
-      SwingComponentUtils.invokeOnEDT( new Runnable()
+      @Override
+      public void run()
       {
-        @Override
-        public void run()
+        final JMenuBar menuBar = getMainMenuBar();
+
+        if ( menuBar != null )
         {
           final JMenu menu = ( JMenu )aProvider.getComponent();
-          final JMenuBar menuBar = ClientController.this.mainFrame.getJMenuBar();
           menuBar.add( menu );
+
           aProvider.addedToContainer();
 
           menuBar.revalidate();
           menuBar.repaint();
         }
-      } );
+      }
+    } );
+  }
+
+  /**
+   * Adds a given tool to this controller.
+   * <p>
+   * This method is called by the dependency manager.
+   * </p>
+   * 
+   * @param aTool
+   *          the tool to add, cannot be <code>null</code>.
+   */
+  public void addTool( final Tool<?> aTool )
+  {
+    synchronized ( this.tools )
+    {
+      this.tools.add( aTool );
+
+      this.actionManager.add( new RunToolAction( this, aTool.getName() ) );
     }
   }
 
@@ -514,21 +588,36 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     if ( this.selectedDevice != null )
     {
-      return getDeviceController( this.selectedDevice );
+      return getDevice( this.selectedDevice );
     }
 
     return null;
   }
 
   /**
-   * Returns all available device controllers.
+   * Returns all available devices.
    * 
-   * @return an array of device controller names, never <code>null</code>, but
-   *         an empty array is possible.
+   * @return an array of device names, never <code>null</code>, but an empty
+   *         array is possible.
    */
   public String[] getDeviceNames()
   {
-    return getAllServiceNamesFor( Device.class );
+    final String[] result;
+
+    synchronized ( this.devices )
+    {
+      result = new String[this.devices.size()];
+
+      int i = 0;
+      for ( Device device : this.devices )
+      {
+        result[i++] = device.getName();
+      }
+    }
+    // Make sure we've got a predictable order of names...
+    Arrays.sort( result );
+
+    return result;
   }
 
   /**
@@ -572,7 +661,22 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public String[] getExporterNames()
   {
-    return getAllServiceNamesFor( Exporter.class );
+    final String[] result;
+
+    synchronized ( this.exporters )
+    {
+      result = new String[this.exporters.size()];
+
+      int i = 0;
+      for ( Exporter exporter : this.exporters )
+      {
+        result[i++] = exporter.getName();
+      }
+    }
+    // Make sure we've got a predictable order of names...
+    Arrays.sort( result );
+
+    return result;
   }
 
   /**
@@ -614,7 +718,22 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public String[] getToolNames()
   {
-    return getAllServiceNamesFor( Tool.class );
+    final String[] result;
+
+    synchronized ( this.tools )
+    {
+      result = new String[this.tools.size()];
+
+      int i = 0;
+      for ( Tool<?> tool : this.tools )
+      {
+        result[i++] = tool.getName();
+      }
+    }
+    // Make sure we've got a predictable order of names...
+    Arrays.sort( result );
+
+    return result;
   }
 
   /**
@@ -748,10 +867,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Returns whether or not the current project is changed.
+   * 
+   * @return <code>true</code> if the current project is changed,
+   *         <code>false</code> otherwise.
    */
   public boolean isProjectChanged()
   {
+    if ( this.projectManager == null )
+    {
+      return false;
+    }
     return this.projectManager.getCurrentProject().isChanged();
   }
 
@@ -857,8 +983,77 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Removes the menu from the given provider from this controller, and does
-   * this synchronously on the EDT.
+   * Removes a given device from this controller.
+   * <p>
+   * This method is called by the dependency manager.
+   * </p>
+   * 
+   * @param aDevice
+   *          the device to remove, cannot be <code>null</code>.
+   */
+  public void removeDevice( final Device aDevice )
+  {
+    synchronized ( this.devices )
+    {
+      this.devices.remove( aDevice );
+
+      final String deviceName = aDevice.getName();
+
+      // Make sure the internal state remains correct...
+      if ( this.selectedDevice.equals( deviceName ) )
+      {
+        this.selectedDevice = null;
+      }
+
+      try
+      {
+        IManagedAction action = this.actionManager.getAction( SelectDeviceAction.getID( deviceName ) );
+        this.actionManager.remove( action );
+      }
+      catch ( IllegalArgumentException exception )
+      {
+        LOG.log( Level.FINE, "No action for device {}?!", deviceName );
+      }
+    }
+
+    updateActionsOnEDT();
+  }
+
+  /**
+   * Removes a given exporter from this controller.
+   * <p>
+   * This method is called by the dependency manager.
+   * </p>
+   * 
+   * @param aExporter
+   *          the exporter to remove, cannot be <code>null</code>.
+   */
+  public void removeExporter( final Exporter aExporter )
+  {
+    synchronized ( this.exporters )
+    {
+      this.exporters.remove( aExporter );
+
+      final String exporterName = aExporter.getName();
+
+      try
+      {
+        IManagedAction action = this.actionManager.getAction( ExportAction.getID( exporterName ) );
+        this.actionManager.remove( action );
+      }
+      catch ( IllegalArgumentException exception )
+      {
+        LOG.log( Level.FINE, "No action for exporter {}?!", exporterName );
+      }
+    }
+  }
+
+  /**
+   * Removes the given component provider from this controller, and does this
+   * synchronously on the EDT.
+   * <p>
+   * This method is called by the Dependency Manager.
+   * </p>
    * 
    * @param aProvider
    *          the menu component provider, cannot be <code>null</code>.
@@ -882,6 +1077,35 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         }
       }
     } );
+  }
+
+  /**
+   * Removes a given tool from this controller.
+   * <p>
+   * This method is called by the dependency manager.
+   * </p>
+   * 
+   * @param aTool
+   *          the tool to remove, cannot be <code>null</code>.
+   */
+  public void removeTool( final Tool<?> aTool )
+  {
+    synchronized ( this.tools )
+    {
+      this.tools.remove( aTool );
+
+      final String toolName = aTool.getName();
+
+      try
+      {
+        IManagedAction action = this.actionManager.getAction( RunToolAction.getID( toolName ) );
+        this.actionManager.remove( action );
+      }
+      catch ( IllegalArgumentException exception )
+      {
+        LOG.log( Level.FINE, "No action for tool {}?!", toolName );
+      }
+    }
   }
 
   /**
@@ -1045,20 +1269,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * @param aMainFrame
-   *          the mainFrame to set
-   */
-  public void setMainFrame( final MainFrame aMainFrame )
-  {
-    if ( ( this.projectManager != null ) && ( aMainFrame != null ) )
-    {
-      this.projectManager.addPropertyChangeListener( aMainFrame );
-    }
-
-    this.mainFrame = aMainFrame;
-  }
-
-  /**
    * Shows the "about OLS" dialog on screen. the parent window to use, can be
    * <code>null</code>.
    */
@@ -1151,12 +1361,18 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         // Cause exceptions to be shown in a more user-friendly way...
         JErrorDialog.installSwingExceptionHandler();
 
-        final MainFrame mainFrame = MainFrame.createMainFrame( ClientController.this );
-        setMainFrame( mainFrame );
+        final MainFrame mainFrame = getMainFrame();
 
-        mainFrame.setVisible( true );
+        HostProperties hostProperties = getHostProperties();
+        if ( hostProperties != null )
+        {
+          mainFrame.setTitle( hostProperties.getFullName() );
+          mainFrame.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
+        }
 
         LOG.info( "Client started ..." );
+
+        mainFrame.setVisible( true );
       }
     } );
   }
@@ -1187,8 +1403,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
             window.setVisible( false );
             window.dispose();
           }
-
-          setMainFrame( null );
+          // release all resources...
+          mainFrame.dispose();
         }
 
         JErrorDialog.uninstallSwingExceptionHandler();
@@ -1363,9 +1579,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( CancelCaptureAction.ID ).setEnabled( deviceCapturing );
         getAction( RepeatCaptureAction.ID ).setEnabled( deviceSetup );
 
-        final boolean projectChanged = ClientController.this.projectManager.getCurrentProject().isChanged();
-        final boolean projectSavedBefore = ClientController.this.projectManager.getCurrentProject().getFilename() != null;
-        final boolean dataAvailable = ClientController.this.dataContainer.hasCapturedData();
+        final boolean projectChanged = isProjectChanged();
+        final boolean projectSavedBefore = !isAnonymousProject();
+        final boolean dataAvailable = hasCapturedData();
+        final boolean triggerEnable = dataAvailable && hasTriggerData();
+        final boolean cursorsEnabled = areCursorsEnabled();
+        final boolean enableCursors = dataAvailable && cursorsEnabled;
 
         getAction( SaveProjectAction.ID ).setEnabled( projectChanged );
         getAction( SaveProjectAsAction.ID ).setEnabled( projectSavedBefore && projectChanged );
@@ -1376,20 +1595,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( ZoomDefaultAction.ID ).setEnabled( dataAvailable );
         getAction( ZoomFitAction.ID ).setEnabled( dataAvailable );
 
-        final boolean triggerEnable = dataAvailable && ClientController.this.dataContainer.hasTriggerData();
         getAction( GotoTriggerAction.ID ).setEnabled( triggerEnable );
 
         // Update the cursor actions accordingly...
         getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
-        getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY,
-            Boolean.valueOf( ClientController.this.dataContainer.isCursorsEnabled() ) );
-
-        final boolean enableCursors = dataAvailable && ClientController.this.dataContainer.isCursorsEnabled();
+        getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY, Boolean.valueOf( cursorsEnabled ) );
 
         boolean anyCursorSet = false;
         for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
         {
-          final boolean cursorPositionSet = ClientController.this.dataContainer.isCursorPositionSet( c );
+          final boolean cursorPositionSet = isCursorSet( c );
           anyCursorSet |= cursorPositionSet;
 
           final boolean gotoCursorNEnabled = enableCursors && cursorPositionSet;
@@ -1406,20 +1621,114 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( ClearCursors.ID ).setEnabled( enableCursors && anyCursorSet );
 
         // Update the tools...
-        final IManagedAction[] toolActions = ClientController.this.actionManager.getActionByType( RunToolAction.class );
+        final IManagedAction[] toolActions = getActionsByType( RunToolAction.class );
         for ( final IManagedAction toolAction : toolActions )
         {
           toolAction.setEnabled( dataAvailable );
         }
 
         // Update the exporters...
-        final IManagedAction[] exportActions = ClientController.this.actionManager.getActionByType( ExportAction.class );
+        final IManagedAction[] exportActions = getActionsByType( ExportAction.class );
         for ( final IManagedAction exportAction : exportActions )
         {
           exportAction.setEnabled( dataAvailable );
         }
       }
     } );
+  }
+
+  /**
+   * Returns whether or not the cursors are enabled.
+   * 
+   * @return <code>true</code> if cursors are enabled, <code>false</code>
+   *         otherwise.
+   */
+  protected boolean areCursorsEnabled()
+  {
+    if ( this.dataContainer == null )
+    {
+      return false;
+    }
+    return this.dataContainer.isCursorsEnabled();
+  }
+
+  /**
+   * Returns all actions of a given type.
+   * 
+   * @param aActionType
+   *          the type of action to return, cannot be <code>null</code>.
+   * @return an array of requested actions, never <code>null</code>.
+   */
+  protected IManagedAction[] getActionsByType( final Class<? extends IManagedAction> aActionType )
+  {
+    if ( this.actionManager == null )
+    {
+      return new IManagedAction[0];
+    }
+    return this.actionManager.getActionByType( aActionType );
+  }
+
+  /**
+   * Returns whether or not there's captured data to display.
+   * 
+   * @return <code>true</code> if there's captured data, <code>false</code>
+   *         otherwise.
+   */
+  protected boolean hasCapturedData()
+  {
+    if ( this.dataContainer == null )
+    {
+      return false;
+    }
+    return this.dataContainer.hasCapturedData();
+  }
+
+  /**
+   * Returns whether or not there is trigger data available.
+   * 
+   * @return <code>true</code> if there is trigger data available,
+   *         <code>false</code> otherwise.
+   */
+  protected boolean hasTriggerData()
+  {
+    if ( this.dataContainer == null )
+    {
+      return false;
+    }
+    return this.dataContainer.hasTriggerData();
+  }
+
+  /**
+   * Returns whether or not the current project is "anonymous", i.e., not yet
+   * saved.
+   * 
+   * @return <code>true</code> if the current project is anonymous,
+   *         <code>false</code> otherwise.
+   */
+  protected boolean isAnonymousProject()
+  {
+    if ( this.projectManager == null )
+    {
+      return false;
+    }
+    return this.projectManager.getCurrentProject().getFilename() == null;
+  }
+
+  /**
+   * Returns whether or not a cursor with the given index is set.
+   * 
+   * @param aCursorIdx
+   *          the index of the cursor test.
+   * @return <code>true</code> if the cursor with the given index is set,
+   *         <code>false</code> otherwise.
+   */
+  protected boolean isCursorSet( final int aCursorIdx )
+  {
+    if ( this.dataContainer == null )
+    {
+      return false;
+    }
+    return this.dataContainer.isCursorPositionSet( aCursorIdx );
   }
 
   /**
@@ -1508,17 +1817,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * @param aServiceClass
-   * @return
-   */
-  private String[] getAllServiceNamesFor( final Class<?> aServiceClass )
-  {
-    final String[] result = this.osgiHelper.getAllServicePropertiesFor( Action.NAME, aServiceClass );
-    Arrays.sort( result );
-    return result;
-  }
-
-  /**
    * Returns the data acquisition service.
    * 
    * @return a data acquisition service, never <code>null</code>.
@@ -1531,9 +1829,19 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  private Device getDeviceController( final String aName ) throws IllegalArgumentException
+  private Device getDevice( final String aName ) throws IllegalArgumentException
   {
-    return this.osgiHelper.getService( Device.class, Action.NAME, aName );
+    synchronized ( this.devices )
+    {
+      for ( Device device : this.devices )
+      {
+        if ( aName.equals( device.getName() ) )
+        {
+          return device;
+        }
+      }
+    }
+    return null;
   }
 
   /**
@@ -1541,7 +1849,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private Exporter getExporter( final String aName ) throws IllegalArgumentException
   {
-    return this.osgiHelper.getService( Exporter.class, Action.NAME, aName );
+    synchronized ( this.exporters )
+    {
+      for ( Exporter exporter : this.exporters )
+      {
+        if ( aName.equals( exporter.getName() ) )
+        {
+          return exporter;
+        }
+      }
+    }
+    return null;
   }
 
   /**
@@ -1549,7 +1867,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private Tool<?> getTool( final String aName ) throws IllegalArgumentException
   {
-    return this.osgiHelper.getService( Tool.class, Action.NAME, aName );
+    synchronized ( this.tools )
+    {
+      for ( Tool<?> tool : this.tools )
+      {
+        if ( aName.equals( tool.getName() ) )
+        {
+          return tool;
+        }
+      }
+    }
+    return null;
   }
 
   /**
@@ -1616,5 +1944,4 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.dataContainer.setCursorPosition( i, aCursorData[i] );
     }
   }
-
 }

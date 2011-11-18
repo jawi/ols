@@ -65,12 +65,27 @@ public class ExportAction extends BaseAction
    */
   public ExportAction( final ClientController aController, final String aExporterName )
   {
-    super( ID + aExporterName, aController, aExporterName, "Export the current diagram to a " + aExporterName + " file" );
+    super( getID( aExporterName ), aController, aExporterName, "Export the current diagram to a " + aExporterName
+        + " file" );
 
     this.exporterName = aExporterName;
   }
 
   // METHODS
+
+  /**
+   * Creates an ID for an action that represents the "export" action for the
+   * exporter with the given name.
+   * 
+   * @param aExporterName
+   *          the name of the exporter to create the ID for, cannot be
+   *          <code>null</code>.
+   * @return a ID, never <code>null</code>.
+   */
+  public static final String getID( final String aExporterName )
+  {
+    return ID.concat( aExporterName );
+  }
 
   /**
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)

@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client;
 
 
 import java.util.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
@@ -35,6 +36,7 @@ import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.osgi.*;
+
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 import org.osgi.service.prefs.*;
@@ -68,9 +70,7 @@ public class Activator extends DependencyActivatorBase
   // VARIABLES
 
   private BundleWatcher bundleWatcher;
-
   private LogReaderTracker logReaderTracker;
-  private ComponentProviderTracker menuTracker;
 
   // METHODS
 
@@ -82,7 +82,7 @@ public class Activator extends DependencyActivatorBase
   private static BundleObserver createComponentProviderBundleObserver()
   {
     return new BundleServiceObserver( OLS_COMPONENT_PROVIDER_MAGIC_KEY, OLS_COMPONENT_PROVIDER_MAGIC_VALUE,
-        OLS_COMPONENT_PROVIDER_CLASS_KEY, nl.lxtreme.ols.api.ui.ComponentProvider.class.getName() )
+        OLS_COMPONENT_PROVIDER_CLASS_KEY, ComponentProvider.class.getName() )
     {
       @Override
       protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
@@ -171,7 +171,6 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    this.menuTracker.close();
     this.bundleWatcher.stop();
     this.logReaderTracker.close();
   }
@@ -185,9 +184,6 @@ public class Activator extends DependencyActivatorBase
     final ProjectManager projectManager = new SimpleProjectManager();
 
     final ClientController clientController = new ClientController( aContext );
-
-    this.menuTracker = new ComponentProviderTracker( aContext, clientController );
-    this.menuTracker.open( true /* trackAllServices */);
 
     this.logReaderTracker = new LogReaderTracker( aContext );
     this.logReaderTracker.open();
@@ -247,6 +243,21 @@ public class Activator extends DependencyActivatorBase
             .add( createServiceDependency() //
                 .setService( DataAcquisitionService.class ) //
                 .setRequired( true ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( ComponentProvider.class, "(component.id=Menu)" ) //
+                .setCallbacks( "addMenu", "removeMenu" ) //
+                .setRequired( false ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( Device.class ) //
+                .setCallbacks( "addDevice", "removeDevice" ) //
+                .setRequired( false ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( Tool.class ) //
+                .setCallbacks( "addTool", "removeTool" ) //
+                .setRequired( false ) //
             ) //
         );
   }
