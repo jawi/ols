@@ -259,6 +259,11 @@ public class Activator extends DependencyActivatorBase
                 .setCallbacks( "addTool", "removeTool" ) //
                 .setRequired( false ) //
             ) //
+            .add( createServiceDependency() //
+                .setService( Exporter.class ) //
+                .setCallbacks( "addExporter", "removeExporter" ) //
+                .setRequired( false ) //
+            ) //
         );
   }
 }

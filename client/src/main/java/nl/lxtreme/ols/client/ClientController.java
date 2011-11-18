@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client;
 
 
 import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
@@ -69,6 +70,40 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     protected void run( final List<Void> aArgs )
     {
       repaintMainFrame();
+    }
+  }
+
+  /**
+   * Provides an {@link Action} for closing a {@link JOptionPane}.
+   */
+  static final class CloseOptionPaneAction extends AbstractAction
+  {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      final JOptionPane optionPane = ( JOptionPane )aEvent.getSource();
+      optionPane.setValue( Integer.valueOf( JOptionPane.CLOSED_OPTION ) );
+    }
+  }
+
+  /**
+   * Provides a hack to ensure the system class loader is used at all times when
+   * loading UI classes/resources/...
+   */
+  static class CLValue implements UIDefaults.ActiveValue
+  {
+    /**
+     * @see javax.swing.UIDefaults.ActiveValue#createValue(javax.swing.UIDefaults)
+     */
+    public @Override
+    ClassLoader createValue( final UIDefaults aDefaults )
+    {
+      return Activator.class.getClassLoader();
     }
   }
 
@@ -234,15 +269,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
     this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
     this.repaintAccumulatingRunnable = new AccumulatingRepaintingRunnable();
-
-    SwingComponentUtils.invokeOnEDT( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        ClientController.this.mainFrame = new MainFrame( ClientController.this );
-      }
-    } );
   }
 
   // METHODS
@@ -1351,6 +1377,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void start()
   {
+    final HostProperties hostProperties = getHostProperties();
+
+    initOSSpecifics( hostProperties.getShortName() );
+
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
     SwingUtilities.invokeLater( new Runnable()
@@ -1361,14 +1391,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         // Cause exceptions to be shown in a more user-friendly way...
         JErrorDialog.installSwingExceptionHandler();
 
+        ClientController.this.mainFrame = new MainFrame( ClientController.this );
+
         final MainFrame mainFrame = getMainFrame();
 
-        HostProperties hostProperties = getHostProperties();
-        if ( hostProperties != null )
-        {
-          mainFrame.setTitle( hostProperties.getFullName() );
-          mainFrame.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
-        }
+        mainFrame.setTitle( hostProperties.getFullName() );
+        mainFrame.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
 
         LOG.info( "Client started ..." );
 
@@ -1881,6 +1909,68 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Initializes the OS-specific stuff.
+   * 
+   * @param aApplicationName
+   *          the name of the application (when this needs to be passed to the
+   *          guest OS);
+   * @param aApplicationCallback
+   *          the application callback used to report application events on some
+   *          platforms (Mac OS), may be <code>null</code>.
+   */
+  private void initOSSpecifics( final String aApplicationName )
+  {
+    final HostInfo hostInfo = HostUtils.getHostInfo();
+    if ( hostInfo.isMacOS() )
+    {
+      // Moves the main menu bar to the screen menu bar location...
+      System.setProperty( "apple.laf.useScreenMenuBar", "true" );
+      System.setProperty( "apple.awt.graphics.EnableQ2DX", "true" );
+      System.setProperty( "com.apple.mrj.application.apple.menu.about.name", aApplicationName );
+      System.setProperty( "com.apple.mrj.application.growbox.intrudes", "false" );
+      System.setProperty( "com.apple.mrj.application.live-resize", "false" );
+      System.setProperty( "com.apple.macos.smallTabs", "true" );
+      System.setProperty( "apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS" );
+
+      // Install an additional accelerator (Cmd+W) for closing option panes...
+      ActionMap map = ( ActionMap )UIManager.get( "OptionPane.actionMap" );
+      if ( map == null )
+      {
+        map = new ActionMap();
+        UIManager.put( "OptionPane.actionMap", map );
+      }
+      map.put( "close", new CloseOptionPaneAction() );
+
+      UIManager.put( "OptionPane.windowBindings", //
+          new Object[] { SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ), "close", "ESCAPE", "close" } );
+    }
+    else if ( hostInfo.isUnix() )
+    {
+      try
+      {
+        UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
+        setLookAndFeel( "com.jgoodies.looks.plastic.Plastic3DLookAndFeel" );
+      }
+      catch ( Exception exception )
+      {
+        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
+      }
+    }
+    else if ( hostInfo.isWindows() )
+    {
+      try
+      {
+        UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
+        setLookAndFeel( "com.jgoodies.looks.plastic.PlasticXPLookAndFeel" );
+      }
+      catch ( Exception exception )
+      {
+        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
+      }
+    }
+  }
+
+  /**
    * Dispatches a request to repaint the entire main frame.
    */
   private void repaintMainFrame()
@@ -1942,6 +2032,35 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       this.dataContainer.setCursorPosition( i, aCursorData[i] );
+    }
+  }
+
+  /**
+   * @param aLookAndFeelClass
+   */
+  private void setLookAndFeel( final String aLookAndFeelClassName )
+  {
+    final UIDefaults defaults = UIManager.getDefaults();
+    // to make sure we always use system class loader
+    defaults.put( "ClassLoader", new CLValue() );
+
+    final ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+    try
+    {
+      Thread.currentThread().setContextClassLoader( Activator.class.getClassLoader() );
+      UIManager.setLookAndFeel( aLookAndFeelClassName );
+    }
+    catch ( Exception exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
+      }
+    }
+    finally
+    {
+      Thread.currentThread().setContextClassLoader( oldCL );
     }
   }
 }
