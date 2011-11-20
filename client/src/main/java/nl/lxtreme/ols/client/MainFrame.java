@@ -833,6 +833,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorModeAction.ID ) ) );
     diagramMenu.add( this.controller.getAction( ClearCursors.ID ) );
     diagramMenu.addSeparator();
+    diagramMenu.add( this.controller.getAction( RemoveAnnotationsAction.ID ) );
+    diagramMenu.addSeparator();
     diagramMenu.add( this.controller.getAction( ShowDiagramModeSettingsDialogAction.ID ) );
     diagramMenu.add( this.controller.getAction( ShowChannelLabelsDialogAction.ID ) );
 
