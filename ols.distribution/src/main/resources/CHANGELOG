@@ -1,0 +1,24 @@
+OpenBench LogicSniffer Client ChangeLog
+=======================================
+J.W. Janssen, <j.w.janssen@lxtreme.nl>
+
+
+Release 0.9.5 (beta):
+- Fixed issues #79, #77, #76, #75, #74, #70 and #40;
+- Use PureJavacomm (see [1]) as experimental serial library instead of RXTX;
+- Major cleanups in Tool/Device API making it easier to implement and test new
+  tools and/or devices;
+- Hide more of the OSGi complexity in the "main" code;
+- Ansgar Kueckes donated an new decoder tool to decode ASM45 signals (see [2])
+  as part of the HP 9845 project;
+- OLS trigger mask/value can now be entered as hex-value (patch provided by 
+  Ansgar Kueckes);
+- Several small cleanups and improvements.
+
+
+Older releases:
+- see <https://github.com/jawi/ols/blob/master/ChangeLog>
+
+
+1. http://www.sparetimelabs.com/purejavacomm/index.html
+2. http://www.hp9845.net/9845/projects/assembler/

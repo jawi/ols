@@ -41,7 +41,7 @@ In order to run the OLS client, you need at least:
    - Solaris, 32-bit only.
    other platforms *might* work, but need some hacking in the OLS client 
    itself;
- - Java 6, see [4].
+ - Java 6, or 7, see [4].
 
 
 Installation
@@ -85,7 +85,7 @@ External links
 [3] <https://github.com/jawi/ols/wiki/OLS-Device-Profiles>, explains how the
     OLS client can be extended for other devices;
 [4] <http://www.oracle.com/technetwork/java/index.html>, the home page where
-    Java 6+ can be downloaded;
+    Java 6 and later can be downloaded;
 [5] <http://ols.lxtreme.nl/#FAQ>, provides some answers to frequently asked
     questions;
 [6] <http://dangerousprototypes.com/forum/viewforum.php?f=23>, the forum for

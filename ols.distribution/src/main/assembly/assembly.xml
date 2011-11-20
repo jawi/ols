@@ -91,6 +91,7 @@
 				<include>AUTHOR</include>
 				<include>README</include>
 				<include>LICENSE</include>
+				<include>CHANGELOG</include>
 				<include>run.bat</include>
 			</includes>
 			<lineEnding>dos</lineEnding>
