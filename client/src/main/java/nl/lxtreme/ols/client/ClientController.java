@@ -505,6 +505,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       clearAnnotations( i );
     }
+
+    repaintMainFrame();
   }
 
   /**
@@ -1647,6 +1649,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
 
         getAction( ClearCursors.ID ).setEnabled( enableCursors && anyCursorSet );
+        getAction( RemoveAnnotationsAction.ID ).setEnabled( dataAvailable );
 
         // Update the tools...
         final IManagedAction[] toolActions = getActionsByType( RunToolAction.class );

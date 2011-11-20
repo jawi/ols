@@ -98,6 +98,7 @@ public final class ActionManagerFactory
     {
       aActionManager.add( new SetCursorAction( aController, c ) );
     }
+    aActionManager.add( new RemoveAnnotationsAction( aController ) ).setEnabled( false );
 
     aActionManager.add( new ShowPreferencesDialogAction( aController ) );
     aActionManager.add( new ShowDiagramModeSettingsDialogAction( aController ) );
