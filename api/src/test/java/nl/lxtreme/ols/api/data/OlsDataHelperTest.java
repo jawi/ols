@@ -266,7 +266,7 @@ public class OlsDataHelperTest
     OlsDataHelper.read( this.project, reader );
 
     this.project.assertTimeStamps( 0 );
-    this.project.assertValues( 0 );
+    this.project.assertValues( Integer.MIN_VALUE );
   }
 
   /**
@@ -427,6 +427,39 @@ public class OlsDataHelperTest
    * Test method for {@link OlsDataHelper#read(Project, Reader)}.
    */
   @Test
+  public void testReadMSBDataOk() throws Exception
+  {
+    // Issue #80: MSB data isn't correctly read back from stored data...
+    final String snippet = MINIMAL_HEADER + "80000000@0\n00000000@1\n80000000@2\n";
+
+    final StringReader reader = new StringReader( snippet );
+    OlsDataHelper.read( this.project, reader );
+
+    this.project.assertTimeStamps( 0, 1, 2 );
+    this.project.assertValues( 0x80000000, 0x0, 0x80000000 );
+  }
+
+  /**
+   * Test method for {@link OlsDataHelper#read(Project, Reader)}.
+   */
+  @Test
+  public void testReadNegativeEnabledChannelsOk() throws Exception
+  {
+    final String snippet = MINIMAL_HEADER + ";EnabledChannels: " + 0xFF000000 + "\n" + "0@0";
+
+    final StringReader reader = new StringReader( snippet );
+    OlsDataHelper.read( this.project, reader );
+
+    this.project.assertChannelGroupDisabled( 0 );
+    this.project.assertChannelGroupDisabled( 1 );
+    this.project.assertChannelGroupDisabled( 2 );
+    this.project.assertChannelGroupEnabled( 3 );
+  }
+
+  /**
+   * Test method for {@link OlsDataHelper#read(Project, Reader)}.
+   */
+  @Test
   public void testReadOldUnsetCursorOk() throws Exception
   {
     final String snippet = MINIMAL_HEADER + ";CursorA: " + Long.MIN_VALUE + "\n" + "0@0";
@@ -435,6 +468,23 @@ public class OlsDataHelperTest
     OlsDataHelper.read( this.project, reader );
 
     this.project.assertCursorUnset( 0 );
+  }
+
+  /**
+   * Test method for {@link OlsDataHelper#read(Project, Reader)}.
+   */
+  @Test
+  public void testReadPositiveEnabledChannelsOk() throws Exception
+  {
+    final String snippet = MINIMAL_HEADER + ";EnabledChannels: " + 0x00FF0000 + "\n" + "0@0";
+
+    final StringReader reader = new StringReader( snippet );
+    OlsDataHelper.read( this.project, reader );
+
+    this.project.assertChannelGroupDisabled( 0 );
+    this.project.assertChannelGroupDisabled( 1 );
+    this.project.assertChannelGroupEnabled( 2 );
+    this.project.assertChannelGroupDisabled( 3 );
   }
 
   /**
@@ -481,7 +531,7 @@ public class OlsDataHelperTest
     OlsDataHelper.write( this.project, writer );
 
     final String snippet = writer.toString();
-    assertTrue( snippet.contains( Integer.toHexString( Integer.MAX_VALUE ) + "@1" ) );
+    assertTrue( snippet.contains( "ffffffff@1" ) );
   }
 
   /**
@@ -497,5 +547,23 @@ public class OlsDataHelperTest
 
     final String snippet = writer.toString();
     assertTrue( snippet.contains( "1@" + Long.MAX_VALUE ) );
+  }
+
+  /**
+   * Test method for {@link OlsDataHelper#write(Project, Writer)}.
+   */
+  @Test
+  public void testWriteMSBDataOk() throws Exception
+  {
+    // Issue #80: MSB data isn't correctly written to stored data...
+    this.project.setCapturedData( new CapturedData( new int[] { 0x80000000, 0x0, 0x80000000 }, new long[] { 0L, 1L, 2L }, -1, 100, 2, 2, 1 ) );
+
+    final StringWriter writer = new StringWriter();
+    OlsDataHelper.write( this.project, writer );
+
+    final String snippet = writer.toString();
+    assertTrue( snippet.contains( "80000000@0" ) );
+    assertTrue( snippet.contains( "00000000@1" ) );
+    assertTrue( snippet.contains( "80000000@2" ) );
   }
 }

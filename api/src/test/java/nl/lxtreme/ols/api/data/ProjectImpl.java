@@ -65,6 +65,30 @@ public final class ProjectImpl implements Project
   }
 
   /**
+   * Asserts the channel group with the given index is disabled in the captured
+   * data.
+   * 
+   * @param aGroupIdx
+   *          the group index.
+   */
+  public void assertChannelGroupDisabled( final int aGroupIdx )
+  {
+    assertTrue( ( this.capturedData.getEnabledChannels() & ( 0xFFL << ( aGroupIdx * 8 ) ) ) == 0 );
+  }
+
+  /**
+   * Asserts the channel group with the given index is enabled in the captured
+   * data.
+   * 
+   * @param aGroupIdx
+   *          the group index.
+   */
+  public void assertChannelGroupEnabled( final int aGroupIdx )
+  {
+    assertTrue( ( this.capturedData.getEnabledChannels() & ( 0xFFL << ( aGroupIdx * 8 ) ) ) != 0 );
+  }
+
+  /**
    * Asserts the cursor with the given index occur in the captured data.
    * 
    * @param aTimestamps
@@ -80,7 +104,8 @@ public final class ProjectImpl implements Project
    * Asserts the cursor with the given index does NOT occur in the captured
    * data.
    * 
-   * @param aTimestamps
+   * @param aCursorIdx
+   *          the cursor index.
    */
   public void assertCursorUnset( final int aCursorIdx )
   {

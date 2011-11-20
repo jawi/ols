@@ -65,9 +65,11 @@ public final class OlsDataHelper
    * @throws IOException
    *           in case of I/O problems.
    */
+  @SuppressWarnings( "boxing" )
   public static void read( final Project aProject, final Reader aReader ) throws IOException
   {
-    int size = -1, rate = -1, channels = -1, enabledChannels = -1;
+    int size = -1;
+    Integer rate = null, channels = null, enabledChannels = null;
     long triggerPos = -1L;
     long absLen = -1L;
 
@@ -177,16 +179,16 @@ public final class OlsDataHelper
       {
         throw new IOException( "Data file is corrupt?! Data size does not match sample count!" );
       }
-      if ( rate <= 0 )
+      if ( rate == null )
       {
         throw new IOException( "Data file is corrupt?! Sample rate is not provided!" );
       }
-      if ( ( channels <= 0 ) || ( channels > 32 ) )
+      if ( ( channels == null ) || ( channels <= 0 ) || ( channels > 32 ) )
       {
         throw new IOException( "Data file is corrupt?! Channel count is not provided!" );
       }
       // Make sure the enabled channels are defined...
-      if ( enabledChannels < 0 )
+      if ( enabledChannels == null )
       {
         enabledChannels = NumberUtils.getBitMask( channels );
       }
@@ -200,7 +202,7 @@ public final class OlsDataHelper
         {
           final String[] dataPair = dataValues.get( i );
 
-          values[i] = ( int )( Long.parseLong( dataPair[0], 16 ) & Integer.MAX_VALUE );
+          values[i] = ( int )Long.parseLong( dataPair[0], 16 );
           timestamps[i] = Long.parseLong( dataPair[1], 10 ) & Long.MAX_VALUE;
         }
       }
@@ -316,14 +318,11 @@ public final class OlsDataHelper
    * @return the sample string, in the form of
    *         &lt;value<sub>16</sub>&gt;@&lt;timestamp<sub>10</sub>&gt;.
    */
+  @SuppressWarnings( "boxing" )
   static String formatSample( final int aValue, final long aTimestamp )
   {
-    final String hexVal = Integer.toHexString( aValue & Integer.MAX_VALUE );
-    final StringBuilder sb = new StringBuilder();
-    sb.append( "00000000".substring( hexVal.length() ) );
-    sb.append( hexVal );
-    sb.append( "@" );
-    sb.append( Long.toString( aTimestamp & Long.MAX_VALUE ) );
-    return sb.toString();
+    // values can become negative (full 32-bit is used!), while timestamps never
+    // can be negative (it is a relative timestamp!)...
+    return String.format( "%08x@%d", aValue, ( aTimestamp & Long.MAX_VALUE ) );
   }
 }
