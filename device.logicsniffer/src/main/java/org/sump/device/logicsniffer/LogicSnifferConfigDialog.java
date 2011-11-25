@@ -1004,8 +1004,12 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
     this.ratioSlider.setMinorTickSpacing( 5 );
     this.ratioSlider.setPaintLabels( true );
     this.ratioSlider.setPaintTicks( true );
-    this.ratioSlider.setPreferredSize( new Dimension( 300, 50 ) );
     this.ratioSlider.addChangeListener( new TriggerRatioChangeListener( this.ratioLabel ) );
+    // Issue #82: set the minimum and preferred size to avoid having a
+    // "squeezed" slider in the UI...
+    final Dimension size = new Dimension( 350, 50 );
+    this.ratioSlider.setMinimumSize( size );
+    this.ratioSlider.setPreferredSize( size );
 
     this.triggerTypeSelect = new JComboBox();
     this.triggerTypeSelect.addActionListener( this );

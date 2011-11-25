@@ -639,7 +639,10 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
     int read, offset = 0;
     do
     {
-      read = this.inputStream.read( buf, offset, enabledGroupCount );
+      // Issue #81: read the same amount of bytes as given in the enabled group
+      // count; otherwise succeeding reads might fail and/or data offset errors
+      // could occur...
+      read = this.inputStream.read( buf, offset, enabledGroupCount - offset );
       if ( read < 0 )
       {
         throw new EOFException( "Data readout interrupted: EOF." );
