@@ -3,7 +3,13 @@ OpenBench LogicSniffer Client ChangeLog
 J.W. Janssen, <j.w.janssen@lxtreme.nl>
 
 
-Release 0.9.5 (beta):
+Release 0.9.5 (beta 2):
+- Fixed issues #81 and #82;
+- Ensured that the selected capture device is retained between user sessions;
+- Updated the about box to include the proper copyright years;
+- Small cleanups.
+
+Release 0.9.5 (beta 1):
 - Fixed issues #79, #77, #76, #75, #74, #70 and #40;
 - Use PureJavacomm (see [1]) as experimental serial library instead of RXTX;
 - Major cleanups in Tool/Device API making it easier to implement and test new
