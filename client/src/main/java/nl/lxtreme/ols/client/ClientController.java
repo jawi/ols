@@ -241,7 +241,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private volatile ProjectManager projectManager;
   private volatile DataAcquisitionService dataAcquisitionService;
   private volatile MainFrame mainFrame;
-  private volatile String selectedDevice;
   private volatile HostProperties hostProperties;
 
   // CONSTRUCTORS
@@ -538,6 +537,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void exit()
   {
+    // Close the main window ourselves; we should do this explicitly...
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.setVisible( false );
+      this.mainFrame.dispose();
+      this.mainFrame = null;
+    }
+
     try
     {
       // Stop the framework bundle; which should stop all other bundles as
@@ -608,15 +615,20 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Returns the current device controller.
+   * Returns the current selected device.
    * 
-   * @return the current device controller, can be <code>null</code>.
+   * @return the selected device, can be <code>null</code> if no device is
+   *         selected.
    */
   public final Device getDevice()
   {
-    if ( this.selectedDevice != null )
+    if ( this.mainFrame != null )
     {
-      return getDevice( this.selectedDevice );
+      final String selectedDevice = this.mainFrame.getSelectedDeviceName();
+      if ( selectedDevice != null )
+      {
+        return getDevice( selectedDevice );
+      }
     }
 
     return null;
@@ -879,11 +891,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Returns whether or not a device is selected.
+   * 
+   * @return <code>true</code> if a device is selected, <code>false</code>
+   *         otherwise.
    */
   public boolean isDeviceSelected()
   {
-    return this.selectedDevice != null;
+    return ( this.mainFrame != null ) && ( this.mainFrame.getSelectedDeviceName() != null );
   }
 
   /**
@@ -1026,12 +1041,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.devices.remove( aDevice );
 
       final String deviceName = aDevice.getName();
-
-      // Make sure the internal state remains correct...
-      if ( deviceName.equals( this.selectedDevice ) )
-      {
-        this.selectedDevice = null;
-      }
 
       try
       {
@@ -1252,7 +1261,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void selectDevice( final String aDeviceName )
   {
-    this.selectedDevice = aDeviceName;
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.setSelectedDeviceName( aDeviceName );
+    }
     // Make sure the action reflect the current situation...
     updateActionsOnEDT();
   }

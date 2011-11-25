@@ -381,12 +381,21 @@ public class UserSessionManager
   }
 
   /**
+   * Returns the file-object pointing to a user-settings file.
+   * 
+   * @return a user-settings file-object, never <code>null</code>.
+   */
+  private File getUserSettingsFile()
+  {
+    return HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX, IMPLICIT_USER_SETTING_NAME_SUFFIX );
+  }
+
+  /**
    * Loads the implicit user settings for the given project manager.
    */
   private void loadImplicitUserSettings()
   {
-    final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
-        IMPLICIT_USER_SETTING_NAME_SUFFIX );
+    final File userSettingsFile = getUserSettingsFile();
     final Project currentProject = this.projectManager.getCurrentProject();
     try
     {
@@ -408,10 +417,9 @@ public class UserSessionManager
     final Project currentProject = this.projectManager.getCurrentProject();
     if ( currentProject.isChanged() )
     {
-      final File userSettingsFile = HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX,
-          IMPLICIT_USER_SETTING_NAME_SUFFIX );
       try
       {
+        final File userSettingsFile = getUserSettingsFile();
         UserSettingsManager.saveUserSettings( userSettingsFile, currentProject );
 
         LOG.fine( "Implicit user settings stored ..." );

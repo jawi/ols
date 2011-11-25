@@ -47,7 +47,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Denotes the main UI.
  */
-public final class MainFrame extends JFrame implements Closeable, PropertyChangeListener
+public final class MainFrame extends JFrame implements Closeable, PropertyChangeListener, Configurable
 {
   // INNER TYPES
 
@@ -69,18 +69,21 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     {
       super( SwingComponentUtils.getCurrentWindow(), "About ...", ModalityType.APPLICATION_MODAL );
 
-      final String message = String.format( "<html><body><h3>%s</h3>" //
-          + "<p>Copyright 2006-2010 Michael Poppitz<br>" //
-          + "Copyright 2010 J.W. Janssen<br><br></p>" //
-          + "<p>This software is released under the GNU GPL.<br><br></p>" //
-          + "<p>Version: %s<br><br></p>" //
-          + "<p>For more information see:</p>" //
-          + "<ul>" //
-          + "<li>&lt;http://www.lxtreme.nl/ols/&gt;</li>" //
-          + "<li>&lt;http://dangerousprototypes.com/open-logic-sniffer/&gt;</li>" //
-          + "<li>&lt;http://www.gadgetfactory.net/gf/project/butterflylogic/&gt;</li>" //
-          + "<li>&lt;http://www.sump.org/projects/analyzer/&gt;</li>" //
-          + "</ul></p></body></html>", aName, aVersion );
+      final String message = String
+          .format(
+              "<html><body><h3>%s</h3>" //
+                  + "<p>Copyright 2006-2010 Michael Poppitz<br>" //
+                  + "Copyright 2010-2011 J.W. Janssen<br><br></p>" //
+                  + "<p>This software is released under the GNU GPLv2.<br><br></p>" //
+                  + "<p>Version: %s<br><br></p>" //
+                  + "<p>For more information see:</p>" //
+                  + "<ul>" //
+                  + "<li><a href='http://ols.lxtreme.nl/'>http://ols.lxtreme.nl</a>;</li>" //
+                  + "<li><a href='https://github.com/jawi/ols/wiki/FAQ'>https://github.com/jawi/ols/wiki/FAQ</a>;</li>" //
+                  + "<li><a href='http://dangerousprototypes.com/open-logic-sniffer'>http://dangerousprototypes.com/open-logic-sniffer</a>;</li>" //
+                  + "<li><a href='http://www.gadgetfactory.net/gf/project/butterflylogic'>http://www.gadgetfactory.net/gf/project/butterflylogic</a>;</li>" //
+                  + "<li><a href='http://www.sump.org/projects/analyzer'>http://www.sump.org/projects/analyzer</a>.</li>" //
+                  + "</ul></body></html>", aName, aVersion );
 
       final JLabel messageLabel = new JLabel( message );
 
@@ -323,12 +326,19 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   static class DeviceMenuBuilder extends AbstractMenuBuilder
   {
+    // VARIABLES
+
+    private final MainFrame mainFrame;
+
+    // CONSTRUCTORS
+
     /**
      * Creates a new MainFrame.DeviceMenuBuilder instance.
      */
-    public DeviceMenuBuilder( final ClientController aController )
+    public DeviceMenuBuilder( final ClientController aController, final MainFrame aMainFrame )
     {
       super( aController );
+      this.mainFrame = aMainFrame;
     }
 
     /**
@@ -337,7 +347,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     @Override
     protected JMenuItem createMenuItem( final String aDeviceName )
     {
-      return new JRadioButtonMenuItem( this.controller.getAction( SelectDeviceAction.getID( aDeviceName ) ) );
+      final Action action = this.controller.getAction( SelectDeviceAction.getID( aDeviceName ) );
+      action.putValue( Action.SELECTED_KEY, isDeviceToBeSelected( aDeviceName ) );
+      return new JRadioButtonMenuItem( action );
     }
 
     /**
@@ -356,6 +368,20 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     protected String getNoItemsName()
     {
       return "No devices.";
+    }
+
+    /**
+     * Returns whether or not the given device name is to be selected in the
+     * menu.
+     * 
+     * @param aDeviceName
+     *          the name of the device to test.
+     * @return {@link Boolean#TRUE} if the device is to be selected,
+     *         {@link Boolean#FALSE} otherwise.
+     */
+    private Boolean isDeviceToBeSelected( final String aDeviceName )
+    {
+      return Boolean.valueOf( aDeviceName.equals( this.mainFrame.lastSelectedDeviceName ) );
     }
   }
 
@@ -521,6 +547,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private JMenu windowMenu;
   private JMenu exportMenu;
 
+  private volatile String lastSelectedDeviceName;
+
   private final ClientController controller;
 
   // CONSTRUCTORS
@@ -595,6 +623,17 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
+   * Returns the name of the current selected device in the devices menu.
+   * 
+   * @return the name of the current selected device, or <code>null</code> if no
+   *         device is selected.
+   */
+  public final String getSelectedDeviceName()
+  {
+    return this.lastSelectedDeviceName;
+  }
+
+  /**
    * Returns the current zoom scale.
    * 
    * @return a zoom scale, > 0.0
@@ -625,10 +664,12 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     if ( ProjectProperties.PROPERTY_CHANGED.equals( propertyName ) )
     {
       final Boolean value = ( Boolean )aEvent.getNewValue();
+      // Causes the window to be annotated with a dot on OSX...
       getRootPane().putClientProperty( "Window.documentModified", value );
     }
     else if ( ProjectProperties.PROPERTY_NAME.equals( propertyName ) )
     {
+      // The project's name has changed; update the title bar to show this...
       final String value = ( String )aEvent.getNewValue();
 
       String title = this.controller.getHostProperties().getFullName();
@@ -642,7 +683,21 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void readPreferences( final UserSettings aSettings )
+  {
+    // Detour: make sure the controller does this, so the actions are correctly
+    // synchronized...
+    this.controller.selectDevice( aSettings.get( "selectedDevice", "" ) );
+  }
+
+  /**
+   * Sets the channel labels to the given array.
+   * 
    * @param aChannelLabels
+   *          the changed channel labels.
    */
   public void setChannelLabels( final String[] aChannelLabels )
   {
@@ -651,7 +706,10 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
+   * Updates the progress bar to the given percentage.
+   * 
    * @param aPercentage
+   *          the percentage to set, >= 0 && <= 100.
    */
   public void setProgress( final int aPercentage )
   {
@@ -679,9 +737,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   /**
    * Shows the main about box.
-   * 
-   * @param aVersion
-   *          the version to display in this about box.
    */
   public void showAboutBox()
   {
@@ -691,15 +746,18 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * @see nl.lxtreme.ols.api.ProgressCallback#updateProgress(int)
+   * {@inheritDoc}
    */
-  public void updateProgress( final int aPercentage )
+  @Override
+  public void writePreferences( final UserSettings aSettings )
   {
-    this.status.setProgress( aPercentage );
+    // We cannot put null values into the settings!
+    final String selectedDevice = this.lastSelectedDeviceName != null ? this.lastSelectedDeviceName : "";
+    aSettings.put( "selectedDevice", selectedDevice );
   }
 
   /**
-   *
+   * Zooms to the default level.
    */
   public void zoomDefault()
   {
@@ -707,7 +765,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   *
+   * Zooms in.
    */
   public void zoomIn()
   {
@@ -715,7 +773,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   *
+   * Zooms out.
    */
   public void zoomOut()
   {
@@ -723,7 +781,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   *
+   * Zooms so that the entire capture is visible.
    */
   public void zoomToFit()
   {
@@ -757,6 +815,17 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   {
     final Container viewport = getDiagram().getParent();
     return ( JComponent )viewport.getParent();
+  }
+
+  /**
+   * Sets the name of the current selected device in the devices menu.
+   * 
+   * @param aSelectedDeviceName
+   *          the name of the selected device, can be <code>null</code>.
+   */
+  final void setSelectedDeviceName( final String aSelectedDeviceName )
+  {
+    this.lastSelectedDeviceName = aSelectedDeviceName;
   }
 
   /**
@@ -806,7 +875,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     this.deviceMenu = new JMenu( "Device" );
     this.deviceMenu.setMnemonic( 'D' );
-    this.deviceMenu.addMenuListener( new DeviceMenuBuilder( this.controller ) );
+    this.deviceMenu.addMenuListener( new DeviceMenuBuilder( this.controller, this ) );
 
     captureMenu.add( this.controller.getAction( CaptureAction.ID ) );
     captureMenu.add( this.controller.getAction( RepeatCaptureAction.ID ) );
