@@ -24,7 +24,6 @@ package nl.lxtreme.ols.client;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
-import java.net.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
@@ -34,6 +33,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.diagram.*;
@@ -50,99 +50,6 @@ import nl.lxtreme.ols.util.swing.component.*;
 public final class MainFrame extends JFrame implements Closeable, PropertyChangeListener, Configurable
 {
   // INNER TYPES
-
-  /**
-   * Provides an about box dialog.
-   */
-  static final class AboutBox extends JDialog implements Closeable
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new AboutBox instance.
-     */
-    public AboutBox( final String aName, final String aVersion )
-    {
-      super( SwingComponentUtils.getCurrentWindow(), "About ...", ModalityType.APPLICATION_MODAL );
-
-      final String message = String
-          .format(
-              "<html><body><h3>%s</h3>" //
-                  + "<p>Copyright 2006-2010 Michael Poppitz<br>" //
-                  + "Copyright 2010-2011 J.W. Janssen<br><br></p>" //
-                  + "<p>This software is released under the GNU GPLv2.<br><br></p>" //
-                  + "<p>Version: %s<br><br></p>" //
-                  + "<p>For more information see:</p>" //
-                  + "<ul>" //
-                  + "<li><a href='http://ols.lxtreme.nl/'>http://ols.lxtreme.nl</a>;</li>" //
-                  + "<li><a href='https://github.com/jawi/ols/wiki/FAQ'>https://github.com/jawi/ols/wiki/FAQ</a>;</li>" //
-                  + "<li><a href='http://dangerousprototypes.com/open-logic-sniffer'>http://dangerousprototypes.com/open-logic-sniffer</a>;</li>" //
-                  + "<li><a href='http://www.gadgetfactory.net/gf/project/butterflylogic'>http://www.gadgetfactory.net/gf/project/butterflylogic</a>;</li>" //
-                  + "<li><a href='http://www.sump.org/projects/analyzer'>http://www.sump.org/projects/analyzer</a>.</li>" //
-                  + "</ul></body></html>", aName, aVersion );
-
-      final JLabel messageLabel = new JLabel( message );
-
-      final URL url = IconLocator.class.getResource( IconLocator.LOGO );
-      final ImageIcon icon = new ImageIcon( url );
-
-      final JLabel iconLabel = new JLabel( icon );
-      iconLabel.setBackground( Color.WHITE );
-
-      final JButton closeButton = StandardActionFactory.createCloseButton();
-
-      final JPanel buttonPane = new JPanel();
-      buttonPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-      buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
-
-      buttonPane.add( Box.createHorizontalGlue() );
-      buttonPane.add( closeButton );
-
-      final JPanel contentPane = new JPanel( new GridBagLayout() );
-      contentPane.setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ) );
-      setContentPane( contentPane );
-
-      contentPane.add( iconLabel, //
-          new GridBagConstraints( 0, 0, 1, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL,
-              new Insets( 0, 0, 5, 0 ), 0, 0 ) );
-
-      contentPane.add( messageLabel, //
-          new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets(
-              5, 10, 5, 10 ), 0, 0 ) );
-
-      contentPane.add( buttonPane, //
-          new GridBagConstraints( 0, 2, 1, 1, 1.0, 0.0, GridBagConstraints.SOUTH, GridBagConstraints.HORIZONTAL,
-              new Insets( 5, 0, 5, 0 ), 0, 0 ) );
-
-      pack();
-
-      setLocationRelativeTo( getOwner() );
-      setResizable( false );
-    }
-
-    // METHODS
-
-    /**
-     * Closes this dialog and disposes it.
-     */
-    public final void close()
-    {
-      setVisible( false );
-      dispose();
-    }
-
-    /**
-     * @see java.awt.Dialog#show()
-     */
-    public void showDialog()
-    {
-      setVisible( true );
-    }
-  }
 
   /**
    * Provides an adapter class for {@link MenuListener} allowing a menu to be
