@@ -279,8 +279,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public void acquisitionComplete( final AcquisitionResult aData )
   {
     setAcquisitionResult( aData );
-
-    updateActionsOnEDT();
+    // XXX zoom to fit; shouldn't we restore the last zoom settings?
+    zoomToFit();
   }
 
   /**
@@ -959,8 +959,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       OlsDataHelper.read( tempProject, reader );
 
       setChannelLabels( tempProject.getChannelLabels() );
-      setAcquisitionResult( tempProject.getCapturedData() );
       setCursorData( tempProject.getCursorPositions(), tempProject.isCursorsEnabled() );
+      setAcquisitionResult( tempProject.getCapturedData() );
+      // XXX zoom to fit; shouldn't we restore the last zoom settings?
+      zoomToFit();
 
       setStatusOnEDT( "Capture data loaded from {0} ...", aFile.getName() );
     }
@@ -2012,11 +2014,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private void setAcquisitionResult( final AcquisitionResult aData )
   {
     this.dataContainer.setCapturedData( aData );
-
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.zoomDefault();
-    }
   }
 
   /**

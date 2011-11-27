@@ -689,8 +689,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   public void readPreferences( final UserSettings aSettings )
   {
     // Detour: make sure the controller does this, so the actions are correctly
-    // synchronized...
-    this.controller.selectDevice( aSettings.get( "selectedDevice", "" ) );
+    // synchronized; make sure the OLS device is selected by default...
+    this.controller.selectDevice( aSettings.get( "selectedDevice", "OpenBench LogicSniffer" ) );
   }
 
   /**
