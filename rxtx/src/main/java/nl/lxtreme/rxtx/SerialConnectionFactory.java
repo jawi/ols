@@ -126,7 +126,17 @@ public class SerialConnectionFactory implements ConnectionFactory
       port.setRTS( true );
       port.setDTR( options.isDTR() );
 
-      return new SerialConnection( port );
+      final SerialConnection serialConnection = new SerialConnection( port );
+
+      // Some devices need some time to initialize after being opened for the
+      // first time, see issue #34.
+      final int openDelay = options.getOpenDelay();
+      if ( openDelay > 0 )
+      {
+        Thread.sleep( openDelay );
+      }
+
+      return serialConnection;
     }
     catch ( UnsupportedCommOperationException exception )
     {
@@ -135,6 +145,10 @@ public class SerialConnectionFactory implements ConnectionFactory
     catch ( NoSuchPortException exception )
     {
       throw new IOException( "No such port!" );
+    }
+    catch ( InterruptedException exception )
+    {
+      throw new IOException( "Interrupted while opening port!" );
     }
   }
 

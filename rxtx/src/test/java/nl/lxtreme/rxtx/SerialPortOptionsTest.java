@@ -76,6 +76,40 @@ public class SerialPortOptionsTest
    * @throws Exception
    */
   @Test
+  public void testParseInvalidOpenDelayOk() throws Exception
+  {
+    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0;baudrate=115200;delay=xyz" );
+
+    assertNotNull( options );
+    assertEquals( "/dev/tty.usb0", options.getPortName() );
+    assertEquals( 115200, options.getBaudrate() );
+    assertEquals( SerialPort.DATABITS_8, options.getDatabits() );
+    assertEquals( SerialPort.PARITY_NONE, options.getParityMode() );
+    assertEquals( SerialPort.STOPBITS_1, options.getStopbits() );
+    assertEquals( 0, options.getOpenDelay() );
+  }
+
+  /**
+   * @throws Exception
+   */
+  @Test
+  public void testParseOpenDelayOk() throws Exception
+  {
+    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0;baudrate=115200;delay=115" );
+
+    assertNotNull( options );
+    assertEquals( "/dev/tty.usb0", options.getPortName() );
+    assertEquals( 115200, options.getBaudrate() );
+    assertEquals( SerialPort.DATABITS_8, options.getDatabits() );
+    assertEquals( SerialPort.PARITY_NONE, options.getParityMode() );
+    assertEquals( SerialPort.STOPBITS_1, options.getStopbits() );
+    assertEquals( 115, options.getOpenDelay() );
+  }
+
+  /**
+   * @throws Exception
+   */
+  @Test
   public void testParsePortNameAndOptionsOk() throws Exception
   {
     final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0;bitsperchar=5;stopbits=2;parity=mark" );
@@ -102,6 +136,7 @@ public class SerialPortOptionsTest
     assertEquals( SerialPort.DATABITS_8, options.getDatabits() );
     assertEquals( SerialPort.PARITY_NONE, options.getParityMode() );
     assertEquals( SerialPort.STOPBITS_1, options.getStopbits() );
+    assertEquals( 0, options.getOpenDelay() );
   }
 
   /**
