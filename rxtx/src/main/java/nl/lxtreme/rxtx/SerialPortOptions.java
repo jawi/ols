@@ -88,6 +88,13 @@ import java.util.regex.*;
  * <td>If on, turn on the DTR line. If off (the default), the DTR is turned low.
  * </td>
  * </tr>
+ * <tr>
+ * <td>delay</td>
+ * <td>0</td>
+ * <td>(<b>OLS-specific addition!</b>) If &gt; 0, delays for a number of
+ * milliseconds after opening the serial port. If 0 (the default), the port
+ * opening is not delayed.</td>
+ * </tr>
  * </table>
  */
 final class SerialPortOptions
@@ -96,7 +103,7 @@ final class SerialPortOptions
 
   private static final Pattern SCHEMA_REGEX = Pattern.compile( "^comm:([^;]+)(?:;([^\r\n]+))*$" );
   private static final Pattern OPTION_REGEX = Pattern.compile(
-      "(baudrate|bitsperchar|stopbits|parity|blocking|autocts|autorts|flowcontrol|dtr)=([\\.\\d\\w_-]+)",
+      "(baudrate|bitsperchar|stopbits|parity|blocking|autocts|autorts|flowcontrol|dtr|delay)=([\\.\\d\\w_-]+)",
       Pattern.CASE_INSENSITIVE );
 
   // VARIABLES
@@ -109,6 +116,7 @@ final class SerialPortOptions
   private int flowControl;
   private boolean blocking;
   private boolean dtr;
+  private int openDelay;
 
   // CONSTRUCTORS
 
@@ -144,6 +152,9 @@ final class SerialPortOptions
     // Default to a low DTR signal...
     this.dtr = false;
 
+    // Default to no open delay...
+    this.openDelay = 0;
+
     parseURI( aURI );
   }
 
@@ -171,6 +182,14 @@ final class SerialPortOptions
   public int getFlowControl()
   {
     return this.flowControl;
+  }
+
+  /**
+   * @return the delay after opening the port, in milliseconds.
+   */
+  public int getOpenDelay()
+  {
+    return this.openDelay;
   }
 
   /**
@@ -275,6 +294,24 @@ final class SerialPortOptions
       return SerialPort.FLOWCONTROL_RTSCTS_IN;
     }
     return -1;
+  }
+
+  /**
+   * @param aStr
+   * @return
+   */
+  private int parseOpenDelay( final String aStr )
+  {
+    int result = 0;
+    try
+    {
+      result = Integer.parseInt( aStr );
+    }
+    catch ( NumberFormatException exception )
+    {
+      // Ignore, fall back to default value of 0...
+    }
+    return result;
   }
 
   /**
@@ -424,6 +461,10 @@ final class SerialPortOptions
       else if ( "dtr".equals( key ) )
       {
         this.dtr = "on".equalsIgnoreCase( value );
+      }
+      else if ( "delay".equals( key ) )
+      {
+        this.openDelay = parseOpenDelay( value );
       }
     }
   }
