@@ -30,6 +30,7 @@ import org.junit.runners.*;
 import org.junit.runners.Parameterized.Parameters;
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import org.sump.device.logicsniffer.protocol.*;
 
 
 /**
@@ -148,7 +149,8 @@ public class LogicSnifferDeviceComponentTest
 
   /**
    * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}.
+   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
+   * .
    */
   @Test( timeout = 10000 )
   public void testVerifyFlags() throws Exception
@@ -163,24 +165,25 @@ public class LogicSnifferDeviceComponentTest
 
     this.device.call();
 
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_DEMUX, ddrMode );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_GROUP1_DISABLED, isGroup1disabled );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_GROUP2_DISABLED, isGroup2disabled );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_GROUP3_DISABLED, isGroup3disabled );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_GROUP4_DISABLED, isGroup4disabled );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_RLE, this.useRLE );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_DEMUX, ddrMode );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP1_DISABLED, isGroup1disabled );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP2_DISABLED, isGroup2disabled );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP3_DISABLED, isGroup3disabled );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP4_DISABLED, isGroup4disabled );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_RLE, this.useRLE );
     // The following values are static/not used...
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_INVERTED, false );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_EXTERNAL, false );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_EXTERNAL_TEST_MODE, false );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_INTERNAL_TEST_MODE, false );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_NUMBER_SCHEME, false );
-    this.device.assertFlagState( LogicSnifferAcquisitionTask.FLAG_FILTER, !ddrMode );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_INVERTED, false );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_EXTERNAL, false );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_EXTERNAL_TEST_MODE, false );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_INTERNAL_TEST_MODE, false );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_NUMBER_SCHEME, false );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_FILTER, !ddrMode );
   }
 
   /**
    * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}.
+   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
+   * .
    */
   @Test( timeout = 10000 )
   public void testVerifySentData() throws Exception

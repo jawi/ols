@@ -25,6 +25,8 @@ import java.util.*;
 
 import nl.lxtreme.ols.api.devices.*;
 
+import org.sump.device.logicsniffer.profile.*;
+
 
 /**
  * Provides an implementation of {@link DeviceMetadata}.
@@ -34,6 +36,7 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   // VARIABLES
 
   private final Map<Integer, Object> values;
+  private DeviceProfile deviceProfile;
 
   // CONSTRUCTORS
 
@@ -56,6 +59,16 @@ public final class LogicSnifferMetadata implements DeviceMetadata
   public String getAncillaryVersion()
   {
     return ( String )getValue( KEY_ANCILLARY_VERSION );
+  }
+
+  /**
+   * Returns the current value of deviceProfile.
+   * 
+   * @return the deviceProfile
+   */
+  public DeviceProfile getDeviceProfile()
+  {
+    return this.deviceProfile;
   }
 
   /**
@@ -184,6 +197,17 @@ public final class LogicSnifferMetadata implements DeviceMetadata
       throw new IllegalStateException( "Duplicate key: 0x" + Integer.toHexString( aKey ) + "!" );
     }
     this.values.put( key, aValue );
+  }
+
+  /**
+   * Sets deviceProfile to the given value.
+   * 
+   * @param aDeviceProfile
+   *          the deviceProfile to set.
+   */
+  public void setDeviceProfile( final DeviceProfile aDeviceProfile )
+  {
+    this.deviceProfile = aDeviceProfile;
   }
 
   /**
