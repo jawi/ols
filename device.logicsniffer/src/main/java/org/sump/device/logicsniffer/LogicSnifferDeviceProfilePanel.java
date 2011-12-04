@@ -204,6 +204,15 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
   // CONSTRUCTORS
 
+  private static final String DETAILS_TMPL = "<html><style>body { font-family: sans-serif; font-size: 9px; margin-left: 8px; }</style><body><table>"
+      + "<tr><th colspan=2>%s</th></tr>"
+      + "<tr><th>%s</th><td>%s</td></tr>"
+      + "<tr><th>%s</th><td>%s</td></tr>"
+      + "<tr><th>%s</th><td>%s</td></tr>" //
+      + "</table></body></html>";
+
+  // METHODS
+
   /**
    * Creates a new LogicSnifferDeviceProfilePanel instance.
    */
@@ -213,8 +222,6 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
     initPanel();
   }
-
-  // METHODS
 
   /**
    * Builds this panel.
@@ -335,15 +342,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    */
   private String getEmtpyMetadataDetails()
   {
-    StringBuilder details = new StringBuilder();
-    details
-        .append( "<html><style>body { font-family: sans-serif; font-size: 9px; margin-left: 8px; }</style><body><table>" );
-
-    details.append( "<tr><th>&#160;</th><td></td></tr>" );
-    details.append( "<tr><th>&#160;</th><td></td></tr>" );
-    details.append( "<tr><th>&#160;</th><td></td></tr>" );
-    details.append( "</table></body></html>" );
-    return details.toString();
+    return String.format( DETAILS_TMPL, "", "&#160;", "&#160;", "&#160;", "&#160;", "&#160;", "&#160;" );
   }
 
   /**
@@ -352,39 +351,30 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    */
   private String getMetadataDetailsAsText( final LogicSnifferMetadata aMetadata )
   {
-    StringBuilder details = new StringBuilder();
-    details
-        .append( "<html><style>body { font-family: sans-serif; font-size: 9px; margin-left: 8px; }</style><body><table>" );
+    String header1 = "&#160;", text1 = "";
+    String header2 = "&#160;", text2 = "";
+    String header3 = "&#160;", text3 = "";
 
     Object version = aMetadata.getFpgaVersion();
     if ( version != null )
     {
-      details.append( "<tr><th>Firmware version</th><td>" ).append( version ).append( "</td></tr>" );
-    }
-    else
-    {
-      details.append( "<tr><th>&#160;</th><td></td></tr>" );
+      header1 = "Firmware version";
+      text1 = String.valueOf( version );
     }
     version = aMetadata.getProtocolVersion();
     if ( version != null )
     {
-      details.append( "<tr><th>Protocol version</th><td>" ).append( version ).append( "</td></tr>" );
-    }
-    else
-    {
-      details.append( "<tr><th>&#160;</th><td></td></tr>" );
+      header2 = "Protocol version";
+      text2 = String.valueOf( version );
     }
     version = aMetadata.getAncillaryVersion();
     if ( version != null )
     {
-      details.append( "<tr><th>Ancillary version</th><td>" ).append( version ).append( "</td></tr>" );
+      header3 = "Ancillary version";
+      text3 = String.valueOf( version );
     }
-    else
-    {
-      details.append( "<tr><th>&#160;</th><td></td></tr>" );
-    }
-    details.append( "</table></body></html>" );
-    return details.toString();
+
+    return String.format( DETAILS_TMPL, "Firmware details", header1, text1, header2, text2, header3, text3 );
   }
 
   /**
