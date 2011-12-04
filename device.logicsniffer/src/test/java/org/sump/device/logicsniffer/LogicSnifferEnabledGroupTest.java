@@ -21,8 +21,6 @@
 package org.sump.device.logicsniffer;
 
 
-import static org.sump.device.logicsniffer.LogicSnifferAcquisitionTask.*;
-
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -32,6 +30,7 @@ import org.junit.runners.*;
 import org.junit.runners.Parameterized.Parameters;
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import org.sump.device.logicsniffer.protocol.*;
 
 
 /**
@@ -135,7 +134,7 @@ public class LogicSnifferEnabledGroupTest
     this.config.setEnabledChannels( this.enabledGroupMask );
 
     this.device.open();
-    this.device.configureDevice();
+    this.device.configureAndArmDevice();
 
     TimeUnit.MILLISECONDS.sleep( 10L );
   }
@@ -156,9 +155,9 @@ public class LogicSnifferEnabledGroupTest
   public void testEnableChannelGroupsWithDdrOk() throws Exception
   {
     // channel groups 0 & 1 are leading; 2 & 3 are following...
-    this.device.assertFlagState( FLAG_GROUP1_DISABLED, this.expectedDisabledGroups[0] );
-    this.device.assertFlagState( FLAG_GROUP2_DISABLED, this.expectedDisabledGroups[1] );
-    this.device.assertFlagState( FLAG_GROUP3_DISABLED, this.expectedDisabledGroups[2] );
-    this.device.assertFlagState( FLAG_GROUP4_DISABLED, this.expectedDisabledGroups[3] );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP1_DISABLED, this.expectedDisabledGroups[0] );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP2_DISABLED, this.expectedDisabledGroups[1] );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP3_DISABLED, this.expectedDisabledGroups[2] );
+    this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP4_DISABLED, this.expectedDisabledGroups[3] );
   }
 }

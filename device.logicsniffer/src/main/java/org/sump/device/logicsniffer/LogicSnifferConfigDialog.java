@@ -27,7 +27,9 @@ import static org.sump.device.logicsniffer.ConfigDialogHelper.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 
+import javax.microedition.io.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
@@ -44,6 +46,7 @@ import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 import org.sump.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
 import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
+import org.sump.device.logicsniffer.protocol.*;
 
 
 /**
@@ -116,71 +119,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
           return "External / Falling";
       }
       return super.getDisplayValue( aValue );
-    }
-  }
-
-  /**
-   * Provides a combobox model for device profile types.
-   */
-  final class DeviceProfileTypeComboBoxModel extends AbstractListModel implements ComboBoxModel
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // VARIABLES
-
-    private volatile Object selected = null;
-
-    // METHODS
-
-    /**
-     * Finds the element with a given type.
-     * 
-     * @param aType
-     *          the identifying type of the element to find.
-     * @return the element with the given identifying type, or <code>null</code>
-     *         if no such type could be found.
-     */
-    public Object findElementByType( final String aType )
-    {
-      return getDeviceProfileManager().getProfile( aType );
-    }
-
-    /**
-     * @see javax.swing.ListModel#getElementAt(int)
-     */
-    @Override
-    public Object getElementAt( final int aIndex )
-    {
-      return getDeviceProfileManager().getProfiles().get( aIndex );
-    }
-
-    /**
-     * @see javax.swing.ComboBoxModel#getSelectedItem()
-     */
-    @Override
-    public Object getSelectedItem()
-    {
-      return this.selected;
-    }
-
-    /**
-     * @see javax.swing.ListModel#getSize()
-     */
-    @Override
-    public int getSize()
-    {
-      return getDeviceProfileManager().getSize();
-    }
-
-    /**
-     * @see javax.swing.ComboBoxModel#setSelectedItem(java.lang.Object)
-     */
-    @Override
-    public void setSelectedItem( final Object aItem )
-    {
-      this.selected = aItem;
     }
   }
 
@@ -298,8 +236,10 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   // VARIABLES
 
   private final DeviceProfileManagerTracker deviceProfileManagerTracker;
+  private final StreamConnectionFactory connectionFactory;
 
-  private JComboBox deviceTypeSelect;
+  private LogicSnifferDeviceProfilePanel deviceProfilePanel;
+
   private JComboBox numberSchemeSelect;
   private JComboBox portSelect;
   private JComboBox portRateSelect;
@@ -346,13 +286,16 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    *          the parent window of this dialog;
    * @param aConfig
    *          the logic sniffer device to configure.
+   * @param aStreamConnectionFactory
    */
   public LogicSnifferConfigDialog( final Window aParent, final LogicSnifferConfig aConfig,
-      final DeviceProfileManagerTracker aDeviceProfileManagerTracker )
+      final DeviceProfileManagerTracker aDeviceProfileManagerTracker,
+      final StreamConnectionFactory aStreamConnectionFactory )
   {
     super( aParent, "OLS Capture settings", ModalityType.DOCUMENT_MODAL );
 
     this.deviceProfileManagerTracker = aDeviceProfileManagerTracker;
+    this.connectionFactory = aStreamConnectionFactory;
     this.config = aConfig;
 
     initDialog();
@@ -504,20 +447,13 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
     this.listening = false;
     try
     {
+      // Delegate to the contained panels...
+      this.deviceProfilePanel.readPreferences( aSettings );
+
       final String preferredPortName = aSettings.get( "port", null );
       if ( ( preferredPortName != null ) && !"null".equals( preferredPortName ) )
       {
         this.portSelect.setSelectedItem( preferredPortName );
-      }
-      final String preferredDeviceType = aSettings.get( "deviceType", null );
-      if ( ( preferredDeviceType != null ) && !"null".equals( preferredDeviceType ) )
-      {
-        final Object element = ( ( DeviceProfileTypeComboBoxModel )this.deviceTypeSelect.getModel() )
-            .findElementByType( preferredDeviceType );
-        if ( element != null )
-        {
-          this.deviceTypeSelect.setSelectedItem( element );
-        }
       }
       this.portRateSelect.setSelectedIndex( aSettings.getInt( "portRate", this.portRateSelect.getSelectedIndex() ) );
       this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", this.sourceSelect.getSelectedIndex() ) );
@@ -605,7 +541,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   public void writePreferences( final UserSettings aSettings )
   {
     aSettings.put( "port", String.valueOf( this.portSelect.getSelectedItem() ) );
-    aSettings.put( "deviceType", String.valueOf( this.deviceTypeSelect.getSelectedItem() ) );
     aSettings.putInt( "portRate", this.portRateSelect.getSelectedIndex() );
     aSettings.putInt( "source", this.sourceSelect.getSelectedIndex() );
     aSettings.putInt( "numberScheme", this.numberSchemeSelect.getSelectedIndex() );
@@ -651,6 +586,9 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
       group.append( this.channelGroup[i].isSelected() ? "1" : "0" );
     }
     aSettings.put( "channelGroup", group.toString() );
+
+    // Delegate to the contained panels...
+    this.deviceProfilePanel.writePreferences( aSettings );
   }
 
   /**
@@ -660,7 +598,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    *          the device type to update the controls for, cannot be
    *          <code>null</code>.
    */
-  void updateDeviceType( final DeviceProfile aProfile )
+  final void updateDeviceType( final DeviceProfile aProfile )
   {
     // "Publish" the device type to the device configuration...
     this.config.setDeviceProfile( aProfile );
@@ -787,15 +725,53 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
 
     SpringLayoutUtils.addSeparator( connectionPane, "" );
 
-    connectionPane.add( createRightAlignedLabel( "Device type" ) );
-    connectionPane.add( this.deviceTypeSelect );
+    this.deviceProfilePanel = new LogicSnifferDeviceProfilePanel()
+    {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      protected StreamConnection getConnection() throws IOException
+      {
+        // We've to create a new connection each, as the settings can be changed
+        // on-the-fly by the user...
+        return LogicSnifferConfigDialog.this.connectionFactory.getConnection(
+            LogicSnifferConfigDialog.this.config.getPortName(), LogicSnifferConfigDialog.this.config.getBaudrate(),
+            LogicSnifferConfigDialog.this.config.isOpenPortDtr(),
+            LogicSnifferConfigDialog.this.config.getOpenPortDelay() );
+      }
+
+      @Override
+      protected DeviceProfileManager getDeviceProfileManager()
+      {
+        return LogicSnifferConfigDialog.this.deviceProfileManagerTracker.getService();
+      }
+
+      @Override
+      protected void updateDeviceProfile( final DeviceProfile aProfile )
+      {
+        LogicSnifferConfigDialog.this.listening = false;
+        try
+        {
+          updateDeviceType( aProfile );
+
+          updateConfig( false /* aWarnUserIfConfigIncorrect */);
+          updateFields();
+        }
+        finally
+        {
+          LogicSnifferConfigDialog.this.listening = true;
+        }
+      }
+    };
+
+    this.deviceProfilePanel.buildPanel( connectionPane );
 
     SpringLayoutUtils.makeEditorGrid( connectionPane, 10, 10 );
 
     final JPanel result = new JPanel( new GridBagLayout() );
-    result.add( connectionPane, new GridBagConstraints( 0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER,
+    result.add( connectionPane, new GridBagConstraints( 0, 0, 1, 1, 0.4, 0.0, GridBagConstraints.CENTER,
         GridBagConstraints.NONE, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
-    result.add( new JLabel(), new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER,
+    result.add( new JLabel(), new GridBagConstraints( 0, 1, 1, 1, 0.6, 1.0, GridBagConstraints.CENTER,
         GridBagConstraints.BOTH, new Insets( 0, 0, 0, 0 ), 0, 0 ) );
 
     return result;
@@ -915,16 +891,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   private void forceCaptureSizeTo( final Integer aSampleCount )
   {
     this.sizeSelect.setSelectedItem( aSampleCount );
-  }
-
-  /**
-   * Returns the current device profile manager, never <code>null</code>.
-   * 
-   * @return the device profile manager to return, cannot be <code>null</code>.
-   */
-  private DeviceProfileManager getDeviceProfileManager()
-  {
-    return this.deviceProfileManagerTracker.getService();
   }
 
   /**
@@ -1061,7 +1027,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
       final JPanel maskValueEditor = createMaskValueEditor( i );
       stagePane.add( maskValueEditor, createConstraints( 0, 1, 6, 1, 1.0, 1.0 ) );
 
-      // @@@
       stagePane.add( createRightAlignedLabel( "Hex Mask" ), createConstraints( 0, 4, 1, 1, 0.5, 1.0 ) );
       this.triggerHexMask[i] = new JTextField( "0" );
       this.triggerHexMask[i].setToolTipText( "hexadecimal trigger mask." );
@@ -1098,40 +1063,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
 
     this.warningLabel = new JLabel( " " );
     this.warningLabel.setFont( this.warningLabel.getFont().deriveFont( Font.BOLD ) );
-
-    // NOTE: create this component as last component, as it will fire an event
-    // that uses all other components!!!
-    this.deviceTypeSelect = new JComboBox( new DeviceProfileTypeComboBoxModel() );
-    this.deviceTypeSelect.setRenderer( new DeviceProfileTypeComboBoxRenderer() );
-    this.deviceTypeSelect.addItemListener( new ItemListener()
-    {
-      /**
-       * @see java.awt.event.ItemListener#itemStateChanged(java.awt.event.ItemEvent)
-       */
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        final JComboBox combobox = ( JComboBox )aEvent.getSource();
-        final DeviceProfile profile = ( DeviceProfile )combobox.getSelectedItem();
-        if ( profile != null )
-        {
-          LogicSnifferConfigDialog.this.listening = false;
-          try
-          {
-            updateDeviceType( profile );
-
-            updateConfig( false /* aWarnUserIfConfigIncorrect */);
-            updateFields();
-          }
-          finally
-          {
-            LogicSnifferConfigDialog.this.listening = true;
-          }
-        }
-      }
-    } );
-    // By default, select the "OLS" device, if available...
-    this.deviceTypeSelect.setSelectedItem( getDeviceProfileManager().getDefaultProfile() );
   }
 
   /**
@@ -1236,7 +1167,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
     // set sample rate; use a default to ensure the internal state remains
     // correct...
     value = String.valueOf( this.speedSelect.getSelectedItem() );
-    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, LogicSnifferAcquisitionTask.CLOCK );
+    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, SumpProtocolConstants.CLOCK );
     this.config.setSampleRate( f );
 
     // set sample count
@@ -1333,18 +1264,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
             this.config.setParallelTrigger( stage, 0, 0, 3, 0, false );
           }
         }
-      }
-    }
-
-    // Determine whether the chosen device type matches the one found...
-    DeviceProfile deviceProfile = this.config.getDeviceProfile();
-    if ( ( deviceProfile != null ) && result )
-    {
-      final DeviceProfile selectedProfile = ( DeviceProfile )this.deviceTypeSelect.getSelectedItem();
-      if ( !deviceProfile.equals( selectedProfile ) )
-      {
-        result = SwingComponentUtils.askConfirmation( this,
-            "Device type does not match selected type! Continue capture?" );
       }
     }
 

@@ -23,6 +23,7 @@ package org.sump.device.logicsniffer;
 
 import java.util.*;
 
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.sump.device.logicsniffer.profile.*;
@@ -31,38 +32,32 @@ import org.sump.device.logicsniffer.profile.*;
 /**
  * @author jawi
  */
-public class Activator implements BundleActivator
+public class Activator extends DependencyActivatorBase
 {
-  // VARIABLES
-
-  private ServiceRegistration serviceRegistration;
-
   // METHODS
 
   /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+   * {@inheritDoc}
    */
   @Override
-  public void start( final BundleContext aContext ) throws Exception
+  public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
+  {
+    // NO-op
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
     Dictionary<String, String> props = new Hashtable<String, String>();
     props.put( Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
 
-    this.serviceRegistration = aContext.registerService( ManagedServiceFactory.class.getName(),
-        new DeviceProfileManager(), props );
-
-  }
-
-  /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-   */
-  @Override
-  public void stop( final BundleContext aContext ) throws Exception
-  {
-    if ( this.serviceRegistration != null )
-    {
-      this.serviceRegistration.unregister();
-      this.serviceRegistration = null;
-    }
+    aManager.add( //
+        createComponent() //
+            .setInterface( ManagedServiceFactory.class.getName(), props ) //
+            .setImplementation( new DeviceProfileManager() ) //
+        );
   }
 }

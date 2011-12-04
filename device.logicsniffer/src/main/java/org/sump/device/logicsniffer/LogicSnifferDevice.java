@@ -115,7 +115,8 @@ public class LogicSnifferDevice implements Device
     // if no valid dialog exists, create one
     if ( this.configDialog == null )
     {
-      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.deviceConfig, this.deviceProfileManagerTracker );
+      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.deviceConfig, this.deviceProfileManagerTracker,
+          this.streamConnectionFactory );
     }
 
     this.setup = this.configDialog.showDialog();
@@ -164,11 +165,12 @@ public class LogicSnifferDevice implements Device
     final String portName = this.deviceConfig.getPortName();
     final int baudrate = this.deviceConfig.getBaudrate();
     final boolean dtrValue = this.deviceConfig.isOpenPortDtr();
+    final int openDelay = this.deviceConfig.getOpenPortDelay();
 
     // Make sure we release the device if it was still attached...
     LOG.log( Level.INFO, "Attaching to {0} @ {1}bps (DTR = {2}) ...",
         new Object[] { portName, Integer.valueOf( baudrate ), dtrValue ? "high" : "low" } );
 
-    return this.streamConnectionFactory.getConnection( portName, baudrate, dtrValue );
+    return this.streamConnectionFactory.getConnection( portName, baudrate, dtrValue, openDelay );
   }
 }

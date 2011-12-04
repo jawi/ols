@@ -25,6 +25,7 @@ import nl.lxtreme.ols.api.*;
 
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import org.sump.device.logicsniffer.protocol.*;
 
 
 /**
@@ -43,9 +44,9 @@ public final class LogicSnifferConfig
   // trigger operates in serial mode
   private final static int TRIGGER_SERIAL = 0x04000000;
   /** The number of trigger stages. */
-  final static int TRIGGER_STAGES = 4;
+  public final static int TRIGGER_STAGES = 4;
   // trigger will start capture when fired
-  final static int TRIGGER_CAPTURE = 0x08000000;
+  public final static int TRIGGER_CAPTURE = 0x08000000;
 
   static final int MIN_CHANNEL_GROUPS = 1;
   static final int MAX_CHANNEL_GROUPS_DDR = 2;
@@ -154,7 +155,7 @@ public final class LogicSnifferConfig
    */
   public int getClockspeed()
   {
-    int result = LogicSnifferAcquisitionTask.CLOCK;
+    int result = SumpProtocolConstants.CLOCK;
     if ( this.deviceProfile != null )
     {
       result = Math.min( result, this.deviceProfile.getClockspeed() );
@@ -180,7 +181,7 @@ public final class LogicSnifferConfig
   public int getDivider()
   {
     // double clock = getClockspeed();
-    double clock = LogicSnifferAcquisitionTask.CLOCK;
+    double clock = SumpProtocolConstants.CLOCK;
     if ( isDoubleDataRateEnabled() )
     {
       clock *= 2.0;

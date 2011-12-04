@@ -52,14 +52,14 @@ public class StreamConnectionFactory extends ServiceTracker
   /**
    * {@inheritDoc}
    */
-  public StreamConnection getConnection( final String aPortName, final int aPortRate, final boolean aDtrValue )
-      throws IOException
+  public StreamConnection getConnection( final String aPortName, final int aPortRate, final boolean aDtrValue,
+      final int aOpenDelay ) throws IOException
   {
     final ConnectorService connectorService = ( ConnectorService )getService();
 
     final String portUri = String.format(
-        "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff;dtr=%s", aPortName,
-        Integer.valueOf( aPortRate ), ( aDtrValue ? "on" : "off" ) );
+        "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff;dtr=%s;delay=%d", aPortName,
+        Integer.valueOf( aPortRate ), ( aDtrValue ? "on" : "off" ), Integer.valueOf( aOpenDelay ) );
 
     return ( StreamConnection )connectorService.open( portUri, ConnectorService.READ_WRITE, true /* timeouts */);
   }
