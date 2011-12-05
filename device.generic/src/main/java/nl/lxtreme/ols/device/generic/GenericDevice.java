@@ -23,6 +23,7 @@ package nl.lxtreme.ols.device.generic;
 
 import java.awt.*;
 import java.io.*;
+
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.devices.*;
 
@@ -48,9 +49,29 @@ public class GenericDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener ) throws IOException
+  public void close() throws IOException
+  {
+    // No-op...
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
+      throws IOException
   {
     return new GenericDeviceAcquisitionTask( this.deviceConfig, aProgressListener );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public CancelTask createCancelTask() throws IOException
+  {
+    // Nothing special is needed...
+    return null;
   }
 
   /**

@@ -430,12 +430,34 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public void cancelCapture()
   {
     final DataAcquisitionService acquisitionService = getDataAcquisitionService();
-    if ( acquisitionService != null )
+    final Device device = getDevice();
+    if ( ( device == null ) || ( acquisitionService == null ) )
     {
-      acquisitionService.cancelAcquisition();
+      return;
     }
 
-    updateActionsOnEDT();
+    try
+    {
+      acquisitionService.cancelAcquisition( device );
+    }
+    catch ( final IllegalStateException exception )
+    {
+      setStatusOnEDT( "No acquisition in progress!" );
+    }
+    catch ( final IOException exception )
+    {
+      setStatusOnEDT( "I/O problem: " + exception.getMessage() );
+
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        exception.printStackTrace();
+      }
+    }
+    finally
+    {
+      updateActionsOnEDT();
+    }
   }
 
   /**

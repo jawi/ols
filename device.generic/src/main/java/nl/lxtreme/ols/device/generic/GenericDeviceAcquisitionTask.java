@@ -83,6 +83,8 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
     final int[] values = new int[count];
     final long[] timestamps = new long[count];
 
+    this.inputStream = new FileInputStream( this.deviceConfig.getDevicePath() );
+
     try
     {
       int idx = 0;
@@ -109,24 +111,10 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
       // Rethrow the caught exception...
       throw exception;
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void close() throws IOException
-  {
-    HostUtils.closeResource( this.inputStream );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void open() throws IOException
-  {
-    this.inputStream = new FileInputStream( this.deviceConfig.getDevicePath() );
+    finally
+    {
+      HostUtils.closeResource( this.inputStream );
+    }
   }
 
   /**

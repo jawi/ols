@@ -80,8 +80,6 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
   private static final int CMD_SELFTEST = 0x03;
   /** ask for device meta data. */
   private static final int CMD_METADATA = 0x04;
-  /** ask the device to immediately return its RLE-encoded data. */
-  private static final int CMD_RLE_FINISH_NOW = 0x05;
 
   // demultiplex
   static final int FLAG_DEMUX = 0x00000001;
@@ -120,7 +118,7 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
   private final AcquisitionProgressListener acquisitionProgressListener;
   private final LogicSnifferConfig config;
 
-  private StreamConnection connection1;
+  private StreamConnection connection;
   private DataInputStream inputStream;
   private DataOutputStream outputStream;
   private int trigcount;
@@ -134,7 +132,7 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
       final DeviceProfileManager aDeviceProfileManager, final AcquisitionProgressListener aProgressListener )
   {
     this.config = aConfig;
-    this.connection1 = aConnection;
+    this.connection = aConnection;
     this.deviceProfileManager = aDeviceProfileManager;
     this.acquisitionProgressListener = aProgressListener;
   }
@@ -181,6 +179,9 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
   public AcquisitionResult call() throws IOException, InterruptedException
   {
     LOG.info( "Starting capture ..." );
+
+    // Opens the device...
+    open();
 
     // First try to find the logic sniffer itself...
     detectDevice();
@@ -272,6 +273,9 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
       this.acquisitionProgressListener.acquisitionInProgress( 100 );
     }
 
+    // Close the connection...
+    close();
+
     LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( samples - sampleIdx - 1 ) );
 
     // In case the device sends its samples in "reverse" order, we need to
@@ -312,142 +316,6 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
 
     return new CapturedData( values, timestamps, triggerPos[0], rate, channelCount,
         this.config.getEnabledChannelsMask(), absoluteLength[0] );
-  }
-
-  /**
-   * Informs the thread in run() that it is supposed to stop reading data and
-   * return.
-   */
-  public void cancel()
-  {
-    final boolean isRleEnabled = this.config.isRleEnabled();
-    try
-    {
-      if ( isRleEnabled )
-      {
-        LOG.info( "Prematurely finishing RLE-enabled capture ..." );
-        sendCommand( CMD_RLE_FINISH_NOW );
-      }
-      else
-      {
-        LOG.info( "Prematurely finishing normal capture ..." );
-        resetDevice();
-      }
-    }
-    catch ( IOException exception )
-    {
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "Stopping capture failed?!", exception );
-      }
-    }
-  }
-
-  /**
-   * Detaches the currently attached port, if one exists. This will close the
-   * serial port.
-   */
-  @Override
-  public void close()
-  {
-    StreamConnection conn = getStreamConnection();
-    if ( conn != null )
-    {
-      try
-      {
-        // try to make sure device is reset...
-        if ( this.outputStream != null )
-        {
-          // XXX it seems that after a RLE abort command, the OLS device no
-          // longer is able to process a full 5x reset command. However, we're
-          // also resetting the thing right after we've started an acquisition,
-          // so it might not be that bad...
-          sendCommand( CMD_RESET );
-        }
-      }
-      catch ( final IOException exception )
-      {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.WARNING, "Detaching failed!", exception );
-        }
-      }
-      finally
-      {
-        HostUtils.closeResource( this.outputStream );
-        HostUtils.closeResource( this.inputStream );
-
-        try
-        {
-          conn.close();
-        }
-        catch ( IOException exception )
-        {
-          LOG.log( Level.WARNING, "Closing connection failed!", exception );
-        }
-        finally
-        {
-          this.connection1 = null;
-          this.outputStream = null;
-          this.inputStream = null;
-        }
-      }
-    }
-  }
-
-  /**
-   * Opens the incoming and outgoing connection to the OLS device.
-   * <p>
-   * This method will directly flush all incoming data, and, if configured,
-   * delay a bit to ensure the device hardware is properly initialized.
-   * </p>
-   * 
-   * @return <code>true</code> if the attach operation succeeded,
-   *         <code>false</code> otherwise.
-   * @throws IOException
-   *           in case of I/O problems during attaching to the device.
-   */
-  @Override
-  public void open() throws IOException
-  {
-    final StreamConnection conn = getStreamConnection();
-    final String portName = this.config.getPortName();
-    final int openDelay = this.config.getOpenPortDelay();
-
-    try
-    {
-      if ( conn == null )
-      {
-        throw new IOException( "Failed to open a valid connection!" );
-      }
-
-      this.outputStream = conn.openDataOutputStream();
-      this.inputStream = conn.openDataInputStream();
-
-      // Some devices need some time to initialize after being opened for the
-      // first time, see issue #34.
-      if ( openDelay > 0 )
-      {
-        Thread.sleep( openDelay );
-      }
-
-      // We don't expect any data, so flush all data pending in the given
-      // input stream. See issue #34.
-      HostUtils.flushInputStream( this.inputStream );
-    }
-    catch ( final Exception exception )
-    {
-      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
-          new Object[] { portName, exception.getMessage() } );
-      LOG.log( Level.FINE, "Detailed stack trace:", exception );
-
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        throw new IOException( "Failed to open/use " + portName + "! Possible reason: " + exception.getMessage() );
-      }
-    }
   }
 
   /**
@@ -757,6 +625,58 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
   }
 
   /**
+   * Detaches the currently attached port, if one exists. This will close the
+   * serial port.
+   */
+  protected void close()
+  {
+    StreamConnection conn = getStreamConnection();
+    if ( conn != null )
+    {
+      try
+      {
+        // try to make sure device is reset...
+        if ( this.outputStream != null )
+        {
+          // XXX it seems that after a RLE abort command, the OLS device no
+          // longer is able to process a full 5x reset command. However, we're
+          // also resetting the thing right after we've started an acquisition,
+          // so it might not be that bad...
+          sendCommand( CMD_RESET );
+        }
+      }
+      catch ( final IOException exception )
+      {
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.WARNING, "Detaching failed!", exception );
+        }
+      }
+      finally
+      {
+        HostUtils.closeResource( this.outputStream );
+        HostUtils.closeResource( this.inputStream );
+
+        try
+        {
+          conn.close();
+        }
+        catch ( IOException exception )
+        {
+          LOG.log( Level.WARNING, "Closing connection failed!", exception );
+        }
+        finally
+        {
+          this.connection = null;
+          this.outputStream = null;
+          this.inputStream = null;
+        }
+      }
+    }
+  }
+
+  /**
    * Returns the configuration as used for this device.
    * 
    * @return a device configuration, never <code>null</code>.
@@ -783,7 +703,60 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
    */
   protected StreamConnection getStreamConnection()
   {
-    return this.connection1;
+    return this.connection;
+  }
+
+  /**
+   * Opens the incoming and outgoing connection to the OLS device.
+   * <p>
+   * This method will directly flush all incoming data, and, if configured,
+   * delay a bit to ensure the device hardware is properly initialized.
+   * </p>
+   * 
+   * @return <code>true</code> if the attach operation succeeded,
+   *         <code>false</code> otherwise.
+   * @throws IOException
+   *           in case of I/O problems during attaching to the device.
+   */
+  protected void open() throws IOException
+  {
+    final StreamConnection conn = getStreamConnection();
+    final String portName = this.config.getPortName();
+    final int openDelay = this.config.getOpenPortDelay();
+
+    try
+    {
+      if ( conn == null )
+      {
+        throw new IOException( "Failed to open a valid connection!" );
+      }
+
+      this.outputStream = conn.openDataOutputStream();
+      this.inputStream = conn.openDataInputStream();
+
+      // Some devices need some time to initialize after being opened for the
+      // first time, see issue #34.
+      if ( openDelay > 0 )
+      {
+        Thread.sleep( openDelay );
+      }
+
+      // We don't expect any data, so flush all data pending in the given
+      // input stream. See issue #34.
+      HostUtils.flushInputStream( this.inputStream );
+    }
+    catch ( final Exception exception )
+    {
+      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
+          new Object[] { portName, exception.getMessage() } );
+      LOG.log( Level.FINE, "Detailed stack trace:", exception );
+
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        throw new IOException( "Failed to open/use " + portName + "! Possible reason: " + exception.getMessage() );
+      }
+    }
   }
 
   /**

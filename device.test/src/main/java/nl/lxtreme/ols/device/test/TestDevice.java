@@ -54,9 +54,29 @@ public class TestDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener ) throws IOException
+  public void close() throws IOException
+  {
+    // No-op...
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
+      throws IOException
   {
     return new TestAcquisitionTask( this.configDialog, aProgressListener );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public CancelTask createCancelTask() throws IOException
+  {
+    // Nothing special is needed...
+    return null;
   }
 
   /**
