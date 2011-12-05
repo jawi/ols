@@ -30,7 +30,7 @@ import nl.lxtreme.ols.api.acquisition.*;
  * Interface for implementing device controllers. Each supported device must
  * implement at least this interface.
  */
-public interface Device
+public interface Device extends Closeable
 {
   // METHODS
 
@@ -40,11 +40,24 @@ public interface Device
    * @param aProgressListener
    *          the acquisition progress listener the acquisition task can use to
    *          report its progress, cannot be <code>null</code>.
+   * @return a new acquisition task, never <code>null</code>.
    * @throws IOException
    *           in case of I/O problems during the creation of the acquisition
    *           task.
    */
   public AcquisitionTask createAcquisitionTask( AcquisitionProgressListener aProgressListener ) throws IOException;
+
+  /**
+   * Creates a new {@link CancelTask} for canceling the current acquisition from
+   * the device, if the device needs something special to do this.
+   * 
+   * @return a new cancel task, if <code>null</code> the running acquisition is
+   *         simply cancelled.
+   * @throws IOException
+   *           in case of I/O problems during the creating of the cancellation
+   *           task.
+   */
+  public CancelTask createCancelTask() throws IOException;
 
   /**
    * Returns a descriptive name of this device controller.

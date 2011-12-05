@@ -21,17 +21,16 @@
 package nl.lxtreme.ols.api.devices;
 
 
-import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.task.*;
 
 
 /**
- * Denotes an acquisition task that we can talk to by calling {@link #call()} on
- * it. The implementation of that method should do all necessary tasks to
- * acquire data from the device and return that data in the form of an
- * {@link AcquisitionResult} object.
+ * Denotes a task that talk to by calling {@link #call()} on it. The
+ * implementation of that method should cause the device to stop acquiring data,
+ * if possible. If the device already finished its acquisition task, this task
+ * should not lead to unpredictable results.
  */
-public interface AcquisitionTask extends Task<AcquisitionResult>
+public interface CancelTask extends Task<Void>
 {
   // No additional methods
 }

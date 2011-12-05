@@ -130,7 +130,10 @@ final class SerialConnection implements CommConnection
       closeResource( this.is );
       closeResource( this.os );
 
-      this.port.close();
+      if ( this.port != null )
+      {
+        this.port.close();
+      }
     }
     finally
     {
