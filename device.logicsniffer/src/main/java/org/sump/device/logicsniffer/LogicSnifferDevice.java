@@ -29,6 +29,7 @@ import javax.microedition.io.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.devices.*;
+
 import org.osgi.framework.*;
 import org.sump.device.logicsniffer.profile.*;
 
@@ -56,6 +57,8 @@ public class LogicSnifferDevice implements Device
   private LogicSnifferConfigDialog configDialog;
   private boolean setup;
 
+  private volatile StreamConnection connection;
+
   // CONSTRUCTORS
 
   /**
@@ -73,11 +76,33 @@ public class LogicSnifferDevice implements Device
    * {@inheritDoc}
    */
   @Override
+  public void close() throws IOException
+  {
+    if ( this.connection != null )
+    {
+      this.connection.close();
+      this.connection = null;
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
       throws IOException
   {
     return new LogicSnifferAcquisitionTask( this.deviceConfig, getStreamConnection(), getDeviceProfileManager(),
         aProgressListener );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public CancelTask createCancelTask() throws IOException
+  {
+    return new LogicSnifferCancelTask( this.deviceConfig, getStreamConnection() );
   }
 
   /**
@@ -162,15 +187,19 @@ public class LogicSnifferDevice implements Device
    */
   private StreamConnection getStreamConnection() throws IOException
   {
-    final String portName = this.deviceConfig.getPortName();
-    final int baudrate = this.deviceConfig.getBaudrate();
-    final boolean dtrValue = this.deviceConfig.isOpenPortDtr();
-    final int openDelay = this.deviceConfig.getOpenPortDelay();
+    if ( this.connection == null )
+    {
+      final String portName = this.deviceConfig.getPortName();
+      final int baudrate = this.deviceConfig.getBaudrate();
+      final boolean dtrValue = this.deviceConfig.isOpenPortDtr();
+      final int openDelay = this.deviceConfig.getOpenPortDelay();
 
-    // Make sure we release the device if it was still attached...
-    LOG.log( Level.INFO, "Attaching to {0} @ {1}bps (DTR = {2}) ...",
-        new Object[] { portName, Integer.valueOf( baudrate ), dtrValue ? "high" : "low" } );
+      // Make sure we release the device if it was still attached...
+      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps (DTR = {2}) ...",
+          new Object[] { portName, Integer.valueOf( baudrate ), dtrValue ? "high" : "low" } );
 
-    return this.streamConnectionFactory.getConnection( portName, baudrate, dtrValue, openDelay );
+      this.connection = this.streamConnectionFactory.getConnection( portName, baudrate, dtrValue, openDelay );
+    }
+    return this.connection;
   }
 }

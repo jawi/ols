@@ -89,14 +89,13 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
       @Override
       public AcquisitionResult call() throws Exception
       {
-        innerTask.open();
         try
         {
           return innerTask.call();
         }
         finally
         {
-          innerTask.close();
+          aDevice.close();
         }
       }
     };
@@ -150,15 +149,23 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
    * {@inheritDoc}
    */
   @Override
-  public void cancelAcquisition() throws IllegalStateException
+  public void cancelAcquisition( final Device aDevice ) throws IOException, IllegalStateException
   {
     if ( this.acquisitionFutureTask == null )
     {
       throw new IllegalStateException( "No acquisition in progress!" );
     }
 
-    this.acquisitionFutureTask.cancel( true /* mayInterruptIfRunning */);
-    this.acquisitionFutureTask = null;
+    final CancelTask cancelTask = aDevice.createCancelTask();
+    if ( cancelTask != null )
+    {
+      this.taskExecutionService.execute( cancelTask );
+    }
+    else
+    {
+      this.acquisitionFutureTask.cancel( true /* mayInterruptIfRunning */);
+      this.acquisitionFutureTask = null;
+    }
   }
 
   /**

@@ -36,10 +36,15 @@ public interface DataAcquisitionService
   /**
    * Signals that the current acquisition should be cancelled.
    * 
+   * @param aDevice
+   *          the device from which data should be acquired, cannot be
+   *          <code>null</code>;
+   * @throws IOException
+   *           in case of I/O problems during the acquisition of data;
    * @throws IllegalStateException
    *           in case no acquisition is in progress.
    */
-  public void cancelAcquisition() throws IllegalStateException;
+  public void cancelAcquisition( Device aDevice ) throws IOException, IllegalStateException;
 
   /**
    * Returns whether or not this device controller is acquiring data.
@@ -53,13 +58,13 @@ public interface DataAcquisitionService
   /**
    * Acquires data from the given device.
    * 
-   * @param aDeviceController
-   *          the device controller from which data should be acquired, cannot
-   *          be <code>null</code>;
+   * @param aDevice
+   *          the device from which data should be acquired, cannot be
+   *          <code>null</code>;
    * @throws IOException
    *           in case of I/O problems during the acquisition of data;
    * @throws IllegalArgumentException
    *           in case the given device was <code>null</code>.
    */
-  void acquireData( Device aDeviceController ) throws IOException;
+  void acquireData( Device aDevice ) throws IOException;
 }

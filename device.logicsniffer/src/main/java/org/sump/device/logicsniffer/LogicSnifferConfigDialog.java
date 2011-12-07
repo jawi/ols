@@ -727,8 +727,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
 
     this.deviceProfilePanel = new LogicSnifferDeviceProfilePanel()
     {
-      private static final long serialVersionUID = 1L;
-
       @Override
       protected StreamConnection getConnection() throws IOException
       {

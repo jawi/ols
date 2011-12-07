@@ -23,7 +23,6 @@ package nl.lxtreme.ols.device.test;
 
 import static nl.lxtreme.ols.device.test.TestDeviceDialog.*;
 
-import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
@@ -125,23 +124,5 @@ public class TestAcquisitionTask implements AcquisitionTask
     }
 
     return new CapturedData( data, 23, rate, channels, Integer.MAX_VALUE );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void close() throws IOException
-  {
-    // No-op
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void open() throws IOException
-  {
-    // No-op
   }
 }

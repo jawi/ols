@@ -92,6 +92,9 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
   {
     LOG.info( "Starting capture ..." );
 
+    // Opens the device...
+    open();
+
     // First try to find the logic sniffer itself...
     detectDevice();
 
@@ -123,7 +126,17 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     // read all other samples
     sampleIdx = readSamples( sampleIdx, buffer );
 
+    // Close the connection...
+    close();
+
     LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( sampleCount - sampleIdx - 1 ) );
+
+    // In case the device sends its samples in "reverse" order, we need to
+    // revert it now, before processing them further...
+    if ( this.config.isSamplesInReverseOrder() )
+    {
+      HostUtils.reverse( buffer );
+    }
 
     final List<Integer> values = new ArrayList<Integer>();
     final List<Long> timestamps = new ArrayList<Long>();
@@ -159,30 +172,34 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
   }
 
   /**
-   * Informs the thread in run() that it is supposed to stop reading data and
-   * return.
+   * Configures the device and arms it so that it starts capturing. Performs a
+   * self-test on the OLS device.
+   * <p>
+   * Note: not all versions of the OLS device firmware support a selftest!
+   * </p>
+   * 
+   * @throws IOException
+   *           in case of I/O problems.
    */
-  public void cancel()
+  void configureAndArmDevice() throws IOException
   {
-    try
-    {
-      this.outputStream.writeCmdFinishNow();
-    }
-    catch ( IOException exception )
-    {
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "Stopping capture failed?!", exception );
-      }
-    }
+    this.trigcount = this.outputStream.writeDeviceConfiguration();
+
+    // We're ready to process the samples from the device...
+    this.outputStream.writeCmdRun();
   }
 
   /**
-   * Detaches the currently attached port, if one exists. This will close the
-   * serial port.
+   * Factory method to create a sample procesor for the given numer of samples
+   * and sample values.
+   * 
+   * @param aSampleCount
+   *          the sample count;
+   * @param aSampleValues
+   *          the sample values; Detaches the currently attached port, if one
+   *          exists. This will close the serial port.
    */
-  @Override
-  public void close()
+  protected void close()
   {
     StreamConnection conn = getStreamConnection();
     if ( conn != null )
@@ -192,6 +209,10 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
         // try to make sure device is reset...
         if ( this.outputStream != null )
         {
+          // XXX it seems that after a RLE abort command, the OLS device no
+          // longer is able to process a full 5x reset command. However, we're
+          // also resetting the thing right after we've started an acquisition,
+          // so it might not be that bad...
           this.outputStream.writeCmdReset();
         }
       }
@@ -227,67 +248,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
   }
 
   /**
-   * Opens the incoming and outgoing connection to the OLS device.
-   * <p>
-   * This method will directly flush all incoming data, and, if configured,
-   * delay a bit to ensure the device hardware is properly initialized.
-   * </p>
-   * 
-   * @return <code>true</code> if the attach operation succeeded,
-   *         <code>false</code> otherwise.
-   * @throws IOException
-   *           in case of I/O problems during attaching to the device.
-   */
-  @Override
-  public void open() throws IOException
-  {
-    final StreamConnection conn = getStreamConnection();
-
-    try
-    {
-      if ( conn == null )
-      {
-        throw new IOException( "Failed to open a valid connection!" );
-      }
-
-      this.outputStream = new SumpCommandWriter( this.config, conn.openDataOutputStream() );
-      this.inputStream = new SumpResultReader( this.config, conn.openDataInputStream() );
-
-      // We don't expect any data, so flush all data pending in the given
-      // input stream. See issue #34.
-      this.inputStream.flush();
-    }
-    catch ( final Exception exception )
-    {
-      final String portName = this.config.getPortName();
-
-      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
-          new Object[] { portName, exception.getMessage() } );
-      LOG.log( Level.FINE, "Detailed stack trace:", exception );
-
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        throw new IOException( "Failed to open/use " + portName + "! Possible reason: " + exception.getMessage() );
-      }
-    }
-  }
-
-  /**
-   * Configures the device and arms it so that it starts capturing.
-   * 
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  void configureAndArmDevice() throws IOException
-  {
-    this.trigcount = this.outputStream.writeDeviceConfiguration();
-
-    // We're ready to process the samples from the device...
-    this.outputStream.writeCmdRun();
-  }
-
-  /**
    * Returns the configuration as used for this device.
    * 
    * @return a device configuration, never <code>null</code>.
@@ -304,19 +264,70 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
    * @throws IllegalArgumentException
    *           in case the device profile manager could not be found/obtained.
    */
-  protected final DeviceProfileManager getDeviceProfileManager()
+  protected DeviceProfileManager getDeviceProfileManager()
   {
     return this.deviceProfileManager;
   }
 
   /**
-   * Returns the stream connection.
-   * 
-   * @return a stream connection, never <code>null</code>.
+   * @return
    */
   protected StreamConnection getStreamConnection()
   {
     return this.connection;
+  }
+
+  /**
+   * Opens the incoming and outgoing connection to the OLS device.
+   * <p>
+   * This method will directly flush all incoming data, and, if configured,
+   * delay a bit to ensure the device hardware is properly initialized.
+   * </p>
+   * 
+   * @return <code>true</code> if the attach operation succeeded,
+   *         <code>false</code> otherwise.
+   * @throws IOException
+   *           in case of I/O problems during attaching to the device.
+   */
+  protected void open() throws IOException
+  {
+    final StreamConnection conn = getStreamConnection();
+    final String portName = this.config.getPortName();
+    final int openDelay = this.config.getOpenPortDelay();
+
+    try
+    {
+      if ( conn == null )
+      {
+        throw new IOException( "Failed to open a valid connection!" );
+      }
+
+      this.outputStream = new SumpCommandWriter( this.config, conn.openDataOutputStream() );
+      this.inputStream = new SumpResultReader( this.config, conn.openDataInputStream() );
+
+      // Some devices need some time to initialize after being opened for the
+      // first time, see issue #34.
+      if ( openDelay > 0 )
+      {
+        Thread.sleep( openDelay );
+      }
+
+      // We don't expect any data, so flush all data pending in the given
+      // input stream. See issue #34.
+      this.inputStream.flush();
+    }
+    catch ( final Exception exception )
+    {
+      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
+          new Object[] { portName, exception.getMessage() } );
+      LOG.log( Level.FINE, "Detailed stack trace:", exception );
+
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !HostUtils.handleInterruptedException( exception ) )
+      {
+        throw new IOException( "Failed to open/use " + portName + "! Possible reason: " + exception.getMessage() );
+      }
+    }
   }
 
   /**
@@ -367,13 +378,9 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
   }
 
   /**
-   * Factory method to create a sample procesor for the given numer of samples
-   * and sample values.
-   * 
-   * @param aSampleCount
-   *          the sample count;
-   * @param aSampleValues
-   *          the sample values;
+   * @param aSamples
+   * @param aBuffer
+   *          >>>>>>> ols_v0_9_5
    * @param aCallback
    *          the processor callback to use.
    * @return a sample processor instance, never <code>null</code>.
