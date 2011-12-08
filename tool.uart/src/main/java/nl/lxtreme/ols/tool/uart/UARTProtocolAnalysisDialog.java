@@ -175,6 +175,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   private JComboBox bits;
   private JComboBox stop;
   private JCheckBox inv;
+  private JCheckBox inverse;
   private JComboBox baudrate;
   private JEditorPane outText;
 
@@ -243,6 +244,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.stop.setSelectedIndex( aSettings.getInt( "stop", this.stop.getSelectedIndex() ) );
     this.baudrate.setSelectedIndex( aSettings.getInt( "baudrate", this.baudrate.getSelectedIndex() ) );
     this.inv.setSelected( aSettings.getBoolean( "inverted", this.inv.isSelected() ) );
+    this.inverse.setSelected( aSettings.getBoolean( "inverse", this.inverse.isSelected() ) );
   }
 
   /**
@@ -276,6 +278,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     aSettings.putInt( "stop", this.stop.getSelectedIndex() );
     aSettings.putInt( "baudrate", this.baudrate.getSelectedIndex() );
     aSettings.putBoolean( "inverted", this.inv.isSelected() );
+    aSettings.putBoolean( "inverse", this.inverse.isSelected() );
   }
 
   /**
@@ -344,6 +347,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
     // Other properties...
     toolTask.setInverted( this.inv.isSelected() );
+    toolTask.setInversed( this.inverse.isSelected() );
     toolTask.setParity( ( UARTParity )this.parity.getSelectedItem() );
     toolTask.setStopBits( ( UARTStopBits )this.stop.getSelectedItem() );
     toolTask.setBitCount( NumberUtils.smartParseInt( ( String )this.bits.getSelectedItem(), 8 ) );
@@ -370,6 +374,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.bits.setEnabled( aEnable );
     this.stop.setEnabled( aEnable );
     this.inv.setEnabled( aEnable );
+    this.inverse.setEnabled( aEnable );
 
     this.closeAction.setEnabled( aEnable );
   }
@@ -544,6 +549,11 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.inv.setSelected( false );
     settings.add( createRightAlignedLabel( "Invert?" ) );
     settings.add( this.inv );
+    
+    this.inverse = new JCheckBox();
+    this.inverse.setSelected( false );
+    settings.add( createRightAlignedLabel( "Inverse?" ) );
+    settings.add( this.inverse );
 
     SpringLayoutUtils.makeEditorGrid( settings, 10, 4 );
 
