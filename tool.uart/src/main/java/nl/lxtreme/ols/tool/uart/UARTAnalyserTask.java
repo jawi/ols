@@ -55,6 +55,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   private int dsrIndex;
   private int dtrIndex;
   private boolean inverted;
+  private boolean inversed;
   private UARTStopBits stopBits;
   private UARTParity parity;
   private int bitCount;
@@ -183,6 +184,17 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   {
     return this.inverted;
   }
+  
+  /**
+   * Returns whether the entire signal is inversed.
+   * 
+   * @return <code>true</code> if the signal is to be considered inversed,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isInversed()
+  {
+    return this.inversed;
+  }
 
   /**
    * Sets baudRate to the given value.
@@ -245,6 +257,14 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   public void setInverted( final boolean aInverted )
   {
     this.inverted = aInverted;
+  }
+  
+  /**
+   * @param aInversed
+   */
+  public void setInversed( final boolean aInversed )
+  {
+    this.inversed = aInversed;
   }
 
   /**
@@ -483,6 +503,29 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
           value |= ( 1 << bitIdx );
         }
       }
+      
+      // inverse value
+      if (this.inversed) {
+    	  int invertedValue = 0;
+    	  int inversedValue = 0;
+    	  int mask1 = 0;
+    	  int mask2 = 0;
+    	  
+    	  invertedValue = (value ^ 0xFF);
+    	  mask1 = 0x01;
+    	  mask2 = 0x80;
+    	  inversedValue = 0;
+    	  
+    	  for (int i=0; i<8; i++) {
+    		  if ((invertedValue & mask1) != 0) {
+    			  inversedValue = inversedValue | mask2;
+    		  }
+    		  mask1 = mask1 << 1;
+    		  mask2 = mask2 >> 1;
+    	  }
+    	  value = inversedValue;
+      }
+      
       // fully decoded a single symbol...
       reportData( data, aDataSet, aChannelIndex, startTime, time, value, aType );
       symbolCount++;
