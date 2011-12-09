@@ -60,7 +60,9 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
   private JComboBox owLine;
   private JComboBox owMode;
   private JEditorPane outText;
+
   private RestorableAction runAnalysisAction;
+  private Action exportAction;
   private Action closeAction;
 
   // CONSTRUCTORS
@@ -127,6 +129,10 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
     this.outText.setEditable( false );
 
     this.runAnalysisAction.restore();
+
+    setControlsEnabled( true );
+
+    this.exportAction.setEnabled( false );
   }
 
   /**
@@ -204,6 +210,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
     this.owMode.setEnabled( aEnabled );
 
     this.closeAction.setEnabled( aEnabled );
+    this.exportAction.setEnabled( aEnabled );
   }
 
   /**
@@ -361,6 +368,8 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
     final JButton exportButton = ToolUtils.createExportButton( this );
+    this.exportAction = exportButton.getAction();
+    this.exportAction.setEnabled( false );
 
     final JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
