@@ -56,6 +56,10 @@ public class StreamConnectionFactory extends ServiceTracker
       final int aOpenDelay ) throws IOException
   {
     final ConnectorService connectorService = ( ConnectorService )getService();
+    if ( connectorService == null )
+    {
+      throw new IOException( "No connector service available!" );
+    }
 
     final String portUri = String.format(
         "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff;dtr=%s;delay=%d", aPortName,

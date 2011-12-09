@@ -174,7 +174,9 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * @return
+   * Returns the current device profile manager.
+   * 
+   * @return a device profile manager, never <code>null</code>.
    */
   private DeviceProfileManager getDeviceProfileManager()
   {
@@ -182,8 +184,11 @@ public class LogicSnifferDevice implements Device
   }
 
   /**
-   * @return
+   * Returns the current stream connection that is opened.
+   * 
+   * @return a stream connection, can be a cached one, never <code>null</code>.
    * @throws IOException
+   *           in case of I/O problems creating the stream connection.
    */
   private StreamConnection getStreamConnection() throws IOException
   {
