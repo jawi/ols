@@ -267,11 +267,11 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     this.outText.setText( getEmptyHtmlPage() );
     this.outText.setEditable( false );
 
-    this.exportAction.setEnabled( false );
-
     this.runAnalysisAction.restore();
 
     setControlsEnabled( true );
+
+    this.exportAction.setEnabled( false );
   }
 
   /**
@@ -389,6 +389,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     this.order.setEnabled( aEnable );
 
     this.closeAction.setEnabled( aEnable );
+    this.exportAction.setEnabled( aEnable );
   }
 
   /**

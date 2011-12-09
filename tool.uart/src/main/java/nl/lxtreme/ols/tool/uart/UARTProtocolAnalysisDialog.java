@@ -180,6 +180,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
   private RestorableAction runAnalysisAction;
   private Action closeAction;
+  private Action exportAction;
 
   // CONSTRUCTORS
 
@@ -255,6 +256,10 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.outText.setEditable( false );
 
     this.runAnalysisAction.restore();
+
+    setControlsEnabled( true );
+
+    this.exportAction.setEnabled( false );
   }
 
   /**
@@ -372,6 +377,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.inv.setEnabled( aEnable );
 
     this.closeAction.setEnabled( aEnable );
+    this.exportAction.setEnabled( aEnable );
   }
 
   /**
@@ -604,6 +610,8 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
     final JButton exportButton = ToolUtils.createExportButton( this );
+    this.exportAction = exportButton.getAction();
+    this.exportAction.setEnabled( false );
 
     final JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
