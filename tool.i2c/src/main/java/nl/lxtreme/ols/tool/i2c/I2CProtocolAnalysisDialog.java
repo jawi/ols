@@ -186,11 +186,11 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
     this.outText.setText( emptyHtmlPage );
     this.outText.setEditable( false );
 
-    this.exportAction.setEnabled( false );
-
     this.runAnalysisAction.restore();
 
     setControlsEnabled( true );
+
+    this.exportAction.setEnabled( false );
   }
 
   /**
@@ -210,6 +210,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
     this.detectNACK.setEnabled( aEnabled );
 
     this.closeAction.setEnabled( aEnabled );
+    this.exportAction.setEnabled( aEnabled );
   }
 
   /**

@@ -134,9 +134,11 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     this.outText.setText( getEmptyHtmlPage() );
     this.outText.setEditable( false );
 
-    this.exportAction.setEnabled( false );
-
     this.runAnalysisAction.restore();
+
+    setControlsEnabled( true );
+
+    this.exportAction.setEnabled( false );
   }
 
   /**
@@ -224,6 +226,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     this.tdo.setEnabled( aEnable );
 
     this.closeAction.setEnabled( aEnable );
+    this.exportAction.setEnabled( aEnable );
   }
 
   /**

@@ -86,7 +86,9 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
   private JCheckBox showData;
   private JCheckBox showBusGrants;
   private JEditorPane outText;
+
   private RestorableAction runAnalysisAction;
+  private Action exportAction;
   private Action closeAction;
 
   // CONSTRUCTORS
@@ -155,6 +157,10 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     this.outText.setEditable( false );
 
     this.runAnalysisAction.restore();
+
+    setControlsEnabled( true );
+
+    this.exportAction.setEnabled( false );
   }
 
   /**
@@ -255,6 +261,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     this.showBusGrants.setEnabled( aEnabled );
 
     this.closeAction.setEnabled( aEnabled );
+    this.exportAction.setEnabled( aEnabled );
   }
 
   /**
@@ -520,6 +527,8 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     this.runAnalysisAction = ( RestorableAction )runAnalysisButton.getAction();
 
     final JButton exportButton = ToolUtils.createExportButton( this );
+    this.exportAction = exportButton.getAction();
+    this.exportAction.setEnabled( false );
 
     final JButton closeButton = ToolUtils.createCloseButton();
     this.closeAction = closeButton.getAction();
