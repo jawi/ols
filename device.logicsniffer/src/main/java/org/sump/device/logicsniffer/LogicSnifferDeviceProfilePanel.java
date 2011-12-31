@@ -26,14 +26,13 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.logging.*;
 
 import javax.microedition.io.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.component.*;
-
 import org.sump.device.logicsniffer.LogicSnifferConfigDialog.DeviceProfileTypeComboBoxRenderer;
 import org.sump.device.logicsniffer.profile.*;
 
@@ -118,10 +117,6 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
       {
         detectDeviceType();
       }
-      catch ( IOException exception )
-      {
-        JErrorDialog.showDialog( getCurrentWindow(), "Device detect failed!", exception );
-      }
       finally
       {
         component.setCursor( Cursor.getDefaultCursor() );
@@ -202,16 +197,18 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
   private JCheckBox autoDetectDeviceType;
   private JEditorPane deviceTypeDetails;
 
-  // CONSTRUCTORS
+  // CONSTANTS
 
-  private static final String DETAILS_TMPL = "<html><style>body { font-family: sans-serif; font-size: 9px; margin-left: 8px; }</style><body><table>"
+  private static final Logger LOG = Logger.getLogger( LogicSnifferDeviceProfilePanel.class.getName() );
+
+  private static final String DETAILS_TMPL = "<html><style>body { font-family: sans-serif; font-size: 9px; margin-left: 8px; } th { text-align: right; }</style><body><table>"
       + "<tr><th colspan=2>%s</th></tr>"
       + "<tr><th>%s</th><td>%s</td></tr>"
       + "<tr><th>%s</th><td>%s</td></tr>"
       + "<tr><th>%s</th><td>%s</td></tr>" //
       + "</table></body></html>";
 
-  // METHODS
+  // CONSTRUCTORS
 
   /**
    * Creates a new LogicSnifferDeviceProfilePanel instance.
@@ -222,6 +219,8 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
     initPanel();
   }
+
+  // METHODS
 
   /**
    * Builds this panel.
@@ -266,6 +265,9 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
   {
     this.detectDeviceButton.setEnabled( aAutoDetect );
     this.deviceTypeSelect.setEnabled( !aAutoDetect );
+
+    // Empty the details as to indicate this switch...
+    this.deviceTypeDetails.setText( getEmtpyMetadataDetails() );
   }
 
   /**
@@ -283,7 +285,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    * @throws IOException
    *           in case of I/O problems.
    */
-  final void detectDeviceType() throws IOException
+  final void detectDeviceType()
   {
     // Make sure we don't allow this method to be called concurrently!
     this.detectDeviceButton.setEnabled( false );
@@ -292,9 +294,18 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
     try
     {
-      detectTask = new LogicSnifferDetectionTask( getDeviceProfileManager(), getConnection() );
+      LogicSnifferMetadata metadata = null;
+      String details = getEmtpyMetadataDetails();
 
-      final LogicSnifferMetadata metadata = detectTask.call();
+      try
+      {
+        detectTask = new LogicSnifferDetectionTask( getDeviceProfileManager(), getConnection() );
+        metadata = detectTask.call();
+      }
+      catch ( Exception exception )
+      {
+        LOG.log( Level.INFO, "Failed to detect device!", exception );
+      }
 
       if ( metadata != null )
       {
@@ -302,16 +313,16 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
         if ( deviceProfile != null )
         {
           // Update the selection of the combobox directly; causing everything
-          // to
-          // be synchronized nicely...
+          // to be synchronized nicely...
           this.deviceTypeSelect.setSelectedItem( deviceProfile );
           // Ensure it is updated immediately...
           this.deviceTypeSelect.repaint();
         }
 
-        String details = getMetadataDetailsAsText( metadata );
-        this.deviceTypeDetails.setText( details );
+        details = getMetadataDetailsAsText( metadata );
       }
+
+      this.deviceTypeDetails.setText( details );
     }
     finally
     {
@@ -355,20 +366,18 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     String header2 = "&#160;", text2 = "";
     String header3 = "&#160;", text3 = "";
 
-    Object version = aMetadata.getFpgaVersion();
-    if ( version != null )
+    Object version;
+    if ( ( version = aMetadata.getFpgaVersion() ) != null )
     {
       header1 = "Firmware version";
       text1 = String.valueOf( version );
     }
-    version = aMetadata.getProtocolVersion();
-    if ( version != null )
+    if ( ( version = aMetadata.getProtocolVersion() ) != null )
     {
       header2 = "Protocol version";
       text2 = String.valueOf( version );
     }
-    version = aMetadata.getAncillaryVersion();
-    if ( version != null )
+    if ( ( version = aMetadata.getAncillaryVersion() ) != null )
     {
       header3 = "Ancillary version";
       text3 = String.valueOf( version );

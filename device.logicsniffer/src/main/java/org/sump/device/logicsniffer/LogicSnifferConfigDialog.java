@@ -730,10 +730,13 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
       @Override
       protected StreamConnection getConnection() throws IOException
       {
+        final String portName = ( String )LogicSnifferConfigDialog.this.portSelect.getSelectedItem();
+        final int baudrate = NumberUtils.smartParseInt( ( String )LogicSnifferConfigDialog.this.portRateSelect
+            .getSelectedItem() );
+
         // We've to create a new connection each, as the settings can be changed
         // on-the-fly by the user...
-        return LogicSnifferConfigDialog.this.connectionFactory.getConnection(
-            LogicSnifferConfigDialog.this.config.getPortName(), LogicSnifferConfigDialog.this.config.getBaudrate(),
+        return LogicSnifferConfigDialog.this.connectionFactory.getConnection( portName, baudrate,
             LogicSnifferConfigDialog.this.config.isOpenPortDtr(),
             LogicSnifferConfigDialog.this.config.getOpenPortDelay() );
       }
