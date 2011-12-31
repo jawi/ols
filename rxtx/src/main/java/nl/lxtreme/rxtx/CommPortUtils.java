@@ -21,14 +21,13 @@
 package nl.lxtreme.rxtx;
 
 
-import purejavacomm.*;
-
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 import java.util.regex.*;
 
 import nl.lxtreme.ols.util.*;
+import purejavacomm.*;
 
 
 /**

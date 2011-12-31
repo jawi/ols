@@ -21,14 +21,14 @@
 package nl.lxtreme.rxtx;
 
 
-import purejavacomm.*;
-
 import java.io.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
 
 import org.osgi.service.io.*;
+
+import purejavacomm.*;
 
 
 /**
