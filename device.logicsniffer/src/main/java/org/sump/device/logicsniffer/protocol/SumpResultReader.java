@@ -115,7 +115,7 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
    * @throws IOException
    *           if stream reading fails.
    */
-  public int readSample() throws IOException, InterruptedException
+  public int readSample() throws IOException
   {
     final int groupCount = this.config.getGroupCount();
     byte[] buf = new byte[groupCount];
@@ -135,13 +135,9 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
       {
         throw new EOFException( "Data readout interrupted: EOF." );
       }
-      if ( Thread.currentThread().isInterrupted() )
-      {
-        throw new InterruptedException( "Data readout interrupted." );
-      }
       offset += read;
     }
-    while ( offset < enabledGroupCount );
+    while ( !Thread.currentThread().isInterrupted() && ( offset < enabledGroupCount ) );
 
     // "Expand" the read sample-bytes into a single sample value...
     int value = 0;
@@ -157,5 +153,4 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
 
     return value;
   }
-
 }

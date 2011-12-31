@@ -22,47 +22,50 @@ package org.sump.device.logicsniffer;
 
 
 import java.io.*;
-import java.util.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
 
+import org.sump.device.logicsniffer.protocol.*;
+
 import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
- * Cancels the ongoing acquisition.
+ * Cancels the ongoing RLE-enabled acquisition.
+ * <p>
+ * When using RLE, the acquisition needs to be aborted with a "special" command
+ * in order to stop the device from gathering samples. After receiving this
+ * command, the device will return its buffer immediately. When using a non-RLE
+ * capture, the device can be simply interrupted and we cannot obtain any new
+ * samples from it.
+ * </p>
  */
-public class LogicSnifferCancelTask implements CancelTask
+public class LogicSnifferCancelTask implements CancelTask, SumpProtocolConstants
 {
   // CONSTANTS
-
-  /** reset analyzer */
-  private static final byte CMD_RESET = 0x00;
-  /** ask the device to immediately return its RLE-encoded data. */
-  private static final byte CMD_RLE_FINISH_NOW = 0x05;
 
   private static final Logger LOG = Logger.getLogger( LogicSnifferCancelTask.class.getName() );
 
   // VARIABLES
 
-  private final LogicSnifferConfig config;
   private final StreamConnection connection;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new LogicSnifferCancelTask instance.
+   * Creates a new {@link LogicSnifferCancelTask} instance.
    * 
    * @param aConnection
-   * @param aConfig
+   *          the stream connection to write the "finish RLE" command to, cannot
+   *          be <code>null</code>.
    */
-  public LogicSnifferCancelTask( final LogicSnifferConfig aConfig, final StreamConnection aConnection )
+  public LogicSnifferCancelTask( final StreamConnection aConnection )
   {
-    this.config = aConfig;
     this.connection = aConnection;
   }
+
+  // METHODS
 
   /**
    * {@inheritDoc}
@@ -70,36 +73,13 @@ public class LogicSnifferCancelTask implements CancelTask
   @Override
   public Void call() throws Exception
   {
-    final OutputStream outputStream = this.connection.openOutputStream();
+    LOG.info( "Prematurely finishing RLE-enabled capture ..." );
 
-    try
-    {
-      if ( this.config.isRleEnabled() )
-      {
-        LOG.info( "Prematurely finishing RLE-enabled capture ..." );
-
-        outputStream.write( CMD_RLE_FINISH_NOW );
-      }
-      else
-      {
-        LOG.info( "Prematurely finishing normal capture ..." );
-
-        byte[] buffer = new byte[5];
-        Arrays.fill( buffer, CMD_RESET );
-
-        outputStream.write( buffer );
-      }
-      // Make sure nothing keeps lingering in the streams' buffer...
-      outputStream.flush();
-    }
-    catch ( IOException exception )
-    {
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "Stopping capture failed?!", exception );
-        throw exception;
-      }
-    }
+    final DataOutputStream outputStream = this.connection.openDataOutputStream();
+    // Write a single command to stop RLE from doing its job...
+    outputStream.writeByte( CMD_RLE_FINISH_NOW );
+    // Make sure nothing keeps lingering in the streams' buffer...
+    outputStream.flush();
 
     return null;
   }

@@ -366,21 +366,16 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
           throw exception;
         }
       }
-      catch ( InterruptedException exception )
-      {
-        // When running, we simply have a timeout; this could be that the
-        // trigger is not fired yet... We keep waiting...
-        LOG.fine( "Interrupted while awaiting trigger; ignoring it & continue waiting..." );
-      }
     }
 
     return sampleIdx;
   }
 
   /**
-   * @param aSamples
-   * @param aBuffer
-   *          >>>>>>> ols_v0_9_5
+   * @param aSampleCount
+   *          the actual number of samples to process;
+   * @param aSampleValues
+   *          the sample values to process;
    * @param aCallback
    *          the processor callback to use.
    * @return a sample processor instance, never <code>null</code>.
@@ -584,20 +579,11 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
         throw exception;
       }
     }
-    catch ( InterruptedException exception )
-    {
-      LOG.log( Level.WARNING, "Capture interrupted! Only {0} samples read ...",
-          Integer.valueOf( aBuffer.length - aSampleIdx ) );
-
-      if ( Thread.currentThread().isInterrupted() )
-      {
-        // Make sure the device is in a state were we can do something with
-        // it after this method is completed...
-        this.outputStream.writeCmdFinishNow();
-      }
-    }
     finally
     {
+      // Make sure we leave the device in a correct state...
+      this.outputStream.writeCmdReset();
+
       this.acquisitionProgressListener.acquisitionInProgress( 100 );
     }
 
