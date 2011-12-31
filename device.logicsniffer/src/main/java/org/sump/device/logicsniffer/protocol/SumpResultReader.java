@@ -104,6 +104,76 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
   }
 
   /**
+   * Tries to obtain the OLS device's metadata.
+   * 
+   * @return the device metadata, can be not populated, but never
+   *         <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems;
+   * @throws IllegalStateException
+   *           in case we're not attached to the OLS device.
+   */
+  public boolean readMetadata( final LogicSnifferMetadata aMetadata ) throws IOException, IllegalStateException
+  {
+    boolean gotResponse = false;
+
+    int result = -1;
+    do
+    {
+      try
+      {
+        result = this.inputStream.read();
+
+        if ( result > 0 )
+        {
+          // We've got response!
+          gotResponse = true;
+
+          final int type = ( result & 0xE0 ) >> 5;
+          if ( type == 0x00 )
+          {
+            // key value is a null-terminated string...
+            final String value = readString();
+            aMetadata.put( result, value );
+          }
+          else if ( type == 0x01 )
+          {
+            // key value is a 32-bit integer; least significant byte first...
+            // final Integer value = NumberUtils.convertByteOrder(
+            // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
+            final int value = this.inputStream.readInt();
+            aMetadata.put( result, Integer.valueOf( value ) );
+          }
+          else if ( type == 0x02 )
+          {
+            // key value is a 8-bit integer...
+            final int value = this.inputStream.read();
+            aMetadata.put( result, Integer.valueOf( value ) );
+          }
+          else
+          {
+            LOG.log( Level.INFO, "Ignoring unknown metadata type: {0}", Integer.valueOf( type ) );
+          }
+        }
+      }
+      catch ( final IOException exception )
+      {
+        /* don't care */
+        result = -1;
+
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
+        {
+          LOG.log( Level.INFO, "I/O exception", exception );
+        }
+      }
+    }
+    while ( ( result > 0x00 ) && !Thread.currentThread().isInterrupted() );
+
+    return gotResponse;
+  }
+
+  /**
    * Reads a single sample (= 1..4 bytes) from the serial input stream.
    * <p>
    * This method will take the enabled channel groups into consideration, making
@@ -152,5 +222,32 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
     }
 
     return value;
+  }
+
+  /**
+   * Reads a zero-terminated ASCII-string from the current input stream.
+   * 
+   * @return the read string, can be empty but never <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems during the string read.
+   */
+  final String readString() throws IOException
+  {
+    StringBuilder sb = new StringBuilder();
+
+    int read = -1;
+    do
+    {
+      read = this.inputStream.read();
+      if ( read > 0x00 )
+      {
+        // no additional conversion to UTF-8 is needed, as the ASCII character
+        // set is a subset of UTF-8...
+        sb.append( ( char )read );
+      }
+    }
+    while ( ( read > 0x00 ) && !Thread.currentThread().isInterrupted() );
+
+    return sb.toString();
   }
 }

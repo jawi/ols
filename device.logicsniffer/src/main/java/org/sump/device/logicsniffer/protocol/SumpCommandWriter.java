@@ -165,6 +165,14 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
   }
 
   /**
+   * Writes the 'get metadata' command to the device.
+   */
+  public void writeCmdGetMetadata() throws IOException
+  {
+    sendCommand( CMD_METADATA );
+  }
+
+  /**
    * Resets the OLS device by sending 5 consecutive 'reset' commands.
    * 
    * @throws IOException

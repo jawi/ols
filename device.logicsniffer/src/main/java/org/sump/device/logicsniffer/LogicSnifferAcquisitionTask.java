@@ -126,17 +126,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     // read all other samples
     sampleIdx = readSamples( sampleIdx, buffer );
 
-    // Close the connection...
-    close();
-
     LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( sampleCount - sampleIdx - 1 ) );
-
-    // In case the device sends its samples in "reverse" order, we need to
-    // revert it now, before processing them further...
-    if ( this.config.isSamplesInReverseOrder() )
-    {
-      HostUtils.reverse( buffer );
-    }
 
     final List<Integer> values = new ArrayList<Integer>();
     final List<Long> timestamps = new ArrayList<Long>();
@@ -166,6 +156,9 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     };
     // Process the actual samples...
     createSampleProcessor( sampleCount, buffer, callback ).process();
+
+    // Close the connection...
+    close();
 
     return new CapturedData( values, timestamps, triggerPos[0], rate, channelCount,
         this.config.getEnabledChannelsMask(), absoluteLength[0] );
@@ -484,7 +477,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
 
     // Ok; device appears to be good and willing to communicate; let's get its
     // metadata...
-    // this.outputStream.writeCmdGetMetadata();
+    this.outputStream.writeCmdGetMetadata();
 
     boolean gotResponse = false;
 
@@ -492,7 +485,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     {
       final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
 
-      // gotResponse = this.inputStream.readMetadata( metadata );
+      gotResponse = this.inputStream.readMetadata( metadata );
 
       return metadata;
     }
@@ -573,6 +566,9 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     }
     catch ( IOException exception )
     {
+      // Make sure we leave the device in a correct state...
+      this.outputStream.writeCmdReset();
+
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
@@ -581,9 +577,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     }
     finally
     {
-      // Make sure we leave the device in a correct state...
-      this.outputStream.writeCmdReset();
-
       this.acquisitionProgressListener.acquisitionInProgress( 100 );
     }
 

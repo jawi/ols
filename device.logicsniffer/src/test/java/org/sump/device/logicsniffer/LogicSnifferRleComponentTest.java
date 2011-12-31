@@ -290,7 +290,8 @@ public class LogicSnifferRleComponentTest
 
   /**
    * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}.
+   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
+   * .
    */
   @Test( timeout = 10000 )
   public void testRleOk() throws Exception

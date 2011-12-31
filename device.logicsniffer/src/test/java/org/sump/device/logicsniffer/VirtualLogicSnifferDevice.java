@@ -389,7 +389,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
 
     // Quite a lot of data can be pumped from this device, so we need some room
     // for it to store it all...
-    final int pipeSize = 768 * 1024;
+    final int pipeSize = 512 * 1024;
 
     PipedInputStream pipeIn = new PipedInputStream( pipeSize );
     PipedOutputStream pipeOut = new PipedOutputStream();
@@ -499,23 +499,6 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public AcquisitionResult call() throws IOException, InterruptedException
-  {
-    super.open();
-    try
-    {
-      return super.call();
-    }
-    finally
-    {
-      super.close();
-    }
-  }
-
-  /**
    * Closes this virtual device.
    */
   @Override
@@ -535,6 +518,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
       }
     }
     while ( this.streamReader.isAlive() );
+
+    // super.close();
   }
 
   /**
