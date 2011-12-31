@@ -220,17 +220,12 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
         sampleIdx--;
         waiting = false;
       }
-      catch ( final InterruptedException exception )
+      catch ( IOException exception )
       {
-        // When running, we simply have a timeout; this could be that the
-        // trigger is not fired yet... We keep waiting...
-        if ( Thread.currentThread().isInterrupted() )
+        // Make sure to handle IO-interrupted exceptions properly!
+        if ( !HostUtils.handleInterruptedException( exception ) )
         {
-          // Make sure to handle IO-interrupted exceptions properly!
-          if ( !HostUtils.handleInterruptedException( exception ) )
-          {
-            throw exception;
-          }
+          throw exception;
         }
       }
     }
@@ -251,16 +246,13 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
             .acquisitionInProgress( ( int )( 100.0 - ( ( 100.0 * sampleIdx ) / buffer.length ) ) );
       }
     }
-    catch ( InterruptedException exception )
+    catch ( IOException exception )
     {
       LOG.log( Level.WARNING, "Capture interrupted! Only {0} samples read ...", Integer.valueOf( samples - sampleIdx ) );
 
-      if ( Thread.currentThread().isInterrupted() )
-      {
-        // Make sure the device is in a state were we can do something with
-        // it after this method is completed...
-        resetDevice();
-      }
+      // Make sure the device is in a state were we can do something with
+      // it after this method is completed...
+      resetDevice();
 
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
@@ -495,7 +487,7 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
    * @throws IOException
    *           if stream reading fails.
    */
-  final int readSample() throws IOException, InterruptedException
+  final int readSample() throws IOException
   {
     final int groupCount = this.config.getGroupCount();
     byte[] buf = new byte[groupCount];
@@ -515,17 +507,13 @@ public class LogicSnifferAcquisitionTask implements AcquisitionTask
       {
         throw new EOFException( "Data readout interrupted: EOF." );
       }
-      if ( Thread.currentThread().isInterrupted() )
-      {
-        throw new InterruptedException( "Data readout interrupted." );
-      }
       offset += read;
     }
-    while ( offset < enabledGroupCount );
+    while ( !Thread.currentThread().isInterrupted() && ( offset < enabledGroupCount ) );
 
-    // "Expand" the read sample-bytes into a single sample value...
     int value = 0;
 
+    // "Expand" the read sample-bytes into a single sample value...
     for ( int i = 0, j = 0; i < groupCount; i++ )
     {
       // in case the group is disabled, simply set it to zero...

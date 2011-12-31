@@ -102,7 +102,11 @@ public class LogicSnifferDevice implements Device
   @Override
   public CancelTask createCancelTask() throws IOException
   {
-    return new LogicSnifferCancelTask( this.deviceConfig, getStreamConnection() );
+    if ( this.deviceConfig.isRleEnabled() )
+    {
+      return new LogicSnifferCancelTask( getStreamConnection() );
+    }
+    return null;
   }
 
   /**
