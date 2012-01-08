@@ -3,6 +3,9 @@ OpenBench LogicSniffer Client ChangeLog
 J.W. Janssen, <j.w.janssen@lxtreme.nl>
 
 
+Release 0.9.5:
+- Fixed cancel capture issue.
+
 Release 0.9.5 (beta 2):
 - Fixed issues #81 and #82;
 - Ensured that the selected capture device is retained between user sessions;
