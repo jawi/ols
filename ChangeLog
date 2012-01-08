@@ -1,3 +1,78 @@
+2011-12-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferAcquisitionTask.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferCancelTask.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java: Some simplifications in the cancellation of
+	acquisitions.
+
+2011-12-31  JaWi <j.w.janssen@lxtreme.nl>
+
+	* rxtx/src/main/java/nl/lxtreme/rxtx/CommPortUtils.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnection.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnectionFactory.java,
+	rxtx/src/main/java/nl/lxtreme/rxtx/SerialPortOptions.java: Updated
+	to latest PureJavaComm release (0.0.3).
+
+2011-12-09  JaWi <j.w.janssen@lxtreme.nl>
+
+	*
+	tool.1wire/src/main/java/nl/lxtreme/ols/tool/onewire/OneWireAnalyse
+	rDialog.java,
+	tool.asm45/src/main/java/nl/lxtreme/ols/tool/asm45/Asm45ProtocolAna
+	lysisDialog.java,
+	tool.i2c/src/main/java/nl/lxtreme/ols/tool/i2c/I2CProtocolAnalysisD
+	ialog.java,
+	tool.jtag/src/main/java/nl/lxtreme/ols/tool/jtag/JTAGProtocolAnalys
+	isDialog.java,
+	tool.spi/src/main/java/nl/lxtreme/ols/tool/spi/SPIProtocolAnalysisD
+	ialog.java,
+	tool.uart/src/main/java/nl/lxtreme/ols/tool/uart/UARTProtocolAnalys
+	isDialog.java: Fixed issue #83: export button in various tools was
+	not enabled properly after a successful decoding has taken place.
+
+2011-12-05  JaWi <j.w.janssen@lxtreme.nl>
+
+	* api/src/main/java/nl/lxtreme/ols/api/DataAcquisitionService.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/AcquisitionTask.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/CancelTask.java,
+	api/src/main/java/nl/lxtreme/ols/api/devices/Device.java,
+	client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	evice.java,
+	device.generic/src/main/java/nl/lxtreme/ols/device/generic/GenericD
+	eviceAcquisitionTask.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferAcquisitionTask.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferCancelTask.java,
+	device.logicsniffer/src/main/java/org/sump/device/logicsniffer/Logi
+	cSnifferDevice.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestAcquisitio
+	nTask.java,
+	device.test/src/main/java/nl/lxtreme/ols/device/test/TestDevice.jav
+	a, rxtx/src/main/java/nl/lxtreme/rxtx/SerialConnection.java,
+	service.acquisition/src/main/java/nl/lxtreme/ols/acquisition/Backgr
+	oundDataAcquisitionService.java: When a RLE-enabled capture was
+	ongoing, the cancel acquisition didn't finish properly. This won't
+	work however when a basic trigger is set which not yet fired. It
+	appears that advanced triggers should work.
+
+2011-11-27  JaWi <j.w.janssen@lxtreme.nl>
+
+	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
+	client/src/main/java/nl/lxtreme/ols/client/MainFrame.java: By
+	default select the OLS device as capturing device; after a capture
+	is complete, or a project is loaded, zoom diagram to fit window.
+
+2011-11-25  JaWi <j.w.janssen@lxtreme.nl>
+
+	* ChangeLog, ols.distribution/src/main/resources/CHANGELOG, pom.xml: 
+	Preparation for beta 2.
+
 2011-11-25  JaWi <j.w.janssen@lxtreme.nl>
 
 	* client/src/main/java/nl/lxtreme/ols/client/ClientController.java,
