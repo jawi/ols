@@ -243,9 +243,9 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.parity.setSelectedIndex( aSettings.getInt( "parity", this.parity.getSelectedIndex() ) );
     this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
     this.stop.setSelectedIndex( aSettings.getInt( "stop", this.stop.getSelectedIndex() ) );
-    this.baudrate.setSelectedIndex( aSettings.getInt( "baudrate", this.baudrate.getSelectedIndex() ) );
     this.inv.setSelected( aSettings.getBoolean( "inverted", this.inv.isSelected() ) );
     this.inverse.setSelected( aSettings.getBoolean( "inverse", this.inverse.isSelected() ) );
+    this.baudrate.setSelectedItem( Integer.valueOf( aSettings.getInt( "baudrate", 9600 ) ) );
   }
 
   /**
@@ -281,9 +281,9 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     aSettings.putInt( "parity", this.parity.getSelectedIndex() );
     aSettings.putInt( "bits", this.bits.getSelectedIndex() );
     aSettings.putInt( "stop", this.stop.getSelectedIndex() );
-    aSettings.putInt( "baudrate", this.baudrate.getSelectedIndex() );
     aSettings.putBoolean( "inverted", this.inv.isSelected() );
     aSettings.putBoolean( "inverse", this.inverse.isSelected() );
+    aSettings.putInt( "baudrate", ( ( Integer )this.baudrate.getSelectedItem() ).intValue() );
   }
 
   /**
@@ -523,6 +523,8 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
       baudrates[i++] = Integer.valueOf( baudrate );
     }
     this.baudrate = new JComboBox( baudrates );
+    // Issue #90: allow custom baudrates to be specified...
+    this.baudrate.setEditable( true );
     this.baudrate.setSelectedIndex( 0 );
     this.baudrate.setRenderer( new BaudrateItemRenderer() );
     settings.add( createRightAlignedLabel( "Baudrate" ) );
@@ -555,7 +557,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.inv.setSelected( false );
     settings.add( createRightAlignedLabel( "Invert?" ) );
     settings.add( this.inv );
-    
+
     this.inverse = new JCheckBox();
     this.inverse.setSelected( false );
     settings.add( createRightAlignedLabel( "Inverse?" ) );

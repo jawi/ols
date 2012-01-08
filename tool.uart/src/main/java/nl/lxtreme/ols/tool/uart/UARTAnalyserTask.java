@@ -29,6 +29,7 @@ import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -175,17 +176,6 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
-   * Returns whether the entire signal is inverted.
-   * 
-   * @return <code>true</code> if the signal is to be considered inverted,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isInverted()
-  {
-    return this.inverted;
-  }
-  
-  /**
    * Returns whether the entire signal is inversed.
    * 
    * @return <code>true</code> if the signal is to be considered inversed,
@@ -194,6 +184,17 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   public boolean isInversed()
   {
     return this.inversed;
+  }
+
+  /**
+   * Returns whether the entire signal is inverted.
+   * 
+   * @return <code>true</code> if the signal is to be considered inverted,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isInverted()
+  {
+    return this.inverted;
   }
 
   /**
@@ -252,19 +253,19 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
-   * @param aInverted
-   */
-  public void setInverted( final boolean aInverted )
-  {
-    this.inverted = aInverted;
-  }
-  
-  /**
    * @param aInversed
    */
   public void setInversed( final boolean aInversed )
   {
     this.inversed = aInversed;
+  }
+
+  /**
+   * @param aInverted
+   */
+  public void setInverted( final boolean aInverted )
+  {
+    this.inverted = aInverted;
   }
 
   /**
@@ -503,29 +504,16 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
           value |= ( 1 << bitIdx );
         }
       }
-      
-      // inverse value
-      if (this.inversed) {
-    	  int invertedValue = 0;
-    	  int inversedValue = 0;
-    	  int mask1 = 0;
-    	  int mask2 = 0;
-    	  
-    	  invertedValue = (value ^ 0xFF);
-    	  mask1 = 0x01;
-    	  mask2 = 0x80;
-    	  inversedValue = 0;
-    	  
-    	  for (int i=0; i<8; i++) {
-    		  if ((invertedValue & mask1) != 0) {
-    			  inversedValue = inversedValue | mask2;
-    		  }
-    		  mask1 = mask1 << 1;
-    		  mask2 = mask2 >> 1;
-    	  }
-    	  value = inversedValue;
+
+      // inverse value; actually meaning invert + MSB first, iso LSB first...
+      if ( isInversed() )
+      {
+        // Issue #85: reverse the value and swap the bit order...
+        // TODO we should coerse the #isInversed() & #isInverted(), and
+        // introduce a new property #getBitOrder()...
+        value = NumberUtils.reverseBits( value ^ 0xFF, this.bitCount );
       }
-      
+
       // fully decoded a single symbol...
       reportData( data, aDataSet, aChannelIndex, startTime, time, value, aType );
       symbolCount++;
