@@ -361,21 +361,50 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
   @Override
   public ClockStats call() throws Exception
   {
+    final Long cursorA = this.context.getCursorPosition( 0 );
+    final Long cursorB = this.context.getCursorPosition( 1 );
+
     final AcquisitionResult data = this.context.getData();
 
     final int[] values = data.getValues();
     final long[] timestamps = data.getTimestamps();
 
-    int start = this.context.getStartSampleIndex();
-    int end = this.context.getEndSampleIndex();
+    final long startTimestamp;
+    final long endTimestamp;
 
-    int i = Math.max( 0, start - 1 );
-    long lastTransition = 0;
+    final int start;
+    final int end;
+
+    if ( ( cursorA != null ) && ( cursorB != null ) )
+    {
+      startTimestamp = cursorA.longValue();
+      start = data.getSampleIndex( startTimestamp );
+
+      endTimestamp = cursorB.longValue();
+      end = data.getSampleIndex( endTimestamp );
+    }
+    else
+    {
+      start = this.context.getStartSampleIndex();
+      startTimestamp = timestamps[start];
+
+      end = this.context.getEndSampleIndex();
+      endTimestamp = timestamps[end];
+    }
+
+    final double measureTime = Math.abs( endTimestamp - startTimestamp ) / ( double )data.getSampleRate();
+
+    int i = start;
     int lastBitValue = values[i++] & this.channelMask;
 
-    Long prevPeriodTime = null;
+    long lastTransition = 0;
 
-    for ( ; i < end; i++ )
+    int highCount = 0;
+    long highTime = 0;
+    int lowCount = 0;
+    long lowTime = 0;
+
+    for ( ; !Thread.currentThread().isInterrupted() && ( i <= end ); i++ )
     {
       final int bitValue = values[i] & this.channelMask;
 
@@ -383,16 +412,17 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
       {
         final long periodTime = timestamps[i] - lastTransition;
 
-        if ( prevPeriodTime != null )
+        if ( lastBitValue < bitValue )
         {
-          final ClockPeriodStats stats = new ClockPeriodStats( prevPeriodTime.longValue(), periodTime );
-          this.periodStats.addValue( stats );
-
-          prevPeriodTime = null;
+          // Low to high transition: previously seen a low-state...
+          lowCount++;
+          lowTime += periodTime;
         }
-        else
+        else if ( lastBitValue > bitValue )
         {
-          prevPeriodTime = Long.valueOf( periodTime );
+          // High to low transition: previously seen a high-state...
+          highCount++;
+          highTime += periodTime;
         }
 
         lastTransition = timestamps[i];
@@ -401,20 +431,29 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
       lastBitValue = bitValue;
     }
 
-    final ClockPeriodStats best = this.periodStats.getHighestRanked();
+    int pulseCount = ( lowCount + highCount ) / 2;
 
-    if ( LOG.isLoggable( Level.INFO ) && ( best != null ) )
+    // Take the average high & low time per pulse...
+    double r = ( highTime / ( double )highCount );
+    double s = ( lowTime / ( double )lowCount );
+
+    double f = data.getSampleRate() / ( r + s );
+
+    double e = Math.abs( ( pulseCount / measureTime ) - f );
+
+    if ( LOG.isLoggable( Level.INFO ) )
     {
-      final long periodCount = this.periodStats.getCount( best );
-      final int uniqueValues = this.periodStats.getUniqueValueCount();
-      final long totalCount = this.periodStats.getTotalCount();
-      final double percentage = ( 100.0 * periodCount ) / totalCount;
+      String timeText = DisplayUtils.displayTime( measureTime );
+      String frequencyText = DisplayUtils.displayFrequency( f );
+      String dutyCycleText = String.format( "%.3f%%", Double.valueOf( ( 100.0 * r ) / ( r + s ) ) );
+      String error = DisplayUtils.displayFrequency( e );
+      String pulseCountText = Integer.toString( pulseCount );
 
-      LOG.info( String.format( "Choosing period: %s (%d occurrences in %d values; %d unique: %.2f%%)", best,
-          Long.valueOf( periodCount ), Long.valueOf( totalCount ), Integer.valueOf( uniqueValues ),
-          Double.valueOf( percentage ) ) );
+      LOG.info( String.format( "Measure time: %s; # of pulses: %s; frequency: %s (error = %s); dutycycle: %s",
+          timeText, pulseCountText, frequencyText, error, dutyCycleText ) );
     }
 
+    final ClockPeriodStats best = this.periodStats.getHighestRanked();
     return new ClockStats( best, data.getSampleRate() );
   }
 
