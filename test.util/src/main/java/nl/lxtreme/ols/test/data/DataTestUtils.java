@@ -249,9 +249,9 @@ public final class DataTestUtils
   public static ToolContext createToolContext( final AcquisitionResult aData, final int aStartSampleIdx,
       final int aLastSampleIdx )
   {
-    final Integer size = Integer.valueOf( aLastSampleIdx - Math.max( 0, aStartSampleIdx ) );
     final Integer first = Integer.valueOf( Math.max( 0, aStartSampleIdx ) );
-    final Integer last = Integer.valueOf( aLastSampleIdx );
+    final Integer last = Integer.valueOf( Math.min( aLastSampleIdx, aData.getValues().length - 1 ) );
+    final Integer size = Integer.valueOf( last.intValue() - first.intValue() );
 
     // Do NOT use Mockito#mock for this; it appears to slow things down *really*
     // much...
@@ -299,6 +299,24 @@ public final class DataTestUtils
         return first.intValue();
       }
     };
+  }
+
+  /**
+   * Creates a (mocked) tool context starting and ending at the given sample
+   * indexes.
+   * 
+   * @param aStartSampleIdx
+   *          the starting sample index of the returned tool context;
+   * @param aLastSampleIdx
+   *          the ending sample index of the returned tool context.
+   * @return a mocked tool context, never <code>null</code>.
+   */
+  public static ToolContext createToolContext( final AcquisitionResult aData, final long aStartTimestamp,
+      final long aLastTimestamp )
+  {
+    int startIdx = aData.getSampleIndex( aStartTimestamp );
+    int endIdx = aData.getSampleIndex( aLastTimestamp );
+    return createToolContext( aData, startIdx, endIdx );
   }
 
   /**
