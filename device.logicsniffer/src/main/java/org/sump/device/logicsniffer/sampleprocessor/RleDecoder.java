@@ -118,7 +118,7 @@ public final class RleDecoder implements SampleProcessor
       // if a count just add it to the time
       if ( ( normalizedSampleValue & this.rleCountValue ) != 0 )
       {
-        int count = ( normalizedSampleValue & this.rleCountMask );
+        long count = ( normalizedSampleValue & this.rleCountMask );
         if ( ddrMode && ( i < ( samples - 1 ) ) )
         {
           // In case of "double data rate", the RLE-counts are encoded as 16-
@@ -126,10 +126,10 @@ public final class RleDecoder implements SampleProcessor
           // count (as they are 8- or 16-bits in DDR mode).
           // This should also solve issue #31...
 
-          // XXX should be multiplied by two, as suggested by DavidFrancis?!
-          // Tests with a 25MHz crystal show good results, without
-          // multiplication...
-          count = ( count << rleShiftBits ) | normalizeSampleValue( this.buffer[++i] );
+          // Issue #55: double the RLE-count as we're using DDR mode which 
+          // takes two samples in one time period...
+          long ddrCount = ( ( count << rleShiftBits ) | normalizeSampleValue( this.buffer[++i] ) );
+          count = 2L * ddrCount;
         }
 
         if ( oldSample >= 0 )
@@ -138,7 +138,7 @@ public final class RleDecoder implements SampleProcessor
         }
         else
         {
-          LOG.warning( "Ignoring RLE count without preceeding sample value: " + Integer.toHexString( count ) );
+          LOG.warning( "Ignoring RLE count without preceeding sample value: " + Long.toHexString( count ) );
         }
       }
       else
