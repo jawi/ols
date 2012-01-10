@@ -15,8 +15,8 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
- * Copyright (C) 2010-2011 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.tool.uart;
 
@@ -44,34 +44,31 @@ import org.mockito.*;
  * (Parameterized) tests cases for {@link UARTAnalyserTask}.
  */
 @RunWith( Parameterized.class )
-public class UARTAnalyserWorkerDataFilesTest
+public class ISO7816DataTest
 {
   // VARIABLES
 
   private final String resourceName;
   private final int baudrate;
-  private final int expectedErrorCount;
-  private final int expectedSymbolCount;
-  private final int expectedBaudrate;
-  private final Parity parity;
+  private final long cursorA;
+  private final long cursorB;
   private final int[] channels;
+  private final int[] symbols;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new UARTAnalyserWorkerTest instance.
+   * Creates a new ISO7816DataTest instance.
    */
-  public UARTAnalyserWorkerDataFilesTest( final String aResourceName, final int aExpectedErrorCount,
-      final int aExpectedSymbolCount, final int aBaudrate, final int aExpectedBaudrate, final Parity aParity,
-      final int... aChannels )
+  public ISO7816DataTest( final String aResourceName, final int aBaudrate, final long aCursorA, final long aCursorB,
+      final int[] aChannels, final int[] aSymbols )
   {
     this.resourceName = aResourceName;
     this.baudrate = aBaudrate;
-    this.expectedErrorCount = aExpectedErrorCount;
-    this.expectedSymbolCount = aExpectedSymbolCount;
-    this.expectedBaudrate = aExpectedBaudrate;
-    this.parity = aParity;
+    this.cursorA = aCursorA;
+    this.cursorB = aCursorB;
     this.channels = aChannels;
+    this.symbols = aSymbols;
   }
 
   // METHODS
@@ -84,13 +81,45 @@ public class UARTAnalyserWorkerDataFilesTest
   public static Collection<Object[]> getTestData()
   {
     return Arrays.asList( new Object[][] { //
-        // { filename, error count, symbol count, baudrate, (rxd, txd) }
-            { "uart_8bit_1.ols", 0, 33, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, //
-            { "uart_8bit_2.ols", 0, 6, -1, 9600, Parity.NONE, new int[] { 2, -1 } }, //
-            { "uart_8bit_3.ols", 50, 418, -1, 9600, Parity.NONE, new int[] { 1, 0 } }, //
-            { "uart_8bit_4_38400bps.ols", 0, 22, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, //
-            { "uart_8bit_5_115200bps.ols", 0, 306, 115200, 115200, Parity.NONE, new int[] { 0, -1 } }, //
+        {
+            "uart_iso7816_kd1.ols",
+            12096, /* baudrate */
+            59331, /* start timestamp */
+            762348, /* end timestamp */
+            new int[] { 2, -1 }, /* { RxD, TxD } */
+            /* expected symbols */
+            new int[] { 0x3f, 0xfd, 0xfc, 0x15, 0x25, 0x02, 0x50, 0xff, 0x00, 0x03, 0xff, 0x33, 0xb0, 0x15, 0x69, 0xff,
+                0x4a, 0x50, 0xf0, 0x80, 0x03, 0x4b, 0x4c, 0x03, 0x00 } //
+        }, //
         } );
+  }
+
+  /**
+   * @param aDataSet
+   * @param aEventName
+   * @return
+   */
+  private static void assertDataEvents( final UARTDataSet aDataSet, final int... aExpectedData )
+  {
+    final Iterator<UARTData> dataIter = aDataSet.getData().iterator();
+
+    int symbolIdx = 0, errors = 0;
+    while ( dataIter.hasNext() && ( symbolIdx < aExpectedData.length ) )
+    {
+      final UARTData data = dataIter.next();
+      if ( data.isEvent() )
+      {
+        errors++;
+      }
+      else
+      {
+        assertEquals( "Data value at index " + symbolIdx + " not equal, ", aExpectedData[symbolIdx], data.getData() );
+        symbolIdx++;
+      }
+    }
+    assertEquals( "Not all data events were seen?!", aExpectedData.length, symbolIdx );
+    assertEquals( "Not all symbols were seen?!", symbolIdx, aDataSet.getDecodedSymbols() );
+    assertEquals( "Not all errors were seen?!", errors, aDataSet.getDetectedErrors() );
   }
 
   /**
@@ -98,12 +127,10 @@ public class UARTAnalyserWorkerDataFilesTest
    * {@link nl.lxtreme.ols.tool.uart.UARTAnalyserTask#doInBackground()}.
    */
   @Test
-  public void testUartAnalysisOk() throws Exception
+  public void testISO7816CompliantDataOk() throws Exception
   {
     UARTDataSet result = analyseDataFile( this.resourceName );
-    assertEquals( this.expectedErrorCount, result.getDetectedErrors() );
-    assertEquals( this.expectedSymbolCount, result.getDecodedSymbols() );
-    assertEquals( this.expectedBaudrate, result.getBaudRate() );
+    assertDataEvents( result, this.symbols );
   }
 
   /**
@@ -120,18 +147,20 @@ public class UARTAnalyserWorkerDataFilesTest
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     DataContainer container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( container );
+    ToolContext toolContext = DataTestUtils.createToolContext( container, this.cursorA, this.cursorB );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
     AnnotationListener al = Mockito.mock( AnnotationListener.class );
 
     UARTAnalyserTask worker = new UARTAnalyserTask( toolContext, tpl, al );
     worker.setStopBits( StopBits.ONE );
+    worker.setParity( Parity.EVEN );
     worker.setBitCount( 8 );
-    worker.setParity( this.parity );
     worker.setBaudRate( this.baudrate );
     worker.setRxdIndex( this.channels[0] );
     worker.setTxdIndex( this.channels[1] );
+    worker.setInversed( true );
+    worker.setInverted( true );
 
     UARTDataSet result = worker.call();
     assertNotNull( result );

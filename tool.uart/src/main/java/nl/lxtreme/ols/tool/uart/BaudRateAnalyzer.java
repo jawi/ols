@@ -59,7 +59,7 @@ final class BaudRateAnalyzer
 
     // We already know our baudrate, so lets put a single value for the
     // corresponding bitlength in our frequency mapping to let it be used...
-    final int bitLength = ( int )( aSampleRate / ( double )aFixedBaudRate );
+    final int bitLength = ( int )Math.round( aSampleRate / ( double )aFixedBaudRate );
     this.statData.addValue( bitLength );
   }
 
@@ -120,6 +120,11 @@ final class BaudRateAnalyzer
       {
         baudRateRounded = COMMON_BAUDRATES[idx];
       }
+    }
+
+    if ( baudRateRounded < 0 )
+    {
+      return br;
     }
 
     return baudRateRounded;

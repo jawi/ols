@@ -37,6 +37,8 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -90,7 +92,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   /**
    * Provides a combobox renderer for {@link UARTParity} values.
    */
-  static final class UARTParityItemRenderer extends EnumItemRenderer<UARTParity>
+  static final class UARTParityItemRenderer extends EnumItemRenderer<Parity>
   {
     // CONSTANTS
 
@@ -102,18 +104,18 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
      * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
      */
     @Override
-    protected String getDisplayValue( final UARTParity aValue )
+    protected String getDisplayValue( final Parity aValue )
     {
       String text = super.getDisplayValue( aValue );
-      if ( UARTParity.EVEN.equals( aValue ) )
+      if ( Parity.EVEN.equals( aValue ) )
       {
         text = "Even parity";
       }
-      else if ( UARTParity.NONE.equals( aValue ) )
+      else if ( Parity.NONE.equals( aValue ) )
       {
         text = "No parity";
       }
-      else if ( UARTParity.ODD.equals( aValue ) )
+      else if ( Parity.ODD.equals( aValue ) )
       {
         text = "Odd parity";
       }
@@ -124,7 +126,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   /**
    * Provides a combobox renderer for {@link UARTStopBits} values.
    */
-  static final class UARTStopBitsItemRenderer extends EnumItemRenderer<UARTStopBits>
+  static final class UARTStopBitsItemRenderer extends EnumItemRenderer<StopBits>
   {
     // CONSTANTS
 
@@ -136,18 +138,18 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
      * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
      */
     @Override
-    protected String getDisplayValue( final UARTStopBits aValue )
+    protected String getDisplayValue( final StopBits aValue )
     {
       String text = super.getDisplayValue( aValue );
-      if ( UARTStopBits.STOP_1.equals( aValue ) )
+      if ( StopBits.ONE.equals( aValue ) )
       {
         text = "1";
       }
-      else if ( UARTStopBits.STOP_15.equals( aValue ) )
+      else if ( StopBits.ONE_HALF.equals( aValue ) )
       {
         text = "1.5";
       }
-      else if ( UARTStopBits.STOP_2.equals( aValue ) )
+      else if ( StopBits.TWO.equals( aValue ) )
       {
         text = "2";
       }
@@ -353,8 +355,8 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     // Other properties...
     toolTask.setInverted( this.inv.isSelected() );
     toolTask.setInversed( this.inverse.isSelected() );
-    toolTask.setParity( ( UARTParity )this.parity.getSelectedItem() );
-    toolTask.setStopBits( ( UARTStopBits )this.stop.getSelectedItem() );
+    toolTask.setParity( ( Parity )this.parity.getSelectedItem() );
+    toolTask.setStopBits( ( StopBits )this.stop.getSelectedItem() );
     toolTask.setBitCount( NumberUtils.smartParseInt( ( String )this.bits.getSelectedItem(), 8 ) );
   }
 
@@ -531,7 +533,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     settings.add( this.baudrate );
 
     settings.add( createRightAlignedLabel( "Parity" ) );
-    this.parity = new JComboBox( UARTParity.values() );
+    this.parity = new JComboBox( Parity.values() );
     this.parity.setSelectedIndex( 0 );
     this.parity.setRenderer( new UARTParityItemRenderer() );
     settings.add( this.parity );
@@ -548,7 +550,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     settings.add( this.bits );
 
     settings.add( createRightAlignedLabel( "Stopbits" ) );
-    this.stop = new JComboBox( UARTStopBits.values() );
+    this.stop = new JComboBox( StopBits.values() );
     this.stop.setSelectedIndex( 0 );
     this.stop.setRenderer( new UARTStopBitsItemRenderer() );
     settings.add( this.stop );
@@ -560,7 +562,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
     this.inverse = new JCheckBox();
     this.inverse.setSelected( false );
-    settings.add( createRightAlignedLabel( "Inverse?" ) );
+    settings.add( createRightAlignedLabel( "Inverse bit-order?" ) );
     settings.add( this.inverse );
 
     SpringLayoutUtils.makeEditorGrid( settings, 10, 4 );

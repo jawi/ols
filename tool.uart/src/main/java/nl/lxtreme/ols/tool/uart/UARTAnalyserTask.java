@@ -29,6 +29,7 @@ import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -57,8 +58,8 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   private int dtrIndex;
   private boolean inverted;
   private boolean inversed;
-  private UARTStopBits stopBits;
-  private UARTParity parity;
+  private StopBits stopBits;
+  private Parity parity;
   private int bitCount;
   private int baudRate;
 
@@ -271,7 +272,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   /**
    * @param aParity
    */
-  public void setParity( final UARTParity aParity )
+  public void setParity( final Parity aParity )
   {
     this.parity = aParity;
   }
@@ -306,7 +307,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   /**
    * @param aStopBits
    */
-  public void setStopBits( final UARTStopBits aStopBits )
+  public void setStopBits( final StopBits aStopBits )
   {
     this.stopBits = aStopBits;
   }
@@ -428,7 +429,40 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
             + aDataSet.getBaudRate() );
       }
 
-      decodeDataLine( aDataSet, aChannelIndex, bitLength, aEventType );
+      SerialConfiguration config = new SerialConfiguration( baudrateAnalyzer.getBaudRateExact(), this.bitCount,
+          this.stopBits, this.parity, this.inverted, this.inversed );
+
+      // decodeDataLine( aDataSet, aChannelIndex, bitLength, aEventType );
+      AsyncSerialDataDecoder decoder = new AsyncSerialDataDecoder( config, this.context );
+      decoder.setProgressListener( this.progressListener );
+
+      decoder.decodeDataLine( data, aChannelIndex, new SerialDecoderCallback()
+      {
+
+        @Override
+        public void reportFrameError( final long aTime )
+        {
+          UARTAnalyserTask.this.reportFrameError( data, aDataSet, aTime, aEventType );
+        }
+
+        @Override
+        public void reportParityError( final long aTime )
+        {
+          UARTAnalyserTask.this.reportParityError( data, aDataSet, aTime, aEventType );
+        }
+
+        @Override
+        public void reportStartError( final long aTime )
+        {
+          UARTAnalyserTask.this.reportStartError( data, aDataSet, aTime, aEventType );
+        }
+
+        @Override
+        public void reportSymbol( final int aChannelIndex, final long aStartTime, final long aEndTime, final int aValue )
+        {
+          UARTAnalyserTask.this.reportData( data, aDataSet, aChannelIndex, aStartTime, aEndTime, aValue, aEventType );
+        }
+      } );
     }
   }
 
@@ -495,7 +529,8 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
        */
       int value = 0;
 
-      final long startTime = time + aBitLength;
+      final long startTime = time + bitCenter;
+      final long endTime = ( startTime + ( this.bitCount * aBitLength ) ) - 1;
       for ( int bitIdx = 0; bitIdx < this.bitCount; bitIdx++ )
       {
         time += aBitLength;
@@ -505,17 +540,22 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
         }
       }
 
+      if ( isInverted() )
+      {
+        value = ~value & NumberUtils.getBitMask( this.bitCount );
+      }
+
       // inverse value; actually meaning invert + MSB first, iso LSB first...
       if ( isInversed() )
       {
         // Issue #85: reverse the value and swap the bit order...
         // TODO we should coerse the #isInversed() & #isInverted(), and
         // introduce a new property #getBitOrder()...
-        value = NumberUtils.reverseBits( value ^ 0xFF, this.bitCount );
+        value = NumberUtils.reverseBits( value, this.bitCount );
       }
 
       // fully decoded a single symbol...
-      reportData( data, aDataSet, aChannelIndex, startTime, time, value, aType );
+      reportData( data, aDataSet, aChannelIndex, startTime, endTime, value, aType );
       symbolCount++;
 
       /*
@@ -523,20 +563,19 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
        */
       if ( isOddParity() || isEvenParity() )
       {
-        time += aBitLength;
-
-        final boolean evenBitCount = ( Integer.bitCount( value ) & 1 ) == 0;
+        final int actualBitCount = Integer.bitCount( value );
         // determine which parity bit we should expect...
         final int expectedValue;
         if ( isOddParity() )
         {
-          expectedValue = evenBitCount ? mask : 0;
+          expectedValue = ( actualBitCount % 2 ) == 0 ? mask : 0;
         }
         else
         {
-          expectedValue = evenBitCount ? 0 : mask;
+          expectedValue = ( actualBitCount % 2 ) == 1 ? mask : 0;
         }
 
+        time += aBitLength;
         if ( !isExpectedLevel( time, mask, expectedValue ) )
         {
           reportParityError( data, aDataSet, time, aType );
@@ -586,12 +625,12 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
     long result = -1;
 
-    int oldBitValue = getDataValue( aStartOfDecode ) & aMask;
+    int oldBitValue = getDataValue( aStartOfDecode, aMask );
     for ( long timeCursor = aStartOfDecode + 1; ( result < 0 ) && ( timeCursor < aEndOfDecode ); timeCursor++ )
     {
-      final int bitValue = getDataValue( timeCursor ) & aMask;
+      final int bitValue = getDataValue( timeCursor, aMask );
 
-      final Edge edge = Edge.toEdge( oldBitValue, bitValue );
+      Edge edge = Edge.toEdge( oldBitValue, bitValue );
       if ( sampleEdge == edge )
       {
         result = timeCursor;
@@ -671,7 +710,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    * @return the data value of the sample index right before the given time
    *         value.
    */
-  private int getDataValue( final long aTimeValue )
+  private int getDataValue( final long aTimeValue, final int aMask )
   {
     final AcquisitionResult data = this.context.getData();
 
@@ -686,7 +725,14 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
         break;
       }
     }
-    return values[i - 1];
+
+    int value = values[i - 1];
+    if ( isInverted() )
+    {
+      return ~value & aMask;
+    }
+
+    return value & aMask;
   }
 
   /**
@@ -697,7 +743,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    */
   private boolean isEvenParity()
   {
-    return this.parity == UARTParity.EVEN;
+    return this.parity == Parity.EVEN;
   }
 
   /**
@@ -719,12 +765,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    */
   private boolean isExpectedLevel( final long aTimestamp, final int aMask, final int aExpectedMask )
   {
-    final int value = getDataValue( aTimestamp ) & aMask;
-    if ( isInverted() )
-    {
-      return value != aExpectedMask;
-    }
-    return value == aExpectedMask;
+    return getDataValue( aTimestamp, aMask ) == aExpectedMask;
   }
 
   /**
@@ -740,7 +781,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    */
   private boolean isMark( final long aTimestamp, final int aMask )
   {
-    return isExpectedLevel( aTimestamp, aMask, aMask );
+    return isExpectedLevel( aTimestamp, aMask, isInverted() ? 0x00 : aMask );
   }
 
   /**
@@ -751,7 +792,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    */
   private boolean isOddParity()
   {
-    return this.parity == UARTParity.ODD;
+    return this.parity == Parity.ODD;
   }
 
   /**
@@ -767,7 +808,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    */
   private boolean isSpace( final long aTimestamp, final int aMask )
   {
-    return isExpectedLevel( aTimestamp, aMask, 0x00 );
+    return isExpectedLevel( aTimestamp, aMask, isInverted() ? aMask : 0x00 );
   }
 
   /**
@@ -830,7 +871,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
       final long aStartTimestamp, final long aEndTimestamp, final int aByteValue, final int aType )
   {
     final int startSampleIdx = Math.max( aData.getSampleIndex( aStartTimestamp ), 0 );
-    final int endSampleIdx = Math.min( aData.getSampleIndex( aEndTimestamp ) + 1, aData.getTimestamps().length - 1 );
+    final int endSampleIdx = Math.min( aData.getSampleIndex( aEndTimestamp ), aData.getTimestamps().length - 1 );
 
     aDataSet.reportData( aChannelIndex, startSampleIdx, endSampleIdx, aByteValue, aType );
 
