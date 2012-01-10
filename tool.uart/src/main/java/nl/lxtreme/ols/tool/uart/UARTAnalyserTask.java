@@ -29,8 +29,10 @@ import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
-import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialConfiguration;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialDecoderCallback;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 
 
 /**
@@ -322,6 +324,25 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
+   * Emits a new symbol annotation to the interested listener(s).
+   * 
+   * @param aChannelIndex
+   *          the channel index on which the symbol was found;
+   * @param aSymbol
+   *          the symbol itself;
+   * @param aStartSampleIdx
+   *          the start sample index of the symbol;
+   * @param aEndSampleIdx
+   *          the end sample index of the symbol.
+   */
+  private void addSymbolAnnotation( final int aChannelIndex, final int aSymbol, final int aStartSampleIdx,
+      final int aEndSampleIdx )
+  {
+    this.annotationListener.onAnnotation( new SampleDataAnnotation( aChannelIndex, aStartSampleIdx, aEndSampleIdx,
+        String.format( "0x%1$X (%1$c)", Integer.valueOf( aSymbol ) ) ) );
+  }
+
+  /**
    * Factory method for creating the baud rate analyzer for the given
    * acquisition results & bit mask.
    * 
@@ -438,208 +459,72 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
       decoder.decodeDataLine( data, aChannelIndex, new SerialDecoderCallback()
       {
+        private final int rxdIdx = UARTAnalyserTask.this.rxdIndex;
+        private final int txdIdx = UARTAnalyserTask.this.txdIndex;
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void reportFrameError( final long aTime )
         {
-          UARTAnalyserTask.this.reportFrameError( data, aDataSet, aTime, aEventType );
+          if ( aEventType == UARTData.UART_TYPE_RXDATA )
+          {
+            aDataSet.reportFrameError( this.rxdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_RXEVENT );
+          }
+          else
+          {
+            aDataSet.reportFrameError( this.txdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_TXEVENT );
+          }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void reportParityError( final long aTime )
         {
-          UARTAnalyserTask.this.reportParityError( data, aDataSet, aTime, aEventType );
+          if ( aEventType == UARTData.UART_TYPE_RXDATA )
+          {
+            aDataSet.reportParityError( this.rxdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_RXEVENT );
+          }
+          else
+          {
+            aDataSet.reportParityError( this.txdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_TXEVENT );
+          }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void reportStartError( final long aTime )
         {
-          UARTAnalyserTask.this.reportStartError( data, aDataSet, aTime, aEventType );
+          if ( aEventType == UARTData.UART_TYPE_RXDATA )
+          {
+            aDataSet.reportStartError( this.rxdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_RXEVENT );
+          }
+          else
+          {
+            aDataSet.reportStartError( this.txdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_TXEVENT );
+          }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public void reportSymbol( final int aChannelIndex, final long aStartTime, final long aEndTime, final int aValue )
+        public void reportSymbol( final int aSymbol, final long aStartTime, final long aEndTime )
         {
-          UARTAnalyserTask.this.reportData( data, aDataSet, aChannelIndex, aStartTime, aEndTime, aValue, aEventType );
+          final int startSampleIdx = Math.max( data.getSampleIndex( aStartTime ), 0 );
+          final int endSampleIdx = Math.min( data.getSampleIndex( aEndTime ), data.getTimestamps().length - 1 );
+
+          aDataSet.reportData( aChannelIndex, startSampleIdx, endSampleIdx, aSymbol, aEventType );
+
+          addSymbolAnnotation( aChannelIndex, aSymbol, startSampleIdx, endSampleIdx );
         }
       } );
     }
-  }
-
-  /**
-   * decode a UART data line
-   * 
-   * @param aDataSet
-   *          the data set to add the decoded data to;
-   * @param aChannelIndex
-   *          the channel index to decode;
-   * @param aBitLength
-   *          the length of a single bit (counted samples per bit)
-   * @param aType
-   *          type of the data (rx or tx)
-   * @return the number of decoded symbols, >= 0.
-   */
-  private int decodeDataLine( final UARTDataSet aDataSet, final int aChannelIndex, final int aBitLength, final int aType )
-  {
-    final AcquisitionResult data = this.context.getData();
-
-    final int mask = ( 1 << aChannelIndex );
-    final int stopCount = ( int )Math.ceil( this.stopBits.getValue() );
-    final int parityCount = this.parity.isNone() ? 0 : 1;
-    final int frameSize = ( this.bitCount + stopCount + parityCount ) * aBitLength;
-
-    final int bitCenter = aBitLength / 2;
-
-    final long[] timestamps = data.getTimestamps();
-
-    final long startOfDecode = timestamps[aDataSet.getStartOfDecode()];
-    final long endOfDecode = timestamps[aDataSet.getEndOfDecode()];
-
-    long time = Math.max( 0, startOfDecode );
-    this.progressListener.setProgress( 0 );
-
-    int symbolCount = 0;
-    while ( ( endOfDecode - time ) > frameSize )
-    {
-      /*
-       * find first falling edge this is the start of the startbit. If the
-       * signal is inverted, find the first rising edge.
-       */
-      time = findStartBit( time, endOfDecode, mask );
-      if ( time < 0 )
-      {
-        LOG.log( Level.INFO, "Decoding ended for {0}; no start bit found...",
-            ( aChannelIndex == this.rxdIndex ) ? UARTDataSet.UART_RXD : UARTDataSet.UART_TXD );
-        break;
-      }
-
-      /*
-       * Sampling is done in the middle of each bit the start bit must be low.
-       * If the signal is inverted, the startbit must be high.
-       */
-      time += bitCenter;
-      if ( !isSpace( time, mask ) )
-      {
-        // this is not a start bit !
-        reportStartError( data, aDataSet, time, aType );
-      }
-
-      /*
-       * sample the databits in the middle of the bit position
-       */
-      int value = 0;
-
-      final long startTime = time + bitCenter;
-      final long endTime = ( startTime + ( this.bitCount * aBitLength ) ) - 1;
-      for ( int bitIdx = 0; bitIdx < this.bitCount; bitIdx++ )
-      {
-        time += aBitLength;
-        if ( isMark( time, mask ) )
-        {
-          value |= ( 1 << bitIdx );
-        }
-      }
-
-      if ( isInverted() )
-      {
-        value = ~value & NumberUtils.getBitMask( this.bitCount );
-      }
-
-      // inverse value; actually meaning invert + MSB first, iso LSB first...
-      if ( isInversed() )
-      {
-        // Issue #85: reverse the value and swap the bit order...
-        // TODO we should coerse the #isInversed() & #isInverted(), and
-        // introduce a new property #getBitOrder()...
-        value = NumberUtils.reverseBits( value, this.bitCount );
-      }
-
-      // fully decoded a single symbol...
-      reportData( data, aDataSet, aChannelIndex, startTime, endTime, value, aType );
-      symbolCount++;
-
-      /*
-       * Sample parity bit (if available/desired).
-       */
-      if ( isOddParity() || isEvenParity() )
-      {
-        final int actualBitCount = Integer.bitCount( value );
-        // determine which parity bit we should expect...
-        final int expectedValue;
-        if ( isOddParity() )
-        {
-          expectedValue = ( actualBitCount % 2 ) == 0 ? mask : 0;
-        }
-        else
-        {
-          expectedValue = ( actualBitCount % 2 ) == 1 ? mask : 0;
-        }
-
-        time += aBitLength;
-        if ( !isExpectedLevel( time, mask, expectedValue ) )
-        {
-          reportParityError( data, aDataSet, time, aType );
-        }
-      }
-
-      /*
-       * sample stopbit(s)
-       */
-      time += aBitLength;
-
-      double stopBitCount = this.stopBits.getValue();
-      while ( stopBitCount > 0.0 )
-      {
-        if ( !isMark( time, mask ) )
-        {
-          reportFrameError( data, aDataSet, time, aType );
-        }
-        stopBitCount -= 1.0;
-
-        time += stopBitCount * aBitLength;
-      }
-
-      this.progressListener.setProgress( getPercentage( time, startOfDecode, endOfDecode ) );
-    }
-
-    this.progressListener.setProgress( 100 );
-
-    return symbolCount;
-  }
-
-  /**
-   * Find first falling edge this is the start of the start bit. If the signal
-   * is inverted, find the first rising edge.
-   * 
-   * @param aStartOfDecode
-   *          the timestamp to start searching;
-   * @param aEndOfDecode
-   *          the timestamp to end the search;
-   * @param aMask
-   *          the bit-value mask to apply for finding the start bit.
-   * @return the time at which the start bit was found, -1 if it is not found.
-   */
-  private long findStartBit( final long aStartOfDecode, final long aEndOfDecode, final int aMask )
-  {
-    final Edge sampleEdge = isInverted() ? Edge.RISING : Edge.FALLING;
-
-    long result = -1;
-
-    int oldBitValue = getDataValue( aStartOfDecode, aMask );
-    for ( long timeCursor = aStartOfDecode + 1; ( result < 0 ) && ( timeCursor < aEndOfDecode ); timeCursor++ )
-    {
-      final int bitValue = getDataValue( timeCursor, aMask );
-
-      Edge edge = Edge.toEdge( oldBitValue, bitValue );
-      if ( sampleEdge == edge )
-      {
-        result = timeCursor;
-      }
-
-      oldBitValue = bitValue;
-    }
-
-    return result;
   }
 
   /**
@@ -703,115 +588,6 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
-   * Returns the data value for the given time stamp.
-   * 
-   * @param aTimeValue
-   *          the time stamp to return the data value for.
-   * @return the data value of the sample index right before the given time
-   *         value.
-   */
-  private int getDataValue( final long aTimeValue, final int aMask )
-  {
-    final AcquisitionResult data = this.context.getData();
-
-    final int[] values = data.getValues();
-    final long[] timestamps = data.getTimestamps();
-
-    int i;
-    for ( i = 1; i < timestamps.length; i++ )
-    {
-      if ( aTimeValue < timestamps[i] )
-      {
-        break;
-      }
-    }
-
-    int value = values[i - 1];
-    if ( isInverted() )
-    {
-      return ~value & aMask;
-    }
-
-    return value & aMask;
-  }
-
-  /**
-   * Returns whether an EVEN parity is chosen.
-   * 
-   * @return <code>true</code> if an even parity is chosen, <code>false</code>
-   *         otherwise.
-   */
-  private boolean isEvenParity()
-  {
-    return this.parity == Parity.EVEN;
-  }
-
-  /**
-   * Returns whether the bit-value (denoted by the given mask) is the given
-   * expected mask.
-   * <p>
-   * In case the signal is inverted, this method will inverse the check.
-   * </p>
-   * 
-   * @param aTimestamp
-   *          the timestamp to sample the data at;
-   * @param aMask
-   *          the bit-value mask;
-   * @param aExpectedMask
-   *          the expected bit-value mask.
-   * @return <code>true</code> if the given bit-value meets the expected mask,
-   *         <code>false</code> otherwise.
-   * @see #isInverted()
-   */
-  private boolean isExpectedLevel( final long aTimestamp, final int aMask, final int aExpectedMask )
-  {
-    return getDataValue( aTimestamp, aMask ) == aExpectedMask;
-  }
-
-  /**
-   * Returns whether the (data-)value at the given timestamp is at a 'mark'
-   * (active high, or -when inverted- active low).
-   * 
-   * @param aTimestamp
-   *          the timestamp to sample the data at;
-   * @param aMask
-   *          the mask of the bit-value.
-   * @return <code>true</code> if the bit-value is at the expected value,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isMark( final long aTimestamp, final int aMask )
-  {
-    return isExpectedLevel( aTimestamp, aMask, isInverted() ? 0x00 : aMask );
-  }
-
-  /**
-   * Returns whether an ODD parity is chosen.
-   * 
-   * @return <code>true</code> if an odd parity is chosen, <code>false</code>
-   *         otherwise.
-   */
-  private boolean isOddParity()
-  {
-    return this.parity == Parity.ODD;
-  }
-
-  /**
-   * Returns whether the (data-)value at the given timestamp is at a 'space'
-   * (active low, or -when inverted- active high).
-   * 
-   * @param aTimestamp
-   *          the timestamp to sample the data at;
-   * @param aMask
-   *          the mask of the bit-value.
-   * @return <code>true</code> if the bit-value is at the expected value,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isSpace( final long aTimestamp, final int aMask )
-  {
-    return isExpectedLevel( aTimestamp, aMask, isInverted() ? aMask : 0x00 );
-  }
-
-  /**
    * Prepares and decoded the control line indicated by the given channel index.
    * 
    * @param aDataSet
@@ -858,78 +634,5 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   {
     this.annotationListener.clearAnnotations( aChannelIndex );
     this.annotationListener.onAnnotation( new ChannelLabelAnnotation( aChannelIndex, aLabel ) );
-  }
-
-  /**
-   * @param aDataSet
-   * @param aChannelIndex
-   * @param aByteValue
-   * @param aType
-   * @param aTimestamp
-   */
-  private void reportData( final AcquisitionResult aData, final UARTDataSet aDataSet, final int aChannelIndex,
-      final long aStartTimestamp, final long aEndTimestamp, final int aByteValue, final int aType )
-  {
-    final int startSampleIdx = Math.max( aData.getSampleIndex( aStartTimestamp ), 0 );
-    final int endSampleIdx = Math.min( aData.getSampleIndex( aEndTimestamp ), aData.getTimestamps().length - 1 );
-
-    aDataSet.reportData( aChannelIndex, startSampleIdx, endSampleIdx, aByteValue, aType );
-
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( aChannelIndex, startSampleIdx, endSampleIdx, String
-        .format( "0x%1$X (%1$c)", Integer.valueOf( aByteValue ) ) ) );
-  }
-
-  /**
-   * @param aDataSet
-   * @param aTimestamp
-   * @param aType
-   */
-  private void reportFrameError( final AcquisitionResult aData, final UARTDataSet aDataSet, final long aTimestamp,
-      final int aType )
-  {
-    if ( aType == UARTData.UART_TYPE_RXDATA )
-    {
-      aDataSet.reportFrameError( this.rxdIndex, aData.getSampleIndex( aTimestamp ), UARTData.UART_TYPE_RXEVENT );
-    }
-    else
-    {
-      aDataSet.reportFrameError( this.txdIndex, aData.getSampleIndex( aTimestamp ), UARTData.UART_TYPE_TXEVENT );
-    }
-  }
-
-  /**
-   * @param aDataSet
-   * @param aTimestamp
-   * @param aType
-   */
-  private void reportParityError( final AcquisitionResult aData, final UARTDataSet aDataSet, final long aTimestamp,
-      final int aType )
-  {
-    if ( aType == UARTData.UART_TYPE_RXDATA )
-    {
-      aDataSet.reportParityError( this.rxdIndex, aData.getSampleIndex( aTimestamp ), UARTData.UART_TYPE_RXEVENT );
-    }
-    else
-    {
-      aDataSet.reportParityError( this.txdIndex, aData.getSampleIndex( aTimestamp ), UARTData.UART_TYPE_TXEVENT );
-    }
-  }
-
-  /**
-   * @param aDataSet
-   * @param aTimestamp
-   * @param aType
-   */
-  private void reportStartError( final AcquisitionResult aData, final UARTDataSet aDataSet, final long aTimestamp,
-      final int aType )
-  {
-    if ( aType == UARTData.UART_TYPE_RXDATA )
-    {
-      aDataSet.reportStartError( this.rxdIndex, aData.getSampleIndex( aTimestamp ), UARTData.UART_TYPE_RXEVENT );
-    }
-    else
-    {
-      aDataSet.reportStartError( this.txdIndex, aData.getSampleIndex( aTimestamp ), UARTData.UART_TYPE_TXEVENT );
-    }
   }
 }

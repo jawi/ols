@@ -272,18 +272,15 @@ public final class AsyncSerialDataDecoder
     /**
      * Called when a single data symbol has been fully decoded.
      * 
-     * @param aChannelIndex
-     *          the index of the channel on which the data symbol has been
-     *          decoded;
+     * @param aSymbol
+     *          the actual data symbol, as integer value. For 8-bit symbols, it
+     *          can be directly represented as ASCII.
      * @param aStartTime
      *          the starting time stamp on which the data symbol starts;
      * @param aEndTime
      *          the ending time stamp on which the data symbol ends;
-     * @param aValue
-     *          the actual data symbol, as integer value. For 8-bit symbols, it
-     *          can be directly represented as ASCII.
      */
-    void reportSymbol( int aChannelIndex, long aStartTime, long aEndTime, int aValue );
+    void reportSymbol( int aSymbol, long aStartTime, long aEndTime );
   }
 
   /**
@@ -423,7 +420,7 @@ public final class AsyncSerialDataDecoder
       symbol = correctSymbol( symbol, bitCount );
 
       // fully decoded a single symbol...
-      aCallback.reportSymbol( aChannelIndex, startTime, endTime, symbol );
+      aCallback.reportSymbol( symbol, startTime, endTime );
       symbolCount++;
 
       // Sample parity bit (if available/desired).
