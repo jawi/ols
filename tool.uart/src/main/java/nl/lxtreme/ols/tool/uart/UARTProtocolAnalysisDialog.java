@@ -25,6 +25,7 @@ import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
@@ -61,33 +62,6 @@ import org.osgi.framework.*;
 public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet> implements ExportAware<UARTDataSet>
 {
   // INNER TYPES
-
-  /**
-   * Cell item renderer for baud rates.
-   */
-  static final class BaudrateItemRenderer extends DefaultListCellRenderer
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-        final boolean aIsSelected, final boolean aCellHasFocus )
-    {
-      String text = ( aValue == null ) ? "" : aValue.toString();
-      if ( "-1".equals( text ) )
-      {
-        text = "Auto detect";
-      }
-      return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
-    }
-  }
 
   /**
    * Provides a combobox renderer for {@link UARTParity} values.
@@ -178,6 +152,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   private JComboBox stop;
   private JCheckBox inv;
   private JCheckBox inverse;
+  private JCheckBox autoDetectBaudRate;
   private JComboBox baudrate;
   private JEditorPane outText;
 
@@ -248,6 +223,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.inv.setSelected( aSettings.getBoolean( "inverted", this.inv.isSelected() ) );
     this.inverse.setSelected( aSettings.getBoolean( "inverse", this.inverse.isSelected() ) );
     this.baudrate.setSelectedItem( Integer.valueOf( aSettings.getInt( "baudrate", 9600 ) ) );
+    this.autoDetectBaudRate.setSelected( aSettings.getBoolean( "auto-baudrate", this.autoDetectBaudRate.isSelected() ) );
   }
 
   /**
@@ -286,6 +262,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     aSettings.putBoolean( "inverted", this.inv.isSelected() );
     aSettings.putBoolean( "inverse", this.inverse.isSelected() );
     aSettings.putInt( "baudrate", ( ( Integer )this.baudrate.getSelectedItem() ).intValue() );
+    aSettings.putBoolean( "auto-baudrate", this.autoDetectBaudRate.isSelected() );
   }
 
   /**
@@ -350,7 +327,15 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     toolTask.setRiIndex( this.ri.getSelectedIndex() - 1 );
     toolTask.setDsrIndex( this.dsr.getSelectedIndex() - 1 );
     toolTask.setDtrIndex( this.dtr.getSelectedIndex() - 1 );
-    toolTask.setBaudRate( ( ( Integer )this.baudrate.getSelectedItem() ).intValue() );
+    // Handle the auto detect option for baudrates...
+    if ( this.autoDetectBaudRate.isSelected() )
+    {
+      toolTask.setBaudRate( UARTAnalyserTask.AUTO_DETECT_BAUDRATE );
+    }
+    else
+    {
+      toolTask.setBaudRate( ( ( Integer )this.baudrate.getSelectedItem() ).intValue() );
+    }
 
     // Other properties...
     toolTask.setInverted( this.inv.isSelected() );
@@ -481,6 +466,18 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   {
     final int channelCount = getData().getChannels();
 
+    final Integer[] baudrates = new Integer[BaudRateAnalyzer.COMMON_BAUDRATES.length];
+    for ( int i = 0; i < baudrates.length; i++ )
+    {
+      baudrates[i] = Integer.valueOf( BaudRateAnalyzer.COMMON_BAUDRATES[i] );
+    }
+    final String[] bitarray = new String[10];
+    // allow symbol lengths between 5 and 14 bits...
+    for ( int i = 0; i < bitarray.length; i++ )
+    {
+      bitarray[i] = String.format( "%d", Integer.valueOf( i + 5 ) );
+    }
+
     final JPanel settings = new JPanel( new SpringLayout() );
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
@@ -517,20 +514,26 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.ri = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     settings.add( this.ri );
 
-    final Integer[] baudrates = new Integer[BaudRateAnalyzer.COMMON_BAUDRATES.length + 1];
-    baudrates[0] = Integer.valueOf( -1 );
-    int i = 1;
-    for ( int baudrate : BaudRateAnalyzer.COMMON_BAUDRATES )
-    {
-      baudrates[i++] = Integer.valueOf( baudrate );
-    }
+    settings.add( createRightAlignedLabel( "Baudrate" ) );
+    this.autoDetectBaudRate = new JCheckBox( "Auto detect" );
+    settings.add( this.autoDetectBaudRate );
+
+    settings.add( new JLabel( "" ) );
     this.baudrate = new JComboBox( baudrates );
     // Issue #90: allow custom baudrates to be specified...
     this.baudrate.setEditable( true );
     this.baudrate.setSelectedIndex( 0 );
-    this.baudrate.setRenderer( new BaudrateItemRenderer() );
-    settings.add( createRightAlignedLabel( "Baudrate" ) );
     settings.add( this.baudrate );
+
+    this.autoDetectBaudRate.addItemListener( new ItemListener()
+    {
+      @Override
+      public void itemStateChanged( final ItemEvent aEvent )
+      {
+        final JCheckBox cb = ( JCheckBox )aEvent.getSource();
+        UARTProtocolAnalysisDialog.this.baudrate.setEnabled( !cb.isSelected() );
+      }
+    } );
 
     settings.add( createRightAlignedLabel( "Parity" ) );
     this.parity = new JComboBox( Parity.values() );
@@ -539,12 +542,6 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     settings.add( this.parity );
 
     settings.add( createRightAlignedLabel( "Bits" ) );
-    final String[] bitarray = new String[10];
-    // allow word lengths between 5 and 14 bits...
-    for ( i = 0; i < bitarray.length; i++ )
-    {
-      bitarray[i] = String.format( "%d", Integer.valueOf( i + 5 ) );
-    }
     this.bits = new JComboBox( bitarray );
     this.bits.setSelectedIndex( 3 );
     settings.add( this.bits );

@@ -44,6 +44,12 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
   private static final Logger LOG = Logger.getLogger( UARTAnalyserTask.class.getName() );
 
+  /**
+   * A constant used to distinguish between "real" baudrates and the auto-detect
+   * option.
+   */
+  public static final int AUTO_DETECT_BAUDRATE = -1;
+
   // VARIABLES
 
   private final ToolContext context;
@@ -354,7 +360,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    */
   private BaudRateAnalyzer createBaudRateAnalyzer( final AcquisitionResult aData, final int aMask )
   {
-    if ( this.baudRate <= 0 )
+    if ( this.baudRate == AUTO_DETECT_BAUDRATE )
     {
       // Auto detect the baud rate...
       return new BaudRateAnalyzer( aData.getSampleRate(), aData.getValues(), aData.getTimestamps(), aMask );
