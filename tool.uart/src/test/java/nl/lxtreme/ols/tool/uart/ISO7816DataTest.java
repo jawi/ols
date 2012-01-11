@@ -43,6 +43,7 @@ import org.mockito.*;
 /**
  * (Parameterized) tests cases for {@link UARTAnalyserTask}.
  */
+@Ignore
 @RunWith( Parameterized.class )
 public class ISO7816DataTest
 {
