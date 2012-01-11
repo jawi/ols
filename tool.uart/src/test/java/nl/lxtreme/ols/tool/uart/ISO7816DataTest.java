@@ -34,8 +34,6 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 
 import org.junit.*;
-import org.junit.runner.*;
-import org.junit.runners.*;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.*;
 
@@ -43,35 +41,8 @@ import org.mockito.*;
 /**
  * (Parameterized) tests cases for {@link UARTAnalyserTask}.
  */
-@Ignore
-@RunWith( Parameterized.class )
 public class ISO7816DataTest
 {
-  // VARIABLES
-
-  private final String resourceName;
-  private final int baudrate;
-  private final long cursorA;
-  private final long cursorB;
-  private final int[] channels;
-  private final int[] symbols;
-
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new ISO7816DataTest instance.
-   */
-  public ISO7816DataTest( final String aResourceName, final int aBaudrate, final long aCursorA, final long aCursorB,
-      final int[] aChannels, final int[] aSymbols )
-  {
-    this.resourceName = aResourceName;
-    this.baudrate = aBaudrate;
-    this.cursorA = aCursorA;
-    this.cursorB = aCursorB;
-    this.channels = aChannels;
-    this.symbols = aSymbols;
-  }
-
   // METHODS
 
   /**
@@ -83,11 +54,12 @@ public class ISO7816DataTest
   {
     return Arrays.asList( new Object[][] { //
         {
-            "uart_iso7816_kd1.ols",
-            12096, /* baudrate */
-            59331, /* start timestamp */
+            "sy-card-atr-rxd-channel1-baud9600-parity-odd.ols",
+            9600, /* baudrate */
+            0, /* start timestamp */
             762348, /* end timestamp */
-            new int[] { 2, -1 }, /* { RxD, TxD } */
+            1, /* RxD */
+            Parity.EVEN, /* parity */
             /* expected symbols */
             new int[] { 0x3f, 0xfd, 0xfc, 0x15, 0x25, 0x02, 0x50, 0xff, 0x00, 0x03, 0xff, 0x33, 0xb0, 0x15, 0x69, 0xff,
                 0x4a, 0x50, 0xf0, 0x80, 0x03, 0x4b, 0x4c, 0x03, 0x00 } //
@@ -125,13 +97,36 @@ public class ISO7816DataTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.uart.UARTAnalyserTask#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder#decodeDataLine(AcquisitionResult, int, SerialDecoderCallback)}
+   * .
    */
   @Test
-  public void testISO7816CompliantDataOk() throws Exception
+  public void testDirectConventionOk() throws Exception
   {
-    UARTDataSet result = analyseDataFile( this.resourceName );
-    assertDataEvents( result, this.symbols );
+    UARTDataSet result = analyseDataFile( "sy-card-atr-rxd-channel1-baud9600-parity-odd.ols", 9600, Parity.EVEN,
+        1 /* RxD */, true /* inverse convention */);
+
+    assertEquals( 21, result.getDecodedSymbols() );
+    assertEquals( 0, result.getDetectedErrors() );
+    assertDataEvents( result, new int[] { 0x3f, 0xfd, 0x11, 0x25, 0x02, 0x50, 0x00, 0x03, 0x33, 0xb0, 0x15, 0x69, 0xff,
+        0x4a, 0x50, 0xf0, 0x80, 0x03, 0x4b, 0x4c, 0x03 } );
+  }
+
+  /**
+   * Test method for
+   * {@link nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder#decodeDataLine(AcquisitionResult, int, SerialDecoderCallback)}
+   * .
+   */
+  @Test
+  public void testInverseConventionOk() throws Exception
+  {
+    UARTDataSet result = analyseDataFile( "openpgp-card-atr-rxd-channel1-baud9600-parity-even.ols", 9600, Parity.EVEN,
+        1 /* RxD */, false /* inverse convention */);
+
+    assertEquals( 20, result.getDecodedSymbols() );
+    assertEquals( 0, result.getDetectedErrors() );
+    assertDataEvents( result, new int[] { 0x3b, 0xfa, 0x13, 0x00, 0xff, 0x81, 0x31, 0x80, 0x45, 0x00, 0x31, 0xc1, 0x73,
+        0xc0, 0x01, 0x00, 0x00, 0x90, 0x00, 0xb1 } );
   }
 
   /**
@@ -144,24 +139,25 @@ public class ISO7816DataTest
    * @throws Exception
    *           in case of exceptions.
    */
-  private UARTDataSet analyseDataFile( final String aResourceName ) throws Exception
+  private UARTDataSet analyseDataFile( final String aResourceName, final int aBaudRate, final Parity aParity,
+      final int aRxDChannel, final boolean aInverseConvention ) throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
     DataContainer container = DataTestUtils.getCapturedData( resource );
-    ToolContext toolContext = DataTestUtils.createToolContext( container, this.cursorA, this.cursorB );
+    ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );
     AnnotationListener al = Mockito.mock( AnnotationListener.class );
 
     UARTAnalyserTask worker = new UARTAnalyserTask( toolContext, tpl, al );
-    worker.setStopBits( StopBits.ONE );
-    worker.setParity( Parity.EVEN );
     worker.setBitCount( 8 );
-    worker.setBaudRate( this.baudrate );
-    worker.setRxdIndex( this.channels[0] );
-    worker.setTxdIndex( this.channels[1] );
-    worker.setInversed( true );
-    worker.setInverted( true );
+    worker.setStopBits( StopBits.ONE );
+    worker.setParity( aParity );
+    worker.setBaudRate( aBaudRate );
+    worker.setRxdIndex( aRxDChannel );
+    worker.setTxdIndex( -1 );
+    worker.setInversed( aInverseConvention );
+    worker.setInverted( aInverseConvention );
 
     UARTDataSet result = worker.call();
     assertNotNull( result );
