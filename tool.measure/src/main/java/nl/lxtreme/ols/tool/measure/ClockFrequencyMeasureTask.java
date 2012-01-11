@@ -21,12 +21,11 @@
 package nl.lxtreme.ols.tool.measure;
 
 
+import static nl.lxtreme.ols.util.DisplayUtils.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.analysis.*;
 
 
 /**
@@ -42,15 +41,15 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
    */
   public static class ClockStats
   {
-    // CONSTANTS
-
-    /** Denotes a half sampling period (unitless). */
-    private static final double HALF_PERIOD = 0.5;
-
     // VARIABLES
 
-    private final ClockPeriodStats periodStats;
-    private final double sampleRate;
+    private final double dutycycle;
+    private final double frequency;
+    private final double error;
+    private final double measuringTime;
+    private final int pulseCount;
+    private final int risingEdgeCount;
+    private final int fallingEdgeCount;
 
     /**
      * Creates a new ClockStats instance.
@@ -60,10 +59,16 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
      * @param aSampleRate
      *          the sample rate to use.
      */
-    private ClockStats( final ClockPeriodStats aPeriodStats, final long aSampleRate )
+    private ClockStats( final double aMeasuringTime, final double aFrequency, final double aDutyCycle,
+        final int aPulseCount, final int aRisingEdgeCount, final int aFallingEdgeCount )
     {
-      this.periodStats = aPeriodStats;
-      this.sampleRate = aSampleRate;
+      this.measuringTime = aMeasuringTime;
+      this.frequency = aFrequency;
+      this.dutycycle = aDutyCycle;
+      this.pulseCount = aPulseCount;
+      this.risingEdgeCount = aRisingEdgeCount;
+      this.fallingEdgeCount = aFallingEdgeCount;
+      this.error = Math.abs( ( this.pulseCount / this.measuringTime ) - this.frequency ) / 2.0;
     }
 
     // METHODS
@@ -77,19 +82,7 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
      */
     public double getDutyCycle()
     {
-      if ( this.periodStats == null )
-      {
-        return 0.0;
-      }
-
-      final double totalPeriod = this.periodStats.getTotalPeriod();
-      if ( totalPeriod == 0.0 )
-      {
-        return 0.0;
-      }
-
-      final double period = Math.max( this.periodStats.getPeriod1(), this.periodStats.getPeriod2() );
-      return period / totalPeriod;
+      return this.dutycycle;
     }
 
     /**
@@ -109,14 +102,17 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
      */
     public double getError()
     {
-      if ( this.periodStats == null )
-      {
-        return 0.0;
-      }
+      return this.error;
+    }
 
-      final double tau = this.periodStats.getTotalPeriod();
-      // Simplified version of expression denoted in JavaDoc...
-      return this.sampleRate / ( ( 2 * tau * tau ) - 0.5 );
+    /**
+     * Returns the current value of fallingEdgeCount.
+     * 
+     * @return the falling edge count, never <code>null</code>.
+     */
+    public Integer getFallingEdgeCount()
+    {
+      return Integer.valueOf( this.fallingEdgeCount );
     }
 
     /**
@@ -126,63 +122,48 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
      */
     public double getFrequency()
     {
-      if ( this.periodStats == null )
-      {
-        return 0.0;
-      }
-
-      final long totalPeriod = this.periodStats.getTotalPeriod();
-      if ( totalPeriod == 0 )
-      {
-        return 0.0;
-      }
-
-      return this.sampleRate / totalPeriod;
+      return this.frequency;
     }
 
     /**
-     * Returns the "lower bound" of the measured frequency.
-     * <p>
-     * The measured frequency has a certain uncertainty, due to the discrete
-     * sampling of the original signal. This uncertainty can be represented by a
-     * lower and upper bound.
-     * </p>
-     * <p>
-     * The lower bound is calculated by making the measured signal period
-     * "slightly" larger, and divide this by the sample frequency. The upper
-     * bound is calculated similarly, making the measured period "slightly"
-     * shorter. Note that these calculated frequencies are optimistic values, as
-     * the period is enlarged/shortened by <em>half</em> the sampling period.
-     * </p>
+     * Returns the current value of measuringTime.
      * 
-     * @return a lower bound frequency, in Hertz.
+     * @return the measuringTime
      */
-    public double getLowerBoundFrequency()
+    public double getMeasuringTime()
     {
-      if ( this.periodStats == null )
-      {
-        return 0.0;
-      }
-
-      final double period = this.periodStats.getTotalPeriod() + HALF_PERIOD;
-      return this.sampleRate / period;
+      return this.measuringTime;
     }
 
     /**
-     * Returns the "upper bound" of the measured frequency.
+     * Returns the current value of pulseCount.
      * 
-     * @return a upper bound frequency, in Hertz.
-     * @see #getLowerBoundFrequency()
+     * @return the pulse count, never <code>null</code>.
      */
-    public double getUpperBoundFrequency()
+    public Integer getPulseCount()
     {
-      if ( this.periodStats == null )
-      {
-        return 0.0;
-      }
+      return Integer.valueOf( this.pulseCount );
+    }
 
-      final double period = this.periodStats.getTotalPeriod() - HALF_PERIOD;
-      return this.sampleRate / period;
+    /**
+     * Returns the current value of risingEdgeCount.
+     * 
+     * @return the rising edge count, never <code>null</code>.
+     */
+    public Integer getRisingEdgeCount()
+    {
+      return Integer.valueOf( this.risingEdgeCount );
+    }
+
+    /**
+     * Returns whether or not there's an error in the frequency measurement.
+     * 
+     * @return <code>true</code> if there is an error, <code>false</code>
+     *         otherwise.
+     */
+    public boolean hasError()
+    {
+      return Math.abs( this.error ) >= 0.01;
     }
 
     /**
@@ -191,139 +172,18 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
     @Override
     public String toString()
     {
-      StringBuilder sb = new StringBuilder();
-      sb.append( "Clock statistics: " ).append( DisplayUtils.displayFrequency( getFrequency() ) );
-      sb.append( " (" ).append( DisplayUtils.displayPercentage( getDutyCycle() ) ).append( "), " );
-      sb.append( "error = \u00b1" ).append( DisplayUtils.displayFrequency( getError() ) );
-      return sb.toString();
-    }
-  }
-
-  /**
-   * Container for the period statistics.
-   */
-  private static class ClockPeriodStats implements Comparable<ClockPeriodStats>
-  {
-    // VARIABLES
-
-    private final long period1;
-    private final long period2;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new ClockFrequencyMeasureWorker.ClockPeriodStats instance.
-     */
-    public ClockPeriodStats( final long aPeriod1, final long aPeriod2 )
-    {
-      this.period1 = aPeriod1;
-      this.period2 = aPeriod2;
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int compareTo( final ClockPeriodStats aOtherStats )
-    {
-      long p1 = getTotalPeriod();
-      long p2 = aOtherStats.getTotalPeriod();
-      int result = ( int )( p1 - p2 );
-      if ( result == 0 )
+      String timeText = displayTime( this.measuringTime );
+      String frequencyText = displayFrequency( this.frequency );
+      if ( hasError() )
       {
-        p1 = getPeriod1();
-        p2 = aOtherStats.getPeriod1();
-        result = ( int )( p1 - p2 );
-        if ( result == 0 )
-        {
-          p1 = getPeriod2();
-          p2 = aOtherStats.getPeriod2();
-          result = ( int )( p1 - p2 );
-        }
+        frequencyText = frequencyText.concat( " (error = \u00b1" ).concat( displayFrequency( this.error ) )
+            .concat( ")" );
       }
-      return result;
-    }
+      String dutyCycleText = displayPercentage( this.dutycycle );
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals( final Object aObject )
-    {
-      if ( this == aObject )
-      {
-        return true;
-      }
-      if ( ( aObject == null ) || !( aObject instanceof ClockPeriodStats ) )
-      {
-        return false;
-      }
-
-      final ClockPeriodStats other = ( ClockPeriodStats )aObject;
-      if ( this.period1 != other.period1 )
-      {
-        return false;
-      }
-      if ( this.period2 != other.period2 )
-      {
-        return false;
-      }
-      return true;
-    }
-
-    /**
-     * Returns the current value of period1.
-     * 
-     * @return the period1
-     */
-    public long getPeriod1()
-    {
-      return this.period1;
-    }
-
-    /**
-     * Returns the current value of period2.
-     * 
-     * @return the period2
-     */
-    public long getPeriod2()
-    {
-      return this.period2;
-    }
-
-    /**
-     * Returns the total period value.
-     * 
-     * @return the value of period1 + period2.
-     */
-    public long getTotalPeriod()
-    {
-      return this.period1 + this.period2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode()
-    {
-      final int prime = 31;
-      int result = 1;
-      result = ( prime * result ) + ( int )( this.period1 ^ ( this.period1 >>> 32 ) );
-      result = ( prime * result ) + ( int )( this.period2 ^ ( this.period2 >>> 32 ) );
-      return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString()
-    {
-      return String.format( "[%d, %d] => (%.3f)", Long.valueOf( this.period1 ), Long.valueOf( this.period2 ),
-          Double.valueOf( this.period1 / ( double )( this.period2 + this.period1 ) ) );
+      return String.format( "Measure time: %s; frequency: %s; dutycycle: %s; # of pulses: %d (\u2191%d, \u2193%d)",
+          timeText, frequencyText, dutyCycleText, Integer.valueOf( this.pulseCount ),
+          Integer.valueOf( this.risingEdgeCount ), Integer.valueOf( this.fallingEdgeCount ) );
     }
   }
 
@@ -336,7 +196,6 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
   private final ToolContext context;
 
   private int channelMask;
-  private final Frequency<ClockPeriodStats> periodStats;
 
   // CONSTRUCTORS
 
@@ -349,8 +208,6 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
   public ClockFrequencyMeasureTask( final ToolContext aContext )
   {
     this.context = aContext;
-
-    this.periodStats = new Frequency<ClockPeriodStats>();
   }
 
   // METHODS
@@ -394,15 +251,14 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
 
     final double measureTime = Math.abs( endTimestamp - startTimestamp ) / ( double )data.getSampleRate();
 
-    int i = start;
-    int lastBitValue = values[i++] & this.channelMask;
-
-    long lastTransition = 0;
-
     int highCount = 0;
     long highTime = 0;
     int lowCount = 0;
     long lowTime = 0;
+
+    int i = start;
+    long lastTransition = timestamps[i];
+    int lastBitValue = values[i++] & this.channelMask;
 
     for ( ; !Thread.currentThread().isInterrupted() && ( i <= end ); i++ )
     {
@@ -434,27 +290,20 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
     int pulseCount = ( lowCount + highCount ) / 2;
 
     // Take the average high & low time per pulse...
-    double r = ( highTime / ( double )highCount );
-    double s = ( lowTime / ( double )lowCount );
+    double avgHighTime = ( highTime / ( double )highCount );
+    double avgLowTime = ( lowTime / ( double )lowCount );
 
-    double f = data.getSampleRate() / ( r + s );
+    double frequency = data.getSampleRate() / ( avgHighTime + avgLowTime );
+    double dutyCycle = avgHighTime / ( avgHighTime + avgLowTime );
 
-    double e = Math.abs( ( pulseCount / measureTime ) - f );
+    final ClockStats clockStats = new ClockStats( measureTime, frequency, dutyCycle, pulseCount, lowCount, highCount );
 
     if ( LOG.isLoggable( Level.INFO ) )
     {
-      String timeText = DisplayUtils.displayTime( measureTime );
-      String frequencyText = DisplayUtils.displayFrequency( f );
-      String dutyCycleText = String.format( "%.3f%%", Double.valueOf( ( 100.0 * r ) / ( r + s ) ) );
-      String error = DisplayUtils.displayFrequency( e );
-      String pulseCountText = Integer.toString( pulseCount );
-
-      LOG.info( String.format( "Measure time: %s; # of pulses: %s; frequency: %s (error = %s); dutycycle: %s",
-          timeText, pulseCountText, frequencyText, error, dutyCycleText ) );
+      LOG.info( clockStats.toString() );
     }
 
-    final ClockPeriodStats best = this.periodStats.getHighestRanked();
-    return new ClockStats( best, data.getSampleRate() );
+    return clockStats;
   }
 
   /**

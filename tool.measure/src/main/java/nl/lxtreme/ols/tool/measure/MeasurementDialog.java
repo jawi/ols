@@ -122,6 +122,7 @@ public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.
   private JLabel distanceLabel;
   private JLabel clockFrequencyLabel;
   private JLabel clockDutyCycleLabel;
+  private JLabel pulseInformation;
 
   private JComboBox clockChannelChooser;
 
@@ -247,12 +248,18 @@ public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.
   @Override
   protected void onToolEnded( final ClockStats aClockStats )
   {
-    StringBuilder freqText = new StringBuilder();
-    freqText.append( DisplayUtils.displayFrequency( aClockStats.getFrequency() ) );
-    freqText.append( " (\u00b1 " ).append( DisplayUtils.displayFrequency( aClockStats.getError() ) ).append( ")" );
+    String frequency = DisplayUtils.displayFrequency( aClockStats.getFrequency() );
+    String dutycycle = DisplayUtils.displayPercentage( aClockStats.getDutyCycle() );
+    if ( aClockStats.hasError() )
+    {
+      frequency = "\u2248".concat( frequency );
+      dutycycle = "\u2248".concat( dutycycle );
+    }
 
-    this.clockFrequencyLabel.setText( freqText.toString() );
-    this.clockDutyCycleLabel.setText( DisplayUtils.displayPercentage( aClockStats.getDutyCycle() ) );
+    this.clockFrequencyLabel.setText( frequency );
+    this.clockDutyCycleLabel.setText( dutycycle );
+    this.pulseInformation.setText( String.format( "%d (\u2191%d, \u2193%d)", aClockStats.getPulseCount(),
+        aClockStats.getRisingEdgeCount(), aClockStats.getFallingEdgeCount() ) );
 
     getRootPane().revalidate();
   }
@@ -372,6 +379,7 @@ public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.
 
     this.clockFrequencyLabel = new JLabel( EMPTY_TEXT );
     this.clockDutyCycleLabel = new JLabel( EMPTY_TEXT );
+    this.pulseInformation = new JLabel( EMPTY_TEXT );
     final JButton measureClockFrequency = new JButton( measureAction );
 
     SpringLayoutUtils.addSeparator( rightPane, "Measure clock" );
@@ -380,6 +388,8 @@ public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.
     rightPane.add( this.clockFrequencyLabel );
     rightPane.add( createRightAlignedLabel( "Duty cycle" ) );
     rightPane.add( this.clockDutyCycleLabel );
+    rightPane.add( createRightAlignedLabel( "Pulse count" ) );
+    rightPane.add( this.pulseInformation );
     rightPane.add( createRightAlignedLabel( "Channel" ) );
     rightPane.add( this.clockChannelChooser );
     rightPane.add( new JLabel() );
