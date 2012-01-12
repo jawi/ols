@@ -28,8 +28,8 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
 {
   // VARIABLES
 
-  private final int startIndex;
-  private final int endIndex;
+  private final long startIndex;
+  private final long endIndex;
   private final Object data;
 
   // CONSTRUCTORS
@@ -44,7 +44,7 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
    * @param aData
    *          the actual annotated data.
    */
-  public ChannelAnnotation( final int aStartIndex, final int aEndIndex, final Object aData )
+  public ChannelAnnotation( final long aStartIndex, final long aEndIndex, final Object aData )
   {
     this.startIndex = aStartIndex;
     this.endIndex = aEndIndex;
@@ -68,21 +68,24 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
   }
 
   /**
-   * @see java.lang.Object#equals(java.lang.Object)
+   * {@inheritDoc}
    */
   @Override
-  public boolean equals( final Object aObject )
+  public boolean equals( final Object obj )
   {
-    if ( this == aObject )
+    if ( this == obj )
     {
       return true;
     }
-    if ( ( aObject == null ) || !( aObject instanceof ChannelAnnotation ) )
+    if ( obj == null )
     {
       return false;
     }
-
-    final ChannelAnnotation other = ( ChannelAnnotation )aObject;
+    if ( !( obj instanceof ChannelAnnotation ) )
+    {
+      return false;
+    }
+    ChannelAnnotation other = ( ChannelAnnotation )obj;
     if ( this.data == null )
     {
       if ( other.data != null )
@@ -116,7 +119,7 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
   /**
    * @return the endIndex
    */
-  public int getEndIndex()
+  public long getEndTimestamp()
   {
     return this.endIndex;
   }
@@ -124,22 +127,22 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
   /**
    * @return the startIndex
    */
-  public int getStartIndex()
+  public long getStartTimestamp()
   {
     return this.startIndex;
   }
 
   /**
-   * @see java.lang.Object#hashCode()
+   * {@inheritDoc}
    */
   @Override
   public int hashCode()
   {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ( ( this.data == null ) ? 0 : this.data.hashCode() );
-    result = prime * result + this.endIndex;
-    result = prime * result + this.startIndex;
+    result = ( prime * result ) + ( ( this.data == null ) ? 0 : this.data.hashCode() );
+    result = ( prime * result ) + ( int )( this.endIndex ^ ( this.endIndex >>> 32 ) );
+    result = ( prime * result ) + ( int )( this.startIndex ^ ( this.startIndex >>> 32 ) );
     return result;
   }
 
@@ -152,9 +155,9 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
    * @return <code>true</code> if this annotation is valid at the given index
    *         (see above), <code>false</code> otherwise.
    */
-  public boolean isInRange( final int aIndex )
+  public boolean isInRange( final long aTimestamp )
   {
-    return ( getStartIndex() <= aIndex ) && ( getEndIndex() >= aIndex );
+    return ( getStartTimestamp() <= aTimestamp ) && ( getEndTimestamp() >= aTimestamp );
   }
 
   /**
@@ -168,9 +171,9 @@ public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
    * @return <code>true</code> if this annotation is valid between the given
    *         range (see above), <code>false</code> otherwise.
    */
-  public boolean isInRange( final int aStartIndex, final int aEndIndex )
+  public boolean isInRange( final long aStartIndex, final long aEndIndex )
   {
-    return ( getStartIndex() <= aEndIndex ) && ( getEndIndex() >= aStartIndex );
+    return ( getStartTimestamp() <= aEndIndex ) && ( getEndTimestamp() >= aStartIndex );
   }
 
   /**

@@ -29,6 +29,7 @@ import java.util.logging.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
@@ -535,13 +536,15 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   private void reportData( final SPIDataSet aDecodedData, final int aStartIdx, final int aEndIdx, final int aMosiValue,
       final int aMisoValue )
   {
+    long[] timestamps = this.context.getData().getTimestamps(); // XXX
+
     if ( this.mosiIdx >= 0 )
     {
       // Perform bit-order conversion on the full byte...
       final int mosivalue = NumberUtils.convertBitOrder( aMosiValue, ( this.bitCount + 1 ), this.bitOrder );
 
-      this.annotationListener.onAnnotation( new SampleDataAnnotation( this.mosiIdx, aStartIdx, aEndIdx, String.format(
-          "0x%1$X (%1$c)", Integer.valueOf( mosivalue ) ) ) );
+      this.annotationListener.onAnnotation( new SampleDataAnnotation( this.mosiIdx, timestamps[aStartIdx],
+          timestamps[aEndIdx], String.format( "0x%1$X (%1$c)", Integer.valueOf( mosivalue ) ) ) );
 
       aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
     }
@@ -551,8 +554,8 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
       // Perform bit-order conversion on the full byte...
       final int misovalue = NumberUtils.convertBitOrder( aMisoValue, ( this.bitCount + 1 ), this.bitOrder );
 
-      this.annotationListener.onAnnotation( new SampleDataAnnotation( this.misoIdx, aStartIdx, aEndIdx, String.format(
-          "0x%1$X (%1$c)", Integer.valueOf( misovalue ) ) ) );
+      this.annotationListener.onAnnotation( new SampleDataAnnotation( this.misoIdx, timestamps[aStartIdx],
+          timestamps[aEndIdx], String.format( "0x%1$X (%1$c)", Integer.valueOf( misovalue ) ) ) );
 
       aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
     }

@@ -28,6 +28,7 @@ import java.util.logging.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialConfiguration;
@@ -341,10 +342,10 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    * @param aEndSampleIdx
    *          the end sample index of the symbol.
    */
-  private void addSymbolAnnotation( final int aChannelIndex, final int aSymbol, final int aStartSampleIdx,
-      final int aEndSampleIdx )
+  private void addSymbolAnnotation( final int aChannelIndex, final int aSymbol, final long aStartTimestamp,
+      final long aEndTimestamp )
   {
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( aChannelIndex, aStartSampleIdx, aEndSampleIdx,
+    this.annotationListener.onAnnotation( new SampleDataAnnotation( aChannelIndex, aStartTimestamp, aEndTimestamp,
         String.format( "0x%1$X (%1$c)", Integer.valueOf( aSymbol ) ) ) );
   }
 
@@ -527,7 +528,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
           aDataSet.reportData( aChannelIndex, startSampleIdx, endSampleIdx, aSymbol, aEventType );
 
-          addSymbolAnnotation( aChannelIndex, aSymbol, startSampleIdx, endSampleIdx );
+          addSymbolAnnotation( aChannelIndex, aSymbol, aStartTime, aEndTime );
         }
       } );
     }

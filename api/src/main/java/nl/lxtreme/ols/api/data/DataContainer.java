@@ -83,9 +83,10 @@ public final class DataContainer implements AcquisitionResult
    * @param aData
    *          the data.
    */
-  public void addChannelAnnotation( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final Object aData )
+  public void addChannelAnnotation( final int aChannelIdx, final long aStartTimestamp, final long aEndTimestamp,
+      final Object aData )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > ( Ols.MAX_CHANNELS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
@@ -96,7 +97,7 @@ public final class DataContainer implements AcquisitionResult
       annotations = new ChannelAnnotations( aChannelIdx );
       this.annotations.put( Integer.valueOf( aChannelIdx ), annotations );
     }
-    annotations.addAnnotation( aStartIdx, aEndIdx, aData );
+    annotations.addAnnotation( aStartTimestamp, aEndTimestamp, aData );
   }
 
   /**
@@ -121,7 +122,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public void clearChannelAnnotations( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > ( Ols.MAX_CHANNELS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
@@ -161,7 +162,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public ChannelAnnotation getChannelAnnotation( final int aChannelIdx, final int aTimeIndex )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > ( Ols.MAX_CHANNELS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
@@ -192,7 +193,7 @@ public final class DataContainer implements AcquisitionResult
   public Iterator<ChannelAnnotation> getChannelAnnotations( final int aChannelIdx, final int aStartIdx,
       final int aEndIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > ( Ols.MAX_CHANNELS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
@@ -216,7 +217,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public String getChannelLabel( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > ( Ols.MAX_CHANNELS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
@@ -292,7 +293,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public Long getCursorPosition( final int aCursorIdx ) throws IllegalArgumentException
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > Ols.MAX_CURSORS - 1 ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > ( Ols.MAX_CURSORS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
           + Ols.MAX_CURSORS );
@@ -421,7 +422,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public boolean isChannelLabelSet( final int aChannelIdx )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > ( Ols.MAX_CHANNELS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
@@ -440,7 +441,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public boolean isCursorPositionSet( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > Ols.MAX_CURSORS - 1 ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > ( Ols.MAX_CURSORS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
           + Ols.MAX_CURSORS );
@@ -485,7 +486,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public void setChannelAnnotations( final int aChannelIdx, final ChannelAnnotations aAnnotations )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > ( Ols.MAX_CHANNELS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
@@ -503,7 +504,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public void setChannelLabel( final int aChannelIdx, final String aLabel )
   {
-    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > Ols.MAX_CHANNELS - 1 ) )
+    if ( ( aChannelIdx < 0 ) || ( aChannelIdx > ( Ols.MAX_CHANNELS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
@@ -550,7 +551,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public void setCursorPosition( final int aCursorIdx, final Long aCursorPosition ) throws IllegalArgumentException
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > Ols.MAX_CURSORS - 1 ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > ( Ols.MAX_CURSORS - 1 ) ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index! Should be between 0 and " + Ols.MAX_CURSORS );
     }

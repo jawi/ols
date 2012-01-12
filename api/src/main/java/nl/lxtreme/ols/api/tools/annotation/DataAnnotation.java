@@ -18,42 +18,29 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.tools;
+package nl.lxtreme.ols.api.tools.annotation;
 
 
 /**
- * Can be used to create a service that listens for the addition/removal of
- * annotation on channel data.
+ * Denotes an annotation for data, which normally covers a certain range of
+ * samples.
  */
-public interface AnnotationListener
+public interface DataAnnotation<ANNOTATION_TYPE> extends Annotation<ANNOTATION_TYPE>
 {
   // METHODS
 
   /**
-   * Called when all annotations for all channels need to be cleared.
-   * <p>
-   * Called <em>before</em> any annotation is added.
-   * </p>
+   * Returns the ending timecstamp of this annotation.
+   * 
+   * @return a time stamp, >= 0.
    */
-  void clearAnnotations();
+  public long getEndTimestamp();
 
   /**
-   * Called when the annotations for a single channel need to be cleared.
-   * <p>
-   * Called <em>before</em> any annotation is added.
-   * </p>
+   * Returns the starting time stamp of this annotation.
    * 
-   * @param aChannelIdx
-   *          the channel index to clear the annotation for, >= 0 && < 32.
+   * @return a time stamp, >= 0.
    */
-  void clearAnnotations( int aChannelIdx );
-
-  /**
-   * Called for each annotation.
-   * 
-   * @param aAnnotation
-   *          the (new) annotation, cannot be <code>null</code>.
-   */
-  void onAnnotation( Annotation<?> aAnnotation );
+  public long getStartTimestamp();
 
 }

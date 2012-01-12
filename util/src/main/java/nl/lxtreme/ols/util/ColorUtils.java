@@ -83,7 +83,7 @@ public final class ColorUtils
   {
     final float[] rgb = aColor.getRGBComponents( null );
     // (0.299*R + 0.587*G + 0.114*B)
-    return ( 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2] );
+    return ( ( 0.299 * rgb[0] ) + ( 0.587 * rgb[1] ) + ( 0.114 * rgb[2] ) );
   }
 
   /**
@@ -98,7 +98,29 @@ public final class ColorUtils
   {
     final float[] rgb = aColor.getRGBComponents( null );
     // (0.2126*R) + (0.7152*G) + (0.0722*B)
-    return ( 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] );
+    return ( ( 0.2126 * rgb[0] ) + ( 0.7152 * rgb[1] ) + ( 0.0722 * rgb[2] ) );
+  }
+
+  /**
+   * Interpolates a gray-scale color between two given colors.
+   * 
+   * @param aBaseColor
+   * @param aSecondaryColor
+   * @param aDelta
+   * @return
+   */
+  public static Color interpolate( final Color aBaseColor, final Color aSecondaryColor, final float aDelta )
+  {
+    float[] acomp = aSecondaryColor.getRGBComponents( null );
+    float[] bcomp = aBaseColor.getRGBComponents( null );
+    float[] ccomp = new float[4];
+
+    for ( int i = 0; i < 4; i++ )
+    {
+      ccomp[i] = acomp[i] + ( ( bcomp[i] - acomp[i] ) * aDelta );
+    }
+
+    return new Color( ccomp[0], ccomp[1], ccomp[2], ccomp[3] );
   }
 
   /**

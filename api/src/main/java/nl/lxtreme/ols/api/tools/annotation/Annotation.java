@@ -18,28 +18,33 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.tools;
+package nl.lxtreme.ols.api.tools.annotation;
 
 
 /**
- * Denotes an annotation for data, which normally covers a certain range of
- * samples.
+ * Denotes an annotation.
  */
-public interface DataAnnotation<ANNOTATION_TYPE> extends Annotation<ANNOTATION_TYPE>
+public interface Annotation<ANNOTATION_TYPE>
 {
   // METHODS
 
   /**
-   * Returns the index of the last sample included in this annotation.
+   * Returns the actual annotation.
+   * <p>
+   * The given annotation type is generic, meaning it can be of <em>any</em>
+   * type. One constraint that <b>all</b> annotation types must adhere is that
+   * they have a proper {@link Object#toString()} implementation.
+   * </p>
    * 
-   * @return a sample index, >= 0.
+   * @return an annotation, never <code>null</code>.
    */
-  public int getEndSampleIndex();
+  ANNOTATION_TYPE getAnnotation();
 
   /**
-   * Returns the index of the first sample included in this annotation.
+   * Returns the channel index of the channel to annotate.
    * 
-   * @return a sample index, >= 0.
+   * @return a channel index, >= 0 && < 32.
    */
-  public int getStartSampleIndex();
+  int getChannel();
+
 }

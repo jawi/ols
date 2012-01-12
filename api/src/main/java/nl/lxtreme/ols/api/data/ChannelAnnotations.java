@@ -62,9 +62,9 @@ public class ChannelAnnotations
    * @param aData
    *          the actual annotation data of the annotation to add.
    */
-  public void addAnnotation( final int aStartIdx, final int aEndIdx, final Object aData )
+  public void addAnnotation( final long aStartTimestamp, final long aEndTimestamp, final Object aData )
   {
-    this.annotations.add( new ChannelAnnotation( aStartIdx, aEndIdx, aData ) );
+    this.annotations.add( new ChannelAnnotation( aStartTimestamp, aEndTimestamp, aData ) );
   }
 
   /**

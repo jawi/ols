@@ -15,36 +15,25 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2011 - J.W. Janssen, <http://www.lxtreme.nl>
  */
-package nl.lxtreme.ols.api.tools;
+package nl.lxtreme.ols.client.signaldisplay;
+
+
+import java.util.*;
+
+import nl.lxtreme.ols.api.acquisition.*;
 
 
 /**
- * Denotes an annotation.
+ * TODO merge this with {@link AcquisitionDataListener}!
  */
-public interface Annotation<ANNOTATION_TYPE>
+public interface IDataModelChangeListener extends EventListener
 {
   // METHODS
 
   /**
-   * Returns the actual annotation.
-   * <p>
-   * The given annotation type is generic, meaning it can be of <em>any</em>
-   * type. One constraint that <b>all</b> annotation types must adhere is that
-   * they have a proper {@link Object#toString()} implementation.
-   * </p>
-   * 
-   * @return an annotation, never <code>null</code>.
+   * @param aDataModel
    */
-  ANNOTATION_TYPE getAnnotation();
-
-  /**
-   * Returns the channel index of the channel to annotate.
-   * 
-   * @return a channel index, >= 0 && < 32.
-   */
-  int getChannel();
-
+  void dataModelChanged( AcquisitionResult aDataModel );
 }

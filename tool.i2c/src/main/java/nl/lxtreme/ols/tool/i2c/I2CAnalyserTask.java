@@ -28,6 +28,7 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
 
 
@@ -117,6 +118,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
     final AcquisitionResult data = this.context.getData();
 
     final int[] values = data.getValues();
+    final long[] timestamps = data.getTimestamps();
 
     // process the captured data and write to output
     int oldSCL, oldSDA, bitCount;
@@ -176,7 +178,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
       // We've just found our start condition, start the report with that...
       reportStartCondition( i2cDataSet, startOfDecode );
 
-      this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, startOfDecode, startOfDecode,
+      this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[startOfDecode],
           I2CDataSet.I2C_START ) );
 
       startCondFound = true;
@@ -245,7 +247,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
                 Integer.valueOf( byteValue ), Integer.valueOf( byteValue ) );
           }
 
-          this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, prevIdx, idx, annotation ) );
+          this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[prevIdx],
+              timestamps[idx], annotation ) );
 
           byteValue = 0;
         }
@@ -276,7 +279,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
               // NACK
               reportNACK( i2cDataSet, idx );
 
-              this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, idx, idx,
+              this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[idx],
                   I2CDataSet.I2C_NACK ) );
             }
             else
@@ -284,8 +287,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
               // ACK
               reportACK( i2cDataSet, idx );
 
-              this.annotationListener
-                  .onAnnotation( new SampleDataAnnotation( this.sdaIdx, idx, idx, I2CDataSet.I2C_ACK ) );
+              this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[idx],
+                  I2CDataSet.I2C_ACK ) );
             }
 
             // next byte
@@ -311,8 +314,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
             // SDA rises, this is a stop condition
             reportStopCondition( i2cDataSet, idx );
 
-            this.annotationListener
-                .onAnnotation( new SampleDataAnnotation( this.sdaIdx, idx, idx, I2CDataSet.I2C_STOP ) );
+            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[idx],
+                I2CDataSet.I2C_STOP ) );
 
             slaveAddress = 0x00;
             direction = -1;
@@ -322,8 +325,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
             // SDA falls, this is a start condition
             reportStartCondition( i2cDataSet, idx );
 
-            this.annotationListener
-                .onAnnotation( new SampleDataAnnotation( this.sdaIdx, idx, idx, I2CDataSet.I2C_START ) );
+            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.sdaIdx, timestamps[idx],
+                I2CDataSet.I2C_START ) );
 
             startCondFound = true;
           }

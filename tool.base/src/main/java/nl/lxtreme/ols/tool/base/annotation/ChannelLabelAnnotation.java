@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.base.annotation;
 
 
-import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 
 
 /**
