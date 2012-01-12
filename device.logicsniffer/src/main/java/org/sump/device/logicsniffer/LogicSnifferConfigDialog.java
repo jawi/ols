@@ -388,8 +388,8 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
           this.triggerMask[stage][i].setSelected( value );
         }
 
-        updateConfig( false /* aWarnUserIfConfigIncorrect */);
         updateFields();
+        updateConfig( false /* aWarnUserIfConfigIncorrect */);
       }
       catch ( NumberFormatException e )
       {
@@ -412,8 +412,8 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
           this.triggerValue[stage][i].setSelected( value );
         }
 
-        updateConfig( false /* aWarnUserIfConfigIncorrect */);
         updateFields();
+        updateConfig( false /* aWarnUserIfConfigIncorrect */);
       }
       catch ( NumberFormatException e )
       {
@@ -422,8 +422,8 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
     }
     else
     {
-      updateConfig( false /* aWarnUserIfConfigIncorrect */);
       updateFields();
+      updateConfig( false /* aWarnUserIfConfigIncorrect */);
     }
   }
 
@@ -513,8 +513,8 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
         this.channelGroup[i].setSelected( group.charAt( i ) == '1' );
       }
 
-      updateConfig( false /* aWarnUserIfConfigIncorrect */);
       updateFields();
+      updateConfig( false /* aWarnUserIfConfigIncorrect */);
     }
     finally
     {
@@ -755,8 +755,8 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
         {
           updateDeviceType( aProfile );
 
-          updateConfig( false /* aWarnUserIfConfigIncorrect */);
           updateFields();
+          updateConfig( false /* aWarnUserIfConfigIncorrect */);
         }
         finally
         {
@@ -1302,6 +1302,12 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
     {
       final boolean enabled = ( i < availableChannelGroups );
       this.channelGroup[i].setEnabled( enabled );
+      if ( !enabled )
+      {
+        // Issue #94: make sure the disabled channel groups are also
+        // deselected...
+        this.channelGroup[i].setSelected( false );
+      }
     }
 
     this.triggerEnable.setSelected( this.config.isTriggerEnabled() );
