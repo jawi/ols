@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.rxtx;
+package nl.lxtreme.ols.io.serial;
 
 
 import java.io.*;
@@ -36,11 +36,11 @@ import purejavacomm.*;
  * @see http://download.oracle.com/docs/cd/E17802_01/products/products/javacomm/
  *      reference/api/index.html
  */
-final class SerialConnection implements CommConnection
+final class CommConnectionImpl implements CommConnection
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( SerialConnection.class.getName() );
+  private static final Logger LOG = Logger.getLogger( CommConnectionImpl.class.getName() );
 
   // VARIABLES
 
@@ -59,7 +59,7 @@ final class SerialConnection implements CommConnection
    * @throws IllegalArgumentException
    *           in case the given port was <code>null</code>.
    */
-  public SerialConnection( final SerialPort aPort ) throws IllegalArgumentException, IOException
+  public CommConnectionImpl( final SerialPort aPort ) throws IllegalArgumentException
   {
     if ( aPort == null )
     {

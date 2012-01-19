@@ -121,8 +121,6 @@ public class LogicSnifferEnabledGroupTest
     this.config.setDeviceProfile( deviceProfile );
 
     this.config.setAltNumberSchemeEnabled( false ); // don't care
-    this.config.setBaudrate( 9600 ); // don't care
-    this.config.setPortName( "/dev/virtual" ); // don't care
     this.config.setClockSource( CaptureClockSource.INTERNAL ); // don't care
     this.config.setFilterEnabled( false ); // don't care
     this.config.setTestModeEnabled( false ); // don't care

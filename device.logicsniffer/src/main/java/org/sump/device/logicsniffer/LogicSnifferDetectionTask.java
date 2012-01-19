@@ -38,7 +38,7 @@ import nl.lxtreme.ols.util.*;
  * Provides a task for detecting the current type of the attached logic sniffer
  * device.
  */
-public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, SumpProtocolConstants, Closeable
+public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, SumpProtocolConstants
 {
   // CONSTANTS
 
@@ -46,10 +46,8 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
 
   // VARIABLES
 
-  private final DeviceProfileManager manager;
-  private final StreamConnection connection;
-  private final DataInputStream inputStream;
-  private final DataOutputStream outputStream;
+  private final LogicSnifferDevice device;
+  private final String connectionURI;
 
   // CONSTRUCTORS
 
@@ -59,13 +57,10 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
    * @throws IOException
    *           in case of I/O problems.
    */
-  public LogicSnifferDetectionTask( final DeviceProfileManager aManager, final StreamConnection aConnection )
-      throws IOException
+  public LogicSnifferDetectionTask( final LogicSnifferDevice aDevice, final String aConnectionURI )
   {
-    this.manager = aManager;
-    this.connection = aConnection;
-    this.inputStream = aConnection.openDataInputStream();
-    this.outputStream = aConnection.openDataOutputStream();
+    this.device = aDevice;
+    this.connectionURI = aConnectionURI;
   }
 
   // METHODS
@@ -76,20 +71,29 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
   @Override
   public LogicSnifferMetadata call() throws IOException
   {
-    // Make sure nothing is left in our input buffer...
-    HostUtils.flushInputStream( this.inputStream );
-
-    // Ok; device appears to be good and willing to communicate; let's get its
-    // metadata...
-    writeCmdGetMetadata();
+    DataInputStream inputStream = null;
+    DataOutputStream outputStream = null;
+    StreamConnection connection = null;
 
     boolean gotResponse = false;
 
     try
     {
+      connection = this.device.createStreamConnection( this.connectionURI );
+
+      inputStream = connection.openDataInputStream();
+      outputStream = connection.openDataOutputStream();
+
+      // Make sure nothing is left in our input buffer...
+      HostUtils.flushInputStream( inputStream );
+
+      // Ok; device appears to be good and willing to communicate; let's get its
+      // metadata...
+      writeCmdGetMetadata( outputStream );
+
       final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
 
-      if ( gotResponse = readMetadata( metadata ) )
+      if ( gotResponse = readMetadata( inputStream, metadata ) )
       {
         // Determine the device profile based on the information of the
         // metadata; it will be placed in the given metadata object...
@@ -100,31 +104,27 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
     }
     finally
     {
-      if ( !gotResponse )
+      if ( !gotResponse && ( outputStream != null ) )
       {
         // Reset the device again; this ensures correct working for devices
         // whose firmware do not understand the metadata command...
-        writeCmdReset();
+        writeCmdReset( outputStream );
       }
-    }
-  }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void close() throws IOException
-  {
-    HostUtils.closeResource( this.inputStream );
-    HostUtils.closeResource( this.outputStream );
+      HostUtils.closeResource( inputStream );
+      HostUtils.closeResource( outputStream );
 
-    try
-    {
-      this.connection.close();
-    }
-    catch ( IOException exception )
-    {
-      LOG.log( Level.INFO, "I/O connection while trying to close connection after device detect!", exception );
+      try
+      {
+        if ( connection != null )
+        {
+          connection.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        LOG.log( Level.INFO, "I/O connection while trying to close connection after device detect!", exception );
+      }
     }
   }
 
@@ -150,7 +150,7 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
       final String name = aMetadata.getName();
       if ( name != null )
       {
-        profile = this.manager.findProfile( name );
+        profile = this.device.getDeviceProfileManager().findProfile( name );
 
         if ( profile != null )
         {
@@ -172,7 +172,8 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
    * @param aMetadata
    * @throws IOException
    */
-  private boolean readMetadata( final LogicSnifferMetadata aMetadata ) throws IOException
+  private boolean readMetadata( final DataInputStream aInputStream, final LogicSnifferMetadata aMetadata )
+      throws IOException
   {
     boolean gotResponse = false;
     int result = -1;
@@ -181,7 +182,7 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
     {
       try
       {
-        result = this.inputStream.read();
+        result = aInputStream.read();
 
         if ( result > 0 )
         {
@@ -192,7 +193,7 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
           if ( type == 0x00 )
           {
             // key value is a null-terminated string...
-            final String value = readString();
+            final String value = readString( aInputStream );
             aMetadata.put( result, value );
           }
           else if ( type == 0x01 )
@@ -200,13 +201,13 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
             // key value is a 32-bit integer; least significant byte first...
             // final Integer value = NumberUtils.convertByteOrder(
             // this.inputStream.readInt(), 32, ByteOrder.LITTLE_ENDIAN );
-            final int value = this.inputStream.readInt();
+            final int value = aInputStream.readInt();
             aMetadata.put( result, Integer.valueOf( value ) );
           }
           else if ( type == 0x02 )
           {
             // key value is a 8-bit integer...
-            final int value = this.inputStream.read();
+            final int value = aInputStream.read();
             aMetadata.put( result, Integer.valueOf( value ) );
           }
           else
@@ -239,14 +240,14 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
    * @throws IOException
    *           in case of I/O problems during the string read.
    */
-  private String readString() throws IOException
+  private String readString( final InputStream aInputStream ) throws IOException
   {
     StringBuilder sb = new StringBuilder();
 
     int read = -1;
     do
     {
-      read = this.inputStream.read();
+      read = aInputStream.read();
       if ( read > 0x00 )
       {
         // no additional conversion to UTF-8 is needed, as the ASCII character
@@ -262,10 +263,10 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
   /**
    * @throws IOException
    */
-  private void writeCmdGetMetadata() throws IOException
+  private void writeCmdGetMetadata( final DataOutputStream aOutputStream ) throws IOException
   {
-    this.outputStream.writeByte( CMD_METADATA );
-    this.outputStream.flush();
+    aOutputStream.writeByte( CMD_METADATA );
+    aOutputStream.flush();
   }
 
   /**
@@ -274,12 +275,12 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
    * @throws IOException
    *           in case of I/O problems.
    */
-  private void writeCmdReset() throws IOException
+  private void writeCmdReset( final DataOutputStream aOutputStream ) throws IOException
   {
     final byte[] resetSequence = new byte[5];
     Arrays.fill( resetSequence, ( byte )CMD_RESET );
-    this.outputStream.write( resetSequence );
-    this.outputStream.flush();
+    aOutputStream.write( resetSequence );
+    aOutputStream.flush();
   }
 
 }

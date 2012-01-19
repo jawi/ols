@@ -125,8 +125,6 @@ public class LogicSnifferDeviceComponentTest
     config.setDeviceProfile( deviceProfile );
 
     config.setAltNumberSchemeEnabled( false ); // don't care
-    config.setBaudrate( 9600 ); // don't care
-    config.setPortName( "/dev/virtual" ); // don't care
     config.setClockSource( CaptureClockSource.INTERNAL ); // don't care
     config.setFilterEnabled( true ); // don't care
     config.setTestModeEnabled( false ); // don't care
@@ -153,7 +151,7 @@ public class LogicSnifferDeviceComponentTest
    * .
    */
   @Test( timeout = 10000 )
-  public void testVerifyFlags() throws Exception
+  public void testVerifyFlagsAndSentData() throws Exception
   {
     final boolean ddrMode = ( this.sampleRate > this.device.getConfig().getClockspeed() );
     final boolean isGroup1disabled = ( this.enabledChannelsMask & 0x000000FF ) == 0;
@@ -163,7 +161,7 @@ public class LogicSnifferDeviceComponentTest
     final boolean isGroup4disabled = ( ( this.enabledChannelsMask & 0xFF000000 ) == 0 )
         || ( ddrMode && isGroup2disabled );
 
-    this.device.call();
+    final AcquisitionResult result = this.device.call();
 
     this.device.assertFlagState( SumpCommandWriter.FLAG_DEMUX, ddrMode );
     this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP1_DISABLED, isGroup1disabled );
@@ -178,17 +176,6 @@ public class LogicSnifferDeviceComponentTest
     this.device.assertFlagState( SumpCommandWriter.FLAG_INTERNAL_TEST_MODE, false );
     this.device.assertFlagState( SumpCommandWriter.FLAG_NUMBER_SCHEME, false );
     this.device.assertFlagState( SumpCommandWriter.FLAG_FILTER, !ddrMode );
-  }
-
-  /**
-   * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
-   * .
-   */
-  @Test( timeout = 10000 )
-  public void testVerifySentData() throws Exception
-  {
-    final AcquisitionResult result = this.device.call();
 
     this.device.assertSampleRate( this.sampleRate );
     this.device.assertReadAndDelayCount( this.readCounter, this.delayCounter );

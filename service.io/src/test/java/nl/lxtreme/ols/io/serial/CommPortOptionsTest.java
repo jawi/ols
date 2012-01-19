@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.rxtx;
+package nl.lxtreme.ols.io.serial;
 
 
 import static org.junit.Assert.*;
@@ -29,9 +29,9 @@ import purejavacomm.*;
 
 
 /**
- * Tests for {@link SerialPortOptions}.
+ * Tests for {@link CommPortOptions}.
  */
-public class SerialPortOptionsTest
+public class CommPortOptionsTest
 {
   // METHODS
 
@@ -41,7 +41,7 @@ public class SerialPortOptionsTest
   @Test( expected = IllegalArgumentException.class )
   public void testParseEmptyPortNameFail() throws Exception
   {
-    new SerialPortOptions( "comm:;baudrate=1" );
+    new CommPortOptions( "comm:;baudrate=1" );
   }
 
   /**
@@ -50,7 +50,7 @@ public class SerialPortOptionsTest
   @Test( expected = IllegalArgumentException.class )
   public void testParseEmptyUriFail() throws Exception
   {
-    new SerialPortOptions( "comm:" );
+    new CommPortOptions( "comm:" );
   }
 
   /**
@@ -59,7 +59,7 @@ public class SerialPortOptionsTest
   @Test
   public void testParseFullUriOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions(
+    final CommPortOptions options = new CommPortOptions(
         "comm:COM13;baudrate=2400;bitsperchar=5;stopbits=1.5;parity=odd;flowcontrol=xon_xoff;dtr=on" );
 
     assertNotNull( options );
@@ -78,7 +78,7 @@ public class SerialPortOptionsTest
   @Test
   public void testParseInvalidOpenDelayOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0;baudrate=115200;delay=xyz" );
+    final CommPortOptions options = new CommPortOptions( "comm:/dev/tty.usb0;baudrate=115200;delay=xyz" );
 
     assertNotNull( options );
     assertEquals( "/dev/tty.usb0", options.getPortName() );
@@ -95,7 +95,7 @@ public class SerialPortOptionsTest
   @Test
   public void testParseOpenDelayOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0;baudrate=115200;delay=115" );
+    final CommPortOptions options = new CommPortOptions( "comm:/dev/tty.usb0;baudrate=115200;delay=115" );
 
     assertNotNull( options );
     assertEquals( "/dev/tty.usb0", options.getPortName() );
@@ -112,7 +112,7 @@ public class SerialPortOptionsTest
   @Test
   public void testParsePortNameAndOptionsOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0;bitsperchar=5;stopbits=2;parity=mark" );
+    final CommPortOptions options = new CommPortOptions( "comm:/dev/tty.usb0;bitsperchar=5;stopbits=2;parity=mark" );
 
     assertNotNull( options );
     assertEquals( "/dev/tty.usb0", options.getPortName() );
@@ -128,7 +128,7 @@ public class SerialPortOptionsTest
   @Test
   public void testParsePortNameBaudrateOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0;baudrate=115200" );
+    final CommPortOptions options = new CommPortOptions( "comm:/dev/tty.usb0;baudrate=115200" );
 
     assertNotNull( options );
     assertEquals( "/dev/tty.usb0", options.getPortName() );
@@ -145,7 +145,7 @@ public class SerialPortOptionsTest
   @Test
   public void testParsePortNameOnlyOk() throws Exception
   {
-    final SerialPortOptions options = new SerialPortOptions( "comm:/dev/tty.usb0" );
+    final CommPortOptions options = new CommPortOptions( "comm:/dev/tty.usb0" );
 
     assertNotNull( options );
     assertEquals( "/dev/tty.usb0", options.getPortName() );

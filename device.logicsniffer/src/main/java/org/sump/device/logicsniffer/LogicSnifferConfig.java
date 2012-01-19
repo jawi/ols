@@ -67,11 +67,9 @@ public final class LogicSnifferConfig
   private int size;
   private double ratio;
   private int rleDataWidth;
-  private String portName;
-  private int baudrate;
-  private LogicSnifferMetadata metadata;
   private DeviceProfile deviceProfile;
   private int sampleRate;
+  private String connectionURI;
 
   // CONSTRUCTORS
 
@@ -95,21 +93,9 @@ public final class LogicSnifferConfig
     this.ratio = 0.5;
     this.size = 512;
     this.enabledGroups = new boolean[] { true, true, true, true };
-
-    this.metadata = new LogicSnifferMetadata();
   }
 
   // METHODS
-
-  /**
-   * Returns the baudrate in which to communicate with the device.
-   * 
-   * @return the baudrate, for example, 115200.
-   */
-  public int getBaudrate()
-  {
-    return this.baudrate;
-  }
 
   /**
    * Returns the number of <em>available</em> channels in current configuration.
@@ -129,10 +115,6 @@ public final class LogicSnifferConfig
     if ( this.deviceProfile != null )
     {
       channels = Math.min( channels, this.deviceProfile.getChannelCount() );
-    }
-    if ( this.metadata != null )
-    {
-      channels = Math.min( channels, this.metadata.getProbeCount( channels ) );
     }
 
     return channels;
@@ -161,6 +143,16 @@ public final class LogicSnifferConfig
       result = Math.min( result, this.deviceProfile.getClockspeed() );
     }
     return result;
+  }
+
+  /**
+   * Returns the current value of connectionURI.
+   * 
+   * @return the connectionURI
+   */
+  public String getConnectionURI()
+  {
+    return this.connectionURI;
   }
 
   /**
@@ -269,16 +261,6 @@ public final class LogicSnifferConfig
       return 0;
     }
     return this.deviceProfile.getOpenPortDelay();
-  }
-
-  /**
-   * Returns the name of the port through which to communicate with the device.
-   * 
-   * @return the port name, e.g., "COM3", or "/dev/ttyACM0".
-   */
-  public String getPortName()
-  {
-    return this.portName;
   }
 
   /**
@@ -591,17 +573,6 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Sets the communication speed with the device.
-   * 
-   * @param aBaudrate
-   *          the baudrate to set.
-   */
-  public void setBaudrate( final int aBaudrate )
-  {
-    this.baudrate = aBaudrate;
-  }
-
-  /**
    * Sets the clock source to use.
    * 
    * @param aSource
@@ -610,6 +581,21 @@ public final class LogicSnifferConfig
   public void setClockSource( final CaptureClockSource aSource )
   {
     this.clockSource = aSource;
+  }
+
+  /**
+   * Sets connectionURI to the given value.
+   * 
+   * @param aConnectionURI
+   *          the connectionURI to set.
+   */
+  public void setConnectionURI( final String aConnectionURI )
+  {
+    if ( ( aConnectionURI == null ) || aConnectionURI.trim().isEmpty() )
+    {
+      throw new IllegalArgumentException( "ConnectionURI cannot be null!" );
+    }
+    this.connectionURI = aConnectionURI;
   }
 
   /**
@@ -657,17 +643,6 @@ public final class LogicSnifferConfig
   public void setFilterEnabled( final boolean aEnable )
   {
     this.filterEnabled = aEnable;
-  }
-
-  /**
-   * Sets the device metadata.
-   * 
-   * @param aMetadata
-   *          the metadata to set, cannot be <code>null</code>.
-   */
-  public void setMetadata( final LogicSnifferMetadata aMetadata )
-  {
-    this.metadata = aMetadata;
   }
 
   /**
@@ -721,17 +696,6 @@ public final class LogicSnifferConfig
     {
       this.triggerConfig[aStage] |= TRIGGER_CAPTURE;
     }
-  }
-
-  /**
-   * Sets the name of the port to communicate with the device.
-   * 
-   * @param aPortName
-   *          the port name to set, cannot be <code>null</code>.
-   */
-  public void setPortName( final String aPortName )
-  {
-    this.portName = aPortName;
   }
 
   /**

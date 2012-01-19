@@ -23,10 +23,12 @@ package nl.lxtreme.ols.io;
 
 import java.io.*;
 import java.net.*;
+import java.util.*;
 import javax.microedition.io.*;
 
 import org.osgi.framework.*;
 import org.osgi.service.io.*;
+import org.osgi.service.log.*;
 
 
 /**
@@ -37,6 +39,10 @@ public class ConnectorServiceImpl implements ConnectorService
   // VARIABLES
 
   private final BundleContext context;
+  private final List<Connection> openConnections;
+
+  // Injected by DependencyManager...
+  private volatile LogService logService;
 
   // CONSTRUCTORS
 
@@ -49,6 +55,7 @@ public class ConnectorServiceImpl implements ConnectorService
   public ConnectorServiceImpl( final BundleContext aContext )
   {
     this.context = aContext;
+    this.openConnections = new ArrayList<Connection>();
   }
 
   // METHODS
@@ -149,7 +156,14 @@ public class ConnectorServiceImpl implements ConnectorService
     {
       throw new ConnectionNotFoundException( "No connection for: " + aName );
     }
-    return cf.createConnection( aName, aMode, aTimeouts );
+
+    final Connection connection = cf.createConnection( aName, aMode, aTimeouts );
+    synchronized ( this.openConnections )
+    {
+      this.openConnections.add( connection );
+    }
+
+    return connection;
   }
 
   /**
@@ -189,11 +203,27 @@ public class ConnectorServiceImpl implements ConnectorService
   }
 
   /**
-   * Shuts down this connector service.
+   * Shuts down this connector service, closing all lingering connections.
    */
   public void shutdown()
   {
-    // NO-op
+    final List<Connection> connections;
+    synchronized ( this.openConnections )
+    {
+      connections = new ArrayList<Connection>( this.openConnections );
+    }
+
+    for ( Connection conn : connections )
+    {
+      try
+      {
+        conn.close();
+      }
+      catch ( IOException exception )
+      {
+        this.logService.log( LogService.LOG_DEBUG, "I/O exception closing connection!", exception );
+      }
+    }
   }
 
   /**

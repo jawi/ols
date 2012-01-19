@@ -18,15 +18,14 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.rxtx;
+package nl.lxtreme.ols.io.serial;
 
 
 import java.io.*;
-import java.util.logging.*;
-
 import javax.microedition.io.*;
 
 import org.osgi.service.io.*;
+import org.osgi.service.log.*;
 
 import purejavacomm.*;
 
@@ -34,7 +33,7 @@ import purejavacomm.*;
 /**
  * Provides a connection factory for serial devices.
  */
-public class SerialConnectionFactory implements ConnectionFactory
+public class CommConnectionFactory implements ConnectionFactory
 {
   // CONSTANTS
 
@@ -45,70 +44,31 @@ public class SerialConnectionFactory implements ConnectionFactory
    */
   public static final String SCHEME = "comm";
 
-  private static final Logger LOG = Logger.getLogger( SerialConnectionFactory.class.getName() );
-
   /**
    * Number of tries before bailing out on establishing a connection to the
    * serial port...
    */
   private static final int MAX_TRIES = 10;
   /** Name to use when connecting to the port... */
-  private static final String CONNECT_ID = SerialConnectionFactory.class.getSimpleName();
+  private static final String CONNECT_ID = CommConnectionFactory.class.getSimpleName();
 
-  static
-  {
-    // For some reason, serial ports under Linux do not get properly enumerated.
-    // This is due the fact that ttyACM is ignored in the detection routines of
-    // RxTx. Therefore, the device won't appear in the list of devices, and also
-    // cannot be entered manually as RxTx will refuse to add that particular
-    // comm.port identifier.
-    //
-    // The workaround is to craft a serial ports path ourselves, and set the
-    // system property 'gnu.io.rxtx.SerialPorts' ourselves with the "correct"
-    // list of ports...
-    // Reported by frankalicious on February 6th, 2011.
-    try
-    {
-      final String portsEnum = CommPortUtils.enumerateDevices();
-      if ( ( portsEnum != null ) && !portsEnum.trim().isEmpty() )
-      {
-        System.setProperty( "gnu.io.rxtx.SerialPorts", portsEnum );
-      }
-    }
-    catch ( UnsupportedOperationException exception )
-    {
-      LOG.log( Level.WARNING, "Enumeration of serial devices failed! Proceeding anyway..." );
-      LOG.log( Level.FINE, "Detailed stacktrace:", exception );
-    }
-  }
+  // VARIABLES
 
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new SerialConnectionFactory instance.
-   */
-  public SerialConnectionFactory()
-  {
-    // TODO: this will force the user to have its device(s) connected at
-    // startup. However, it will ensure everything is quick and responsive in
-    // case the device ports are requested... Stupid RXTX library...
-    // final CommDriver driver = new RXTXCommDriver();
-    // driver.initialize();
-  }
+  // Injected by dependency manager...
+  private volatile LogService logService;
 
   // METHODS
 
   /**
-   * @see org.osgi.service.io.ConnectionFactory#createConnection(java.lang.String,
-   *      int, boolean)
+   * {@inheritDoc}
    */
   @Override
   public Connection createConnection( final String aName, final int aMode, final boolean aTimeouts ) throws IOException
   {
-    final SerialPortOptions options = new SerialPortOptions( aName );
-
     try
     {
+      final CommPortOptions options = new CommPortOptions( aName );
+
       final SerialPort port = obtainSerialPort( options );
 
       port.setSerialPortParams( options.getBaudrate(), options.getDatabits(), options.getStopbits(),
@@ -126,7 +86,7 @@ public class SerialConnectionFactory implements ConnectionFactory
       port.setRTS( true );
       port.setDTR( options.isDTR() );
 
-      final SerialConnection serialConnection = new SerialConnection( port );
+      final CommConnectionImpl connection = new CommConnectionImpl( port );
 
       // Some devices need some time to initialize after being opened for the
       // first time, see issue #34.
@@ -136,7 +96,11 @@ public class SerialConnectionFactory implements ConnectionFactory
         Thread.sleep( openDelay );
       }
 
-      return serialConnection;
+      return connection;
+    }
+    catch ( IllegalArgumentException exception )
+    {
+      throw new IOException( "Invalid URI!", exception );
     }
     catch ( UnsupportedCommOperationException exception )
     {
@@ -165,7 +129,7 @@ public class SerialConnectionFactory implements ConnectionFactory
    * @throws IOException
    *           in case of other I/O problems.
    */
-  private SerialPort getSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
+  private SerialPort getSerialPort( final CommPortOptions aOptions ) throws NoSuchPortException, PortInUseException,
       IOException
   {
     final CommPortIdentifier commPortId = CommPortIdentifier.getPortIdentifier( aOptions.getPortName() );
@@ -185,7 +149,7 @@ public class SerialConnectionFactory implements ConnectionFactory
 
   /**
    * Performs a best effort in trying to get a serial port instance by calling
-   * {@link #getSerialPort(SerialPortOptions)} a number of times before bailing
+   * {@link #getSerialPort(CommPortOptions)} a number of times before bailing
    * out.
    * <p>
    * Idea taken from: <a href=
@@ -201,7 +165,7 @@ public class SerialConnectionFactory implements ConnectionFactory
    * @throws IOException
    *           in case of other I/O problems.
    */
-  private SerialPort obtainSerialPort( final SerialPortOptions aOptions ) throws NoSuchPortException, IOException
+  private SerialPort obtainSerialPort( final CommPortOptions aOptions ) throws NoSuchPortException, IOException
   {
     int tries = MAX_TRIES;
     SerialPort port = null;
@@ -214,32 +178,15 @@ public class SerialConnectionFactory implements ConnectionFactory
       }
       catch ( PortInUseException exception )
       {
-        LOG.log( Level.FINE, "Port (still) in use!", exception );
+        this.logService.log( LogService.LOG_DEBUG, "Port (still) in use!", exception );
       }
       catch ( NoSuchPortException exception )
       {
-        LOG.log( Level.FINE, "No such port!", exception );
-        // Immediately stop trying. On non-Windows platforms, try an alternative
-        // approach as last resort...
+        this.logService.log( LogService.LOG_DEBUG, "No such port!", exception );
+        // Immediately stop trying.
         tries = -1;
       }
     }
-
-    // A workaround for all non-Windows platforms: it could be that the device
-    // name is not in the list of searched port-names, so we should try whether
-    // the port itself can be opened directly. We should consider this a
-    // best-effort strategy...
-    // if ( ( port == null ) && !HostUtils.getHostInfo().isWindows() )
-    // {
-    // try
-    // {
-    // port = new RXTXPort( aOptions.getPortName() );
-    // }
-    // catch ( PortInUseException exception )
-    // {
-    // LOG.log( Level.FINE, "Port (still) in use!", exception );
-    // }
-    // }
 
     if ( port == null )
     {

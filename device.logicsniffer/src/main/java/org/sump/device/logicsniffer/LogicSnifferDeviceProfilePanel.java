@@ -28,11 +28,9 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.logging.*;
 
-import javax.microedition.io.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.util.*;
 import org.sump.device.logicsniffer.LogicSnifferConfigDialog.DeviceProfileTypeComboBoxRenderer;
 import org.sump.device.logicsniffer.profile.*;
 
@@ -136,7 +134,16 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
     // VARIABLES
 
+    private final DeviceProfileManager deviceProfileManager;
     private volatile Object selected = null;
+
+    /**
+     * Creates a new {@link DeviceProfileTypeComboBoxModel} instance.
+     */
+    public DeviceProfileTypeComboBoxModel( final DeviceProfileManager aDeviceProfileManager )
+    {
+      this.deviceProfileManager = aDeviceProfileManager;
+    }
 
     // METHODS
 
@@ -150,7 +157,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
      */
     public Object findElementByType( final String aType )
     {
-      return getDeviceProfileManager().getProfile( aType );
+      return this.deviceProfileManager.getProfile( aType );
     }
 
     /**
@@ -159,7 +166,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     @Override
     public Object getElementAt( final int aIndex )
     {
-      return getDeviceProfileManager().getProfiles().get( aIndex );
+      return this.deviceProfileManager.getProfiles().get( aIndex );
     }
 
     /**
@@ -177,7 +184,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     @Override
     public int getSize()
     {
-      return getDeviceProfileManager().getSize();
+      return this.deviceProfileManager.getSize();
     }
 
     /**
@@ -208,14 +215,20 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
       + "<tr><th>%s</th><td>%s</td></tr>" //
       + "</table></body></html>";
 
+  // VARIABLES
+
+  private final LogicSnifferDevice device;
+
   // CONSTRUCTORS
 
   /**
    * Creates a new LogicSnifferDeviceProfilePanel instance.
    */
-  public LogicSnifferDeviceProfilePanel()
+  public LogicSnifferDeviceProfilePanel( final LogicSnifferDevice aDevice )
   {
     super();
+
+    this.device = aDevice;
 
     initPanel();
   }
@@ -290,7 +303,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     // Make sure we don't allow this method to be called concurrently!
     this.detectDeviceButton.setEnabled( false );
 
-    LogicSnifferDetectionTask detectTask = null;
+    LogicSnifferDetectionTask detectTask = new LogicSnifferDetectionTask( this.device, getConnectionURI() );
 
     try
     {
@@ -299,10 +312,9 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
       try
       {
-        detectTask = new LogicSnifferDetectionTask( getDeviceProfileManager(), getConnection() );
         metadata = detectTask.call();
       }
-      catch ( Exception exception )
+      catch ( IOException exception )
       {
         LOG.log( Level.INFO, "Failed to detect device!", exception );
       }
@@ -326,7 +338,6 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     }
     finally
     {
-      HostUtils.closeResource( detectTask );
       // Restore the state of this button...
       this.detectDeviceButton.setEnabled( true );
     }
@@ -335,17 +346,12 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
   /**
    * @return
    */
-  protected abstract StreamConnection getConnection() throws IOException;
-
-  /**
-   * @return
-   */
-  protected abstract DeviceProfileManager getDeviceProfileManager();
+  protected abstract String getConnectionURI();
 
   /**
    * @param aProfile
    */
-  protected abstract void updateDeviceProfile( DeviceProfile aProfile );
+  protected abstract void updateDeviceProfile( final DeviceProfile aProfile );
 
   /**
    * @param aMetadata
@@ -402,7 +408,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
     // NOTE: create this component as last component, as it will fire an event
     // that uses all other components!!!
-    this.deviceTypeSelect = new JComboBox( new DeviceProfileTypeComboBoxModel() );
+    this.deviceTypeSelect = new JComboBox( new DeviceProfileTypeComboBoxModel( this.device.getDeviceProfileManager() ) );
 
     // Don't auto-detect at first...
     setAutoDetectDeviceType( false );
@@ -425,7 +431,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
       }
     } );
     // By default, select the "OLS" device, if available...
-    this.deviceTypeSelect.setSelectedItem( getDeviceProfileManager().getDefaultProfile() );
+    this.deviceTypeSelect.setSelectedItem( this.device.getDefaultProfile() );
   }
 
 }

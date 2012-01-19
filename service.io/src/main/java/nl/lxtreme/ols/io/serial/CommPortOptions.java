@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.rxtx;
+package nl.lxtreme.ols.io.serial;
 
 
 import java.util.regex.*;
@@ -97,7 +97,7 @@ import purejavacomm.*;
  * </tr>
  * </table>
  */
-final class SerialPortOptions
+final class CommPortOptions
 {
   // CONSTANTS
 
@@ -128,7 +128,7 @@ final class SerialPortOptions
    * @throws IllegalArgumentException
    *           in case the given URI was <code>null</code>.
    */
-  public SerialPortOptions( final String aURI ) throws IllegalArgumentException
+  public CommPortOptions( final String aURI ) throws IllegalArgumentException
   {
     if ( aURI == null )
     {

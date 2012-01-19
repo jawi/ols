@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.rxtx;
+package nl.lxtreme.ols.io.serial;
 
 
 import static org.hamcrest.core.IsInstanceOf.*;
@@ -41,17 +41,12 @@ import org.osgi.service.io.*;
 
 
 /**
- * Tests for {@link SerialConnectionFactory}.
+ * Tests for {@link CommConnectionFactory}.
  */
 @Ignore
 @RunWith( JUnit4TestRunner.class )
-public class SerialConnectionFactoryTest
+public class CommConnectionFactoryTest
 {
-  // VARIABLES
-
-  @Inject
-  private BundleContext context;
-
   // METHODS
 
   /**
@@ -237,7 +232,7 @@ public class SerialConnectionFactoryTest
    */
   private ConnectionFactory getConnectionFactory( final BundleContext aContext ) throws InvalidSyntaxException
   {
-    final String filter = "(" + ConnectionFactory.IO_SCHEME + "=" + SerialConnectionFactory.SCHEME + ")";
+    final String filter = "(" + ConnectionFactory.IO_SCHEME + "=" + CommConnectionFactory.SCHEME + ")";
     final ServiceReference[] serviceRefs = aContext.getServiceReferences( ConnectionFactory.class.getName(), filter );
     assertNotNull( serviceRefs );
     assertTrue( serviceRefs.length == 1 );

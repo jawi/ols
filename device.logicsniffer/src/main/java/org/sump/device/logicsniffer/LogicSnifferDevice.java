@@ -29,8 +29,12 @@ import javax.microedition.io.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.util.swing.*;
 
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.cm.*;
+import org.osgi.service.io.*;
 import org.sump.device.logicsniffer.profile.*;
 
 
@@ -49,26 +53,13 @@ public class LogicSnifferDevice implements Device
 
   // VARIABLES
 
-  private final LogicSnifferConfig deviceConfig;
+  private DependencyManager dependencyManager;
+  private LogicSnifferConfig config;
 
-  private DeviceProfileManagerTracker deviceProfileManagerTracker;
-  private StreamConnectionFactory streamConnectionFactory;
-
-  private LogicSnifferConfigDialog configDialog;
-  private boolean setup;
-
+  private volatile ManagedServiceFactory deviceProfileManagerServiceFactory;
+  private volatile ConnectorService connectorService;
   private volatile StreamConnection connection;
-
-  // CONSTRUCTORS
-
-  /**
-   * Constructs device controller component.
-   */
-  public LogicSnifferDevice()
-  {
-    this.deviceConfig = new LogicSnifferConfig();
-    this.setup = false;
-  }
+  private volatile LogicSnifferConfigDialog configDialog;
 
   // METHODS
 
@@ -92,7 +83,7 @@ public class LogicSnifferDevice implements Device
   public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
       throws IOException
   {
-    return new LogicSnifferAcquisitionTask( this.deviceConfig, getStreamConnection(), getDeviceProfileManager(),
+    return new LogicSnifferAcquisitionTask( this.config, getStreamConnection(), getDeviceProfileManager(),
         aProgressListener );
   }
 
@@ -102,7 +93,7 @@ public class LogicSnifferDevice implements Device
   @Override
   public CancelTask createCancelTask() throws IOException
   {
-    if ( this.deviceConfig.isRleEnabled() )
+    if ( this.config.isRleEnabled() )
     {
       return new LogicSnifferCancelTask( getStreamConnection() );
     }
@@ -124,7 +115,7 @@ public class LogicSnifferDevice implements Device
   @Override
   public boolean isSetup()
   {
-    return this.setup;
+    return this.config != null;
   }
 
   /**
@@ -136,21 +127,55 @@ public class LogicSnifferDevice implements Device
   @Override
   public boolean setupCapture( final Window aOwner )
   {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.configDialog != null ) && ( this.configDialog.getOwner() != aOwner ) )
+    // Just to be sure...
+    disposeConfigDialog();
+
+    this.configDialog = new LogicSnifferConfigDialog( aOwner, this );
+
+    try
+    {
+      boolean configConfirmed = this.configDialog.showDialog();
+      if ( configConfirmed )
+      {
+        this.config = this.configDialog.getConfiguration();
+      }
+      return configConfirmed;
+    }
+    finally
     {
       this.configDialog.dispose();
       this.configDialog = null;
     }
-    // if no valid dialog exists, create one
-    if ( this.configDialog == null )
-    {
-      this.configDialog = new LogicSnifferConfigDialog( aOwner, this.deviceConfig, this.deviceProfileManagerTracker,
-          this.streamConnectionFactory );
-    }
+  }
 
-    this.setup = this.configDialog.showDialog();
-    return this.setup;
+  /**
+   * @param uri
+   * @return
+   * @throws IOException
+   */
+  final StreamConnection createStreamConnection( final String uri ) throws IOException
+  {
+    return ( StreamConnection )this.connectorService.open( uri, ConnectorService.READ_WRITE, true /* timeouts */);
+  }
+
+  /**
+   * Returns the default device profile.
+   * 
+   * @return a default profile, never <code>null</code>.
+   */
+  final DeviceProfile getDefaultProfile()
+  {
+    return getDeviceProfileManager().getDefaultProfile();
+  }
+
+  /**
+   * Returns the current device profile manager.
+   * 
+   * @return a device profile manager, never <code>null</code>.
+   */
+  final DeviceProfileManager getDeviceProfileManager()
+  {
+    return ( DeviceProfileManager )this.deviceProfileManagerServiceFactory;
   }
 
   /**
@@ -158,8 +183,7 @@ public class LogicSnifferDevice implements Device
    */
   protected void destroy()
   {
-    this.streamConnectionFactory.close();
-    this.deviceProfileManagerTracker.close();
+    disposeConfigDialog();
   }
 
   /**
@@ -170,22 +194,35 @@ public class LogicSnifferDevice implements Device
    */
   protected void init( final BundleContext aBundleContext )
   {
-    // Keep for later use...
-    this.deviceProfileManagerTracker = new DeviceProfileManagerTracker( aBundleContext );
-    this.deviceProfileManagerTracker.open();
+    final String pmFilter = String.format( "(&(%s=%s)(%s=%s))", Constants.SERVICE_PID,
+        DeviceProfileManager.SERVICE_PID, Constants.OBJECTCLASS, ManagedServiceFactory.class.getName() );
 
-    this.streamConnectionFactory = new StreamConnectionFactory( aBundleContext );
-    this.streamConnectionFactory.open();
+    this.dependencyManager = new DependencyManager( aBundleContext );
+    this.dependencyManager.add( this.dependencyManager.createComponent() //
+        .setImplementation( this ) //
+        .add( this.dependencyManager.createServiceDependency() //
+            .setService( ManagedServiceFactory.class, pmFilter ) //
+            .setAutoConfig( "deviceProfileManagerServiceFactory" ) //
+            .setRequired( true ) //
+        ).add( this.dependencyManager.createServiceDependency() //
+            .setService( ConnectorService.class ) //
+            .setAutoConfig( "connectorService" ) //
+            .setRequired( true ) //
+        ) //
+        );
   }
 
   /**
-   * Returns the current device profile manager.
-   * 
-   * @return a device profile manager, never <code>null</code>.
+   * Disposes the current configuration dialog, if one is still visible on
+   * screen. If no configuration dialog is visible, this method does nothing.
    */
-  private DeviceProfileManager getDeviceProfileManager()
+  private void disposeConfigDialog()
   {
-    return this.deviceProfileManagerTracker.getService();
+    if ( this.configDialog != null )
+    {
+      SwingComponentUtils.dispose( this.configDialog );
+      this.configDialog = null;
+    }
   }
 
   /**
@@ -199,16 +236,14 @@ public class LogicSnifferDevice implements Device
   {
     if ( this.connection == null )
     {
-      final String portName = this.deviceConfig.getPortName();
-      final int baudrate = this.deviceConfig.getBaudrate();
-      final boolean dtrValue = this.deviceConfig.isOpenPortDtr();
-      final int openDelay = this.deviceConfig.getOpenPortDelay();
+      final String uri = this.config.getConnectionURI();
 
-      // Make sure we release the device if it was still attached...
-      LOG.log( Level.INFO, "Attaching to {0} @ {1}bps (DTR = {2}) ...",
-          new Object[] { portName, Integer.valueOf( baudrate ), dtrValue ? "high" : "low" } );
+      if ( LOG.isLoggable( Level.INFO ) )
+      {
+        LOG.info( "Connecting to " + uri );
+      }
 
-      this.connection = this.streamConnectionFactory.getConnection( portName, baudrate, dtrValue, openDelay );
+      this.connection = createStreamConnection( uri );
     }
     return this.connection;
   }

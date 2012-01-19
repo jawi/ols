@@ -223,6 +223,26 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Closes and disposes a given {@link Window}.
+   * 
+   * @param aWindow
+   *          the window to close, if <code>null</code>, this method doesn't do
+   *          anything.
+   */
+  public static void dispose( final Window aWindow )
+  {
+    if ( aWindow == null )
+    {
+      return;
+    }
+    if ( aWindow.isVisible() )
+    {
+      aWindow.setVisible( false );
+    }
+    aWindow.dispose();
+  }
+
+  /**
    * Draws a single arrow head
    * 
    * @param aG

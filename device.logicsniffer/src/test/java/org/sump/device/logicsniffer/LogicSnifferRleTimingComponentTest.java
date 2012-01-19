@@ -249,8 +249,6 @@ public class LogicSnifferRleTimingComponentTest
     config.setDeviceProfile( deviceProfile );
 
     config.setAltNumberSchemeEnabled( false ); // don't care
-    config.setBaudrate( 9600 ); // don't care
-    config.setPortName( "/dev/virtual" ); // don't care
     config.setClockSource( CaptureClockSource.INTERNAL ); // don't care
     config.setFilterEnabled( false ); // don't care
     config.setTestModeEnabled( false ); // don't care
@@ -273,7 +271,8 @@ public class LogicSnifferRleTimingComponentTest
 
   /**
    * Test method for
-   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}.
+   * {@link org.sump.device.logicsniffer.LogicSnifferAcquisitionTask#doInBackground()}
+   * .
    */
   @Test( /* timeout = 10000 */)
   public void testRleOk() throws Exception
