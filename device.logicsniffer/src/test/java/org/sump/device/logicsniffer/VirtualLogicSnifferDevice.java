@@ -343,14 +343,14 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
         final boolean aDdrMode ) throws IOException
     {
       final byte[] sample = new byte[aSampleWidth];
-      Arrays.fill( sample, ( byte )( aRleMode ? 0x7F : 0xFF ) );
+      final byte value = ( byte )( aRleMode ? 0x7F : 0xFF );
+      Arrays.fill( sample, value );
 
       for ( int i = 0; i <= aSampleCount; i++ )
       {
         aOs.write( sample );
       }
       aOs.flush();
-
     }
   }
 

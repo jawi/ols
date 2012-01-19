@@ -38,11 +38,13 @@ import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -227,6 +229,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   private final BundleContext bundleContext;
   private final IActionManager actionManager;
+  private final SignalDiagramController signalDiagramController;
 
   private final List<Device> devices;
   private final List<Tool<?>> tools;
@@ -258,6 +261,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public ClientController( final BundleContext aBundleContext )
   {
     this.bundleContext = aBundleContext;
+
+    this.signalDiagramController = new SignalDiagramController();
 
     this.devices = new ArrayList<Device>();
     this.tools = new ArrayList<Tool<?>>();
@@ -773,6 +778,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Returns the current value of signalDiagramController.
+   * 
+   * @return the signalDiagramController
+   */
+  public SignalDiagramController getSignalDiagramController()
+  {
+    return this.signalDiagramController;
+  }
+
+  /**
    * Returns all available tools.
    * 
    * @return an array of tool names, never <code>null</code>, but an empty array
@@ -808,7 +823,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       final Long cursorPosition = this.dataContainer.getCursorPosition( aCursorIdx );
       if ( cursorPosition != null )
       {
-        this.mainFrame.gotoPosition( cursorPosition.longValue() );
+        this.mainFrame.gotoPosition( 0, cursorPosition.longValue() );
       }
     }
   }
@@ -827,7 +842,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
           final Long cursorPosition = this.dataContainer.getCursorPosition( c );
           if ( cursorPosition != null )
           {
-            this.mainFrame.gotoPosition( cursorPosition.longValue() );
+            this.mainFrame.gotoPosition( 0, cursorPosition.longValue() );
           }
           break;
         }
@@ -849,7 +864,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
           final Long cursorPosition = this.dataContainer.getCursorPosition( c );
           if ( cursorPosition != null )
           {
-            this.mainFrame.gotoPosition( cursorPosition.longValue() );
+            this.mainFrame.gotoPosition( 0, cursorPosition.longValue() );
           }
           break;
         }
@@ -865,7 +880,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     if ( ( this.mainFrame != null ) && this.dataContainer.hasTriggerData() )
     {
       final long position = this.dataContainer.getTriggerPosition();
-      this.mainFrame.gotoPosition( position );
+      this.mainFrame.gotoPosition( 0, position );
     }
   }
 
@@ -956,8 +971,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       final DataAnnotation<?> dataAnnotation = ( DataAnnotation<?> )aAnnotation;
 
-      this.dataContainer.addChannelAnnotation( dataAnnotation.getChannel(), dataAnnotation.getStartSampleIndex(),
-          dataAnnotation.getEndSampleIndex(), dataAnnotation.getAnnotation() );
+      this.dataContainer.addChannelAnnotation( dataAnnotation.getChannel(), dataAnnotation.getStartTimestamp(),
+          dataAnnotation.getEndTimestamp(), dataAnnotation.getAnnotation() );
+
+      this.signalDiagramController.addAnnotation( dataAnnotation );
 
       // Accumulate repaint events to avoid an avalanche of events on the EDT...
       this.repaintAccumulatingRunnable.add( ( Void )null );
@@ -2036,6 +2053,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private void setAcquisitionResult( final AcquisitionResult aData )
   {
     this.dataContainer.setCapturedData( aData );
+
+    this.signalDiagramController.setDataModel( this.dataContainer );
   }
 
   /**

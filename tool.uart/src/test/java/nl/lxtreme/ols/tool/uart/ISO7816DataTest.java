@@ -26,11 +26,14 @@ import static org.junit.Assert.*;
 import java.net.*;
 import java.util.*;
 
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialDecoderCallback;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 
 import org.junit.*;

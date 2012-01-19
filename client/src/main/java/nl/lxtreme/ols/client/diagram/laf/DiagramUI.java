@@ -367,8 +367,8 @@ public class DiagramUI extends ComponentUI
 
       if ( aAnnotation != null )
       {
-        final double start = dataContainer.calculateTime( aAnnotation.getStartIndex() );
-        final double end = dataContainer.calculateTime( aAnnotation.getEndIndex() );
+        final double start = aAnnotation.getStartTimestamp();
+        final double end = aAnnotation.getEndTimestamp();
 
         sb.append( aAnnotation.getData() );
         sb.append( " | Time: " );
@@ -818,8 +818,8 @@ public class DiagramUI extends ComponentUI
           {
             final ChannelAnnotation annotation = annotations.next();
 
-            final long startIdx = timestamps[annotation.getStartIndex()];
-            final long endIdx = timestamps[annotation.getEndIndex()];
+            final long startIdx = annotation.getStartTimestamp();
+            final long endIdx = annotation.getEndTimestamp();
 
             final String data = annotation.getData() != null ? String.valueOf( annotation.getData() ) : "";
 

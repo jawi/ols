@@ -22,11 +22,13 @@ package nl.lxtreme.ols.tool.onewire;
 
 
 import static nl.lxtreme.ols.util.NumberUtils.*;
+
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.util.*;
 
@@ -372,11 +374,11 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
   private void reportBusError( final OneWireDataSet aDataSet, final long aStartTimestamp )
   {
     final AcquisitionResult data = this.context.getData();
-    final int startSampleIdx = Math.max( data.getSampleIndex( aStartTimestamp ), 0 );
 
+    final int startSampleIdx = Math.max( data.getSampleIndex( aStartTimestamp ), 0 );
     aDataSet.reportBusError( this.owLineIndex, startSampleIdx );
 
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.owLineIndex, startSampleIdx, startSampleIdx,
+    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.owLineIndex, aStartTimestamp, aStartTimestamp,
         OneWireDataSet.OW_BUS_ERROR ) );
   }
 
@@ -397,7 +399,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     aDataSet.reportData( this.owLineIndex, startSampleIdx, endSampleIdx, aByteValue );
 
     final String annotation = String.format( "0x%X (%c)", Integer.valueOf( aByteValue ), Integer.valueOf( aByteValue ) );
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.owLineIndex, startSampleIdx, endSampleIdx,
+    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp,
         annotation ) );
   }
 
@@ -418,7 +420,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     aDataSet.reportReset( this.owLineIndex, startSampleIdx, endSampleIdx, aSlaveIsPresent );
 
     final String annotation = String.format( "Master reset, slave %s present", aSlaveIsPresent ? "is" : "is NOT" );
-    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.owLineIndex, startSampleIdx, endSampleIdx,
+    this.annotationListener.onAnnotation( new SampleDataAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp,
         annotation ) );
   }
 }

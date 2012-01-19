@@ -36,8 +36,8 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.data.project.*;
-import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
@@ -446,8 +446,10 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   // VARIABLES
 
-  private final Diagram diagram;
+  // private final Diagram diagram;
+  private final SignalDiagramComponent signalDiagram;
   private final JTextStatusBar status;
+  private final ClientController controller;
 
   private JMenu deviceMenu;
   private JMenu toolsMenu;
@@ -455,8 +457,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private JMenu exportMenu;
 
   private volatile String lastSelectedDeviceName;
-
-  private final ClientController controller;
 
   // CONSTRUCTORS
 
@@ -476,7 +476,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     this.controller = aController;
 
-    this.diagram = new Diagram( this.controller );
+    // this.diagram = new Diagram( this.controller );
+    this.signalDiagram = SignalDiagramComponent.create( aController.getSignalDiagramController() );
     this.status = new JTextStatusBar();
 
     setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
@@ -485,7 +486,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     final JToolBar tools = createMenuBars();
 
     // Create a scrollpane for the diagram...
-    final JScrollPane scrollPane = new JScrollPane( this.diagram );
+    final JScrollPane scrollPane = new JScrollPane( this.signalDiagram );
+    scrollPane.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS );
+    scrollPane.setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED );
 
     final Container contentPane = getContentPane();
     contentPane.setLayout( new BorderLayout() );
@@ -526,7 +529,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public long convertMousePositionToSampleIndex( final Point aLocation )
   {
-    return this.diagram.convertPointToSampleIndex( aLocation );
+    return -1; // XXX
   }
 
   /**
@@ -541,24 +544,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Returns the current zoom scale.
-   * 
-   * @return a zoom scale, > 0.0
-   */
-  public double getZoomScale()
-  {
-    return this.diagram.getScale();
-  }
-
-  /**
    * Sets the view to the position indicated by the given sample position.
    * 
    * @param aSamplePos
    *          the sample position, >= 0.
    */
-  public void gotoPosition( final long aSamplePos )
+  public void gotoPosition( final int aChannelIdx, final long aSamplePos )
   {
-    this.diagram.gotoPosition( aSamplePos );
+    this.signalDiagram.scrollToTimestamp( aChannelIdx, aSamplePos );
   }
 
   /**
@@ -608,8 +601,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public void setChannelLabels( final String[] aChannelLabels )
   {
-    this.diagram.updatePreferredSize();
-    this.diagram.revalidateAll();
+    this.signalDiagram.recalculateDimensions();
+    this.signalDiagram.revalidate();
   }
 
   /**
@@ -668,7 +661,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public void zoomDefault()
   {
-    this.diagram.zoomDefault();
+    this.signalDiagram.zoomOriginal();
   }
 
   /**
@@ -676,7 +669,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public void zoomIn()
   {
-    this.diagram.zoomIn();
+    this.signalDiagram.zoomIn();
   }
 
   /**
@@ -684,7 +677,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public void zoomOut()
   {
-    this.diagram.zoomOut();
+    this.signalDiagram.zoomOut();
   }
 
   /**
@@ -692,7 +685,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public void zoomToFit()
   {
-    this.diagram.zoomToFit();
+    this.signalDiagram.zoomAll();
   }
 
   /**
@@ -700,17 +693,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   final void diagramSettingsUpdated()
   {
-    this.diagram.revalidateAll();
-  }
-
-  /**
-   * Returns the current diagram instance.
-   * 
-   * @return a diagram instance, cannot be <code>null</code>.
-   */
-  final Diagram getDiagram()
-  {
-    return this.diagram;
+    this.signalDiagram.revalidate();
   }
 
   /**
@@ -720,7 +703,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   final JComponent getDiagramScrollPane()
   {
-    final Container viewport = getDiagram().getParent();
+    final Container viewport = this.signalDiagram.getParent();
     return ( JComponent )viewport.getParent();
   }
 

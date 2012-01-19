@@ -22,9 +22,9 @@ package nl.lxtreme.ols.tool.asm45;
 
 
 import static nl.lxtreme.ols.util.NumberUtils.*;
-
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 
 
 /**

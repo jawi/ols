@@ -26,6 +26,7 @@ import java.util.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.*;
 
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
@@ -37,6 +38,64 @@ import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
 final class ConfigDialogHelper
 {
   // METHODS
+
+  /**
+   * @param aComboBox
+   * @return
+   */
+  static String getComboBoxText( final JComboBox aComboBox )
+  {
+    if ( aComboBox == null )
+    {
+      return null;
+    }
+    Object value = aComboBox.getSelectedItem();
+    if ( value instanceof String )
+    {
+      return ( String )value;
+    }
+    if ( value == null )
+    {
+      return null;
+    }
+    return String.valueOf( value );
+  }
+
+  /**
+   * @param aComboBox
+   * @return
+   */
+  static Integer getNumericValue( final JComboBox aTextField )
+  {
+    if ( aTextField == null )
+    {
+      return null;
+    }
+    Object value = aTextField.getSelectedItem();
+    if ( value == null )
+    {
+      return null;
+    }
+    return Integer.valueOf( NumberUtils.smartParseInt( String.valueOf( value ) ) );
+  }
+
+  /**
+   * @param aComboBox
+   * @return
+   */
+  static Integer getNumericValue( final JTextField aTextField )
+  {
+    if ( aTextField == null )
+    {
+      return null;
+    }
+    String value = aTextField.getText();
+    if ( value == null )
+    {
+      return null;
+    }
+    return Integer.valueOf( NumberUtils.smartParseInt( value ) );
+  }
 
   /**
    * @param <T>

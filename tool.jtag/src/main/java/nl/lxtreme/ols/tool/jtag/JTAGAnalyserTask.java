@@ -27,6 +27,7 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
 
 
@@ -166,6 +167,7 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
     final AcquisitionResult data = this.context.getData();
 
     final int[] values = data.getValues();
+    final long[] timestamps = data.getTimestamps();
 
     final int startOfDecode = Math.max( aSlaveSelectedIdx, aDataSet.getStartOfDecode() );
     final int endOfDecode = aDataSet.getEndOfDecode();
@@ -330,10 +332,10 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
           { // state 8: Update DR
             state = this.currentState.getDisplayText();
 
-            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdiIdx, startTdiDataIdx,
-                endTdiDataIdx, TdiData ) );
-            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdoIdx, startTdiDataIdx,
-                endTdiDataIdx, TdoData ) );
+            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdiIdx, timestamps[startTdiDataIdx],
+                timestamps[endTdiDataIdx], TdiData ) );
+            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdoIdx, timestamps[startTdiDataIdx],
+                timestamps[endTdiDataIdx], TdoData ) );
 
             if ( tmsValue == 0 )
             {
@@ -447,13 +449,13 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
           { // state 15: Update IR
             state = this.currentState.getDisplayText();
 
-            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdiIdx, startTdiDataIdx,
-                endTdiDataIdx, TdiData ) );
+            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdiIdx, timestamps[startTdiDataIdx],
+                timestamps[endTdiDataIdx], TdiData ) );
             // aDataSet.reportJTAGState( this.tdiIdx, startTdiDataIdx,
             // endTdiDataIdx, TdiData );
 
-            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdoIdx, startTdiDataIdx,
-                endTdiDataIdx, TdoData ) );
+            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdoIdx, timestamps[startTdiDataIdx],
+                timestamps[endTdiDataIdx], TdoData ) );
             // aDataSet.reportJTAGState( this.tdoIdx, startTdiDataIdx,
             // endTdiDataIdx, TdoData );
 
@@ -476,7 +478,8 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
             // LOG.log( Level.INFO, "state transition: " + oldJTAGState + " to "
             // + JTAGState + " (" + StartIdx + "," + idx + ")");
 
-            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tmsIdx, this.startIdx, idx, state ) );
+            this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tmsIdx, timestamps[this.startIdx],
+                timestamps[idx], state ) );
 
             aDataSet.reportJTAGState( this.tmsIdx, this.startIdx, idx, this.oldState );
 

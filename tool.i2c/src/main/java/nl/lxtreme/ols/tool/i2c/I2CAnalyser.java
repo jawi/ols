@@ -22,9 +22,11 @@ package nl.lxtreme.ols.tool.i2c;
 
 
 import java.awt.*;
-import org.osgi.framework.*;
 
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
+
+import org.osgi.framework.*;
 
 
 /**

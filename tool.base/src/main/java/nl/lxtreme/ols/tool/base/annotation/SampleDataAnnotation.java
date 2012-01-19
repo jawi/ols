@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.base.annotation;
 
 
-import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 
 
 /**
@@ -32,8 +32,8 @@ public class SampleDataAnnotation implements DataAnnotation<String>
   // VARIABLES
 
   private final int channelIdx;
-  private final int startSampleIdx;
-  private final int endSampleIdx;
+  private final long startTimestamp;
+  private final long endTimestamp;
   private final String text;
 
   // CONSTRUCTORS
@@ -41,13 +41,21 @@ public class SampleDataAnnotation implements DataAnnotation<String>
   /**
    * Creates a new DataAnnotation instance.
    */
-  public SampleDataAnnotation( final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
+  public SampleDataAnnotation( final int aChannelIdx, final long aStartTimestamp, final long aEndTimestamp,
       final String aText )
   {
     this.channelIdx = aChannelIdx;
-    this.startSampleIdx = aStartSampleIdx;
-    this.endSampleIdx = aEndSampleIdx;
+    this.startTimestamp = aStartTimestamp;
+    this.endTimestamp = aEndTimestamp;
     this.text = aText;
+  }
+
+  /**
+   * Creates a new DataAnnotation instance.
+   */
+  public SampleDataAnnotation( final int aChannelIdx, final long aStartTimestamp, final String aText )
+  {
+    this( aChannelIdx, aStartTimestamp, aStartTimestamp + 1, aText );
   }
 
   // METHODS
@@ -73,16 +81,18 @@ public class SampleDataAnnotation implements DataAnnotation<String>
   /**
    * {@inheritDoc}
    */
-  public int getEndSampleIndex()
+  @Override
+  public long getEndTimestamp()
   {
-    return this.endSampleIdx;
+    return this.endTimestamp;
   }
 
   /**
    * {@inheritDoc}
    */
-  public int getStartSampleIndex()
+  @Override
+  public long getStartTimestamp()
   {
-    return this.startSampleIdx;
+    return this.startTimestamp;
   }
 }

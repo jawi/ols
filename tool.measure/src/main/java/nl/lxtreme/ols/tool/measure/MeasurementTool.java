@@ -23,10 +23,11 @@ package nl.lxtreme.ols.tool.measure;
 
 import java.awt.*;
 
-import org.osgi.framework.*;
-
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureTask.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
+import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureTask.ClockStats;
+
+import org.osgi.framework.*;
 
 
 /**

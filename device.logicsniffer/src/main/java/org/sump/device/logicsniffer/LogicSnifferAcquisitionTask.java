@@ -285,7 +285,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
   protected void open() throws IOException
   {
     final StreamConnection conn = getStreamConnection();
-    final String portName = this.config.getPortName();
     final int openDelay = this.config.getOpenPortDelay();
 
     try
@@ -311,14 +310,13 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     }
     catch ( final Exception exception )
     {
-      LOG.log( Level.WARNING, "Failed to open/use {0}! Possible reason: {1}",
-          new Object[] { portName, exception.getMessage() } );
+      LOG.log( Level.WARNING, "Failed to open connection! Possible reason: " + exception.getMessage() );
       LOG.log( Level.FINE, "Detailed stack trace:", exception );
 
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
-        throw new IOException( "Failed to open/use " + portName + "! Possible reason: " + exception.getMessage() );
+        throw new IOException( "Failed to open connection! Possible reason: " + exception.getMessage() );
       }
     }
   }

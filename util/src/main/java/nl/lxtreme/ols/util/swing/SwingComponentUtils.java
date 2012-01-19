@@ -22,6 +22,7 @@ package nl.lxtreme.ols.util.swing;
 
 
 import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 
 import javax.swing.*;
@@ -222,6 +223,26 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Closes and disposes a given {@link Window}.
+   * 
+   * @param aWindow
+   *          the window to close, if <code>null</code>, this method doesn't do
+   *          anything.
+   */
+  public static void dispose( final Window aWindow )
+  {
+    if ( aWindow == null )
+    {
+      return;
+    }
+    if ( aWindow.isVisible() )
+    {
+      aWindow.setVisible( false );
+    }
+    aWindow.dispose();
+  }
+
+  /**
    * Draws a single arrow head
    * 
    * @param aG
@@ -407,6 +428,46 @@ public final class SwingComponentUtils
   }
 
   /**
+   * Returns the deepest visible descendent Component of <code>parent</code>
+   * that contains the location <code>x</code>, <code>y</code>. If
+   * <code>parent</code> does not contain the specified location, then
+   * <code>null</code> is returned. If <code>parent</code> is not a container,
+   * or none of <code>parent</code>'s visible descendents contain the specified
+   * location, <code>parent</code> is returned.
+   * 
+   * @param aParent
+   *          the root component to begin the search
+   * @param aXpos
+   *          the x target location
+   * @param aYpos
+   *          the y target location
+   */
+  public static JComponent getDeepestComponentAt( final Component aParent, final int aXpos, final int aYpos )
+  {
+    return ( JComponent )SwingUtilities.getDeepestComponentAt( aParent, aXpos, aYpos );
+  }
+
+  /**
+   * Returns the deepest visible descendent Component of <code>parent</code>
+   * that contains the location <code>x</code>, <code>y</code>. If
+   * <code>parent</code> does not contain the specified location, then
+   * <code>null</code> is returned. If <code>parent</code> is not a container,
+   * or none of <code>parent</code>'s visible descendents contain the specified
+   * location, <code>parent</code> is returned.
+   * 
+   * @param aParent
+   *          the root component to begin the search
+   * @param aXpos
+   *          the x target location
+   * @param aYpos
+   *          the y target location
+   */
+  public static JComponent getDeepestComponentAt( final MouseEvent aEvent )
+  {
+    return getDeepestComponentAt( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
+  }
+
+  /**
    * Returns the key mask of the menu shortcut key.
    * 
    * @return a key mask, >= 0.
@@ -553,6 +614,56 @@ public final class SwingComponentUtils
     {
       // Ignore...
     }
+  }
+
+  /**
+   * Registers a given keystroke to invoke a given action on the given
+   * component.
+   * 
+   * @param aComponent
+   *          the component to register the keystroke for;
+   * @param aKeyStroke
+   *          the keystroke (as plain char) to register;
+   * @param aAction
+   *          the action to invoke when the keystroke is typed.
+   */
+  public static void registerKeyBinding( final JComponent aComponent, final char aKey, final Action aAction )
+  {
+    registerKeyBinding( aComponent, KeyStroke.getKeyStroke( aKey ), aAction );
+  }
+
+  /**
+   * Registers a given keystroke to invoke a given action on the given
+   * component.
+   * 
+   * @param aComponent
+   *          the component to register the keystroke for;
+   * @param aKeyStroke
+   *          the keystroke to register;
+   * @param aAction
+   *          the action to invoke when the keystroke is typed.
+   */
+  public static void registerKeyBinding( final JComponent aComponent, final KeyStroke aKeyStroke, final Action aAction )
+  {
+    final String name = "KeyBinding.".concat( aKeyStroke.toString() );
+    aComponent.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( aKeyStroke, name );
+    aComponent.getActionMap().put( name, aAction );
+  }
+
+  /**
+   * Registers a given keystroke to invoke a given action on the given
+   * component.
+   * 
+   * @param aComponent
+   *          the component to register the keystroke for;
+   * @param aKeyStroke
+   *          the keystroke (as String) to register;
+   * @param aAction
+   *          the action to invoke when the keystroke is typed.
+   */
+  public static void registerKeyBinding( final JComponent aComponent, final String aKeyStroke, final Action aAction )
+  {
+    registerKeyBinding( aComponent, KeyStroke.getKeyStroke( aKeyStroke ), aAction );
   }
 
   /**
@@ -913,6 +1024,37 @@ public final class SwingComponentUtils
       dialog.setVisible( true );
       return dialog.getSelectedFile();
     }
+  }
+
+  /**
+   * Converts a given font to a font-clause that can be used in a CSS-file.
+   * 
+   * @param aFont
+   *          the font convert to CSS, cannot be <code>null</code>.
+   * @return a CSS clause for the given font, never <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given font was <code>null</code>.
+   */
+  public static String toCssString( final Font aFont )
+  {
+    if ( aFont == null )
+    {
+      throw new IllegalArgumentException( "Parameter Font cannot be null!" );
+    }
+
+    final StringBuilder sb = new StringBuilder( "font: " );
+    if ( aFont.isItalic() )
+    {
+      sb.append( "italic " );
+    }
+    if ( aFont.isBold() )
+    {
+      sb.append( "bold " );
+    }
+    sb.append( aFont.getSize() ).append( "pt " );
+    sb.append( '"' ).append( aFont.getFontName() ).append( "\", " );
+    sb.append( '"' ).append( aFont.getPSName() ).append( "\";" );
+    return sb.toString();
   }
 
   /**

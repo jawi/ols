@@ -27,9 +27,9 @@ import static org.sump.device.logicsniffer.ConfigDialogHelper.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
+import java.util.*;
+import java.util.List;
 
-import javax.microedition.io.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
@@ -40,19 +40,21 @@ import nl.lxtreme.ols.util.NumberUtils.UnitDefinition;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
-import nl.lxtreme.rxtx.*;
 
 import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import org.sump.device.logicsniffer.profile.DeviceProfile.DeviceInterface;
 import org.sump.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
 import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
 import org.sump.device.logicsniffer.protocol.*;
+
+import purejavacomm.*;
 
 
 /**
  * Provides the configuration dialog for the Open Bench Logic Sniffer device.
  */
-public final class LogicSnifferConfigDialog extends JDialog implements ActionListener, Configurable, Closeable
+public final class LogicSnifferConfigDialog extends JDialog implements Configurable, Closeable
 {
   // INNER TYPES
 
@@ -117,6 +119,36 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
           return "External / Rising";
         case EXTERNAL_RISING:
           return "External / Falling";
+      }
+      return super.getDisplayValue( aValue );
+    }
+  }
+
+  /**
+   * Renders a device interface.
+   */
+  static final class DeviceInterfaceComboBoxRenderer extends EnumItemRenderer<DeviceInterface>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getDisplayValue( final DeviceInterface aValue )
+    {
+      switch ( aValue )
+      {
+        case NETWORK:
+          return "Network";
+        case SERIAL:
+          return "Serial port";
+        case USB:
+          return "USB";
       }
       return super.getDisplayValue( aValue );
     }
@@ -235,11 +267,13 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
 
   // VARIABLES
 
-  private final DeviceProfileManagerTracker deviceProfileManagerTracker;
-  private final StreamConnectionFactory connectionFactory;
+  private final LogicSnifferDevice logicSnifferDevice;
 
   private LogicSnifferDeviceProfilePanel deviceProfilePanel;
 
+  private JComboBox connTypeSelect;
+  private JTextField remAddress;
+  private JTextField remPort;
   private JComboBox numberSchemeSelect;
   private JComboBox portSelect;
   private JComboBox portRateSelect;
@@ -263,7 +297,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   private JCheckBox[] channelGroup;
   private JButton captureButton;
   private JComponent groupsPanel;
-  private final LogicSnifferConfig config;
   private boolean dialogResult;
   private JSlider ratioSlider;
   private JLabel ratioLabel;
@@ -275,7 +308,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   private JButton[] applyHexValueButton;
   private JCheckBox[] invertHexValue;
 
-  private volatile boolean listening = true;
+  private DeviceProfile deviceProfile;
 
   // CONSTRUCTORS
 
@@ -284,19 +317,14 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    * 
    * @param aParent
    *          the parent window of this dialog;
-   * @param aConfig
+   * @param aDevice
    *          the logic sniffer device to configure.
-   * @param aStreamConnectionFactory
    */
-  public LogicSnifferConfigDialog( final Window aParent, final LogicSnifferConfig aConfig,
-      final DeviceProfileManagerTracker aDeviceProfileManagerTracker,
-      final StreamConnectionFactory aStreamConnectionFactory )
+  public LogicSnifferConfigDialog( final Window aParent, final LogicSnifferDevice aDevice )
   {
     super( aParent, "OLS Capture settings", ModalityType.DOCUMENT_MODAL );
 
-    this.deviceProfileManagerTracker = aDeviceProfileManagerTracker;
-    this.connectionFactory = aStreamConnectionFactory;
-    this.config = aConfig;
+    this.logicSnifferDevice = aDevice;
 
     initDialog();
     buildDialog();
@@ -354,80 +382,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   }
 
   /**
-   * Handles all action events for this component.
-   */
-  public void actionPerformed( final ActionEvent aEvent )
-  {
-    // ignore all events when dialog is not displayed or we're not supposed to
-    // listen to events...
-    if ( !this.listening || !isVisible() )
-    {
-      return;
-    }
-
-    final int stage = this.triggerStageTabs.getSelectedIndex();
-
-    final Object source = aEvent.getSource();
-    if ( source == this.captureButton )
-    {
-      this.dialogResult = updateConfig( true /* aWarnUserIfConfigIncorrect */);
-
-      if ( this.dialogResult )
-      {
-        close();
-      }
-    }
-    else if ( source == this.applyHexMaskButton[stage] )
-    {
-      try
-      {
-        final long hexMask = Long.parseLong( this.triggerHexMask[stage].getText(), 16 );
-        for ( int i = 0; i < MAX_CHANNELS; i++ )
-        {
-          boolean value = ( ( hexMask >>> i ) & 0x01 ) != 0;
-          this.triggerMask[stage][i].setSelected( value );
-        }
-
-        updateFields();
-        updateConfig( false /* aWarnUserIfConfigIncorrect */);
-      }
-      catch ( NumberFormatException e )
-      {
-        JOptionPane.showMessageDialog( this, "Illegal number format!\nPlease enter a hexadecimal value." );
-      }
-    }
-    else if ( source == this.applyHexValueButton[stage] )
-    {
-      try
-      {
-        long hexValue = Long.parseLong( this.triggerHexValue[stage].getText(), 16 );
-        if ( this.invertHexValue[stage].isSelected() )
-        {
-          hexValue = ~hexValue;
-        }
-
-        for ( int i = 0; i < MAX_CHANNELS; i++ )
-        {
-          boolean value = ( ( hexValue >>> i ) & 0x01 ) != 0;
-          this.triggerValue[stage][i].setSelected( value );
-        }
-
-        updateFields();
-        updateConfig( false /* aWarnUserIfConfigIncorrect */);
-      }
-      catch ( NumberFormatException e )
-      {
-        JOptionPane.showMessageDialog( this, "Illegal number format!\nPlease enter a hexadecimal value." );
-      }
-    }
-    else
-    {
-      updateFields();
-      updateConfig( false /* aWarnUserIfConfigIncorrect */);
-    }
-  }
-
-  /**
    * Properly closes the dialog. This method makes sure timer and worker thread
    * are stopped before the dialog is closed.
    * 
@@ -440,86 +394,194 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   }
 
   /**
+   * @return a {@link LogicSnifferConfig} instance, never <code>null</code>.
+   */
+  public LogicSnifferConfig getConfiguration()
+  {
+    final LogicSnifferConfig config = new LogicSnifferConfig();
+
+    // the current device profile...
+    config.setDeviceProfile( this.deviceProfile );
+
+    // how should we connect to our device?
+    config.setConnectionURI( getConnectionURI() );
+
+    // set clock source
+    config.setClockSource( ( CaptureClockSource )this.sourceSelect.getSelectedItem() );
+
+    // set enabled channel groups
+    int enabledChannels = 0;
+    for ( int i = 0; i < this.channelGroup.length; i++ )
+    {
+      if ( this.channelGroup[i].isSelected() )
+      {
+        enabledChannels |= 0xff << ( 8 * i );
+      }
+    }
+    config.setEnabledChannels( enabledChannels );
+
+    // set sample rate; use a default to ensure the internal state remains
+    // correct...
+    config.setSampleRate( getSelectedSampleRate() );
+
+    // set sample count
+    config.setSampleCount( getSelectedSampleCount() );
+
+    // set before / after ratio
+    double r = 1.0 - ( this.ratioSlider.getValue() / ( double )this.ratioSlider.getMaximum() );
+    config.setRatio( r );
+
+    // set filter
+    config.setFilterEnabled( this.filterEnable.isEnabled() && this.filterEnable.isSelected() );
+    config.setRleEnabled( this.rleEnable.isEnabled() && this.rleEnable.isSelected() );
+
+    // set number scheme
+    NumberingScheme scheme = ( NumberingScheme )this.numberSchemeSelect.getSelectedItem();
+    config.setAltNumberSchemeEnabled( NumberingScheme.OUTSIDE.equals( scheme ) );
+
+    // set testing mode
+    config.setTestModeEnabled( this.testModeEnable.isEnabled() && this.testModeEnable.isSelected() );
+
+    // set trigger
+    final boolean triggerEnabled = this.triggerEnable.isEnabled() && this.triggerEnable.isSelected();
+    config.setTriggerEnabled( triggerEnabled );
+
+    if ( triggerEnabled )
+    {
+      final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
+      for ( int stage = 0; stage < LogicSnifferConfig.TRIGGER_STAGES; stage++ )
+      {
+        int m = 0;
+        int v = 0;
+        for ( int i = 0; i < MAX_CHANNELS; i++ )
+        {
+          if ( this.triggerMask[stage][i].isSelected() )
+          {
+            m |= 1 << i;
+          }
+          if ( this.triggerValue[stage][i].isSelected() )
+          {
+            v |= 1 << i;
+          }
+        }
+        final int level = this.triggerLevel[stage].getSelectedIndex();
+        final int delay = NumberUtils.smartParseInt( this.triggerDelay[stage].getText() );
+
+        final boolean parallelTriggerStage = this.triggerMode[stage].getSelectedIndex() == 0;
+        final int channel = this.triggerChannel[stage].getSelectedIndex();
+        final boolean startCapture = this.triggerStart[stage].isSelected();
+
+        if ( complex )
+        {
+          if ( parallelTriggerStage )
+          {
+            config.setParallelTrigger( stage, m, v, level, delay, startCapture );
+          }
+          else
+          {
+            config.setSerialTrigger( stage, channel, m, v, level, delay, startCapture );
+          }
+        }
+        else
+        {
+          if ( stage == 0 )
+          {
+            if ( parallelTriggerStage )
+            {
+              config.setParallelTrigger( stage, m, v, 0, delay, true );
+            }
+            else
+            {
+              config.setSerialTrigger( stage, channel, m, v, 0, delay, true );
+            }
+          }
+          else
+          {
+            // make sure stages > 0 will not interfere
+            config.setParallelTrigger( stage, 0, 0, 3, 0, false );
+          }
+        }
+      }
+    }
+
+    return config;
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    this.listening = false;
-    try
+    this.connTypeSelect.setSelectedIndex( aSettings.getInt( "connType", this.connTypeSelect.getSelectedIndex() ) );
+    this.remAddress.setText( aSettings.get( "remAddress", "" ) );
+    this.remPort.setText( aSettings.get( "remPort", "" ) );
+
+    // Delegate to the contained panels...
+    this.deviceProfilePanel.readPreferences( aSettings );
+    final String preferredPortName = aSettings.get( "port", null );
+    if ( ( preferredPortName != null ) && !"null".equals( preferredPortName ) )
     {
-      // Delegate to the contained panels...
-      this.deviceProfilePanel.readPreferences( aSettings );
-
-      final String preferredPortName = aSettings.get( "port", null );
-      if ( ( preferredPortName != null ) && !"null".equals( preferredPortName ) )
-      {
-        this.portSelect.setSelectedItem( preferredPortName );
-      }
-      this.portRateSelect.setSelectedIndex( aSettings.getInt( "portRate", this.portRateSelect.getSelectedIndex() ) );
-      this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", this.sourceSelect.getSelectedIndex() ) );
-      this.numberSchemeSelect.setSelectedIndex( aSettings.getInt( "numberScheme",
-          this.numberSchemeSelect.getSelectedIndex() ) );
-      this.testModeEnable.setSelected( aSettings.getBoolean( "testMode", this.testModeEnable.isSelected() ) );
-      this.speedSelect.setSelectedIndex( aSettings.getInt( "speed", this.speedSelect.getSelectedIndex() ) );
-      this.sizeSelect.setSelectedIndex( aSettings.getInt( "size", this.sizeSelect.getSelectedIndex() ) );
-      this.maxSampleSize.setSelected( aSettings.getBoolean( "autosize", this.maxSampleSize.isSelected() ) );
-      this.ratioSlider.setValue( aSettings.getInt( "ratio", TriggerRatioChangeListener.DEFAULT_RATIO ) );
-      this.filterEnable.setSelected( aSettings.getBoolean( "filter", this.filterEnable.isSelected() ) );
-      this.rleEnable.setSelected( aSettings.getBoolean( "rle", this.rleEnable.isSelected() ) );
-      this.triggerEnable.setSelected( aSettings.getBoolean( "trigger", this.triggerEnable.isSelected() ) );
-      this.triggerTypeSelect.setSelectedIndex( aSettings.getInt( "triggerType",
-          this.triggerTypeSelect.getSelectedIndex() ) );
-
-      for ( int stage = 0; stage < LogicSnifferConfig.TRIGGER_STAGES; stage++ )
-      {
-        final String prefix = "triggerStage." + stage;
-
-        this.triggerDelay[stage].setText( aSettings.get( prefix + ".delay", "" ) );
-
-        this.triggerLevel[stage].setSelectedIndex( aSettings.getInt( prefix + ".level",
-            this.triggerLevel[stage].getSelectedIndex() ) );
-        this.triggerMode[stage].setSelectedIndex( aSettings.getInt( prefix + ".mode",
-            this.triggerMode[stage].getSelectedIndex() ) );
-        this.triggerChannel[stage].setSelectedIndex( aSettings.getInt( prefix + ".channel",
-            this.triggerChannel[stage].getSelectedIndex() ) );
-
-        final String mask = aSettings.get( prefix + ".mask", "" );
-        for ( int i = 0; ( i < MAX_CHANNELS ) && ( i < mask.length() ); i++ )
-        {
-          this.triggerMask[stage][i].setSelected( mask.charAt( i ) == '1' );
-        }
-
-        final String value = aSettings.get( prefix + ".value", "" );
-        for ( int i = 0; ( i < MAX_CHANNELS ) && ( i < value.length() ); i++ )
-        {
-          this.triggerValue[stage][i].setSelected( value.charAt( i ) == '1' );
-        }
-
-        this.triggerStart[stage].setSelected( aSettings.getBoolean( prefix + ".startCapture",
-            this.triggerStart[stage].isSelected() ) );
-
-        String hexMask = maskToHexString( mask );
-        this.triggerHexMask[stage].setText( hexMask );
-
-        String hexValue = maskToHexString( value );
-        this.triggerHexValue[stage].setText( hexValue );
-
-        // this.invertHexValue[stage].setSelected( false );
-      }
-
-      final String group = aSettings.get( "channelGroup", "" );
-      for ( int i = 0; ( i < MAX_BLOCKS ) && ( i < group.length() ); i++ )
-      {
-        this.channelGroup[i].setSelected( group.charAt( i ) == '1' );
-      }
-
-      updateFields();
-      updateConfig( false /* aWarnUserIfConfigIncorrect */);
+      this.portSelect.setSelectedItem( preferredPortName );
     }
-    finally
+    this.portRateSelect.setSelectedIndex( aSettings.getInt( "portRate", this.portRateSelect.getSelectedIndex() ) );
+    this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", this.sourceSelect.getSelectedIndex() ) );
+    this.numberSchemeSelect.setSelectedIndex( aSettings.getInt( "numberScheme",
+        this.numberSchemeSelect.getSelectedIndex() ) );
+    this.testModeEnable.setSelected( aSettings.getBoolean( "testMode", this.testModeEnable.isSelected() ) );
+    this.speedSelect.setSelectedIndex( aSettings.getInt( "speed", this.speedSelect.getSelectedIndex() ) );
+    this.sizeSelect.setSelectedIndex( aSettings.getInt( "size", this.sizeSelect.getSelectedIndex() ) );
+    this.maxSampleSize.setSelected( aSettings.getBoolean( "autosize", this.maxSampleSize.isSelected() ) );
+    this.ratioSlider.setValue( aSettings.getInt( "ratio", TriggerRatioChangeListener.DEFAULT_RATIO ) );
+    this.filterEnable.setSelected( aSettings.getBoolean( "filter", this.filterEnable.isSelected() ) );
+    this.rleEnable.setSelected( aSettings.getBoolean( "rle", this.rleEnable.isSelected() ) );
+    this.triggerEnable.setSelected( aSettings.getBoolean( "trigger", this.triggerEnable.isSelected() ) );
+    this.triggerTypeSelect
+        .setSelectedIndex( aSettings.getInt( "triggerType", this.triggerTypeSelect.getSelectedIndex() ) );
+
+    for ( int stage = 0; stage < LogicSnifferConfig.TRIGGER_STAGES; stage++ )
     {
-      this.listening = true;
+      final String prefix = "triggerStage." + stage;
+
+      this.triggerDelay[stage].setText( aSettings.get( prefix + ".delay", "" ) );
+
+      this.triggerLevel[stage].setSelectedIndex( aSettings.getInt( prefix + ".level",
+          this.triggerLevel[stage].getSelectedIndex() ) );
+      this.triggerMode[stage].setSelectedIndex( aSettings.getInt( prefix + ".mode",
+          this.triggerMode[stage].getSelectedIndex() ) );
+      this.triggerChannel[stage].setSelectedIndex( aSettings.getInt( prefix + ".channel",
+          this.triggerChannel[stage].getSelectedIndex() ) );
+
+      final String mask = aSettings.get( prefix + ".mask", "" );
+      for ( int i = 0; ( i < MAX_CHANNELS ) && ( i < mask.length() ); i++ )
+      {
+        this.triggerMask[stage][i].setSelected( mask.charAt( i ) == '1' );
+      }
+
+      final String value = aSettings.get( prefix + ".value", "" );
+      for ( int i = 0; ( i < MAX_CHANNELS ) && ( i < value.length() ); i++ )
+      {
+        this.triggerValue[stage][i].setSelected( value.charAt( i ) == '1' );
+      }
+
+      this.triggerStart[stage].setSelected( aSettings.getBoolean( prefix + ".startCapture",
+          this.triggerStart[stage].isSelected() ) );
+
+      String hexMask = maskToHexString( mask );
+      this.triggerHexMask[stage].setText( hexMask );
+
+      String hexValue = maskToHexString( value );
+      this.triggerHexValue[stage].setText( hexValue );
+
+      // this.invertHexValue[stage].setSelected( false );
     }
+
+    final String group = aSettings.get( "channelGroup", "" );
+    for ( int i = 0; ( i < MAX_BLOCKS ) && ( i < group.length() ); i++ )
+    {
+      this.channelGroup[i].setSelected( group.charAt( i ) == '1' );
+    }
+
+    updateFields();
   }
 
   /**
@@ -540,6 +602,9 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    */
   public void writePreferences( final UserSettings aSettings )
   {
+    aSettings.putInt( "connType", this.connTypeSelect.getSelectedIndex() );
+    aSettings.put( "remAddress", this.remAddress.getText() );
+    aSettings.putInt( "remPort", NumberUtils.smartParseInt( this.remPort.getText() ) );
     aSettings.put( "port", String.valueOf( this.portSelect.getSelectedItem() ) );
     aSettings.putInt( "portRate", this.portRateSelect.getSelectedIndex() );
     aSettings.putInt( "source", this.sourceSelect.getSelectedIndex() );
@@ -592,6 +657,47 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   }
 
   /**
+   * Returns the connection URI to connect to the logic sniffer device.
+   * 
+   * @return the connection string, used for the connector service, never
+   *         <code>null</code>.
+   */
+  final String getConnectionURI()
+  {
+    String result;
+
+    if ( this.connTypeSelect.getSelectedItem() == DeviceInterface.NETWORK )
+    {
+      final String address = this.remAddress.getText();
+      final Integer port = getNumericValue( this.remPort );
+
+      result = String.format( "socket://%s:%d", address, port );
+    }
+    else if ( this.connTypeSelect.getSelectedItem() == DeviceInterface.SERIAL )
+    {
+      final String portName = getComboBoxText( this.portSelect );
+      final Integer baudrate = getNumericValue( this.speedSelect );
+
+      result = String.format( "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff",
+          portName, baudrate );
+
+      if ( this.deviceProfile != null )
+      {
+        Integer openDelay = Integer.valueOf( this.deviceProfile.getOpenPortDelay() );
+        boolean dtrValue = this.deviceProfile.isOpenPortDtr();
+
+        result = String.format( "%s;dtr=%s;delay=%d", result, ( dtrValue ? "on" : "off" ), openDelay );
+      }
+    }
+    else
+    {
+      throw new IllegalStateException( "Unknown/unsupported device interface: " + this.connTypeSelect.getSelectedItem() );
+    }
+
+    return result;
+  }
+
+  /**
    * Updates the controls to a given device type.
    * 
    * @param aType
@@ -601,7 +707,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   final void updateDeviceType( final DeviceProfile aProfile )
   {
     // "Publish" the device type to the device configuration...
-    this.config.setDeviceProfile( aProfile );
+    this.deviceProfile = aProfile;
 
     // Noise filter supported?
     updateCheckBoxState( this.filterEnable, aProfile.isNoiseFilterSupported() );
@@ -631,6 +737,57 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   }
 
   /**
+   * activates / deactivates dialog options according to device status
+   */
+  final void updateFields()
+  {
+    final int availableChannelGroups = getChannelGroupCount();
+    for ( int i = 0; i < this.channelGroup.length; i++ )
+    {
+      final boolean enabled = ( i < availableChannelGroups );
+      this.channelGroup[i].setEnabled( enabled );
+      if ( !enabled )
+      {
+        // deselect if the channel group is not enabled...
+        this.channelGroup[i].setSelected( false );
+      }
+    }
+
+    final boolean filterEnabled = this.deviceProfile.isNoiseFilterSupported() && !isDdrMode();
+    this.filterEnable.setEnabled( filterEnabled );
+    if ( !filterEnabled )
+    {
+      this.filterEnable.setSelected( false );
+    }
+
+    this.triggerEnable.setSelected( this.deviceProfile.isTriggerSupported() );
+    setTriggerEnabled( this.deviceProfile.isTriggerSupported(), this.deviceProfile.getTriggerStages() );
+
+    this.speedSelect.setEnabled( this.sourceSelect.getSelectedItem() == CaptureClockSource.INTERNAL );
+
+    this.sizeSelect.setEnabled( !this.maxSampleSize.isSelected() );
+
+    final boolean serialPortSelected = this.connTypeSelect.getSelectedItem() == DeviceInterface.SERIAL;
+    this.portSelect.setEnabled( serialPortSelected );
+    this.portRateSelect.setEnabled( serialPortSelected );
+
+    final boolean networkSelected = this.connTypeSelect.getSelectedItem() == DeviceInterface.NETWORK;
+    this.remAddress.setEnabled( networkSelected );
+    this.remPort.setEnabled( networkSelected );
+
+    this.warningLabel.setText( " " );
+    if ( this.rleEnable.isSelected() )
+    {
+      this.warningLabel.setText( rleWarning );
+    }
+
+    if ( this.maxSampleSize.isSelected() )
+    {
+      forceCaptureSizeTo( getSelectedSampleCount() );
+    }
+  }
+
+  /**
    * Builds this dialog by adding all components to it.
    */
   private void buildDialog()
@@ -643,13 +800,30 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
     final JButton cancel = StandardActionFactory.createCloseButton();
 
     this.captureButton = new JButton( "Capture" );
-    this.captureButton.addActionListener( this );
+    this.captureButton.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        boolean configCorrect = verifyConfiguration( true /* aWarnUserIfConfigIncorrect */);
+
+        LogicSnifferConfigDialog.this.dialogResult = configCorrect;
+
+        if ( configCorrect )
+        {
+          close();
+        }
+      }
+    } );
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( this.captureButton, cancel );
 
     SwingComponentUtils.setupDialogContentPane( this, tabs, buttonPane, this.captureButton );
 
     pack();
+
+    // Make sure all components are in-sync with the current settings...
+    updateFields();
   }
 
   /**
@@ -717,6 +891,19 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
 
     SpringLayoutUtils.addSeparator( connectionPane, "General" );
 
+    connectionPane.add( createRightAlignedLabel( "Connection type" ) );
+    connectionPane.add( this.connTypeSelect );
+
+    SpringLayoutUtils.addSeparator( connectionPane, "" );
+
+    connectionPane.add( createRightAlignedLabel( "Remote host address" ) );
+    connectionPane.add( this.remAddress );
+
+    connectionPane.add( createRightAlignedLabel( "Remote port" ) );
+    connectionPane.add( this.remPort );
+
+    SpringLayoutUtils.addSeparator( connectionPane, "" );
+
     connectionPane.add( createRightAlignedLabel( "Analyzer port" ) );
     connectionPane.add( this.portSelect );
 
@@ -725,43 +912,18 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
 
     SpringLayoutUtils.addSeparator( connectionPane, "" );
 
-    this.deviceProfilePanel = new LogicSnifferDeviceProfilePanel()
+    this.deviceProfilePanel = new LogicSnifferDeviceProfilePanel( this.logicSnifferDevice )
     {
       @Override
-      protected StreamConnection getConnection() throws IOException
+      protected String getConnectionURI()
       {
-        final String portName = ( String )LogicSnifferConfigDialog.this.portSelect.getSelectedItem();
-        final int baudrate = NumberUtils.smartParseInt( ( String )LogicSnifferConfigDialog.this.portRateSelect
-            .getSelectedItem() );
-
-        // We've to create a new connection each, as the settings can be changed
-        // on-the-fly by the user...
-        return LogicSnifferConfigDialog.this.connectionFactory.getConnection( portName, baudrate,
-            LogicSnifferConfigDialog.this.config.isOpenPortDtr(),
-            LogicSnifferConfigDialog.this.config.getOpenPortDelay() );
-      }
-
-      @Override
-      protected DeviceProfileManager getDeviceProfileManager()
-      {
-        return LogicSnifferConfigDialog.this.deviceProfileManagerTracker.getService();
+        return LogicSnifferConfigDialog.this.getConnectionURI();
       }
 
       @Override
       protected void updateDeviceProfile( final DeviceProfile aProfile )
       {
-        LogicSnifferConfigDialog.this.listening = false;
-        try
-        {
-          updateDeviceType( aProfile );
-
-          updateFields();
-          updateConfig( false /* aWarnUserIfConfigIncorrect */);
-        }
-        finally
-        {
-          LogicSnifferConfigDialog.this.listening = true;
-        }
+        updateDeviceType( aProfile );
       }
     };
 
@@ -869,10 +1031,9 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    */
   private int determineMaxSampleCount( final int aEnabledChannelGroups )
   {
-    final DeviceProfile deviceProfile = this.config.getDeviceProfile();
-    if ( deviceProfile != null )
+    if ( this.deviceProfile != null )
     {
-      return deviceProfile.getMaximumCaptureSizeFor( aEnabledChannelGroups );
+      return this.deviceProfile.getMaximumCaptureSizeFor( aEnabledChannelGroups );
     }
 
     return -1;
@@ -889,9 +1050,97 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    * @param aSampleCount
    *          the sample count that should be set.
    */
-  private void forceCaptureSizeTo( final Integer aSampleCount )
+  private void forceCaptureSizeTo( final int aSampleCount )
   {
-    this.sizeSelect.setSelectedItem( aSampleCount );
+    this.sizeSelect.setSelectedItem( Integer.valueOf( aSampleCount ) );
+  }
+
+  /**
+   * Determines, based on the current settings, what the maximum number of
+   * channels would be.
+   * 
+   * @return a channel count, >= 0.
+   */
+  private int getChannelCount()
+  {
+    int channels = 32;
+    if ( isDdrMode() )
+    {
+      // When the multiplexer is turned on, the upper two channel blocks are
+      // disabled, leaving only 16 channels for capturing...
+      channels = 16;
+    }
+
+    // When there's a device profile available, ask it for the maximum number of
+    // channels...
+    if ( this.deviceProfile != null )
+    {
+      channels = Math.min( channels, this.deviceProfile.getChannelCount() );
+    }
+
+    return channels;
+  }
+
+  /**
+   * @return the maximum number of channel groups, handling DDR-mode if this is
+   *         selected.
+   */
+  private int getChannelGroupCount()
+  {
+    int count = 4; // default
+
+    if ( isDdrMode() )
+    {
+      count >>= 1;
+    }
+
+    if ( this.deviceProfile != null )
+    {
+      count = Math.min( count, this.deviceProfile.getChannelGroupCount() );
+    }
+
+    return count;
+  }
+
+  /**
+   * @return
+   */
+  private int getEnabledChannelGroups()
+  {
+    int enabledChannelGroups = 0;
+    for ( JCheckBox element : this.channelGroup )
+    {
+      if ( element.isSelected() )
+      {
+        enabledChannelGroups++;
+      }
+    }
+    return enabledChannelGroups;
+  }
+
+  /**
+   * @return
+   */
+  private int getSelectedSampleCount()
+  {
+    int result = determineMaxSampleCount( getEnabledChannelGroups() );
+
+    Integer sampleCount = getNumericValue( this.sizeSelect );
+    if ( ( sampleCount != null ) && !this.maxSampleSize.isSelected() )
+    {
+      result = sampleCount.intValue();
+    }
+
+    return result;
+  }
+
+  /**
+   * @return the selected sample rate, in Hertz.
+   */
+  private int getSelectedSampleRate()
+  {
+    final String value = getComboBoxText( this.speedSelect );
+    return NumberUtils.smartParseInt( value, UnitDefinition.SI, SumpProtocolConstants.CLOCK );
   }
 
   /**
@@ -899,12 +1148,44 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    */
   private void initDialog()
   {
+    final ActionListener fieldUpdater = new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        updateFields();
+      }
+    };
+
+    final DeviceInterface[] devInterfaces = new DeviceInterface[] { DeviceInterface.NETWORK, DeviceInterface.SERIAL };
+
+    this.connTypeSelect = new JComboBox( devInterfaces );
+    this.connTypeSelect.setRenderer( new DeviceInterfaceComboBoxRenderer() );
+    this.connTypeSelect.setSelectedItem( DeviceInterface.SERIAL );
+    this.connTypeSelect.addActionListener( fieldUpdater );
+
+    this.remAddress = new JTextField();
+    this.remPort = new JTextField();
+
     this.portSelect = new JLazyComboBox( new JLazyComboBox.ItemProvider()
     {
       @Override
+      @SuppressWarnings( "unchecked" )
       public Object[] getItems()
       {
-        return CommPortUtils.getAvailablePorts();
+        final Enumeration<CommPortIdentifier> portIdentifiers = CommPortIdentifier.getPortIdentifiers();
+        final List<String> portList = new ArrayList<String>();
+
+        while ( portIdentifiers.hasMoreElements() )
+        {
+          CommPortIdentifier portId = portIdentifiers.nextElement();
+          if ( portId.getPortType() == CommPortIdentifier.PORT_SERIAL )
+          {
+            portList.add( portId.getName() );
+          }
+        }
+
+        return portList.toArray( new String[portList.size()] );
       }
     } );
     // allow people to put their own port name into it...
@@ -915,15 +1196,15 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
 
     this.numberSchemeSelect = new JComboBox();
     this.numberSchemeSelect.setRenderer( new NumberSchemeComboBoxRenderer() );
-    this.numberSchemeSelect.addActionListener( this );
+    this.numberSchemeSelect.addActionListener( fieldUpdater );
 
     this.sourceSelect = new JComboBox();
     this.sourceSelect.setRenderer( new ClockSourceComboBoxRenderer() );
-    this.sourceSelect.addActionListener( this );
+    this.sourceSelect.addActionListener( fieldUpdater );
 
     this.speedSelect = new JComboBox();
     this.speedSelect.setRenderer( new CaptureSpeedComboBoxRenderer() );
-    this.speedSelect.addActionListener( this );
+    this.speedSelect.addActionListener( fieldUpdater );
 
     this.groupsPanel = new JPanel();
     this.groupsPanel.setLayout( new GridLayout( 1, 4 ) );
@@ -933,35 +1214,35 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
     {
       this.channelGroup[i] = new JCheckBox( Integer.toString( i ) );
       this.channelGroup[i].setSelected( ( i == 0 ) );
-      this.channelGroup[i].addActionListener( this );
+      this.channelGroup[i].addActionListener( fieldUpdater );
       this.groupsPanel.add( this.channelGroup[i] );
     }
 
     this.sizeSelect = new JComboBox();
     this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer() );
-    this.sizeSelect.addActionListener( this );
+    this.sizeSelect.addActionListener( fieldUpdater );
 
     this.maxSampleSize = new JCheckBox( "Automatic (maximum)" );
     this.maxSampleSize.setSelected( false );
-    this.maxSampleSize.addActionListener( this );
+    this.maxSampleSize.addActionListener( fieldUpdater );
 
     this.testModeEnable = new JCheckBox( "Enabled" );
     this.testModeEnable.setSelected( true );
     this.testModeEnable.setEnabled( false );
-    this.testModeEnable.addActionListener( this );
+    this.testModeEnable.addActionListener( fieldUpdater );
 
     this.filterEnable = new JCheckBox( "Enabled" );
     this.filterEnable.setSelected( true );
     this.filterEnable.setEnabled( false );
-    this.filterEnable.addActionListener( this );
+    this.filterEnable.addActionListener( fieldUpdater );
 
     this.rleEnable = new JCheckBox( "Enabled" );
     this.rleEnable.setSelected( false );
     this.rleEnable.setEnabled( true );
-    this.rleEnable.addActionListener( this );
+    this.rleEnable.addActionListener( fieldUpdater );
 
     this.triggerEnable = new JCheckBox( "Enabled" );
-    this.triggerEnable.addActionListener( this );
+    this.triggerEnable.addActionListener( fieldUpdater );
 
     this.ratioLabel = new JLabel( "" );
     SwingComponentUtils.fixLabelWidth( this.ratioLabel, "100 / 100" );
@@ -979,7 +1260,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
     this.ratioSlider.setPreferredSize( size );
 
     this.triggerTypeSelect = new JComboBox();
-    this.triggerTypeSelect.addActionListener( this );
+    this.triggerTypeSelect.addActionListener( fieldUpdater );
 
     this.triggerStageTabs = new JTabbedPane();
     this.triggerMask = new JCheckBox[LogicSnifferConfig.TRIGGER_STAGES][];
@@ -1016,7 +1297,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
       stagePane.add( createRightAlignedLabel( "Mode" ), createConstraints( 2, 0, 1, 1, 0.5, 1.0 ) );
       stagePane.add( this.triggerMode[i], createConstraints( 3, 0, 1, 1, 0.5, 1.0 ) );
 
-      this.triggerMode[i].addActionListener( this );
+      this.triggerMode[i].addActionListener( fieldUpdater );
       final String[] channels = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
           "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
       this.triggerChannel[i] = new JComboBox( channels );
@@ -1042,12 +1323,79 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
       stagePane.add( this.invertHexValue[i], createConstraints( 4, 4, 1, 1, 1.0, 1.0 ) );
 
       this.applyHexMaskButton[i] = new JButton( "Apply Hex Mask" );
+      this.applyHexMaskButton[i].putClientProperty( "EDITOR", this.triggerHexMask[i] );
+      this.applyHexMaskButton[i].putClientProperty( "MASKS", this.triggerMask[i] );
       stagePane.add( this.applyHexMaskButton[i], createConstraints( 1, 5, 1, 1, 1.0, 1.0 ) );
-      this.applyHexMaskButton[i].addActionListener( this );
+      this.applyHexMaskButton[i].addActionListener( new ActionListener()
+      {
+        @Override
+        public void actionPerformed( final ActionEvent aEvent )
+        {
+          final JComponent source = ( JComponent )aEvent.getSource();
+          final JTextField textField = ( JTextField )source.getClientProperty( "EDITOR" );
+          final JCheckBox[] triggerMask = ( JCheckBox[] )source.getClientProperty( "MASKS" );
+
+          try
+          {
+            final long hexMask = Long.parseLong( textField.getText(), 16 );
+            for ( int i = 0; i < MAX_CHANNELS; i++ )
+            {
+              boolean value = ( ( hexMask >>> i ) & 0x01 ) != 0;
+              triggerMask[i].setSelected( value );
+            }
+          }
+          catch ( NumberFormatException e )
+          {
+            JOptionPane.showMessageDialog( LogicSnifferConfigDialog.this,
+                "Illegal number format!\nPlease enter a hexadecimal value." );
+          }
+          finally
+          {
+            updateFields();
+          }
+        }
+      } );
 
       this.applyHexValueButton[i] = new JButton( "Apply Hex Value" );
+      this.applyHexValueButton[i].putClientProperty( "EDITOR", this.triggerHexValue[i] );
+      this.applyHexValueButton[i].putClientProperty( "VALUES", this.triggerValue[i] );
+      this.applyHexValueButton[i].putClientProperty( "INVERT", this.invertHexValue[i] );
       stagePane.add( this.applyHexValueButton[i], createConstraints( 3, 5, 1, 1, 1.0, 1.0 ) );
-      this.applyHexValueButton[i].addActionListener( this );
+      this.applyHexValueButton[i].addActionListener( new ActionListener()
+      {
+        @Override
+        public void actionPerformed( final ActionEvent aEvent )
+        {
+          final JComponent source = ( JComponent )aEvent.getSource();
+          final JTextField textField = ( JTextField )source.getClientProperty( "EDITOR" );
+          final JCheckBox[] triggerValue = ( JCheckBox[] )source.getClientProperty( "VALUES" );
+          final JCheckBox invertHexValue = ( JCheckBox )source.getClientProperty( "INVERT" );
+
+          try
+          {
+            long hexValue = Long.parseLong( textField.getText(), 16 );
+            if ( invertHexValue.isSelected() )
+            {
+              hexValue = ~hexValue;
+            }
+
+            for ( int i = 0; i < MAX_CHANNELS; i++ )
+            {
+              boolean value = ( ( hexValue >>> i ) & 0x01 ) != 0;
+              triggerValue[i].setSelected( value );
+            }
+          }
+          catch ( NumberFormatException e )
+          {
+            JOptionPane.showMessageDialog( LogicSnifferConfigDialog.this,
+                "Illegal number format!\nPlease enter a hexadecimal value." );
+          }
+          finally
+          {
+            updateFields();
+          }
+        }
+      } );
 
       stagePane.add( createRightAlignedLabel( "Action" ), createConstraints( 0, 6, 1, 1, 1.0, 1.0 ) );
 
@@ -1067,6 +1415,15 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
   }
 
   /**
+   * @return <code>true</code> if double-data rate mode is enabled,
+   *         <code>false</code> if it disabled.
+   */
+  private boolean isDdrMode()
+  {
+    return getSelectedSampleRate() > SumpProtocolConstants.CLOCK;
+  }
+
+  /**
    * Sets the enabled state of all available trigger check boxes and the ratio
    * select.
    * 
@@ -1079,7 +1436,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    */
   private void setTriggerEnabled( final boolean aEnable, final int aAvailableTriggerStages )
   {
-    final int channelCount = this.config.getChannelCount();
+    final int channelCount = getChannelCount();
 
     final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
     if ( !complex )
@@ -1120,13 +1477,11 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
       this.applyHexMaskButton[stage].setEnabled( stageEnabled );
       this.applyHexValueButton[stage].setEnabled( stageEnabled );
       this.invertHexValue[stage].setEnabled( stageEnabled );
-
     }
   }
 
   /**
-   * Synchronizes the configuration settings in the UI with the device
-   * configuration object.
+   * Verifies whether the current configuration settings are correct.
    * 
    * @param aWarnUserIfConfigIncorrect
    *          <code>true</code> if the user should be warned when an "incorrect"
@@ -1135,138 +1490,30 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
    * @return <code>true</code> if the configuration is correct,
    *         <code>false</code> if the configuration is incorrect.
    */
-  private boolean updateConfig( final boolean aWarnUserIfConfigIncorrect )
+  private boolean verifyConfiguration( final boolean aWarnUserIfConfigIncorrect )
   {
-    String value;
     boolean result = true;
-
-    // set port + baudrate
-    this.config.setPortName( ( String )this.portSelect.getSelectedItem() );
-    this.config.setBaudrate( NumberUtils.smartParseInt( String.valueOf( this.portRateSelect.getSelectedItem() ) ) );
-
-    // set clock source
-    this.config.setClockSource( ( CaptureClockSource )this.sourceSelect.getSelectedItem() );
-
-    // set enabled channel groups
-    int enabledChannels = 0;
-    int enabledChannelGroups = 0;
-    for ( int i = 0; i < this.channelGroup.length; i++ )
-    {
-      if ( this.channelGroup[i].isSelected() )
-      {
-        enabledChannels |= 0xff << ( 8 * i );
-        enabledChannelGroups++;
-      }
-    }
-    this.config.setEnabledChannels( enabledChannels );
-
-    // The OLS is capable of "auto" selecting the maximum capture size itself,
-    // and does this based on chosen device type and the number of enabled
-    // channel groups...
-    final int maxSampleCount = determineMaxSampleCount( enabledChannelGroups );
-
-    // set sample rate; use a default to ensure the internal state remains
-    // correct...
-    value = String.valueOf( this.speedSelect.getSelectedItem() );
-    int f = NumberUtils.smartParseInt( value, UnitDefinition.SI, SumpProtocolConstants.CLOCK );
-    this.config.setSampleRate( f );
-
-    // set sample count
-    value = String.valueOf( this.sizeSelect.getSelectedItem() );
-    int sampleCount = NumberUtils.smartParseInt( value );
-
-    if ( this.maxSampleSize.isSelected() )
-    {
-      sampleCount = maxSampleCount;
-      forceCaptureSizeTo( Integer.valueOf( sampleCount ) );
-    }
-    if ( sampleCount > 0 )
-    {
-      this.config.setSampleCount( sampleCount );
-    }
-
-    // set before / after ratio
-    double r = 1.0 - ( this.ratioSlider.getValue() / ( double )this.ratioSlider.getMaximum() );
-    this.config.setRatio( r );
-
-    // set filter
-    this.config.setFilterEnabled( this.filterEnable.isSelected() );
-    this.config.setRleEnabled( this.rleEnable.isSelected() );
-
-    // set number scheme
-    NumberingScheme scheme = ( NumberingScheme )this.numberSchemeSelect.getSelectedItem();
-    this.config.setAltNumberSchemeEnabled( NumberingScheme.OUTSIDE.equals( scheme ) );
-
-    // set testing mode
-    this.config.setTestModeEnabled( this.testModeEnable.isSelected() );
 
     // set trigger
     final boolean triggerEnabled = this.triggerEnable.isSelected();
-    this.config.setTriggerEnabled( triggerEnabled );
     if ( triggerEnabled )
     {
-      final boolean complex = TriggerType.COMPLEX.equals( this.triggerTypeSelect.getSelectedItem() );
       for ( int stage = 0; stage < LogicSnifferConfig.TRIGGER_STAGES; stage++ )
       {
-        int m = 0;
-        int v = 0;
-        for ( int i = 0; i < MAX_CHANNELS; i++ )
-        {
-          if ( this.triggerMask[stage][i].isSelected() )
-          {
-            m |= 1 << i;
-          }
-          if ( this.triggerValue[stage][i].isSelected() )
-          {
-            v |= 1 << i;
-          }
-        }
-        final int level = this.triggerLevel[stage].getSelectedIndex();
-        final int delay = NumberUtils.smartParseInt( this.triggerDelay[stage].getText() );
+        final Integer delay = getNumericValue( this.triggerDelay[stage] );
 
-        result &= ( delay <= 65535 );
+        result &= ( ( delay != null ) && ( delay.intValue() <= 65535 ) );
         if ( !result && aWarnUserIfConfigIncorrect )
         {
           result = SwingComponentUtils.askConfirmation( this, "Trigger delay for stage " + stage
               + " is larger than 65535 cycles! Continue capture?" );
         }
-
-        final boolean parallelTriggerStage = this.triggerMode[stage].getSelectedIndex() == 0;
-        final int channel = this.triggerChannel[stage].getSelectedIndex();
-        final boolean startCapture = this.triggerStart[stage].isSelected();
-
-        if ( complex )
-        {
-          if ( parallelTriggerStage )
-          {
-            this.config.setParallelTrigger( stage, m, v, level, delay, startCapture );
-          }
-          else
-          {
-            this.config.setSerialTrigger( stage, channel, m, v, level, delay, startCapture );
-          }
-        }
-        else
-        {
-          if ( stage == 0 )
-          {
-            if ( parallelTriggerStage )
-            {
-              this.config.setParallelTrigger( stage, m, v, 0, delay, true );
-            }
-            else
-            {
-              this.config.setSerialTrigger( stage, channel, m, v, 0, delay, true );
-            }
-          }
-          else
-          {
-            // make sure stages > 0 will not interfere
-            this.config.setParallelTrigger( stage, 0, 0, 3, 0, false );
-          }
-        }
       }
     }
+
+    final int enabledChannelGroups = getEnabledChannelGroups();
+    final int maxSampleCount = determineMaxSampleCount( enabledChannelGroups );
+    final int sampleCount = getSelectedSampleCount();
 
     // Determine whether the chosen sample count is larger than the OLS can
     // provide us in the chosen channel group-selection...
@@ -1279,6 +1526,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
             "Sample count too large for chosen channel groups! Continue capture?" );
       }
     }
+
     // When no channel groups are enabled, the capture won't be very useful...
     if ( result )
     {
@@ -1291,41 +1539,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements ActionLis
 
     return result;
   }
-
-  /**
-   * activates / deactivates dialog options according to device status
-   */
-  private void updateFields()
-  {
-    final int availableChannelGroups = this.config.getGroupCount();
-    for ( int i = 0; i < this.channelGroup.length; i++ )
-    {
-      final boolean enabled = ( i < availableChannelGroups );
-      this.channelGroup[i].setEnabled( enabled );
-      if ( !enabled )
-      {
-        // Issue #94: make sure the disabled channel groups are also
-        // deselected...
-        this.channelGroup[i].setSelected( false );
-      }
-    }
-
-    this.triggerEnable.setSelected( this.config.isTriggerEnabled() );
-    setTriggerEnabled( this.config.isTriggerEnabled(), this.config.getMaxTriggerStages() );
-
-    this.filterEnable.setEnabled( this.config.isFilterAvailable() );
-
-    this.speedSelect.setEnabled( this.config.isInternalClock() );
-
-    this.sizeSelect.setEnabled( !this.maxSampleSize.isSelected() );
-
-    this.warningLabel.setText( " " );
-    if ( this.rleEnable.isSelected() )
-    {
-      this.warningLabel.setText( rleWarning );
-    }
-  }
-
 }
 
 /* EOF */

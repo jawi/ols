@@ -23,6 +23,8 @@ package nl.lxtreme.ols.api.tools;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.api.tools.annotation.*;
+
 
 /**
  * Interface for pluggable tools.

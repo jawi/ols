@@ -48,7 +48,7 @@ public final class DeviceProfile implements Cloneable
    */
   public static enum DeviceInterface
   {
-    SERIAL, USB;
+    SERIAL, NETWORK, USB;
   }
 
   /**
@@ -452,7 +452,7 @@ public final class DeviceProfile implements Cloneable
   {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ( ( this.properties == null ) ? 0 : this.properties.hashCode() );
+    result = ( prime * result ) + ( ( this.properties == null ) ? 0 : this.properties.hashCode() );
     return result;
   }
 

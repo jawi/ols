@@ -30,7 +30,7 @@ import org.sump.device.logicsniffer.profile.*;
 
 
 /**
- * @author jawi
+ * Provides a bundle-activator for the LogicSniffer device.
  */
 public class Activator extends DependencyActivatorBase
 {

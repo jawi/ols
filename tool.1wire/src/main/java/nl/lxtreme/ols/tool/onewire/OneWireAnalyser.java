@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.onewire;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.tools.annotation.*;
 
 import org.osgi.framework.*;
 
