@@ -676,7 +676,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     else if ( this.connTypeSelect.getSelectedItem() == DeviceInterface.SERIAL )
     {
       final String portName = getComboBoxText( this.portSelect );
-      final Integer baudrate = getNumericValue( this.speedSelect );
+      final Integer baudrate = getNumericValue( this.portRateSelect );
 
       result = String.format( "comm:%s;baudrate=%d;bitsperchar=8;parity=none;stopbits=1;flowcontrol=xon_xoff",
           portName, baudrate );
@@ -760,8 +760,14 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       this.filterEnable.setSelected( false );
     }
 
-    this.triggerEnable.setSelected( this.deviceProfile.isTriggerSupported() );
-    setTriggerEnabled( this.deviceProfile.isTriggerSupported(), this.deviceProfile.getTriggerStages() );
+    final boolean triggerSupported = this.deviceProfile.isTriggerSupported();
+    this.triggerEnable.setEnabled( triggerSupported );
+    if ( !triggerSupported )
+    {
+      this.triggerEnable.setSelected( false );
+    }
+
+    setTriggerEnabled( this.triggerEnable.isSelected(), this.deviceProfile.getTriggerStages() );
 
     this.speedSelect.setEnabled( this.sourceSelect.getSelectedItem() == CaptureClockSource.INTERNAL );
 
