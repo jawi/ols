@@ -20,8 +20,8 @@
 package nl.lxtreme.ols.client.signaldisplay;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import static nl.lxtreme.ols.util.DisplayUtils.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -29,8 +29,9 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.Cursor;
+import nl.lxtreme.ols.client.signaldisplay.cursor.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
@@ -323,7 +324,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       {
         if ( getModel().isCursorMode() )
         {
-          nl.lxtreme.ols.client.signaldisplay.cursor.Cursor hoveredCursor = findCursor( point );
+          Cursor hoveredCursor = findCursor( point );
           this.movingCursor = ( hoveredCursor != null ) ? hoveredCursor.getIndex() : -1;
         }
       }
@@ -416,7 +417,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       else
       {
         // Not hovering above existing cursor, show add menu...
-        for ( int i = 0; i < Cursor.MAX_CURSORS; i++ )
+        for ( int i = 0; i < CursorImpl.MAX_CURSORS; i++ )
         {
           final SetCursorAction action = new SetCursorAction( this.controller, i );
           contextMenu.add( new JCheckBoxMenuItem( action ) );

@@ -251,20 +251,11 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
     final InputStreamReader isReader = new InputStreamReader( aZipIS );
     final BufferedReader reader = new BufferedReader( isReader );
 
-    String[] labels = new String[Ols.MAX_CHANNELS];
-
-    try
+    String label = null;
+    int idx = 0;
+    while ( ( ( label = reader.readLine() ) != null ) && ( idx < Ols.MAX_CHANNELS ) )
     {
-      String label = null;
-      int idx = 0;
-      while ( ( ( label = reader.readLine() ) != null ) && ( idx < labels.length ) )
-      {
-        labels[idx++] = StringUtils.isEmpty( label ) ? null : label;
-      }
-    }
-    finally
-    {
-      aProject.setChannelLabels( labels );
+      aProject.getChannel( idx++ ).setLabel( label );
     }
   }
 
@@ -374,11 +365,7 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
    */
   protected void storeChannelLabels( final Project aProject, final ZipOutputStream aZipOS ) throws IOException
   {
-    final String[] labels = aProject.getChannelLabels();
-    if ( ( labels == null ) || ( labels.length == 0 ) )
-    {
-      return;
-    }
+    final Channel[] channels = aProject.getChannels();
 
     final ZipEntry zipEntry = new ZipEntry( FILENAME_CHANNEL_LABELS );
     aZipOS.putNextEntry( zipEntry );
@@ -388,9 +375,9 @@ public class SimpleProjectManager implements ProjectManager, ProjectProperties
 
     try
     {
-      for ( String label : labels )
+      for ( Channel channel : channels )
       {
-        out.println( StringUtils.isEmpty( label ) ? "" : label );
+        out.println( ( channel != null ) && channel.hasName() ? channel.getLabel() : "" );
       }
     }
     finally

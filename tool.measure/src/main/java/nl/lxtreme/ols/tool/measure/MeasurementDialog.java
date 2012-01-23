@@ -28,15 +28,17 @@ import java.awt.event.*;
 import java.util.logging.*;
 
 import javax.swing.*;
-import org.osgi.framework.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureTask.ClockStats;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
+
+import org.osgi.framework.*;
 
 
 /**
@@ -221,15 +223,15 @@ public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.
 
     final double rate = data.getSampleRate();
 
-    final Long cursorApos = context.getCursorPosition( this.cursorA.getSelectedIndex() );
-    final Long cursorBpos = context.getCursorPosition( this.cursorB.getSelectedIndex() );
+    final Cursor cursorA = context.getCursor( this.cursorA.getSelectedIndex() );
+    final Cursor cursorB = context.getCursor( this.cursorB.getSelectedIndex() );
 
     String distanceText = EMPTY_TEXT;
     String frequencyText = EMPTY_TEXT;
 
-    if ( ( cursorApos != null ) && ( cursorBpos != null ) && ( !cursorApos.equals( cursorBpos ) ) )
+    if ( ( cursorA.isDefined() ) && ( cursorB.isDefined() ) && ( !cursorA.equals( cursorB ) ) )
     {
-      final long diff = cursorApos.longValue() - cursorBpos.longValue();
+      final long diff = cursorA.getTimestamp() - cursorB.getTimestamp();
 
       final double distance = Math.abs( diff / rate );
       distanceText = DisplayUtils.displayTime( distance );
@@ -415,10 +417,10 @@ public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.
     {
       final ToolContext context = getContext();
 
-      final Long cursorPosition = context.getCursorPosition( aIndex );
-      if ( cursorPosition != null )
+      final Cursor cursor = context.getCursor( aIndex );
+      if ( cursor.isDefined() )
       {
-        return DisplayUtils.displayTime( cursorPosition.doubleValue() / data.getSampleRate() );
+        return DisplayUtils.displayTime( cursor.getTimestamp() / ( double )data.getSampleRate() );
       }
     }
     return "<not set>";

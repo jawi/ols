@@ -23,8 +23,7 @@ package nl.lxtreme.ols.client.signaldisplay;
 import java.awt.*;
 import java.beans.*;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.annotation.*;
+import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 
@@ -51,14 +50,6 @@ public final class SignalDiagramController
   }
 
   // METHODS
-
-  /**
-   * @param aDataAnnotation
-   */
-  public void addAnnotation( final DataAnnotation<?> aDataAnnotation )
-  {
-    this.signalDiagram.getModel().addAnnotation( aDataAnnotation );
-  }
 
   /**
    * Adds a channel change listener.
@@ -273,12 +264,12 @@ public final class SignalDiagramController
   /**
    * Sets the data model for this controller.
    * 
-   * @param aDataModel
-   *          the dataModel to set, cannot be <code>null</code>.
+   * @param aProject
+   *          the project to set, cannot be <code>null</code>.
    */
-  public void setDataModel( final DataContainer aContainer )
+  public void setDataModel( final Project aProject )
   {
-    getSignalDiagramModel().setDataModel( aContainer );
+    getSignalDiagramModel().setDataModel( aProject );
   }
 
   /**

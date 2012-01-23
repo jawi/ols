@@ -26,9 +26,9 @@ import static org.junit.Assert.*;
 import java.net.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
@@ -120,7 +120,7 @@ public class UARTAnalyserWorkerDataFilesTest
   private UARTDataSet analyseDataFile( final String aResourceName ) throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
-    DataContainer container = DataTestUtils.getCapturedData( resource );
+    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );

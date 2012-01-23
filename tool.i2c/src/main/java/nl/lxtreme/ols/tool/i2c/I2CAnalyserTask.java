@@ -27,8 +27,8 @@ import java.beans.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
 
 

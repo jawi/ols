@@ -26,8 +26,8 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 
 

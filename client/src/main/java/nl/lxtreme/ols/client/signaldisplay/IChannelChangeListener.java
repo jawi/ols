@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client.signaldisplay;
 
 import java.util.*;
 
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.channel.*;
 
 
@@ -116,7 +117,7 @@ public interface IChannelChangeListener extends EventListener
   {
     // VARIABLES
 
-    private final Channel channel;
+    private final ChannelImpl channel;
     private final ChannelGroup oldGroup;
     private final int oldPosition;
 
@@ -125,7 +126,7 @@ public interface IChannelChangeListener extends EventListener
     /**
      * Creates a new ChannelMoveEvent instance.
      */
-    public ChannelMoveEvent( final Channel aChannel, final ChannelGroup aOldGroup, final int aOldPosition )
+    public ChannelMoveEvent( final ChannelImpl aChannel, final ChannelGroup aOldGroup, final int aOldPosition )
     {
       this.channel = aChannel;
       this.oldGroup = aOldGroup;
@@ -214,7 +215,7 @@ public interface IChannelChangeListener extends EventListener
    *          the new, immutable, list of assigned channels, never
    *          <code>null</code>.
    */
-  void channelGroupStructureChanged( Collection<Channel> aChannelList );
+  void channelGroupStructureChanged( Collection<ChannelImpl> aChannelList );
 
   /**
    * Called when a channel is moved either inside a channel group or between

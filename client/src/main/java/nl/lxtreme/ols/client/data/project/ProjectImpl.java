@@ -28,8 +28,11 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.data.settings.*;
+import nl.lxtreme.ols.client.signaldisplay.channel.*;
+import nl.lxtreme.ols.client.signaldisplay.cursor.CursorImpl;
 
 
 /**
@@ -46,8 +49,8 @@ final class ProjectImpl implements Project, ProjectProperties
   private final PropertyChangeSupport propertyChangeSupport;
 
   private String name;
-  private final String[] channelLabels;
-  private final Long[] cursors;
+  private Channel[] channels;
+  private final Cursor[] cursors;
   private final Map<String, UserSettings> settings;
   private AcquisitionResult capturedData;
   private boolean changed;
@@ -67,8 +70,12 @@ final class ProjectImpl implements Project, ProjectProperties
 
     this.propertyChangeSupport = new PropertyChangeSupport( this );
 
-    this.cursors = new Long[Ols.MAX_CURSORS];
-    this.channelLabels = new String[Ols.MAX_CHANNELS];
+    this.cursors = new Cursor[Ols.MAX_CURSORS];
+    for ( int i = 0; i < this.cursors.length; i++ )
+    {
+      this.cursors[i] = new CursorImpl( i );
+    }
+    this.channels = new Channel[Ols.MAX_CHANNELS];
 
     this.changed = false;
     this.cursorsEnabled = false;
@@ -99,21 +106,45 @@ final class ProjectImpl implements Project, ProjectProperties
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getChannelLabels()
+   * {@inheritDoc}
    */
   @Override
-  public String[] getChannelLabels()
+  public Channel getChannel( final int aIndex )
   {
-    return this.channelLabels;
+    Channel channel = this.channels[aIndex];
+    if ( channel == null )
+    {
+      channel = new ChannelImpl( aIndex );
+      this.channels[aIndex] = channel;
+    }
+    return channel;
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getCursorPositions()
+   * {@inheritDoc}
    */
   @Override
-  public Long[] getCursorPositions()
+  public Channel[] getChannels()
   {
-    return this.cursors;
+    return Arrays.copyOf( this.channels, this.channels.length );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Cursor getCursor( final int aIndex )
+  {
+    return this.cursors[aIndex];
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Cursor[] getCursors()
+  {
+    return Arrays.copyOf( this.cursors, this.cursors.length );
   }
 
   /**
@@ -207,6 +238,13 @@ final class ProjectImpl implements Project, ProjectProperties
 
     this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA, old, aCapturedData );
 
+    int channelCount = aCapturedData.getChannels();
+    this.channels = new Channel[channelCount];
+    for ( int c = 0; c < channelCount; c++ )
+    {
+      this.channels[c] = new ChannelImpl( c );
+    }
+
     // Mark this project as modified...
     setChanged( true );
   }
@@ -224,38 +262,38 @@ final class ProjectImpl implements Project, ProjectProperties
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setChannelLabels(java.lang.String[])
+   * {@inheritDoc}
    */
   @Override
-  public void setChannelLabels( final String... aChannelLabels )
+  public void setChannels( final Channel... aChannels )
   {
-    if ( aChannelLabels == null )
+    if ( aChannels == null )
     {
       throw new IllegalArgumentException( "Channel labels cannot be null!" );
     }
 
-    final String[] old = Arrays.copyOf( this.channelLabels, this.channelLabels.length );
-    Arrays.fill( this.channelLabels, null );
-    System.arraycopy( aChannelLabels, 0, this.channelLabels, 0, aChannelLabels.length );
+    final Channel[] old = getChannels();
+    Arrays.fill( this.channels, null );
+    System.arraycopy( aChannels, 0, this.channels, 0, aChannels.length );
 
-    this.propertyChangeSupport.firePropertyChange( PROPERTY_CHANNEL_LABELS, old, aChannelLabels );
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_CHANNEL_LABELS, old, aChannels );
 
     // Mark this project as modified...
     setChanged( true );
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setCursorPositions(long[])
+   * {@inheritDoc}
    */
   @Override
-  public void setCursorPositions( final Long... aCursors )
+  public void setCursors( final Cursor... aCursors )
   {
     if ( aCursors == null )
     {
       throw new IllegalArgumentException( "Cursors cannot be null!" );
     }
 
-    final Long[] old = Arrays.copyOf( this.cursors, this.cursors.length );
+    final Cursor[] old = getCursors();
     Arrays.fill( this.cursors, null );
     System.arraycopy( aCursors, 0, this.cursors, 0, aCursors.length );
 

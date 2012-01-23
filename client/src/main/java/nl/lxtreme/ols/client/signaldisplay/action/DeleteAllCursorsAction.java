@@ -60,7 +60,7 @@ public class DeleteAllCursorsAction extends AbstractAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    for ( int i = 0; i < Cursor.MAX_CURSORS; i++ )
+    for ( int i = 0; i < CursorImpl.MAX_CURSORS; i++ )
     {
       this.controller.removeCursor( i );
     }

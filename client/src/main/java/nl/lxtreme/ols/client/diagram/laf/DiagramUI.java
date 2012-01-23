@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.diagram.laf;
 
 
 import java.awt.*;
+import java.awt.Cursor;
 import java.awt.event.*;
 import java.util.*;
 import java.util.logging.*;

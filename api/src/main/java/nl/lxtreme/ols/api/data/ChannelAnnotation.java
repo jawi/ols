@@ -24,6 +24,7 @@ package nl.lxtreme.ols.api.data;
 /**
  * Provides an annotation for a single channel.
  */
+@Deprecated
 public final class ChannelAnnotation implements Comparable<ChannelAnnotation>
 {
   // VARIABLES

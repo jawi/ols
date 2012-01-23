@@ -22,12 +22,9 @@ package nl.lxtreme.ols.test.data;
 
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import java.io.*;
 import java.net.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
@@ -147,20 +144,20 @@ public final class DataTestUtils
   }
 
   /**
-   * Creates a mocked data container with 16 sample/time values.
+   * Creates a mocked project with 16 sample/time values.
    * 
    * @param aChannelCount
    *          the number of <em>enabled</em> channels in the returned data
    *          container, > 0 && < 32.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static DataContainer createMockDataContainer( final int aChannelCount )
+  public static Project createMockProject( final int aChannelCount )
   {
-    return createMockDataContainer( 16, aChannelCount );
+    return createMockProject( 16, aChannelCount );
   }
 
   /**
-   * Creates a mocked data container with a given number of sample/time values.
+   * Creates a mocked project with a given number of sample/time values.
    * 
    * @param aDataSize
    *          the number of sample/time values in the returned data container, >
@@ -170,13 +167,13 @@ public final class DataTestUtils
    *          container, > 0 && < 32.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static DataContainer createMockDataContainer( final int aDataSize, final int aChannelCount )
+  public static Project createMockProject( final int aDataSize, final int aChannelCount )
   {
-    return createMockDataContainer( aDataSize, aChannelCount, 1000000 );
+    return createMockProject( aDataSize, aChannelCount, 1000000 );
   }
 
   /**
-   * Creates a mocked data container with a given number of sample/time values.
+   * Creates a mocked project with a given number of sample/time values.
    * 
    * @param aDataSize
    *          the number of sample/time values in the returned data container, >
@@ -188,14 +185,13 @@ public final class DataTestUtils
    *          the sample rate (in Hertz), > 0.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static DataContainer createMockDataContainer( final int aDataSize, final int aChannelCount,
-      final int aSampleRate )
+  public static Project createMockProject( final int aDataSize, final int aChannelCount, final int aSampleRate )
   {
-    return createMockDataContainer( aDataSize, aChannelCount, aSampleRate, new DefaultTestDataProvider( aChannelCount ) );
+    return createMockProject( aDataSize, aChannelCount, aSampleRate, new DefaultTestDataProvider( aChannelCount ) );
   }
 
   /**
-   * Creates a mocked data container with a given number of sample/time values.
+   * Creates a mocked project with a given number of sample/time values.
    * 
    * @param aDataSize
    *          the number of sample/time values in the returned data container, >
@@ -209,31 +205,47 @@ public final class DataTestUtils
    *          the test data provider to use, cannot be <code>null</code>.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static DataContainer createMockDataContainer( final int aDataSize, final int aChannelCount,
-      final int aSampleRate, final TestDataProvider aProvider )
+  public static Project createMockProject( final int aDataSize, final int aChannelCount, final int aSampleRate,
+      final TestDataProvider aProvider )
   {
-    final Project project = new StubTestProject();
-    project.setChannelLabels( new String[32] );
-    final ProjectManager pm = mock( ProjectManager.class );
-    doReturn( project ).when( pm ).getCurrentProject();
-
     final int[] values = new int[aDataSize];
     final long[] timestamps = new long[aDataSize];
 
     aProvider.fillData( values, timestamps, aDataSize );
 
-    final AcquisitionResult data = mock( AcquisitionResult.class );
-    when( Integer.valueOf( data.getChannels() ) ).thenReturn( Integer.valueOf( Ols.MAX_CHANNELS ) );
-    when( Long.valueOf( data.getAbsoluteLength() ) ).thenReturn( Long.valueOf( timestamps[aDataSize - 1] + 1L ) );
-    when( Integer.valueOf( data.getEnabledChannels() ) ).thenReturn(
-        Integer.valueOf( NumberUtils.getBitMask( aChannelCount ) ) );
-    when( Integer.valueOf( data.getSampleRate() ) ).thenReturn( Integer.valueOf( aSampleRate ) );
-    when( data.getValues() ).thenReturn( values );
-    when( data.getTimestamps() ).thenReturn( timestamps );
+    final Project project = new StubTestProject();
+    project.setCapturedData( new CapturedData( values, timestamps, 0, aSampleRate, aChannelCount, NumberUtils
+        .getBitMask( aChannelCount ), timestamps[aDataSize - 1] + 1L ) );
+    project.setChanged( false );
 
-    final DataContainer result = new DataContainer( pm );
-    result.setCapturedData( data );
-    return result;
+    return project;
+  }
+
+  /**
+   * Creates a (mocked) tool context starting at the given sample index and
+   * ending at the last available sample index.
+   * 
+   * @return a mocked tool context, never <code>null</code>.
+   */
+  public static ToolContext createToolContext( final AcquisitionResult aContainer )
+  {
+    final int startSampleIdx = Math.max( 0, aContainer.getSampleIndex( aContainer.getTriggerPosition() ) - 1 );
+    final int lastSampleIdx = aContainer.getValues().length - 1;
+    return createToolContext( aContainer, startSampleIdx, lastSampleIdx );
+  }
+
+  /**
+   * Creates a (mocked) tool context starting at the given sample index and
+   * ending at the last available sample index.
+   * 
+   * @param aStartSampleIdx
+   *          the starting sample index of the returned tool context;
+   * @return a mocked tool context, never <code>null</code>.
+   */
+  public static ToolContext createToolContext( final AcquisitionResult aContainer, final int aStartSampleIdx )
+  {
+    final int lastSampleIdx = aContainer.getValues().length - 1;
+    return createToolContext( aContainer, aStartSampleIdx, lastSampleIdx );
   }
 
   /**
@@ -264,9 +276,9 @@ public final class DataTestUtils
       }
 
       @Override
-      public Long getCursorPosition( final int aSelectedIndex )
+      public Cursor getCursor( final int aSelectedIndex )
       {
-        return null;
+        return new StubCursorImpl( aSelectedIndex );
       }
 
       @Override
@@ -320,52 +332,21 @@ public final class DataTestUtils
   }
 
   /**
-   * Creates a (mocked) tool context starting at the given sample index and
-   * ending at the last available sample index.
-   * 
-   * @return a mocked tool context, never <code>null</code>.
-   */
-  public static ToolContext createToolContext( final DataContainer aContainer )
-  {
-    final int startSampleIdx = Math.max( 0, aContainer.getSampleIndex( aContainer.getTriggerPosition() ) - 1 );
-    final int lastSampleIdx = aContainer.getValues().length - 1;
-    return createToolContext( aContainer, startSampleIdx, lastSampleIdx );
-  }
-
-  /**
-   * Creates a (mocked) tool context starting at the given sample index and
-   * ending at the last available sample index.
-   * 
-   * @param aStartSampleIdx
-   *          the starting sample index of the returned tool context;
-   * @return a mocked tool context, never <code>null</code>.
-   */
-  public static ToolContext createToolContext( final DataContainer aContainer, final int aStartSampleIdx )
-  {
-    final int lastSampleIdx = aContainer.getValues().length - 1;
-    return createToolContext( aContainer, aStartSampleIdx, lastSampleIdx );
-  }
-
-  /**
    * Returns the given resource as project with captured data.
    * 
    * @param aResource
    *          the resource URL of the resource to get as datafile.
    * @return the data container with the given resource as captured data.
    */
-  public static DataContainer getCapturedData( final URL aResource ) throws IOException
+  public static AcquisitionResult getCapturedData( final URL aResource ) throws IOException
   {
     InputStream is = aResource.openStream();
     try
     {
       final Project project = new StubTestProject();
-      project.setChannelLabels( new String[32] );
       OlsDataHelper.read( project, new InputStreamReader( is ) );
 
-      StubTestProjectManager projectMgr = new StubTestProjectManager();
-      projectMgr.setCurrentProject( project );
-
-      return new DataContainer( projectMgr );
+      return project.getCapturedData();
     }
     finally
     {

@@ -29,7 +29,6 @@ import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -96,9 +95,8 @@ public class ExportAction extends BaseAction
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
     final ClientController controller = getController();
-    final DataContainer dataContainer = controller.getDataContainer();
 
-    if ( !dataContainer.hasCapturedData() )
+    if ( !controller.hasCapturedData() )
     {
       JOptionPane.showMessageDialog( owner, "Nothing to export!", "Error", JOptionPane.ERROR_MESSAGE );
       return;

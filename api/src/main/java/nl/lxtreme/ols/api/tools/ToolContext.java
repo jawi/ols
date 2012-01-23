@@ -22,6 +22,7 @@ package nl.lxtreme.ols.api.tools;
 
 
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 
 
 /**
@@ -46,7 +47,7 @@ public interface ToolContext
    * @param aSelectedIndex
    * @return
    */
-  Long getCursorPosition( int aSelectedIndex );
+  Cursor getCursor( int aSelectedIndex );
 
   /**
    * Returns the acquisition result for use in the tool.

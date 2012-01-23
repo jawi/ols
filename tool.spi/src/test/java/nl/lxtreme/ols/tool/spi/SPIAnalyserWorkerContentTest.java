@@ -26,9 +26,9 @@ import static org.junit.Assert.*;
 import java.net.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
@@ -107,7 +107,7 @@ public class SPIAnalyserWorkerContentTest
       final BitOrder aBitOrder, final boolean aHonourCS, final int... aChannels ) throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
-    DataContainer container = DataTestUtils.getCapturedData( resource );
+    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container, 0, container.getValues().length - 1 );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );

@@ -25,6 +25,8 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import nl.lxtreme.ols.api.data.*;
+
 
 /**
  * Indicates a number of grouped channels, with their own set of labels and
@@ -74,7 +76,7 @@ public class ChannelGroup
 
   // VARIABLES
 
-  private final List<Channel> channels;
+  private final List<ChannelImpl> channels;
 
   private int index;
   private int mask;
@@ -118,9 +120,9 @@ public class ChannelGroup
     this.viewOptions = ChannelElementType.DIGITAL_SIGNAL.mask | ChannelElementType.GROUP_SUMMARY.mask
         | ChannelElementType.ANALOG_SIGNAL.mask;
     // By default pick a color...
-    this.color = Channel.DEFAULT_COLORS[aIndex % Channel.DEFAULT_COLORS.length];
+    this.color = ChannelImpl.DEFAULT_COLORS[aIndex % ChannelImpl.DEFAULT_COLORS.length];
 
-    this.channels = new ArrayList<Channel>();
+    this.channels = new ArrayList<ChannelImpl>();
   }
 
   // METHODS
@@ -137,7 +139,7 @@ public class ChannelGroup
    * @throws IllegalArgumentException
    *           in case the given channel was <code>null</code>.
    */
-  public void addChannel( final Channel aChannel )
+  public void addChannel( final ChannelImpl aChannel )
   {
     if ( hasChannel( aChannel ) )
     {
@@ -258,10 +260,10 @@ public class ChannelGroup
    * 
    * @return an array of channels, never <code>null</code>.
    */
-  public Channel[] getChannels()
+  public ChannelImpl[] getChannels()
   {
     final int size = this.channels.size();
-    return this.channels.toArray( new Channel[size] );
+    return this.channels.toArray( new ChannelImpl[size] );
   }
 
   /**
@@ -412,7 +414,7 @@ public class ChannelGroup
    * @param aNewIndex
    *          the new index of the channel, >= 0.
    */
-  public void moveChannel( final Channel aChannel, final int aNewIndex )
+  public void moveChannel( final ChannelImpl aChannel, final int aNewIndex )
   {
     // Make sure we've disconnected the channel from its former channel group...
     final ChannelGroup oldChannelGroup = aChannel.getChannelGroup();
@@ -441,7 +443,7 @@ public class ChannelGroup
    * @throws IllegalArgumentException
    *           in case the given channel was <code>null</code>.
    */
-  public void removeChannel( final Channel aChannel )
+  public void removeChannel( final ChannelImpl aChannel )
   {
     if ( hasChannel( aChannel ) )
     {
@@ -581,7 +583,7 @@ public class ChannelGroup
    */
   final int getVirtualIndex( final Channel aChannel )
   {
-    Iterator<Channel> channelIter = this.channels.iterator();
+    Iterator<ChannelImpl> channelIter = this.channels.iterator();
     int i = 0;
     while ( channelIter.hasNext() )
     {

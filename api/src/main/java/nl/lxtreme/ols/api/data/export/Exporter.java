@@ -25,7 +25,7 @@ import java.io.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.project.*;
 
 
 /**
@@ -39,8 +39,9 @@ public interface Exporter
   /**
    * Exports the given data container to the given writer.
    * 
-   * @param aContainer
-   *          the data container to export, can never be <code>null</code>;
+   * @param aProject
+   *          the current project with all data to export, can never be
+   *          <code>null</code>;
    * @param aComponent
    *          the Swing UI component that is being exported, this is for example
    *          the scroll pane in which the diagram is shown, cannot be
@@ -51,8 +52,7 @@ public interface Exporter
    * @throws IOException
    *           in case of I/O problems.
    */
-  void export( final DataContainer aContainer, final JComponent aComponent, final OutputStream aStream )
-      throws IOException;
+  void export( final Project aProject, final JComponent aComponent, final OutputStream aStream ) throws IOException;
 
   /**
    * Returns the file extensions supported by this exporter.

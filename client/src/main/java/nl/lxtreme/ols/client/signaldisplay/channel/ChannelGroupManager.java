@@ -26,6 +26,7 @@ import java.util.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.IChannelChangeListener.*;
 
@@ -37,14 +38,14 @@ public final class ChannelGroupManager implements IDataModelChangeListener
 {
   // CONSTANTS
 
-  public static final int MAX_CHANNEL_GROUPS = Channel.MAX_CHANNELS;
+  public static final int MAX_CHANNEL_GROUPS = ChannelImpl.MAX_CHANNELS;
 
   // VARIABLES
 
   private final List<ChannelGroup> channelGroups;
   private final EventListenerList eventListeners;
 
-  private Channel[] channels;
+  private ChannelImpl[] channels;
 
   // CONSTRUCTORS
 
@@ -56,7 +57,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
     this.channelGroups = new ArrayList<ChannelGroup>();
     this.eventListeners = new EventListenerList();
 
-    this.channels = new Channel[0];
+    this.channels = new ChannelImpl[0];
   }
 
   // METHODS
@@ -67,12 +68,12 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @param aCount
    *          the number of channels to initialize, >= 0.
    */
-  private static Channel[] createChannels( final int aCount )
+  private static ChannelImpl[] createChannels( final int aCount )
   {
-    Channel[] channels = new Channel[aCount];
+    ChannelImpl[] channels = new ChannelImpl[aCount];
     for ( int i = 0; i < channels.length; i++ )
     {
-      channels[i] = new Channel( i );
+      channels[i] = new ChannelImpl( i );
     }
     return channels;
   }
@@ -93,7 +94,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @throws IllegalArgumentException
    *           in case one of the given parameters was <code>null</code>.
    */
-  public void addChannel( final ChannelGroup aChannelGroup, final Channel aChannel )
+  public void addChannel( final ChannelGroup aChannelGroup, final ChannelImpl aChannel )
   {
     if ( aChannelGroup == null )
     {
@@ -147,7 +148,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    */
   public ChannelGroup addChannelGroup( final String aName )
   {
-    final Channel firstAvailableChannel = getFirstUnassignedChannel();
+    final ChannelImpl firstAvailableChannel = getFirstUnassignedChannel();
     if ( firstAvailableChannel == null )
     {
       throw new IllegalStateException( "No channels left!" );
@@ -238,9 +239,9 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * 
    * @return a sorted set of all assigned channels, never <code>null</code>.
    */
-  public SortedSet<Channel> getAssignedChannels()
+  public SortedSet<ChannelImpl> getAssignedChannels()
   {
-    SortedSet<Channel> channelIndexes = new TreeSet<Channel>();
+    SortedSet<ChannelImpl> channelIndexes = new TreeSet<ChannelImpl>();
 
     for ( ChannelGroup cg : this.channelGroups )
     {
@@ -338,9 +339,9 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * 
    * @return a sorted set of unassigned channels, never <code>null</code>.
    */
-  public SortedSet<Channel> getUnassignedChannels()
+  public SortedSet<ChannelImpl> getUnassignedChannels()
   {
-    SortedSet<Channel> channelIndexes = new TreeSet<Channel>();
+    SortedSet<ChannelImpl> channelIndexes = new TreeSet<ChannelImpl>();
     channelIndexes.addAll( Arrays.asList( this.channels ) );
 
     for ( ChannelGroup cg : this.channelGroups )
@@ -378,7 +379,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @param aInsertIndex
    *          the insertion index of the channel to move.
    */
-  public void moveChannel( final Channel aMovedChannel, final Channel aInsertChannel )
+  public void moveChannel( final ChannelImpl aMovedChannel, final ChannelImpl aInsertChannel )
   {
     if ( ( aMovedChannel != null ) && ( aInsertChannel != null ) )
     {
@@ -398,7 +399,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @throws IllegalArgumentException
    *           in case one of the given parameters was <code>null</code>.
    */
-  public void removeChannel( final ChannelGroup aChannelGroup, final Channel aChannel )
+  public void removeChannel( final ChannelGroup aChannelGroup, final ChannelImpl aChannel )
   {
     if ( aChannelGroup == null )
     {
@@ -449,7 +450,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   /**
    * @param aEvent
    */
-  final void fireChannelGroupStructureChangeEvent( final Collection<Channel> aEvent )
+  final void fireChannelGroupStructureChangeEvent( final Collection<ChannelImpl> aEvent )
   {
     final IChannelChangeListener[] listeners = this.eventListeners.getListeners( IChannelChangeListener.class );
     for ( IChannelChangeListener listener : listeners )
@@ -463,9 +464,9 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * 
    * @return a channel, or <code>null</code> if no channels are available.
    */
-  private Channel getFirstUnassignedChannel()
+  private ChannelImpl getFirstUnassignedChannel()
   {
-    SortedSet<Channel> channels = getUnassignedChannels();
+    SortedSet<ChannelImpl> channels = getUnassignedChannels();
 
     // Any channels left?
     if ( ( channels == null ) || channels.isEmpty() )

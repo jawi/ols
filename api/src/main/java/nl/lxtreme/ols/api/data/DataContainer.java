@@ -40,7 +40,10 @@ import nl.lxtreme.ols.api.data.project.*;
  * character. This is called compressed format. The handling of the data within
  * the class is the same. A value is 32bits long. The value is encoded in hex
  * and each value is followed by a new line.
+ * 
+ * @deprecated
  */
+@Deprecated
 public final class DataContainer implements AcquisitionResult
 {
   // VARIABLES
@@ -140,6 +143,16 @@ public final class DataContainer implements AcquisitionResult
   }
 
   /**
+   * Returns all channel labels.
+   * 
+   * @return an array of all channel's label, never <code>null</code>.
+   */
+  public Channel[] getAllChannels()
+  {
+    return this.projectManager.getCurrentProject().getChannels();
+  }
+
+  /**
    * Returns the number of channel blocks that are available in the data.
    * 
    * @return a block count, >= 0 && < {@value nl.lxtreme.ols.api.Ols#MAX_BLOCKS}
@@ -222,17 +235,7 @@ public final class DataContainer implements AcquisitionResult
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
     }
-    return getChannelLabels()[aChannelIdx];
-  }
-
-  /**
-   * Returns all channel labels.
-   * 
-   * @return an array of all channel's label, never <code>null</code>.
-   */
-  public String[] getChannelLabels()
-  {
-    return this.projectManager.getCurrentProject().getChannelLabels();
+    return getAllChannels()[aChannelIdx].getLabel();
   }
 
   /**
@@ -298,13 +301,13 @@ public final class DataContainer implements AcquisitionResult
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
           + Ols.MAX_CURSORS );
     }
-    final Long[] cursorPositions = getCursorPositions();
+    final Cursor[] cursorPositions = getCursors();
     if ( ( cursorPositions == null ) || ( cursorPositions[aCursorIdx] == null ) )
     {
       return null;
     }
 
-    return cursorPositions[aCursorIdx];
+    return Long.valueOf( cursorPositions[aCursorIdx].getTimestamp() );
   }
 
   /**
@@ -427,8 +430,8 @@ public final class DataContainer implements AcquisitionResult
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
     }
-    final String label = getChannelLabels()[aChannelIdx];
-    return ( label != null ) && !label.trim().isEmpty();
+    final Channel channel = getAllChannels()[aChannelIdx];
+    return channel.hasName();
   }
 
   /**
@@ -446,13 +449,13 @@ public final class DataContainer implements AcquisitionResult
       throw new IllegalArgumentException( "Invalid cursor index: " + aCursorIdx + "! Should be between 0 and "
           + Ols.MAX_CURSORS );
     }
-    final Long[] cursorPositions = getCursorPositions();
+    final Cursor[] cursorPositions = getCursors();
     if ( cursorPositions == null )
     {
       return false;
     }
 
-    return ( cursorPositions[aCursorIdx] != null ) && ( cursorPositions[aCursorIdx].longValue() > Long.MIN_VALUE );
+    return ( cursorPositions[aCursorIdx] != null ) && ( cursorPositions[aCursorIdx].isDefined() );
   }
 
   /**
@@ -509,7 +512,7 @@ public final class DataContainer implements AcquisitionResult
       throw new IllegalArgumentException( "Invalid channel index: " + aChannelIdx + "! Should be between 0 and "
           + Ols.MAX_CHANNELS );
     }
-    getChannelLabels()[aChannelIdx] = aLabel;
+    getAllChannels()[aChannelIdx].setLabel( aLabel );
   }
 
   /**
@@ -524,7 +527,10 @@ public final class DataContainer implements AcquisitionResult
     {
       throw new IllegalArgumentException( "Invalid channel labels! Should have exact " + Ols.MAX_CHANNELS + " items!" );
     }
-    System.arraycopy( aLabels, 0, getChannelLabels(), 0, Ols.MAX_CHANNELS );
+    for ( int i = 0; i < aLabels.length; i++ )
+    {
+      getAllChannels()[i].setLabel( aLabels[i] );
+    }
   }
 
   /**
@@ -555,16 +561,16 @@ public final class DataContainer implements AcquisitionResult
     {
       throw new IllegalArgumentException( "Invalid cursor index! Should be between 0 and " + Ols.MAX_CURSORS );
     }
-    final Long[] cursorPositions = getCursorPositions();
+    final Cursor[] cursorPositions = getCursors();
     if ( cursorPositions != null )
     {
       if ( ( aCursorPosition == null ) || ( aCursorPosition.longValue() == Long.MIN_VALUE ) )
       {
-        cursorPositions[aCursorIdx] = null;
+        cursorPositions[aCursorIdx].clear();
       }
       else
       {
-        cursorPositions[aCursorIdx] = aCursorPosition;
+        cursorPositions[aCursorIdx].setTimestamp( aCursorPosition.longValue() );
       }
     }
   }
@@ -600,8 +606,8 @@ public final class DataContainer implements AcquisitionResult
   /**
    * @return the cursorPositions
    */
-  private Long[] getCursorPositions()
+  private Cursor[] getCursors()
   {
-    return this.projectManager.getCurrentProject().getCursorPositions();
+    return this.projectManager.getCurrentProject().getCursors();
   }
 }

@@ -29,10 +29,11 @@ import java.util.List;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.annotation.*;
+import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.channel.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.Cursor;
+import nl.lxtreme.ols.client.signaldisplay.cursor.CursorImpl;
 
 
 /**
@@ -128,14 +129,7 @@ public class SignalDiagramModel
   private int groupSummaryHeight;
   private int mode;
   private SignalAlignment signalAlignment;
-
-  private int[] values;
-  private long[] timestamps;
-  private Cursor[] cursors;
-  private final List<Annotation<?>> annotations;
-  private int sampleRate;
-  private int sampleWidth;
-
+  private Project project;
   private double zoomFactor;
 
   private final ChannelGroupManager channelGroupManager;
@@ -172,13 +166,6 @@ public class SignalDiagramModel
 
     this.zoomFactor = 0.0;
     this.mode = 0;
-
-    this.cursors = new Cursor[0];
-
-    this.values = new int[0];
-    this.timestamps = new long[0];
-
-    this.annotations = new ArrayList<Annotation<?>>();
 
     this.alternativeAnnotationRendering = true;
 
@@ -281,14 +268,6 @@ public class SignalDiagramModel
   }
 
   /**
-   * @param aDataAnnotation
-   */
-  public void addAnnotation( final DataAnnotation<?> aDataAnnotation )
-  {
-    this.annotations.add( aDataAnnotation );
-  }
-
-  /**
    * Adds a cursor change listener.
    * 
    * @param aListener
@@ -346,7 +325,7 @@ public class SignalDiagramModel
 
     final double snapArea = CURSOR_SENSITIVITY_AREA / getZoomFactor();
 
-    for ( Cursor cursor : this.cursors )
+    for ( Cursor cursor : this.project.getCursors() )
     {
       if ( cursor.inArea( refIdx, snapArea ) )
       {
@@ -396,19 +375,20 @@ public class SignalDiagramModel
    */
   public long getAbsoluteLength()
   {
-    int idx = this.timestamps.length - 1;
+    // XXX
+    // int idx = this.timestamps.length - 1;
+    //
+    // long length = -1L;
+    // if ( idx > 0 )
+    // {
+    // length = ( this.timestamps[idx] + 1 ) - this.timestamps[0];
+    // }
+    // else if ( idx == 0 )
+    // {
+    // length = this.timestamps[0];
+    // }
 
-    long length = -1L;
-    if ( idx > 0 )
-    {
-      length = ( this.timestamps[idx] + 1 ) - this.timestamps[0];
-    }
-    else if ( idx == 0 )
-    {
-      length = this.timestamps[0];
-    }
-
-    return length;
+    return this.project.getCapturedData().getAbsoluteLength();
   }
 
   /**
@@ -462,14 +442,6 @@ public class SignalDiagramModel
   }
 
   /**
-   * @return
-   */
-  public Annotation<?>[] getAnnotations()
-  {
-    return this.annotations.toArray( new Annotation<?>[this.annotations.size()] );
-  }
-
-  /**
    * {@inheritDoc}
    */
   public double getCaptureLength()
@@ -500,11 +472,12 @@ public class SignalDiagramModel
    */
   public Cursor getCursor( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursors.length ) )
+    final Cursor[] cursors = this.project.getCursors();
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
-    return this.cursors[aCursorIdx];
+    return cursors[aCursorIdx];
   }
 
   /**
@@ -514,8 +487,10 @@ public class SignalDiagramModel
    */
   public Cursor[] getDefinedCursors()
   {
+    final Cursor[] cursors = this.project.getCursors();
+
     List<Cursor> result = new ArrayList<Cursor>();
-    for ( Cursor c : this.cursors )
+    for ( Cursor c : cursors )
     {
       if ( c.isDefined() )
       {
@@ -603,7 +578,7 @@ public class SignalDiagramModel
    */
   public int getSampleCount()
   {
-    return this.values.length;
+    return this.project.getCapturedData().getValues().length;
   }
 
   /**
@@ -611,7 +586,7 @@ public class SignalDiagramModel
    */
   public int getSampleRate()
   {
-    return this.sampleRate;
+    return this.project.getCapturedData().getSampleRate();
   }
 
   /**
@@ -619,7 +594,7 @@ public class SignalDiagramModel
    */
   public int getSampleWidth()
   {
-    return this.sampleWidth;
+    return this.project.getCapturedData().getChannels();
   }
 
   /**
@@ -683,7 +658,7 @@ public class SignalDiagramModel
 
       if ( cg.isShowDigitalSignals() )
       {
-        for ( Channel channel : cg.getChannels() )
+        for ( ChannelImpl channel : cg.getChannels() )
         {
           // Does this individual channel fit?
           if ( aMeasurer.signalElementFits( yPos, channelHeight, yMin, yMax ) )
@@ -749,7 +724,7 @@ public class SignalDiagramModel
     // "over sampling" factor to allow intermediary (between two time stamps)
     // time value to be shown...
     final double refTime = ( ( MeasurementInfo.TIMESTAMP_FACTOR * aPoint.x ) / this.zoomFactor )
-        / ( MeasurementInfo.TIMESTAMP_FACTOR * this.sampleRate );
+        / ( MeasurementInfo.TIMESTAMP_FACTOR * getSampleRate() );
 
     final SignalElement signalElement = findSignalElement( aPoint );
     if ( ( signalElement == null ) || !signalElement.isDigitalSignal() )
@@ -838,8 +813,8 @@ public class SignalDiagramModel
     // The position where the "other" signal transition should be...
     middleXpos = ( int )( getZoomFactor() * tm );
 
-    final double timeHigh = th / ( double )this.sampleRate;
-    final double timeTotal = ( te - ts ) / ( double )this.sampleRate;
+    final double timeHigh = th / ( double )getSampleRate();
+    final double timeTotal = ( te - ts ) / ( double )getSampleRate();
 
     return new MeasurementInfo( realChannelIdx, channelLabel, rect, ts, te, refTime, timeHigh, timeTotal, middleXpos );
   }
@@ -918,8 +893,7 @@ public class SignalDiagramModel
    */
   public int getTimestampIndex( final long aValue )
   {
-    final int length = this.timestamps.length;
-    return binarySearch( this.timestamps, 0, length, aValue );
+    return this.project.getCapturedData().getSampleIndex( aValue );
   }
 
   /**
@@ -927,7 +901,7 @@ public class SignalDiagramModel
    */
   public long[] getTimestamps()
   {
-    return this.timestamps;
+    return this.project.getCapturedData().getTimestamps();
   }
 
   /**
@@ -935,7 +909,7 @@ public class SignalDiagramModel
    */
   public int[] getValues()
   {
-    return this.values;
+    return this.project.getCapturedData().getValues();
   }
 
   /**
@@ -1030,11 +1004,12 @@ public class SignalDiagramModel
    */
   public boolean isCursorDefined( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursors.length ) )
+    Cursor[] cursors = this.project.getCursors();
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
-    return this.cursors[aCursorIdx].isDefined();
+    return cursors[aCursorIdx].isDefined();
   }
 
   /**
@@ -1121,19 +1096,20 @@ public class SignalDiagramModel
    */
   public void removeCursor( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursors.length ) )
+    Cursor[] cursors = this.project.getCursors();
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
 
-    final Cursor cursor = this.cursors[aCursorIdx];
+    final Cursor cursor = cursors[aCursorIdx];
     if ( !cursor.isDefined() )
     {
       // Nothing to do; the cursor is not defined...
       return;
     }
 
-    final Cursor oldCursor = cursor.clone();
+    final Cursor oldCursor = new CursorImpl( cursor );
 
     cursor.clear();
 
@@ -1201,13 +1177,14 @@ public class SignalDiagramModel
    */
   public void setCursor( final int aCursorIdx, final long aTimestamp )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursors.length ) )
+    Cursor[] cursors = this.project.getCursors();
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
 
-    final Cursor cursor = this.cursors[aCursorIdx];
-    final Cursor oldCursor = cursor.clone();
+    final Cursor cursor = cursors[aCursorIdx];
+    final Cursor oldCursor = new CursorImpl( cursor );
 
     // Update the time stamp of the cursor...
     cursor.setTimestamp( aTimestamp );
@@ -1226,13 +1203,14 @@ public class SignalDiagramModel
    */
   public void setCursorColor( final int aCursorIdx, final Color aColor )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursors.length ) )
+    Cursor[] cursors = this.project.getCursors();
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
 
-    final Cursor cursor = this.cursors[aCursorIdx];
-    final Cursor oldCursor = cursor.clone();
+    final Cursor cursor = cursors[aCursorIdx];
+    final Cursor oldCursor = new CursorImpl( cursor );
 
     // Update the color of the cursor...
     cursor.setColor( aColor );
@@ -1251,13 +1229,14 @@ public class SignalDiagramModel
    */
   public void setCursorLabel( final int aCursorIdx, final String aLabel )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > this.cursors.length ) )
+    Cursor[] cursors = this.project.getCursors();
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
 
-    final Cursor cursor = this.cursors[aCursorIdx];
-    final Cursor oldCursor = cursor.clone();
+    final Cursor cursor = cursors[aCursorIdx];
+    final Cursor oldCursor = new CursorImpl( cursor );
 
     // Update the label of the cursor...
     cursor.setLabel( aLabel );
@@ -1303,56 +1282,19 @@ public class SignalDiagramModel
    * @param aDataModel
    *          the dataModel to set, cannot be <code>null</code>.
    */
-  public void setDataModel( final DataContainer aContainer )
+  public void setDataModel( final Project aProject )
   {
-    if ( aContainer == null )
+    if ( aProject == null )
     {
-      throw new IllegalArgumentException( "Parameter Container cannot be null!" );
+      throw new IllegalArgumentException( "Parameter project cannot be null!" );
     }
 
-    final int[] dmValues = aContainer.getValues();
-    final long[] dmTimestamps = aContainer.getTimestamps();
-
-    // Correct the timestamps so they always start at zero...
-    if ( ( dmTimestamps.length > 0 ) && ( dmTimestamps[0] != 0L ) )
-    {
-      final int newSize = dmTimestamps.length + 1;
-
-      this.values = new int[newSize];
-      this.timestamps = new long[newSize];
-
-      // Initial point...
-      this.values[0] = dmValues[0];
-      this.timestamps[0] = 0L;
-
-      // All other points...
-      System.arraycopy( dmValues, 0, this.values, 1, dmValues.length );
-      System.arraycopy( dmTimestamps, 0, this.timestamps, 1, dmTimestamps.length );
-    }
-    else
-    {
-      this.values = Arrays.copyOf( dmValues, dmValues.length );
-      this.timestamps = Arrays.copyOf( dmTimestamps, dmTimestamps.length );
-    }
-
-    // final Cursor[] dmCursors = aContainer.getCursors();
-    // this.cursors = Arrays.copyOf( dmCursors, dmCursors.length );
-    this.cursors = new Cursor[Cursor.MAX_CURSORS];
-    for ( int i = 0; i < this.cursors.length; i++ )
-    {
-      final Long cursorPos = aContainer.getCursorPosition( i );
-      this.cursors[i] = new Cursor( i, cursorPos );
-    }
-
-    this.annotations.clear();
-
-    this.sampleRate = aContainer.getSampleRate();
-    this.sampleWidth = aContainer.getChannels();
+    this.project = aProject;
 
     final IDataModelChangeListener[] listeners = this.eventListeners.getListeners( IDataModelChangeListener.class );
     for ( IDataModelChangeListener listener : listeners )
     {
-      listener.dataModelChanged( aContainer );
+      listener.dataModelChanged( aProject.getCapturedData() );
     }
   }
 

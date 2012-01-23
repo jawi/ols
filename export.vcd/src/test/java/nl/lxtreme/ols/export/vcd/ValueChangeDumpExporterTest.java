@@ -28,7 +28,7 @@ import java.io.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.util.*;
 
@@ -75,13 +75,13 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExport16ChannelDataDumpOk() throws IOException
   {
-    DataContainer dataContainer = DataTestUtils.createMockDataContainer( 16 );
+    Project project = DataTestUtils.createMockProject( 16 );
 
-    this.exporter.export( dataContainer, this.component, this.nullOutputStream );
+    this.exporter.export( project, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataContainer ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( project ) );
     verify( this.exporter, times( 16 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
-    verify( this.exporter, times( 2 ) ).writeVariableData( any( PrintWriter.class ), eq( 32 ), eq( 65535 ), anyInt(),
+    verify( this.exporter, times( 2 ) ).writeVariableData( any( PrintWriter.class ), eq( 16 ), eq( 65535 ), anyInt(),
         anyInt(), anyBoolean() );
     verify( this.exporter, times( 3 ) ).writeTime( any( PrintWriter.class ), anyLong() );
   }
@@ -98,13 +98,13 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExport8ChannelDataDumpOk() throws IOException
   {
-    DataContainer dataContainer = DataTestUtils.createMockDataContainer( 8 );
+    Project project = DataTestUtils.createMockProject( 8 );
 
-    this.exporter.export( dataContainer, this.component, this.nullOutputStream );
+    this.exporter.export( project, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataContainer ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( project ) );
     verify( this.exporter, times( 8 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
-    verify( this.exporter, times( 4 ) ).writeVariableData( any( PrintWriter.class ), eq( 32 ), eq( 255 ), anyInt(),
+    verify( this.exporter, times( 4 ) ).writeVariableData( any( PrintWriter.class ), eq( 8 ), eq( 255 ), anyInt(),
         anyInt(), anyBoolean() );
     verify( this.exporter, times( 5 ) ).writeTime( any( PrintWriter.class ), anyLong() );
   }
@@ -121,14 +121,14 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExportDataDumpOk() throws IOException
   {
-    DataContainer dataContainer = DataTestUtils.createMockDataContainer( 8 );
+    Project project = DataTestUtils.createMockProject( 8 );
 
     File file = this.folder.newFile( "dump.vcd" );
     FileOutputStream fos = new FileOutputStream( file );
 
     try
     {
-      this.exporter.export( dataContainer, this.component, fos );
+      this.exporter.export( project, this.component, fos );
     }
     finally
     {
@@ -148,13 +148,13 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExportSingleChannelDataDumpOk() throws IOException
   {
-    DataContainer dataContainer = DataTestUtils.createMockDataContainer( 1 );
+    Project project = DataTestUtils.createMockProject( 1 );
 
-    this.exporter.export( dataContainer, this.component, this.nullOutputStream );
+    this.exporter.export( project, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataContainer ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( project ) );
     verify( this.exporter, times( 1 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
-    verify( this.exporter, times( 16 ) ).writeVariableData( any( PrintWriter.class ), eq( 32 ), eq( 1 ), anyInt(),
+    verify( this.exporter, times( 16 ) ).writeVariableData( any( PrintWriter.class ), eq( 1 ), eq( 1 ), anyInt(),
         anyInt(), anyBoolean() );
     verify( this.exporter, times( 17 ) ).writeTime( any( PrintWriter.class ), anyLong() );
   }

@@ -28,7 +28,6 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.regex.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.util.*;
@@ -73,11 +72,10 @@ public final class OlsDataHelper
     long triggerPos = -1L;
     long absLen = -1L;
 
-    boolean cursors = false;
+    boolean cursorsEnabled = false;
     // assume 'new' file format is in use, don't support uncompressed ones...
     boolean compressed = true;
 
-    Long[] cursorPositions = new Long[Ols.MAX_CURSORS];
     AcquisitionResult result = null;
 
     final BufferedReader br = new BufferedReader( aReader );
@@ -130,7 +128,7 @@ public final class OlsDataHelper
           }
           else if ( "CursorEnabled".equals( instrKey ) )
           {
-            cursors = Boolean.parseBoolean( instrValue );
+            cursorsEnabled = Boolean.parseBoolean( instrValue );
           }
           else if ( "Compressed".equals( instrKey ) )
           {
@@ -143,18 +141,27 @@ public final class OlsDataHelper
           else if ( "CursorA".equals( instrKey ) )
           {
             final long value = safeParseLong( instrValue );
-            cursorPositions[0] = ( value > Long.MIN_VALUE ) ? Long.valueOf( value ) : null;
+            if ( value > Long.MIN_VALUE )
+            {
+              aProject.getCursor( 0 ).setTimestamp( value );
+            }
           }
           else if ( "CursorB".equals( instrKey ) )
           {
             final long value = safeParseLong( instrValue );
-            cursorPositions[1] = ( value > Long.MIN_VALUE ) ? Long.valueOf( value ) : null;
+            if ( value > Long.MIN_VALUE )
+            {
+              aProject.getCursor( 1 ).setTimestamp( value );
+            }
           }
           else if ( instrKey.startsWith( "Cursor" ) )
           {
             final int idx = safeParseInt( instrKey.substring( 6 ) );
             final long pos = Long.parseLong( instrValue );
-            cursorPositions[idx] = ( pos > Long.MIN_VALUE ) ? Long.valueOf( pos ) : null;
+            if ( pos > Long.MIN_VALUE )
+            {
+              aProject.getCursor( idx ).setTimestamp( pos );
+            }
           }
         }
       }
@@ -222,8 +229,7 @@ public final class OlsDataHelper
     finally
     {
       aProject.setCapturedData( result );
-      aProject.setCursorPositions( cursorPositions );
-      aProject.setCursorsEnabled( cursors );
+      aProject.setCursorsEnabled( cursorsEnabled );
     }
   }
 
@@ -244,7 +250,7 @@ public final class OlsDataHelper
 
     final AcquisitionResult capturedData = aProject.getCapturedData();
 
-    final Long[] cursors = aProject.getCursorPositions();
+    final Cursor[] cursors = aProject.getCursors();
     final boolean cursorsEnabled = aProject.isCursorsEnabled();
 
     try
@@ -289,10 +295,10 @@ public final class OlsDataHelper
 
       for ( int i = 0; cursorsEnabled && ( i < cursors.length ); i++ )
       {
-        if ( cursors[i] != null )
+        if ( cursors[i].isDefined() )
         {
           bw.write( String.format( ";Cursor%d: ", Integer.valueOf( i ) ) );
-          bw.write( cursors[i].toString() );
+          bw.write( Long.toString( cursors[i].getTimestamp() ) );
           bw.newLine();
         }
       }

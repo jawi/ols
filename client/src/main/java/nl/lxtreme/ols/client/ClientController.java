@@ -34,11 +34,14 @@ import javax.swing.event.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.api.data.annotation.Annotation;
+import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
+import nl.lxtreme.ols.api.data.annotation.DataAnnotation;
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
@@ -116,7 +119,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     // VARIABLES
 
-    private final DataContainer data;
+    private final Project project;
     private final int startSampleIdx;
     private final int endSampleIdx;
 
@@ -132,11 +135,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
      * @param aData
      *          the acquisition result.
      */
-    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final DataContainer aData )
+    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final Project aProject )
     {
       this.startSampleIdx = aStartSampleIdx;
       this.endSampleIdx = aEndSampleIdx;
-      this.data = aData;
+      this.project = aProject;
     }
 
     /**
@@ -145,16 +148,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public int getChannels()
     {
-      return this.data.getChannels();
+      return getData().getChannels();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Long getCursorPosition( final int aIndex )
+    public Cursor getCursor( final int aIndex )
     {
-      return this.data.getCursorPosition( aIndex );
+      return this.project.getCursor( aIndex );
     }
 
     /**
@@ -163,7 +166,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public AcquisitionResult getData()
     {
-      return this.data;
+      return this.project.getCapturedData();
     }
 
     /**
@@ -172,7 +175,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public int getEnabledChannels()
     {
-      return this.data.getEnabledChannels();
+      return getData().getEnabledChannels();
     }
 
     /**
@@ -238,8 +241,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private final EventListenerList evenListeners;
   private final ProgressUpdatingRunnable progressAccumulatingRunnable;
   private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
-
-  private DataContainer dataContainer;
 
   private volatile ProjectManager projectManager;
   private volatile DataAcquisitionService dataAcquisitionService;
@@ -514,7 +515,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
-      this.dataContainer.setCursorPosition( i, null );
+      getCurrentProject().getCursor( i ).clear();
     }
     fireCursorChangedEvent( 0, -1 ); // removed...
 
@@ -541,7 +542,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void clearAnnotations( final int aChannelIdx )
   {
-    this.dataContainer.clearChannelAnnotations( aChannelIdx );
+    // XXX
+    // this.dataContainer.clearChannelAnnotations( aChannelIdx );
   }
 
   /**
@@ -612,7 +614,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       writer = new FileOutputStream( aExportFile );
 
       final Exporter exporter = getExporter( aExporterName );
-      exporter.export( this.dataContainer, this.mainFrame.getDiagramScrollPane(), writer );
+      exporter.export( this.projectManager.getCurrentProject(), this.mainFrame.getDiagramScrollPane(), writer );
 
       setStatusOnEDT( "Export to {0} succesful ...", aExporterName );
     }
@@ -631,14 +633,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public Action getAction( final String aID )
   {
     return this.actionManager.getAction( aID );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public DataContainer getDataContainer()
-  {
-    return this.dataContainer;
   }
 
   /**
@@ -818,12 +812,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void gotoCursorPosition( final int aCursorIdx )
   {
-    if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
+    if ( ( this.mainFrame != null ) && getCurrentProject().isCursorsEnabled() )
     {
-      final Long cursorPosition = this.dataContainer.getCursorPosition( aCursorIdx );
-      if ( cursorPosition != null )
+      final Cursor cursor = getCurrentProject().getCursor( aCursorIdx );
+      if ( ( cursor != null ) && cursor.isDefined() )
       {
-        this.mainFrame.gotoPosition( 0, cursorPosition.longValue() );
+        this.mainFrame.gotoPosition( 0, cursor.getTimestamp() );
       }
     }
   }
@@ -833,17 +827,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void gotoFirstAvailableCursor()
   {
-    if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
+    if ( ( this.mainFrame != null ) && getCurrentProject().isCursorsEnabled() )
     {
       for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
       {
-        if ( this.dataContainer.isCursorPositionSet( c ) )
+        final Cursor cursor = getCurrentProject().getCursor( c );
+        if ( cursor.isDefined() )
         {
-          final Long cursorPosition = this.dataContainer.getCursorPosition( c );
-          if ( cursorPosition != null )
-          {
-            this.mainFrame.gotoPosition( 0, cursorPosition.longValue() );
-          }
+          this.mainFrame.gotoPosition( 0, cursor.getTimestamp() );
           break;
         }
       }
@@ -855,17 +846,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void gotoLastAvailableCursor()
   {
-    if ( ( this.mainFrame != null ) && this.dataContainer.isCursorsEnabled() )
+    if ( ( this.mainFrame != null ) && getCurrentProject().isCursorsEnabled() )
     {
       for ( int c = Ols.MAX_CURSORS - 1; c >= 0; c-- )
       {
-        if ( this.dataContainer.isCursorPositionSet( c ) )
+        final Cursor cursor = getCurrentProject().getCursor( c );
+        if ( cursor.isDefined() )
         {
-          final Long cursorPosition = this.dataContainer.getCursorPosition( c );
-          if ( cursorPosition != null )
-          {
-            this.mainFrame.gotoPosition( 0, cursorPosition.longValue() );
-          }
+          this.mainFrame.gotoPosition( 0, cursor.getTimestamp() );
           break;
         }
       }
@@ -877,9 +865,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void gotoTriggerPosition()
   {
-    if ( ( this.mainFrame != null ) && this.dataContainer.hasTriggerData() )
+    final AcquisitionResult capturedData = getCurrentProject().getCapturedData();
+    if ( ( capturedData != null ) && capturedData.hasTriggerData() )
     {
-      final long position = this.dataContainer.getTriggerPosition();
+      final long position = capturedData.getTriggerPosition();
       this.mainFrame.gotoPosition( 0, position );
     }
   }
@@ -916,6 +905,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     // hooks... By returning false, we're not acknowledging the quit action to
     // the system, but instead do it all on our own...
     return false;
+  }
+
+  /**
+   * Returns whether or not there's captured data to display.
+   * 
+   * @return <code>true</code> if there's captured data, <code>false</code>
+   *         otherwise.
+   */
+  public boolean hasCapturedData()
+  {
+    return getCurrentProject().getCapturedData() != null;
   }
 
   /**
@@ -967,21 +967,19 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void onAnnotation( final Annotation<?> aAnnotation )
   {
-    if ( aAnnotation instanceof DataAnnotation )
+    final Channel channel = getCurrentProject().getChannel( aAnnotation.getChannel() );
+    if ( aAnnotation instanceof DataAnnotation<?> )
     {
       final DataAnnotation<?> dataAnnotation = ( DataAnnotation<?> )aAnnotation;
 
-      this.dataContainer.addChannelAnnotation( dataAnnotation.getChannel(), dataAnnotation.getStartTimestamp(),
-          dataAnnotation.getEndTimestamp(), dataAnnotation.getAnnotation() );
-
-      this.signalDiagramController.addAnnotation( dataAnnotation );
+      channel.addAnnotation( dataAnnotation );
 
       // Accumulate repaint events to avoid an avalanche of events on the EDT...
       this.repaintAccumulatingRunnable.add( ( Void )null );
     }
     else
     {
-      this.dataContainer.setChannelLabel( aAnnotation.getChannel(), aAnnotation.toString() );
+      channel.setLabel( aAnnotation.toString() );
     }
   }
 
@@ -997,8 +995,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       final Project tempProject = this.projectManager.createTemporaryProject();
       OlsDataHelper.read( tempProject, reader );
 
-      setChannelLabels( tempProject.getChannelLabels() );
-      setCursorData( tempProject.getCursorPositions(), tempProject.isCursorsEnabled() );
       setAcquisitionResult( tempProject.getCapturedData() );
       // XXX zoom to fit; shouldn't we restore the last zoom settings?
       zoomToFit();
@@ -1048,7 +1044,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     if ( this.mainFrame != null )
     {
-      this.dataContainer.setCursorPosition( aCursorIdx, null );
+      getCurrentProject().getCursor( aCursorIdx ).clear();
       fireCursorChangedEvent( aCursorIdx, -1 ); // removed...
     }
 
@@ -1262,7 +1258,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     try
     {
       final Project tempProject = this.projectManager.createTemporaryProject();
-      tempProject.setCapturedData( this.dataContainer );
+      tempProject.setCapturedData( getCurrentProject().getCapturedData() );
 
       OlsDataHelper.write( tempProject, writer );
 
@@ -1319,7 +1315,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void setCursorMode( final boolean aState )
   {
-    this.dataContainer.setCursorEnabled( aState );
+    getCurrentProject().setCursorsEnabled( aState );
     // Reflect the change directly on the diagram...
     repaintMainFrame();
 
@@ -1339,9 +1335,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     if ( this.mainFrame != null )
     {
       // Convert the mouse-position to a sample index...
-      final long sampleIdx = this.mainFrame.convertMousePositionToSampleIndex( aLocation );
+      final long timestamp = this.mainFrame.convertMousePositionToSampleIndex( aLocation );
 
-      this.dataContainer.setCursorPosition( aCursorIdx, Long.valueOf( sampleIdx ) );
+      getCurrentProject().getCursor( aCursorIdx ).setTimestamp( timestamp );
 
       fireCursorChangedEvent( aCursorIdx, aLocation.x );
     }
@@ -1369,24 +1365,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     final BundlesDialog dialog = new BundlesDialog( aOwner, this.bundleContext );
     if ( dialog.showDialog() )
     {
-      dialog.dispose();
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void showChannelLabelsDialog( final Window aParent )
-  {
-    if ( this.mainFrame != null )
-    {
-      final DiagramLabelsDialog dialog = new DiagramLabelsDialog( aParent, this.dataContainer.getChannelLabels() );
-      if ( dialog.showDialog() )
-      {
-        final String[] channelLabels = dialog.getChannelLabels();
-        setChannelLabels( channelLabels );
-      }
-
       dialog.dispose();
     }
   }
@@ -1585,7 +1563,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
 
     this.projectManager = null;
-    this.dataContainer = null;
   }
 
   /**
@@ -1619,7 +1596,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.projectManager.removePropertyChangeListener( this.mainFrame );
     }
     this.projectManager = aProjectManager;
-    this.dataContainer = new DataContainer( this.projectManager );
   }
 
   /**
@@ -1729,11 +1705,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean areCursorsEnabled()
   {
-    if ( this.dataContainer == null )
-    {
-      return false;
-    }
-    return this.dataContainer.isCursorsEnabled();
+    return getCurrentProject().isCursorsEnabled();
   }
 
   /**
@@ -1753,21 +1725,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Returns whether or not there's captured data to display.
-   * 
-   * @return <code>true</code> if there's captured data, <code>false</code>
-   *         otherwise.
-   */
-  protected boolean hasCapturedData()
-  {
-    if ( this.dataContainer == null )
-    {
-      return false;
-    }
-    return this.dataContainer.hasCapturedData();
-  }
-
-  /**
    * Returns whether or not there is trigger data available.
    * 
    * @return <code>true</code> if there is trigger data available,
@@ -1775,11 +1732,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean hasTriggerData()
   {
-    if ( this.dataContainer == null )
-    {
-      return false;
-    }
-    return this.dataContainer.hasTriggerData();
+    return getCurrentProject().getCapturedData().hasTriggerData();
   }
 
   /**
@@ -1808,11 +1761,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean isCursorSet( final int aCursorIdx )
   {
-    if ( this.dataContainer == null )
-    {
-      return false;
-    }
-    return this.dataContainer.isCursorPositionSet( aCursorIdx );
+    return getCurrentProject().getCursor( aCursorIdx ).isDefined();
   }
 
   /**
@@ -1826,18 +1775,21 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     int startOfDecode = -1;
     int endOfDecode = -1;
 
-    final int dataLength = this.dataContainer.getValues().length;
-    if ( this.dataContainer.isCursorsEnabled() )
+    final Project currentProject = getCurrentProject();
+    final AcquisitionResult capturedData = currentProject.getCapturedData();
+
+    final int dataLength = capturedData.getValues().length;
+    if ( currentProject.isCursorsEnabled() )
     {
-      if ( this.dataContainer.isCursorPositionSet( 0 ) )
+      if ( isCursorSet( 0 ) )
       {
-        final Long cursor1 = this.dataContainer.getCursorPosition( 0 );
-        startOfDecode = this.dataContainer.getSampleIndex( cursor1.longValue() ) - 1;
+        final Cursor cursor1 = currentProject.getCursor( 0 );
+        startOfDecode = capturedData.getSampleIndex( cursor1.getTimestamp() ) - 1;
       }
-      if ( this.dataContainer.isCursorPositionSet( 1 ) )
+      if ( isCursorSet( 1 ) )
       {
-        final Long cursor2 = this.dataContainer.getCursorPosition( 1 );
-        endOfDecode = this.dataContainer.getSampleIndex( cursor2.longValue() ) + 1;
+        final Cursor cursor2 = currentProject.getCursor( 1 );
+        endOfDecode = capturedData.getSampleIndex( cursor2.getTimestamp() ) + 1;
       }
     }
     else
@@ -1852,19 +1804,19 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       endOfDecode = dataLength - 1;
     }
 
-    int channels = this.dataContainer.getChannels();
+    int channels = capturedData.getChannels();
     if ( channels == Ols.NOT_AVAILABLE )
     {
       channels = Ols.MAX_CHANNELS;
     }
 
-    int enabledChannels = this.dataContainer.getEnabledChannels();
+    int enabledChannels = capturedData.getEnabledChannels();
     if ( enabledChannels == Ols.NOT_AVAILABLE )
     {
       enabledChannels = NumberUtils.getBitMask( channels );
     }
 
-    return new DefaultToolContext( startOfDecode, endOfDecode, this.dataContainer );
+    return new DefaultToolContext( startOfDecode, endOfDecode, currentProject );
   }
 
   /**
@@ -1898,6 +1850,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         listener.cursorRemoved( aCursorIdx );
       }
     }
+  }
+
+  /**
+   * Returns the current project.
+   * 
+   * @return the current project, never <code>null</code>.
+   */
+  private Project getCurrentProject()
+  {
+    return this.projectManager.getCurrentProject();
   }
 
   /**
@@ -2052,40 +2014,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private void setAcquisitionResult( final AcquisitionResult aData )
   {
-    this.dataContainer.setCapturedData( aData );
+    getCurrentProject().setCapturedData( aData );
 
-    this.signalDiagramController.setDataModel( this.dataContainer );
-  }
-
-  /**
-   * Set the channel labels.
-   * 
-   * @param aChannelLabels
-   *          the channel labels to set, cannot be <code>null</code>.
-   */
-  private void setChannelLabels( final String[] aChannelLabels )
-  {
-    if ( aChannelLabels != null )
-    {
-      this.dataContainer.setChannelLabels( aChannelLabels );
-      this.mainFrame.setChannelLabels( aChannelLabels );
-    }
-  }
-
-  /**
-   * @param aCursorData
-   *          the cursor positions to set, cannot be <code>null</code>;
-   * @param aCursorsEnabled
-   *          <code>true</code> if cursors should be enabled, <code>false</code>
-   *          if they should be disabled.
-   */
-  private void setCursorData( final Long[] aCursorData, final boolean aCursorsEnabled )
-  {
-    this.dataContainer.setCursorEnabled( aCursorsEnabled );
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
-    {
-      this.dataContainer.setCursorPosition( i, aCursorData[i] );
-    }
+    this.signalDiagramController.setDataModel( getCurrentProject() );
   }
 
   /**

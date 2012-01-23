@@ -29,7 +29,10 @@ import java.util.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.data.settings.*;
+import nl.lxtreme.ols.client.signaldisplay.channel.*;
+import nl.lxtreme.ols.client.signaldisplay.cursor.CursorImpl;
 import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
 
@@ -54,24 +57,6 @@ public class ProjectImplTest
   public void setUp()
   {
     this.project = new ProjectImpl();
-  }
-
-  /**
-   * Test method for {@link ProjectImpl#getChannelLabels()}.
-   */
-  @Test
-  public void testGetChannelLabels()
-  {
-    assertNotNull( this.project.getChannelLabels() );
-  }
-
-  /**
-   * Test method for {@link ProjectImpl#getCursorPositions()}.
-   */
-  @Test
-  public void testGetCursorPositions()
-  {
-    assertNotNull( this.project.getCursorPositions() );
   }
 
   /**
@@ -170,10 +155,10 @@ public class ProjectImplTest
     this.project.setCapturedData( null );
     ensure.waitForStep( 1, 500 );
 
-    this.project.setChannelLabels( "a", "b", "c" );
+    this.project.setChannels( new ChannelImpl( 0 ) );
     ensure.waitForStep( 2, 500 );
 
-    this.project.setCursorPositions( Long.valueOf( 100L ) );
+    this.project.setCursors( new CursorImpl( 1, 100L ) );
     ensure.waitForStep( 3, 500 );
 
     this.project.setCursorsEnabled( true );
@@ -215,14 +200,14 @@ public class ProjectImplTest
   @Test
   public void testSetChannelLabels()
   {
-    final String[] labels = new String[Ols.MAX_CHANNELS];
-    labels[0] = "labelA";
-    labels[1] = "labelB";
-    labels[2] = "labelC";
-    this.project.setChannelLabels( labels );
+    final Channel[] labels = new Channel[Ols.MAX_CHANNELS];
+    labels[0] = new ChannelImpl( 0 );
+    labels[1] = new ChannelImpl( 1 );
+    labels[2] = new ChannelImpl( 2 );
+    this.project.setChannels( labels );
 
-    assertNotSame( labels, this.project.getChannelLabels() );
-    assertArrayEquals( labels, this.project.getChannelLabels() );
+    assertNotSame( labels, this.project.getChannels() );
+    assertArrayEquals( labels, this.project.getChannels() );
     assertTrue( this.project.isChanged() );
   }
 
@@ -232,15 +217,15 @@ public class ProjectImplTest
   @Test
   public void testSetCursorPositions()
   {
-    final Long[] cursors = new Long[Ols.MAX_CURSORS];
-    cursors[0] = Long.valueOf( 1L );
-    cursors[1] = Long.valueOf( 2L );
-    cursors[2] = Long.valueOf( 3L );
-    cursors[3] = Long.valueOf( 4L );
-    this.project.setCursorPositions( cursors );
+    final Cursor[] cursors = new Cursor[Ols.MAX_CURSORS];
+    cursors[0] = new CursorImpl( 0, 1L );
+    cursors[1] = new CursorImpl( 1, 2L );
+    cursors[2] = new CursorImpl( 2, 3L );
+    cursors[3] = new CursorImpl( 3, 4L );
+    this.project.setCursors( cursors );
 
-    assertNotSame( cursors, this.project.getCursorPositions() );
-    assertArrayEquals( cursors, this.project.getCursorPositions() );
+    assertNotSame( cursors, this.project.getCursors() );
+    assertArrayEquals( cursors, this.project.getCursors() );
     assertTrue( this.project.isChanged() );
   }
 

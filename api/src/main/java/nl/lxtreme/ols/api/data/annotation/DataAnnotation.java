@@ -18,59 +18,29 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.base.annotation;
-
-
-import nl.lxtreme.ols.api.data.annotation.*;
+package nl.lxtreme.ols.api.data.annotation;
 
 
 /**
- * Provides an annotation that provides an annotation for a channel label.
+ * Denotes an annotation for data, which normally covers a certain range of
+ * samples.
  */
-public class ChannelLabelAnnotation implements Annotation<String>
+public interface DataAnnotation<ANNOTATION_TYPE> extends Annotation<ANNOTATION_TYPE>
 {
-  // VARIABLES
-
-  private final int channelIdx;
-  private final String label;
-
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new ChannelLabelAnnotation instance.
-   */
-  public ChannelLabelAnnotation( final int aChannelIdx, final String aLabel )
-  {
-    this.channelIdx = aChannelIdx;
-    this.label = aLabel;
-  }
-
   // METHODS
 
   /**
-   * {@inheritDoc}
+   * Returns the ending timecstamp of this annotation.
+   * 
+   * @return a time stamp, >= 0.
    */
-  @Override
-  public String getAnnotation()
-  {
-    return this.label;
-  }
+  public long getEndTimestamp();
 
   /**
-   * {@inheritDoc}
+   * Returns the starting time stamp of this annotation.
+   * 
+   * @return a time stamp, >= 0.
    */
-  @Override
-  public int getChannel()
-  {
-    return this.channelIdx;
-  }
+  public long getStartTimestamp();
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String toString()
-  {
-    return this.label;
-  }
 }

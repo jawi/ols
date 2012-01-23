@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalElementMeasurer;
@@ -88,7 +89,7 @@ public abstract class AbstractViewModel
    */
   public Color getCursorColor( final int aCursorIndex )
   {
-    final nl.lxtreme.ols.client.signaldisplay.cursor.Cursor cursor = getSignalDiagramModel().getCursor( aCursorIndex );
+    final Cursor cursor = getSignalDiagramModel().getCursor( aCursorIndex );
     return cursor.getColor();
   }
 
@@ -103,7 +104,7 @@ public abstract class AbstractViewModel
    */
   public String getCursorFlagText( final int aCursorIndex, final LabelStyle aStyle )
   {
-    final nl.lxtreme.ols.client.signaldisplay.cursor.Cursor cursor = getSignalDiagramModel().getCursor( aCursorIndex );
+    final Cursor cursor = getSignalDiagramModel().getCursor( aCursorIndex );
     if ( !cursor.isDefined() )
     {
       return "";
@@ -122,8 +123,7 @@ public abstract class AbstractViewModel
    */
   public int getCursorScreenCoordinate( final int aCursorIndex )
   {
-    nl.lxtreme.ols.client.signaldisplay.cursor.Cursor cursorTimestamp = getSignalDiagramModel()
-        .getCursor( aCursorIndex );
+    Cursor cursorTimestamp = getSignalDiagramModel().getCursor( aCursorIndex );
     if ( !cursorTimestamp.isDefined() )
     {
       return -1;
@@ -299,7 +299,7 @@ public abstract class AbstractViewModel
     final SignalDiagramModel model = getSignalDiagramModel();
     final double sampleRate = model.getSampleRate();
 
-    final nl.lxtreme.ols.client.signaldisplay.cursor.Cursor cursor = model.getCursor( aCursorIdx );
+    final Cursor cursor = model.getCursor( aCursorIdx );
     Integer index = Integer.valueOf( aCursorIdx + 1 );
 
     String label = cursor.getLabel();

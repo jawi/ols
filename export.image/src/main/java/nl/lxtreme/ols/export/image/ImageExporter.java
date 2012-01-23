@@ -29,8 +29,8 @@ import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.export.*;
+import nl.lxtreme.ols.api.data.project.*;
 
 
 /**
@@ -48,11 +48,10 @@ public class ImageExporter implements Exporter
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.data.export.Exporter#export(nl.lxtreme.ols.api.data.DataContainer,
-   *      javax.swing.JComponent, java.io.OutputStream)
+   * {@inheritDoc}
    */
   @Override
-  public void export( final DataContainer aContainer, final JComponent aComponent, final OutputStream aStream )
+  public void export( final Project aProject, final JComponent aComponent, final OutputStream aStream )
       throws IOException
   {
     final Dimension dims = getExportSize( aComponent );

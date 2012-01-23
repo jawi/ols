@@ -264,7 +264,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public final DataContainer getDataContainer()
   {
-    return this.controller.getDataContainer();
+    return null; // XXX
   }
 
   /**

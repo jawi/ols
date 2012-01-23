@@ -23,8 +23,8 @@ package nl.lxtreme.ols.tool.measure;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
 import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.api.tools.annotation.*;
 import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureTask.ClockStats;
 
 import org.osgi.framework.*;

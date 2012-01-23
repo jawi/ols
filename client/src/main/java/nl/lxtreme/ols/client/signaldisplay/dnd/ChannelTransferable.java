@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.signaldisplay.dnd;
 
 import java.awt.datatransfer.*;
 
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.channel.*;
 
 

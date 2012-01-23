@@ -18,59 +18,33 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.base.annotation;
-
-
-import nl.lxtreme.ols.api.data.annotation.*;
+package nl.lxtreme.ols.api.data.annotation;
 
 
 /**
- * Provides an annotation that provides an annotation for a channel label.
+ * Denotes an annotation.
  */
-public class ChannelLabelAnnotation implements Annotation<String>
+public interface Annotation<ANNOTATION_TYPE>
 {
-  // VARIABLES
-
-  private final int channelIdx;
-  private final String label;
-
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new ChannelLabelAnnotation instance.
-   */
-  public ChannelLabelAnnotation( final int aChannelIdx, final String aLabel )
-  {
-    this.channelIdx = aChannelIdx;
-    this.label = aLabel;
-  }
-
   // METHODS
 
   /**
-   * {@inheritDoc}
+   * Returns the actual annotation.
+   * <p>
+   * The given annotation type is generic, meaning it can be of <em>any</em>
+   * type. One constraint that <b>all</b> annotation types must adhere is that
+   * they have a proper {@link Object#toString()} implementation.
+   * </p>
+   * 
+   * @return an annotation, never <code>null</code>.
    */
-  @Override
-  public String getAnnotation()
-  {
-    return this.label;
-  }
+  ANNOTATION_TYPE getAnnotation();
 
   /**
-   * {@inheritDoc}
+   * Returns the channel index of the channel to annotate.
+   * 
+   * @return a channel index, >= 0 && < 32.
    */
-  @Override
-  public int getChannel()
-  {
-    return this.channelIdx;
-  }
+  int getChannel();
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String toString()
-  {
-    return this.label;
-  }
 }

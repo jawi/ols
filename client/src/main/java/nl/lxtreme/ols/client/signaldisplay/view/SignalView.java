@@ -22,8 +22,8 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 

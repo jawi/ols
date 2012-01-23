@@ -24,6 +24,7 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
@@ -95,7 +96,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    * @return the channel underneat the given X,Y-coordinate, or
    *         <code>null</code> if no channel is found.
    */
-  public Channel findChannel( final Point aCoordinate )
+  public ChannelImpl findChannel( final Point aCoordinate )
   {
     SignalElement signalElement = findSignalElement( aCoordinate );
     if ( ( signalElement != null ) && signalElement.isDigitalSignal() )
@@ -219,7 +220,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    *          the channel that the moved channel is inserted before, cannot be
    *          <code>null</code>.
    */
-  public void moveChannelRows( final Channel aMovedChannel, final Channel aInsertChannel )
+  public void moveChannelRows( final ChannelImpl aMovedChannel, final ChannelImpl aInsertChannel )
   {
     final ChannelGroupManager channelGroupManager = getChannelGroupManager();
 

@@ -25,7 +25,8 @@ import static org.junit.Assert.*;
 
 import java.net.*;
 import java.util.*;
-import nl.lxtreme.ols.api.data.*;
+
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
@@ -98,7 +99,7 @@ public class ClockFrequencyMeasureWorkerResourceTest
   public void setUp() throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), this.resourceName );
-    DataContainer container = DataTestUtils.getCapturedData( resource );
+    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ClockFrequencyMeasureTask worker = new ClockFrequencyMeasureTask( toolContext );

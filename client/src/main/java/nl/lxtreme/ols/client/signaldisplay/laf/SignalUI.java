@@ -25,9 +25,9 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
-import nl.lxtreme.ols.api.tools.annotation.*;
+import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.Cursor;
+import nl.lxtreme.ols.client.signaldisplay.cursor.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
@@ -372,7 +372,7 @@ public class SignalUI extends ComponentUI
     // Tell Swing how we would like to render ourselves...
     aCanvas.setRenderingHints( createCursorRenderingHints() );
 
-    for ( int i = 0; i < Cursor.MAX_CURSORS; i++ )
+    for ( int i = 0; i < CursorImpl.MAX_CURSORS; i++ )
     {
       int cursorXpos = aModel.getCursorScreenCoordinate( i );
 

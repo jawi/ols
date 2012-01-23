@@ -30,9 +30,10 @@ import java.util.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.channel.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -56,8 +57,8 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
     @Override
     public void actionPerformed( final ActionEvent aEvent )
     {
-      final Collection<Channel> channelList = getChannelGroupManager().getAssignedChannels();
-      updateChannelModel( toArray( Channel.class, channelList ) );
+      final Collection<ChannelImpl> channelList = getChannelGroupManager().getAssignedChannels();
+      updateChannelModel( toArray( ChannelImpl.class, channelList ) );
     }
   }
 
@@ -255,8 +256,8 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
   {
     if ( this.listening && ChannelChangeEvent.PROPERTY_ENABLED.equals( aEvent.getPropertyName() ) )
     {
-      final Collection<Channel> channelList = getChannelGroupManager().getAssignedChannels();
-      updateChannelModel( toArray( Channel.class, channelList ) );
+      final Collection<ChannelImpl> channelList = getChannelGroupManager().getAssignedChannels();
+      updateChannelModel( toArray( ChannelImpl.class, channelList ) );
     }
   }
 
@@ -264,11 +265,11 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
    * {@inheritDoc}
    */
   @Override
-  public void channelGroupStructureChanged( final Collection<Channel> aChannelList )
+  public void channelGroupStructureChanged( final Collection<ChannelImpl> aChannelList )
   {
     if ( this.listening )
     {
-      updateChannelModel( toArray( Channel.class, aChannelList ) );
+      updateChannelModel( toArray( ChannelImpl.class, aChannelList ) );
     }
   }
 
@@ -386,7 +387,7 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
   {
     final SignalDiagramModel model = getSignalDiagramModel();
 
-    Channel channel = ( Channel )this.channel.getSelectedItem();
+    ChannelImpl channel = ( ChannelImpl )this.channel.getSelectedItem();
     if ( ( channel == null ) || !channel.isEnabled() || !channel.isAssigned() )
     {
       return false;

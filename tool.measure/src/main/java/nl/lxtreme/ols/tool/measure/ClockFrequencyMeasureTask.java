@@ -25,6 +25,7 @@ import static nl.lxtreme.ols.util.DisplayUtils.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.tools.*;
 
 
@@ -218,8 +219,8 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
   @Override
   public ClockStats call() throws Exception
   {
-    final Long cursorA = this.context.getCursorPosition( 0 );
-    final Long cursorB = this.context.getCursorPosition( 1 );
+    final Cursor cursorA = this.context.getCursor( 0 );
+    final Cursor cursorB = this.context.getCursor( 1 );
 
     final AcquisitionResult data = this.context.getData();
 
@@ -232,12 +233,12 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
     final int start;
     final int end;
 
-    if ( ( cursorA != null ) && ( cursorB != null ) )
+    if ( ( cursorA.isDefined() ) && ( cursorB.isDefined() ) )
     {
-      startTimestamp = cursorA.longValue();
+      startTimestamp = cursorA.getTimestamp();
       start = data.getSampleIndex( startTimestamp );
 
-      endTimestamp = cursorB.longValue();
+      endTimestamp = cursorB.getTimestamp();
       end = data.getSampleIndex( endTimestamp );
     }
     else

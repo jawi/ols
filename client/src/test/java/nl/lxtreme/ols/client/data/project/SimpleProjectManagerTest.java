@@ -28,7 +28,9 @@ import java.io.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.util.*;
 
@@ -151,9 +153,15 @@ public class SimpleProjectManagerTest
         "labelQ", "labelR", "labelS", "labelT", "labelU", "labelV", "labelW", "labelX", //
         "labelY", "labelZ", "label0", "label1", "label2", "label3", "label4", "label5" //
     };
+    final Channel[] channels = new Channel[labels.length];
+    for ( int i = 0; i < labels.length; i++ )
+    {
+      channels[i] = new ChannelImpl( i );
+      channels[i].setLabel( labels[i] );
+    }
 
     final Project project = this.projectManager.getCurrentProject();
-    project.setChannelLabels( labels );
+    project.setChannels( channels );
 
     final ByteArrayOutputStream baos = new ByteArrayOutputStream( 1024 );
     this.projectManager.saveProject( baos ); // should succeed...
@@ -164,7 +172,7 @@ public class SimpleProjectManagerTest
     final ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
     this.projectManager.loadProject( bais );
 
-    assertArrayEquals( labels, this.projectManager.getCurrentProject().getChannelLabels() );
+    assertArrayEquals( channels, this.projectManager.getCurrentProject().getChannels() );
   }
 
   /**

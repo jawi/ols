@@ -26,6 +26,7 @@ import java.util.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 
 
 /**
@@ -44,18 +45,36 @@ public interface Project
   public AcquisitionResult getCapturedData();
 
   /**
-   * Returns the channel labels of this project.
+   * Returns a single channel.
    * 
-   * @return an array of channel labels, can be <code>null</code>.
+   * @param aIndex
+   *          the channel index, >= 0 && <
+   *          {@link AcquisitionResult#getChannels()}.
+   * @return an array of channels, never <code>null</code>.
    */
-  public String[] getChannelLabels();
+  public Channel getChannel( int aIndex );
+
+  /**
+   * Returns the channels of this project.
+   * 
+   * @return an array of channels, never <code>null</code>.
+   */
+  public Channel[] getChannels();
+
+  /**
+   * Returns a single cursor
+   * 
+   * @param aIndex
+   *          the index of the cursor to retrieve, >= 0.
+   */
+  public Cursor getCursor( int aIndex );
 
   /**
    * Returns the available cursors of this project.
    * 
-   * @return an array of cursor positions, can be <code>null</code>.
+   * @return an array of cursors, never <code>null</code>.
    */
-  public Long[] getCursorPositions();
+  public Cursor[] getCursors();
 
   /**
    * Returns the path to the project file.
@@ -137,7 +156,8 @@ public interface Project
    * @param aChannelLabels
    *          the channel labels, in order, can be <code>null</code>.
    */
-  public void setChannelLabels( final String... aChannelLabels );
+  @Deprecated
+  public void setChannels( final Channel... aChannels );
 
   /**
    * Sets the cursor positions.
@@ -145,7 +165,8 @@ public interface Project
    * @param aCursors
    *          the cursor positions to set, in order, can be <code>null</code>.
    */
-  public void setCursorPositions( final Long... aCursors );
+  @Deprecated
+  public void setCursors( final Cursor... aCursors );
 
   /**
    * Sets whether or not cursors are enabled.

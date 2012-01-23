@@ -28,6 +28,7 @@ import java.util.concurrent.*;
 /**
  * Denotes a set of channel annotations for a single channel.
  */
+@Deprecated
 public class ChannelAnnotations
 {
   // VARIABLES

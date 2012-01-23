@@ -28,6 +28,7 @@ import java.util.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 
 
@@ -42,14 +43,25 @@ public class StubTestProject implements Project
 
   private AcquisitionResult capturedData;
   private boolean cursorsEnabled;
-  private Long[] cursors;
-  private String[] labels;
+  private Cursor[] cursors;
+  private Channel[] channels;
   private String sourceVersion;
   private final Map<String, UserSettings> settings = new HashMap<String, UserSettings>();
   private String name;
   private Date lastModified;
   private File file;
   private boolean changed;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new StubTestProject instance.
+   */
+  public StubTestProject()
+  {
+    this.cursors = new Cursor[Ols.MAX_CURSORS];
+    this.channels = new Channel[Ols.MAX_CHANNELS];
+  }
 
   // METHODS
 
@@ -136,19 +148,37 @@ public class StubTestProject implements Project
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getChannelLabels()
+   * {@inheritDoc}
    */
   @Override
-  public String[] getChannelLabels()
+  public Channel getChannel( final int aIndex )
   {
-    return this.labels;
+    return this.channels[aIndex];
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getCursorPositions()
+   * {@inheritDoc}
    */
   @Override
-  public Long[] getCursorPositions()
+  public Channel[] getChannels()
+  {
+    return this.channels;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Cursor getCursor( final int aIndex )
+  {
+    return this.cursors[aIndex];
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Cursor[] getCursors()
   {
     return this.cursors;
   }
@@ -238,16 +268,16 @@ public class StubTestProject implements Project
    * @see nl.lxtreme.ols.api.data.project.Project#setChannelLabels(java.lang.String[])
    */
   @Override
-  public void setChannelLabels( final String... aChannelLabels )
+  public void setChannels( final Channel... aChannelLabels )
   {
-    this.labels = aChannelLabels;
+    this.channels = aChannelLabels;
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setCursorPositions(java.lang.Long[])
+   * {@inheritDoc}
    */
   @Override
-  public void setCursorPositions( final Long... aCursors )
+  public void setCursors( final Cursor... aCursors )
   {
     this.cursors = aCursors;
   }

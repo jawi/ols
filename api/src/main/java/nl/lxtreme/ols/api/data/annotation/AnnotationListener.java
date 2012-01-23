@@ -18,59 +18,42 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.base.annotation;
-
-
-import nl.lxtreme.ols.api.data.annotation.*;
+package nl.lxtreme.ols.api.data.annotation;
 
 
 /**
- * Provides an annotation that provides an annotation for a channel label.
+ * Can be used to create a service that listens for the addition/removal of
+ * annotation on channel data.
  */
-public class ChannelLabelAnnotation implements Annotation<String>
+public interface AnnotationListener
 {
-  // VARIABLES
-
-  private final int channelIdx;
-  private final String label;
-
-  // CONSTRUCTORS
-
-  /**
-   * Creates a new ChannelLabelAnnotation instance.
-   */
-  public ChannelLabelAnnotation( final int aChannelIdx, final String aLabel )
-  {
-    this.channelIdx = aChannelIdx;
-    this.label = aLabel;
-  }
-
   // METHODS
 
   /**
-   * {@inheritDoc}
+   * Called when all annotations for all channels need to be cleared.
+   * <p>
+   * Called <em>before</em> any annotation is added.
+   * </p>
    */
-  @Override
-  public String getAnnotation()
-  {
-    return this.label;
-  }
+  void clearAnnotations();
 
   /**
-   * {@inheritDoc}
+   * Called when the annotations for a single channel need to be cleared.
+   * <p>
+   * Called <em>before</em> any annotation is added.
+   * </p>
+   * 
+   * @param aChannelIdx
+   *          the channel index to clear the annotation for, >= 0 && < 32.
    */
-  @Override
-  public int getChannel()
-  {
-    return this.channelIdx;
-  }
+  void clearAnnotations( int aChannelIdx );
 
   /**
-   * {@inheritDoc}
+   * Called for each annotation.
+   * 
+   * @param aAnnotation
+   *          the (new) annotation, cannot be <code>null</code>.
    */
-  @Override
-  public String toString()
-  {
-    return this.label;
-  }
+  void onAnnotation( Annotation<?> aAnnotation );
+
 }
