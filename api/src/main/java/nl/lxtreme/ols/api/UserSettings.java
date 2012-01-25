@@ -98,6 +98,14 @@ public interface UserSettings extends Serializable, Iterable<Map.Entry<String, O
   public void put( String aName, String aValue );
 
   /**
+   * Allows all given map of settings to be copied to this user settings.
+   * 
+   * @param aSettings
+   *          the map with settings to copy, cannot be <code>null</code>.
+   */
+  public void putAll( Map<?, ?> aSettings );
+
+  /**
    * Associates the given boolean value to the given name.
    * 
    * @param aName

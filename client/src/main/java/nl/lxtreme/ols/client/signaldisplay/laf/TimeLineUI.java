@@ -30,7 +30,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
-import nl.lxtreme.ols.client.signaldisplay.cursor.CursorImpl;
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.signaldisplay.model.AbstractViewModel.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
@@ -238,6 +238,11 @@ public class TimeLineUI extends ComponentUI
   {
     final TimeLineView view = ( TimeLineView )aComponent;
     final TimeLineViewModel model = view.getModel();
+    if ( !model.hasData() )
+    {
+      // Nothing to do!
+      return;
+    }
 
     final int baseTickYpos = model.getTimeLineHeight() - VERTICAL_PADDING;
     final int tickYpos = baseTickYpos - model.getTickHeight();
@@ -369,7 +374,7 @@ public class TimeLineUI extends ComponentUI
 
     // Phase 1: determine the boundaries of each defined cursor that should be
     // shown in the current clip boundaries...
-    for ( int i = 0; i < CursorImpl.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       // TODO persist the cursor labels between paints so we can perform smart
       // redraws...

@@ -35,7 +35,6 @@ import javax.swing.event.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.*;
@@ -527,7 +526,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    *          the mouse position to convert, cannot be <code>null</code>.
    * @return the sample index of the sample under the mouse.
    */
-  public long convertMousePositionToSampleIndex( final Point aLocation )
+  public long convertMousePositionToTimestamp( final Point aLocation )
   {
     return -1; // XXX
   }
@@ -561,13 +560,13 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   public void propertyChange( final PropertyChangeEvent aEvent )
   {
     final String propertyName = aEvent.getPropertyName();
-    if ( ProjectProperties.PROPERTY_CHANGED.equals( propertyName ) )
+    if ( "changed".equals( propertyName ) )
     {
       final Boolean value = ( Boolean )aEvent.getNewValue();
       // Causes the window to be annotated with a dot on OSX...
       getRootPane().putClientProperty( "Window.documentModified", value );
     }
-    else if ( ProjectProperties.PROPERTY_NAME.equals( propertyName ) )
+    else if ( "name".equals( propertyName ) )
     {
       // The project's name has changed; update the title bar to show this...
       final String value = ( String )aEvent.getNewValue();

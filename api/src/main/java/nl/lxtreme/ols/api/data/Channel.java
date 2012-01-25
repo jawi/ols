@@ -22,6 +22,7 @@ package nl.lxtreme.ols.api.data;
 
 
 import java.awt.*;
+import java.util.*;
 
 import nl.lxtreme.ols.api.data.annotation.*;
 
@@ -29,7 +30,7 @@ import nl.lxtreme.ols.api.data.annotation.*;
 /**
  * Denotes a single channel in the data set.
  */
-public interface Channel
+public interface Channel extends Comparable<Channel>
 {
   // METHODS
 
@@ -49,9 +50,10 @@ public interface Channel
   /**
    * Returns all available annotations for this channel.
    * 
-   * @return a copy of all annotations, never <code>null</code>.
+   * @return an immutable collection of this channel's annotations, never
+   *         <code>null</code>, never <code>null</code>.
    */
-  Annotation<?>[] getAnnotations();
+  Collection<Annotation<?>> getAnnotations();
 
   /**
    * Returns the color signals should be drawn in.

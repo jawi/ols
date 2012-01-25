@@ -23,7 +23,7 @@ package nl.lxtreme.ols.client.signaldisplay;
 import java.awt.*;
 import java.beans.*;
 
-import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 
@@ -264,12 +264,12 @@ public final class SignalDiagramController
   /**
    * Sets the data model for this controller.
    * 
-   * @param aProject
-   *          the project to set, cannot be <code>null</code>.
+   * @param aDataSet
+   *          the data set to set, cannot be <code>null</code>.
    */
-  public void setDataModel( final Project aProject )
+  public void setDataModel( final DataSet aDataSet )
   {
-    getSignalDiagramModel().setDataModel( aProject );
+    getSignalDiagramModel().setDataModel( aDataSet );
   }
 
   /**

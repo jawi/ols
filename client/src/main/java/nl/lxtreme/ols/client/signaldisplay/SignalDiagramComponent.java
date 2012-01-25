@@ -29,9 +29,9 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
@@ -417,7 +417,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       else
       {
         // Not hovering above existing cursor, show add menu...
-        for ( int i = 0; i < CursorImpl.MAX_CURSORS; i++ )
+        for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
         {
           final SetCursorAction action = new SetCursorAction( this.controller, i );
           contextMenu.add( new JCheckBoxMenuItem( action ) );
@@ -693,7 +693,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
      */
     public double getFactor()
     {
-      return this.signalDiagram.getModel().getZoomFactor();
+      return getModel().getZoomFactor();
     }
 
     /**
@@ -761,7 +761,12 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
      */
     private double getMaxZoomLevel()
     {
-      final SignalDiagramModel model = this.signalDiagram.getModel();
+      final SignalDiagramModel model = getModel();
+      if ( !model.hasData() )
+      {
+        return 1.0;
+      }
+
       final double length = model.getAbsoluteLength();
       return Math.floor( Integer.MAX_VALUE / length );
     }
@@ -774,12 +779,24 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
      */
     private double getMinZoomLevel()
     {
-      final SignalDiagramModel model = this.signalDiagram.getModel();
+      final SignalDiagramModel model = getModel();
+      if ( !model.hasData() )
+      {
+        return 1.0;
+      }
 
       Rectangle viewSize = this.signalDiagram.getVisibleViewSize();
       final double length = model.getAbsoluteLength();
 
       return viewSize.getWidth() / length;
+    }
+
+    /**
+     * @return
+     */
+    private SignalDiagramModel getModel()
+    {
+      return this.signalDiagram.getModel();
     }
 
     /**
@@ -790,7 +807,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
      */
     private void setFactor( final double aFactor )
     {
-      this.signalDiagram.getModel().setZoomFactor( aFactor );
+      getModel().setZoomFactor( aFactor );
     }
 
     /**
@@ -809,7 +826,8 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
      */
     private void zoomRelative( final double aFactor )
     {
-      zoomAbsolute( Math.max( getMinZoomLevel(), Math.min( getMaxZoomLevel(), aFactor * getFactor() ) ) );
+      final double newFactor = Math.max( getMinZoomLevel(), Math.min( getMaxZoomLevel(), aFactor * getFactor() ) );
+      zoomAbsolute( newFactor );
     }
   }
 
@@ -863,7 +881,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   static final java.awt.Cursor CURSOR_MOVE_TIMESTAMP = java.awt.Cursor
       .getPredefinedCursor( java.awt.Cursor.E_RESIZE_CURSOR );
 
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
 
   private static final long serialVersionUID = 1L;
 
@@ -885,7 +903,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
    */
   private SignalDiagramComponent( final SignalDiagramController aController )
   {
-    super( new BorderLayout( 4, 4 ) );
+    super( new BorderLayout() );
 
     this.controller = aController;
 

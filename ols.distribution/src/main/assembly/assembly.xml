@@ -34,6 +34,7 @@
                 <include>org.apache.felix:org.apache.felix.dependencymanager</include>
 				<include>nl.lxtreme.ols:api</include>
 				<include>nl.lxtreme.ols:client</include>
+                <include>nl.lxtreme.ols.client:client.project</include>
 				<include>nl.lxtreme.ols:logging</include>
 				<include>nl.lxtreme.ols:service.acquisition</include>
                 <include>nl.lxtreme.ols:service.io</include>

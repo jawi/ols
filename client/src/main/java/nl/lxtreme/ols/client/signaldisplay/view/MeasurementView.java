@@ -57,8 +57,8 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
     @Override
     public void actionPerformed( final ActionEvent aEvent )
     {
-      final Collection<ChannelImpl> channelList = getChannelGroupManager().getAssignedChannels();
-      updateChannelModel( toArray( ChannelImpl.class, channelList ) );
+      final Collection<GroupableChannel> channelList = getChannelGroupManager().getAssignedChannels();
+      updateChannelModel( toArray( GroupableChannel.class, channelList ) );
     }
   }
 
@@ -256,8 +256,8 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
   {
     if ( this.listening && ChannelChangeEvent.PROPERTY_ENABLED.equals( aEvent.getPropertyName() ) )
     {
-      final Collection<ChannelImpl> channelList = getChannelGroupManager().getAssignedChannels();
-      updateChannelModel( toArray( ChannelImpl.class, channelList ) );
+      final Collection<GroupableChannel> channelList = getChannelGroupManager().getAssignedChannels();
+      updateChannelModel( toArray( GroupableChannel.class, channelList ) );
     }
   }
 
@@ -265,11 +265,11 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
    * {@inheritDoc}
    */
   @Override
-  public void channelGroupStructureChanged( final Collection<ChannelImpl> aChannelList )
+  public void channelGroupStructureChanged( final Collection<GroupableChannel> aChannelList )
   {
     if ( this.listening )
     {
-      updateChannelModel( toArray( ChannelImpl.class, aChannelList ) );
+      updateChannelModel( toArray( GroupableChannel.class, aChannelList ) );
     }
   }
 
@@ -387,7 +387,7 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
   {
     final SignalDiagramModel model = getSignalDiagramModel();
 
-    ChannelImpl channel = ( ChannelImpl )this.channel.getSelectedItem();
+    GroupableChannel channel = ( GroupableChannel )this.channel.getSelectedItem();
     if ( ( channel == null ) || !channel.isEnabled() || !channel.isAssigned() )
     {
       return false;

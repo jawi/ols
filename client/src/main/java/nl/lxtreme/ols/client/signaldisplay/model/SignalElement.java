@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.channel.*;
 
 
@@ -53,7 +54,7 @@ public class SignalElement
   private final int height;
   private final int mask;
 
-  private ChannelImpl channel;
+  private Channel channel;
   private ChannelGroup channelGroup;
 
   // TODO add label, color & font...
@@ -109,7 +110,7 @@ public class SignalElement
    *          <code>null</code>.
    * @return a new {@link SignalElement} instance, never <code>null</code>.
    */
-  public static SignalElement createDigitalSignalElement( final ChannelImpl aChannel, final int aYposition,
+  public static SignalElement createDigitalSignalElement( final Channel aChannel, final int aYposition,
       final int aHeight )
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.DIGITAL_SIGNAL, aChannel.getMask(),
@@ -195,7 +196,7 @@ public class SignalElement
    *           in case this signal element does not represent a digital signal.
    * @see #isDigitalSignal()
    */
-  public ChannelImpl getChannel()
+  public Channel getChannel()
   {
     if ( this.channel == null )
     {

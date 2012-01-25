@@ -28,9 +28,9 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 
@@ -176,7 +176,7 @@ public class CursorDetailsView extends AbstractViewLayer implements ICursorChang
 
     final StringBuilder sb = new StringBuilder( "<html><head><style>td, th {" );
     sb.append( toCssString( labelFont ) ).append( "} th { font-weight: bold; }</style></head><body><table>" );
-    for ( int c = 0; c < CursorImpl.MAX_CURSORS; c++ )
+    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
     {
       final Cursor cursor = model.getCursor( c );
       if ( !cursor.isDefined() )

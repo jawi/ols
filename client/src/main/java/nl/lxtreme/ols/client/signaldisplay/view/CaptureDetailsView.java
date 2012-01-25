@@ -21,13 +21,14 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 
 import static nl.lxtreme.ols.util.DisplayUtils.*;
+
 import java.awt.*;
 import java.beans.*;
 import java.text.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 
@@ -91,13 +92,13 @@ public class CaptureDetailsView extends AbstractViewLayer implements IDataModelC
    * {@inheritDoc}
    */
   @Override
-  public void dataModelChanged( final AcquisitionResult aDataModel )
+  public void dataModelChanged( final DataSet aDataSet )
   {
     this.sampleRate = "-";
     this.sampleCount = "-";
     this.totalWidth = "-";
 
-    if ( aDataModel != null )
+    if ( aDataSet != null )
     {
       // XXX
     }

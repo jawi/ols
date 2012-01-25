@@ -28,7 +28,7 @@ import java.io.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.util.*;
 
@@ -65,8 +65,7 @@ public class ValueChangeDumpExporterTest
 
   /**
    * Test method for
-   * {@link ValueChangeDumpExporter#export(DataContainer, JComponent, OutputStream)}
-   * .
+   * {@link ValueChangeDumpExporter#export(DataSet, JComponent, OutputStream)} .
    * <p>
    * This method tests that exporting a datadump with only 8 channels works as
    * expected.
@@ -75,11 +74,11 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExport16ChannelDataDumpOk() throws IOException
   {
-    Project project = DataTestUtils.createMockProject( 16 );
+    DataSet dataSet = DataTestUtils.createStubDataSet( 16 );
 
-    this.exporter.export( project, this.component, this.nullOutputStream );
+    this.exporter.export( dataSet, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( project ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
     verify( this.exporter, times( 16 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
     verify( this.exporter, times( 2 ) ).writeVariableData( any( PrintWriter.class ), eq( 16 ), eq( 65535 ), anyInt(),
         anyInt(), anyBoolean() );
@@ -88,8 +87,7 @@ public class ValueChangeDumpExporterTest
 
   /**
    * Test method for
-   * {@link ValueChangeDumpExporter#export(DataContainer, JComponent, OutputStream)}
-   * .
+   * {@link ValueChangeDumpExporter#export(DataSet, JComponent, OutputStream)} .
    * <p>
    * This method tests that exporting a datadump with only 8 channels works as
    * expected.
@@ -98,11 +96,11 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExport8ChannelDataDumpOk() throws IOException
   {
-    Project project = DataTestUtils.createMockProject( 8 );
+    DataSet dataSet = DataTestUtils.createStubDataSet( 8 );
 
-    this.exporter.export( project, this.component, this.nullOutputStream );
+    this.exporter.export( dataSet, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( project ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
     verify( this.exporter, times( 8 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
     verify( this.exporter, times( 4 ) ).writeVariableData( any( PrintWriter.class ), eq( 8 ), eq( 255 ), anyInt(),
         anyInt(), anyBoolean() );
@@ -111,8 +109,7 @@ public class ValueChangeDumpExporterTest
 
   /**
    * Test method for
-   * {@link ValueChangeDumpExporter#export(DataContainer, JComponent, OutputStream)}
-   * .
+   * {@link ValueChangeDumpExporter#export(DataSet, JComponent, OutputStream)} .
    * <p>
    * This method tests that exporting a datadump with only 8 channels works as
    * expected.
@@ -121,14 +118,14 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExportDataDumpOk() throws IOException
   {
-    Project project = DataTestUtils.createMockProject( 8 );
+    DataSet dataSet = DataTestUtils.createStubDataSet( 8 );
 
     File file = this.folder.newFile( "dump.vcd" );
     FileOutputStream fos = new FileOutputStream( file );
 
     try
     {
-      this.exporter.export( project, this.component, fos );
+      this.exporter.export( dataSet, this.component, fos );
     }
     finally
     {
@@ -138,8 +135,7 @@ public class ValueChangeDumpExporterTest
 
   /**
    * Test method for
-   * {@link ValueChangeDumpExporter#export(DataContainer, JComponent, OutputStream)}
-   * .
+   * {@link ValueChangeDumpExporter#export(DataSet, JComponent, OutputStream)} .
    * <p>
    * This method tests that exporting a datadump with only 1 channel works as
    * expected.
@@ -148,11 +144,11 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExportSingleChannelDataDumpOk() throws IOException
   {
-    Project project = DataTestUtils.createMockProject( 1 );
+    DataSet dataSet = DataTestUtils.createStubDataSet( 1 );
 
-    this.exporter.export( project, this.component, this.nullOutputStream );
+    this.exporter.export( dataSet, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( project ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
     verify( this.exporter, times( 1 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
     verify( this.exporter, times( 16 ) ).writeVariableData( any( PrintWriter.class ), eq( 1 ), eq( 1 ), anyInt(),
         anyInt(), anyBoolean() );

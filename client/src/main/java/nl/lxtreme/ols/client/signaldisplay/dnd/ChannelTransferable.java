@@ -23,7 +23,6 @@ package nl.lxtreme.ols.client.signaldisplay.dnd;
 import java.awt.datatransfer.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.signaldisplay.channel.*;
 
 
 /**
@@ -35,22 +34,11 @@ public class ChannelTransferable implements Transferable
 {
   // CONSTANTS
 
-  public static final DataFlavor CHANNEL_FLAVOR;
-
-  static
-  {
-    try
-    {
-      final String clazz = ChannelTransferable.class.getCanonicalName();
-
-      CHANNEL_FLAVOR = new DataFlavor( "application/vnd.ols.x-channel;class=" + clazz, "OLS%20Channel", Thread
-          .currentThread().getContextClassLoader() );
-    }
-    catch ( final ClassNotFoundException exception )
-    {
-      throw new RuntimeException( exception );
-    }
-  }
+  /**
+   * Represents the {@link DataFlavor} for this transferable, used to
+   * distinguish between the various DnD transferable.
+   */
+  public static final DataFlavor CHANNEL_FLAVOR = new DataFlavor( ChannelTransferable.class, "OLS%20Channel" );
 
   // VARIABLES
 

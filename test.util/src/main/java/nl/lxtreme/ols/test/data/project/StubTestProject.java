@@ -22,6 +22,7 @@ package nl.lxtreme.ols.test.data.project;
 
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.io.*;
 import java.util.*;
@@ -30,6 +31,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.test.data.*;
 
 
 /**
@@ -41,10 +43,7 @@ public class StubTestProject implements Project
 {
   // VARIABLES
 
-  private AcquisitionResult capturedData;
-  private boolean cursorsEnabled;
-  private Cursor[] cursors;
-  private Channel[] channels;
+  private final StubDataSet dataSet;
   private String sourceVersion;
   private final Map<String, UserSettings> settings = new HashMap<String, UserSettings>();
   private String name;
@@ -59,128 +58,18 @@ public class StubTestProject implements Project
    */
   public StubTestProject()
   {
-    this.cursors = new Cursor[Ols.MAX_CURSORS];
-    this.channels = new Channel[Ols.MAX_CHANNELS];
+    this.dataSet = new StubDataSet();
   }
 
   // METHODS
 
   /**
-   * Asserts the given absolute lengths is defined in the captured data.
-   * 
-   * @param aAbsLength
-   *          the absolute length that is expected.
-   */
-  public void assertAbsoluteLength( final long aAbsLength )
-  {
-    assertNotNull( this.capturedData );
-
-    final long absLength = this.capturedData.getAbsoluteLength();
-    assertEquals( aAbsLength, absLength );
-  }
-
-  /**
-   * Asserts the cursor with the given index occur in the captured data.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to assert;
-   * @param aCursorValue
-   *          the expected value of the cursor to assert.
-   */
-  public void assertCursorSet( final int aCursorIdx, final long aCursorValue )
-  {
-    assertNotNull( this.cursors );
-    assertTrue( this.cursors.length > aCursorIdx );
-    assertEquals( Long.valueOf( aCursorValue ), this.cursors[aCursorIdx] );
-  }
-
-  /**
-   * Asserts the cursor with the given index does NOT occur in the captured
-   * data.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor that should be unset.
-   */
-  public void assertCursorUnset( final int aCursorIdx )
-  {
-    assertNotNull( this.cursors );
-    assertTrue( this.cursors.length > aCursorIdx );
-    assertNull( this.cursors[aCursorIdx] );
-  }
-
-  /**
-   * Asserts the given timestamps occur in the captured data.
-   * 
-   * @param aTimestamps
-   *          the timestamps that are to be expected, starting at the first
-   *          timestamp.
-   */
-  public void assertTimeStamps( final long... aTimestamps )
-  {
-    assertNotNull( this.capturedData );
-
-    final long[] timestamps = this.capturedData.getTimestamps();
-    assertArrayEquals( aTimestamps, timestamps );
-  }
-
-  /**
-   * Asserts the given values occur in the captured data.
-   * 
-   * @param aValues
-   *          the sample values that are to be expected, starting at the first
-   *          value.
-   */
-  public void assertValues( final int... aValues )
-  {
-    assertNotNull( this.capturedData );
-
-    final int[] values = this.capturedData.getValues();
-    assertArrayEquals( aValues, values );
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getCapturedData()
-   */
-  @Override
-  public AcquisitionResult getCapturedData()
-  {
-    return this.capturedData;
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
-  public Channel getChannel( final int aIndex )
+  public DataSet getDataSet()
   {
-    return this.channels[aIndex];
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Channel[] getChannels()
-  {
-    return this.channels;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Cursor getCursor( final int aIndex )
-  {
-    return this.cursors[aIndex];
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Cursor[] getCursors()
-  {
-    return this.cursors;
+    return this.dataSet;
   }
 
   /**
@@ -216,7 +105,12 @@ public class StubTestProject implements Project
   @Override
   public UserSettings getSettings( final String aName )
   {
-    return this.settings.get( aName );
+    UserSettings userSettings = this.settings.get( aName );
+    if ( userSettings == null )
+    {
+      userSettings = mock( UserSettings.class );
+    }
+    return userSettings;
   }
 
   /**
@@ -238,12 +132,12 @@ public class StubTestProject implements Project
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#isCursorsEnabled()
+   * {@inheritDoc}
    */
   @Override
-  public boolean isCursorsEnabled()
+  public void readData( final Reader aReader ) throws IOException
   {
-    return this.cursorsEnabled;
+    OlsDataHelper.read( this.dataSet, aReader );
   }
 
   /**
@@ -252,7 +146,7 @@ public class StubTestProject implements Project
   @Override
   public void setCapturedData( final AcquisitionResult aCapturedData )
   {
-    this.capturedData = aCapturedData;
+    this.dataSet.setCapturedData( aCapturedData );
   }
 
   /**
@@ -262,33 +156,6 @@ public class StubTestProject implements Project
   public void setChanged( final boolean aChanged )
   {
     this.changed = aChanged;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setChannelLabels(java.lang.String[])
-   */
-  @Override
-  public void setChannels( final Channel... aChannelLabels )
-  {
-    this.channels = aChannelLabels;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setCursors( final Cursor... aCursors )
-  {
-    this.cursors = aCursors;
-  }
-
-  /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setCursorsEnabled(boolean)
-   */
-  @Override
-  public void setCursorsEnabled( final boolean aEnabled )
-  {
-    this.cursorsEnabled = aEnabled;
   }
 
   /**
@@ -353,5 +220,14 @@ public class StubTestProject implements Project
         fail( exception.toString() );
       }
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void writeData( final Writer aWriter ) throws IOException
+  {
+    OlsDataHelper.write( this.dataSet, aWriter );
   }
 }

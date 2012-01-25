@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client.signaldisplay.channel;
 
 
+import static nl.lxtreme.ols.util.ColorUtils.*;
+
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -74,9 +76,13 @@ public class ChannelGroup
     }
   }
 
+  // CONSTANTS
+
+  private static final Color DEFAULT_COLOR = parseColor( "7bf9dd" );
+
   // VARIABLES
 
-  private final List<ChannelImpl> channels;
+  private final List<GroupableChannel> channels;
 
   private int index;
   private int mask;
@@ -119,10 +125,9 @@ public class ChannelGroup
     // By default only the digital signals are shown...
     this.viewOptions = ChannelElementType.DIGITAL_SIGNAL.mask | ChannelElementType.GROUP_SUMMARY.mask
         | ChannelElementType.ANALOG_SIGNAL.mask;
-    // By default pick a color...
-    this.color = ChannelImpl.DEFAULT_COLORS[aIndex % ChannelImpl.DEFAULT_COLORS.length];
+    this.color = DEFAULT_COLOR;
 
-    this.channels = new ArrayList<ChannelImpl>();
+    this.channels = new ArrayList<GroupableChannel>();
   }
 
   // METHODS
@@ -139,7 +144,7 @@ public class ChannelGroup
    * @throws IllegalArgumentException
    *           in case the given channel was <code>null</code>.
    */
-  public void addChannel( final ChannelImpl aChannel )
+  public void addChannel( final GroupableChannel aChannel )
   {
     if ( hasChannel( aChannel ) )
     {
@@ -260,10 +265,10 @@ public class ChannelGroup
    * 
    * @return an array of channels, never <code>null</code>.
    */
-  public ChannelImpl[] getChannels()
+  public GroupableChannel[] getChannels()
   {
     final int size = this.channels.size();
-    return this.channels.toArray( new ChannelImpl[size] );
+    return this.channels.toArray( new GroupableChannel[size] );
   }
 
   /**
@@ -414,7 +419,7 @@ public class ChannelGroup
    * @param aNewIndex
    *          the new index of the channel, >= 0.
    */
-  public void moveChannel( final ChannelImpl aChannel, final int aNewIndex )
+  public void moveChannel( final GroupableChannel aChannel, final int aNewIndex )
   {
     // Make sure we've disconnected the channel from its former channel group...
     final ChannelGroup oldChannelGroup = aChannel.getChannelGroup();
@@ -443,7 +448,7 @@ public class ChannelGroup
    * @throws IllegalArgumentException
    *           in case the given channel was <code>null</code>.
    */
-  public void removeChannel( final ChannelImpl aChannel )
+  public void removeChannel( final GroupableChannel aChannel )
   {
     if ( hasChannel( aChannel ) )
     {
@@ -583,7 +588,7 @@ public class ChannelGroup
    */
   final int getVirtualIndex( final Channel aChannel )
   {
-    Iterator<ChannelImpl> channelIter = this.channels.iterator();
+    Iterator<GroupableChannel> channelIter = this.channels.iterator();
     int i = 0;
     while ( channelIter.hasNext() )
     {

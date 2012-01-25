@@ -26,7 +26,6 @@ import static org.junit.Assert.*;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorScheme;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.EdgeSlope;
@@ -488,16 +487,6 @@ public class MutableDiagramSettingsTest
   }
 
   /**
-   * Test method for
-   * {@link MutableDiagramSettings#MutableDiagramSettings(UserSettings)} .
-   */
-  @Test( expected = IllegalArgumentException.class )
-  public void testInvalidNamedUserSettingCopyConstructorFail()
-  {
-    new MutableDiagramSettings( new UserSettingsImpl( "test" ) );
-  }
-
-  /**
    * Test method for {@link MutableDiagramSettings#isShowByte(int)} .
    */
   @Test
@@ -901,17 +890,4 @@ public class MutableDiagramSettingsTest
   {
     new MutableDiagramSettings().setSignalHeight( 0 );
   }
-
-  /**
-   * Test method for
-   * {@link MutableDiagramSettings#MutableDiagramSettings(UserSettings)} .
-   */
-  @Test
-  public void testUserSettingCopyConstructorOk()
-  {
-    UserSettings userSettings = new UserSettingsImpl( MutableDiagramSettings.NAME );
-    MutableDiagramSettings newInstance = new MutableDiagramSettings( userSettings );
-    assertNotNull( newInstance );
-  }
-
 }

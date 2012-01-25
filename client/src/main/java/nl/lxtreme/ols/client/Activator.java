@@ -33,13 +33,13 @@ import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.ui.*;
-import nl.lxtreme.ols.client.data.project.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.osgi.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.log.*;
 import org.osgi.service.prefs.*;
 
 
@@ -182,8 +182,6 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    final ProjectManager projectManager = new SimpleProjectManager();
-
     final ClientController clientController = new ClientController( aContext );
 
     this.logReaderTracker = new LogReaderTracker( aContext );
@@ -198,17 +196,6 @@ public class Activator extends DependencyActivatorBase
     // Start watching all bundles for extenders...
     this.bundleWatcher.start();
 
-    // Project manager...
-    aManager.add( //
-        createComponent() //
-            .setInterface( ProjectManager.class.getName(), null ) //
-            .setImplementation( projectManager ) //
-            .add( createServiceDependency() //
-                .setService( HostProperties.class ) //
-                .setRequired( true ) //
-            ) //
-        );
-
     // User session manager...
     aManager.add( //
         createComponent() //
@@ -217,8 +204,14 @@ public class Activator extends DependencyActivatorBase
                 .setService( ProjectManager.class ) //
                 .setRequired( true ) ) //
             .add( createServiceDependency() //
+                .setService( UserSettingsManager.class ) //
+                .setRequired( true ) ) //
+            .add( createServiceDependency() //
                 .setService( PreferencesService.class ) //
                 .setRequired( true ) //
+            ).add( createServiceDependency() //
+                .setService( LogService.class ) //
+                .setRequired( false ) //
             ) //
         );
 

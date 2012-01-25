@@ -22,18 +22,22 @@ package nl.lxtreme.ols.client.signaldisplay;
 
 import java.util.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 
 
 /**
- * TODO merge this with {@link AcquisitionDataListener}!
+ * Allows implementors to listen for changes to the captured data.
  */
 public interface IDataModelChangeListener extends EventListener
 {
   // METHODS
 
   /**
-   * @param aDataModel
+   * Called when the acquisition is finished and the captured data is available.
+   * 
+   * @param aDataSet
+   *          the changed data set, containing the captured data, never
+   *          <code>null</code>.
    */
-  void dataModelChanged( AcquisitionResult aDataModel );
+  void dataModelChanged( DataSet aDataSet );
 }

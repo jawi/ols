@@ -21,21 +21,18 @@
 package nl.lxtreme.ols.client.osgi;
 
 
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
-import java.util.List;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.Configurable;
-import nl.lxtreme.ols.client.data.project.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.osgi.UserSessionManager.WindowStateListener;
 
 import org.junit.*;
+import org.osgi.service.log.*;
 import org.osgi.service.prefs.*;
 
 
@@ -46,8 +43,7 @@ public class WindowStateListenerTest
 {
   // VARIABLES
 
-  private SimpleProjectManager projectManager;
-  private AWTEventListener windowStateListener;
+  private WindowStateListener windowStateListener;
 
   // METHODS
 
@@ -59,44 +55,21 @@ public class WindowStateListenerTest
   {
     PreferencesService mockedPreferenceService = mock( PreferencesService.class );
 
-    HostProperties mockProperties = mock( HostProperties.class );
-    this.projectManager = new SimpleProjectManager();
-    this.projectManager.setHostProperties( mockProperties );
+    Project mockedProject = mock( Project.class );
+    ProjectManager mockedProjectManager = mock( ProjectManager.class );
+    when( mockedProjectManager.getCurrentProject() ).thenReturn( mockedProject );
 
-    UserSessionManager userSessionManager = new UserSessionManager();
-    userSessionManager.setPreferenceService( mockedPreferenceService );
-    userSessionManager.setProjectManager( this.projectManager );
-
-    final AWTEventListener[] awtEventListenersBefore = Toolkit.getDefaultToolkit().getAWTEventListeners();
-
-    userSessionManager.start();
-
-    final List<AWTEventListener> temp = new ArrayList<AWTEventListener>();
-    temp.addAll( Arrays.asList( Toolkit.getDefaultToolkit().getAWTEventListeners() ) );
-    temp.removeAll( Arrays.asList( awtEventListenersBefore ) );
-
-    assertEquals( 1, temp.size() );
-
-    this.windowStateListener = spy( temp.get( 0 ) );
-  }
-
-  /**
-   * @throws Exception
-   */
-  @After
-  public void tearDown() throws Exception
-  {
-    if ( this.windowStateListener != null )
-    {
-      Toolkit.getDefaultToolkit().removeAWTEventListener( this.windowStateListener );
-    }
+    this.windowStateListener = spy( new WindowStateListener() );
+    this.windowStateListener.setPreferenceService( mockedPreferenceService );
+    this.windowStateListener.setProjectManager( mockedProjectManager );
+    this.windowStateListener.setLogger( mock( LogService.class ) );
   }
 
   /**
    * Test method for {@link WindowStateListener#eventDispatched(AWTEvent)}.
    */
   @Test
-  public void testMultipleWindowClosedEventCausesPreferencesToBeWrittenMultipleTimes()
+  public void testMultipleWindowClosedEventCausesPreferencesToBeWrittenOnlyOnce()
   {
     final Window window = mock( Window.class, withSettings().extraInterfaces( Configurable.class ) );
 

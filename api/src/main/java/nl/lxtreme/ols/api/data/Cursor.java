@@ -28,7 +28,7 @@ import java.awt.*;
  * Defines a cursor, which is a temporary marker in time defined somewhere on
  * the captured data.
  */
-public interface Cursor
+public interface Cursor extends Cloneable
 {
   // METHODS
 
@@ -36,6 +36,13 @@ public interface Cursor
    * Clears this cursor, making it undefined.
    */
   void clear();
+
+  /**
+   * Creates a clone of this cursor.
+   * 
+   * @return an exact copy of this cursor.
+   */
+  Cursor clone();
 
   /**
    * Returns the cursor color.

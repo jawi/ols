@@ -25,10 +25,10 @@ import java.util.*;
 
 import javax.swing.event.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.IChannelChangeListener.*;
+import nl.lxtreme.ols.client.signaldisplay.IChannelChangeListener.ChannelChangeEvent;
+import nl.lxtreme.ols.client.signaldisplay.IChannelChangeListener.ChannelMoveEvent;
 
 
 /**
@@ -36,16 +36,12 @@ import nl.lxtreme.ols.client.signaldisplay.IChannelChangeListener.*;
  */
 public final class ChannelGroupManager implements IDataModelChangeListener
 {
-  // CONSTANTS
-
-  public static final int MAX_CHANNEL_GROUPS = ChannelImpl.MAX_CHANNELS;
-
   // VARIABLES
 
   private final List<ChannelGroup> channelGroups;
   private final EventListenerList eventListeners;
 
-  private ChannelImpl[] channels;
+  private GroupableChannel[] channels;
 
   // CONSTRUCTORS
 
@@ -57,26 +53,10 @@ public final class ChannelGroupManager implements IDataModelChangeListener
     this.channelGroups = new ArrayList<ChannelGroup>();
     this.eventListeners = new EventListenerList();
 
-    this.channels = new ChannelImpl[0];
+    this.channels = new GroupableChannel[0];
   }
 
   // METHODS
-
-  /**
-   * Initializes the channels.
-   * 
-   * @param aCount
-   *          the number of channels to initialize, >= 0.
-   */
-  private static ChannelImpl[] createChannels( final int aCount )
-  {
-    ChannelImpl[] channels = new ChannelImpl[aCount];
-    for ( int i = 0; i < channels.length; i++ )
-    {
-      channels[i] = new ChannelImpl( i );
-    }
-    return channels;
-  }
 
   /**
    * Adds a given channel to the given channel group.
@@ -94,7 +74,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @throws IllegalArgumentException
    *           in case one of the given parameters was <code>null</code>.
    */
-  public void addChannel( final ChannelGroup aChannelGroup, final ChannelImpl aChannel )
+  public void addChannel( final ChannelGroup aChannelGroup, final GroupableChannel aChannel )
   {
     if ( aChannelGroup == null )
     {
@@ -148,7 +128,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    */
   public ChannelGroup addChannelGroup( final String aName )
   {
-    final ChannelImpl firstAvailableChannel = getFirstUnassignedChannel();
+    final GroupableChannel firstAvailableChannel = getFirstUnassignedChannel();
     if ( firstAvailableChannel == null )
     {
       throw new IllegalStateException( "No channels left!" );
@@ -178,7 +158,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * {@inheritDoc}
    */
   @Override
-  public void dataModelChanged( final AcquisitionResult aCapturedData )
+  public void dataModelChanged( final DataSet aCapturedData )
   {
     this.channelGroups.clear();
     this.channels = createChannels( aCapturedData.getChannels() );
@@ -239,9 +219,9 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * 
    * @return a sorted set of all assigned channels, never <code>null</code>.
    */
-  public SortedSet<ChannelImpl> getAssignedChannels()
+  public SortedSet<GroupableChannel> getAssignedChannels()
   {
-    SortedSet<ChannelImpl> channelIndexes = new TreeSet<ChannelImpl>();
+    SortedSet<GroupableChannel> channelIndexes = new TreeSet<GroupableChannel>();
 
     for ( ChannelGroup cg : this.channelGroups )
     {
@@ -339,9 +319,9 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * 
    * @return a sorted set of unassigned channels, never <code>null</code>.
    */
-  public SortedSet<ChannelImpl> getUnassignedChannels()
+  public SortedSet<GroupableChannel> getUnassignedChannels()
   {
-    SortedSet<ChannelImpl> channelIndexes = new TreeSet<ChannelImpl>();
+    SortedSet<GroupableChannel> channelIndexes = new TreeSet<GroupableChannel>();
     channelIndexes.addAll( Arrays.asList( this.channels ) );
 
     for ( ChannelGroup cg : this.channelGroups )
@@ -379,12 +359,15 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @param aInsertIndex
    *          the insertion index of the channel to move.
    */
-  public void moveChannel( final ChannelImpl aMovedChannel, final ChannelImpl aInsertChannel )
+  public void moveChannel( final Channel aMovedChannel, final Channel aInsertChannel )
   {
     if ( ( aMovedChannel != null ) && ( aInsertChannel != null ) )
     {
-      final ChannelGroup cg = aInsertChannel.getChannelGroup();
-      cg.moveChannel( aMovedChannel, aInsertChannel.getVirtualIndex() );
+      GroupableChannel movedChannel = asGroupableChannel( aMovedChannel );
+      GroupableChannel insertChannel = asGroupableChannel( aInsertChannel );
+
+      final ChannelGroup cg = insertChannel.getChannelGroup();
+      cg.moveChannel( movedChannel, insertChannel.getVirtualIndex() );
     }
   }
 
@@ -399,7 +382,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @throws IllegalArgumentException
    *           in case one of the given parameters was <code>null</code>.
    */
-  public void removeChannel( final ChannelGroup aChannelGroup, final ChannelImpl aChannel )
+  public void removeChannel( final ChannelGroup aChannelGroup, final GroupableChannel aChannel )
   {
     if ( aChannelGroup == null )
     {
@@ -450,7 +433,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   /**
    * @param aEvent
    */
-  final void fireChannelGroupStructureChangeEvent( final Collection<ChannelImpl> aEvent )
+  final void fireChannelGroupStructureChangeEvent( final Collection<GroupableChannel> aEvent )
   {
     final IChannelChangeListener[] listeners = this.eventListeners.getListeners( IChannelChangeListener.class );
     for ( IChannelChangeListener listener : listeners )
@@ -460,13 +443,44 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   }
 
   /**
+   * @param aMovedChannel
+   * @return
+   */
+  private GroupableChannel asGroupableChannel( final Channel aMovedChannel )
+  {
+    if ( aMovedChannel instanceof GroupableChannel )
+    {
+      return ( GroupableChannel )aMovedChannel;
+    }
+    throw new RuntimeException( "TODO: wrap channel!" );
+  }
+
+  /**
+   * Wraps the given array of channels into groupable channels.
+   * 
+   * @param aChannels
+   *          the channels to wrap, cannot be <code>null</code>.
+   * @return an array (of the exact same size as the given array) with groupable
+   *         channels.
+   */
+  private GroupableChannel[] createChannels( final Channel[] aChannels )
+  {
+    GroupableChannel[] result = new GroupableChannel[aChannels.length];
+    for ( int i = 0; i < result.length; i++ )
+    {
+      result[i] = new GroupableChannel( aChannels[i] );
+    }
+    return result;
+  }
+
+  /**
    * Returns the first available channel for a (new) channel group.
    * 
    * @return a channel, or <code>null</code> if no channels are available.
    */
-  private ChannelImpl getFirstUnassignedChannel()
+  private GroupableChannel getFirstUnassignedChannel()
   {
-    SortedSet<ChannelImpl> channels = getUnassignedChannels();
+    SortedSet<GroupableChannel> channels = getUnassignedChannels();
 
     // Any channels left?
     if ( ( channels == null ) || channels.isEmpty() )

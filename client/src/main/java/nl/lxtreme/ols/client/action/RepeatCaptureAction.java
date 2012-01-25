@@ -79,7 +79,7 @@ public class RepeatCaptureAction extends BaseAction
       return;
     }
 
-    getController().repeatCaptureData( owner );
+    getController().repeatCaptureData();
   }
 }
 

@@ -21,13 +21,12 @@ package nl.lxtreme.ols.client.signaldisplay.laf;
 
 
 import java.awt.*;
-
 import javax.swing.*;
 import javax.swing.plaf.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
@@ -147,10 +146,15 @@ public class SignalUI extends ComponentUI
   @Override
   public void paint( final Graphics aGraphics, final JComponent aComponent )
   {
-    this.listening = false;
-
     final SignalView view = ( SignalView )aComponent;
     final SignalViewModel model = view.getModel();
+    if ( !model.hasData() )
+    {
+      // Nothing to do!
+      return;
+    }
+
+    this.listening = false;
 
     try
     {
@@ -161,7 +165,6 @@ public class SignalUI extends ComponentUI
 
       try
       {
-
         if ( signalElements.length > 0 )
         {
           paintSignals( canvas, model, signalElements );
@@ -258,7 +261,7 @@ public class SignalUI extends ComponentUI
 
         if ( signalElement.isEnabled() )
         {
-          final Annotation<?>[] annotations = aModel.getAnnotationsFor( signalElement.getChannel().getIndex() );
+          final Iterable<Annotation<?>> annotations = aModel.getAnnotationsFor( signalElement.getChannel().getIndex() );
 
           final FontMetrics fm = aCanvas.getFontMetrics();
 
@@ -372,7 +375,7 @@ public class SignalUI extends ComponentUI
     // Tell Swing how we would like to render ourselves...
     aCanvas.setRenderingHints( createCursorRenderingHints() );
 
-    for ( int i = 0; i < CursorImpl.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       int cursorXpos = aModel.getCursorScreenCoordinate( i );
 
@@ -434,11 +437,6 @@ public class SignalUI extends ComponentUI
   {
     final int[] values = aModel.getDataValues();
     final long[] timestamps = aModel.getTimestamps();
-    if ( ( timestamps == null ) || ( timestamps.length == 0 ) || ( aSignalElements.length == 0 ) )
-    {
-      // Nothing to do...
-      return;
-    }
 
     final Rectangle clip = aCanvas.getClipBounds();
 

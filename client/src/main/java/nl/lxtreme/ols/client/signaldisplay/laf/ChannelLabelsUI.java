@@ -26,7 +26,6 @@ import javax.swing.*;
 import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
@@ -98,6 +97,11 @@ public class ChannelLabelsUI extends ComponentUI
   {
     final ChannelLabelsView view = ( ChannelLabelsView )aComponent;
     final ChannelLabelsViewModel model = view.getModel();
+    if ( !model.hasData() )
+    {
+      // Nothing to do!
+      return;
+    }
 
     Graphics2D canvas = ( Graphics2D )aGraphics.create();
 

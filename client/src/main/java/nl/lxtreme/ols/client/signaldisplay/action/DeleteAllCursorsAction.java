@@ -24,8 +24,8 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
 
 
 /**
@@ -60,7 +60,7 @@ public class DeleteAllCursorsAction extends AbstractAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    for ( int i = 0; i < CursorImpl.MAX_CURSORS; i++ )
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
       this.controller.removeCursor( i );
     }

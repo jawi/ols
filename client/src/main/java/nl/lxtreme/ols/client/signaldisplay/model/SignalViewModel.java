@@ -21,6 +21,8 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 
 import java.awt.*;
+import java.util.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -60,7 +62,7 @@ public class SignalViewModel extends AbstractViewModel
   /**
    * @return
    */
-  public Annotation<?>[] getAnnotationsFor( final int aChannel )
+  public Collection<Annotation<?>> getAnnotationsFor( final int aChannel )
   {
     final ChannelGroupManager channelGroupManager = this.controller.getSignalDiagramModel().getChannelGroupManager();
     final Channel channel = channelGroupManager.getChannelByIndex( aChannel );

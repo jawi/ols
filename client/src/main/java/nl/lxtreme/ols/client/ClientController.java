@@ -119,7 +119,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     // VARIABLES
 
-    private final Project project;
+    private final DataSet dataSet;
     private final int startSampleIdx;
     private final int endSampleIdx;
 
@@ -135,11 +135,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
      * @param aData
      *          the acquisition result.
      */
-    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final Project aProject )
+    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final DataSet aDataSet )
     {
       this.startSampleIdx = aStartSampleIdx;
       this.endSampleIdx = aEndSampleIdx;
-      this.project = aProject;
+      this.dataSet = aDataSet;
     }
 
     /**
@@ -157,7 +157,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public Cursor getCursor( final int aIndex )
     {
-      return this.project.getCursor( aIndex );
+      return this.dataSet.getCursor( aIndex );
     }
 
     /**
@@ -166,7 +166,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public AcquisitionResult getData()
     {
-      return this.project.getCapturedData();
+      return this.dataSet.getCapturedData();
     }
 
     /**
@@ -284,7 +284,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void acquisitionComplete( final AcquisitionResult aData )
   {
-    setAcquisitionResult( aData );
+    getCurrentProject().setCapturedData( aData );
+
+    this.signalDiagramController.setDataModel( getCurrentDataSet() );
+
     // XXX zoom to fit; shouldn't we restore the last zoom settings?
     zoomToFit();
   }
@@ -335,6 +338,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
+  @Deprecated
   public void addCursorChangeListener( final DiagramCursorChangeListener aListener )
   {
     this.evenListeners.add( DiagramCursorChangeListener.class, aListener );
@@ -509,13 +513,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Clears all cursors.
    */
+  @Deprecated
   public void clearAllCursors()
   {
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
-      getCurrentProject().getCursor( i ).clear();
+      getCurrentDataSet().getCursor( i ).clear();
     }
     fireCursorChangedEvent( 0, -1 ); // removed...
 
@@ -547,7 +552,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Creates a new project, causing all current data to be thrown away.
    */
   public void createNewProject()
   {
@@ -562,7 +567,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Terminates & shuts down the client.
    */
   public void exit()
   {
@@ -598,7 +603,15 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Exports the current data set to a file using an {@link Exporter} with a
+   * given name.
+   * 
+   * @param aExporterName
+   *          the name of the exporter to use, cannot be <code>null</code>;
+   * @param aExportFile
+   *          the file to export the results to, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems during the export.
    */
   public void exportTo( final String aExporterName, final File aExportFile ) throws IOException
   {
@@ -614,7 +627,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       writer = new FileOutputStream( aExportFile );
 
       final Exporter exporter = getExporter( aExporterName );
-      exporter.export( this.projectManager.getCurrentProject(), this.mainFrame.getDiagramScrollPane(), writer );
+      exporter.export( getCurrentDataSet(), this.mainFrame.getDiagramScrollPane(), writer );
 
       setStatusOnEDT( "Export to {0} succesful ...", aExporterName );
     }
@@ -627,7 +640,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * @see nl.lxtreme.ols.client.ActionProvider#getAction(java.lang.String)
+   * {@inheritDoc}
    */
   @Override
   public Action getAction( final String aID )
@@ -687,9 +700,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @return the current diagram settings, can be <code>null</code> if there is
    *         no main frame to take the settings from.
    */
+  @Deprecated
   public final DiagramSettings getDiagramSettings()
   {
-    final Project currentProject = this.projectManager.getCurrentProject();
+    final Project currentProject = getCurrentProject();
     final UserSettings settings = currentProject.getSettings( MutableDiagramSettings.NAME );
     if ( settings instanceof DiagramSettings )
     {
@@ -712,6 +726,24 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
 
     return diagramSettings;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public Exporter getExporter( final String aName ) throws IllegalArgumentException
+  {
+    synchronized ( this.exporters )
+    {
+      for ( Exporter exporter : this.exporters )
+      {
+        if ( aName.equals( exporter.getName() ) )
+        {
+          return exporter;
+        }
+      }
+    }
+    return null;
   }
 
   /**
@@ -741,7 +773,13 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Returns the "supported" export extensions for the exporter with the given
+   * name.
+   * 
+   * @param aExporterName
+   *          the name of the exporter to get the possible file extensions for,
+   *          cannot be <code>null</code>.
+   * @return an array of supported file extensions, never <code>null</code>.
    */
   public String[] getExportExtensions( final String aExporterName )
   {
@@ -754,7 +792,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Returns the current value of hostProperties.
+   * Returns the current host properties.
    * 
    * @return the host properties, can be <code>null</code>.
    */
@@ -764,17 +802,20 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Returns the current project's file name.
+   * 
+   * @return the project file name, can be <code>null</code> if it is never
+   *         saved before.
    */
   public File getProjectFilename()
   {
-    return this.projectManager.getCurrentProject().getFilename();
+    return getCurrentProject().getFilename();
   }
 
   /**
-   * Returns the current value of signalDiagramController.
+   * Returns the signal diagram controller.
    * 
-   * @return the signalDiagramController
+   * @return a signal diagram controller, never <code>null</code>.
    */
   public SignalDiagramController getSignalDiagramController()
   {
@@ -810,11 +851,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Deprecated
   public void gotoCursorPosition( final int aCursorIdx )
   {
-    if ( ( this.mainFrame != null ) && getCurrentProject().isCursorsEnabled() )
+    if ( ( this.mainFrame != null ) && getCurrentDataSet().isCursorsEnabled() )
     {
-      final Cursor cursor = getCurrentProject().getCursor( aCursorIdx );
+      final Cursor cursor = getCurrentDataSet().getCursor( aCursorIdx );
       if ( ( cursor != null ) && cursor.isDefined() )
       {
         this.mainFrame.gotoPosition( 0, cursor.getTimestamp() );
@@ -825,13 +867,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Deprecated
   public void gotoFirstAvailableCursor()
   {
-    if ( ( this.mainFrame != null ) && getCurrentProject().isCursorsEnabled() )
+    if ( ( this.mainFrame != null ) && getCurrentDataSet().isCursorsEnabled() )
     {
       for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
       {
-        final Cursor cursor = getCurrentProject().getCursor( c );
+        final Cursor cursor = getCurrentDataSet().getCursor( c );
         if ( cursor.isDefined() )
         {
           this.mainFrame.gotoPosition( 0, cursor.getTimestamp() );
@@ -844,13 +887,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Deprecated
   public void gotoLastAvailableCursor()
   {
-    if ( ( this.mainFrame != null ) && getCurrentProject().isCursorsEnabled() )
+    if ( ( this.mainFrame != null ) && getCurrentDataSet().isCursorsEnabled() )
     {
       for ( int c = Ols.MAX_CURSORS - 1; c >= 0; c-- )
       {
-        final Cursor cursor = getCurrentProject().getCursor( c );
+        final Cursor cursor = getCurrentDataSet().getCursor( c );
         if ( cursor.isDefined() )
         {
           this.mainFrame.gotoPosition( 0, cursor.getTimestamp() );
@@ -865,7 +909,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void gotoTriggerPosition()
   {
-    final AcquisitionResult capturedData = getCurrentProject().getCapturedData();
+    final AcquisitionResult capturedData = getCurrentDataSet().getCapturedData();
     if ( ( capturedData != null ) && capturedData.hasTriggerData() )
     {
       final long position = capturedData.getTriggerPosition();
@@ -915,7 +959,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public boolean hasCapturedData()
   {
-    return getCurrentProject().getCapturedData() != null;
+    final DataSet currentDataSet = getCurrentDataSet();
+    return ( currentDataSet != null ) && ( currentDataSet.getCapturedData() != null );
   }
 
   /**
@@ -958,7 +1003,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       return false;
     }
-    return this.projectManager.getCurrentProject().isChanged();
+    return getCurrentProject().isChanged();
   }
 
   /**
@@ -967,7 +1012,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void onAnnotation( final Annotation<?> aAnnotation )
   {
-    final Channel channel = getCurrentProject().getChannel( aAnnotation.getChannel() );
+    final Channel channel = getCurrentDataSet().getChannel( aAnnotation.getChannel() );
     if ( aAnnotation instanceof DataAnnotation<?> )
     {
       final DataAnnotation<?> dataAnnotation = ( DataAnnotation<?> )aAnnotation;
@@ -984,7 +1029,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Opens a given file as OLS-data file.
+   * 
+   * @param aFile
+   *          the file to open, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case opening/reading from the given file failed.
    */
   public void openDataFile( final File aFile ) throws IOException
   {
@@ -992,10 +1042,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
     try
     {
-      final Project tempProject = this.projectManager.createTemporaryProject();
-      OlsDataHelper.read( tempProject, reader );
+      getCurrentProject().readData( reader );
 
-      setAcquisitionResult( tempProject.getCapturedData() );
       // XXX zoom to fit; shouldn't we restore the last zoom settings?
       zoomToFit();
 
@@ -1012,7 +1060,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Opens a given file as OLS-project file.
+   * 
+   * @param aFile
+   *          the file to open, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case opening/reading from the given file failed.
    */
   public void openProjectFile( final File aFile ) throws IOException
   {
@@ -1024,7 +1077,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
       this.projectManager.loadProject( fis );
 
-      final Project project = this.projectManager.getCurrentProject();
+      final Project project = getCurrentProject();
       project.setFilename( aFile );
 
       zoomToFit();
@@ -1040,11 +1093,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Deprecated
   public void removeCursor( final int aCursorIdx )
   {
     if ( this.mainFrame != null )
     {
-      getCurrentProject().getCursor( aCursorIdx ).clear();
+      getCurrentDataSet().getCursor( aCursorIdx ).clear();
       fireCursorChangedEvent( aCursorIdx, -1 ); // removed...
     }
 
@@ -1057,6 +1111,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
+  @Deprecated
   public void removeCursorChangeListener( final DiagramCursorChangeListener aListener )
   {
     this.evenListeners.remove( DiagramCursorChangeListener.class, aListener );
@@ -1183,15 +1238,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Restarts a new acquisition with the current device and with its current
+   * settings.
    */
-  public boolean repeatCaptureData( final Window aParent )
+  public void repeatCaptureData()
   {
     final DataAcquisitionService acquisitionService = getDataAcquisitionService();
     final Device devCtrl = getDevice();
+
     if ( ( devCtrl == null ) || ( acquisitionService == null ) )
     {
-      return false;
+      return;
     }
 
     try
@@ -1199,8 +1256,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       setStatusOnEDT( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", devCtrl.getName(), new Date() );
 
       acquisitionService.acquireData( devCtrl );
-
-      return true;
     }
     catch ( final IOException exception )
     {
@@ -1210,8 +1265,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
       // Make sure to handle IO-interrupted exceptions properly!
       HostUtils.handleInterruptedException( exception );
-
-      return false;
     }
     finally
     {
@@ -1250,17 +1303,20 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Stores the current acquisition data to the given file, in the OLS-data file
+   * format.
+   * 
+   * @param aFile
+   *          the file to write the data to, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of errors during opening/writing to the file.
    */
   public void saveDataFile( final File aFile ) throws IOException
   {
     final FileWriter writer = new FileWriter( aFile );
     try
     {
-      final Project tempProject = this.projectManager.createTemporaryProject();
-      tempProject.setCapturedData( getCurrentProject().getCapturedData() );
-
-      OlsDataHelper.write( tempProject, writer );
+      getCurrentProject().writeData( writer );
 
       setStatusOnEDT( "Capture data saved to {0} ...", aFile.getName() );
     }
@@ -1271,14 +1327,22 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Stores the current acquisition data to the given file, in the OLS-project
+   * file format.
+   * 
+   * @param aName
+   *          the name of the project to store, cannot be <code>null</code>;
+   * @param aFile
+   *          the file to write the data to, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of errors during opening/writing to the file.
    */
   public void saveProjectFile( final String aName, final File aFile ) throws IOException
   {
     FileOutputStream out = null;
     try
     {
-      final Project project = this.projectManager.getCurrentProject();
+      final Project project = getCurrentProject();
       project.setFilename( aFile );
       project.setName( aName );
 
@@ -1294,7 +1358,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Selects the device with the given name.
+   * 
+   * @param aDeviceName
+   *          the name of the device to select, can be <code>null</code> to
+   *          deselect the current selected device.
    */
   public void selectDevice( final String aDeviceName )
   {
@@ -1315,7 +1383,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void setCursorMode( final boolean aState )
   {
-    getCurrentProject().setCursorsEnabled( aState );
+    getCurrentDataSet().setCursorsEnabled( aState );
     // Reflect the change directly on the diagram...
     repaintMainFrame();
 
@@ -1323,7 +1391,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Sets the position of the cursor with the given index to the given location.
+   * 
+   * @param aCursorIdx
+   *          the index of the cursor to set;
+   * @param aLocation
+   *          the mouse location of the new cursor position.
    */
   public void setCursorPosition( final int aCursorIdx, final Point aLocation )
   {
@@ -1335,9 +1408,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     if ( this.mainFrame != null )
     {
       // Convert the mouse-position to a sample index...
-      final long timestamp = this.mainFrame.convertMousePositionToSampleIndex( aLocation );
+      final long timestamp = this.mainFrame.convertMousePositionToTimestamp( aLocation );
 
-      getCurrentProject().getCursor( aCursorIdx ).setTimestamp( timestamp );
+      getCurrentDataSet().getCursor( aCursorIdx ).setTimestamp( timestamp );
 
       fireCursorChangedEvent( aCursorIdx, aLocation.x );
     }
@@ -1358,7 +1431,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Shows a dialog with all current bundles.
+   * 
+   * @param aOwner
+   *          the owning window to use, can be <code>null</code>.
    */
   public void showBundlesDialog( final Window aOwner )
   {
@@ -1372,6 +1448,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
+  @Deprecated
   public void showDiagramModeSettingsDialog( final Window aParent )
   {
     if ( this.mainFrame != null )
@@ -1380,7 +1457,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       if ( dialog.showDialog() )
       {
         final DiagramSettings settings = dialog.getDiagramSettings();
-        this.projectManager.getCurrentProject().setSettings( settings );
+        getCurrentProject().setSettings( settings );
         diagramSettingsUpdated();
       }
 
@@ -1389,7 +1466,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Shows the global preferences dialog.
+   * 
+   * @param aParent
+   *          the parent window of the dialog, can be <code>null</code>.
    */
   public void showPreferencesDialog( final Window aParent )
   {
@@ -1397,7 +1477,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     if ( dialog.showDialog() )
     {
       final DiagramSettings settings = dialog.getDiagramSettings();
-      this.projectManager.getCurrentProject().setSettings( settings );
+      getCurrentProject().setSettings( settings );
       diagramSettingsUpdated();
     }
 
@@ -1408,7 +1488,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * Called by the dependency manager when this component is about to be
    * started.
    */
-  public void start()
+  public final void start()
   {
     final HostProperties hostProperties = getHostProperties();
 
@@ -1442,7 +1522,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * Called by the dependency manager when this component is about to be
    * stopped.
    */
-  public void stop()
+  public final void stop()
   {
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
@@ -1476,7 +1556,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Zooms to the default level (1.0).
    */
   public void zoomDefault()
   {
@@ -1489,7 +1569,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Zooms in with a fixed factor.
    */
   public void zoomIn()
   {
@@ -1502,7 +1582,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Zooms out with a fixed factor.
    */
   public void zoomOut()
   {
@@ -1515,7 +1595,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
+   * Zooms out to fit all data on screen.
    */
   public void zoomToFit()
   {
@@ -1553,7 +1633,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Called by the dependency manager when the project manager service is going
+   * away.
+   * 
    * @param aProjectManager
+   *          the old project manager to remove.
    */
   final void removeProjectManager( final ProjectManager aProjectManager )
   {
@@ -1584,7 +1668,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Sets projectManager to the given value.
+   * Called by the dependency manager when a (new) project manager service
+   * becomes available.
    * 
    * @param aProjectManager
    *          the projectManager to set.
@@ -1599,8 +1684,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Sets the given message + arguments as status message.
+   * 
    * @param aMessage
+   *          the message to set;
    * @param aMessageArgs
+   *          the (optional) arguments of the message.
    */
   void setStatusOnEDT( final String aMessage, final Object... aMessageArgs )
   {
@@ -1705,7 +1794,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean areCursorsEnabled()
   {
-    return getCurrentProject().isCursorsEnabled();
+    return getCurrentDataSet().isCursorsEnabled();
   }
 
   /**
@@ -1732,7 +1821,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean hasTriggerData()
   {
-    return getCurrentProject().getCapturedData().hasTriggerData();
+    return getCurrentDataSet().getCapturedData().hasTriggerData();
   }
 
   /**
@@ -1748,7 +1837,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       return false;
     }
-    return this.projectManager.getCurrentProject().getFilename() == null;
+    return getCurrentProject().getFilename() == null;
   }
 
   /**
@@ -1761,7 +1850,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean isCursorSet( final int aCursorIdx )
   {
-    return getCurrentProject().getCursor( aCursorIdx ).isDefined();
+    return getCurrentDataSet().getCursor( aCursorIdx ).isDefined();
   }
 
   /**
@@ -1775,20 +1864,20 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     int startOfDecode = -1;
     int endOfDecode = -1;
 
-    final Project currentProject = getCurrentProject();
-    final AcquisitionResult capturedData = currentProject.getCapturedData();
+    final DataSet dataSet = getCurrentDataSet();
+    final AcquisitionResult capturedData = dataSet.getCapturedData();
 
     final int dataLength = capturedData.getValues().length;
-    if ( currentProject.isCursorsEnabled() )
+    if ( dataSet.isCursorsEnabled() )
     {
       if ( isCursorSet( 0 ) )
       {
-        final Cursor cursor1 = currentProject.getCursor( 0 );
+        final Cursor cursor1 = dataSet.getCursor( 0 );
         startOfDecode = capturedData.getSampleIndex( cursor1.getTimestamp() ) - 1;
       }
       if ( isCursorSet( 1 ) )
       {
-        final Cursor cursor2 = currentProject.getCursor( 1 );
+        final Cursor cursor2 = dataSet.getCursor( 1 );
         endOfDecode = capturedData.getSampleIndex( cursor2.getTimestamp() ) + 1;
       }
     }
@@ -1816,7 +1905,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       enabledChannels = NumberUtils.getBitMask( channels );
     }
 
-    return new DefaultToolContext( startOfDecode, endOfDecode, currentProject );
+    return new DefaultToolContext( startOfDecode, endOfDecode, dataSet );
   }
 
   /**
@@ -1836,6 +1925,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @param aCursorIdx
    * @param aMouseXpos
    */
+  @Deprecated
   private void fireCursorChangedEvent( final int aCursorIdx, final int aMouseXpos )
   {
     final DiagramCursorChangeListener[] listeners = this.evenListeners.getListeners( DiagramCursorChangeListener.class );
@@ -1850,6 +1940,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         listener.cursorRemoved( aCursorIdx );
       }
     }
+  }
+
+  /**
+   * Returns the current data set.
+   * 
+   * @return the current data set, never <code>null</code>.
+   */
+  private DataSet getCurrentDataSet()
+  {
+    return getCurrentProject().getDataSet();
   }
 
   /**
@@ -1884,24 +1984,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         if ( aName.equals( device.getName() ) )
         {
           return device;
-        }
-      }
-    }
-    return null;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  private Exporter getExporter( final String aName ) throws IllegalArgumentException
-  {
-    synchronized ( this.exporters )
-    {
-      for ( Exporter exporter : this.exporters )
-      {
-        if ( aName.equals( exporter.getName() ) )
-        {
-          return exporter;
         }
       }
     }
@@ -2004,19 +2086,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         }
       } );
     }
-  }
-
-  /**
-   * Sets the captured data and zooms the view to show all the data.
-   * 
-   * @param aData
-   *          the new captured data to set, cannot be <code>null</code>.
-   */
-  private void setAcquisitionResult( final AcquisitionResult aData )
-  {
-    getCurrentProject().setCapturedData( aData );
-
-    this.signalDiagramController.setDataModel( getCurrentProject() );
   }
 
   /**

@@ -41,6 +41,7 @@
 		<module>service.acquisition</module>
 		<module>service.taskexecution</module>
 		<module>client</module>
+		<module>client.project</module>
 		<module>device.test</module>
 		<module>device.generic</module>
 		<module>device.logicsniffer</module>
@@ -196,6 +197,11 @@
 				<groupId>nl.lxtreme.ols</groupId>
 				<artifactId>client</artifactId>
 				<version>1.2.0</version>
+			</dependency>
+			<dependency>
+				<groupId>nl.lxtreme.ols.client</groupId>
+				<artifactId>client.project</artifactId>
+				<version>1.0.0</version>
 			</dependency>
 			<dependency>
 				<groupId>nl.lxtreme.ols</groupId>

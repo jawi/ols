@@ -30,7 +30,6 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.DragAndDropTargetController.DragAndDropHandler;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
@@ -241,12 +240,12 @@ public class ChannelLabelsView extends AbstractViewLayer
       {
         final Transferable transferable = aEvent.getTransferable();
 
-        final ChannelImpl movedChannel = ( ChannelImpl )transferable.getTransferData( ChannelTransferable.CHANNEL_FLAVOR );
+        final Channel movedChannel = ( Channel )transferable.getTransferData( ChannelTransferable.CHANNEL_FLAVOR );
         if ( movedChannel != null )
         {
           final ChannelLabelsViewModel model = getModel();
 
-          final ChannelImpl insertChannel = model.findChannel( aEvent.getLocation() );
+          final Channel insertChannel = model.findChannel( aEvent.getLocation() );
 
           if ( accepted = model.acceptChannel( movedChannel, insertChannel ) )
           {

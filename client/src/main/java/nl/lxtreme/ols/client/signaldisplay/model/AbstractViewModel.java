@@ -222,6 +222,17 @@ public abstract class AbstractViewModel
   }
 
   /**
+   * Returns whether or not there is captured data to display.
+   * 
+   * @return <code>true</code> if there is any data to display,
+   *         <code>false</code> otherwise.
+   */
+  public final boolean hasData()
+  {
+    return getSignalDiagramModel().hasData();
+  }
+
+  /**
    * @return
    */
   public boolean isCursorMode()

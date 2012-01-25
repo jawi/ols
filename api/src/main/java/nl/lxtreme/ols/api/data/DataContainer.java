@@ -149,7 +149,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public Channel[] getAllChannels()
   {
-    return this.projectManager.getCurrentProject().getChannels();
+    return getCurrentDataSet().getChannels();
   }
 
   /**
@@ -466,7 +466,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public boolean isCursorsEnabled()
   {
-    return this.projectManager.getCurrentProject().isCursorsEnabled();
+    return getCurrentDataSet().isCursorsEnabled();
   }
 
   /**
@@ -542,7 +542,7 @@ public final class DataContainer implements AcquisitionResult
    */
   public void setCursorEnabled( final boolean aCursorEnabled )
   {
-    this.projectManager.getCurrentProject().setCursorsEnabled( aCursorEnabled );
+    getCurrentDataSet().setCursorsEnabled( aCursorEnabled );
   }
 
   /**
@@ -600,7 +600,15 @@ public final class DataContainer implements AcquisitionResult
    */
   private AcquisitionResult getAcquisitionData()
   {
-    return this.projectManager.getCurrentProject().getCapturedData();
+    return getCurrentDataSet().getCapturedData();
+  }
+
+  /**
+   * @return
+   */
+  private DataSet getCurrentDataSet()
+  {
+    return this.projectManager.getCurrentProject().getDataSet();
   }
 
   /**
@@ -608,6 +616,6 @@ public final class DataContainer implements AcquisitionResult
    */
   private Cursor[] getCursors()
   {
-    return this.projectManager.getCurrentProject().getCursors();
+    return getCurrentDataSet().getCursors();
   }
 }

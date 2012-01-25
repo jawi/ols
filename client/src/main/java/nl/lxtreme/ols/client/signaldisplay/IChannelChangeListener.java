@@ -117,7 +117,7 @@ public interface IChannelChangeListener extends EventListener
   {
     // VARIABLES
 
-    private final ChannelImpl channel;
+    private final GroupableChannel channel;
     private final ChannelGroup oldGroup;
     private final int oldPosition;
 
@@ -126,7 +126,7 @@ public interface IChannelChangeListener extends EventListener
     /**
      * Creates a new ChannelMoveEvent instance.
      */
-    public ChannelMoveEvent( final ChannelImpl aChannel, final ChannelGroup aOldGroup, final int aOldPosition )
+    public ChannelMoveEvent( final GroupableChannel aChannel, final ChannelGroup aOldGroup, final int aOldPosition )
     {
       this.channel = aChannel;
       this.oldGroup = aOldGroup;
@@ -215,7 +215,7 @@ public interface IChannelChangeListener extends EventListener
    *          the new, immutable, list of assigned channels, never
    *          <code>null</code>.
    */
-  void channelGroupStructureChanged( Collection<ChannelImpl> aChannelList );
+  void channelGroupStructureChanged( Collection<GroupableChannel> aChannelList );
 
   /**
    * Called when a channel is moved either inside a channel group or between

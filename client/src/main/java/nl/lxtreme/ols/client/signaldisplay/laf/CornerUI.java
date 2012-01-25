@@ -44,6 +44,11 @@ public class CornerUI extends ComponentUI
   {
     final CornerView view = ( CornerView )aComponent;
     final CornerViewModel model = view.getModel();
+    if ( !model.hasData() )
+    {
+      // Nothing to do!
+      return;
+    }
 
     ( ( Graphics2D )aGraphics ).setBackground( model.getBackgroundColor() );
 

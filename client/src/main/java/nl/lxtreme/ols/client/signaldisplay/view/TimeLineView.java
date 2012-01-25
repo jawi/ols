@@ -20,7 +20,6 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
-import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
@@ -156,7 +155,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
    * {@inheritDoc}
    */
   @Override
-  public void dataModelChanged( final AcquisitionResult aDataModel )
+  public void dataModelChanged( final DataSet aDataSet )
   {
     repaint( 50L );
   }

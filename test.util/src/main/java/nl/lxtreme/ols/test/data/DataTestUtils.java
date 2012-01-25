@@ -144,20 +144,20 @@ public final class DataTestUtils
   }
 
   /**
-   * Creates a mocked project with 16 sample/time values.
+   * Creates a mocked data set with 16 sample/time values.
    * 
    * @param aChannelCount
    *          the number of <em>enabled</em> channels in the returned data
    *          container, > 0 && < 32.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static Project createMockProject( final int aChannelCount )
+  public static DataSet createStubDataSet( final int aChannelCount )
   {
-    return createMockProject( 16, aChannelCount );
+    return createStubDataSet( 16, aChannelCount );
   }
 
   /**
-   * Creates a mocked project with a given number of sample/time values.
+   * Creates a mocked data set with a given number of sample/time values.
    * 
    * @param aDataSize
    *          the number of sample/time values in the returned data container, >
@@ -167,13 +167,13 @@ public final class DataTestUtils
    *          container, > 0 && < 32.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static Project createMockProject( final int aDataSize, final int aChannelCount )
+  public static DataSet createStubDataSet( final int aDataSize, final int aChannelCount )
   {
-    return createMockProject( aDataSize, aChannelCount, 1000000 );
+    return createStubDataSet( aDataSize, aChannelCount, 1000000 );
   }
 
   /**
-   * Creates a mocked project with a given number of sample/time values.
+   * Creates a mocked data set with a given number of sample/time values.
    * 
    * @param aDataSize
    *          the number of sample/time values in the returned data container, >
@@ -185,13 +185,13 @@ public final class DataTestUtils
    *          the sample rate (in Hertz), > 0.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static Project createMockProject( final int aDataSize, final int aChannelCount, final int aSampleRate )
+  public static DataSet createStubDataSet( final int aDataSize, final int aChannelCount, final int aSampleRate )
   {
-    return createMockProject( aDataSize, aChannelCount, aSampleRate, new DefaultTestDataProvider( aChannelCount ) );
+    return createStubDataSet( aDataSize, aChannelCount, aSampleRate, new DefaultTestDataProvider( aChannelCount ) );
   }
 
   /**
-   * Creates a mocked project with a given number of sample/time values.
+   * Creates a mocked data set with a given number of sample/time values.
    * 
    * @param aDataSize
    *          the number of sample/time values in the returned data container, >
@@ -205,7 +205,7 @@ public final class DataTestUtils
    *          the test data provider to use, cannot be <code>null</code>.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static Project createMockProject( final int aDataSize, final int aChannelCount, final int aSampleRate,
+  public static DataSet createStubDataSet( final int aDataSize, final int aChannelCount, final int aSampleRate,
       final TestDataProvider aProvider )
   {
     final int[] values = new int[aDataSize];
@@ -213,10 +213,9 @@ public final class DataTestUtils
 
     aProvider.fillData( values, timestamps, aDataSize );
 
-    final Project project = new StubTestProject();
+    final StubDataSet project = new StubDataSet();
     project.setCapturedData( new CapturedData( values, timestamps, 0, aSampleRate, aChannelCount, NumberUtils
         .getBitMask( aChannelCount ), timestamps[aDataSize - 1] + 1L ) );
-    project.setChanged( false );
 
     return project;
   }
@@ -278,7 +277,7 @@ public final class DataTestUtils
       @Override
       public Cursor getCursor( final int aSelectedIndex )
       {
-        return new StubCursorImpl( aSelectedIndex );
+        return new StubCursor( aSelectedIndex );
       }
 
       @Override
@@ -344,9 +343,9 @@ public final class DataTestUtils
     try
     {
       final Project project = new StubTestProject();
-      OlsDataHelper.read( project, new InputStreamReader( is ) );
+      project.readData( new InputStreamReader( is ) );
 
-      return project.getCapturedData();
+      return project.getDataSet().getCapturedData();
     }
     finally
     {

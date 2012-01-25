@@ -24,18 +24,17 @@ package nl.lxtreme.ols.client.osgi;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.client.data.settings.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
+import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
+import org.osgi.service.log.*;
 import org.osgi.service.prefs.*;
 
 
@@ -50,39 +49,25 @@ public class UserSessionManager
    * Defines a (global) AWT event listener for storing/retrieving the window
    * state.
    */
-  static final class WindowStateListener implements AWTEventListener
+  static class WindowStateListener implements AWTEventListener
   {
-    // CONSTANTS
-
-    private static final Logger LOG = Logger.getLogger( WindowStateListener.class.getName() );
-
     // VARIABLES
 
-    private final Map<String, Boolean> prefsLoaded;
-    private final PreferencesService preferenceService;
-    private final ProjectManager projectManager;
+    private volatile PreferencesService preferenceService;
+    private volatile ProjectManager projectManager;
+    private volatile LogService logger;
+
+    private final ConcurrentMap<String, Boolean> prefsLoaded;
     private final String userName;
 
     // CONSTRUCTORS
 
     /**
-     * Creates a new FrameStateListener instance.
-     * 
-     * @param aPreferences
-     *          the preferences to pass to the individual opened windows;
-     * @param aProjectManager
-     *          the project manager that provides the (current) user settings;
-     * @param aUserName
-     *          the name of the user running the client. Used to "partition" the
-     *          window preferences for individual users in global preferences
-     *          storage.
+     * Creates a new {@link WindowStateListener} instance.
      */
-    public WindowStateListener( final PreferencesService aPreferenceService, final ProjectManager aProjectManager,
-        final String aUserName )
+    public WindowStateListener()
     {
-      this.userName = aUserName;
-      this.projectManager = aProjectManager;
-      this.preferenceService = aPreferenceService;
+      this.userName = System.getProperty( "user.name", "default" );
 
       this.prefsLoaded = new ConcurrentHashMap<String, Boolean>();
     }
@@ -127,6 +112,60 @@ public class UserSessionManager
 
         savePreferences( component, namespace );
       }
+    }
+
+    /**
+     * Called by Felix DM when this component is started.
+     */
+    public void start()
+    {
+      // Install us as a global window state listener...
+      Toolkit.getDefaultToolkit().addAWTEventListener( this, AWTEvent.WINDOW_EVENT_MASK );
+
+      this.logger.log( LogService.LOG_DEBUG, "AWT Window state listener installed..." );
+    }
+
+    /**
+     * Called by Felix DM when this component is stopped.
+     */
+    public void stop()
+    {
+      Toolkit.getDefaultToolkit().removeAWTEventListener( this );
+
+      this.logger.log( LogService.LOG_DEBUG, "AWT Window state listener removed..." );
+    }
+
+    /**
+     * Sets logger to the given value.
+     * 
+     * @param aLogger
+     *          the logger to set.
+     */
+    final void setLogger( final LogService aLogger )
+    {
+      this.logger = aLogger;
+    }
+
+    /**
+     * Sets preferenceService to the given value.
+     * 
+     * @param aPreferenceService
+     *          the preferenceService to set.
+     */
+    final void setPreferenceService( final PreferencesService aPreferenceService )
+    {
+      this.preferenceService = aPreferenceService;
+    }
+
+    /**
+     * Sets projectManager to the given value.
+     * 
+     * @param aProjectManager
+     *          the projectManager to set.
+     */
+    final void setProjectManager( final ProjectManager aProjectManager )
+    {
+      this.projectManager = aProjectManager;
     }
 
     /**
@@ -203,7 +242,7 @@ public class UserSessionManager
       {
         if ( aComponent instanceof Configurable )
         {
-          LOG.log( Level.FINE, "Reading dialog-specific properties for {0} ...", aNamespace );
+          this.logger.log( LogService.LOG_DEBUG, "Reading dialog-specific properties for: " + aNamespace );
 
           final UserSettings userSettings = getUserSettings( aNamespace );
           ( ( Configurable )aComponent ).readPreferences( userSettings );
@@ -213,7 +252,7 @@ public class UserSessionManager
         // popups/dropdowns, etc...
         if ( ( aComponent instanceof JFrame ) || ( aComponent instanceof JDialog ) )
         {
-          LOG.log( Level.FINE, "Reading window-properties for {0} ...", aNamespace );
+          this.logger.log( LogService.LOG_DEBUG, "Reading window-properties for: " + aNamespace );
 
           final Preferences componentPrefs = getUserPreferences( aNamespace );
           SwingComponentUtils.loadWindowState( componentPrefs, aComponent );
@@ -261,7 +300,7 @@ public class UserSessionManager
       {
         if ( aComponent instanceof Configurable )
         {
-          LOG.log( Level.FINE, "Writing dialog-specific properties for {0} ...", aNamespace );
+          this.logger.log( LogService.LOG_DEBUG, "Writing dialog-specific properties for: " + aNamespace );
 
           final UserSettings userSettings = getUserSettings( aNamespace );
           ( ( Configurable )aComponent ).writePreferences( userSettings );
@@ -274,7 +313,7 @@ public class UserSessionManager
         // popups/dropdowns, etc...
         if ( ( aComponent instanceof JFrame ) || ( aComponent instanceof JDialog ) )
         {
-          LOG.log( Level.FINE, "Writing window-properties for {0} ...", aNamespace );
+          this.logger.log( LogService.LOG_DEBUG, "Writing window-properties for: " + aNamespace );
 
           final Preferences componentPrefs = getUserPreferences( aNamespace );
           SwingComponentUtils.saveWindowState( componentPrefs, aComponent );
@@ -282,7 +321,7 @@ public class UserSessionManager
       }
       catch ( RuntimeException exception )
       {
-        LOG.log( Level.WARNING, "Writing dialog properties failed!", exception );
+        this.logger.log( LogService.LOG_WARNING, "Writing dialog properties failed!", exception );
       }
       finally
       {
@@ -309,37 +348,17 @@ public class UserSessionManager
   private static final String IMPLICIT_USER_SETTING_NAME_PREFIX = "nl.lxtreme.ols.client";
   private static final String IMPLICIT_USER_SETTING_NAME_SUFFIX = "settings";
 
-  private static final Logger LOG = Logger.getLogger( UserSessionManager.class.getName() );
-
   // VARIABLES
 
+  // All volatiles below are injected by Felix DM...
+  private volatile DependencyManager dependencyManager;
   private volatile ProjectManager projectManager;
-  private volatile PreferencesService preferenceService = null;
-  private WindowStateListener windowStateListener = null;
+  private volatile UserSettingsManager userSettingsManager;
+  private volatile LogService log;
+
+  private Component windowStateComponent;
 
   // METHODS
-
-  /**
-   * Called by the dependency manager when the preference service becomes
-   * available.
-   * 
-   * @param aPreferenceService
-   */
-  public void setPreferenceService( final PreferencesService aPreferenceService )
-  {
-    this.preferenceService = aPreferenceService;
-  }
-
-  /**
-   * Called by the dependency manager when the project manager service becomes
-   * available.
-   * 
-   * @param aProjectManager
-   */
-  public void setProjectManager( final ProjectManager aProjectManager )
-  {
-    this.projectManager = aProjectManager;
-  }
 
   /**
    * Called by the dependency manager when all dependencies are satisfied, and
@@ -350,16 +369,22 @@ public class UserSessionManager
     // Restore any implicit user settings from our previous session...
     loadImplicitUserSettings();
 
-    if ( this.windowStateListener == null )
-    {
-      final String userName = System.getProperty( "user.name", "default" );
+    this.windowStateComponent = this.dependencyManager.createComponent();
+    this.windowStateComponent.setImplementation( new WindowStateListener() ) //
+        .add( this.dependencyManager.createServiceDependency() //
+            .setService( ProjectManager.class ) //
+            .setRequired( true ) //
+        ) //
+        .add( this.dependencyManager.createServiceDependency() //
+            .setService( PreferencesService.class ) //
+            .setRequired( true ) //
+        ) //
+        .add( this.dependencyManager.createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) //
+        );
 
-      this.windowStateListener = new WindowStateListener( this.preferenceService, this.projectManager, userName );
-      // Install a global window state listener...
-      Toolkit.getDefaultToolkit().addAWTEventListener( this.windowStateListener, AWTEvent.WINDOW_EVENT_MASK );
-
-      LOG.fine( "AWT Window state listener installed..." );
-    }
+    this.dependencyManager.add( this.windowStateComponent );
   }
 
   /**
@@ -370,14 +395,7 @@ public class UserSessionManager
     // Store all implicit user settings for our next session...
     saveImplicitUserSettings();
 
-    if ( this.windowStateListener != null )
-    {
-      Toolkit.getDefaultToolkit().removeAWTEventListener( this.windowStateListener );
-
-      this.windowStateListener = null;
-
-      LOG.fine( "AWT Window state listener removed..." );
-    }
+    this.dependencyManager.remove( this.windowStateComponent );
   }
 
   /**
@@ -399,9 +417,9 @@ public class UserSessionManager
     final Project currentProject = this.projectManager.getCurrentProject();
     try
     {
-      UserSettingsManager.loadUserSettings( userSettingsFile, currentProject );
+      this.userSettingsManager.loadUserSettings( userSettingsFile, currentProject );
 
-      LOG.fine( "Implicit user settings restored ..." );
+      this.log.log( LogService.LOG_DEBUG, "User settings restored ..." );
     }
     finally
     {
@@ -420,9 +438,9 @@ public class UserSessionManager
       try
       {
         final File userSettingsFile = getUserSettingsFile();
-        UserSettingsManager.saveUserSettings( userSettingsFile, currentProject );
+        this.userSettingsManager.saveUserSettings( userSettingsFile, currentProject );
 
-        LOG.fine( "Implicit user settings stored ..." );
+        this.log.log( LogService.LOG_DEBUG, "User settings stored ..." );
       }
       finally
       {
