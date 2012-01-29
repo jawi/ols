@@ -52,6 +52,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   private String dataFunction;
   private int channels;
   private int dataLength;
+
   private JComboBox dataFunctionCombo;
   private JComboBox channelsCombo;
   private JComboBox dataLengthCombo;
@@ -144,39 +145,28 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   }
 
   /**
+   * Confirms and closes this dialog.
+   */
+  final void confirmAndCloseDialog()
+  {
+    this.setupConfirmed = true;
+
+    // Make the selected information available for the outside...
+    this.channels = ( Integer )this.channelsCombo.getSelectedItem();
+    this.dataFunction = ( String )this.dataFunctionCombo.getSelectedItem();
+    this.dataLength = ( Integer )this.dataLengthCombo.getSelectedItem();
+
+    close();
+  }
+
+  /**
    * @return
    */
   private JPanel createContents()
   {
     this.dataFunctionCombo = new JComboBox( DATA_FUNCTIONS );
-    this.dataFunctionCombo.addItemListener( new ItemListener()
-    {
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        TestDeviceDialog.this.dataFunction = ( String )aEvent.getItem();
-      }
-    } );
-
     this.channelsCombo = new JComboBox( CHANNELS );
-    this.channelsCombo.addItemListener( new ItemListener()
-    {
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        TestDeviceDialog.this.channels = ( Integer )aEvent.getItem();
-      }
-    } );
-
     this.dataLengthCombo = new JComboBox( DATA_LENGTH );
-    this.dataLengthCombo.addItemListener( new ItemListener()
-    {
-      @Override
-      public void itemStateChanged( final ItemEvent aEvent )
-      {
-        TestDeviceDialog.this.dataLength = ( Integer )aEvent.getItem();
-      }
-    } );
 
     final Insets labelInsets = new Insets( 4, 4, 4, 2 );
     final Insets compInsets = new Insets( 4, 2, 4, 4 );
@@ -223,8 +213,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
-        TestDeviceDialog.this.setupConfirmed = true;
-        close();
+        confirmAndCloseDialog();
       }
     } );
 
@@ -232,4 +221,5 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
 
     SwingComponentUtils.setupDialogContentPane( this, contents, buttonPane, okButton );
   }
+
 }

@@ -35,7 +35,7 @@ final class OneWireGenerator
 {
   // CONSTANTS
 
-  private static final int OW_LINE = 0x04;
+  private static final int OW_LINE = 0x01;
 
   // VARIABLES
 
@@ -187,13 +187,13 @@ final class OneWireGenerator
   /**
    * Generates a 1-wire one-value.
    * 
-   * @param aZeroOrOne
+   * @param aWriteOne
    *          <code>true</code> to write a one, <code>false</code> to write a
    *          zero.
    */
-  private void writeBit( final boolean aZeroOrOne )
+  private void writeBit( final boolean aWriteOne )
   {
-    if ( aZeroOrOne )
+    if ( aWriteOne )
     {
       // write 1...
       this.data.add( Integer.valueOf( 0 ) );
