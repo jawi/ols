@@ -24,6 +24,7 @@ package nl.lxtreme.ols.api.data;
 /**
  * Denotes a sample of data, which has a value and a timestamp.
  */
+@Deprecated
 public final class Sample implements Cloneable
 {
   // CONSTANTS
@@ -158,9 +159,9 @@ public final class Sample implements Cloneable
   {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ( int )( this.timestamp ^ ( this.timestamp >>> 32 ) );
-    result = prime * result + this.value;
-    result = prime * result + this.width;
+    result = ( prime * result ) + ( int )( this.timestamp ^ ( this.timestamp >>> 32 ) );
+    result = ( prime * result ) + this.value;
+    result = ( prime * result ) + this.width;
     return result;
   }
 

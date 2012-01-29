@@ -459,17 +459,6 @@ public final class DataContainer implements AcquisitionResult
   }
 
   /**
-   * Returns whether or not the cursor data is enabled.
-   * 
-   * @return <code>true</code> if the cursors are enabled, <code>false</code>
-   *         otherwise.
-   */
-  public boolean isCursorsEnabled()
-  {
-    return getCurrentDataSet().isCursorsEnabled();
-  }
-
-  /**
    * Sets the captured data.
    * 
    * @param aData
@@ -531,18 +520,6 @@ public final class DataContainer implements AcquisitionResult
     {
       getAllChannels()[i].setLabel( aLabels[i] );
     }
-  }
-
-  /**
-   * Sets whether or not the cursor data is enabled.
-   * 
-   * @param aCursorEnabled
-   *          <code>true</code> to the enable the cursor data,
-   *          <code>false</code> otherwise.
-   */
-  public void setCursorEnabled( final boolean aCursorEnabled )
-  {
-    getCurrentDataSet().setCursorsEnabled( aCursorEnabled );
   }
 
   /**

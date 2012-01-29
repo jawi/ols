@@ -87,5 +87,4 @@ public interface DataSet
    *          otherwise.
    */
   public void setCursorsEnabled( final boolean aEnabled );
-
 }
