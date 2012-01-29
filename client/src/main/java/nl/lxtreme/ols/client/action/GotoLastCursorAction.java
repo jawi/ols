@@ -23,13 +23,18 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 
 
 /**
  * Provides an action that goes to the last available cursor.
  */
-public class GotoLastCursorAction extends BaseAction
+public class GotoLastCursorAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -37,18 +42,26 @@ public class GotoLastCursorAction extends BaseAction
 
   public static final String ID = "GotoLastCursor";
 
+  // VARIABLES
+
+  private final SignalDiagramController controller;
+
   // CONSTRUCTORS
 
   /**
-   * Creates a new GotoLastCursorAction instance.
+   * Creates a new {@link GotoLastCursorAction} instance.
    * 
    * @param aController
    *          the controller to use for this action.
    */
-  public GotoLastCursorAction( final ClientController aController )
+  public GotoLastCursorAction( final SignalDiagramController aController )
   {
-    super( ID, aController, ICON_GOTO_LAST_CURSOR, "Go to highest cursor",
-        "Go to the cursor with highest index in diagram" );
+    this.controller = aController;
+
+    putValue( NAME, "Go to highest cursor" );
+    putValue( SHORT_DESCRIPTION, "Go to the cursor with highest index in diagram" );
+    putValue( Action.LARGE_ICON_KEY, IconLocator.ICON_GOTO_LAST_CURSOR );
+
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_L ) );
   }
 
@@ -60,7 +73,20 @@ public class GotoLastCursorAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().gotoLastAvailableCursor();
+    final Cursor[] definedCursors = this.controller.getDefinedCursors();
+    if ( definedCursors.length > 0 )
+    {
+      this.controller.scrollToTimestamp( definedCursors[definedCursors.length - 1].getTimestamp() );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
   }
 }
 

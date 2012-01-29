@@ -25,6 +25,7 @@ import java.util.*;
 
 import javax.swing.event.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.IChannelChangeListener.ChannelChangeEvent;
@@ -59,6 +60,231 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   // METHODS
 
   /**
+   * Adds a channel change listener.
+   * 
+   * @param aListener
+   *          the listener to add, cannot be <code>null</code>.
+   */
+  public void addChannelChangeListener( final IChannelChangeListener aListener )
+  {
+    this.eventListeners.add( IChannelChangeListener.class, aListener );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void dataModelChanged( final DataSet aCapturedData )
+  {
+    // Make sure only a single thread at a time modifies us...
+    synchronized ( this.channelGroups )
+    {
+      this.channelGroups.clear();
+      this.channels = createChannels( aCapturedData.getChannels() );
+
+      // Reset channel groups so they align with the given data model...
+      final int groupCount = Math.max( 1, ( int )Math.ceil( this.channels.length / ( double )Ols.CHANNELS_PER_BLOCK ) );
+      final int channelsPerGroup = ( int )Math.ceil( this.channels.length / ( double )groupCount );
+
+      for ( int g = 0; g < groupCount; g++ )
+      {
+        final ChannelGroup channelGroup = addChannelGroup( "Group " + ( g + 1 ) );
+
+        for ( int c = 0; c < channelsPerGroup; c++ )
+        {
+          final int channelIdx = ( g * channelsPerGroup ) + c;
+          addChannel( channelGroup, this.channels[channelIdx] );
+        }
+      }
+    }
+
+    fireChannelGroupStructureChangeEvent( getAssignedChannels() );
+  }
+
+  /**
+   * Returns all channels used in this signal diagram model.
+   * 
+   * @return a collection of all channels, never <code>null</code>.
+   */
+  public Collection<Channel> getAllChannels()
+  {
+    List<Channel> result = new ArrayList<Channel>();
+    if ( this.channels != null )
+    {
+      Collections.addAll( result, this.channels );
+    }
+    return result;
+  }
+
+  /**
+   * Returns a sorted set of all assigned (not available) channels.
+   * 
+   * @return a sorted set of all assigned channels, never <code>null</code>.
+   */
+  public SortedSet<GroupableChannel> getAssignedChannels()
+  {
+    SortedSet<GroupableChannel> channelIndexes = new TreeSet<GroupableChannel>();
+
+    for ( ChannelGroup cg : this.channelGroups )
+    {
+      channelIndexes.addAll( Arrays.asList( cg.getChannels() ) );
+    }
+
+    return channelIndexes;
+  }
+
+  /**
+   * Returns the channel with a given index.
+   * 
+   * @param aIndex
+   *          the index of the channel to return.
+   * @return the channel with the given index, or <code>null</code> if no such
+   *         channel was found.
+   */
+  public Channel getChannelByIndex( final int aIndex )
+  {
+    Channel result = null;
+
+    synchronized ( this.channelGroups )
+    {
+      Iterator<ChannelGroup> channelGroupIter = this.channelGroups.iterator();
+      while ( channelGroupIter.hasNext() && ( result == null ) )
+      {
+        ChannelGroup cg = channelGroupIter.next();
+        result = cg.getChannelByIndex( aIndex );
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns the channel group with a given name.
+   * 
+   * @param aName
+   *          the name of the channel group to return, cannot be
+   *          <code>null</code> or empty.
+   * @return the channel group with the given name, or <code>null</code> if no
+   *         such channel group exists.
+   * @throws IllegalArgumentException
+   *           in case the given name was <code>null</code> or empty.
+   */
+  public ChannelGroup getChannelGroupByName( final String aName )
+  {
+    if ( ( aName == null ) || aName.trim().isEmpty() )
+    {
+      throw new IllegalArgumentException( "Name cannot be null or empty!" );
+    }
+
+    synchronized ( this.channelGroups )
+    {
+      for ( ChannelGroup cg : this.channelGroups )
+      {
+        if ( aName.equals( cg.getName() ) )
+        {
+          return cg;
+        }
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Returns all current channel groups.
+   * 
+   * @return an array of channel groups, never <code>null</code>.
+   */
+  public ChannelGroup[] getChannelGroups()
+  {
+    synchronized ( this.channelGroups )
+    {
+      final int size = this.channelGroups.size();
+      return this.channelGroups.toArray( new ChannelGroup[size] );
+    }
+  }
+
+  /**
+   * Moves a channel with a given index to a new index.
+   * 
+   * @param aMovedChannel
+   *          the channel to move;
+   * @param aInsertChannel
+   *          the channel before which the moved channel is to be inserted.
+   */
+  public void moveChannel( final Channel aMovedChannel, final Channel aInsertChannel )
+  {
+    if ( ( aMovedChannel != null ) && ( aInsertChannel != null ) )
+    {
+      GroupableChannel movedChannel = asGroupableChannel( aMovedChannel );
+      GroupableChannel insertChannel = asGroupableChannel( aInsertChannel );
+
+      final ChannelGroup oldCG = movedChannel.getChannelGroup();
+      final int oldIndex = movedChannel.getVirtualIndex();
+
+      final ChannelGroup cg = insertChannel.getChannelGroup();
+      cg.moveChannel( movedChannel, insertChannel.getVirtualIndex() );
+
+      fireChannelMoveEvent( new ChannelMoveEvent( movedChannel, oldCG, oldIndex ) );
+    }
+  }
+
+  /**
+   * Removes a channel change listener.
+   * 
+   * @param aListener
+   *          the listener to remove, cannot be <code>null</code>.
+   */
+  public void removeChannelChangeListener( final IChannelChangeListener aListener )
+  {
+    this.eventListeners.remove( IChannelChangeListener.class, aListener );
+  }
+
+  /**
+   * Fires a {@link ChannelChangeEvent} to all interested listeners.
+   * 
+   * @param aEvent
+   *          the event to fire,cannot be <code>null</code>.
+   */
+  final void fireChannelChangeEvent( final ChannelChangeEvent aEvent )
+  {
+    final IChannelChangeListener[] listeners = this.eventListeners.getListeners( IChannelChangeListener.class );
+    for ( IChannelChangeListener listener : listeners )
+    {
+      listener.channelChanged( aEvent );
+    }
+  }
+
+  /**
+   * Fires a "channelgroup structure changed"-event to all interested listeners.
+   * 
+   * @param aEvent
+   *          the event to fire,cannot be <code>null</code>.
+   */
+  final void fireChannelGroupStructureChangeEvent( final Collection<GroupableChannel> aEvent )
+  {
+    final IChannelChangeListener[] listeners = this.eventListeners.getListeners( IChannelChangeListener.class );
+    for ( IChannelChangeListener listener : listeners )
+    {
+      listener.channelGroupStructureChanged( aEvent );
+    }
+  }
+
+  /**
+   * Fires a {@link ChannelMoveEvent} to all interested listeners.
+   * 
+   * @param aEvent
+   *          the event to fire,cannot be <code>null</code>.
+   */
+  final void fireChannelMoveEvent( final ChannelMoveEvent aEvent )
+  {
+    final IChannelChangeListener[] listeners = this.eventListeners.getListeners( IChannelChangeListener.class );
+    for ( IChannelChangeListener listener : listeners )
+    {
+      listener.channelMoved( aEvent );
+    }
+  }
+
+  /**
    * Adds a given channel to the given channel group.
    * <p>
    * If the given channel group already contains the given channel, then this
@@ -74,7 +300,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @throws IllegalArgumentException
    *           in case one of the given parameters was <code>null</code>.
    */
-  public void addChannel( final ChannelGroup aChannelGroup, final GroupableChannel aChannel )
+  protected void addChannel( final ChannelGroup aChannelGroup, final GroupableChannel aChannel )
   {
     if ( aChannelGroup == null )
     {
@@ -104,17 +330,6 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   }
 
   /**
-   * Adds a channel change listener.
-   * 
-   * @param aListener
-   *          the listener to add, cannot be <code>null</code>.
-   */
-  public void addChannelChangeListener( final IChannelChangeListener aListener )
-  {
-    this.eventListeners.add( IChannelChangeListener.class, aListener );
-  }
-
-  /**
    * Adds a new channel group to this manager.
    * 
    * @param aName
@@ -126,7 +341,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @throws IllegalStateException
    *           in case no channels are available for the new channel group.
    */
-  public ChannelGroup addChannelGroup( final String aName )
+  protected ChannelGroup addChannelGroup( final String aName )
   {
     final GroupableChannel firstAvailableChannel = getFirstUnassignedChannel();
     if ( firstAvailableChannel == null )
@@ -144,182 +359,11 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   }
 
   /**
-   * Returns whether or not a new channel group can be added.
-   * 
-   * @return <code>true</code> if a new channel group can be added,
-   *         <code>false</code> otherwise.
-   */
-  public boolean canAddChannelGroup()
-  {
-    return !getUnassignedChannels().isEmpty();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void dataModelChanged( final DataSet aCapturedData )
-  {
-    this.channelGroups.clear();
-    this.channels = createChannels( aCapturedData.getChannels() );
-
-    // Reset channel groups so they align with the given data model...
-    final int maxI = this.channels.length / 8;
-    final int maxJ = 8;
-    for ( int i = 0; i < maxI; i++ )
-    {
-      ChannelGroup channelGroup = addChannelGroup( "Group " + ( i + 1 ) );
-      // channelGroup.setVisible( ( i % 2 ) == 0 );
-
-      for ( int j = 0; j < maxJ; j++ )
-      {
-        channelGroup.addChannel( this.channels[( i * maxJ ) + j] );
-      }
-    }
-
-    fireChannelGroupStructureChangeEvent( getAssignedChannels() );
-  }
-
-  /**
-   * @param aEvent
-   */
-  public void fireChannelChangeEvent( final ChannelChangeEvent aEvent )
-  {
-    final IChannelChangeListener[] listeners = this.eventListeners.getListeners( IChannelChangeListener.class );
-    for ( IChannelChangeListener listener : listeners )
-    {
-      listener.channelChanged( aEvent );
-    }
-  }
-
-  /**
-   * @param aEvent
-   */
-  public void fireChannelMoveEvent( final ChannelMoveEvent aEvent )
-  {
-    final IChannelChangeListener[] listeners = this.eventListeners.getListeners( IChannelChangeListener.class );
-    for ( IChannelChangeListener listener : listeners )
-    {
-      listener.channelMoved( aEvent );
-    }
-  }
-
-  /**
-   * Returns all channels used in this signal diagram model.
-   * 
-   * @return an array of channels, never <code>null</code>.
-   */
-  public Channel[] getAllChannels()
-  {
-    return this.channels;
-  }
-
-  /**
-   * Returns a sorted set of all assigned (not available) channels.
-   * 
-   * @return a sorted set of all assigned channels, never <code>null</code>.
-   */
-  public SortedSet<GroupableChannel> getAssignedChannels()
-  {
-    SortedSet<GroupableChannel> channelIndexes = new TreeSet<GroupableChannel>();
-
-    for ( ChannelGroup cg : this.channelGroups )
-    {
-      channelIndexes.addAll( Arrays.asList( cg.getChannels() ) );
-    }
-
-    return channelIndexes;
-  }
-
-  /**
-   * Returns the channel with a given index.
-   * 
-   * @param aIndex
-   *          the index of the channel to return.
-   * @return the channel with the given index, or <code>null</code> if no such
-   *         channel was found.
-   */
-  public Channel getChannel( final int aIndex )
-  {
-    Channel result = null;
-    Iterator<ChannelGroup> channelGroupIter = this.channelGroups.iterator();
-
-    while ( channelGroupIter.hasNext() && ( result == null ) )
-    {
-      ChannelGroup cg = channelGroupIter.next();
-      result = cg.getChannel( aIndex );
-    }
-
-    return result;
-  }
-
-  /**
-   * Returns the channel with a given index.
-   * 
-   * @param aIndex
-   *          the index of the channel to return.
-   * @return the channel with the given index, or <code>null</code> if no such
-   *         channel was found.
-   */
-  public Channel getChannelByIndex( final int aIndex )
-  {
-    Channel result = null;
-    Iterator<ChannelGroup> channelGroupIter = this.channelGroups.iterator();
-
-    while ( channelGroupIter.hasNext() && ( result == null ) )
-    {
-      ChannelGroup cg = channelGroupIter.next();
-      result = cg.getChannelByIndex( aIndex );
-    }
-
-    return result;
-  }
-
-  /**
-   * Returns the channel group with a given name.
-   * 
-   * @param aName
-   *          the name of the channel group to return, cannot be
-   *          <code>null</code> or empty.
-   * @return the channel group with the given name, or <code>null</code> if no
-   *         such channel group exists.
-   * @throws IllegalArgumentException
-   *           in case the given name was <code>null</code> or empty.
-   */
-  public ChannelGroup getChannelGroupByName( final String aName )
-  {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
-    {
-      throw new IllegalArgumentException( "Name cannot be null or empty!" );
-    }
-
-    for ( ChannelGroup cg : this.channelGroups )
-    {
-      if ( aName.equals( cg.getName() ) )
-      {
-        return cg;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Returns all current channel groups.
-   * 
-   * @return an array of channel groups, never <code>null</code>.
-   */
-  public ChannelGroup[] getChannelGroups()
-  {
-    final int size = this.channelGroups.size();
-    return this.channelGroups.toArray( new ChannelGroup[size] );
-  }
-
-  /**
    * Returns a sorted set of all unassigned (= available) channels.
    * 
    * @return a sorted set of unassigned channels, never <code>null</code>.
    */
-  public SortedSet<GroupableChannel> getUnassignedChannels()
+  protected SortedSet<GroupableChannel> getUnassignedChannels()
   {
     SortedSet<GroupableChannel> channelIndexes = new TreeSet<GroupableChannel>();
     channelIndexes.addAll( Arrays.asList( this.channels ) );
@@ -333,45 +377,6 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   }
 
   /**
-   * Returns the number of visible channels.
-   * 
-   * @return a channel count, >= 0.
-   */
-  public int getVisibleChannelCount()
-  {
-    int count = 0;
-    for ( ChannelGroup cg : this.channelGroups )
-    {
-      if ( cg.isVisible() )
-      {
-        count += cg.getChannels().length;
-      }
-    }
-
-    return count;
-  }
-
-  /**
-   * Moves a channel with a given index to a new index.
-   * 
-   * @param aMovedChannel
-   *          the channel to move;
-   * @param aInsertIndex
-   *          the insertion index of the channel to move.
-   */
-  public void moveChannel( final Channel aMovedChannel, final Channel aInsertChannel )
-  {
-    if ( ( aMovedChannel != null ) && ( aInsertChannel != null ) )
-    {
-      GroupableChannel movedChannel = asGroupableChannel( aMovedChannel );
-      GroupableChannel insertChannel = asGroupableChannel( aInsertChannel );
-
-      final ChannelGroup cg = insertChannel.getChannelGroup();
-      cg.moveChannel( movedChannel, insertChannel.getVirtualIndex() );
-    }
-  }
-
-  /**
    * Removes a channel from a given channel group.
    * 
    * @param aChannelGroup
@@ -382,7 +387,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @throws IllegalArgumentException
    *           in case one of the given parameters was <code>null</code>.
    */
-  public void removeChannel( final ChannelGroup aChannelGroup, final GroupableChannel aChannel )
+  protected void removeChannel( final ChannelGroup aChannelGroup, final GroupableChannel aChannel )
   {
     if ( aChannelGroup == null )
     {
@@ -397,17 +402,6 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   }
 
   /**
-   * Removes a channel change listener.
-   * 
-   * @param aListener
-   *          the listener to remove, cannot be <code>null</code>.
-   */
-  public void removeChannelChangeListener( final IChannelChangeListener aListener )
-  {
-    this.eventListeners.remove( IChannelChangeListener.class, aListener );
-  }
-
-  /**
    * Removes the channel group with the given name.
    * 
    * @param aName
@@ -416,7 +410,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * @throws IllegalArgumentException
    *           in case the given name was <code>null</code> or empty.
    */
-  public void removeChannelGroup( final String aName )
+  protected void removeChannelGroup( final String aName )
   {
     if ( ( aName == null ) || aName.trim().isEmpty() )
     {
@@ -427,18 +421,6 @@ public final class ChannelGroupManager implements IDataModelChangeListener
     if ( cg != null )
     {
       this.channelGroups.remove( cg );
-    }
-  }
-
-  /**
-   * @param aEvent
-   */
-  final void fireChannelGroupStructureChangeEvent( final Collection<GroupableChannel> aEvent )
-  {
-    final IChannelChangeListener[] listeners = this.eventListeners.getListeners( IChannelChangeListener.class );
-    for ( IChannelChangeListener listener : listeners )
-    {
-      listener.channelGroupStructureChanged( aEvent );
     }
   }
 
@@ -468,7 +450,7 @@ public final class ChannelGroupManager implements IDataModelChangeListener
     GroupableChannel[] result = new GroupableChannel[aChannels.length];
     for ( int i = 0; i < result.length; i++ )
     {
-      result[i] = new GroupableChannel( aChannels[i] );
+      result[i] = new GroupableChannel( this, aChannels[i] );
     }
     return result;
   }

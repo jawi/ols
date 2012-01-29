@@ -34,7 +34,6 @@ import javax.swing.plaf.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
@@ -442,14 +441,15 @@ public class DiagramUI extends ComponentUI
   public DiagramUI( final ActionProvider aActionProvider )
   {
     this.contextMenu = new JPopupMenu();
-    this.contextMenu.addPopupMenuListener( new ContextMenuListener() );
-    for ( int i = 0; i < 10; i++ )
-    {
-      final Action setCursorAction = aActionProvider.getAction( SetCursorAction.getCursorId( i ) );
-      this.contextMenu.add( new JCheckBoxMenuItem( setCursorAction ) );
-    }
-    this.contextMenu.addSeparator();
-    this.contextMenu.add( aActionProvider.getAction( ClearCursors.ID ) );
+    // this.contextMenu.addPopupMenuListener( new ContextMenuListener() );
+    // for ( int i = 0; i < 10; i++ )
+    // {
+    // final Action setCursorAction = aActionProvider.getAction(
+    // SetCursorAction.getCursorId( i ) );
+    // this.contextMenu.add( new JCheckBoxMenuItem( setCursorAction ) );
+    // }
+    // this.contextMenu.addSeparator();
+    // this.contextMenu.add( aActionProvider.getAction( ClearCursors.ID ) );
 
     this.cursorDefault = Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR );
     this.cursorDrag = Cursor.getPredefinedCursor( Cursor.MOVE_CURSOR );
@@ -604,7 +604,7 @@ public class DiagramUI extends ComponentUI
       final long aFirstRow, final long aLastRow )
   {
     final DataContainer dataContainer = aDiagram.getDataContainer();
-    if ( dataContainer.isCursorsEnabled() )
+    // if ( dataContainer.isCursorsEnabled() )
     {
       final DiagramSettings settings = aDiagram.getDiagramSettings();
 

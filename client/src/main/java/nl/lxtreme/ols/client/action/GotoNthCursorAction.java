@@ -25,8 +25,13 @@ import static nl.lxtreme.ols.client.icons.IconFactory.*;
 
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -36,7 +41,7 @@ import nl.lxtreme.ols.util.swing.*;
  * 
  * @author stefant
  */
-public class GotoNthCursorAction extends BaseAction
+public class GotoNthCursorAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -47,6 +52,7 @@ public class GotoNthCursorAction extends BaseAction
   // VARIABLES
 
   private final int index;
+  private final SignalDiagramController controller;
 
   // METHODS
 
@@ -58,12 +64,16 @@ public class GotoNthCursorAction extends BaseAction
    * @param aIndex
    *          the (zero-based) index of the cursor.
    */
-  public GotoNthCursorAction( final ClientController aController, final int aIndex )
+  public GotoNthCursorAction( final SignalDiagramController aController, final int aIndex )
   {
-    super( getID( aIndex ), aController, createOverlayIcon( ICON_GOTO_CURSOR, String.valueOf( aIndex + 1 ) ),
-        "Go to cursor " + String.valueOf( aIndex + 1 ), "Go to the " + DisplayUtils.getOrdinalNumber( aIndex + 1 )
-            + " cursor in the diagram" );
+    this.controller = aController;
     this.index = aIndex;
+
+    final String cursorStr = String.valueOf( aIndex + 1 );
+
+    putValue( NAME, "Go to cursor " + cursorStr );
+    putValue( SHORT_DESCRIPTION, "Go to the " + DisplayUtils.getOrdinalNumber( aIndex + 1 ) + " cursor in the diagram" );
+    putValue( Action.LARGE_ICON_KEY, createOverlayIcon( IconLocator.ICON_GOTO_CURSOR, cursorStr ) );
 
     int keyStroke = KeyEvent.VK_0 + ( ( aIndex + 1 ) % Ols.MAX_CURSORS );
     if ( keyStroke != KeyEvent.VK_0 )
@@ -71,6 +81,7 @@ public class GotoNthCursorAction extends BaseAction
       // Avoid overwriting CTRL/CMD + 0 as accelerator...
       putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( keyStroke ) );
     }
+
     putValue( MNEMONIC_KEY, Integer.valueOf( keyStroke ) );
   }
 
@@ -81,7 +92,7 @@ public class GotoNthCursorAction extends BaseAction
    * 
    * @param aCursorIdx
    *          the cursor index to get the action-ID for, >= 0 && <
-   *          {@value CapturedData#MAX_CURSORS}.
+   *          {@value Ols#MAX_CURSORS}.
    * @return the action ID for the action, never <code>null</code>.
    */
   public static String getID( final int aCursorIdx )
@@ -99,6 +110,22 @@ public class GotoNthCursorAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().gotoCursorPosition( this.index );
+    final Cursor[] definedCursors = this.controller.getDefinedCursors();
+    for ( Cursor cursor : definedCursors )
+    {
+      if ( ( this.index == cursor.getIndex() ) && cursor.isDefined() )
+      {
+        this.controller.scrollToTimestamp( cursor.getTimestamp() );
+      }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return getID( this.index );
   }
 }

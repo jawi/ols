@@ -84,8 +84,8 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
     // enable synthetic drag events
     setAutoscrolls( true );
 
-    aController.addCursorChangeListener( this );
-    aController.addCursorChangeListener( this.timeLine );
+    // aController.addCursorChangeListener( this );
+    // aController.addCursorChangeListener( this.timeLine );
   }
 
   /**
@@ -210,12 +210,7 @@ public final class Diagram extends JComponent implements Scrollable, DiagramCurs
    */
   public final void dragCursor( final int aCursorIdx, final Point aMousePosition )
   {
-    if ( !getDataContainer().isCursorsEnabled() )
-    {
-      return;
-    }
-
-    this.controller.setCursorPosition( aCursorIdx, aMousePosition );
+    // this.controller.setCursorPosition( aCursorIdx, aMousePosition );
   }
 
   /**

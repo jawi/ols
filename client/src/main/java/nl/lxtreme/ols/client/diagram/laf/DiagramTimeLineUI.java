@@ -145,26 +145,26 @@ public class DiagramTimeLineUI extends ComponentUI
 
     canvas.setColor( settings.getTimeColor() );
 
-    final int baselineYpos = clipArea.y + TIMELINE_HEIGHT - PADDING_Y;
+    final int baselineYpos = ( clipArea.y + TIMELINE_HEIGHT ) - PADDING_Y;
     final int longTickYpos = ( int )( baselineYpos - ( 3.5 * SHORT_TICK_HEIGHT ) );
     final int shortTickYpos = baselineYpos - SHORT_TICK_HEIGHT;
 
-    for ( long time = ( startSample / tickInc ) * tickInc + timeLineShift; time < endSample; time += tickInc )
+    for ( long time = ( ( startSample / tickInc ) * tickInc ) + timeLineShift; time < endSample; time += tickInc )
     {
       final int xPos = Math.max( 0, ( int )( scale * time ) );
 
       final long absoluteTime = time - triggerPosition;
       final long scaledTime = absoluteTime / tickInc;
 
-      if ( scaledTime % LONG_TICK_INTERVAL == 0 )
+      if ( ( scaledTime % LONG_TICK_INTERVAL ) == 0 )
       {
         final String timeValue = indexToTime( dataContainer, time );
 
-        final int labelYpos = longTickYpos - 2 * PADDING_Y;
+        final int labelYpos = longTickYpos - ( 2 * PADDING_Y );
         final int labelXpos = Math.max( clipArea.x, xPos - ( fm.stringWidth( timeValue ) / 2 ) );
 
         canvas.drawLine( xPos, baselineYpos, xPos, longTickYpos );
-        if ( scaledTime % TIME_INTERVAL == 0 )
+        if ( ( scaledTime % TIME_INTERVAL ) == 0 )
         {
           canvas.drawString( timeValue, labelXpos, labelYpos );
         }
@@ -177,7 +177,7 @@ public class DiagramTimeLineUI extends ComponentUI
 
     // If cursors are disabled entirely, we're done; otherwise we need to draw
     // them for the range of samples we're currently showing...
-    if ( dataContainer.isCursorsEnabled() )
+    // if ( dataContainer.isCursorsEnabled() )
     {
       paintCursorFlags( dataContainer, canvas, timeLine, startSample, endSample );
     }

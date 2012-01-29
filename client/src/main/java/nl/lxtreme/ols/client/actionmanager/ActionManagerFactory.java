@@ -18,12 +18,13 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.action.manager;
+package nl.lxtreme.ols.client.actionmanager;
 
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 
 
 /**
@@ -68,6 +69,8 @@ public final class ActionManagerFactory
    */
   private static void fillActionManager( final ActionManager aActionManager, final ClientController aController )
   {
+    final SignalDiagramController signalDiagramController = aController.getSignalDiagramController();
+
     aActionManager.add( new NewProjectAction( aController ) );
     aActionManager.add( new OpenProjectAction( aController ) );
     aActionManager.add( new SaveProjectAction( aController ) ).setEnabled( false );
@@ -88,16 +91,12 @@ public final class ActionManagerFactory
     aActionManager.add( new GotoTriggerAction( aController ) ).setEnabled( false );
     for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
     {
-      aActionManager.add( new GotoNthCursorAction( aController, c ) ).setEnabled( false );
+      aActionManager.add( new GotoNthCursorAction( signalDiagramController, c ) ).setEnabled( false );
     }
-    aActionManager.add( new GotoFirstCursorAction( aController ) ).setEnabled( false );
-    aActionManager.add( new GotoLastCursorAction( aController ) ).setEnabled( false );
-    aActionManager.add( new ClearCursors( aController ) ).setEnabled( false );
-    aActionManager.add( new SetCursorModeAction( aController ) );
-    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
-    {
-      aActionManager.add( new SetCursorAction( aController, c ) );
-    }
+    aActionManager.add( new GotoFirstCursorAction( signalDiagramController ) ).setEnabled( false );
+    aActionManager.add( new GotoLastCursorAction( signalDiagramController ) ).setEnabled( false );
+    aActionManager.add( new DeleteAllCursorsAction( signalDiagramController ) ).setEnabled( false );
+    aActionManager.add( new SetCursorModeAction( signalDiagramController ) );
     aActionManager.add( new RemoveAnnotationsAction( aController ) ).setEnabled( false );
 
     aActionManager.add( new ShowPreferencesDialogAction( aController ) );

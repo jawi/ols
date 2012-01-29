@@ -24,6 +24,7 @@ import java.awt.*;
 import java.beans.*;
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 
@@ -104,6 +105,16 @@ public final class SignalDiagramController
   public void addPropertyChangeListener( final PropertyChangeListener aListener )
   {
     getSignalDiagramModel().addPropertyChangeListener( aListener );
+  }
+
+  /**
+   * Returns the set of defined cursors, never <code>null</code>.
+   * 
+   * @return all defined cursors, never <code>null</code>.
+   */
+  public Cursor[] getDefinedCursors()
+  {
+    return getSignalDiagramModel().getDefinedCursors();
   }
 
   /**
@@ -246,7 +257,19 @@ public final class SignalDiagramController
   }
 
   /**
-   * Turns the visibility of all cursors either on or off.
+   * Jumps to a given timestamp in the diagram.
+   * 
+   * @param aTimestamp
+   *          the time stamp to jump to.
+   */
+  public void scrollToTimestamp( final long aTimestamp )
+  {
+    getSignalDiagram().scrollToTimestamp( aTimestamp );
+  }
+
+  /**
+   * Enables or disables the cursor mode, which in effect, Ttrns the visibility
+   * of all cursors either on or off.
    * <p>
    * This method does <em>not</em> modify any cursor, only whether they are
    * displayed or not!
@@ -256,7 +279,7 @@ public final class SignalDiagramController
    *          <code>true</code> if the cursors should be made visible,
    *          <code>false</code> if the cursors should be made invisible.
    */
-  public void setCursorsVisible( final boolean aVisible )
+  public void setCursorMode( final boolean aVisible )
   {
     getSignalDiagramModel().setCursorMode( aVisible );
   }

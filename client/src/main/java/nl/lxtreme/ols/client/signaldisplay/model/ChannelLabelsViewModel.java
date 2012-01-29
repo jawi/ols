@@ -21,6 +21,7 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 
 import java.awt.*;
+import java.util.*;
 
 import javax.swing.*;
 
@@ -129,9 +130,9 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   /**
    * Returns all available channels.
    * 
-   * @return an array of channels, never <code>null</code>.
+   * @return a collection of all channels, never <code>null</code>.
    */
-  public final Channel[] getAllChannels()
+  public final Collection<Channel> getAllChannels()
   {
     return getChannelGroupManager().getAllChannels();
   }

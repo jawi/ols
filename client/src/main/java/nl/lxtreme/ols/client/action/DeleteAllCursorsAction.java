@@ -17,7 +17,7 @@
  *
  * Copyright (C) 2010-2011 - J.W. Janssen, <http://www.lxtreme.nl>
  */
-package nl.lxtreme.ols.client.signaldisplay.action;
+package nl.lxtreme.ols.client.action;
 
 
 import java.awt.event.*;
@@ -25,17 +25,21 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.action.*;
 
 
 /**
- * 
+ * Provides a UI-action to delete all cursors in a single go.
  */
-public class DeleteAllCursorsAction extends AbstractAction
+public class DeleteAllCursorsAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
+
+  public static final String ID = "DeleteAllCursors";
 
   // VARIABLES
 
@@ -44,7 +48,7 @@ public class DeleteAllCursorsAction extends AbstractAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new DeleteCursorAction instance.
+   * Creates a new {@link DeleteCursorAction} instance.
    */
   public DeleteAllCursorsAction( final SignalDiagramController aController )
   {
@@ -64,5 +68,14 @@ public class DeleteAllCursorsAction extends AbstractAction
     {
       this.controller.removeCursor( i );
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
   }
 }

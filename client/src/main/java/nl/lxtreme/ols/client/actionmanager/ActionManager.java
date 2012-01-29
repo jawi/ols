@@ -18,13 +18,11 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.action.manager;
+package nl.lxtreme.ols.client.actionmanager;
 
 
 import java.util.*;
 import java.util.concurrent.*;
-
-import nl.lxtreme.ols.client.action.*;
 
 
 /**

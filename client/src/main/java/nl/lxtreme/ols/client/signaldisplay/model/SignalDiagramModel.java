@@ -115,9 +115,8 @@ public class SignalDiagramModel
   /** The tick increment (in pixels). */
   private static final int TIMELINE_INCREMENT = 5;
 
-  private static final int CURSORS_VISIBLE = ( 1 << 0 );
-  private static final int SNAP_CURSOR_MODE = ( 1 << 1 );
-  private static final int MEASUREMENT_MODE = ( 1 << 2 );
+  private static final int SNAP_CURSOR_MODE = ( 1 << 0 );
+  private static final int MEASUREMENT_MODE = ( 1 << 1 );
 
   // VARIABLES
 
@@ -1054,11 +1053,14 @@ public class SignalDiagramModel
   }
 
   /**
-   * @return the cursorMode
+   * Returns whether or not the cursor-mode is enabled.
+   * 
+   * @return <code>true</code> if cursor-mode is enabled, thereby making all
+   *         defined cursors visible, <code>false</code> otherwise.
    */
   public boolean isCursorMode()
   {
-    return ( this.mode & CURSORS_VISIBLE ) != 0;
+    return ( this.dataSet != null ) && this.dataSet.isCursorsEnabled();
   }
 
   /**
@@ -1294,14 +1296,7 @@ public class SignalDiagramModel
    */
   public void setCursorMode( final boolean aCursorMode )
   {
-    if ( aCursorMode )
-    {
-      this.mode |= CURSORS_VISIBLE;
-    }
-    else
-    {
-      this.mode &= ~CURSORS_VISIBLE;
-    }
+    this.dataSet.setCursorsEnabled( aCursorMode );
 
     ICursorChangeListener[] listeners = this.eventListeners.getListeners( ICursorChangeListener.class );
     for ( ICursorChangeListener listener : listeners )

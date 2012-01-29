@@ -26,6 +26,7 @@ import java.net.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.icons.*;
 
 
@@ -64,7 +65,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
   protected BaseAction( final String aID, final ClientController aController, final Icon aIcon, final String aName,
       final String aDescription )
   {
-    super( aID );
+    super();
 
     this.id = aID;
     this.controller = aController;
@@ -116,7 +117,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
   protected BaseAction( final String aID, final ClientController aController, final String aIconName,
       final String aName, final String aDescription )
   {
-    super( aID );
+    super();
 
     this.id = aID;
     this.controller = aController;
@@ -134,7 +135,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
   // METHODS
 
   /**
-   * @see nl.lxtreme.luna.ui.IManagedAction#getId()
+   * @see nl.lxtreme.ols.client.actionmanager.luna.ui.IManagedAction#getId()
    */
   @Override
   public String getId()

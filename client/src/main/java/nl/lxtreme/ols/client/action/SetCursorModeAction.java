@@ -25,19 +25,24 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 
 
 /**
  * Provides an action that either shows or hides all set cursors.
  */
-public class SetCursorModeAction extends BaseAction
+public class SetCursorModeAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
   public static final String ID = "SetCursorMode";
+
+  // VARIABLES
+
+  private final SignalDiagramController controller;
 
   // CONSTRUCTORS
 
@@ -47,9 +52,13 @@ public class SetCursorModeAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public SetCursorModeAction( final ClientController aController )
+  public SetCursorModeAction( final SignalDiagramController aController )
   {
-    super( ID, aController, "Toggle visibility of all cursors", "Toggle visibility of all cursors in the diagram" );
+    this.controller = aController;
+
+    putValue( NAME, "Toggle visibility of all cursors" );
+    putValue( SHORT_DESCRIPTION, "Toggle visibility of all cursors in the diagram" );
+
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_C ) );
   }
 
@@ -62,7 +71,16 @@ public class SetCursorModeAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
-    getController().setCursorMode( menuItem.getState() );
+    this.controller.setCursorMode( menuItem.getState() );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
   }
 }
 

@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project
+ * OpenBench LogicSniffer / SUMP project 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,43 +18,26 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.action;
+package nl.lxtreme.ols.client.actionmanager;
 
 
-import java.awt.event.*;
-
-import nl.lxtreme.ols.client.*;
+import javax.swing.*;
 
 
 /**
- * Clears all cursors.
+ * Denotes an Swing {@link Action} that is managed by a framework as it is named
+ * uniquely.
  */
-public class ClearCursors extends BaseAction
+public interface IManagedAction extends Action
 {
-  // CONSTANTS
-
-  private static final long serialVersionUID = 1L;
-
-  public static final String ID = "ClearCursors";
-
-  // CONSTRUCTORS
-
-  /**
-   * @param aController
-   */
-  public ClearCursors( final ClientController aController )
-  {
-    super( ID, aController, "Clear all cursors", "Clear all cursors" );
-  }
-
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * Returns the ID of this managed action.
+   * 
+   * @return an identifier of this managed action, never <code>null</code>.
    */
-  @Override
-  public void actionPerformed( final ActionEvent aEvent )
-  {
-    getController().clearAllCursors();
-  }
+  public String getId();
 }
+
+/* EOF */

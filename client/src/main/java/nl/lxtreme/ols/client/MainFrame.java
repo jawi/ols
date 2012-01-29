@@ -550,7 +550,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public void gotoPosition( final int aChannelIdx, final long aSamplePos )
   {
-    this.signalDiagram.scrollToTimestamp( aChannelIdx, aSamplePos );
+    this.signalDiagram.scrollToTimestamp( aSamplePos );
   }
 
   /**
@@ -789,7 +789,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     }
     diagramMenu.addSeparator();
     diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorModeAction.ID ) ) );
-    diagramMenu.add( this.controller.getAction( ClearCursors.ID ) );
+    diagramMenu.add( this.controller.getAction( DeleteAllCursorsAction.ID ) );
     diagramMenu.addSeparator();
     diagramMenu.add( this.controller.getAction( RemoveAnnotationsAction.ID ) );
     diagramMenu.addSeparator();

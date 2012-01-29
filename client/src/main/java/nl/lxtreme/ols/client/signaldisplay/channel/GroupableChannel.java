@@ -25,6 +25,7 @@ import java.awt.*;
 import java.util.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.client.signaldisplay.IChannelChangeListener.ChannelChangeEvent;
 
 
 /**
@@ -34,6 +35,7 @@ public class GroupableChannel implements Channel
 {
   // VARIABLES
 
+  private final ChannelGroupManager manager;
   private final Channel delegate;
   private ChannelGroup group;
 
@@ -43,15 +45,18 @@ public class GroupableChannel implements Channel
    * Creates a new {@link GroupableChannel} instance as wrapper for a given
    * {@link Channel}.
    * 
+   * @param aManager
+   *          the channel group manager to use, cannot be <code>null</code>;
    * @param aChannel
    *          the actual channel, cannot be <code>null</code>.
    */
-  public GroupableChannel( final Channel aChannel )
+  public GroupableChannel( final ChannelGroupManager aManager, final Channel aChannel )
   {
     if ( aChannel == null )
     {
       throw new IllegalArgumentException( "Parameter channel cannot be null!" );
     }
+    this.manager = aManager;
     this.delegate = aChannel;
   }
 
@@ -237,7 +242,12 @@ public class GroupableChannel implements Channel
   @Override
   public void setColor( final Color aColor )
   {
+    Color oldColor = this.delegate.getColor();
+
     this.delegate.setColor( aColor );
+
+    this.manager.fireChannelChangeEvent( new ChannelChangeEvent( this, ChannelChangeEvent.PROPERTY_COLOR, oldColor,
+        aColor ) );
   }
 
   /**
@@ -246,7 +256,12 @@ public class GroupableChannel implements Channel
   @Override
   public void setEnabled( final boolean aEnabled )
   {
+    boolean oldEnabled = this.delegate.isEnabled();
+
     this.delegate.setEnabled( aEnabled );
+
+    this.manager.fireChannelChangeEvent( new ChannelChangeEvent( this, ChannelChangeEvent.PROPERTY_ENABLED, Boolean
+        .valueOf( oldEnabled ), Boolean.valueOf( aEnabled ) ) );
   }
 
   /**
@@ -255,7 +270,12 @@ public class GroupableChannel implements Channel
   @Override
   public void setLabel( final String aName )
   {
+    String oldName = this.delegate.getLabel();
+
     this.delegate.setLabel( aName );
+
+    this.manager.fireChannelChangeEvent( new ChannelChangeEvent( this, ChannelChangeEvent.PROPERTY_LABEL, oldName,
+        aName ) );
   }
 
   /**

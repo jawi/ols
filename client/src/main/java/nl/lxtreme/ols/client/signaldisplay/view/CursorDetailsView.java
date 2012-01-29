@@ -149,7 +149,7 @@ public class CursorDetailsView extends AbstractViewLayer implements ICursorChang
       try
       {
         long value = Long.parseLong( desc );
-        getController().getSignalDiagram().scrollToTimestamp( 0, value );
+        getController().getSignalDiagram().scrollToTimestamp( value );
       }
       catch ( NumberFormatException exception )
       {

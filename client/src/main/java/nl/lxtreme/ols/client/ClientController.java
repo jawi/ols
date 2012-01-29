@@ -29,23 +29,19 @@ import java.util.List;
 import java.util.logging.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
-
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.annotation.Annotation;
 import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
-import nl.lxtreme.ols.api.data.annotation.DataAnnotation;
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.action.manager.*;
-import nl.lxtreme.ols.client.diagram.*;
+import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.*;
@@ -64,7 +60,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   // INNER TYPES
 
   /**
-   * 
+   * Provides a {@link AccumulatingRunnable} that repaints the entire main frame
+   * once in a while. This is necessary if a tool produces lots of annotations
+   * in a short time-frame, which would otherwise cause the UI to become slow
+   * due to the many repaint requests.
    */
   final class AccumulatingRepaintingRunnable extends AccumulatingRunnable<Void>
   {
@@ -72,7 +71,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
      * {@inheritDoc}
      */
     @Override
-    protected void run( final List<Void> aArgs )
+    protected void run( final Deque<Void> aArgs )
     {
       repaintMainFrame();
     }
@@ -216,9 +215,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
      * {@inheritDoc}
      */
     @Override
-    protected void run( final List<Integer> aArgs )
+    protected void run( final Deque<Integer> aArgs )
     {
-      final Integer percentage = aArgs.get( aArgs.size() - 1 );
+      final Integer percentage = aArgs.getLast();
       setProgressOnEDT( percentage.intValue() );
       updateActionsOnEDT();
     }
@@ -238,7 +237,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private final List<Tool<?>> tools;
   private final List<Exporter> exporters;
 
-  private final EventListenerList evenListeners;
   private final ProgressUpdatingRunnable progressAccumulatingRunnable;
   private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
 
@@ -269,7 +267,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     this.tools = new ArrayList<Tool<?>>();
     this.exporters = new ArrayList<Exporter>();
 
-    this.evenListeners = new EventListenerList();
     this.actionManager = ActionManagerFactory.createActionManager( this );
 
     this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
@@ -330,18 +327,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public void acquisitionStarted()
   {
     updateActionsOnEDT();
-  }
-
-  /**
-   * Adds a cursor change listener.
-   * 
-   * @param aListener
-   *          the listener to add, cannot be <code>null</code>.
-   */
-  @Deprecated
-  public void addCursorChangeListener( final DiagramCursorChangeListener aListener )
-  {
-    this.evenListeners.add( DiagramCursorChangeListener.class, aListener );
   }
 
   /**
@@ -513,29 +498,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Clears all cursors.
-   */
-  @Deprecated
-  public void clearAllCursors()
-  {
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
-    {
-      getCurrentDataSet().getCursor( i ).clear();
-    }
-    fireCursorChangedEvent( 0, -1 ); // removed...
-
-    updateActionsOnEDT();
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
   public void clearAnnotations()
   {
-    for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
+    for ( Channel channel : getCurrentDataSet().getChannels() )
     {
-      clearAnnotations( i );
+      channel.clearAnnotations();
     }
 
     repaintMainFrame();
@@ -547,8 +517,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void clearAnnotations( final int aChannelIdx )
   {
-    // XXX
-    // this.dataContainer.clearChannelAnnotations( aChannelIdx );
+    final Channel channel = getChannel( aChannelIdx );
+    channel.clearAnnotations();
+
+    repaintMainFrame();
   }
 
   /**
@@ -646,6 +618,18 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public Action getAction( final String aID )
   {
     return this.actionManager.getAction( aID );
+  }
+
+  /**
+   * Provides direct access to the cursor with the given index.
+   * 
+   * @param aCursorIdx
+   *          the index of the cursor, >= 0 && < {@link Ols#MAX_CURSORS}.
+   * @return a cursor, never <code>null</code>.
+   */
+  public final Cursor getCursor( final int aCursorIdx )
+  {
+    return getCurrentDataSet().getCursor( aCursorIdx );
   }
 
   /**
@@ -851,62 +835,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   /**
    * {@inheritDoc}
    */
-  @Deprecated
-  public void gotoCursorPosition( final int aCursorIdx )
-  {
-    if ( ( this.mainFrame != null ) && getCurrentDataSet().isCursorsEnabled() )
-    {
-      final Cursor cursor = getCurrentDataSet().getCursor( aCursorIdx );
-      if ( ( cursor != null ) && cursor.isDefined() )
-      {
-        this.mainFrame.gotoPosition( 0, cursor.getTimestamp() );
-      }
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Deprecated
-  public void gotoFirstAvailableCursor()
-  {
-    if ( ( this.mainFrame != null ) && getCurrentDataSet().isCursorsEnabled() )
-    {
-      for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
-      {
-        final Cursor cursor = getCurrentDataSet().getCursor( c );
-        if ( cursor.isDefined() )
-        {
-          this.mainFrame.gotoPosition( 0, cursor.getTimestamp() );
-          break;
-        }
-      }
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Deprecated
-  public void gotoLastAvailableCursor()
-  {
-    if ( ( this.mainFrame != null ) && getCurrentDataSet().isCursorsEnabled() )
-    {
-      for ( int c = Ols.MAX_CURSORS - 1; c >= 0; c-- )
-      {
-        final Cursor cursor = getCurrentDataSet().getCursor( c );
-        if ( cursor.isDefined() )
-        {
-          this.mainFrame.gotoPosition( 0, cursor.getTimestamp() );
-          break;
-        }
-      }
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
   public void gotoTriggerPosition()
   {
     final AcquisitionResult capturedData = getCurrentDataSet().getCapturedData();
@@ -1012,20 +940,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void onAnnotation( final Annotation<?> aAnnotation )
   {
-    final Channel channel = getCurrentDataSet().getChannel( aAnnotation.getChannel() );
-    if ( aAnnotation instanceof DataAnnotation<?> )
-    {
-      final DataAnnotation<?> dataAnnotation = ( DataAnnotation<?> )aAnnotation;
+    final Channel channel = getChannel( aAnnotation.getChannel() );
+    channel.addAnnotation( aAnnotation );
 
-      channel.addAnnotation( dataAnnotation );
-
-      // Accumulate repaint events to avoid an avalanche of events on the EDT...
-      this.repaintAccumulatingRunnable.add( ( Void )null );
-    }
-    else
-    {
-      channel.setLabel( aAnnotation.toString() );
-    }
+    // Accumulate repaint events to avoid an avalanche of events on the EDT...
+    this.repaintAccumulatingRunnable.add( ( Void )null );
   }
 
   /**
@@ -1088,33 +1007,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       HostUtils.closeResource( fis );
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Deprecated
-  public void removeCursor( final int aCursorIdx )
-  {
-    if ( this.mainFrame != null )
-    {
-      getCurrentDataSet().getCursor( aCursorIdx ).clear();
-      fireCursorChangedEvent( aCursorIdx, -1 ); // removed...
-    }
-
-    updateActionsOnEDT();
-  }
-
-  /**
-   * Removes a cursor change listener.
-   * 
-   * @param aListener
-   *          the listener to remove, cannot be <code>null</code>.
-   */
-  @Deprecated
-  public void removeCursorChangeListener( final DiagramCursorChangeListener aListener )
-  {
-    this.evenListeners.remove( DiagramCursorChangeListener.class, aListener );
   }
 
   /**
@@ -1371,50 +1263,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       this.mainFrame.setSelectedDeviceName( aDeviceName );
     }
     // Make sure the action reflect the current situation...
-    updateActionsOnEDT();
-  }
-
-  /**
-   * Sets whether or not cursors are enabled.
-   * 
-   * @param aState
-   *          <code>true</code> if the cursors should be enabled,
-   *          <code>false</code> otherwise.
-   */
-  public void setCursorMode( final boolean aState )
-  {
-    getCurrentDataSet().setCursorsEnabled( aState );
-    // Reflect the change directly on the diagram...
-    repaintMainFrame();
-
-    updateActionsOnEDT();
-  }
-
-  /**
-   * Sets the position of the cursor with the given index to the given location.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to set;
-   * @param aLocation
-   *          the mouse location of the new cursor position.
-   */
-  public void setCursorPosition( final int aCursorIdx, final Point aLocation )
-  {
-    // Implicitly enable cursor mode, the user already had made its
-    // intensions clear that he want to have this by opening up the
-    // context menu anyway...
-    setCursorMode( true );
-
-    if ( this.mainFrame != null )
-    {
-      // Convert the mouse-position to a sample index...
-      final long timestamp = this.mainFrame.convertMousePositionToTimestamp( aLocation );
-
-      getCurrentDataSet().getCursor( aCursorIdx ).setTimestamp( timestamp );
-
-      fireCursorChangedEvent( aCursorIdx, aLocation.x );
-    }
-
     updateActionsOnEDT();
   }
 
@@ -1757,16 +1605,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
           final boolean gotoCursorNEnabled = enableCursors && cursorPositionSet;
           getAction( GotoNthCursorAction.getID( c ) ).setEnabled( gotoCursorNEnabled );
-
-          final Action action = getAction( SetCursorAction.getCursorId( c ) );
-          action.setEnabled( dataAvailable );
-          action.putValue( Action.SELECTED_KEY, Boolean.valueOf( cursorPositionSet ) );
         }
 
         getAction( GotoFirstCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
         getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
 
-        getAction( ClearCursors.ID ).setEnabled( enableCursors && anyCursorSet );
+        getAction( DeleteAllCursorsAction.ID ).setEnabled( enableCursors && anyCursorSet );
         getAction( RemoveAnnotationsAction.ID ).setEnabled( dataAvailable );
 
         // Update the tools...
@@ -1794,7 +1638,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean areCursorsEnabled()
   {
-    return getCurrentDataSet().isCursorsEnabled();
+    return this.signalDiagramController.getSignalDiagramModel().isCursorMode();
   }
 
   /**
@@ -1850,7 +1694,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean isCursorSet( final int aCursorIdx )
   {
-    return getCurrentDataSet().getCursor( aCursorIdx ).isDefined();
+    return getCursor( aCursorIdx ).isDefined();
   }
 
   /**
@@ -1868,7 +1712,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     final AcquisitionResult capturedData = dataSet.getCapturedData();
 
     final int dataLength = capturedData.getValues().length;
-    if ( dataSet.isCursorsEnabled() )
+    if ( areCursorsEnabled() )
     {
       if ( isCursorSet( 0 ) )
       {
@@ -1922,24 +1766,15 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * @param aCursorIdx
-   * @param aMouseXpos
+   * Returns the {@link Channel} with the given index.
+   * 
+   * @param aChannelIdx
+   *          the index of the channel to return, >= 0.
+   * @return a {@link Channel} instance, never <code>null</code>.
    */
-  @Deprecated
-  private void fireCursorChangedEvent( final int aCursorIdx, final int aMouseXpos )
+  private Channel getChannel( final int aChannelIdx )
   {
-    final DiagramCursorChangeListener[] listeners = this.evenListeners.getListeners( DiagramCursorChangeListener.class );
-    for ( final DiagramCursorChangeListener listener : listeners )
-    {
-      if ( aMouseXpos >= 0 )
-      {
-        listener.cursorChanged( aCursorIdx, aMouseXpos );
-      }
-      else
-      {
-        listener.cursorRemoved( aCursorIdx );
-      }
-    }
+    return getCurrentDataSet().getChannel( aChannelIdx );
   }
 
   /**

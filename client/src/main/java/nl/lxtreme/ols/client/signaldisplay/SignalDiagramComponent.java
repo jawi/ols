@@ -31,6 +31,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
@@ -256,10 +257,9 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
         final MeasurementInfo signalHover = getModel().getSignalHover( point );
         if ( ( signalHover != null ) && !signalHover.isEmpty() )
         {
-          final int channel = signalHover.getChannelIndex();
           final long timestamp = signalHover.getEndTimestamp().longValue();
 
-          scrollToTimestamp( channel, timestamp );
+          scrollToTimestamp( timestamp );
         }
 
         aEvent.consume();
@@ -379,6 +379,12 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
       mi = new JCheckBoxMenuItem( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
       result.add( mi );
+
+      if ( signalElement.isDigitalSignal() )
+      {
+        mi = new JMenuItem( new RemoveChannelAnnotations( this.controller, signalElement ) );
+        result.add( mi );
+      }
 
       if ( signalElement.isSignalGroup() )
       {
@@ -1167,15 +1173,29 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   }
 
   /**
+   * Repaints the area of this component specified by the given
+   * {@link SignalElement}.
+   * 
+   * @param aSignalElement
+   *          the signal element to repaint, cannot be <code>null</code>.
+   */
+  public void repaintSignalElement( final SignalElement aSignalElement )
+  {
+    final Rectangle rect = getVisibleRect();
+    rect.y = aSignalElement.getYposition();
+    rect.height = aSignalElement.getHeight();
+
+    repaint( rect );
+  }
+
+  /**
    * Scrolls the signal diagram component so that the given timestamp for the
    * given channel becomes visible.
    * 
-   * @param aChannel
-   *          the channel index of the channel to scroll the timeline for;
    * @param aTimestamp
    *          the timestamp to make visible, >= 0 and < last timestamp.
    */
-  public void scrollToTimestamp( final int aChannel, final long aTimestamp )
+  public void scrollToTimestamp( final long aTimestamp )
   {
     final SignalView signalView = getSignalView();
     final Rectangle visibleRect = signalView.getVisibleRect();
