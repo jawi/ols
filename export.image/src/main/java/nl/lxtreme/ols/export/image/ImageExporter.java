@@ -31,7 +31,6 @@ import javax.swing.border.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.export.*;
-import nl.lxtreme.ols.api.data.project.*;
 
 
 /**
