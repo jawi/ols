@@ -63,10 +63,9 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
     this.propertyChangeSupport = new PropertyChangeSupport( this );
     this.settings = new HashMap<String, UserSettings>();
 
-    this.dataSet = new DataSetImpl();
-    this.changed = false;
+    setDataSet( new DataSetImpl() );
 
-    this.dataSet.addPropertyChangeListener( this );
+    this.changed = false;
   }
 
   // METHODS
@@ -191,10 +190,8 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   public void setCapturedData( final AcquisitionResult aCapturedData )
   {
     final DataSetImpl old = this.dataSet;
-    old.removePropertyChangeListener( this );
 
-    this.dataSet = new DataSetImpl( aCapturedData, old );
-    this.dataSet.addPropertyChangeListener( this );
+    setDataSet( new DataSetImpl( aCapturedData, old ) );
 
     this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA, old, this.dataSet );
 
@@ -346,6 +343,13 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
     {
       throw new IllegalArgumentException();
     }
+    if ( this.dataSet != null )
+    {
+      this.dataSet.removePropertyChangeListener( this );
+    }
+
     this.dataSet = aDataSet;
+
+    this.dataSet.addPropertyChangeListener( this );
   }
 }

@@ -26,6 +26,7 @@ import static nl.lxtreme.ols.util.ColorUtils.*;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
@@ -75,7 +76,7 @@ public final class ChannelImpl implements Channel
     this.color = aChannel.getColor();
     this.enabled = aChannel.isEnabled();
 
-    this.annotations = new ArrayList<Annotation<?>>( aChannel.getAnnotations() );
+    this.annotations = new CopyOnWriteArrayList<Annotation<?>>( aChannel.getAnnotations() );
   }
 
   /**
@@ -97,7 +98,7 @@ public final class ChannelImpl implements Channel
     this.color = DEFAULT_COLOR;
     this.enabled = true;
 
-    this.annotations = new ArrayList<Annotation<?>>();
+    this.annotations = new CopyOnWriteArrayList<Annotation<?>>();
   }
 
   // METHODS
@@ -108,7 +109,15 @@ public final class ChannelImpl implements Channel
   @Override
   public void addAnnotation( final Annotation<?> aAnnotation )
   {
-    this.annotations.add( aAnnotation );
+    if ( aAnnotation instanceof DataAnnotation )
+    {
+      this.annotations.add( aAnnotation );
+    }
+    else
+    {
+      // TODO ensure it is a channel label annotation?!
+      setLabel( aAnnotation.toString() );
+    }
   }
 
   /**

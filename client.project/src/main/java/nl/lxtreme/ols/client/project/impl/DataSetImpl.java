@@ -73,7 +73,7 @@ public class DataSetImpl implements DataSet, ProjectProperties
     this.capturedData = null;
     this.cursors = createCursors( Ols.MAX_CURSORS );
     this.channels = createChannels( Ols.MAX_CHANNELS );
-    this.cursorsEnabled = false;
+    this.cursorsEnabled = true;
   }
 
   // METHODS

@@ -175,9 +175,9 @@ public class ProjectImplTest
   @Test
   public void testSetCursorsEnabled()
   {
-    this.project.getDataSet().setCursorsEnabled( true );
+    this.project.getDataSet().setCursorsEnabled( false );
 
-    assertTrue( this.project.getDataSet().isCursorsEnabled() );
+    assertFalse( this.project.getDataSet().isCursorsEnabled() );
     assertTrue( this.project.isChanged() );
   }
 
