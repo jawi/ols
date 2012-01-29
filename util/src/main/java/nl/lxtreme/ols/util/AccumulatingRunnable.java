@@ -36,7 +36,7 @@ public abstract class AccumulatingRunnable<T> implements Runnable
 {
   // VARIABLES
 
-  private List<T> arguments = null;
+  private Deque<T> arguments = null;
 
   // METHODS
 
@@ -56,7 +56,7 @@ public abstract class AccumulatingRunnable<T> implements Runnable
     if ( this.arguments == null )
     {
       isSubmitted = false;
-      this.arguments = new ArrayList<T>();
+      this.arguments = new LinkedList<T>();
     }
     Collections.addAll( this.arguments, args );
     if ( !isSubmitted )
@@ -80,19 +80,19 @@ public abstract class AccumulatingRunnable<T> implements Runnable
    * Equivalent to {@code Runnable.run} method with the accumulated arguments to
    * process.
    * 
-   * @param args
-   *          accumulated argumets to process.
+   * @param aArguments
+   *          the accumulated arguments to process.
    */
-  protected abstract void run( List<T> args );
+  protected abstract void run( Deque<T> aArguments );
 
   /**
    * Returns accumulated arguments and flashes the arguments storage.
    * 
    * @return accumulated arguments
    */
-  private synchronized List<T> flush()
+  private synchronized Deque<T> flush()
   {
-    List<T> list = this.arguments;
+    Deque<T> list = this.arguments;
     this.arguments = null;
     return list;
   }
