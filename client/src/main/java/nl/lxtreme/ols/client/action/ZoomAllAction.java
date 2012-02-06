@@ -23,7 +23,11 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -31,7 +35,7 @@ import nl.lxtreme.ols.util.swing.*;
  * Provides a "zoom fit" action, that zooms the diagram to fit entirely in the
  * current viewport dimensions.
  */
-public class ZoomFitAction extends BaseAction
+public class ZoomAllAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -39,17 +43,25 @@ public class ZoomFitAction extends BaseAction
 
   public static final String ID = "ZoomFit";
 
+  // VARIABLES
+
+  private final SignalDiagramController controller;
+
   // CONSTRUCTORS
 
   /**
-   * Creates a new ZoomFitAction instance.
+   * Creates a new {@link ZoomAllAction} instance.
    * 
    * @param aController
    *          the controller to use for this action.
    */
-  public ZoomFitAction( final ClientController aController )
+  public ZoomAllAction( final SignalDiagramController aController )
   {
-    super( ID, aController, ICON_ZOOM_FIT_BEST, "Zoom to fit", "Zoom to best fit" );
+    this.controller = aController;
+
+    putValue( NAME, "Zoom to fit" );
+    putValue( SHORT_DESCRIPTION, "Zoom to best fit" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( IconLocator.ICON_ZOOM_FIT_BEST ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_F ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_F ) );
   }
@@ -62,7 +74,24 @@ public class ZoomFitAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().zoomToFit();
+    getZoomController().zoomAll();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * @return the signal diagram's zoom controller, never <code>null</code>.
+   */
+  private ZoomController getZoomController()
+  {
+    return this.controller.getZoomController();
   }
 }
 

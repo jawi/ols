@@ -33,6 +33,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.icons.*;
@@ -131,9 +132,11 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
           try
           {
             final JMenuItem menuItem = createMenuItem( name );
-
-            this.group.add( menuItem );
-            menu.add( menuItem );
+            if ( menuItem != null )
+            {
+              this.group.add( menuItem );
+              menu.add( menuItem );
+            }
           }
           catch ( Exception exception )
           {
@@ -223,6 +226,67 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       }
 
       return result.toArray( new String[result.size()] );
+    }
+  }
+
+  /**
+   * Provides a builder for building the cursors menu upon selection of the
+   * menu.
+   */
+  static class CursorMenuBuilder extends AbstractMenuBuilder
+  {
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new MainFrame.CursorMenuBuilder instance.
+     */
+    public CursorMenuBuilder( final ClientController aController )
+    {
+      super( aController );
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected JMenuItem createMenuItem( final String aName )
+    {
+      int idx = NumberUtils.safeParseInt( aName );
+      if ( idx >= 0 )
+      {
+        final Action action = this.controller.getAction( GotoNthCursorAction.getID( idx ) );
+        return new JMenuItem( action );
+      }
+      return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String[] getMenuItemNames()
+    {
+      final Cursor[] cursors = this.controller.getCurrentDataSet().getCursors();
+      final List<String> result = new ArrayList<String>();
+      for ( Cursor cursor : cursors )
+      {
+        if ( cursor.isDefined() )
+        {
+          result.add( Integer.toString( cursor.getIndex() ) );
+        }
+      }
+      return result.toArray( new String[result.size()] );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getNoItemsName()
+    {
+      return "No cursors set.";
     }
   }
 
@@ -454,6 +518,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private JMenu toolsMenu;
   private JMenu windowMenu;
   private JMenu exportMenu;
+  private JMenu cursorsMenu;
 
   private volatile String lastSelectedDeviceName;
 
@@ -520,18 +585,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Converts a mouse position to a sample index.
-   * 
-   * @param aLocation
-   *          the mouse position to convert, cannot be <code>null</code>.
-   * @return the sample index of the sample under the mouse.
-   */
-  public long convertMousePositionToTimestamp( final Point aLocation )
-  {
-    return -1; // XXX
-  }
-
-  /**
    * Returns the name of the current selected device in the devices menu.
    * 
    * @return the name of the current selected device, or <code>null</code> if no
@@ -540,6 +593,16 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   public final String getSelectedDeviceName()
   {
     return this.lastSelectedDeviceName;
+  }
+
+  /**
+   * Returns the signal diagram's zoom controller.
+   * 
+   * @return the zoom controller, never <code>null</code>.
+   */
+  public ZoomController getZoomController()
+  {
+    return this.signalDiagram.getZoomController();
   }
 
   /**
@@ -593,18 +656,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Sets the channel labels to the given array.
-   * 
-   * @param aChannelLabels
-   *          the changed channel labels.
-   */
-  public void setChannelLabels( final String[] aChannelLabels )
-  {
-    this.signalDiagram.recalculateDimensions();
-    this.signalDiagram.revalidate();
-  }
-
-  /**
    * Updates the progress bar to the given percentage.
    * 
    * @param aPercentage
@@ -653,38 +704,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // We cannot put null values into the settings!
     final String selectedDevice = this.lastSelectedDeviceName != null ? this.lastSelectedDeviceName : "";
     aSettings.put( "selectedDevice", selectedDevice );
-  }
-
-  /**
-   * Zooms to the default level.
-   */
-  public void zoomDefault()
-  {
-    this.signalDiagram.zoomOriginal();
-  }
-
-  /**
-   * Zooms in.
-   */
-  public void zoomIn()
-  {
-    this.signalDiagram.zoomIn();
-  }
-
-  /**
-   * Zooms out.
-   */
-  public void zoomOut()
-  {
-    this.signalDiagram.zoomOut();
-  }
-
-  /**
-   * Zooms so that the entire capture is visible.
-   */
-  public void zoomToFit()
-  {
-    this.signalDiagram.zoomAll();
   }
 
   /**
@@ -777,19 +796,21 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     diagramMenu.add( this.controller.getAction( ZoomInAction.ID ) );
     diagramMenu.add( this.controller.getAction( ZoomOutAction.ID ) );
-    diagramMenu.add( this.controller.getAction( ZoomDefaultAction.ID ) );
-    diagramMenu.add( this.controller.getAction( ZoomFitAction.ID ) );
+    diagramMenu.add( this.controller.getAction( ZoomOriginalAction.ID ) );
+    diagramMenu.add( this.controller.getAction( ZoomAllAction.ID ) );
     diagramMenu.addSeparator();
     diagramMenu.add( this.controller.getAction( GotoTriggerAction.ID ) );
-    diagramMenu.add( this.controller.getAction( GotoFirstCursorAction.ID ) );
-    diagramMenu.add( this.controller.getAction( GotoLastCursorAction.ID ) );
-    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
-    {
-      diagramMenu.add( this.controller.getAction( GotoNthCursorAction.getID( c ) ) );
-    }
     diagramMenu.addSeparator();
     diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorModeAction.ID ) ) );
     diagramMenu.add( this.controller.getAction( DeleteAllCursorsAction.ID ) );
+    diagramMenu.add( this.controller.getAction( GotoFirstCursorAction.ID ) );
+    diagramMenu.add( this.controller.getAction( GotoLastCursorAction.ID ) );
+
+    this.cursorsMenu = new JMenu( "Cursors" );
+    this.cursorsMenu.setMnemonic( 'C' );
+    this.cursorsMenu.addMenuListener( new CursorMenuBuilder( this.controller ) );
+    diagramMenu.add( this.cursorsMenu );
+
     diagramMenu.addSeparator();
     diagramMenu.add( this.controller.getAction( RemoveAnnotationsAction.ID ) );
     diagramMenu.addSeparator();
@@ -841,8 +862,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     toolbar.add( this.controller.getAction( ZoomInAction.ID ) );
     toolbar.add( this.controller.getAction( ZoomOutAction.ID ) );
-    toolbar.add( this.controller.getAction( ZoomDefaultAction.ID ) );
-    toolbar.add( this.controller.getAction( ZoomFitAction.ID ) );
+    toolbar.add( this.controller.getAction( ZoomOriginalAction.ID ) );
+    toolbar.add( this.controller.getAction( ZoomAllAction.ID ) );
     toolbar.addSeparator();
 
     toolbar.add( this.controller.getAction( GotoTriggerAction.ID ) );

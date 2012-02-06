@@ -25,13 +25,13 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.logging.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
@@ -166,9 +166,10 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
             try
             {
-              if ( isZoomAll() )
+              final ZoomController zoomCtrl = getZoomController();
+              if ( zoomCtrl.isZoomAll() )
               {
-                zoomAll();
+                zoomCtrl.zoomAll();
               }
               else
               {
@@ -206,9 +207,10 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
       try
       {
-        if ( isZoomAll() )
+        final ZoomController zoomCtrl = getZoomController();
+        if ( zoomCtrl.isZoomAll() )
         {
-          zoomAll();
+          zoomCtrl.zoomAll();
         }
         else
         {
@@ -648,237 +650,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     }
   }
 
-  /**
-   * Action to zoom all via '0' key.
-   */
-  final class ZoomAllAction extends AbstractAction
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      zoomAll();
-    }
-  }
-
-  /**
-   * Defines a zoom factor, with a ratio and some additional properties.
-   */
-  static class ZoomHelper
-  {
-    // CONSTANTS
-
-    private static final Logger LOG = Logger.getLogger( ZoomHelper.class.getName() );
-
-    // VARIABLES
-
-    private boolean zoomAll;
-
-    private final SignalDiagramComponent signalDiagram;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new SignalDiagramComponent.ZoomFactor instance.
-     * 
-     * @param aSignalDiagram
-     *          the signal diagram component to use.
-     */
-    public ZoomHelper( final SignalDiagramComponent aSignalDiagram )
-    {
-      this.signalDiagram = aSignalDiagram;
-    }
-
-    // METHODS
-
-    /**
-     * Returns the current value of factor.
-     * 
-     * @return the factor
-     */
-    public double getFactor()
-    {
-      return getModel().getZoomFactor();
-    }
-
-    /**
-     * Returns the current value of zoomAll.
-     * 
-     * @return the zoomAll
-     */
-    public boolean isZoomAll()
-    {
-      return this.zoomAll;
-    }
-
-    /**
-     * Zooms to make all data visible in one screen.
-     */
-    public void zoomAll()
-    {
-      setFactor( getMinZoomLevel() );
-      this.zoomAll = true;
-
-      LOG.log( Level.INFO, "Zoom factor set to " + getFactor() );
-
-      this.signalDiagram.recalculateDimensions();
-    }
-
-    /**
-     * Zooms in with a factor 1.5
-     */
-    public void zoomIn()
-    {
-      zoomRelative( 2.0 );
-
-      this.signalDiagram.recalculateDimensions();
-    }
-
-    /**
-     * Zooms to a factor of 1.0.
-     */
-    public void zoomOriginal()
-    {
-      zoomAbsolute( 1.0 );
-
-      this.signalDiagram.recalculateDimensions();
-    }
-
-    /**
-     * Zooms out with a factor 1.5
-     */
-    public void zoomOut()
-    {
-      zoomRelative( 0.5 );
-
-      this.signalDiagram.recalculateDimensions();
-    }
-
-    /**
-     * Determines the maximum zoom level that we can handle without causing
-     * display problems.
-     * <p>
-     * It appears that the maximum width of a component can be
-     * {@link Short#MAX_VALUE} pixels wide.
-     * </p>
-     * 
-     * @return a maximum zoom level.
-     */
-    private double getMaxZoomLevel()
-    {
-      final SignalDiagramModel model = getModel();
-      if ( !model.hasData() )
-      {
-        return 1.0;
-      }
-
-      final double length = model.getAbsoluteLength();
-      return Math.floor( Integer.MAX_VALUE / length );
-    }
-
-    /**
-     * Determines the minimum zoom level that we can causes all signals to be
-     * displayed in the current width and height.
-     * 
-     * @return a minimum zoom level.
-     */
-    private double getMinZoomLevel()
-    {
-      final SignalDiagramModel model = getModel();
-      if ( !model.hasData() )
-      {
-        return 1.0;
-      }
-
-      Rectangle viewSize = this.signalDiagram.getVisibleViewSize();
-      final double length = model.getAbsoluteLength();
-
-      return viewSize.getWidth() / length;
-    }
-
-    /**
-     * @return
-     */
-    private SignalDiagramModel getModel()
-    {
-      return this.signalDiagram.getModel();
-    }
-
-    /**
-     * Sets the factor.
-     * 
-     * @param aFactor
-     *          the factor to set
-     */
-    private void setFactor( final double aFactor )
-    {
-      getModel().setZoomFactor( aFactor );
-    }
-
-    /**
-     * @param aFactor
-     */
-    private void zoomAbsolute( final double aFactor )
-    {
-      setFactor( aFactor );
-      this.zoomAll = false;
-
-      LOG.log( Level.INFO, "Zoom factor set to " + getFactor() );
-    }
-
-    /**
-     * @param aFactor
-     */
-    private void zoomRelative( final double aFactor )
-    {
-      final double newFactor = Math.max( getMinZoomLevel(), Math.min( getMaxZoomLevel(), aFactor * getFactor() ) );
-      zoomAbsolute( newFactor );
-    }
-  }
-
-  /**
-   * Action to zoom in via '+' or '=' key.
-   */
-  final class ZoomInAction extends AbstractAction
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      zoomIn();
-    }
-  }
-
-  /**
-   * Action to zoom to original via '1' key.
-   */
-  final class ZoomOriginalAction extends AbstractAction
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      zoomOriginal();
-    }
-  }
-
-  /**
-   * Action to zoom out via '-' or '_' key.
-   */
-  final class ZoomOutAction extends AbstractAction
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      zoomOut();
-    }
-  }
-
   // CONSTANTS
 
   static final java.awt.Cursor CURSOR_WAIT = java.awt.Cursor.getPredefinedCursor( java.awt.Cursor.WAIT_CURSOR );
@@ -897,7 +668,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   private final SignalView signalView;
   private final TransparentAWTListener awtListener;
   private final SignalDiagramModel model;
-  private final ZoomHelper zoomHelper;
+  private final ZoomController zoomController;
 
   // CONSTRUCTORS
 
@@ -913,7 +684,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
     this.controller = aController;
 
-    this.zoomHelper = new ZoomHelper( this );
+    this.zoomController = new ZoomController( this.controller );
 
     this.awtListener = new TransparentAWTListener( this.controller );
     this.model = new SignalDiagramModel( this.controller );
@@ -965,15 +736,21 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
       configureEnclosingScrollPane();
 
-      ZoomInAction zoomInAction = new ZoomInAction();
-      ZoomOutAction zoomOutAction = new ZoomOutAction();
+      final IActionManager actionManager = this.controller.getActionManager();
+
+      // Wrap the original zoom-actions so that we can update its state upon
+      // each invocation...
+      Action zoomInAction = actionManager.getAction( ZoomInAction.ID );
+      Action zoomOutAction = actionManager.getAction( ZoomOutAction.ID );
+      Action zoomAllAction = actionManager.getAction( ZoomAllAction.ID );
+      Action zoomOriginalAction = actionManager.getAction( ZoomOriginalAction.ID );
 
       registerKeyBinding( this, '+', zoomInAction );
       registerKeyBinding( this, '=', zoomInAction );
       registerKeyBinding( this, '-', zoomOutAction );
       registerKeyBinding( this, '_', zoomOutAction );
-      registerKeyBinding( this, '0', new ZoomAllAction() );
-      registerKeyBinding( this, '1', new ZoomOriginalAction() );
+      registerKeyBinding( this, '0', zoomAllAction );
+      registerKeyBinding( this, '1', zoomOriginalAction );
     }
     finally
     {
@@ -1083,6 +860,16 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   }
 
   /**
+   * Returns the zoom controller of this diagram.
+   * 
+   * @return the zoom controller, never <code>null</code>.
+   */
+  public ZoomController getZoomController()
+  {
+    return this.zoomController;
+  }
+
+  /**
    * @see javax.swing.JComponent#paint(java.awt.Graphics)
    */
   @Override
@@ -1106,52 +893,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     {
       super.paint( aGraphics );
     }
-  }
-
-  /**
-   * Recalculates the dimensions of the main view.
-   */
-  public void recalculateDimensions()
-  {
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getSignalView() );
-    if ( scrollPane == null )
-    {
-      return;
-    }
-
-    final Rectangle viewPortSize = scrollPane.getViewport().getVisibleRect();
-
-    int width = this.model.getAbsoluteScreenWidth();
-    if ( width < viewPortSize.width )
-    {
-      width = viewPortSize.width;
-    }
-
-    int height = this.model.getAbsoluteScreenHeight();
-    if ( height < viewPortSize.height )
-    {
-      height = viewPortSize.height;
-    }
-
-    JComponent signalView = ( JComponent )scrollPane.getViewport().getView();
-    signalView.setPreferredSize( new Dimension( width, height ) );
-    signalView.revalidate();
-
-    TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
-    // the timeline component always follows the width of the signal view, but
-    // with a fixed height...
-    timeline.setPreferredSize( new Dimension( width, timeline.getTimeLineHeight() ) );
-    timeline.setMinimumSize( signalView.getPreferredSize() );
-    timeline.revalidate();
-
-    ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
-    // the channel label component calculates its own 'optimal' width, but
-    // doesn't know squat about the correct height...
-    final Dimension minimumSize = channelLabels.getMinimumSize();
-    channelLabels.setPreferredSize( new Dimension( minimumSize.width, height ) );
-    channelLabels.revalidate();
-
-    scrollPane.repaint();
   }
 
   /**
@@ -1210,43 +951,49 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   }
 
   /**
-   * Zooms to make all data visible in one screen.
+   * Recalculates the dimensions of the main view.
    */
-  public final void zoomAll()
+  final void recalculateDimensions()
   {
-    this.zoomHelper.zoomAll();
-  }
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getSignalView() );
+    if ( scrollPane == null )
+    {
+      return;
+    }
 
-  /**
-   * Zooms in with a factor 1.5
-   */
-  public final void zoomIn()
-  {
-    this.zoomHelper.zoomIn();
-  }
+    final Rectangle viewPortSize = scrollPane.getViewport().getVisibleRect();
 
-  /**
-   * Zooms to a factor of 1.0.
-   */
-  public final void zoomOriginal()
-  {
-    this.zoomHelper.zoomOriginal();
-  }
+    int width = this.model.getAbsoluteScreenWidth();
+    if ( width < viewPortSize.width )
+    {
+      width = viewPortSize.width;
+    }
 
-  /**
-   * Zooms out with a factor 1.5
-   */
-  public final void zoomOut()
-  {
-    this.zoomHelper.zoomOut();
-  }
+    int height = this.model.getAbsoluteScreenHeight();
+    if ( height < viewPortSize.height )
+    {
+      height = viewPortSize.height;
+    }
 
-  /**
-   * @return
-   */
-  final boolean isZoomAll()
-  {
-    return this.zoomHelper.isZoomAll();
+    JComponent signalView = ( JComponent )scrollPane.getViewport().getView();
+    signalView.setPreferredSize( new Dimension( width, height ) );
+    signalView.revalidate();
+
+    TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
+    // the timeline component always follows the width of the signal view, but
+    // with a fixed height...
+    timeline.setPreferredSize( new Dimension( width, timeline.getTimeLineHeight() ) );
+    timeline.setMinimumSize( signalView.getPreferredSize() );
+    timeline.revalidate();
+
+    ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+    // the channel label component calculates its own 'optimal' width, but
+    // doesn't know squat about the correct height...
+    final Dimension minimumSize = channelLabels.getMinimumSize();
+    channelLabels.setPreferredSize( new Dimension( minimumSize.width, height ) );
+    channelLabels.revalidate();
+
+    scrollPane.repaint();
   }
 
   /**

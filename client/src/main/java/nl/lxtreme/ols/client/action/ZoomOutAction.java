@@ -23,7 +23,11 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -31,13 +35,17 @@ import nl.lxtreme.ols.util.swing.*;
  * Provides a "zoom out" action, that zooms out the diagram with a constant
  * factor.
  */
-public class ZoomOutAction extends BaseAction
+public class ZoomOutAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
   public static final String ID = "ZoomOut";
+
+  // VARIABLES
+
+  private final SignalDiagramController controller;
 
   // CONSTRUCTORS
 
@@ -47,9 +55,13 @@ public class ZoomOutAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public ZoomOutAction( final ClientController aController )
+  public ZoomOutAction( final SignalDiagramController aController )
   {
-    super( ID, aController, ICON_ZOOM_OUT, "Zoom out", "Zoom out" );
+    this.controller = aController;
+
+    putValue( NAME, "Zoom out" );
+    putValue( SHORT_DESCRIPTION, "Zooms out with a factor" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( IconLocator.ICON_ZOOM_OUT ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_MINUS ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_O ) );
   }
@@ -62,7 +74,24 @@ public class ZoomOutAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().zoomOut();
+    getZoomController().zoomOut();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * @return the signal diagram's zoom controller, never <code>null</code>.
+   */
+  private ZoomController getZoomController()
+  {
+    return this.controller.getZoomController();
   }
 }
 

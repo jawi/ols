@@ -230,7 +230,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   // VARIABLES
 
   private final BundleContext bundleContext;
-  private final IActionManager actionManager;
+  private final ActionManager actionManager;
   private final SignalDiagramController signalDiagramController;
 
   private final List<Device> devices;
@@ -261,13 +261,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     this.bundleContext = aBundleContext;
 
-    this.signalDiagramController = new SignalDiagramController();
-
     this.devices = new ArrayList<Device>();
     this.tools = new ArrayList<Tool<?>>();
     this.exporters = new ArrayList<Exporter>();
 
-    this.actionManager = ActionManagerFactory.createActionManager( this );
+    this.actionManager = ActionManagerFactory.createActionManager();
+    this.signalDiagramController = new SignalDiagramController( this.actionManager );
+
+    ActionManagerFactory.fillActionManager( this.actionManager, this );
 
     this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
     this.repaintAccumulatingRunnable = new AccumulatingRepaintingRunnable();
@@ -285,8 +286,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
     this.signalDiagramController.setDataModel( getCurrentDataSet() );
 
-    // XXX zoom to fit; shouldn't we restore the last zoom settings?
-    zoomToFit();
+    updateActionsOnEDT();
+    restoreZoomLevel();
   }
 
   /**
@@ -901,6 +902,36 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Runs the tool denoted by the given name.
+   * 
+   * @param aToolName
+   *          the name of the tool to run, cannot be <code>null</code>;
+   * @param aParent
+   *          the parent window to use, can be <code>null</code>.
+   */
+  public void invokeTool( final String aToolName, final Window aParent )
+  {
+    if ( LOG.isLoggable( Level.INFO ) )
+    {
+      LOG.log( Level.INFO, "Running tool: \"{0}\" ...", aToolName );
+    }
+
+    final Tool<?> tool = getTool( aToolName );
+    if ( tool == null )
+    {
+      JOptionPane.showMessageDialog( aParent, "No such tool found: " + aToolName, "Error ...",
+          JOptionPane.ERROR_MESSAGE );
+    }
+    else
+    {
+      final ToolContext context = createToolContext();
+      tool.invoke( aParent, context );
+    }
+
+    updateActionsOnEDT();
+  }
+
+  /**
    * Returns whether or not a device is selected.
    * 
    * @return <code>true</code> if a device is selected, <code>false</code>
@@ -963,16 +994,13 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       getCurrentProject().readData( reader );
 
-      // XXX zoom to fit; shouldn't we restore the last zoom settings?
-      zoomToFit();
-
       setStatusOnEDT( "Capture data loaded from {0} ...", aFile.getName() );
     }
     finally
     {
       HostUtils.closeResource( reader );
 
-      zoomToFit();
+      resetZoomLevel();
 
       updateActionsOnEDT();
     }
@@ -999,13 +1027,15 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       final Project project = getCurrentProject();
       project.setFilename( aFile );
 
-      zoomToFit();
-
       setStatusOnEDT( "Project {0} loaded ...", project.getName() );
     }
     finally
     {
       HostUtils.closeResource( fis );
+
+      resetZoomLevel();
+
+      updateActionsOnEDT();
     }
   }
 
@@ -1162,36 +1192,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       updateActionsOnEDT();
     }
-  }
-
-  /**
-   * Runs the tool denoted by the given name.
-   * 
-   * @param aToolName
-   *          the name of the tool to run, cannot be <code>null</code>;
-   * @param aParent
-   *          the parent window to use, can be <code>null</code>.
-   */
-  public void runTool( final String aToolName, final Window aParent )
-  {
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      LOG.log( Level.INFO, "Running tool: \"{0}\" ...", aToolName );
-    }
-
-    final Tool<?> tool = getTool( aToolName );
-    if ( tool == null )
-    {
-      JOptionPane.showMessageDialog( aParent, "No such tool found: " + aToolName, "Error ...",
-          JOptionPane.ERROR_MESSAGE );
-    }
-    else
-    {
-      final ToolContext context = createToolContext();
-      tool.invoke( aParent, context );
-    }
-
-    updateActionsOnEDT();
   }
 
   /**
@@ -1404,55 +1404,13 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Zooms to the default level (1.0).
+   * Returns the current data set.
+   * 
+   * @return the current data set, never <code>null</code>.
    */
-  public void zoomDefault()
+  final DataSet getCurrentDataSet()
   {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.zoomDefault();
-    }
-
-    updateActionsOnEDT();
-  }
-
-  /**
-   * Zooms in with a fixed factor.
-   */
-  public void zoomIn()
-  {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.zoomIn();
-    }
-
-    updateActionsOnEDT();
-  }
-
-  /**
-   * Zooms out with a fixed factor.
-   */
-  public void zoomOut()
-  {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.zoomOut();
-    }
-
-    updateActionsOnEDT();
-  }
-
-  /**
-   * Zooms out to fit all data on screen.
-   */
-  public void zoomToFit()
-  {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.zoomToFit();
-    }
-
-    updateActionsOnEDT();
+    return getCurrentProject().getDataSet();
   }
 
   /**
@@ -1585,11 +1543,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( SaveProjectAction.ID ).setEnabled( projectChanged );
         getAction( SaveProjectAsAction.ID ).setEnabled( projectSavedBefore && projectChanged );
         getAction( SaveDataFileAction.ID ).setEnabled( dataAvailable );
-
-        getAction( ZoomInAction.ID ).setEnabled( dataAvailable );
-        getAction( ZoomOutAction.ID ).setEnabled( dataAvailable );
-        getAction( ZoomDefaultAction.ID ).setEnabled( dataAvailable );
-        getAction( ZoomFitAction.ID ).setEnabled( dataAvailable );
 
         getAction( GotoTriggerAction.ID ).setEnabled( triggerEnable );
 
@@ -1778,16 +1731,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Returns the current data set.
-   * 
-   * @return the current data set, never <code>null</code>.
-   */
-  private DataSet getCurrentDataSet()
-  {
-    return getCurrentProject().getDataSet();
-  }
-
-  /**
    * Returns the current project.
    * 
    * @return the current project, never <code>null</code>.
@@ -1921,6 +1864,26 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         }
       } );
     }
+  }
+
+  /**
+   * Resets the zoom-level to show everything in one screen.
+   */
+  private void resetZoomLevel()
+  {
+    final ZoomController zoomController = this.mainFrame.getZoomController();
+
+    zoomController.zoomAll();
+  }
+
+  /**
+   * Restores the zoom-level to the last zoom-level.
+   */
+  private void restoreZoomLevel()
+  {
+    final ZoomController zoomController = this.mainFrame.getZoomController();
+
+    zoomController.restoreZoomLevel();
   }
 
   /**

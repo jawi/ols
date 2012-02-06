@@ -23,15 +23,19 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * Provides a "zoom default" action, zooming the diagram to the "original"
+ * Provides a "zoom original" action, zooming the diagram to the "original"
  * level.
  */
-public class ZoomDefaultAction extends BaseAction
+public class ZoomOriginalAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -39,17 +43,25 @@ public class ZoomDefaultAction extends BaseAction
 
   public static final String ID = "ZoomDefault";
 
+  // VARIABLES
+
+  private final SignalDiagramController controller;
+
   // CONSTRUCTORS
 
   /**
-   * Creates a new ZoomDefaultAction instance.
+   * Creates a new {@link ZoomOriginalAction} instance.
    * 
    * @param aController
    *          the controller to use for this action.
    */
-  public ZoomDefaultAction( final ClientController aController )
+  public ZoomOriginalAction( final SignalDiagramController aController )
   {
-    super( ID, aController, ICON_ZOOM_DEFAULT, "Zoom original", "Zoom to original level" );
+    this.controller = aController;
+
+    putValue( NAME, "Zoom original" );
+    putValue( SHORT_DESCRIPTION, "Zoom to original level" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( IconLocator.ICON_ZOOM_DEFAULT ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_0 ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_R ) );
   }
@@ -57,12 +69,29 @@ public class ZoomDefaultAction extends BaseAction
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().zoomDefault();
+    getZoomController().zoomOriginal();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * @return the signal diagram's zoom controller, never <code>null</code>.
+   */
+  private ZoomController getZoomController()
+  {
+    return this.controller.getZoomController();
   }
 }
 

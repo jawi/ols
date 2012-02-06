@@ -23,7 +23,11 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
-import nl.lxtreme.ols.client.*;
+import javax.swing.*;
+
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -31,13 +35,17 @@ import nl.lxtreme.ols.util.swing.*;
  * Provides a "zoom in" action, that zooms into the diagram with a constant
  * factor.
  */
-public class ZoomInAction extends BaseAction
+public class ZoomInAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
   public static final String ID = "ZoomIn";
+
+  // VARIABLES
+
+  private final SignalDiagramController controller;
 
   // CONSTRUCTORS
 
@@ -47,9 +55,13 @@ public class ZoomInAction extends BaseAction
    * @param aController
    *          the controller to use for this action.
    */
-  public ZoomInAction( final ClientController aController )
+  public ZoomInAction( final SignalDiagramController aController )
   {
-    super( ID, aController, ICON_ZOOM_IN, "Zoom in", "Zoom in" );
+    this.controller = aController;
+
+    putValue( NAME, "Zoom in" );
+    putValue( SHORT_DESCRIPTION, "Zooms in with a factor" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( IconLocator.ICON_ZOOM_IN ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_PLUS ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_I ) );
   }
@@ -62,7 +74,24 @@ public class ZoomInAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().zoomIn();
+    getZoomController().zoomIn();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * @return the signal diagram's zoom controller, never <code>null</code>.
+   */
+  private ZoomController getZoomController()
+  {
+    return this.controller.getZoomController();
   }
 }
 

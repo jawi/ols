@@ -23,10 +23,16 @@ package nl.lxtreme.ols.client.signaldisplay;
 import java.awt.*;
 import java.beans.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -37,16 +43,21 @@ public final class SignalDiagramController
   // VARIABLES
 
   private final DragAndDropTargetController dndTargetController;
+  private final IActionManager actionManager;
 
   private SignalDiagramComponent signalDiagram;
 
   // CONSTRUCTORS
 
   /**
-   * @param aModel
+   * Creates a new {@link SignalDiagramController} instance.
+   * 
+   * @param aActionManager
+   *          the action manager to use, cannot be <code>null</code>.
    */
-  public SignalDiagramController()
+  public SignalDiagramController( final IActionManager aActionManager )
   {
+    this.actionManager = aActionManager;
     this.dndTargetController = new DragAndDropTargetController( this );
   }
 
@@ -108,6 +119,16 @@ public final class SignalDiagramController
   }
 
   /**
+   * Returns the current value of actionManager.
+   * 
+   * @return the actionManager
+   */
+  public final IActionManager getActionManager()
+  {
+    return this.actionManager;
+  }
+
+  /**
    * Returns the set of defined cursors, never <code>null</code>.
    * 
    * @return all defined cursors, never <code>null</code>.
@@ -143,6 +164,16 @@ public final class SignalDiagramController
       return null;
     }
     return this.signalDiagram.getModel();
+  }
+
+  /**
+   * Returns the zoom controller of this diagram.
+   * 
+   * @return the zoom controller, never <code>null</code>.
+   */
+  public ZoomController getZoomController()
+  {
+    return this.signalDiagram.getZoomController();
   }
 
   /**
@@ -317,6 +348,36 @@ public final class SignalDiagramController
   public void setSnapModeEnabled( final boolean aSnapMode )
   {
     getSignalDiagramModel().setSnapCursor( aSnapMode );
+  }
+
+  /**
+   * Callback method that should be called when the current zoom-factor is
+   * changed.
+   */
+  final void notifyZoomChange( final ZoomEvent aEvent )
+  {
+    final boolean dataAvailable = this.signalDiagram.getModel().hasData();
+
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        Action zoomInAction = SignalDiagramController.this.actionManager.getAction( ZoomInAction.ID );
+        zoomInAction.setEnabled( dataAvailable && aEvent.canZoomIn() );
+
+        Action zoomOutAction = SignalDiagramController.this.actionManager.getAction( ZoomOutAction.ID );
+        zoomOutAction.setEnabled( dataAvailable && aEvent.canZoomOut() );
+
+        Action zoomAllAction = SignalDiagramController.this.actionManager.getAction( ZoomAllAction.ID );
+        zoomAllAction.setEnabled( dataAvailable && !aEvent.isZoomAll() );
+
+        Action zoomOriginalAction = SignalDiagramController.this.actionManager.getAction( ZoomOriginalAction.ID );
+        zoomOriginalAction.setEnabled( dataAvailable && !aEvent.isZoomOriginal() );
+
+        SignalDiagramController.this.signalDiagram.recalculateDimensions();
+      }
+    } );
   }
 
   /**

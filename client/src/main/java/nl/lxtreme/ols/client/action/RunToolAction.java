@@ -102,7 +102,7 @@ public class RunToolAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-    getController().runTool( this.toolName, owner );
+    getController().invokeTool( this.toolName, owner );
   }
 }
 

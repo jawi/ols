@@ -51,10 +51,9 @@ public final class ActionManagerFactory
    *          the controller to use for the actions, cannot be <code>null</code>
    *          .
    */
-  public static IActionManager createActionManager( final ClientController aController )
+  public static ActionManager createActionManager()
   {
     final ActionManager actionManager = new ActionManager();
-    fillActionManager( actionManager, aController );
     return actionManager;
   }
 
@@ -67,7 +66,7 @@ public final class ActionManagerFactory
    *          the controller to use for the actions, cannot be <code>null</code>
    *          .
    */
-  private static void fillActionManager( final ActionManager aActionManager, final ClientController aController )
+  public static void fillActionManager( final ActionManager aActionManager, final ClientController aController )
   {
     final SignalDiagramController signalDiagramController = aController.getSignalDiagramController();
 
@@ -83,10 +82,10 @@ public final class ActionManagerFactory
     aActionManager.add( new CancelCaptureAction( aController ) ).setEnabled( false );
     aActionManager.add( new RepeatCaptureAction( aController ) ).setEnabled( false );
 
-    aActionManager.add( new ZoomInAction( aController ) ).setEnabled( false );
-    aActionManager.add( new ZoomOutAction( aController ) ).setEnabled( false );
-    aActionManager.add( new ZoomDefaultAction( aController ) ).setEnabled( false );
-    aActionManager.add( new ZoomFitAction( aController ) ).setEnabled( false );
+    aActionManager.add( new ZoomInAction( signalDiagramController ) ).setEnabled( false );
+    aActionManager.add( new ZoomOutAction( signalDiagramController ) ).setEnabled( false );
+    aActionManager.add( new ZoomOriginalAction( signalDiagramController ) ).setEnabled( false );
+    aActionManager.add( new ZoomAllAction( signalDiagramController ) ).setEnabled( false );
 
     aActionManager.add( new GotoTriggerAction( aController ) ).setEnabled( false );
     for ( int c = 0; c < Ols.MAX_CURSORS; c++ )

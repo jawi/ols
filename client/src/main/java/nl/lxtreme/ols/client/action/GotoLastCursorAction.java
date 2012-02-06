@@ -60,8 +60,7 @@ public class GotoLastCursorAction extends AbstractAction implements IManagedActi
 
     putValue( NAME, "Go to highest cursor" );
     putValue( SHORT_DESCRIPTION, "Go to the cursor with highest index in diagram" );
-    putValue( Action.LARGE_ICON_KEY, IconLocator.ICON_GOTO_LAST_CURSOR );
-
+    putValue( LARGE_ICON_KEY, IconLocator.ICON_GOTO_LAST_CURSOR );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_L ) );
   }
 
