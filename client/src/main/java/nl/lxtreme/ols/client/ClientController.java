@@ -1871,9 +1871,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private void resetZoomLevel()
   {
-    final ZoomController zoomController = this.mainFrame.getZoomController();
-
-    zoomController.zoomAll();
+    this.mainFrame.resetZoomLevel();
   }
 
   /**
@@ -1881,9 +1879,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private void restoreZoomLevel()
   {
-    final ZoomController zoomController = this.mainFrame.getZoomController();
-
-    zoomController.restoreZoomLevel();
+    this.mainFrame.restoreZoomLevel();
   }
 
   /**

@@ -28,7 +28,6 @@ import java.awt.*;
 /**
  * Provides a small DTO for keeping signal hover information together.
  */
-@SuppressWarnings( "boxing" )
 public final class MeasurementInfo
 {
   // CONSTANTS
@@ -102,12 +101,12 @@ public final class MeasurementInfo
     this.channelIdx = aChannelIdx;
     this.channelLabel = aChannelLabel;
     this.rectangle = aRectangle;
-    this.startTimestamp = aStartTimestamp;
-    this.endTimestamp = aEndTimestamp;
+    this.startTimestamp = Long.valueOf( aStartTimestamp );
+    this.endTimestamp = Long.valueOf( aEndTimestamp );
     this.refTime = aRefTime;
-    this.totalTime = aTotalTime;
-    this.highTime = aHighTime;
-    this.midSamplePos = aMidSamplePos;
+    this.totalTime = Double.valueOf( aTotalTime );
+    this.highTime = Double.valueOf( aHighTime );
+    this.midSamplePos = Integer.valueOf( aMidSamplePos );
   }
 
   // METHODS
@@ -202,23 +201,6 @@ public final class MeasurementInfo
   }
 
   /**
-   * Returns the channel index.
-   * 
-   * @return a channel index, >= 0, never <code>null</code>.
-   */
-  @Deprecated
-  public String getChannelIndexAsString()
-  {
-    StringBuilder sb = new StringBuilder();
-    sb.append( this.channelIdx );
-    if ( this.channelLabel != null )
-    {
-      sb.append( ", " ).append( this.channelLabel );
-    }
-    return sb.toString();
-  }
-
-  /**
    * Returns the current value of channelLabel.
    * 
    * @return the channelLabel
@@ -234,6 +216,7 @@ public final class MeasurementInfo
    * 
    * @return a duty cycle, as percentage.
    */
+  @SuppressWarnings( "boxing" )
   public Double getDutyCycle()
   {
     if ( ( this.highTime == null ) || ( this.totalTime == null ) )
@@ -241,22 +224,6 @@ public final class MeasurementInfo
       return null;
     }
     return ( ( 100.0 * this.highTime ) / this.totalTime );
-  }
-
-  /**
-   * Returns the duty cycle as formatted String value.
-   * 
-   * @return a String representation, never <code>null</code>.
-   */
-  @Deprecated
-  public String getDutyCycleAsString()
-  {
-    Double dc = getDutyCycle();
-    if ( dc != null )
-    {
-      return String.format( "%.1f %%", dc.doubleValue() );
-    }
-    return "-";
   }
 
   /**
@@ -280,26 +247,11 @@ public final class MeasurementInfo
   }
 
   /**
-   * Returns the time the signal is in a non-zero (or high) state.
-   * 
-   * @return a pulse high time, in seconds.
-   */
-  @Deprecated
-  public String getHighTimeAsString()
-  {
-    Double ht = getHighTime();
-    if ( ht != null )
-    {
-      return displayTime( ht.doubleValue() );
-    }
-    return "-";
-  }
-
-  /**
    * Returns the time the signal is in a zero (or low) state.
    * 
    * @return a pulse low time, in seconds.
    */
+  @SuppressWarnings( "boxing" )
   public Double getLowTime()
   {
     if ( ( this.totalTime == null ) || ( this.highTime == null ) )
@@ -307,22 +259,6 @@ public final class MeasurementInfo
       return null;
     }
     return this.totalTime - this.highTime;
-  }
-
-  /**
-   * Returns the time the signal is in a non-zero (or high) state.
-   * 
-   * @return a pulse high time, in seconds.
-   */
-  @Deprecated
-  public String getLowTimeAsString()
-  {
-    Double lt = getLowTime();
-    if ( lt != null )
-    {
-      return displayTime( lt.doubleValue() );
-    }
-    return "-";
   }
 
   /**
@@ -356,17 +292,6 @@ public final class MeasurementInfo
   }
 
   /**
-   * Returns the time value where the mouse cursor is.
-   * 
-   * @return a reference time value, in seconds.
-   */
-  @Deprecated
-  public String getReferenceTimeAsString()
-  {
-    return displayTime( getReferenceTime() );
-  }
-
-  /**
    * Returns the current value of startTimestamp.
    * 
    * @return the startTimestamp
@@ -384,22 +309,6 @@ public final class MeasurementInfo
   public Double getTotalTime()
   {
     return this.totalTime;
-  }
-
-  /**
-   * Returns the width of the total pulse.
-   * 
-   * @return a total pulse width, in seconds.
-   */
-  @Deprecated
-  public String getTotalTimeAsString()
-  {
-    Double tt = getTotalTime();
-    if ( tt != null )
-    {
-      return displayTime( tt.doubleValue() );
-    }
-    return "-";
   }
 
   /**

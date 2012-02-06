@@ -20,6 +20,8 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
+import static nl.lxtreme.ols.util.DisplayUtils.*;
+
 import java.awt.*;
 
 import javax.swing.*;
@@ -86,11 +88,11 @@ public class SignalDetailsView extends AbstractViewLayer implements IMeasurement
 
     if ( aMeasurementInfo != null )
     {
-      timeValue = aMeasurementInfo.getReferenceTimeAsString();
-      totalWidth = aMeasurementInfo.getTotalTimeAsString();
-      pwHigh = aMeasurementInfo.getHighTimeAsString();
-      pwLow = aMeasurementInfo.getLowTimeAsString();
-      dc = aMeasurementInfo.getDutyCycleAsString();
+      timeValue = displayTime( aMeasurementInfo.getReferenceTime() );
+      totalWidth = getTimeAsString( aMeasurementInfo.getTotalTime() );
+      pwHigh = getTimeAsString( aMeasurementInfo.getHighTime() );
+      pwLow = getTimeAsString( aMeasurementInfo.getLowTime() );
+      dc = getDutyCycleAsString( aMeasurementInfo.getDutyCycle() );
     }
 
     final StringBuilder sb = new StringBuilder( "<html><table>" );
@@ -109,6 +111,34 @@ public class SignalDetailsView extends AbstractViewLayer implements IMeasurement
     sb.append( "</table></html>" );
 
     return sb.toString();
+  }
+
+  /**
+   * Returns the duty cycle as formatted String value.
+   * 
+   * @return a String representation, never <code>null</code>.
+   */
+  private static String getDutyCycleAsString( final Double aDC )
+  {
+    if ( aDC != null )
+    {
+      return String.format( "%.1f %%", aDC );
+    }
+    return "-";
+  }
+
+  /**
+   * Returns the given double value as time string.
+   * 
+   * @return a time representation.
+   */
+  private static String getTimeAsString( final Double aTime )
+  {
+    if ( aTime != null )
+    {
+      return displayTime( aTime.doubleValue() );
+    }
+    return "-";
   }
 
   /**

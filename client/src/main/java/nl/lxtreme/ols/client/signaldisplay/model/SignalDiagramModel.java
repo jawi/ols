@@ -162,7 +162,7 @@ public class SignalDiagramModel
 
     this.signalAlignment = SignalAlignment.CENTER;
 
-    this.zoomFactor = 0.0;
+    this.zoomFactor = 1.0;
     this.mode = 0;
 
     this.alternativeAnnotationRendering = true;

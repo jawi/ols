@@ -483,12 +483,15 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     protected String[] getMenuItemNames()
     {
       final Window[] windows = Window.getWindows();
-      final String[] titles = new String[windows.length];
-      for ( int i = 0; i < titles.length; i++ )
+      final List<String> titles = new ArrayList<String>();
+      for ( Window window : windows )
       {
-        titles[i] = FocusWindowAction.getTitle( windows[i] );
+        if ( window.isDisplayable() )
+        {
+          titles.add( FocusWindowAction.getTitle( window ) );
+        }
       }
-      return titles;
+      return titles.toArray( new String[titles.size()] );
     }
 
     /**
@@ -596,16 +599,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Returns the signal diagram's zoom controller.
-   * 
-   * @return the zoom controller, never <code>null</code>.
-   */
-  public ZoomController getZoomController()
-  {
-    return this.signalDiagram.getZoomController();
-  }
-
-  /**
    * Sets the view to the position indicated by the given sample position.
    * 
    * @param aSamplePos
@@ -653,6 +646,22 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // Detour: make sure the controller does this, so the actions are correctly
     // synchronized; make sure the OLS device is selected by default...
     this.controller.selectDevice( aSettings.get( "selectedDevice", "OpenBench LogicSniffer" ) );
+  }
+
+  /**
+   * Resets the zoom-level to show everything in one screen.
+   */
+  public void resetZoomLevel()
+  {
+    getZoomController().zoomAll();
+  }
+
+  /**
+   * Restores the zoom-level to the last zoom-level.
+   */
+  public void restoreZoomLevel()
+  {
+    getZoomController().restoreZoomLevel();
   }
 
   /**
@@ -873,6 +882,16 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     }
 
     return toolbar;
+  }
+
+  /**
+   * Returns the signal diagram's zoom controller.
+   * 
+   * @return the zoom controller, never <code>null</code>.
+   */
+  private ZoomController getZoomController()
+  {
+    return this.signalDiagram.getZoomController();
   }
 
   /**
