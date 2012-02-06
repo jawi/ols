@@ -22,8 +22,6 @@ package nl.lxtreme.ols.client.signaldisplay;
 
 
 import java.awt.*;
-import java.util.logging.*;
-
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 
 
@@ -141,13 +139,13 @@ public class ZoomController
 
   // CONSTANTS
 
+  /** The default/original zoom factor. */
   private static final double DEFAULT_ZOOM_FACTOR = 1.0;
-
-  private static final Logger LOG = Logger.getLogger( ZoomController.class.getName() );
+  /** The zoom-ratio to use when zooming in (or out, if you use the inverse). */
+  private static final double DEFAULT_ZOOM_RATIO = 2.0;
 
   // VARIABLES
 
-  private boolean zoomAll;
   private final SignalDiagramController controller;
 
   // CONSTRUCTORS
@@ -158,12 +156,9 @@ public class ZoomController
    * @param aController
    *          the signal diagram controller to use.
    */
-  public ZoomController( final SignalDiagramController aController )
+  protected ZoomController( final SignalDiagramController aController )
   {
     this.controller = aController;
-
-    // The default...
-    this.zoomAll = true;
   }
 
   // METHODS
@@ -186,7 +181,7 @@ public class ZoomController
    */
   public boolean isZoomAll()
   {
-    return this.zoomAll;
+    return getFactor() == getMinZoomLevel();
   }
 
   /**
@@ -203,7 +198,7 @@ public class ZoomController
    */
   public void restoreZoomLevel()
   {
-    this.controller.notifyZoomChange( new ZoomEvent( getFactor(), getMinZoomLevel(), getMaxZoomLevel() ) );
+    this.controller.notifyZoomChange( createZoomEvent() );
   }
 
   /**
@@ -212,21 +207,18 @@ public class ZoomController
   public void zoomAll()
   {
     setFactor( getMinZoomLevel() );
-    this.zoomAll = true;
 
-    LOG.log( Level.INFO, "Zoom factor set to " + getFactor() );
-
-    this.controller.notifyZoomChange( new ZoomEvent( getFactor(), getMinZoomLevel(), getMaxZoomLevel() ) );
+    this.controller.notifyZoomChange( createZoomEvent() );
   }
 
   /**
-   * Zooms in with a factor 1.5
+   * Zooms in with a factor 2.
    */
   public void zoomIn()
   {
-    zoomRelative( 2.0 );
+    setFactor( calculateNewFactor( DEFAULT_ZOOM_RATIO ) );
 
-    this.controller.notifyZoomChange( new ZoomEvent( getFactor(), getMinZoomLevel(), getMaxZoomLevel() ) );
+    this.controller.notifyZoomChange( createZoomEvent() );
   }
 
   /**
@@ -234,19 +226,41 @@ public class ZoomController
    */
   public void zoomOriginal()
   {
-    zoomAbsolute( DEFAULT_ZOOM_FACTOR );
+    setFactor( DEFAULT_ZOOM_FACTOR );
 
-    this.controller.notifyZoomChange( new ZoomEvent( getFactor(), getMinZoomLevel(), getMaxZoomLevel() ) );
+    this.controller.notifyZoomChange( createZoomEvent() );
   }
 
   /**
-   * Zooms out with a factor 1.5
+   * Zooms out with a factor 2.
    */
   public void zoomOut()
   {
-    zoomRelative( 0.5 );
+    setFactor( calculateNewFactor( 1.0 / DEFAULT_ZOOM_RATIO ) );
 
-    this.controller.notifyZoomChange( new ZoomEvent( getFactor(), getMinZoomLevel(), getMaxZoomLevel() ) );
+    this.controller.notifyZoomChange( createZoomEvent() );
+  }
+
+  /**
+   * Calculates the new zoom-factor, based on a given zoom ratio.
+   * 
+   * @param aZoomRatio
+   *          the zoom-ratio to use, != 0.0.
+   * @return a new zoom factor, bounded to the minimum and maximum zoom levels.
+   */
+  private double calculateNewFactor( final double aZoomRatio )
+  {
+    return Math.max( getMinZoomLevel(), Math.min( getMaxZoomLevel(), aZoomRatio * getFactor() ) );
+  }
+
+  /**
+   * Creates a new ZoomEvent instance, based on the current situation.
+   * 
+   * @return a new {@link ZoomEvent} instance, never <code>null</code>.
+   */
+  private ZoomEvent createZoomEvent()
+  {
+    return new ZoomEvent( getFactor(), getMinZoomLevel(), getMaxZoomLevel() );
   }
 
   /**
@@ -292,7 +306,7 @@ public class ZoomController
   }
 
   /**
-   * @return
+   * @return the signal diagram model, never <code>null</code>.
    */
   private SignalDiagramModel getModel()
   {
@@ -300,33 +314,13 @@ public class ZoomController
   }
 
   /**
-   * Sets the factor.
+   * Sets the new zoom factor to the one given.
    * 
    * @param aFactor
-   *          the factor to set
+   *          the new zoom factor to set.
    */
   private void setFactor( final double aFactor )
   {
     getModel().setZoomFactor( aFactor );
-  }
-
-  /**
-   * @param aFactor
-   */
-  private void zoomAbsolute( final double aFactor )
-  {
-    setFactor( aFactor );
-    this.zoomAll = false;
-
-    LOG.log( Level.INFO, "Zoom factor set to " + getFactor() );
-  }
-
-  /**
-   * @param aFactor
-   */
-  private void zoomRelative( final double aFactor )
-  {
-    final double newFactor = Math.max( getMinZoomLevel(), Math.min( getMaxZoomLevel(), aFactor * getFactor() ) );
-    zoomAbsolute( newFactor );
   }
 }
