@@ -32,6 +32,7 @@
 		<ols.version>0.9.6-b1</ols.version>
 	</properties>
 	<modules>
+		<module>lib.mydoggy</module>
 		<module>api</module>
 		<module>util</module>
 		<module>test.util</module>
