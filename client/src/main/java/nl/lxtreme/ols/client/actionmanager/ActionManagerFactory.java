@@ -95,8 +95,10 @@ public final class ActionManagerFactory
     aActionManager.add( new GotoFirstCursorAction( signalDiagramController ) ).setEnabled( false );
     aActionManager.add( new GotoLastCursorAction( signalDiagramController ) ).setEnabled( false );
     aActionManager.add( new DeleteAllCursorsAction( signalDiagramController ) ).setEnabled( false );
+    aActionManager.add( new SetCursorSnapModeAction( signalDiagramController ) );
     aActionManager.add( new SetCursorModeAction( signalDiagramController ) );
     aActionManager.add( new RemoveAnnotationsAction( aController ) ).setEnabled( false );
+    aActionManager.add( new SetMeasurementModeAction( signalDiagramController ) ).setEnabled( false );
 
     aActionManager.add( new ShowPreferencesDialogAction( aController ) );
     aActionManager.add( new ShowDiagramModeSettingsDialogAction( aController ) );

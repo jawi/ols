@@ -691,6 +691,8 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     this.signalView = SignalView.create( this.controller );
 
     add( this.signalView, BorderLayout.CENTER );
+
+    setOpaque( false );
   }
 
   // METHODS

@@ -35,6 +35,7 @@ import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
 
@@ -42,7 +43,8 @@ import nl.lxtreme.ols.util.swing.component.*;
  * Provides a simple measurement component for measuring some common aspects of
  * signals, such as frequency, # of pulses and so on.
  */
-public class MeasurementView extends AbstractViewLayer implements IChannelChangeListener, ICursorChangeListener
+public class MeasurementView extends AbstractViewLayer implements IToolWindow, IChannelChangeListener,
+    ICursorChangeListener
 {
   // INNER TYPES
 
@@ -187,6 +189,9 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
   }
 
   // CONSTANTS
+
+  /** The identifier of this tool-window view. */
+  public static final String ID = "Measure";
 
   private static final long serialVersionUID = 1L;
 
@@ -353,15 +358,40 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Icon getIcon()
+  {
+    return null; // XXX
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
    * Updates the channel model to the current list of channels.
    */
   protected void updateChannelModel( final Channel... aChannels )
   {
-    updateChannelComboBoxModel( this.channel, aChannels );
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        updateChannelComboBoxModel( MeasurementView.this.channel, aChannels );
 
-    updateMeasurementInfo();
+        updateMeasurementInfo();
 
-    repaint( 50L );
+        repaint( 50L );
+      }
+    } );
   }
 
   /**
@@ -369,12 +399,19 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
    */
   protected void updateCursorModels()
   {
-    updateCursorComboBoxModel( this.cursorA );
-    updateCursorComboBoxModel( this.cursorB );
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        updateCursorComboBoxModel( MeasurementView.this.cursorA );
+        updateCursorComboBoxModel( MeasurementView.this.cursorB );
 
-    updateMeasurementInfo();
+        updateMeasurementInfo();
 
-    repaint( 50L );
+        repaint( 50L );
+      }
+    } );
   }
 
   /**
@@ -464,6 +501,7 @@ public class MeasurementView extends AbstractViewLayer implements IChannelChange
 
     setOpaque( false );
     setLayout( new BorderLayout() );
+    setName( "Measurement" );
     setBorder( BorderFactory.createEmptyBorder( 4, 4, 4, 4 ) );
 
     GridBagConstraints gbc = new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, 0, GridBagConstraints.HORIZONTAL,

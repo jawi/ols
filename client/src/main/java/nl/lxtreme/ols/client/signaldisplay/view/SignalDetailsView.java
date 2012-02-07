@@ -27,14 +27,18 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * 
  */
-public class SignalDetailsView extends AbstractViewLayer implements IMeasurementListener
+public class SignalDetailsView extends AbstractViewLayer implements IToolWindow, IMeasurementListener
 {
   // CONSTANTS
+
+  /** The identifier of this tool-window view. */
+  public static final String ID = "Signal";
 
   private static final long serialVersionUID = 1L;
 
@@ -84,10 +88,13 @@ public class SignalDetailsView extends AbstractViewLayer implements IMeasurement
    */
   private static String asText( final MeasurementInfo aMeasurementInfo )
   {
+    String channelIdx = "", channelLabel = "";
     String timeValue = "-", totalWidth = "-", pwHigh = "-", pwLow = "-", dc = "-";
 
     if ( aMeasurementInfo != null )
     {
+      channelLabel = aMeasurementInfo.getChannelLabel();
+      channelIdx = Integer.toString( aMeasurementInfo.getChannelIndex() );
       timeValue = displayTime( aMeasurementInfo.getReferenceTime() );
       totalWidth = getTimeAsString( aMeasurementInfo.getTotalTime() );
       pwHigh = getTimeAsString( aMeasurementInfo.getHighTime() );
@@ -97,10 +104,10 @@ public class SignalDetailsView extends AbstractViewLayer implements IMeasurement
 
     final StringBuilder sb = new StringBuilder( "<html><table>" );
     sb.append( "<tr><th align='right'>Channel:</th><td>" );
-    sb.append( aMeasurementInfo.getChannelIndex() );
-    if ( aMeasurementInfo.getChannelLabel() != null )
+    sb.append( channelIdx );
+    if ( channelLabel != null )
     {
-      sb.append( ", " ).append( aMeasurementInfo.getChannelLabel() );
+      sb.append( ", " ).append( channelLabel );
     }
     sb.append( "</td>" );
     sb.append( "<tr><th align='right'>Time:</th><td>" ).append( timeValue ).append( "</td>" );
@@ -147,7 +154,7 @@ public class SignalDetailsView extends AbstractViewLayer implements IMeasurement
   @Override
   public void disableMeasurementMode()
   {
-    updateViewText();
+    updateViewText( null );
   }
 
   /**
@@ -156,7 +163,25 @@ public class SignalDetailsView extends AbstractViewLayer implements IMeasurement
   @Override
   public void enableMeasurementMode()
   {
-    updateViewText();
+    updateViewText( null );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Icon getIcon()
+  {
+    return null; // XXX
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
   }
 
   /**
@@ -165,8 +190,7 @@ public class SignalDetailsView extends AbstractViewLayer implements IMeasurement
   @Override
   public void handleMeasureEvent( final MeasurementInfo aEvent )
   {
-    this.measureInfoField.setText( asText( aEvent ) );
-    repaint( 50L );
+    updateViewText( aEvent );
   }
 
   /**
@@ -184,20 +208,27 @@ public class SignalDetailsView extends AbstractViewLayer implements IMeasurement
   private void initComponent()
   {
     setOpaque( false );
-
     setLayout( new BorderLayout() );
+    setName( "Signal details" );
 
     add( this.measureInfoField, BorderLayout.NORTH );
 
-    updateViewText();
+    updateViewText( null );
   }
 
   /**
-   * 
+   * Updates this view's text and schedules it for a repaint job.
    */
-  private void updateViewText()
+  private void updateViewText( final MeasurementInfo aEvent )
   {
-    this.measureInfoField.setText( asText( null ) );
-    repaint( 50L );
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        SignalDetailsView.this.measureInfoField.setText( asText( aEvent ) );
+        repaint( 50L );
+      }
+    } );
   }
 }

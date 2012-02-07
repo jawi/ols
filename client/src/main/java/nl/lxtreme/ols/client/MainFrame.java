@@ -38,6 +38,7 @@ import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
@@ -516,12 +517,18 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private final SignalDiagramComponent signalDiagram;
   private final JTextStatusBar status;
   private final ClientController controller;
+  private final DockController dockController;
 
   private JMenu deviceMenu;
   private JMenu toolsMenu;
   private JMenu windowMenu;
   private JMenu exportMenu;
   private JMenu cursorsMenu;
+
+  private final SignalDetailsView signalDetails;
+  private final CaptureDetailsView captureDetails;
+  private final CursorDetailsView cursorDetails;
+  private final MeasurementView measurementDetails;
 
   private volatile String lastSelectedDeviceName;
 
@@ -535,8 +542,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public MainFrame( final ClientController aController )
   {
-    super();
-
     // Let the host platform determine where this diagram should be displayed;
     // gives it more or less a native feel...
     setLocationByPlatform( true );
@@ -547,6 +552,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.signalDiagram = SignalDiagramComponent.create( aController.getSignalDiagramController() );
     this.status = new JTextStatusBar();
 
+    this.signalDetails = SignalDetailsView.create( this.controller.getSignalDiagramController() );
+    this.captureDetails = CaptureDetailsView.create( this.controller.getSignalDiagramController() );
+    this.cursorDetails = CursorDetailsView.create( this.controller.getSignalDiagramController() );
+    this.measurementDetails = MeasurementView.create( this.controller.getSignalDiagramController() );
+
+    // Docking mechanism...
+    this.dockController = new DockController();
+
     setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
     setSize( 1200, 600 );
 
@@ -554,15 +567,22 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     // Create a scrollpane for the diagram...
     final JScrollPane scrollPane = new JScrollPane( this.signalDiagram );
-    scrollPane.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS );
+    scrollPane.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED );
     scrollPane.setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED );
 
-    final Container contentPane = getContentPane();
-    contentPane.setLayout( new BorderLayout() );
+    this.dockController.registerToolWindow( this.signalDetails, "Signal" );
+    this.dockController.registerToolWindow( this.captureDetails, "Signal" );
+    this.dockController.registerToolWindow( this.cursorDetails, "Measure" );
+    this.dockController.registerToolWindow( this.measurementDetails, "Measure" );
 
+    this.dockController.setMainContent( scrollPane );
+
+    final JPanel contentPane = new JPanel( new BorderLayout() );
     contentPane.add( tools, BorderLayout.PAGE_START );
-    contentPane.add( scrollPane, BorderLayout.CENTER );
+    contentPane.add( this.dockController.get(), BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
+
+    setContentPane( contentPane );
 
     // Add the window icon...
     setIconImages( internalGetIconImages() );
@@ -811,6 +831,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     diagramMenu.add( this.controller.getAction( GotoTriggerAction.ID ) );
     diagramMenu.addSeparator();
     diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorModeAction.ID ) ) );
+    diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorSnapModeAction.ID ) ) );
     diagramMenu.add( this.controller.getAction( DeleteAllCursorsAction.ID ) );
     diagramMenu.add( this.controller.getAction( GotoFirstCursorAction.ID ) );
     diagramMenu.add( this.controller.getAction( GotoLastCursorAction.ID ) );
@@ -828,6 +849,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     this.toolsMenu = bar.add( new JMenu( "Tools" ) );
     this.toolsMenu.setMnemonic( 'T' );
+    this.toolsMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetMeasurementModeAction.ID ) ) ) //
+        .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+    this.toolsMenu.addSeparator();
     this.toolsMenu.addMenuListener( new ToolMenuBuilder( this.controller ) );
 
     if ( hostInfo.isMacOS() )

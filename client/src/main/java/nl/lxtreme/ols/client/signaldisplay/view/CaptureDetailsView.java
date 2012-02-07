@@ -28,17 +28,23 @@ import java.text.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * 
  */
-public class CaptureDetailsView extends AbstractViewLayer implements IDataModelChangeListener, PropertyChangeListener
+public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow, IDataModelChangeListener,
+    PropertyChangeListener
 {
   // CONSTANTS
+
+  /** The identifier of this tool-window view. */
+  public static final String ID = "Acquisition";
 
   private static final long serialVersionUID = 1L;
 
@@ -98,12 +104,37 @@ public class CaptureDetailsView extends AbstractViewLayer implements IDataModelC
     this.sampleCount = "-";
     this.totalWidth = "-";
 
+    this.tickInterval = null;
+    this.displayedTime = null;
+
     if ( aDataSet != null )
     {
-      // XXX
+      final AcquisitionResult model = aDataSet.getCapturedData();
+
+      this.sampleRate = displayFrequency( model.getSampleRate() );
+      this.sampleCount = new DecimalFormat().format( model.getValues().length );
+      this.totalWidth = displayTime( model.getAbsoluteLength() / ( double )model.getSampleRate() );
     }
 
-    repaint( 50L );
+    updateView();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Icon getIcon()
+  {
+    return null; // XXX
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
   }
 
   /**
@@ -115,7 +146,10 @@ public class CaptureDetailsView extends AbstractViewLayer implements IDataModelC
     final String name = aEvent.getPropertyName();
     if ( "zoomFactor".equals( name ) )
     {
-      repaint( 50L );
+      this.tickInterval = null;
+      this.displayedTime = null;
+
+      updateView();
     }
   }
 
@@ -127,12 +161,14 @@ public class CaptureDetailsView extends AbstractViewLayer implements IDataModelC
   {
     final SignalDiagramModel model = getController().getSignalDiagramModel();
 
-    this.sampleRate = displayFrequency( model.getSampleRate() );
-    this.sampleCount = new DecimalFormat().format( model.getSampleCount() );
-    this.totalWidth = displayTime( model.getCaptureLength() );
-
-    this.tickInterval = displayTime( model.getTimeInterval() );
-    this.displayedTime = displayTime( model.getDisplayedTimeInterval() );
+    if ( this.tickInterval == null )
+    {
+      this.tickInterval = displayTime( model.getTimeInterval() );
+    }
+    if ( this.displayedTime == null )
+    {
+      this.displayedTime = displayTime( model.getDisplayedTimeInterval() );
+    }
 
     this.captureInfoField.setText( asText() );
 
@@ -164,9 +200,24 @@ public class CaptureDetailsView extends AbstractViewLayer implements IDataModelC
   private void initComponent()
   {
     setOpaque( false );
-
     setLayout( new BorderLayout() );
+    setName( "Acquisition details" );
 
     add( this.captureInfoField, BorderLayout.NORTH );
+  }
+
+  /**
+   * Updates this view by repainting it.
+   */
+  private void updateView()
+  {
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        repaint( 25L );
+      }
+    } );
   }
 }

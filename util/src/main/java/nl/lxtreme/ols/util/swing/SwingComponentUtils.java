@@ -23,6 +23,7 @@ package nl.lxtreme.ols.util.swing;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.*;
 import java.io.*;
 
 import javax.swing.*;
@@ -522,6 +523,33 @@ public final class SwingComponentUtils
       owner = getCurrentWindow();
     }
     return owner;
+  }
+
+  /**
+   * Returns the string width for a given {@link Font} and string.
+   * 
+   * @param aFont
+   *          the font to create the string width;
+   * @param aString
+   *          the string to get the width for.
+   * @return a string width, >= 0.
+   */
+  public static int getStringWidth( final Font aFont, final String aString )
+  {
+    final FontMetrics frc = createFontMetrics( aFont );
+    return SwingUtilities.computeStringWidth( frc, aString );
+  }
+
+  /**
+   * Returns the string width for the default label font and string.
+   * 
+   * @param aString
+   *          the string to get the width for.
+   * @return a string width, >= 0.
+   */
+  public static int getStringWidth( final String aString )
+  {
+    return getStringWidth( UIManager.getFont( "Label.font" ), aString );
   }
 
   /**
@@ -1055,6 +1083,31 @@ public final class SwingComponentUtils
     sb.append( '"' ).append( aFont.getFontName() ).append( "\", " );
     sb.append( '"' ).append( aFont.getPSName() ).append( "\";" );
     return sb.toString();
+  }
+
+  /**
+   * Creates (in a rather clumsy way) the font metrics for a given {@link Font}.
+   * 
+   * @param aFont
+   *          the font instance to create the font metrics for, cannot be
+   *          <code>null</code>.
+   * @return a font metrics, never <code>null</code>.
+   */
+  private static FontMetrics createFontMetrics( final Font aFont )
+  {
+    BufferedImage img = new BufferedImage( 1, 1, BufferedImage.TYPE_INT_ARGB );
+    Graphics canvas = img.getGraphics();
+
+    try
+    {
+      return canvas.getFontMetrics( aFont );
+    }
+    finally
+    {
+      canvas.dispose();
+      canvas = null;
+      img = null;
+    }
   }
 
   /**

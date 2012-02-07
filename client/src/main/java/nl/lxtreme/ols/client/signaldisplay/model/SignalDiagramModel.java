@@ -491,16 +491,19 @@ public class SignalDiagramModel
    */
   public Cursor[] getDefinedCursors()
   {
-    final Cursor[] cursors = this.dataSet.getCursors();
-
     List<Cursor> result = new ArrayList<Cursor>();
-    for ( Cursor c : cursors )
+
+    if ( hasData() )
     {
-      if ( c.isDefined() )
+      for ( Cursor c : this.dataSet.getCursors() )
       {
-        result.add( c );
+        if ( c.isDefined() )
+        {
+          result.add( c );
+        }
       }
     }
+
     return result.toArray( new Cursor[result.size()] );
   }
 

@@ -33,14 +33,19 @@ import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * 
  */
-public class CursorDetailsView extends AbstractViewLayer implements ICursorChangeListener, HyperlinkListener
+public class CursorDetailsView extends AbstractViewLayer implements IToolWindow, ICursorChangeListener,
+    HyperlinkListener
 {
   // CONSTANTS
+
+  /** The identifier of this tool-window view. */
+  public static final String ID = "Cursor";
 
   private static final long serialVersionUID = 1L;
 
@@ -136,6 +141,24 @@ public class CursorDetailsView extends AbstractViewLayer implements ICursorChang
    * {@inheritDoc}
    */
   @Override
+  public Icon getIcon()
+  {
+    return null; // XXX
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void hyperlinkUpdate( final HyperlinkEvent aEvent )
   {
     if ( HyperlinkEvent.EventType.ACTIVATED.equals( aEvent.getEventType() ) )
@@ -207,8 +230,8 @@ public class CursorDetailsView extends AbstractViewLayer implements ICursorChang
   private void initComponent()
   {
     setOpaque( false );
-
     setLayout( new BorderLayout() );
+    setName( "Cursor details" );
 
     add( this.cursorInfoField, BorderLayout.NORTH );
 
@@ -222,7 +245,14 @@ public class CursorDetailsView extends AbstractViewLayer implements ICursorChang
    */
   private void updateViewText()
   {
-    this.cursorInfoField.setText( asText() );
-    repaint( 50L );
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        CursorDetailsView.this.cursorInfoField.setText( asText() );
+        repaint( 50L );
+      }
+    } );
   }
 }

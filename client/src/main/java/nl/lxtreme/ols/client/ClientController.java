@@ -1566,6 +1566,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( DeleteAllCursorsAction.ID ).setEnabled( enableCursors && anyCursorSet );
         getAction( RemoveAnnotationsAction.ID ).setEnabled( dataAvailable );
 
+        getAction( SetMeasurementModeAction.ID ).setEnabled( dataAvailable );
+
         // Update the tools...
         final IManagedAction[] toolActions = getActionsByType( RunToolAction.class );
         for ( final IManagedAction toolAction : toolActions )
