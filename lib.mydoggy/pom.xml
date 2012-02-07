@@ -1,0 +1,58 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>nl.lxtreme.ols</groupId>
+		<artifactId>parent</artifactId>
+		<version>1.0.0</version>
+	</parent>
+	<artifactId>lib.mydoggy</artifactId>
+	<packaging>bundle</packaging>
+	<version>1.5.0-SNAPSHOT</version>
+	<name>MyDoggy Library</name>
+	<dependencies>
+		<dependency>
+			<groupId>net.sourceforge.mydoggy</groupId>
+			<artifactId>mydoggy-api</artifactId>
+			<version>1.5.0-beta-r1389</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.mydoggy</groupId>
+			<artifactId>mydoggy-plaf</artifactId>
+			<version>1.5.0-beta-r1389</version>
+            <scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.mydoggy</groupId>
+			<artifactId>mydoggy-res</artifactId>
+			<version>1.5.0-beta-r1389</version>
+            <scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>tablelayout</groupId>
+			<artifactId>TableLayout</artifactId>
+			<version>20050920</version>
+            <scope>runtime</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Bundle-Description>MyDoggy Library.</Bundle-Description>
+						<Bundle-Copyright>MyDoggy Team (C) 2010</Bundle-Copyright>
+						<Bundle-License>LGPLv3;link=http://www.gnu.org/licenses/lgpl-3.0.html</Bundle-License>
+                        <Embed-Dependency>*;scope=runtime;inline=true</Embed-Dependency>
+                        <Export-Package>org.noos.xing.mydoggy.*</Export-Package>
+                        <Import-Package>javax.*, org.w3c.*, org.xml.sax.*</Import-Package>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
