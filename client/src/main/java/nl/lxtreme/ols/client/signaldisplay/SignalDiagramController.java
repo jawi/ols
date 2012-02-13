@@ -27,6 +27,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
@@ -38,7 +39,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Provides the main component controller for the signal diagram component.
  */
-public final class SignalDiagramController
+public final class SignalDiagramController implements PropertyChangeListener
 {
   // VARIABLES
 
@@ -204,6 +205,25 @@ public final class SignalDiagramController
     final long newCursorTimestamp = locationToTimestamp( aPoint );
 
     getSignalDiagramModel().setCursor( aCursorIdx, newCursorTimestamp );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void propertyChange( final PropertyChangeEvent aEvent )
+  {
+    String name = aEvent.getPropertyName();
+    if ( "project".equals( name ) )
+    {
+      Project project = ( Project )aEvent.getNewValue();
+      setDataModel( project.getDataSet() );
+    }
+    else if ( "capturedData".equals( name ) )
+    {
+      DataSet dataSet = ( DataSet )aEvent.getNewValue();
+      setDataModel( dataSet );
+    }
   }
 
   /**

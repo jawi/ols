@@ -100,8 +100,15 @@ public final class IconFactory
    */
   public static Icon createIcon( final String aIconName )
   {
-    final URL url = IconLocator.class.getResource( aIconName );
-    return new ImageIcon( url );
+    try
+    {
+      final URL url = IconLocator.class.getResource( aIconName );
+      return new ImageIcon( url );
+    }
+    catch ( Exception exception )
+    {
+      return new ImageIcon();
+    }
   }
 
   /**
@@ -131,6 +138,6 @@ public final class IconFactory
    */
   public static Icon createOverlayIcon( final String aIconName, final String aText )
   {
-    return new CompoundTextIcon( aIconName, aText, SwingConstants.SOUTH_EAST );
+    return new CompoundTextIcon( aIconName, aText, SwingConstants.EAST );
   }
 }

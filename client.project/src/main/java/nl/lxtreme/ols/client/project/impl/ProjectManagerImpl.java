@@ -36,7 +36,7 @@ import nl.lxtreme.ols.util.*;
  * Provides a simple implementation of a project manager, which writes an entire
  * project as (compressed) ZIP-file.
  */
-public class ProjectManagerImpl implements ProjectManager, ProjectProperties
+public class ProjectManagerImpl implements PropertyChangeListener, ProjectManager, ProjectProperties
 {
   // CONSTANTS
 
@@ -49,6 +49,8 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
 
   private volatile HostProperties hostProperties;
 
+  private final PropertyChangeSupport propertyChangeSupport;
+
   private ProjectImpl project;
 
   // CONSTRUCTORS
@@ -58,7 +60,9 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
    */
   public ProjectManagerImpl()
   {
-    this.project = new ProjectImpl();
+    this.propertyChangeSupport = new PropertyChangeSupport( this );
+
+    setProject( new ProjectImpl() );
   }
 
   // METHODS
@@ -68,7 +72,7 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
    */
   public void addPropertyChangeListener( final PropertyChangeListener aListener )
   {
-    this.project.addPropertyChangeListener( aListener );
+    this.propertyChangeSupport.addPropertyChangeListener( aListener );
   }
 
   /**
@@ -76,7 +80,8 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
    */
   public Project createNewProject()
   {
-    return setProject( new ProjectImpl() );
+    setProject( new ProjectImpl() );
+    return this.project;
   }
 
   /**
@@ -111,7 +116,10 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
     final ZipInputStream zipIS = new ZipInputStream( in );
 
     final ProjectImpl newProject = new ProjectImpl();
-    final DataSetImpl tmpDataSet = new DataSetImpl();
+    // Make sure listeners retrieve the proper events...
+    copyPropertyChangeListeners( this.project, newProject );
+
+    List<String> labels = null;
 
     try
     {
@@ -119,7 +127,6 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
       boolean entriesSeen = false;
       while ( ( ze = zipIS.getNextEntry() ) != null )
       {
-
         final String name = ze.getName();
         if ( FILENAME_PROJECT_METADATA.equals( name ) )
         {
@@ -128,7 +135,7 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
         }
         else if ( FILENAME_CHANNEL_LABELS.equals( name ) )
         {
-          loadChannelLabels( tmpDataSet, zipIS );
+          labels = loadChannelLabels( zipIS );
           entriesSeen = true;
         }
         else if ( FILENAME_CAPTURE_RESULTS.equals( name ) )
@@ -154,13 +161,13 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
       // Merge the channel labels with the channel-data in the project's data
       // set; this is not the nicest way of doing this, but we otherwise have to
       // break our project file-format, which is not done at the moment...
-      ( ( DataSetImpl )newProject.getDataSet() ).mergeChannelData( tmpDataSet );
-
-      // Publish the newly loaded project...
-      setProject( newProject );
+      newProject.getDataSet().mergeChannelLabels( labels );
 
       // Mark the project as no longer changed...
       newProject.setChanged( false );
+
+      // Overwrite the main project...
+      setProject( newProject );
     }
     finally
     {
@@ -169,11 +176,21 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void propertyChange( final PropertyChangeEvent aEvent )
+  {
+    // Relay event to outside listeners...
+    this.propertyChangeSupport.firePropertyChange( aEvent );
+  }
+
+  /**
    * @see nl.lxtreme.ols.api.data.project.ProjectManager#removePropertyChangeListener(java.beans.PropertyChangeListener)
    */
   public void removePropertyChangeListener( final PropertyChangeListener aListener )
   {
-    this.project.removePropertyChangeListener( aListener );
+    this.propertyChangeSupport.removePropertyChangeListener( aListener );
   }
 
   /**
@@ -248,17 +265,21 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void loadChannelLabels( final DataSet aDataSet, final ZipInputStream aZipIS ) throws IOException
+  protected List<String> loadChannelLabels( final ZipInputStream aZipIS ) throws IOException
   {
     final InputStreamReader isReader = new InputStreamReader( aZipIS );
     final BufferedReader reader = new BufferedReader( isReader );
+
+    List<String> result = new ArrayList<String>();
 
     String label = null;
     int idx = 0;
     while ( ( ( label = reader.readLine() ) != null ) && ( idx < Ols.MAX_CHANNELS ) )
     {
-      aDataSet.getChannel( idx++ ).setLabel( label );
+      result.add( label );
     }
+
+    return result;
   }
 
   /**
@@ -475,21 +496,41 @@ public class ProjectManagerImpl implements ProjectManager, ProjectProperties
   }
 
   /**
-   * Sets the current project to the given project, moving all registered
-   * property change listeners to the new project.
+   * Copies the current set of {@link PropertyChangeListener}s from a given
+   * source project to a given target project.
+   * 
+   * @param aSource
+   *          the source project to copy the {@link PropertyChangeListener}s
+   *          from;
+   * @param aTarget
+   *          the target project to copy the {@link PropertyChangeListener} to.
+   */
+  private void copyPropertyChangeListeners( final ProjectImpl aSource, final ProjectImpl aTarget )
+  {
+    final PropertyChangeListener[] listeners = aSource.getPropertyChangeListeners();
+    for ( PropertyChangeListener listener : listeners )
+    {
+      aTarget.addPropertyChangeListener( listener );
+    }
+  }
+
+  /**
+   * Sets the current project to the given project.
    * 
    * @param aProject
    *          the project to set, cannot be <code>null</code>.
    */
-  private ProjectImpl setProject( final ProjectImpl aProject )
+  private void setProject( final ProjectImpl aProject )
   {
-    final PropertyChangeListener[] listeners = this.project.getPropertyChangeListeners();
-    for ( PropertyChangeListener listener : listeners )
+    final ProjectImpl oldProject = this.project;
+    if ( oldProject != null )
     {
-      this.project.removePropertyChangeListener( listener );
-      aProject.addPropertyChangeListener( listener );
+      oldProject.removePropertyChangeListener( this );
     }
+
     this.project = aProject;
-    return aProject;
+    this.project.addPropertyChangeListener( this );
+
+    this.propertyChangeSupport.firePropertyChange( "project", oldProject, this.project );
   }
 }

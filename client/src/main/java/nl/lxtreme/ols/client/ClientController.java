@@ -284,8 +284,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     getCurrentProject().setCapturedData( aData );
 
-    this.signalDiagramController.setDataModel( getCurrentDataSet() );
-
     updateActionsOnEDT();
     restoreZoomLevel();
   }
@@ -630,7 +628,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public final Cursor getCursor( final int aCursorIdx )
   {
-    return getCurrentDataSet().getCursor( aCursorIdx );
+    final DataSet currentDataSet = getCurrentDataSet();
+    if ( currentDataSet == null )
+    {
+      return null;
+    }
+    return currentDataSet.getCursor( aCursorIdx );
   }
 
   /**
@@ -958,11 +961,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public boolean isProjectChanged()
   {
-    if ( this.projectManager == null )
+    final Project currentProject = getCurrentProject();
+    if ( currentProject == null )
     {
       return false;
     }
-    return getCurrentProject().isChanged();
+    return currentProject.isChanged();
   }
 
   /**
@@ -1352,16 +1356,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         // Cause exceptions to be shown in a more user-friendly way...
         JErrorDialog.installSwingExceptionHandler();
 
-        ClientController.this.mainFrame = new MainFrame( ClientController.this );
+        final MainFrame mf = new MainFrame( ClientController.this );
+        setMainFrame( mf );
 
-        final MainFrame mainFrame = getMainFrame();
-
-        mainFrame.setTitle( hostProperties.getFullName() );
-        mainFrame.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
+        mf.setTitle( hostProperties.getFullName() );
+        mf.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
+        mf.setVisible( true );
 
         LOG.info( "Client started ..." );
-
-        mainFrame.setVisible( true );
       }
     } );
   }
@@ -1379,8 +1381,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       @Override
       public void run()
       {
-        final MainFrame mainFrame = getMainFrame();
-        if ( mainFrame != null )
+        final MainFrame mf = getMainFrame();
+        if ( mf != null )
         {
           // Safety guard: also loop through all unclosed frames and close them
           // as well...
@@ -1393,7 +1395,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
             window.dispose();
           }
           // release all resources...
-          mainFrame.dispose();
+          mf.dispose();
+          setMainFrame( null );
         }
 
         JErrorDialog.uninstallSwingExceptionHandler();
@@ -1410,7 +1413,26 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   final DataSet getCurrentDataSet()
   {
-    return getCurrentProject().getDataSet();
+    final Project currentProject = getCurrentProject();
+    if ( currentProject == null )
+    {
+      return null;
+    }
+    return currentProject.getDataSet();
+  }
+
+  /**
+   * Returns the current project.
+   * 
+   * @return the current project, never <code>null</code>.
+   */
+  final Project getCurrentProject()
+  {
+    if ( this.projectManager == null )
+    {
+      return null;
+    }
+    return this.projectManager.getCurrentProject();
   }
 
   /**
@@ -1447,12 +1469,26 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   final void removeProjectManager( final ProjectManager aProjectManager )
   {
-    if ( ( this.projectManager != null ) && ( this.mainFrame != null ) )
+    setProjectManager( null );
+  }
+
+  /**
+   * @param aMainFrame
+   *          the main frame to set, cannot be <code>null</code>.
+   */
+  final void setMainFrame( final MainFrame aMainFrame )
+  {
+    if ( ( this.mainFrame != null ) && ( this.projectManager != null ) )
     {
-      this.projectManager.removePropertyChangeListener( this.mainFrame );
+      this.projectManager.addPropertyChangeListener( this.mainFrame );
     }
 
-    this.projectManager = null;
+    this.mainFrame = aMainFrame;
+
+    if ( this.projectManager != null )
+    {
+      this.projectManager.addPropertyChangeListener( this.mainFrame );
+    }
   }
 
   /**
@@ -1482,11 +1518,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   final void setProjectManager( final ProjectManager aProjectManager )
   {
-    if ( ( this.projectManager != null ) && ( this.mainFrame != null ) )
+    if ( ( this.projectManager != null ) && ( this.signalDiagramController != null ) )
     {
-      this.projectManager.removePropertyChangeListener( this.mainFrame );
+      this.projectManager.removePropertyChangeListener( this.signalDiagramController );
     }
+
     this.projectManager = aProjectManager;
+
+    if ( this.projectManager != null )
+    {
+      this.projectManager.addPropertyChangeListener( this.signalDiagramController );
+    }
   }
 
   /**
@@ -1620,7 +1662,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean hasTriggerData()
   {
-    return getCurrentDataSet().getCapturedData().hasTriggerData();
+    final DataSet currentDataSet = getCurrentDataSet();
+    if ( ( currentDataSet == null ) || ( currentDataSet.getCapturedData() == null ) )
+    {
+      return false;
+    }
+    return currentDataSet.getCapturedData().hasTriggerData();
   }
 
   /**
@@ -1632,11 +1679,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean isAnonymousProject()
   {
-    if ( this.projectManager == null )
+    final Project currentProject = getCurrentProject();
+    if ( currentProject == null )
     {
       return false;
     }
-    return getCurrentProject().getFilename() == null;
+    return currentProject.getFilename() == null;
   }
 
   /**
@@ -1649,7 +1697,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean isCursorSet( final int aCursorIdx )
   {
-    return getCursor( aCursorIdx ).isDefined();
+    final Cursor cursor = getCursor( aCursorIdx );
+    if ( cursor == null )
+    {
+      return false;
+    }
+    return cursor.isDefined();
   }
 
   /**
@@ -1729,17 +1782,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private Channel getChannel( final int aChannelIdx )
   {
-    return getCurrentDataSet().getChannel( aChannelIdx );
-  }
-
-  /**
-   * Returns the current project.
-   * 
-   * @return the current project, never <code>null</code>.
-   */
-  private Project getCurrentProject()
-  {
-    return this.projectManager.getCurrentProject();
+    final DataSet currentDataSet = getCurrentDataSet();
+    if ( currentDataSet == null )
+    {
+      return null;
+    }
+    return currentDataSet.getChannel( aChannelIdx );
   }
 
   /**

@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client.project.impl;
 import static nl.lxtreme.ols.util.ColorUtils.*;
 
 import java.awt.*;
+import java.beans.*;
 
 import nl.lxtreme.ols.api.data.Cursor;
 
@@ -38,6 +39,7 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
 
   // VARIABLES
 
+  private final PropertyChangeSupport propertyChangeSupport;
   private final int index;
   private String label;
   private Long timestamp;
@@ -46,20 +48,23 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
   // CONSTRUCTORS
 
   /**
-   * Creates a new Cursor instance as exact copy of a given cursor.
+   * Creates a new Cursor instance a copy of a given cursor.
    * 
    * @param aCursor
    *          the cursor to copy, cannot be <code>null</code>.
+   * @param aAbsLen
+   *          the absolute length of the data, >= 0L.
    * @throws IllegalArgumentException
    *           in case the given index was invalid.
    */
-  public CursorImpl( final Cursor aCursor )
+  public CursorImpl( final Cursor aCursor, final long aAbsLen )
   {
     this( aCursor.getIndex() );
 
     this.color = aCursor.getColor();
     this.label = aCursor.getLabel();
-    this.timestamp = aCursor.isDefined() ? Long.valueOf( aCursor.getTimestamp() ) : null;
+    this.timestamp = aCursor.isDefined() && ( aCursor.getTimestamp() <= aAbsLen ) //
+    ? Long.valueOf( aCursor.getTimestamp() ) : null;
   }
 
   /**
@@ -76,6 +81,8 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
+
+    this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.index = aIndex;
     this.color = parseColor( "7bf9dd" ).brighter();
@@ -119,28 +126,14 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
   // METHODS
 
   /**
-   * Factory method that creates up to {@value #MAX_CURSORS} cursors. TODO fix
-   * me!
+   * Adds the given listener to the list of property change listeners.
    * 
-   * @return an array of {@link CursorImpl} instances, never <code>null</code>.
+   * @param aListener
+   *          a property change listener, cannot be <code>null</code>.
    */
-  public static Cursor[] createCursors()
+  public void addPropertyChangeListener( final PropertyChangeListener aListener )
   {
-    Cursor[] cursors = new Cursor[MAX_CURSORS];
-    cursors[0] = new CursorImpl( 0, 100 );
-    cursors[0].setLabel( "AAA" );
-    cursors[1] = new CursorImpl( 1, 200 );
-    cursors[1].setLabel( "BBB" );
-    cursors[2] = new CursorImpl( 2, 125 );
-    cursors[2].setLabel( "CCC" );
-    cursors[3] = new CursorImpl( 3 );
-    cursors[4] = new CursorImpl( 4 );
-    cursors[5] = new CursorImpl( 5 );
-    cursors[6] = new CursorImpl( 6 );
-    cursors[7] = new CursorImpl( 7 );
-    cursors[8] = new CursorImpl( 8 );
-    cursors[9] = new CursorImpl( 9 );
-    return cursors;
+    this.propertyChangeSupport.addPropertyChangeListener( aListener );
   }
 
   /**
@@ -299,6 +292,17 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
   }
 
   /**
+   * Removes the given listener from the list of property change listeners.
+   * 
+   * @param aListener
+   *          a property change listener, cannot be <code>null</code>.
+   */
+  public void removePropertyChangeListener( final PropertyChangeListener aListener )
+  {
+    this.propertyChangeSupport.removePropertyChangeListener( aListener );
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -308,7 +312,10 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
     {
       throw new IllegalArgumentException( "Parameter color cannot be null!" );
     }
+    Color oldColor = this.color;
     this.color = aColor;
+
+    this.propertyChangeSupport.fireIndexedPropertyChange( "cursorColor", this.index, oldColor, this.color );
   }
 
   /**
@@ -317,7 +324,10 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
   @Override
   public void setLabel( final String aLabel )
   {
+    String oldLabel = this.label;
     this.label = aLabel;
+
+    this.propertyChangeSupport.fireIndexedPropertyChange( "cursorLabel", this.index, oldLabel, this.label );
   }
 
   /**
@@ -326,7 +336,10 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
   @Override
   public void setTimestamp( final long aTimestamp )
   {
+    Long oldValue = this.timestamp;
     this.timestamp = Long.valueOf( aTimestamp );
+
+    this.propertyChangeSupport.fireIndexedPropertyChange( "cursorTimestamp", this.index, oldValue, this.timestamp );
   }
 
   /**

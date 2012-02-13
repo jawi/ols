@@ -107,7 +107,7 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
     this.tickInterval = null;
     this.displayedTime = null;
 
-    if ( aDataSet != null )
+    if ( ( aDataSet != null ) && ( aDataSet.getCapturedData() != null ) )
     {
       final AcquisitionResult model = aDataSet.getCapturedData();
 
@@ -163,11 +163,27 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
 
     if ( this.tickInterval == null )
     {
-      this.tickInterval = displayTime( model.getTimeInterval() );
+      final Double timeInterval = model.getTimeInterval();
+      if ( timeInterval != null )
+      {
+        this.tickInterval = displayTime( timeInterval.doubleValue() );
+      }
+      else
+      {
+        this.tickInterval = "-";
+      }
     }
     if ( this.displayedTime == null )
     {
-      this.displayedTime = displayTime( model.getDisplayedTimeInterval() );
+      final Double displayedTimeInterval = model.getDisplayedTimeInterval();
+      if ( displayedTimeInterval != null )
+      {
+        this.displayedTime = displayTime( displayedTimeInterval.doubleValue() );
+      }
+      else
+      {
+        this.displayedTime = "-";
+      }
     }
 
     this.captureInfoField.setText( asText() );

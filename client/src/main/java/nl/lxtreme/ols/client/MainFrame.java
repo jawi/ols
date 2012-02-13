@@ -34,6 +34,7 @@ import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.icons.*;
@@ -636,25 +637,18 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   public void propertyChange( final PropertyChangeEvent aEvent )
   {
     final String propertyName = aEvent.getPropertyName();
-    if ( "changed".equals( propertyName ) )
+    if ( "project".equals( propertyName ) )
     {
-      final Boolean value = ( Boolean )aEvent.getNewValue();
-      // Causes the window to be annotated with a dot on OSX...
-      getRootPane().putClientProperty( "Window.documentModified", value );
-    }
-    else if ( "name".equals( propertyName ) )
-    {
-      // The project's name has changed; update the title bar to show this...
-      final String value = ( String )aEvent.getNewValue();
+      Project project = ( Project )aEvent.getNewValue();
 
-      String title = this.controller.getHostProperties().getFullName();
-      if ( !StringUtils.isEmpty( value ) )
-      {
-        // Denote the project file in the title of the main window...
-        title = title.concat( " :: " ).concat( value );
-      }
-      setTitle( title );
+      updateWindowDecorations( project );
     }
+    else if ( "capturedData".equals( propertyName ) )
+    {
+      updateWindowDecorations( this.controller.getCurrentProject() );
+    }
+
+    this.controller.updateActionsOnEDT();
   }
 
   /**
@@ -883,6 +877,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     final JToolBar toolbar = new JToolBar();
     toolbar.setRollover( true );
+    toolbar.setFloatable( false );
 
     toolbar.add( this.controller.getAction( OpenProjectAction.ID ) );
     toolbar.add( this.controller.getAction( SaveProjectAction.ID ) );
@@ -931,5 +926,26 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     final Image windowIcon64x64 = IconFactory.createImage( IconLocator.WINDOW_ICON_64x64 );
     final Image windowIcon256x256 = IconFactory.createImage( IconLocator.WINDOW_ICON_256x256 );
     return Arrays.asList( windowIcon16x16, windowIcon32x32, windowIcon48x48, windowIcon64x64, windowIcon256x256 );
+  }
+
+  /**
+   * Updates the title and any other window decorations for the current running
+   * platform.
+   * 
+   * @param aProject
+   *          the project to take the current properties from, cannot be
+   *          <code>null</code>.
+   */
+  private void updateWindowDecorations( final Project aProject )
+  {
+    String title = this.controller.getHostProperties().getFullName();
+    if ( !StringUtils.isEmpty( aProject.getName() ) )
+    {
+      // Denote the project file in the title of the main window...
+      title = title.concat( " :: " ).concat( aProject.getName() );
+    }
+    setTitle( title );
+
+    getRootPane().putClientProperty( "Window.documentModified", Boolean.valueOf( aProject.isChanged() ) );
   }
 }

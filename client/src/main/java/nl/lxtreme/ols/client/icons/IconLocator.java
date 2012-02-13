@@ -36,28 +36,28 @@ public interface IconLocator
   static final String WINDOW_ICON_64x64 = "LogicSniffer_64x64x32.png";
   static final String WINDOW_ICON_256x256 = "LogicSniffer_256x256x32.png";
 
-  static final String ICON_NEW_PROJECT = "Gnome-Folder-New-32.png";
-  static final String ICON_OPEN_PROJECT = "Gnome-Document-Open-32.png";
-  static final String ICON_SAVE_PROJECT = "Gnome-Document-Save-32.png";
+  static final String ICON_NEW_PROJECT = "folder-new.png";
+  static final String ICON_OPEN_PROJECT = "document-open.png";
+  static final String ICON_SAVE_PROJECT = "document-save.png";
 
-  static final String ICON_OPEN_DATAFILE = "Gnome-Document-Open-32.png";
-  static final String ICON_SAVE_DATAFILE = "Gnome-Document-Save-32.png";
+  static final String ICON_OPEN_DATAFILE = "document-open.png";
+  static final String ICON_SAVE_DATAFILE = "document-save.png";
 
-  static final String ICON_ZOOM_DEFAULT = "Gnome-Zoom-Original-32.png";
-  static final String ICON_ZOOM_FIT_BEST = "Gnome-Zoom-Fit-Best-32.png";
-  static final String ICON_ZOOM_IN = "Gnome-Zoom-In-32.png";
-  static final String ICON_ZOOM_OUT = "Gnome-Zoom-Out-32.png";
+  static final String ICON_ZOOM_DEFAULT = "zoom-original.png";
+  static final String ICON_ZOOM_FIT_BEST = "zoom-fit-best.png";
+  static final String ICON_ZOOM_IN = "zoom-in.png";
+  static final String ICON_ZOOM_OUT = "zoom-out.png";
 
-  static final String ICON_GOTO_TRIGGER = "Gnome-Go-Home-32.png";
-  static final String ICON_GOTO_CURSOR = "Gnome-Go-Jump-32.png";
-  static final String ICON_GOTO_FIRST_CURSOR = "Gnome-Go-First-32.png";
-  static final String ICON_GOTO_PREVIOUS_CURSOR = "Gnome-Go-Previous-32.png";
-  static final String ICON_GOTO_NEXT_CURSOR = "Gnome-Go-Next-32.png";
-  static final String ICON_GOTO_LAST_CURSOR = "Gnome-Go-Last-32.png";
+  static final String ICON_GOTO_TRIGGER = "go-home.png";
+  static final String ICON_GOTO_CURSOR = "go-jump.png";
+  static final String ICON_GOTO_FIRST_CURSOR = "go-first.png";
+  static final String ICON_GOTO_PREVIOUS_CURSOR = "go-previous.png";
+  static final String ICON_GOTO_NEXT_CURSOR = "go-next.png";
+  static final String ICON_GOTO_LAST_CURSOR = "go-last.png";
 
-  static final String ICON_CAPTURE_DATA = "Gnome-Emblem-Downloads-32.png";
-  static final String ICON_CANCEL_CAPTURE = "Gnome-Dialog-Error-32.png";
-  static final String ICON_RECAPTURE_DATA = "Gnome-View-Refresh-32.png";
+  static final String ICON_CAPTURE_DATA = "emblem-downloads.png";
+  static final String ICON_CANCEL_CAPTURE = "process-stop.png";
+  static final String ICON_RECAPTURE_DATA = "view-refresh.png";
 
   static final String ICON_DIAGRAM_SETTINGS = "system-run.png";
 }

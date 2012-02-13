@@ -28,7 +28,6 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 
 
@@ -85,7 +84,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
    * {@inheritDoc}
    */
   @Override
-  public DataSet getDataSet()
+  public DataSetImpl getDataSet()
   {
     return this.dataSet;
   }
@@ -157,10 +156,12 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   public void propertyChange( final PropertyChangeEvent aEvent )
   {
     String name = aEvent.getPropertyName();
-    if ( PROPERTY_CURSORS_ENABLED.equals( name ) )
+    if ( PROPERTY_CURSORS_ENABLED.equals( name ) || name.startsWith( "channel" ) || name.startsWith( "cursor" ) )
     {
       setChanged( true );
     }
+
+    this.propertyChangeSupport.firePropertyChange( aEvent );
   }
 
   /**
@@ -192,8 +193,6 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
     final DataSetImpl old = this.dataSet;
 
     setDataSet( new DataSetImpl( aCapturedData, old ) );
-
-    this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA, old, this.dataSet );
 
     // Mark this project as modified...
     setChanged( true );
@@ -348,8 +347,12 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
       this.dataSet.removePropertyChangeListener( this );
     }
 
+    final DataSetImpl old = this.dataSet;
+
     this.dataSet = aDataSet;
 
     this.dataSet.addPropertyChangeListener( this );
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA, old, this.dataSet );
   }
 }

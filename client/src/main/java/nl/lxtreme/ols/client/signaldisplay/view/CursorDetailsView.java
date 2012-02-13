@@ -29,6 +29,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
@@ -40,7 +41,7 @@ import nl.lxtreme.ols.util.swing.*;
  * 
  */
 public class CursorDetailsView extends AbstractViewLayer implements IToolWindow, ICursorChangeListener,
-    HyperlinkListener
+    IDataModelChangeListener, HyperlinkListener
 {
   // CONSTANTS
 
@@ -85,6 +86,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
     final CursorDetailsView result = new CursorDetailsView( aController );
 
     aController.addCursorChangeListener( result );
+    aController.addDataModelChangeListener( result );
 
     return result;
   }
@@ -133,6 +135,15 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
    */
   @Override
   public void cursorsVisible()
+  {
+    updateViewText();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void dataModelChanged( final DataSet aDataSet )
   {
     updateViewText();
   }

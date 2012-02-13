@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.project.impl;
 import static nl.lxtreme.ols.util.ColorUtils.*;
 
 import java.awt.*;
+import java.beans.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
@@ -54,6 +55,7 @@ public final class ChannelImpl implements Channel
   private boolean enabled;
 
   private final List<Annotation<?>> annotations;
+  private final PropertyChangeSupport propertyChangeSupport;
 
   // CONSTRUCTORS
 
@@ -69,6 +71,8 @@ public final class ChannelImpl implements Channel
     {
       throw new IllegalArgumentException( "Channel cannot be null!" );
     }
+
+    this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.index = aChannel.getIndex();
     this.mask = aChannel.getMask();
@@ -91,6 +95,8 @@ public final class ChannelImpl implements Channel
     {
       throw new IllegalArgumentException( "Invalid channel index!" );
     }
+
+    this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.index = aChannelIdx;
     this.mask = ( int )( 1L << aChannelIdx );
@@ -118,6 +124,17 @@ public final class ChannelImpl implements Channel
       // TODO ensure it is a channel label annotation?!
       setLabel( aAnnotation.toString() );
     }
+  }
+
+  /**
+   * Adds the given listener to the list of property change listeners.
+   * 
+   * @param aListener
+   *          a property change listener, cannot be <code>null</code>.
+   */
+  public void addPropertyChangeListener( final PropertyChangeListener aListener )
+  {
+    this.propertyChangeSupport.addPropertyChangeListener( aListener );
   }
 
   /**
@@ -242,6 +259,17 @@ public final class ChannelImpl implements Channel
   }
 
   /**
+   * Removes the given listener from the list of property change listeners.
+   * 
+   * @param aListener
+   *          a property change listener, cannot be <code>null</code>.
+   */
+  public void removePropertyChangeListener( final PropertyChangeListener aListener )
+  {
+    this.propertyChangeSupport.removePropertyChangeListener( aListener );
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -251,7 +279,10 @@ public final class ChannelImpl implements Channel
     {
       throw new IllegalArgumentException( "Color cannot be null!" );
     }
+    Color oldColor = this.color;
     this.color = aColor;
+
+    this.propertyChangeSupport.fireIndexedPropertyChange( "channelColor", this.index, oldColor, aColor );
   }
 
   /**
@@ -260,16 +291,22 @@ public final class ChannelImpl implements Channel
   @Override
   public void setEnabled( final boolean aEnabled )
   {
+    boolean oldEnabled = this.enabled;
     this.enabled = aEnabled;
+
+    this.propertyChangeSupport.fireIndexedPropertyChange( "channelEnabled", this.index, oldEnabled, aEnabled );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void setLabel( final String aName )
+  public void setLabel( final String aLabel )
   {
-    this.label = aName;
+    String oldLabel = this.label;
+    this.label = aLabel;
+
+    this.propertyChangeSupport.fireIndexedPropertyChange( "channelLabel", this.index, oldLabel, aLabel );
   }
 
   /**

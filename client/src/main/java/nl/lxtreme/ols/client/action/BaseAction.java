@@ -21,8 +21,6 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.net.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
@@ -127,8 +125,7 @@ public abstract class BaseAction extends AbstractAction implements IconLocator, 
 
     if ( aIconName != null )
     {
-      final URL url = IconLocator.class.getResource( aIconName );
-      putValue( Action.LARGE_ICON_KEY, new ImageIcon( url ) );
+      putValue( Action.LARGE_ICON_KEY, IconFactory.createIcon( aIconName ) );
     }
   }
 

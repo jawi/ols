@@ -512,16 +512,16 @@ public class SignalDiagramModel
    * 
    * @return a time interval, in seconds.
    */
-  public double getDisplayedTimeInterval()
+  public Double getDisplayedTimeInterval()
   {
     final Rectangle visibleRect = this.controller.getSignalDiagram().getVisibleViewSize();
-    if ( visibleRect == null )
+    if ( ( visibleRect == null ) || !hasData() )
     {
-      return 0.0;
+      return null;
     }
     double start = visibleRect.x / this.zoomFactor;
     double end = ( visibleRect.x + visibleRect.width ) / this.zoomFactor;
-    return ( end - start ) / getSampleRate();
+    return Double.valueOf( ( end - start ) / getSampleRate() );
   }
 
   /**
@@ -898,11 +898,16 @@ public class SignalDiagramModel
   /**
    * Returns the time interval displayed by a single tick in the time line.
    * 
-   * @return a time interval, in seconds.
+   * @return a time interval, in seconds, or <code>null</code> if no time
+   *         interval could be determined.
    */
-  public double getTimeInterval()
+  public Double getTimeInterval()
   {
-    return getTimeIncrement() / getSampleRate();
+    if ( !hasData() )
+    {
+      return null;
+    }
+    return Double.valueOf( getTimeIncrement() / getSampleRate() );
   }
 
   /**

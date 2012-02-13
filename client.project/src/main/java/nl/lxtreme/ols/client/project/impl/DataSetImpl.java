@@ -32,7 +32,7 @@ import nl.lxtreme.ols.api.data.*;
 /**
  * Provides a implementation of {@link DataSet}.
  */
-public class DataSetImpl implements DataSet, ProjectProperties
+public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProperties
 {
   // VARIABLES
 
@@ -40,7 +40,7 @@ public class DataSetImpl implements DataSet, ProjectProperties
   private final AcquisitionResult capturedData;
   private final Cursor[] cursors;
 
-  private Channel[] channels;
+  private final Channel[] channels;
   private boolean cursorsEnabled;
 
   // CONSTRUCTORS
@@ -58,9 +58,9 @@ public class DataSetImpl implements DataSet, ProjectProperties
     this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.capturedData = aCapturedData;
-    this.cursors = createCursors( Ols.MAX_CURSORS, aOld.getCursors() );
-    this.channels = createChannels( aCapturedData.getChannels(), aOld.getChannels() );
     this.cursorsEnabled = aOld.isCursorsEnabled();
+    this.channels = createChannels( aCapturedData.getChannels(), aOld.getChannels() );
+    this.cursors = createCursors( Ols.MAX_CURSORS, aOld.getCursors() );
   }
 
   /**
@@ -77,54 +77,6 @@ public class DataSetImpl implements DataSet, ProjectProperties
   }
 
   // METHODS
-
-  /**
-   * Creates an array of a given number of channels.
-   * 
-   * @param aCount
-   *          the number of channels to create, >= 0.
-   * @return an array with channels, never <code>null</code>.
-   */
-  private static Channel[] createChannels( final int aCount, final Channel... aInitialValues )
-  {
-    Channel[] result = new Channel[aCount];
-    for ( int i = 0; i < aCount; i++ )
-    {
-      if ( i < aInitialValues.length )
-      {
-        result[i] = new ChannelImpl( aInitialValues[i] );
-      }
-      else
-      {
-        result[i] = new ChannelImpl( i );
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Creates an array of a given number of channels.
-   * 
-   * @param aCount
-   *          the number of channels to create, >= 0.
-   * @return an array with channels, never <code>null</code>.
-   */
-  private static Cursor[] createCursors( final int aCount, final Cursor... aInitialValues )
-  {
-    Cursor[] result = new Cursor[aCount];
-    for ( int i = 0; i < aCount; i++ )
-    {
-      if ( i < aInitialValues.length )
-      {
-        result[i] = new CursorImpl( aInitialValues[i] );
-      }
-      else
-      {
-        result[i] = new CursorImpl( i );
-      }
-    }
-    return result;
-  }
 
   /**
    * Adds the given listener to the list of property change listeners.
@@ -198,6 +150,15 @@ public class DataSetImpl implements DataSet, ProjectProperties
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void propertyChange( final PropertyChangeEvent aEvent )
+  {
+    this.propertyChangeSupport.firePropertyChange( aEvent );
+  }
+
+  /**
    * Removes the given listener from the list of property change listeners.
    * 
    * @param aListener
@@ -223,10 +184,81 @@ public class DataSetImpl implements DataSet, ProjectProperties
   /**
    * Trims the channels to the same number as the captured data, using the
    * channel information of the given data set as template.
+   * 
+   * @param aLabels
+   *          the channel labels to merge, can be <code>null</code>.
    */
-  final void mergeChannelData( final DataSetImpl aDataSet )
+  final void mergeChannelLabels( final List<String> aLabels )
   {
-    int channelCount = aDataSet.getChannels().length;
-    this.channels = createChannels( channelCount, aDataSet.getChannels() );
+    if ( aLabels == null )
+    {
+      return;
+    }
+
+    int channelCount = Math.min( aLabels.size(), this.channels.length );
+    for ( int i = 0; i < channelCount; i++ )
+    {
+      this.channels[i].setLabel( aLabels.get( i ) );
+    }
+  }
+
+  /**
+   * Creates an array of a given number of channels.
+   * 
+   * @param aCount
+   *          the number of channels to create, >= 0.
+   * @return an array with channels, never <code>null</code>.
+   */
+  private Channel[] createChannels( final int aCount, final Channel... aInitialValues )
+  {
+    final int chCount = this.capturedData == null ? aCount : this.capturedData.getChannels();
+
+    Channel[] result = new Channel[aCount];
+    for ( int i = 0; i < aCount; i++ )
+    {
+      ChannelImpl channel;
+      if ( ( i < aInitialValues.length ) && ( i < chCount ) )
+      {
+        channel = new ChannelImpl( aInitialValues[i] );
+      }
+      else
+      {
+        channel = new ChannelImpl( i );
+      }
+      channel.addPropertyChangeListener( this );
+
+      result[i] = channel;
+    }
+    return result;
+  }
+
+  /**
+   * Creates an array of a given number of channels.
+   * 
+   * @param aCount
+   *          the number of channels to create, >= 0.
+   * @return an array with channels, never <code>null</code>.
+   */
+  private Cursor[] createCursors( final int aCount, final Cursor... aInitialValues )
+  {
+    final long absLen = this.capturedData == null ? 0L : this.capturedData.getAbsoluteLength();
+
+    Cursor[] result = new Cursor[aCount];
+    for ( int i = 0; i < aCount; i++ )
+    {
+      CursorImpl cursor;
+      if ( i < aInitialValues.length )
+      {
+        cursor = new CursorImpl( aInitialValues[i], absLen );
+      }
+      else
+      {
+        cursor = new CursorImpl( i );
+      }
+      cursor.addPropertyChangeListener( this );
+
+      result[i] = cursor;
+    }
+    return result;
   }
 }
