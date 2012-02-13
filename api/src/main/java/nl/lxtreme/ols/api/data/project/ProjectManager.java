@@ -50,7 +50,9 @@ public interface ProjectManager
    * Creates a temporary project, useful for loading data files.
    * 
    * @return a new project, <b>not</b> managed by this manager!
+   * @deprecated do not use, no replacement.
    */
+  @Deprecated
   public Project createTemporaryProject();
 
   /**
