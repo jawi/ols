@@ -113,7 +113,7 @@ public class TextOverlayIcon extends ImageIcon
     switch ( getVerticalAlignment( aPosition ) )
     {
       case SwingConstants.CENTER:
-        yText = ( float )( aHeight / 2.0 + aText.getAscent() / 4.0 );
+        yText = ( float )( ( aHeight / 2.0 ) + ( aText.getAscent() / 4.0 ) );
         break;
       case SwingConstants.BOTTOM:
         yText = ( aHeight - 1 );
