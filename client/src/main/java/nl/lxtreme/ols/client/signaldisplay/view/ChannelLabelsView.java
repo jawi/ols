@@ -158,10 +158,9 @@ public class ChannelLabelsView extends AbstractViewLayer
 
       final Point dropPoint = createChannelDropPoint( coordinate, sourceComponent, glassPane );
 
-      final ChannelInsertionPointRenderer renderer = new ChannelInsertionPointRenderer();
-      renderer.setContext( channel.getLabel() );
+      final ChannelInsertionPointRenderer renderer = new ChannelInsertionPointRenderer( model, channel );
 
-      glassPane.setDropPoint( dropPoint, renderer );
+      glassPane.setDropPoint( dropPoint, renderer, coordinate );
       glassPane.setVisible( true );
       glassPane.repaintPartially();
 
@@ -198,7 +197,7 @@ public class ChannelLabelsView extends AbstractViewLayer
 
       final Point dropPoint = createChannelDropPoint( coordinate, sourceComponent, glassPane );
 
-      glassPane.setDropPoint( dropPoint );
+      glassPane.setDropPoint( dropPoint, coordinate );
       glassPane.repaintPartially();
     }
 

@@ -119,6 +119,6 @@ public class SetSignalElementVisibilityAction extends AbstractAction
     this.signalElement.setEnabled( menuitem.getState() );
 
     // TODO: this can be made smarter...
-    this.controller.getSignalDiagram().repaint( 25L );
+    this.controller.recalculateDimensions();
   }
 }

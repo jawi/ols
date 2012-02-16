@@ -159,6 +159,24 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   }
 
   /**
+   * Returns the channel group the given channel belongs to.
+   * 
+   * @param aChannel
+   *          the channel of which to return the channel group, cannot be
+   *          <code>null</code>.
+   * @return a channel group, never <code>null</code>.
+   */
+  public ChannelGroup getChannelGroup( final Channel aChannel )
+  {
+    GroupableChannel channel = asGroupableChannel( aChannel );
+    if ( channel != null )
+    {
+      return channel.getChannelGroup();
+    }
+    return null;
+  }
+
+  /**
    * Returns the channel group with a given name.
    * 
    * @param aName
@@ -222,7 +240,9 @@ public final class ChannelGroupManager implements IDataModelChangeListener
       final int oldIndex = movedChannel.getVirtualIndex();
 
       final ChannelGroup cg = insertChannel.getChannelGroup();
-      cg.moveChannel( movedChannel, insertChannel.getVirtualIndex() );
+      int offset = ( oldCG.getIndex() - cg.getIndex() );
+
+      cg.moveChannel( movedChannel, insertChannel.getVirtualIndex() + offset );
 
       fireChannelMoveEvent( new ChannelMoveEvent( movedChannel, oldCG, oldIndex ) );
     }

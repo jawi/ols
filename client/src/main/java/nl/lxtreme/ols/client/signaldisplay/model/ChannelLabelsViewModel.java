@@ -153,6 +153,20 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
+   * Returns the channel group for the given channel.
+   * 
+   * @param aChannel
+   *          the channel of which to return the channel group, cannot be
+   *          <code>null</code>.
+   * @return a channel group, never <code>null</code>.
+   */
+  public ChannelGroup getChannelGroupFor( final Channel aChannel )
+  {
+    final ChannelGroupManager channelGroupManager = getChannelGroupManager();
+    return channelGroupManager.getChannelGroup( aChannel );
+  }
+
+  /**
    * Returns the background color for the labels themselves.
    * 
    * @return a color, never <code>null</code>.

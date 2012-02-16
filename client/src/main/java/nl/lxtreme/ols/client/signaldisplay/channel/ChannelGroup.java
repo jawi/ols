@@ -428,7 +428,14 @@ public class ChannelGroup
       oldChannelGroup.removeChannel( aChannel );
     }
 
-    this.channels.add( aNewIndex, aChannel );
+    if ( aNewIndex >= this.channels.size() )
+    {
+      this.channels.add( aChannel );
+    }
+    else
+    {
+      this.channels.add( Math.max( 0, aNewIndex ), aChannel );
+    }
     // Make sure the channel links back to this channel group...
     aChannel.setChannelGroup( this );
 

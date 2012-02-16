@@ -112,15 +112,15 @@ public final class GhostGlassPane extends JPanel
    * Sets the location where the channel/cursor might be dropped. This location
    * is used to draw a marker indicating the drop point.
    * 
-   * @param aLocation
+   * @param aPaintLocation
    *          the location where the channel/cursor might be dropped, cannot be
    *          <code>null</code>;
    * @param aContext
    *          the drag and drop context, cannot be <code>null</code>.
    */
-  public void setDropPoint( final Point aLocation )
+  public void setDropPoint( final Point aPaintLocation, final Point aDropPoint )
   {
-    setDropPoint( aLocation, this.renderer );
+    setDropPoint( aPaintLocation, this.renderer, aDropPoint );
   }
 
   /**
@@ -133,10 +133,14 @@ public final class GhostGlassPane extends JPanel
    * @param aContext
    *          the drag and drop context, cannot be <code>null</code>.
    */
-  public void setDropPoint( final Point aLocation, final Renderer aRenderer )
+  public void setDropPoint( final Point aLocation, final Renderer aRenderer, final Point aDropPoint )
   {
     this.dropPoint = aLocation;
     this.renderer = aRenderer;
+    if ( this.renderer != null )
+    {
+      this.renderer.setContext( aDropPoint );
+    }
   }
 
   /**

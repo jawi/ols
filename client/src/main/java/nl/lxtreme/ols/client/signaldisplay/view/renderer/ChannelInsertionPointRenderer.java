@@ -22,6 +22,10 @@ package nl.lxtreme.ols.client.signaldisplay.view.renderer;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.client.signaldisplay.channel.*;
+import nl.lxtreme.ols.client.signaldisplay.model.*;
+
 
 /**
  * @author jawi
@@ -36,7 +40,20 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
 
   // VARIABLES
 
-  private String channelLabel;
+  private final ChannelLabelsViewModel model;
+  private final Channel channel;
+  private volatile Point dropPoint;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new ChannelInsertionPointRenderer instance.
+   */
+  public ChannelInsertionPointRenderer( final ChannelLabelsViewModel aModel, final Channel aMovedChannel )
+  {
+    this.model = aModel;
+    this.channel = aMovedChannel;
+  }
 
   // METHODS
 
@@ -46,11 +63,10 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
   @Override
   public void setContext( final Object... aParameters )
   {
-    if ( ( aParameters == null ) || ( aParameters.length < 1 ) )
+    if ( ( aParameters != null ) && ( aParameters.length > 0 ) )
     {
-      throw new IllegalArgumentException( "Expected one String parameter!" );
+      this.dropPoint = ( Point )aParameters[0];
     }
-    this.channelLabel = ( String )aParameters[0];
   }
 
   /**
@@ -63,11 +79,13 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
 
     int yPos = fm.getLeading() + fm.getAscent();
     int labelWidth = 0;
-    if ( ( this.channelLabel != null ) && !this.channelLabel.trim().isEmpty() )
-    {
-      labelWidth = fm.stringWidth( this.channelLabel );
 
-      aCanvas.drawString( this.channelLabel, CHANNEL_ROW_MARKER_WIDTH - labelWidth, yPos );
+    String label = getLabel();
+    if ( !label.isEmpty() )
+    {
+      labelWidth = fm.stringWidth( label );
+
+      aCanvas.drawString( label, Math.max( 2, CHANNEL_ROW_MARKER_WIDTH - labelWidth ), yPos );
     }
 
     aCanvas.setStroke( INDICATOR_STROKE );
@@ -75,5 +93,30 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
     aCanvas.drawLine( 0, 0, CHANNEL_ROW_MARKER_WIDTH, 0 );
 
     return new Rectangle( -2, -2, Math.max( labelWidth, CHANNEL_ROW_MARKER_WIDTH ) + 4, yPos + 4 );
+  }
+
+  /**
+   * @return
+   */
+  private String getLabel()
+  {
+    String result = this.channel.getLabel();
+    if ( result == null )
+    {
+      result = "";
+    }
+    if ( this.dropPoint != null )
+    {
+      final Channel dropChannel = this.model.findChannel( this.dropPoint );
+      if ( this.model.acceptChannel( this.channel, dropChannel ) )
+      {
+        final ChannelGroup channelGroupFor = this.model.getChannelGroupFor( dropChannel );
+        if ( channelGroupFor != null )
+        {
+          result = result.concat( "  " ).concat( channelGroupFor.getName() );
+        }
+      }
+    }
+    return result.trim();
   }
 }

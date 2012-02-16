@@ -455,6 +455,7 @@ public class SignalUI extends ComponentUI
     aCanvas.translate( 0, aSignalElements[0].getYposition() + signalOffset );
 
     final int sampleIncr = ( int )Math.max( 1.0, ( 1.0 / zoomFactor ) );
+    System.out.println( "SAMPLE_INCR = " + sampleIncr + ", " + zoomFactor );
 
     for ( SignalElement signalElement : aSignalElements )
     {
@@ -471,7 +472,7 @@ public class SignalUI extends ComponentUI
         // Tell Swing how we would like to render ourselves...
         aCanvas.setRenderingHints( createSignalRenderingHints( false /* aUseAA */) );
 
-        if ( !signalElement.isEnabled() )
+        if ( !signalElement.isEnabled() || ( startIdx == endIdx ) )
         {
           // Forced zero'd channel is *very* easy to draw...
           aCanvas.drawLine( clip.x, signalHeight, clip.x + clip.width, signalHeight );
@@ -572,28 +573,42 @@ public class SignalUI extends ComponentUI
         // Tell Swing how we would like to render ourselves...
         aCanvas.setRenderingHints( createSignalRenderingHints( aModel.isRenderScopeSignalAntiAliased() ) );
 
-        int mask = signalElement.getMask();
-        final int trailingZeros = Integer.numberOfTrailingZeros( mask );
-        final int onesCount = Integer.SIZE - Integer.numberOfLeadingZeros( mask ) - trailingZeros;
-        final int maxValue = ( int )( 1L << onesCount );
-        double scaleFactor = ( signalElement.getHeight() - ( 2 * PADDING_Y ) ) / ( maxValue + 1.0 );
+        long mask = signalElement.getMask() & 0xFFFFFFFFL;
+        final int trailingZeros = Long.numberOfTrailingZeros( mask );
+        final int onesCount = Long.SIZE - Long.numberOfLeadingZeros( mask ) - trailingZeros;
+        final long maxValue = ( ( 1L << onesCount ) - 1L ) & 0xFFFFFFFFL;
+        double scaleFactor = ( signalElement.getHeight() - ( 2.0 * PADDING_Y ) ) / maxValue;
 
         // Make sure we always start with time 0...
         int p = 0;
-        for ( int sampleIdx = startIdx + sampleIncr; sampleIdx < endIdx; sampleIdx += sampleIncr )
+        if ( startIdx == endIdx )
         {
-          long timestamp = timestamps[sampleIdx - sampleIncr];
-          int sampleValue = 0;
-          for ( int i = sampleIdx - sampleIncr; i < sampleIdx; i++ )
-          {
-            sampleValue += ( ( values[sampleIdx] & mask ) >> trailingZeros );
-          }
-          sampleValue = maxValue - ( sampleValue / sampleIncr );
-
-          x[p] = ( int )( zoomFactor * timestamp );
-          y[p] = PADDING_Y + ( int )( scaleFactor * sampleValue );
+          x[p] = clip.x;
+          y[p] = signalElement.getHeight() - PADDING_Y;
           p++;
         }
+        else
+        {
+          for ( int sampleIdx = startIdx + sampleIncr; sampleIdx < endIdx; sampleIdx += sampleIncr )
+          {
+            long timestamp = timestamps[sampleIdx - sampleIncr];
+            int sampleValue = 0;
+            for ( int i = sampleIdx - sampleIncr; i < sampleIdx; i++ )
+            {
+              sampleValue += ( ( values[sampleIdx] & mask ) >> trailingZeros );
+            }
+            sampleValue = ( int )( maxValue - ( sampleValue / ( double )sampleIncr ) );
+
+            x[p] = ( int )( zoomFactor * timestamp );
+            y[p] = PADDING_Y + ( int )( scaleFactor * sampleValue );
+            p++;
+          }
+        }
+
+        // Make sure we end at the last visible sample index...
+        x[p] = clip.x + clip.width;
+        y[p] = y[p - 1];
+        p++;
 
         aCanvas.drawPolyline( x, y, p );
 
