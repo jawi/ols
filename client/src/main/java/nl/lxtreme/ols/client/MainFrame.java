@@ -933,13 +933,13 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * platform.
    * 
    * @param aProject
-   *          the project to take the current properties from, cannot be
+   *          the project to take the current properties from, can be
    *          <code>null</code>.
    */
   private void updateWindowDecorations( final Project aProject )
   {
     String title = this.controller.getHostProperties().getFullName();
-    if ( !StringUtils.isEmpty( aProject.getName() ) )
+    if ( ( aProject != null ) && !StringUtils.isEmpty( aProject.getName() ) )
     {
       // Denote the project file in the title of the main window...
       title = title.concat( " :: " ).concat( aProject.getName() );

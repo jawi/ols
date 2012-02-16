@@ -245,6 +245,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private volatile MainFrame mainFrame;
   private volatile HostProperties hostProperties;
 
+  private volatile long acquisitionStartTime;
+
   // CONSTRUCTORS
 
   /**
@@ -304,7 +306,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     else
     {
-      setStatusOnEDT( "Capture finished at {0,date,medium} {0,time,medium}.", new Date() );
+      long time = System.currentTimeMillis() - this.acquisitionStartTime;
+
+      setStatusOnEDT( "Capture finished at {0,date,medium} {0,time,medium}, and took {1}.", new Date(),
+          DisplayUtils.displayTime( time / 1000.0, 1, "" ) );
     }
 
     updateActionsOnEDT();
@@ -325,6 +330,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void acquisitionStarted()
   {
+    this.acquisitionStartTime = System.currentTimeMillis();
+
     updateActionsOnEDT();
   }
 
@@ -1396,7 +1403,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
           }
           // release all resources...
           mf.dispose();
-          setMainFrame( null );
+          // Make sure the event listeners are deregistered...
+          removeMainFrame( mf );
         }
 
         JErrorDialog.uninstallSwingExceptionHandler();
@@ -1461,6 +1469,20 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * @param aMainFrame
+   *          the main frame to remove, cannot be <code>null</code>.
+   */
+  final void removeMainFrame( final MainFrame aMainFrame )
+  {
+    if ( this.projectManager != null )
+    {
+      this.projectManager.removePropertyChangeListener( aMainFrame );
+    }
+
+    this.mainFrame = null;
+  }
+
+  /**
    * Called by the dependency manager when the project manager service is going
    * away.
    * 
@@ -1469,7 +1491,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   final void removeProjectManager( final ProjectManager aProjectManager )
   {
-    setProjectManager( null );
+    if ( this.signalDiagramController != null )
+    {
+      aProjectManager.removePropertyChangeListener( this.signalDiagramController );
+    }
+    if ( this.mainFrame != null )
+    {
+      aProjectManager.removePropertyChangeListener( this.mainFrame );
+    }
+
+    this.projectManager = null;
   }
 
   /**
@@ -1478,11 +1509,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   final void setMainFrame( final MainFrame aMainFrame )
   {
-    if ( ( this.mainFrame != null ) && ( this.projectManager != null ) )
-    {
-      this.projectManager.addPropertyChangeListener( this.mainFrame );
-    }
-
     this.mainFrame = aMainFrame;
 
     if ( this.projectManager != null )
@@ -1518,16 +1544,18 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   final void setProjectManager( final ProjectManager aProjectManager )
   {
-    if ( ( this.projectManager != null ) && ( this.signalDiagramController != null ) )
-    {
-      this.projectManager.removePropertyChangeListener( this.signalDiagramController );
-    }
-
     this.projectManager = aProjectManager;
 
     if ( this.projectManager != null )
     {
-      this.projectManager.addPropertyChangeListener( this.signalDiagramController );
+      if ( this.signalDiagramController != null )
+      {
+        this.projectManager.addPropertyChangeListener( this.signalDiagramController );
+      }
+      if ( this.mainFrame != null )
+      {
+        this.projectManager.addPropertyChangeListener( this.mainFrame );
+      }
     }
   }
 
