@@ -30,6 +30,7 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.IChannelChangeListener.ChannelChangeEvent;
 import nl.lxtreme.ols.client.signaldisplay.IChannelChangeListener.ChannelMoveEvent;
+import nl.lxtreme.ols.client.signaldisplay.model.*;
 
 
 /**
@@ -177,6 +178,22 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   }
 
   /**
+   * @param aMovedChannel
+   * @return
+   */
+  public ChannelGroup getChannelGroup( final SignalElement aSignalElement )
+  {
+    if ( aSignalElement.isDigitalSignal() )
+    {
+      return asGroupableChannel( aSignalElement.getChannel() ).getChannelGroup();
+    }
+    else
+    {
+      return aSignalElement.getChannelGroup();
+    }
+  }
+
+  /**
    * Returns the channel group with a given name.
    * 
    * @param aName
@@ -226,23 +243,37 @@ public final class ChannelGroupManager implements IDataModelChangeListener
    * 
    * @param aMovedChannel
    *          the channel to move;
-   * @param aInsertChannel
+   * @param aInsertElement
    *          the channel before which the moved channel is to be inserted.
    */
-  public void moveChannel( final Channel aMovedChannel, final Channel aInsertChannel )
+  public void moveChannel( final Channel aMovedChannel, final SignalElement aInsertElement )
   {
-    if ( ( aMovedChannel != null ) && ( aInsertChannel != null ) )
+    if ( ( aMovedChannel != null ) && ( aInsertElement != null ) )
     {
-      GroupableChannel movedChannel = asGroupableChannel( aMovedChannel );
-      GroupableChannel insertChannel = asGroupableChannel( aInsertChannel );
+      final GroupableChannel movedChannel = asGroupableChannel( aMovedChannel );
 
       final ChannelGroup oldCG = movedChannel.getChannelGroup();
-      final int oldIndex = movedChannel.getVirtualIndex();
+      final ChannelGroup cg = getChannelGroup( aInsertElement );
 
-      final ChannelGroup cg = insertChannel.getChannelGroup();
+      int oldIndex = movedChannel.getVirtualIndex();
+      int newIndex = 0;
       int offset = ( oldCG.getIndex() - cg.getIndex() );
 
-      cg.moveChannel( movedChannel, insertChannel.getVirtualIndex() + offset );
+      if ( aInsertElement.isDigitalSignal() )
+      {
+        newIndex = asGroupableChannel( aInsertElement.getChannel() ).getVirtualIndex();
+      }
+      else if ( aInsertElement.isSignalGroup() )
+      {
+        newIndex = 0; //
+        offset = 0;
+      }
+      else
+      {
+        newIndex = getChannelGroup( aInsertElement ).getChannelCount();
+      }
+
+      cg.moveChannel( movedChannel, newIndex + offset );
 
       fireChannelMoveEvent( new ChannelMoveEvent( movedChannel, oldCG, oldIndex ) );
     }
@@ -445,16 +476,16 @@ public final class ChannelGroupManager implements IDataModelChangeListener
   }
 
   /**
-   * @param aMovedChannel
+   * @param aChannel
    * @return
    */
-  private GroupableChannel asGroupableChannel( final Channel aMovedChannel )
+  private GroupableChannel asGroupableChannel( final Channel aChannel )
   {
-    if ( aMovedChannel instanceof GroupableChannel )
+    if ( aChannel instanceof GroupableChannel )
     {
-      return ( GroupableChannel )aMovedChannel;
+      return ( GroupableChannel )aChannel;
     }
-    throw new RuntimeException( "TODO: wrap channel!" );
+    throw new RuntimeException( "TODO wrap me!" );
   }
 
   /**

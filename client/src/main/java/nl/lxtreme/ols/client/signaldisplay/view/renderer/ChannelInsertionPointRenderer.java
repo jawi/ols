@@ -107,10 +107,10 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
     }
     if ( this.dropPoint != null )
     {
-      final Channel dropChannel = this.model.findChannel( this.dropPoint );
-      if ( this.model.acceptChannel( this.channel, dropChannel ) )
+      final SignalElement dropElement = this.model.findSignalElement( this.dropPoint );
+      if ( this.model.acceptChannel( this.channel, dropElement ) )
       {
-        final ChannelGroup channelGroupFor = this.model.getChannelGroupFor( dropChannel );
+        final ChannelGroup channelGroupFor = this.model.getChannelGroupFor( dropElement );
         if ( channelGroupFor != null )
         {
           result = result.concat( "  " ).concat( channelGroupFor.getName() );

@@ -206,6 +206,14 @@ public class SignalElement
   }
 
   /**
+   * @return a channel group, can be <code>null</code>.
+   */
+  public ChannelGroup getChannelGroup()
+  {
+    return this.channelGroup;
+  }
+
+  /**
    * Returns the main color of this signal element.
    * 
    * @return a color, never <code>null</code>.

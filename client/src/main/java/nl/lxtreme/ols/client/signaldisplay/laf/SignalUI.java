@@ -455,7 +455,6 @@ public class SignalUI extends ComponentUI
     aCanvas.translate( 0, aSignalElements[0].getYposition() + signalOffset );
 
     final int sampleIncr = ( int )Math.max( 1.0, ( 1.0 / zoomFactor ) );
-    System.out.println( "SAMPLE_INCR = " + sampleIncr + ", " + zoomFactor );
 
     for ( SignalElement signalElement : aSignalElements )
     {

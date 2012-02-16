@@ -69,16 +69,16 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    * 
    * @param aMovedChannel
    *          the channel that is moved;
-   * @param aInsertChannel
-   *          the channel that the moved channel is inserted before.
+   * @param aInsertPoint
+   *          the signal element that the moved channel is inserted before.
    * @return <code>true</code> if the move is accepted, <code>false</code> if
    *         the move is declined.
    */
-  public boolean acceptChannel( final Channel aMovedChannel, final Channel aInsertChannel )
+  public boolean acceptChannel( final Channel aMovedChannel, final SignalElement aInsertPoint )
   {
     boolean result = false;
 
-    if ( ( aMovedChannel != null ) && ( aInsertChannel != null ) )
+    if ( ( aMovedChannel != null ) && ( aInsertPoint != null ) )
     {
       // result = insertChannel.getChannelGroup() ==
       // aMovedChannel.getChannelGroup();
@@ -86,25 +86,6 @@ public class ChannelLabelsViewModel extends AbstractViewModel
     }
 
     return result;
-  }
-
-  /**
-   * Finds the channel that lies underneat the given coordinate.
-   * 
-   * @param aCoordinate
-   *          the X,Y-coordinate to find the channel for, cannot be
-   *          <code>null</code>.
-   * @return the channel underneat the given X,Y-coordinate, or
-   *         <code>null</code> if no channel is found.
-   */
-  public Channel findChannel( final Point aCoordinate )
-  {
-    SignalElement signalElement = findSignalElement( aCoordinate );
-    if ( ( signalElement != null ) && signalElement.isDigitalSignal() )
-    {
-      return signalElement.getChannel();
-    }
-    return null;
   }
 
   /**
@@ -125,6 +106,20 @@ public class ChannelLabelsViewModel extends AbstractViewModel
       return signalElement.getYposition() + signalElement.getHeight();
     }
     return -1;
+  }
+
+  /**
+   * Finds the signal element located at the given X,Y-coordinate.
+   * 
+   * @param aCoordinate
+   *          the coordinate to find the signal element for, cannot be
+   *          <code>null</code>.
+   * @return the signal element at the given X,Y-coordinate, or
+   *         <code>null</code> if no such signal element could be found.
+   */
+  public SignalElement findSignalElement( final Point aCoordinate )
+  {
+    return getSignalDiagramModel().findSignalElement( aCoordinate );
   }
 
   /**
@@ -155,15 +150,15 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   /**
    * Returns the channel group for the given channel.
    * 
-   * @param aChannel
+   * @param aDropElement
    *          the channel of which to return the channel group, cannot be
    *          <code>null</code>.
    * @return a channel group, never <code>null</code>.
    */
-  public ChannelGroup getChannelGroupFor( final Channel aChannel )
+  public ChannelGroup getChannelGroupFor( final SignalElement aDropElement )
   {
     final ChannelGroupManager channelGroupManager = getChannelGroupManager();
-    return channelGroupManager.getChannelGroup( aChannel );
+    return channelGroupManager.getChannelGroup( aDropElement );
   }
 
   /**
@@ -231,28 +226,14 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    * 
    * @param aMovedChannel
    *          the channel that is moved, cannot be <code>null</code>;
-   * @param aInsertChannel
+   * @param aInsertElement
    *          the channel that the moved channel is inserted before, cannot be
    *          <code>null</code>.
    */
-  public void moveChannelRows( final Channel aMovedChannel, final Channel aInsertChannel )
+  public void moveChannelRows( final Channel aMovedChannel, final SignalElement aInsertElement )
   {
     final ChannelGroupManager channelGroupManager = getChannelGroupManager();
 
-    channelGroupManager.moveChannel( aMovedChannel, aInsertChannel );
-  }
-
-  /**
-   * Finds the signal element located at the given X,Y-coordinate.
-   * 
-   * @param aCoordinate
-   *          the coordinate to find the signal element for, cannot be
-   *          <code>null</code>.
-   * @return the signal element at the given X,Y-coordinate, or
-   *         <code>null</code> if no such signal element could be found.
-   */
-  private SignalElement findSignalElement( final Point aCoordinate )
-  {
-    return getSignalDiagramModel().findSignalElement( aCoordinate );
+    channelGroupManager.moveChannel( aMovedChannel, aInsertElement );
   }
 }

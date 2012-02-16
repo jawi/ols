@@ -147,8 +147,8 @@ public class ChannelLabelsView extends AbstractViewLayer
       final ChannelLabelsView sourceComponent = ( ChannelLabelsView )aEvent.getComponent();
       final ChannelLabelsViewModel model = sourceComponent.getModel();
 
-      final Channel channel = model.findChannel( coordinate );
-      if ( channel == null )
+      final SignalElement element = model.findSignalElement( coordinate );
+      if ( ( element == null ) || !element.isDigitalSignal() )
       {
         DragAndDropLock.releaseLock( this );
         return;
@@ -158,6 +158,7 @@ public class ChannelLabelsView extends AbstractViewLayer
 
       final Point dropPoint = createChannelDropPoint( coordinate, sourceComponent, glassPane );
 
+      final Channel channel = element.getChannel();
       final ChannelInsertionPointRenderer renderer = new ChannelInsertionPointRenderer( model, channel );
 
       glassPane.setDropPoint( dropPoint, renderer, coordinate );
@@ -244,12 +245,12 @@ public class ChannelLabelsView extends AbstractViewLayer
         {
           final ChannelLabelsViewModel model = getModel();
 
-          final Channel insertChannel = model.findChannel( aEvent.getLocation() );
+          final SignalElement insertElement = model.findSignalElement( aEvent.getLocation() );
 
-          if ( accepted = model.acceptChannel( movedChannel, insertChannel ) )
+          if ( accepted = model.acceptChannel( movedChannel, insertElement ) )
           {
             // Move the channel rows...
-            model.moveChannelRows( movedChannel, insertChannel );
+            model.moveChannelRows( movedChannel, insertElement );
           }
         }
       }
