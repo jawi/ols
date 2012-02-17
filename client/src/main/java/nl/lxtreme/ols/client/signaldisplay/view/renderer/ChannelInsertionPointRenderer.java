@@ -22,9 +22,8 @@ package nl.lxtreme.ols.client.signaldisplay.view.renderer;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 
 
 /**
@@ -41,7 +40,7 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
   // VARIABLES
 
   private final ChannelLabelsViewModel model;
-  private final Channel channel;
+  private final SignalElement signalElement;
   private volatile Point dropPoint;
 
   // CONSTRUCTORS
@@ -49,10 +48,10 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
   /**
    * Creates a new ChannelInsertionPointRenderer instance.
    */
-  public ChannelInsertionPointRenderer( final ChannelLabelsViewModel aModel, final Channel aMovedChannel )
+  public ChannelInsertionPointRenderer( final ChannelLabelsViewModel aModel, final SignalElement aMovedChannel )
   {
     this.model = aModel;
-    this.channel = aMovedChannel;
+    this.signalElement = aMovedChannel;
   }
 
   // METHODS
@@ -100,7 +99,7 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
    */
   private String getLabel()
   {
-    String result = this.channel.getLabel();
+    String result = this.signalElement.getLabel();
     if ( result == null )
     {
       result = "";
@@ -108,9 +107,9 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
     if ( this.dropPoint != null )
     {
       final SignalElement dropElement = this.model.findSignalElement( this.dropPoint );
-      if ( this.model.acceptChannel( this.channel, dropElement ) )
+      if ( this.model.acceptDrop( this.signalElement, dropElement ) )
       {
-        final ChannelGroup channelGroupFor = this.model.getChannelGroupFor( dropElement );
+        final ElementGroup channelGroupFor = dropElement.getGroup();
         if ( channelGroupFor != null )
         {
           result = result.concat( "  " ).concat( channelGroupFor.getName() );

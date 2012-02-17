@@ -25,16 +25,16 @@ import static nl.lxtreme.ols.util.DisplayUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.lang.reflect.*;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -43,7 +43,7 @@ import nl.lxtreme.ols.util.swing.component.*;
  * Provides a simple measurement component for measuring some common aspects of
  * signals, such as frequency, # of pulses and so on.
  */
-public class MeasurementView extends AbstractViewLayer implements IToolWindow, IChannelChangeListener,
+public class MeasurementView extends AbstractViewLayer implements IToolWindow, ISignalElementChangeListener,
     ICursorChangeListener
 {
   // INNER TYPES
@@ -59,8 +59,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     @Override
     public void actionPerformed( final ActionEvent aEvent )
     {
-      final Collection<GroupableChannel> channelList = getChannelGroupManager().getAssignedChannels();
-      updateChannelModel( toArray( GroupableChannel.class, channelList ) );
+      final Collection<Channel> channelList = getAllChannels();
+      updateChannelModel( channelList );
     }
   }
 
@@ -243,51 +243,6 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
-   * @param aCollection
-   * @return
-   */
-  @SuppressWarnings( "unchecked" )
-  private static <T> T[] toArray( final Class<T> aType, final Collection<T> aCollection )
-  {
-    final T[] result = ( T[] )Array.newInstance( aType, aCollection.size() );
-    return aCollection.toArray( result );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void channelChanged( final ChannelChangeEvent aEvent )
-  {
-    if ( this.listening && ChannelChangeEvent.PROPERTY_ENABLED.equals( aEvent.getPropertyName() ) )
-    {
-      final Collection<GroupableChannel> channelList = getChannelGroupManager().getAssignedChannels();
-      updateChannelModel( toArray( GroupableChannel.class, channelList ) );
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void channelGroupStructureChanged( final Collection<GroupableChannel> aChannelList )
-  {
-    if ( this.listening )
-    {
-      updateChannelModel( toArray( GroupableChannel.class, aChannelList ) );
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void channelMoved( final ChannelMoveEvent aEvent )
-  {
-    // NO-op
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
@@ -376,9 +331,40 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void groupStructureChanged( final Collection<SignalElement> aSignalElements )
+  {
+    if ( this.listening )
+    {
+      updateChannelModel( getAllChannels( aSignalElements ) );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void signalElementMoved( final ElementMoveEvent aEvent )
+  {
+    // NO-op
+  }
+
+  /**
+   * Returns all available channels.
+   * 
+   * @return a collection of all channels, never <code>null</code>.
+   */
+  final Collection<Channel> getAllChannels()
+  {
+    return getAllChannels( getSignalElementManager().getAllElements() );
+  }
+
+  /**
    * Updates the channel model to the current list of channels.
    */
-  protected void updateChannelModel( final Channel... aChannels )
+  protected void updateChannelModel( final Collection<Channel> aChannels )
   {
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
@@ -424,8 +410,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   {
     final SignalDiagramModel model = getSignalDiagramModel();
 
-    GroupableChannel channel = ( GroupableChannel )this.channel.getSelectedItem();
-    if ( ( channel == null ) || !channel.isEnabled() || !channel.isAssigned() )
+    Channel channel = ( Channel )this.channel.getSelectedItem();
+    if ( ( channel == null ) || !channel.isEnabled() )
     {
       return false;
     }
@@ -451,13 +437,21 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
-   * Returns the channel group manager.
+   * Returns all available channels.
    * 
-   * @return a channel group manager, never <code>null</code>.
+   * @return a collection of all channels, never <code>null</code>.
    */
-  private ChannelGroupManager getChannelGroupManager()
+  private Collection<Channel> getAllChannels( final Collection<SignalElement> aSignalElements )
   {
-    return getSignalDiagramModel().getChannelGroupManager();
+    final List<Channel> channels = new ArrayList<Channel>();
+    for ( SignalElement element : aSignalElements )
+    {
+      if ( element.isDigitalSignal() )
+      {
+        channels.add( element.getChannel() );
+      }
+    }
+    return channels;
   }
 
   /**
@@ -469,11 +463,21 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
+   * Returns the channel group manager.
+   * 
+   * @return a channel group manager, never <code>null</code>.
+   */
+  private SignalElementManager getSignalElementManager()
+  {
+    return getSignalDiagramModel().getSignalElementManager();
+  }
+
+  /**
    * Initializes this component.
    */
   private void initComponent()
   {
-    this.channel = updateChannelComboBoxModel( new JComboBox() );
+    this.channel = updateChannelComboBoxModel( new JComboBox(), Collections.<Channel> emptyList() );
     this.channel.addActionListener( new CursorActionListener() );
     // Make the component a bit smaller and a pop-down on OSX...
     this.channel.putClientProperty( "JComponent.sizeVariant", "small" );
@@ -559,9 +563,9 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    * 
    * @return the given combobox.
    */
-  private JComboBox updateChannelComboBoxModel( final JComboBox aComboBox, final Channel... aChannels )
+  private JComboBox updateChannelComboBoxModel( final JComboBox aComboBox, final Collection<Channel> aChannels )
   {
-    ComboBoxModel model = new DefaultComboBoxModel( aChannels );
+    ComboBoxModel model = new DefaultComboBoxModel( new Vector<Channel>( aChannels ) );
 
     final Object oldSelectedItem = aComboBox.getSelectedItem();
     aComboBox.setModel( model );

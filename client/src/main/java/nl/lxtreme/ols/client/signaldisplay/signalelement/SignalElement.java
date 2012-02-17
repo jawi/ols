@@ -18,20 +18,18 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signaldisplay.model;
+package nl.lxtreme.ols.client.signaldisplay.signalelement;
 
 
 import java.awt.*;
-
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.signaldisplay.channel.*;
 
 
 /**
  * Represents a signal element in the form of a digital signal, analog signal or
  * a group summary.
  */
-public class SignalElement
+public final class SignalElement implements Comparable<SignalElement>
 {
   // INNER TYPES
 
@@ -50,14 +48,15 @@ public class SignalElement
   // VARIABLES
 
   private final SignalElementType type;
-  private final int yPosition;
-  private final int height;
   private final int mask;
 
+  /** the wrapped digital channel, if type == DIGITAL_SIGNAL. */
   private Channel channel;
-  private ChannelGroup channelGroup;
+  /** the group we belong to, should always be non-null. */
+  private ElementGroup group;
 
-  // TODO add label, color & font...
+  private int height;
+  private int yPosition;
 
   // CONSTRUCTORS
 
@@ -73,12 +72,10 @@ public class SignalElement
    * @param aHeight
    *          the height of this channel element, in pixels, >= 0.
    */
-  private SignalElement( final SignalElementType aType, final int aMask, final int aYposition, final int aHeight )
+  private SignalElement( final SignalElementType aType, final int aMask )
   {
     this.type = aType;
     this.mask = aMask;
-    this.yPosition = aYposition;
-    this.height = aHeight;
   }
 
   // METHODS
@@ -87,17 +84,15 @@ public class SignalElement
    * Factory method for creating a {@link SignalElement} instance representing
    * an analog scope for a channel group.
    * 
-   * @param aChannelGroup
+   * @param aGroup
    *          the channel group to create a channel element for, cannot be
    *          <code>null</code>.
    * @return a new {@link SignalElement} instance, never <code>null</code>.
    */
-  public static SignalElement createAnalogScopeElement( final ChannelGroup aChannelGroup, final int aYposition,
-      final int aHeight )
+  public static SignalElement createAnalogScopeElement( final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, aChannelGroup.getMask(),
-        aYposition, aHeight );
-    channelElement.channelGroup = aChannelGroup;
+    final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, aGroup.getMask() );
+    channelElement.group = aGroup;
     return channelElement;
   }
 
@@ -110,12 +105,11 @@ public class SignalElement
    *          <code>null</code>.
    * @return a new {@link SignalElement} instance, never <code>null</code>.
    */
-  public static SignalElement createDigitalSignalElement( final Channel aChannel, final int aYposition,
-      final int aHeight )
+  public static SignalElement createDigitalSignalElement( final Channel aChannel, final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.DIGITAL_SIGNAL, aChannel.getMask(),
-        aYposition, aHeight );
+    final SignalElement channelElement = new SignalElement( SignalElementType.DIGITAL_SIGNAL, aChannel.getMask() );
     channelElement.channel = aChannel;
+    channelElement.group = aGroup;
     return channelElement;
   }
 
@@ -123,17 +117,15 @@ public class SignalElement
    * Factory method for creating a {@link SignalElement} instance representing a
    * summary for a group of signals.
    * 
-   * @param aChannelGroup
+   * @param aGroup
    *          the channel group to create a channel element for, cannot be
    *          <code>null</code>.
    * @return a new {@link SignalElement} instance, never <code>null</code>.
    */
-  public static SignalElement createGroupSummaryElement( final ChannelGroup aChannelGroup, final int aYposition,
-      final int aHeight )
+  public static SignalElement createGroupSummaryElement( final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, aChannelGroup.getMask(),
-        aYposition, aHeight );
-    channelElement.channelGroup = aChannelGroup;
+    final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, aGroup.getMask() );
+    channelElement.group = aGroup;
     return channelElement;
   }
 
@@ -141,18 +133,28 @@ public class SignalElement
    * Factory method for creating a {@link SignalElement} instance representing a
    * a group of signals.
    * 
-   * @param aChannelGroup
+   * @param aGroup
    *          the channel group to create a channel element for, cannot be
    *          <code>null</code>.
    * @return a new {@link SignalElement} instance, never <code>null</code>.
    */
-  public static SignalElement createSignalGroupElement( final ChannelGroup aChannelGroup, final int aYposition,
-      final int aHeight )
+  public static SignalElement createSignalGroupElement( final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, aChannelGroup.getMask(),
-        aYposition, aHeight );
-    channelElement.channelGroup = aChannelGroup;
+    final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, aGroup.getMask() );
+    channelElement.group = aGroup;
     return channelElement;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public int compareTo( final SignalElement aSignalElement )
+  {
+    int thisIdx = getVirtualIndex();
+    int thatIdx = aSignalElement.getVirtualIndex();
+
+    return thisIdx - thatIdx;
   }
 
   /**
@@ -171,15 +173,15 @@ public class SignalElement
     }
 
     final SignalElement other = ( SignalElement )aObject;
-    if ( this.height != other.height )
-    {
-      return false;
-    }
-    if ( this.yPosition != other.yPosition )
-    {
-      return false;
-    }
     if ( this.type != other.type )
+    {
+      return false;
+    }
+    if ( this.channel != other.channel )
+    {
+      return false;
+    }
+    if ( this.group != other.group )
     {
       return false;
     }
@@ -206,14 +208,6 @@ public class SignalElement
   }
 
   /**
-   * @return a channel group, can be <code>null</code>.
-   */
-  public ChannelGroup getChannelGroup()
-  {
-    return this.channelGroup;
-  }
-
-  /**
    * Returns the main color of this signal element.
    * 
    * @return a color, never <code>null</code>.
@@ -226,14 +220,22 @@ public class SignalElement
     }
     else
     {
-      return this.channelGroup.getColor();
+      return this.group.getColor();
     }
   }
 
   /**
-   * Returns the current value of height.
+   * Returns the element group this element belongs to.
    * 
-   * @return the height, in pixels.
+   * @return a group, can be <code>null</code>.
+   */
+  public ElementGroup getGroup()
+  {
+    return this.group;
+  }
+
+  /**
+   * @return the height of this signal element on screen, in pixels.
    */
   public int getHeight()
   {
@@ -245,26 +247,26 @@ public class SignalElement
    * 
    * @return a label, can be <code>null</code>.
    */
-  public final String getLabel()
+  public String getLabel()
   {
     if ( this.channel != null )
     {
       return this.channel.getLabel();
     }
-    else if ( this.channelGroup != null )
+    else if ( this.group != null )
     {
       if ( isAnalogSignal() )
       {
-        return this.channelGroup.getAnalogSignalLabel();
+        return this.group.getAnalogSignalLabel();
       }
       else if ( isGroupSummary() )
       {
-        return this.channelGroup.getGroupSummaryLabel();
+        return this.group.getGroupSummaryLabel();
       }
 
-      return this.channelGroup.getName();
+      return this.group.getName();
     }
-    return null;
+    return getDefaultName();
   }
 
   /**
@@ -278,9 +280,22 @@ public class SignalElement
   }
 
   /**
-   * Returns the Y-position of this channel element on screen.
+   * Returns the virtual index of this channel.
    * 
-   * @return the Y-position, >= 0.
+   * @return the virtualIndex, >= 0.
+   */
+  public int getVirtualIndex()
+  {
+    int result = -1;
+    if ( this.group != null )
+    {
+      result = this.group.getVirtualIndex( this );
+    }
+    return result;
+  }
+
+  /**
+   * @return the Y-position on screen, >= 0, in pixels.
    */
   public int getYposition()
   {
@@ -295,7 +310,7 @@ public class SignalElement
   {
     final int prime = 31;
     int result = 1;
-    result = ( prime * result ) + this.height;
+    result = ( prime * result ) + this.group.hashCode();
     result = ( prime * result ) + this.type.hashCode();
     return result;
   }
@@ -333,19 +348,19 @@ public class SignalElement
     {
       return this.channel.isEnabled();
     }
-    else if ( this.channelGroup != null )
+    else if ( this.group != null )
     {
       if ( isGroupSummary() )
       {
-        return this.channelGroup.isShowGroupSummary();
+        return this.group.isShowGroupSummary();
       }
       else if ( isAnalogSignal() )
       {
-        return this.channelGroup.isShowAnalogSignal();
+        return this.group.isShowAnalogSignal();
       }
       else if ( isSignalGroup() )
       {
-        return this.channelGroup.isShowDigitalSignals();
+        return this.group.isShowDigitalSignals();
       }
       else
       {
@@ -391,7 +406,7 @@ public class SignalElement
     }
     else
     {
-      this.channelGroup.setColor( aColor );
+      this.group.setColor( aColor );
     }
   }
 
@@ -408,19 +423,19 @@ public class SignalElement
     {
       this.channel.setEnabled( aEnabled );
     }
-    else if ( this.channelGroup != null )
+    else if ( this.group != null )
     {
       if ( isGroupSummary() )
       {
-        this.channelGroup.setGroupSummary( aEnabled );
+        this.group.setGroupSummary( aEnabled );
       }
       else if ( isAnalogSignal() )
       {
-        this.channelGroup.setShowAnalogSignal( aEnabled );
+        this.group.setShowAnalogSignal( aEnabled );
       }
       else if ( isSignalGroup() )
       {
-        this.channelGroup.setShowDigitalSignals( aEnabled );
+        this.group.setShowDigitalSignals( aEnabled );
       }
       else
       {
@@ -441,19 +456,19 @@ public class SignalElement
     {
       this.channel.setLabel( aLabel );
     }
-    else if ( this.channelGroup != null )
+    else if ( this.group != null )
     {
       if ( isAnalogSignal() )
       {
-        this.channelGroup.setAnalogSignalLabel( aLabel );
+        this.group.setAnalogSignalLabel( aLabel );
       }
       else if ( isGroupSummary() )
       {
-        this.channelGroup.setGroupSummaryLabel( aLabel );
+        this.group.setGroupSummaryLabel( aLabel );
       }
       else
       {
-        this.channelGroup.setName( aLabel );
+        this.group.setName( aLabel );
       }
     }
   }
@@ -467,21 +482,65 @@ public class SignalElement
     StringBuilder builder = new StringBuilder();
     builder.append( "SignalElement [type=" );
     builder.append( this.type );
-    builder.append( ", yPosition=" );
-    builder.append( this.yPosition );
-    builder.append( ", height=" );
-    builder.append( this.height );
     if ( this.channel != null )
     {
       builder.append( ", channel=" );
       builder.append( this.channel );
     }
-    if ( this.channelGroup != null )
+    if ( this.group != null )
     {
       builder.append( ", channelGroup=" );
-      builder.append( this.channelGroup );
+      builder.append( this.group );
     }
     builder.append( "]" );
     return builder.toString();
+  }
+
+  /**
+   * Connects this signal element to a the given group.
+   * 
+   * @param aGroup
+   *          the group to connect this element to, can be <code>null</code> to
+   *          disconnect this element from its current group.
+   */
+  final void setGroup( final ElementGroup aGroup )
+  {
+    synchronized ( this )
+    {
+      this.group = aGroup;
+    }
+  }
+
+  /**
+   * Sets height to the given value.
+   * 
+   * @param aHeight
+   *          the height to set.
+   */
+  final void setHeight( final int aHeight )
+  {
+    this.height = aHeight;
+  }
+
+  /**
+   * Sets yPosition to the given value.
+   * 
+   * @param aYPosition
+   *          the yPosition to set.
+   */
+  final void setYposition( final int aYPosition )
+  {
+    this.yPosition = aYPosition;
+  }
+
+  /**
+   * Crafts a default channel name for use when a channel has no label set.
+   * 
+   * @return a channel name, never <code>null</code>.
+   */
+  private String getDefaultName()
+  {
+    int index = this.channel != null ? this.channel.getIndex() : this.group.getIndex();
+    return String.format( "%s-%d", this.group.getName(), Integer.valueOf( index + 1 ) );
   }
 }

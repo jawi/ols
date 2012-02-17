@@ -22,13 +22,14 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
 
@@ -67,18 +68,18 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    * Channels can only be moved within a single group.
    * </p>
    * 
-   * @param aMovedChannel
+   * @param aMovedElement
    *          the channel that is moved;
    * @param aInsertPoint
    *          the signal element that the moved channel is inserted before.
    * @return <code>true</code> if the move is accepted, <code>false</code> if
    *         the move is declined.
    */
-  public boolean acceptChannel( final Channel aMovedChannel, final SignalElement aInsertPoint )
+  public boolean acceptDrop( final SignalElement aMovedElement, final SignalElement aInsertPoint )
   {
     boolean result = false;
 
-    if ( ( aMovedChannel != null ) && ( aInsertPoint != null ) )
+    if ( ( aMovedElement != null ) && ( aInsertPoint != null ) )
     {
       // result = insertChannel.getChannelGroup() ==
       // aMovedChannel.getChannelGroup();
@@ -86,26 +87,6 @@ public class ChannelLabelsViewModel extends AbstractViewModel
     }
 
     return result;
-  }
-
-  /**
-   * Determines the virtual channel row corresponding to the given
-   * X,Y-coordinate.
-   * 
-   * @param aCoordinate
-   *          the coordinate to return the channel row for, cannot be
-   *          <code>null</code>.
-   * @return a channel row index (>= 0), or -1 if the point is nowhere near a
-   *         channel row.
-   */
-  public int findChannelVirtualOffset( final Point aCoordinate )
-  {
-    SignalElement signalElement = findSignalElement( aCoordinate );
-    if ( signalElement != null )
-    {
-      return signalElement.getYposition() + signalElement.getHeight();
-    }
-    return -1;
   }
 
   /**
@@ -123,13 +104,42 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
+   * Determines the virtual signal element row corresponding to the given
+   * X,Y-coordinate.
+   * 
+   * @param aCoordinate
+   *          the coordinate to return the channel row for, cannot be
+   *          <code>null</code>.
+   * @return a channel row index (>= 0), or -1 if the point is nowhere near a
+   *         channel row.
+   */
+  public int findSignalElementVirtualOffset( final Point aCoordinate )
+  {
+    SignalElement signalElement = findSignalElement( aCoordinate );
+    if ( signalElement != null )
+    {
+      return signalElement.getYposition() + signalElement.getHeight();
+    }
+    return -1;
+  }
+
+  /**
    * Returns all available channels.
    * 
    * @return a collection of all channels, never <code>null</code>.
    */
   public final Collection<Channel> getAllChannels()
   {
-    return getChannelGroupManager().getAllChannels();
+    final Collection<SignalElement> allElements = getSignalElementManager().getAllElements();
+    final List<Channel> channels = new ArrayList<Channel>();
+    for ( SignalElement element : allElements )
+    {
+      if ( element.isDigitalSignal() )
+      {
+        channels.add( element.getChannel() );
+      }
+    }
+    return channels;
   }
 
   /**
@@ -145,20 +155,6 @@ public class ChannelLabelsViewModel extends AbstractViewModel
       color = LafDefaults.DEFAULT_BACKGROUND_COLOR;
     }
     return color;
-  }
-
-  /**
-   * Returns the channel group for the given channel.
-   * 
-   * @param aDropElement
-   *          the channel of which to return the channel group, cannot be
-   *          <code>null</code>.
-   * @return a channel group, never <code>null</code>.
-   */
-  public ChannelGroup getChannelGroupFor( final SignalElement aDropElement )
-  {
-    final ChannelGroupManager channelGroupManager = getChannelGroupManager();
-    return channelGroupManager.getChannelGroup( aDropElement );
   }
 
   /**
@@ -224,16 +220,34 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   /**
    * Moves a given channel row to another position.
    * 
-   * @param aMovedChannel
+   * @param aMovedElement
    *          the channel that is moved, cannot be <code>null</code>;
    * @param aInsertElement
    *          the channel that the moved channel is inserted before, cannot be
    *          <code>null</code>.
    */
-  public void moveChannelRows( final Channel aMovedChannel, final SignalElement aInsertElement )
+  public void moveSignalElement( final SignalElement aMovedElement, final SignalElement aInsertElement )
   {
-    final ChannelGroupManager channelGroupManager = getChannelGroupManager();
+    final SignalElementManager channelGroupManager = getSignalElementManager();
 
-    channelGroupManager.moveChannel( aMovedChannel, aInsertElement );
+    final ElementGroup oldGroup = aMovedElement.getGroup();
+    final ElementGroup newGroup = aInsertElement.getGroup();
+
+    int newIndex;
+    if ( aInsertElement.isDigitalSignal() )
+    {
+      int offset = ( oldGroup != newGroup ) ? 1 : 0;
+      newIndex = aInsertElement.getVirtualIndex() + offset;
+    }
+    else if ( aInsertElement.isSignalGroup() )
+    {
+      newIndex = 0; //
+    }
+    else
+    {
+      newIndex = newGroup.getElementCount();
+    }
+
+    channelGroupManager.moveElement( aMovedElement, newGroup, newIndex );
   }
 }

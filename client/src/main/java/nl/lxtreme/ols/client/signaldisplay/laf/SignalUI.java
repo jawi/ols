@@ -28,6 +28,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.Renderer;
@@ -261,7 +262,7 @@ public class SignalUI extends ComponentUI
 
         if ( signalElement.isEnabled() )
         {
-          final Iterable<Annotation<?>> annotations = aModel.getAnnotationsFor( signalElement.getChannel().getIndex() );
+          final Iterable<Annotation<?>> annotations = signalElement.getChannel().getAnnotations();
 
           final FontMetrics fm = aCanvas.getFontMetrics();
 

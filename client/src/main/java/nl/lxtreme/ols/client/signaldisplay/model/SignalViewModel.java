@@ -21,14 +21,9 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 
 import java.awt.*;
-import java.util.*;
-
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.channel.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
@@ -58,16 +53,6 @@ public class SignalViewModel extends AbstractViewModel
   }
 
   // METHODS
-
-  /**
-   * @return
-   */
-  public Collection<Annotation<?>> getAnnotationsFor( final int aChannel )
-  {
-    final ChannelGroupManager channelGroupManager = this.controller.getSignalDiagramModel().getChannelGroupManager();
-    final Channel channel = channelGroupManager.getChannelByIndex( aChannel );
-    return channel.getAnnotations();
-  }
 
   /**
    * Returns the background color for the signal view.

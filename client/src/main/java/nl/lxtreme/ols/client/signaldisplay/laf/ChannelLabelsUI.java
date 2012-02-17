@@ -27,6 +27,7 @@ import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.Renderer;

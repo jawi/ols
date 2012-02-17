@@ -127,10 +127,7 @@ public final class ChannelImpl implements Channel
   }
 
   /**
-   * Adds the given listener to the list of property change listeners.
-   * 
-   * @param aListener
-   *          a property change listener, cannot be <code>null</code>.
+   * {@inheritDoc}
    */
   public void addPropertyChangeListener( final PropertyChangeListener aListener )
   {
@@ -259,10 +256,7 @@ public final class ChannelImpl implements Channel
   }
 
   /**
-   * Removes the given listener from the list of property change listeners.
-   * 
-   * @param aListener
-   *          a property change listener, cannot be <code>null</code>.
+   * {@inheritDoc}
    */
   public void removePropertyChangeListener( final PropertyChangeListener aListener )
   {

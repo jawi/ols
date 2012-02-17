@@ -33,6 +33,7 @@ import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -70,9 +71,9 @@ public final class SignalDiagramController implements PropertyChangeListener
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
-  public void addChannelChangeListener( final IChannelChangeListener aListener )
+  public void addChannelChangeListener( final ISignalElementChangeListener aListener )
   {
-    getSignalDiagramModel().getChannelGroupManager().addChannelChangeListener( aListener );
+    getSignalDiagramModel().getSignalElementManager().addChannelChangeListener( aListener );
   }
 
   /**
@@ -245,9 +246,9 @@ public final class SignalDiagramController implements PropertyChangeListener
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
-  public void removeChannelChangeListener( final IChannelChangeListener aListener )
+  public void removeChannelChangeListener( final ISignalElementChangeListener aListener )
   {
-    getSignalDiagramModel().getChannelGroupManager().removeChannelChangeListener( aListener );
+    getSignalDiagramModel().getSignalElementManager().removeChannelChangeListener( aListener );
   }
 
   /**

@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signaldisplay.channel;
+package nl.lxtreme.ols.client.signaldisplay.signalelement;
 
 
 import static nl.lxtreme.ols.util.ColorUtils.*;
@@ -27,17 +27,21 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import nl.lxtreme.ols.api.data.*;
-
 
 /**
  * Indicates a number of grouped channels, with their own set of labels and
  * indexes of channels.
+ * <p>
+ * This class is thread-safe.
+ * </p>
  */
-public class ChannelGroup
+public class ElementGroup
 {
   // INNER TYPES
 
+  /**
+   * Denotes the type of the channel.
+   */
   public static enum ChannelElementType
   {
     // CONSTANTS
@@ -82,9 +86,9 @@ public class ChannelGroup
 
   // VARIABLES
 
-  private final List<GroupableChannel> channels;
+  private final List<SignalElement> elements;
 
-  private int index;
+  private final int index;
   private int mask;
   /** The name of this group. */
   private String name;
@@ -110,7 +114,7 @@ public class ChannelGroup
    * @throws IllegalArgumentException
    *           in case the given name was <code>null</code> or empty.
    */
-  ChannelGroup( final int aIndex, final String aName )
+  ElementGroup( final int aIndex, final String aName )
   {
     if ( ( aName == null ) || aName.trim().isEmpty() )
     {
@@ -127,44 +131,49 @@ public class ChannelGroup
         | ChannelElementType.ANALOG_SIGNAL.mask;
     this.color = DEFAULT_COLOR;
 
-    this.channels = new ArrayList<GroupableChannel>();
+    this.elements = new ArrayList<SignalElement>();
   }
 
   // METHODS
 
   /**
-   * Adds a given channel to this channel group.
+   * Adds a given signal element to this group.
    * <p>
-   * If the given channel is already contained by this channel group, this
-   * method is effectively a no-op.
+   * If the given element is already contained by this group, this method is
+   * effectively a no-op.
    * </p>
    * 
-   * @param aChannel
-   *          the channel to add, cannot be <code>null</code>.
+   * @param aElement
+   *          the signal element to add, cannot be <code>null</code>.
    * @throws IllegalArgumentException
    *           in case the given channel was <code>null</code>.
    */
-  public void addChannel( final GroupableChannel aChannel )
+  public void addElement( final SignalElement aElement )
   {
-    if ( hasChannel( aChannel ) )
+    if ( hasElement( aElement ) )
     {
       // Nothing to do; this channel already is in this group...
       return;
     }
 
-    // Make sure we've disconnected the channel from its former channel group...
-    final ChannelGroup oldChannelGroup = aChannel.getChannelGroup();
-    if ( oldChannelGroup != null )
+    final SignalElement signalElement = aElement;
+
+    // Make sure we've disconnected the element from its former group...
+    final ElementGroup oldGroup = aElement.getGroup();
+    if ( oldGroup != null )
     {
-      oldChannelGroup.removeChannel( aChannel );
+      oldGroup.removeElement( signalElement );
     }
 
-    this.channels.add( aChannel );
-    // Make sure the channel links back to this channel group...
-    aChannel.setChannelGroup( this );
+    synchronized ( this.elements )
+    {
+      this.elements.add( signalElement );
+      // Make sure the channel links back to this channel group...
+      signalElement.setGroup( this );
 
-    // Update our local mask...
-    this.mask |= aChannel.getMask();
+      // Update our local mask...
+      this.mask |= aElement.getMask();
+    }
   }
 
   /**
@@ -177,12 +186,12 @@ public class ChannelGroup
     {
       return true;
     }
-    if ( ( aObject == null ) || !( aObject instanceof ChannelGroup ) )
+    if ( ( aObject == null ) || !( aObject instanceof ElementGroup ) )
     {
       return false;
     }
 
-    final ChannelGroup other = ( ChannelGroup )aObject;
+    final ElementGroup other = ( ElementGroup )aObject;
     if ( this.name == null )
     {
       if ( other.name != null )
@@ -213,65 +222,6 @@ public class ChannelGroup
   }
 
   /**
-   * Returns the channel with the given index.
-   * 
-   * @param aIndex
-   *          the channel index to return the channel for.
-   * @return a channel with the given index, or <code>null</code> if no such
-   *         channel exists.
-   */
-  public Channel getChannel( final int aIndex )
-  {
-    if ( ( aIndex < 0 ) || ( aIndex >= this.channels.size() ) )
-    {
-      // Invalid channel index...
-      return null;
-    }
-    return this.channels.get( aIndex );
-  }
-
-  /**
-   * Returns the channel with the given index.
-   * 
-   * @param aIndex
-   *          the channel index to return the channel for.
-   * @return a channel with the given index, or <code>null</code> if no such
-   *         channel exists.
-   */
-  public Channel getChannelByIndex( final int aIndex )
-  {
-    for ( Channel channel : this.channels )
-    {
-      if ( channel.getIndex() == aIndex )
-      {
-        return channel;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Returns the number of channels in this channel group.
-   * 
-   * @return a channel count, >= 0.
-   */
-  public int getChannelCount()
-  {
-    return this.channels.size();
-  }
-
-  /**
-   * Returns all channels assigned to this channel group.
-   * 
-   * @return an array of channels, never <code>null</code>.
-   */
-  public GroupableChannel[] getChannels()
-  {
-    final int size = this.channels.size();
-    return this.channels.toArray( new GroupableChannel[size] );
-  }
-
-  /**
    * Returns the color of this channel group.
    * 
    * @return the color used by this channel group.
@@ -279,6 +229,34 @@ public class ChannelGroup
   public Color getColor()
   {
     return this.color;
+  }
+
+  /**
+   * Returns the number of element in this group.
+   * 
+   * @return an element count, >= 0.
+   */
+  public int getElementCount()
+  {
+    synchronized ( this.elements )
+    {
+      return this.elements.size();
+    }
+  }
+
+  /**
+   * Returns all channels assigned to this channel group.
+   * 
+   * @return an array of channels, never <code>null</code>.
+   */
+  public Collection<SignalElement> getElements()
+  {
+    Collection<SignalElement> result = new ArrayList<SignalElement>();
+    synchronized ( this.elements )
+    {
+      result.addAll( this.elements );
+    }
+    return result;
   }
 
   /**
@@ -325,34 +303,37 @@ public class ChannelGroup
   }
 
   /**
-   * Returns whether or not a channel is
+   * Returns whether or not a element belong to this group.
    * 
-   * @param aChannel
-   *          the channel to test, cannot be <code>null</code>.
+   * @param aElement
+   *          the element to test, cannot be <code>null</code>.
    * @return <code>true</code> if the given channel is contained by this channel
    *         group, <code>false</code> otherwise.
    * @throws IllegalArgumentException
    *           in case the given channel was <code>null</code>.
    */
-  public boolean hasChannel( final Channel aChannel )
+  public boolean hasElement( final SignalElement aElement )
   {
-    if ( aChannel == null )
+    if ( aElement == null )
     {
       throw new IllegalArgumentException( "Channel cannot be null!" );
     }
 
-    return this.channels.contains( aChannel );
+    return this.elements.contains( aElement );
   }
 
   /**
-   * Returns whether or not this channel group has any channels.
+   * Returns whether or not this group has any elements.
    * 
-   * @return <code>true</code> if this channel group contains at least one
-   *         channel, <code>false</code> otherwise.
+   * @return <code>true</code> if this group contains at least one signal
+   *         element, <code>false</code> otherwise.
    */
-  public boolean hasChannels()
+  public boolean hasElements()
   {
-    return !this.channels.isEmpty();
+    synchronized ( this.elements )
+    {
+      return !this.elements.isEmpty();
+    }
   }
 
   /**
@@ -409,63 +390,6 @@ public class ChannelGroup
   public boolean isVisible()
   {
     return this.visible;
-  }
-
-  /**
-   * Moves a given channel to a new index in this channel group.
-   * 
-   * @param aChannel
-   *          the channel to move, cannot be <code>null</code>;
-   * @param aNewIndex
-   *          the new index of the channel, >= 0.
-   */
-  public void moveChannel( final GroupableChannel aChannel, final int aNewIndex )
-  {
-    // Make sure we've disconnected the channel from its former channel group...
-    final ChannelGroup oldChannelGroup = aChannel.getChannelGroup();
-    if ( oldChannelGroup != null )
-    {
-      oldChannelGroup.removeChannel( aChannel );
-    }
-
-    if ( aNewIndex >= this.channels.size() )
-    {
-      this.channels.add( aChannel );
-    }
-    else
-    {
-      this.channels.add( Math.max( 0, aNewIndex ), aChannel );
-    }
-    // Make sure the channel links back to this channel group...
-    aChannel.setChannelGroup( this );
-
-    // Update our local mask...
-    this.mask |= aChannel.getMask();
-  }
-
-  /**
-   * Removes a given channel from this channel group.
-   * <p>
-   * If the given channel is <em>not</em> contained by this channel group, this
-   * method is effectively a no-op.
-   * </p>
-   * 
-   * @param aChannel
-   *          the channel to remove, cannot be <code>null</code>.
-   * @throws IllegalArgumentException
-   *           in case the given channel was <code>null</code>.
-   */
-  public void removeChannel( final GroupableChannel aChannel )
-  {
-    if ( hasChannel( aChannel ) )
-    {
-      this.channels.remove( aChannel );
-      // Make sure the channel no longer links back to this channel group...
-      aChannel.removeChannelGroup();
-
-      // Remove channel's mask from our local mask...
-      this.mask &= ~aChannel.getMask();
-    }
   }
 
   /**
@@ -590,31 +514,96 @@ public class ChannelGroup
   }
 
   /**
-   * @param aChannel
-   * @return
+   * Returns the virtual index for a given channel.
+   * 
+   * @param aElement
+   *          the channel to return the virtual index for, cannot be
+   *          <code>null</code>.
+   * @return the virtual index of the given channel (>= 0 && <
+   *         {@link #getElementCount()}) or -1 if the given channel does not
+   *         belong to this group.
    */
-  final int getVirtualIndex( final Channel aChannel )
+  final int getVirtualIndex( final SignalElement aElement )
   {
-    Iterator<GroupableChannel> channelIter = this.channels.iterator();
-    int i = 0;
-    while ( channelIter.hasNext() )
+    Iterator<SignalElement> iter;
+    synchronized ( this.elements )
     {
-      if ( aChannel == channelIter.next() )
+      iter = this.elements.iterator();
+    }
+
+    int i = 0;
+    while ( iter.hasNext() )
+    {
+      if ( aElement == iter.next() )
       {
         return i;
       }
       i++;
     }
+
     return -1;
   }
 
   /**
-   * @param aIndex
-   *          the index to set
+   * Moves a given channel to a new index in this channel group.
+   * 
+   * @param aElement
+   *          the channel to move, cannot be <code>null</code>;
+   * @param aNewIndex
+   *          the new index of the channel, >= 0.
    */
-  final void setIndex( final int aIndex )
+  final void moveChannel( final SignalElement aElement, final int aNewIndex )
   {
-    this.index = aIndex;
+    // Make sure we've disconnected the element from its former group...
+    final ElementGroup oldGroup = aElement.getGroup();
+    if ( oldGroup != null )
+    {
+      oldGroup.removeElement( aElement );
+    }
+
+    synchronized ( this.elements )
+    {
+      if ( aNewIndex >= this.elements.size() )
+      {
+        this.elements.add( aElement );
+      }
+      else
+      {
+        this.elements.add( Math.max( 0, aNewIndex ), aElement );
+      }
+      // Make sure the channel links back to this channel group...
+      aElement.setGroup( this );
+
+      // Update our local mask...
+      this.mask |= aElement.getMask();
+    }
+  }
+
+  /**
+   * Removes a given channel from this channel group.
+   * <p>
+   * If the given channel is <em>not</em> contained by this channel group, this
+   * method is effectively a no-op.
+   * </p>
+   * 
+   * @param aElement
+   *          the channel to remove, cannot be <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given channel was <code>null</code>.
+   */
+  final void removeElement( final SignalElement aElement )
+  {
+    synchronized ( this.elements )
+    {
+      if ( this.elements.remove( aElement ) )
+      {
+        // Make sure the channel no longer links back to this channel group...
+        aElement.setGroup( null );
+
+        // Remove channel's mask from our local mask...
+        this.mask &= ~aElement.getMask();
+      }
+    }
   }
 
   /**

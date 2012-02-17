@@ -28,12 +28,12 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.DragAndDropTargetController.DragAndDropHandler;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
 
@@ -77,7 +77,7 @@ public class ChannelLabelsView extends AbstractViewLayer
         final Component aTargetComponent )
     {
       final ChannelLabelsViewModel model = aView.getModel();
-      final int offset = model.findChannelVirtualOffset( aPoint );
+      final int offset = model.findSignalElementVirtualOffset( aPoint );
 
       final Point dropPoint = new Point( 0, offset );
 
@@ -148,7 +148,7 @@ public class ChannelLabelsView extends AbstractViewLayer
       final ChannelLabelsViewModel model = sourceComponent.getModel();
 
       final SignalElement element = model.findSignalElement( coordinate );
-      if ( ( element == null ) || !element.isDigitalSignal() )
+      if ( ( element == null ) || element.isSignalGroup() )
       {
         DragAndDropLock.releaseLock( this );
         return;
@@ -158,8 +158,7 @@ public class ChannelLabelsView extends AbstractViewLayer
 
       final Point dropPoint = createChannelDropPoint( coordinate, sourceComponent, glassPane );
 
-      final Channel channel = element.getChannel();
-      final ChannelInsertionPointRenderer renderer = new ChannelInsertionPointRenderer( model, channel );
+      final ChannelInsertionPointRenderer renderer = new ChannelInsertionPointRenderer( model, element );
 
       glassPane.setDropPoint( dropPoint, renderer, coordinate );
       glassPane.setVisible( true );
@@ -174,7 +173,7 @@ public class ChannelLabelsView extends AbstractViewLayer
       // problem for this component, as the dragged cursor will be drawn on the
       // glasspane, not by the DnD routines of Java...
       aEvent.startDrag( DragSource.DefaultMoveDrop, this.stubImage, new Point( 0, 0 ),
-          new ChannelTransferable( channel ), null /* dsl */);
+          new ChannelTransferable( element ), null /* dsl */);
     }
 
     /**
@@ -240,17 +239,17 @@ public class ChannelLabelsView extends AbstractViewLayer
       {
         final Transferable transferable = aEvent.getTransferable();
 
-        final Channel movedChannel = ( Channel )transferable.getTransferData( ChannelTransferable.CHANNEL_FLAVOR );
-        if ( movedChannel != null )
+        final SignalElement movedElement = ( SignalElement )transferable
+            .getTransferData( ChannelTransferable.CHANNEL_FLAVOR );
+        if ( movedElement != null )
         {
           final ChannelLabelsViewModel model = getModel();
 
           final SignalElement insertElement = model.findSignalElement( aEvent.getLocation() );
-
-          if ( accepted = model.acceptChannel( movedChannel, insertElement ) )
+          if ( accepted = model.acceptDrop( movedElement, insertElement ) )
           {
             // Move the channel rows...
-            model.moveChannelRows( movedChannel, insertElement );
+            model.moveSignalElement( movedElement, insertElement );
           }
         }
       }

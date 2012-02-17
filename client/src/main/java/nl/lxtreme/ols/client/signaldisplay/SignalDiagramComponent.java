@@ -34,6 +34,7 @@ import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.util.swing.*;

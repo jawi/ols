@@ -284,10 +284,19 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void acquisitionComplete( final AcquisitionResult aData )
   {
-    getCurrentProject().setCapturedData( aData );
-
-    updateActionsOnEDT();
-    restoreZoomLevel();
+    try
+    {
+      getCurrentProject().setCapturedData( aData );
+    }
+    catch ( Exception exception )
+    {
+      exception.printStackTrace();
+    }
+    finally
+    {
+      updateActionsOnEDT();
+      restoreZoomLevel();
+    }
   }
 
   /**

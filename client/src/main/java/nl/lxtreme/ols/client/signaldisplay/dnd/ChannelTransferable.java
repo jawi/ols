@@ -22,7 +22,7 @@ package nl.lxtreme.ols.client.signaldisplay.dnd;
 
 import java.awt.datatransfer.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 
 
 /**
@@ -38,23 +38,23 @@ public class ChannelTransferable implements Transferable
    * Represents the {@link DataFlavor} for this transferable, used to
    * distinguish between the various DnD transferable.
    */
-  public static final DataFlavor CHANNEL_FLAVOR = new DataFlavor( ChannelTransferable.class, "OLS%20Channel" );
+  public static final DataFlavor CHANNEL_FLAVOR = new DataFlavor( ChannelTransferable.class, "OLS%20Signal%20Element" );
 
   // VARIABLES
 
-  private final Channel channel;
+  private final SignalElement signalElement;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new {@link ChannelTransferable} instance.
    * 
-   * @param aChannel
-   *          the channel to transfer, cannot be <code>null</code>.
+   * @param aSignalElement
+   *          the signal element to transfer, cannot be <code>null</code>.
    */
-  public ChannelTransferable( final Channel aChannel )
+  public ChannelTransferable( final SignalElement aSignalElement )
   {
-    this.channel = aChannel;
+    this.signalElement = aSignalElement;
   }
 
   // METHODS
@@ -63,11 +63,11 @@ public class ChannelTransferable implements Transferable
    * {@inheritDoc}
    */
   @Override
-  public Object getTransferData( final DataFlavor aFlavor ) throws UnsupportedFlavorException
+  public SignalElement getTransferData( final DataFlavor aFlavor ) throws UnsupportedFlavorException
   {
     if ( CHANNEL_FLAVOR.equals( aFlavor ) )
     {
-      return this.channel;
+      return this.signalElement;
     }
 
     throw new UnsupportedFlavorException( aFlavor );

@@ -24,15 +24,16 @@ import java.awt.*;
 
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.channel.*;
-import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalElementMeasurer;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementHeightProvider;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.util.*;
 
 
 /**
  * Provides a common base class for the view models.
  */
-public abstract class AbstractViewModel
+public abstract class AbstractViewModel implements SignalElementHeightProvider
 {
   // INNER TYPES
 
@@ -65,19 +66,11 @@ public abstract class AbstractViewModel
   // METHODS
 
   /**
-   * @return
+   * {@inheritDoc}
    */
-  public final ChannelGroupManager getChannelGroupManager()
+  public int getAnalogSignalHeight()
   {
-    return getSignalDiagramModel().getChannelGroupManager();
-  }
-
-  /**
-   * @return
-   */
-  public int getChannelHeight()
-  {
-    return getSignalDiagramModel().getChannelHeight();
+    return getSignalDiagramModel().getAnalogSignalHeight();
   }
 
   /**
@@ -144,6 +137,14 @@ public abstract class AbstractViewModel
   }
 
   /**
+   * {@inheritDoc}
+   */
+  public int getDigitalSignalHeight()
+  {
+    return getSignalDiagramModel().getDigitalSignalHeight();
+  }
+
+  /**
    * @return
    */
   public int getGroupSummaryHeight()
@@ -162,9 +163,9 @@ public abstract class AbstractViewModel
   /**
    * @return
    */
-  public int getScopeHeight()
+  public final SignalElementManager getSignalElementManager()
   {
-    return getSignalDiagramModel().getScopeHeight();
+    return getSignalDiagramModel().getSignalElementManager();
   }
 
   /**
@@ -180,7 +181,7 @@ public abstract class AbstractViewModel
   {
     // Return all channel elements within the given boundaries, even if they do
     // not completely fit...
-    return getSignalDiagramModel().getSignalElements( aY, aHeight, SignalElementMeasurer.LOOSE_MEASURER );
+    return getSignalElementManager().getSignalElements( aY, aHeight, SignalElementMeasurer.LOOSE_MEASURER, this );
   }
 
   /**
