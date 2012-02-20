@@ -23,12 +23,14 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.dnd.*;
+import java.awt.event.*;
 import java.awt.image.*;
 import java.util.logging.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.DragAndDropTargetController.DragAndDropHandler;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
@@ -280,6 +282,102 @@ public class ChannelLabelsView extends AbstractViewLayer
     }
   }
 
+  /**
+   * Provides a mouse-event hand
+   */
+  static final class ChannelLabelMouseHandler extends MouseAdapter
+  {
+    // VARIABLES
+
+    private final SignalDiagramController controller;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new ChannelLabelsView.MouseHandler instance.
+     */
+    public ChannelLabelMouseHandler( final SignalDiagramController aController )
+    {
+      this.controller = aController;
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mousePressed( final MouseEvent aEvent )
+    {
+      if ( aEvent.isPopupTrigger() )
+      {
+        JPopupMenu contextMenu = createChannelLabelPopup( aEvent.getPoint(), aEvent.getLocationOnScreen() );
+        contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
+        // Mark the event as consumed...
+        aEvent.consume();
+      }
+    }
+
+    /**
+     * Creates the context-sensitive popup menu for channel labels.
+     * 
+     * @param aRelativePoint
+     *          the current mouse location to show the popup menu, cannot be
+     *          <code>null</code>.
+     * @param aLocationOnScreen
+     *          the location on screen, cannot be <code>null</code>.
+     * @return a popup menu, can be <code>null</code> if the given mouse point
+     *         is not above a channel.
+     */
+    private JPopupMenu createChannelLabelPopup( final Point aRelativePoint, final Point aLocationOnScreen )
+    {
+      final SignalElement signalElement = findSignalElement( aRelativePoint );
+      if ( signalElement == null )
+      {
+        return null;
+      }
+
+      JPopupMenu result = new JPopupMenu();
+      JMenuItem mi;
+
+      mi = new JMenuItem( new EditSignalElementLabelAction( this.controller, signalElement, aLocationOnScreen ) );
+      result.add( mi );
+
+      result.addSeparator();
+
+      mi = new JCheckBoxMenuItem( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
+      result.add( mi );
+
+      if ( signalElement.isDigitalSignal() )
+      {
+        mi = new JMenuItem( new RemoveChannelAnnotations( this.controller, signalElement ) );
+        result.add( mi );
+      }
+
+      if ( signalElement.isSignalGroup() )
+      {
+        // TODO add visibility actions for summary/analog signal/...
+        mi = new JCheckBoxMenuItem( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
+        result.add( mi );
+      }
+
+      return result;
+    }
+
+    /**
+     * Finds the channel under the given point.
+     * 
+     * @param aPoint
+     *          the coordinate of the potential channel, cannot be
+     *          <code>null</code>.
+     * @return the channel index, or -1 if not found.
+     */
+    private SignalElement findSignalElement( final Point aPoint )
+    {
+      return this.controller.getSignalDiagramModel().findSignalElement( aPoint );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -288,10 +386,13 @@ public class ChannelLabelsView extends AbstractViewLayer
 
   // VARIABLES
 
-  private final DropHandler dropHandler;
   private final ChannelLabelsViewModel model;
+
+  private final DropHandler dropHandler;
   private final DragAndDropListener dndListener;
   private final DragGestureRecognizer dragGestureRecognizer;
+
+  private final ChannelLabelMouseHandler mouseHandler;
 
   // CONSTRUCTORS
 
@@ -313,6 +414,8 @@ public class ChannelLabelsView extends AbstractViewLayer
 
     this.dragGestureRecognizer = dragSource.createDefaultDragGestureRecognizer( this, DnDConstants.ACTION_MOVE,
         this.dndListener );
+
+    this.mouseHandler = new ChannelLabelMouseHandler( aController );
 
     updateUI();
   }
@@ -345,6 +448,8 @@ public class ChannelLabelsView extends AbstractViewLayer
 
     setDropTarget( new DropTarget( this, dndTargetController ) );
 
+    addMouseListener( this.mouseHandler );
+
     super.addNotify();
   }
 
@@ -372,6 +477,8 @@ public class ChannelLabelsView extends AbstractViewLayer
       dragSource.removeDragSourceListener( this.dndListener );
       dragSource.removeDragSourceMotionListener( this.dndListener );
     }
+
+    removeMouseListener( this.mouseHandler );
 
     super.removeNotify();
   }

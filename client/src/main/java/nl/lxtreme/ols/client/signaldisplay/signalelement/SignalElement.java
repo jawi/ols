@@ -37,7 +37,7 @@ public final class SignalElement implements Comparable<SignalElement>
    * Denotes the kind of a signal element, such as a digital signal, or an
    * analog signal.
    */
-  static enum SignalElementType
+  public static enum SignalElementType
   {
     SIGNAL_GROUP, //
     DIGITAL_SIGNAL, //
@@ -277,6 +277,16 @@ public final class SignalElement implements Comparable<SignalElement>
   public int getMask()
   {
     return this.mask;
+  }
+
+  /**
+   * Returns the type of this signal element.
+   * 
+   * @return a signal element type, never <code>null</code>.
+   */
+  public SignalElementType getType()
+  {
+    return this.type;
   }
 
   /**

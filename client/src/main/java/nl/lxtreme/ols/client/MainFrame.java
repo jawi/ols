@@ -663,22 +663,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Resets the zoom-level to show everything in one screen.
-   */
-  public void resetZoomLevel()
-  {
-    getZoomController().zoomAll();
-  }
-
-  /**
-   * Restores the zoom-level to the last zoom-level.
-   */
-  public void restoreZoomLevel()
-  {
-    getZoomController().restoreZoomLevel();
-  }
-
-  /**
    * Updates the progress bar to the given percentage.
    * 
    * @param aPercentage
@@ -901,16 +885,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     }
 
     return toolbar;
-  }
-
-  /**
-   * Returns the signal diagram's zoom controller.
-   * 
-   * @return the zoom controller, never <code>null</code>.
-   */
-  private ZoomController getZoomController()
-  {
-    return this.signalDiagram.getZoomController();
   }
 
   /**

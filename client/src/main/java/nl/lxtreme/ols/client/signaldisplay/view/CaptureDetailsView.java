@@ -23,7 +23,6 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 import static nl.lxtreme.ols.util.DisplayUtils.*;
 
 import java.awt.*;
-import java.beans.*;
 import java.text.*;
 
 import javax.swing.*;
@@ -31,6 +30,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.ZoomController.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -39,7 +39,7 @@ import nl.lxtreme.ols.util.swing.*;
  * 
  */
 public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow, IDataModelChangeListener,
-    PropertyChangeListener
+    ZoomListener
 {
   // CONSTANTS
 
@@ -89,7 +89,8 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
     result.initComponent();
 
     aController.addDataModelChangeListener( result );
-    aController.addPropertyChangeListener( result );
+
+    aController.getZoomController().addZoomListener( result );
 
     return result;
   }
@@ -141,16 +142,12 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
    * {@inheritDoc}
    */
   @Override
-  public void propertyChange( final PropertyChangeEvent aEvent )
+  public void notifyZoomChange( final ZoomEvent aEvent )
   {
-    final String name = aEvent.getPropertyName();
-    if ( "zoomFactor".equals( name ) )
-    {
-      this.tickInterval = null;
-      this.displayedTime = null;
+    this.tickInterval = null;
+    this.displayedTime = null;
 
-      updateView();
-    }
+    updateView();
   }
 
   /**

@@ -138,16 +138,6 @@ public class SignalViewModel extends AbstractViewModel
   }
 
   /**
-   * XXX temporary method to switch between annotation rendering styles.
-   * 
-   * @return
-   */
-  public boolean isRenderAnnotationsAlternatively()
-  {
-    return this.controller.getSignalDiagramModel().isRenderAnnotationsAlternatively();
-  }
-
-  /**
    * Returns whether or not the analog scope signal itself is rendered in
    * anti-aliased mode.
    * 

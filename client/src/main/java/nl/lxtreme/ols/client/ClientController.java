@@ -1958,7 +1958,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private void resetZoomLevel()
   {
-    this.mainFrame.resetZoomLevel();
+    this.signalDiagramController.getZoomController().zoomAll();
   }
 
   /**
@@ -1966,7 +1966,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private void restoreZoomLevel()
   {
-    this.mainFrame.restoreZoomLevel();
+    this.signalDiagramController.getZoomController().restoreZoomLevel();
   }
 
   /**

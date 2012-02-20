@@ -31,22 +31,25 @@ import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
+import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomListener;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
 import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * Provides the main component controller for the signal diagram component.
  */
-public final class SignalDiagramController implements PropertyChangeListener
+public final class SignalDiagramController implements ZoomListener, PropertyChangeListener
 {
   // VARIABLES
 
   private final DragAndDropTargetController dndTargetController;
   private final IActionManager actionManager;
 
+  private SignalDiagramModel signalDiagramModel;
   private SignalDiagramComponent signalDiagram;
 
   // CONSTRUCTORS
@@ -149,7 +152,7 @@ public final class SignalDiagramController implements PropertyChangeListener
   }
 
   /**
-   * @return the signalDiagram
+   * @return the signal diagram component, never <code>null</code>.
    */
   public final SignalDiagramComponent getSignalDiagram()
   {
@@ -157,15 +160,26 @@ public final class SignalDiagramController implements PropertyChangeListener
   }
 
   /**
-   * @return
+   * @return the signal diagram model, never <code>null</code>.
    */
-  public SignalDiagramModel getSignalDiagramModel()
+  public final SignalDiagramModel getSignalDiagramModel()
   {
-    if ( this.signalDiagram == null )
-    {
-      return null;
-    }
-    return this.signalDiagram.getModel();
+    return this.signalDiagramModel;
+  }
+
+  /**
+   * Returns the signal element type that is underneat the given coordinate.
+   * 
+   * @param aPoint
+   *          the coordinate to determine what signal element is underneat, may
+   *          be <code>null</code>.
+   * @return <code>null</code> if no coordinate is given, or no signal element
+   *         type could be determined. Otherwise, the signal element type.
+   */
+  public SignalElementType getSignalHoverType( final Point aPoint )
+  {
+    final SignalElement element = getSignalDiagramModel().findSignalElement( aPoint );
+    return ( element != null ) ? element.getType() : null;
   }
 
   /**
@@ -175,7 +189,7 @@ public final class SignalDiagramController implements PropertyChangeListener
    */
   public ZoomController getZoomController()
   {
-    return this.signalDiagram.getZoomController();
+    return this.signalDiagramModel.getZoomController();
   }
 
   /**
@@ -206,6 +220,43 @@ public final class SignalDiagramController implements PropertyChangeListener
     final long newCursorTimestamp = locationToTimestamp( aPoint );
 
     getSignalDiagramModel().setCursor( aCursorIdx, newCursorTimestamp );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void notifyZoomChange( final ZoomEvent aEvent )
+  {
+    final boolean dataAvailable = getSignalDiagramModel().hasData();
+
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        // Update the zoom action's state...
+        Action zoomInAction = getActionManager().getAction( ZoomInAction.ID );
+        zoomInAction.setEnabled( dataAvailable && aEvent.canZoomIn() );
+
+        Action zoomOutAction = getActionManager().getAction( ZoomOutAction.ID );
+        zoomOutAction.setEnabled( dataAvailable && aEvent.canZoomOut() );
+
+        Action zoomAllAction = getActionManager().getAction( ZoomAllAction.ID );
+        zoomAllAction.setEnabled( dataAvailable && !aEvent.isZoomAll() );
+
+        Action zoomOriginalAction = getActionManager().getAction( ZoomOriginalAction.ID );
+        zoomOriginalAction.setEnabled( dataAvailable && !aEvent.isZoomOriginal() );
+
+        // Update the main component's state...
+        final SignalDiagramComponent diagram = getSignalDiagram();
+        if ( aEvent.isFactorChange() )
+        {
+          diagram.recalculateDimensions();
+        }
+        diagram.repaint( 25L );
+      }
+    } );
   }
 
   /**
@@ -372,41 +423,22 @@ public final class SignalDiagramController implements PropertyChangeListener
   }
 
   /**
-   * Callback method that should be called when the current zoom-factor is
-   * changed.
-   */
-  final void notifyZoomChange( final ZoomEvent aEvent )
-  {
-    final boolean dataAvailable = this.signalDiagram.getModel().hasData();
-
-    SwingComponentUtils.invokeOnEDT( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        Action zoomInAction = SignalDiagramController.this.actionManager.getAction( ZoomInAction.ID );
-        zoomInAction.setEnabled( dataAvailable && aEvent.canZoomIn() );
-
-        Action zoomOutAction = SignalDiagramController.this.actionManager.getAction( ZoomOutAction.ID );
-        zoomOutAction.setEnabled( dataAvailable && aEvent.canZoomOut() );
-
-        Action zoomAllAction = SignalDiagramController.this.actionManager.getAction( ZoomAllAction.ID );
-        zoomAllAction.setEnabled( dataAvailable && !aEvent.isZoomAll() );
-
-        Action zoomOriginalAction = SignalDiagramController.this.actionManager.getAction( ZoomOriginalAction.ID );
-        zoomOriginalAction.setEnabled( dataAvailable && !aEvent.isZoomOriginal() );
-
-        SignalDiagramController.this.signalDiagram.recalculateDimensions();
-      }
-    } );
-  }
-
-  /**
    * @param aComponent
    */
   final void setSignalDiagram( final SignalDiagramComponent aComponent )
   {
     this.signalDiagram = aComponent;
+  }
+
+  /**
+   * Sets signalDiagramModel to the given value.
+   * 
+   * @param aSignalDiagramModel
+   *          the signalDiagramModel to set.
+   */
+  final void setSignalDiagramModel( final SignalDiagramModel aSignalDiagramModel )
+  {
+    this.signalDiagramModel = aSignalDiagramModel;
   }
 
   /**

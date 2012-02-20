@@ -231,10 +231,13 @@ public class SignalUI extends ComponentUI
     // Start drawing at the correct position in the clipped region...
     aCanvas.translate( 0, aSignalElements[0].getYposition() + signalOffset );
 
+    // XXX
+    final boolean annotationRenderStyle = true;
+
     // Some drawing primitives we're going to re-use over and over...
     final float strokeWidth = ( float )( 3.0f / Math.max( 1.0f, ( 1.0f / zoomFactor ) ) );
     final BasicStroke stroke;
-    if ( aModel.isRenderAnnotationsAlternatively() )
+    if ( annotationRenderStyle )
     {
       stroke = new BasicStroke( strokeWidth, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND, 0.9f );
     }
@@ -303,7 +306,7 @@ public class SignalUI extends ComponentUI
 
               // Fade out the signal itself...
               aCanvas.setColor( aModel.getBackgroundColor() );
-              if ( aModel.isRenderAnnotationsAlternatively() )
+              if ( annotationRenderStyle )
               {
                 aCanvas.fillRect( x1, y1 + 0, annotationWidth, y2 + 1 );
               }
@@ -325,7 +328,7 @@ public class SignalUI extends ComponentUI
               if ( textXoffset > 0 )
               {
                 int x3 = ( x1 + textXoffset );
-                if ( aModel.isRenderAnnotationsAlternatively() && ( ( x3 - 4 ) > 0 ) )
+                if ( annotationRenderStyle && ( ( x3 - 4 ) > 0 ) )
                 {
                   aCanvas.drawLine( x1, midY, x3 - 4, midY );
                   aCanvas.drawLine( x3 + textWidth + 4, midY, x2, midY );

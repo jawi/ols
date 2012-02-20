@@ -76,14 +76,12 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   private int mode;
   private SignalAlignment signalAlignment;
   private DataSet dataSet;
-  private double zoomFactor;
 
+  private final ZoomController zoomController;
   private final SignalElementManager channelGroupManager;
   private final SignalDiagramController controller;
   private final EventListenerList eventListeners;
   private final PropertyChangeSupport propertyChangeSupport;
-
-  private boolean alternativeAnnotationRendering;
 
   // CONSTRUCTORS
 
@@ -96,6 +94,8 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   public SignalDiagramModel( final SignalDiagramController aController )
   {
     this.controller = aController;
+
+    this.zoomController = new ZoomController( aController );
 
     this.channelGroupManager = new SignalElementManager();
 
@@ -110,10 +110,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
 
     this.signalAlignment = SignalAlignment.CENTER;
 
-    this.zoomFactor = 1.0;
     this.mode = 0;
-
-    this.alternativeAnnotationRendering = true;
 
     addDataModelChangeListener( this.channelGroupManager );
   }
@@ -465,8 +462,9 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     {
       return null;
     }
-    double start = visibleRect.x / this.zoomFactor;
-    double end = ( visibleRect.x + visibleRect.width ) / this.zoomFactor;
+    final double factor = getZoomFactor();
+    double start = visibleRect.x / factor;
+    double end = ( visibleRect.x + visibleRect.width ) / factor;
     return Double.valueOf( ( end - start ) / getSampleRate() );
   }
 
@@ -611,7 +609,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     // Calculate the "absolute" time based on the mouse position, use a
     // "over sampling" factor to allow intermediary (between two time stamps)
     // time value to be shown...
-    final double refTime = ( ( MeasurementInfo.TIMESTAMP_FACTOR * aPoint.x ) / this.zoomFactor )
+    final double refTime = ( ( MeasurementInfo.TIMESTAMP_FACTOR * aPoint.x ) / getZoomFactor() )
         / ( MeasurementInfo.TIMESTAMP_FACTOR * getSampleRate() );
 
     final SignalElement signalElement = findSignalElement( aPoint );
@@ -899,13 +897,23 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   }
 
   /**
+   * Returns the zoom controller of this diagram.
+   * 
+   * @return the zoom controller, never <code>null</code>.
+   */
+  public final ZoomController getZoomController()
+  {
+    return this.zoomController;
+  }
+
+  /**
    * Returns the current zoom factor.
    * 
    * @return a zoom factor.
    */
   public final double getZoomFactor()
   {
-    return this.zoomFactor;
+    return getZoomController().getFactor();
   }
 
   /**
@@ -949,16 +957,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   public boolean isMeasurementMode()
   {
     return ( this.mode & MEASUREMENT_MODE ) != 0;
-  }
-
-  /**
-   * XXX temporary method to switch between rendering styles.
-   * 
-   * @return
-   */
-  public boolean isRenderAnnotationsAlternatively()
-  {
-    return this.alternativeAnnotationRendering;
   }
 
   /**
@@ -1254,17 +1252,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   }
 
   /**
-   * XXX Sets alternativeAnnotationRendering to the given value.
-   * 
-   * @param aAlternativeAnnotationRendering
-   *          the alternativeAnnotationRendering to set.
-   */
-  public void setRenderAnnotationsAlternatively( final boolean aAlternativeAnnotationRendering )
-  {
-    this.alternativeAnnotationRendering = aAlternativeAnnotationRendering;
-  }
-
-  /**
    * Sets the height of the analogue scope.
    * 
    * @param aScopeHeight
@@ -1316,21 +1303,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     {
       this.mode &= ~SNAP_CURSOR_MODE;
     }
-  }
-
-  /**
-   * Sets the zoom factor.
-   * 
-   * @param aZoomFactor
-   *          the zoom factor to set.
-   */
-  public final void setZoomFactor( final double aZoomFactor )
-  {
-    double oldFactor = this.zoomFactor;
-    this.zoomFactor = aZoomFactor;
-
-    this.propertyChangeSupport.firePropertyChange( "zoomFactor", Double.valueOf( oldFactor ),
-        Double.valueOf( aZoomFactor ) );
   }
 
   /**

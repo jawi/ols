@@ -24,6 +24,7 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.view.SignalView.*;
 
 
 /**
@@ -39,6 +40,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
   // VARIABLES
 
   private final TimeLineViewModel model;
+  private final BasicMouseHandler mouseHandler;
 
   // CONSTRUCTORS
 
@@ -53,6 +55,8 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
     super( aController );
 
     this.model = new TimeLineViewModel( aController );
+
+    this.mouseHandler = new BasicMouseHandler( aController );
 
     updateUI();
   }
@@ -69,8 +73,26 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
   public static TimeLineView create( final SignalDiagramController aController )
   {
     TimeLineView result = new TimeLineView( aController );
+
     aController.addCursorChangeListener( result );
+    aController.addDataModelChangeListener( result );
+
     return result;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void addNotify()
+  {
+    updateUI();
+
+    addMouseListener( this.mouseHandler );
+    addMouseMotionListener( this.mouseHandler );
+    addMouseWheelListener( this.mouseHandler );
+
+    super.addNotify();
   }
 
   /**
@@ -174,6 +196,19 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
   public int getTimeLineHeight()
   {
     return getModel().getTimeLineHeight();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void removeNotify()
+  {
+    removeMouseListener( this.mouseHandler );
+    removeMouseMotionListener( this.mouseHandler );
+    removeMouseWheelListener( this.mouseHandler );
+
+    super.removeNotify();
   }
 
   /**
