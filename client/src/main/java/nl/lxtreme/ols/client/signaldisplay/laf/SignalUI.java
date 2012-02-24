@@ -608,8 +608,10 @@ public class SignalUI extends ComponentUI
           for ( int sampleIdx = startIdx; sampleIdx < endIdx; sampleIdx += sampleIncr )
           {
             long timestamp = timestamps[sampleIdx];
+
             int sampleValue = 0;
-            for ( int i = sampleIdx + 1; i < ( ( sampleIdx + sampleIncr ) - 1 ); i++ )
+            final int i_max = Math.min( endIdx, ( sampleIdx + sampleIncr ) - 1 );
+            for ( int i = sampleIdx + 1; i < i_max; i++ )
             {
               sampleValue += ( ( values[i] & mask ) >> trailingZeros );
             }
