@@ -455,6 +455,19 @@ public class SignalUI extends ComponentUI
     final int signalOffset = aModel.getSignalOffset();
     final double zoomFactor = aModel.getZoomFactor();
 
+    if ( aModel.hasTriggerData() )
+    {
+      final long triggerOffset = aModel.getTriggerOffset();
+      if ( ( timestamps[startIdx] <= triggerOffset ) && ( timestamps[endIdx] >= triggerOffset ) )
+      {
+        // Draw a line denoting the trigger position...
+        final int x = ( int )( triggerOffset * zoomFactor );
+
+        aCanvas.setColor( Color.WHITE );
+        aCanvas.drawLine( x, clip.y, x, clip.y + clip.height );
+      }
+    }
+
     // Start drawing at the correct position in the clipped region...
     aCanvas.translate( 0, aSignalElements[0].getYposition() + signalOffset );
 
@@ -592,13 +605,13 @@ public class SignalUI extends ComponentUI
         }
         else
         {
-          for ( int sampleIdx = startIdx + sampleIncr; sampleIdx < endIdx; sampleIdx += sampleIncr )
+          for ( int sampleIdx = startIdx; sampleIdx < endIdx; sampleIdx += sampleIncr )
           {
-            long timestamp = timestamps[sampleIdx - sampleIncr];
+            long timestamp = timestamps[sampleIdx];
             int sampleValue = 0;
-            for ( int i = sampleIdx - sampleIncr; i < sampleIdx; i++ )
+            for ( int i = sampleIdx + 1; i < ( ( sampleIdx + sampleIncr ) - 1 ); i++ )
             {
-              sampleValue += ( ( values[sampleIdx] & mask ) >> trailingZeros );
+              sampleValue += ( ( values[i] & mask ) >> trailingZeros );
             }
             sampleValue = ( int )( maxValue - ( sampleValue / ( double )sampleIncr ) );
 

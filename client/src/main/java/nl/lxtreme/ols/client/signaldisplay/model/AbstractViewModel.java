@@ -102,7 +102,12 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
     {
       return "";
     }
-    return getCursorFlagText( aCursorIndex, cursor.getTimestamp(), aStyle );
+    long timestamp = cursor.getTimestamp();
+    if ( hasTriggerData() )
+    {
+      timestamp -= getTriggerOffset();
+    }
+    return getCursorFlagText( aCursorIndex, timestamp, aStyle );
   }
 
   /**
@@ -213,6 +218,21 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   }
 
   /**
+   * Returns the trigger position, as relative offset from zero.
+   * 
+   * @return a trigger position, as offset.
+   */
+  public long getTriggerOffset()
+  {
+    final Long triggerPosition = getSignalDiagramModel().getTriggerPosition();
+    if ( triggerPosition == null )
+    {
+      return 0L;
+    }
+    return triggerPosition.longValue();
+  }
+
+  /**
    * Returns the current zoom factor that is used to display the signals with.
    * 
    * @return a zoom factor, >= 0.0.
@@ -231,6 +251,17 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   public final boolean hasData()
   {
     return getSignalDiagramModel().hasData();
+  }
+
+  /**
+   * Returns whether or not there is trigger data present.
+   * 
+   * @return <code>true</code> if there is trigger data present,
+   *         <code>false</code> otherwise.
+   */
+  public boolean hasTriggerData()
+  {
+    return getSignalDiagramModel().getTriggerPosition() != null;
   }
 
   /**

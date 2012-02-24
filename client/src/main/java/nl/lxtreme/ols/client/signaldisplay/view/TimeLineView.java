@@ -20,11 +20,17 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.view.SignalView.CURSOR_MOVE_CURSOR;
+import java.awt.*;
+import java.awt.event.*;
+
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
-import nl.lxtreme.ols.client.signaldisplay.view.SignalView.*;
+import nl.lxtreme.ols.client.signaldisplay.view.SignalView.BasicMouseHandler;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -33,6 +39,59 @@ import nl.lxtreme.ols.client.signaldisplay.view.SignalView.*;
  */
 public class TimeLineView extends AbstractViewLayer implements ICursorChangeListener, IDataModelChangeListener
 {
+  // INNER TYPES
+
+  /**
+   * Handles all specific mouse events for this view.
+   */
+  private final class MouseHandler extends BasicMouseHandler
+  {
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new MouseHandler instance.
+     */
+    public MouseHandler( final SignalDiagramController aController )
+    {
+      super( aController );
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mouseMoved( final MouseEvent aEvent )
+    {
+      final MouseEvent event = convertEvent( aEvent );
+      final Point point = event.getPoint();
+
+      final SignalDiagramModel model = getModel();
+      if ( model.isCursorMode() )
+      {
+        final Cursor hoveredCursor = findCursor( point );
+        if ( hoveredCursor != null )
+        {
+          setMouseCursor( aEvent, CURSOR_MOVE_CURSOR );
+          aEvent.consume();
+        }
+        else
+        {
+          setMouseCursor( aEvent, null );
+          aEvent.consume();
+        }
+      }
+
+      // Calculate the "absolute" time based on the mouse position, use a
+      // "over sampling" factor to allow intermediary (between two time stamps)
+      // time value to be shown...
+      final double refTime = getModel().getCursorTime( point );
+
+      setToolTipText( DisplayUtils.displayTime( refTime ) );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -40,7 +99,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
   // VARIABLES
 
   private final TimeLineViewModel model;
-  private final BasicMouseHandler mouseHandler;
+  private final MouseHandler mouseHandler;
 
   // CONSTRUCTORS
 
@@ -56,7 +115,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
 
     this.model = new TimeLineViewModel( aController );
 
-    this.mouseHandler = new BasicMouseHandler( aController );
+    this.mouseHandler = new MouseHandler( aController );
 
     updateUI();
   }

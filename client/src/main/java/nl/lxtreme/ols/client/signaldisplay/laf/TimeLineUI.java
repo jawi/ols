@@ -21,8 +21,6 @@ package nl.lxtreme.ols.client.signaldisplay.laf;
 
 
 import static java.awt.RenderingHints.*;
-import static nl.lxtreme.ols.util.DisplayUtils.*;
-
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -34,6 +32,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.signaldisplay.model.AbstractViewModel.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -260,29 +259,44 @@ public class TimeLineUI extends ComponentUI
       canvas.setBackground( model.getBackgroundColor() );
       canvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
-      final Rectangle visibleRect = view.getVisibleRect();
-
       final double zoomFactor = model.getZoomFactor();
       final double sampleRate = model.getSampleRate();
-      final double timebase = model.getTimebase();
-      final double tickIncr = model.getTickIncrement();
-      final double timeIncr = model.getTimeIncrement();
+      final long triggerOffset = model.getTriggerOffset();
 
-      final long startTimeStamp = model.getStartTimestamp( visibleRect );
-      final long endTimeStamp = model.getEndTimestamp( visibleRect );
+      final double startTimeStamp = ( clip.x / zoomFactor );
+      final double endTimeStamp = ( ( clip.x + clip.width ) / zoomFactor );
+      final double timeFrame = ( clip.width / zoomFactor );
+
+      final double t = Math.pow( 10, Math.floor( Math.log10( zoomFactor ) ) );
+      final double q = Math.pow( 10, Math.floor( Math.log10( timeFrame / sampleRate ) ) ) * sampleRate;
+
+      final double tickIncr = Math.round( t * q ) / t;
+      final double timeIncr = tickIncr / 10.0;
+
+      final double offset = triggerOffset % timeIncr;
+
+      // Start at the first multiple of the time increment we're using...
+      double timestamp = ( Math.round( startTimeStamp / timeIncr ) * timeIncr ) + offset;
+
+      System.out.println( "visible rect = " + clip );
+      System.out.println( "start time = " + startTimeStamp + ", end time = " + endTimeStamp + ", time = " + timeFrame );
+      System.out.println( "tickIncr = " + tickIncr + ", timeIncr = " + timeIncr + ", zoomFactor = " + zoomFactor
+          + ", t = " + t + ", o = " + offset + ", " + DisplayUtils.displayScaledTime( q, sampleRate ) );
 
       final FontMetrics majorFM = canvas.getFontMetrics( model.getMajorTickLabelFont() );
       final FontMetrics minorFM = canvas.getFontMetrics( model.getMinorTickLabelFont() );
       final int minorFontHeight = minorFM.getHeight();
 
-      double timestamp = Math.floor( startTimeStamp / tickIncr ) * tickIncr;
-      double majorTimestamp = Math.round( startTimeStamp / timebase ) * timebase;
-
+      double majorTimestamp = 0;
       while ( timestamp <= endTimeStamp )
       {
         int relXpos = ( int )( zoomFactor * timestamp );
+        double abs = Math.abs( Math.round( t * ( timestamp - triggerOffset ) ) % Math.round( ( t * tickIncr ) / 2.0 ) );
+        double abs2 = Math.abs( Math.round( t * ( timestamp - triggerOffset ) ) % Math.round( t * tickIncr ) );
 
-        if ( ( timestamp % tickIncr ) != 0 )
+        // System.out.printf( "T = %d, T%%tI = %f, %f\n", relXpos, abs, abs2 );
+
+        if ( abs != 0.0 )
         {
           canvas.setColor( model.getTickColor() );
 
@@ -290,23 +304,23 @@ public class TimeLineUI extends ComponentUI
         }
         else
         {
-          boolean major = ( ( timestamp % timebase ) == 0 );
+          boolean major = ( ( abs2 - abs ) < 1.0e-6 );
+          // System.out.println( timestamp + ", " + major );
 
-          final String time;
+          final String timeStr;
           final int textWidth;
           final int textHeight;
           final int tickHeight;
 
           if ( major )
           {
-            majorTimestamp = timestamp;
+            majorTimestamp = timestamp - triggerOffset;
 
-            final double tickTime = ( majorTimestamp / sampleRate );
-            time = displayTime( tickTime, 3, "" );
+            timeStr = DisplayUtils.displayTime( majorTimestamp / sampleRate, 3, "" );
 
             canvas.setFont( model.getMajorTickLabelFont() );
 
-            textWidth = majorFM.stringWidth( time ) + TEXT_PADDING_X;
+            textWidth = majorFM.stringWidth( timeStr ) + TEXT_PADDING_X;
             textHeight = 2 * minorFontHeight;
 
             canvas.setColor( model.getMajorTickColor() );
@@ -315,11 +329,13 @@ public class TimeLineUI extends ComponentUI
           }
           else
           {
-            final double tickTime = ( timestamp - majorTimestamp ) / sampleRate;
-            time = displayTime( tickTime, 1, "" );
+            double time = timestamp - triggerOffset;
+
+            timeStr = DisplayUtils.displayTime( time / sampleRate, 1, "" );
 
             canvas.setFont( model.getMinorTickLabelFont() );
-            textWidth = minorFM.stringWidth( time ) + TEXT_PADDING_X;
+
+            textWidth = minorFM.stringWidth( timeStr ) + TEXT_PADDING_X;
             textHeight = minorFontHeight;
 
             canvas.setColor( model.getMinorTickColor() );
@@ -334,11 +350,11 @@ public class TimeLineUI extends ComponentUI
 
           canvas.setColor( model.getTextColor() );
 
-          canvas.drawString( time, textXpos, textYpos );
+          canvas.drawString( timeStr, textXpos, textYpos );
         }
 
         // make sure we're rounding to two digits after the comma...
-        timestamp = Math.round( 100.0 * ( timestamp + timeIncr ) ) / 100.0;
+        timestamp = ( timestamp + timeIncr );
       }
 
       // Draw the cursor "flags"...

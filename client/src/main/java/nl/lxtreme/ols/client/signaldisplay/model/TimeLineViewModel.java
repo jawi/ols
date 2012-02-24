@@ -107,9 +107,10 @@ public class TimeLineViewModel extends AbstractViewModel
    *          <code>null</code>.
    * @return the ending time stamp, as long value.
    */
-  public long getEndTimestamp( final Rectangle aClip )
+  public double getEndTimestamp( final Rectangle aClip )
   {
-    return locationToTimestamp( new Point( aClip.x + aClip.width, 0 ) );
+    final double zf = getZoomFactor();
+    return ( ( aClip.x + aClip.width ) / zf );
   }
 
   /**
@@ -203,7 +204,7 @@ public class TimeLineViewModel extends AbstractViewModel
   }
 
   /**
-   * Returns the sample rate of the sampled.
+   * Returns the sample rate of the sampled data.
    * 
    * @return a sample rate, in Hertz.
    */
@@ -221,9 +222,10 @@ public class TimeLineViewModel extends AbstractViewModel
    *          <code>null</code>.
    * @return the starting time stamp, as long value.
    */
-  public long getStartTimestamp( final Rectangle aClip )
+  public double getStartTimestamp( final Rectangle aClip )
   {
-    return locationToTimestamp( aClip.getLocation() );
+    final double zf = getZoomFactor();
+    return ( aClip.x / zf );
   }
 
   /**

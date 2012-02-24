@@ -34,6 +34,7 @@ import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -65,6 +66,8 @@ public class SignalDiagramModel implements SignalElementHeightProvider
 
   private static final int SNAP_CURSOR_MODE = ( 1 << 0 );
   private static final int MEASUREMENT_MODE = ( 1 << 1 );
+
+  private static final double TIMESTAMP_FACTOR = 100.0;
 
   // VARIABLES
 
@@ -420,6 +423,36 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   }
 
   /**
+   * Converts the X-coordinate of the given {@link Point} to a precise
+   * timestamp, useful for display purposes.
+   * 
+   * @param aPoint
+   *          the X,Y-coordinate to convert to a precise timestamp, cannot be
+   *          <code>null</code>.
+   * @return a precise timestamp, as double value.
+   * @see DisplayUtils#displayTime(double)
+   */
+  public double getCursorTime( final Point aPoint )
+  {
+    // Calculate the "absolute" time based on the mouse position, use a
+    // "over sampling" factor to allow intermediary (between two time stamps)
+    // time value to be shown...
+    final double zoomFactor = getZoomFactor();
+    final double scaleFactor = TIMESTAMP_FACTOR * zoomFactor;
+
+    // Convert mouse position to absolute timestamp...
+    double x = aPoint.x / zoomFactor;
+    // Take (optional) trigger position into account...
+    final Long triggerPos = getTriggerPosition();
+    if ( triggerPos != null )
+    {
+      x -= triggerPos.longValue();
+    }
+
+    return ( scaleFactor * x ) / ( scaleFactor * getSampleRate() );
+  }
+
+  /**
    * Returns all defined cursors.
    * 
    * @return an array of defined cursors, never <code>null</code>.
@@ -609,8 +642,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     // Calculate the "absolute" time based on the mouse position, use a
     // "over sampling" factor to allow intermediary (between two time stamps)
     // time value to be shown...
-    final double refTime = ( ( MeasurementInfo.TIMESTAMP_FACTOR * aPoint.x ) / getZoomFactor() )
-        / ( MeasurementInfo.TIMESTAMP_FACTOR * getSampleRate() );
+    final double refTime = getCursorTime( aPoint );
 
     final SignalElement signalElement = findSignalElement( aPoint );
     if ( ( signalElement == null ) || !signalElement.isDigitalSignal() )
@@ -803,6 +835,22 @@ public class SignalDiagramModel implements SignalElementHeightProvider
       return new long[0];
     }
     return capturedData.getTimestamps();
+  }
+
+  /**
+   * Returns the trigger position, if available.
+   * 
+   * @return a trigger position, as timestamp, or <code>null</code> if no
+   *         trigger is used/present.
+   */
+  public Long getTriggerPosition()
+  {
+    AcquisitionResult capturedData = getCapturedData();
+    if ( ( capturedData == null ) || !capturedData.hasTriggerData() )
+    {
+      return null;
+    }
+    return Long.valueOf( capturedData.getTriggerPosition() );
   }
 
   /**

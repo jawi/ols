@@ -30,10 +30,6 @@ import java.awt.*;
  */
 public final class MeasurementInfo
 {
-  // CONSTANTS
-
-  public static final double TIMESTAMP_FACTOR = 100.0;
-
   // VARIABLES
 
   private final int channelIdx;
