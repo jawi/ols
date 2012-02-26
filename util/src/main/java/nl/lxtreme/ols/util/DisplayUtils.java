@@ -26,12 +26,167 @@ package nl.lxtreme.ols.util;
  */
 public final class DisplayUtils
 {
-  // CONSTANTS
+  // INNER TYPES
 
   /**
-   * Constant used to determine whether we should show "0.000 s".
+   * Represents a frequency that can be displayed and has a scale factor.
    */
-  private static final double ZERO_TIME_THRESHOLD = 1.0e-16;
+  public static enum Frequencies
+  {
+    HZ( "Hz", 1.0 ), //
+    KHZ( "kHz", 1.0e3 ), //
+    MHZ( "MHz", 1.0e6 ), //
+    GHZ( "GHz", 1.0e9 ), //
+    THZ( "THz", 1.0e12 ); //
+
+    private String displayName;
+    private double factor;
+
+    /**
+     * Creates a new DisplayUtils.Frequencies instance.
+     */
+    private Frequencies( final String aDisplayName, final double aFactor )
+    {
+      this.displayName = aDisplayName;
+      this.factor = aFactor;
+    }
+
+    /**
+     * Returns the current value of displayName.
+     * 
+     * @return the displayName
+     */
+    public String getDisplayName()
+    {
+      return this.displayName;
+    }
+
+    /**
+     * Returns the current value of factor.
+     * 
+     * @return the factor
+     */
+    public double getFactor()
+    {
+      return this.factor;
+    }
+  }
+
+  /**
+   * Represents a unit of time that can be displayed has a scale factor.
+   */
+  public static enum UnitOfTime
+  {
+    // CONSTANTS
+
+    S( "", 1.0 ), //
+    MS( "m", 1.0e-3 ), //
+    US( "\u03BC", 1.0e-6 ), //
+    NS( "n", 1.0e-9 ), //
+    PS( "p", 1.0e-12 ), //
+    FS( "f", 1.0e-15 ); //
+
+    /**
+     * Constant used to determine whether we should show "0.000 s".
+     */
+    public static final double ZERO_TIME_THRESHOLD = 1.0e-16;
+
+    private String displayName;
+    private double factor;
+
+    /**
+     * Creates a new DisplayUtils.UnitOfTime instance.
+     */
+    private UnitOfTime( final String aPrefix, final double aFactor )
+    {
+      this.displayName = aPrefix.concat( "s" );
+      this.factor = aFactor;
+    }
+
+    /**
+     * Converts a given time value (as double representation, in seconds) to a
+     * more suitable unit of time.
+     * 
+     * @param aTimeValue
+     *          the time value (in seconds) to return the unit of time for.
+     * @return a {@link UnitOfTime}, never <code>null</code>.
+     */
+    public static UnitOfTime valueOf( final double aTimeValue )
+    {
+      double absTime = Math.abs( aTimeValue );
+      final UnitOfTime[] values = values();
+
+      int i = 0;
+      if ( absTime > ZERO_TIME_THRESHOLD )
+      {
+        for ( ; i < values.length; i++ )
+        {
+          if ( absTime >= values[i].getFactor() )
+          {
+            break;
+          }
+        }
+      }
+
+      return values[Math.min( i, values.length - 1 )];
+    }
+
+    /**
+     * Returns the current value of displayName.
+     * 
+     * @return the displayName
+     */
+    public String getDisplayName()
+    {
+      return this.displayName;
+    }
+
+    /**
+     * Returns the current value of factor.
+     * 
+     * @return the factor
+     */
+    public double getFactor()
+    {
+      return this.factor;
+    }
+
+    /**
+     * Returns the predecessor of this unit of time.
+     * 
+     * @return the predecessor of this unit of time, which is a factor
+     *         <em>larger</em> than this unit of time. Can be <code>null</code>
+     *         if no greater unit of time is defined.
+     */
+    public UnitOfTime predecessor()
+    {
+      int i = ordinal();
+      final UnitOfTime[] values = values();
+      if ( i < 1 )
+      {
+        return null;
+      }
+      return values[i - 1];
+    }
+
+    /**
+     * Returns the successor of this unit of time.
+     * 
+     * @return the successor of this unit of time, which is a factor
+     *         <em>smaller</em> than this unit of time. Can be <code>null</code>
+     *         if no smaller unit of time is defined.
+     */
+    public UnitOfTime successor()
+    {
+      int i = ordinal();
+      final UnitOfTime[] values = values();
+      if ( i >= ( values.length - 1 ) )
+      {
+        return null;
+      }
+      return values[i + 1];
+    }
+  }
 
   // CONSTRUCTORS
 
@@ -166,27 +321,10 @@ public final class DisplayUtils
       throw new IllegalArgumentException( "Separator cannot be null!" );
     }
 
-    // \u03BC == Greek mu character
-    final String[] unitStrs = { "s", "ms", "\u03BCs", "ns", "ps" };
-    final double[] unitVals = { 1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12 };
+    final UnitOfTime unitOfTime = UnitOfTime.valueOf( aTime );
 
-    double absTime = Math.abs( aTime );
-
-    int i = 0;
-    if ( absTime > ZERO_TIME_THRESHOLD )
-    {
-      for ( ; i < unitVals.length; i++ )
-      {
-        if ( absTime >= unitVals[i] )
-        {
-          break;
-        }
-      }
-      i = Math.min( i, unitVals.length - 1 );
-    }
-
-    final String format = "%." + aPrecision + "f" + aSeparator + "%s";
-    return String.format( format, Double.valueOf( aTime / unitVals[i] ), unitStrs[i] );
+    final String format = String.format( "%%.%df%s%%s", Integer.valueOf( aPrecision ), aSeparator );
+    return String.format( format, Double.valueOf( aTime / unitOfTime.getFactor() ), unitOfTime.getDisplayName() );
   }
 
   /**

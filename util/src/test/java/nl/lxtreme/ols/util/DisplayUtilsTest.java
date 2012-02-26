@@ -77,7 +77,8 @@ public class DisplayUtilsTest
     assertEquals( "1.000 \u03BCs", DisplayUtils.displayTime( 1.0e-6 ) );
     assertEquals( "1.000 ns", DisplayUtils.displayTime( 1.0e-9 ) );
     assertEquals( "1.000 ps", DisplayUtils.displayTime( 1.0e-12 ) );
-    assertEquals( "0.010 ps", DisplayUtils.displayTime( 1.0e-14 ) );
+    assertEquals( "10.000 fs", DisplayUtils.displayTime( 1.0e-14 ) );
+    assertEquals( "1.000 fs", DisplayUtils.displayTime( 1.0e-15 ) );
 
     assertEquals( "333.333 ms", DisplayUtils.displayTime( 0.3333333333333333 ) );
     assertEquals( "-40.000 ns", DisplayUtils.displayTime( -4.0E-8 ) );
