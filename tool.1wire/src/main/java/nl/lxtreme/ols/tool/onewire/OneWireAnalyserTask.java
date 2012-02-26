@@ -29,8 +29,8 @@ import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -180,7 +180,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
       if ( fallingEdge < 0 )
       {
         LOG.log( Level.INFO, "Decoding ended at {0}; no falling edge found...",
-            DisplayUtils.displayScaledTime( time, aData.getSampleRate() ) );
+            UnitOfTime.toString( time / ( double )aData.getSampleRate() ) );
         break;
       }
       long risingEdge = findEdge( aData, fallingEdge, endOfDecode, Edge.RISING );

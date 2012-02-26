@@ -40,6 +40,7 @@ import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.ui.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
@@ -318,7 +319,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       long time = System.currentTimeMillis() - this.acquisitionStartTime;
 
       setStatusOnEDT( "Capture finished at {0,date,medium} {0,time,medium}, and took {1}.", new Date(),
-          DisplayUtils.displayTime( time / 1000.0, 1, "" ) );
+          UnitOfTime.toString( time / 1000.0 ) );
     }
 
     updateActionsOnEDT();

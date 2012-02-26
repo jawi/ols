@@ -20,8 +20,6 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
-import static nl.lxtreme.ols.util.DisplayUtils.*;
-
 import java.awt.*;
 import java.text.*;
 
@@ -29,6 +27,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
@@ -112,9 +111,9 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
     {
       final AcquisitionResult model = aDataSet.getCapturedData();
 
-      this.sampleRate = displayFrequency( model.getSampleRate() );
+      this.sampleRate = FrequencyUnit.toString( model.getSampleRate() );
       this.sampleCount = new DecimalFormat().format( model.getValues().length );
-      this.totalWidth = displayTime( model.getAbsoluteLength() / ( double )model.getSampleRate() );
+      this.totalWidth = UnitOfTime.toString( model.getAbsoluteLength() / ( double )model.getSampleRate() );
     }
 
     updateView();
@@ -163,7 +162,7 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
       final Double timeInterval = model.getTimeInterval();
       if ( timeInterval != null )
       {
-        this.tickInterval = displayTime( timeInterval.doubleValue() );
+        this.tickInterval = UnitOfTime.toString( timeInterval.doubleValue() );
       }
       else
       {
@@ -175,7 +174,7 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
       final Double displayedTimeInterval = model.getDisplayedTimeInterval();
       if ( displayedTimeInterval != null )
       {
-        this.displayedTime = displayTime( displayedTimeInterval.doubleValue() );
+        this.displayedTime = UnitOfTime.toString( displayedTimeInterval.doubleValue() );
       }
       else
       {

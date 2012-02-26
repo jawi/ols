@@ -23,7 +23,7 @@ package nl.lxtreme.ols.tool.jtag;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.api.util.*;
 
 
 /**
@@ -60,7 +60,7 @@ public final class JTAGDataSet extends BaseDataSet<JTAGData>
    */
   public String getDisplayTime( final int aSampleIdx )
   {
-    return DisplayUtils.displayTime( getTime( aSampleIdx ) );
+    return UnitOfTime.toString( getTime( aSampleIdx ) );
   }
 
   /**

@@ -20,12 +20,11 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
-import static nl.lxtreme.ols.util.DisplayUtils.*;
-
 import java.awt.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -95,7 +94,7 @@ public class SignalDetailsView extends AbstractViewLayer implements IToolWindow,
     {
       channelLabel = aMeasurementInfo.getChannelLabel();
       channelIdx = Integer.toString( aMeasurementInfo.getChannelIndex() );
-      timeValue = displayTime( aMeasurementInfo.getReferenceTime() );
+      timeValue = UnitOfTime.toString( aMeasurementInfo.getReferenceTime() );
       totalWidth = getTimeAsString( aMeasurementInfo.getTotalTime() );
       pwHigh = getTimeAsString( aMeasurementInfo.getHighTime() );
       pwLow = getTimeAsString( aMeasurementInfo.getLowTime() );
@@ -143,7 +142,7 @@ public class SignalDetailsView extends AbstractViewLayer implements IToolWindow,
   {
     if ( aTime != null )
     {
-      return displayTime( aTime.doubleValue() );
+      return UnitOfTime.toString( aTime.doubleValue() );
     }
     return "-";
   }

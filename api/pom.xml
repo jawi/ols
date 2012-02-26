@@ -58,7 +58,8 @@
 							nl.lxtreme.ols.api.devices,
                             nl.lxtreme.ols.api.task,
 							nl.lxtreme.ols.api.tools,
-							nl.lxtreme.ols.api.ui</Export-Package>
+							nl.lxtreme.ols.api.ui,
+							nl.lxtreme.ols.api.util</Export-Package>
 					</instructions>
 				</configuration>
 			</plugin>

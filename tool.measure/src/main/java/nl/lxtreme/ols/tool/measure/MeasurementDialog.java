@@ -33,6 +33,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.measure.ClockFrequencyMeasureTask.ClockStats;
 import nl.lxtreme.ols.util.*;
@@ -234,10 +235,10 @@ public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.
       final long diff = cursorA.getTimestamp() - cursorB.getTimestamp();
 
       final double distance = Math.abs( diff / rate );
-      distanceText = DisplayUtils.displayTime( distance );
+      distanceText = UnitOfTime.toString( distance );
 
       final double frequency = Math.abs( rate / diff );
-      frequencyText = DisplayUtils.displayFrequency( frequency );
+      frequencyText = FrequencyUnit.toString( frequency );
     }
 
     this.distanceLabel.setText( distanceText );
@@ -250,7 +251,7 @@ public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.
   @Override
   protected void onToolEnded( final ClockStats aClockStats )
   {
-    String frequency = DisplayUtils.displayFrequency( aClockStats.getFrequency() );
+    String frequency = FrequencyUnit.toString( aClockStats.getFrequency() );
     String dutycycle = DisplayUtils.displayPercentage( aClockStats.getDutyCycle() );
     if ( aClockStats.hasError() )
     {
@@ -420,7 +421,7 @@ public class MeasurementDialog extends BaseToolDialog<ClockFrequencyMeasureTask.
       final Cursor cursor = context.getCursor( aIndex );
       if ( cursor.isDefined() )
       {
-        return DisplayUtils.displayTime( cursor.getTimestamp() / ( double )data.getSampleRate() );
+        return UnitOfTime.toString( cursor.getTimestamp() / ( double )data.getSampleRate() );
       }
     }
     return "<not set>";

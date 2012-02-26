@@ -23,11 +23,11 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementHeightProvider;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -354,11 +354,11 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
     switch ( aStyle )
     {
       case LABEL_TIME:
-        return label.concat( ": " ).concat( DisplayUtils.displayTime( aCursorTimestamp / sampleRate ) );
+        return label.concat( ": " ).concat( UnitOfTime.toString( aCursorTimestamp / sampleRate ) );
       case INDEX_LABEL:
         return String.format( "%d: %s", index, label );
       case TIME_ONLY:
-        return DisplayUtils.displayTime( aCursorTimestamp / sampleRate );
+        return UnitOfTime.toString( aCursorTimestamp / sampleRate );
       case LABEL_ONLY:
         return label;
       case INDEX_ONLY:

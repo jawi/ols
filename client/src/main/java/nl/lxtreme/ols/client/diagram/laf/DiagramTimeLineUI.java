@@ -28,6 +28,7 @@ import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
 import nl.lxtreme.ols.util.*;
@@ -203,7 +204,7 @@ public class DiagramTimeLineUI extends ComponentUI
       timeValue -= aDataContainer.getTriggerPosition();
     }
 
-    return DisplayUtils.displayScaledTime( timeValue, aDataContainer.getSampleRate() );
+    return UnitOfTime.toString( timeValue / aDataContainer.getSampleRate() );
   }
 
   /**
@@ -248,7 +249,7 @@ public class DiagramTimeLineUI extends ComponentUI
         final int cursorPos = ( int )( cursorPosition.longValue() * scale );
 
         final Double cursorTimeValue = aDataContainer.getCursorTimeValue( i );
-        final String cursorTime = DisplayUtils.displayTime( cursorTimeValue.doubleValue() );
+        final String cursorTime = UnitOfTime.toString( cursorTimeValue.doubleValue() );
 
         final Color cursorColor = settings.getCursorColor( i );
         final Color cursorTextColor = ColorUtils.getContrastColor( cursorColor );

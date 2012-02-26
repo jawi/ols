@@ -20,9 +20,9 @@
 package nl.lxtreme.ols.client.signaldisplay;
 
 
-import static nl.lxtreme.ols.util.DisplayUtils.*;
-
 import java.awt.*;
+
+import nl.lxtreme.ols.api.util.*;
 
 
 /**
@@ -353,11 +353,11 @@ public final class MeasurementInfo
       sb.append( ", " ).append( this.channelLabel );
     }
     sb.append( "<br>" );
-    sb.append( "Time: " ).append( displayTime( getReferenceTime() ) ).append( "<br>" );
+    sb.append( "Time: " ).append( UnitOfTime.toString( getReferenceTime() ) ).append( "<br>" );
     sb.append( "Period: " );
     if ( tt != null )
     {
-      sb.append( displayTime( tt.doubleValue() ) );
+      sb.append( UnitOfTime.toString( tt.doubleValue() ) );
     }
     else
     {

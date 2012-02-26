@@ -30,11 +30,10 @@ import javax.swing.*;
 import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.model.AbstractViewModel.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.DisplayUtils.UnitOfTime;
 
 
 /**
@@ -429,7 +428,7 @@ public class TimeLineUI extends ComponentUI
   {
     if ( aModel.hasTimingData() )
     {
-      return DisplayUtils.displayTime( aTime, 1, "" );
+      return UnitOfTime.toString( aTime );
     }
 
     return Integer.toString( ( int )aTime );

@@ -33,6 +33,7 @@ import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.diagram.*;
 import nl.lxtreme.ols.client.diagram.settings.*;
@@ -372,9 +373,9 @@ public class DiagramUI extends ComponentUI
 
         sb.append( aAnnotation.getData() );
         sb.append( " | Time: " );
-        sb.append( DisplayUtils.displayTime( start ) );
+        sb.append( UnitOfTime.toString( start ) );
         sb.append( ".." );
-        sb.append( DisplayUtils.displayTime( end ) );
+        sb.append( UnitOfTime.toString( end ) );
       }
       else
       {
@@ -391,7 +392,7 @@ public class DiagramUI extends ComponentUI
           {
             absMouseX -= triggerPosition;
           }
-          sb.append( "Time: " ).append( DisplayUtils.displayScaledTime( absMouseX, sampleRate ) );
+          sb.append( "Time: " ).append( UnitOfTime.toString( absMouseX / sampleRate ) );
         }
       }
 

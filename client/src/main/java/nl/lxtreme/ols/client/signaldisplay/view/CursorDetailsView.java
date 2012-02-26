@@ -20,7 +20,6 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
-import static nl.lxtreme.ols.util.DisplayUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -31,6 +30,7 @@ import javax.swing.event.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
@@ -228,7 +228,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
       sb.append( c + 1 ).append( ":" ).append( "</th>" );
       sb.append( "<td>" ).append( label ).append( "</td>" );
       sb.append( "<td align='right'><a href='#" ).append( cursor.getTimestamp() ).append( "'>" );
-      sb.append( displayTime( cursor.getTimestamp() / ( double )model.getSampleRate() ) );
+      sb.append( UnitOfTime.toString( cursor.getTimestamp() / ( double )model.getSampleRate() ) );
       sb.append( "</a></td></tr>" );
     }
     sb.append( "</table></body></html>" );

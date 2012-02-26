@@ -35,6 +35,7 @@ import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.UnitDefinition;
 import nl.lxtreme.ols.util.swing.*;
@@ -72,7 +73,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = DisplayUtils.displaySize( ( ( Integer )aValue ).doubleValue() );
+        value = SizeUnit.toString( ( ( Integer )aValue ).doubleValue() );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -92,7 +93,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = DisplayUtils.displayFrequency( ( ( Integer )value ).doubleValue() );
+        value = FrequencyUnit.toString( ( ( Integer )value ).doubleValue() );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
