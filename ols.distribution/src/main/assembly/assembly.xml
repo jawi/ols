@@ -32,6 +32,7 @@
 				<include>org.apache.felix:org.apache.felix.log</include>
 				<include>org.apache.felix:org.apache.felix.prefs</include>
                 <include>org.apache.felix:org.apache.felix.dependencymanager</include>
+                <include>nl.lxtreme.ols:lib.mydoggy</include>
 				<include>nl.lxtreme.ols:api</include>
 				<include>nl.lxtreme.ols:client</include>
                 <include>nl.lxtreme.ols.client:client.project</include>

@@ -67,6 +67,11 @@
 			<artifactId>client</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+        <dependency>
+            <groupId>nl.lxtreme.ols.client</groupId>
+            <artifactId>client.project</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>logging</artifactId>
@@ -89,9 +94,14 @@
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
-			<artifactId>util</artifactId>
+			<artifactId>lib.mydoggy</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+        <dependency>
+            <groupId>nl.lxtreme.ols</groupId>
+            <artifactId>util</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>test.util</artifactId>
