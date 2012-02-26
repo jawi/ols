@@ -45,6 +45,8 @@ final class OneWireGenerator
   private final List<Integer> data;
   private final int a, b, c, d, e, f, g, h, i, j;
 
+  private int trigger;
+
   // CONSTRUCTORS
 
   /**
@@ -60,7 +62,7 @@ final class OneWireGenerator
     this.data = new ArrayList<Integer>();
 
     this.busSpeed = 1000000; // 1 MHz
-    this.sampleRate = this.busSpeed * 4; // 4 MHz
+    this.sampleRate = this.busSpeed * 8; // 8 MHz
 
     this.tickSize = ( int )( Math.rint( this.sampleRate / ( double )this.busSpeed ) );
 
@@ -118,6 +120,16 @@ final class OneWireGenerator
   public int getRate()
   {
     return this.sampleRate;
+  }
+
+  /**
+   * Returns the trigger offset.
+   * 
+   * @return the trigger offset, never <code>null</code>.
+   */
+  public int getTrigger()
+  {
+    return this.trigger;
   }
 
   /**
@@ -241,6 +253,8 @@ final class OneWireGenerator
     tickDelay( this.h );
     // drive 1-wire line high...
     this.data.add( Integer.valueOf( OW_LINE ) );
+
+    this.trigger = this.data.size();
 
     tickDelay( this.i - 1 );
     // drive 1-wire line low (signals device presence)...

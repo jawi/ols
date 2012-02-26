@@ -44,6 +44,7 @@ final class I2CGenerator
   private final int tickSize;
   private final List<Integer> data;
   private int idx;
+  private int trigger;
 
   // CONSTRUCTORS
 
@@ -85,6 +86,16 @@ final class I2CGenerator
   }
 
   /**
+   * Returns the trigger offset of the generated signal.
+   * 
+   * @return a trigger offset.
+   */
+  public int getTrigger()
+  {
+    return this.trigger;
+  }
+
+  /**
    * Writes a given string as bit-stream to the given data array.
    * 
    * @param aData
@@ -96,6 +107,8 @@ final class I2CGenerator
     this.idx = 0;
 
     writeStartBit();
+
+    this.trigger = this.data.size();
 
     writeByte( ( byte )0xf6 ); // write to address 0x1ff (10-bit)
     writeBit( ACK ); // ack

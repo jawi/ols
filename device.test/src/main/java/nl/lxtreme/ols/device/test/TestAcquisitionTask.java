@@ -69,8 +69,11 @@ public class TestAcquisitionTask implements AcquisitionTask
 
     final int[] data;
     int rate = 1000000000;
+    int trigger = -1;
 
-    final double halfWidth = ( 1L << ( channels - 1 ) ) / 2.0;
+    final double max = ( ( ( 1L << Math.min( 16, channels ) ) - 1L ) & 0xFFFFFFFFL );
+    final double half = ( max / 2.0 );
+    final double factor = ( ( 2.0 * Math.PI ) / max );
 
     if ( DATA_FUNCTIONS[6].equals( dataFunction ) )
     {
@@ -78,6 +81,7 @@ public class TestAcquisitionTask implements AcquisitionTask
       generator.writeBitStream( "Hello World, this is a sample I2C bit stream!" );
       data = generator.getData();
       rate = generator.getRate();
+      trigger = generator.getTrigger();
     }
     else if ( DATA_FUNCTIONS[7].equals( dataFunction ) )
     {
@@ -85,6 +89,7 @@ public class TestAcquisitionTask implements AcquisitionTask
       generator.writeBitStream( "Hello World, this is a sample 1-wire bit stream!" );
       data = generator.getData();
       rate = generator.getRate();
+      trigger = generator.getTrigger();
     }
     else
     {
@@ -104,7 +109,8 @@ public class TestAcquisitionTask implements AcquisitionTask
         }
         else if ( DATA_FUNCTIONS[2].equals( dataFunction ) )
         {
-          data[i] = ( int )( halfWidth + ( halfWidth * Math.sin( i / ( data.length / ( double )channels ) ) ) );
+          data[i] = ( int )( half + ( half * Math.sin( i * factor ) ) );
+          rate = -1;
         }
         else if ( DATA_FUNCTIONS[3].equals( dataFunction ) )
         {
@@ -123,6 +129,6 @@ public class TestAcquisitionTask implements AcquisitionTask
       }
     }
 
-    return new CapturedData( data, 23, rate, channels, Integer.MAX_VALUE );
+    return new CapturedData( data, trigger, rate, channels, ( int )( ( 1L << channels ) - 1 ) );
   }
 }
