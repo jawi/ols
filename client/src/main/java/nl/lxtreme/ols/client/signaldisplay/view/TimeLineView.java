@@ -20,7 +20,9 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
-import static nl.lxtreme.ols.client.signaldisplay.view.SignalView.CURSOR_MOVE_CURSOR;
+import static nl.lxtreme.ols.client.signaldisplay.view.SignalView.*;
+import static nl.lxtreme.ols.util.DisplayUtils.*;
+
 import java.awt.*;
 import java.awt.event.*;
 
@@ -30,7 +32,6 @@ import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.view.SignalView.BasicMouseHandler;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -83,12 +84,35 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
         }
       }
 
-      // Calculate the "absolute" time based on the mouse position, use a
-      // "over sampling" factor to allow intermediary (between two time stamps)
-      // time value to be shown...
-      final double refTime = getModel().getCursorTime( point );
+      final String toolTip = getToolTipText( point );
+      setToolTipText( toolTip );
+    }
 
-      setToolTipText( DisplayUtils.displayTime( refTime ) );
+    /**
+     * Determines what tooltip is to be displayed.
+     * 
+     * @param aPoint
+     *          a current mouse location, cannot be <code>null</code>.
+     * @return a tooltip text, never <code>null</code>.
+     */
+    private String getToolTipText( final Point aPoint )
+    {
+      final SignalDiagramModel signalDiagramModel = getModel();
+
+      final double refTime = signalDiagramModel.getCursorTime( aPoint );
+
+      String toolTip;
+      if ( signalDiagramModel.hasTimingData() )
+      {
+        toolTip = displayTime( refTime, 6, "" );
+      }
+      else
+      {
+        Integer sampleIdx = Integer.valueOf( ( int )refTime );
+        toolTip = String.format( "Sample: %d", sampleIdx );
+      }
+
+      return toolTip;
     }
   }
 
@@ -149,7 +173,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
 
     addMouseListener( this.mouseHandler );
     addMouseMotionListener( this.mouseHandler );
-    addMouseWheelListener( this.mouseHandler );
+    // addMouseWheelListener( this.mouseHandler );
 
     super.addNotify();
   }

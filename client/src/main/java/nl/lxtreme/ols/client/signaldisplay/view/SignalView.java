@@ -537,7 +537,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
 
     addMouseListener( this.mouseHandler );
     addMouseMotionListener( this.mouseHandler );
-    addMouseWheelListener( this.mouseHandler );
+    // addMouseWheelListener( this.mouseHandler );
 
     super.addNotify();
   }

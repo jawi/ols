@@ -448,8 +448,11 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     {
       x -= triggerPos.longValue();
     }
+    // If no sample rate is available, we use a factor of 1; which doesn't
+    // make a difference in the result...
+    final int sampleRate = Math.max( 1, getSampleRate() );
 
-    return ( scaleFactor * x ) / ( scaleFactor * getSampleRate() );
+    return ( scaleFactor * x ) / ( scaleFactor * sampleRate );
   }
 
   /**
@@ -973,6 +976,18 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   public final boolean hasData()
   {
     return ( this.dataSet != null ) && ( getCapturedData() != null );
+  }
+
+  /**
+   * Returns whether the data is a timed-capture or a state-capture.
+   * 
+   * @return <code>true</code> if there is timing data available,
+   *         <code>false</code> if not.
+   */
+  public boolean hasTimingData()
+  {
+    AcquisitionResult captureData = getCapturedData();
+    return ( captureData != null ) && captureData.hasTimingData();
   }
 
   /**

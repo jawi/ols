@@ -21,6 +21,7 @@ package nl.lxtreme.ols.client.signaldisplay.laf;
 
 
 import static java.awt.RenderingHints.*;
+
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -33,6 +34,7 @@ import nl.lxtreme.ols.client.signaldisplay.model.AbstractViewModel.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.DisplayUtils.UnitOfTime;
 
 
 /**
@@ -260,39 +262,42 @@ public class TimeLineUI extends ComponentUI
       canvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
       final double zoomFactor = model.getZoomFactor();
-      final double sampleRate = model.getSampleRate();
+      final double sampleRate = Math.max( 1, model.getSampleRate() );
       final long triggerOffset = model.getTriggerOffset();
 
       final double startTimeStamp = ( clip.x / zoomFactor );
       final double endTimeStamp = ( ( clip.x + clip.width ) / zoomFactor );
       final double timeFrame = ( clip.width / zoomFactor );
 
-      final double t = Math.pow( 10, Math.floor( Math.log10( zoomFactor ) ) );
-      final double q = Math.pow( 10, Math.floor( Math.log10( timeFrame / sampleRate ) ) ) * sampleRate;
+      final double scaleFactor = Math.pow( 10, Math.floor( Math.log10( zoomFactor ) ) );
+      final double unitOfTime = Math.pow( 10, Math.floor( Math.log10( timeFrame / sampleRate ) ) ) * sampleRate;
 
-      final double tickIncr = Math.round( t * q ) / t;
+      final double tickIncr = Math.round( scaleFactor * unitOfTime ) / scaleFactor;
       final double timeIncr = tickIncr / 10.0;
 
       final double offset = triggerOffset % timeIncr;
 
       // Start at the first multiple of the time increment we're using...
       double timestamp = ( Math.round( startTimeStamp / timeIncr ) * timeIncr ) + offset;
+      double majorTimestamp = Math.abs( Math.round( scaleFactor * ( startTimeStamp - triggerOffset ) )
+          % Math.round( ( scaleFactor * tickIncr ) / 2.0 ) );
 
       System.out.println( "visible rect = " + clip );
       System.out.println( "start time = " + startTimeStamp + ", end time = " + endTimeStamp + ", time = " + timeFrame );
       System.out.println( "tickIncr = " + tickIncr + ", timeIncr = " + timeIncr + ", zoomFactor = " + zoomFactor
-          + ", t = " + t + ", o = " + offset + ", " + DisplayUtils.displayScaledTime( q, sampleRate ) );
+          + ", scaleFactor = " + scaleFactor + ", unitOfTime = " + unitOfTime );
 
       final FontMetrics majorFM = canvas.getFontMetrics( model.getMajorTickLabelFont() );
       final FontMetrics minorFM = canvas.getFontMetrics( model.getMinorTickLabelFont() );
       final int minorFontHeight = minorFM.getHeight();
 
-      double majorTimestamp = 0;
       while ( timestamp <= endTimeStamp )
       {
-        int relXpos = ( int )( zoomFactor * timestamp );
-        double abs = Math.abs( Math.round( t * ( timestamp - triggerOffset ) ) % Math.round( ( t * tickIncr ) / 2.0 ) );
-        double abs2 = Math.abs( Math.round( t * ( timestamp - triggerOffset ) ) % Math.round( t * tickIncr ) );
+        int relXpos = ( int )Math.round( zoomFactor * timestamp ) - 1;
+        double abs = Math.abs( Math.round( scaleFactor * ( timestamp - triggerOffset ) )
+            % Math.round( ( scaleFactor * tickIncr ) / 2.0 ) );
+        double abs2 = Math.abs( Math.round( scaleFactor * ( timestamp - triggerOffset ) )
+            % Math.round( scaleFactor * tickIncr ) );
 
         // System.out.printf( "T = %d, T%%tI = %f, %f\n", relXpos, abs, abs2 );
 
@@ -316,7 +321,7 @@ public class TimeLineUI extends ComponentUI
           {
             majorTimestamp = timestamp - triggerOffset;
 
-            timeStr = DisplayUtils.displayTime( majorTimestamp / sampleRate, 3, "" );
+            timeStr = getMajorTimestamp( model, majorTimestamp / sampleRate, unitOfTime / sampleRate );
 
             canvas.setFont( model.getMajorTickLabelFont() );
 
@@ -329,9 +334,9 @@ public class TimeLineUI extends ComponentUI
           }
           else
           {
-            double time = timestamp - triggerOffset;
+            double time = Math.abs( ( majorTimestamp - timestamp ) + triggerOffset );
 
-            timeStr = DisplayUtils.displayTime( time / sampleRate, 1, "" );
+            timeStr = getMinorTimestamp( model, time / sampleRate, unitOfTime / sampleRate );
 
             canvas.setFont( model.getMinorTickLabelFont() );
 
@@ -353,7 +358,6 @@ public class TimeLineUI extends ComponentUI
           canvas.drawString( timeStr, textXpos, textYpos );
         }
 
-        // make sure we're rounding to two digits after the comma...
         timestamp = ( timestamp + timeIncr );
       }
 
@@ -368,6 +372,67 @@ public class TimeLineUI extends ComponentUI
       canvas.dispose();
       canvas = null;
     }
+  }
+
+  /**
+   * @param aTime
+   * @param aTimeScale
+   * @return
+   */
+  private String displayTime( final double aTime, final double aTimeScale, final int aPrecision )
+  {
+    UnitOfTime timeScale = UnitOfTime.valueOf( aTimeScale );
+    UnitOfTime time = UnitOfTime.valueOf( aTime );
+
+    Double t;
+    String s;
+
+    if ( ( timeScale != time ) && ( timeScale != time.successor() ) )
+    {
+      // More than a factor 1000 difference...
+      UnitOfTime predecessor = timeScale.predecessor();
+
+      t = Double.valueOf( aTime / predecessor.getFactor() );
+      s = predecessor.getDisplayName();
+    }
+    else
+    {
+      t = Double.valueOf( aTime / time.getFactor() );
+      s = time.getDisplayName();
+    }
+
+    String format = String.format( "%%.%df%%s", Integer.valueOf( aPrecision ) );
+    return String.format( format, t, s );
+  }
+
+  /**
+   * @param sampleRate
+   * @param majorTimestamp
+   * @return
+   */
+  private String getMajorTimestamp( final TimeLineViewModel aModel, final double aTime, final double aTimeScale )
+  {
+    if ( aModel.hasTimingData() )
+    {
+      return displayTime( aTime, aTimeScale, 2 );
+    }
+
+    return Integer.toString( ( int )aTime );
+  }
+
+  /**
+   * @param aTime
+   * @param sampleRate
+   * @return
+   */
+  private String getMinorTimestamp( final TimeLineViewModel aModel, final double aTime, final double aTimeScale )
+  {
+    if ( aModel.hasTimingData() )
+    {
+      return DisplayUtils.displayTime( aTime, 1, "" );
+    }
+
+    return Integer.toString( ( int )aTime );
   }
 
   /**

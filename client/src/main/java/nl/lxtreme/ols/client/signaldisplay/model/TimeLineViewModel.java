@@ -320,4 +320,15 @@ public class TimeLineViewModel extends AbstractViewModel
     }
     return value;
   }
+
+  /**
+   * Returns whether the data is a timed-capture or a state-capture.
+   * 
+   * @return <code>true</code> if there is timing data available,
+   *         <code>false</code> if not.
+   */
+  public boolean hasTimingData()
+  {
+    return getSignalDiagramModel().hasTimingData();
+  }
 }
