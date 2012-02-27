@@ -23,7 +23,6 @@ package nl.lxtreme.ols.tool.onewire;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.util.*;
 
 
 /**
@@ -76,18 +75,6 @@ public class OneWireDataSet extends BaseDataSet<OneWireData>
   public int getDecodedByteCount()
   {
     return this.decodedBytes;
-  }
-
-  /**
-   * Returns the time as display string.
-   * 
-   * @param aSampleIdx
-   *          a sample index to return the time value for.
-   * @return a time display value, never <code>null</code>.
-   */
-  public String getDisplayTime( final int aSampleIdx )
-  {
-    return UnitOfTime.toString( getTime( aSampleIdx ) );
   }
 
   /**

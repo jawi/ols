@@ -37,6 +37,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.*;
@@ -553,8 +554,8 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
       {
         final I2CData ds = dataSet.get( i );
 
-        final String startTime = aAnalysisResult.getDisplayTime( ds.getStartSampleIndex() );
-        final String endTime = aAnalysisResult.getDisplayTime( ds.getEndSampleIndex() );
+        final String startTime = UnitOfTime.format( aAnalysisResult.getTime( ds.getStartSampleIndex() ) );
+        final String endTime = UnitOfTime.format( aAnalysisResult.getTime( ds.getEndSampleIndex() ) );
         final String data = ds.isEvent() ? "" : Character.toString( ( char )ds.getValue() );
 
         exporter.addRow( Integer.valueOf( i ), startTime, endTime, Boolean.valueOf( ds.isEvent() ), ds.getEventName(),
@@ -665,7 +666,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( aAnalysisResult.getDisplayTime( data.getStartSampleIndex() ) );
+              tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( event );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -677,7 +678,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( aAnalysisResult.getDisplayTime( data.getStartSampleIndex() ) );
+              tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( "0x" + StringUtils.integerToHexString( value, 2 ) );
               tr.addChild( TD ).addContent( "0b" + StringUtils.integerToBinString( value, 8 ) );
               tr.addChild( TD ).addContent( String.valueOf( value ) );

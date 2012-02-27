@@ -103,7 +103,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
       String toolTip;
       if ( signalDiagramModel.hasTimingData() )
       {
-        toolTip = UnitOfTime.toString( refTime );
+        toolTip = UnitOfTime.toUnit( refTime ).format( refTime, 6 );
       }
       else
       {

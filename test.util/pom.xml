@@ -16,6 +16,12 @@
             <artifactId>api</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>nl.lxtreme.ols</groupId>
+            <artifactId>util</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

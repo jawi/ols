@@ -354,11 +354,11 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
     switch ( aStyle )
     {
       case LABEL_TIME:
-        return label.concat( ": " ).concat( UnitOfTime.toString( aCursorTimestamp / sampleRate ) );
+        return label.concat( ": " ).concat( UnitOfTime.format( aCursorTimestamp / sampleRate ) );
       case INDEX_LABEL:
         return String.format( "%d: %s", index, label );
       case TIME_ONLY:
-        return UnitOfTime.toString( aCursorTimestamp / sampleRate );
+        return UnitOfTime.format( aCursorTimestamp / sampleRate );
       case LABEL_ONLY:
         return label;
       case INDEX_ONLY:

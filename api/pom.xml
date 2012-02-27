@@ -16,11 +16,6 @@
 			<artifactId>org.osgi.compendium</artifactId>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols</groupId>
-			<artifactId>util</artifactId>
-			<scope>compile</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>junit</groupId>

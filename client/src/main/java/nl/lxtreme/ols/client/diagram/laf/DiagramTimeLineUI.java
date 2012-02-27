@@ -204,7 +204,7 @@ public class DiagramTimeLineUI extends ComponentUI
       timeValue -= aDataContainer.getTriggerPosition();
     }
 
-    return UnitOfTime.toString( timeValue / aDataContainer.getSampleRate() );
+    return UnitOfTime.format( timeValue / aDataContainer.getSampleRate() );
   }
 
   /**
@@ -249,7 +249,7 @@ public class DiagramTimeLineUI extends ComponentUI
         final int cursorPos = ( int )( cursorPosition.longValue() * scale );
 
         final Double cursorTimeValue = aDataContainer.getCursorTimeValue( i );
-        final String cursorTime = UnitOfTime.toString( cursorTimeValue.doubleValue() );
+        final String cursorTime = UnitOfTime.format( cursorTimeValue.doubleValue() );
 
         final Color cursorColor = settings.getCursorColor( i );
         final Color cursorTextColor = ColorUtils.getContrastColor( cursorColor );

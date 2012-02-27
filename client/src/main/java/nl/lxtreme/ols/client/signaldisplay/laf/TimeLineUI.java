@@ -380,28 +380,16 @@ public class TimeLineUI extends ComponentUI
    */
   private String displayTime( final double aTime, final double aTimeScale, final int aPrecision )
   {
-    UnitOfTime timeScale = UnitOfTime.valueOf( aTimeScale );
-    UnitOfTime time = UnitOfTime.valueOf( aTime );
-
-    Double t;
-    String s;
+    final UnitOfTime timeScale = UnitOfTime.toUnit( aTimeScale );
+    final UnitOfTime time = UnitOfTime.toUnit( aTime );
 
     if ( ( timeScale != time ) && ( timeScale != time.successor() ) )
     {
       // More than a factor 1000 difference...
-      UnitOfTime predecessor = timeScale.predecessor();
-
-      t = Double.valueOf( aTime / predecessor.getFactor() );
-      s = predecessor.getDisplayName();
-    }
-    else
-    {
-      t = Double.valueOf( aTime / time.getFactor() );
-      s = time.getDisplayName();
+      return timeScale.predecessor().format( aTime, aPrecision );
     }
 
-    String format = String.format( "%%.%df%%s", Integer.valueOf( aPrecision ) );
-    return String.format( format, t, s );
+    return time.format( aTime, aPrecision );
   }
 
   /**
@@ -428,7 +416,7 @@ public class TimeLineUI extends ComponentUI
   {
     if ( aModel.hasTimingData() )
     {
-      return UnitOfTime.toString( aTime );
+      return UnitOfTime.format( aTime );
     }
 
     return Integer.toString( ( int )aTime );

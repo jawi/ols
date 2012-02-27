@@ -94,7 +94,7 @@ public class SignalDetailsView extends AbstractViewLayer implements IToolWindow,
     {
       channelLabel = aMeasurementInfo.getChannelLabel();
       channelIdx = Integer.toString( aMeasurementInfo.getChannelIndex() );
-      timeValue = UnitOfTime.toString( aMeasurementInfo.getReferenceTime() );
+      timeValue = UnitOfTime.format( aMeasurementInfo.getReferenceTime() );
       totalWidth = getTimeAsString( aMeasurementInfo.getTotalTime() );
       pwHigh = getTimeAsString( aMeasurementInfo.getHighTime() );
       pwLow = getTimeAsString( aMeasurementInfo.getLowTime() );
@@ -142,7 +142,7 @@ public class SignalDetailsView extends AbstractViewLayer implements IToolWindow,
   {
     if ( aTime != null )
     {
-      return UnitOfTime.toString( aTime.doubleValue() );
+      return UnitOfTime.format( aTime.doubleValue() );
     }
     return "-";
   }

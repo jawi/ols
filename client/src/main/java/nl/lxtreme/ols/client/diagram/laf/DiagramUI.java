@@ -373,9 +373,9 @@ public class DiagramUI extends ComponentUI
 
         sb.append( aAnnotation.getData() );
         sb.append( " | Time: " );
-        sb.append( UnitOfTime.toString( start ) );
+        sb.append( UnitOfTime.format( start ) );
         sb.append( ".." );
-        sb.append( UnitOfTime.toString( end ) );
+        sb.append( UnitOfTime.format( end ) );
       }
       else
       {
@@ -392,7 +392,7 @@ public class DiagramUI extends ComponentUI
           {
             absMouseX -= triggerPosition;
           }
-          sb.append( "Time: " ).append( UnitOfTime.toString( absMouseX / sampleRate ) );
+          sb.append( "Time: " ).append( UnitOfTime.format( absMouseX / sampleRate ) );
         }
       }
 

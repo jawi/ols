@@ -353,11 +353,11 @@ public final class MeasurementInfo
       sb.append( ", " ).append( this.channelLabel );
     }
     sb.append( "<br>" );
-    sb.append( "Time: " ).append( UnitOfTime.toString( getReferenceTime() ) ).append( "<br>" );
+    sb.append( "Time: " ).append( UnitOfTime.format( getReferenceTime() ) ).append( "<br>" );
     sb.append( "Period: " );
     if ( tt != null )
     {
-      sb.append( UnitOfTime.toString( tt.doubleValue() ) );
+      sb.append( UnitOfTime.format( tt.doubleValue() ) );
     }
     else
     {

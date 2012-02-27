@@ -153,8 +153,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       double frequency = model.getSampleRate() / ( avgHighTime + avgLowTime );
       double dutyCycle = avgHighTime / ( avgHighTime + avgLowTime );
 
-      String timeText = UnitOfTime.toString( measureTime );
-      String frequencyText = FrequencyUnit.toString( frequency );
+      String timeText = UnitOfTime.format( measureTime );
+      String frequencyText = FrequencyUnit.format( frequency );
       String dutyCycleText = String.format( "%.3f%%", Double.valueOf( 100.0 * dutyCycle ) );
       String pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", Integer.valueOf( pulseCount ),
           Integer.valueOf( lowCount ), Integer.valueOf( highCount ) );

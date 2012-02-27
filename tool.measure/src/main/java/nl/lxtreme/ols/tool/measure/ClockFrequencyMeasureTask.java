@@ -21,7 +21,6 @@
 package nl.lxtreme.ols.tool.measure;
 
 
-import static nl.lxtreme.ols.util.DisplayUtils.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
@@ -174,14 +173,14 @@ public class ClockFrequencyMeasureTask implements ToolTask<ClockFrequencyMeasure
     @Override
     public String toString()
     {
-      String timeText = UnitOfTime.toString( this.measuringTime );
-      String frequencyText = FrequencyUnit.toString( this.frequency );
+      String timeText = UnitOfTime.format( this.measuringTime );
+      String frequencyText = FrequencyUnit.format( this.frequency );
       if ( hasError() )
       {
-        frequencyText = frequencyText.concat( " (error = \u00b1" ).concat( FrequencyUnit.toString( this.error ) )
+        frequencyText = frequencyText.concat( " (error = \u00b1" ).concat( FrequencyUnit.format( this.error ) )
             .concat( ")" );
       }
-      String dutyCycleText = displayPercentage( this.dutycycle );
+      String dutyCycleText = String.format( "%.1f%%", Double.valueOf( this.dutycycle * 100.0 ) );
 
       return String.format( "Measure time: %s; frequency: %s; dutycycle: %s; # of pulses: %d (\u2191%d, \u2193%d)",
           timeText, frequencyText, dutyCycleText, Integer.valueOf( this.pulseCount ),

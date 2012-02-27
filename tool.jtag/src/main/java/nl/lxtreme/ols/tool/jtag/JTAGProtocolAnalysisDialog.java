@@ -33,10 +33,9 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import org.osgi.framework.*;
-
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.*;
@@ -46,6 +45,8 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
+
+import org.osgi.framework.*;
 
 
 /**
@@ -413,12 +414,12 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
       {
         final JTAGData data = dataSet.get( i );
 
-        final String Time = aDataSet.getDisplayTime( data.getStartSampleIndex() );
-        final String Event = data.isEvent() ? data.getEventName() : data.getDataValue().getDisplayText();
+        final String time = UnitOfTime.format( aDataSet.getTime( data.getStartSampleIndex() ) );
+        final String event = data.isEvent() ? data.getEventName() : data.getDataValue().getDisplayText();
         final String tdiDataValue = data.isTdiData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
         final String tdoDataValue = data.isTdoData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
 
-        exporter.addRow( Integer.valueOf( i ), Time, Event, tdiDataValue, tdoDataValue );
+        exporter.addRow( Integer.valueOf( i ), time, event, tdiDataValue, tdoDataValue );
       }
 
       exporter.close();
@@ -499,7 +500,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( aAnalysisResult.getDisplayTime( data.getStartSampleIndex() ) );
+              tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( event );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -511,7 +512,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( aAnalysisResult.getDisplayTime( data.getStartSampleIndex() ) );
+              tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( value.getDisplayText() );
             }
           }

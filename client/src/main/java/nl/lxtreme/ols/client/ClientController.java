@@ -319,7 +319,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       long time = System.currentTimeMillis() - this.acquisitionStartTime;
 
       setStatusOnEDT( "Capture finished at {0,date,medium} {0,time,medium}, and took {1}.", new Date(),
-          UnitOfTime.toString( time / 1000.0 ) );
+          UnitOfTime.MS.format( time, 1 ) );
     }
 
     updateActionsOnEDT();

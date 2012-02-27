@@ -23,22 +23,34 @@ package nl.lxtreme.ols.api.util;
 
 /**
  * Represents a frequency unit that has a displayable representation and a scale
- * factor.
+ * factor to convert it from/to Hertz.
  */
 public enum FrequencyUnit
 {
   // CONSTANTS
 
-  HZ( "", 1.0 ), //
-  KHZ( "k", 1.0e3 ), //
-  MHZ( "M", 1.0e6 ), //
-  GHZ( "G", 1.0e9 ), //
-  THZ( "T", 1.0e12 ); //
+  /** millihertz. */
+  MiHZ( "m", 1.0e-3 ),
+  /** hertz. */
+  HZ( "", 1.0 ),
+  /** kilohertz. */
+  KHZ( "k", 1.0e3 ),
+  /** megahertz. */
+  MHZ( "M", 1.0e6 ),
+  /** gigahertz. */
+  GHZ( "G", 1.0e9 ),
+  /** terahertz. */
+  THZ( "T", 1.0e12 );
+
+  /** Constant used to determine whether we should show "0Hz". */
+  public static final double ZERO_THRESHOLD = 1.0e-5;
+  /** All units are in Hertz. */
+  private static final String BASE_UNIT = "Hz";
 
   // VARIABLES
 
-  private String displayName;
-  private double factor;
+  private final String displayName;
+  private final double factor;
 
   // CONSTRUCTORS
 
@@ -47,7 +59,7 @@ public enum FrequencyUnit
    */
   private FrequencyUnit( final String aPrefix, final double aFactor )
   {
-    this.displayName = aPrefix.concat( "Hz" );
+    this.displayName = aPrefix.concat( BASE_UNIT );
     this.factor = aFactor;
   }
 
@@ -56,17 +68,19 @@ public enum FrequencyUnit
   /**
    * Convenience method to directly get a displayable represention of a given
    * frequency.
+   * <p>
+   * This method does the same as calling:
+   * <code>toUnit( aFrequency ).format( aFrequency, 3 );</code>.
+   * </p>
    * 
    * @param aFrequency
    *          the frequency to get a displayable representation for.
    * @return a string representation of the given frequency, never
    *         <code>null</code>.
    */
-  public static String toString( final double aFrequency )
+  public static String format( final double aFrequency )
   {
-    final FrequencyUnit unit = valueOf( aFrequency );
-    final Double f = Double.valueOf( aFrequency / unit.getFactor() );
-    return String.format( "%.3f%s", f, unit.getDisplayName() );
+    return toUnit( aFrequency ).format( aFrequency, 3 );
   }
 
   /**
@@ -76,14 +90,15 @@ public enum FrequencyUnit
    *          the frequency to convert to a {@link FrequencyUnit}.
    * @return a {@link FrequencyUnit} instance, never <code>null</code>.
    */
-  public static FrequencyUnit valueOf( final double aFrequency )
+  public static FrequencyUnit toUnit( final double aFrequency )
   {
     final FrequencyUnit[] freqs = values();
+    final double frequency = Math.abs( aFrequency );
 
     int i = freqs.length - 1;
     for ( ; i >= 0; i-- )
     {
-      if ( aFrequency >= freqs[i].getFactor() )
+      if ( frequency >= freqs[i].getFactor() )
       {
         break;
       }
@@ -93,9 +108,34 @@ public enum FrequencyUnit
   }
 
   /**
-   * Returns the current value of displayName.
+   * Returns the given frequency as string representation using this frequency
+   * unit's display name.
    * 
-   * @return the displayName
+   * @param aFrequency
+   *          the frequency to convert to a string representation;
+   * @param aScale
+   *          the scale (= number of digits after decimal separator) to use in
+   *          the string representation.
+   * @return a string representation of the given frequency, like "1.234kHz",
+   *         never <code>null</code>.
+   */
+  public String format( final double aFrequency, final int aScale )
+  {
+    // For *very* small frequencies, we simply always yield zero...
+    if ( ( Math.abs( aFrequency ) < ZERO_THRESHOLD ) && ( this != HZ ) )
+    {
+      return HZ.format( 0.0, aScale );
+    }
+
+    final Double frequency = Double.valueOf( aFrequency / getFactor() );
+    final String format = String.format( "%%.%df%%s", Integer.valueOf( aScale ) );
+    return String.format( format, frequency, getDisplayName() );
+  }
+
+  /**
+   * Returns display name of this frequency unit, like "Hz" or "MHz".
+   * 
+   * @return a display name, never <code>null</code>.
    */
   public String getDisplayName()
   {
@@ -103,9 +143,9 @@ public enum FrequencyUnit
   }
 
   /**
-   * Returns the current value of factor.
+   * Returns the scale factor to get from Hertz to this frequency unit.
    * 
-   * @return the factor
+   * @return a scale factor, >= 1.0.
    */
   public double getFactor()
   {

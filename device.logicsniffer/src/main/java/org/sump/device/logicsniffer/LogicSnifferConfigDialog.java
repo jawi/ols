@@ -73,7 +73,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = SizeUnit.toString( ( ( Integer )aValue ).doubleValue() );
+        value = SizeUnit.format( ( ( Integer )aValue ).doubleValue() );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -93,7 +93,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = FrequencyUnit.toString( ( ( Integer )value ).doubleValue() );
+        value = FrequencyUnit.format( ( ( Integer )value ).doubleValue() );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }

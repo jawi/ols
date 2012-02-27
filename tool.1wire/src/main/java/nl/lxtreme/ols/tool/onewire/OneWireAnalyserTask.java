@@ -180,7 +180,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
       if ( fallingEdge < 0 )
       {
         LOG.log( Level.INFO, "Decoding ended at {0}; no falling edge found...",
-            UnitOfTime.toString( time / ( double )aData.getSampleRate() ) );
+            UnitOfTime.format( time / ( double )aData.getSampleRate() ) );
         break;
       }
       long risingEdge = findEdge( aData, fallingEdge, endOfDecode, Edge.RISING );

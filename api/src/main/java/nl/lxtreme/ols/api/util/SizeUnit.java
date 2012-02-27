@@ -29,16 +29,26 @@ public enum SizeUnit
 {
   // CONSTANTS
 
-  B( "", 1.0 ), //
-  KB( "k", 1024.0 ), //
-  MB( "M", 1048576.0 ), //
-  GB( "G", 1073741824.0 ), //
-  TB( "T", 1099511627776.0 ); //
+  /** bytes. */
+  B( "", 1.0 ),
+  /** kilobytes. */
+  KB( "k", 1024.0 ),
+  /** megabytes. */
+  MB( "M", 1048576.0 ),
+  /** gigabytes. */
+  GB( "G", 1073741824.0 ),
+  /** terabytes. */
+  TB( "T", 1099511627776.0 );
+
+  /** Constant used to determine whether we should show "0B". */
+  public static final double ZERO_THRESHOLD = 1.0e-1;
+  /** All units are in bytes. */
+  private static final String BASE_UNIT = "B";
 
   // VARIABLES
 
-  private String displayName;
-  private double factor;
+  private final String displayName;
+  private final double factor;
 
   // CONSTRUCTORS
 
@@ -47,25 +57,27 @@ public enum SizeUnit
    */
   private SizeUnit( final String aPrefix, final double aFactor )
   {
-    this.displayName = aPrefix.concat( "B" );
+    this.displayName = aPrefix.concat( BASE_UNIT );
     this.factor = aFactor;
   }
 
   // METHODS
 
   /**
-   * Convenience method to convert a given size to a displayable representation.
+   * Convenience method to directly get a displayable represention of a given
+   * size.
+   * <p>
+   * This method does the same as calling:
+   * <code>toUnit( aSize ).format( aSize, 2 );</code>.
+   * </p>
    * 
    * @param aSize
-   *          the size to convert to a displayable representation.
-   * @return a displayable representation of the given size, never
-   *         <code>null</code>.
+   *          the size to get a displayable representation for.
+   * @return a string representation of the given size, never <code>null</code>.
    */
-  public static String toString( final double aSize )
+  public static String format( final double aSize )
   {
-    SizeUnit unit = valueOf( aSize );
-    final Double s = Double.valueOf( aSize / unit.getFactor() );
-    return String.format( "%.3f%s", s, unit.getDisplayName() );
+    return toUnit( aSize ).format( aSize, 2 );
   }
 
   /**
@@ -75,20 +87,46 @@ public enum SizeUnit
    *          the size to convert to a {@link SizeUnit} instance.
    * @return a {@link SizeUnit} instance, never <code>null</code>.
    */
-  public static SizeUnit valueOf( final double aSize )
+  public static SizeUnit toUnit( final double aSize )
   {
     SizeUnit[] sizes = values();
+    double size = Math.abs( aSize );
 
     int i = sizes.length - 1;
     for ( ; i >= 0; i-- )
     {
-      if ( aSize >= sizes[i].getFactor() )
+      if ( size >= sizes[i].getFactor() )
       {
         break;
       }
     }
 
     return sizes[Math.max( i, 0 )];
+  }
+
+  /**
+   * Returns the given size as string representation using this size unit's
+   * display name.
+   * 
+   * @param aSize
+   *          the size to convert to a string representation;
+   * @param aScale
+   *          the scale (= number of digits after decimal separator) to use in
+   *          the string representation.
+   * @return a string representation of the given size, like "1.44MB", never
+   *         <code>null</code>.
+   */
+  public String format( final double aSize, final int aScale )
+  {
+    // For *very* small sizes, we simply always yield zero...
+    if ( ( Math.abs( aSize ) < ZERO_THRESHOLD ) && ( this != B ) )
+    {
+      return B.format( 0.0, aScale );
+    }
+
+    final Double size = Double.valueOf( aSize / getFactor() );
+    final String format = String.format( "%%.%df%%s", Integer.valueOf( aScale ) );
+    return String.format( format, size, getDisplayName() );
   }
 
   /**

@@ -32,7 +32,6 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -72,7 +71,7 @@ public class GotoNthCursorAction extends AbstractAction implements IManagedActio
     final String cursorStr = String.valueOf( aIndex + 1 );
 
     putValue( NAME, "Go to cursor " + cursorStr );
-    putValue( SHORT_DESCRIPTION, "Go to the " + DisplayUtils.getOrdinalNumber( aIndex + 1 ) + " cursor in the diagram" );
+    putValue( SHORT_DESCRIPTION, "Go to the " + getOrdinalNumber( aIndex + 1 ) + " cursor in the diagram" );
     putValue( Action.LARGE_ICON_KEY, createOverlayIcon( IconLocator.ICON_GOTO_CURSOR, cursorStr ) );
 
     int keyStroke = KeyEvent.VK_0 + ( ( aIndex + 1 ) % Ols.MAX_CURSORS );
@@ -102,6 +101,35 @@ public class GotoNthCursorAction extends AbstractAction implements IManagedActio
       throw new IllegalArgumentException( "Invalid cursor index, should be between 0 and " + Ols.MAX_CURSORS );
     }
     return ID_PREFIX + aCursorIdx;
+  }
+
+  /**
+   * Returns the ordinal representation (in English) of the given value.
+   * 
+   * @param aValue
+   *          the value to get the ordinal value for, >= 0 && < 40.
+   * @return a ordinal number representation of the given value, like "1st".
+   */
+  private static String getOrdinalNumber( final int aValue )
+  {
+    String suffix = "";
+    if ( ( aValue == 1 ) || ( aValue == 21 ) || ( aValue == 31 ) )
+    {
+      suffix = "st";
+    }
+    else if ( ( aValue == 2 ) || ( aValue == 22 ) )
+    {
+      suffix = "nd";
+    }
+    else if ( ( aValue == 3 ) || ( aValue == 23 ) )
+    {
+      suffix = "rd";
+    }
+    else if ( ( aValue >= 0 ) && ( aValue < 40 ) )
+    {
+      suffix = "th";
+    }
+    return String.format( "%d%s", Integer.valueOf( aValue ), suffix );
   }
 
   /**

@@ -28,22 +28,28 @@ public enum UnitOfTime
 {
   // CONSTANTS
 
-  S( "", 1.0 ), //
-  MS( "m", 1.0e-3 ), //
-  US( "\u03BC", 1.0e-6 ), //
-  NS( "n", 1.0e-9 ), //
-  PS( "p", 1.0e-12 ), //
-  FS( "f", 1.0e-15 ); //
+  /** seconds. */
+  S( "", 1.0 ),
+  /** milliseconds. */
+  MS( "m", 1.0e-3 ),
+  /** microseconds. */
+  US( "\u03BC", 1.0e-6 ),
+  /** nanoseconds. */
+  NS( "n", 1.0e-9 ),
+  /** picoseconds. */
+  PS( "p", 1.0e-12 ),
+  /** femtoseconds. */
+  FS( "f", 1.0e-15 );
 
-  /**
-   * Constant used to determine whether we should show "0.000 s".
-   */
-  public static final double ZERO_TIME_THRESHOLD = 1.0e-16;
+  /** Constant used to determine whether we should show "0.000 s". */
+  public static final double ZERO_THRESHOLD = 1.0e-16;
+  /** All units are in seconds. */
+  private static final String BASE_UNIT = "s";
 
   // VARIABLES
 
-  private String displayName;
-  private double factor;
+  private final String displayName;
+  private final double factor;
 
   // CONSTRUCTORS
 
@@ -52,23 +58,28 @@ public enum UnitOfTime
    */
   private UnitOfTime( final String aPrefix, final double aFactor )
   {
-    this.displayName = aPrefix.concat( "s" );
+    this.displayName = aPrefix.concat( BASE_UNIT );
     this.factor = aFactor;
   }
 
   // METHODS
 
   /**
-   * @param aTimeValue
-   *          the time value to convert to a displayable representation.
-   * @return a displayable representation of the given time value, never
-   *         <code>null</code>.
+   * Convenience method to directly get a displayable represention of a given
+   * time value.
+   * <p>
+   * This method does the same as calling:
+   * <code>toUnit( aTime ).format( aTime, 3 );</code>.
+   * </p>
+   * 
+   * @param aTime
+   *          the time value (in seconds) to get a displayable representation
+   *          for.
+   * @return a string representation of the given time, never <code>null</code>.
    */
-  public static String toString( final double aTimeValue )
+  public static String format( final double aTime )
   {
-    UnitOfTime unit = valueOf( aTimeValue );
-    Double t = Double.valueOf( aTimeValue / unit.getFactor() );
-    return String.format( "%.3f%s", t, unit.getDisplayName() );
+    return toUnit( aTime ).format( aTime, 2 );
   }
 
   /**
@@ -79,24 +90,46 @@ public enum UnitOfTime
    *          the time value (in seconds) to return the unit of time for.
    * @return a {@link UnitOfTime}, never <code>null</code>.
    */
-  public static UnitOfTime valueOf( final double aTimeValue )
+  public static UnitOfTime toUnit( final double aTimeValue )
   {
     double absTime = Math.abs( aTimeValue );
     final UnitOfTime[] values = values();
 
     int i = 0;
-    if ( absTime > ZERO_TIME_THRESHOLD )
+    for ( ; i < values.length; i++ )
     {
-      for ( ; i < values.length; i++ )
+      if ( absTime >= values[i].getFactor() )
       {
-        if ( absTime >= values[i].getFactor() )
-        {
-          break;
-        }
+        break;
       }
     }
 
     return values[Math.min( i, values.length - 1 )];
+  }
+
+  /**
+   * Returns the given time as string representation using this time unit's
+   * display name.
+   * 
+   * @param aTime
+   *          the time (in seconds) to convert to a string representation;
+   * @param aScale
+   *          the scale (= number of digits after decimal separator) to use in
+   *          the string representation.
+   * @return a string representation of the given time, like "1.453ms", never
+   *         <code>null</code>.
+   */
+  public String format( final double aTime, final int aScale )
+  {
+    // For *very* small sizes, we simply always yield zero...
+    if ( ( Math.abs( aTime ) < ZERO_THRESHOLD ) && ( this != S ) )
+    {
+      return S.format( 0.0, aScale );
+    }
+
+    final Double time = Double.valueOf( aTime / getFactor() );
+    final String format = String.format( "%%.%df%%s", Integer.valueOf( aScale ) );
+    return String.format( format, time, getDisplayName() );
   }
 
   /**

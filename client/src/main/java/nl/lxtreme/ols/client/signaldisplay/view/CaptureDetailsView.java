@@ -111,9 +111,9 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
     {
       final AcquisitionResult model = aDataSet.getCapturedData();
 
-      this.sampleRate = FrequencyUnit.toString( model.getSampleRate() );
+      this.sampleRate = FrequencyUnit.format( model.getSampleRate() );
       this.sampleCount = new DecimalFormat().format( model.getValues().length );
-      this.totalWidth = UnitOfTime.toString( model.getAbsoluteLength() / ( double )model.getSampleRate() );
+      this.totalWidth = UnitOfTime.format( model.getAbsoluteLength() / ( double )model.getSampleRate() );
     }
 
     updateView();
@@ -162,7 +162,7 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
       final Double timeInterval = model.getTimeInterval();
       if ( timeInterval != null )
       {
-        this.tickInterval = UnitOfTime.toString( timeInterval.doubleValue() );
+        this.tickInterval = UnitOfTime.format( timeInterval.doubleValue() );
       }
       else
       {
@@ -174,7 +174,7 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
       final Double displayedTimeInterval = model.getDisplayedTimeInterval();
       if ( displayedTimeInterval != null )
       {
-        this.displayedTime = UnitOfTime.toString( displayedTimeInterval.doubleValue() );
+        this.displayedTime = UnitOfTime.format( displayedTimeInterval.doubleValue() );
       }
       else
       {

@@ -36,6 +36,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.*;
@@ -613,8 +614,8 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
       {
         final SPIData ds = decodedData.get( i );
 
-        final String startTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
-        final String endTime = aDataSet.getDisplayTime( ds.getStartSampleIndex() );
+        final String startTime = UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
+        final String endTime = UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
         final String mosiDataValue = ds.isMosiData() ? Integer.toString( ds.getDataValue() ) : null;
         final String misoDataValue = ds.isMisoData() ? Integer.toString( ds.getDataValue() ) : null;
 
@@ -737,7 +738,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( aDataSet.getDisplayTime( ds.getStartSampleIndex() ) );
+              tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( event );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -753,7 +754,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( aDataSet.getDisplayTime( sampleIdx ) );
+              tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( sampleIdx ) ) );
 
               int mosiValue = ds.isMosiData() ? ds.getDataValue() : 0;
               int misoValue = ds.isMisoData() ? ds.getDataValue() : 0;
