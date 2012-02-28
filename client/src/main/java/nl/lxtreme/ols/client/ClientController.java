@@ -96,22 +96,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * Provides a hack to ensure the system class loader is used at all times when
-   * loading UI classes/resources/...
-   */
-  static class CLValue implements UIDefaults.ActiveValue
-  {
-    /**
-     * @see javax.swing.UIDefaults.ActiveValue#createValue(javax.swing.UIDefaults)
-     */
-    public @Override
-    ClassLoader createValue( final UIDefaults aDefaults )
-    {
-      return Activator.class.getClassLoader();
-    }
-  }
-
-  /**
    * Provides a default tool context implementation.
    */
   static final class DefaultToolContext implements ToolContext
@@ -1974,14 +1958,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private void setLookAndFeel( final String aLookAndFeelClassName )
   {
-    final UIDefaults defaults = UIManager.getDefaults();
+    final UIDefaults defaults = UIManager.getLookAndFeelDefaults();
     // to make sure we always use system class loader
-    defaults.put( "ClassLoader", new CLValue() );
+    defaults.put( "ClassLoader", Activator.class.getClassLoader() );
 
-    final ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
     try
     {
-      Thread.currentThread().setContextClassLoader( Activator.class.getClassLoader() );
       UIManager.setLookAndFeel( aLookAndFeelClassName );
     }
     catch ( Exception exception )
@@ -1991,10 +1973,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       {
         Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
       }
-    }
-    finally
-    {
-      Thread.currentThread().setContextClassLoader( oldCL );
     }
   }
 }
