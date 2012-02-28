@@ -48,6 +48,14 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
    */
   static class BasicMouseHandler extends MouseAdapter
   {
+    // CONSTANTS
+
+    /**
+     * Defines the area around each cursor in which the mouse cursor should be
+     * in before the cursor can be moved.
+     */
+    private static final int CURSOR_SENSITIVITY_AREA = 4;
+
     // VARIABLES
 
     private final SignalDiagramController controller;
@@ -198,7 +206,20 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
      */
     protected final Cursor findCursor( final Point aPoint )
     {
-      return getModel().findCursor( aPoint );
+      final SignalDiagramModel model = getModel();
+
+      final long refIdx = model.locationToTimestamp( aPoint );
+      final double snapArea = CURSOR_SENSITIVITY_AREA / model.getZoomFactor();
+
+      for ( Cursor cursor : model.getDefinedCursors() )
+      {
+        if ( cursor.inArea( refIdx, snapArea ) )
+        {
+          return cursor;
+        }
+      }
+
+      return null;
     }
 
     /**

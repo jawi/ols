@@ -274,39 +274,6 @@ public class TimeLineViewModel extends AbstractViewModel
   }
 
   /**
-   * Returns the increment of pixels per timeline tick.
-   * 
-   * @return a tick increment, >= 1.0.
-   * @see #getTimebase()
-   */
-  public double getTickIncrement()
-  {
-    return getSignalDiagramModel().getTickIncrement();
-  }
-
-  /**
-   * Determines the time base for the given absolute time (= total time
-   * displayed).
-   * 
-   * @return a time base, as power of 10.
-   */
-  public double getTimebase()
-  {
-    return getSignalDiagramModel().getTimebase();
-  }
-
-  /**
-   * Returns the increment of pixels per unit of time.
-   * 
-   * @return a time increment, >= 0.1.
-   * @see #getTimebase()
-   */
-  public double getTimeIncrement()
-  {
-    return getSignalDiagramModel().getTimeIncrement();
-  }
-
-  /**
    * Returns the height of the time line component.
    * 
    * @return a height, in pixels, > 0.

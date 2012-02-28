@@ -55,12 +55,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
 
   // CONSTANTS
 
-  /**
-   * Defines the area around each cursor in which the mouse cursor should be in
-   * before the cursor can be moved.
-   */
-  private static final int CURSOR_SENSITIVITY_AREA = 4;
-
   /** The tick increment (in pixels). */
   private static final int TIMELINE_INCREMENT = 5;
 
@@ -258,31 +252,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   }
 
   /**
-   * Finds a cursor based on a given screen coordinate.
-   * 
-   * @param aPoint
-   *          the coordinate to find the cursor for, cannot be <code>null</code>
-   *          .
-   * @return the cursor if found, or <code>null</code> if no cursor was found.
-   */
-  public Cursor findCursor( final Point aPoint )
-  {
-    final long refIdx = locationToTimestamp( aPoint );
-
-    final double snapArea = CURSOR_SENSITIVITY_AREA / getZoomFactor();
-
-    for ( Cursor cursor : this.dataSet.getCursors() )
-    {
-      if ( cursor.inArea( refIdx, snapArea ) )
-      {
-        return cursor;
-      }
-    }
-
-    return null;
-  }
-
-  /**
    * Finds a signal element based on a given screen coordinate.
    * 
    * @param aPoint
@@ -350,32 +319,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
    */
   public int getAbsoluteScreenHeight()
   {
-    int height = 0;
-    for ( ElementGroup cg : getSignalElementManager().getGroups() )
-    {
-      if ( !cg.isVisible() )
-      {
-        continue;
-      }
-
-      height += getSignalGroupHeight();
-
-      if ( cg.isShowDigitalSignals() )
-      {
-        height += getDigitalSignalHeight() * cg.getElementCount();
-      }
-      // Always keep these heights into account...
-      if ( cg.isShowGroupSummary() )
-      {
-        height += getGroupSummaryHeight();
-      }
-      if ( cg.isShowAnalogSignal() )
-      {
-        height += getAnalogSignalHeight();
-      }
-    }
-
-    return height;
+    return getSignalElementManager().calculateScreenHeight( this );
   }
 
   /**
@@ -399,14 +343,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   public int getAnalogSignalHeight()
   {
     return this.scopeHeight;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public double getCaptureLength()
-  {
-    return getAbsoluteLength() / ( double )getSampleRate();
   }
 
   /**
@@ -498,10 +434,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     {
       return null;
     }
-    final double factor = getZoomFactor();
-    double start = visibleRect.x / factor;
-    double end = ( visibleRect.x + visibleRect.width ) / factor;
-    return Double.valueOf( ( end - start ) / getSampleRate() );
+    return Double.valueOf( visibleRect.width / ( getZoomFactor() * getSampleRate() ) );
   }
 
   /**
@@ -558,14 +491,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     }
 
     return inc;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public int getSampleCount()
-  {
-    return getValues().length;
   }
 
   /**
@@ -765,22 +690,13 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   }
 
   /**
-   * Returns the increment of pixels per timeline tick.
-   * 
-   * @return a tick increment, >= 1.0.
-   * @see #getTimebase()
-   */
-  public double getTickIncrement()
-  {
-    return Math.max( 1.0, getTimebase() / TIMELINE_INCREMENT );
-  }
-
-  /**
    * Determines the time base for the given absolute time (= total time
    * displayed).
    * 
    * @return a time base, as power of 10.
+   * @deprecated
    */
+  @Deprecated
   public double getTimebase()
   {
     final Rectangle visibleViewSize = this.controller.getSignalDiagram().getVisibleViewSize();
@@ -793,7 +709,9 @@ public class SignalDiagramModel implements SignalElementHeightProvider
    * 
    * @return a time increment, >= 0.1.
    * @see #getTimebase()
+   * @deprecated
    */
+  @Deprecated
   public double getTimeIncrement()
   {
     return Math.max( 0.1, getTimebase() / ( 10.0 * TIMELINE_INCREMENT ) );
@@ -804,7 +722,9 @@ public class SignalDiagramModel implements SignalElementHeightProvider
    * 
    * @return a time interval, in seconds, or <code>null</code> if no time
    *         interval could be determined.
+   * @deprecated
    */
+  @Deprecated
   public Double getTimeInterval()
   {
     if ( !hasData() )
@@ -1398,5 +1318,13 @@ public class SignalDiagramModel implements SignalElementHeightProvider
       return null;
     }
     return this.dataSet.getCapturedData();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  private int getSampleCount()
+  {
+    return getValues().length;
   }
 }

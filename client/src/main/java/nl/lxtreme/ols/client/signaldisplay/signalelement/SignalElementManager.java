@@ -157,6 +157,44 @@ public final class SignalElementManager implements IDataModelChangeListener
   }
 
   /**
+   * Returns the absolute height of the screen.
+   * 
+   * @param aHeightProvider
+   *          the provider for the various element's heights, cannot be
+   *          <code>null</code>.
+   * @return a screen height, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
+   */
+  public int calculateScreenHeight( final SignalElementHeightProvider aHeightProvider )
+  {
+    int height = 0;
+    for ( ElementGroup cg : getGroups() )
+    {
+      if ( !cg.isVisible() )
+      {
+        continue;
+      }
+
+      height += aHeightProvider.getSignalGroupHeight();
+
+      if ( cg.isShowDigitalSignals() )
+      {
+        height += aHeightProvider.getDigitalSignalHeight() * cg.getElementCount();
+      }
+      // Always keep these heights into account...
+      if ( cg.isShowGroupSummary() )
+      {
+        height += aHeightProvider.getGroupSummaryHeight();
+      }
+      if ( cg.isShowAnalogSignal() )
+      {
+        height += aHeightProvider.getAnalogSignalHeight();
+      }
+    }
+
+    return height;
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
