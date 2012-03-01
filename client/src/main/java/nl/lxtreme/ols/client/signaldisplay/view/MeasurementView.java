@@ -43,7 +43,7 @@ import nl.lxtreme.ols.util.swing.component.*;
  * signals, such as frequency, # of pulses and so on.
  */
 public class MeasurementView extends AbstractViewLayer implements IToolWindow, ISignalElementChangeListener,
-    ICursorChangeListener
+    ICursorChangeListener, IMeasurementListener
 {
   // INNER TYPES
 
@@ -64,6 +64,32 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
+   * Provides a renderer for the channels combobox.
+   */
+  static final class ChannelComboBoxRenderer extends DefaultListCellRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      StringBuilder sb = new StringBuilder();
+      if ( ( aValue != null ) && ( aValue instanceof Channel ) )
+      {
+        final Channel channel = ( Channel )aValue;
+        sb.append( channel.getIndex() );
+        if ( channel.hasName() )
+        {
+          sb.append( ", " ).append( channel.getLabel() );
+        }
+      }
+
+      return super.getListCellRendererComponent( aList, sb.toString(), aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
+
+  /**
    * {@link ActionListener} implementation for the cursor comboboxes.
    */
   final class CursorActionListener implements ActionListener
@@ -75,6 +101,32 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     public void actionPerformed( final ActionEvent aEvent )
     {
       updateCursorModels();
+    }
+  }
+
+  /**
+   * Provides a renderer for the cursor combobox.
+   */
+  static final class CursorComboBoxRenderer extends DefaultListCellRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      StringBuilder sb = new StringBuilder();
+      if ( ( aValue != null ) && ( aValue instanceof Cursor ) )
+      {
+        final Cursor cursor = ( Cursor )aValue;
+        sb.append( cursor.getIndex() );
+        if ( cursor.hasLabel() )
+        {
+          sb.append( ": " ).append( cursor.getLabel() );
+        }
+      }
+
+      return super.getListCellRendererComponent( aList, sb.toString(), aIndex, aIsSelected, aCellHasFocus );
     }
   }
 
@@ -92,8 +144,6 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     @Override
     protected String doInBackground() throws Exception
     {
-      MeasurementView.this.indicator.setVisible( true );
-
       final int mask = ( ( Channel )MeasurementView.this.channel.getSelectedItem() ).getMask();
       final long startTimestamp = ( ( Cursor )MeasurementView.this.cursorA.getSelectedItem() ).getTimestamp();
       final long endTimestamp = ( ( Cursor )MeasurementView.this.cursorB.getSelectedItem() ).getTimestamp();
@@ -102,6 +152,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
       final int startIdx = model.getTimestampIndex( startTimestamp );
       final int endIdx = model.getTimestampIndex( endTimestamp );
+
+      final boolean hasTimingData = model.hasTimingData();
 
       final int[] values = model.getValues();
       final long[] timestamps = model.getTimestamps();
@@ -160,10 +212,17 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
           Integer.valueOf( lowCount ), Integer.valueOf( highCount ) );
 
       final StringBuilder sb = new StringBuilder( "<html><table>" );
-      sb.append( "<tr><th align='right'>Time:</th><td>" ).append( timeText ).append( "</td>" );
-      sb.append( "<tr><th align='right'>Frequency:</th><td>" ).append( frequencyText ).append( "</td>" );
-      sb.append( "<tr><th align='right'>Duty cycle:</th><td>" ).append( dutyCycleText ).append( "</td>" );
-      sb.append( "<tr><th align='right'># of pulses:</th><td>" ).append( pulseCountText ).append( "</td>" );
+      if ( hasTimingData )
+      {
+        sb.append( "<tr><th align='right'>Time:</th><td>" ).append( timeText ).append( "</td>" );
+        sb.append( "<tr><th align='right'>Frequency:</th><td>" ).append( frequencyText ).append( "</td>" );
+        sb.append( "<tr><th align='right'>Duty cycle:</th><td>" ).append( dutyCycleText ).append( "</td>" );
+        sb.append( "<tr><th align='right'># of pulses:</th><td>" ).append( pulseCountText ).append( "</td>" );
+      }
+      else
+      {
+        sb.append( "<tr><th align='right'># of states:</th><td>" ).append( pulseCountText ).append( "</td>" );
+      }
       sb.append( "</table></html>" );
 
       return sb.toString();
@@ -177,12 +236,15 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     {
       try
       {
-        MeasurementView.this.indicator.setVisible( false );
         MeasurementView.this.measurementInfo.setText( get() );
       }
       catch ( Exception exception )
       {
         exception.printStackTrace();
+      }
+      finally
+      {
+        MeasurementView.this.indicator.setVisible( false );
       }
     }
   }
@@ -237,6 +299,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
     aController.addChannelChangeListener( result );
     aController.addCursorChangeListener( result );
+    aController.addMeasurementListener( result );
 
     return result;
   }
@@ -288,10 +351,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       updateCursorModels();
     }
 
-    this.channel.setEnabled( false );
-    this.cursorA.setEnabled( false );
-    this.cursorB.setEnabled( false );
-    this.measurementInfo.setText( "" );
+    setState( false );
   }
 
   /**
@@ -305,10 +365,35 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       updateCursorModels();
     }
 
-    this.channel.setEnabled( true );
-    this.cursorA.setEnabled( true );
-    this.cursorB.setEnabled( true );
-    this.measurementInfo.setText( "" );
+    setState( true );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void disableMeasurementMode()
+  {
+    if ( this.listening )
+    {
+      updateCursorModels();
+    }
+
+    setState( false );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void enableMeasurementMode()
+  {
+    if ( this.listening )
+    {
+      updateCursorModels();
+    }
+
+    setState( true );
   }
 
   /**
@@ -339,6 +424,24 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     {
       updateChannelModel( getAllChannels( aSignalElements ) );
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void handleMeasureEvent( final MeasurementInfo aEvent )
+  {
+    // No-op
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isListening()
+  {
+    return this.listening;
   }
 
   /**
@@ -477,6 +580,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   private void initComponent()
   {
     this.channel = updateChannelComboBoxModel( new JComboBox(), Collections.<Channel> emptyList() );
+    this.channel.setRenderer( new ChannelComboBoxRenderer() );
     this.channel.addActionListener( new CursorActionListener() );
     // Make the component a bit smaller and a pop-down on OSX...
     this.channel.putClientProperty( "JComponent.sizeVariant", "small" );
@@ -484,6 +588,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     this.channel.setEnabled( false );
 
     this.cursorA = updateCursorComboBoxModel( new JComboBox() );
+    this.cursorA.setRenderer( new CursorComboBoxRenderer() );
     this.cursorA.addActionListener( new ChannelActionListener() );
     // Make the component a bit smaller and a pop-down on OSX...
     this.cursorA.putClientProperty( "JComponent.sizeVariant", "small" );
@@ -491,6 +596,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     this.cursorA.setEnabled( false );
 
     this.cursorB = updateCursorComboBoxModel( new JComboBox() );
+    this.cursorB.setRenderer( new CursorComboBoxRenderer() );
     this.cursorB.addActionListener( new ChannelActionListener() );
     // Make the component a bit smaller and a pop-down on OSX...
     this.cursorB.putClientProperty( "JComponent.sizeVariant", "small" );
@@ -557,6 +663,24 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
+   * Enables/disables the various components on this view.
+   */
+  private void setState( final boolean aEnabled )
+  {
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        MeasurementView.this.channel.setEnabled( aEnabled );
+        MeasurementView.this.cursorA.setEnabled( aEnabled );
+        MeasurementView.this.cursorB.setEnabled( aEnabled );
+        MeasurementView.this.measurementInfo.setText( "" );
+      }
+    } );
+  }
+
+  /**
    * Updates a given combobox' model to contain the current list of defined
    * cursors.
    * 
@@ -602,7 +726,12 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     {
       if ( canPerformMeasurement() )
       {
+        this.indicator.setVisible( true );
         ( new SignalMeasurer() ).execute();
+      }
+      else
+      {
+        this.measurementInfo.setText( "" );
       }
     }
     finally

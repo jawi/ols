@@ -26,7 +26,6 @@ import java.awt.event.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
@@ -83,35 +82,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
         }
       }
 
-      final String toolTip = getToolTipText( point );
-      setToolTipText( toolTip );
-    }
-
-    /**
-     * Determines what tooltip is to be displayed.
-     * 
-     * @param aPoint
-     *          a current mouse location, cannot be <code>null</code>.
-     * @return a tooltip text, never <code>null</code>.
-     */
-    private String getToolTipText( final Point aPoint )
-    {
-      final SignalDiagramModel signalDiagramModel = getModel();
-
-      final double refTime = signalDiagramModel.getCursorTime( aPoint );
-
-      String toolTip;
-      if ( signalDiagramModel.hasTimingData() )
-      {
-        toolTip = UnitOfTime.toUnit( refTime ).format( refTime, 6 );
-      }
-      else
-      {
-        Integer sampleIdx = Integer.valueOf( ( int )refTime );
-        toolTip = String.format( "Sample: %d", sampleIdx );
-      }
-
-      return toolTip;
+      setToolTipText( ViewUtils.getToolTipText( getModel(), point ) );
     }
   }
 

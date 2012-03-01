@@ -571,10 +571,10 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     scrollPane.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED );
     scrollPane.setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED );
 
-    this.dockController.registerToolWindow( this.signalDetails, "Signal" );
-    this.dockController.registerToolWindow( this.captureDetails, "Signal" );
-    this.dockController.registerToolWindow( this.cursorDetails, "Measure" );
-    this.dockController.registerToolWindow( this.measurementDetails, "Measure" );
+    this.dockController.registerToolWindow( this.signalDetails, DockController.GROUP_MEASURE );
+    this.dockController.registerToolWindow( this.measurementDetails, DockController.GROUP_MEASURE );
+    this.dockController.registerToolWindow( this.captureDetails, DockController.GROUP_SIGNAL );
+    this.dockController.registerToolWindow( this.cursorDetails, DockController.GROUP_SIGNAL );
 
     this.dockController.setMainContent( scrollPane );
 

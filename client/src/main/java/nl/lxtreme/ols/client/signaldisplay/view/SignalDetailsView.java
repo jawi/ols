@@ -89,16 +89,25 @@ public class SignalDetailsView extends AbstractViewLayer implements IToolWindow,
   {
     String channelIdx = "", channelLabel = "";
     String timeValue = "-", totalWidth = "-", pwHigh = "-", pwLow = "-", dc = "-";
+    boolean hasTimingData = true;
 
     if ( aMeasurementInfo != null )
     {
       channelLabel = aMeasurementInfo.getChannelLabel();
       channelIdx = Integer.toString( aMeasurementInfo.getChannelIndex() );
-      timeValue = UnitOfTime.format( aMeasurementInfo.getReferenceTime() );
       totalWidth = getTimeAsString( aMeasurementInfo.getTotalTime() );
       pwHigh = getTimeAsString( aMeasurementInfo.getHighTime() );
       pwLow = getTimeAsString( aMeasurementInfo.getLowTime() );
       dc = getDutyCycleAsString( aMeasurementInfo.getDutyCycle() );
+      hasTimingData = aMeasurementInfo.hasTimingData();
+      if ( hasTimingData )
+      {
+        timeValue = UnitOfTime.format( aMeasurementInfo.getReferenceTime() );
+      }
+      else
+      {
+        timeValue = Integer.toString( ( int )aMeasurementInfo.getReferenceTime() );
+      }
     }
 
     final StringBuilder sb = new StringBuilder( "<html><table>" );
@@ -109,11 +118,18 @@ public class SignalDetailsView extends AbstractViewLayer implements IToolWindow,
       sb.append( ", " ).append( channelLabel );
     }
     sb.append( "</td>" );
-    sb.append( "<tr><th align='right'>Time:</th><td>" ).append( timeValue ).append( "</td>" );
-    sb.append( "<tr><th align='right'>Period:</th><td>" ).append( totalWidth ).append( "</td>" );
-    sb.append( "<tr><th align='right'>Width (H):</th><td>" ).append( pwHigh ).append( "</td>" );
-    sb.append( "<tr><th align='right'>Width (L):</th><td>" ).append( pwLow ).append( "</td>" );
-    sb.append( "<tr><th align='right'>Duty cycle:</th><td>" ).append( dc ).append( "</td>" );
+    if ( hasTimingData )
+    {
+      sb.append( "<tr><th align='right'>Time:</th><td>" ).append( timeValue ).append( "</td>" );
+      sb.append( "<tr><th align='right'>Period:</th><td>" ).append( totalWidth ).append( "</td>" );
+      sb.append( "<tr><th align='right'>Width (H):</th><td>" ).append( pwHigh ).append( "</td>" );
+      sb.append( "<tr><th align='right'>Width (L):</th><td>" ).append( pwLow ).append( "</td>" );
+      sb.append( "<tr><th align='right'>Duty cycle:</th><td>" ).append( dc ).append( "</td>" );
+    }
+    else
+    {
+      sb.append( "<tr><th align='right'>State:</th><td>" ).append( timeValue ).append( "</td>" );
+    }
     sb.append( "</table></html>" );
 
     return sb.toString();

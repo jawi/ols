@@ -570,7 +570,15 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     // Calculate the "absolute" time based on the mouse position, use a
     // "over sampling" factor to allow intermediary (between two time stamps)
     // time value to be shown...
-    final double refTime = getCursorTime( aPoint );
+    final double refTime;
+    if ( hasTimingData() )
+    {
+      refTime = getCursorTime( aPoint );
+    }
+    else
+    {
+      refTime = locationToSampleIndex( aPoint );
+    }
 
     final SignalElement signalElement = findSignalElement( aPoint );
     if ( ( signalElement == null ) || !signalElement.isDigitalSignal() )
@@ -659,10 +667,21 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     // The position where the "other" signal transition should be...
     middleXpos = ( int )( getZoomFactor() * tm );
 
-    final double timeHigh = th / ( double )getSampleRate();
-    final double timeTotal = ( te - ts ) / ( double )getSampleRate();
+    MeasurementInfo result;
+    if ( hasTimingData() )
+    {
+      final double timeHigh = th / ( double )getSampleRate();
+      final double timeTotal = ( te - ts ) / ( double )getSampleRate();
 
-    return new MeasurementInfo( realChannelIdx, channelLabel, rect, ts, te, refTime, timeHigh, timeTotal, middleXpos );
+      result = new MeasurementInfo( realChannelIdx, channelLabel, rect, ts, te, refTime, timeHigh, timeTotal,
+          middleXpos );
+    }
+    else
+    {
+      result = new MeasurementInfo( realChannelIdx, channelLabel, rect, ts, te, refTime, middleXpos );
+    }
+
+    return result;
   }
 
   /**

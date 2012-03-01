@@ -30,6 +30,7 @@ import nl.lxtreme.ols.util.swing.*;
 
 import org.noos.xing.mydoggy.*;
 import org.noos.xing.mydoggy.plaf.*;
+import org.noos.xing.mydoggy.plaf.ui.content.*;
 
 
 /**
@@ -60,6 +61,9 @@ public class DockController
   {
     final MyDoggyToolWindowManager wm = new MyDoggyToolWindowManager( Locale.getDefault(),
         MyDoggyToolWindowManager.class.getClassLoader() );
+
+    final ContentManager contentManager = wm.getContentManager();
+    contentManager.setContentManagerUI( new MyDoggyMultiSplitContentManagerUI() );
 
     this.windowManager = wm;
   }
@@ -111,6 +115,7 @@ public class DockController
         aToolWindow.getIcon(), ( Component )aToolWindow, ToolWindowAnchor.RIGHT );
 
     final ToolWindowGroup group = this.windowManager.getToolWindowGroup( aGroupName );
+    group.setImplicit( true );
     group.addToolWindow( tw );
 
     // Given string is based on some experiments with the best "default"

@@ -22,8 +22,6 @@ package nl.lxtreme.ols.client.signaldisplay;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.util.*;
-
 
 /**
  * Provides a small DTO for keeping signal hover information together.
@@ -41,6 +39,7 @@ public final class MeasurementInfo
   private final Double highTime;
   private final Double totalTime;
   private final Integer midSamplePos;
+  private final boolean hasTimingData;
 
   // CONSTRUCTORS
 
@@ -65,6 +64,7 @@ public final class MeasurementInfo
     this.totalTime = null;
     this.highTime = null;
     this.midSamplePos = null;
+    this.hasTimingData = false;
   }
 
   /**
@@ -103,6 +103,45 @@ public final class MeasurementInfo
     this.totalTime = Double.valueOf( aTotalTime );
     this.highTime = Double.valueOf( aHighTime );
     this.midSamplePos = Integer.valueOf( aMidSamplePos );
+    this.hasTimingData = true;
+  }
+
+  /**
+   * Creates a new SignalHoverInfo instance.
+   * 
+   * @param aChannelIdx
+   *          the channel index on which the hover information is based;
+   * @param aChannelLabel
+   *          the label of the channel;
+   * @param aRectangle
+   *          the UI coordinates defining the hover on screen, cannot be
+   *          <code>null</code>;
+   * @param aStartTimestamp
+   *          the time stamp that makes up the left side of the hover;
+   * @param aEndTimestamp
+   *          the time stamp that makes up the right side of the hover;
+   * @param aRefTime
+   *          the time stamp of this hover, based on the mouse position;
+   * @param aHighTime
+   *          the time the signal is non-zero (high);
+   * @param aTotalTime
+   *          the total time of the signal (high + low);
+   * @param aMidSamplePos
+   *          the screen coordinate of the middle X position.
+   */
+  public MeasurementInfo( final int aChannelIdx, final String aChannelLabel, final Rectangle aRectangle,
+      final long aStartTimestamp, final long aEndTimestamp, final double aRefTime, final int aMidSamplePos )
+  {
+    this.channelIdx = aChannelIdx;
+    this.channelLabel = aChannelLabel;
+    this.rectangle = aRectangle;
+    this.startTimestamp = Long.valueOf( aStartTimestamp );
+    this.endTimestamp = Long.valueOf( aEndTimestamp );
+    this.refTime = aRefTime;
+    this.totalTime = null;
+    this.highTime = null;
+    this.midSamplePos = Integer.valueOf( aMidSamplePos );
+    this.hasTimingData = false;
   }
 
   // METHODS
@@ -326,6 +365,17 @@ public final class MeasurementInfo
   }
 
   /**
+   * Returns whether or not there is timing data available.
+   * 
+   * @return <code>true</code> if the timing data (low, high, total time) is
+   *         present, <code>false</code> otherwise.
+   */
+  public boolean hasTimingData()
+  {
+    return this.hasTimingData;
+  }
+
+  /**
    * Returns whether or not this measurement information is empty, meaning that
    * it doesn't cover any part of a signal.
    * 
@@ -335,36 +385,5 @@ public final class MeasurementInfo
   public boolean isEmpty()
   {
     return this.rectangle.isEmpty();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public String toHtmlString()
-  {
-    final Double tt = getTotalTime();
-
-    final StringBuilder sb = new StringBuilder();
-    sb.append( "<html>" );
-    sb.append( "Channel: " );
-    sb.append( this.channelIdx );
-    if ( this.channelLabel != null )
-    {
-      sb.append( ", " ).append( this.channelLabel );
-    }
-    sb.append( "<br>" );
-    sb.append( "Time: " ).append( UnitOfTime.format( getReferenceTime() ) ).append( "<br>" );
-    sb.append( "Period: " );
-    if ( tt != null )
-    {
-      sb.append( UnitOfTime.format( tt.doubleValue() ) );
-    }
-    else
-    {
-      sb.append( "-" );
-    }
-    sb.append( "<br>" );
-    sb.append( "</html>" );
-    return sb.toString();
   }
 }
