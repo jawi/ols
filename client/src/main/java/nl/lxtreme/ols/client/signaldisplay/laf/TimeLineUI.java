@@ -260,106 +260,106 @@ public class TimeLineUI extends ComponentUI
       canvas.setBackground( model.getBackgroundColor() );
       canvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
-      final double zoomFactor = model.getZoomFactor();
-      final double sampleRate = Math.max( 1, model.getSampleRate() );
-      final long triggerOffset = model.getTriggerOffset();
-
-      final double startTimeStamp = ( clip.x / zoomFactor );
-      final double endTimeStamp = ( ( clip.x + clip.width ) / zoomFactor );
-      final double timeFrame = ( clip.width / zoomFactor );
-
-      final double scaleFactor = model.getTimelineScale();
-      final double unitOfTime = model.getTimelineUnitOfTime().doubleValue();
-
-      final double tickIncr = model.getTimelineTickIncrement().doubleValue();
-      final double timeIncr = model.getTimelineTimeIncrement().doubleValue();
-
-      final double offset = triggerOffset % timeIncr;
-
-      // Start at the first multiple of the time increment we're using...
-      double timestamp = ( Math.round( startTimeStamp / timeIncr ) * timeIncr ) + offset;
-      double majorTimestamp = Math.abs( Math.round( scaleFactor * ( startTimeStamp - triggerOffset ) )
-          % Math.round( ( scaleFactor * tickIncr ) / 2.0 ) );
-
-      // System.out.println( "visible rect = " + clip );
-      // System.out.println( "time = " + UnitOfTime.format( timeFrame /
-      // model.getSampleRate() ) );
-      // System.out.println( "tickIncr = " + tickIncr + ", timeIncr = " +
-      // timeIncr + ", zoomFactor = " + zoomFactor
-      // + ", scaleFactor = " + scaleFactor + ", unitOfTime = " + unitOfTime );
-
       final FontMetrics majorFM = canvas.getFontMetrics( model.getMajorTickLabelFont() );
       final FontMetrics minorFM = canvas.getFontMetrics( model.getMinorTickLabelFont() );
       final int minorFontHeight = minorFM.getHeight();
 
-      while ( timestamp <= endTimeStamp )
+      final double zoomFactor = model.getZoomFactor();
+      final double sampleRate = Math.max( 1, model.getSampleRate() );
+      final long triggerOffset = model.getTriggerOffset();
+
+      final long startX = clip.x;
+      final long endX = ( clip.x + clip.width );
+
+      // p denotes the amount of time per pixel...
+      final double p = 1.0 / ( zoomFactor * sampleRate );
+      // UoT represents a logical unit-of-time...
+      final double uot = Math.pow( 10, Math.ceil( Math.log10( p ) ) );
+      // s denotes the amount of pixels per second...
+      final double s = ( zoomFactor * sampleRate );
+      // ts denotes the number of pixels per unit-of-time...
+      final double ts = uot * s;
+      // tts denotes the tick increment...
+      final double tts = 10 * ts;
+      // to denotes the trigger offset...
+      final double to = ( triggerOffset * zoomFactor ) % tts;
+
+      double timestamp = ( Math.round( startX / tts ) * tts ) + to;
+
+      System.out.println( "p   = " + UnitOfTime.format( p ) + " (Zf = " + zoomFactor + ", Sr = " + sampleRate + ")" );
+      System.out.println( "uot = " + UnitOfTime.format( uot ) );
+      System.out.println( "ts  = " + ts + "px; to = " + to );
+
+      System.out.println( "clip= " + clip );
+      System.out.println( "t   = " + timestamp + " [" + startX + ".." + endX + "]" );
+
+      int tick = 0;
+      while ( timestamp <= endX )
       {
-        int relXpos = ( int )Math.round( zoomFactor * timestamp ) - 1;
-        double abs = Math.abs( Math.round( scaleFactor * ( timestamp - triggerOffset ) )
-            % Math.round( ( scaleFactor * tickIncr ) / 2.0 ) );
-        double abs2 = Math.abs( Math.round( scaleFactor * ( timestamp - triggerOffset ) )
-            % Math.round( scaleFactor * tickIncr ) );
+        int relXpos = ( int )Math.round( timestamp );
 
-        // System.out.printf( "T = %d, T%%tI = %f, %f\n", relXpos, abs, abs2 );
-
-        if ( abs != 0.0 )
+        if ( ( tick++ % 10 ) == 0 )
         {
           canvas.setColor( model.getTickColor() );
 
           canvas.drawLine( relXpos, baseTickYpos, relXpos, tickYpos );
         }
-        else
-        {
-          boolean major = ( ( abs2 - abs ) < 1.0e-6 );
-          // System.out.println( timestamp + ", " + major );
+        // else
+        // {
+        // boolean major = ( ( abs2 - abs ) < 1.0e-6 );
+        // // System.out.println( timestamp + ", " + major );
+        //
+        // final String timeStr;
+        // final int textWidth;
+        // final int textHeight;
+        // final int tickHeight;
+        //
+        // if ( major )
+        // {
+        // majorTimestamp = timestamp - triggerOffset;
+        //
+        // timeStr = getMajorTimestamp( model, majorTimestamp / sampleRate,
+        // unitOfTime / sampleRate );
+        //
+        // canvas.setFont( model.getMajorTickLabelFont() );
+        //
+        // textWidth = majorFM.stringWidth( timeStr ) + TEXT_PADDING_X;
+        // textHeight = 2 * minorFontHeight;
+        //
+        // canvas.setColor( model.getMajorTickColor() );
+        //
+        // tickHeight = majorTickYpos;
+        // }
+        // else
+        // {
+        // double time = Math.abs( ( majorTimestamp - timestamp ) +
+        // triggerOffset );
+        //
+        // timeStr = getMinorTimestamp( model, time / sampleRate, unitOfTime /
+        // sampleRate );
+        //
+        // canvas.setFont( model.getMinorTickLabelFont() );
+        //
+        // textWidth = minorFM.stringWidth( timeStr ) + TEXT_PADDING_X;
+        // textHeight = minorFontHeight;
+        //
+        // canvas.setColor( model.getMinorTickColor() );
+        //
+        // tickHeight = minorTickYpos;
+        // }
+        //
+        // canvas.drawLine( relXpos, baseTickYpos, relXpos, tickHeight );
+        //
+        // int textXpos = Math.max( 0, ( int )( relXpos - ( textWidth / 2.0 ) )
+        // ) + 1;
+        // int textYpos = Math.max( 1, ( baseTickYpos - textHeight ) );
+        //
+        // canvas.setColor( model.getTextColor() );
+        //
+        // canvas.drawString( timeStr, textXpos, textYpos );
+        // }
 
-          final String timeStr;
-          final int textWidth;
-          final int textHeight;
-          final int tickHeight;
-
-          if ( major )
-          {
-            majorTimestamp = timestamp - triggerOffset;
-
-            timeStr = getMajorTimestamp( model, majorTimestamp / sampleRate, unitOfTime / sampleRate );
-
-            canvas.setFont( model.getMajorTickLabelFont() );
-
-            textWidth = majorFM.stringWidth( timeStr ) + TEXT_PADDING_X;
-            textHeight = 2 * minorFontHeight;
-
-            canvas.setColor( model.getMajorTickColor() );
-
-            tickHeight = majorTickYpos;
-          }
-          else
-          {
-            double time = Math.abs( ( majorTimestamp - timestamp ) + triggerOffset );
-
-            timeStr = getMinorTimestamp( model, time / sampleRate, unitOfTime / sampleRate );
-
-            canvas.setFont( model.getMinorTickLabelFont() );
-
-            textWidth = minorFM.stringWidth( timeStr ) + TEXT_PADDING_X;
-            textHeight = minorFontHeight;
-
-            canvas.setColor( model.getMinorTickColor() );
-
-            tickHeight = minorTickYpos;
-          }
-
-          canvas.drawLine( relXpos, baseTickYpos, relXpos, tickHeight );
-
-          int textXpos = Math.max( 0, ( int )( relXpos - ( textWidth / 2.0 ) ) ) + 1;
-          int textYpos = Math.max( 1, ( baseTickYpos - textHeight ) );
-
-          canvas.setColor( model.getTextColor() );
-
-          canvas.drawString( timeStr, textXpos, textYpos );
-        }
-
-        timestamp = ( timestamp + timeIncr );
+        timestamp = ( timestamp + ts );
       }
 
       // Draw the cursor "flags"...
