@@ -268,11 +268,11 @@ public class TimeLineUI extends ComponentUI
       final double endTimeStamp = ( ( clip.x + clip.width ) / zoomFactor );
       final double timeFrame = ( clip.width / zoomFactor );
 
-      final double scaleFactor = Math.pow( 10, Math.floor( Math.log10( zoomFactor ) ) );
-      final double unitOfTime = Math.pow( 10, Math.floor( Math.log10( timeFrame / sampleRate ) ) ) * sampleRate;
+      final double scaleFactor = model.getTimelineScale();
+      final double unitOfTime = model.getTimelineUnitOfTime().doubleValue();
 
-      final double tickIncr = Math.round( scaleFactor * unitOfTime ) / scaleFactor;
-      final double timeIncr = tickIncr / 10.0;
+      final double tickIncr = model.getTimelineTickIncrement().doubleValue();
+      final double timeIncr = model.getTimelineTimeIncrement().doubleValue();
 
       final double offset = triggerOffset % timeIncr;
 
@@ -281,10 +281,12 @@ public class TimeLineUI extends ComponentUI
       double majorTimestamp = Math.abs( Math.round( scaleFactor * ( startTimeStamp - triggerOffset ) )
           % Math.round( ( scaleFactor * tickIncr ) / 2.0 ) );
 
-      System.out.println( "visible rect = " + clip );
-      System.out.println( "start time = " + startTimeStamp + ", end time = " + endTimeStamp + ", time = " + timeFrame );
-      System.out.println( "tickIncr = " + tickIncr + ", timeIncr = " + timeIncr + ", zoomFactor = " + zoomFactor
-          + ", scaleFactor = " + scaleFactor + ", unitOfTime = " + unitOfTime );
+      // System.out.println( "visible rect = " + clip );
+      // System.out.println( "time = " + UnitOfTime.format( timeFrame /
+      // model.getSampleRate() ) );
+      // System.out.println( "tickIncr = " + tickIncr + ", timeIncr = " +
+      // timeIncr + ", zoomFactor = " + zoomFactor
+      // + ", scaleFactor = " + scaleFactor + ", unitOfTime = " + unitOfTime );
 
       final FontMetrics majorFM = canvas.getFontMetrics( model.getMajorTickLabelFont() );
       final FontMetrics minorFM = canvas.getFontMetrics( model.getMinorTickLabelFont() );

@@ -359,39 +359,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   }
 
   /**
-   * Converts the X-coordinate of the given {@link Point} to a precise
-   * timestamp, useful for display purposes.
-   * 
-   * @param aPoint
-   *          the X,Y-coordinate to convert to a precise timestamp, cannot be
-   *          <code>null</code>.
-   * @return a precise timestamp, as double value.
-   * @see DisplayUtils#displayTime(double)
-   */
-  public double getCursorTime( final Point aPoint )
-  {
-    // Calculate the "absolute" time based on the mouse position, use a
-    // "over sampling" factor to allow intermediary (between two time stamps)
-    // time value to be shown...
-    final double zoomFactor = getZoomFactor();
-    final double scaleFactor = TIMESTAMP_FACTOR * zoomFactor;
-
-    // Convert mouse position to absolute timestamp...
-    double x = aPoint.x / zoomFactor;
-    // Take (optional) trigger position into account...
-    final Long triggerPos = getTriggerPosition();
-    if ( triggerPos != null )
-    {
-      x -= triggerPos.longValue();
-    }
-    // If no sample rate is available, we use a factor of 1; which doesn't
-    // make a difference in the result...
-    final int sampleRate = Math.max( 1, getSampleRate() );
-
-    return ( scaleFactor * x ) / ( scaleFactor * sampleRate );
-  }
-
-  /**
    * Returns all defined cursors.
    * 
    * @return an array of defined cursors, never <code>null</code>.
@@ -573,7 +540,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     final double refTime;
     if ( hasTimingData() )
     {
-      refTime = getCursorTime( aPoint );
+      refTime = getTimestamp( aPoint );
     }
     else
     {
@@ -751,6 +718,100 @@ public class SignalDiagramModel implements SignalElementHeightProvider
       return null;
     }
     return Double.valueOf( getTimeIncrement() / getSampleRate() );
+  }
+
+  /**
+   * Returns the scale in which the timeline should be displayed, in powers of
+   * ten.
+   * 
+   * @return a timeline scale value, > 0.
+   */
+  public double getTimelineScale()
+  {
+    return Math.pow( 10, Math.floor( Math.log10( getZoomFactor() ) ) );
+  }
+
+  /**
+   * @return
+   */
+  public Double getTimelineTickIncrement()
+  {
+    if ( !hasData() )
+    {
+      return null;
+    }
+
+    final double zoomFactor = getZoomFactor();
+    final int sampleRate = Math.max( 1, getSampleRate() );
+
+    final Rectangle visibleViewSize = this.controller.getSignalDiagram().getVisibleViewSize();
+    final double timeFrame = ( visibleViewSize.width / zoomFactor );
+
+    double exp = Math.floor( Math.log10( zoomFactor ) ) + Math.floor( Math.log10( timeFrame / sampleRate ) );
+
+    return Double.valueOf( Math.round( sampleRate * Math.pow( 10, exp ) ) / getTimelineScale() );
+  }
+
+  /**
+   * @return
+   */
+  public Double getTimelineTimeIncrement()
+  {
+    final Double tickIncr = getTimelineTickIncrement();
+    if ( tickIncr == null )
+    {
+      return null;
+    }
+    return Double.valueOf( tickIncr.doubleValue() / 10.0 );
+  }
+
+  /**
+   * @return a timeline unit of time, > 0, can only be <code>null</code> if
+   *         there is no data.
+   */
+  public Double getTimelineUnitOfTime()
+  {
+    if ( !hasData() )
+    {
+      return null;
+    }
+    final Rectangle visibleViewSize = this.controller.getSignalDiagram().getVisibleViewSize();
+    final double timeFrame = ( visibleViewSize.width / getZoomFactor() );
+    final int sampleRate = Math.max( 1, getSampleRate() );
+    return Math.pow( 10, Math.floor( Math.log10( timeFrame / sampleRate ) ) ) * sampleRate;
+  }
+
+  /**
+   * Converts the X-coordinate of the given {@link Point} to a precise
+   * timestamp, useful for display purposes.
+   * 
+   * @param aPoint
+   *          the X,Y-coordinate to convert to a precise timestamp, cannot be
+   *          <code>null</code>.
+   * @return a precise timestamp, as double value.
+   * @see DisplayUtils#displayTime(double)
+   */
+  public double getTimestamp( final Point aPoint )
+  {
+    // Calculate the "absolute" time based on the mouse position, use a
+    // "over sampling" factor to allow intermediary (between two time stamps)
+    // time value to be shown...
+    final double zoomFactor = getZoomFactor();
+    final double scaleFactor = TIMESTAMP_FACTOR * zoomFactor;
+
+    // Convert mouse position to absolute timestamp...
+    double x = aPoint.x / zoomFactor;
+    // Take (optional) trigger position into account...
+    final Long triggerPos = getTriggerPosition();
+    if ( triggerPos != null )
+    {
+      x -= triggerPos.longValue();
+    }
+    // If no sample rate is available, we use a factor of 1; which doesn't
+    // make a difference in the result...
+    final int sampleRate = Math.max( 1, getSampleRate() );
+
+    return ( scaleFactor * x ) / ( scaleFactor * sampleRate );
   }
 
   /**

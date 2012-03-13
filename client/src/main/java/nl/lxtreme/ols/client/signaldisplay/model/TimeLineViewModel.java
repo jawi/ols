@@ -289,6 +289,38 @@ public class TimeLineViewModel extends AbstractViewModel
   }
 
   /**
+   * @see SignalDiagramModel#getTimelineScale()
+   */
+  public double getTimelineScale()
+  {
+    return getSignalDiagramModel().getTimelineScale();
+  }
+
+  /**
+   * @see SignalDiagramModel#getTimelineTickIncrement()
+   */
+  public Double getTimelineTickIncrement()
+  {
+    return getSignalDiagramModel().getTimelineTickIncrement();
+  }
+
+  /**
+   * @see SignalDiagramModel#getTimelineTimeIncrement()
+   */
+  public Double getTimelineTimeIncrement()
+  {
+    return getSignalDiagramModel().getTimelineTimeIncrement();
+  }
+
+  /**
+   * @see SignalDiagramModel#getTimelineUnitOfTime()
+   */
+  public Double getTimelineUnitOfTime()
+  {
+    return getSignalDiagramModel().getTimelineUnitOfTime();
+  }
+
+  /**
    * Returns whether the data is a timed-capture or a state-capture.
    * 
    * @return <code>true</code> if there is timing data available,

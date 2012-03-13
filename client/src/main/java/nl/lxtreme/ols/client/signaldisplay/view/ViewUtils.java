@@ -41,22 +41,97 @@ final class ViewUtils
    *          a current mouse location, cannot be <code>null</code>.
    * @return a tooltip text, never <code>null</code>.
    */
-  public static String getToolTipText( final SignalDiagramModel aModel, final Point aPoint )
+  public static String formatReference( final boolean aHasTimingInformation, final double aRefTime )
   {
-    String toolTip;
-    if ( aModel.hasTimingData() )
+    final String toolTip;
+    if ( aHasTimingInformation )
     {
-      final double refTime = aModel.getCursorTime( aPoint );
-      toolTip = UnitOfTime.toUnit( refTime ).format( refTime, 6 );
+      toolTip = formatTimestamp( aRefTime );
     }
     else
     {
-      final int refIndex = aModel.locationToSampleIndex( aPoint );
-      Integer sampleIdx = Integer.valueOf( refIndex );
-      toolTip = String.format( "Sample: %d", sampleIdx );
+      toolTip = formatStateValue( ( int )aRefTime );
     }
 
     return toolTip;
+  }
+
+  /**
+   * Returns the duty cycle as formatted String value.
+   * 
+   * @return a String representation, never <code>null</code>.
+   */
+  public static String formatDutyCycle( final Double aDC )
+  {
+    if ( aDC != null )
+    {
+      return String.format( "%.1f %%", aDC );
+    }
+    return "-";
+  }
+
+  /**
+   * Returns the given double value as time string.
+   * 
+   * @return a time representation.
+   */
+  public static String formatTime( final Double aTime )
+  {
+    if ( aTime != null )
+    {
+      return UnitOfTime.format( aTime.doubleValue() );
+    }
+    return "-";
+  }
+
+  /**
+   * Determines what tooltip is to be displayed.
+   * 
+   * @param aPoint
+   *          a current mouse location, cannot be <code>null</code>.
+   * @return a tooltip text, never <code>null</code>.
+   */
+  public static String getToolTipText( final SignalDiagramModel aModel, final double aRefTime )
+  {
+    return formatReference( aModel.hasTimingData(), aRefTime );
+  }
+
+  /**
+   * Determines what tooltip is to be displayed.
+   * 
+   * @param aPoint
+   *          a current mouse location, cannot be <code>null</code>.
+   * @return a tooltip text, never <code>null</code>.
+   */
+  public static String getToolTipText( final SignalDiagramModel aModel, final Point aPoint )
+  {
+    final boolean hasTimingData = aModel.hasTimingData();
+    return formatReference( hasTimingData,
+        hasTimingData ? aModel.getTimestamp( aPoint ) : aModel.locationToSampleIndex( aPoint ) );
+  }
+
+  /**
+   * Formats a given sample index as state value.
+   * 
+   * @param aSampleIdx
+   *          the sample index to format.
+   * @return a state value formatted string, never <code>null</code>.
+   */
+  private static String formatStateValue( final int aSampleIdx )
+  {
+    return "State: ".concat( Integer.toString( aSampleIdx ) );
+  }
+
+  /**
+   * Formats a given time as human readable timestamp.
+   * 
+   * @param aTime
+   *          the time to format.
+   * @return a timestamp, never <code>null</code>.
+   */
+  private static String formatTimestamp( final double aTime )
+  {
+    return UnitOfTime.toUnit( aTime ).formatHumanReadable( aTime );
   }
 
 }

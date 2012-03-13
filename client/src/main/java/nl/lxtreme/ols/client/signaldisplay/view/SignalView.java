@@ -676,8 +676,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
 
     if ( aEvent != null )
     {
-      // TODO location is incorrect!
-      setToolTipText( ViewUtils.getToolTipText( getSignalDiagramModel(), aEvent.getRectangle().getLocation() ) );
+      setToolTipText( ViewUtils.getToolTipText( getSignalDiagramModel(), aEvent.getReferenceTime() ) );
     }
     else
     {

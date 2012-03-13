@@ -527,7 +527,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private JMenu cursorsMenu;
 
   private final SignalDetailsView signalDetails;
-  private final CaptureDetailsView captureDetails;
+  private final AcquisitionDetailsView captureDetails;
   private final CursorDetailsView cursorDetails;
   private final MeasurementView measurementDetails;
 
@@ -554,7 +554,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.status = new JTextStatusBar();
 
     this.signalDetails = SignalDetailsView.create( this.controller.getSignalDiagramController() );
-    this.captureDetails = CaptureDetailsView.create( this.controller.getSignalDiagramController() );
+    this.captureDetails = AcquisitionDetailsView.create( this.controller.getSignalDiagramController() );
     this.cursorDetails = CursorDetailsView.create( this.controller.getSignalDiagramController() );
     this.measurementDetails = MeasurementView.create( this.controller.getSignalDiagramController() );
 

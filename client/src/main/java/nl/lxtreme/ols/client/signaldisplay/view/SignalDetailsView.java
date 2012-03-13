@@ -24,9 +24,10 @@ import java.awt.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.swing.*;
+
+import static nl.lxtreme.ols.client.signaldisplay.view.ViewUtils.*;
 
 
 /**
@@ -88,26 +89,20 @@ public class SignalDetailsView extends AbstractViewLayer implements IToolWindow,
   private static String asText( final MeasurementInfo aMeasurementInfo )
   {
     String channelIdx = "", channelLabel = "";
-    String timeValue = "-", totalWidth = "-", pwHigh = "-", pwLow = "-", dc = "-";
+    String reference = "-", totalWidth = "-", pwHigh = "-", pwLow = "-", dc = "-";
     boolean hasTimingData = true;
 
     if ( aMeasurementInfo != null )
     {
+      hasTimingData = aMeasurementInfo.hasTimingData();
+
       channelLabel = aMeasurementInfo.getChannelLabel();
       channelIdx = Integer.toString( aMeasurementInfo.getChannelIndex() );
-      totalWidth = getTimeAsString( aMeasurementInfo.getTotalTime() );
-      pwHigh = getTimeAsString( aMeasurementInfo.getHighTime() );
-      pwLow = getTimeAsString( aMeasurementInfo.getLowTime() );
-      dc = getDutyCycleAsString( aMeasurementInfo.getDutyCycle() );
-      hasTimingData = aMeasurementInfo.hasTimingData();
-      if ( hasTimingData )
-      {
-        timeValue = UnitOfTime.format( aMeasurementInfo.getReferenceTime() );
-      }
-      else
-      {
-        timeValue = Integer.toString( ( int )aMeasurementInfo.getReferenceTime() );
-      }
+      totalWidth = formatTime( aMeasurementInfo.getTotalTime() );
+      pwHigh = formatTime( aMeasurementInfo.getHighTime() );
+      pwLow = formatTime( aMeasurementInfo.getLowTime() );
+      dc = formatDutyCycle( aMeasurementInfo.getDutyCycle() );
+      reference = formatReference( hasTimingData, aMeasurementInfo.getReferenceTime() );
     }
 
     final StringBuilder sb = new StringBuilder( "<html><table>" );
@@ -120,7 +115,7 @@ public class SignalDetailsView extends AbstractViewLayer implements IToolWindow,
     sb.append( "</td>" );
     if ( hasTimingData )
     {
-      sb.append( "<tr><th align='right'>Time:</th><td>" ).append( timeValue ).append( "</td>" );
+      sb.append( "<tr><th align='right'>Time:</th><td>" ).append( reference ).append( "</td>" );
       sb.append( "<tr><th align='right'>Period:</th><td>" ).append( totalWidth ).append( "</td>" );
       sb.append( "<tr><th align='right'>Width (H):</th><td>" ).append( pwHigh ).append( "</td>" );
       sb.append( "<tr><th align='right'>Width (L):</th><td>" ).append( pwLow ).append( "</td>" );
@@ -128,39 +123,11 @@ public class SignalDetailsView extends AbstractViewLayer implements IToolWindow,
     }
     else
     {
-      sb.append( "<tr><th align='right'>State:</th><td>" ).append( timeValue ).append( "</td>" );
+      sb.append( "<tr><th align='right'>State:</th><td>" ).append( reference ).append( "</td>" );
     }
     sb.append( "</table></html>" );
 
     return sb.toString();
-  }
-
-  /**
-   * Returns the duty cycle as formatted String value.
-   * 
-   * @return a String representation, never <code>null</code>.
-   */
-  private static String getDutyCycleAsString( final Double aDC )
-  {
-    if ( aDC != null )
-    {
-      return String.format( "%.1f %%", aDC );
-    }
-    return "-";
-  }
-
-  /**
-   * Returns the given double value as time string.
-   * 
-   * @return a time representation.
-   */
-  private static String getTimeAsString( final Double aTime )
-  {
-    if ( aTime != null )
-    {
-      return UnitOfTime.format( aTime.doubleValue() );
-    }
-    return "-";
   }
 
   /**

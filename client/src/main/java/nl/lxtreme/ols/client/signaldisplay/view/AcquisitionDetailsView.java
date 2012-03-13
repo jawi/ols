@@ -35,9 +35,10 @@ import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * 
+ * Provides a dockable tool window that shows details on the acquisition, like
+ * sample rate, sample count, total capture time, etc.
  */
-public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow, IDataModelChangeListener,
+public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWindow, IDataModelChangeListener,
     ZoomListener
 {
   // CONSTANTS
@@ -55,6 +56,8 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
   private volatile String tickInterval = "-";
   private volatile String displayedTime = "-";
 
+  private volatile String scaleFactor = "-";
+
   private final JLabel captureInfoField;
 
   // CONSTRUCTORS
@@ -65,7 +68,7 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
    * @param aController
    *          the diagram controller to use, cannot be <code>null</code>.
    */
-  private CaptureDetailsView( final SignalDiagramController aController )
+  private AcquisitionDetailsView( final SignalDiagramController aController )
   {
     super( aController );
 
@@ -75,16 +78,17 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
   // METHODS
 
   /**
-   * Factory method to create a new {@link CaptureDetailsView} instance.
+   * Factory method to create a new {@link AcquisitionDetailsView} instance.
    * 
    * @param aController
    *          the controller to use for the SignalDetailsView instance, cannot
    *          be <code>null</code>.
-   * @return a new {@link CaptureDetailsView} instance, never <code>null</code>.
+   * @return a new {@link AcquisitionDetailsView} instance, never
+   *         <code>null</code>.
    */
-  public static CaptureDetailsView create( final SignalDiagramController aController )
+  public static AcquisitionDetailsView create( final SignalDiagramController aController )
   {
-    final CaptureDetailsView result = new CaptureDetailsView( aController );
+    final AcquisitionDetailsView result = new AcquisitionDetailsView( aController );
     result.initComponent();
 
     aController.addDataModelChangeListener( result );
@@ -106,6 +110,7 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
 
     this.tickInterval = null;
     this.displayedTime = null;
+    this.scaleFactor = null;
 
     if ( ( aDataSet != null ) && ( aDataSet.getCapturedData() != null ) )
     {
@@ -159,27 +164,33 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
 
     if ( this.tickInterval == null )
     {
-      final Double timeInterval = model.getTimeInterval();
+      final Double timeInterval = model.getTimelineTimeIncrement();
       if ( timeInterval != null )
       {
-        this.tickInterval = UnitOfTime.format( timeInterval.doubleValue() );
+        this.tickInterval = UnitOfTime.format( timeInterval.doubleValue() / model.getSampleRate() );
       }
       else
       {
         this.tickInterval = "-";
       }
     }
-    if ( this.displayedTime == null )
+
+    if ( this.scaleFactor == null )
     {
-      final Double displayedTimeInterval = model.getDisplayedTimeInterval();
-      if ( displayedTimeInterval != null )
+      final Double scaleFactor = model.getTimelineScale();
+      if ( scaleFactor != null )
       {
-        this.displayedTime = UnitOfTime.format( displayedTimeInterval.doubleValue() );
+        this.scaleFactor = UnitOfTime.format( scaleFactor.doubleValue() / model.getSampleRate() );
       }
       else
       {
-        this.displayedTime = "-";
+        this.scaleFactor = "-";
       }
+    }
+
+    if ( this.displayedTime == null )
+    {
+      this.displayedTime = ViewUtils.formatTime( model.getDisplayedTimeInterval() );
     }
 
     this.captureInfoField.setText( asText() );
@@ -197,9 +208,11 @@ public class CaptureDetailsView extends AbstractViewLayer implements IToolWindow
     sb.append( "<tr><th align='right'>Sample count:</th><td>" ).append( this.sampleCount ).append( "</td>" );
     sb.append( "<tr><th align='right'>Sample rate:</th><td align='right'>" ).append( this.sampleRate ).append( "</td>" );
     sb.append( "<tr><th align='right'>Sample time:</th><td align='right'>" ).append( this.totalWidth ).append( "</td>" );
+    sb.append( "<tr><th align='right'>Displayed time:</th><td align='right'>" ).append( this.displayedTime )
+        .append( "</td>" );
     sb.append( "<tr><th align='right'>Tick interval:</th><td align='right'>" ).append( this.tickInterval )
         .append( "</td>" );
-    sb.append( "<tr><th align='right'>Displayed time:</th><td align='right'>" ).append( this.displayedTime )
+    sb.append( "<tr><th align='right'>Timeline scale:</th><td align='right'>" ).append( this.scaleFactor )
         .append( "</td>" );
     sb.append( "</table></html>" );
 
