@@ -49,6 +49,21 @@ public class UnitOfTimeTest
   }
 
   /**
+   * Test method for
+   * {@link nl.lxtreme.ols.api.util.UnitOfTime#formatHumanReadable(double)}.
+   */
+  @Test
+  public void testFormatHumanReadableOk()
+  {
+    assertEquals( "0.0s", UnitOfTime.S.formatHumanReadable( 0 ) );
+    assertEquals( "1.0ms", UnitOfTime.MS.formatHumanReadable( 1.0e-3 ) );
+    assertEquals( "-1.0ms", UnitOfTime.MS.formatHumanReadable( -1.0e-3 ) );
+    assertEquals( "1.2345ns", UnitOfTime.NS.formatHumanReadable( 1.2345e-9 ) );
+    assertEquals( "1.00001s", UnitOfTime.S.formatHumanReadable( 1.00001 ) );
+    assertEquals( "1050.607s", UnitOfTime.S.formatHumanReadable( 1.050607e3 ) );
+  }
+
+  /**
    * Test method for {@link nl.lxtreme.ols.api.util.UnitOfTime#predecessor()}.
    */
   @Test

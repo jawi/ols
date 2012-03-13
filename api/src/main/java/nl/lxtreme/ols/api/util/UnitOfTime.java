@@ -109,7 +109,7 @@ public enum UnitOfTime
 
   /**
    * Returns the given time as string representation using this time unit's
-   * display name.
+   * display name and a fixed number of digits after the decimal separator.
    * 
    * @param aTime
    *          the time (in seconds) to convert to a string representation;
@@ -130,6 +130,33 @@ public enum UnitOfTime
     final Double time = Double.valueOf( aTime / getFactor() );
     final String format = String.format( "%%.%df%%s", Integer.valueOf( aScale ) );
     return String.format( format, time, getDisplayName() );
+  }
+
+  /**
+   * Returns the given time as string representation using this time unit's
+   * display name and the least number of digits after the decimal separator.
+   * 
+   * @param aTime
+   *          the time (in seconds) to convert to a string representation;
+   * @param aScale
+   *          the scale (= number of digits after decimal separator) to use in
+   *          the string representation.
+   * @return a string representation of the given time, like "1.453ms", never
+   *         <code>null</code>.
+   */
+  public String formatHumanReadable( final double aTime )
+  {
+    // For *very* small sizes, we simply always yield zero...
+    if ( ( Math.abs( aTime ) < ZERO_THRESHOLD ) && ( this != S ) )
+    {
+      return S.formatHumanReadable( 0.0 );
+    }
+
+    final Double time = Double.valueOf( aTime / getFactor() );
+    String formattedTime = String.format( "%.9f", time );
+    formattedTime = formattedTime.replaceAll( "(\\d)0+$", "$1" );
+
+    return String.format( "%s%s", formattedTime, getDisplayName() );
   }
 
   /**
