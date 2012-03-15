@@ -204,6 +204,14 @@ public class TimeLineViewModel extends AbstractViewModel
   }
 
   /**
+   * @see SignalDiagramModel#getTimelinePixelsPerSecond()
+   */
+  public double getPixelsPerSecond()
+  {
+    return getSignalDiagramModel().getTimelinePixelsPerSecond().doubleValue();
+  }
+
+  /**
    * Returns the sample rate of the sampled data.
    * 
    * @return a sample rate, in Hertz.
@@ -211,6 +219,14 @@ public class TimeLineViewModel extends AbstractViewModel
   public int getSampleRate()
   {
     return getSignalDiagramModel().getSampleRate();
+  }
+
+  /**
+   * @see SignalDiagramModel#getTimelineSecondsPerPixel()
+   */
+  public double getSecondsPerPixel()
+  {
+    return getSignalDiagramModel().getTimelineSecondsPerPixel().doubleValue();
   }
 
   /**
@@ -289,35 +305,11 @@ public class TimeLineViewModel extends AbstractViewModel
   }
 
   /**
-   * @see SignalDiagramModel#getTimelineScale()
-   */
-  public double getTimelineScale()
-  {
-    return getSignalDiagramModel().getTimelineScale();
-  }
-
-  /**
-   * @see SignalDiagramModel#getTimelineTickIncrement()
-   */
-  public Double getTimelineTickIncrement()
-  {
-    return getSignalDiagramModel().getTimelineTickIncrement();
-  }
-
-  /**
-   * @see SignalDiagramModel#getTimelineTimeIncrement()
-   */
-  public Double getTimelineTimeIncrement()
-  {
-    return getSignalDiagramModel().getTimelineTimeIncrement();
-  }
-
-  /**
    * @see SignalDiagramModel#getTimelineUnitOfTime()
    */
-  public Double getTimelineUnitOfTime()
+  public double getUnitOfTime()
   {
-    return getSignalDiagramModel().getTimelineUnitOfTime();
+    return getSignalDiagramModel().getTimelineUnitOfTime().doubleValue();
   }
 
   /**

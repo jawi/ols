@@ -25,7 +25,6 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.util.*;
@@ -391,7 +390,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       {
         final long endTime = System.nanoTime();
         final long renderTime = endTime - startTime;
-        System.out.println( "Rendering time = " + UnitOfTime.format( renderTime ) );
+        System.out.println( "Rendering time = " + UnitOfTime.NS.format( 1.0 / renderTime, 2 ) );
       }
     }
     else

@@ -53,10 +53,10 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
   private volatile String sampleRate = "-";
   private volatile String sampleCount = "-";
   private volatile String totalWidth = "-";
-  private volatile String tickInterval = "-";
-  private volatile String displayedTime = "-";
 
-  private volatile String scaleFactor = "-";
+  private volatile String displayedTime = "-";
+  private volatile String secondsPerPixel = "-";
+  private volatile String unitOfTime = "-";
 
   private final JLabel captureInfoField;
 
@@ -108,9 +108,9 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
     this.sampleCount = "-";
     this.totalWidth = "-";
 
-    this.tickInterval = null;
+    this.secondsPerPixel = null;
     this.displayedTime = null;
-    this.scaleFactor = null;
+    this.unitOfTime = null;
 
     if ( ( aDataSet != null ) && ( aDataSet.getCapturedData() != null ) )
     {
@@ -148,8 +148,9 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
   @Override
   public void notifyZoomChange( final ZoomEvent aEvent )
   {
-    this.tickInterval = null;
+    this.secondsPerPixel = null;
     this.displayedTime = null;
+    this.unitOfTime = null;
 
     updateView();
   }
@@ -162,29 +163,29 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
   {
     final SignalDiagramModel model = getController().getSignalDiagramModel();
 
-    if ( this.tickInterval == null )
+    if ( this.secondsPerPixel == null )
     {
-      final Double timeInterval = model.getTimelineTimeIncrement();
-      if ( timeInterval != null )
+      final Double spp = model.getTimelineSecondsPerPixel();
+      if ( spp != null )
       {
-        this.tickInterval = UnitOfTime.format( timeInterval.doubleValue() / model.getSampleRate() );
+        this.secondsPerPixel = UnitOfTime.format( spp.doubleValue() );
       }
       else
       {
-        this.tickInterval = "-";
+        this.secondsPerPixel = "-";
       }
     }
 
-    if ( this.scaleFactor == null )
+    if ( this.unitOfTime == null )
     {
-      final Double scaleFactor = model.getTimelineScale();
-      if ( scaleFactor != null )
+      final Double uot = model.getTimelineUnitOfTime();
+      if ( uot != null )
       {
-        this.scaleFactor = UnitOfTime.format( scaleFactor.doubleValue() / model.getSampleRate() );
+        this.unitOfTime = UnitOfTime.format( uot.doubleValue() );
       }
       else
       {
-        this.scaleFactor = "-";
+        this.unitOfTime = "-";
       }
     }
 
@@ -210,9 +211,9 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
     sb.append( "<tr><th align='right'>Sample time:</th><td align='right'>" ).append( this.totalWidth ).append( "</td>" );
     sb.append( "<tr><th align='right'>Displayed time:</th><td align='right'>" ).append( this.displayedTime )
         .append( "</td>" );
-    sb.append( "<tr><th align='right'>Tick interval:</th><td align='right'>" ).append( this.tickInterval )
+    sb.append( "<tr><th align='right'>Time/pixel:</th><td align='right'>" ).append( this.secondsPerPixel )
         .append( "</td>" );
-    sb.append( "<tr><th align='right'>Timeline scale:</th><td align='right'>" ).append( this.scaleFactor )
+    sb.append( "<tr><th align='right'>Unit of time:</th><td align='right'>" ).append( this.unitOfTime )
         .append( "</td>" );
     sb.append( "</table></html>" );
 

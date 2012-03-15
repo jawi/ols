@@ -55,9 +55,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
 
   // CONSTANTS
 
-  /** The tick increment (in pixels). */
-  private static final int TIMELINE_INCREMENT = 5;
-
   private static final int SNAP_CURSOR_MODE = ( 1 << 0 );
   private static final int MEASUREMENT_MODE = ( 1 << 1 );
 
@@ -676,109 +673,50 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   }
 
   /**
-   * Determines the time base for the given absolute time (= total time
-   * displayed).
+   * Returns the amount of pixels that represents one second on the timeline.
    * 
-   * @return a time base, as power of 10.
-   * @deprecated
+   * @return the number of pixels to display for 1 second, > 0.
    */
-  @Deprecated
-  public double getTimebase()
-  {
-    final Rectangle visibleViewSize = this.controller.getSignalDiagram().getVisibleViewSize();
-    final double absoluteTime = visibleViewSize.width / getZoomFactor();
-    return Math.pow( 10, Math.round( Math.log10( absoluteTime ) ) );
-  }
-
-  /**
-   * Returns the increment of pixels per unit of time.
-   * 
-   * @return a time increment, >= 0.1.
-   * @see #getTimebase()
-   * @deprecated
-   */
-  @Deprecated
-  public double getTimeIncrement()
-  {
-    return Math.max( 0.1, getTimebase() / ( 10.0 * TIMELINE_INCREMENT ) );
-  }
-
-  /**
-   * Returns the time interval displayed by a single tick in the time line.
-   * 
-   * @return a time interval, in seconds, or <code>null</code> if no time
-   *         interval could be determined.
-   * @deprecated
-   */
-  @Deprecated
-  public Double getTimeInterval()
+  public Double getTimelinePixelsPerSecond()
   {
     if ( !hasData() )
     {
       return null;
     }
-    return Double.valueOf( getTimeIncrement() / getSampleRate() );
+    return Double.valueOf( getZoomFactor() * getSampleRate() );
   }
 
   /**
-   * Returns the scale in which the timeline should be displayed, in powers of
-   * ten.
+   * Returns the number of seconds that represents one pixel on the timeline.
    * 
-   * @return a timeline scale value, > 0.
+   * @return the number of seconds per pixel, > 0.
+   * @see #getTimelinePixelsPerSecond()
    */
-  public double getTimelineScale()
+  public Double getTimelineSecondsPerPixel()
   {
-    return Math.pow( 10, Math.floor( Math.log10( getZoomFactor() ) ) );
-  }
-
-  /**
-   * @return
-   */
-  public Double getTimelineTickIncrement()
-  {
-    if ( !hasData() )
+    Double pixelsPerSecond = getTimelinePixelsPerSecond();
+    if ( pixelsPerSecond == null )
     {
       return null;
     }
-
-    final double zoomFactor = getZoomFactor();
-    final int sampleRate = Math.max( 1, getSampleRate() );
-
-    final Rectangle visibleViewSize = this.controller.getSignalDiagram().getVisibleViewSize();
-    final double timeFrame = ( visibleViewSize.width / zoomFactor );
-
-    double exp = Math.floor( Math.log10( zoomFactor ) ) + Math.floor( Math.log10( timeFrame / sampleRate ) );
-
-    return Double.valueOf( Math.round( sampleRate * Math.pow( 10, exp ) ) / getTimelineScale() );
+    return Double.valueOf( 1.0 / pixelsPerSecond.doubleValue() );
   }
 
   /**
-   * @return
-   */
-  public Double getTimelineTimeIncrement()
-  {
-    final Double tickIncr = getTimelineTickIncrement();
-    if ( tickIncr == null )
-    {
-      return null;
-    }
-    return Double.valueOf( tickIncr.doubleValue() / 10.0 );
-  }
-
-  /**
+   * Returns the unit of time the timeline is currently is displaying, in
+   * multiples of 10 (for human readability).
+   * 
    * @return a timeline unit of time, > 0, can only be <code>null</code> if
    *         there is no data.
    */
   public Double getTimelineUnitOfTime()
   {
-    if ( !hasData() )
+    final Double p = getTimelineSecondsPerPixel();
+    if ( p == null )
     {
       return null;
     }
-    final Rectangle visibleViewSize = this.controller.getSignalDiagram().getVisibleViewSize();
-    final double timeFrame = ( visibleViewSize.width / getZoomFactor() );
-    final int sampleRate = Math.max( 1, getSampleRate() );
-    return Math.pow( 10, Math.floor( Math.log10( timeFrame / sampleRate ) ) ) * sampleRate;
+    return Double.valueOf( Math.pow( 10, Math.ceil( Math.log10( p.doubleValue() ) ) + 1 ) );
   }
 
   /**
