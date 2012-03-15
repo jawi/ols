@@ -127,6 +127,8 @@ public class TestAcquisitionTask implements AcquisitionTask
 
         this.progressListener.acquisitionInProgress( ( int )( ( i * 100.0 ) / data.length ) );
       }
+
+      trigger = ( int )( data.length * 0.25 );
     }
 
     return new CapturedData( data, trigger, rate, channels, ( int )( ( 1L << channels ) - 1 ) );
