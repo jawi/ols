@@ -22,9 +22,12 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 import java.awt.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementHeightProvider;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
@@ -45,6 +48,10 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   {
     INDEX_ONLY, TIME_ONLY, LABEL_ONLY, INDEX_LABEL, LABEL_TIME;
   }
+
+  // CONSTANTS
+
+  public static final String TRIGGER_COLOR = "signal.trigger.color";
 
   // VARIABLES
 
@@ -215,6 +222,21 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   public int getSignalOffset()
   {
     return getSignalDiagramModel().getSignalOffset();
+  }
+
+  /**
+   * Returns the color to use for painting a trigger moment.
+   * 
+   * @return the trigger color, never <code>null</code>.
+   */
+  public Color getTriggerColor()
+  {
+    Color color = UIManager.getColor( TRIGGER_COLOR );
+    if ( color == null )
+    {
+      color = LafDefaults.DEFAULT_TRIGGER_COLOR;
+    }
+    return color;
   }
 
   /**

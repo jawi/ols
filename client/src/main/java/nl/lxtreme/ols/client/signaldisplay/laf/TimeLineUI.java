@@ -302,12 +302,20 @@ public class TimeLineUI extends ComponentUI
           continue;
         }
 
-        canvas.setColor( model.getTickColor() );
+        final double time = ( x - triggerOffset );
+
+        if ( abs( time ) < 1.0e-5 )
+        {
+          canvas.setColor( model.getTriggerColor() );
+        }
+        else
+        {
+          canvas.setColor( model.getTickColor() );
+        }
 
         String text = null;
         int textYpos = -1;
 
-        final double time = ( x - triggerOffset );
         if ( ( tick % majorTickInc ) == 0 )
         {
           textYpos = majorTickYpos;

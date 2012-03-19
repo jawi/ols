@@ -461,9 +461,9 @@ public class SignalUI extends ComponentUI
       if ( ( timestamps[startIdx] <= triggerOffset ) && ( timestamps[endIdx] >= triggerOffset ) )
       {
         // Draw a line denoting the trigger position...
-        final int x = ( int )( triggerOffset * zoomFactor );
+        final int x = ( int )Math.round( triggerOffset * zoomFactor ) - 1;
 
-        aCanvas.setColor( Color.WHITE );
+        aCanvas.setColor( aModel.getTriggerColor() );
         aCanvas.drawLine( x, clip.y, x, clip.y + clip.height );
       }
     }

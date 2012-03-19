@@ -24,6 +24,9 @@ public final class LafDefaults
   /** The key for the default label font as used by Swing. */
   public static final String SWING_LABEL_FONT = "Label.font";
 
+  /** The color to use for the trigger. */
+  public static final Color DEFAULT_TRIGGER_COLOR = Color.WHITE;
+
   // CHANNEL LABELS
 
   /** Background color for the channel labels. */

@@ -21,6 +21,7 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 
 import java.awt.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
