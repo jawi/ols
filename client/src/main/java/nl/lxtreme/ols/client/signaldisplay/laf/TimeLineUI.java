@@ -20,6 +20,7 @@
 package nl.lxtreme.ols.client.signaldisplay.laf;
 
 
+import static java.lang.Math.*;
 import static java.awt.RenderingHints.*;
 
 import java.awt.*;
@@ -260,9 +261,6 @@ public class TimeLineUI extends ComponentUI
       canvas.setBackground( model.getBackgroundColor() );
       canvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
-      final long startX = clip.x;
-      final long endX = ( clip.x + clip.width );
-
       final double zoomFactor = model.getZoomFactor();
       final double triggerOffset = ( model.getTriggerOffset() * zoomFactor );
 
@@ -275,60 +273,69 @@ public class TimeLineUI extends ComponentUI
       // ts denotes the number of pixels per unit-of-time...
       final double ts = uot * s;
 
-      final double correctedVisibleTime = Math.pow( 10, Math.ceil( Math.log10( clip.width * p ) ) );
-      final int majorTickInc = ( int )( correctedVisibleTime / uot );
+      // determine the tick increment based on the current width of the visible
+      // timeline; this will make it a factor of 1, 10, 100, 1000, ...
+      final int majorTickInc = ( int )max( 1.0, pow( 10, floor( log10( clip.width / 2 ) ) ) );
       final int minorTickInc = ( majorTickInc / 2 );
-      final int tickInc = Math.max( 1, majorTickInc / 10 );
+      final double minorTickTime = ( minorTickInc * uot );
+      final int tickInc = max( 1, majorTickInc / 10 );
 
-      // tts denotes the tick increment...
+      // tts denotes rounding factor to use ...
       final double tts = majorTickInc * ts;
       // to denotes the trigger offset...
-      final double to = triggerOffset % ts;
+      final double to = triggerOffset % tts;
 
-      double x = ( Math.floor( startX / ts ) * ts ) + to;
-      double majorTime = x - triggerOffset;
+      final int startX = clip.x;
+      final int endX = ( clip.x + clip.width );
 
-      System.out.println( "X = [" + startX + ".." + endX + "]; " + x + " (triggerOffset = " + triggerOffset
-          + ", tts = " + tts + ", to = " + to + ")" );
-      System.out.println( "majorTime = " + majorTime + "; time = " + ( x - triggerOffset ) + "; visibleTime = "
-          + UnitOfTime.format( correctedVisibleTime ) + "; ratio = " + majorTickInc );
+      // Start *before* the clip region starts; but at a multiple of our
+      // rounding factor...
+      double x = ( ( floor( startX / tts ) - 1 ) * tts ) + to;
 
       int tick = 0;
       for ( ; x <= endX; tick++, x += ts )
       {
-        int xPos = ( int )Math.round( x ) - 1; // XXX why the minus one???
+        int xPos = ( int )round( x ) - 1;
         if ( ( xPos < startX ) || ( xPos > endX ) )
         {
           // Trivial reject: only paint visible items...
           continue;
         }
 
-        double time = x - triggerOffset;
-
         canvas.setColor( model.getTickColor() );
 
         String text = null;
+        int textYpos = -1;
 
+        final double time = ( x - triggerOffset );
         if ( ( tick % majorTickInc ) == 0 )
         {
-          canvas.drawLine( xPos, majorTickYpos, xPos, tickYpos );
+          textYpos = majorTickYpos;
+
+          canvas.drawLine( xPos, majorTickYpos, xPos, baseTickYpos );
 
           canvas.setFont( model.getMajorTickLabelFont() );
 
-          text = getMajorTimestamp( model, time * p, uot );
-          majorTime = time;
+          double t = round( ( time * p ) / uot ) * uot;
+
+          text = getMajorTimestamp( model, t, uot );
         }
         else if ( ( tick % minorTickInc ) == 0 )
         {
-          canvas.drawLine( xPos, minorTickYpos, xPos, tickYpos );
+          textYpos = minorTickYpos;
+
+          canvas.drawLine( xPos, minorTickYpos, xPos, baseTickYpos );
 
           canvas.setFont( model.getMinorTickLabelFont() );
 
-          text = UnitOfTime.format( ( time - majorTime ) * p );
+          if ( model.isMinorTimestampVisible() )
+          {
+            text = getMinorTimestamp( model, time < 0 ? -minorTickTime : minorTickTime, uot );
+          }
         }
         else if ( ( tick % tickInc ) == 0 )
         {
-          canvas.drawLine( xPos, baseTickYpos, xPos, tickYpos );
+          canvas.drawLine( xPos, tickYpos, xPos, baseTickYpos );
         }
 
         if ( text != null )
@@ -338,10 +345,9 @@ public class TimeLineUI extends ComponentUI
           canvas.setColor( model.getTextColor() );
 
           int textWidth = ( fm.stringWidth( text ) + TEXT_PADDING_X );
-          int textHeight = fm.getHeight();
 
-          int textXpos = Math.max( 0, ( int )( xPos - ( textWidth / 2.0 ) ) ) + 1;
-          int textYpos = Math.max( 1, ( baseTickYpos - textHeight ) );
+          int textXpos = Math.max( clip.x, ( int )( xPos - ( textWidth / 2.0 ) ) ) + 1;
+          textYpos = Math.max( clip.y, ( textYpos - fm.getDescent() ) );
 
           canvas.drawString( text, textXpos, textYpos );
         }
@@ -370,13 +376,27 @@ public class TimeLineUI extends ComponentUI
     final UnitOfTime timeScale = UnitOfTime.toUnit( aTimeScale );
     final UnitOfTime time = UnitOfTime.toUnit( aTime );
 
-    if ( ( timeScale != time ) && ( timeScale != time.successor() ) )
+    // determine the magnitude of difference...
+    int mag = 0;
+    UnitOfTime ptr = timeScale;
+    while ( ( ptr != null ) && ( ptr != time ) )
     {
-      // More than a factor 1000 difference...
-      return timeScale.predecessor().format( aTime, aPrecision );
+      ptr = ptr.predecessor();
+      mag++;
     }
 
-    return time.format( aTime, aPrecision );
+    if ( mag > 1 )
+    {
+      ptr = time.successor();
+      if ( ptr == null )
+      {
+        ptr = timeScale.predecessor();
+      }
+      // More than a factor 1000 difference...
+      return ptr.formatHumanReadable( aTime );
+    }
+
+    return time.formatHumanReadable( aTime );
   }
 
   /**
@@ -403,7 +423,8 @@ public class TimeLineUI extends ComponentUI
   {
     if ( aModel.hasTimingData() )
     {
-      return UnitOfTime.format( aTime );
+      final UnitOfTime time = UnitOfTime.toUnit( aTime );
+      return time.formatHumanReadable( aTime );
     }
 
     return Integer.toString( ( int )aTime );

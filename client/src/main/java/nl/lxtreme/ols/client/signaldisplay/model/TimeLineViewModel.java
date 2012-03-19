@@ -322,4 +322,17 @@ public class TimeLineViewModel extends AbstractViewModel
   {
     return getSignalDiagramModel().hasTimingData();
   }
+
+  /**
+   * Returns whether or not the minor timestamps on the timeline are to be
+   * painted.
+   * 
+   * @return <code>true</code> if the minor timestamps are to be painted,
+   *         <code>false</code> if they should be hidden.
+   */
+  public boolean isMinorTimestampVisible()
+  {
+    // TODO Auto-generated method stub
+    return false;
+  }
 }

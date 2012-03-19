@@ -716,7 +716,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     {
       return null;
     }
-    return Double.valueOf( Math.pow( 10, Math.ceil( Math.log10( p.doubleValue() ) ) + 1 ) );
+    return Double.valueOf( Math.pow( 10, Math.ceil( Math.log10( p.doubleValue() ) ) ) );
   }
 
   /**
