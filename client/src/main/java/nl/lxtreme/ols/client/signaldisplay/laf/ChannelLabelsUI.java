@@ -40,12 +40,10 @@ public class ChannelLabelsUI extends ComponentUI
 {
   // CONSTANTS
 
-  private static final String MINIMAL_LABEL = "W88";
+  public static final int PADDING_Y = 2;
+  public static final int PADDING_X = 4;
 
   private static final int ARC_WIDTH = 12;
-  private static final int PADDING_Y = 2;
-  private static final int PADDING_X = 4;
-
   private static final int GUTTER_X = 15;
 
   // VARIABLES
@@ -66,28 +64,6 @@ public class ChannelLabelsUI extends ComponentUI
     hints.put( RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED );
     hints.put( RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED );
     return hints;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Dimension getMaximumSize( final JComponent aComponent )
-  {
-    final ChannelLabelsView view = ( ChannelLabelsView )aComponent;
-
-    return determineSize( view );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Dimension getMinimumSize( final JComponent aComponent )
-  {
-    final ChannelLabelsView view = ( ChannelLabelsView )aComponent;
-
-    return determineSize( view );
   }
 
   /**
@@ -276,47 +252,6 @@ public class ChannelLabelsUI extends ComponentUI
     // this.renderer.render( aCanvas, -30, 0 ); // XXX
 
     aCanvas.translate( 0, height );
-  }
-
-  /**
-   * Determines the size of the view.
-   * 
-   * @param aView
-   *          the view to determine the size for;
-   * @param aModel
-   *          the model of the view to determine the size for.
-   * @return a size, never <code>null</code>.
-   */
-  private Dimension determineSize( final ChannelLabelsView aView )
-  {
-    Dimension result = super.getPreferredSize( aView );
-    if ( result == null )
-    {
-      result = new Dimension();
-    }
-
-    ChannelLabelsViewModel model = aView.getModel();
-
-    int minWidth = -1;
-
-    final FontMetrics fm = aView.getFontMetrics( model.getLabelFont() );
-    for ( Channel channel : model.getAllChannels() )
-    {
-      String label = channel.getLabel();
-      if ( ( label == null ) || label.trim().isEmpty() )
-      {
-        label = MINIMAL_LABEL;
-      }
-      minWidth = Math.max( minWidth, fm.stringWidth( label ) );
-    }
-
-    // And always ensure we've got at least a minimal width...
-    minWidth = Math.max( minWidth + ( 2 * ( PADDING_X + ChannelLabelRenderer.PADDING_X ) ), model.getMinimalWidth() );
-
-    // Overwrite the preferred width with the one calculated...
-    result.width = minWidth;
-
-    return result;
   }
 
   /**

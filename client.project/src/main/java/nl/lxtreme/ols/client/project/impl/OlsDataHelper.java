@@ -217,9 +217,8 @@ public final class OlsDataHelper
     }
 
     // Allow the absolute length to be undefined, in which case the last
-    // time stamp is used (+ some margin to be able to see the last
-    // sample)...
-    long absoluteLength = Math.max( absLen, timestamps[size - 1] + ABS_TIME_MARGIN );
+    // time stamp is used...
+    long absoluteLength = Math.max( absLen, timestamps[size - 1] );
 
     // Finally set the captured data, and notify all event listeners...
     capturedData = new CapturedData( values, timestamps, triggerPos, rate, channels, enabledChannels, absoluteLength );

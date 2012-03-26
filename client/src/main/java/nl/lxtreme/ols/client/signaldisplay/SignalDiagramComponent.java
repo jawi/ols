@@ -30,6 +30,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
@@ -265,11 +266,23 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       registerKeyBinding( this, '1', zoomOriginalAction );
 
       KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher( new GlobalKeyListener() );
+
+      revalidate();
     }
     finally
     {
       super.addNotify();
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void doLayout()
+  {
+    calculateDimensions();
+    super.doLayout();
   }
 
   /**
@@ -464,49 +477,102 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   }
 
   /**
-   * Recalculates the dimensions of the main view.
+   * @param aEvent
    */
-  final void recalculateDimensions()
+  final void notifyZoomChange( final ZoomEvent aEvent )
   {
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getSignalView() );
-    if ( scrollPane == null )
+    final SignalDiagramModel model = getModel();
+    if ( !model.hasData() )
     {
       return;
     }
 
-    final Rectangle viewPortSize = scrollPane.getViewport().getVisibleRect();
+    // Idea based on <http://stackoverflow.com/questions/115103>
 
-    int width = getModel().getAbsoluteScreenWidth();
-    if ( width < viewPortSize.width )
+    final SignalView view = getSignalView();
+
+    System.out.println( "notifyZoomChange[" + view.getVisibleRect() + "]" );
+
+    double mx = view.getVisibleRect().getCenterX();
+    double my = 0;
+
+    final double newZf = aEvent.getFactor();
+    final double oldZf = aEvent.getOldFactor();
+    final double relZf = newZf / oldZf;
+
+    // Calculate the timestamp from the center position of the visible view
+    // rectangle; after which we lookup the exact timestamp that is at that
+    // position. If found, we'll use that timestamp to recalculate the new
+    // center position in the new zoom factor...
+    final long timestamp = ( long )Math.ceil( mx / oldZf );
+    final int tsIdx = model.getTimestampIndex( timestamp );
+
+    mx = Math.floor( model.getTimestamps()[tsIdx] * oldZf );
+
+    if ( aEvent.isFactorChange() )
     {
-      width = viewPortSize.width;
+      // Recalculate all dimensions...
+      calculateDimensions();
     }
 
-    int height = getModel().getAbsoluteScreenHeight();
-    if ( height < viewPortSize.height )
+    final Point location = getLocation();
+
+    // Recalculate the new screen position of the visible view rectangle...
+    int newX = ( int )( location.getX() - ( ( mx * relZf ) - mx ) );
+    int newY = ( int )( location.getY() - ( ( my * relZf ) - my ) );
+
+    setLocation( newX, newY );
+
+    // Notify that everything needs to be revalidated as well...
+    revalidateAll();
+  }
+
+  /**
+   * Calculates all dimensions of the contained components.
+   */
+  private void calculateDimensions()
+  {
+    final SignalView view = getSignalView();
+    final Dimension frameSize = getRootPane().getSize();
+    final SignalDiagramModel model = getModel();
+
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, view );
+    if ( scrollPane != null )
     {
-      height = viewPortSize.height;
+      final Rectangle viewPortSize = scrollPane.getViewport().getVisibleRect();
+
+      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
+      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+
+      final int clWidth = channelLabels.getPreferredWidth();
+      final int tlHeight = timeline.getTimeLineHeight();
+
+      final int minWidth = Math.max( viewPortSize.width, frameSize.width - clWidth );
+
+      final int newWidth = Math.max( minWidth, model.getAbsoluteScreenWidth() );
+      final int newHeight = Math.max( viewPortSize.height, model.getAbsoluteScreenHeight() );
+
+      // the timeline component always follows the width of the signal view, but
+      // with a fixed height...
+      timeline.setPreferredSize( new Dimension( newWidth, tlHeight ) );
+
+      // the channel label component calculates its own 'optimal' width, but
+      // doesn't know squat about the correct height...
+      channelLabels.setPreferredSize( new Dimension( clWidth, newHeight ) );
+
+      view.setPreferredSize( new Dimension( newWidth, newHeight ) );
     }
+    else
+    {
+      final Rectangle viewSize = view.getVisibleRect();
 
-    JComponent signalView = ( JComponent )scrollPane.getViewport().getView();
-    signalView.setPreferredSize( new Dimension( width, height ) );
-    signalView.revalidate();
+      final int minWidth = Math.max( viewSize.width, frameSize.width );
 
-    TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
-    // the timeline component always follows the width of the signal view, but
-    // with a fixed height...
-    timeline.setPreferredSize( new Dimension( width, timeline.getTimeLineHeight() ) );
-    timeline.setMinimumSize( signalView.getPreferredSize() );
-    timeline.revalidate();
+      final int newWidth = Math.max( minWidth, model.getAbsoluteScreenWidth() );
+      final int newHeight = Math.max( viewSize.height, model.getAbsoluteScreenHeight() );
 
-    ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
-    // the channel label component calculates its own 'optimal' width, but
-    // doesn't know squat about the correct height...
-    final Dimension minimumSize = channelLabels.getMinimumSize();
-    channelLabels.setPreferredSize( new Dimension( minimumSize.width, height ) );
-    channelLabels.revalidate();
-
-    scrollPane.repaint();
+      view.setPreferredSize( new Dimension( newWidth, newHeight ) );
+    }
   }
 
   /**
@@ -541,6 +607,24 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       scrollPane.setCorner( ScrollPaneConstants.UPPER_LEADING_CORNER, new CornerView( this.controller ) );
 
       scrollPane.addComponentListener( this.componentHandler );
+    }
+  }
+
+  /**
+   * Revalidates this component, the timeline and channel labels.
+   */
+  private void revalidateAll()
+  {
+    this.signalView.revalidate();
+
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this );
+    if ( scrollPane != null )
+    {
+      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
+      timeline.revalidate();
+
+      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+      channelLabels.revalidate();
     }
   }
 

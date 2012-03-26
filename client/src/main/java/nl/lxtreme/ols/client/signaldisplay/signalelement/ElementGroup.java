@@ -27,6 +27,8 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
+
 
 /**
  * Indicates a number of grouped channels, with their own set of labels and
@@ -232,7 +234,7 @@ public class ElementGroup
   }
 
   /**
-   * Returns the number of element in this group.
+   * Returns the number of all element in this group.
    * 
    * @return an element count, >= 0.
    */
@@ -241,6 +243,29 @@ public class ElementGroup
     synchronized ( this.elements )
     {
       return this.elements.size();
+    }
+  }
+
+  /**
+   * Returns the number of elements specified by the given type in this group.
+   * 
+   * @param aType
+   *          the type to count, cannot be <code>null</code>.
+   * @return an element count, >= 0.
+   */
+  public int getElementCount( final SignalElementType aType )
+  {
+    int count = 0;
+    synchronized ( this.elements )
+    {
+      for ( SignalElement element : this.elements )
+      {
+        if ( aType.equals( element.getType() ) )
+        {
+          count++;
+        }
+      }
+      return count;
     }
   }
 

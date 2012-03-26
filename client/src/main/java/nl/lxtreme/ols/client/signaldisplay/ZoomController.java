@@ -125,6 +125,16 @@ public class ZoomController
     }
 
     /**
+     * Returns the current value of oldFactor.
+     * 
+     * @return the oldFactor
+     */
+    public double getOldFactor()
+    {
+      return this.oldFactor;
+    }
+
+    /**
      * @return <code>true</code> if there's a change in the zoom factor,
      *         <code>false</code> if the zoom factor remains the same.
      */

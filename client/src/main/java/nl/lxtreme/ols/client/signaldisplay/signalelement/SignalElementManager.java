@@ -178,7 +178,7 @@ public final class SignalElementManager implements IDataModelChangeListener
 
       if ( cg.isShowDigitalSignals() )
       {
-        height += aHeightProvider.getDigitalSignalHeight() * cg.getElementCount();
+        height += aHeightProvider.getDigitalSignalHeight() * cg.getElementCount( SignalElementType.DIGITAL_SIGNAL );
       }
       // Always keep these heights into account...
       if ( cg.isShowGroupSummary() )

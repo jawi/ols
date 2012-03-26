@@ -117,7 +117,7 @@ public class CapturedData implements AcquisitionResult
       tmp = values[i];
     }
 
-    this.absoluteLength = values.length;
+    this.absoluteLength = this.timestamps[this.timestamps.length - 1];
   }
 
   // METHODS
@@ -246,7 +246,7 @@ public class CapturedData implements AcquisitionResult
     }
 
     // Determine the insertion point, avoid crossing the array boundaries...
-    if ( mid < aToIndex - 1 )
+    if ( mid < ( aToIndex - 1 ) )
     {
       // If the searched value is greater than the value of the found index,
       // insert it after this value, otherwise before it (= the last return)...

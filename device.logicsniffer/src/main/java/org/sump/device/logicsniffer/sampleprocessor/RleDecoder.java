@@ -20,9 +20,11 @@
  */
 package org.sump.device.logicsniffer.sampleprocessor;
 
+
 import java.util.logging.*;
 
 import org.sump.device.logicsniffer.*;
+
 
 /**
  * Provides a RLE decoder.
@@ -47,18 +49,20 @@ public final class RleDecoder implements SampleProcessor
 
   /**
    * Creates a new RleDecoder instance.
+   * 
    * @param aConfig
    * @param aBuffer
    * @param aTrigCount
    * @param aCallback
    */
-  public RleDecoder( final LogicSnifferConfig aConfig, final int[] aBuffer, final int aTrigCount, final SampleProcessorCallback aCallback )
+  public RleDecoder( final LogicSnifferConfig aConfig, final int[] aBuffer, final int aTrigCount,
+      final SampleProcessorCallback aCallback )
   {
     if ( aBuffer == null )
     {
       throw new IllegalArgumentException( "Buffer cannot be null!" );
     }
-    
+
     this.config = aConfig;
     this.buffer = aBuffer;
     this.trigCount = aTrigCount;
@@ -126,7 +130,7 @@ public final class RleDecoder implements SampleProcessor
           // count (as they are 8- or 16-bits in DDR mode).
           // This should also solve issue #31...
 
-          // Issue #55: double the RLE-count as we're using DDR mode which 
+          // Issue #55: double the RLE-count as we're using DDR mode which
           // takes two samples in one time period...
           long ddrCount = ( ( count << rleShiftBits ) | normalizeSampleValue( this.buffer[++i] ) );
           count = 2L * ddrCount;
@@ -161,12 +165,12 @@ public final class RleDecoder implements SampleProcessor
     }
 
     // Take the last seen time value as "absolete" length of this trace...
-    this.callback.ready( time, rleTrigPos - 1 );
+    this.callback.ready( time - 1, rleTrigPos - 1 );
   }
 
   /**
-   * Normalizes the given sample value to mask out the unused channel groups
-   * and get a sample value in the correct width.
+   * Normalizes the given sample value to mask out the unused channel groups and
+   * get a sample value in the correct width.
    * 
    * @param aSampleValue
    *          the original sample to normalize.

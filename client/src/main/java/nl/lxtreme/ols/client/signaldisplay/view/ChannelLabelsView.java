@@ -29,6 +29,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
@@ -46,6 +47,102 @@ import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
 public class ChannelLabelsView extends AbstractViewLayer
 {
   // INNER TYPES
+
+  /**
+   * Provides a mouse-event hand
+   */
+  static final class ChannelLabelMouseHandler extends MouseAdapter
+  {
+    // VARIABLES
+
+    private final SignalDiagramController controller;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new ChannelLabelsView.MouseHandler instance.
+     */
+    public ChannelLabelMouseHandler( final SignalDiagramController aController )
+    {
+      this.controller = aController;
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mousePressed( final MouseEvent aEvent )
+    {
+      if ( aEvent.isPopupTrigger() )
+      {
+        JPopupMenu contextMenu = createChannelLabelPopup( aEvent.getPoint(), aEvent.getLocationOnScreen() );
+        contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
+        // Mark the event as consumed...
+        aEvent.consume();
+      }
+    }
+
+    /**
+     * Creates the context-sensitive popup menu for channel labels.
+     * 
+     * @param aRelativePoint
+     *          the current mouse location to show the popup menu, cannot be
+     *          <code>null</code>.
+     * @param aLocationOnScreen
+     *          the location on screen, cannot be <code>null</code>.
+     * @return a popup menu, can be <code>null</code> if the given mouse point
+     *         is not above a channel.
+     */
+    private JPopupMenu createChannelLabelPopup( final Point aRelativePoint, final Point aLocationOnScreen )
+    {
+      final SignalElement signalElement = findSignalElement( aRelativePoint );
+      if ( signalElement == null )
+      {
+        return null;
+      }
+
+      JPopupMenu result = new JPopupMenu();
+      JMenuItem mi;
+
+      mi = new JMenuItem( new EditSignalElementLabelAction( this.controller, signalElement, aLocationOnScreen ) );
+      result.add( mi );
+
+      result.addSeparator();
+
+      mi = new JCheckBoxMenuItem( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
+      result.add( mi );
+
+      if ( signalElement.isDigitalSignal() )
+      {
+        mi = new JMenuItem( new RemoveChannelAnnotations( this.controller, signalElement ) );
+        result.add( mi );
+      }
+
+      if ( signalElement.isSignalGroup() )
+      {
+        // TODO add visibility actions for summary/analog signal/...
+        mi = new JCheckBoxMenuItem( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
+        result.add( mi );
+      }
+
+      return result;
+    }
+
+    /**
+     * Finds the channel under the given point.
+     * 
+     * @param aPoint
+     *          the coordinate of the potential channel, cannot be
+     *          <code>null</code>.
+     * @return the channel index, or -1 if not found.
+     */
+    private SignalElement findSignalElement( final Point aPoint )
+    {
+      return this.controller.getSignalDiagramModel().findSignalElement( aPoint );
+    }
+  }
 
   /**
    * Provides an mouse event listener to allow some of the functionality (such
@@ -282,102 +379,6 @@ public class ChannelLabelsView extends AbstractViewLayer
     }
   }
 
-  /**
-   * Provides a mouse-event hand
-   */
-  static final class ChannelLabelMouseHandler extends MouseAdapter
-  {
-    // VARIABLES
-
-    private final SignalDiagramController controller;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new ChannelLabelsView.MouseHandler instance.
-     */
-    public ChannelLabelMouseHandler( final SignalDiagramController aController )
-    {
-      this.controller = aController;
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void mousePressed( final MouseEvent aEvent )
-    {
-      if ( aEvent.isPopupTrigger() )
-      {
-        JPopupMenu contextMenu = createChannelLabelPopup( aEvent.getPoint(), aEvent.getLocationOnScreen() );
-        contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
-        // Mark the event as consumed...
-        aEvent.consume();
-      }
-    }
-
-    /**
-     * Creates the context-sensitive popup menu for channel labels.
-     * 
-     * @param aRelativePoint
-     *          the current mouse location to show the popup menu, cannot be
-     *          <code>null</code>.
-     * @param aLocationOnScreen
-     *          the location on screen, cannot be <code>null</code>.
-     * @return a popup menu, can be <code>null</code> if the given mouse point
-     *         is not above a channel.
-     */
-    private JPopupMenu createChannelLabelPopup( final Point aRelativePoint, final Point aLocationOnScreen )
-    {
-      final SignalElement signalElement = findSignalElement( aRelativePoint );
-      if ( signalElement == null )
-      {
-        return null;
-      }
-
-      JPopupMenu result = new JPopupMenu();
-      JMenuItem mi;
-
-      mi = new JMenuItem( new EditSignalElementLabelAction( this.controller, signalElement, aLocationOnScreen ) );
-      result.add( mi );
-
-      result.addSeparator();
-
-      mi = new JCheckBoxMenuItem( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
-      result.add( mi );
-
-      if ( signalElement.isDigitalSignal() )
-      {
-        mi = new JMenuItem( new RemoveChannelAnnotations( this.controller, signalElement ) );
-        result.add( mi );
-      }
-
-      if ( signalElement.isSignalGroup() )
-      {
-        // TODO add visibility actions for summary/analog signal/...
-        mi = new JCheckBoxMenuItem( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
-        result.add( mi );
-      }
-
-      return result;
-    }
-
-    /**
-     * Finds the channel under the given point.
-     * 
-     * @param aPoint
-     *          the coordinate of the potential channel, cannot be
-     *          <code>null</code>.
-     * @return the channel index, or -1 if not found.
-     */
-    private SignalElement findSignalElement( final Point aPoint )
-    {
-      return this.controller.getSignalDiagramModel().findSignalElement( aPoint );
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -461,6 +462,47 @@ public class ChannelLabelsView extends AbstractViewLayer
   public ChannelLabelsViewModel getModel()
   {
     return this.model;
+  }
+
+  /**
+   * Determines the preferred width of this view, based on the current set of
+   * channel labels.
+   * 
+   * @return a width, in pixels.
+   */
+  public int getPreferredWidth()
+  {
+    int minWidth = 0;
+
+    BufferedImage dummy = new BufferedImage( 1, 1, BufferedImage.TYPE_INT_ARGB );
+    Graphics2D canvas = dummy.createGraphics();
+
+    try
+    {
+      final FontMetrics fm = canvas.getFontMetrics( this.model.getLabelFont() );
+      for ( Channel channel : this.model.getAllChannels() )
+      {
+        String label = channel.getLabel();
+        if ( ( label == null ) || label.trim().isEmpty() )
+        {
+          label = "W888";
+        }
+        minWidth = Math.max( minWidth, fm.stringWidth( label ) );
+      }
+
+      minWidth += ( 2 * ( ChannelLabelsUI.PADDING_X + ChannelLabelRenderer.PADDING_X ) );
+    }
+    finally
+    {
+      canvas.dispose();
+      canvas = null;
+      dummy = null;
+    }
+
+    // And always ensure we've got at least a minimal width...
+    minWidth = Math.max( minWidth, this.model.getMinimalWidth() );
+
+    return minWidth;
   }
 
   /**

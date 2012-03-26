@@ -287,19 +287,6 @@ public class SignalDiagramModel implements SignalElementHeightProvider
    */
   public long getAbsoluteLength()
   {
-    // XXX
-    // int idx = this.timestamps.length - 1;
-    //
-    // long length = -1L;
-    // if ( idx > 0 )
-    // {
-    // length = ( this.timestamps[idx] + 1 ) - this.timestamps[0];
-    // }
-    // else if ( idx == 0 )
-    // {
-    // length = this.timestamps[0];
-    // }
-
     if ( !hasData() )
     {
       return 0L;
@@ -326,7 +313,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
    */
   public int getAbsoluteScreenWidth()
   {
-    final double result = getAbsoluteLength() * getZoomFactor();
+    final double result = Math.floor( getAbsoluteLength() * getZoomFactor() );
     if ( result > Integer.MAX_VALUE )
     {
       return Integer.MAX_VALUE;

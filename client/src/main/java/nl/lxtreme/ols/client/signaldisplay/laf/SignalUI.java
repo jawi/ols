@@ -509,7 +509,7 @@ public class SignalUI extends ComponentUI
           y[0] = yValue;
           int p = 1;
 
-          for ( int sampleIdx = startIdx + 1; sampleIdx < endIdx; sampleIdx++ )
+          for ( int sampleIdx = startIdx + 1; sampleIdx <= endIdx; sampleIdx++ )
           {
             timestamp = timestamps[sampleIdx];
             int sampleValue = ( values[sampleIdx] & mask );

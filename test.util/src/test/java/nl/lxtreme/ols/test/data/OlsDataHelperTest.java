@@ -137,7 +137,7 @@ public class OlsDataHelperTest
 
     this.dataSet.assertTimeStamps( 0, 1, 3 );
     this.dataSet.assertValues( 0, 1, 3 );
-    this.dataSet.assertAbsoluteLength( 3 + OlsDataHelper.ABS_TIME_MARGIN );
+    this.dataSet.assertAbsoluteLength( 3 );
   }
 
   /**
@@ -229,7 +229,7 @@ public class OlsDataHelperTest
 
     this.dataSet.assertTimeStamps( 0, 1, 3 );
     this.dataSet.assertValues( 0, 1, 3 );
-    this.dataSet.assertAbsoluteLength( 3 + OlsDataHelper.ABS_TIME_MARGIN );
+    this.dataSet.assertAbsoluteLength( 3 );
   }
 
   /**

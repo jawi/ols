@@ -104,7 +104,9 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
         this.progressListener.acquisitionInProgress( ( int )( ( idx++ * 100.0 ) / count ) );
       }
 
-      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels, channels, idx );
+      final long absLength = timestamps[idx - 1];
+
+      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels, channels, absLength );
     }
     catch ( IOException exception )
     {
