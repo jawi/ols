@@ -558,7 +558,6 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
 
     addMouseListener( this.mouseHandler );
     addMouseMotionListener( this.mouseHandler );
-    // addMouseWheelListener( this.mouseHandler );
 
     super.addNotify();
   }
@@ -710,7 +709,6 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
   {
     removeMouseListener( this.mouseHandler );
     removeMouseMotionListener( this.mouseHandler );
-    removeMouseWheelListener( this.mouseHandler );
 
     super.removeNotify();
   }

@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 
 import java.awt.*;
+import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
 import java.util.List;
@@ -35,6 +36,7 @@ import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementHeightProvider;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -442,6 +444,21 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     }
 
     return inc;
+  }
+
+  /**
+   * @return the input modifier to distinguish between scroll events and zoom
+   *         events.
+   */
+  public int getMouseWheelZoomModifier()
+  {
+    final HostInfo hostInfo = HostUtils.getHostInfo();
+    if ( hostInfo.isMacOS() )
+    {
+      return InputEvent.META_DOWN_MASK;
+    }
+
+    return InputEvent.CTRL_DOWN_MASK;
   }
 
   /**
@@ -945,6 +962,17 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   public boolean isMeasurementMode()
   {
     return ( this.mode & MEASUREMENT_MODE ) != 0;
+  }
+
+  /**
+   * @return <code>true</code> if the default mouse-wheel behavior is to zoom,
+   *         <code>false</code> if the default mouse-wheel behavior is to
+   *         scroll.
+   */
+  public boolean isMouseWheelDefaultZooms()
+  {
+    // TODO Auto-generated method stub
+    return false;
   }
 
   /**

@@ -491,23 +491,38 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
     final SignalView view = getSignalView();
 
-    System.out.println( "notifyZoomChange[" + view.getVisibleRect() + "]" );
-
-    double mx = view.getVisibleRect().getCenterX();
+    double mx;
     double my = 0;
+
+    Point hotSpot = aEvent.getHotSpot();
+    if ( hotSpot != null )
+    {
+      mx = hotSpot.x;
+    }
+    else
+    {
+      mx = view.getVisibleRect().getCenterX();
+    }
 
     final double newZf = aEvent.getFactor();
     final double oldZf = aEvent.getOldFactor();
     final double relZf = newZf / oldZf;
 
-    // Calculate the timestamp from the center position of the visible view
-    // rectangle; after which we lookup the exact timestamp that is at that
-    // position. If found, we'll use that timestamp to recalculate the new
-    // center position in the new zoom factor...
-    final long timestamp = ( long )Math.ceil( mx / oldZf );
-    final int tsIdx = model.getTimestampIndex( timestamp );
+    System.out.println( "notifyZoomChange[" + view.getClass().getSimpleName() + "] " + hotSpot + "; "
+        + view.getVisibleRect().getCenterX() + "; " + relZf );
 
-    mx = Math.floor( model.getTimestamps()[tsIdx] * oldZf );
+    if ( hotSpot == null )
+    {
+      // Calculate the timestamp from the center position of the visible view
+      // rectangle; after which we lookup the exact timestamp that is at that
+      // position. If found, we'll use that timestamp to recalculate the new
+      // center position in the new zoom factor...
+      final long timestamp = ( long )Math.ceil( mx / oldZf );
+      final int tsIdx = model.getTimestampIndex( timestamp );
+
+      mx = Math.floor( model.getTimestamps()[tsIdx] * oldZf );
+      System.out.println( "mx (ts) = " + mx );
+    }
 
     if ( aEvent.isFactorChange() )
     {

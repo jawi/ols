@@ -74,7 +74,7 @@ public class ZoomInAction extends AbstractAction implements IManagedAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getZoomController().zoomIn();
+    getZoomController().zoom( ZoomController.ZOOM_IN );
   }
 
   /**

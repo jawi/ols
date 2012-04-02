@@ -31,6 +31,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.Cursor;
@@ -39,6 +40,7 @@ import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -402,7 +404,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * Listens to window-close events for our main frame, explicitly invoking code
    * to close it on all platforms.
    */
-  static final class MainFrameListener extends WindowAdapter
+  static class MainFrameListener extends WindowAdapter
   {
     /**
      * @see java.awt.event.WindowAdapter#windowClosing(java.awt.event.WindowEvent)
@@ -412,6 +414,52 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     {
       final MainFrame mainFrame = ( MainFrame )aEvent.getSource();
       mainFrame.close();
+    }
+  }
+
+  /**
+   * Provides a {@link MouseWheelListener} that adapts its events to our own
+   * {@link ZoomController}.
+   */
+  static class MouseWheelZoomAdapter implements MouseWheelListener
+  {
+    // VARIABLES
+
+    private final ZoomController zoomController;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link MouseWheelZoomAdapter} instance.
+     * 
+     * @param aZoomController
+     *          the zoom controller to adapt, cannot be <code>null</code>.
+     */
+    public MouseWheelZoomAdapter( final ZoomController aZoomController )
+    {
+      this.zoomController = aZoomController;
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mouseWheelMoved( final MouseWheelEvent aEvent )
+    {
+      // Convert to the component under the mouse-cursor...
+      final JComponent destination = SwingComponentUtils.getDeepestComponentAt( aEvent );
+      final Point newPoint = SwingUtilities.convertPoint( aEvent.getComponent(), aEvent.getPoint(), destination );
+
+      final int r = aEvent.getWheelRotation();
+      if ( r != 0 )
+      {
+        final int direction = ( r < 0 ) ? ZoomController.ZOOM_IN : ZoomController.ZOOM_OUT;
+        this.zoomController.zoom( direction, newPoint );
+      }
+
+      aEvent.consume();
     }
   }
 
@@ -506,6 +554,170 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     }
   }
 
+  /**
+   * Provides a custom scrollpane that intercepts all {@link MouseWheelEvent}s
+   * in order to differentiate between zoom-events and non-zooming events.
+   * <p>
+   * Idea based on: <a
+   * href="http://tips4java.wordpress.com/2010/01/10/mouse-wheel-controller/"
+   * >this blog posting</a>.
+   * </p>
+   */
+  static class ZoomCapableScrollPane extends JScrollPane implements MouseWheelListener
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // VARIABLES
+
+    private final MouseWheelZoomAdapter zoomAdapter;
+    private final SignalDiagramModel diagramModel;
+
+    private volatile List<MouseWheelListener> originalListeners;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link ZoomCapableScrollPane} instance.
+     * 
+     * @param aController
+     *          the signal diagram controller to use, cannot be
+     *          <code>null</code>.
+     */
+    public ZoomCapableScrollPane( final SignalDiagramController aController )
+    {
+      super( aController.getSignalDiagram() );
+
+      this.zoomAdapter = new MouseWheelZoomAdapter( aController.getZoomController() );
+      this.diagramModel = aController.getSignalDiagramModel();
+
+      updateUI();
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void addMouseWheelListener( final MouseWheelListener aListener )
+    {
+      lazyInitListeners();
+      this.originalListeners.add( aListener );
+      super.addMouseWheelListener( aListener );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mouseWheelMoved( final MouseWheelEvent aEvent )
+    {
+      // Intercept all events and check whether we've hit a zooming event...
+      if ( isZoomEvent( aEvent ) )
+      {
+        this.zoomAdapter.mouseWheelMoved( aEvent );
+      }
+      else
+      {
+        // Not a zoom-event; just redispatch it to all "original" listeners...
+        MouseWheelListener[] listeners;
+        synchronized ( this.originalListeners )
+        {
+          listeners = this.originalListeners.toArray( new MouseWheelListener[this.originalListeners.size()] );
+        }
+
+        for ( MouseWheelListener listener : listeners )
+        {
+          listener.mouseWheelMoved( aEvent );
+        }
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void removeMouseWheelListener( final MouseWheelListener aListener )
+    {
+      lazyInitListeners();
+      this.originalListeners.remove( aListener );
+      super.removeMouseWheelListener( aListener );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUI( final ScrollPaneUI aNewUI )
+    {
+      super.setUI( aNewUI );
+
+      boolean installAdapter = true;
+
+      synchronized ( this.originalListeners )
+      {
+        lazyInitListeners();
+
+        this.originalListeners.clear();
+
+        final MouseWheelListener[] listeners = getListeners( MouseWheelListener.class );
+        for ( MouseWheelListener listener : listeners )
+        {
+          if ( listener == this )
+          {
+            installAdapter = false;
+          }
+          else
+          {
+            removeMouseWheelListener( listener );
+            this.originalListeners.add( listener );
+          }
+        }
+      }
+
+      if ( installAdapter )
+      {
+        super.addMouseWheelListener( this );
+      }
+    }
+
+    /**
+     * Tests whether the given {@link MouseWheelEvent} is a zooming event.
+     * 
+     * @param aEvent
+     *          the {@link MouseWheelEvent} to test, may be <code>null</code>.
+     * @return <code>true</code> if the given {@link MouseWheelEvent} is
+     *         actually to be regarded as a zooming event, <code>false</code> if
+     *         not.
+     */
+    private boolean isZoomEvent( final MouseWheelEvent aEvent )
+    {
+      if ( aEvent == null )
+      {
+        return false;
+      }
+
+      boolean invert = this.diagramModel.isMouseWheelDefaultZooms();
+
+      final int modifier = this.diagramModel.getMouseWheelZoomModifier();
+      final int result = ( aEvent.getModifiersEx() & modifier );
+      return invert ? ( result == 0 ) : ( result != 0 );
+    }
+
+    /**
+     * Lazily initializes the listeners.
+     */
+    private void lazyInitListeners()
+    {
+      if ( this.originalListeners == null )
+      {
+        this.originalListeners = new ArrayList<MouseWheelListener>();
+      }
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -549,7 +761,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     this.controller = aController;
 
-    // this.diagram = new Diagram( this.controller );
     this.signalDiagram = SignalDiagramComponent.create( aController.getSignalDiagramController() );
     this.status = new JTextStatusBar();
 
@@ -567,9 +778,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     final JToolBar tools = createMenuBars();
 
     // Create a scrollpane for the diagram...
-    final JScrollPane scrollPane = new JScrollPane( this.signalDiagram );
-    scrollPane.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED );
-    scrollPane.setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED );
+    final JScrollPane scrollPane = new ZoomCapableScrollPane( aController.getSignalDiagramController() );
 
     this.dockController.registerToolWindow( this.signalDetails, DockController.GROUP_MEASURE );
     this.dockController.registerToolWindow( this.measurementDetails, DockController.GROUP_MEASURE );
