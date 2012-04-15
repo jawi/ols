@@ -180,9 +180,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   // VARIABLES
 
   private final SignalDiagramController controller;
-
   private final SignalView signalView;
-
   private final ComponentEventHandler componentHandler;
 
   // CONSTRUCTORS
@@ -508,21 +506,14 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     final double oldZf = aEvent.getOldFactor();
     final double relZf = newZf / oldZf;
 
-    System.out.println( "notifyZoomChange[" + view.getClass().getSimpleName() + "] " + hotSpot + "; "
-        + view.getVisibleRect().getCenterX() + "; " + relZf );
+    // Calculate the timestamp from the center position of the visible view
+    // rectangle; after which we lookup the exact timestamp that is at that
+    // position. If found, we'll use that timestamp to recalculate the new
+    // center position in the new zoom factor...
+    final long timestamp = ( long )Math.ceil( mx / oldZf );
+    final int tsIdx = model.getTimestampIndex( timestamp );
 
-    if ( hotSpot == null )
-    {
-      // Calculate the timestamp from the center position of the visible view
-      // rectangle; after which we lookup the exact timestamp that is at that
-      // position. If found, we'll use that timestamp to recalculate the new
-      // center position in the new zoom factor...
-      final long timestamp = ( long )Math.ceil( mx / oldZf );
-      final int tsIdx = model.getTimestampIndex( timestamp );
-
-      mx = Math.floor( model.getTimestamps()[tsIdx] * oldZf );
-      System.out.println( "mx (ts) = " + mx );
-    }
+    mx = Math.floor( model.getTimestamps()[tsIdx] * oldZf );
 
     if ( aEvent.isFactorChange() )
     {

@@ -338,16 +338,6 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   }
 
   /**
-   * @param aPoint
-   * @return
-   */
-  protected long locationToTimestamp( final Point aPoint )
-  {
-    final SignalDiagramModel model = this.controller.getSignalDiagram().getModel();
-    return model.locationToTimestamp( aPoint );
-  }
-
-  /**
    * Returns the cursor flag text for the cursor with the given index.
    * 
    * @param aCursorIdx

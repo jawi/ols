@@ -45,7 +45,7 @@ public final class GhostGlassPane extends JPanel
   private final GhostGlassPaneModel model;
 
   private volatile Rectangle affectedArea;
-  private volatile Point dropPoint;
+  private volatile Point paintLocation;
   private volatile Renderer renderer;
 
   // CONSTRUCTORS
@@ -78,15 +78,6 @@ public final class GhostGlassPane extends JPanel
   }
 
   /**
-   * Clears the location where the channel/cursor might be dropped. This
-   * location is used to draw a marker indicating the drop point.
-   */
-  public void clearDropPoint()
-  {
-    this.dropPoint = null;
-  }
-
-  /**
    * Repaints only the affected areas of this glass pane.
    * 
    * @see #setDropPoint(Point)
@@ -102,59 +93,61 @@ public final class GhostGlassPane extends JPanel
       final Rectangle repaintRect = new Rectangle( this.affectedArea );
       // take a slighter larger area in order to ensure we've repainted
       // everything correctly...
-      repaintRect.grow( 2, 2 );
+      repaintRect.grow( 1, 1 );
 
       repaint( repaintRect );
     }
   }
 
   /**
-   * Sets the location where the channel/cursor might be dropped. This location
-   * is used to draw a marker indicating the drop point.
+   * Sets the renderer and location where to use it.
+   * 
+   * @param aRenderer
+   *          the renderer to use on this glass pane, cannot be
+   *          <code>null</code>;
+   * @param aPaintLocation
+   *          the location where the to paint the renderer, cannot be
+   *          <code>null</code>;
+   * @param aContext
+   *          the (optional) rendering context.
+   */
+  public void setRenderer( final Renderer aRenderer, final Point aPaintLocation, final Object... aContext )
+  {
+    this.paintLocation = aPaintLocation;
+    this.renderer = aRenderer;
+    setRenderContext( aContext );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void setVisible( final boolean aFlag )
+  {
+    super.setVisible( aFlag );
+
+    if ( !aFlag )
+    {
+      // Clean up the administration...
+      this.paintLocation = null;
+      this.renderer = null;
+      this.affectedArea = null;
+    }
+  }
+
+  /**
+   * Updates the current renderer with the given location and context
+   * information.
    * 
    * @param aPaintLocation
-   *          the location where the channel/cursor might be dropped, cannot be
+   *          the location where the to paint the renderer, cannot be
    *          <code>null</code>;
    * @param aContext
-   *          the drag and drop context, cannot be <code>null</code>.
+   *          the (optional) rendering context.
    */
-  public void setDropPoint( final Point aPaintLocation, final Point aDropPoint )
+  public void updateRenderer( final Point aPaintLocation, final Object... aContext )
   {
-    setDropPoint( aPaintLocation, this.renderer, aDropPoint );
-  }
-
-  /**
-   * Sets the location where the channel/cursor might be dropped. This location
-   * is used to draw a marker indicating the drop point.
-   * 
-   * @param aLocation
-   *          the location where the channel/cursor might be dropped, cannot be
-   *          <code>null</code>;
-   * @param aContext
-   *          the drag and drop context, cannot be <code>null</code>.
-   */
-  public void setDropPoint( final Point aLocation, final Renderer aRenderer, final Point aDropPoint )
-  {
-    this.dropPoint = aLocation;
-    this.renderer = aRenderer;
-    if ( this.renderer != null )
-    {
-      this.renderer.setContext( aDropPoint );
-    }
-  }
-
-  /**
-   * Sets the rendering context for the renderer that should be painted.
-   * 
-   * @param aParameters
-   *          the rendering context parameters, cannot be <code>null</code>.
-   */
-  public void setRenderContext( final Object... aParameters )
-  {
-    if ( this.renderer != null )
-    {
-      this.renderer.setContext( aParameters );
-    }
+    setRenderer( this.renderer, aPaintLocation, aContext );
   }
 
   /**
@@ -163,7 +156,7 @@ public final class GhostGlassPane extends JPanel
   @Override
   protected void paintComponent( final Graphics aGraphics )
   {
-    if ( ( this.dropPoint == null ) || ( this.renderer == null ) || !isVisible() )
+    if ( ( this.paintLocation == null ) || ( this.renderer == null ) || !isVisible() )
     {
       return;
     }
@@ -176,14 +169,28 @@ public final class GhostGlassPane extends JPanel
       g2d.setComposite( this.model.getComposite() );
       g2d.setColor( this.model.getColor() );
 
-      int x = this.dropPoint.x;
-      int y = this.dropPoint.y;
+      int x = this.paintLocation.x;
+      int y = this.paintLocation.y;
 
       this.affectedArea = this.renderer.render( g2d, x, y );
     }
     finally
     {
       g2d.dispose();
+    }
+  }
+
+  /**
+   * Sets the rendering context for the renderer that should be painted.
+   * 
+   * @param aParameters
+   *          the rendering context parameters, cannot be <code>null</code>.
+   */
+  private void setRenderContext( final Object... aParameters )
+  {
+    if ( this.renderer != null )
+    {
+      this.renderer.setContext( aParameters );
     }
   }
 }

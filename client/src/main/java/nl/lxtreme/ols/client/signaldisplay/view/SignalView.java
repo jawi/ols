@@ -33,6 +33,8 @@ import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
+import nl.lxtreme.ols.client.signaldisplay.util.*;
+import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -61,6 +63,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     private final SignalDiagramController controller;
 
     private volatile int movingCursor;
+    private volatile Point rubberBandStartPoint = null;
 
     // CONSTRUCTORS
 
@@ -110,6 +113,16 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         this.controller.moveCursor( this.movingCursor, getCursorDropPoint( point ) );
 
         aEvent.consume();
+      }
+      else
+      {
+        if ( this.rubberBandStartPoint == null )
+        {
+          this.rubberBandStartPoint = new Point( point );
+        }
+
+        // Use UNCONVERTED/ORIGINAL mouse event!
+        handleZoomRegion( aEvent, this.rubberBandStartPoint );
       }
     }
 
@@ -175,14 +188,21 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
       final MouseEvent event = convertEvent( aEvent );
       final Point point = event.getPoint();
 
-      if ( !isCursorHover( aEvent ) && !isEdgeWarpTrigger( aEvent, point ) )
+      if ( !isCursorHover( event ) && !isEdgeWarpTrigger( event, point ) )
       {
-        setMouseCursor( aEvent, null );
+        setMouseCursor( event, null );
       }
 
       if ( !handlePopupTrigger( point, aEvent ) )
       {
         this.movingCursor = -1;
+      }
+
+      if ( this.rubberBandStartPoint != null )
+      {
+        // Use UNCONVERTED/ORIGINAL mouse event!
+        handleZoomRegion( aEvent, this.rubberBandStartPoint );
+        this.rubberBandStartPoint = null;
       }
     }
 
@@ -228,6 +248,62 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     protected final SignalDiagramModel getModel()
     {
       return this.controller.getSignalDiagramModel();
+    }
+
+    /**
+     * @param aEvent
+     * @param aStartPoint
+     */
+    protected void handleZoomRegion( final MouseEvent aEvent, final Point aStartPoint )
+    {
+      // For now, disabled by default as it isn't 100% working yet...
+      if ( Boolean.FALSE.equals( Boolean.valueOf( System.getProperty( "zoomregionenabled", "false" ) ) ) )
+      {
+        return;
+      }
+
+      final JComponent source = ( JComponent )aEvent.getComponent();
+      final boolean dragging = ( aEvent.getID() == MouseEvent.MOUSE_DRAGGED );
+
+      final GhostGlassPane glassPane = ( GhostGlassPane )SwingUtilities.getRootPane( source ).getGlassPane();
+
+      Rectangle viewRect;
+      final JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, source );
+      if ( scrollPane != null )
+      {
+        final JViewport viewport = scrollPane.getViewport();
+        viewRect = SwingUtilities.convertRectangle( viewport, viewport.getVisibleRect(), glassPane );
+      }
+      else
+      {
+        viewRect = SwingUtilities.convertRectangle( source, source.getVisibleRect(), glassPane );
+      }
+
+      final Point start = SwingUtilities.convertPoint( source, aStartPoint, glassPane );
+      final Point current = SwingUtilities.convertPoint( source, aEvent.getPoint(), glassPane );
+
+      if ( dragging )
+      {
+        if ( !glassPane.isVisible() )
+        {
+          glassPane.setVisible( true );
+          glassPane.setRenderer( new RubberBandRenderer(), start, current, viewRect );
+        }
+        else
+        {
+          glassPane.updateRenderer( start, current, viewRect );
+        }
+
+        glassPane.repaintPartially();
+      }
+      else
+      /* if ( !dragging ) */
+      {
+        // Fire off a signal to the zoom controller to do its job...
+        this.controller.getZoomController().zoomRegion( aStartPoint, aEvent.getPoint() );
+
+        glassPane.setVisible( false );
+      }
     }
 
     /**
@@ -392,7 +468,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
   /**
    * 
    */
-  private static final class MouseHandler extends BasicMouseHandler
+  private final class MouseHandler extends BasicMouseHandler
   {
     // VARIABLES
 
@@ -459,7 +535,6 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         }
       }
     }
-
   }
 
   // CONSTANTS

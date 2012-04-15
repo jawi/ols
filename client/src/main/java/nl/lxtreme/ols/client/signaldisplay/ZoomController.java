@@ -374,6 +374,53 @@ public final class ZoomController
   }
 
   /**
+   * @param aPoint1
+   * @param aPoint2
+   */
+  public boolean zoomRegion( final Point aPoint1, final Point aPoint2 )
+  {
+    if ( aPoint1.distance( aPoint2 ) < 10 ) // XXX threshold!
+    {
+      return false;
+    }
+
+    // Zoom region...
+
+    final SignalDiagramModel model = this.controller.getSignalDiagramModel();
+    final Rectangle viewSize = this.controller.getSignalDiagram().getVisibleViewSize();
+
+    final int width = Math.abs( aPoint2.x - aPoint1.x );
+    final Long triggerPos = model.getTriggerPosition();
+
+    ZoomEvent event;
+    long ts;
+    synchronized ( this.LOCK )
+    {
+      double oldFactor = getFactor();
+
+      int midX = ( int )( aPoint1.x + ( width / 2.0 ) );
+
+      ts = ( long )Math.ceil( midX / oldFactor );
+      if ( triggerPos != null )
+      {
+        ts -= triggerPos.longValue();
+      }
+
+      Point hs = new Point( ( int )( ts * oldFactor ), 0 );
+
+      double newFactor = setFactor( ( viewSize.width / ( double )width ) );
+
+      this.zoomAll = false;
+
+      event = createZoomEvent( oldFactor, newFactor, hs );
+    }
+
+    fireZoomEvent( event );
+
+    return true;
+  }
+
+  /**
    * Calculates the new zoom-factor, based on a given zoom ratio.
    * 
    * @param aZoomRatio
