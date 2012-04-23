@@ -1896,27 +1896,13 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     else if ( hostInfo.isUnix() )
     {
-      try
-      {
-        UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
-        setLookAndFeel( "com.jgoodies.looks.plastic.Plastic3DLookAndFeel" );
-      }
-      catch ( Exception exception )
-      {
-        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
-      }
+      UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
+      setLookAndFeel( "com.jgoodies.looks.plastic.Plastic3DLookAndFeel" );
     }
     else if ( hostInfo.isWindows() )
     {
-      try
-      {
-        UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
-        setLookAndFeel( "com.jgoodies.looks.plastic.PlasticXPLookAndFeel" );
-      }
-      catch ( Exception exception )
-      {
-        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
-      }
+      UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
+      setLookAndFeel( "com.jgoodies.looks.plastic.PlasticXPLookAndFeel" );
     }
   }
 
@@ -1972,7 +1958,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !HostUtils.handleInterruptedException( exception ) )
       {
-        Logger.getAnonymousLogger().log( Level.WARNING, "Failed to set look and feel!", exception );
+        System.err.println( "Failed to set look and feel to: " + aLookAndFeelClassName );
+        setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
       }
     }
   }
