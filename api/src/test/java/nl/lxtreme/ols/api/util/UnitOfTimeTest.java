@@ -23,6 +23,8 @@ package nl.lxtreme.ols.api.util;
 
 import static org.junit.Assert.*;
 
+import java.util.*;
+
 import org.junit.*;
 
 
@@ -32,6 +34,15 @@ import org.junit.*;
 public class UnitOfTimeTest
 {
   // METHODS
+
+  /**
+   * Forces the use of English locales for this test.
+   */
+  @Before
+  public void setUp()
+  {
+    Locale.setDefault( Locale.US );
+  }
 
   /**
    * Test method for
