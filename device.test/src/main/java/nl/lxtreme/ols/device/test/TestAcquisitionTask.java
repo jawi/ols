@@ -91,6 +91,14 @@ public class TestAcquisitionTask implements AcquisitionTask
       rate = generator.getRate();
       trigger = generator.getTrigger();
     }
+    else if ( DATA_FUNCTIONS[8].equals( dataFunction ) )
+    {
+      final ManchesterEncoder encoder = new ManchesterEncoder();
+      encoder.writeData( "Hello World!" );
+      data = encoder.getData();
+      rate = encoder.getRate();
+      trigger = encoder.getTrigger();
+    }
     else
     {
       final Random rnd = new Random();
