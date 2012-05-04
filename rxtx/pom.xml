@@ -123,7 +123,7 @@
 							(C) 2010-2011</Bundle-Copyright>
 						<Bundle-License>LGPL;link=http://www.gnu.org/licenses/lgpl.html</Bundle-License>
 						<Export-Package>purejavacomm.*;version="0.0.3"</Export-Package>
-						<Embed-Dependency>*;scope=system</Embed-Dependency>
+						<Embed-Dependency>*;scope=system;inline=true</Embed-Dependency>
 <!-- 
 						<Bundle-NativeCode>
 						    native/SunOS/x86/librxtxSerial.so; osname=SunOS; processor=x86,
