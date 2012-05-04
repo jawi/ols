@@ -32,8 +32,6 @@ public final class HostUtils implements HostInfo
 {
   // INNER TYPES
 
-  
-
   // CONSTANTS
 
   private static final HostInfo HOSTINFO = new HostUtils();
@@ -205,6 +203,13 @@ public final class HostUtils implements HostInfo
     {
       ext = filename.substring( idx + 1 ).toLowerCase();
     }
+
+    // Avoid directories being detected as having a file extension...
+    if ( aFile.exists() && aFile.isDirectory() && !"".equals( ext ) )
+    {
+      ext = "";
+    }
+
     return ext;
   }
 
