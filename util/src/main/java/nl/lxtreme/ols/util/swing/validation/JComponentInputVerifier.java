@@ -126,13 +126,12 @@ public class JComponentInputVerifier extends InputVerifier implements KeyListene
    *          the message to display in case the verification failed.
    * @return an input verifier instance, never <code>null</code>.
    */
-  @SuppressWarnings( "unchecked" )
   public static JComponentInputVerifier create( final Class<?> aType, final String aMessage )
   {
     IValidator validator;
-    if ( Number.class.isAssignableFrom( aType ) )
+    if ( NumberValidator.isNumericType( aType ) )
     {
-      validator = new NumberValidator( ( Class<? extends Number> )aType );
+      validator = new NumberValidator( aType );
     }
     else
     {
@@ -147,8 +146,7 @@ public class JComponentInputVerifier extends InputVerifier implements KeyListene
   @Override
   public final void keyPressed( final KeyEvent aEvent )
   {
-    final Component source = ( Component )aEvent.getSource();
-    source.removeKeyListener( this );
+    ( ( Component )aEvent.getSource() ).removeKeyListener( this );
 
     if ( this.popup != null )
     {
@@ -164,7 +162,7 @@ public class JComponentInputVerifier extends InputVerifier implements KeyListene
   @Override
   public final void keyReleased( final KeyEvent aEvent )
   {
-    // NO-op
+    ( ( Component )aEvent.getSource() ).removeKeyListener( this );
   }
 
   /**
@@ -173,7 +171,7 @@ public class JComponentInputVerifier extends InputVerifier implements KeyListene
   @Override
   public final void keyTyped( final KeyEvent aEvent )
   {
-    // NO-op
+    ( ( Component )aEvent.getSource() ).removeKeyListener( this );
   }
 
   /**
@@ -209,14 +207,12 @@ public class JComponentInputVerifier extends InputVerifier implements KeyListene
       // Signal that the input is incorrect...
       aInput.setBackground( Color.PINK );
 
-      this.popup.setSize( 0, 0 );
-      this.popup.setLocationRelativeTo( aInput );
-
-      final Point point = this.popup.getLocation();
+      final Point point = aInput.getLocationOnScreen();
       final Dimension componentSize = aInput.getSize();
 
-      this.popup.setLocation( point.x - ( int )componentSize.getWidth() / 2, point.y + ( int )componentSize.getHeight()
-          / 2 );
+      this.popup.setSize( 0, 0 );
+      this.popup.setLocation( point.x + ( ( int )componentSize.getWidth() / 2 ),
+          point.y + ( ( int )componentSize.getHeight() / 2 ) );
 
       this.popup.pack();
       this.popup.setVisible( true );
@@ -282,7 +278,7 @@ public class JComponentInputVerifier extends InputVerifier implements KeyListene
   private JDialog createMessagePopup( final JComponent aComponent )
   {
     String message = getMessage();
-    if ( ( message == null ) || message.trim().isEmpty() )
+    if ( ( message == null ) || "".equals( message.trim() ) )
     {
       message = DEFAULT_MESSAGE;
     }

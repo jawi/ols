@@ -27,6 +27,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 
 
 /**
@@ -35,6 +36,26 @@ import nl.lxtreme.ols.util.*;
 public final class StandardActionFactory
 {
   // INNER TYPES
+
+  /**
+   * Denotes an action for an "Cancel" button.
+   */
+  public static final class CancelAction extends AbstractStatusAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link CancelAction} instance.
+     */
+    public CancelAction()
+    {
+      super( DialogStatus.CANCEL );
+    }
+  }
 
   /**
    * Provides a generic close dialog action.
@@ -94,7 +115,7 @@ public final class StandardActionFactory
       {
         final Component source = ( Component )aEvent.getSource();
 
-        final Closeable closeableParent = findCloseableParent( source );
+        final Closeable closeableParent = findCloseableParent( source, Closeable.class );
         if ( closeableParent == null )
         {
           throw new RuntimeException( "Failed to find closeable parent?!" );
@@ -109,37 +130,117 @@ public final class StandardActionFactory
         }
       }
     }
+  }
+
+  /**
+   * Denotes the result status of a dialog.
+   */
+  public static enum DialogStatus
+  {
+    OK, CANCEL;
 
     /**
-     * Tries to find a parent container/component that implements the
-     * {@link Closeable} interface.
-     * 
-     * @param aComponent
-     *          the component to find the closeable parent for, may be
-     *          <code>null</code>.
-     * @return the closeable parent, or <code>null</code> if no such parent was
-     *         found (or the given component was <code>null</code>).
+     * @return <code>true</code> if this status equals to {@link #CANCEL},
+     *         <code>false</code> otherwise.
      */
-    private Closeable findCloseableParent( final Component aComponent )
+    public boolean isCancel()
     {
-      Closeable closeableParent;
-      // Some magic in order to also be able to find the parent's of menu items
-      // or popup menu items...
-      if ( aComponent instanceof JMenuItem )
+      return this == CANCEL;
+    }
+
+    /**
+     * @return <code>true</code> if this status equals to {@link #OK},
+     *         <code>false</code> otherwise.
+     */
+    public boolean isOk()
+    {
+      return this == OK;
+    }
+  }
+
+  /**
+   * Denotes an action for an "Ok"/"Apply" button.
+   */
+  public static final class OkAction extends AbstractStatusAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link OkAction} instance.
+     */
+    public OkAction()
+    {
+      super( DialogStatus.OK );
+    }
+  }
+
+  /**
+   * 
+   */
+  public static interface StatusAwareCloseableDialog extends Closeable
+  {
+    /**
+     * Reports back what the status of a dialog is.
+     * 
+     * @param aStatus
+     *          the status of the dialog, never <code>null</code>.
+     */
+    void setDialogStatus( DialogStatus aStatus );
+  }
+
+  /**
+   * Denotes an action for an "Ok"/"Apply" button.
+   */
+  abstract static class AbstractStatusAction extends AbstractAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // VARIABLES
+
+    private final DialogStatus status;
+
+    /**
+     * Creates a new {@link AbstractStatusAction} instance.
+     */
+    public AbstractStatusAction( final DialogStatus aStatus )
+    {
+      super( aStatus.name().substring( 0, 1 ).concat( aStatus.name().substring( 1 ).toLowerCase() ) );
+
+      this.status = aStatus;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      if ( aEvent.getSource() instanceof Component )
       {
-        final Component parent = ( ( JMenuItem )aComponent ).getParent();
-        closeableParent = findCloseableParent( parent );
+        final Component source = ( Component )aEvent.getSource();
+
+        final StatusAwareCloseableDialog closeableParent = findCloseableParent( source,
+            StatusAwareCloseableDialog.class );
+        if ( closeableParent == null )
+        {
+          throw new RuntimeException( "Failed to find closeable parent?!" );
+        }
+
+        closeableParent.setDialogStatus( this.status );
+        closeableParent.close();
+
+        // Make sure the resources held by the window are released...
+        if ( closeableParent instanceof Window )
+        {
+          ( ( Window )closeableParent ).dispose();
+        }
       }
-      else if ( aComponent instanceof JPopupMenu )
-      {
-        final Component invoker = ( ( JPopupMenu )aComponent ).getInvoker();
-        closeableParent = findCloseableParent( invoker );
-      }
-      else
-      {
-        closeableParent = SwingComponentUtils.getAncestorOfClass( Closeable.class, aComponent );
-      }
-      return closeableParent;
     }
   }
 
@@ -159,6 +260,27 @@ public final class StandardActionFactory
   }
 
   // METHODS
+
+  /**
+   * Creates a new cancel action instance.
+   * 
+   * @return a cancel action instance, never <code>null</code>.
+   */
+  public static final Action createCancelAction()
+  {
+    return new CancelAction();
+  }
+
+  /**
+   * Creates a new button instance with a cancel action assigned to it.
+   * 
+   * @return a new cancel-button instance, never <code>null</code>.
+   */
+  public static final JButton createCancelButton()
+  {
+    final Action action = createCancelAction();
+    return createButton( action );
+  }
 
   /**
    * Creates a new close action instance.
@@ -190,6 +312,27 @@ public final class StandardActionFactory
   }
 
   /**
+   * Creates a new OK action instance.
+   * 
+   * @return an OK action instance, never <code>null</code>.
+   */
+  public static final Action createOkAction()
+  {
+    return new OkAction();
+  }
+
+  /**
+   * Creates a new button instance with an OK action assigned to it.
+   * 
+   * @return a new OK-button instance, never <code>null</code>.
+   */
+  public static final JButton createOkButton()
+  {
+    final Action action = createOkAction();
+    return createButton( action );
+  }
+
+  /**
    * Creates a new button with the given action and registers the (optional)
    * shortcut key as default action for the returned button.
    * 
@@ -208,5 +351,40 @@ public final class StandardActionFactory
     final JButton button = new JButton( aAction );
     SwingComponentUtils.registerKeystroke( button, aAction, actionName );
     return button;
+  }
+
+  /**
+   * Tries to find a parent container/component that implements the
+   * {@link Closeable} interface.
+   * 
+   * @param aComponent
+   *          the component to find the closeable parent for, may be
+   *          <code>null</code>.
+   * @return the closeable parent, or <code>null</code> if no such parent was
+   *         found (or the given component was <code>null</code>).
+   */
+  private static <T extends Closeable> T findCloseableParent( final Component aComponent,
+      final Class<T> aImplementingType )
+  {
+    T closeableParent;
+
+    // Some magic in order to also be able to find the parent's of menu items
+    // or popup menu items...
+    if ( aComponent instanceof JMenuItem )
+    {
+      final Component parent = ( ( JMenuItem )aComponent ).getParent();
+      closeableParent = findCloseableParent( parent, aImplementingType );
+    }
+    else if ( aComponent instanceof JPopupMenu )
+    {
+      final Component invoker = ( ( JPopupMenu )aComponent ).getInvoker();
+      closeableParent = findCloseableParent( invoker, aImplementingType );
+    }
+    else
+    {
+      closeableParent = SwingComponentUtils.getAncestorOfClass( aImplementingType, aComponent );
+    }
+
+    return closeableParent;
   }
 }

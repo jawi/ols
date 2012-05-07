@@ -33,7 +33,7 @@ public final class NumberValidator implements IValidator
 
   // VARIABLES
 
-  private final Class<? extends Number> type;
+  private final Class<?> type;
   private final int radix;
 
   // CONSTRUCTORS
@@ -53,7 +53,7 @@ public final class NumberValidator implements IValidator
    * @param aType
    *          the numeric type (Integer, Long, ...) to expect.
    */
-  public NumberValidator( final Class<? extends Number> aType )
+  public NumberValidator( final Class<?> aType )
   {
     this( aType, DECIMAL_RADIX );
   }
@@ -70,7 +70,7 @@ public final class NumberValidator implements IValidator
    *           in case the given type was either a float or double <b>and</b>
    *           the radix is not 10.
    */
-  public NumberValidator( final Class<? extends Number> aType, final int aRadix )
+  public NumberValidator( final Class<?> aType, final int aRadix )
   {
     if ( ( aRadix != DECIMAL_RADIX )
         && ( Float.class.isAssignableFrom( aType ) || Double.class.isAssignableFrom( aType ) ) )
@@ -94,6 +94,55 @@ public final class NumberValidator implements IValidator
   }
 
   // METHODS
+
+  /**
+   * Returns whether or not the given type represents a numeric floating-point
+   * type.
+   * 
+   * @param aType
+   *          the type to test, can be <code>null</code>.
+   * @return <code>true</code> if the given type represents a floating-point
+   *         type, <code>false</code> otherwise.
+   */
+  public static boolean isFloatType( final Class<?> aType )
+  {
+    if ( ( aType == Float.TYPE ) || ( aType == Double.TYPE ) )
+    {
+      return true;
+    }
+    return Float.class.isAssignableFrom( aType ) || Double.class.isAssignableFrom( aType );
+  }
+
+  /**
+   * Returns whether or not the given type represents a numeric integer-like
+   * type.
+   * 
+   * @param aType
+   *          the type to test, can be <code>null</code>.
+   * @return <code>true</code> if the given type represents a integer-like type,
+   *         <code>false</code> otherwise.
+   */
+  public static boolean isIntegerType( final Class<?> aType )
+  {
+    if ( ( aType == Integer.TYPE ) || ( aType == Long.TYPE ) )
+    {
+      return true;
+    }
+    return Integer.class.isAssignableFrom( aType ) || Long.class.isAssignableFrom( aType );
+  }
+
+  /**
+   * Returns whether or not the given type represents a numeric type.
+   * 
+   * @param aType
+   *          the type to test, can be <code>null</code>.
+   * @return <code>true</code> if the given type represents a numeric type,
+   *         <code>false</code> otherwise.
+   */
+  public static boolean isNumericType( final Class<?> aType )
+  {
+    return isIntegerType( aType ) || isFloatType( aType );
+  }
 
   /**
    * @see nl.lxtreme.ols.util.swing.validation.IValidator#validate(java.lang.Object)
@@ -137,19 +186,19 @@ public final class NumberValidator implements IValidator
     try
     {
       final Number value;
-      if ( Long.TYPE == this.type )
+      if ( ( Long.TYPE == this.type ) || ( Long.class == this.type ) )
       {
         value = Long.parseLong( aInputText, this.radix );
       }
-      else if ( Short.TYPE == this.type )
+      else if ( ( Short.TYPE == this.type ) || ( Short.class == this.type ) )
       {
         value = Short.parseShort( aInputText, this.radix );
       }
-      else if ( Float.TYPE == this.type )
+      else if ( ( Float.TYPE == this.type ) || ( Float.class == this.type ) )
       {
         value = Float.parseFloat( aInputText );
       }
-      else if ( Double.TYPE == this.type )
+      else if ( ( Double.TYPE == this.type ) || ( Double.class == this.type ) )
       {
         value = Double.parseDouble( aInputText );
       }

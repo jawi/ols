@@ -25,8 +25,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
+import java.util.*;
 
 import javax.swing.*;
+
+import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
 
 import org.osgi.service.prefs.*;
 
@@ -111,6 +114,33 @@ public final class SwingComponentUtils
       throw new IllegalArgumentException( "Need at least one button!" );
     }
 
+    // we want equally sized buttons, so we are recording preferred sizes while
+    // adding the buttons and set them to the maximum afterwards...
+    int width = 1;
+    int height = 1;
+
+    ArrayList<JButton> buttons = new ArrayList<JButton>();
+    ArrayList<JButton> stdButtons = new ArrayList<JButton>();
+
+    for ( JButton button : aButtons )
+    {
+      width = Math.max( width, button.getPreferredSize().width );
+      height = Math.max( height, button.getPreferredSize().height );
+
+      Action action = button.getAction();
+      if ( ( action != null )
+          && ( ( action instanceof CloseAction ) || ( action instanceof OkAction ) || ( action instanceof CancelAction ) ) )
+      {
+        stdButtons.add( button );
+      }
+      else
+      {
+        buttons.add( button );
+      }
+    }
+
+    final Dimension newDims = new Dimension( width, height );
+
     final JPanel buttonPane = new JPanel();
     buttonPane.setLayout( new BoxLayout( buttonPane, BoxLayout.LINE_AXIS ) );
     buttonPane.setBorder( BorderFactory.createEmptyBorder( BUTTONS_PADDING_TOP, BUTTONS_PADDING_LEFT,
@@ -118,29 +148,25 @@ public final class SwingComponentUtils
 
     buttonPane.add( Box.createHorizontalGlue() );
 
-    // we want equally sized buttons, so we are recording preferred sizes while
-    // adding the buttons and set them to the maximum afterwards...
-    int width = 1;
-    int height = 1;
-
-    for ( JButton button : aButtons )
+    // everything added; let's set all sizes
+    for ( final JButton button : buttons )
     {
-      width = Math.max( width, button.getPreferredSize().width );
-      height = Math.max( height, button.getPreferredSize().height );
+      button.setPreferredSize( newDims );
+
+      buttonPane.add( Box.createHorizontalStrut( BUTTONS_SPACING_DEFAULT ) );
+      buttonPane.add( button );
+    }
+
+    // everything added; let's set all sizes
+    for ( final JButton button : stdButtons )
+    {
+      button.setPreferredSize( newDims );
 
       buttonPane.add( Box.createHorizontalStrut( BUTTONS_SPACING_DEFAULT ) );
       buttonPane.add( button );
     }
 
     buttonPane.add( Box.createHorizontalStrut( BUTTONS_SPACING_DEFAULT ) );
-
-    final Dimension newDims = new Dimension( width, height );
-
-    // everything added; let's set all sizes
-    for ( final JButton button : aButtons )
-    {
-      button.setPreferredSize( newDims );
-    }
 
     return buttonPane;
   }
