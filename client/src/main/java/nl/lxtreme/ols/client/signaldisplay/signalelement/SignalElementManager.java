@@ -224,6 +224,10 @@ public final class SignalElementManager implements IDataModelChangeListener
         for ( int c = 0; c < channelsPerGroup; c++ )
         {
           final int channelIdx = ( g * channelsPerGroup ) + c;
+          if ( newChannelList[channelIdx] == null )
+          {
+            continue;
+          }
           addSignalElement( group, createDigitalSignalElement( newChannelList[channelIdx], group ) );
         }
 
