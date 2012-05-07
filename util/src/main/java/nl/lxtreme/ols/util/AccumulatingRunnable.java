@@ -108,5 +108,4 @@ public abstract class AccumulatingRunnable<T> implements Runnable
   {
     SwingUtilities.invokeLater( this );
   }
-
 }
