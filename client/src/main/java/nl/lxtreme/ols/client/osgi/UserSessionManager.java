@@ -228,6 +228,24 @@ public class UserSessionManager
     }
 
     /**
+     * Returns whether or not the given component is a managed window.
+     * 
+     * @param aComponent
+     *          the component to test, can be <code>null</code>.
+     * @return <code>false</code> if the given component is not a managed window
+     *         (or <code>null</code>), <code>true</code> if it is.
+     */
+    private boolean isManagedWindow( final Window aComponent )
+    {
+      if ( aComponent == null )
+      {
+        return false;
+      }
+      return ( ( aComponent instanceof JFrame ) && !( ( JFrame )aComponent ).isUndecorated() )
+          || ( ( aComponent instanceof JDialog ) && !( ( JDialog )aComponent ).isUndecorated() );
+    }
+
+    /**
      * Loads the window preferences for the given window with the given
      * namespace.
      * 
@@ -250,7 +268,7 @@ public class UserSessionManager
 
         // Only store settings of "real" frames and dialogs, not
         // popups/dropdowns, etc...
-        if ( ( aComponent instanceof JFrame ) || ( aComponent instanceof JDialog ) )
+        if ( isManagedWindow( aComponent ) )
         {
           this.logger.log( LogService.LOG_DEBUG, "Reading window-properties for: " + aNamespace );
 
@@ -311,7 +329,7 @@ public class UserSessionManager
 
         // Only store settings of "real" frames and dialogs, not
         // popups/dropdowns, etc...
-        if ( ( aComponent instanceof JFrame ) || ( aComponent instanceof JDialog ) )
+        if ( isManagedWindow( aComponent ) )
         {
           this.logger.log( LogService.LOG_DEBUG, "Writing window-properties for: " + aNamespace );
 
