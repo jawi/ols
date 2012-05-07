@@ -100,7 +100,7 @@ public final class LogicSnifferConfig
   /**
    * Returns the number of <em>available</em> channels in current configuration.
    * 
-   * @return number of available channels, e.g., 8 or 16.
+   * @return the total number of available channels, e.g., 8, 16, 24 or 32.
    */
   public int getChannelCount()
   {
@@ -182,9 +182,20 @@ public final class LogicSnifferConfig
   }
 
   /**
-   * Returns the currently enabled channels.
+   * Returns the number of currently enabled channels.
    * 
-   * @return bitmask with enabled channels represented as 1
+   * @return a number of enabled channels, either 8, 16, 24 or 32.
+   */
+  public int getEnabledChannelsCount()
+  {
+    return getEnabledGroupCount() * 8;
+  }
+
+  /**
+   * Returns the mask of the currently enabled channels.
+   * 
+   * @return a bitmask with enabled channels represented as 1 integer
+   *         representation (power of two), >= 0.
    */
   public int getEnabledChannelsMask()
   {

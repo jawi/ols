@@ -160,7 +160,9 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     // Close the connection...
     close();
 
-    return new CapturedData( values, timestamps, triggerPos[0], rate, channelCount,
+    // Issue #98: use the *enabled* channel count, not the total channel
+    // count...
+    return new CapturedData( values, timestamps, triggerPos[0], rate, this.config.getEnabledChannelsCount(),
         this.config.getEnabledChannelsMask(), absoluteLength[0] );
   }
 
