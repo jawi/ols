@@ -59,7 +59,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
 
     this.capturedData = aCapturedData;
     this.cursorsEnabled = aOld.isCursorsEnabled();
-    this.channels = createChannels( aCapturedData.getChannels(), aOld.getChannels() );
+    this.channels = createChannels( aCapturedData.getChannels(), aCapturedData.getEnabledChannels(), aOld.getChannels() );
     this.cursors = createCursors( Ols.MAX_CURSORS, aOld.getCursors() );
   }
 
@@ -72,7 +72,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
 
     this.capturedData = null;
     this.cursors = createCursors( Ols.MAX_CURSORS );
-    this.channels = createChannels( Ols.MAX_CHANNELS );
+    this.channels = createChannels( Ols.MAX_CHANNELS, 0xFFFFFFFF );
     this.cursorsEnabled = true;
   }
 
@@ -209,17 +209,25 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
    *          the number of channels to create, >= 0.
    * @return an array with channels, never <code>null</code>.
    */
-  private Channel[] createChannels( final int aCount, final Channel... aInitialValues )
+  private Channel[] createChannels( final int aCount, final int aMask, final Channel... aInitialValues )
   {
-    final int chCount = this.capturedData == null ? aCount : this.capturedData.getChannels();
+    final int chCount = ( this.capturedData == null ) ? aCount : this.capturedData.getChannels();
 
     Channel[] result = new Channel[aCount];
-    for ( int i = 0; i < aCount; i++ )
+    for ( int i = 0, j = 0; i < Ols.MAX_CHANNELS; i++ )
     {
-      ChannelImpl channel;
-      if ( ( i < aInitialValues.length ) && ( i < chCount ) )
+      final int mask = ( 1 << i );
+      // Issue #99: demultiplex the channels to the right group...
+      if ( ( aMask & mask ) == 0 )
       {
-        channel = new ChannelImpl( aInitialValues[i] );
+        continue;
+      }
+
+      ChannelImpl channel;
+      // Only use an initial version of channel if the channel indexes match...
+      if ( ( j < aInitialValues.length ) && ( j < chCount ) && ( aInitialValues[j].getIndex() == i ) )
+      {
+        channel = new ChannelImpl( aInitialValues[j] );
       }
       else
       {
@@ -227,7 +235,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
       }
       channel.addPropertyChangeListener( this );
 
-      result[i] = channel;
+      result[j++] = channel;
     }
     return result;
   }
