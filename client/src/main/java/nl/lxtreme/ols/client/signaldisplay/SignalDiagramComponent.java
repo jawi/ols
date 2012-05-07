@@ -531,6 +531,13 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
     // Notify that everything needs to be revalidated as well...
     revalidateAll();
+
+    // Issue #100: in case the factor is changed, we need to repaint all
+    // components...
+    if ( aEvent.isFactorChange() )
+    {
+      repaintAll();
+    }
   }
 
   /**
@@ -613,6 +620,24 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       scrollPane.setCorner( ScrollPaneConstants.UPPER_LEADING_CORNER, new CornerView( this.controller ) );
 
       scrollPane.addComponentListener( this.componentHandler );
+    }
+  }
+
+  /**
+   * Repaints this component, the timeline and channel labels.
+   */
+  private void repaintAll()
+  {
+    this.signalView.repaint( 50L );
+
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this );
+    if ( scrollPane != null )
+    {
+      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
+      timeline.repaint( 50L );
+
+      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+      channelLabels.repaint( 50L );
     }
   }
 
