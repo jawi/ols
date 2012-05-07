@@ -283,8 +283,8 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public void recalculateDimensions()
   {
-    this.signalDiagram.revalidate();
-    this.signalDiagram.repaint( 25L );
+    this.signalDiagram.revalidateAll();
+    this.signalDiagram.repaintAll();
   }
 
   /**

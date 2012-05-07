@@ -29,6 +29,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -122,16 +123,13 @@ public class EditCursorLabelAction extends AbstractAction
         }
       } );
 
-      // XXX use SpringLayout instead...
-      JPanel editorPane = new JPanel( new GridLayout( 1, 2 ) );
+      JPanel editorPane = new JPanel( new SpringLayout() );
       editorPane.add( label );
       editorPane.add( this.labelEditor );
 
-      // XXX use button factory instead...
-      JPanel buttonPane = new JPanel( new GridLayout( 1, 3 ) );
-      buttonPane.add( new JLabel( " " ) );
-      buttonPane.add( okButton );
-      buttonPane.add( cancelButton );
+      SpringLayoutUtils.makeEditorGrid( editorPane, 10, 10 );
+
+      JComponent buttonPane = SwingComponentUtils.createButtonPane( okButton, cancelButton );
 
       JPanel contentPane = new JPanel( new BorderLayout( 4, 4 ) );
       contentPane.add( editorPane, BorderLayout.CENTER );

@@ -455,6 +455,17 @@ public final class SignalElement implements Comparable<SignalElement>
   }
 
   /**
+   * Sets height to the given value.
+   * 
+   * @param aHeight
+   *          the height to set.
+   */
+  public void setHeight( final int aHeight )
+  {
+    this.height = aHeight;
+  }
+
+  /**
    * Returns the label of this signal element.
    * 
    * @param aLabel
@@ -519,17 +530,6 @@ public final class SignalElement implements Comparable<SignalElement>
     {
       this.group = aGroup;
     }
-  }
-
-  /**
-   * Sets height to the given value.
-   * 
-   * @param aHeight
-   *          the height to set.
-   */
-  final void setHeight( final int aHeight )
-  {
-    this.height = aHeight;
   }
 
   /**

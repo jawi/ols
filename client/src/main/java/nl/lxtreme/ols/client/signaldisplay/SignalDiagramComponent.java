@@ -541,6 +541,42 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   }
 
   /**
+   * Repaints this component, the timeline and channel labels.
+   */
+  final void repaintAll()
+  {
+    this.signalView.repaint( 50L );
+
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this );
+    if ( scrollPane != null )
+    {
+      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
+      timeline.repaint( 50L );
+
+      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+      channelLabels.repaint( 50L );
+    }
+  }
+
+  /**
+   * Revalidates this component, the timeline and channel labels.
+   */
+  final void revalidateAll()
+  {
+    this.signalView.revalidate();
+
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this );
+    if ( scrollPane != null )
+    {
+      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
+      timeline.revalidate();
+
+      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+      channelLabels.revalidate();
+    }
+  }
+
+  /**
    * Calculates all dimensions of the contained components.
    */
   private void calculateDimensions()
@@ -620,42 +656,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       scrollPane.setCorner( ScrollPaneConstants.UPPER_LEADING_CORNER, new CornerView( this.controller ) );
 
       scrollPane.addComponentListener( this.componentHandler );
-    }
-  }
-
-  /**
-   * Repaints this component, the timeline and channel labels.
-   */
-  private void repaintAll()
-  {
-    this.signalView.repaint( 50L );
-
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this );
-    if ( scrollPane != null )
-    {
-      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
-      timeline.repaint( 50L );
-
-      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
-      channelLabels.repaint( 50L );
-    }
-  }
-
-  /**
-   * Revalidates this component, the timeline and channel labels.
-   */
-  private void revalidateAll()
-  {
-    this.signalView.revalidate();
-
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this );
-    if ( scrollPane != null )
-    {
-      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
-      timeline.revalidate();
-
-      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
-      channelLabels.revalidate();
     }
   }
 

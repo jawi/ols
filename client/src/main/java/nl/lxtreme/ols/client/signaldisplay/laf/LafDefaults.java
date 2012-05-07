@@ -42,6 +42,10 @@ public final class LafDefaults
 
   /** Measurement arrow color. */
   public static final Color DEFAULT_ARROW_COLOR = Color.WHITE;
+  /** The default color of a signal. */
+  public static final Color DEFAULT_SIGNAL_COLOR = parseColor( "7bf9dd" );
+  /** Default height of a signal channel. */
+  public static final int DEFAULT_SIGNAL_HEIGHT = 40;
 
   // GLASS PANE
 
@@ -77,6 +81,8 @@ public final class LafDefaults
 
   /** The font of the cursor flags. */
   public static final Font DEFAULT_CURSOR_FLAG_FONT = deriveFont( SWING_LABEL_FONT, 0.8f, Font.PLAIN );
+  /** The default color of each cursor. */
+  public static final Color DEFAULT_CURSOR_COLOR = parseColor( "7bf9dd" ).brighter();
 
   // CONSTRUCTORS
 

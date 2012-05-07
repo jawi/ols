@@ -106,7 +106,7 @@ public class ChannelLabelsView extends AbstractViewLayer
       JPopupMenu result = new JPopupMenu();
       JMenuItem mi;
 
-      mi = new JMenuItem( new EditSignalElementLabelAction( this.controller, signalElement, aLocationOnScreen ) );
+      mi = new JMenuItem( new EditSignalElementPropertiesAction( this.controller, signalElement, aLocationOnScreen ) );
       result.add( mi );
 
       result.addSeparator();
