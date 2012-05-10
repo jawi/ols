@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.view.ViewUtils.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -131,10 +133,81 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
+   * Represents a small DTO for measured pulse count information.
+   */
+  static final class PulseCountInfo
+  {
+    final double measureTime;
+    final int risingEdgeCount;
+    final int fallingEdgeCount;
+    final long totalLowTime;
+    final long totalHighTime;
+    final int sampleRate;
+    final boolean hasTimingData;
+
+    /**
+     * Creates a new {@link PulseCountInfo} instance.
+     */
+    public PulseCountInfo( final double aMeasureTime, final int aRisingEdgeCount, final int aFallingEdgeCount,
+        final long aTotalLowTime, final long aTotalHighTime, final int aSampleRate, final boolean aHasTimingData )
+    {
+      this.measureTime = aMeasureTime;
+      this.risingEdgeCount = aRisingEdgeCount;
+      this.fallingEdgeCount = aFallingEdgeCount;
+      this.totalLowTime = aTotalLowTime;
+      this.totalHighTime = aTotalHighTime;
+      this.sampleRate = aSampleRate;
+      this.hasTimingData = aHasTimingData;
+    }
+
+    /**
+     * @return
+     */
+    public double getDutyCycle()
+    {
+      final double avgHighTime = getAveragePulseHighTime();
+      final double avgLowTime = getAveragePulseLowTime();
+      return 100.0 * ( avgHighTime / ( avgHighTime + avgLowTime ) );
+    }
+
+    /**
+     * @return
+     */
+    public double getFrequency()
+    {
+      return this.sampleRate / ( getAveragePulseHighTime() + getAveragePulseLowTime() );
+    }
+
+    /**
+     * @return
+     */
+    public int getPulseCount()
+    {
+      return ( this.risingEdgeCount + this.fallingEdgeCount ) / 2;
+    }
+
+    /**
+     * @return
+     */
+    private double getAveragePulseHighTime()
+    {
+      return ( this.totalHighTime / ( double )this.fallingEdgeCount );
+    }
+
+    /**
+     * @return
+     */
+    private double getAveragePulseLowTime()
+    {
+      return ( this.totalLowTime / ( double )this.risingEdgeCount );
+    }
+  }
+
+  /**
    * Provides a {@link SwingWorker} to measure the frequency, dutycycle and such
    * asynchronously from the UI.
    */
-  final class SignalMeasurer extends SwingWorker<String, Boolean>
+  final class SignalMeasurer extends SwingWorker<PulseCountInfo, Boolean>
   {
     // VARIABLES
 
@@ -160,7 +233,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
      * {@inheritDoc}
      */
     @Override
-    protected String doInBackground() throws Exception
+    protected PulseCountInfo doInBackground() throws Exception
     {
       final SignalDiagramModel model = getSignalDiagramModel();
 
@@ -171,8 +244,6 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
       final int[] values = model.getValues();
       final long[] timestamps = model.getTimestamps();
-
-      final double measureTime = ( double )Math.abs( this.endTimestamp - this.startTimestamp ) / model.getSampleRate();
 
       int fallingEdgeCount = 0;
       long highTime = 0;
@@ -211,51 +282,10 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
         lastBitValue = bitValue;
       }
 
-      int pulseCount = ( risingEdgeCount + fallingEdgeCount ) / 2;
+      final double measureTime = ( double )Math.abs( this.endTimestamp - this.startTimestamp ) / model.getSampleRate();
 
-      String timeText;
-      String frequencyText;
-      String dutyCycleText;
-      String pulseCountText;
-
-      if ( pulseCount != 0 )
-      {
-        // Take the average high & low time per pulse...
-        double avgHighTime = ( highTime / ( double )fallingEdgeCount );
-        double avgLowTime = ( lowTime / ( double )risingEdgeCount );
-
-        double frequency = model.getSampleRate() / ( avgHighTime + avgLowTime );
-        double dutyCycle = avgHighTime / ( avgHighTime + avgLowTime );
-
-        timeText = UnitOfTime.format( measureTime );
-        frequencyText = FrequencyUnit.format( frequency );
-        dutyCycleText = String.format( "%.3f%%", Double.valueOf( 100.0 * dutyCycle ) );
-        pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", Integer.valueOf( pulseCount ),
-            Integer.valueOf( risingEdgeCount ), Integer.valueOf( fallingEdgeCount ) );
-      }
-      else
-      {
-        timeText = UnitOfTime.format( measureTime );
-        frequencyText = "-";
-        dutyCycleText = "-";
-        pulseCountText = "-";
-      }
-
-      final StringBuilder sb = new StringBuilder( "<html><table>" );
-      if ( hasTimingData )
-      {
-        sb.append( "<tr><th align='right'>Time:</th><td>" ).append( timeText ).append( "</td>" );
-        sb.append( "<tr><th align='right'>Frequency:</th><td>" ).append( frequencyText ).append( "</td>" );
-        sb.append( "<tr><th align='right'>Duty cycle:</th><td>" ).append( dutyCycleText ).append( "</td>" );
-        sb.append( "<tr><th align='right'># of pulses:</th><td>" ).append( pulseCountText ).append( "</td>" );
-      }
-      else
-      {
-        sb.append( "<tr><th align='right'># of states:</th><td>" ).append( pulseCountText ).append( "</td>" );
-      }
-      sb.append( "</table></html>" );
-
-      return sb.toString();
+      return new PulseCountInfo( measureTime, risingEdgeCount, fallingEdgeCount, lowTime, highTime,
+          model.getSampleRate(), hasTimingData );
     }
 
     /**
@@ -266,7 +296,9 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     {
       try
       {
-        MeasurementView.this.measurementInfo.setText( get() );
+        updatePulseCountInformation( get() );
+
+        repaint( 50L );
       }
       catch ( Exception exception )
       {
@@ -288,12 +320,25 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
   // VARIABLES
 
-  private JComboBox channel;
+  private JComboBox measureChannel;
   private JComboBox cursorA;
   private JComboBox cursorB;
   private JBusyIndicator indicator;
 
-  private JLabel measurementInfo;
+  private final JLabel mi_channel;
+  private final JLabel mi_referenceLabel;
+  private final JLabel mi_reference;
+  private final JLabel mi_period;
+  private final JLabel mi_frequency;
+  private final JLabel mi_widthHigh;
+  private final JLabel mi_widthLow;
+  private final JLabel mi_dutyCycle;
+
+  private final JLabel pci_time;
+  private final JLabel pci_frequency;
+  private final JLabel pci_dutyCycle;
+  private final JLabel pci_pulseCountLabel;
+  private final JLabel pci_pulseCount;
 
   private volatile boolean listening;
   private volatile SignalMeasurer signalMeasurer;
@@ -308,6 +353,21 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   public MeasurementView( final SignalDiagramController aController )
   {
     super( aController );
+
+    this.mi_channel = new JLabel();
+    this.mi_referenceLabel = new JLabel( "Time:" );
+    this.mi_reference = new JLabel();
+    this.mi_period = new JLabel();
+    this.mi_frequency = new JLabel();
+    this.mi_widthHigh = new JLabel();
+    this.mi_widthLow = new JLabel();
+    this.mi_dutyCycle = new JLabel();
+
+    this.pci_time = new JLabel();
+    this.pci_frequency = new JLabel();
+    this.pci_dutyCycle = new JLabel();
+    this.pci_pulseCountLabel = new JLabel( "# of pulses:" );
+    this.pci_pulseCount = new JLabel();
 
     initComponent();
 
@@ -463,7 +523,16 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   @Override
   public void handleMeasureEvent( final MeasurementInfo aEvent )
   {
-    // No-op
+    updateMeasurementInformation( aEvent );
+
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        repaint( 50L );
+      }
+    } );
   }
 
   /**
@@ -495,6 +564,122 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
+   * @param aMeasurementInfo
+   * @return
+   */
+  final void updateMeasurementInformation( final MeasurementInfo aMeasurementInfo )
+  {
+    String channelId = "-";
+    String referenceLabel = "Time:";
+    String reference = "-";
+    String totalWidth = "-";
+    String frequency = "-";
+    String pwHigh = "-";
+    String pwLow = "-";
+    String dc = "-";
+    boolean hasTimingData = true;
+
+    if ( aMeasurementInfo != null )
+    {
+      hasTimingData = aMeasurementInfo.hasTimingData();
+
+      channelId = Integer.toString( aMeasurementInfo.getChannelIndex() );
+      if ( aMeasurementInfo.getChannelLabel() != null )
+      {
+        channelId = channelId.concat( ", " ).concat( aMeasurementInfo.getChannelLabel() );
+      }
+
+      reference = formatReference( hasTimingData, aMeasurementInfo.getReferenceTime() );
+
+      if ( hasTimingData )
+      {
+        totalWidth = formatTime( aMeasurementInfo.getTotalTime() );
+        frequency = "XXX";
+        pwHigh = formatTime( aMeasurementInfo.getHighTime() );
+        pwLow = formatTime( aMeasurementInfo.getLowTime() );
+        dc = formatDutyCycle( aMeasurementInfo.getDutyCycle() );
+      }
+      else
+      {
+        referenceLabel = "State:";
+      }
+    }
+
+    this.mi_channel.setText( channelId );
+    this.mi_referenceLabel.setText( referenceLabel );
+    this.mi_reference.setText( reference );
+    this.mi_frequency.setText( frequency );
+    this.mi_period.setText( totalWidth );
+    this.mi_widthHigh.setText( pwHigh );
+    this.mi_widthLow.setText( pwLow );
+    this.mi_dutyCycle.setText( dc );
+  }
+
+  /**
+   * @param aPulseCountInfo
+   * @return
+   */
+  final void updatePulseCountInformation( final PulseCountInfo aPulseCountInfo )
+  {
+    boolean hasTimingData = true;
+    boolean hasPulses = false;
+
+    String timeText = "";
+    String frequencyText = "-";
+    String dutyCycleText = "-";
+    String pulseCountLabel = "# of pulses:";
+    String pulseCountText = "-";
+
+    if ( aPulseCountInfo != null )
+    {
+      hasTimingData = aPulseCountInfo.hasTimingData;
+      hasPulses = aPulseCountInfo.getPulseCount() != 0;
+
+      timeText = UnitOfTime.format( aPulseCountInfo.measureTime );
+      if ( hasPulses )
+      {
+        frequencyText = FrequencyUnit.format( aPulseCountInfo.getFrequency() );
+        dutyCycleText = String.format( "%.3f%%", Double.valueOf( aPulseCountInfo.getDutyCycle() ) );
+      }
+
+      if ( hasTimingData )
+      {
+        pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", Integer.valueOf( aPulseCountInfo.getPulseCount() ),
+            Integer.valueOf( aPulseCountInfo.risingEdgeCount ), Integer.valueOf( aPulseCountInfo.fallingEdgeCount ) );
+      }
+      else
+      {
+        pulseCountLabel = "# of states:";
+        pulseCountText = String.format( "%d", Integer.valueOf( aPulseCountInfo.getPulseCount() ) );
+      }
+    }
+
+    if ( hasTimingData )
+    {
+      this.pci_time.setText( timeText );
+
+      if ( hasPulses )
+      {
+        this.pci_frequency.setText( frequencyText );
+        this.pci_dutyCycle.setText( dutyCycleText );
+      }
+      else
+      {
+        this.pci_frequency.setText( "-" );
+        this.pci_dutyCycle.setText( "-" );
+      }
+
+      this.pci_pulseCountLabel.setText( pulseCountLabel );
+      this.pci_pulseCount.setText( pulseCountText );
+    }
+    else
+    {
+      this.pci_pulseCountLabel.setText( pulseCountLabel );
+      this.pci_pulseCount.setText( pulseCountText );
+    }
+  }
+
+  /**
    * Updates the channel model to the current list of channels.
    */
   protected void updateChannelModel( final Collection<Channel> aChannels )
@@ -504,7 +689,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       @Override
       public void run()
       {
-        updateChannelComboBoxModel( MeasurementView.this.channel, aChannels );
+        updateChannelComboBoxModel( MeasurementView.this.measureChannel, aChannels );
 
         updateMeasurementInfo();
 
@@ -543,7 +728,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   {
     final SignalDiagramModel model = getSignalDiagramModel();
 
-    Channel channel = ( Channel )this.channel.getSelectedItem();
+    Channel channel = ( Channel )this.measureChannel.getSelectedItem();
     if ( ( channel == null ) || !channel.isEnabled() )
     {
       return false;
@@ -564,16 +749,6 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     if ( ( selectedCursorB == null ) || !selectedCursorB.isDefined() )
     {
       return false;
-    }
-
-    if ( this.signalMeasurer != null )
-    {
-      if ( !this.signalMeasurer.isDone() )
-      {
-        // Still busy with a thread; avoid having multiple threads...
-        return false;
-      }
-      this.signalMeasurer = null;
     }
 
     return selectedCursorA != selectedCursorB;
@@ -620,13 +795,13 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    */
   private void initComponent()
   {
-    this.channel = updateChannelComboBoxModel( new JComboBox(), Collections.<Channel> emptyList() );
-    this.channel.setRenderer( new ChannelComboBoxRenderer() );
-    this.channel.addActionListener( new CursorActionListener() );
+    this.measureChannel = updateChannelComboBoxModel( new JComboBox(), Collections.<Channel> emptyList() );
+    this.measureChannel.setRenderer( new ChannelComboBoxRenderer() );
+    this.measureChannel.addActionListener( new CursorActionListener() );
     // Make the component a bit smaller and a pop-down on OSX...
-    this.channel.putClientProperty( "JComponent.sizeVariant", "small" );
-    this.channel.putClientProperty( "JComboBox.isPopDown", Boolean.TRUE );
-    this.channel.setEnabled( false );
+    this.measureChannel.putClientProperty( "JComponent.sizeVariant", "small" );
+    this.measureChannel.putClientProperty( "JComboBox.isPopDown", Boolean.TRUE );
+    this.measureChannel.setEnabled( false );
 
     this.cursorA = updateCursorComboBoxModel( new JComboBox() );
     this.cursorA.setRenderer( new CursorComboBoxRenderer() );
@@ -647,60 +822,276 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     this.indicator = new JBusyIndicator();
     this.indicator.setVisible( false );
 
-    this.measurementInfo = new JLabel();
-
     setOpaque( false );
-    setLayout( new BorderLayout() );
+    setLayout( new GridBagLayout() );
     setName( "Measurement" );
     setBorder( BorderFactory.createEmptyBorder( 4, 4, 4, 4 ) );
 
-    GridBagConstraints gbc = new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, 0, GridBagConstraints.HORIZONTAL,
-        new Insets( 0, 0, 0, 0 ), 0, 0 );
+    final Font boldFont;
 
-    JPanel cursorPanel = new JPanel( new GridBagLayout() );
+    final Insets defaultInsets = new Insets( 2, 4, 2, 4 );
+    final Insets headerInsets = new Insets( 8, 4, 2, 4 );
 
+    GridBagConstraints gbc = new GridBagConstraints( 0, 0, 1, 1, 1.0, 0.0, 0, 0, defaultInsets, 0, 0 );
+
+    // ROW 0 -- HEADER
     gbc.gridx = 0;
     gbc.gridy = 0;
+    gbc.weightx = 0.3;
     gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+    gbc.insets = headerInsets;
 
-    cursorPanel.add( new JLabel( "Channel" ), gbc );
+    final JLabel miHeader = new JLabel( "Measurement" );
+    boldFont = miHeader.getFont().deriveFont( Font.BOLD );
+    miHeader.setFont( boldFont );
+
+    add( miHeader, gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+
+    add( new JSeparator(), gbc );
+
+    // ROW 1
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+    gbc.fill = GridBagConstraints.NONE;
+    gbc.insets = defaultInsets;
+
+    add( new JLabel( "Channel:" ), gbc );
 
     gbc.gridx = 1;
+    gbc.weightx = 0.7;
     gbc.anchor = GridBagConstraints.BASELINE_LEADING;
 
-    cursorPanel.add( this.channel, gbc );
+    add( this.mi_channel, gbc );
 
+    // ROW 2
     gbc.gridx = 0;
-    gbc.gridy = 1;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
     gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
 
-    cursorPanel.add( new JLabel( "Cursor A" ), gbc );
+    add( this.mi_referenceLabel, gbc );
 
-    gbc.gridx = 1;
+    gbc.gridx++;
+    gbc.weightx = 0.7;
     gbc.anchor = GridBagConstraints.BASELINE_LEADING;
 
-    cursorPanel.add( this.cursorA, gbc );
+    add( this.mi_reference, gbc );
 
+    // ROW 3
     gbc.gridx = 0;
-    gbc.gridy = 2;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
     gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
 
-    cursorPanel.add( new JLabel( "Cursor B" ), gbc );
+    add( new JLabel( "Period:" ), gbc );
 
-    gbc.gridx = 1;
+    gbc.gridx++;
+    gbc.weightx = 0.7;
     gbc.anchor = GridBagConstraints.BASELINE_LEADING;
 
-    cursorPanel.add( this.cursorB, gbc );
+    add( this.mi_period, gbc );
 
+    // ROW 4
     gbc.gridx = 0;
-    gbc.gridy = 3;
-    gbc.gridwidth = 3;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( new JLabel( "Frequency:" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.mi_frequency, gbc );
+
+    // ROW 5
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( new JLabel( "Width (H):" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.mi_widthHigh, gbc );
+
+    // ROW 6
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( new JLabel( "Width (L):" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.mi_widthLow, gbc );
+
+    // ROW 7
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( new JLabel( "Duty cycle:" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.mi_dutyCycle, gbc );
+
+    // ROW 8 -- HEADER
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+    gbc.insets = headerInsets;
+
+    final JLabel pcHeader = new JLabel( "Pulse counter" );
+    pcHeader.setFont( boldFont );
+
+    add( pcHeader, gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+
+    add( new JSeparator(), gbc );
+
+    // ROW 9
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.gridwidth = 1;
+    gbc.weightx = 0.3;
+    gbc.weighty = 0.0;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+    gbc.fill = GridBagConstraints.NONE;
+    gbc.insets = defaultInsets;
+
+    add( new JLabel( "Channel:" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.measureChannel, gbc );
+
+    // ROW 10
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( new JLabel( "Cursor A:" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.cursorA, gbc );
+
+    // ROW 11
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( new JLabel( "Cursor B:" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.cursorB, gbc );
+
+    // ROW 12
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( this.pci_pulseCountLabel, gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.pci_pulseCount, gbc );
+
+    // ROW 13
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( new JLabel( "\u0394T:" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.pci_time, gbc );
+
+    // ROW 14
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( new JLabel( "Frequency:" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.pci_frequency, gbc );
+
+    // ROW 15
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.weightx = 0.3;
+    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
+
+    add( new JLabel( "Duty cycle:" ), gbc );
+
+    gbc.gridx++;
+    gbc.weightx = 0.7;
+    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
+
+    add( this.pci_dutyCycle, gbc );
+
+    // ROW 16
+    gbc.gridx = 0;
+    gbc.gridy++;
+    gbc.gridwidth = 2;
+    gbc.weightx = 1.0;
+    gbc.weighty = 1.0;
     gbc.anchor = GridBagConstraints.CENTER;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
 
-    cursorPanel.add( this.indicator, gbc );
+    add( this.indicator, gbc );
 
-    add( cursorPanel, BorderLayout.NORTH );
-    add( this.measurementInfo, BorderLayout.CENTER );
+    // ROW 17
+    gbc.gridy++;
+    gbc.anchor = GridBagConstraints.NORTH;
+    gbc.fill = GridBagConstraints.BOTH;
+
+    add( new JLabel( " " ), gbc );
   }
 
   /**
@@ -713,10 +1104,9 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       @Override
       public void run()
       {
-        MeasurementView.this.channel.setEnabled( aEnabled );
+        MeasurementView.this.measureChannel.setEnabled( aEnabled );
         MeasurementView.this.cursorA.setEnabled( aEnabled );
         MeasurementView.this.cursorB.setEnabled( aEnabled );
-        MeasurementView.this.measurementInfo.setText( "" );
       }
     } );
   }
@@ -767,18 +1157,21 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     {
       if ( canPerformMeasurement() )
       {
-        this.indicator.setVisible( true );
+        if ( ( this.signalMeasurer == null ) || this.signalMeasurer.isDone() )
+        {
+          this.indicator.setVisible( true );
 
-        Channel channel = ( Channel )MeasurementView.this.channel.getSelectedItem();
-        Cursor cursorA = ( Cursor )MeasurementView.this.cursorA.getSelectedItem();
-        Cursor cursorB = ( Cursor )MeasurementView.this.cursorB.getSelectedItem();
+          Channel channel = ( Channel )MeasurementView.this.measureChannel.getSelectedItem();
+          Cursor cursorA = ( Cursor )MeasurementView.this.cursorA.getSelectedItem();
+          Cursor cursorB = ( Cursor )MeasurementView.this.cursorB.getSelectedItem();
 
-        this.signalMeasurer = new SignalMeasurer( channel, cursorA, cursorB );
-        this.signalMeasurer.execute();
+          this.signalMeasurer = new SignalMeasurer( channel, cursorA, cursorB );
+          this.signalMeasurer.execute();
+        }
       }
       else
       {
-        this.measurementInfo.setText( "" );
+        updatePulseCountInformation( null );
       }
     }
     finally
