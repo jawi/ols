@@ -136,6 +136,24 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    */
   final class SignalMeasurer extends SwingWorker<String, Boolean>
   {
+    // VARIABLES
+
+    private final int mask;
+    private final long startTimestamp;
+    private final long endTimestamp;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new MeasurementView.SignalMeasurer instance.
+     */
+    public SignalMeasurer( final Channel aChannel, final Cursor aCursorA, final Cursor aCursorB )
+    {
+      this.mask = aChannel.getMask();
+      this.startTimestamp = aCursorA.getTimestamp();
+      this.endTimestamp = aCursorB.getTimestamp();
+    }
+
     // METHODS
 
     /**
@@ -144,61 +162,56 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     @Override
     protected String doInBackground() throws Exception
     {
-      final int mask = ( ( Channel )MeasurementView.this.channel.getSelectedItem() ).getMask();
-      final long startTimestamp = ( ( Cursor )MeasurementView.this.cursorA.getSelectedItem() ).getTimestamp();
-      final long endTimestamp = ( ( Cursor )MeasurementView.this.cursorB.getSelectedItem() ).getTimestamp();
-
       final SignalDiagramModel model = getSignalDiagramModel();
 
-      final int startIdx = model.getTimestampIndex( startTimestamp );
-      final int endIdx = model.getTimestampIndex( endTimestamp );
+      final int startIdx = model.getTimestampIndex( this.startTimestamp );
+      final int endIdx = model.getTimestampIndex( this.endTimestamp );
 
       final boolean hasTimingData = model.hasTimingData();
 
       final int[] values = model.getValues();
       final long[] timestamps = model.getTimestamps();
 
-      final double measureTime = ( double )Math.abs( endTimestamp - startTimestamp ) / model.getSampleRate();
+      final double measureTime = ( double )Math.abs( this.endTimestamp - this.startTimestamp ) / model.getSampleRate();
 
-      int highCount = 0;
+      int fallingEdgeCount = 0;
       long highTime = 0;
-      int lowCount = 0;
+      int risingEdgeCount = 0;
       long lowTime = 0;
 
       int i = startIdx;
       long lastTransition = timestamps[i];
-      int lastBitValue = values[i++] & mask;
+      int lastBitValue = values[i++] & this.mask;
 
       for ( ; !isCancelled() && ( i <= endIdx ); i++ )
       {
-        final int bitValue = values[i] & mask;
+        final int bitValue = values[i] & this.mask;
         final Edge edge = Edge.toEdge( lastBitValue, bitValue );
 
         if ( !edge.isNone() )
         {
           final long periodTime = timestamps[i] - lastTransition;
+          lastTransition = timestamps[i];
 
           if ( edge.isRising() )
           {
             // Low to high transition: previously seen a low-state...
-            lowCount++;
+            risingEdgeCount++;
             lowTime += periodTime;
           }
           else
           /* if ( edge.isFalling() ) */
           {
             // High to low transition: previously seen a high-state...
-            highCount++;
+            fallingEdgeCount++;
             highTime += periodTime;
           }
-
-          lastTransition = timestamps[i];
         }
 
         lastBitValue = bitValue;
       }
 
-      int pulseCount = ( lowCount + highCount ) / 2;
+      int pulseCount = ( risingEdgeCount + fallingEdgeCount ) / 2;
 
       String timeText;
       String frequencyText;
@@ -208,8 +221,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       if ( pulseCount != 0 )
       {
         // Take the average high & low time per pulse...
-        double avgHighTime = ( highTime / ( double )highCount );
-        double avgLowTime = ( lowTime / ( double )lowCount );
+        double avgHighTime = ( highTime / ( double )fallingEdgeCount );
+        double avgLowTime = ( lowTime / ( double )risingEdgeCount );
 
         double frequency = model.getSampleRate() / ( avgHighTime + avgLowTime );
         double dutyCycle = avgHighTime / ( avgHighTime + avgLowTime );
@@ -218,7 +231,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
         frequencyText = FrequencyUnit.format( frequency );
         dutyCycleText = String.format( "%.3f%%", Double.valueOf( 100.0 * dutyCycle ) );
         pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", Integer.valueOf( pulseCount ),
-            Integer.valueOf( lowCount ), Integer.valueOf( highCount ) );
+            Integer.valueOf( risingEdgeCount ), Integer.valueOf( fallingEdgeCount ) );
       }
       else
       {
@@ -283,6 +296,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   private JLabel measurementInfo;
 
   private volatile boolean listening;
+  private volatile SignalMeasurer signalMeasurer;
 
   // CONSTRUCTORS
 
@@ -552,6 +566,16 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       return false;
     }
 
+    if ( this.signalMeasurer != null )
+    {
+      if ( !this.signalMeasurer.isDone() )
+      {
+        // Still busy with a thread; avoid having multiple threads...
+        return false;
+      }
+      this.signalMeasurer = null;
+    }
+
     return selectedCursorA != selectedCursorB;
   }
 
@@ -744,7 +768,13 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       if ( canPerformMeasurement() )
       {
         this.indicator.setVisible( true );
-        ( new SignalMeasurer() ).execute();
+
+        Channel channel = ( Channel )MeasurementView.this.channel.getSelectedItem();
+        Cursor cursorA = ( Cursor )MeasurementView.this.cursorA.getSelectedItem();
+        Cursor cursorB = ( Cursor )MeasurementView.this.cursorB.getSelectedItem();
+
+        this.signalMeasurer = new SignalMeasurer( channel, cursorA, cursorB );
+        this.signalMeasurer.execute();
       }
       else
       {
