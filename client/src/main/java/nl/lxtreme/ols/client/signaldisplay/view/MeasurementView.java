@@ -172,18 +172,20 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       for ( ; !isCancelled() && ( i <= endIdx ); i++ )
       {
         final int bitValue = values[i] & mask;
+        final Edge edge = Edge.toEdge( lastBitValue, bitValue );
 
-        if ( lastBitValue != bitValue )
+        if ( !edge.isNone() )
         {
           final long periodTime = timestamps[i] - lastTransition;
 
-          if ( lastBitValue < bitValue )
+          if ( edge.isRising() )
           {
             // Low to high transition: previously seen a low-state...
             lowCount++;
             lowTime += periodTime;
           }
-          else if ( lastBitValue > bitValue )
+          else
+          /* if ( edge.isFalling() ) */
           {
             // High to low transition: previously seen a high-state...
             highCount++;
@@ -198,18 +200,33 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
       int pulseCount = ( lowCount + highCount ) / 2;
 
-      // Take the average high & low time per pulse...
-      double avgHighTime = ( highTime / ( double )highCount );
-      double avgLowTime = ( lowTime / ( double )lowCount );
+      String timeText;
+      String frequencyText;
+      String dutyCycleText;
+      String pulseCountText;
 
-      double frequency = model.getSampleRate() / ( avgHighTime + avgLowTime );
-      double dutyCycle = avgHighTime / ( avgHighTime + avgLowTime );
+      if ( pulseCount != 0 )
+      {
+        // Take the average high & low time per pulse...
+        double avgHighTime = ( highTime / ( double )highCount );
+        double avgLowTime = ( lowTime / ( double )lowCount );
 
-      String timeText = UnitOfTime.format( measureTime );
-      String frequencyText = FrequencyUnit.format( frequency );
-      String dutyCycleText = String.format( "%.3f%%", Double.valueOf( 100.0 * dutyCycle ) );
-      String pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", Integer.valueOf( pulseCount ),
-          Integer.valueOf( lowCount ), Integer.valueOf( highCount ) );
+        double frequency = model.getSampleRate() / ( avgHighTime + avgLowTime );
+        double dutyCycle = avgHighTime / ( avgHighTime + avgLowTime );
+
+        timeText = UnitOfTime.format( measureTime );
+        frequencyText = FrequencyUnit.format( frequency );
+        dutyCycleText = String.format( "%.3f%%", Double.valueOf( 100.0 * dutyCycle ) );
+        pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", Integer.valueOf( pulseCount ),
+            Integer.valueOf( lowCount ), Integer.valueOf( highCount ) );
+      }
+      else
+      {
+        timeText = UnitOfTime.format( measureTime );
+        frequencyText = "-";
+        dutyCycleText = "-";
+        pulseCountText = "-";
+      }
 
       final StringBuilder sb = new StringBuilder( "<html><table>" );
       if ( hasTimingData )
