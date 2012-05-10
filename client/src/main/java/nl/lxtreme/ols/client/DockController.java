@@ -60,6 +60,7 @@ public class DockController
   {
     final MyDoggyToolWindowManager wm = new MyDoggyToolWindowManager( Locale.getDefault(),
         MyDoggyToolWindowManager.class.getClassLoader() );
+    wm.setDockableMainContentMode( false );
 
     final ContentManager contentManager = wm.getContentManager();
     contentManager.setContentManagerUI( new MyDoggyMultiSplitContentManagerUI() );
@@ -74,26 +75,28 @@ public class DockController
    */
   private static void tweakToolWindow( final ToolWindow aWindow, final int aDockLength )
   {
-    // RepresentativeAnchorDescriptor<?> anchorDesc =
-    // aWindow.getRepresentativeAnchorDescriptor();
-    // anchorDesc.setPreviewEnabled( false );
-    //
-    // final ToolWindowType[] types = ToolWindowType.values();
-    // for ( ToolWindowType type : types )
-    // {
-    // ToolWindowTypeDescriptor desc = aWindow.getTypeDescriptor( type );
-    // desc.setHideRepresentativeButtonOnVisible( true );
-    // desc.setIdVisibleOnTitleBar( false );
-    // }
-    //
-    // DockedTypeDescriptor desc = ( DockedTypeDescriptor
-    // )aWindow.getTypeDescriptor( ToolWindowType.DOCKED );
-    // desc.setDockLength( aDockLength );
-    // desc.setHideRepresentativeButtonOnVisible( true );
-    // desc.setPopupMenuEnabled( false );
+    RepresentativeAnchorDescriptor<?> anchorDesc = aWindow.getRepresentativeAnchorDescriptor();
+    anchorDesc.setPreviewEnabled( false );
+
+    final ToolWindowType[] types = ToolWindowType.values();
+    for ( ToolWindowType type : types )
+    {
+      ToolWindowTypeDescriptor desc = aWindow.getTypeDescriptor( type );
+      desc.setAnimating( false );
+      desc.setAutoHide( false );
+      desc.setEnabled( true );
+      desc.setHideRepresentativeButtonOnVisible( false );
+      desc.setIdVisibleOnTitleBar( false );
+      desc.setTitleBarButtonsVisible( false );
+      desc.setTitleBarVisible( false );
+    }
+
+    DockedTypeDescriptor desc = ( DockedTypeDescriptor )aWindow.getTypeDescriptor( ToolWindowType.DOCKED );
+    desc.setMinimumDockLength( aDockLength );
+    desc.setPopupMenuEnabled( false );
 
     aWindow.setAvailable( true );
-    aWindow.setHideOnZeroTabs( true );
+    aWindow.setHideOnZeroTabs( false );
   }
 
   /**
@@ -114,12 +117,12 @@ public class DockController
         aToolWindow.getIcon(), ( Component )aToolWindow, ToolWindowAnchor.RIGHT );
 
     final ToolWindowGroup group = this.windowManager.getToolWindowGroup( aGroupName );
-    group.setImplicit( true );
+    group.setImplicit( false );
     group.addToolWindow( tw );
 
     // Given string is based on some experiments with the best "default"
     // length...
-    final int dockLength = SwingComponentUtils.getStringWidth( "XXXXXXXXXXXXXXXXXXXXXXXXXXXX" );
+    final int dockLength = SwingComponentUtils.getStringWidth( "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" );
 
     tweakToolWindow( tw, dockLength );
   }
