@@ -738,7 +738,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private JMenu exportMenu;
   private JMenu cursorsMenu;
 
-  private final SignalDetailsView signalDetails;
   private final AcquisitionDetailsView captureDetails;
   private final CursorDetailsView cursorDetails;
   private final MeasurementView measurementDetails;
@@ -764,7 +763,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.signalDiagram = SignalDiagramComponent.create( aController.getSignalDiagramController() );
     this.status = new JTextStatusBar();
 
-    this.signalDetails = SignalDetailsView.create( this.controller.getSignalDiagramController() );
     this.captureDetails = AcquisitionDetailsView.create( this.controller.getSignalDiagramController() );
     this.cursorDetails = CursorDetailsView.create( this.controller.getSignalDiagramController() );
     this.measurementDetails = MeasurementView.create( this.controller.getSignalDiagramController() );
@@ -780,7 +778,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // Create a scrollpane for the diagram...
     final JScrollPane scrollPane = new ZoomCapableScrollPane( aController.getSignalDiagramController() );
 
-    this.dockController.registerToolWindow( this.signalDetails, DockController.GROUP_MEASURE );
     this.dockController.registerToolWindow( this.measurementDetails, DockController.GROUP_MEASURE );
     this.dockController.registerToolWindow( this.captureDetails, DockController.GROUP_SIGNAL );
     this.dockController.registerToolWindow( this.cursorDetails, DockController.GROUP_SIGNAL );

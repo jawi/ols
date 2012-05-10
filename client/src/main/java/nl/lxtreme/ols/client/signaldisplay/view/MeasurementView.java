@@ -32,7 +32,6 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
@@ -137,11 +136,12 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    */
   static final class PulseCountInfo
   {
-    final double measureTime;
-    final int risingEdgeCount;
-    final int fallingEdgeCount;
+    final Double measureTime;
+    final Integer risingEdgeCount;
+    final Integer fallingEdgeCount;
     final long totalLowTime;
     final long totalHighTime;
+    final Integer pulseCount;
     final int sampleRate;
     final boolean hasTimingData;
 
@@ -151,11 +151,12 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     public PulseCountInfo( final double aMeasureTime, final int aRisingEdgeCount, final int aFallingEdgeCount,
         final long aTotalLowTime, final long aTotalHighTime, final int aSampleRate, final boolean aHasTimingData )
     {
-      this.measureTime = aMeasureTime;
-      this.risingEdgeCount = aRisingEdgeCount;
-      this.fallingEdgeCount = aFallingEdgeCount;
+      this.measureTime = Double.valueOf( aMeasureTime );
+      this.risingEdgeCount = Integer.valueOf( aRisingEdgeCount );
+      this.fallingEdgeCount = Integer.valueOf( aFallingEdgeCount );
       this.totalLowTime = aTotalLowTime;
       this.totalHighTime = aTotalHighTime;
+      this.pulseCount = Integer.valueOf( ( aRisingEdgeCount + aFallingEdgeCount ) / 2 );
       this.sampleRate = aSampleRate;
       this.hasTimingData = aHasTimingData;
     }
@@ -173,17 +174,9 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     /**
      * @return
      */
-    public double getFrequency()
+    public Double getFrequency()
     {
-      return this.sampleRate / ( getAveragePulseHighTime() + getAveragePulseLowTime() );
-    }
-
-    /**
-     * @return
-     */
-    public int getPulseCount()
-    {
-      return ( this.risingEdgeCount + this.fallingEdgeCount ) / 2;
+      return Double.valueOf( this.sampleRate / ( getAveragePulseHighTime() + getAveragePulseLowTime() ) );
     }
 
     /**
@@ -191,7 +184,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
      */
     private double getAveragePulseHighTime()
     {
-      return ( this.totalHighTime / ( double )this.fallingEdgeCount );
+      return ( this.totalHighTime / this.fallingEdgeCount.doubleValue() );
     }
 
     /**
@@ -199,7 +192,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
      */
     private double getAveragePulseLowTime()
     {
-      return ( this.totalLowTime / ( double )this.risingEdgeCount );
+      return ( this.totalLowTime / this.risingEdgeCount.doubleValue() );
     }
   }
 
@@ -356,6 +349,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
     this.mi_channel = new JLabel();
     this.mi_referenceLabel = new JLabel( "Time:" );
+    this.mi_referenceLabel.setHorizontalAlignment( SwingConstants.RIGHT );
     this.mi_reference = new JLabel();
     this.mi_period = new JLabel();
     this.mi_frequency = new JLabel();
@@ -367,6 +361,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     this.pci_frequency = new JLabel();
     this.pci_dutyCycle = new JLabel();
     this.pci_pulseCountLabel = new JLabel( "# of pulses:" );
+    this.pci_pulseCountLabel.setHorizontalAlignment( SwingConstants.RIGHT );
     this.pci_pulseCount = new JLabel();
 
     initComponent();
@@ -594,7 +589,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       if ( hasTimingData )
       {
         totalWidth = formatTime( aMeasurementInfo.getTotalTime() );
-        frequency = "XXX";
+        frequency = formatPeriodAsFrequency( aMeasurementInfo.getTotalTime() );
         pwHigh = formatTime( aMeasurementInfo.getHighTime() );
         pwLow = formatTime( aMeasurementInfo.getLowTime() );
         dc = formatDutyCycle( aMeasurementInfo.getDutyCycle() );
@@ -633,24 +628,24 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     if ( aPulseCountInfo != null )
     {
       hasTimingData = aPulseCountInfo.hasTimingData;
-      hasPulses = aPulseCountInfo.getPulseCount() != 0;
+      hasPulses = aPulseCountInfo.pulseCount.intValue() != 0;
 
-      timeText = UnitOfTime.format( aPulseCountInfo.measureTime );
+      timeText = formatTime( aPulseCountInfo.measureTime );
       if ( hasPulses )
       {
-        frequencyText = FrequencyUnit.format( aPulseCountInfo.getFrequency() );
-        dutyCycleText = String.format( "%.3f%%", Double.valueOf( aPulseCountInfo.getDutyCycle() ) );
+        frequencyText = formatFrequency( aPulseCountInfo.getFrequency() );
+        dutyCycleText = formatDutyCycle( Double.valueOf( aPulseCountInfo.getDutyCycle() ) );
       }
 
       if ( hasTimingData )
       {
-        pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", Integer.valueOf( aPulseCountInfo.getPulseCount() ),
-            Integer.valueOf( aPulseCountInfo.risingEdgeCount ), Integer.valueOf( aPulseCountInfo.fallingEdgeCount ) );
+        pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", aPulseCountInfo.pulseCount,
+            aPulseCountInfo.risingEdgeCount, aPulseCountInfo.fallingEdgeCount );
       }
       else
       {
         pulseCountLabel = "# of states:";
-        pulseCountText = String.format( "%d", Integer.valueOf( aPulseCountInfo.getPulseCount() ) );
+        pulseCountText = String.format( "%d", aPulseCountInfo.pulseCount );
       }
     }
 
@@ -823,275 +818,80 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     this.indicator.setVisible( false );
 
     setOpaque( false );
-    setLayout( new GridBagLayout() );
+    setLayout( new BorderLayout() );
     setName( "Measurement" );
-    setBorder( BorderFactory.createEmptyBorder( 4, 4, 4, 4 ) );
 
-    final Font boldFont;
-
-    final Insets defaultInsets = new Insets( 2, 4, 2, 4 );
-    final Insets headerInsets = new Insets( 8, 4, 2, 4 );
-
-    GridBagConstraints gbc = new GridBagConstraints( 0, 0, 1, 1, 1.0, 0.0, 0, 0, defaultInsets, 0, 0 );
+    JPanel panel = new JPanel( new SpringLayout() );
 
     // ROW 0 -- HEADER
-    gbc.gridx = 0;
-    gbc.gridy = 0;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-    gbc.insets = headerInsets;
-
-    final JLabel miHeader = new JLabel( "Measurement" );
-    boldFont = miHeader.getFont().deriveFont( Font.BOLD );
-    miHeader.setFont( boldFont );
-
-    add( miHeader, gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-    gbc.fill = GridBagConstraints.HORIZONTAL;
-
-    add( new JSeparator(), gbc );
+    SpringLayoutUtils.addSeparator( panel, "Measurement" );
 
     // ROW 1
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-    gbc.fill = GridBagConstraints.NONE;
-    gbc.insets = defaultInsets;
-
-    add( new JLabel( "Channel:" ), gbc );
-
-    gbc.gridx = 1;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.mi_channel, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Channel:" ) );
+    panel.add( this.mi_channel );
 
     // ROW 2
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( this.mi_referenceLabel, gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.mi_reference, gbc );
+    panel.add( this.mi_referenceLabel );
+    panel.add( this.mi_reference );
 
     // ROW 3
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "Period:" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.mi_period, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Period:" ) );
+    panel.add( this.mi_period );
 
     // ROW 4
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "Frequency:" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.mi_frequency, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Frequency:" ) );
+    panel.add( this.mi_frequency );
 
     // ROW 5
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "Width (H):" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.mi_widthHigh, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Width (H):" ) );
+    panel.add( this.mi_widthHigh );
 
     // ROW 6
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "Width (L):" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.mi_widthLow, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Width (L):" ) );
+    panel.add( this.mi_widthLow );
 
     // ROW 7
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "Duty cycle:" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.mi_dutyCycle, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Duty cycle:" ) );
+    panel.add( this.mi_dutyCycle );
 
     // ROW 8 -- HEADER
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-    gbc.insets = headerInsets;
-
-    final JLabel pcHeader = new JLabel( "Pulse counter" );
-    pcHeader.setFont( boldFont );
-
-    add( pcHeader, gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-    gbc.fill = GridBagConstraints.HORIZONTAL;
-
-    add( new JSeparator(), gbc );
+    SpringLayoutUtils.addSeparator( panel, "Pulse counter" );
 
     // ROW 9
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.gridwidth = 1;
-    gbc.weightx = 0.3;
-    gbc.weighty = 0.0;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-    gbc.fill = GridBagConstraints.NONE;
-    gbc.insets = defaultInsets;
-
-    add( new JLabel( "Channel:" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.measureChannel, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Channel:" ) );
+    panel.add( this.measureChannel );
 
     // ROW 10
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "Cursor A:" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.cursorA, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Cursor A:" ) );
+    panel.add( this.cursorA );
 
     // ROW 11
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "Cursor B:" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.cursorB, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Cursor B:" ) );
+    panel.add( this.cursorB );
 
     // ROW 12
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( this.pci_pulseCountLabel, gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.pci_pulseCount, gbc );
+    panel.add( this.pci_pulseCountLabel );
+    panel.add( this.pci_pulseCount );
 
     // ROW 13
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "\u0394T:" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.pci_time, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "\u0394T:" ) );
+    panel.add( this.pci_time );
 
     // ROW 14
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "Frequency:" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.pci_frequency, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Frequency:" ) );
+    panel.add( this.pci_frequency );
 
     // ROW 15
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.weightx = 0.3;
-    gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-
-    add( new JLabel( "Duty cycle:" ), gbc );
-
-    gbc.gridx++;
-    gbc.weightx = 0.7;
-    gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-
-    add( this.pci_dutyCycle, gbc );
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Duty cycle:" ) );
+    panel.add( this.pci_dutyCycle );
 
     // ROW 16
-    gbc.gridx = 0;
-    gbc.gridy++;
-    gbc.gridwidth = 2;
-    gbc.weightx = 1.0;
-    gbc.weighty = 1.0;
-    gbc.anchor = GridBagConstraints.CENTER;
-    gbc.fill = GridBagConstraints.HORIZONTAL;
+    panel.add( new JLabel( "" ) );
+    panel.add( this.indicator );
 
-    add( this.indicator, gbc );
+    SpringLayoutUtils.makeEditorGrid( panel, 10, 10 );
 
-    // ROW 17
-    gbc.gridy++;
-    gbc.anchor = GridBagConstraints.NORTH;
-    gbc.fill = GridBagConstraints.BOTH;
-
-    add( new JLabel( " " ), gbc );
+    add( panel, BorderLayout.NORTH );
   }
 
   /**

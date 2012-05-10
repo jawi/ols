@@ -35,6 +35,48 @@ final class ViewUtils
   // METHODS
 
   /**
+   * Returns the duty cycle as formatted String value.
+   * 
+   * @return a String representation, never <code>null</code>.
+   */
+  public static String formatDutyCycle( final Double aDC )
+  {
+    if ( aDC != null )
+    {
+      return String.format( "%.1f %%", aDC );
+    }
+    return "-";
+  }
+
+  /**
+   * Returns the given double value as frequency string.
+   * 
+   * @return a frequency representation.
+   */
+  public static String formatFrequency( final Double aFrequency )
+  {
+    if ( aFrequency != null )
+    {
+      return FrequencyUnit.format( aFrequency.doubleValue() );
+    }
+    return "-";
+  }
+
+  /**
+   * Returns the given double value as frequency string.
+   * 
+   * @return a frequency representation.
+   */
+  public static String formatPeriodAsFrequency( final Double aPeriod )
+  {
+    if ( aPeriod != null )
+    {
+      return FrequencyUnit.format( 1.0 / aPeriod.doubleValue() );
+    }
+    return "-";
+  }
+
+  /**
    * Determines what tooltip is to be displayed.
    * 
    * @param aPoint
@@ -54,20 +96,6 @@ final class ViewUtils
     }
 
     return toolTip;
-  }
-
-  /**
-   * Returns the duty cycle as formatted String value.
-   * 
-   * @return a String representation, never <code>null</code>.
-   */
-  public static String formatDutyCycle( final Double aDC )
-  {
-    if ( aDC != null )
-    {
-      return String.format( "%.1f %%", aDC );
-    }
-    return "-";
   }
 
   /**

@@ -43,7 +43,6 @@ public class DockController
   // CONSTANTS
 
   public static final String TW_ACQUISITION = AcquisitionDetailsView.ID;
-  public static final String TW_SIGNAL = SignalDetailsView.ID;
   public static final String TW_MEASURE = MeasurementView.ID;
   public static final String TW_CURSORS = CursorDetailsView.ID;
 
