@@ -503,7 +503,7 @@ public class SignalUI extends ComponentUI
           int prevSampleValue = ( values[startIdx] & mask );
 
           int xValue = ( int )( zoomFactor * timestamp );
-          int yValue = ( prevSampleValue == 0 ? signalHeight : 0 );
+          int yValue = ( prevSampleValue != 0 ? signalHeight : 0 );
 
           x[0] = xValue;
           y[0] = yValue;
@@ -519,12 +519,12 @@ public class SignalUI extends ComponentUI
             if ( prevSampleValue != sampleValue )
             {
               x[p] = xValue;
-              y[p] = ( prevSampleValue == 0 ? signalHeight : 0 );
+              y[p] = ( prevSampleValue != 0 ? signalHeight : 0 );
               p++;
             }
 
             x[p] = xValue;
-            y[p] = ( sampleValue == 0 ? signalHeight : 0 );
+            y[p] = ( sampleValue != 0 ? signalHeight : 0 );
             p++;
 
             prevSampleValue = sampleValue;
