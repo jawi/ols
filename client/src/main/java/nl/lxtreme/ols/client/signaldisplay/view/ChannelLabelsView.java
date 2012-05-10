@@ -75,11 +75,20 @@ public class ChannelLabelsView extends AbstractViewLayer
     @Override
     public void mousePressed( final MouseEvent aEvent )
     {
-      if ( aEvent.isPopupTrigger() )
+      if ( handlePopupTrigger( aEvent ) )
       {
-        JPopupMenu contextMenu = createChannelLabelPopup( aEvent.getPoint(), aEvent.getLocationOnScreen() );
-        contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
-        // Mark the event as consumed...
+        aEvent.consume();
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mouseReleased( final MouseEvent aEvent )
+    {
+      if ( handlePopupTrigger( aEvent ) )
+      {
         aEvent.consume();
       }
     }
@@ -141,6 +150,28 @@ public class ChannelLabelsView extends AbstractViewLayer
     private SignalElement findSignalElement( final Point aPoint )
     {
       return this.controller.getSignalDiagramModel().findSignalElement( aPoint );
+    }
+
+    /**
+     * Handles the given event if it represents a popup trigger.
+     * 
+     * @param aEvent
+     *          the mouse event to handle as popup trigger, cannot be
+     *          <code>null</code>.
+     * @return <code>true</code> if the event represented a popup trigger,
+     *         <code>false</code> otherwise.
+     */
+    private boolean handlePopupTrigger( final MouseEvent aEvent )
+    {
+      boolean result = false;
+      if ( aEvent.isPopupTrigger() )
+      {
+        JPopupMenu contextMenu = createChannelLabelPopup( aEvent.getPoint(), aEvent.getLocationOnScreen() );
+        contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
+        result = true;
+      }
+
+      return result;
     }
   }
 
