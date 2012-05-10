@@ -401,7 +401,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       {
         final long endTime = System.nanoTime();
         final long renderTime = endTime - startTime;
-        System.out.println( "Rendering time = " + UnitOfTime.NS.format( 1.0 / renderTime, 2 ) );
+        System.out.println( "Rendering time = " + UnitOfTime.format( 1.0 / renderTime ) );
       }
     }
     else

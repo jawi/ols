@@ -261,6 +261,8 @@ public class TimeLineUI extends ComponentUI
       canvas.setBackground( model.getBackgroundColor() );
       canvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
+      final Rectangle visibleRect = view.getVisibleRect();
+
       final double zoomFactor = model.getZoomFactor();
       final double triggerOffset = ( model.getTriggerOffset() * zoomFactor );
 
@@ -275,7 +277,7 @@ public class TimeLineUI extends ComponentUI
 
       // determine the tick increment based on the current width of the visible
       // timeline; this will make it a factor of 1, 10, 100, 1000, ...
-      final int majorTickInc = ( int )max( 1.0, pow( 10, floor( log10( clip.width / 2 ) ) ) );
+      final int majorTickInc = ( int )max( 1.0, pow( 10, floor( log10( visibleRect.width / 2 ) ) ) );
       final int minorTickInc = ( majorTickInc / 2 );
       final double minorTickTime = ( minorTickInc * uot );
       final int tickInc = max( 1, majorTickInc / 10 );
@@ -354,8 +356,8 @@ public class TimeLineUI extends ComponentUI
 
           int textWidth = ( fm.stringWidth( text ) + TEXT_PADDING_X );
 
-          int textXpos = Math.max( clip.x, ( int )( xPos - ( textWidth / 2.0 ) ) ) + 1;
-          textYpos = Math.max( clip.y, ( textYpos - fm.getDescent() ) );
+          int textXpos = Math.max( visibleRect.x, ( int )( xPos - ( textWidth / 2.0 ) ) ) + 1;
+          textYpos = Math.max( visibleRect.y, ( textYpos - fm.getDescent() ) );
 
           canvas.drawString( text, textXpos, textYpos );
         }

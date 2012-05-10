@@ -471,7 +471,7 @@ public class SignalUI extends ComponentUI
     // Start drawing at the correct position in the clipped region...
     aCanvas.translate( 0, aSignalElements[0].getYposition() + signalOffset );
 
-    final int sampleIncr = ( int )Math.max( 1.0, ( 1.0 / zoomFactor ) );
+    final int sampleIncr = 1;
 
     for ( SignalElement signalElement : aSignalElements )
     {

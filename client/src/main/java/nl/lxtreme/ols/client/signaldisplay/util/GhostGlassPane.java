@@ -165,7 +165,7 @@ public final class GhostGlassPane extends JPanel
     try
     {
       g2d.setRenderingHints( createRenderingHints() );
-
+      
       g2d.setComposite( this.model.getComposite() );
       g2d.setColor( this.model.getColor() );
 
