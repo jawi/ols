@@ -287,7 +287,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
   protected void open() throws IOException
   {
     final StreamConnection conn = getStreamConnection();
-    final int openDelay = this.config.getOpenPortDelay();
 
     try
     {
@@ -298,13 +297,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
 
       this.outputStream = new SumpCommandWriter( this.config, conn.openDataOutputStream() );
       this.inputStream = new SumpResultReader( this.config, conn.openDataInputStream() );
-
-      // Some devices need some time to initialize after being opened for the
-      // first time, see issue #34.
-      if ( openDelay > 0 )
-      {
-        Thread.sleep( openDelay );
-      }
 
       // We don't expect any data, so flush all data pending in the given
       // input stream. See issue #34.
