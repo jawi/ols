@@ -135,7 +135,7 @@ final class ViewUtils
   {
     final boolean hasTimingData = aModel.hasTimingData();
     return formatReference( hasTimingData,
-        hasTimingData ? aModel.getTimestamp( aPoint ) : aModel.locationToSampleIndex( aPoint ) );
+        hasTimingData ? aModel.getTimestamp( aPoint.x ) : aModel.locationToSampleIndex( aPoint ) );
   }
 
   /**
@@ -147,7 +147,7 @@ final class ViewUtils
    */
   private static String formatStateValue( final int aSampleIdx )
   {
-    return "State: ".concat( Integer.toString( aSampleIdx ) );
+    return Integer.toString( aSampleIdx );
   }
 
   /**

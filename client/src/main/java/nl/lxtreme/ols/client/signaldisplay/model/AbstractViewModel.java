@@ -25,12 +25,13 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementHeightProvider;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
+import nl.lxtreme.ols.client.signaldisplay.util.*;
+import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.LabelStyle;
 
 
 /**
@@ -38,17 +39,6 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.Si
  */
 public abstract class AbstractViewModel implements SignalElementHeightProvider
 {
-  // INNER TYPES
-
-  /**
-   * Denotes how to represent a cursor label. Used for automatic placement of
-   * cursor labels.
-   */
-  public static enum LabelStyle
-  {
-    INDEX_ONLY, TIME_ONLY, LABEL_ONLY, INDEX_LABEL, LABEL_TIME;
-  }
-
   // CONSTANTS
 
   public static final String TRIGGER_COLOR = "signal.trigger.color";
@@ -56,6 +46,7 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   // VARIABLES
 
   protected final SignalDiagramController controller;
+  private final CursorFlagRenderer cursorFlagRender;
 
   // CONSTRUCTORS
 
@@ -68,6 +59,8 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   protected AbstractViewModel( final SignalDiagramController aController )
   {
     this.controller = aController;
+
+    this.cursorFlagRender = new CursorFlagRenderer( this.controller.getSignalDiagramModel() );
   }
 
   // METHODS
@@ -105,16 +98,7 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   public String getCursorFlagText( final int aCursorIndex, final LabelStyle aStyle )
   {
     final Cursor cursor = getSignalDiagramModel().getCursor( aCursorIndex );
-    if ( !cursor.isDefined() )
-    {
-      return "";
-    }
-    long timestamp = cursor.getTimestamp();
-    if ( hasTriggerData() )
-    {
-      timestamp -= getTriggerOffset();
-    }
-    return getCursorFlagText( aCursorIndex, timestamp, aStyle );
+    return this.cursorFlagRender.getCursorFlagText( cursor, aStyle );
   }
 
   /**
@@ -335,47 +319,5 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   {
     final SignalDiagramModel model = this.controller.getSignalDiagram().getModel();
     return model.locationToSampleIndex( aPoint );
-  }
-
-  /**
-   * Returns the cursor flag text for the cursor with the given index.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor, >= 0 && < 10;
-   * @param aCursorTimestamp
-   *          the timestamp of the cursor;
-   * @param aStyle
-   *          the style of the cursor flag text, cannot be <code>null</code>.
-   * @return a cursor flag text, or an empty string if the cursor with the given
-   *         index is undefined.
-   */
-  private String getCursorFlagText( final int aCursorIdx, final long aCursorTimestamp, final LabelStyle aStyle )
-  {
-    final SignalDiagramModel model = getSignalDiagramModel();
-    final double sampleRate = model.getSampleRate();
-
-    final Cursor cursor = model.getCursor( aCursorIdx );
-    Integer index = Integer.valueOf( aCursorIdx + 1 );
-
-    String label = cursor.getLabel();
-    if ( !cursor.hasLabel() )
-    {
-      label = index.toString();
-    }
-
-    switch ( aStyle )
-    {
-      case LABEL_TIME:
-        return label.concat( ": " ).concat( UnitOfTime.format( aCursorTimestamp / sampleRate ) );
-      case INDEX_LABEL:
-        return String.format( "%d: %s", index, label );
-      case TIME_ONLY:
-        return UnitOfTime.format( aCursorTimestamp / sampleRate );
-      case LABEL_ONLY:
-        return label;
-      case INDEX_ONLY:
-      default:
-        return String.format( "%d", index );
-    }
   }
 }

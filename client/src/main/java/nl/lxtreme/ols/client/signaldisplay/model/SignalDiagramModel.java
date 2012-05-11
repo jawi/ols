@@ -387,7 +387,16 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     {
       return null;
     }
-    return Double.valueOf( visibleRect.width / ( getZoomFactor() * getSampleRate() ) );
+    double result;
+    if ( hasTimingData() )
+    {
+      result = visibleRect.width / ( getZoomFactor() * getSampleRate() );
+    }
+    else
+    {
+      result = visibleRect.width / getZoomFactor();
+    }
+    return Double.valueOf( result );
   }
 
   /**
@@ -683,7 +692,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
    */
   public Double getTimelinePixelsPerSecond()
   {
-    if ( !hasData() )
+    if ( !hasData() || !hasTimingData() )
     {
       return null;
     }
@@ -727,6 +736,36 @@ public class SignalDiagramModel implements SignalElementHeightProvider
    * Converts the X-coordinate of the given {@link Point} to a precise
    * timestamp, useful for display purposes.
    * 
+   * @param aAbsTimestamp
+   *          the timestamp to convert to a relative timestamp, should be >= 0.
+   * @return a precise timestamp, as double value.
+   * @see DisplayUtils#displayTime(double)
+   */
+  public double getTimestamp( long aAbsTimestamp )
+  {
+    // Calculate the "absolute" time based on the mouse position, use a
+    // "over sampling" factor to allow intermediary (between two time stamps)
+    // time value to be shown...
+    final double zoomFactor = getZoomFactor();
+    final double scaleFactor = TIMESTAMP_FACTOR * zoomFactor;
+
+    // Take (optional) trigger position into account...
+    final Long triggerPos = getTriggerPosition();
+    if ( triggerPos != null )
+    {
+      aAbsTimestamp -= triggerPos.longValue();
+    }
+    // If no sample rate is available, we use a factor of 1; which doesn't
+    // make a difference in the result...
+    final int sampleRate = Math.max( 1, getSampleRate() );
+
+    return ( scaleFactor * aAbsTimestamp ) / ( scaleFactor * sampleRate );
+  }
+
+  /**
+   * Converts the X-coordinate of the given {@link Point} to a precise
+   * timestamp, useful for display purposes.
+   * 
    * @param aPoint
    *          the X,Y-coordinate to convert to a precise timestamp, cannot be
    *          <code>null</code>.
@@ -751,9 +790,12 @@ public class SignalDiagramModel implements SignalElementHeightProvider
     }
     // If no sample rate is available, we use a factor of 1; which doesn't
     // make a difference in the result...
-    final int sampleRate = Math.max( 1, getSampleRate() );
+    if ( !hasTimingData() )
+    {
+      return ( scaleFactor * x ) / scaleFactor;
+    }
 
-    return ( scaleFactor * x ) / ( scaleFactor * sampleRate );
+    return ( scaleFactor * x ) / ( scaleFactor * getSampleRate() );
   }
 
   /**

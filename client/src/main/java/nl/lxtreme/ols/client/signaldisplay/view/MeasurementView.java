@@ -35,6 +35,8 @@ import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.client.signaldisplay.util.*;
+import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -108,7 +110,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   /**
    * Provides a renderer for the cursor combobox.
    */
-  static final class CursorComboBoxRenderer extends DefaultListCellRenderer
+  final class CursorComboBoxRenderer extends DefaultListCellRenderer
   {
     private static final long serialVersionUID = 1L;
 
@@ -116,18 +118,22 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
         final boolean aIsSelected, final boolean aCellHasFocus )
     {
-      StringBuilder sb = new StringBuilder();
+      String text;
       if ( ( aValue != null ) && ( aValue instanceof Cursor ) )
       {
         final Cursor cursor = ( Cursor )aValue;
-        sb.append( cursor.getIndex() );
-        if ( cursor.hasLabel() )
-        {
-          sb.append( ": " ).append( cursor.getLabel() );
-        }
+        text = CursorFlagRenderer.getCursorFlagText( getSignalDiagramModel(), cursor, LabelStyle.LABEL_TIME );
+      }
+      else if ( aValue != null )
+      {
+        text = String.valueOf( aValue );
+      }
+      else
+      {
+        text = "";
       }
 
-      return super.getListCellRendererComponent( aList, sb.toString(), aIndex, aIsSelected, aCellHasFocus );
+      return super.getListCellRendererComponent( aList, text, aIndex, aIsSelected, aCellHasFocus );
     }
   }
 
@@ -139,6 +145,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     final Double measureTime;
     final Integer risingEdgeCount;
     final Integer fallingEdgeCount;
+    final Integer totalEdgeCount;
     final long totalLowTime;
     final long totalHighTime;
     final Integer pulseCount;
@@ -154,9 +161,10 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       this.measureTime = Double.valueOf( aMeasureTime );
       this.risingEdgeCount = Integer.valueOf( aRisingEdgeCount );
       this.fallingEdgeCount = Integer.valueOf( aFallingEdgeCount );
+      this.totalEdgeCount = Integer.valueOf( aRisingEdgeCount + aFallingEdgeCount );
       this.totalLowTime = aTotalLowTime;
       this.totalHighTime = aTotalHighTime;
-      this.pulseCount = Integer.valueOf( ( aRisingEdgeCount + aFallingEdgeCount ) / 2 );
+      this.pulseCount = Integer.valueOf( this.totalEdgeCount.intValue() / 2 );
       this.sampleRate = aSampleRate;
       this.hasTimingData = aHasTimingData;
     }
@@ -275,7 +283,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
         lastBitValue = bitValue;
       }
 
-      final double measureTime = ( double )Math.abs( this.endTimestamp - this.startTimestamp ) / model.getSampleRate();
+      final double measureTime = Math.abs( ( this.endTimestamp - this.startTimestamp )
+          / ( double )model.getSampleRate() );
 
       return new PulseCountInfo( measureTime, risingEdgeCount, fallingEdgeCount, lowTime, highTime,
           model.getSampleRate(), hasTimingData );
@@ -327,6 +336,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   private final JLabel mi_widthLow;
   private final JLabel mi_dutyCycle;
 
+  private final JLabel pci_timeLabel;
   private final JLabel pci_time;
   private final JLabel pci_frequency;
   private final JLabel pci_dutyCycle;
@@ -357,6 +367,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     this.mi_widthLow = new JLabel();
     this.mi_dutyCycle = new JLabel();
 
+    this.pci_timeLabel = new JLabel();
+    this.pci_timeLabel.setHorizontalAlignment( SwingConstants.RIGHT );
     this.pci_time = new JLabel();
     this.pci_frequency = new JLabel();
     this.pci_dutyCycle = new JLabel();
@@ -559,6 +571,14 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
+   * @return a signal diagram model, never <code>null</code>.
+   */
+  final SignalDiagramModel getSignalDiagramModel()
+  {
+    return getController().getSignalDiagramModel();
+  }
+
+  /**
    * @param aMeasurementInfo
    * @return
    */
@@ -619,10 +639,11 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     boolean hasTimingData = true;
     boolean hasPulses = false;
 
-    String timeText = "";
+    String timeTextLabel = "\u0394T (B-A):";
+    String timeText = "-";
     String frequencyText = "-";
     String dutyCycleText = "-";
-    String pulseCountLabel = "# of pulses:";
+    String pulseCountLabel = "Pulses:";
     String pulseCountText = "-";
 
     if ( aPulseCountInfo != null )
@@ -630,48 +651,40 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       hasTimingData = aPulseCountInfo.hasTimingData;
       hasPulses = aPulseCountInfo.pulseCount.intValue() != 0;
 
-      timeText = formatTime( aPulseCountInfo.measureTime );
-      if ( hasPulses )
-      {
-        frequencyText = formatFrequency( aPulseCountInfo.getFrequency() );
-        dutyCycleText = formatDutyCycle( Double.valueOf( aPulseCountInfo.getDutyCycle() ) );
-      }
-
       if ( hasTimingData )
       {
+        timeText = formatTime( aPulseCountInfo.measureTime );
+
         pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", aPulseCountInfo.pulseCount,
             aPulseCountInfo.risingEdgeCount, aPulseCountInfo.fallingEdgeCount );
+
+        if ( hasPulses )
+        {
+          frequencyText = formatFrequency( aPulseCountInfo.getFrequency() );
+          dutyCycleText = formatDutyCycle( Double.valueOf( aPulseCountInfo.getDutyCycle() ) );
+        }
       }
       else
       {
-        pulseCountLabel = "# of states:";
+        timeTextLabel = "\u0394S (B-A):";
+        timeText = Integer.toString( aPulseCountInfo.measureTime.intValue() );
+
+        pulseCountLabel = "Transitions:";
         pulseCountText = String.format( "%d", aPulseCountInfo.pulseCount );
+        pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", aPulseCountInfo.totalEdgeCount,
+            aPulseCountInfo.risingEdgeCount, aPulseCountInfo.fallingEdgeCount );
+
       }
     }
 
-    if ( hasTimingData )
-    {
-      this.pci_time.setText( timeText );
+    this.pci_timeLabel.setText( timeTextLabel );
+    this.pci_time.setText( timeText );
 
-      if ( hasPulses )
-      {
-        this.pci_frequency.setText( frequencyText );
-        this.pci_dutyCycle.setText( dutyCycleText );
-      }
-      else
-      {
-        this.pci_frequency.setText( "-" );
-        this.pci_dutyCycle.setText( "-" );
-      }
+    this.pci_frequency.setText( frequencyText );
+    this.pci_dutyCycle.setText( dutyCycleText );
 
-      this.pci_pulseCountLabel.setText( pulseCountLabel );
-      this.pci_pulseCount.setText( pulseCountText );
-    }
-    else
-    {
-      this.pci_pulseCountLabel.setText( pulseCountLabel );
-      this.pci_pulseCount.setText( pulseCountText );
-    }
+    this.pci_pulseCountLabel.setText( pulseCountLabel );
+    this.pci_pulseCount.setText( pulseCountText );
   }
 
   /**
@@ -765,14 +778,6 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       }
     }
     return channels;
-  }
-
-  /**
-   * @return
-   */
-  private SignalDiagramModel getSignalDiagramModel()
-  {
-    return getController().getSignalDiagramModel();
   }
 
   /**
@@ -874,7 +879,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     panel.add( this.pci_pulseCount );
 
     // ROW 13
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "\u0394T:" ) );
+    panel.add( this.pci_timeLabel );
     panel.add( this.pci_time );
 
     // ROW 14

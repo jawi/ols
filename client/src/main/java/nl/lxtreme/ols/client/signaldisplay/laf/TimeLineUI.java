@@ -20,8 +20,8 @@
 package nl.lxtreme.ols.client.signaldisplay.laf;
 
 
-import static java.lang.Math.*;
 import static java.awt.RenderingHints.*;
+import static java.lang.Math.*;
 
 import java.awt.*;
 import java.util.*;
@@ -32,8 +32,8 @@ import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.util.*;
-import nl.lxtreme.ols.client.signaldisplay.model.AbstractViewModel.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
 

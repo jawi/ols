@@ -20,6 +20,8 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.view.ViewUtils.*;
+
 import java.awt.*;
 import java.text.*;
 
@@ -27,9 +29,9 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.ZoomController.*;
+import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
+import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomListener;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -50,15 +52,13 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
 
   // VARIABLES
 
-  private volatile String sampleRate = "-";
-  private volatile String sampleCount = "-";
-  private volatile String totalWidth = "-";
-
-  private volatile String displayedTime = "-";
-  private volatile String secondsPerPixel = "-";
-  private volatile String unitOfTime = "-";
-
-  private final JLabel captureInfoField;
+  private final JLabel sampleRate;
+  private final JLabel sampleCount;
+  private final JLabel totalWidth;
+  private final JLabel displayedTimeLabel;
+  private final JLabel displayedTime;
+  private final JLabel secondsPerPixel;
+  private final JLabel unitOfTime;
 
   // CONSTRUCTORS
 
@@ -72,7 +72,14 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
   {
     super( aController );
 
-    this.captureInfoField = new JLabel( asText() );
+    this.sampleRate = new JLabel( "-" );
+    this.sampleCount = new JLabel( "-" );
+    this.totalWidth = new JLabel( "-" );
+    this.displayedTimeLabel = new JLabel( "" );
+    this.displayedTimeLabel.setHorizontalAlignment( SwingConstants.RIGHT );
+    this.displayedTime = new JLabel( "-" );
+    this.secondsPerPixel = new JLabel( "-" );
+    this.unitOfTime = new JLabel( "-" );
   }
 
   // METHODS
@@ -104,24 +111,49 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
   @Override
   public void dataModelChanged( final DataSet aDataSet )
   {
-    this.sampleRate = "-";
-    this.sampleCount = "-";
-    this.totalWidth = "-";
-
-    this.secondsPerPixel = null;
-    this.displayedTime = null;
-    this.unitOfTime = null;
+    final String srText;
+    final String scText;
+    final String twText;
 
     if ( ( aDataSet != null ) && ( aDataSet.getCapturedData() != null ) )
     {
       final AcquisitionResult model = aDataSet.getCapturedData();
 
-      this.sampleRate = FrequencyUnit.format( model.getSampleRate() );
-      this.sampleCount = new DecimalFormat().format( model.getValues().length );
-      this.totalWidth = UnitOfTime.format( model.getAbsoluteLength() / ( double )model.getSampleRate() );
+      if ( model.hasTimingData() )
+      {
+        final double sr = model.getSampleRate();
+        final double tw = model.getAbsoluteLength() / sr;
+
+        srText = formatFrequency( Double.valueOf( sr ) );
+        twText = formatTime( Double.valueOf( tw ) );
+      }
+      else
+      {
+        srText = "n/a";
+        twText = "n/a";
+      }
+
+      scText = new DecimalFormat().format( model.getValues().length );
+
+    }
+    else
+    {
+      srText = "-";
+      scText = "-";
+      twText = "-";
     }
 
-    updateView();
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      public void run()
+      {
+        AcquisitionDetailsView.this.sampleRate.setText( srText );
+        AcquisitionDetailsView.this.sampleCount.setText( scText );
+        AcquisitionDetailsView.this.totalWidth.setText( twText );
+
+        repaint( 25L );
+      };
+    } );
   }
 
   /**
@@ -148,76 +180,64 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
   @Override
   public void notifyZoomChange( final ZoomEvent aEvent )
   {
-    this.secondsPerPixel = null;
-    this.displayedTime = null;
-    this.unitOfTime = null;
 
-    updateView();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected void paintComponent( final Graphics aGraphics )
-  {
     final SignalDiagramModel model = getController().getSignalDiagramModel();
 
-    if ( this.secondsPerPixel == null )
+    final Double dt = model.getDisplayedTimeInterval();
+    final String dtText, dtTextLabel;
+
+    if ( model.hasTimingData() )
     {
-      final Double spp = model.getTimelineSecondsPerPixel();
-      if ( spp != null )
-      {
-        this.secondsPerPixel = UnitOfTime.format( spp.doubleValue() );
-      }
-      else
-      {
-        this.secondsPerPixel = "-";
-      }
+      dtTextLabel = "Displayed time:";
+    }
+    else
+    {
+      dtTextLabel = "Displayed states:";
     }
 
-    if ( this.unitOfTime == null )
+    if ( dt != null )
     {
-      final Double uot = model.getTimelineUnitOfTime();
-      if ( uot != null )
-      {
-        this.unitOfTime = UnitOfTime.format( uot.doubleValue() );
-      }
-      else
-      {
-        this.unitOfTime = "-";
-      }
+      dtText = formatReference( model.hasTimingData(), model.getDisplayedTimeInterval().doubleValue() );
+    }
+    else
+    {
+      dtText = "-";
     }
 
-    if ( this.displayedTime == null )
+    final Double spp = model.getTimelineSecondsPerPixel();
+    final String sppText;
+    if ( spp != null )
     {
-      this.displayedTime = ViewUtils.formatTime( model.getDisplayedTimeInterval() );
+      sppText = formatTime( spp );
+    }
+    else
+    {
+      sppText = "-";
     }
 
-    this.captureInfoField.setText( asText() );
+    final Double uot = model.getTimelineUnitOfTime();
+    final String uotText;
+    if ( uot != null )
+    {
+      uotText = formatTime( uot );
+    }
+    else
+    {
+      uotText = "-";
+    }
 
-    super.paintComponent( aGraphics );
-  }
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      public void run()
+      {
+        AcquisitionDetailsView.this.displayedTimeLabel.setText( dtTextLabel );
+        AcquisitionDetailsView.this.displayedTime.setText( dtText );
+        AcquisitionDetailsView.this.secondsPerPixel.setText( sppText );
+        AcquisitionDetailsView.this.unitOfTime.setText( uotText );
 
-  /**
-   * @param aEvent
-   * @return
-   */
-  private String asText()
-  {
-    final StringBuilder sb = new StringBuilder( "<html><table>" );
-    sb.append( "<tr><th align='right'>Sample count:</th><td>" ).append( this.sampleCount ).append( "</td>" );
-    sb.append( "<tr><th align='right'>Sample rate:</th><td align='right'>" ).append( this.sampleRate ).append( "</td>" );
-    sb.append( "<tr><th align='right'>Sample time:</th><td align='right'>" ).append( this.totalWidth ).append( "</td>" );
-    sb.append( "<tr><th align='right'>Displayed time:</th><td align='right'>" ).append( this.displayedTime )
-        .append( "</td>" );
-    sb.append( "<tr><th align='right'>Time/pixel:</th><td align='right'>" ).append( this.secondsPerPixel )
-        .append( "</td>" );
-    sb.append( "<tr><th align='right'>Unit of time:</th><td align='right'>" ).append( this.unitOfTime )
-        .append( "</td>" );
-    sb.append( "</table></html>" );
-
-    return sb.toString();
+        repaint( 25L );
+      };
+    } );
   }
 
   /**
@@ -229,21 +249,36 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
     setLayout( new BorderLayout() );
     setName( "Acquisition details" );
 
-    add( this.captureInfoField, BorderLayout.NORTH );
-  }
+    JPanel panel = new JPanel( new SpringLayout() );
 
-  /**
-   * Updates this view by repainting it.
-   */
-  private void updateView()
-  {
-    SwingComponentUtils.invokeOnEDT( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        repaint( 25L );
-      }
-    } );
+    SpringLayoutUtils.addSeparator( panel, "Acquisition details" );
+
+    // ROW 1
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Sample count:" ) );
+    panel.add( this.sampleCount );
+
+    // ROW 2
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Sample rate:" ) );
+    panel.add( this.sampleRate );
+
+    // ROW 3
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Sample time:" ) );
+    panel.add( this.totalWidth );
+
+    // ROW 4
+    panel.add( this.displayedTimeLabel );
+    panel.add( this.displayedTime );
+
+    // ROW 5
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Time/pixel:" ) );
+    panel.add( this.secondsPerPixel );
+
+    // ROW 6
+    panel.add( SwingComponentUtils.createRightAlignedLabel( "Unit of time:" ) );
+    panel.add( this.unitOfTime );
+
+    SpringLayoutUtils.makeEditorGrid( panel, 10, 10 );
+
+    add( panel, BorderLayout.NORTH );
   }
 }

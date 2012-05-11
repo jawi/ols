@@ -208,7 +208,12 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public double getPixelsPerSecond()
   {
-    return getSignalDiagramModel().getTimelinePixelsPerSecond().doubleValue();
+    final Double value = getSignalDiagramModel().getTimelinePixelsPerSecond();
+    if ( value == null )
+    {
+      return 1;
+    }
+    return value.doubleValue();
   }
 
   /**
@@ -226,7 +231,12 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public double getSecondsPerPixel()
   {
-    return getSignalDiagramModel().getTimelineSecondsPerPixel().doubleValue();
+    final Double value = getSignalDiagramModel().getTimelineSecondsPerPixel();
+    if ( value == null )
+    {
+      return 1;
+    }
+    return value.doubleValue();
   }
 
   /**
@@ -309,7 +319,12 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public double getUnitOfTime()
   {
-    return getSignalDiagramModel().getTimelineUnitOfTime().doubleValue();
+    final Double timelineUnitOfTime = getSignalDiagramModel().getTimelineUnitOfTime();
+    if ( timelineUnitOfTime == null )
+    {
+      return 1;
+    }
+    return timelineUnitOfTime.doubleValue();
   }
 
   /**

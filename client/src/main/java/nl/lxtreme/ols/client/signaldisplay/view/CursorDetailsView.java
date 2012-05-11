@@ -20,28 +20,30 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
+import static nl.lxtreme.ols.util.swing.SpringLayoutUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+import static nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.*;
 
 import java.awt.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.util.*;
+import nl.lxtreme.ols.client.signaldisplay.util.ClickableLink.LinkListener;
+import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.LabelStyle;
 import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * 
+ * Provides a dockable tool window that shows the details of the defined
+ * cursors.
  */
 public class CursorDetailsView extends AbstractViewLayer implements IToolWindow, ICursorChangeListener,
-    IDataModelChangeListener, HyperlinkListener
+    IDataModelChangeListener, LinkListener
 {
   // CONSTANTS
 
@@ -49,10 +51,6 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
   public static final String ID = "Cursor";
 
   private static final long serialVersionUID = 1L;
-
-  // VARIABLES
-
-  private final JEditorPane cursorInfoField;
 
   // CONSTRUCTORS
 
@@ -65,8 +63,6 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
   private CursorDetailsView( final SignalDiagramController aController )
   {
     super( aController );
-
-    this.cursorInfoField = new JEditorPane( "text/html", asText() );
 
     initComponent();
   }
@@ -167,72 +163,16 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
   }
 
   /**
-   * {@inheritDoc}
+   * @param aLinkId
    */
   @Override
-  public void hyperlinkUpdate( final HyperlinkEvent aEvent )
+  public void linkActivated( final Object aLinkId )
   {
-    if ( HyperlinkEvent.EventType.ACTIVATED.equals( aEvent.getEventType() ) )
+    if ( aLinkId instanceof Long )
     {
-      String desc = aEvent.getDescription();
-      if ( desc.startsWith( "#" ) )
-      {
-        desc = desc.substring( 1 );
-      }
-
-      try
-      {
-        long value = Long.parseLong( desc );
-        getController().getSignalDiagram().scrollToTimestamp( value );
-      }
-      catch ( NumberFormatException exception )
-      {
-        // Ignore...
-      }
+      long timestamp = ( ( Long )aLinkId ).longValue();
+      getController().getSignalDiagram().scrollToTimestamp( timestamp );
     }
-  }
-
-  /**
-   * @param aEvent
-   * @return
-   */
-  private String asText()
-  {
-    final SignalDiagramController ctrl = getController();
-
-    final SignalDiagramModel model = ctrl.getSignalDiagramModel();
-    if ( ( model == null ) || !model.isCursorMode() )
-    {
-      return "";
-    }
-
-    final Font labelFont = UIManager.getFont( LafDefaults.SWING_LABEL_FONT );
-
-    final StringBuilder sb = new StringBuilder( "<html><head><style>td, th {" );
-    sb.append( toCssString( labelFont ) ).append( "} th { font-weight: bold; }</style></head><body><table>" );
-    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
-    {
-      final Cursor cursor = model.getCursor( c );
-      if ( !cursor.isDefined() )
-      {
-        continue;
-      }
-
-      String label = cursor.getLabel();
-      if ( !cursor.hasLabel() )
-      {
-        label = "";
-      }
-
-      sb.append( "<tr><th align='right'>" );
-      sb.append( c + 1 ).append( ":" ).append( "</th>" );
-      sb.append( "<td>" ).append( label ).append( "</td>" );
-      sb.append( "<td align='right'><a href='#" ).append( cursor.getTimestamp() ).append( "'>" );
-      sb.append( UnitOfTime.format( cursor.getTimestamp() / ( double )model.getSampleRate() ) );
-      sb.append( "</a></td></tr>" );
-    }
-    sb.append( "</table></body></html>" );
-    return sb.toString();
   }
 
   /**
@@ -244,11 +184,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
     setLayout( new BorderLayout() );
     setName( "Cursor details" );
 
-    add( this.cursorInfoField, BorderLayout.NORTH );
-
-    this.cursorInfoField.setEditable( false );
-    this.cursorInfoField.setOpaque( false );
-    this.cursorInfoField.addHyperlinkListener( this );
+    updateViewText();
   }
 
   /**
@@ -256,13 +192,65 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
    */
   private void updateViewText()
   {
+    final SignalDiagramController ctrl = getController();
+
+    final SignalDiagramModel model = ctrl.getSignalDiagramModel();
+    final boolean cursorsEnabled;
+
+    final Cursor[] cursors;
+    if ( model != null )
+    {
+      cursors = model.getDefinedCursors();
+      cursorsEnabled = model.isCursorMode();
+    }
+    else
+    {
+      cursors = new Cursor[0];
+      cursorsEnabled = false;
+    }
+
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
       @Override
       public void run()
       {
-        CursorDetailsView.this.cursorInfoField.setText( asText() );
-        repaint( 50L );
+        final JPanel panel = new JPanel( new SpringLayout() );
+
+        addSeparator( panel, "Cursors" );
+
+        for ( Cursor cursor : cursors )
+        {
+          String label = "" + ( cursor.getIndex() + 1 );
+          if ( cursor.hasLabel() )
+          {
+            label = label.concat( ", " ).concat( cursor.getLabel() );
+          }
+
+          panel.add( createRightAlignedLabel( label.concat( ":" ) ) );
+
+          String linkText = getCursorFlagText( model, cursor, LabelStyle.TIME_ONLY );
+
+          ClickableLink link = new ClickableLink( linkText, Long.valueOf( cursor.getTimestamp() ) );
+          link.setLinkListener( CursorDetailsView.this );
+          link.setEnabled( cursorsEnabled );
+          link.setForeground( Color.BLUE );
+
+          panel.add( link );
+        }
+
+        if ( cursors.length == 0 )
+        {
+          panel.add( createRightAlignedLabel( "No" ) );
+          panel.add( new JLabel( "cursors defined." ) );
+        }
+
+        makeEditorGrid( panel, 10, 10 );
+
+        removeAll();
+        add( panel, BorderLayout.NORTH );
+
+        validate();
+        repaint();
       }
     } );
   }
