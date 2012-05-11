@@ -274,16 +274,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void doLayout()
-  {
-    calculateDimensions();
-    super.doLayout();
-  }
-
-  /**
    * Returns the model of this component.
    * 
    * @return the model, never <code>null</code>.
@@ -401,7 +391,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       {
         final long endTime = System.nanoTime();
         final long renderTime = endTime - startTime;
-        System.out.println( "Rendering time = " + UnitOfTime.format( 1.0 / renderTime ) );
+        System.out.println( "Rendering time = " + UnitOfTime.format( renderTime / 1.0e9 ) );
       }
     }
     else
@@ -464,6 +454,52 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   }
 
   /**
+   * Calculates all dimensions of the contained components.
+   */
+  final void calculateDimensions()
+  {
+    final SignalView view = getSignalView();
+    final SignalDiagramModel model = getModel();
+
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, view );
+    if ( scrollPane != null )
+    {
+      final Rectangle viewPortSize = scrollPane.getViewport().getVisibleRect();
+
+      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
+      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+
+      final int clWidth = channelLabels.getPreferredWidth();
+      final int tlHeight = timeline.getTimeLineHeight();
+
+      final int newWidth = Math.max( viewPortSize.width, model.getAbsoluteScreenWidth() );
+      final int newHeight = Math.max( viewPortSize.height, model.getAbsoluteScreenHeight() );
+
+      // the timeline component always follows the width of the signal view, but
+      // with a fixed height...
+      timeline.setPreferredSize( new Dimension( newWidth, tlHeight ) );
+
+      // the channel label component calculates its own 'optimal' width, but
+      // doesn't know squat about the correct height...
+      channelLabels.setPreferredSize( new Dimension( clWidth, newHeight ) );
+
+      view.setPreferredSize( new Dimension( newWidth, newHeight ) );
+    }
+    else
+    {
+      final Dimension frameSize = getRootPane().getSize();
+      final Rectangle viewSize = view.getVisibleRect();
+
+      final int minWidth = Math.max( viewSize.width, frameSize.width );
+
+      final int newWidth = Math.max( minWidth, model.getAbsoluteScreenWidth() );
+      final int newHeight = Math.max( viewSize.height, model.getAbsoluteScreenHeight() );
+
+      view.setPreferredSize( new Dimension( newWidth, newHeight ) );
+    }
+  }
+
+  /**
    * Returns whether or not there's data to display.
    * 
    * @return <code>true</code> if there is any captured data to display,
@@ -515,11 +551,11 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
     mx = Math.floor( model.getTimestamps()[tsIdx] * oldZf );
 
-    if ( aEvent.isFactorChange() )
-    {
-      // Recalculate all dimensions...
-      calculateDimensions();
-    }
+    // Recalculate all dimensions...
+    calculateDimensions();
+
+    // Notify that everything needs to be revalidated as well...
+    revalidateAll();
 
     final Point location = getLocation();
 
@@ -528,9 +564,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     int newY = ( int )( location.getY() - ( ( my * relZf ) - my ) );
 
     setLocation( newX, newY );
-
-    // Notify that everything needs to be revalidated as well...
-    revalidateAll();
 
     // Issue #100: in case the factor is changed, we need to repaint all
     // components...
@@ -560,7 +593,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
    */
   final void revalidateAll()
   {
-    this.signalView.revalidate();
+    revalidate();
 
     final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this );
     if ( scrollPane != null )
@@ -570,54 +603,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
       ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
       channelLabels.revalidate();
-    }
-  }
-
-  /**
-   * Calculates all dimensions of the contained components.
-   */
-  private void calculateDimensions()
-  {
-    final SignalView view = getSignalView();
-    final Dimension frameSize = getRootPane().getSize();
-    final SignalDiagramModel model = getModel();
-
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, view );
-    if ( scrollPane != null )
-    {
-      final Rectangle viewPortSize = scrollPane.getViewport().getVisibleRect();
-
-      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
-      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
-
-      final int clWidth = channelLabels.getPreferredWidth();
-      final int tlHeight = timeline.getTimeLineHeight();
-
-      final int minWidth = Math.max( viewPortSize.width, frameSize.width - clWidth );
-
-      final int newWidth = Math.max( minWidth, model.getAbsoluteScreenWidth() );
-      final int newHeight = Math.max( viewPortSize.height, model.getAbsoluteScreenHeight() );
-
-      // the timeline component always follows the width of the signal view, but
-      // with a fixed height...
-      timeline.setPreferredSize( new Dimension( newWidth, tlHeight ) );
-
-      // the channel label component calculates its own 'optimal' width, but
-      // doesn't know squat about the correct height...
-      channelLabels.setPreferredSize( new Dimension( clWidth, newHeight ) );
-
-      view.setPreferredSize( new Dimension( newWidth, newHeight ) );
-    }
-    else
-    {
-      final Rectangle viewSize = view.getVisibleRect();
-
-      final int minWidth = Math.max( viewSize.width, frameSize.width );
-
-      final int newWidth = Math.max( minWidth, model.getAbsoluteScreenWidth() );
-      final int newHeight = Math.max( viewSize.height, model.getAbsoluteScreenHeight() );
-
-      view.setPreferredSize( new Dimension( newWidth, newHeight ) );
     }
   }
 

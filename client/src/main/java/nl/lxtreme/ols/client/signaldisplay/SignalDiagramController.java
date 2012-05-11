@@ -283,6 +283,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public void recalculateDimensions()
   {
+    this.signalDiagram.calculateDimensions();
     this.signalDiagram.revalidateAll();
     this.signalDiagram.repaintAll();
   }
@@ -392,6 +393,8 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   public void setDataModel( final DataSet aDataSet )
   {
     getSignalDiagramModel().setDataModel( aDataSet );
+
+    recalculateDimensions();
   }
 
   /**

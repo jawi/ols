@@ -163,6 +163,7 @@ public class SignalUI extends ComponentUI
       final SignalElement[] signalElements = model.getSignalElements( clip.y, clip.height );
 
       Graphics2D canvas = ( Graphics2D )aGraphics.create();
+      System.out.println( "REPAINT: " + aGraphics.getClipBounds() );
 
       try
       {

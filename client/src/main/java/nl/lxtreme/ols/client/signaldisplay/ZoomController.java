@@ -518,6 +518,7 @@ public final class ZoomController
    */
   private double setFactor( final double aFactor )
   {
+    System.out.println( "SET FACTOR = " + aFactor );
     return this.factor = aFactor;
   }
 }
