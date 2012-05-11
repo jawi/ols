@@ -534,10 +534,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
     // Issue #100: in case the factor is changed, we need to repaint all
     // components...
-    if ( aEvent.isFactorChange() )
-    {
-      repaintAll();
-    }
+    repaintAll();
   }
 
   /**
