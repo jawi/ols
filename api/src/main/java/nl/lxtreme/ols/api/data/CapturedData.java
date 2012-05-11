@@ -105,7 +105,7 @@ public class CapturedData implements AcquisitionResult
 
     tmp = values[0];
     count = 1;
-    for ( int i = 0; i < values.length; i++ )
+    for ( int i = 1; i < values.length; i++ )
     {
       if ( tmp != values[i] )
       {
@@ -117,7 +117,13 @@ public class CapturedData implements AcquisitionResult
       tmp = values[i];
     }
 
-    this.absoluteLength = this.timestamps[this.timestamps.length - 1];
+    long absLength = this.timestamps[this.timestamps.length - 1];
+    if ( values.length > 1 )
+    {
+      absLength -= this.timestamps[0];
+    }
+
+    this.absoluteLength = absLength;
   }
 
   // METHODS
