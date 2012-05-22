@@ -319,6 +319,6 @@ public final class ChannelImpl implements Channel
    */
   private String getDefaultName()
   {
-    return String.format( "%s-%d", "Channel", Integer.valueOf( getIndex() + 1 ) );
+    return String.format( "%s-%d", "Channel", Integer.valueOf( getIndex() ) );
   }
 }
