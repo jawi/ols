@@ -106,6 +106,7 @@ public class DeviceProfileManagerTest
     properties.put( DeviceProfile.DEVICE_METADATA_KEYS, aMetadataKeys );
     properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "10" );
     properties.put( DeviceProfile.DEVICE_OPEN_PORT_DTR, "true" );
+    properties.put( DeviceProfile.DEVICE_RECEIVE_TIMEOUT, "12" );
     properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "false" );
     properties.put( DeviceProfile.DEVICE_SAMPLERATES, "5,6,7" );
     properties.put( DeviceProfile.DEVICE_SUPPORTS_DDR, "true" );

@@ -688,6 +688,12 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
         boolean dtrValue = this.deviceProfile.isOpenPortDtr();
 
         result = String.format( "%s;dtr=%s;delay=%d", result, ( dtrValue ? "on" : "off" ), openDelay );
+
+        Integer recvTimeout = this.deviceProfile.getReceiveTimeout();
+        if ( recvTimeout != null )
+        {
+          result = String.format( "%s;recv_timeout=%d", result, recvTimeout );
+        }
       }
     }
     else

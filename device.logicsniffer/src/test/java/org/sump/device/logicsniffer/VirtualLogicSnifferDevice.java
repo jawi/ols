@@ -426,6 +426,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     properties.put( DeviceProfile.DEVICE_METADATA_KEYS, aMetadataKeys );
     properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "0" );
     properties.put( DeviceProfile.DEVICE_OPEN_PORT_DTR, "false" );
+    properties.put( DeviceProfile.DEVICE_RECEIVE_TIMEOUT, "12" );
     properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "true" );
     properties.put( DeviceProfile.DEVICE_SAMPLERATES, "1000000" );
     properties.put( DeviceProfile.DEVICE_SUPPORTS_DDR, "true" );

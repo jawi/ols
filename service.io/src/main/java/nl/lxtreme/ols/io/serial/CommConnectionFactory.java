@@ -79,7 +79,7 @@ public class CommConnectionFactory implements ConnectionFactory
       {
         // A receive timeout allows us to better control blocking I/O, such as
         // read() from the serial port...
-        port.enableReceiveTimeout( 100 );
+        port.enableReceiveTimeout( options.getReceiveTimeout() );
       }
       // Taken from
       // <http://mailman.qbang.org/pipermail/rxtx/2010-September/7821768.html>

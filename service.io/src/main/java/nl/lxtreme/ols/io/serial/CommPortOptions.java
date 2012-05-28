@@ -95,6 +95,13 @@ import purejavacomm.*;
  * milliseconds after opening the serial port. If 0 (the default), the port
  * opening is not delayed.</td>
  * </tr>
+ * <tr>
+ * <td>recv_timeout</td>
+ * <td>100</td>
+ * <td>(<b>OLS-specific addition!</b>) Allows the receive timeout to be
+ * manipulated. Greater values give slower hardware more time to push out their
+ * data.</td>
+ * </tr>
  * </table>
  */
 final class CommPortOptions
@@ -102,9 +109,10 @@ final class CommPortOptions
   // CONSTANTS
 
   private static final Pattern SCHEMA_REGEX = Pattern.compile( "^comm:([^;]+)(?:;([^\r\n]+))*$" );
-  private static final Pattern OPTION_REGEX = Pattern.compile(
-      "(baudrate|bitsperchar|stopbits|parity|blocking|autocts|autorts|flowcontrol|dtr|delay)=([\\.\\d\\w_-]+)",
-      Pattern.CASE_INSENSITIVE );
+  private static final Pattern OPTION_REGEX = Pattern
+      .compile(
+          "(baudrate|bitsperchar|stopbits|parity|blocking|autocts|autorts|flowcontrol|dtr|delay|recv_timeout)=([\\.\\d\\w_-]+)",
+          Pattern.CASE_INSENSITIVE );
 
   // VARIABLES
 
@@ -117,6 +125,7 @@ final class CommPortOptions
   private boolean blocking;
   private boolean dtr;
   private int openDelay;
+  private int recvTimeout;
 
   // CONSTRUCTORS
 
@@ -154,6 +163,9 @@ final class CommPortOptions
 
     // Default to no open delay...
     this.openDelay = 0;
+
+    // Default to a small delay of 100ms...
+    this.recvTimeout = 100;
 
     parseURI( aURI );
   }
@@ -206,6 +218,14 @@ final class CommPortOptions
   public String getPortName()
   {
     return this.portName;
+  }
+
+  /**
+   * @return the receive timeout, in milliseconds.
+   */
+  public int getReceiveTimeout()
+  {
+    return this.recvTimeout;
   }
 
   /**
@@ -347,6 +367,24 @@ final class CommPortOptions
    * @param aStr
    * @return
    */
+  private int parseRecvTimeout( final String aStr )
+  {
+    int result = 100;
+    try
+    {
+      result = Integer.parseInt( aStr );
+    }
+    catch ( NumberFormatException exception )
+    {
+      // Ignore, fall back to default value of 0...
+    }
+    return result;
+  }
+
+  /**
+   * @param aStr
+   * @return
+   */
   private int parseStopBits( final String aStr )
   {
     if ( "1".equals( aStr ) )
@@ -465,6 +503,10 @@ final class CommPortOptions
       else if ( "delay".equals( key ) )
       {
         this.openDelay = parseOpenDelay( value );
+      }
+      else if ( "recv_timeout".equals( key ) )
+      {
+        this.recvTimeout = parseRecvTimeout( value );
       }
     }
   }

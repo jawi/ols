@@ -61,10 +61,7 @@ public class DeviceProfileManager implements ManagedServiceFactory
   @Override
   public void deleted( final String aPid )
   {
-    synchronized ( this.profiles )
-    {
-      this.profiles.remove( aPid );
-    }
+    this.profiles.remove( aPid );
   }
 
   /**
@@ -159,10 +156,7 @@ public class DeviceProfileManager implements ManagedServiceFactory
   public List<DeviceProfile> getProfiles()
   {
     List<DeviceProfile> result = new ArrayList<DeviceProfile>();
-    synchronized ( this.profiles )
-    {
-      result.addAll( this.profiles.values() );
-    }
+    result.addAll( this.profiles.values() );
     return result;
   }
 
@@ -173,10 +167,7 @@ public class DeviceProfileManager implements ManagedServiceFactory
    */
   public int getSize()
   {
-    synchronized ( this.profiles )
-    {
-      return this.profiles.size();
-    }
+    return this.profiles.size();
   }
 
   /**
@@ -187,20 +178,13 @@ public class DeviceProfileManager implements ManagedServiceFactory
   @SuppressWarnings( "rawtypes" )
   public void updated( final String aPid, final Dictionary aProperties ) throws ConfigurationException
   {
-    synchronized ( this.profiles )
+    DeviceProfile profile = this.profiles.get( aPid );
+    if ( profile == null )
     {
-      if ( this.profiles.containsKey( aPid ) )
-      {
-        DeviceProfile profile = this.profiles.get( aPid );
-        profile.setProperties( aProperties );
-      }
-      else
-      {
-        DeviceProfile profile = new DeviceProfile();
-        profile.setProperties( aProperties );
-        this.profiles.put( aPid, profile );
-      }
+      profile = new DeviceProfile();
+      this.profiles.putIfAbsent( aPid, profile );
     }
+    profile.setProperties( aProperties );
   }
 
   /**

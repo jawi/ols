@@ -93,6 +93,23 @@ public class CommPortOptionsTest
    * @throws Exception
    */
   @Test
+  public void testParseInvalidReceiveTimeoutOk() throws Exception
+  {
+    final CommPortOptions options = new CommPortOptions( "comm:/dev/tty.usb0;baudrate=115200;recv_timeout=xyz" );
+
+    assertNotNull( options );
+    assertEquals( "/dev/tty.usb0", options.getPortName() );
+    assertEquals( 115200, options.getBaudrate() );
+    assertEquals( SerialPort.DATABITS_8, options.getDatabits() );
+    assertEquals( SerialPort.PARITY_NONE, options.getParityMode() );
+    assertEquals( SerialPort.STOPBITS_1, options.getStopbits() );
+    assertEquals( 100, options.getReceiveTimeout() );
+  }
+
+  /**
+   * @throws Exception
+   */
+  @Test
   public void testParseOpenDelayOk() throws Exception
   {
     final CommPortOptions options = new CommPortOptions( "comm:/dev/tty.usb0;baudrate=115200;delay=115" );
@@ -153,5 +170,22 @@ public class CommPortOptionsTest
     assertEquals( SerialPort.DATABITS_8, options.getDatabits() );
     assertEquals( SerialPort.PARITY_NONE, options.getParityMode() );
     assertEquals( SerialPort.STOPBITS_1, options.getStopbits() );
+  }
+
+  /**
+   * @throws Exception
+   */
+  @Test
+  public void testParseValidReceiveTimeoutOk() throws Exception
+  {
+    final CommPortOptions options = new CommPortOptions( "comm:/dev/tty.usb0;baudrate=115200;recv_timeout=12" );
+
+    assertNotNull( options );
+    assertEquals( "/dev/tty.usb0", options.getPortName() );
+    assertEquals( 115200, options.getBaudrate() );
+    assertEquals( SerialPort.DATABITS_8, options.getDatabits() );
+    assertEquals( SerialPort.PARITY_NONE, options.getParityMode() );
+    assertEquals( SerialPort.STOPBITS_1, options.getStopbits() );
+    assertEquals( 12, options.getReceiveTimeout() );
   }
 }

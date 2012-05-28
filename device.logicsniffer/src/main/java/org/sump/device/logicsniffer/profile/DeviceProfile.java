@@ -23,6 +23,7 @@ package org.sump.device.logicsniffer.profile;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.util.*;
@@ -116,6 +117,8 @@ public final class DeviceProfile implements Cloneable
    * delay, >0 = delay in milliseconds)
    */
   public static final String DEVICE_OPEN_PORT_DELAY = "device.open.portdelay";
+  /** The receive timeout (100 = default, in milliseconds) */
+  public static final String DEVICE_RECEIVE_TIMEOUT = "device.receive.timeout";
   /**
    * Which metadata keys correspond to this device profile? Value is a
    * comma-separated list of (double quoted) names.
@@ -145,7 +148,8 @@ public final class DeviceProfile implements Cloneable
       DEVICE_CAPTURESIZES, DEVICE_FEATURE_NOISEFILTER, DEVICE_FEATURE_RLE, DEVICE_FEATURE_TEST_MODE,
       DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT,
       DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY,
-      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR, FELIX_FILEINSTALL_FILENAME } );
+      DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR, DEVICE_RECEIVE_TIMEOUT,
+      FELIX_FILEINSTALL_FILENAME } );
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { FELIX_SERVICE_PID,
       FELIX_SERVICE_FACTORY_PID } );
 
@@ -153,7 +157,7 @@ public final class DeviceProfile implements Cloneable
 
   // VARIABLES
 
-  private final Map<String, String> properties;
+  private final ConcurrentMap<String, String> properties;
 
   // CONSTRUCTORS
 
@@ -162,7 +166,7 @@ public final class DeviceProfile implements Cloneable
    */
   public DeviceProfile()
   {
-    this.properties = new HashMap<String, String>();
+    this.properties = new ConcurrentHashMap<String, String>();
   }
 
   // METHODS
@@ -404,6 +408,27 @@ public final class DeviceProfile implements Cloneable
   }
 
   /**
+   * Returns the (optional) receive timeout.
+   * <p>
+   * WARNING: if no receive timeout is used, the communication essentially
+   * results in a non-blocking I/O operation which can not be cancelled!
+   * </p>
+   * 
+   * @return the receive timeout, in ms, or <code>null</code> when no receive
+   *         timeout should be used.
+   */
+  public Integer getReceiveTimeout()
+  {
+    final String value = this.properties.get( DEVICE_RECEIVE_TIMEOUT );
+    if ( value == null )
+    {
+      return null;
+    }
+    int timeout = Integer.parseInt( value );
+    return ( timeout <= 0 ) ? null : Integer.valueOf( timeout );
+  }
+
+  /**
    * Returns all supported sample rates.
    * 
    * @return an array of sample rates, in Hertz, never <code>null</code>.
@@ -412,12 +437,12 @@ public final class DeviceProfile implements Cloneable
   {
     final String rawValue = this.properties.get( DEVICE_SAMPLERATES );
     final String[] values = rawValue.split( ",\\s*" );
-    final List<Integer> result = new ArrayList<Integer>();
+    final SortedSet<Integer> result = new TreeSet<Integer>(
+        NumberUtils.<Integer> createNumberComparator( false /* aSortAscending */) );
     for ( String value : values )
     {
       result.add( Integer.valueOf( value.trim() ) );
     }
-    Collections.sort( result, NumberUtils.<Integer> createNumberComparator( false /* aSortAscending */) );
 
     return result.toArray( new Integer[result.size()] );
   }
@@ -631,13 +656,9 @@ public final class DeviceProfile implements Cloneable
       throw new IllegalArgumentException( "Profile settings not complete! Missing keys are: " + checkedKeys.toString() );
     }
 
-    synchronized ( this.properties )
-    {
-      this.properties.clear();
-      this.properties.putAll( newProps );
+    this.properties.putAll( newProps );
 
-      LOG.log( Level.INFO, "New device profile settings applied for {1} ({0}) ...", //
-          new Object[] { getType(), getDescription() } );
-    }
+    LOG.log( Level.INFO, "New device profile settings applied for {1} ({0}) ...", //
+        new Object[] { getType(), getDescription() } );
   }
 }
