@@ -21,9 +21,12 @@
 package nl.lxtreme.ols.client.signaldisplay;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
 import java.util.*;
 
+import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.client.signaldisplay.model.*;
@@ -493,10 +496,22 @@ public final class ZoomController
       return DEFAULT_ZOOM_FACTOR;
     }
 
-    Rectangle viewSize = this.controller.getSignalDiagram().getVisibleViewSize();
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this.controller.getSignalDiagram() );
     final double length = model.getAbsoluteLength();
 
-    return viewSize.getWidth() / length;
+    final int width;
+    if ( scrollPane != null )
+    {
+      final JViewport viewport = scrollPane.getViewport();
+
+      width = viewport.getWidth();
+    }
+    else
+    {
+      width = this.controller.getSignalDiagram().getWidth();
+    }
+
+    return width / length;
   }
 
   /**

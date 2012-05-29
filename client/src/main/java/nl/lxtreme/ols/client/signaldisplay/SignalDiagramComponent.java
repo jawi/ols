@@ -364,7 +364,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     final Rectangle rect;
     if ( scrollPane != null )
     {
-      rect = scrollPane.getViewport().getVisibleRect();
+      rect = scrollPane.getViewport().getBounds();
     }
     else
     {

@@ -592,6 +592,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       this.zoomAdapter = new MouseWheelZoomAdapter( aController.getZoomController() );
       this.diagramModel = aController.getSignalDiagramModel();
 
+      setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED );
+      setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED );
+
       updateUI();
     }
 
