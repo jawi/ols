@@ -638,30 +638,12 @@ public final class SwingComponentUtils
     {
       final int xPos = aProperties.getInt( "winXpos", -1 );
       final int yPos = aProperties.getInt( "winYpos", -1 );
-      if ( ( xPos >= 0 ) && ( yPos >= 0 ) )
-      {
-        aWindow.setLocation( xPos, yPos );
-      }
-    }
-    catch ( NumberFormatException exception )
-    {
-      // Ignore...
-    }
-
-    if ( isNonResizableWindow( aWindow ) )
-    {
-      // In case the window cannot be resized, don't restore its width &
-      // height...
-      return;
-    }
-
-    try
-    {
       final int width = aProperties.getInt( "winWidth", -1 );
       final int height = aProperties.getInt( "winHeight", -1 );
-      if ( ( width >= 0 ) && ( height >= 0 ) )
+
+      if ( ( xPos >= 0 ) && ( yPos >= 0 ) && ( width >= 0 ) && ( height >= 0 ) )
       {
-        aWindow.setSize( width, height );
+        aWindow.setBounds( xPos, yPos, width, height );
       }
     }
     catch ( NumberFormatException exception )
@@ -777,20 +759,11 @@ public final class SwingComponentUtils
     // Special case: for FileDialog/JFileChooser we also store the properties...
     saveFileDialogState( aProperties, aWindow );
 
-    final Point location = aWindow.getLocation();
-    aProperties.put( "winXpos", Integer.toString( location.x ) );
-    aProperties.put( "winYpos", Integer.toString( location.y ) );
-
-    if ( isNonResizableWindow( aWindow ) )
-    {
-      // In case the window cannot be resized, don't restore its width &
-      // height...
-      return;
-    }
-
-    final Dimension dims = aWindow.getSize();
-    aProperties.put( "winWidth", Integer.toString( dims.width ) );
-    aProperties.put( "winHeight", Integer.toString( dims.height ) );
+    final Rectangle bounds = aWindow.getBounds();
+    aProperties.put( "winXpos", Integer.toString( bounds.x ) );
+    aProperties.put( "winYpos", Integer.toString( bounds.y ) );
+    aProperties.put( "winWidth", Integer.toString( bounds.width ) );
+    aProperties.put( "winHeight", Integer.toString( bounds.height ) );
   }
 
   /**
@@ -1210,36 +1183,6 @@ public final class SwingComponentUtils
   {
     final String osName = System.getProperty( "os.name", "" ).toLowerCase();
     return osName.startsWith( "mac os" );
-  }
-
-  /**
-   * Returns whether the given window is non-resizable.
-   * 
-   * @param aWindow
-   *          the window to determine whether it can be resized or not, may be
-   *          <code>null</code>.
-   * @return <code>true</code> if the given window is not resizable,
-   *         <code>false</code> otherwise.
-   */
-  private static boolean isNonResizableWindow( final Window aWindow )
-  {
-    if ( aWindow instanceof Dialog )
-    {
-      if ( !( ( Dialog )aWindow ).isResizable() )
-      {
-        return true;
-      }
-    }
-
-    if ( aWindow instanceof Frame )
-    {
-      if ( !( ( Frame )aWindow ).isResizable() )
-      {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   /**

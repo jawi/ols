@@ -80,17 +80,12 @@ public class UserSessionManager
     @Override
     public void eventDispatched( final AWTEvent aEvent )
     {
-      if ( !( aEvent instanceof ComponentEvent ) )
-      {
-        return;
-      }
-
       final ComponentEvent event = ( ComponentEvent )aEvent;
       final Window component = ( Window )event.getComponent();
       final String namespace = component.getClass().getName();
       final int id = aEvent.getID();
 
-      if ( ( id == WindowEvent.WINDOW_OPENED ) || ( id == WindowEvent.WINDOW_ACTIVATED ) )
+      if ( id == WindowEvent.WINDOW_OPENED )
       {
         // When we've already loaded the preferences once; don't do this
         // again...
@@ -262,8 +257,15 @@ public class UserSessionManager
         {
           this.logger.log( LogService.LOG_DEBUG, "Reading dialog-specific properties for: " + aNamespace );
 
-          final UserSettings userSettings = getUserSettings( aNamespace );
-          ( ( Configurable )aComponent ).readPreferences( userSettings );
+          try
+          {
+            final UserSettings userSettings = getUserSettings( aNamespace );
+            ( ( Configurable )aComponent ).readPreferences( userSettings );
+          }
+          catch ( Exception exception )
+          {
+            this.logger.log( LogService.LOG_DEBUG, "Failed to read preferences for: " + aNamespace, exception );
+          }
         }
 
         // Only store settings of "real" frames and dialogs, not
@@ -320,11 +322,18 @@ public class UserSessionManager
         {
           this.logger.log( LogService.LOG_DEBUG, "Writing dialog-specific properties for: " + aNamespace );
 
-          final UserSettings userSettings = getUserSettings( aNamespace );
-          ( ( Configurable )aComponent ).writePreferences( userSettings );
-          // Important: write back the user settings to mark the project as
-          // changed!
-          setUserSettings( userSettings );
+          try
+          {
+            final UserSettings userSettings = getUserSettings( aNamespace );
+            ( ( Configurable )aComponent ).writePreferences( userSettings );
+            // Important: write back the user settings to mark the project as
+            // changed!
+            setUserSettings( userSettings );
+          }
+          catch ( Exception exception )
+          {
+            this.logger.log( LogService.LOG_DEBUG, "Failed to safe properties for: " + aNamespace, exception );
+          }
         }
 
         // Only store settings of "real" frames and dialogs, not
