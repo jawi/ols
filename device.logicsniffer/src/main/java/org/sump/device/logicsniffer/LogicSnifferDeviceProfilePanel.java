@@ -26,6 +26,7 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.List;
 import java.util.logging.*;
 
 import javax.swing.*;
@@ -166,7 +167,12 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     @Override
     public Object getElementAt( final int aIndex )
     {
-      return this.deviceProfileManager.getProfiles().get( aIndex );
+      final List<DeviceProfile> profiles = this.deviceProfileManager.getProfiles();
+      if ( profiles.isEmpty() )
+      {
+        return null;
+      }
+      return profiles.get( aIndex );
     }
 
     /**

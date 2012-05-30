@@ -760,21 +760,15 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       }
     }
 
-    final boolean filterEnabled = this.deviceProfile.isNoiseFilterSupported() && !isDdrMode();
-    this.filterEnable.setEnabled( filterEnabled );
-    if ( !filterEnabled )
-    {
-      this.filterEnable.setSelected( false );
-    }
+    final boolean filterEnabled = ( this.deviceProfile != null ) && this.deviceProfile.isNoiseFilterSupported()
+        && !isDdrMode();
+    updateCheckBoxState( this.filterEnable, filterEnabled );
 
-    final boolean triggerSupported = this.deviceProfile.isTriggerSupported();
-    this.triggerEnable.setEnabled( triggerSupported );
-    if ( !triggerSupported )
-    {
-      this.triggerEnable.setSelected( false );
-    }
+    final boolean triggerSupported = ( this.deviceProfile != null ) && this.deviceProfile.isTriggerSupported();
+    updateCheckBoxState( this.triggerEnable, triggerSupported );
 
-    setTriggerEnabled( this.triggerEnable.isSelected(), this.deviceProfile.getTriggerStages() );
+    final int triggerStages = this.deviceProfile != null ? this.deviceProfile.getTriggerStages() : 0;
+    setTriggerEnabled( this.triggerEnable.isSelected(), triggerStages );
 
     this.speedSelect.setEnabled( this.sourceSelect.getSelectedItem() == CaptureClockSource.INTERNAL );
 
