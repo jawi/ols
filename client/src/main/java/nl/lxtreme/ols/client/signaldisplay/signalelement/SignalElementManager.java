@@ -43,32 +43,6 @@ public final class SignalElementManager implements IDataModelChangeListener
   // INNER TYPES
 
   /**
-   * Defines a provider the heights of the various types of signal elements.
-   */
-  public static interface SignalElementHeightProvider
-  {
-    /**
-     * @return a analog signal height, in pixels.
-     */
-    int getAnalogSignalHeight();
-
-    /**
-     * @return a digital channel height, in pixels.
-     */
-    int getDigitalSignalHeight();
-
-    /**
-     * @return a group summary height, in pixels.
-     */
-    int getGroupSummaryHeight();
-
-    /**
-     * @return a signal group height, in pixels.
-     */
-    int getSignalGroupHeight();
-  }
-
-  /**
    * Defines a measurer for signal elements.
    */
   public static interface SignalElementMeasurer
@@ -77,11 +51,19 @@ public final class SignalElementManager implements IDataModelChangeListener
     public static final SignalElementMeasurer LOOSE_MEASURER = new LooseChannelElementMeasurer();
 
     /**
+     * Determines whether a signal element at a given Y-position with a given
+     * height fits in the boundaries defined by [minY, maxY].
+     * 
      * @param aYpos
+     *          the Y-position of the signal element, in pixels;
      * @param aHeight
+     *          the height of the signal element, in pixels;
      * @param aMinY
+     *          the minimum Y-position to fit in;
      * @param aMaxY
-     * @return
+     *          the maximum Y-position to fit in.
+     * @return <code>true</code> if the signal element would fit,
+     *         <code>false</code> otherwise.
      */
     boolean signalElementFits( int aYpos, int aHeight, int aMinY, int aMaxY );
   }
@@ -164,7 +146,7 @@ public final class SignalElementManager implements IDataModelChangeListener
    *          <code>null</code>.
    * @return a screen height, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
    */
-  public int calculateScreenHeight( final SignalElementHeightProvider aHeightProvider )
+  public int calculateScreenHeight()
   {
     int height = 0;
     for ( ElementGroup cg : getGroups() )
@@ -174,20 +156,24 @@ public final class SignalElementManager implements IDataModelChangeListener
         continue;
       }
 
-      height += aHeightProvider.getSignalGroupHeight();
-
-      if ( cg.isShowDigitalSignals() )
+      for ( SignalElement element : cg.getElements() )
       {
-        height += aHeightProvider.getDigitalSignalHeight() * cg.getElementCount( SignalElementType.DIGITAL_SIGNAL );
-      }
-      // Always keep these heights into account...
-      if ( cg.isShowGroupSummary() )
-      {
-        height += aHeightProvider.getGroupSummaryHeight();
-      }
-      if ( cg.isShowAnalogSignal() )
-      {
-        height += aHeightProvider.getAnalogSignalHeight();
+        if ( element.isSignalGroup() )
+        {
+          height += element.getHeight();
+        }
+        else if ( element.isDigitalSignal() && cg.isShowDigitalSignals() )
+        {
+          height += element.getHeight();
+        }
+        else if ( element.isGroupSummary() && cg.isShowGroupSummary() )
+        {
+          height += element.getHeight();
+        }
+        else if ( element.isAnalogSignal() && cg.isShowAnalogSignal() )
+        {
+          height += element.getHeight();
+        }
       }
     }
 
@@ -218,7 +204,7 @@ public final class SignalElementManager implements IDataModelChangeListener
       {
         final ElementGroup group = addGroup( "Group " + ( g + 1 ) );
 
-        // We start with a signal group element... XXX?
+        // We start with a signal group element...
         addSignalElement( group, createSignalGroupElement( group ) );
 
         for ( int c = 0; c < channelsPerGroup; c++ )
@@ -307,15 +293,9 @@ public final class SignalElementManager implements IDataModelChangeListener
    *          fits in the given dimensions.
    * @return an array of channels, never <code>null</code>.
    */
-  public SignalElement[] getSignalElements( final int aY, final int aHeight, final SignalElementMeasurer aMeasurer,
-      final SignalElementHeightProvider aHeightProvider )
+  public SignalElement[] getSignalElements( final int aY, final int aHeight, final SignalElementMeasurer aMeasurer )
   {
     final List<SignalElement> result = new ArrayList<SignalElement>();
-
-    final int digitalSignalHeight = aHeightProvider.getDigitalSignalHeight();
-    final int groupSummaryHeight = aHeightProvider.getGroupSummaryHeight();
-    final int analogSignalHeight = aHeightProvider.getAnalogSignalHeight();
-    final int signalGroupHeight = aHeightProvider.getSignalGroupHeight();
 
     final int yMin = aY;
     final int yMax = aHeight + aY;
@@ -337,44 +317,44 @@ public final class SignalElementManager implements IDataModelChangeListener
       {
         if ( element.isSignalGroup() )
         {
-          if ( aMeasurer.signalElementFits( yPos, signalGroupHeight, yMin, yMax ) )
+          int height = element.getHeight();
+          if ( aMeasurer.signalElementFits( yPos, height, yMin, yMax ) )
           {
             element.setYposition( yPos );
-            element.setHeight( signalGroupHeight );
             result.add( element );
           }
-          yPos += signalGroupHeight;
+          yPos += height;
         }
         else if ( element.isDigitalSignal() && group.isShowDigitalSignals() )
         {
           // Does this individual channel fit?
-          if ( aMeasurer.signalElementFits( yPos, digitalSignalHeight, yMin, yMax ) )
+          int height = element.getHeight();
+          if ( aMeasurer.signalElementFits( yPos, height, yMin, yMax ) )
           {
             element.setYposition( yPos );
-            element.setHeight( digitalSignalHeight );
             result.add( element );
           }
-          yPos += digitalSignalHeight;
+          yPos += height;
         }
         else if ( element.isGroupSummary() && group.isShowGroupSummary() )
         {
-          if ( aMeasurer.signalElementFits( yPos, groupSummaryHeight, yMin, yMax ) )
+          int height = element.getHeight();
+          if ( aMeasurer.signalElementFits( yPos, height, yMin, yMax ) )
           {
             element.setYposition( yPos );
-            element.setHeight( groupSummaryHeight );
             result.add( element );
           }
-          yPos += groupSummaryHeight;
+          yPos += height;
         }
         else if ( element.isAnalogSignal() && group.isShowAnalogSignal() )
         {
-          if ( aMeasurer.signalElementFits( yPos, analogSignalHeight, yMin, yMax ) )
+          int height = element.getHeight();
+          if ( aMeasurer.signalElementFits( yPos, height, yMin, yMax ) )
           {
             element.setYposition( yPos );
-            element.setHeight( analogSignalHeight );
             result.add( element );
           }
-          yPos += analogSignalHeight;
+          yPos += height;
         }
       }
     }

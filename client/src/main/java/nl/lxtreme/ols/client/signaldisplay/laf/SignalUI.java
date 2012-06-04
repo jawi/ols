@@ -28,6 +28,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
@@ -45,7 +46,6 @@ public class SignalUI extends ComponentUI
   private static final int SLOPPY_THRESHOLD = 1000000;
 
   private static final int PADDING_X = 2;
-  private static final int PADDING_Y = 2;
 
   // VARIABLES
 
@@ -204,6 +204,38 @@ public class SignalUI extends ComponentUI
   }
 
   /**
+   * Calculates the relative offset of a digital signal, according to its
+   * alignment and height.
+   * 
+   * @param aSignalElement
+   * @return
+   */
+  private int calculateOffset( final SignalElement aSignalElement )
+  {
+    assert aSignalElement.isDigitalSignal() : "Only to be called for digital signals!";
+
+    final SignalAlignment signalAlignment = aSignalElement.getSignalAlignment();
+    final int elementHeight = aSignalElement.getHeight();
+    final int signalHeight = aSignalElement.getSignalHeight();
+
+    final int signalOffset;
+    if ( SignalAlignment.BOTTOM.equals( signalAlignment ) )
+    {
+      signalOffset = ( elementHeight - signalHeight );
+    }
+    else if ( SignalAlignment.CENTER.equals( signalAlignment ) )
+    {
+      signalOffset = ( int )( ( elementHeight - signalHeight ) / 2.0 );
+    }
+    else
+    {
+      signalOffset = 0;
+    }
+
+    return signalOffset;
+  }
+
+  /**
    * @param aCanvas
    * @param aModel
    * @param aSignalElements
@@ -225,12 +257,10 @@ public class SignalUI extends ComponentUI
     final long startTimestamp = timestamps[startIdx];
     final long endTimestamp = timestamps[endIdx];
 
-    final int signalHeight = aModel.getSignalHeight();
-    final int signalOffset = aModel.getSignalOffset();
     final double zoomFactor = aModel.getZoomFactor();
 
     // Start drawing at the correct position in the clipped region...
-    aCanvas.translate( 0, aSignalElements[0].getYposition() + signalOffset );
+    aCanvas.translate( 0, aSignalElements[0].getYposition() );
 
     // XXX
     final boolean annotationRenderStyle = true;
@@ -291,8 +321,8 @@ public class SignalUI extends ComponentUI
               int x1 = ( int )( annStartTime * zoomFactor );
               int x2 = ( int )( annEndTime * zoomFactor );
               int y1 = 0;
-              int y2 = signalHeight;
-              int midY = signalHeight / 2;
+              int y2 = signalElement.getSignalHeight();
+              int midY = y2 / 2;
 
               final String annText = ann.getAnnotation().toString();
 
@@ -340,28 +370,20 @@ public class SignalUI extends ComponentUI
             }
           }
         }
-
-        // Advance to the next channel...
-        aCanvas.translate( 0, signalElement.getHeight() );
       }
-
-      // remove the signal offset...
-      aCanvas.translate( 0, -signalOffset );
 
       if ( signalElement.isGroupSummary() )
       {
         // Draw nothing...
-        aCanvas.translate( 0, signalElement.getHeight() );
       }
 
       if ( signalElement.isAnalogSignal() )
       {
         // Draw nothing...
-        aCanvas.translate( 0, signalElement.getHeight() );
       }
 
-      // remove the signal offset...
-      aCanvas.translate( 0, signalOffset );
+      // Advance to the next channel...
+      aCanvas.translate( 0, signalElement.getHeight() + aModel.getSignalElementSpacing() );
     }
   }
 
@@ -451,9 +473,6 @@ public class SignalUI extends ComponentUI
     final int startIdx = aModel.getStartIndex( clip );
     final int endIdx = aModel.getEndIndex( clip, values.length );
 
-    final int signalHeight = aModel.getSignalHeight();
-    // Where is the signal to be drawn?
-    final int signalOffset = aModel.getSignalOffset();
     final double zoomFactor = aModel.getZoomFactor();
 
     if ( aModel.hasTriggerData() )
@@ -470,7 +489,7 @@ public class SignalUI extends ComponentUI
     }
 
     // Start drawing at the correct position in the clipped region...
-    aCanvas.translate( 0, aSignalElements[0].getYposition() + signalOffset );
+    aCanvas.translate( 0, aSignalElements[0].getYposition() );
 
     final int sampleIncr = 1;
 
@@ -481,11 +500,13 @@ public class SignalUI extends ComponentUI
       if ( signalElement.isSignalGroup() )
       {
         // Draw nothing...
-        aCanvas.translate( 0, signalElement.getHeight() );
       }
 
       if ( signalElement.isDigitalSignal() )
       {
+        int signalHeight = signalElement.getSignalHeight();
+        int signalOffset = calculateOffset( signalElement );
+
         // Tell Swing how we would like to render ourselves...
         aCanvas.setRenderingHints( createSignalRenderingHints( false /* aUseAA */) );
 
@@ -504,7 +525,7 @@ public class SignalUI extends ComponentUI
           int prevSampleValue = ( values[startIdx] & mask );
 
           int xValue = ( int )( zoomFactor * timestamp );
-          int yValue = ( prevSampleValue != 0 ? signalHeight : 0 );
+          int yValue = signalOffset + ( prevSampleValue != 0 ? signalHeight : 0 );
 
           x[0] = xValue;
           y[0] = yValue;
@@ -520,12 +541,12 @@ public class SignalUI extends ComponentUI
             if ( prevSampleValue != sampleValue )
             {
               x[p] = xValue;
-              y[p] = ( prevSampleValue != 0 ? signalHeight : 0 );
+              y[p] = signalOffset + ( prevSampleValue != 0 ? signalHeight : 0 );
               p++;
             }
 
             x[p] = xValue;
-            y[p] = ( sampleValue != 0 ? signalHeight : 0 );
+            y[p] = signalOffset + ( sampleValue != 0 ? signalHeight : 0 );
             p++;
 
             prevSampleValue = sampleValue;
@@ -533,13 +554,7 @@ public class SignalUI extends ComponentUI
 
           aCanvas.drawPolyline( x, y, p );
         }
-
-        // Advance to the next channel...
-        aCanvas.translate( 0, signalElement.getHeight() );
       }
-
-      // remove the signal offset...
-      aCanvas.translate( 0, -signalOffset );
 
       if ( signalElement.isGroupSummary() )
       {
@@ -574,15 +589,13 @@ public class SignalUI extends ComponentUI
             }
 
             // draw a small line...
-            aCanvas.drawLine( x, PADDING_Y, x, signalElement.getHeight() - ( 2 * PADDING_Y ) );
+            aCanvas.drawLine( x, 0, x, signalElement.getHeight() );
 
             prevX = x;
           }
 
           prevSampleValue = sampleValue;
         }
-
-        aCanvas.translate( 0, signalElement.getHeight() );
       }
 
       if ( signalElement.isAnalogSignal() )
@@ -594,14 +607,14 @@ public class SignalUI extends ComponentUI
         final int trailingZeros = Long.numberOfTrailingZeros( mask );
         final int onesCount = Long.SIZE - Long.numberOfLeadingZeros( mask ) - trailingZeros;
         final long maxValue = ( ( 1L << onesCount ) - 1L ) & 0xFFFFFFFFL;
-        double scaleFactor = ( signalElement.getHeight() - ( 2.0 * PADDING_Y ) ) / maxValue;
+        double scaleFactor = signalElement.getHeight() / maxValue;
 
         // Make sure we always start with time 0...
         int p = 0;
         if ( startIdx == endIdx )
         {
           x[p] = clip.x;
-          y[p] = signalElement.getHeight() - PADDING_Y;
+          y[p] = signalElement.getHeight();
           p++;
         }
         else
@@ -619,7 +632,7 @@ public class SignalUI extends ComponentUI
             sampleValue = ( int )( maxValue - ( sampleValue / ( double )sampleIncr ) );
 
             x[p] = ( int )( zoomFactor * timestamp );
-            y[p] = PADDING_Y + ( int )( scaleFactor * sampleValue );
+            y[p] = ( int )( scaleFactor * sampleValue );
             p++;
           }
         }
@@ -630,12 +643,10 @@ public class SignalUI extends ComponentUI
         p++;
 
         aCanvas.drawPolyline( x, y, p );
-
-        aCanvas.translate( 0, signalElement.getHeight() );
       }
 
-      // remove the signal offset...
-      aCanvas.translate( 0, signalOffset );
+      // advance to the next element...
+      aCanvas.translate( 0, signalElement.getHeight() + aModel.getSignalElementSpacing() );
     }
   }
 }

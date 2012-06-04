@@ -34,7 +34,6 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementHeightProvider;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.util.*;
 
@@ -42,7 +41,7 @@ import nl.lxtreme.ols.util.*;
 /**
  * The main model for the {@link SignalDiagramComponent}.
  */
-public class SignalDiagramModel implements SignalElementHeightProvider
+public class SignalDiagramModel
 {
   // INNER TYPES
 
@@ -261,7 +260,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   public SignalElement findSignalElement( final Point aPoint )
   {
     final SignalElement[] elements = getSignalElementManager().getSignalElements( aPoint.y, aPoint.y + 1,
-        SignalElementMeasurer.LOOSE_MEASURER, this );
+        SignalElementMeasurer.LOOSE_MEASURER );
     if ( elements.length == 0 )
     {
       return null;
@@ -305,7 +304,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
    */
   public int getAbsoluteScreenHeight()
   {
-    return getSignalElementManager().calculateScreenHeight( this );
+    return getSignalElementManager().calculateScreenHeight();
   }
 
   /**
@@ -879,7 +878,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
   {
     final SignalElementMeasurer strictMeasurer = SignalElementMeasurer.STRICT_MEASURER;
     SignalElement[] signalElements = getSignalElementManager().getSignalElements( aVisibleRect.y, aVisibleRect.height,
-        strictMeasurer, this );
+        strictMeasurer );
 
     int inc = 0;
     if ( signalElements.length > 0 )
@@ -910,7 +909,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
           {
             // Row > 0, and completely visible; take the full height of the
             // row prior to the top row...
-            signalElements = getSignalElementManager().getSignalElements( 0, aVisibleRect.y - 1, strictMeasurer, this );
+            signalElements = getSignalElementManager().getSignalElements( 0, aVisibleRect.y - 1, strictMeasurer );
             if ( signalElements.length > 0 )
             {
               inc = signalElements[signalElements.length - 1].getHeight();
@@ -919,7 +918,7 @@ public class SignalDiagramModel implements SignalElementHeightProvider
         }
         else
         {
-          signalElements = getSignalElementManager().getSignalElements( 0, aVisibleRect.y - 1, strictMeasurer, this );
+          signalElements = getSignalElementManager().getSignalElements( 0, aVisibleRect.y - 1, strictMeasurer );
           if ( signalElements.length > 0 )
           {
             // Make sure the first element is completely shown...

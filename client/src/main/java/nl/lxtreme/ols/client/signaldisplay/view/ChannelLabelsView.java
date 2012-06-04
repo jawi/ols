@@ -129,13 +129,6 @@ public class ChannelLabelsView extends AbstractViewLayer
         result.add( mi );
       }
 
-      if ( signalElement.isSignalGroup() )
-      {
-        // TODO add visibility actions for summary/analog signal/...
-        mi = new JCheckBoxMenuItem( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
-        result.add( mi );
-      }
-
       return result;
     }
 
@@ -519,7 +512,7 @@ public class ChannelLabelsView extends AbstractViewLayer
         minWidth = Math.max( minWidth, fm.stringWidth( label ) );
       }
 
-      minWidth += ( 2 * ( ChannelLabelsUI.PADDING_X + ChannelLabelRenderer.PADDING_X ) );
+      minWidth += ( 2 * ChannelLabelRenderer.PADDING_X );
     }
     finally
     {

@@ -10,6 +10,8 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
+
 
 /**
  * Provides the default L&F for the component.
@@ -27,6 +29,9 @@ public final class LafDefaults
   /** The color to use for the trigger. */
   public static final Color DEFAULT_TRIGGER_COLOR = Color.WHITE;
 
+  /** Default vertical spacing between two signal elements. */
+  public static final int DEFAULT_SIGNAL_ELEMENT_SPACING = 4;
+
   // CHANNEL LABELS
 
   /** Background color for the channel labels. */
@@ -37,6 +42,13 @@ public final class LafDefaults
   public static final Font DEFAULT_CHANNEL_LABEL_FONT = deriveFont( SWING_LABEL_FONT, Font.BOLD );
   /** Minimal width of all channel labels. */
   public static final int DEFAULT_MINIMAL_CHANNEL_WIDTH = 40;
+  /**
+   * The default width of the gutter (= space between channel labels and
+   * signals).
+   */
+  public static final int DEFAULT_GUTTER_WIDTH = 15;
+  /** The default arc width. */
+  public static final int DEFAULT_ARC_WIDTH = 12;
 
   // SIGNAL VIEW
 
@@ -44,8 +56,18 @@ public final class LafDefaults
   public static final Color DEFAULT_ARROW_COLOR = Color.WHITE;
   /** The default color of a signal. */
   public static final Color DEFAULT_SIGNAL_COLOR = parseColor( "7bf9dd" );
-  /** Default height of a signal channel. */
-  public static final int DEFAULT_SIGNAL_HEIGHT = 40;
+  /** Default height of a signal. */
+  public static final SignalAlignment DEFAULT_SIGNAL_ALIGNMENT = SignalAlignment.CENTER;
+  /** Default height of a channel. */
+  public static final int DEFAULT_CHANNEL_HEIGHT = 36;
+  /** Default height of a signal. */
+  public static final int DEFAULT_SIGNAL_HEIGHT = 22;
+  /** Default height of a signal group */
+  public static final int DEFAULT_SIGNAL_GROUP_HEIGHT = 20;
+  /** Default height of a analog scope. */
+  public static final int DEFAULT_ANALOG_SCOPE_HEIGHT = 96;
+  /** Default height of a group summary. */
+  public static final int DEFAULT_GROUP_SUMMARY_HEIGHT = 30;
 
   // GLASS PANE
 

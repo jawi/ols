@@ -38,14 +38,6 @@ import nl.lxtreme.ols.client.signaldisplay.view.renderer.Renderer;
  */
 public class ChannelLabelsUI extends ComponentUI
 {
-  // CONSTANTS
-
-  public static final int PADDING_Y = 2;
-  public static final int PADDING_X = 4;
-
-  private static final int ARC_WIDTH = 12;
-  private static final int GUTTER_X = 15;
-
   // VARIABLES
 
   private final Renderer renderer = new ChannelLabelRenderer();
@@ -98,7 +90,8 @@ public class ChannelLabelsUI extends ComponentUI
       canvas.setBackground( model.getBackgroundColor() );
       canvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
-      final int compWidth = view.getWidth() - GUTTER_X;
+      final int compWidth = view.getWidth() - model.getGutterWidth();
+      final int spacingY = model.getSignalElementSpacing();
 
       // Start drawing at the correct position in the clipped region...
       canvas.translate( 0, signalElements[0].getYposition() );
@@ -124,6 +117,8 @@ public class ChannelLabelsUI extends ComponentUI
         {
           paintAnalogScope( canvas, model, signalElement, compWidth );
         }
+
+        canvas.translate( 0, signalElement.getHeight() + spacingY );
       }
     }
     finally
@@ -158,8 +153,6 @@ public class ChannelLabelsUI extends ComponentUI
 
     this.renderer.setContext( Integer.valueOf( aWidth ), Integer.valueOf( height ), aSignalElement.getLabel() );
     this.renderer.render( aCanvas, 0, 0 );
-
-    aCanvas.translate( 0, height );
   }
 
   /**
@@ -176,9 +169,7 @@ public class ChannelLabelsUI extends ComponentUI
   final void paintDigitalSignal( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel,
       final SignalElement aSignalElement, final int aWidth )
   {
-    final int paddingHeight = 2 * PADDING_Y;
-
-    final int height = aSignalElement.getHeight() - paddingHeight;
+    final int height = aSignalElement.getHeight();
     final Channel channel = aSignalElement.getChannel();
 
     paintElementBackground( aCanvas, aModel, aSignalElement, height, aWidth );
@@ -188,9 +179,6 @@ public class ChannelLabelsUI extends ComponentUI
 
     this.renderer.setContext( Integer.valueOf( aWidth ), Integer.valueOf( height ), channel.getLabel() );
     this.renderer.render( aCanvas, 0, 0 );
-
-    // Advance to the next channel...
-    aCanvas.translate( 0, aSignalElement.getHeight() );
   }
 
   /**
@@ -209,9 +197,7 @@ public class ChannelLabelsUI extends ComponentUI
   final void paintGroupSummary( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel,
       final SignalElement aSignalElement, final int aWidth )
   {
-    final int paddingHeight = 2 * PADDING_Y;
-
-    final int height = aSignalElement.getHeight() - paddingHeight;
+    final int height = aSignalElement.getHeight();
 
     paintElementBackground( aCanvas, aModel, aSignalElement, height, aWidth );
 
@@ -220,8 +206,6 @@ public class ChannelLabelsUI extends ComponentUI
 
     this.renderer.setContext( Integer.valueOf( aWidth ), Integer.valueOf( height ), aSignalElement.getLabel() );
     this.renderer.render( aCanvas, 0, 0 );
-
-    aCanvas.translate( 0, aSignalElement.getHeight() );
   }
 
   /**
@@ -240,8 +224,7 @@ public class ChannelLabelsUI extends ComponentUI
   final void paintSignalGroup( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel,
       final SignalElement aSignalElement, final int aWidth )
   {
-    final int height = aSignalElement.getHeight();
-
+    // final int height = aSignalElement.getHeight();
     // paintElementBackground( aCanvas, aModel, height );
 
     // aCanvas.setFont( aModel.getLabelFont() );
@@ -250,8 +233,6 @@ public class ChannelLabelsUI extends ComponentUI
     // this.renderer.setContext( Integer.valueOf( aWidth ), Integer.valueOf(
     // height ), aSignalElement.getLabel() );
     // this.renderer.render( aCanvas, -30, 0 ); // XXX
-
-    aCanvas.translate( 0, height );
   }
 
   /**
@@ -267,10 +248,12 @@ public class ChannelLabelsUI extends ComponentUI
   private void paintElementBackground( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel,
       final SignalElement aSignalElement, final int aHeight, final int aWidth )
   {
-    final int x = -ARC_WIDTH;
-    final int y = PADDING_Y;
-    final int width = aWidth + ( ARC_WIDTH - PADDING_X );
-    final int height = aHeight - y;
+    final int arcWidth = aModel.getArcWidth();
+
+    final int x = -arcWidth;
+    final int y = 0;
+    final int width = aWidth + arcWidth;
+    final int height = aHeight;
 
     final Color labelBackgroundColor = aModel.getLabelBackgroundColor();
     final Color newBrighterColor = labelBackgroundColor.brighter();
@@ -280,11 +263,11 @@ public class ChannelLabelsUI extends ComponentUI
 
     aCanvas.setPaint( paint );
 
-    aCanvas.fillRoundRect( x, y, width, height, ARC_WIDTH, ARC_WIDTH );
+    aCanvas.fillRoundRect( x, y, width, height, arcWidth, arcWidth );
 
     aCanvas.setPaint( oldPaint );
     aCanvas.setColor( aSignalElement.getColor() );
 
-    aCanvas.drawRoundRect( x, y, width, height, ARC_WIDTH, ARC_WIDTH );
+    aCanvas.drawRoundRect( x, y, width, height, arcWidth, arcWidth );
   }
 }

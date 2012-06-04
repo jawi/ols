@@ -26,9 +26,9 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -56,9 +56,17 @@ public class EditSignalElementPropertiesAction extends AbstractAction
 
     // VARIABLES
 
+    private final String defaultLabel;
+    private final Color defaultColor;
+    private final int defaultHeight;
+    private final int defaultSignalHeight;
+    private final SignalAlignment defaultAlignment;
+
     private JTextField labelEditor;
     private JColorEditor colorEditor;
     private JTextField heightEditor;
+    private JTextField signalHeightEditor;
+    private JComboBox signalAlignmentEditor;
 
     boolean dialogResult = false;
 
@@ -77,6 +85,12 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     {
       super( aParent, ModalityType.DOCUMENT_MODAL );
 
+      this.defaultLabel = aSignalElement.getLabel();
+      this.defaultColor = aSignalElement.getColor();
+      this.defaultHeight = aSignalElement.getHeight();
+      this.defaultSignalHeight = aSignalElement.getSignalHeight();
+      this.defaultAlignment = aSignalElement.getSignalAlignment();
+
       initDialog( aSignalElement );
     }
 
@@ -92,15 +106,18 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     {
       if ( aSignalElement.isDigitalSignal() )
       {
-        Channel channel = aSignalElement.getChannel();
-        return "Edit label channel " + channel.getIndex();
+        return "Edit channel properties";
       }
       else if ( aSignalElement.isAnalogSignal() )
       {
-        return "Edit scope label";
+        return "Edit scope properties";
+      }
+      else if ( aSignalElement.isGroupSummary() )
+      {
+        return "Edit group summary properties";
       }
 
-      return "Edit group summary label";
+      return "Edit signal group properties";
     }
 
     /**
@@ -122,6 +139,16 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     }
 
     /**
+     * Returns the new element height.
+     * 
+     * @return the new element height, in pixels.
+     */
+    public int getElementHeight()
+    {
+      return NumberUtils.safeParseInt( this.heightEditor.getText(), LafDefaults.DEFAULT_CHANNEL_HEIGHT );
+    }
+
+    /**
      * Returns the new label.
      * 
      * @return the new label, can be <code>null</code>.
@@ -136,9 +163,24 @@ public class EditSignalElementPropertiesAction extends AbstractAction
      * 
      * @return the new signal height, in pixels.
      */
+    public SignalAlignment getSignalAlignment()
+    {
+      SignalAlignment result = ( SignalAlignment )this.signalAlignmentEditor.getSelectedItem();
+      if ( result == null )
+      {
+        result = LafDefaults.DEFAULT_SIGNAL_ALIGNMENT;
+      }
+      return result;
+    }
+
+    /**
+     * Returns the new signal height.
+     * 
+     * @return the new signal height, in pixels.
+     */
     public int getSignalHeight()
     {
-      return NumberUtils.safeParseInt( this.heightEditor.getText(), LafDefaults.DEFAULT_SIGNAL_HEIGHT );
+      return NumberUtils.safeParseInt( this.signalHeightEditor.getText(), LafDefaults.DEFAULT_SIGNAL_HEIGHT );
     }
 
     /**
@@ -168,9 +210,11 @@ public class EditSignalElementPropertiesAction extends AbstractAction
      */
     protected void applyDefaultProperties()
     {
-      this.labelEditor.setText( null );
-      this.colorEditor.setColor( LafDefaults.DEFAULT_SIGNAL_COLOR );
-      this.heightEditor.setText( "" + LafDefaults.DEFAULT_SIGNAL_HEIGHT );
+      this.labelEditor.setText( this.defaultLabel );
+      this.colorEditor.setColor( this.defaultColor );
+      this.heightEditor.setText( "" + this.defaultHeight );
+      this.signalHeightEditor.setText( "" + this.defaultSignalHeight );
+      this.signalAlignmentEditor.setSelectedItem( this.defaultAlignment );
     }
 
     /**
@@ -180,16 +224,25 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     {
       setTitle( getTitle( aSignalElement ) );
 
-      JLabel labelEditorLabel = new JLabel( "Label" );
+      JLabel labelEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Label" );
       this.labelEditor = new JTextField( aSignalElement.getLabel(), 10 );
 
-      JLabel colorEditorLabel = new JLabel( "Color" );
+      JLabel colorEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Color" );
       this.colorEditor = new JColorEditor( aSignalElement.getColor() );
 
-      JLabel heightEditorLabel = new JLabel( "Height" );
+      JLabel heightEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Height" );
       this.heightEditor = new JTextField( "" + aSignalElement.getHeight(), 10 );
       this.heightEditor.setInputVerifier( JComponentInputVerifier.create( Integer.class,
           "Invalid height! Must be a postive whole number." ) );
+
+      JLabel signalHeightEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Signal height" );
+      this.signalHeightEditor = new JTextField( "" + aSignalElement.getSignalHeight(), 10 );
+      this.signalHeightEditor.setInputVerifier( JComponentInputVerifier.create( Integer.class,
+          "Invalid height! Must be a postive whole number." ) );
+
+      JLabel signalAlignmentEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Signal alignment" );
+      this.signalAlignmentEditor = new JComboBox( SignalAlignment.values() );
+      this.signalAlignmentEditor.setSelectedItem( aSignalElement.getSignalAlignment() );
 
       final JButton okButton = StandardActionFactory.createOkButton();
       final JButton cancelButton = StandardActionFactory.createCancelButton();
@@ -216,6 +269,15 @@ public class EditSignalElementPropertiesAction extends AbstractAction
 
       editorPane.add( heightEditorLabel );
       editorPane.add( this.heightEditor );
+
+      if ( aSignalElement.isDigitalSignal() )
+      {
+        editorPane.add( signalHeightEditorLabel );
+        editorPane.add( this.signalHeightEditor );
+
+        editorPane.add( signalAlignmentEditorLabel );
+        editorPane.add( this.signalAlignmentEditor );
+      }
 
       editorPane.add( new JLabel( "" ) );
       editorPane.add( resetButtonPanel );
@@ -420,7 +482,13 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     {
       this.signalElement.setLabel( dialog.getLabel() );
       this.signalElement.setColor( dialog.getColor() );
-      this.signalElement.setHeight( dialog.getSignalHeight() );
+      this.signalElement.setHeight( dialog.getElementHeight() );
+
+      if ( this.signalElement.isDigitalSignal() )
+      {
+        this.signalElement.setSignalHeight( dialog.getSignalHeight() );
+        this.signalElement.setSignalAlignment( dialog.getSignalAlignment() );
+      }
 
       // Since the entire layout can be mixed up by the new label, we should
       // repaint the entire screen...

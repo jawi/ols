@@ -23,6 +23,8 @@ package nl.lxtreme.ols.client.signaldisplay.signalelement;
 
 import java.awt.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.client.signaldisplay.laf.*;
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 
 
 /**
@@ -57,6 +59,10 @@ public final class SignalElement implements Comparable<SignalElement>
 
   private int height;
   private int yPosition;
+  /** the signal height, if type == DIGITAL_SIGNAL. */
+  private int signalHeight;
+  /** the signal alignment, if type == DIGITAL_SIGNAL. */
+  private SignalAlignment alignment;
 
   // CONSTRUCTORS
 
@@ -93,6 +99,7 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, aGroup.getMask() );
     channelElement.group = aGroup;
+    channelElement.height = LafDefaults.DEFAULT_ANALOG_SCOPE_HEIGHT;
     return channelElement;
   }
 
@@ -110,6 +117,9 @@ public final class SignalElement implements Comparable<SignalElement>
     final SignalElement channelElement = new SignalElement( SignalElementType.DIGITAL_SIGNAL, aChannel.getMask() );
     channelElement.channel = aChannel;
     channelElement.group = aGroup;
+    channelElement.height = LafDefaults.DEFAULT_CHANNEL_HEIGHT;
+    channelElement.signalHeight = LafDefaults.DEFAULT_SIGNAL_HEIGHT;
+    channelElement.alignment = LafDefaults.DEFAULT_SIGNAL_ALIGNMENT;
     return channelElement;
   }
 
@@ -126,6 +136,7 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, aGroup.getMask() );
     channelElement.group = aGroup;
+    channelElement.height = LafDefaults.DEFAULT_GROUP_SUMMARY_HEIGHT;
     return channelElement;
   }
 
@@ -142,6 +153,7 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, aGroup.getMask() );
     channelElement.group = aGroup;
+    channelElement.height = LafDefaults.DEFAULT_SIGNAL_GROUP_HEIGHT;
     return channelElement;
   }
 
@@ -277,6 +289,26 @@ public final class SignalElement implements Comparable<SignalElement>
   public int getMask()
   {
     return this.mask;
+  }
+
+  /**
+   * Returns the current value of alignment.
+   * 
+   * @return the alignment
+   */
+  public SignalAlignment getSignalAlignment()
+  {
+    return this.alignment;
+  }
+
+  /**
+   * Returns the current value of signalHeight.
+   * 
+   * @return the signalHeight
+   */
+  public int getSignalHeight()
+  {
+    return this.signalHeight;
   }
 
   /**
@@ -492,6 +524,36 @@ public final class SignalElement implements Comparable<SignalElement>
         this.group.setName( aLabel );
       }
     }
+  }
+
+  /**
+   * Sets alignment to the given value.
+   * 
+   * @param aAlignment
+   *          the alignment to set.
+   */
+  public void setSignalAlignment( final SignalAlignment aAlignment )
+  {
+    if ( !isDigitalSignal() )
+    {
+      throw new IllegalArgumentException( "Can only be called for digital signals!" );
+    }
+    this.alignment = aAlignment;
+  }
+
+  /**
+   * Sets signalHeight to the given value.
+   * 
+   * @param aSignalHeight
+   *          the signalHeight to set.
+   */
+  public void setSignalHeight( final int aSignalHeight )
+  {
+    if ( !isDigitalSignal() )
+    {
+      throw new IllegalArgumentException( "Can only be called for digital signals!" );
+    }
+    this.signalHeight = aSignalHeight;
   }
 
   /**

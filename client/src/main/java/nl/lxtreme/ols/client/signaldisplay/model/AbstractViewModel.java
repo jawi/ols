@@ -28,7 +28,6 @@ import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementHeightProvider;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.LabelStyle;
@@ -37,9 +36,11 @@ import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.LabelStyle;
 /**
  * Provides a common base class for the view models.
  */
-public abstract class AbstractViewModel implements SignalElementHeightProvider
+public abstract class AbstractViewModel
 {
   // CONSTANTS
+
+  public static final String COMPONENT_ELEMENT_SPACING = "signal.element.spacing";
 
   public static final String TRIGGER_COLOR = "signal.trigger.color";
 
@@ -64,14 +65,6 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   }
 
   // METHODS
-
-  /**
-   * {@inheritDoc}
-   */
-  public int getAnalogSignalHeight()
-  {
-    return getSignalDiagramModel().getAnalogSignalHeight();
-  }
 
   /**
    * Returns the color for a cursor with the given index.
@@ -133,30 +126,6 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   }
 
   /**
-   * {@inheritDoc}
-   */
-  public int getDigitalSignalHeight()
-  {
-    return getSignalDiagramModel().getDigitalSignalHeight();
-  }
-
-  /**
-   * @return
-   */
-  public int getGroupSummaryHeight()
-  {
-    return getSignalDiagramModel().getGroupSummaryHeight();
-  }
-
-  /**
-   * @return
-   */
-  public int getSampleWidth()
-  {
-    return getSignalDiagramModel().getSampleWidth();
-  }
-
-  /**
    * @return
    */
   public final SignalElementManager getSignalElementManager()
@@ -177,35 +146,22 @@ public abstract class AbstractViewModel implements SignalElementHeightProvider
   {
     // Return all channel elements within the given boundaries, even if they do
     // not completely fit...
-    return getSignalElementManager().getSignalElements( aY, aHeight, SignalElementMeasurer.LOOSE_MEASURER, this );
+    return getSignalElementManager().getSignalElements( aY, aHeight, SignalElementMeasurer.LOOSE_MEASURER );
   }
 
   /**
-   * Returns the signal group height.
+   * Returns the spacing between two signal elements.
    * 
-   * @return the signal group height, in pixels.
+   * @return a signal element spacing, in pixels.
    */
-  public int getSignalGroupHeight()
+  public int getSignalElementSpacing()
   {
-    return getSignalDiagramModel().getSignalHeight();
-  }
-
-  /**
-   * @return
-   */
-  public int getSignalHeight()
-  {
-    return getSignalDiagramModel().getSignalHeight();
-  }
-
-  /**
-   * Returns the signal offset.
-   * 
-   * @return a signal offset, >= 0.
-   */
-  public int getSignalOffset()
-  {
-    return getSignalDiagramModel().getSignalOffset();
+    int spacing = UIManager.getInt( COMPONENT_ELEMENT_SPACING );
+    if ( spacing < 0 )
+    {
+      spacing = LafDefaults.DEFAULT_SIGNAL_ELEMENT_SPACING;
+    }
+    return spacing;
   }
 
   /**

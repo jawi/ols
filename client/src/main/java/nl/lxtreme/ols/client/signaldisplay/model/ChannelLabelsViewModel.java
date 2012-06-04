@@ -42,6 +42,8 @@ public class ChannelLabelsViewModel extends AbstractViewModel
 
   public static final String COMPONENT_MINIMAL_WIDTH = "channellabels.width.minimal";
   public static final String COMPONENT_BACKGROUND_COLOR = "channellabels.color.background";
+  public static final String COMPONENT_GUTTER_WIDTH = "channellabels.gutter.width";
+  public static final String COMPONENT_ARC_WIDTH = "channellabels.arc.width";
 
   public static final String LABEL_FOREGROUND_COLOR = "channellabels.label.color.foreground";
   public static final String LABEL_BACKGROUND_COLOR = "channellabels.label.color.background";
@@ -143,6 +145,21 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
+   * Returns the arc width.
+   * 
+   * @return an arc width, in pixels.
+   */
+  public int getArcWidth()
+  {
+    int arcWidth = UIManager.getInt( COMPONENT_ARC_WIDTH );
+    if ( arcWidth < 0 )
+    {
+      arcWidth = LafDefaults.DEFAULT_ARC_WIDTH;
+    }
+    return arcWidth;
+  }
+
+  /**
    * Returns the background color for the channel labels.
    * 
    * @return a color, never <code>null</code>.
@@ -155,6 +172,21 @@ public class ChannelLabelsViewModel extends AbstractViewModel
       color = LafDefaults.DEFAULT_BACKGROUND_COLOR;
     }
     return color;
+  }
+
+  /**
+   * Returns the gutter width.
+   * 
+   * @return a width, in pixels.
+   */
+  public int getGutterWidth()
+  {
+    int gutter = UIManager.getInt( COMPONENT_GUTTER_WIDTH );
+    if ( gutter < 0 )
+    {
+      gutter = LafDefaults.DEFAULT_GUTTER_WIDTH;
+    }
+    return gutter;
   }
 
   /**
