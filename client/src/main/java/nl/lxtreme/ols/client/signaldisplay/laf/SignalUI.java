@@ -21,6 +21,7 @@ package nl.lxtreme.ols.client.signaldisplay.laf;
 
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.*;
 
@@ -28,7 +29,6 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
-import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
@@ -201,38 +201,6 @@ public class SignalUI extends ComponentUI
     {
       this.listening = true;
     }
-  }
-
-  /**
-   * Calculates the relative offset of a digital signal, according to its
-   * alignment and height.
-   * 
-   * @param aSignalElement
-   * @return
-   */
-  private int calculateOffset( final SignalElement aSignalElement )
-  {
-    assert aSignalElement.isDigitalSignal() : "Only to be called for digital signals!";
-
-    final SignalAlignment signalAlignment = aSignalElement.getSignalAlignment();
-    final int elementHeight = aSignalElement.getHeight();
-    final int signalHeight = aSignalElement.getSignalHeight();
-
-    final int signalOffset;
-    if ( SignalAlignment.BOTTOM.equals( signalAlignment ) )
-    {
-      signalOffset = ( elementHeight - signalHeight );
-    }
-    else if ( SignalAlignment.CENTER.equals( signalAlignment ) )
-    {
-      signalOffset = ( int )( ( elementHeight - signalHeight ) / 2.0 );
-    }
-    else
-    {
-      signalOffset = 0;
-    }
-
-    return signalOffset;
   }
 
   /**
@@ -505,7 +473,7 @@ public class SignalUI extends ComponentUI
       if ( signalElement.isDigitalSignal() )
       {
         int signalHeight = signalElement.getSignalHeight();
-        int signalOffset = calculateOffset( signalElement );
+        int signalOffset = aModel.calculateOffset( signalElement );
 
         // Tell Swing how we would like to render ourselves...
         aCanvas.setRenderingHints( createSignalRenderingHints( false /* aUseAA */) );

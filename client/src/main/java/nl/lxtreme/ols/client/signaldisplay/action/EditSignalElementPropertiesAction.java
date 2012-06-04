@@ -32,8 +32,8 @@ import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignm
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
+import nl.lxtreme.ols.util.swing.component.*;
 import nl.lxtreme.ols.util.swing.validation.*;
 
 
@@ -84,6 +84,8 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     public EditPropertiesDialog( final Window aParent, final SignalElement aSignalElement )
     {
       super( aParent, ModalityType.DOCUMENT_MODAL );
+
+      setResizable( false );
 
       this.defaultLabel = aSignalElement.getLabel();
       this.defaultColor = aSignalElement.getColor();
@@ -242,6 +244,7 @@ public class EditSignalElementPropertiesAction extends AbstractAction
 
       JLabel signalAlignmentEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Signal alignment" );
       this.signalAlignmentEditor = new JComboBox( SignalAlignment.values() );
+      this.signalAlignmentEditor.setRenderer( new SignalAlignmentComboBoxRenderer() );
       this.signalAlignmentEditor.setSelectedItem( aSignalElement.getSignalAlignment() );
 
       final JButton okButton = StandardActionFactory.createOkButton();
@@ -435,6 +438,37 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     }
   }
 
+  /**
+   * Provides a signal alignment combobox renderer.
+   */
+  static final class SignalAlignmentComboBoxRenderer extends EnumItemRenderer<SignalAlignment>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getDisplayValue( final SignalAlignment aValue )
+    {
+      switch ( aValue )
+      {
+        case BOTTOM:
+          return "Bottom";
+        case TOP:
+          return "Top";
+        case CENTER:
+          return "Center";
+        default:
+      }
+      return super.getDisplayValue( aValue );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -461,6 +495,7 @@ public class EditSignalElementPropertiesAction extends AbstractAction
       final SignalElement aSignalElement, final Point aChannelLocation )
   {
     super( "Edit properties" );
+
     this.controller = aController;
     this.signalElement = aSignalElement;
     this.dialogLocation = new Point( aChannelLocation.x + 15, aChannelLocation.y + 5 );

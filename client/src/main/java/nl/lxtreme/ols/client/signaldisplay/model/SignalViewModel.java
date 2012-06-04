@@ -26,6 +26,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
 
@@ -54,6 +55,15 @@ public class SignalViewModel extends AbstractViewModel
   }
 
   // METHODS
+
+  /**
+   * @param aSignalElement
+   * @return
+   */
+  public int calculateOffset( final SignalElement aSignalElement )
+  {
+    return getSignalDiagramModel().calculateOffset( aSignalElement );
+  }
 
   /**
    * Returns the background color for the signal view.

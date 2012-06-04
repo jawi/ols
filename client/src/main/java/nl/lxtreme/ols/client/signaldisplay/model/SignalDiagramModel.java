@@ -63,13 +63,7 @@ public class SignalDiagramModel
 
   // VARIABLES
 
-  private int signalHeight;
-  private int channelHeight;
-  private int signalGroupHeight;
-  private int scopeHeight;
-  private int groupSummaryHeight;
   private int mode;
-  private SignalAlignment signalAlignment;
   private DataSet dataSet;
 
   private final ZoomController zoomController;
@@ -96,14 +90,6 @@ public class SignalDiagramModel
 
     this.eventListeners = new EventListenerList();
     this.propertyChangeSupport = new PropertyChangeSupport( this );
-
-    this.signalHeight = 20;
-    this.signalGroupHeight = 20;
-    this.channelHeight = 40;
-    this.groupSummaryHeight = 30;
-    this.scopeHeight = 96;
-
-    this.signalAlignment = SignalAlignment.CENTER;
 
     this.mode = 0;
 
@@ -250,6 +236,40 @@ public class SignalDiagramModel
   }
 
   /**
+   * Calculates the relative offset of a digital signal, according to its
+   * alignment and height.
+   * 
+   * @param aSignalElement
+   *          the signal element to calculate the offset for, can only be done
+   *          for digital signals.
+   * @return an offset, in pixels, >= 0.
+   */
+  public int calculateOffset( final SignalElement aSignalElement )
+  {
+    assert aSignalElement.isDigitalSignal() : "Only to be called for digital signals!";
+
+    final SignalAlignment signalAlignment = aSignalElement.getSignalAlignment();
+    final int elementHeight = aSignalElement.getHeight();
+    final int signalHeight = aSignalElement.getSignalHeight();
+
+    final int signalOffset;
+    if ( SignalAlignment.BOTTOM.equals( signalAlignment ) )
+    {
+      signalOffset = ( elementHeight - signalHeight );
+    }
+    else if ( SignalAlignment.CENTER.equals( signalAlignment ) )
+    {
+      signalOffset = ( int )( ( elementHeight - signalHeight ) / 2.0 );
+    }
+    else
+    {
+      signalOffset = 0;
+    }
+
+    return signalOffset;
+  }
+
+  /**
    * Finds a signal element based on a given screen coordinate.
    * 
    * @param aPoint
@@ -325,14 +345,6 @@ public class SignalDiagramModel
   /**
    * {@inheritDoc}
    */
-  public int getAnalogSignalHeight()
-  {
-    return this.scopeHeight;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
   public Cursor getCursor( final int aCursorIdx )
   {
     final Cursor[] cursors = this.dataSet.getCursors();
@@ -367,14 +379,6 @@ public class SignalDiagramModel
   }
 
   /**
-   * {@inheritDoc}
-   */
-  public int getDigitalSignalHeight()
-  {
-    return this.channelHeight;
-  }
-
-  /**
    * Returns the time interval displayed by the current view.
    * 
    * @return a time interval, in seconds.
@@ -396,14 +400,6 @@ public class SignalDiagramModel
       result = visibleRect.width / getZoomFactor();
     }
     return Double.valueOf( result );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public int getGroupSummaryHeight()
-  {
-    return this.groupSummaryHeight;
   }
 
   /**
@@ -496,14 +492,6 @@ public class SignalDiagramModel
   }
 
   /**
-   * @return
-   */
-  public SignalAlignment getSignalAlignment()
-  {
-    return this.signalAlignment;
-  }
-
-  /**
    * Returns channel group manager.
    * 
    * @return the channel group manager, never <code>null</code>.
@@ -511,24 +499,6 @@ public class SignalDiagramModel
   public final SignalElementManager getSignalElementManager()
   {
     return this.channelGroupManager;
-  }
-
-  /**
-   * Returns the signal group height.
-   * 
-   * @return the signal group height, in pixels.
-   */
-  public int getSignalGroupHeight()
-  {
-    return this.signalGroupHeight;
-  }
-
-  /**
-   * @return
-   */
-  public int getSignalHeight()
-  {
-    return this.signalHeight;
   }
 
   /**
@@ -637,8 +607,8 @@ public class SignalDiagramModel
     final Rectangle rect = new Rectangle();
     rect.x = ( int )( getZoomFactor() * ts );
     rect.width = ( int )( getZoomFactor() * ( te - ts ) );
-    rect.y = signalElement.getYposition() + getSignalOffset();
-    rect.height = this.signalHeight;
+    rect.y = signalElement.getYposition() + calculateOffset( signalElement );
+    rect.height = signalElement.getSignalHeight();
 
     // The position where the "other" signal transition should be...
     middleXpos = ( int )( getZoomFactor() * tm );
@@ -658,30 +628,6 @@ public class SignalDiagramModel
     }
 
     return result;
-  }
-
-  /**
-   * Returns the signal offset.
-   * 
-   * @return a signal offset, >= 0.
-   * @see #getSignalAlignment()
-   */
-  public int getSignalOffset()
-  {
-    final int signalOffset;
-    if ( SignalAlignment.BOTTOM.equals( getSignalAlignment() ) )
-    {
-      signalOffset = ( this.channelHeight - this.signalHeight ) - 2;
-    }
-    else if ( SignalAlignment.CENTER.equals( getSignalAlignment() ) )
-    {
-      signalOffset = ( int )( ( this.channelHeight - this.signalHeight ) / 2.0 );
-    }
-    else
-    {
-      signalOffset = 2;
-    }
-    return signalOffset;
   }
 
   /**
@@ -1143,14 +1089,6 @@ public class SignalDiagramModel
   }
 
   /**
-   * @param aChannelHeight
-   */
-  public void setChannelHeight( final int aChannelHeight )
-  {
-    this.channelHeight = aChannelHeight;
-  }
-
-  /**
    * {@inheritDoc}
    */
   public void setCursor( final int aCursorIdx, final long aTimestamp )
@@ -1270,17 +1208,6 @@ public class SignalDiagramModel
   }
 
   /**
-   * Sets the height of the data-value row
-   * 
-   * @param aHeight
-   *          the height, in pixels, to set.
-   */
-  public void setDataValueRowHeight( final int aHeight )
-  {
-    this.groupSummaryHeight = aHeight;
-  }
-
-  /**
    * @param aEnabled
    */
   public void setMeasurementMode( final boolean aEnabled )
@@ -1306,44 +1233,6 @@ public class SignalDiagramModel
         listener.disableMeasurementMode();
       }
     }
-  }
-
-  /**
-   * Sets the height of the analogue scope.
-   * 
-   * @param aScopeHeight
-   *          the height, in pixels, to set.
-   */
-  public void setScopeHeight( final int aScopeHeight )
-  {
-    this.scopeHeight = aScopeHeight;
-  }
-
-  /**
-   * @param aSignalAlignment
-   */
-  public void setSignalAlignment( final SignalAlignment aSignalAlignment )
-  {
-    this.signalAlignment = aSignalAlignment;
-  }
-
-  /**
-   * Sets signalGroupHeight to the given value.
-   * 
-   * @param aSignalGroupHeight
-   *          the signalGroupHeight to set.
-   */
-  public void setSignalGroupHeight( final int aSignalGroupHeight )
-  {
-    this.signalGroupHeight = aSignalGroupHeight;
-  }
-
-  /**
-   * @param aSignalHeight
-   */
-  public void setSignalHeight( final int aSignalHeight )
-  {
-    this.signalHeight = aSignalHeight;
   }
 
   /**

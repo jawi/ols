@@ -21,10 +21,6 @@
 package nl.lxtreme.ols.client;
 
 
-import java.util.*;
-
-import javax.swing.*;
-
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
@@ -35,8 +31,6 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.osgi.*;
-
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 import org.osgi.service.log.*;
@@ -64,107 +58,10 @@ public class Activator extends DependencyActivatorBase
   private static final String OLS_EXPORTER_CLASS_KEY = "OLS-ExporterClass";
 
   private static final String OLS_COMPONENT_PROVIDER_MAGIC_KEY = "OLS-ComponentProvider";
+  private static final String OLS_COMPONENT_PROVIDER_MAGIC_VALUE = "Menu";
   private static final String OLS_COMPONENT_PROVIDER_CLASS_KEY = "OLS-ComponentProviderClass";
-  /** a RegEx for the supported components. */
-  private static final String OLS_COMPONENT_PROVIDER_MAGIC_VALUE = "(Menu)";
-
-  // VARIABLES
-
-  private BundleWatcher bundleWatcher;
-  private LogReaderTracker logReaderTracker;
 
   // METHODS
-
-  /**
-   * Creates the bundle observer for component providers.
-   * 
-   * @return a bundle observer, never <code>null</code>.
-   */
-  private static BundleObserver createComponentProviderBundleObserver()
-  {
-    return new BundleServiceObserver( OLS_COMPONENT_PROVIDER_MAGIC_KEY, OLS_COMPONENT_PROVIDER_MAGIC_VALUE,
-        OLS_COMPONENT_PROVIDER_CLASS_KEY, ComponentProvider.class.getName() )
-    {
-      @Override
-      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
-          final ManifestHeader... aEntries )
-      {
-        final Properties properties = new Properties();
-        final String componentKind = getManifestHeaderValue( OLS_COMPONENT_PROVIDER_MAGIC_KEY, aEntries );
-        properties.put( ComponentProvider.COMPONENT_ID_KEY, componentKind );
-        return properties;
-      }
-
-      @Override
-      protected boolean matchesMagicValue( final ManifestHeader aHeaderEntry, final String aMagicValue )
-      {
-        return aHeaderEntry.getValue().matches( aMagicValue );
-      }
-    };
-  }
-
-  /**
-   * Creates the bundle observer for device(-controller)s.
-   * 
-   * @return a bundle observer, never <code>null</code>.
-   */
-  private static BundleObserver createDeviceBundleObserver()
-  {
-    return new BundleServiceObserver( OLS_DEVICE_MAGIC_KEY, OLS_DEVICE_MAGIC_VALUE, OLS_DEVICE_CLASS_KEY,
-        Device.class.getName() )
-    {
-      @Override
-      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
-          final ManifestHeader... aEntries )
-      {
-        Properties result = new Properties();
-        result.put( Action.NAME, ( ( Device )aService ).getName() );
-        return result;
-      }
-    };
-  }
-
-  /**
-   * Creates the bundle observer for exporters.
-   * 
-   * @return a bundle observer, never <code>null</code>.
-   */
-  private static BundleObserver createExporterBundleObserver()
-  {
-    return new BundleServiceObserver( OLS_EXPORTER_MAGIC_KEY, OLS_EXPORTER_MAGIC_VALUE, OLS_EXPORTER_CLASS_KEY,
-        Exporter.class.getName() )
-    {
-      @Override
-      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
-          final ManifestHeader... aEntries )
-      {
-        Properties result = new Properties();
-        result.put( Action.NAME, ( ( Exporter )aService ).getName() );
-        return result;
-      }
-    };
-  }
-
-  /**
-   * Creates the bundle observer for tools.
-   * 
-   * @return a bundle observer, never <code>null</code>.
-   */
-  private static BundleObserver createToolBundleObserver()
-  {
-    return new BundleServiceObserver( OLS_TOOL_MAGIC_KEY, OLS_TOOL_MAGIC_VALUE, OLS_TOOL_CLASS_KEY,
-        Tool.class.getName() )
-    {
-      @Override
-      protected Dictionary<?, ?> getServiceProperties( final Bundle aBundle, final Object aService,
-          final ManifestHeader... aEntries )
-      {
-        Properties result = new Properties();
-        result.put( Action.NAME, ( ( Tool<?> )aService ).getName() );
-        return result;
-      }
-    };
-  }
 
   /**
    * {@inheritDoc}
@@ -172,29 +69,45 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    this.bundleWatcher.stop();
-    this.logReaderTracker.close();
+    // Nothing...
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
+  @SuppressWarnings( "rawtypes" )
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
     final ClientController clientController = new ClientController( aContext );
 
-    this.logReaderTracker = new LogReaderTracker( aContext );
-    this.logReaderTracker.open();
+    String filter;
+    filter = String.format( "(&(%s=%s)(%s=*))", OLS_COMPONENT_PROVIDER_MAGIC_KEY, OLS_COMPONENT_PROVIDER_MAGIC_VALUE,
+        OLS_COMPONENT_PROVIDER_CLASS_KEY );
+    aManager.add( //
+        createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
+            .setImplementation(
+                new GenericBundleAdapter<ComponentProvider>( ComponentProvider.class, OLS_COMPONENT_PROVIDER_CLASS_KEY ) ) //
+        );
 
-    this.bundleWatcher = BundleWatcher.createRegExBundleWatcher( aContext, "^OLS-.*" );
-    this.bundleWatcher //
-        .add( createToolBundleObserver() ) //
-        .add( createDeviceBundleObserver() ) //
-        .add( createExporterBundleObserver() ) //
-        .add( createComponentProviderBundleObserver() );
-    // Start watching all bundles for extenders...
-    this.bundleWatcher.start();
+    filter = String.format( "(&(%s=%s)(%s=*))", OLS_TOOL_MAGIC_KEY, OLS_TOOL_MAGIC_VALUE, OLS_TOOL_CLASS_KEY );
+    aManager.add( //
+        createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
+            .setImplementation( new GenericBundleAdapter<Tool>( Tool.class, OLS_TOOL_CLASS_KEY ) ) //
+        );
+
+    filter = String.format( "(&(%s=%s)(%s=*))", OLS_DEVICE_MAGIC_KEY, OLS_DEVICE_MAGIC_VALUE, OLS_DEVICE_CLASS_KEY );
+    aManager.add( //
+        createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
+            .setImplementation( new GenericBundleAdapter<Device>( Device.class, OLS_DEVICE_CLASS_KEY ) ) //
+        );
+
+    filter = String.format( "(&(%s=%s)(%s=*))", OLS_EXPORTER_MAGIC_KEY, OLS_EXPORTER_MAGIC_VALUE,
+        OLS_EXPORTER_CLASS_KEY );
+    aManager.add( //
+        createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
+            .setImplementation( new GenericBundleAdapter<Exporter>( Exporter.class, OLS_EXPORTER_CLASS_KEY ) ) //
+        );
 
     // User session manager...
     aManager.add( //
@@ -239,7 +152,7 @@ public class Activator extends DependencyActivatorBase
                 .setRequired( true ) //
             ) //
             .add( createServiceDependency() //
-                .setService( ComponentProvider.class, "(component.id=Menu)" ) //
+                .setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ) //
                 .setCallbacks( "addMenu", "removeMenu" ) //
                 .setRequired( false ) //
             ) //
