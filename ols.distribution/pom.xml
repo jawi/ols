@@ -182,6 +182,11 @@
 			<artifactId>vcd</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.export</groupId>
+			<artifactId>csv</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
