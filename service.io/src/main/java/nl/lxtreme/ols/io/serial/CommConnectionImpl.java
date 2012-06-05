@@ -203,7 +203,7 @@ final class CommConnectionImpl implements CommConnection
   public int setBaudRate( final int aBaudRate )
   {
     final int oldBaudRate = getBaudRate();
-    // this.port.setBaud( aBaudRate ); XXX
+    // not supported; no change possible...
     return oldBaudRate;
   }
 }

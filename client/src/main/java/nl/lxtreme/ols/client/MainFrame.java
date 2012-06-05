@@ -702,7 +702,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
         return false;
       }
 
-      boolean invert = this.diagramModel.isMouseWheelDefaultZooms();
+      boolean invert = this.diagramModel.isMouseWheelZoomDefault();
 
       final int modifier = this.diagramModel.getMouseWheelZoomModifier();
       final int result = ( aEvent.getModifiersEx() & modifier );

@@ -232,7 +232,7 @@ public class ChannelLabelsUI extends ComponentUI
     //
     // this.renderer.setContext( Integer.valueOf( aWidth ), Integer.valueOf(
     // height ), aSignalElement.getLabel() );
-    // this.renderer.render( aCanvas, -30, 0 ); // XXX
+    // this.renderer.render( aCanvas, -30, 0 );
   }
 
   /**

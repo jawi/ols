@@ -197,8 +197,6 @@ public final class SignalElementManager implements IDataModelChangeListener
       final int groupCount = Math.max( 1, ( int )Math.ceil( newChannelList.length / ( double )Ols.CHANNELS_PER_BLOCK ) );
       final int channelsPerGroup = ( int )Math.ceil( newChannelList.length / ( double )groupCount );
 
-      // TODO property change listeners on SignalElements!
-
       this.elements.clear();
       this.groups.clear();
 

@@ -27,12 +27,14 @@ import java.beans.*;
 import java.util.*;
 import java.util.List;
 
+import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.util.*;
@@ -922,10 +924,9 @@ public class SignalDiagramModel
    *         <code>false</code> if the default mouse-wheel behavior is to
    *         scroll.
    */
-  public boolean isMouseWheelDefaultZooms()
+  public boolean isMouseWheelZoomDefault()
   {
-    // TODO Auto-generated method stub
-    return false;
+    return UIManager.getBoolean( UIManagerKeys.MOUSEWHEEL_ZOOM_DEFAULT );
   }
 
   /**

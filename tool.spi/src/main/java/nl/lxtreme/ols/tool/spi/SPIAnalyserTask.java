@@ -536,7 +536,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   private void reportData( final SPIDataSet aDecodedData, final int aStartIdx, final int aEndIdx, final int aMosiValue,
       final int aMisoValue )
   {
-    long[] timestamps = this.context.getData().getTimestamps(); // XXX
+    long[] timestamps = this.context.getData().getTimestamps();
 
     if ( this.mosiIdx >= 0 )
     {

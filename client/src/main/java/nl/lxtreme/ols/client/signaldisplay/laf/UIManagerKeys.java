@@ -31,15 +31,22 @@ public interface UIManagerKeys
 {
   // CONSTANTS
 
+  /** The space between two signal elements, in pixels. */
   String SIGNAL_ELEMENT_SPACING = "ols.signal.element.spacer.height";
-
+  /** Whether or not the mouse wheel by defaults zooms in/out. */
+  String MOUSEWHEEL_ZOOM_DEFAULT = "ols.mousewheel.zoom.default.boolean";
+  /** The default color for channels, groups and scopes. */
   String CHANNEL_DEFAULT_COLOR = "ols.channel.default.color";
-
+  /** The height of the signal group, in pixels. */
   String SIGNAL_GROUP_HEIGHT = "ols.signalgroup.height";
+  /** The height of the digital channels, in pixels. */
   String CHANNEL_HEIGHT = "ols.channel.height";
+  /** The height of the digitial signals, in pixels. */
   String DIGITAL_SIGNAL_HEIGHT = "ols.digitalsignal.height";
-  String ANALOG_SCOPE_HEIGHT = "ols.analogscope.height";
+  /** The height of the group summary, in pixels. */
   String GROUP_SUMMARY_HEIGHT = "ols.groupsummary.height";
+  /** The height of the analog scope, in pixels. */
+  String ANALOG_SCOPE_HEIGHT = "ols.analogscope.height";
 
   String CHANNELLABELS_BACKGROUND_COLOR = "ols.channellabels.background.color";
   String CHANNELLABELS_MINIMAL_WIDTH = "ols.channellabels.minimal.width";
