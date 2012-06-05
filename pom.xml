@@ -55,6 +55,7 @@
 		<module>tool.spi</module>
 		<module>tool.state</module>
 		<module>tool.uart</module>
+		<module>tool.dmx512</module>
 		<module>export.image</module>
 		<module>export.vcd</module>
 		<module>export.csv</module>
@@ -288,6 +289,11 @@
 			<dependency>
 				<groupId>nl.lxtreme.ols.tool</groupId>
 				<artifactId>uart</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+			<dependency>
+				<groupId>nl.lxtreme.ols.tool</groupId>
+				<artifactId>dmx512</artifactId>
 				<version>1.0.0</version>
 			</dependency>
 			<dependency>
