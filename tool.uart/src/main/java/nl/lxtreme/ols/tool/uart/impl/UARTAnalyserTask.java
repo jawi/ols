@@ -474,7 +474,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
          * {@inheritDoc}
          */
         @Override
-        public void reportFrameError( final long aTime )
+        public void reportFrameError( final int aChannelIdx, final long aTime )
         {
           if ( aEventType == UARTData.UART_TYPE_RXDATA )
           {
@@ -490,7 +490,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
          * {@inheritDoc}
          */
         @Override
-        public void reportParityError( final long aTime )
+        public void reportParityError( final int aChannelIdx, final long aTime )
         {
           if ( aEventType == UARTData.UART_TYPE_RXDATA )
           {
@@ -506,7 +506,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
          * {@inheritDoc}
          */
         @Override
-        public void reportStartError( final long aTime )
+        public void reportStartError( final int aChannelIdx, final long aTime )
         {
           if ( aEventType == UARTData.UART_TYPE_RXDATA )
           {
@@ -522,7 +522,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
          * {@inheritDoc}
          */
         @Override
-        public void reportSymbol( final int aSymbol, final long aStartTime, final long aEndTime )
+        public void reportSymbol( final int aChannelIdx, final int aSymbol, final long aStartTime, final long aEndTime )
         {
           final int startSampleIdx = Math.max( data.getSampleIndex( aStartTime ), 0 );
           final int endSampleIdx = Math.min( data.getSampleIndex( aEndTime ), data.getTimestamps().length - 1 );

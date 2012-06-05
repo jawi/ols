@@ -247,27 +247,33 @@ public final class AsyncSerialDataDecoder
      * Called when a frame error occurred, due to an invalid number of stop-bits
      * or an incorrect value for a single stop-bit.
      * 
+     * @param aChannelIdx
+     *          the channel index of on which the frame error occurred;
      * @param aTime
      *          the time stamp on which the frame error occurred.
      */
-    void reportFrameError( long aTime );
+    void reportFrameError( int aChannelIdx, long aTime );
 
     /**
      * Called when a parity error occurred for a data symbol.
      * 
+     * @param aChannelIdx
+     *          the channel index of on which the frame error occurred;
      * @param aTime
      *          the time stamp on which the parity error occurred.
      */
-    void reportParityError( long aTime );
+    void reportParityError( int aChannelIdx, long aTime );
 
     /**
      * Called when a start error occurred, due to an invalid level for a
      * start-bit.
      * 
+     * @param aChannelIdx
+     *          the channel index of on which the frame error occurred;
      * @param aTime
      *          the time stamp on which the start error occurred.
      */
-    void reportStartError( long aTime );
+    void reportStartError( int aChannelIdx, long aTime );
 
     /**
      * Called when a single data symbol has been fully decoded.
@@ -275,12 +281,14 @@ public final class AsyncSerialDataDecoder
      * @param aSymbol
      *          the actual data symbol, as integer value. For 8-bit symbols, it
      *          can be directly represented as ASCII.
+     * @param aChannelIdx
+     *          the channel index of on which the frame error occurred;
      * @param aStartTime
      *          the starting time stamp on which the data symbol starts;
      * @param aEndTime
      *          the ending time stamp on which the data symbol ends;
      */
-    void reportSymbol( int aSymbol, long aStartTime, long aEndTime );
+    void reportSymbol( int aSymbol, int aChannelIdx, long aStartTime, long aEndTime );
   }
 
   /**
@@ -400,7 +408,7 @@ public final class AsyncSerialDataDecoder
       if ( !isSpace( time, mask ) )
       {
         // this is not a start bit !
-        aCallback.reportStartError( time );
+        aCallback.reportStartError( aChannelIndex, time );
       }
 
       // Keep track of where the symbol originally started; note that we're
@@ -425,7 +433,7 @@ public final class AsyncSerialDataDecoder
       symbol = correctSymbol( symbol, bitCount );
 
       // fully decoded a single symbol...
-      aCallback.reportSymbol( symbol, startTime, endTime );
+      aCallback.reportSymbol( symbol, aChannelIndex, startTime, endTime );
       symbolCount++;
 
       // Sample parity bit (if available/desired).
@@ -447,7 +455,7 @@ public final class AsyncSerialDataDecoder
         time += bitLength; // = middle of the parity bit...
         if ( !isExpectedLevel( time, mask, expectedValue ) )
         {
-          aCallback.reportParityError( time );
+          aCallback.reportParityError( aChannelIndex, time );
         }
       }
 
@@ -459,7 +467,7 @@ public final class AsyncSerialDataDecoder
       {
         if ( !isMark( time, mask ) )
         {
-          aCallback.reportFrameError( time );
+          aCallback.reportFrameError( aChannelIndex, time );
         }
         stopBitCount -= ( ( stopBitCount > 1.0 ) ? 1.0 : stopBitCount );
 
