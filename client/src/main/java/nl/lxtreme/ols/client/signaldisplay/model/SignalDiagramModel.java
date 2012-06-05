@@ -245,7 +245,7 @@ public class SignalDiagramModel
    */
   public SignalElement findSignalElement( final Point aPoint )
   {
-    final SignalElement[] elements = getSignalElementManager().getSignalElements( aPoint.y, aPoint.y + 1,
+    final SignalElement[] elements = getSignalElementManager().getSignalElements( aPoint.y, 1,
         SignalElementMeasurer.LOOSE_MEASURER );
     if ( elements.length == 0 )
     {

@@ -21,9 +21,6 @@
 package nl.lxtreme.ols.client.project.impl;
 
 
-import static nl.lxtreme.ols.util.ColorUtils.*;
-
-import java.awt.*;
 import java.beans.*;
 import java.util.*;
 import java.util.List;
@@ -43,15 +40,12 @@ public final class ChannelImpl implements Channel
 
   private static final int MAX_CHANNELS = Ols.MAX_CHANNELS;
 
-  private static final Color DEFAULT_COLOR = parseColor( "7bf9dd" );
-
   // VARIABLES
 
   private final int index;
   private final int mask;
 
   private String label;
-  private Color color;
   private boolean enabled;
 
   private final List<Annotation<?>> annotations;
@@ -77,7 +71,6 @@ public final class ChannelImpl implements Channel
     this.index = aChannel.getIndex();
     this.mask = aChannel.getMask();
     this.label = aChannel.getLabel();
-    this.color = aChannel.getColor();
     this.enabled = aChannel.isEnabled();
 
     this.annotations = new CopyOnWriteArrayList<Annotation<?>>( aChannel.getAnnotations() );
@@ -101,7 +94,6 @@ public final class ChannelImpl implements Channel
     this.index = aChannelIdx;
     this.mask = ( int )( 1L << aChannelIdx );
     this.label = null;
-    this.color = DEFAULT_COLOR;
     this.enabled = true;
 
     this.annotations = new CopyOnWriteArrayList<Annotation<?>>();
@@ -189,15 +181,6 @@ public final class ChannelImpl implements Channel
    * {@inheritDoc}
    */
   @Override
-  public Color getColor()
-  {
-    return this.color;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   public int getIndex()
   {
     return this.index;
@@ -261,22 +244,6 @@ public final class ChannelImpl implements Channel
   public void removePropertyChangeListener( final PropertyChangeListener aListener )
   {
     this.propertyChangeSupport.removePropertyChangeListener( aListener );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setColor( final Color aColor )
-  {
-    if ( aColor == null )
-    {
-      throw new IllegalArgumentException( "Color cannot be null!" );
-    }
-    Color oldColor = this.color;
-    this.color = aColor;
-
-    this.propertyChangeSupport.fireIndexedPropertyChange( "channelColor", this.index, oldColor, aColor );
   }
 
   /**

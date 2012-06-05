@@ -21,7 +21,6 @@
 package nl.lxtreme.ols.api.data;
 
 
-import java.awt.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.data.annotation.*;
@@ -54,13 +53,6 @@ public interface Channel extends Comparable<Channel>
    *         <code>null</code>, never <code>null</code>.
    */
   Collection<Annotation<?>> getAnnotations();
-
-  /**
-   * Returns the color signals should be drawn in.
-   * 
-   * @return the a signal color, never <code>null</code>.
-   */
-  Color getColor();
 
   /**
    * Returns the index of this channel.
@@ -102,14 +94,6 @@ public interface Channel extends Comparable<Channel>
    * @return the enabled
    */
   boolean isEnabled();
-
-  /**
-   * Sets color for this channel.
-   * 
-   * @param aColor
-   *          the color to set.
-   */
-  void setColor( final Color aColor );
 
   /**
    * Sets enabled to the given value.

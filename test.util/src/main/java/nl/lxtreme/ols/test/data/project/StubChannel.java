@@ -21,7 +21,6 @@
 package nl.lxtreme.ols.test.data.project;
 
 
-import java.awt.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.data.*;
@@ -38,7 +37,6 @@ public class StubChannel implements Channel
   private final int index;
   private final int mask;
 
-  private Color color;
   private String label;
   private boolean enabled;
 
@@ -99,15 +97,6 @@ public class StubChannel implements Channel
    * {@inheritDoc}
    */
   @Override
-  public Color getColor()
-  {
-    return this.color;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   public int getIndex()
   {
     return this.index;
@@ -147,15 +136,6 @@ public class StubChannel implements Channel
   public boolean isEnabled()
   {
     return this.enabled;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setColor( final Color aColor )
-  {
-    this.color = aColor;
   }
 
   /**

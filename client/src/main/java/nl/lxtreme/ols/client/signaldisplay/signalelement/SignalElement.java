@@ -59,6 +59,7 @@ public final class SignalElement implements Comparable<SignalElement>
   private Channel channel;
   /** the group we belong to, should always be non-null. */
   private ElementGroup group;
+  private Color color;
 
   private int height;
   private int yPosition;
@@ -103,6 +104,7 @@ public final class SignalElement implements Comparable<SignalElement>
     final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, aGroup.getMask() );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( ANALOG_SCOPE_HEIGHT );
+    channelElement.color = getUIManagerValue( CHANNEL_DEFAULT_COLOR, Color.CYAN );
     return channelElement;
   }
 
@@ -121,13 +123,9 @@ public final class SignalElement implements Comparable<SignalElement>
     channelElement.channel = aChannel;
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( CHANNEL_HEIGHT );
+    channelElement.color = getUIManagerValue( CHANNEL_DEFAULT_COLOR, Color.CYAN );
     channelElement.signalHeight = UIManager.getInt( DIGITAL_SIGNAL_HEIGHT );
-    String string = UIManager.getString( SIGNALVIEW_SIGNAL_ALIGNMENT );
-    if ( string == null )
-    {
-      string = "CENTER";
-    }
-    channelElement.alignment = SignalAlignment.valueOf( string );
+    channelElement.alignment = SignalAlignment.valueOf( getUIManagerValue( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) );
     return channelElement;
   }
 
@@ -145,6 +143,7 @@ public final class SignalElement implements Comparable<SignalElement>
     final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, aGroup.getMask() );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( GROUP_SUMMARY_HEIGHT );
+    channelElement.color = getUIManagerValue( CHANNEL_DEFAULT_COLOR, Color.CYAN );
     return channelElement;
   }
 
@@ -162,7 +161,26 @@ public final class SignalElement implements Comparable<SignalElement>
     final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, aGroup.getMask() );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( SIGNAL_GROUP_HEIGHT );
+    channelElement.color = getUIManagerValue( CHANNEL_DEFAULT_COLOR, Color.CYAN );
     return channelElement;
+  }
+
+  /**
+   * @param aKey
+   *          the key to lookup, cannot be <code>null</code>.
+   * @param aDefault
+   *          the default value to return in case the requested value is absent.
+   * @return a value, never <code>null</code>.
+   */
+  @SuppressWarnings( "unchecked" )
+  private static <TYPE> TYPE getUIManagerValue( final String aKey, final TYPE aDefault )
+  {
+    Object value = UIManager.get( aKey );
+    if ( ( value == null ) || !( aDefault.getClass().isAssignableFrom( value.getClass() ) ) )
+    {
+      return aDefault;
+    }
+    return ( TYPE )value;
   }
 
   /**
@@ -234,14 +252,7 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public Color getColor()
   {
-    if ( this.channel != null )
-    {
-      return this.channel.getColor();
-    }
-    else
-    {
-      return this.group.getColor();
-    }
+    return this.color;
   }
 
   /**
@@ -483,14 +494,11 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public void setColor( final Color aColor )
   {
-    if ( this.channel != null )
+    if ( aColor == null )
     {
-      this.channel.setColor( aColor );
+      throw new IllegalArgumentException( "Color cannot be null!" );
     }
-    else
-    {
-      this.group.setColor( aColor );
-    }
+    this.color = aColor;
   }
 
   /**

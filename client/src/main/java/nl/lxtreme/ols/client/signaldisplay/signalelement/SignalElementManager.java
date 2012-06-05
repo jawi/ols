@@ -24,11 +24,13 @@ package nl.lxtreme.ols.client.signaldisplay.signalelement;
 import static nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
 import java.util.*;
 
+import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.ISignalElementChangeListener.*;
 
 
@@ -300,6 +302,8 @@ public final class SignalElementManager implements IDataModelChangeListener
     final int yMin = aY;
     final int yMax = aHeight + aY;
 
+    final int spacing = UIManager.getInt( UIManagerKeys.SIGNAL_ELEMENT_SPACING );
+
     int yPos = 0;
     for ( ElementGroup group : getGroups() )
     {
@@ -323,7 +327,7 @@ public final class SignalElementManager implements IDataModelChangeListener
             element.setYposition( yPos );
             result.add( element );
           }
-          yPos += height;
+          yPos += height + spacing;
         }
         else if ( element.isDigitalSignal() && group.isShowDigitalSignals() )
         {
@@ -334,7 +338,7 @@ public final class SignalElementManager implements IDataModelChangeListener
             element.setYposition( yPos );
             result.add( element );
           }
-          yPos += height;
+          yPos += height + spacing;
         }
         else if ( element.isGroupSummary() && group.isShowGroupSummary() )
         {
@@ -344,7 +348,7 @@ public final class SignalElementManager implements IDataModelChangeListener
             element.setYposition( yPos );
             result.add( element );
           }
-          yPos += height;
+          yPos += height + spacing;
         }
         else if ( element.isAnalogSignal() && group.isShowAnalogSignal() )
         {
@@ -354,7 +358,7 @@ public final class SignalElementManager implements IDataModelChangeListener
             element.setYposition( yPos );
             result.add( element );
           }
-          yPos += height;
+          yPos += height + spacing;
         }
       }
     }
