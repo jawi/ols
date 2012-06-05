@@ -29,7 +29,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorScheme;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.ColorTarget;
 import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.EdgeSlope;
-import nl.lxtreme.ols.client.diagram.settings.DiagramSettings.SignalAlignment;
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 
 import org.junit.*;
 

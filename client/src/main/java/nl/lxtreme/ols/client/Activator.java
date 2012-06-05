@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client;
 
 
+import java.util.*;
+
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
@@ -31,8 +33,10 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.util.*;
+
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.cm.*;
 import org.osgi.service.log.*;
 import org.osgi.service.prefs.*;
 
@@ -108,6 +112,15 @@ public class Activator extends DependencyActivatorBase
         createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
             .setImplementation( new GenericBundleAdapter<Exporter>( Exporter.class, OLS_EXPORTER_CLASS_KEY ) ) //
         );
+
+    Properties props = new Properties();
+    props.put( Constants.SERVICE_PID, UIManagerConfigurator.PID );
+
+    // UI Manager Configuration...
+    aManager.add( //
+        createComponent() //
+            .setInterface( ManagedService.class.getName(), props ) //
+            .setImplementation( UIManagerConfigurator.class ) );
 
     // User session manager...
     aManager.add( //

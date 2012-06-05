@@ -20,12 +20,13 @@
 package nl.lxtreme.ols.client.signaldisplay.model;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+
 import java.awt.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
 
@@ -34,25 +35,6 @@ import nl.lxtreme.ols.client.signaldisplay.view.*;
  */
 public class TimeLineViewModel extends AbstractViewModel
 {
-  // CONSTANTS
-
-  public static final String COMPONENT_BACKGROUND_COLOR = "timeline.color.background";
-  public static final String COMPONENT_HEIGHT = "timeline.height";
-  public static final String COMPONENT_VERTICAL_PADDING = "timeline.vertical.padding";
-
-  public static final String CURSOR_FLAG_FONT = "timeline.cursor.font";
-  public static final String TEXT_COLOR = "timeline.text.color";
-  public static final String TICK_HEIGHT = "timeline.tick.height";
-  public static final String TICK_COLOR = "timeline.tick.color";
-
-  public static final String MAJOR_TICK_HEIGHT = "timeline.majortick.height";
-  public static final String MAJOR_TICK_LABEL_FONT = "timeline.majortick.label.font";
-  public static final String MAJOR_TICK_COLOR = "timeline.majortick.color";
-
-  public static final String MINOR_TICK_HEIGHT = "timeline.minortick.height";
-  public static final String MINOR_TICK_LABEL_FONT = "timeline.minortick.label.font";
-  public static final String MINOR_TICK_COLOR = "timeline.minortick.color";
-
   // CONSTRUCTORS
 
   /**
@@ -75,10 +57,10 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public Color getBackgroundColor()
   {
-    Color color = UIManager.getColor( COMPONENT_BACKGROUND_COLOR );
+    Color color = UIManager.getColor( TIMELINE_BACKGROUND_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_BACKGROUND_COLOR;
+      color = Color.BLACK;
     }
     return color;
   }
@@ -90,10 +72,10 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public Font getCursorFlagFont()
   {
-    Font font = UIManager.getFont( CURSOR_FLAG_FONT );
+    Font font = UIManager.getFont( TIMELINE_CURSOR_FLAG_FONT );
     if ( font == null )
     {
-      font = LafDefaults.DEFAULT_CURSOR_FLAG_FONT;
+      font = UIManager.getFont( "Label.font" );
     }
     return font;
   }
@@ -120,10 +102,10 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public Color getMajorTickColor()
   {
-    Color color = UIManager.getColor( MAJOR_TICK_COLOR );
+    Color color = UIManager.getColor( TIMELINE_MAJOR_TICK_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_MAJOR_TICK_COLOR;
+      color = Color.LIGHT_GRAY;
     }
     return color;
   }
@@ -135,12 +117,7 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public int getMajorTickHeight()
   {
-    int value = UIManager.getInt( MAJOR_TICK_HEIGHT );
-    if ( value <= 0 )
-    {
-      return LafDefaults.DEFAULT_MAJOR_TICK_HEIGHT;
-    }
-    return value;
+    return UIManager.getInt( TIMELINE_MAJOR_TICK_HEIGHT );
   }
 
   /**
@@ -150,10 +127,10 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public Font getMajorTickLabelFont()
   {
-    Font font = UIManager.getFont( MAJOR_TICK_LABEL_FONT );
+    Font font = UIManager.getFont( TIMELINE_MAJOR_TICK_LABEL_FONT );
     if ( font == null )
     {
-      font = LafDefaults.DEFAULT_MAJOR_TICK_FONT;
+      font = UIManager.getFont( "Label.font" );
     }
     return font;
   }
@@ -165,10 +142,10 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public Color getMinorTickColor()
   {
-    Color color = UIManager.getColor( MINOR_TICK_COLOR );
+    Color color = UIManager.getColor( TIMELINE_MINOR_TICK_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_MINOR_TICK_COLOR;
+      color = Color.DARK_GRAY;
     }
     return color;
   }
@@ -180,12 +157,7 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public int getMinorTickHeight()
   {
-    int value = UIManager.getInt( MINOR_TICK_HEIGHT );
-    if ( value <= 0 )
-    {
-      return LafDefaults.DEFAULT_MINOR_TICK_HEIGHT;
-    }
-    return value;
+    return UIManager.getInt( TIMELINE_MINOR_TICK_HEIGHT );
   }
 
   /**
@@ -195,10 +167,10 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public Font getMinorTickLabelFont()
   {
-    Font font = UIManager.getFont( MINOR_TICK_LABEL_FONT );
+    Font font = UIManager.getFont( TIMELINE_MINOR_TICK_LABEL_FONT );
     if ( font == null )
     {
-      font = LafDefaults.DEFAULT_MINOR_TICK_FONT;
+      font = UIManager.getFont( "Label.font" );
     }
     return font;
   }
@@ -261,10 +233,10 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public Color getTextColor()
   {
-    Color color = UIManager.getColor( TEXT_COLOR );
+    Color color = UIManager.getColor( TIMELINE_TEXT_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_TEXT_COLOR;
+      color = Color.WHITE;
     }
     return color;
   }
@@ -276,12 +248,12 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public Color getTickColor()
   {
-    Color value = UIManager.getColor( TICK_COLOR );
-    if ( value == null )
+    Color color = UIManager.getColor( TIMELINE_TICK_COLOR );
+    if ( color == null )
     {
-      value = LafDefaults.DEFAULT_TICK_COLOR;
+      color = Color.DARK_GRAY;
     }
-    return value;
+    return color;
   }
 
   /**
@@ -291,12 +263,7 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public int getTickHeight()
   {
-    int value = UIManager.getInt( TICK_HEIGHT );
-    if ( value <= 0 )
-    {
-      return LafDefaults.DEFAULT_TICK_HEIGHT;
-    }
-    return value;
+    return UIManager.getInt( TIMELINE_TICK_HEIGHT );
   }
 
   /**
@@ -306,12 +273,7 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public int getTimeLineHeight()
   {
-    int value = UIManager.getInt( COMPONENT_HEIGHT );
-    if ( value <= 0 )
-    {
-      return LafDefaults.DEFAULT_TIMELINE_HEIGHT;
-    }
-    return value;
+    return UIManager.getInt( TIMELINE_HEIGHT );
   }
 
   /**
@@ -347,7 +309,6 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public boolean isMinorTimestampVisible()
   {
-    // TODO Auto-generated method stub
-    return false;
+    return UIManager.getBoolean( TIMELINE_MINOR_TICKS_VISIBLE );
   }
 }

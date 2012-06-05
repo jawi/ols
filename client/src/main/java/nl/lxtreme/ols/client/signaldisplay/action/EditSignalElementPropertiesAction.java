@@ -147,7 +147,8 @@ public class EditSignalElementPropertiesAction extends AbstractAction
      */
     public int getElementHeight()
     {
-      return NumberUtils.safeParseInt( this.heightEditor.getText(), LafDefaults.DEFAULT_CHANNEL_HEIGHT );
+      int defaultValue = UIManager.getInt( UIManagerKeys.CHANNEL_HEIGHT );
+      return NumberUtils.safeParseInt( this.heightEditor.getText(), defaultValue );
     }
 
     /**
@@ -170,7 +171,7 @@ public class EditSignalElementPropertiesAction extends AbstractAction
       SignalAlignment result = ( SignalAlignment )this.signalAlignmentEditor.getSelectedItem();
       if ( result == null )
       {
-        result = LafDefaults.DEFAULT_SIGNAL_ALIGNMENT;
+        result = SignalAlignment.valueOf( UIManager.getString( UIManagerKeys.SIGNALVIEW_SIGNAL_ALIGNMENT ) );
       }
       return result;
     }
@@ -182,7 +183,8 @@ public class EditSignalElementPropertiesAction extends AbstractAction
      */
     public int getSignalHeight()
     {
-      return NumberUtils.safeParseInt( this.signalHeightEditor.getText(), LafDefaults.DEFAULT_SIGNAL_HEIGHT );
+      int defaultValue = UIManager.getInt( UIManagerKeys.DIGITAL_SIGNAL_HEIGHT );
+      return NumberUtils.safeParseInt( this.signalHeightEditor.getText(), defaultValue );
     }
 
     /**

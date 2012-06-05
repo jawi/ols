@@ -20,12 +20,13 @@
 package nl.lxtreme.ols.client.signaldisplay.model;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+
 import java.awt.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
 
 
 /**
@@ -33,11 +34,6 @@ import nl.lxtreme.ols.client.signaldisplay.laf.*;
  */
 public class GhostGlassPaneModel extends AbstractViewModel
 {
-  // CONSTANTS
-
-  public static final String COMPONENT_COLOR = "glasspane.color.foreground";
-  public static final String COMPONENT_ALPHA = "glasspane.alpha.percentage";
-
   // CONSTRUCTORS
 
   /**
@@ -60,10 +56,10 @@ public class GhostGlassPaneModel extends AbstractViewModel
    */
   public Color getColor()
   {
-    Color color = UIManager.getColor( COMPONENT_COLOR );
+    Color color = UIManager.getColor( GLASSPANE_FOREGROUND_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_GLASSPANE_COLOR;
+      color = Color.YELLOW;
     }
     return color;
   }
@@ -75,11 +71,7 @@ public class GhostGlassPaneModel extends AbstractViewModel
    */
   public Composite getComposite()
   {
-    int percentage = UIManager.getInt( COMPONENT_ALPHA );
-    if ( percentage <= 0 )
-    {
-      percentage = LafDefaults.DEFAULT_GLASSPANE_ALPHA_PERCENTAGE;
-    }
+    int percentage = UIManager.getInt( GLASSPANE_TRANSLUCENT_ALPHA );
     float alpha = percentage / 100.0f;
     return AlphaComposite.getInstance( AlphaComposite.SRC_OVER, alpha );
   }

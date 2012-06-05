@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.diagram.settings;
 import java.awt.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 
 
 /**
@@ -60,14 +61,6 @@ public interface DiagramSettings extends UserSettings
   public static enum EdgeSlope
   {
     PERPENDICULAR, NON_PERPENDICULAR;
-  }
-
-  /**
-   * Denotes where the signal is to be drawn inside a channel.
-   */
-  public static enum SignalAlignment
-  {
-    TOP, CENTER, BOTTOM;
   }
 
   // CONSTANTS

@@ -51,7 +51,7 @@ public class SignalDiagramModel
    */
   public static enum SignalAlignment
   {
-    TOP, BOTTOM, CENTER;
+    TOP, CENTER, BOTTOM;
   }
 
   // CONSTANTS

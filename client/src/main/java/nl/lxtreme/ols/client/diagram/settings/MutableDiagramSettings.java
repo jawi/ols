@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.Map.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 import nl.lxtreme.ols.util.*;
 
 

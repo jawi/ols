@@ -20,12 +20,13 @@
 package nl.lxtreme.ols.client.signaldisplay.model;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+
 import java.awt.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
 
 
 /**
@@ -33,10 +34,6 @@ import nl.lxtreme.ols.client.signaldisplay.laf.*;
  */
 public class CornerViewModel extends AbstractViewModel
 {
-  // CONSTANTS
-
-  public static final String COMPONENT_BACKGROUND_COLOR = "corner.color.background";
-
   // CONSTRUCTORS
 
   /**
@@ -59,10 +56,10 @@ public class CornerViewModel extends AbstractViewModel
    */
   public Color getBackgroundColor()
   {
-    Color color = UIManager.getColor( COMPONENT_BACKGROUND_COLOR );
+    Color color = UIManager.getColor( CORNER_BACKGROUND_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_BACKGROUND_COLOR;
+      color = Color.WHITE;
     }
     return color;
   }

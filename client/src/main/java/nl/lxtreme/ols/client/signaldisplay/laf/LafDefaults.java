@@ -16,7 +16,7 @@ import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignm
 /**
  * Provides the default L&F for the component.
  */
-public final class LafDefaults
+final class LafDefaults
 {
   // GENERIC
 

@@ -21,9 +21,12 @@
 package nl.lxtreme.ols.client.signaldisplay.signalelement;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
 import java.awt.*;
+
+import javax.swing.*;
+
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 
 
@@ -99,7 +102,7 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, aGroup.getMask() );
     channelElement.group = aGroup;
-    channelElement.height = LafDefaults.DEFAULT_ANALOG_SCOPE_HEIGHT;
+    channelElement.height = UIManager.getInt( ANALOG_SCOPE_HEIGHT );
     return channelElement;
   }
 
@@ -117,9 +120,14 @@ public final class SignalElement implements Comparable<SignalElement>
     final SignalElement channelElement = new SignalElement( SignalElementType.DIGITAL_SIGNAL, aChannel.getMask() );
     channelElement.channel = aChannel;
     channelElement.group = aGroup;
-    channelElement.height = LafDefaults.DEFAULT_CHANNEL_HEIGHT;
-    channelElement.signalHeight = LafDefaults.DEFAULT_SIGNAL_HEIGHT;
-    channelElement.alignment = LafDefaults.DEFAULT_SIGNAL_ALIGNMENT;
+    channelElement.height = UIManager.getInt( CHANNEL_HEIGHT );
+    channelElement.signalHeight = UIManager.getInt( DIGITAL_SIGNAL_HEIGHT );
+    String string = UIManager.getString( SIGNALVIEW_SIGNAL_ALIGNMENT );
+    if ( string == null )
+    {
+      string = "CENTER";
+    }
+    channelElement.alignment = SignalAlignment.valueOf( string );
     return channelElement;
   }
 
@@ -136,7 +144,7 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, aGroup.getMask() );
     channelElement.group = aGroup;
-    channelElement.height = LafDefaults.DEFAULT_GROUP_SUMMARY_HEIGHT;
+    channelElement.height = UIManager.getInt( GROUP_SUMMARY_HEIGHT );
     return channelElement;
   }
 
@@ -153,7 +161,7 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, aGroup.getMask() );
     channelElement.group = aGroup;
-    channelElement.height = LafDefaults.DEFAULT_SIGNAL_GROUP_HEIGHT;
+    channelElement.height = UIManager.getInt( SIGNAL_GROUP_HEIGHT );
     return channelElement;
   }
 

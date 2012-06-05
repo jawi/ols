@@ -20,6 +20,7 @@
 package nl.lxtreme.ols.client.signaldisplay.model;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -28,7 +29,6 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
@@ -38,17 +38,6 @@ import nl.lxtreme.ols.client.signaldisplay.view.*;
  */
 public class ChannelLabelsViewModel extends AbstractViewModel
 {
-  // CONSTANTS
-
-  public static final String COMPONENT_MINIMAL_WIDTH = "channellabels.width.minimal";
-  public static final String COMPONENT_BACKGROUND_COLOR = "channellabels.color.background";
-  public static final String COMPONENT_GUTTER_WIDTH = "channellabels.gutter.width";
-  public static final String COMPONENT_ARC_WIDTH = "channellabels.arc.width";
-
-  public static final String LABEL_FOREGROUND_COLOR = "channellabels.label.color.foreground";
-  public static final String LABEL_BACKGROUND_COLOR = "channellabels.label.color.background";
-  public static final String LABEL_FONT = "channellabels.label.font";
-
   // CONSTRUCTORS
 
   /**
@@ -151,12 +140,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    */
   public int getArcWidth()
   {
-    int arcWidth = UIManager.getInt( COMPONENT_ARC_WIDTH );
-    if ( arcWidth < 0 )
-    {
-      arcWidth = LafDefaults.DEFAULT_ARC_WIDTH;
-    }
-    return arcWidth;
+    return UIManager.getInt( CHANNELLABELS_ARC_WIDTH );
   }
 
   /**
@@ -166,10 +150,10 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    */
   public Color getBackgroundColor()
   {
-    Color color = UIManager.getColor( COMPONENT_BACKGROUND_COLOR );
+    Color color = UIManager.getColor( CHANNELLABELS_BACKGROUND_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_BACKGROUND_COLOR;
+      color = Color.BLACK;
     }
     return color;
   }
@@ -181,12 +165,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    */
   public int getGutterWidth()
   {
-    int gutter = UIManager.getInt( COMPONENT_GUTTER_WIDTH );
-    if ( gutter < 0 )
-    {
-      gutter = LafDefaults.DEFAULT_GUTTER_WIDTH;
-    }
-    return gutter;
+    return UIManager.getInt( CHANNELLABELS_GUTTER_WIDTH );
   }
 
   /**
@@ -196,10 +175,10 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    */
   public Color getLabelBackgroundColor()
   {
-    Color color = UIManager.getColor( LABEL_BACKGROUND_COLOR );
+    Color color = UIManager.getColor( CHANNELLABELS_LABEL_BACKGROUND_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_CHANNEL_BACKGROUND_COLOR;
+      color = Color.BLACK;
     }
     return color;
   }
@@ -211,10 +190,10 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    */
   public Font getLabelFont()
   {
-    Font font = UIManager.getFont( LABEL_FONT );
+    Font font = UIManager.getFont( CHANNELLABELS_LABEL_FONT );
     if ( font == null )
     {
-      font = LafDefaults.DEFAULT_CHANNEL_LABEL_FONT;
+      font = UIManager.getFont( "Label.font" );
     }
     return font;
   }
@@ -226,10 +205,10 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    */
   public Color getLabelForegroundColor()
   {
-    Color color = UIManager.getColor( LABEL_FOREGROUND_COLOR );
+    Color color = UIManager.getColor( CHANNELLABELS_LABEL_FOREGROUND_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_CHANNEL_LABEL_COLOR;
+      color = Color.WHITE;
     }
     return color;
   }
@@ -241,12 +220,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    */
   public int getMinimalWidth()
   {
-    int minWidth = UIManager.getInt( COMPONENT_MINIMAL_WIDTH );
-    if ( minWidth <= 0 )
-    {
-      return LafDefaults.DEFAULT_MINIMAL_CHANNEL_WIDTH;
-    }
-    return minWidth;
+    return UIManager.getInt( CHANNELLABELS_MINIMAL_WIDTH );
   }
 
   /**

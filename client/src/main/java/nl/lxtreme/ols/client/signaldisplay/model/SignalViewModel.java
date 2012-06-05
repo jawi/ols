@@ -20,12 +20,13 @@
 package nl.lxtreme.ols.client.signaldisplay.model;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+
 import java.awt.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
@@ -35,12 +36,6 @@ import nl.lxtreme.ols.client.signaldisplay.view.*;
  */
 public class SignalViewModel extends AbstractViewModel
 {
-  // CONSTANTS
-
-  public static final String COMPONENT_BACKGROUND_COLOR = "signal.color.background";
-  public static final String MEASUREMENT_ARROW_COLOR = "signal.color.arrow";
-  public static final String CURSOR_FLAG_FONT = TimeLineViewModel.CURSOR_FLAG_FONT;
-
   // CONSTRUCTORS
 
   /**
@@ -72,10 +67,10 @@ public class SignalViewModel extends AbstractViewModel
    */
   public Color getBackgroundColor()
   {
-    Color color = UIManager.getColor( COMPONENT_BACKGROUND_COLOR );
+    Color color = UIManager.getColor( SIGNALVIEW_BACKGROUND_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_BACKGROUND_COLOR;
+      color = Color.BLACK;
     }
     return color;
   }
@@ -87,10 +82,10 @@ public class SignalViewModel extends AbstractViewModel
    */
   public Font getCursorFlagFont()
   {
-    Font font = UIManager.getFont( CURSOR_FLAG_FONT );
+    Font font = UIManager.getFont( SIGNALVIEW_CURSOR_FLAG_FONT );
     if ( font == null )
     {
-      font = LafDefaults.DEFAULT_CURSOR_FLAG_FONT;
+      font = UIManager.getFont( "Label.font" );
     }
     return font;
   }
@@ -115,16 +110,46 @@ public class SignalViewModel extends AbstractViewModel
   }
 
   /**
+   * Returns the color for the group summary bars.
+   * 
+   * @return a color, never <code>null</code>.
+   */
+  public Color getGroupSummaryBarColor()
+  {
+    Color font = UIManager.getColor( SIGNALVIEW_GROUP_SUMMARY_BAR_COLOR );
+    if ( font == null )
+    {
+      font = Color.WHITE;
+    }
+    return font;
+  }
+
+  /**
+   * Returns the font for the group summary text.
+   * 
+   * @return a font, never <code>null</code>.
+   */
+  public Font getGroupSummaryTextFont()
+  {
+    Font font = UIManager.getFont( SIGNALVIEW_GROUP_SUMMARY_TEXT_FONT );
+    if ( font == null )
+    {
+      font = UIManager.getFont( "Label.font" );
+    }
+    return font;
+  }
+
+  /**
    * Returns the color for the arrows shown in the measurement view.
    * 
    * @return a color, never <code>null</code>.
    */
   public Color getMeasurementArrowColor()
   {
-    Color color = UIManager.getColor( MEASUREMENT_ARROW_COLOR );
+    Color color = UIManager.getColor( SIGNALVIEW_MEASUREMENT_ARROW_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_ARROW_COLOR;
+      color = Color.WHITE;
     }
     return color;
   }
@@ -157,7 +182,7 @@ public class SignalViewModel extends AbstractViewModel
    */
   public boolean isRenderGroupSummaryAntiAliased()
   {
-    return false; // XXX
+    return UIManager.getBoolean( SIGNALVIEW_GROUP_SUMMARY_RENDER_AA );
   }
 
   /**
@@ -169,6 +194,6 @@ public class SignalViewModel extends AbstractViewModel
    */
   public boolean isRenderScopeSignalAntiAliased()
   {
-    return false; // XXX
+    return UIManager.getBoolean( SIGNALVIEW_ANALOG_SCOPE_RENDER_AA );
   }
 }

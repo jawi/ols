@@ -534,6 +534,8 @@ public class SignalUI extends ComponentUI
         int prevSampleValue = values[startIdx] & mask;
         int prevX = ( int )( zoomFactor * timestamps[startIdx] );
 
+        aCanvas.setFont( aModel.getGroupSummaryTextFont() );
+
         FontMetrics fm = aCanvas.getFontMetrics();
         int textYpos = ( int )( ( signalElement.getHeight() + fm.getLeading() + fm.getMaxAscent() ) / 2.0 ) - 2;
 
@@ -545,7 +547,7 @@ public class SignalUI extends ComponentUI
           {
             int x = ( int )( zoomFactor * timestamps[sampleIdx] );
 
-            String text = String.format( "%02x", Integer.valueOf( prevSampleValue ) );
+            String text = String.format( "%02X", Integer.valueOf( prevSampleValue ) );
 
             int textWidth = fm.stringWidth( text ) + ( 2 * PADDING_X );
             int cellWidth = x - prevX;
@@ -553,11 +555,15 @@ public class SignalUI extends ComponentUI
             {
               int textXpos = prevX + ( int )( ( cellWidth - textWidth ) / 2.0 ) + PADDING_X;
 
+              aCanvas.setColor( signalElement.getColor() );
+
               aCanvas.drawString( text, textXpos, textYpos );
             }
 
+            aCanvas.setColor( aModel.getGroupSummaryBarColor() );
+
             // draw a small line...
-            aCanvas.drawLine( x, 0, x, signalElement.getHeight() );
+            aCanvas.drawLine( x, PADDING_X, x, signalElement.getHeight() - PADDING_X );
 
             prevX = x;
           }
@@ -570,6 +576,8 @@ public class SignalUI extends ComponentUI
       {
         // Tell Swing how we would like to render ourselves...
         aCanvas.setRenderingHints( createSignalRenderingHints( aModel.isRenderScopeSignalAntiAliased() ) );
+
+        aCanvas.setColor( signalElement.getColor() );
 
         long mask = signalElement.getMask() & 0xFFFFFFFFL;
         final int trailingZeros = Long.numberOfTrailingZeros( mask );

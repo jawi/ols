@@ -20,13 +20,14 @@
 package nl.lxtreme.ols.client.signaldisplay.model;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+
 import java.awt.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
@@ -38,12 +39,6 @@ import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.LabelStyle;
  */
 public abstract class AbstractViewModel
 {
-  // CONSTANTS
-
-  public static final String COMPONENT_ELEMENT_SPACING = "signal.element.spacing";
-
-  public static final String TRIGGER_COLOR = "signal.trigger.color";
-
   // VARIABLES
 
   protected final SignalDiagramController controller;
@@ -156,12 +151,7 @@ public abstract class AbstractViewModel
    */
   public int getSignalElementSpacing()
   {
-    int spacing = UIManager.getInt( COMPONENT_ELEMENT_SPACING );
-    if ( spacing < 0 )
-    {
-      spacing = LafDefaults.DEFAULT_SIGNAL_ELEMENT_SPACING;
-    }
-    return spacing;
+    return UIManager.getInt( SIGNAL_ELEMENT_SPACING );
   }
 
   /**
@@ -171,10 +161,10 @@ public abstract class AbstractViewModel
    */
   public Color getTriggerColor()
   {
-    Color color = UIManager.getColor( TRIGGER_COLOR );
+    Color color = UIManager.getColor( SIGNALVIEW_TRIGGER_COLOR );
     if ( color == null )
     {
-      color = LafDefaults.DEFAULT_TRIGGER_COLOR;
+      color = Color.WHITE;
     }
     return color;
   }
