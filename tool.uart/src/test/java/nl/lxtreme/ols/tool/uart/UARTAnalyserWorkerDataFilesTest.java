@@ -33,6 +33,7 @@ import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
+import nl.lxtreme.ols.tool.uart.impl.*;
 
 import org.junit.*;
 import org.junit.runner.*;
@@ -96,7 +97,7 @@ public class UARTAnalyserWorkerDataFilesTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.uart.UARTAnalyserTask#doInBackground()}.
+   * {@link nl.lxtreme.ols.tool.uart.impl.UARTAnalyserTask#doInBackground()}.
    */
   @Test
   public void testUartAnalysisOk() throws Exception

@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.uart;
+package nl.lxtreme.ols.tool.uart.impl;
 
 
 import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
@@ -39,6 +39,7 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
+import nl.lxtreme.ols.tool.uart.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 import nl.lxtreme.ols.util.*;
@@ -467,10 +468,10 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   {
     final int channelCount = getData().getChannels();
 
-    final Integer[] baudrates = new Integer[BaudRateAnalyzer.COMMON_BAUDRATES.length];
+    final Integer[] baudrates = new Integer[AsyncSerialDataDecoder.COMMON_BAUDRATES.length];
     for ( int i = 0; i < baudrates.length; i++ )
     {
-      baudrates[i] = Integer.valueOf( BaudRateAnalyzer.COMMON_BAUDRATES[i] );
+      baudrates[i] = Integer.valueOf( AsyncSerialDataDecoder.COMMON_BAUDRATES[i] );
     }
     final String[] bitarray = new String[10];
     // allow symbol lengths between 5 and 14 bits...

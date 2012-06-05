@@ -25,18 +25,12 @@ import nl.lxtreme.ols.util.analysis.*;
 
 
 /**
- * Inner class for statistical baudrate analysis. Creates a histogram that
- * allows to evaluate each detected bit length. The bit length with the highest
- * occurrence is used for baudrate calculation.
+ * Utility for statistical baudrate analysis. Creates a histogram that allows to
+ * evaluate each detected bit length. The bit length with the highest occurrence
+ * is used for baudrate calculation.
  */
-@SuppressWarnings( "boxing" )
-final class BaudRateAnalyzer
+public final class BaudRateAnalyzer
 {
-  // CONSTANTS
-
-  public static final int[] COMMON_BAUDRATES = { 150, 300, 600, 1200, 2400, 4800, 9600, 19200, 28800, 38400, 57600,
-      115200, 230400, 460800, 921600 };
-
   // VARIABLES
 
   private final double sampleRate;
@@ -45,7 +39,7 @@ final class BaudRateAnalyzer
   // CONSTRUCTORS
 
   /**
-   * Creates a new BaudRateAnalyzer instance.
+   * Creates a new {@link BaudRateAnalyzer} instance.
    * 
    * @param aSampleRate
    *          the sample rate at which the incoming data was sampled;
@@ -60,11 +54,11 @@ final class BaudRateAnalyzer
     // We already know our baudrate, so lets put a single value for the
     // corresponding bitlength in our frequency mapping to let it be used...
     final int bitLength = ( int )Math.round( aSampleRate / ( double )aFixedBaudRate );
-    this.statData.addValue( bitLength );
+    this.statData.addValue( Integer.valueOf( bitLength ) );
   }
 
   /**
-   * Creates a new BaudRateAnalyzer instance.
+   * Creates a new {@link BaudRateAnalyzer} instance.
    * 
    * @param aSampleRate
    *          the sample rate at which the incoming data was sampled;
@@ -90,7 +84,7 @@ final class BaudRateAnalyzer
       if ( lastBitValue != bitValue )
       {
         final int bitLength = ( int )( aTimestamps[i] - lastTransition );
-        this.statData.addValue( bitLength );
+        this.statData.addValue( Integer.valueOf( bitLength ) );
 
         lastTransition = aTimestamps[i];
       }
@@ -104,21 +98,23 @@ final class BaudRateAnalyzer
   /**
    * Returns the "normalized" baudrate most people can recognize.
    * 
-   * @return a baudrate, >= 150 if a valid baudrate could be determined, or -1
-   *         if no valid baudrate could be determined.
+   * @return a baudrate, >= 150 if a "common" baudrate could be determined, or
+   *         the exact baudrate if no "common" baudrate could be determined.
+   * @see #getBaudRateExact()
    */
   public int getBaudRate()
   {
     final int br = getBaudRateExact();
+    final int[] commonBaudrates = AsyncSerialDataDecoder.COMMON_BAUDRATES;
 
     int baudRateRounded = -1;
     // Try to find the common baudrate that belongs to the exact one...
-    for ( int idx = 1; ( baudRateRounded < 0 ) && ( idx < COMMON_BAUDRATES.length ); idx++ )
+    for ( int idx = 1; ( baudRateRounded < 0 ) && ( idx < commonBaudrates.length ); idx++ )
     {
-      int delta = ( COMMON_BAUDRATES[idx] - COMMON_BAUDRATES[idx - 1] ) / 2;
-      if ( ( br >= ( COMMON_BAUDRATES[idx] - delta ) ) && ( br <= ( COMMON_BAUDRATES[idx] + delta ) ) )
+      int delta = ( commonBaudrates[idx] - commonBaudrates[idx - 1] ) / 2;
+      if ( ( br >= ( commonBaudrates[idx] - delta ) ) && ( br <= ( commonBaudrates[idx] + delta ) ) )
       {
-        baudRateRounded = COMMON_BAUDRATES[idx];
+        baudRateRounded = commonBaudrates[idx];
       }
     }
 
@@ -131,11 +127,11 @@ final class BaudRateAnalyzer
   }
 
   /**
-   * Returns the calculated baudrate.
+   * Returns the calculated baudrate, as exact value.
    * 
-   * @return a baudrate, calculated by dividing the samplerate by the "best" bit
-   *         length, as returned by {@link #getBestBitLength()}. Returns -1 if
-   *         no best bit length could be determined.
+   * @return a baudrate, calculated by dividing the sample rate by the "best"
+   *         bit length, as returned by {@link #getBestBitLength()}. Returns -1
+   *         if no best bit length could be determined.
    */
   public int getBaudRateExact()
   {
@@ -155,6 +151,6 @@ final class BaudRateAnalyzer
   public int getBestBitLength()
   {
     final Integer highestRanked = this.statData.getHighestRanked();
-    return highestRanked == null ? -1 : highestRanked.intValue();
+    return ( highestRanked == null ) ? -1 : highestRanked.intValue();
   }
 }

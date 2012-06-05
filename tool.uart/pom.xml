@@ -60,11 +60,13 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Description>A UART (serial) decoder tool for the OLS client.</Bundle-Description>
+						<Bundle-Description>A UART (serial) decoder tool and utilities for the OLS client.</Bundle-Description>
 						<Bundle-Copyright>Michael Poppitz (sump.org), J.W. Janssen (lxtreme.nl) (C) 2010-2011</Bundle-Copyright>
 						<Bundle-License>GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html</Bundle-License>
+                        <Private-Package>nl.lxtreme.ols.tool.uart.impl</Private-Package>
+						<Export-Package>nl.lxtreme.ols.tool.uart</Export-Package>
 						<OLS-Tool>1.0</OLS-Tool>
-						<OLS-ToolClass>nl.lxtreme.ols.tool.uart.UARTAnalyser</OLS-ToolClass>
+						<OLS-ToolClass>nl.lxtreme.ols.tool.uart.impl.UARTAnalyser</OLS-ToolClass>
 					</instructions>
 				</configuration>
 			</plugin>

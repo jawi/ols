@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.uart;
+package nl.lxtreme.ols.tool.uart.impl;
 
 
 import static nl.lxtreme.ols.util.NumberUtils.*;
@@ -30,6 +30,7 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
+import nl.lxtreme.ols.tool.uart.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialConfiguration;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialDecoderCallback;
