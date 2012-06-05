@@ -204,6 +204,30 @@ public class SignalUI extends ComponentUI
   }
 
   /**
+   * Returns the stroke to use to render the annotation lines.
+   * 
+   * @param renderStyle
+   * @param zoomFactor
+   * @return
+   */
+  private Stroke getAnnotationLineStroke( final boolean renderStyle, final double zoomFactor )
+  {
+    final float strokeWidth = ( float )( 3.0f / Math.max( 1.0f, ( 1.0f / zoomFactor ) ) );
+
+    final BasicStroke stroke;
+    if ( renderStyle )
+    {
+      stroke = new BasicStroke( strokeWidth, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND, 0.9f );
+    }
+    else
+    {
+      stroke = new BasicStroke( strokeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0.9f );
+    }
+
+    return stroke;
+  }
+
+  /**
    * @param aCanvas
    * @param aModel
    * @param aSignalElements
@@ -230,124 +254,101 @@ public class SignalUI extends ComponentUI
     // Start drawing at the correct position in the clipped region...
     aCanvas.translate( 0, aSignalElements[0].getYposition() );
 
-    // XXX
-    final boolean annotationRenderStyle = true;
+    final boolean annotationRenderStyle = aModel.isRenderAnnotationAlternatively();
 
     // Some drawing primitives we're going to re-use over and over...
-    final float strokeWidth = ( float )( 3.0f / Math.max( 1.0f, ( 1.0f / zoomFactor ) ) );
-    final BasicStroke stroke;
-    if ( annotationRenderStyle )
-    {
-      stroke = new BasicStroke( strokeWidth, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND, 0.9f );
-    }
-    else
-    {
-      stroke = new BasicStroke( strokeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0.9f );
-    }
+    final Stroke stroke = getAnnotationLineStroke( annotationRenderStyle, zoomFactor );
 
-    final AlphaComposite alphaComposite = AlphaComposite.SrcOver.derive( 0.875f );
+    final AlphaComposite alphaComposite = AlphaComposite.SrcOver.derive( aModel.getAnnotationAlpha() );
 
     for ( SignalElement signalElement : aSignalElements )
     {
-      aCanvas.setColor( signalElement.getColor() );
-
-      if ( signalElement.isSignalGroup() )
-      {
-        // Draw nothing...
-        aCanvas.translate( 0, signalElement.getHeight() );
-      }
-
       if ( signalElement.isDigitalSignal() )
       {
         // Tell Swing how we would like to render ourselves...
-        aCanvas.setRenderingHints( createSignalRenderingHints( true /* aUseAA */) );
+        aCanvas.setRenderingHints( createSignalRenderingHints( aModel.isRenderAnnotationAntiAliased() ) );
+
+        aCanvas.setColor( signalElement.getColor() );
 
         if ( signalElement.isEnabled() )
         {
           final Iterable<Annotation<?>> annotations = signalElement.getChannel().getAnnotations();
 
-          final FontMetrics fm = aCanvas.getFontMetrics();
+          aCanvas.setFont( aModel.getAnnotationFont() );
 
+          final FontMetrics fm = aCanvas.getFontMetrics();
           final int fontHeight = fm.getHeight();
 
           for ( Annotation<?> annotation : annotations )
           {
-            if ( annotation instanceof DataAnnotation<?> )
+            if ( !( annotation instanceof DataAnnotation<?> ) )
             {
-              final DataAnnotation<?> ann = ( DataAnnotation<?> )annotation;
+              continue;
+            }
 
-              final long annStartTime = ann.getStartTimestamp();
-              final long annEndTime = ann.getEndTimestamp();
+            final DataAnnotation<?> ann = ( DataAnnotation<?> )annotation;
 
-              if ( ( ( annStartTime < startTimestamp ) && ( annEndTime < startTimestamp ) )
-                  || ( ( annStartTime > endTimestamp ) && ( annEndTime > endTimestamp ) ) )
+            final long annStartTime = ann.getStartTimestamp();
+            final long annEndTime = ann.getEndTimestamp();
+
+            if ( ( ( annStartTime < startTimestamp ) && ( annEndTime < startTimestamp ) )
+                || ( ( annStartTime > endTimestamp ) && ( annEndTime > endTimestamp ) ) )
+            {
+              // Simple reject: annotation falls outside clip boundaries...
+              continue;
+            }
+
+            int x1 = ( int )( annStartTime * zoomFactor );
+            int x2 = ( int )( annEndTime * zoomFactor );
+            int y1 = signalElement.getOffset( aModel.getAnnotationAlignment() );
+            int y2 = y1 + signalElement.getSignalHeight();
+            int midY = y1 + ( ( y2 - y1 ) / 2 );
+
+            final String annText = ann.getAnnotation().toString();
+
+            final int annotationWidth = ( x2 - x1 ) + 2;
+            final int textWidth = fm.stringWidth( annText );
+            final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
+
+            final Composite oldComposite = aCanvas.getComposite();
+            final Stroke oldStroke = aCanvas.getStroke();
+
+            aCanvas.setComposite( alphaComposite );
+
+            // Fade out the signal itself...
+            aCanvas.setColor( aModel.getBackgroundColor() );
+            if ( annotationRenderStyle )
+            {
+              aCanvas.fillRect( x1, y1 + 0, annotationWidth, ( y2 - y1 ) + 1 );
+            }
+            else
+            {
+              aCanvas.fillRect( x1, y1 + 1, annotationWidth, ( y2 - y1 ) - 1 );
+            }
+
+            aCanvas.setComposite( oldComposite );
+
+            // Draw the thick white boundaries...
+            aCanvas.setColor( aModel.getAnnotationColor() );
+            aCanvas.setStroke( stroke );
+            aCanvas.drawLine( x1, y1 + 2, x1, y2 - 2 );
+            aCanvas.drawLine( x2, y1 + 2, x2, y2 - 2 );
+
+            aCanvas.setStroke( oldStroke );
+
+            if ( textXoffset > 0 )
+            {
+              int x3 = ( x1 + textXoffset );
+              if ( annotationRenderStyle && ( ( x3 - 4 ) > 0 ) )
               {
-                // Simple reject: annotation falls outside clip boundaries...
-                continue;
+                aCanvas.drawLine( x1, midY, x3 - 4, midY );
+                aCanvas.drawLine( x3 + textWidth + 4, midY, x2, midY );
               }
 
-              int x1 = ( int )( annStartTime * zoomFactor );
-              int x2 = ( int )( annEndTime * zoomFactor );
-              int y1 = 0;
-              int y2 = signalElement.getSignalHeight();
-              int midY = y2 / 2;
-
-              final String annText = ann.getAnnotation().toString();
-
-              final int annotationWidth = ( x2 - x1 ) + 2;
-              final int textWidth = fm.stringWidth( annText );
-              final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
-
-              final Composite oldComposite = aCanvas.getComposite();
-              final Stroke oldStroke = aCanvas.getStroke();
-
-              aCanvas.setComposite( alphaComposite );
-
-              // Fade out the signal itself...
-              aCanvas.setColor( aModel.getBackgroundColor() );
-              if ( annotationRenderStyle )
-              {
-                aCanvas.fillRect( x1, y1 + 0, annotationWidth, y2 + 1 );
-              }
-              else
-              {
-                aCanvas.fillRect( x1, y1 + 1, annotationWidth, y2 - 1 );
-              }
-
-              aCanvas.setComposite( oldComposite );
-
-              // Draw the thick white boundaries...
-              aCanvas.setColor( Color.WHITE );
-              aCanvas.setStroke( stroke );
-              aCanvas.drawLine( x1, y1 + 2, x1, y2 - 2 );
-              aCanvas.drawLine( x2, y1 + 2, x2, y2 - 2 );
-
-              aCanvas.setStroke( oldStroke );
-
-              if ( textXoffset > 0 )
-              {
-                int x3 = ( x1 + textXoffset );
-                if ( annotationRenderStyle && ( ( x3 - 4 ) > 0 ) )
-                {
-                  aCanvas.drawLine( x1, midY, x3 - 4, midY );
-                  aCanvas.drawLine( x3 + textWidth + 4, midY, x2, midY );
-                }
-
-                aCanvas.drawString( annText, x1 + textXoffset, y1 + fontHeight );
-              }
+              aCanvas.drawString( annText, x1 + textXoffset, y1 + fontHeight );
             }
           }
         }
-      }
-
-      if ( signalElement.isGroupSummary() )
-      {
-        // Draw nothing...
-      }
-
-      if ( signalElement.isAnalogSignal() )
-      {
-        // Draw nothing...
       }
 
       // Advance to the next channel...
@@ -473,7 +474,7 @@ public class SignalUI extends ComponentUI
       if ( signalElement.isDigitalSignal() )
       {
         int signalHeight = signalElement.getSignalHeight();
-        int signalOffset = aModel.calculateOffset( signalElement );
+        int signalOffset = signalElement.getOffset();
 
         // Tell Swing how we would like to render ourselves...
         aCanvas.setRenderingHints( createSignalRenderingHints( false /* aUseAA */) );

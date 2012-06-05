@@ -79,4 +79,10 @@ public interface UIManagerKeys
   String SIGNALVIEW_GROUP_SUMMARY_RENDER_AA = "ols.signal.groupsummary.render.aa.boolean";
   String SIGNALVIEW_ANALOG_SCOPE_RENDER_AA = "ols.signal.analogscope.render.aa.boolean";
   String SIGNALVIEW_SIGNAL_ALIGNMENT = "ols.signal.alignment.enum";
+  String SIGNALVIEW_ANNOTATION_RENDER_AA = "ols.signal.annotation.render.aa.boolean";
+  String SIGNALVIEW_ANNOTATION_COLOR = "ols.signal.annotation.color";
+  String SIGNALVIEW_ANNOTATION_ALPHA = "ols.signal.annotation.alpha.value";
+  String SIGNALVIEW_ANNOTATION_ALIGNMENT = "ols.signal.annotation.alignment.enum";
+  String SIGNALVIEW_ANNOTATION_FONT = "ols.signal.annotation.font";
+  String SIGNALVIEW_ANNOTATION_USE_ALTSTYLE = "ols.signal.annotation.altstyle.boolean";
 }

@@ -236,40 +236,6 @@ public class SignalDiagramModel
   }
 
   /**
-   * Calculates the relative offset of a digital signal, according to its
-   * alignment and height.
-   * 
-   * @param aSignalElement
-   *          the signal element to calculate the offset for, can only be done
-   *          for digital signals.
-   * @return an offset, in pixels, >= 0.
-   */
-  public int calculateOffset( final SignalElement aSignalElement )
-  {
-    assert aSignalElement.isDigitalSignal() : "Only to be called for digital signals!";
-
-    final SignalAlignment signalAlignment = aSignalElement.getSignalAlignment();
-    final int elementHeight = aSignalElement.getHeight();
-    final int signalHeight = aSignalElement.getSignalHeight();
-
-    final int signalOffset;
-    if ( SignalAlignment.BOTTOM.equals( signalAlignment ) )
-    {
-      signalOffset = ( elementHeight - signalHeight );
-    }
-    else if ( SignalAlignment.CENTER.equals( signalAlignment ) )
-    {
-      signalOffset = ( int )( ( elementHeight - signalHeight ) / 2.0 );
-    }
-    else
-    {
-      signalOffset = 0;
-    }
-
-    return signalOffset;
-  }
-
-  /**
    * Finds a signal element based on a given screen coordinate.
    * 
    * @param aPoint
@@ -607,7 +573,7 @@ public class SignalDiagramModel
     final Rectangle rect = new Rectangle();
     rect.x = ( int )( getZoomFactor() * ts );
     rect.width = ( int )( getZoomFactor() * ( te - ts ) );
-    rect.y = signalElement.getYposition() + calculateOffset( signalElement );
+    rect.y = signalElement.getYposition() + signalElement.getOffset();
     rect.height = signalElement.getSignalHeight();
 
     // The position where the "other" signal transition should be...

@@ -300,6 +300,39 @@ public final class SignalElement implements Comparable<SignalElement>
   }
 
   /**
+   * @return a relative offset to display the contents of this signal element,
+   *         >= 0.
+   */
+  public int getOffset()
+  {
+    return getOffset( this.alignment );
+  }
+
+  /**
+   * @return a relative offset to display the contents of this signal element,
+   *         >= 0.
+   */
+  public int getOffset( final SignalAlignment aAlignment )
+  {
+    assert isDigitalSignal() : "Can only be called for digital signals!";
+    final int signalOffset;
+    if ( SignalAlignment.BOTTOM.equals( aAlignment ) )
+    {
+      signalOffset = ( this.height - this.signalHeight );
+    }
+    else if ( SignalAlignment.CENTER.equals( aAlignment ) )
+    {
+      signalOffset = ( int )( ( this.height - this.signalHeight ) / 2.0 );
+    }
+    else
+    {
+      signalOffset = 0;
+    }
+
+    return signalOffset;
+  }
+
+  /**
    * Returns the current value of alignment.
    * 
    * @return the alignment

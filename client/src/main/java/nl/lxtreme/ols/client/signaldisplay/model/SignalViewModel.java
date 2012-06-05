@@ -27,7 +27,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
 
@@ -52,12 +52,55 @@ public class SignalViewModel extends AbstractViewModel
   // METHODS
 
   /**
-   * @param aSignalElement
-   * @return
+   * @return the alignment for the annotations, never <code>null</code>.
    */
-  public int calculateOffset( final SignalElement aSignalElement )
+  public SignalAlignment getAnnotationAlignment()
   {
-    return getSignalDiagramModel().calculateOffset( aSignalElement );
+    String alignment = UIManager.getString( SIGNALVIEW_ANNOTATION_ALIGNMENT );
+    if ( alignment == null )
+    {
+      alignment = "CENTER";
+    }
+    return SignalAlignment.valueOf( alignment );
+  }
+
+  /**
+   * @return a translucency alpha value, &gt;= 0.0 && &lt;= 100.0f
+   */
+  public float getAnnotationAlpha()
+  {
+    int value = UIManager.getInt( SIGNALVIEW_ANNOTATION_ALPHA );
+    return value / 100.0f;
+  }
+
+  /**
+   * Returns the color for the annotations.
+   * 
+   * @return a color, never <code>null</code>.
+   */
+  public Color getAnnotationColor()
+  {
+    Color color = UIManager.getColor( SIGNALVIEW_ANNOTATION_COLOR );
+    if ( color == null )
+    {
+      color = Color.WHITE;
+    }
+    return color;
+  }
+
+  /**
+   * Returns the font for the annotations.
+   * 
+   * @return a font, never <code>null</code>.
+   */
+  public Font getAnnotationFont()
+  {
+    Font font = UIManager.getFont( SIGNALVIEW_ANNOTATION_FONT );
+    if ( font == null )
+    {
+      font = UIManager.getFont( "Label.font" );
+    }
+    return font;
   }
 
   /**
@@ -171,6 +214,30 @@ public class SignalViewModel extends AbstractViewModel
   public long[] getTimestamps()
   {
     return this.controller.getSignalDiagramModel().getTimestamps();
+  }
+
+  /**
+   * Returns whether or not the alternative rendering style for annotations
+   * should be used.
+   * 
+   * @return <code>true</code> if an alternative rendering style for annotations
+   *         should be used, <code>false</code> otherwise.
+   */
+  public boolean isRenderAnnotationAlternatively()
+  {
+    return UIManager.getBoolean( SIGNALVIEW_ANNOTATION_USE_ALTSTYLE );
+  }
+
+  /**
+   * Returns whether or not the annotations itself is rendered in anti-aliased
+   * mode.
+   * 
+   * @return <code>true</code> if anti-aliasing should be applied to the
+   *         annotation rendering, <code>false</code> otherwise.
+   */
+  public boolean isRenderAnnotationAntiAliased()
+  {
+    return UIManager.getBoolean( SIGNALVIEW_ANNOTATION_RENDER_AA );
   }
 
   /**
