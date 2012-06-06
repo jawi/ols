@@ -50,15 +50,7 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
   /**
    * Creates a new BaseData instance.
    */
-  protected BaseData( final int aIdx, final int aChannelIdx, final int aSampleIdx, final String aEventName )
-  {
-    this( aIdx, aChannelIdx, aSampleIdx, aSampleIdx, aEventName );
-  }
-
-  /**
-   * Creates a new BaseData instance.
-   */
-  private BaseData( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
+  protected BaseData( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
       final String aEventName )
   {
     this.idx = aIdx;
@@ -66,6 +58,14 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
     this.startSampleIdx = aStartSampleIdx;
     this.endSampleIdx = aEndSampleIdx;
     this.eventName = aEventName;
+  }
+
+  /**
+   * Creates a new BaseData instance.
+   */
+  protected BaseData( final int aIdx, final int aChannelIdx, final int aSampleIdx, final String aEventName )
+  {
+    this( aIdx, aChannelIdx, aSampleIdx, aSampleIdx, aEventName );
   }
 
   // METHODS
@@ -175,9 +175,9 @@ public abstract class BaseData<TYPE extends Comparable<? super TYPE>> implements
   {
     final int prime = 31;
     int result = 1;
-    result = prime * result + this.idx;
-    result = prime * result + this.startSampleIdx;
-    result = prime * result + this.endSampleIdx;
+    result = ( prime * result ) + this.idx;
+    result = ( prime * result ) + this.startSampleIdx;
+    result = ( prime * result ) + this.endSampleIdx;
     return result;
   }
 
