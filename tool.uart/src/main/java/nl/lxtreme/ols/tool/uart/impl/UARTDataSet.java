@@ -25,6 +25,7 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.ErrorType;
 
 
 /**
@@ -169,33 +170,11 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    * @param aTime
    * @param aEventType
    */
-  public void reportFrameError( final int aChannelIdx, final int aSampleIdx, final int aEventType )
+  public void reportError( final ErrorType aType, final int aChannelIdx, final int aSampleIdx, final int aEventType )
   {
     final int idx = size();
     this.detectedErrors++;
-    addData( new UARTData( idx, aChannelIdx, aSampleIdx, "FRAME_ERR", aEventType ) );
-  }
-
-  /**
-   * @param aTime
-   * @param aEventType
-   */
-  public void reportParityError( final int aChannelIdx, final int aSampleIdx, final int aEventType )
-  {
-    final int idx = size();
-    this.detectedErrors++;
-    addData( new UARTData( idx, aChannelIdx, aSampleIdx, "PARITY_ERR", aEventType ) );
-  }
-
-  /**
-   * @param aTime
-   * @param aEventType
-   */
-  public void reportStartError( final int aChannelIdx, final int aSampleIdx, final int aEventType )
-  {
-    final int idx = size();
-    this.detectedErrors++;
-    addData( new UARTData( idx, aChannelIdx, aSampleIdx, "START_ERR", aEventType ) );
+    addData( new UARTData( idx, aChannelIdx, aSampleIdx, aType.name(), aEventType ) );
   }
 
   /**

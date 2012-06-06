@@ -31,6 +31,7 @@ import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
 import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.uart.*;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.ErrorType;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialConfiguration;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialDecoderCallback;
@@ -461,68 +462,28 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
       SerialConfiguration config = new SerialConfiguration( baudrateAnalyzer.getBaudRateExact(), this.bitCount,
           this.stopBits, this.parity, this.inverted, this.inversed );
 
-      // decodeDataLine( aDataSet, aChannelIndex, bitLength, aEventType );
       AsyncSerialDataDecoder decoder = new AsyncSerialDataDecoder( config, this.context );
       decoder.setProgressListener( this.progressListener );
-
-      decoder.decodeDataLine( data, aChannelIndex, new SerialDecoderCallback()
+      decoder.setCallback( new SerialDecoderCallback()
       {
-        private final int rxdIdx = UARTAnalyserTask.this.rxdIndex;
-        private final int txdIdx = UARTAnalyserTask.this.txdIndex;
-
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        public void reportFrameError( final int aChannelIdx, final long aTime )
+        public void onError( final int aChannelIdx, final ErrorType aType, final long aTime )
         {
-          if ( aEventType == UARTData.UART_TYPE_RXDATA )
-          {
-            aDataSet.reportFrameError( this.rxdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_RXEVENT );
-          }
-          else
-          {
-            aDataSet.reportFrameError( this.txdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_TXEVENT );
-          }
+          final int sampleIdx = data.getSampleIndex( aTime );
+          final int eventType = ( aEventType == UARTData.UART_TYPE_RXDATA ) ? UARTData.UART_TYPE_RXEVENT
+              : UARTData.UART_TYPE_TXEVENT;
+
+          aDataSet.reportError( aType, aChannelIdx, sampleIdx, eventType );
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        public void reportParityError( final int aChannelIdx, final long aTime )
+        public void onEvent( final int aChannelIdx, final String aEvent, final long aStartTime, final long aEndTime )
         {
-          if ( aEventType == UARTData.UART_TYPE_RXDATA )
-          {
-            aDataSet.reportParityError( this.rxdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_RXEVENT );
-          }
-          else
-          {
-            aDataSet.reportParityError( this.txdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_TXEVENT );
-          }
+          // Nop
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        public void reportStartError( final int aChannelIdx, final long aTime )
-        {
-          if ( aEventType == UARTData.UART_TYPE_RXDATA )
-          {
-            aDataSet.reportStartError( this.rxdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_RXEVENT );
-          }
-          else
-          {
-            aDataSet.reportStartError( this.txdIdx, data.getSampleIndex( aTime ), UARTData.UART_TYPE_TXEVENT );
-          }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void reportSymbol( final int aChannelIdx, final int aSymbol, final long aStartTime, final long aEndTime )
+        public void onSymbol( final int aChannelIdx, final int aSymbol, final long aStartTime, final long aEndTime )
         {
           final int startSampleIdx = Math.max( data.getSampleIndex( aStartTime ), 0 );
           final int endSampleIdx = Math.min( data.getSampleIndex( aEndTime ), data.getTimestamps().length - 1 );
@@ -532,6 +493,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
           addSymbolAnnotation( aChannelIndex, aSymbol, aStartTime, aEndTime );
         }
       } );
+      decoder.decodeDataLine( aChannelIndex );
     }
   }
 
