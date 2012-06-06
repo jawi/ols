@@ -479,6 +479,8 @@ public class SignalUI extends ComponentUI
         // Tell Swing how we would like to render ourselves...
         aCanvas.setRenderingHints( createSignalRenderingHints( false /* aUseAA */) );
 
+        aCanvas.translate( 0, signalOffset );
+
         if ( !signalElement.isEnabled() || ( startIdx == endIdx ) )
         {
           // Forced zero'd channel is *very* easy to draw...
@@ -494,7 +496,7 @@ public class SignalUI extends ComponentUI
           int prevSampleValue = ( values[startIdx] & mask );
 
           int xValue = ( int )( zoomFactor * timestamp );
-          int yValue = signalOffset + ( prevSampleValue != 0 ? signalHeight : 0 );
+          int yValue = ( prevSampleValue == 0 ? signalHeight : 0 );
 
           x[0] = xValue;
           y[0] = yValue;
@@ -510,12 +512,12 @@ public class SignalUI extends ComponentUI
             if ( prevSampleValue != sampleValue )
             {
               x[p] = xValue;
-              y[p] = signalOffset + ( prevSampleValue != 0 ? signalHeight : 0 );
+              y[p] = ( prevSampleValue == 0 ? signalHeight : 0 );
               p++;
             }
 
             x[p] = xValue;
-            y[p] = signalOffset + ( sampleValue != 0 ? signalHeight : 0 );
+            y[p] = ( sampleValue == 0 ? signalHeight : 0 );
             p++;
 
             prevSampleValue = sampleValue;
@@ -523,6 +525,9 @@ public class SignalUI extends ComponentUI
 
           aCanvas.drawPolyline( x, y, p );
         }
+
+        // Move back to the original position...
+        aCanvas.translate( 0, -signalOffset );
       }
 
       if ( signalElement.isGroupSummary() )
