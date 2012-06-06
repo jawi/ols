@@ -262,6 +262,9 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
     tr = tbody.addChild( TR );
     tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "Detected bus errors" );
     tr.addChild( TD ).addContent( "{detected-bus-errors}" );
+    tr = tbody.addChild( TR );
+    tr.addChild( TD ).addAttribute( "class", "w30" ).addContent( "Number of slots" );
+    tr.addChild( TD ).addContent( "{slot-count}" );
 
     table = body.addChild( TABLE ).addAttribute( "class", "w100" );
     thead = table.addChild( THEAD );
@@ -404,25 +407,8 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
         final String startTime = UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
         final String endTime = UnitOfTime.format( aDataSet.getTime( ds.getEndSampleIndex() ) );
 
-        String eventType;
-        String dataValue = null;
-        if ( ds.isFrameError() )
-        {
-          eventType = "Frame error";
-        }
-        else if ( ds.isParityError() )
-        {
-          eventType = "Parity error";
-        }
-        else if ( ds.isStartError() )
-        {
-          eventType = "Start error";
-        }
-        else
-        {
-          eventType = "";
-          dataValue = Integer.toString( ds.getData() );
-        }
+        String eventType = ds.getEventName();
+        String dataValue = Integer.toString( ds.getData() );
 
         exporter.addRow( Integer.valueOf( i ), startTime, endTime, eventType, dataValue );
       }
@@ -487,6 +473,10 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
         {
           return Integer.valueOf( aDataSet.getDecodedSymbols() );
         }
+        else if ( "slot-count".equals( aMacro ) )
+        {
+          return Integer.valueOf( aDataSet.getSlotCount() );
+        }
         else if ( "detected-bus-errors".equals( aMacro ) )
         {
           return Integer.valueOf( aDataSet.getDetectedErrors() );
@@ -500,19 +490,19 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
           {
             final DMX512Data ds = decodedData.get( i );
 
-            String eventName = "";
+            String eventName = ds.getEventName();
             String bgColor;
-            if ( ds.isFrameError() )
+            if ( "FRAME".equals( eventName ) )
             {
               eventName = "Frame error";
               bgColor = "#ff6600";
             }
-            else if ( ds.isParityError() )
+            else if ( "PARITY".equals( eventName ) )
             {
               eventName = "Parity error";
               bgColor = "#ff9900";
             }
-            else if ( ds.isStartError() )
+            else if ( "START".equals( eventName ) )
             {
               eventName = "Start error";
               bgColor = "#ffcc00";
@@ -526,7 +516,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
             tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
             tr.addChild( TD ).addContent( String.valueOf( i ) );
             tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
-            if ( ds.isSymbol() )
+            if ( eventName == null )
             {
               // normal symbol...
               int data = ds.getData();

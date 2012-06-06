@@ -76,9 +76,9 @@ public class DMX512AnalyzerDataFilesTest
   {
     return Arrays.asList( new Object[][] { //
         // { filename, error count, symbol count, dataline }
-            { "DMX512_32channel_channel_1-32_val_1-32.ols", 70, 1158, 2 }, //
-            { "DMX512_512channel_all0.ols", 10, 2883, 2 }, //
-            { "DMX512_512channel_channel_1-32_val_1-32.ols", 10, 2638, 2 }, //
+            { "DMX512_32channel_channel_1-32_val_1-32.ols", 0, 1123, 2 }, //
+            { "DMX512_512channel_all0.ols", 0, 2878, 2 }, //
+            { "DMX512_512channel_channel_1-32_val_1-32.ols", 0, 2633, 2 }, //
         } );
   }
 

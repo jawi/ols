@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.dmx512;
 
 
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.ErrorType;
 
 
 /**
@@ -29,17 +30,9 @@ import nl.lxtreme.ols.api.data.*;
  */
 public class DMX512Data extends BaseData<DMX512Data>
 {
-  // CONSTANTS
-
-  public static final int SYMBOL = 0;
-  public static final int FRAME_ERROR = 1;
-  public static final int PARITY_ERROR = 2;
-  public static final int START_ERROR = 3;
-
   // VARIABLES
 
   private final int data;
-  private final int type;
 
   // CONSTRUCTORS
 
@@ -51,10 +44,10 @@ public class DMX512Data extends BaseData<DMX512Data>
    * @param aStartSampleIdx
    * @param aEndSampleIdx
    */
-  public DMX512Data( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
-      final int aType )
+  public DMX512Data( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final ErrorType aType )
   {
-    this( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, aType, -1 );
+    super( aIdx, aChannelIdx, aStartSampleIdx, aType.name() );
+    this.data = -1;
   }
 
   /**
@@ -66,11 +59,25 @@ public class DMX512Data extends BaseData<DMX512Data>
    * @param aEndSampleIdx
    */
   public DMX512Data( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
-      final int aType, final int aData )
+      final int aData )
   {
     super( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx );
-    this.type = aType;
     this.data = aData;
+  }
+
+  /**
+   * Creates a new {@link DMX512Data} instance.
+   * 
+   * @param aIdx
+   * @param aChannelIdx
+   * @param aStartSampleIdx
+   * @param aEndSampleIdx
+   */
+  public DMX512Data( final int aIdx, final int aChannelIdx, final int aStartSampleIdx, final int aEndSampleIdx,
+      final String aEventName )
+  {
+    super( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, aEventName );
+    this.data = -1;
   }
 
   // METHODS
@@ -83,37 +90,5 @@ public class DMX512Data extends BaseData<DMX512Data>
   public int getData()
   {
     return this.data;
-  }
-
-  /**
-   * @return
-   */
-  public boolean isFrameError()
-  {
-    return FRAME_ERROR == this.type;
-  }
-
-  /**
-   * @return
-   */
-  public boolean isParityError()
-  {
-    return PARITY_ERROR == this.type;
-  }
-
-  /**
-   * @return
-   */
-  public boolean isStartError()
-  {
-    return START_ERROR == this.type;
-  }
-
-  /**
-   * @return
-   */
-  public boolean isSymbol()
-  {
-    return SYMBOL == this.type;
   }
 }

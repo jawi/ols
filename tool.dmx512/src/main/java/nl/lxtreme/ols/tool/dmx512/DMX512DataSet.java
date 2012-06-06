@@ -23,6 +23,7 @@ package nl.lxtreme.ols.tool.dmx512;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.ErrorType;
 
 
 /**
@@ -30,10 +31,16 @@ import nl.lxtreme.ols.api.data.*;
  */
 public class DMX512DataSet extends BaseDataSet<DMX512Data>
 {
+  // CONSTANTS
+
+  public static final String EVENT_MAB = "MAB";
+
   // VARIABLES
 
   private int decodedSymbols;
   private int detectedErrors;
+  private int symbolsBetweenMaB;
+  private Boolean inMaB = Boolean.FALSE;
 
   // CONSTRUCTORS
 
@@ -72,6 +79,15 @@ public class DMX512DataSet extends BaseDataSet<DMX512Data>
   }
 
   /**
+   * @return the number of slots in a DMX512-packet, or -1 if this could not be
+   *         determined.
+   */
+  public int getSlotCount()
+  {
+    return this.symbolsBetweenMaB - 1;
+  }
+
+  /**
    * @param aChannelIdx
    * @param aStartSampleIdx
    * @param aEndSampleIdx
@@ -81,39 +97,45 @@ public class DMX512DataSet extends BaseDataSet<DMX512Data>
   {
     final int idx = size();
     this.decodedSymbols++;
-    addData( new DMX512Data( idx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, DMX512Data.SYMBOL, aSymbol ) );
+    if ( Boolean.TRUE.equals( this.inMaB ) )
+    {
+      this.symbolsBetweenMaB++;
+    }
+    addData( new DMX512Data( idx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, aSymbol ) );
   }
 
   /**
    * @param aChannelIdx
    * @param aSampleIndex
    */
-  public void reportFrameError( final int aChannelIdx, final int aSampleIndex )
+  public void reportError( final int aChannelIdx, final ErrorType aType, final int aSampleIndex )
   {
     final int idx = size();
     this.detectedErrors++;
-    addData( new DMX512Data( idx, aChannelIdx, aSampleIndex, aSampleIndex + 1, DMX512Data.FRAME_ERROR ) );
+    addData( new DMX512Data( idx, aChannelIdx, aSampleIndex, aType ) );
   }
 
   /**
    * @param aChannelIdx
+   * @param aEvent
    * @param aSampleIndex
+   * @param aSampleIndex2
    */
-  public void reportParityError( final int aChannelIdx, final int aSampleIndex )
+  public void reportEvent( final int aChannelIdx, final String aEvent, final int aStartSampleIdx,
+      final int aEndSampleIdx )
   {
     final int idx = size();
-    this.detectedErrors++;
-    addData( new DMX512Data( idx, aChannelIdx, aSampleIndex, aSampleIndex + 1, DMX512Data.PARITY_ERROR ) );
-  }
-
-  /**
-   * @param aChannelIdx
-   * @param aSampleIndex
-   */
-  public void reportStartError( final int aChannelIdx, final int aSampleIndex )
-  {
-    final int idx = size();
-    this.detectedErrors++;
-    addData( new DMX512Data( idx, aChannelIdx, aSampleIndex, aSampleIndex + 1, DMX512Data.START_ERROR ) );
+    if ( EVENT_MAB.equals( aEvent ) )
+    {
+      if ( Boolean.FALSE.equals( this.inMaB ) )
+      {
+        this.inMaB = Boolean.TRUE;
+      }
+      else if ( Boolean.TRUE.equals( this.inMaB ) )
+      {
+        this.inMaB = null;
+      }
+    }
+    addData( new DMX512Data( idx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, aEvent ) );
   }
 }

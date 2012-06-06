@@ -67,7 +67,7 @@
 						<Bundle-Description>A DMX512 decoder tool for the OLS client.</Bundle-Description>
 						<Bundle-Copyright>J.W. Janssen (lxtreme.nl) (C) 2010-2012</Bundle-Copyright>
 						<Bundle-License>GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html</Bundle-License>
-						<Import-Package>nl.lxtreme.ols.tool.uart, *</Import-Package>
+						<Import-Package>nl.lxtreme.ols.tool.uart,*</Import-Package>
 						<OLS-Tool>1.0</OLS-Tool>
 						<OLS-ToolClass>nl.lxtreme.ols.tool.dmx512.DMX512Analyzer</OLS-ToolClass>
 					</instructions>
