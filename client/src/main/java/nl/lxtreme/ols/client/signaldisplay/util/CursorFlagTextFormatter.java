@@ -27,9 +27,9 @@ import nl.lxtreme.ols.client.signaldisplay.model.*;
 
 
 /**
- * Provides a renderer for cursor flags.
+ * Provides a text formatter for cursor flags.
  */
-public final class CursorFlagRenderer
+public final class CursorFlagTextFormatter
 {
   // INNER TYPES
 
@@ -51,7 +51,7 @@ public final class CursorFlagRenderer
   /**
    * Creates a new CursorFlagRenderer instance.
    */
-  public CursorFlagRenderer( final SignalDiagramModel aModel )
+  public CursorFlagTextFormatter( final SignalDiagramModel aModel )
   {
     this.model = aModel;
   }
@@ -72,7 +72,7 @@ public final class CursorFlagRenderer
    */
   public static String getCursorFlagText( final SignalDiagramModel aModel, final Cursor aCursor, final LabelStyle aStyle )
   {
-    return new CursorFlagRenderer( aModel ).getCursorFlagText( aCursor, aStyle );
+    return new CursorFlagTextFormatter( aModel ).getCursorFlagText( aCursor, aStyle );
   }
 
   /**

@@ -36,7 +36,7 @@ import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
-import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.*;
+import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -122,7 +122,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       if ( ( aValue != null ) && ( aValue instanceof Cursor ) )
       {
         final Cursor cursor = ( Cursor )aValue;
-        text = CursorFlagRenderer.getCursorFlagText( getSignalDiagramModel(), cursor, LabelStyle.LABEL_TIME );
+        text = CursorFlagTextFormatter.getCursorFlagText( getSignalDiagramModel(), cursor, LabelStyle.LABEL_TIME );
       }
       else if ( aValue != null )
       {

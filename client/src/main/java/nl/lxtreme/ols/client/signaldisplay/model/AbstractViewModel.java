@@ -31,7 +31,7 @@ import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
-import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.LabelStyle;
+import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.LabelStyle;
 
 
 /**
@@ -42,7 +42,7 @@ public abstract class AbstractViewModel
   // VARIABLES
 
   protected final SignalDiagramController controller;
-  private final CursorFlagRenderer cursorFlagRender;
+  private final CursorFlagTextFormatter cursorFlagRender;
 
   // CONSTRUCTORS
 
@@ -56,7 +56,7 @@ public abstract class AbstractViewModel
   {
     this.controller = aController;
 
-    this.cursorFlagRender = new CursorFlagRenderer( this.controller.getSignalDiagramModel() );
+    this.cursorFlagRender = new CursorFlagTextFormatter( this.controller.getSignalDiagramModel() );
   }
 
   // METHODS

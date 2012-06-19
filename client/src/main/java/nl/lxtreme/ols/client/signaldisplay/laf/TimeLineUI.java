@@ -33,7 +33,7 @@ import javax.swing.plaf.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
-import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagRenderer.LabelStyle;
+import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
 
