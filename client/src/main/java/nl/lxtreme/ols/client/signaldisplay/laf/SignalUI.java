@@ -30,9 +30,8 @@ import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
-import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
-import nl.lxtreme.ols.client.signaldisplay.view.renderer.Renderer;
 
 
 /**
@@ -46,8 +45,6 @@ public class SignalUI extends ComponentUI
   private static final int POINT_COUNT = 1000000;
 
   // VARIABLES
-
-  private final Renderer arrowRenderer = new ArrowRenderer();
 
   private volatile boolean listening = true;
   private volatile MeasurementInfo measurementInfo;
@@ -410,8 +407,13 @@ public class SignalUI extends ComponentUI
 
     aCanvas.setColor( aModel.getMeasurementArrowColor() );
 
-    this.arrowRenderer.setContext( Integer.valueOf( w ), Integer.valueOf( middlePos ) );
-    this.arrowRenderer.render( aCanvas, x, y );
+    // Allow arrow renderer to start with [0, 0] as coordinate system...
+    aCanvas.translate( x, y );
+
+    ArrowRenderer.render( aCanvas, w, middlePos );
+
+    // Restore to original coordinate system...
+    aCanvas.translate( -x, -y );
   }
 
   /**

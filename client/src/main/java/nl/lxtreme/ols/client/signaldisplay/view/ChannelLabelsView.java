@@ -279,7 +279,7 @@ public class ChannelLabelsView extends AbstractViewLayer
 
       final Point dropPoint = createChannelDropPoint( coordinate, sourceComponent, glassPane );
 
-      final ChannelInsertionPointRenderer renderer = new ChannelInsertionPointRenderer( model, element );
+      final SignalElementInsertionPointRenderer renderer = new SignalElementInsertionPointRenderer( model, element );
 
       glassPane.setRenderer( renderer, dropPoint, coordinate );
       glassPane.setVisible( true );
@@ -512,7 +512,7 @@ public class ChannelLabelsView extends AbstractViewLayer
         minWidth = Math.max( minWidth, fm.stringWidth( label ) );
       }
 
-      minWidth += ( 2 * ChannelLabelRenderer.PADDING_X );
+      minWidth += ( 2 * ChannelLabelsUI.PADDING_X ); // XXX CONFIGURABLE!
     }
     finally
     {

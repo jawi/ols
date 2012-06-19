@@ -27,9 +27,9 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 
 
 /**
- * @author jawi
+ * Renders where a signal element could be inserted when DnD'ing it.
  */
-public class ChannelInsertionPointRenderer extends BaseRenderer
+public class SignalElementInsertionPointRenderer extends BaseRenderer
 {
   // CONSTANTS
 
@@ -46,9 +46,9 @@ public class ChannelInsertionPointRenderer extends BaseRenderer
   // CONSTRUCTORS
 
   /**
-   * Creates a new ChannelInsertionPointRenderer instance.
+   * Creates a new {@link SignalElementInsertionPointRenderer} instance.
    */
-  public ChannelInsertionPointRenderer( final ChannelLabelsViewModel aModel, final SignalElement aMovedChannel )
+  public SignalElementInsertionPointRenderer( final ChannelLabelsViewModel aModel, final SignalElement aMovedChannel )
   {
     this.model = aModel;
     this.signalElement = aMovedChannel;

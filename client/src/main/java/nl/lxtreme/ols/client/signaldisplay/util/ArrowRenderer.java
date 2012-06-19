@@ -17,7 +17,7 @@
  *
  * Copyright (C) 2010-2011 - J.W. Janssen, <http://www.lxtreme.nl>
  */
-package nl.lxtreme.ols.client.signaldisplay.view.renderer;
+package nl.lxtreme.ols.client.signaldisplay.util;
 
 
 import java.awt.*;
@@ -26,7 +26,7 @@ import java.awt.*;
 /**
  * Renders an arrow with two or three arrow heads.
  */
-public class ArrowRenderer extends BaseRenderer
+public class ArrowRenderer
 {
   // CONSTANTS
 
@@ -36,12 +36,36 @@ public class ArrowRenderer extends BaseRenderer
   public static final int HEAD_WIDTH = 8;
   public static final int HEAD_HEIGHT = 8;
 
-  // VARIABLES
-
-  private int middlePos;
-  private int width;
-
   // METHODS
+
+  /**
+   * Renders the arrow head with a starting and ending head, and one head in the
+   * denoted mid position.
+   * 
+   * @param aCanvas
+   *          the canvas to draw on;
+   * @param aWidth
+   *          the total width (in pixels) of the drawn arrow;
+   * @param aMidPos
+   *          the mid position of the 3rd arrow head.
+   */
+  public static void render( final Graphics2D aCanvas, final int aWidth, final int aMidPos )
+  {
+    // When given, show an additional arrowhead to denote the pulse
+    // itself, taking care of the "smallest" pulse we're displaying...
+    if ( ( aWidth > 0 ) && ( aMidPos >= 0 ) )
+    {
+      int dir = LEFT_FACING;
+      if ( ( aWidth - aMidPos ) > aMidPos )
+      {
+        dir = RIGHT_FACING;
+      }
+
+      drawArrowHead( aCanvas, aMidPos, 0, dir, HEAD_WIDTH, HEAD_HEIGHT );
+    }
+
+    drawDoubleHeadedArrow( aCanvas, 0, 0, aWidth, 0, 8, 8 );
+  }
 
   /**
    * Draws a single arrow head
@@ -114,43 +138,5 @@ public class ArrowRenderer extends BaseRenderer
     }
 
     aCanvas.drawLine( x1, aY1, x2, aY2 );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setContext( final Object... aParameters )
-  {
-    if ( ( aParameters == null ) || ( aParameters.length < 2 ) )
-    {
-      throw new IllegalArgumentException( "Expected two Integer parameters!" );
-    }
-    this.width = ( ( Integer )aParameters[0] ).intValue();
-    this.middlePos = ( ( Integer )aParameters[1] ).intValue();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected Rectangle render( final Graphics2D aCanvas )
-  {
-    // When given, show an additional arrowhead to denote the pulse
-    // itself, taking care of the "smallest" pulse we're displaying...
-    if ( ( this.width > 0 ) && ( this.middlePos >= 0 ) )
-    {
-      int dir = LEFT_FACING;
-      if ( ( this.width - this.middlePos ) > this.middlePos )
-      {
-        dir = RIGHT_FACING;
-      }
-
-      drawArrowHead( aCanvas, this.middlePos, 0, dir, HEAD_WIDTH, HEAD_HEIGHT );
-    }
-
-    drawDoubleHeadedArrow( aCanvas, 0, 0, this.width, 0, 8, 8 );
-
-    return new Rectangle( -HEAD_WIDTH, -HEAD_HEIGHT, this.width + ( 2 * HEAD_WIDTH ), 3 * HEAD_HEIGHT );
   }
 }
