@@ -149,10 +149,11 @@ public class SPIAnalyserWorkerDataFilesTest
     worker.setBitCount( this.bitCount - 1 );
     worker.setHonourCS( this.honourCS );
     worker.setReportCS( false );
-    worker.setMode( this.spiMode );
+    worker.setProtocol( SPIFIMode.STANDARD );
+    worker.setSPIMode( this.spiMode );
     worker.setOrder( this.bitOrder );
-    worker.setMisoIndex( this.channels[0] );
-    worker.setMosiIndex( this.channels[1] );
+    worker.setIO0Index( this.channels[1] );
+    worker.setIO1Index( this.channels[0] );
     worker.setCSIndex( this.channels[2] );
     worker.setSCKIndex( this.channels[3] );
 

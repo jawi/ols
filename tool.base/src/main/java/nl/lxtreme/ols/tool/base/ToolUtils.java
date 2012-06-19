@@ -212,8 +212,7 @@ public class ToolUtils
     {
       try
       {
-        this.toolDialog.invokeTool();
-        return true;
+        return this.toolDialog.invokeTool();
       }
       catch ( IllegalStateException exception )
       {

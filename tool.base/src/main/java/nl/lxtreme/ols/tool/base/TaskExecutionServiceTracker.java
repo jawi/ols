@@ -58,7 +58,15 @@ public class TaskExecutionServiceTracker implements TaskExecutionService
    */
   public void close()
   {
-    this.taskExecutionServiceHelper.close();
+    try
+    {
+      this.taskExecutionServiceHelper.close();
+    }
+    catch ( RuntimeException exception )
+    {
+      // TODO Auto-generated catch block
+      exception.printStackTrace();
+    }
   }
 
   /**
@@ -67,7 +75,7 @@ public class TaskExecutionServiceTracker implements TaskExecutionService
   @Override
   public <RESULT_TYPE> Future<RESULT_TYPE> execute( final Task<RESULT_TYPE> aTask )
   {
-    final TaskExecutionService service = ( TaskExecutionService )this.taskExecutionServiceHelper.getService();
+    final TaskExecutionService service = this.taskExecutionServiceHelper.getService();
     if ( service != null )
     {
       return service.execute( aTask );

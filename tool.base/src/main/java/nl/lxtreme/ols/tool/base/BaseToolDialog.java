@@ -138,8 +138,15 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JDialog implements Too
     this.annotationListener.close();
     this.toolProgressListener.close();
 
-    this.serviceReg.unregister();
-    this.serviceReg = null;
+    try
+    {
+      this.serviceReg.unregister();
+      this.serviceReg = null;
+    }
+    catch ( IllegalStateException exception )
+    {
+      // Ignore; we're closing anyway...
+    }
 
     onBeforeCloseDialog();
 
@@ -179,17 +186,22 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JDialog implements Too
    * {@inheritDoc}
    */
   @Override
-  public final void invokeTool() throws IllegalStateException
+  public final boolean invokeTool() throws IllegalStateException
   {
     if ( this.toolFutureTask != null )
     {
       throw new IllegalStateException( "Tool is already running!" );
     }
 
-    this.toolTask = this.tool.createToolTask( this.context, this.toolProgressListener, this.annotationListener );
-    prepareToolTask( this.toolTask );
+    boolean settingsValid = validateToolSettings();
+    if ( settingsValid )
+    {
+      this.toolTask = this.tool.createToolTask( this.context, this.toolProgressListener, this.annotationListener );
+      prepareToolTask( this.toolTask );
 
-    this.toolFutureTask = this.taskExecutionService.execute( this.toolTask );
+      this.toolFutureTask = this.taskExecutionService.execute( this.toolTask );
+    }
+    return settingsValid;
   }
 
   /**
@@ -383,5 +395,18 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JDialog implements Too
   protected void setControlsEnabled( final boolean aEnabled )
   {
     // NO-op
+  }
+
+  /**
+   * Called right before the tool is invoked to allow additional validation on
+   * the tool settings.
+   * 
+   * @return <code>true</code> if the tool settings are correct and the task can
+   *         be started, <code>false</code> if the settings are incorrect and
+   *         the task should not be started.
+   */
+  protected boolean validateToolSettings()
+  {
+    return true;
   }
 }

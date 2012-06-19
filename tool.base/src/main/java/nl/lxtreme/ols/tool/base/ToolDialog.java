@@ -38,11 +38,12 @@ public interface ToolDialog
 
   /**
    * Called to invoke the actual tool.
+   * @return TODO
    * 
    * @throws IllegalStateException
    *           in case the tool is already running.
    */
-  public void invokeTool() throws IllegalStateException;
+  public boolean invokeTool() throws IllegalStateException;
 
   /**
    * Resets the dialog, will be called if the dialog is shown at least once and

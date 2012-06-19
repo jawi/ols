@@ -56,18 +56,21 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
   private int csIdx;
   private int sckIdx;
-  private SPIMode mode;
+  private SPIFIMode protocol;
+  private SPIMode spiMode;
   private int bitCount;
   private BitOrder bitOrder;
   private boolean reportCS;
   private boolean honourCS;
   private int mosiIdx;
   private int misoIdx;
+  private int io2Idx;
+  private int io3Idx;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new SPIAnalyserTask instance.
+   * Creates a new {@link SPIAnalyserTask} instance.
    * 
    * @param aContext
    * @param aProgressListener
@@ -83,6 +86,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
     this.misoIdx = -1;
     this.mosiIdx = -1;
+    this.protocol = SPIFIMode.STANDARD;
   }
 
   // METHODS
@@ -131,14 +135,14 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     // Initialize the channel labels + clear any existing annotations...
     prepareResults();
 
-    if ( ( this.mode == null ) || ( this.mode == SPIMode.AUTODETECT ) )
+    if ( ( this.spiMode == null ) || ( this.spiMode == SPIMode.AUTODETECT ) )
     {
       LOG.log( Level.INFO, "Detecting which SPI mode is most probably used..." );
-      this.mode = detectSPIMode( startOfDecode, endOfDecode );
+      this.spiMode = detectSPIMode( startOfDecode, endOfDecode );
     }
 
     // Notify any listeners of the detected mode...
-    this.pcs.firePropertyChange( PROPERTY_AUTO_DETECT_MODE, null, this.mode );
+    this.pcs.firePropertyChange( PROPERTY_AUTO_DETECT_MODE, null, this.spiMode );
 
     final SPIDataSet decodedData = new SPIDataSet( startOfDecode, endOfDecode, this.context.getData() );
     if ( slaveSelected >= 0 )
@@ -148,7 +152,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     }
 
     // Perform the actual decoding of the data line(s)...
-    clockDataOnEdge( decodedData, this.mode, slaveSelected );
+    clockDataOnEdge( decodedData, this.spiMode, slaveSelected );
 
     return decodedData;
   }
@@ -199,36 +203,47 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   }
 
   /**
-   * Sets the "master-in slave-out" channel index.
+   * Sets the MOSI/IO0 channel index.
    * 
-   * @param aMisoMask
-   *          the index of the "master-in slave-out" channel.
+   * @param aIndex
+   *          the index of the "master-out slave-in"/IO0 channel.
    */
-  public void setMisoIndex( final int aMisoIndex )
+  public void setIO0Index( final int aIndex )
   {
-    this.misoIdx = aMisoIndex;
+    this.mosiIdx = aIndex;
   }
 
   /**
-   * Sets which SPI mode should be used for the analysis process.
+   * Sets the MISO/IO1 channel index.
    * 
-   * @param aMode
-   *          the SPI mode to set, cannot be <code>null</code>.
+   * @param aIndex
+   *          the index of the "master-in slave-out"/IO1 channel.
    */
-  public void setMode( final SPIMode aMode )
+  public void setIO1Index( final int aIndex )
   {
-    this.mode = aMode;
+    this.misoIdx = aIndex;
   }
 
   /**
-   * Sets the "master-out slave-in" channel index.
+   * Sets the channel index for IO2 (used in QUAD SPI).
    * 
-   * @param aMosiMask
-   *          the index of the "master-out slave-in" channel.
+   * @param aIndex
+   *          the index of the IO2 channel.
    */
-  public void setMosiIndex( final int aMosiIndex )
+  public void setIO2Index( final int aIndex )
   {
-    this.mosiIdx = aMosiIndex;
+    this.io2Idx = aIndex;
+  }
+
+  /**
+   * Sets the channel index for IO3 (used in QUAD SPI).
+   * 
+   * @param aIndex
+   *          the index of the IO3 channel.
+   */
+  public void setIO3Index( final int aIndex )
+  {
+    this.io3Idx = aIndex;
   }
 
   /**
@@ -240,6 +255,17 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   public void setOrder( final BitOrder aOrder )
   {
     this.bitOrder = aOrder;
+  }
+
+  /**
+   * Sets which SPI protocol (i.e., standard, dual or quad) should be used.
+   * 
+   * @param aProtocol
+   *          the protocol to set, cannot be <code>null</code>.
+   */
+  public void setProtocol( final SPIFIMode aProtocol )
+  {
+    this.protocol = aProtocol;
   }
 
   /**
@@ -267,6 +293,17 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   }
 
   /**
+   * Sets which SPI mode should be used for the analysis process.
+   * 
+   * @param aMode
+   *          the SPI mode to set, cannot be <code>null</code>.
+   */
+  public void setSPIMode( final SPIMode aMode )
+  {
+    this.spiMode = aMode;
+  }
+
+  /**
    * Decodes the SPI-data on a given clock edge.
    * 
    * @param aDataSet
@@ -284,8 +321,10 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     final int startOfDecode = Math.max( aSlaveSelectedIdx, aDataSet.getStartOfDecode() );
     final int endOfDecode = aDataSet.getEndOfDecode();
 
-    final int misoMask = ( 1 << this.misoIdx );
-    final int mosiMask = ( 1 << this.mosiIdx );
+    final int mosiMask = ( 1 << this.mosiIdx ); // IO0
+    final int misoMask = ( 1 << this.misoIdx ); // IO1
+    final int io2Mask = ( 1 << this.io2Idx );
+    final int io3Mask = ( 1 << this.io3Idx );
     final int sckMask = ( 1 << this.sckIdx );
     final int csMask = ( 1 << this.csIdx );
 
@@ -376,23 +415,60 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
       if ( sampleEdgeSeen )
       {
-        // sample MiSo here; always MSB first, perform conversion later on...
-        if ( ( this.misoIdx >= 0 ) && ( ( dataSample & misoMask ) == misoMask ) )
+        if ( SPIFIMode.STANDARD.equals( this.protocol ) )
         {
-          misovalue |= ( 1 << bitIdx );
+          // sample MiSo here; always MSB first, perform conversion later on...
+          if ( ( this.misoIdx >= 0 ) && ( ( dataSample & misoMask ) != 0 ) )
+          {
+            misovalue |= ( 1 << bitIdx );
+          }
+          // sample MoSi here; always MSB first, perform conversion later on...
+          if ( ( this.mosiIdx >= 0 ) && ( ( dataSample & mosiMask ) != 0 ) )
+          {
+            mosivalue |= ( 1 << bitIdx );
+          }
+
+          if ( bitIdx >= 0 )
+          {
+            bitIdx--;
+          }
         }
-        // sample MoSi here; always MSB first, perform conversion later on...
-        if ( ( this.mosiIdx >= 0 ) && ( ( dataSample & mosiMask ) == mosiMask ) )
+        else if ( SPIFIMode.DUAL.equals( this.protocol ) )
         {
-          mosivalue |= ( 1 << bitIdx );
+          // Sample both MOSI/IO0 & MISO/IO1 here; they form two bits of our
+          // symbol...
+          if ( ( dataSample & mosiMask ) != 0 )
+          {
+            mosivalue |= ( 1 << bitIdx-- );
+          }
+          if ( ( dataSample & misoMask ) != 0 )
+          {
+            mosivalue |= ( 1 << bitIdx-- );
+          }
+        }
+        else if ( SPIFIMode.QUAD.equals( this.protocol ) )
+        {
+          // Sample both MOSI/IO0, MISO/IO1, IO2 & IO3 here; they form four bits
+          // of our symbol...
+          if ( ( dataSample & mosiMask ) != 0 )
+          {
+            mosivalue |= ( 1 << bitIdx-- );
+          }
+          if ( ( dataSample & misoMask ) != 0 )
+          {
+            mosivalue |= ( 1 << bitIdx-- );
+          }
+          if ( ( dataSample & io2Mask ) != 0 )
+          {
+            mosivalue |= ( 1 << bitIdx-- );
+          }
+          if ( ( dataSample & io3Mask ) != 0 )
+          {
+            mosivalue |= ( 1 << bitIdx-- );
+          }
         }
 
-        if ( bitIdx > 0 )
-        {
-          bitIdx--;
-        }
-        else
-        /* if ( bitIdx == 0 ) */
+        if ( bitIdx < 0 )
         {
           // Full datagram decoded...
           reportData( aDataSet, dataStartIdx, idx, mosivalue, misovalue );

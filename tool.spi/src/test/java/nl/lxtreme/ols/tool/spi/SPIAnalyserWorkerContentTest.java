@@ -117,15 +117,15 @@ public class SPIAnalyserWorkerContentTest
     worker.setBitCount( aBitCount - 1 );
     worker.setHonourCS( aHonourCS );
     worker.setReportCS( false );
-    worker.setMode( aMode );
+    worker.setSPIMode( aMode );
     worker.setOrder( aBitOrder );
     if ( aChannels.length > 0 )
     {
-      worker.setMisoIndex( aChannels[0] );
+      worker.setIO1Index( aChannels[0] );
     }
     if ( aChannels.length > 1 )
     {
-      worker.setMosiIndex( aChannels[1] );
+      worker.setIO0Index( aChannels[1] );
     }
     if ( aChannels.length > 2 )
     {

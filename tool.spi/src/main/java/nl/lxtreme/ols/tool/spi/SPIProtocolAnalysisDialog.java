@@ -25,6 +25,7 @@ import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
+import java.awt.event.*;
 import java.beans.*;
 import java.io.*;
 import java.text.*;
@@ -90,6 +91,33 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
       }
       // Strange, we shouldn't be here...
       LOG.warning( "We should not be here actually! Value = " + aValue );
+      return super.getDisplayValue( aValue );
+    }
+  }
+
+  static class SPIFIModeRenderer extends EnumItemRenderer<SPIFIMode>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getDisplayValue( final SPIFIMode aValue )
+    {
+      switch ( aValue )
+      {
+        case STANDARD:
+          return "Standard";
+        case DUAL:
+          return "Dual mode";
+        case QUAD:
+          return "Quad mode";
+      }
       return super.getDisplayValue( aValue );
     }
   }
@@ -160,13 +188,21 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
   // VARIABLES
 
+  private JLabel misoLabel;
+  private JLabel mosiLabel;
+  private JLabel io2Label;
+  private JLabel io3Label;
+
   private JComboBox sck;
-  private JComboBox miso;
-  private JComboBox mosi;
+  private JComboBox miso; // IO0
+  private JComboBox mosi; // IO1
+  private JComboBox io2; // IO2
+  private JComboBox io3; // IO3
   private JComboBox cs;
   private JComboBox mode;
   private JComboBox bits;
   private JComboBox order;
+  private JComboBox spifiMode;
   private JEditorPane outText;
   private JCheckBox reportCS;
   private JCheckBox honourCS;
@@ -248,15 +284,21 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
+    this.spifiMode.setSelectedIndex( aSettings.getInt( "protocol", this.spifiMode.getSelectedIndex() ) );
     this.reportCS.setSelected( aSettings.getBoolean( "reportCS", this.reportCS.isSelected() ) );
     this.honourCS.setSelected( aSettings.getBoolean( "honourCS", this.honourCS.isSelected() ) );
     this.sck.setSelectedIndex( aSettings.getInt( "sck", this.sck.getSelectedIndex() ) );
     this.miso.setSelectedIndex( aSettings.getInt( "miso", this.miso.getSelectedIndex() ) );
     this.mosi.setSelectedIndex( aSettings.getInt( "mosi", this.mosi.getSelectedIndex() ) );
+    this.io2.setSelectedIndex( aSettings.getInt( "io2", this.io2.getSelectedIndex() ) );
+    this.io3.setSelectedIndex( aSettings.getInt( "io3", this.io3.getSelectedIndex() ) );
     this.cs.setSelectedIndex( aSettings.getInt( "cs", this.cs.getSelectedIndex() ) );
     this.mode.setSelectedIndex( aSettings.getInt( "mode", this.mode.getSelectedIndex() ) );
     this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
     this.order.setSelectedIndex( aSettings.getInt( "order", this.order.getSelectedIndex() ) );
+
+    // Make sure the settings are reflected in the UI...
+    updateSPIFIModeSettings( ( SPIFIMode )this.spifiMode.getSelectedItem() );
   }
 
   /**
@@ -294,13 +336,45 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
   {
     aSettings.putBoolean( "reportCS", this.reportCS.isSelected() );
     aSettings.putBoolean( "honourCS", this.honourCS.isSelected() );
+    aSettings.putInt( "protocol", this.spifiMode.getSelectedIndex() );
     aSettings.putInt( "sck", this.sck.getSelectedIndex() );
     aSettings.putInt( "miso", this.miso.getSelectedIndex() );
     aSettings.putInt( "mosi", this.mosi.getSelectedIndex() );
+    aSettings.putInt( "io2", this.io2.getSelectedIndex() );
+    aSettings.putInt( "io3", this.io3.getSelectedIndex() );
     aSettings.putInt( "cs", this.cs.getSelectedIndex() );
     aSettings.putInt( "mode", this.mode.getSelectedIndex() );
     aSettings.putInt( "bits", this.bits.getSelectedIndex() );
     aSettings.putInt( "order", this.order.getSelectedIndex() );
+  }
+
+  /**
+   * @param aMode
+   *          the SPIFI mode to update the settings to, may be <code>null</code>
+   *          .
+   */
+  final void updateSPIFIModeSettings( final SPIFIMode aMode )
+  {
+    boolean enabled = false;
+    if ( ( aMode == null ) || SPIFIMode.STANDARD.equals( aMode ) )
+    {
+      this.misoLabel.setText( "MISO" );
+      this.mosiLabel.setText( "MOSI" );
+    }
+    else
+    {
+      this.mosiLabel.setText( "IO0" );
+      this.misoLabel.setText( "IO1" );
+
+      enabled = SPIFIMode.QUAD.equals( aMode );
+
+      this.bits.setSelectedIndex( 4 );
+    }
+
+    this.io2Label.setEnabled( enabled );
+    this.io2.setEnabled( enabled );
+    this.io3Label.setEnabled( enabled );
+    this.io3.setEnabled( enabled );
   }
 
   /**
@@ -359,12 +433,15 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     toolTask.setBitCount( Integer.parseInt( ( String )this.bits.getSelectedItem() ) - 1 );
     toolTask.setCSIndex( this.cs.getSelectedIndex() );
     toolTask.setSCKIndex( this.sck.getSelectedIndex() );
-    toolTask.setMisoIndex( this.miso.getSelectedIndex() - 1 );
-    toolTask.setMosiIndex( this.mosi.getSelectedIndex() - 1 );
+    toolTask.setIO0Index( this.mosi.getSelectedIndex() - 1 );
+    toolTask.setIO1Index( this.miso.getSelectedIndex() - 1 );
+    toolTask.setIO2Index( this.io2.getSelectedIndex() - 1 );
+    toolTask.setIO3Index( this.io3.getSelectedIndex() - 1 );
+    toolTask.setProtocol( ( SPIFIMode )this.spifiMode.getSelectedItem() );
     toolTask.setReportCS( this.reportCS.isSelected() );
     toolTask.setHonourCS( this.honourCS.isSelected() );
     toolTask.setOrder( ( BitOrder )this.order.getSelectedItem() );
-    toolTask.setMode( ( SPIMode )this.mode.getSelectedItem() );
+    toolTask.setSPIMode( ( SPIMode )this.mode.getSelectedItem() );
 
     // Register ourselves as property change listener...
     toolTask.addPropertyChangeListener( this );
@@ -391,6 +468,73 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
     this.closeAction.setEnabled( aEnable );
     this.exportAction.setEnabled( aEnable );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected boolean validateToolSettings()
+  {
+    BitSet bitset = new BitSet();
+    bitset.set( this.cs.getSelectedIndex() );
+    bitset.set( this.sck.getSelectedIndex() );
+    int expectedBitCount = 2;
+
+    final SPIFIMode protocol = ( SPIFIMode )this.spifiMode.getSelectedItem();
+    if ( SPIFIMode.DUAL.equals( protocol ) )
+    {
+      // Both MOSI/IO0 & MISO/IO1 should be defined...
+      if ( ( this.mosi.getSelectedIndex() < 1 ) || ( this.miso.getSelectedIndex() < 1 ) )
+      {
+        JErrorDialog.showDialog( getOwner(), "Cannot start analysis!", "Invalid settings detected!",
+            "For dual-mode SPI, you need to assign both IO0 and IO1." );
+        return false;
+      }
+
+      bitset.set( this.mosi.getSelectedIndex() );
+      bitset.set( this.miso.getSelectedIndex() );
+      expectedBitCount += 2;
+    }
+    else if ( SPIFIMode.QUAD.equals( protocol ) )
+    {
+      // All IO0..3 should be defined...
+      if ( ( this.mosi.getSelectedIndex() < 1 ) || ( this.miso.getSelectedIndex() < 1 ) || //
+          ( this.io2.getSelectedIndex() < 1 ) || ( this.io3.getSelectedIndex() < 1 ) )
+      {
+        JErrorDialog.showDialog( getOwner(), "Cannot start analysis!", "Invalid settings detected!",
+            "For quad-mode SPI, you need to assign IO0, IO1, IO2 and IO3." );
+        return false;
+      }
+
+      bitset.set( this.mosi.getSelectedIndex() );
+      bitset.set( this.miso.getSelectedIndex() );
+      bitset.set( this.io2.getSelectedIndex() );
+      bitset.set( this.io3.getSelectedIndex() );
+      expectedBitCount += 4;
+    }
+    else
+    {
+      if ( this.miso.getSelectedIndex() > 0 )
+      {
+        bitset.set( this.miso.getSelectedIndex() );
+        expectedBitCount++;
+      }
+      if ( this.mosi.getSelectedIndex() > 0 )
+      {
+        bitset.set( this.mosi.getSelectedIndex() );
+        expectedBitCount++;
+      }
+    }
+
+    if ( bitset.cardinality() != expectedBitCount )
+    {
+      JErrorDialog.showDialog( getOwner(), "Cannot start analysis!", "Invalid settings detected!",
+          "Not all signals are assigned to unique channels." );
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -482,27 +626,61 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
     SpringLayoutUtils.addSeparator( settings, "Settings" );
 
+    settings.add( createRightAlignedLabel( "Protocol" ) );
+    this.spifiMode = new JComboBox( SPIFIMode.values() );
+    this.spifiMode.setSelectedIndex( 0 );
+    this.spifiMode.setRenderer( new SPIFIModeRenderer() );
+    this.spifiMode.addItemListener( new ItemListener()
+    {
+      @Override
+      public void itemStateChanged( final ItemEvent aEvent )
+      {
+        final JComboBox cb = ( JComboBox )aEvent.getSource();
+
+        updateSPIFIModeSettings( ( SPIFIMode )cb.getSelectedItem() );
+      }
+    } );
+    settings.add( this.spifiMode );
+
     settings.add( createRightAlignedLabel( "SCK" ) );
     this.sck = SwingComponentUtils.createChannelSelector( channelCount );
     this.sck.setSelectedIndex( 0 );
     settings.add( this.sck );
 
-    settings.add( createRightAlignedLabel( "MISO" ) );
+    this.mosiLabel = createRightAlignedLabel( "MOSI" );
+
+    settings.add( this.mosiLabel );
+    this.mosi = SwingComponentUtils.createOptionalChannelSelector( channelCount );
+    this.mosi.setSelectedIndex( 3 );
+    settings.add( this.mosi );
+
+    this.misoLabel = createRightAlignedLabel( "MISO" );
+
+    settings.add( this.misoLabel );
     this.miso = SwingComponentUtils.createOptionalChannelSelector( channelCount );
     this.miso.setSelectedIndex( 2 );
     settings.add( this.miso );
 
-    settings.add( createRightAlignedLabel( "MOSI" ) );
-    this.mosi = SwingComponentUtils.createOptionalChannelSelector( channelCount );
-    this.mosi.setSelectedIndex( 3 );
-    settings.add( this.mosi );
+    this.io2Label = createRightAlignedLabel( "IO2" );
+
+    settings.add( this.io2Label );
+    this.io2 = SwingComponentUtils.createOptionalChannelSelector( channelCount );
+    this.io2.setSelectedIndex( 0 );
+    settings.add( this.io2 );
+
+    this.io3Label = createRightAlignedLabel( "IO3" );
+
+    settings.add( this.io3Label );
+    this.io3 = SwingComponentUtils.createOptionalChannelSelector( channelCount );
+    this.io3.setSelectedIndex( 0 );
+    settings.add( this.io3 );
 
     settings.add( createRightAlignedLabel( "/CS" ) );
     this.cs = SwingComponentUtils.createChannelSelector( channelCount );
     this.cs.setSelectedIndex( 3 );
     settings.add( this.cs );
 
-    settings.add( createRightAlignedLabel( "Mode" ) );
+    settings.add( createRightAlignedLabel( "SPI Mode" ) );
     this.mode = new JComboBox( SPIMode.values() );
     this.mode.setSelectedIndex( 2 );
     this.mode.setRenderer( new SPIModeRenderer() );
@@ -537,6 +715,8 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     settings.add( this.honourCS );
 
     SpringLayoutUtils.makeEditorGrid( settings, 10, 4 );
+
+    updateSPIFIModeSettings( null );
 
     return settings;
   }
