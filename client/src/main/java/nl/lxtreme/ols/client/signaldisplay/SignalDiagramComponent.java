@@ -260,8 +260,8 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       registerKeyBinding( this, '=', zoomInAction );
       registerKeyBinding( this, '-', zoomOutAction );
       registerKeyBinding( this, '_', zoomOutAction );
-      registerKeyBinding( this, '0', zoomAllAction );
-      registerKeyBinding( this, '1', zoomOriginalAction );
+      registerKeyBinding( this, '[', zoomAllAction );
+      registerKeyBinding( this, ']', zoomOriginalAction );
 
       KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher( new GlobalKeyListener() );
 
