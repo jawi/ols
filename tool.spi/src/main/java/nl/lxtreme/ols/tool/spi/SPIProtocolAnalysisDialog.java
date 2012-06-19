@@ -492,8 +492,8 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
         return false;
       }
 
-      bitset.set( this.mosi.getSelectedIndex() );
-      bitset.set( this.miso.getSelectedIndex() );
+      bitset.set( this.mosi.getSelectedIndex() - 1 );
+      bitset.set( this.miso.getSelectedIndex() - 1 );
       expectedBitCount += 2;
     }
     else if ( SPIFIMode.QUAD.equals( protocol ) )
@@ -507,22 +507,22 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
         return false;
       }
 
-      bitset.set( this.mosi.getSelectedIndex() );
-      bitset.set( this.miso.getSelectedIndex() );
-      bitset.set( this.io2.getSelectedIndex() );
-      bitset.set( this.io3.getSelectedIndex() );
+      bitset.set( this.mosi.getSelectedIndex() - 1 );
+      bitset.set( this.miso.getSelectedIndex() - 1 );
+      bitset.set( this.io2.getSelectedIndex() - 1 );
+      bitset.set( this.io3.getSelectedIndex() - 1 );
       expectedBitCount += 4;
     }
     else
     {
       if ( this.miso.getSelectedIndex() > 0 )
       {
-        bitset.set( this.miso.getSelectedIndex() );
+        bitset.set( this.miso.getSelectedIndex() - 1 );
         expectedBitCount++;
       }
       if ( this.mosi.getSelectedIndex() > 0 )
       {
-        bitset.set( this.mosi.getSelectedIndex() );
+        bitset.set( this.mosi.getSelectedIndex() - 1 );
         expectedBitCount++;
       }
     }

@@ -439,12 +439,14 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
           // symbol...
           if ( ( dataSample & mosiMask ) != 0 )
           {
-            mosivalue |= ( 1 << bitIdx-- );
+            mosivalue |= ( 1 << bitIdx );
           }
+          bitIdx--;
           if ( ( dataSample & misoMask ) != 0 )
           {
-            mosivalue |= ( 1 << bitIdx-- );
+            mosivalue |= ( 1 << bitIdx );
           }
+          bitIdx--;
         }
         else if ( SPIFIMode.QUAD.equals( this.protocol ) )
         {
@@ -452,20 +454,24 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
           // of our symbol...
           if ( ( dataSample & mosiMask ) != 0 )
           {
-            mosivalue |= ( 1 << bitIdx-- );
+            mosivalue |= ( 1 << bitIdx );
           }
+          bitIdx--;
           if ( ( dataSample & misoMask ) != 0 )
           {
-            mosivalue |= ( 1 << bitIdx-- );
+            mosivalue |= ( 1 << bitIdx );
           }
+          bitIdx--;
           if ( ( dataSample & io2Mask ) != 0 )
           {
-            mosivalue |= ( 1 << bitIdx-- );
+            mosivalue |= ( 1 << bitIdx );
           }
+          bitIdx--;
           if ( ( dataSample & io3Mask ) != 0 )
           {
-            mosivalue |= ( 1 << bitIdx-- );
+            mosivalue |= ( 1 << bitIdx );
           }
+          bitIdx--;
         }
 
         if ( bitIdx < 0 )
@@ -541,13 +547,25 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   {
     if ( this.mosiIdx >= 0 )
     {
+      String label = ( SPIFIMode.STANDARD.equals( this.protocol ) ? SPIDataSet.SPI_MOSI : "IO0" );
       this.annotationListener.clearAnnotations( this.mosiIdx );
-      this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.mosiIdx, SPIDataSet.SPI_MOSI ) );
+      this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.mosiIdx, label ) );
     }
     if ( this.misoIdx >= 0 )
     {
+      String label = ( SPIFIMode.STANDARD.equals( this.protocol ) ? SPIDataSet.SPI_MISO : "IO1" );
       this.annotationListener.clearAnnotations( this.misoIdx );
-      this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.misoIdx, SPIDataSet.SPI_MISO ) );
+      this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.misoIdx, label ) );
+    }
+    if ( this.io2Idx >= 0 )
+    {
+      this.annotationListener.clearAnnotations( this.io2Idx );
+      this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.io2Idx, "IO2" ) );
+    }
+    if ( this.io3Idx >= 0 )
+    {
+      this.annotationListener.clearAnnotations( this.io3Idx );
+      this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.io3Idx, "IO3" ) );
     }
     if ( this.sckIdx >= 0 )
     {
@@ -614,7 +632,31 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   {
     long[] timestamps = this.context.getData().getTimestamps();
 
-    if ( this.mosiIdx >= 0 )
+    if ( SPIFIMode.STANDARD.equals( this.protocol ) )
+    {
+      if ( this.mosiIdx >= 0 )
+      {
+        // Perform bit-order conversion on the full byte...
+        final int mosivalue = NumberUtils.convertBitOrder( aMosiValue, ( this.bitCount + 1 ), this.bitOrder );
+
+        this.annotationListener.onAnnotation( new SampleDataAnnotation( this.mosiIdx, timestamps[aStartIdx],
+            timestamps[aEndIdx], String.format( "0x%1$X (%1$c)", Integer.valueOf( mosivalue ) ) ) );
+
+        aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
+      }
+
+      if ( this.misoIdx >= 0 )
+      {
+        // Perform bit-order conversion on the full byte...
+        final int misovalue = NumberUtils.convertBitOrder( aMisoValue, ( this.bitCount + 1 ), this.bitOrder );
+
+        this.annotationListener.onAnnotation( new SampleDataAnnotation( this.misoIdx, timestamps[aStartIdx],
+            timestamps[aEndIdx], String.format( "0x%1$X (%1$c)", Integer.valueOf( misovalue ) ) ) );
+
+        aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
+      }
+    }
+    else
     {
       // Perform bit-order conversion on the full byte...
       final int mosivalue = NumberUtils.convertBitOrder( aMosiValue, ( this.bitCount + 1 ), this.bitOrder );
@@ -623,17 +665,6 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
           timestamps[aEndIdx], String.format( "0x%1$X (%1$c)", Integer.valueOf( mosivalue ) ) ) );
 
       aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
-    }
-
-    if ( this.misoIdx >= 0 )
-    {
-      // Perform bit-order conversion on the full byte...
-      final int misovalue = NumberUtils.convertBitOrder( aMisoValue, ( this.bitCount + 1 ), this.bitOrder );
-
-      this.annotationListener.onAnnotation( new SampleDataAnnotation( this.misoIdx, timestamps[aStartIdx],
-          timestamps[aEndIdx], String.format( "0x%1$X (%1$c)", Integer.valueOf( misovalue ) ) ) );
-
-      aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
     }
   }
 
