@@ -57,6 +57,7 @@ public class RemoveChannelAnnotations extends AbstractAction
   public RemoveChannelAnnotations( final SignalDiagramController aController, final SignalElement aSignalElement )
   {
     super( "Remove annotations" );
+
     this.controller = aController;
     this.signalElement = aSignalElement;
   }

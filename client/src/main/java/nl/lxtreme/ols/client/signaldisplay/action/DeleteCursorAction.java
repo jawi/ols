@@ -26,6 +26,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -52,6 +53,8 @@ public class DeleteCursorAction extends AbstractAction
     super( "Delete cursor " + ( aCursor.getIndex() + 1 ) );
     this.controller = aController;
     this.cursorIdx = aCursor.getIndex();
+
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createKeyMask( KeyEvent.VK_DELETE ) );
   }
 
   // METHODS

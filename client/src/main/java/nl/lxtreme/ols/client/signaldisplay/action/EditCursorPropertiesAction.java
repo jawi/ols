@@ -28,21 +28,23 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.action.EditSignalElementPropertiesAction.JColorEditor;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
 
 
 /**
  * Provides an action to edit a cursor label.
  */
-public class EditCursorLabelAction extends AbstractAction
+public class EditCursorPropertiesAction extends AbstractAction
 {
   // INNER TYPES
 
   /**
    * Provides a Swing dialog for editing a cursor label.
    */
-  static final class EditCursorDialog extends JDialog
+  static final class EditCursorDialog extends JDialog implements StatusAwareCloseableDialog
   {
     // CONSTANTS
 
@@ -50,7 +52,11 @@ public class EditCursorLabelAction extends AbstractAction
 
     // VARIABLES
 
+    private final String defaultLabel;
+    private final Color defaultColor;
+
     private JTextField labelEditor;
+    private JColorEditor colorEditor;
 
     boolean dialogResult = false;
 
@@ -59,13 +65,38 @@ public class EditCursorLabelAction extends AbstractAction
     /**
      * Creates a new EditCursorLabelAction.EditCursorDialog instance.
      */
-    public EditCursorDialog( final int aCursorIdx, final String aLabel )
+    public EditCursorDialog( final Window aParent, final Cursor aCursor )
     {
-      super( null /* owner */, ModalityType.DOCUMENT_MODAL );
+      super( aParent, ModalityType.DOCUMENT_MODAL );
 
-      setTitle( String.format( "Edit label cursor %d", Integer.valueOf( aCursorIdx ) ) );
+      setResizable( false );
 
-      initDialog( aCursorIdx, aLabel );
+      this.defaultLabel = aCursor.getLabel();
+      this.defaultColor = aCursor.getColor();
+
+      initDialog( aCursor );
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close()
+    {
+      setVisible( false );
+      dispose();
+    }
+
+    /**
+     * Returns the new cursor color.
+     * 
+     * @return the cursor color, can be <code>null</code>.
+     */
+    public Color getColor()
+    {
+      return this.colorEditor.getColor();
     }
 
     /**
@@ -76,6 +107,15 @@ public class EditCursorLabelAction extends AbstractAction
     public String getLabel()
     {
       return this.labelEditor.getText();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setDialogStatus( final DialogStatus aStatus )
+    {
+      this.dialogResult = ( aStatus == DialogStatus.OK );
     }
 
     /**
@@ -92,40 +132,52 @@ public class EditCursorLabelAction extends AbstractAction
     }
 
     /**
+     * Applies the default properties to the properties.
+     */
+    protected void applyDefaultProperties()
+    {
+      this.labelEditor.setText( this.defaultLabel );
+      this.colorEditor.setColor( this.defaultColor );
+    }
+
+    /**
      * Initializes this dialog.
      */
-    private void initDialog( final int aCursorIdx, final String aLabel )
+    private void initDialog( final Cursor aCursor )
     {
-      JLabel label = new JLabel( String.format( "Cursor label %d", Integer.valueOf( aCursorIdx ) ) );
-      this.labelEditor = new JTextField( aLabel, 10 );
+      setTitle( "Edit cursor properties" );
 
-      final JButton okButton = new JButton( "Ok" );
-      okButton.addActionListener( new ActionListener()
+      JLabel labelEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Label" );
+      this.labelEditor = new JTextField( aCursor.getLabel(), 10 );
+
+      JLabel colorEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Color" );
+      this.colorEditor = new JColorEditor( aCursor.getColor() );
+
+      final JButton okButton = StandardActionFactory.createOkButton();
+      final JButton cancelButton = StandardActionFactory.createCancelButton();
+
+      final JButton resetButton = new JButton( "Reset to defaults" );
+      resetButton.addActionListener( new ActionListener()
       {
         @Override
         public void actionPerformed( final ActionEvent aEvent )
         {
-          EditCursorDialog.this.dialogResult = true;
-          setVisible( false );
-          dispose();
+          applyDefaultProperties();
         }
       } );
 
-      final JButton cancelButton = new JButton( "Cancel" );
-      cancelButton.addActionListener( new ActionListener()
-      {
-        @Override
-        public void actionPerformed( final ActionEvent aEvent )
-        {
-          EditCursorDialog.this.dialogResult = false;
-          setVisible( false );
-          dispose();
-        }
-      } );
+      final JPanel resetButtonPanel = new JPanel();
+      resetButtonPanel.add( resetButton, BorderLayout.LINE_END );
 
       JPanel editorPane = new JPanel( new SpringLayout() );
-      editorPane.add( label );
+      editorPane.add( labelEditorLabel );
       editorPane.add( this.labelEditor );
+
+      editorPane.add( colorEditorLabel );
+      editorPane.add( this.colorEditor );
+
+      editorPane.add( new JLabel( "" ) );
+      editorPane.add( resetButtonPanel );
 
       SpringLayoutUtils.makeEditorGrid( editorPane, 10, 10 );
 
@@ -160,9 +212,10 @@ public class EditCursorLabelAction extends AbstractAction
    * @param aCursor
    *          the cursor to edit the label for.
    */
-  public EditCursorLabelAction( final SignalDiagramController aController, final Cursor aCursor )
+  public EditCursorPropertiesAction( final SignalDiagramController aController, final Cursor aCursor )
   {
-    super( "Edit label" );
+    super( "Cursor Properties" );
+
     this.controller = aController;
     this.cursor = aCursor;
   }
@@ -175,24 +228,14 @@ public class EditCursorLabelAction extends AbstractAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final int cursorIndex = this.cursor.getIndex();
-
-    final EditCursorDialog dialog = new EditCursorDialog( cursorIndex, this.cursor.getLabel() );
+    final EditCursorDialog dialog = new EditCursorDialog( SwingComponentUtils.getOwningWindow( aEvent ), this.cursor );
     if ( dialog.showDialog() )
     {
-      setCursorLabel( dialog.getLabel() );
-    }
-  }
+      final SignalDiagramModel model = this.controller.getSignalDiagramModel();
 
-  /**
-   * Sets the cursor label to the one given.
-   * 
-   * @param aNewLabel
-   *          the new cursor label to set.
-   */
-  private void setCursorLabel( final String aNewLabel )
-  {
-    final SignalDiagramModel model = this.controller.getSignalDiagramModel();
-    model.setCursorLabel( this.cursor.getIndex(), aNewLabel );
+      // XXX shouldn't this be set directly on the cursor?!!!
+      model.setCursorLabel( this.cursor.getIndex(), dialog.getLabel() );
+      model.setCursorColor( this.cursor.getIndex(), dialog.getColor() );
+    }
   }
 }

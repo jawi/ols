@@ -25,7 +25,9 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -54,6 +56,9 @@ public class SetCursorAction extends AbstractAction
     super( "Set cursor " + ( aCursorIdx + 1 ) );
     this.controller = aController;
     this.cursorIdx = aCursorIdx;
+
+    int keyStroke = KeyEvent.VK_0 + ( ( aCursorIdx + 1 ) % Ols.MAX_CURSORS );
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createKeyMask( keyStroke ) );
 
     putValue( Action.SELECTED_KEY, Boolean.valueOf( this.controller.isCursorDefined( aCursorIdx ) ) );
   }
@@ -91,6 +96,12 @@ public class SetCursorAction extends AbstractAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JMenuItem menuitem = ( JMenuItem )aEvent.getSource();
+
+    // Implicitly enable the cursor mode when a cursor is defined...
+    if ( !this.controller.isCursorMode() )
+    {
+      this.controller.setCursorMode( true );
+    }
 
     final Point location = getContextMenuLocation( menuitem );
     this.controller.moveCursor( this.cursorIdx, location );

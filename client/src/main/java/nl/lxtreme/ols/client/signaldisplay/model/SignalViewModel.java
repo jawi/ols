@@ -168,6 +168,16 @@ public class SignalViewModel extends AbstractViewModel
   }
 
   /**
+   * Returns the padding used for the group summary.
+   * 
+   * @return a (horizontal + vertical) padding, in pixels.
+   */
+  public int getGroupSummaryPadding()
+  {
+    return UIManager.getInt( SIGNALVIEW_GROUP_SUMMARY_PADDING );
+  }
+
+  /**
    * Returns the font for the group summary text.
    * 
    * @return a font, never <code>null</code>.

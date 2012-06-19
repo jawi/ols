@@ -36,16 +36,14 @@ import nl.lxtreme.ols.client.signaldisplay.view.renderer.Renderer;
 
 
 /**
- * 
+ * Provides the LaF for displaying the signal data.
  */
 public class SignalUI extends ComponentUI
 {
   // CONSTANTS
 
-  /** XXX The threshold when we're going to draw a bit more sloppy... */
-  private static final int SLOPPY_THRESHOLD = 1000000;
-
-  private static final int PADDING_X = 2;
+  /** The maximum number of points in a polyline. */
+  private static final int POINT_COUNT = 1000000;
 
   // VARIABLES
 
@@ -55,8 +53,8 @@ public class SignalUI extends ComponentUI
   private volatile MeasurementInfo measurementInfo;
   private volatile Rectangle measurementRect;
 
-  private static final int[] x = new int[2 * SLOPPY_THRESHOLD];
-  private static final int[] y = new int[2 * SLOPPY_THRESHOLD];
+  private static final int[] x = new int[2 * POINT_COUNT];
+  private static final int[] y = new int[2 * POINT_COUNT];
 
   // METHODS
 
@@ -163,7 +161,6 @@ public class SignalUI extends ComponentUI
       final SignalElement[] signalElements = model.getSignalElements( clip.y, clip.height );
 
       Graphics2D canvas = ( Graphics2D )aGraphics.create();
-      System.out.println( "REPAINT: " + aGraphics.getClipBounds() );
 
       try
       {
@@ -502,7 +499,7 @@ public class SignalUI extends ComponentUI
           y[0] = yValue;
           int p = 1;
 
-          for ( int sampleIdx = startIdx + 1; sampleIdx <= endIdx; sampleIdx++ )
+          for ( int sampleIdx = startIdx + 1; ( p < POINT_COUNT ) && ( sampleIdx <= endIdx ); sampleIdx++ )
           {
             timestamp = timestamps[sampleIdx];
             int sampleValue = ( values[sampleIdx] & mask );
@@ -537,13 +534,15 @@ public class SignalUI extends ComponentUI
 
         int mask = signalElement.getMask();
 
+        int padding = aModel.getGroupSummaryPadding();
+
         int prevSampleValue = values[startIdx] & mask;
         int prevX = ( int )( zoomFactor * timestamps[startIdx] );
 
         aCanvas.setFont( aModel.getGroupSummaryTextFont() );
 
         FontMetrics fm = aCanvas.getFontMetrics();
-        int textYpos = ( int )( ( signalElement.getHeight() + fm.getLeading() + fm.getMaxAscent() ) / 2.0 ) - 2;
+        int textYpos = ( int )( ( signalElement.getHeight() + fm.getLeading() + fm.getMaxAscent() ) / 2.0 ) - padding;
 
         for ( int sampleIdx = startIdx + 1; sampleIdx < endIdx; sampleIdx += sampleIncr )
         {
@@ -555,11 +554,11 @@ public class SignalUI extends ComponentUI
 
             String text = String.format( "%02X", Integer.valueOf( prevSampleValue ) );
 
-            int textWidth = fm.stringWidth( text ) + ( 2 * PADDING_X );
+            int textWidth = fm.stringWidth( text ) + ( 2 * padding );
             int cellWidth = x - prevX;
             if ( textWidth < cellWidth )
             {
-              int textXpos = prevX + ( int )( ( cellWidth - textWidth ) / 2.0 ) + PADDING_X;
+              int textXpos = prevX + ( int )( ( cellWidth - textWidth ) / 2.0 ) + padding;
 
               aCanvas.setColor( signalElement.getColor() );
 
@@ -569,7 +568,7 @@ public class SignalUI extends ComponentUI
             aCanvas.setColor( aModel.getGroupSummaryBarColor() );
 
             // draw a small line...
-            aCanvas.drawLine( x, PADDING_X, x, signalElement.getHeight() - PADDING_X );
+            aCanvas.drawLine( x, padding, x, signalElement.getHeight() - padding );
 
             prevX = x;
           }
@@ -601,7 +600,7 @@ public class SignalUI extends ComponentUI
         }
         else
         {
-          for ( int sampleIdx = startIdx; sampleIdx < endIdx; sampleIdx += sampleIncr )
+          for ( int sampleIdx = startIdx; ( p < POINT_COUNT ) && ( sampleIdx < endIdx ); sampleIdx += sampleIncr )
           {
             long timestamp = timestamps[sampleIdx];
 

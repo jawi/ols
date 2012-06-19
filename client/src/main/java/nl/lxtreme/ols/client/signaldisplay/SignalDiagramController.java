@@ -206,6 +206,17 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
+   * Returns whether or not the cursor mode is enabled.
+   * 
+   * @return <code>true</code> if the cursor mode is enabled, <code>false</code>
+   *         otherwise.
+   */
+  public boolean isCursorMode()
+  {
+    return getSignalDiagramModel().isCursorMode();
+  }
+
+  /**
    * Drags a cursor with a given index to a given point, possibly snapping to a
    * signal edge.
    * 

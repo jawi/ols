@@ -496,7 +496,7 @@ public class EditSignalElementPropertiesAction extends AbstractAction
   public EditSignalElementPropertiesAction( final SignalDiagramController aController,
       final SignalElement aSignalElement, final Point aChannelLocation )
   {
-    super( "Edit properties" );
+    super( "Element Properties" );
 
     this.controller = aController;
     this.signalElement = aSignalElement;

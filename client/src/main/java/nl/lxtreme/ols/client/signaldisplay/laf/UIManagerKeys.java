@@ -47,49 +47,98 @@ public interface UIManagerKeys
   String GROUP_SUMMARY_HEIGHT = "ols.groupsummary.height";
   /** The height of the analog scope, in pixels. */
   String ANALOG_SCOPE_HEIGHT = "ols.analogscope.height";
-
+  /** The background color for the channel labels. */
   String CHANNELLABELS_BACKGROUND_COLOR = "ols.channellabels.background.color";
+  /** The minimal width of the channel labels, in pixels. */
   String CHANNELLABELS_MINIMAL_WIDTH = "ols.channellabels.minimal.width";
+  /**
+   * The width of the gutter between the channel labels and the signals, in
+   * pixels.
+   */
   String CHANNELLABELS_GUTTER_WIDTH = "ols.channellabels.gutter.width";
+  /** The width of the arc used in the channel labels. */
   String CHANNELLABELS_ARC_WIDTH = "ols.channellabels.arc.width";
+  /** The font used for the channel label texts. */
   String CHANNELLABELS_LABEL_FONT = "ols.channellabels.label.font";
+  /** The foreground color used to display the channel label texts. */
   String CHANNELLABELS_LABEL_FOREGROUND_COLOR = "ols.channellabels.label.foreground.color";
+  /** The background (fill) color used to display the channel label texts. */
   String CHANNELLABELS_LABEL_BACKGROUND_COLOR = "ols.channellabels.label.background.color";
-
+  /** The background color for the corners. */
   String CORNER_BACKGROUND_COLOR = "ols.corner.background.color";
-
+  /** The color used for DnD operations. */
   String GLASSPANE_FOREGROUND_COLOR = "ols.glasspane.foreground.color";
+  /** The percentage for the alpha channel of the glasspane (0..100). */
   String GLASSPANE_TRANSLUCENT_ALPHA = "ols.glasspane.alpha.value";
-
+  /** The background color for the timeline. */
   String TIMELINE_BACKGROUND_COLOR = "ols.timeline.background.color";
+  /** The height of the timeline, in pixels. */
   String TIMELINE_HEIGHT = "ols.timeline.height";
+  /** The padding used in the timeline, in pixels. */
   String TIMELINE_VERTICAL_PADDING = "ols.timeline.vertical.padding";
-
+  /** The font used for the cursor flags in the timeline. */
   String TIMELINE_CURSOR_FLAG_FONT = "ols.timeline.cursor.font";
+  /** The foreground color for the text in the timeline. */
   String TIMELINE_TEXT_COLOR = "ols.timeline.text.color";
+  /** The small tick height in the timeline, in pixels. */
   String TIMELINE_TICK_HEIGHT = "ols.timeline.tick.height";
+  /** The small tick color. */
   String TIMELINE_TICK_COLOR = "ols.timeline.tick.color";
+  /** The major tick height in the timeline, in pixels. */
   String TIMELINE_MAJOR_TICK_HEIGHT = "ols.timeline.majortick.height";
+  /** The font used to display the major tick texts. */
   String TIMELINE_MAJOR_TICK_LABEL_FONT = "ols.timeline.majortick.label.font";
+  /** The color used for the major ticks. */
   String TIMELINE_MAJOR_TICK_COLOR = "ols.timeline.majortick.color";
+  /** Whether or not the minor ticks should be displayed (true|false). */
   String TIMELINE_MINOR_TICKS_VISIBLE = "ols.timeline.minortick.visible.boolean";
+  /** The minor tick height in the timeline, in pixels. */
   String TIMELINE_MINOR_TICK_HEIGHT = "ols.timeline.minortick.height";
+  /** The font used to display the minor tick texts. */
   String TIMELINE_MINOR_TICK_LABEL_FONT = "ols.timeline.minortick.label.font";
+  /** The color used for the minor ticks. */
   String TIMELINE_MINOR_TICK_COLOR = "ols.timeline.minortick.color";
-
+  /** The background color for the signal view. */
   String SIGNALVIEW_BACKGROUND_COLOR = "ols.signal.background.color";
+  /** The foreground color used to display the trigger moment. */
   String SIGNALVIEW_TRIGGER_COLOR = "ols.signal.trigger.color";
+  /** The foreground color used to display the measurement arrow. */
   String SIGNALVIEW_MEASUREMENT_ARROW_COLOR = "ols.signal.arrow.color";
+  /** The font used to display the cursor flags in the signal view. */
   String SIGNALVIEW_CURSOR_FLAG_FONT = TIMELINE_CURSOR_FLAG_FONT;
+  /** The font used to display the group summary texts. */
   String SIGNALVIEW_GROUP_SUMMARY_TEXT_FONT = "ols.signal.groupsummary.text.font";
+  /** The foreground color used to mark group summaries. */
   String SIGNALVIEW_GROUP_SUMMARY_BAR_COLOR = "ols.signal.groupsummary.bar.color";
+  /**
+   * Whether or not the group summary should be rendered using Anti-Aliasing
+   * (true|false).
+   */
   String SIGNALVIEW_GROUP_SUMMARY_RENDER_AA = "ols.signal.groupsummary.render.aa.boolean";
+  /** The padding used for the group summary, in pixels. */
+  String SIGNALVIEW_GROUP_SUMMARY_PADDING = "ols.signal.groupsummary.padding";
+  /**
+   * Whether or not the analog scope should be rendered using Anti-Aliasing
+   * (true|false).
+   */
   String SIGNALVIEW_ANALOG_SCOPE_RENDER_AA = "ols.signal.analogscope.render.aa.boolean";
+  /** How should the signal be vertically aligned. (top|center|bottom). */
   String SIGNALVIEW_SIGNAL_ALIGNMENT = "ols.signal.alignment.enum";
+  /**
+   * Whether or not annotations should be rendered using Anti-Aliasing
+   * (true|false).
+   */
   String SIGNALVIEW_ANNOTATION_RENDER_AA = "ols.signal.annotation.render.aa.boolean";
+  /** The foreground color used to render annotations. */
   String SIGNALVIEW_ANNOTATION_COLOR = "ols.signal.annotation.color";
+  /** The percentage for the alpha channel of annotations (0..100). */
   String SIGNALVIEW_ANNOTATION_ALPHA = "ols.signal.annotation.alpha.value";
+  /** How should the annotation be vertically aligned. (top|center|bottom). */
   String SIGNALVIEW_ANNOTATION_ALIGNMENT = "ols.signal.annotation.alignment.enum";
+  /** The font used to display the annotations in the signal view. */
   String SIGNALVIEW_ANNOTATION_FONT = "ols.signal.annotation.font";
+  /**
+   * Whether to use an alternative style for rendering annotations (true|false).
+   */
   String SIGNALVIEW_ANNOTATION_USE_ALTSTYLE = "ols.signal.annotation.altstyle.boolean";
 }

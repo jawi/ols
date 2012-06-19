@@ -28,6 +28,7 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -54,6 +55,8 @@ public class DeleteAllCursorsAction extends AbstractAction implements IManagedAc
   {
     super( "Delete all cursors" );
     this.controller = aController;
+
+    putValue( ACCELERATOR_KEY, SwingComponentUtils.createKeyMask( KeyEvent.VK_DELETE, InputEvent.SHIFT_DOWN_MASK ) );
   }
 
   // METHODS

@@ -328,7 +328,9 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         return false;
       }
 
-      return this.controller.getSignalHoverType( aPoint ) == SignalElementType.DIGITAL_SIGNAL;
+      boolean result = this.controller.getSignalHoverType( aPoint ) == SignalElementType.DIGITAL_SIGNAL;
+      System.out.println( "isEdgeWarpTrigger called! " + aEvent );
+      return result;
     }
 
     /**
@@ -361,11 +363,11 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
       if ( cursor != null )
       {
         // Hovering above existing cursor, show remove menu...
-        contextMenu.add( new EditCursorLabelAction( this.controller, cursor ) );
-        contextMenu.addSeparator();
-
         contextMenu.add( new DeleteCursorAction( this.controller, cursor ) );
         contextMenu.add( new DeleteAllCursorsAction( this.controller ) );
+
+        contextMenu.addSeparator();
+        contextMenu.add( new EditCursorPropertiesAction( this.controller, cursor ) );
       }
       else
       {
@@ -461,7 +463,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
      */
     private boolean isCursorPopupTrigger( final MouseEvent aEvent )
     {
-      return !aEvent.isConsumed() && aEvent.isPopupTrigger() && getModel().isCursorMode();
+      return !aEvent.isConsumed() && aEvent.isPopupTrigger();
     }
   }
 
@@ -608,7 +610,8 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     {
       modifierDown = aEvent.isControlDown();
     }
-    return modifierDown;
+    // Only consider the left mouse button...
+    return modifierDown && ( ( aEvent.getModifiers() & InputEvent.BUTTON1_MASK ) != 0 );
   }
 
   /**
