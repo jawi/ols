@@ -127,9 +127,9 @@ public class ChannelLabelsUI extends ComponentUI
   private void drawLabel( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel, final String aText,
       final Color aColor, final int aXpos, final int aYpos )
   {
-    if ( aModel.isDrawLabelShadow() )
+    if ( aModel.isDrawTextShadow() )
     {
-      aCanvas.setColor( aModel.getLabelShadowColor() );
+      aCanvas.setColor( aModel.getTextShadowColor() );
       aCanvas.drawString( aText, aXpos + 2, aYpos + 2 );
     }
 

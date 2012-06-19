@@ -242,6 +242,19 @@ public class TimeLineViewModel extends AbstractViewModel
   }
 
   /**
+   * @return the drop shadow color for texts, never <code>null</code>.
+   */
+  public Color getTextShadowColor()
+  {
+    Color color = UIManager.getColor( TIMELINE_TEXT_SHADOW_COLOR );
+    if ( color == null )
+    {
+      color = Color.BLACK;
+    }
+    return color;
+  }
+
+  /**
    * Returns the color of the individual ticks.
    * 
    * @return a color, never <code>null</code>.
@@ -298,6 +311,15 @@ public class TimeLineViewModel extends AbstractViewModel
   public boolean hasTimingData()
   {
     return getSignalDiagramModel().hasTimingData();
+  }
+
+  /**
+   * @return <code>true</code> if a shadow should be drawn behind the text,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isDrawTextShadow()
+  {
+    return UIManager.getBoolean( TIMELINE_DRAW_TEXT_SHADOW );
   }
 
   /**

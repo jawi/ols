@@ -253,19 +253,6 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
-   * @return the drop shadow color for labels, never <code>null</code>.
-   */
-  public Color getLabelShadowColor()
-  {
-    Color color = UIManager.getColor( CHANNELLABELS_SHADOW_COLOR );
-    if ( color == null )
-    {
-      color = Color.BLACK;
-    }
-    return color;
-  }
-
-  /**
    * Returns the minimal width of the channel labels.
    * 
    * @return a minimal width, in pixels.
@@ -276,12 +263,25 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
+   * @return the drop shadow color for labels, never <code>null</code>.
+   */
+  public Color getTextShadowColor()
+  {
+    Color color = UIManager.getColor( CHANNELLABELS_TEXT_SHADOW_COLOR );
+    if ( color == null )
+    {
+      color = Color.BLACK;
+    }
+    return color;
+  }
+
+  /**
    * @return <code>true</code> if a shadow should be drawn behind the labels,
    *         <code>false</code> otherwise.
    */
-  public boolean isDrawLabelShadow()
+  public boolean isDrawTextShadow()
   {
-    return UIManager.getBoolean( CHANNELLABELS_DRAW_SHADOW );
+    return UIManager.getBoolean( CHANNELLABELS_DRAW_TEXT_SHADOW );
   }
 
   /**

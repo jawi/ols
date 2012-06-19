@@ -359,7 +359,8 @@ public class TimeLineUI extends ComponentUI
           int textXpos = Math.max( visibleRect.x, ( int )( xPos - ( textWidth / 2.0 ) ) ) + 1;
           textYpos = Math.max( visibleRect.y, ( textYpos - fm.getDescent() ) );
 
-          canvas.drawString( text, textXpos, textYpos );
+          // canvas.drawString( text, textXpos, textYpos );
+          drawLabel( canvas, model, text, textXpos, textYpos );
         }
       }
 
@@ -407,6 +408,33 @@ public class TimeLineUI extends ComponentUI
     }
 
     return time.formatHumanReadable( aTime );
+  }
+
+  /**
+   * Draws the label (and optionally its drop shadow).
+   * 
+   * @param aCanvas
+   *          the canvas to paint on;
+   * @param aModel
+   *          the model to use;
+   * @param aText
+   *          the text to draw;
+   * @param aXpos
+   *          the X position where the text should be drawn;
+   * @param aYpos
+   *          the Y position where the text should be drawn.
+   */
+  private void drawLabel( final Graphics2D aCanvas, final TimeLineViewModel aModel, final String aText,
+      final int aXpos, final int aYpos )
+  {
+    if ( aModel.isDrawTextShadow() )
+    {
+      aCanvas.setColor( aModel.getTextShadowColor() );
+      aCanvas.drawString( aText, aXpos + 2, aYpos + 2 );
+    }
+
+    aCanvas.setColor( aModel.getTextColor() );
+    aCanvas.drawString( aText, aXpos, aYpos );
   }
 
   /**

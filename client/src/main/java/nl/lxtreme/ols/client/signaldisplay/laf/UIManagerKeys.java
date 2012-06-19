@@ -63,9 +63,9 @@ public interface UIManagerKeys
    * Whether or not to paint a shadow for the channel label + index
    * (true|false).
    */
-  String CHANNELLABELS_DRAW_SHADOW = "ols.channellabels.shadow.boolean";
+  String CHANNELLABELS_DRAW_TEXT_SHADOW = "ols.channellabels.shadow.boolean";
   /** The color for the label shadow. */
-  String CHANNELLABELS_SHADOW_COLOR = "ols.channellabels.shadow.color";
+  String CHANNELLABELS_TEXT_SHADOW_COLOR = "ols.channellabels.shadow.color";
   /**
    * The width of the gutter between the channel labels and the signals, in
    * pixels.
@@ -113,6 +113,8 @@ public interface UIManagerKeys
   String TIMELINE_MINOR_TICK_LABEL_FONT = "ols.timeline.minortick.label.font";
   /** The color used for the minor ticks. */
   String TIMELINE_MINOR_TICK_COLOR = "ols.timeline.minortick.color";
+  String TIMELINE_DRAW_TEXT_SHADOW = "ols.timeline.text.shadow.boolean";
+  String TIMELINE_TEXT_SHADOW_COLOR = "ols.timeline.text.shadow.color";
   /** The background color for the signal view. */
   String SIGNALVIEW_BACKGROUND_COLOR = "ols.signal.background.color";
   /** The foreground color used to display the trigger moment. */
