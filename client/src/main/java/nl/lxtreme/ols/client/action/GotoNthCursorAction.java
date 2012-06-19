@@ -78,7 +78,8 @@ public class GotoNthCursorAction extends AbstractAction implements IManagedActio
     if ( keyStroke != KeyEvent.VK_0 )
     {
       // Avoid overwriting CTRL/CMD + 0 as accelerator...
-      putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( keyStroke ) );
+      int mask = SwingComponentUtils.getMenuShortcutKeyMask();
+      putValue( ACCELERATOR_KEY, SwingComponentUtils.createKeyMask( keyStroke, mask ) );
     }
 
     putValue( MNEMONIC_KEY, Integer.valueOf( keyStroke ) );

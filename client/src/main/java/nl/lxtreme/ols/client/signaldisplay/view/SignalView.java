@@ -22,17 +22,18 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 import java.awt.*;
 import java.awt.event.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -60,7 +61,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
 
     // VARIABLES
 
-    private final SignalDiagramController controller;
+    protected final SignalDiagramController controller;
 
     private volatile int movingCursor;
     private volatile Point rubberBandStartPoint = null;
@@ -96,6 +97,18 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         }
 
         aEvent.consume();
+      }
+      else if ( getModel().isCursorMode() && ( aEvent.getClickCount() == 2 ) )
+      {
+        final MouseEvent event = convertEvent( aEvent );
+
+        final Cursor hoveredCursor = findCursor( event.getPoint() );
+        if ( hoveredCursor != null )
+        {
+          editCursorProperties( hoveredCursor );
+          // Consume the event to stop further processing...
+          aEvent.consume();
+        }
       }
     }
 
@@ -328,9 +341,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         return false;
       }
 
-      boolean result = this.controller.getSignalHoverType( aPoint ) == SignalElementType.DIGITAL_SIGNAL;
-      System.out.println( "isEdgeWarpTrigger called! " + aEvent );
-      return result;
+      return this.controller.getSignalHoverType( aPoint ) == SignalElementType.DIGITAL_SIGNAL;
     }
 
     /**
@@ -386,6 +397,19 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
       }
 
       return contextMenu;
+    }
+
+    /**
+     * Shows the "edit properties" dialog for the given cursor.
+     * 
+     * @param aCursor
+     *          the cursor to edit the properties for, cannot be
+     *          <code>null</code>.
+     */
+    private void editCursorProperties( final Cursor aCursor )
+    {
+      ActionEvent stubEvent = new ActionEvent( this, ActionEvent.ACTION_PERFORMED, "" );
+      new EditCursorPropertiesAction( this.controller, aCursor ).actionPerformed( stubEvent );
     }
 
     /**
@@ -536,6 +560,39 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
           setMouseCursor( aEvent, null );
         }
       }
+
+      if ( !aEvent.isConsumed() )
+      {
+        SignalElement element = findSignalElement( point );
+        if ( ( element != null ) && element.isDigitalSignal() )
+        {
+          final AnnotationsHelper helper = new AnnotationsHelper( element );
+
+          final long timestamp = getModel().locationToTimestamp( point );
+
+          Annotation<?> annotation = helper.getAnnotation( timestamp );
+          if ( annotation != null )
+          {
+            SignalView view = ( SignalView )aEvent.getSource();
+            view.setToolTipText( annotation.getAnnotation().toString() );
+
+            aEvent.consume();
+          }
+        }
+      }
+    }
+
+    /**
+     * Finds the channel under the given point.
+     * 
+     * @param aPoint
+     *          the coordinate of the potential channel, cannot be
+     *          <code>null</code>.
+     * @return the channel index, or -1 if not found.
+     */
+    private SignalElement findSignalElement( final Point aPoint )
+    {
+      return this.controller.getSignalDiagramModel().findSignalElement( aPoint );
     }
   }
 

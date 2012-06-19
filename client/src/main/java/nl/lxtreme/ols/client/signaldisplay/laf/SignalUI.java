@@ -266,31 +266,17 @@ public class SignalUI extends ComponentUI
 
         if ( signalElement.isEnabled() )
         {
-          final Iterable<Annotation<?>> annotations = signalElement.getChannel().getAnnotations();
+          final AnnotationsHelper helper = new AnnotationsHelper( signalElement );
 
           aCanvas.setFont( aModel.getAnnotationFont() );
 
           final FontMetrics fm = aCanvas.getFontMetrics();
           final int fontHeight = fm.getHeight();
 
-          for ( Annotation<?> annotation : annotations )
+          for ( DataAnnotation<?> ann : helper.getAnnotations( DataAnnotation.class, startTimestamp, endTimestamp ) )
           {
-            if ( !( annotation instanceof DataAnnotation<?> ) )
-            {
-              continue;
-            }
-
-            final DataAnnotation<?> ann = ( DataAnnotation<?> )annotation;
-
             final long annStartTime = ann.getStartTimestamp();
             final long annEndTime = ann.getEndTimestamp();
-
-            if ( ( ( annStartTime < startTimestamp ) && ( annEndTime < startTimestamp ) )
-                || ( ( annStartTime > endTimestamp ) && ( annEndTime > endTimestamp ) ) )
-            {
-              // Simple reject: annotation falls outside clip boundaries...
-              continue;
-            }
 
             int x1 = ( int )( annStartTime * zoomFactor );
             int x2 = ( int )( annEndTime * zoomFactor );

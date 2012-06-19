@@ -72,6 +72,27 @@ public class ChannelLabelsView extends AbstractViewLayer
      * {@inheritDoc}
      */
     @Override
+    public void mouseClicked( MouseEvent aEvent )
+    {
+      if ( !aEvent.isConsumed() && ( aEvent.getClickCount() == 2 ) )
+      {
+        final SignalElement signalElement = findSignalElement( aEvent.getPoint() );
+        if ( signalElement != null )
+        {
+          ActionEvent stubEvent = new ActionEvent( this, ActionEvent.ACTION_PERFORMED, "" );
+          new EditSignalElementPropertiesAction( this.controller, signalElement, aEvent.getLocationOnScreen() )
+              .actionPerformed( stubEvent );
+
+          // Do not process this event any further...
+          aEvent.consume();
+        }
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void mousePressed( final MouseEvent aEvent )
     {
       if ( handlePopupTrigger( aEvent ) )

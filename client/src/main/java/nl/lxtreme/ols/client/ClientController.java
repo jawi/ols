@@ -29,12 +29,12 @@ import java.util.List;
 import java.util.logging.*;
 
 import javax.swing.*;
+
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.data.annotation.Annotation;
-import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
+import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
@@ -59,6 +59,60 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     AcquisitionDataListener, AnnotationListener, ApplicationCallback
 {
   // INNER TYPES
+
+  /**
+   * Provides a listener for cursor changes that reflects all changes to their
+   * corresponding actions.
+   */
+  final class CursorActionListener implements ICursorChangeListener
+  {
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorAdded( Cursor aCursor )
+    {
+      updateActionsOnEDT();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorChanged( String aPropertyName, Cursor aOldCursor, Cursor aNewCursor )
+    {
+      // Nothing...
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorRemoved( Cursor aOldCursor )
+    {
+      updateActionsOnEDT();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorsInvisible()
+    {
+      updateActionsOnEDT();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorsVisible()
+    {
+      updateActionsOnEDT();
+    }
+  }
 
   /**
    * Provides a {@link AccumulatingRunnable} that repaints the entire main frame
@@ -253,6 +307,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     this.exporters = new ArrayList<Exporter>();
 
     this.actionManager = ActionManagerFactory.createActionManager();
+
     this.signalDiagramController = new SignalDiagramController( this.actionManager );
 
     ActionManagerFactory.fillActionManager( this.actionManager, this );
@@ -1359,6 +1414,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
         final MainFrame mf = new MainFrame( ClientController.this );
         setMainFrame( mf );
+
+        // ensure that all changes to cursors are reflected in the UI...
+        ClientController.this.signalDiagramController.addCursorChangeListener( new CursorActionListener() );
 
         mf.setTitle( hostProperties.getFullName() );
         mf.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
