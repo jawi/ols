@@ -141,6 +141,7 @@ public class UIManagerConfigurator implements ManagedService
       }
       catch ( Exception exception )
       {
+        exception.printStackTrace();
         throw new ConfigurationException( key, "Unable to parse value!", exception );
       }
     }

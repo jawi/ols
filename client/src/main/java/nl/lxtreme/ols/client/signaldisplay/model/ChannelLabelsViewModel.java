@@ -169,6 +169,45 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
+   * @return a horizontal padding, in pixels.
+   */
+  public int getHorizontalPadding()
+  {
+    return UIManager.getInt( CHANNELLABELS_PADDING );
+  }
+
+  /**
+   * Returns the font for the channel indexes.
+   * 
+   * @return a font, never <code>null</code>.
+   */
+  public Font getIndexFont()
+  {
+    Font font = UIManager.getFont( CHANNELLABELS_INDEX_FONT );
+    if ( font == null )
+    {
+      final Font labelFont = getLabelFont();
+      font = labelFont.deriveFont( 0.75f * labelFont.getSize2D() );
+    }
+    return font;
+  }
+
+  /**
+   * Returns the foreground color for the channel indexes.
+   * 
+   * @return a color, never <code>null</code>.
+   */
+  public Color getIndexForegroundColor()
+  {
+    Color color = UIManager.getColor( CHANNELLABELS_INDEX_COLOR );
+    if ( color == null )
+    {
+      color = Color.WHITE;
+    }
+    return color;
+  }
+
+  /**
    * Returns the background color for the labels themselves.
    * 
    * @return a color, never <code>null</code>.
@@ -214,6 +253,19 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
+   * @return the drop shadow color for labels, never <code>null</code>.
+   */
+  public Color getLabelShadowColor()
+  {
+    Color color = UIManager.getColor( CHANNELLABELS_SHADOW_COLOR );
+    if ( color == null )
+    {
+      color = Color.BLACK;
+    }
+    return color;
+  }
+
+  /**
    * Returns the minimal width of the channel labels.
    * 
    * @return a minimal width, in pixels.
@@ -221,6 +273,24 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   public int getMinimalWidth()
   {
     return UIManager.getInt( CHANNELLABELS_MINIMAL_WIDTH );
+  }
+
+  /**
+   * @return <code>true</code> if a shadow should be drawn behind the labels,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isDrawLabelShadow()
+  {
+    return UIManager.getBoolean( CHANNELLABELS_DRAW_SHADOW );
+  }
+
+  /**
+   * @return <code>true</code> if channel indexes should be shown,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isShowChannelIndex()
+  {
+    return UIManager.getBoolean( CHANNELLABELS_SHOW_CHANNEL_INDEX );
   }
 
   /**

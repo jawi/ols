@@ -51,6 +51,21 @@ public interface UIManagerKeys
   String CHANNELLABELS_BACKGROUND_COLOR = "ols.channellabels.background.color";
   /** The minimal width of the channel labels, in pixels. */
   String CHANNELLABELS_MINIMAL_WIDTH = "ols.channellabels.minimal.width";
+  /** Whether or not to show the indexes of the channels. */
+  String CHANNELLABELS_SHOW_CHANNEL_INDEX = "ols.channellabels.show.channel.index.boolean";
+  /** The font used for the (optional) channel index texts. */
+  String CHANNELLABELS_INDEX_FONT = "ols.channellabels.index.font";
+  /** The foreground color for the channel indexes. */
+  String CHANNELLABELS_INDEX_COLOR = "ols.channellabels.index.color";
+  /** The horizontal padding for the channel label + index. */
+  String CHANNELLABELS_PADDING = "ols.channellabels.label.padding";
+  /**
+   * Whether or not to paint a shadow for the channel label + index
+   * (true|false).
+   */
+  String CHANNELLABELS_DRAW_SHADOW = "ols.channellabels.shadow.boolean";
+  /** The color for the label shadow. */
+  String CHANNELLABELS_SHADOW_COLOR = "ols.channellabels.shadow.color";
   /**
    * The width of the gutter between the channel labels and the signals, in
    * pixels.

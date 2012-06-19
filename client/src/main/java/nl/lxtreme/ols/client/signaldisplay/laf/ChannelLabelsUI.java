@@ -21,6 +21,7 @@ package nl.lxtreme.ols.client.signaldisplay.laf;
 
 
 import java.awt.*;
+import java.awt.geom.*;
 
 import javax.swing.*;
 import javax.swing.plaf.*;
@@ -35,13 +36,6 @@ import nl.lxtreme.ols.client.signaldisplay.view.*;
  */
 public class ChannelLabelsUI extends ComponentUI
 {
-  // CONSTANTS
-
-  public static final int PADDING_Y = 1;
-  public static final int PADDING_X = 15;
-
-  private static final float INDEX_RELATIVE_FONT_SIZE = 0.75f;
-
   // METHODS
 
   /**
@@ -115,6 +109,35 @@ public class ChannelLabelsUI extends ComponentUI
   }
 
   /**
+   * Draws the label (and optionally its drop shadow).
+   * 
+   * @param aCanvas
+   *          the canvas to paint on;
+   * @param aModel
+   *          the model to use;
+   * @param aText
+   *          the text to draw;
+   * @param aColor
+   *          the color to use for drawing the text;
+   * @param aXpos
+   *          the X position where the text should be drawn;
+   * @param aYpos
+   *          the Y position where the text should be drawn.
+   */
+  private void drawLabel( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel, final String aText,
+      final Color aColor, final int aXpos, final int aYpos )
+  {
+    if ( aModel.isDrawLabelShadow() )
+    {
+      aCanvas.setColor( aModel.getLabelShadowColor() );
+      aCanvas.drawString( aText, aXpos + 2, aYpos + 2 );
+    }
+
+    aCanvas.setColor( aColor );
+    aCanvas.drawString( aText, aXpos, aYpos );
+  }
+
+  /**
    * Paints the background.
    * 
    * @param aCanvas
@@ -168,56 +191,62 @@ public class ChannelLabelsUI extends ComponentUI
       final int aWidth )
   {
     String label = aElement.getLabel();
-    String annotation = ""; // XXX
     int aHeight = aElement.getHeight();
 
+    String index = "";
+    if ( aModel.isShowChannelIndex() && aElement.isDigitalSignal() )
+    {
+      index = Integer.toString( aElement.getChannel().getIndex() );
+    }
+
+    boolean labelDefined = !"".equals( label.trim() );
+    boolean indexDefined = !"".equals( index.trim() );
+
     Font labelFont = aModel.getLabelFont();
+    FontMetrics labelFm = aCanvas.getFontMetrics( labelFont );
 
-    aCanvas.setFont( labelFont );
-    aCanvas.setColor( aModel.getLabelForegroundColor() );
+    Font indexFont = aModel.getIndexFont();
+    FontMetrics indexFm = aCanvas.getFontMetrics( indexFont );
 
-    FontMetrics labelFm = aCanvas.getFontMetrics();
+    int padding = aModel.getHorizontalPadding();
 
-    // Derive the index font from the label font...
-    Font annoFont = labelFont.deriveFont( Font.PLAIN, labelFont.getSize() * INDEX_RELATIVE_FONT_SIZE );
-    FontMetrics annoFm = aCanvas.getFontMetrics( annoFont );
+    Rectangle2D labelBounds = labelFm.getStringBounds( label, aCanvas );
+    Rectangle2D indexBounds = indexFm.getStringBounds( index, aCanvas );
 
     final double middle = ( aHeight / 2.0 );
 
-    boolean labelDefined = !"".equals( label.trim() );
-    boolean annotationDefined = !"".equals( annotation.trim() );
-
     if ( labelDefined )
     {
-      final int labelXpos = ( aWidth - labelFm.stringWidth( label ) - PADDING_X );
+      final int labelXpos = ( int )( aWidth - labelBounds.getWidth() - padding );
       final int labelYpos;
-      if ( !annotationDefined )
+      if ( !indexDefined )
       {
-        labelYpos = ( int )Math.round( middle + ( labelFm.getMaxAscent() / 2.0 ) ) - PADDING_Y;
+        labelYpos = ( int )( middle - labelBounds.getCenterY() );
       }
       else
       {
-        labelYpos = ( int )( middle + annoFm.getLeading() );
+        labelYpos = ( int )( middle - labelFm.getDescent() );
       }
 
-      aCanvas.drawString( label, labelXpos, labelYpos );
+      aCanvas.setFont( labelFont );
+      drawLabel( aCanvas, aModel, label, aModel.getLabelForegroundColor(), labelXpos, labelYpos );
     }
 
-    if ( annotationDefined )
+    if ( indexDefined )
     {
-      final int annoXpos = ( aWidth - annoFm.stringWidth( annotation ) - PADDING_X );
-      final int annoYpos;
+      final int indexXpos = ( int )( aWidth - indexBounds.getWidth() - padding );
+      final int indexYpos;
       if ( !labelDefined )
       {
-        annoYpos = ( int )Math.round( middle + ( annoFm.getAscent() / 2.0 ) ) - PADDING_Y;
+        indexYpos = ( int )Math.round( middle + indexBounds.getCenterY() );
       }
       else
       {
-        annoYpos = ( int )( middle + annoFm.getAscent() + annoFm.getDescent() );
+        indexYpos = ( int )Math.round( middle + indexFm.getAscent() );
       }
 
-      aCanvas.setFont( annoFont );
-      aCanvas.drawString( annotation, annoXpos, annoYpos );
+      aCanvas.setFont( indexFont );
+      drawLabel( aCanvas, aModel, index, aModel.getIndexForegroundColor(), indexXpos, indexYpos );
     }
   }
 }

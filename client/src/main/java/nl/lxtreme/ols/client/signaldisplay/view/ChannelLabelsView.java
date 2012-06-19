@@ -29,7 +29,6 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
@@ -499,20 +498,20 @@ public class ChannelLabelsView extends AbstractViewLayer
     BufferedImage dummy = new BufferedImage( 1, 1, BufferedImage.TYPE_INT_ARGB );
     Graphics2D canvas = dummy.createGraphics();
 
+    int padding = ( 2 * this.model.getHorizontalPadding() ) + this.model.getGutterWidth();
+
     try
     {
       final FontMetrics fm = canvas.getFontMetrics( this.model.getLabelFont() );
-      for ( Channel channel : this.model.getAllChannels() )
+      for ( SignalElement element : this.model.getSignalElementManager().getAllElements() )
       {
-        String label = channel.getLabel();
-        if ( ( label == null ) || label.trim().isEmpty() )
+        String label = element.getLabel();
+        if ( label == null )
         {
-          label = "W888";
+          label = "";
         }
-        minWidth = Math.max( minWidth, fm.stringWidth( label ) );
+        minWidth = Math.max( minWidth, fm.stringWidth( label ) + padding );
       }
-
-      minWidth += ( 2 * ChannelLabelsUI.PADDING_X ); // XXX CONFIGURABLE!
     }
     finally
     {
