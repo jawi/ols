@@ -37,7 +37,7 @@ public class MeasurementTool implements Tool<ClockFrequencyMeasureTask.ClockStat
 {
   // VARIABLES
 
-  private BundleContext context;
+  private volatile BundleContext context;
 
   // METHODS
 
@@ -76,16 +76,5 @@ public class MeasurementTool implements Tool<ClockFrequencyMeasureTask.ClockStat
   public void invoke( final Window aParent, final ToolContext aContext )
   {
     new MeasurementDialog( aParent, aContext, this.context, this ).showDialog();
-  }
-
-  /**
-   * Called when this tool is initialized by the client framework.
-   * 
-   * @param aContext
-   *          the bundle context to use, never <code>null</code>.
-   */
-  protected void init( final BundleContext aContext )
-  {
-    this.context = aContext;
   }
 }

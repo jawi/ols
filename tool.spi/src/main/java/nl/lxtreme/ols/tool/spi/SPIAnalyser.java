@@ -35,7 +35,7 @@ public class SPIAnalyser implements Tool<SPIDataSet>
 {
   // VARIABLES
 
-  private BundleContext context;
+  private volatile BundleContext context;
 
   // METHODS
 
@@ -74,17 +74,6 @@ public class SPIAnalyser implements Tool<SPIDataSet>
   public void invoke( final Window aParent, final ToolContext aContext )
   {
     new SPIProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
-  }
-
-  /**
-   * Called when this tool is initialized by the client framework.
-   * 
-   * @param aContext
-   *          the bundle context to use, never <code>null</code>.
-   */
-  protected void init( final BundleContext aContext )
-  {
-    this.context = aContext;
   }
 }
 

@@ -36,7 +36,7 @@ public class StateAnalyser implements Tool<AcquisitionResult>
 {
   // VARIABLES
 
-  private BundleContext context;
+  private volatile BundleContext context;
 
   // METHODS
 
@@ -75,17 +75,6 @@ public class StateAnalyser implements Tool<AcquisitionResult>
   public void invoke( final Window aParent, final ToolContext aContext )
   {
     new StateAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
-  }
-
-  /**
-   * Called when this tool is initialized by the client framework.
-   * 
-   * @param aContext
-   *          the bundle context to use, never <code>null</code>.
-   */
-  protected void init( final BundleContext aContext )
-  {
-    this.context = aContext;
   }
 }
 

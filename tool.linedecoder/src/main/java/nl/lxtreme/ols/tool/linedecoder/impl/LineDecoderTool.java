@@ -44,8 +44,8 @@ public class LineDecoderTool implements Tool<AcquisitionResult>
   // VARIABLES
 
   private final List<LineDecoder> lineDecoders;
-  private DependencyManager manager;
-  private BundleContext context;
+  // Injected by DependencyManager...
+  private volatile BundleContext context;
 
   // CONSTRUCTORS
 
@@ -142,14 +142,13 @@ public class LineDecoderTool implements Tool<AcquisitionResult>
    * @param aContext
    *          the bundle context to use, never <code>null</code>.
    */
-  protected void init( final BundleContext aContext )
+  protected void init()
   {
-    this.context = aContext;
+    DependencyManager manager = new DependencyManager( this.context );
 
-    this.manager = new DependencyManager( aContext );
-    this.manager.add( this.manager.createComponent() //
+    manager.add( manager.createComponent() //
         .setImplementation( this ) //
-        .add( this.manager.createServiceDependency() //
+        .add( manager.createServiceDependency() //
             .setService( LineDecoder.class ) //
             .setCallbacks( "addLineDecoder", "removeLineDecoder" ) //
             .setRequired( false ) //

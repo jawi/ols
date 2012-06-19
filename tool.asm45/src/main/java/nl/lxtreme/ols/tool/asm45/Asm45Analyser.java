@@ -38,7 +38,7 @@ public class Asm45Analyser implements Tool<Asm45DataSet>
 {
   // VARIABLES
 
-  private BundleContext context;
+  private volatile BundleContext context;
 
   // METHODS
 
@@ -77,17 +77,6 @@ public class Asm45Analyser implements Tool<Asm45DataSet>
   public void invoke( final Window aParent, final ToolContext aContext )
   {
     new Asm45ProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
-  }
-
-  /**
-   * Called when this tool is initialized by the client framework.
-   * 
-   * @param aContext
-   *          the bundle context to use, never <code>null</code>.
-   */
-  protected void init( final BundleContext aContext )
-  {
-    this.context = aContext;
   }
 }
 

@@ -36,7 +36,8 @@ public class OneWireAnalyser implements Tool<OneWireDataSet>
 {
   // VARIABLES
 
-  private BundleContext context;
+  // Injected by DependencyManager...
+  private volatile BundleContext context;
 
   // METHODS
 
@@ -75,17 +76,6 @@ public class OneWireAnalyser implements Tool<OneWireDataSet>
   public void invoke( final Window aParent, final ToolContext aToolContext )
   {
     new OneWireAnalyserDialog( aParent, aToolContext, this.context, this ).showDialog();
-  }
-
-  /**
-   * Called when this tool is initialized by the client framework.
-   * 
-   * @param aContext
-   *          the bundle context to use, never <code>null</code>.
-   */
-  protected void init( final BundleContext aContext )
-  {
-    this.context = aContext;
   }
 }
 

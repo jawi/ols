@@ -56,6 +56,7 @@ public class LogicSnifferDevice implements Device
   private DependencyManager dependencyManager;
   private LogicSnifferConfig config;
 
+  private volatile BundleContext context;
   private volatile ManagedServiceFactory deviceProfileManagerServiceFactory;
   private volatile ConnectorService connectorService;
   private volatile StreamConnection connection;
@@ -192,12 +193,11 @@ public class LogicSnifferDevice implements Device
    * @param aBundleContext
    *          the bundle context to use, cannot be <code>null</code>.
    */
-  protected void init( final BundleContext aBundleContext )
+  protected void init()
   {
-    final String pmFilter = String.format( "(&(%s=%s)(%s=%s))", Constants.SERVICE_PID,
-        DeviceProfileManager.SERVICE_PID, Constants.OBJECTCLASS, ManagedServiceFactory.class.getName() );
+    final String pmFilter = String.format( "(%s=%s)", Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
 
-    this.dependencyManager = new DependencyManager( aBundleContext );
+    this.dependencyManager = new DependencyManager( this.context );
     this.dependencyManager.add( this.dependencyManager.createComponent() //
         .setImplementation( this ) //
         .add( this.dependencyManager.createServiceDependency() //

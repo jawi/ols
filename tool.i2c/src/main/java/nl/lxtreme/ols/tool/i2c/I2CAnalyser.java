@@ -35,7 +35,7 @@ public class I2CAnalyser implements Tool<I2CDataSet>
 {
   // VARIABLES
 
-  private BundleContext context;
+  private volatile BundleContext context;
 
   // METHODS
 
@@ -74,17 +74,6 @@ public class I2CAnalyser implements Tool<I2CDataSet>
   public void invoke( final Window aParent, final ToolContext aContext )
   {
     new I2CProtocolAnalysisDialog( aParent, aContext, this.context, this ).showDialog();
-  }
-
-  /**
-   * Called when this tool is initialized by the client framework.
-   * 
-   * @param aContext
-   *          the bundle context to use, never <code>null</code>.
-   */
-  protected void init( final BundleContext aContext )
-  {
-    this.context = aContext;
   }
 }
 
