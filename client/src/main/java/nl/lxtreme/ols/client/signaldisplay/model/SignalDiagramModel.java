@@ -311,6 +311,18 @@ public class SignalDiagramModel
   }
 
   /**
+   * @return
+   */
+  public AcquisitionResult getCapturedData()
+  {
+    if ( this.dataSet == null )
+    {
+      return null;
+    }
+    return this.dataSet.getCapturedData();
+  }
+
+  /**
    * {@inheritDoc}
    */
   public Cursor getCursor( final int aCursorIdx )
@@ -1236,18 +1248,6 @@ public class SignalDiagramModel
         listener.cursorChanged( aPropertyName, aOldCursor, aCursor );
       }
     }
-  }
-
-  /**
-   * @return
-   */
-  private AcquisitionResult getCapturedData()
-  {
-    if ( this.dataSet == null )
-    {
-      return null;
-    }
-    return this.dataSet.getCapturedData();
   }
 
   /**

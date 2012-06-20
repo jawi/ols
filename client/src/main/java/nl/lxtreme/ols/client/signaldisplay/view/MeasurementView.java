@@ -30,6 +30,7 @@ import java.util.List;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
@@ -205,13 +206,13 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   }
 
   /**
-   * Provides a {@link SwingWorker} to measure the frequency, dutycycle and such
-   * asynchronously from the UI.
+   * Does the actual measurement of the signal.
    */
-  final class SignalMeasurer extends SwingWorker<PulseCountInfo, Boolean>
+  static final class SignalMeasurer
   {
     // VARIABLES
 
+    private final AcquisitionResult result;
     private final int mask;
     private final long startTimestamp;
     private final long endTimestamp;
@@ -219,32 +220,33 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     // CONSTRUCTORS
 
     /**
-     * Creates a new MeasurementView.SignalMeasurer instance.
+     * Creates a new {@link SignalMeasurer} instance.
      */
-    public SignalMeasurer( final Channel aChannel, final Cursor aCursorA, final Cursor aCursorB )
+    public SignalMeasurer( final AcquisitionResult aResult, final int aIndex, final long aStartTimestamp,
+        final long aEndTimestamp )
     {
-      this.mask = aChannel.getMask();
-      this.startTimestamp = aCursorA.getTimestamp();
-      this.endTimestamp = aCursorB.getTimestamp();
+      this.result = aResult;
+      this.mask = ( 1 << aIndex );
+      this.startTimestamp = aStartTimestamp;
+      this.endTimestamp = aEndTimestamp;
     }
 
     // METHODS
 
     /**
-     * {@inheritDoc}
+     * Executes the actual measurement.
+     * 
+     * @return the measurement information, never <code>null</code>.
      */
-    @Override
-    protected PulseCountInfo doInBackground() throws Exception
+    public PulseCountInfo run()
     {
-      final SignalDiagramModel model = getSignalDiagramModel();
+      final int startIdx = this.result.getSampleIndex( this.startTimestamp );
+      final int endIdx = this.result.getSampleIndex( this.endTimestamp );
 
-      final int startIdx = model.getTimestampIndex( this.startTimestamp );
-      final int endIdx = model.getTimestampIndex( this.endTimestamp );
+      final boolean hasTimingData = this.result.hasTimingData();
 
-      final boolean hasTimingData = model.hasTimingData();
-
-      final int[] values = model.getValues();
-      final long[] timestamps = model.getTimestamps();
+      final int[] values = this.result.getValues();
+      final long[] timestamps = this.result.getTimestamps();
 
       int fallingEdgeCount = 0;
       long highTime = 0;
@@ -255,7 +257,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       long lastTransition = timestamps[i];
       int lastBitValue = values[i++] & this.mask;
 
-      for ( ; !isCancelled() && ( i <= endIdx ); i++ )
+      for ( ; !Thread.currentThread().isInterrupted() && ( i <= endIdx ); i++ )
       {
         final int bitValue = values[i] & this.mask;
         final Edge edge = Edge.toEdge( lastBitValue, bitValue );
@@ -284,10 +286,55 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       }
 
       final double measureTime = Math.abs( ( this.endTimestamp - this.startTimestamp )
-          / ( double )model.getSampleRate() );
+          / ( double )this.result.getSampleRate() );
 
       return new PulseCountInfo( measureTime, risingEdgeCount, fallingEdgeCount, lowTime, highTime,
-          model.getSampleRate(), hasTimingData );
+          this.result.getSampleRate(), hasTimingData );
+    }
+  }
+
+  /**
+   * Provides a {@link SwingWorker} to measure the frequency, dutycycle and such
+   * asynchronously from the UI.
+   */
+  final class SignalMeasurerWorker extends SwingWorker<PulseCountInfo, Boolean>
+  {
+    // VARIABLES
+
+    private final int index;
+    private final long startTimestamp;
+    private final long endTimestamp;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link SignalMeasurerWorker} instance.
+     * 
+     * @param aChannel
+     *          the channel to measure;
+     * @param aCursorA
+     *          the cursor denoting the start of measurement;
+     * @param aCursorB
+     *          the cursor denoting the end of measurement.
+     */
+    public SignalMeasurerWorker( final Channel aChannel, final Cursor aCursorA, final Cursor aCursorB )
+    {
+      this.index = aChannel.getIndex();
+      this.startTimestamp = aCursorA.getTimestamp();
+      this.endTimestamp = aCursorB.getTimestamp();
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PulseCountInfo doInBackground() throws Exception
+    {
+      final SignalDiagramModel model = getSignalDiagramModel();
+
+      return new SignalMeasurer( model.getCapturedData(), this.index, this.startTimestamp, this.endTimestamp ).run();
     }
 
     /**
@@ -344,7 +391,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   private final JLabel pci_pulseCount;
 
   private volatile boolean listening;
-  private volatile SignalMeasurer signalMeasurer;
+  private volatile SignalMeasurerWorker signalMeasurerWorker;
 
   // CONSTRUCTORS
 
@@ -962,7 +1009,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     {
       if ( canPerformMeasurement() )
       {
-        if ( ( this.signalMeasurer == null ) || this.signalMeasurer.isDone() )
+        if ( ( this.signalMeasurerWorker == null ) || this.signalMeasurerWorker.isDone() )
         {
           this.indicator.setVisible( true );
 
@@ -970,8 +1017,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
           Cursor cursorA = ( Cursor )MeasurementView.this.cursorA.getSelectedItem();
           Cursor cursorB = ( Cursor )MeasurementView.this.cursorB.getSelectedItem();
 
-          this.signalMeasurer = new SignalMeasurer( channel, cursorA, cursorB );
-          this.signalMeasurer.execute();
+          this.signalMeasurerWorker = new SignalMeasurerWorker( channel, cursorA, cursorB );
+          this.signalMeasurerWorker.execute();
         }
       }
       else
