@@ -172,6 +172,11 @@
 			<artifactId>asm45</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+        <dependency>
+            <groupId>nl.lxtreme.ols.tool</groupId>
+            <artifactId>linedecoder</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.export</groupId>
 			<artifactId>image</artifactId>
