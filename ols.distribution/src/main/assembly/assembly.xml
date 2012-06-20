@@ -50,7 +50,6 @@
 				<include>nl.lxtreme.ols.tool:base</include>
 				<include>nl.lxtreme.ols.tool:i2c</include>
 				<include>nl.lxtreme.ols.tool:jtag</include>
-				<include>nl.lxtreme.ols.tool:measure</include>
 				<include>nl.lxtreme.ols.tool:spi</include>
 				<include>nl.lxtreme.ols.tool:state</include>
 				<include>nl.lxtreme.ols.tool:uart</include>

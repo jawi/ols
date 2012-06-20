@@ -139,11 +139,6 @@
 		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.tool</groupId>
-			<artifactId>measure</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>nl.lxtreme.ols.tool</groupId>
 			<artifactId>spi</artifactId>
 			<scope>runtime</scope>
 		</dependency>
