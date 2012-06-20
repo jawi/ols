@@ -267,6 +267,33 @@ public final class SignalElementManager implements IDataModelChangeListener
   }
 
   /**
+   * Returns the signal element that represents the channel with the given
+   * index.
+   * 
+   * @param aChannelIndex
+   *          the index of the channel to retrieve the corresponding signal
+   *          element for.
+   * @return a signal element matching the given channel index, or
+   *         <code>null</code> if no such element was found.
+   */
+  public SignalElement getChannelByIndex( final int aChannelIndex )
+  {
+    SignalElement result = null;
+    synchronized ( this.lock )
+    {
+      for ( ElementGroup cg : this.groups )
+      {
+        result = cg.getChannelByIndex( aChannelIndex );
+        if ( result != null )
+        {
+          break;
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
    * Returns all current channel groups.
    * 
    * @return an array of channel groups, never <code>null</code>.
@@ -301,6 +328,7 @@ public final class SignalElementManager implements IDataModelChangeListener
     final int yMax = aHeight + aY;
 
     final int spacing = UIManager.getInt( UIManagerKeys.SIGNAL_ELEMENT_SPACING );
+    final int halfSpacing = spacing / 2;
 
     int yPos = 0;
     for ( ElementGroup group : getGroups() )
@@ -320,7 +348,7 @@ public final class SignalElementManager implements IDataModelChangeListener
         if ( element.isSignalGroup() )
         {
           int height = element.getHeight();
-          if ( aMeasurer.signalElementFits( yPos, height, yMin, yMax ) )
+          if ( aMeasurer.signalElementFits( yPos, height + halfSpacing, yMin, yMax ) )
           {
             element.setYposition( yPos );
             result.add( element );
@@ -331,7 +359,7 @@ public final class SignalElementManager implements IDataModelChangeListener
         {
           // Does this individual channel fit?
           int height = element.getHeight();
-          if ( aMeasurer.signalElementFits( yPos, height, yMin, yMax ) )
+          if ( aMeasurer.signalElementFits( yPos, height + halfSpacing, yMin, yMax ) )
           {
             element.setYposition( yPos );
             result.add( element );
@@ -341,7 +369,7 @@ public final class SignalElementManager implements IDataModelChangeListener
         else if ( element.isGroupSummary() && group.isShowGroupSummary() )
         {
           int height = element.getHeight();
-          if ( aMeasurer.signalElementFits( yPos, height, yMin, yMax ) )
+          if ( aMeasurer.signalElementFits( yPos, height + halfSpacing, yMin, yMax ) )
           {
             element.setYposition( yPos );
             result.add( element );
@@ -351,7 +379,7 @@ public final class SignalElementManager implements IDataModelChangeListener
         else if ( element.isAnalogSignal() && group.isShowAnalogSignal() )
         {
           int height = element.getHeight();
-          if ( aMeasurer.signalElementFits( yPos, height, yMin, yMax ) )
+          if ( aMeasurer.signalElementFits( yPos, height + halfSpacing, yMin, yMax ) )
           {
             element.setYposition( yPos );
             result.add( element );

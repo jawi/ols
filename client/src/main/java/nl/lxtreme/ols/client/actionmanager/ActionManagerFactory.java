@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.actionmanager;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.action.SmartJumpAction.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 
 
@@ -86,6 +87,9 @@ public final class ActionManagerFactory
     aActionManager.add( new ZoomOutAction( signalDiagramController ) ).setEnabled( false );
     aActionManager.add( new ZoomOriginalAction( signalDiagramController ) ).setEnabled( false );
     aActionManager.add( new ZoomAllAction( signalDiagramController ) ).setEnabled( false );
+
+    aActionManager.add( new SmartJumpAction( JumpDirection.LEFT, aController ) ).setEnabled( false );
+    aActionManager.add( new SmartJumpAction( JumpDirection.RIGHT, aController ) ).setEnabled( false );
 
     aActionManager.add( new GotoTriggerAction( aController ) ).setEnabled( false );
     for ( int c = 0; c < Ols.MAX_CURSORS; c++ )

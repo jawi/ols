@@ -61,60 +61,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   // INNER TYPES
 
   /**
-   * Provides a listener for cursor changes that reflects all changes to their
-   * corresponding actions.
-   */
-  final class CursorActionListener implements ICursorChangeListener
-  {
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void cursorAdded( Cursor aCursor )
-    {
-      updateActionsOnEDT();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void cursorChanged( String aPropertyName, Cursor aOldCursor, Cursor aNewCursor )
-    {
-      // Nothing...
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void cursorRemoved( Cursor aOldCursor )
-    {
-      updateActionsOnEDT();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void cursorsInvisible()
-    {
-      updateActionsOnEDT();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void cursorsVisible()
-    {
-      updateActionsOnEDT();
-    }
-  }
-
-  /**
    * Provides a {@link AccumulatingRunnable} that repaints the entire main frame
    * once in a while. This is necessary if a tool produces lots of annotations
    * in a short time-frame, which would otherwise cause the UI to become slow
@@ -147,6 +93,60 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       final JOptionPane optionPane = ( JOptionPane )aEvent.getSource();
       optionPane.setValue( Integer.valueOf( JOptionPane.CLOSED_OPTION ) );
+    }
+  }
+
+  /**
+   * Provides a listener for cursor changes that reflects all changes to their
+   * corresponding actions.
+   */
+  final class CursorActionListener implements ICursorChangeListener
+  {
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorAdded( final Cursor aCursor )
+    {
+      updateActionsOnEDT();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorChanged( final String aPropertyName, final Cursor aOldCursor, final Cursor aNewCursor )
+    {
+      // Nothing...
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorRemoved( final Cursor aOldCursor )
+    {
+      updateActionsOnEDT();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorsInvisible()
+    {
+      updateActionsOnEDT();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cursorsVisible()
+    {
+      updateActionsOnEDT();
     }
   }
 
@@ -1671,6 +1671,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         // Update the cursor actions accordingly...
         getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );
         getAction( SetCursorModeAction.ID ).putValue( Action.SELECTED_KEY, Boolean.valueOf( cursorsEnabled ) );
+
+        getAction( SmartJumpAction.getJumpLeftID() ).setEnabled( dataAvailable );
+        getAction( SmartJumpAction.getJumpRightID() ).setEnabled( dataAvailable );
 
         boolean anyCursorSet = false;
         for ( int c = 0; c < Ols.MAX_CURSORS; c++ )

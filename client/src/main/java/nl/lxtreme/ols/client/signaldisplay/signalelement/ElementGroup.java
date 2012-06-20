@@ -224,6 +224,31 @@ public class ElementGroup
   }
 
   /**
+   * Returns the signal element that represents the channel with the given
+   * index.
+   * 
+   * @param aChannelIndex
+   *          the index of the channel to retrieve the corresponding signal
+   *          element for.
+   * @return a signal element matching the given channel index, or
+   *         <code>null</code> if no such element was found.
+   */
+  public SignalElement getChannelByIndex( final int aChannelIndex )
+  {
+    synchronized ( this.elements )
+    {
+      for ( SignalElement element : this.elements )
+      {
+        if ( element.isDigitalSignal() && ( element.getChannel().getIndex() == aChannelIndex ) )
+        {
+          return element;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
    * Returns the color of this channel group.
    * 
    * @return the color used by this channel group.

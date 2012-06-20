@@ -138,6 +138,24 @@ public class ChannelLabelsUI extends ComponentUI
   }
 
   /**
+   * Returns whether or not the given signal element is the current selected on
+   * (by hovering the mouse over it).
+   * 
+   * @param aElement
+   * @param aModel
+   * @return <code>true</code> if the given element is the selected element,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isSelectedElement( final SignalElement aElement, final ChannelLabelsViewModel aModel )
+  {
+    if ( !aElement.isDigitalSignal() )
+    {
+      return false;
+    }
+    return aModel.getSelectedChannelIndex() == aElement.getChannel().getIndex();
+  }
+
+  /**
    * Paints the background.
    * 
    * @param aCanvas
@@ -160,8 +178,12 @@ public class ChannelLabelsUI extends ComponentUI
     final int width = aWidth + arcWidth;
     final int height = aElement.getHeight();
 
-    final Color labelBackgroundColor = aModel.getLabelBackgroundColor();
-    final Color newBrighterColor = labelBackgroundColor.brighter();
+    Color labelBackgroundColor = aModel.getLabelBackgroundColor();
+    Color newBrighterColor = labelBackgroundColor.brighter();
+    if ( isSelectedElement( aElement, aModel ) )
+    {
+      newBrighterColor = newBrighterColor.brighter();
+    }
 
     final GradientPaint paint = new GradientPaint( x, y - 5, newBrighterColor, x, height + 10, labelBackgroundColor );
     final Paint oldPaint = aCanvas.getPaint();
@@ -194,7 +216,7 @@ public class ChannelLabelsUI extends ComponentUI
     int aHeight = aElement.getHeight();
 
     String index = "";
-    if ( aModel.isShowChannelIndex() && aElement.isDigitalSignal() )
+    if ( aElement.isDigitalSignal() && aModel.isShowChannelIndex() )
     {
       index = Integer.toString( aElement.getChannel().getIndex() );
     }
@@ -228,8 +250,14 @@ public class ChannelLabelsUI extends ComponentUI
         labelYpos = ( int )( middle - labelFm.getDescent() );
       }
 
+      Color color = aModel.getLabelForegroundColor();
+      if ( isSelectedElement( aElement, aModel ) )
+      {
+        color = color.brighter();
+      }
+
       aCanvas.setFont( labelFont );
-      drawLabel( aCanvas, aModel, label, aModel.getLabelForegroundColor(), labelXpos, labelYpos );
+      drawLabel( aCanvas, aModel, label, color, labelXpos, labelYpos );
     }
 
     if ( indexDefined )

@@ -22,7 +22,6 @@ package nl.lxtreme.ols.client.signaldisplay.util;
 
 
 import java.util.*;
-import java.util.List;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.annotation.*;
@@ -108,6 +107,76 @@ public final class AnnotationsHelper
         break;
       }
     }
+    return result;
+  }
+
+  /**
+   * Finds the first annotation that starts and ends after the given timestamp.
+   * 
+   * @param aTimestamp
+   *          the timestamp to search for annotations, >= 0L.
+   * @return an annotation matching the given timestamp criteria,
+   *         <code>null</code> if not found.
+   */
+  public DataAnnotation<?> getAnnotationAfter( final long aTimestamp )
+  {
+    SortedSet<Annotation<?>> annotations = new TreeSet<Annotation<?>>( this.channel.getAnnotations() );
+    for ( Annotation<?> annotation : annotations )
+    {
+      if ( !( annotation instanceof DataAnnotation<?> ) )
+      {
+        continue;
+      }
+
+      final DataAnnotation<?> ann = ( DataAnnotation<?> )annotation;
+
+      final long annStartTime = ann.getStartTimestamp();
+      final long annEndTime = ann.getEndTimestamp();
+
+      if ( ( annStartTime >= aTimestamp ) && ( annEndTime >= aTimestamp ) )
+      {
+        return ann;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Finds the first annotation that starts and ends before the given timestamp.
+   * 
+   * @param aTimestamp
+   *          the timestamp to search for annotations, >= 0L.
+   * @return an annotation matching the given timestamp criteria,
+   *         <code>null</code> if not found.
+   */
+  public DataAnnotation<?> getAnnotationBefore( final long aTimestamp )
+  {
+    DataAnnotation<?> result = null;
+
+    SortedSet<Annotation<?>> annotations = new TreeSet<Annotation<?>>( this.channel.getAnnotations() );
+    for ( Annotation<?> annotation : annotations )
+    {
+      if ( !( annotation instanceof DataAnnotation<?> ) )
+      {
+        continue;
+      }
+
+      final DataAnnotation<?> ann = ( DataAnnotation<?> )annotation;
+
+      final long annStartTime = ann.getStartTimestamp();
+      final long annEndTime = ann.getEndTimestamp();
+
+      if ( ( annStartTime < aTimestamp ) && ( annEndTime < aTimestamp ) )
+      {
+        result = ann;
+      }
+      else
+      {
+        break;
+      }
+    }
+
     return result;
   }
 

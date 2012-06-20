@@ -33,7 +33,6 @@ import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -84,21 +83,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     @Override
     public void mouseClicked( final MouseEvent aEvent )
     {
-      final Point point = aEvent.getPoint();
-
-      if ( isEdgeWarpTrigger( aEvent, point ) )
-      {
-        final MeasurementInfo signalHover = getModel().getSignalHover( point );
-        if ( ( signalHover != null ) && !signalHover.isEmpty() )
-        {
-          final long timestamp = signalHover.getEndTimestamp().longValue();
-
-          this.controller.scrollToTimestamp( timestamp );
-        }
-
-        aEvent.consume();
-      }
-      else if ( getModel().isCursorMode() && ( aEvent.getClickCount() == 2 ) )
+      if ( getModel().isCursorMode() && ( aEvent.getClickCount() == 2 ) )
       {
         final MouseEvent event = convertEvent( aEvent );
 
@@ -201,7 +186,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
       final MouseEvent event = convertEvent( aEvent );
       final Point point = event.getPoint();
 
-      if ( !isCursorHover( event ) && !isEdgeWarpTrigger( event, point ) )
+      if ( !isCursorHover( event ) )
       {
         setMouseCursor( event, null );
       }
@@ -320,31 +305,6 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     }
 
     /**
-     * Returns whether or not the given mouse event denotes a "edge warp"
-     * trigger event.
-     * 
-     * @param aEvent
-     *          the mouse event to test, cannot be <code>null</code>;
-     * @param aPoint
-     *          the (converted) mouse location, cannot be <code>null</code>.
-     * @return <code>true</code> if the given mouse event represents a
-     *         "edge warp" trigger event, <code>false</code> otherwise.
-     */
-    protected final boolean isEdgeWarpTrigger( final MouseEvent aEvent, final Point aPoint )
-    {
-      if ( ( aPoint == null ) || aEvent.isConsumed() )
-      {
-        return false;
-      }
-      if ( !this.controller.getSignalDiagramModel().hasData() || !isTimestampWarpModifier( aEvent ) )
-      {
-        return false;
-      }
-
-      return this.controller.getSignalHoverType( aPoint ) == SignalElementType.DIGITAL_SIGNAL;
-    }
-
-    /**
      * Sets the current mouse cursor.
      * 
      * @param aMouseCursor
@@ -370,6 +330,18 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     {
       final JPopupMenu contextMenu = new JPopupMenu();
 
+      Action smartJumpLeftAction = this.controller.getActionManager().getAction( SmartJumpAction.getJumpLeftID() );
+      Action smartJumpRightAction = this.controller.getActionManager().getAction( SmartJumpAction.getJumpRightID() );
+
+      contextMenu.add( smartJumpLeftAction );
+      contextMenu.add( smartJumpRightAction );
+      contextMenu.addSeparator();
+
+      // when an action is selected, we *no* longer know where the point was
+      // where the user clicked. Therefore, we need to store it separately
+      // for later use...
+      contextMenu.putClientProperty( "mouseLocation", aPoint );
+
       Cursor cursor = findCursor( aPoint );
       if ( cursor != null )
       {
@@ -390,9 +362,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         }
         contextMenu.addSeparator();
         contextMenu.add( new DeleteAllCursorsAction( this.controller ) );
-        // when an action is selected, we *no* longer know where the point was
-        // where the user clicked. Therefore, we need to store it separately
-        // for later use...
+
         contextMenu.putClientProperty( SetCursorAction.KEY, getCursorDropPoint( aPoint ) );
       }
 
@@ -522,6 +492,9 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
       final Point point = event.getPoint();
 
       final SignalDiagramModel model = getModel();
+
+      this.controller.setSelectedChannel( point );
+
       if ( model.isCursorMode() || model.isMeasurementMode() )
       {
         if ( model.isMeasurementMode() )
@@ -550,19 +523,8 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
 
       if ( !aEvent.isConsumed() )
       {
-        if ( isEdgeWarpTrigger( aEvent, point ) )
-        {
-          setMouseCursor( aEvent, CURSOR_MOVE_TIMESTAMP );
-          aEvent.consume();
-        }
-        else
-        {
-          setMouseCursor( aEvent, null );
-        }
-      }
+        setMouseCursor( aEvent, null );
 
-      if ( !aEvent.isConsumed() )
-      {
         SignalElement element = findSignalElement( point );
         if ( ( element != null ) && element.isDigitalSignal() )
         {

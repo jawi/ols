@@ -65,8 +65,9 @@ public class SignalDiagramModel
 
   // VARIABLES
 
-  private int mode;
-  private DataSet dataSet;
+  private volatile int mode;
+  private volatile int selectedChannelIndex;
+  private volatile DataSet dataSet;
 
   private final ZoomController zoomController;
   private final SignalElementManager channelGroupManager;
@@ -235,6 +236,76 @@ public class SignalDiagramModel
   public void addPropertyChangeListener( final PropertyChangeListener aListener )
   {
     this.propertyChangeSupport.addPropertyChangeListener( aListener );
+  }
+
+  /**
+   * @param aChannelIdx
+   * @param aTimestamp
+   * @return
+   */
+  public final long findEdgeAfter( final int aChannelIdx, final long aTimestamp )
+  {
+    final long[] timestamps = getTimestamps();
+    final int[] values = getValues();
+
+    int refIdx = Arrays.binarySearch( timestamps, aTimestamp );
+    if ( refIdx < 0 )
+    {
+      refIdx = -( refIdx + 1 ) - 1;
+    }
+
+    if ( ( refIdx < 0 ) || ( refIdx >= values.length ) )
+    {
+      return timestamps[0];
+    }
+
+    // find the reference time value; which is the "timestamp" under the
+    // cursor...
+    final int mask = ( 1 << aChannelIdx );
+    final int refValue = ( values[refIdx] & mask );
+
+    do
+    {
+      refIdx++;
+    }
+    while ( ( refIdx < ( values.length - 1 ) ) && ( ( values[refIdx] & mask ) == refValue ) );
+
+    return timestamps[refIdx];
+  }
+
+  /**
+   * @param aChannelIdx
+   * @param aTimestamp
+   * @return
+   */
+  public final long findEdgeBefore( final int aChannelIdx, final long aTimestamp )
+  {
+    final long[] timestamps = getTimestamps();
+    final int[] values = getValues();
+
+    int refIdx = Arrays.binarySearch( timestamps, aTimestamp );
+    if ( refIdx < 0 )
+    {
+      refIdx = -( refIdx + 1 ) - 1;
+    }
+
+    if ( ( refIdx < 0 ) || ( refIdx >= values.length ) )
+    {
+      return timestamps[0];
+    }
+
+    // find the reference time value; which is the "timestamp" under the
+    // cursor...
+    final int mask = ( 1 << aChannelIdx );
+    final int refValue = ( values[refIdx] & mask );
+
+    do
+    {
+      refIdx--;
+    }
+    while ( ( refIdx > 0 ) && ( ( values[refIdx] & mask ) == refValue ) );
+
+    return timestamps[Math.max( 0, refIdx )];
   }
 
   /**
@@ -472,6 +543,16 @@ public class SignalDiagramModel
   }
 
   /**
+   * Returns the index of the current selected channel.
+   * 
+   * @return the selected channel index, or -1 if no channel is selected.
+   */
+  public int getSelectedChannelIndex()
+  {
+    return this.selectedChannelIndex;
+  }
+
+  /**
    * Returns channel group manager.
    * 
    * @return the channel group manager, never <code>null</code>.
@@ -493,6 +574,29 @@ public class SignalDiagramModel
    */
   public final MeasurementInfo getSignalHover( final Point aPoint )
   {
+    final SignalElement signalElement = findSignalElement( aPoint );
+    if ( ( signalElement == null ) || !signalElement.isDigitalSignal() )
+    {
+      // Trivial reject: no digital signal, or not above any channel...
+      return null;
+    }
+
+    return getSignalHover( aPoint, signalElement );
+  }
+
+  /**
+   * @param aPoint
+   * @param aSignalElement
+   * @return
+   */
+  public MeasurementInfo getSignalHover( final Point aPoint, final SignalElement aSignalElement )
+  {
+    if ( !aSignalElement.isDigitalSignal() )
+    {
+      throw new IllegalArgumentException( "Signal element must represent a digital channel!" );
+    }
+
+    final int refIdx = locationToSampleIndex( aPoint );
     // Calculate the "absolute" time based on the mouse position, use a
     // "over sampling" factor to allow intermediary (between two time stamps)
     // time value to be shown...
@@ -503,24 +607,14 @@ public class SignalDiagramModel
     }
     else
     {
-      refTime = locationToSampleIndex( aPoint );
+      refTime = refIdx;
     }
 
-    final SignalElement signalElement = findSignalElement( aPoint );
-    if ( ( signalElement == null ) || !signalElement.isDigitalSignal() )
-    {
-      // Trivial reject: no digital signal, or not above any channel...
-      return null;
-    }
-
-    final Channel channel = signalElement.getChannel();
-    final int realChannelIdx = channel.getIndex();
-    final String channelLabel = channel.getLabel();
-
+    final Channel channel = aSignalElement.getChannel();
     if ( !channel.isEnabled() )
     {
       // Trivial reject: real channel is invisible...
-      return new MeasurementInfo( realChannelIdx, channelLabel, refTime );
+      return new MeasurementInfo( aSignalElement, refTime );
     }
 
     final long[] timestamps = getTimestamps();
@@ -529,15 +623,13 @@ public class SignalDiagramModel
     long tm = -1L;
     long te = -1L;
     long th = -1L;
-    int middleXpos = -1;
 
     // find the reference time value; which is the "timestamp" under the
     // cursor...
-    final int refIdx = locationToSampleIndex( aPoint );
     final int[] values = getValues();
     if ( ( refIdx >= 0 ) && ( refIdx < values.length ) )
     {
-      final int mask = ( 1 << realChannelIdx );
+      final int mask = channel.getMask();
       final int refValue = ( values[refIdx] & mask );
 
       int idx = refIdx;
@@ -584,27 +676,14 @@ public class SignalDiagramModel
       }
     }
 
-    final Rectangle rect = new Rectangle();
-    rect.x = ( int )( getZoomFactor() * ts );
-    rect.width = ( int )( getZoomFactor() * ( te - ts ) );
-    rect.y = signalElement.getYposition() + signalElement.getOffset();
-    rect.height = signalElement.getSignalHeight();
-
-    // The position where the "other" signal transition should be...
-    middleXpos = ( int )( getZoomFactor() * tm );
-
     MeasurementInfo result;
     if ( hasTimingData() )
     {
-      final double timeHigh = th / ( double )getSampleRate();
-      final double timeTotal = ( te - ts ) / ( double )getSampleRate();
-
-      result = new MeasurementInfo( realChannelIdx, channelLabel, rect, ts, te, refTime, timeHigh, timeTotal,
-          middleXpos );
+      result = new MeasurementInfo( aSignalElement, ts, tm, te, th, refTime, getZoomFactor(), getSampleRate() );
     }
     else
     {
-      result = new MeasurementInfo( realChannelIdx, channelLabel, rect, ts, te, refTime, middleXpos );
+      result = new MeasurementInfo( aSignalElement, ts, tm, te, refTime, getZoomFactor(), getSampleRate() );
     }
 
     return result;
@@ -1212,6 +1291,17 @@ public class SignalDiagramModel
         listener.disableMeasurementMode();
       }
     }
+  }
+
+  /**
+   * Sets the selected channel index to the given value.
+   * 
+   * @param aChannelIndex
+   *          the index to set, or -1 if no channel is to be selected.
+   */
+  public void setSelectedChannelIndex( final int aChannelIndex )
+  {
+    this.selectedChannelIndex = aChannelIndex;
   }
 
   /**

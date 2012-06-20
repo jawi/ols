@@ -22,6 +22,8 @@ package nl.lxtreme.ols.client.signaldisplay;
 
 import java.awt.*;
 
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+
 
 /**
  * Provides a small DTO for keeping signal hover information together.
@@ -34,6 +36,7 @@ public final class MeasurementInfo
   private final String channelLabel;
   private final double refTime;
   private final Long startTimestamp;
+  private final Long transitionTimestamp;
   private final Long endTimestamp;
   private final Rectangle rectangle;
   private final Double highTime;
@@ -46,19 +49,18 @@ public final class MeasurementInfo
   /**
    * Creates a new SignalHoverInfo instance.
    * 
-   * @param aChannelIdx
-   *          the channel index on which the hover information is based;
-   * @param aChannelLabel
-   *          the label of the channel;
+   * @param aElement
+   *          the signal element for which this object is created;
    * @param aRefTime
    *          the time stamp of this hover, based on the mouse position.
    */
-  public MeasurementInfo( final int aChannelIdx, final String aChannelLabel, final double aRefTime )
+  public MeasurementInfo( final SignalElement aElement, final double aRefTime )
   {
-    this.channelIdx = aChannelIdx;
-    this.channelLabel = aChannelLabel;
+    this.channelIdx = aElement.getChannel().getIndex();
+    this.channelLabel = aElement.getLabel();
     this.rectangle = new Rectangle();
     this.startTimestamp = null;
+    this.transitionTimestamp = null;
     this.endTimestamp = null;
     this.refTime = aRefTime;
     this.totalTime = null;
@@ -68,80 +70,96 @@ public final class MeasurementInfo
   }
 
   /**
-   * Creates a new SignalHoverInfo instance.
+   * Creates a new {@link MeasurementInfo} instance for the given signal element
+   * and without timing data.
    * 
-   * @param aChannelIdx
-   *          the channel index on which the hover information is based;
-   * @param aChannelLabel
-   *          the label of the channel;
-   * @param aRectangle
-   *          the UI coordinates defining the hover on screen, cannot be
-   *          <code>null</code>;
-   * @param aStartTimestamp
-   *          the time stamp that makes up the left side of the hover;
-   * @param aEndTimestamp
-   *          the time stamp that makes up the right side of the hover;
-   * @param aRefTime
-   *          the time stamp of this hover, based on the mouse position;
-   * @param aHighTime
-   *          the time the signal is non-zero (high);
-   * @param aTotalTime
-   *          the total time of the signal (high + low);
-   * @param aMidSamplePos
-   *          the screen coordinate of the middle X position.
+   * @param aElement
+   *          the signal element for which this object is created;
+   * @param aStartState
+   *          the starting state # of the measurement;
+   * @param aTransitionState
+   *          the state # at with the signal transitions;
+   * @param aEndState
+   *          the ending state # of the measurement;
+   * @param aRefState
+   *          the reference state of the measurement;
+   * @param aZoomFactor
+   *          the zoom factor;
+   * @param aSampleRate
+   *          the sample rate.
    */
-  public MeasurementInfo( final int aChannelIdx, final String aChannelLabel, final Rectangle aRectangle,
-      final long aStartTimestamp, final long aEndTimestamp, final double aRefTime, final double aHighTime,
-      final double aTotalTime, final int aMidSamplePos )
+  public MeasurementInfo( final SignalElement aElement, final long aStartState, final long aTransitionState,
+      final long aEndState, final double aRefState, final double aZoomFactor, final double aSampleRate )
   {
-    this.channelIdx = aChannelIdx;
-    this.channelLabel = aChannelLabel;
-    this.rectangle = aRectangle;
-    this.startTimestamp = Long.valueOf( aStartTimestamp );
-    this.endTimestamp = Long.valueOf( aEndTimestamp );
-    this.refTime = aRefTime;
-    this.totalTime = Double.valueOf( aTotalTime );
-    this.highTime = Double.valueOf( aHighTime );
-    this.midSamplePos = Integer.valueOf( aMidSamplePos );
-    this.hasTimingData = true;
+    this.channelIdx = aElement.getChannel().getIndex();
+    this.channelLabel = aElement.getLabel();
+
+    this.startTimestamp = Long.valueOf( aStartState );
+    this.endTimestamp = Long.valueOf( aEndState );
+    this.transitionTimestamp = Long.valueOf( aTransitionState );
+
+    this.refTime = aRefState;
+
+    this.midSamplePos = Integer.valueOf( ( int )( aTransitionState * aZoomFactor ) );
+
+    this.highTime = null;
+    this.totalTime = null;
+
+    this.rectangle = new Rectangle();
+    this.rectangle.x = ( int )( aZoomFactor * aStartState );
+    this.rectangle.width = ( int )( aZoomFactor * ( aEndState - aStartState ) );
+    this.rectangle.y = aElement.getYposition() + aElement.getOffset();
+    this.rectangle.height = aElement.getSignalHeight();
+
+    this.hasTimingData = false;
   }
 
   /**
-   * Creates a new SignalHoverInfo instance.
+   * Creates a new {@link MeasurementInfo} instance for the given signal element
+   * and with timing data.
    * 
-   * @param aChannelIdx
-   *          the channel index on which the hover information is based;
-   * @param aChannelLabel
-   *          the label of the channel;
-   * @param aRectangle
-   *          the UI coordinates defining the hover on screen, cannot be
-   *          <code>null</code>;
-   * @param aStartTimestamp
-   *          the time stamp that makes up the left side of the hover;
-   * @param aEndTimestamp
-   *          the time stamp that makes up the right side of the hover;
-   * @param aRefTime
-   *          the time stamp of this hover, based on the mouse position;
+   * @param aElement
+   *          the signal element for which this object is created;
+   * @param aStartTime
+   *          the starting timestamp of the measurement;
+   * @param aTransitionTime
+   *          the timestamp at with the signal transitions;
+   * @param aEndTime
+   *          the ending timestamp of the measurement;
    * @param aHighTime
-   *          the time the signal is non-zero (high);
-   * @param aTotalTime
-   *          the total time of the signal (high + low);
-   * @param aMidSamplePos
-   *          the screen coordinate of the middle X position.
+   *          the time the signal is high in the measurement;
+   * @param aRefTime
+   *          the reference time of the measurement;
+   * @param aZoomFactor
+   *          the zoom factor;
+   * @param aSampleRate
+   *          the sample rate.
    */
-  public MeasurementInfo( final int aChannelIdx, final String aChannelLabel, final Rectangle aRectangle,
-      final long aStartTimestamp, final long aEndTimestamp, final double aRefTime, final int aMidSamplePos )
+  public MeasurementInfo( final SignalElement aElement, final long aStartTime, final long aTransitionTime,
+      final long aEndTime, final long aHighTime, final double aRefTime, final double aZoomFactor,
+      final double aSampleRate )
   {
-    this.channelIdx = aChannelIdx;
-    this.channelLabel = aChannelLabel;
-    this.rectangle = aRectangle;
-    this.startTimestamp = Long.valueOf( aStartTimestamp );
-    this.endTimestamp = Long.valueOf( aEndTimestamp );
+    this.channelIdx = aElement.getChannel().getIndex();
+    this.channelLabel = aElement.getLabel();
+
+    this.startTimestamp = Long.valueOf( aStartTime );
+    this.endTimestamp = Long.valueOf( aEndTime );
+    this.transitionTimestamp = Long.valueOf( aTransitionTime );
+
     this.refTime = aRefTime;
-    this.totalTime = null;
-    this.highTime = null;
-    this.midSamplePos = Integer.valueOf( aMidSamplePos );
-    this.hasTimingData = false;
+
+    this.midSamplePos = Integer.valueOf( ( int )( aTransitionTime * aZoomFactor ) );
+
+    this.highTime = Double.valueOf( aHighTime / aSampleRate );
+    this.totalTime = Double.valueOf( ( aEndTime - aStartTime ) / aSampleRate );
+
+    this.rectangle = new Rectangle();
+    this.rectangle.x = ( int )( aZoomFactor * aStartTime );
+    this.rectangle.width = ( int )( aZoomFactor * ( aEndTime - aStartTime ) );
+    this.rectangle.y = aElement.getYposition() + aElement.getOffset();
+    this.rectangle.height = aElement.getSignalHeight();
+
+    this.hasTimingData = true;
   }
 
   // METHODS
@@ -344,6 +362,18 @@ public final class MeasurementInfo
   public Double getTotalTime()
   {
     return this.totalTime;
+  }
+
+  /**
+   * Returns the timestamp in the measurement window at which the signal
+   * transitions.
+   * 
+   * @return the transition timestamp, can be <code>null</code> if no timing or
+   *         state data is present.
+   */
+  public Long getTransitionTimestamp()
+  {
+    return this.transitionTimestamp;
   }
 
   /**

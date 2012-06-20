@@ -121,6 +121,17 @@ public abstract class AbstractViewModel
   }
 
   /**
+   * Returns the index of the current selected channel.
+   * 
+   * @return the current selected channel index, or -1 if no channel is
+   *         selected.
+   */
+  public int getSelectedChannelIndex()
+  {
+    return getSignalDiagramModel().getSelectedChannelIndex();
+  }
+
+  /**
    * @return
    */
   public final SignalElementManager getSignalElementManager()

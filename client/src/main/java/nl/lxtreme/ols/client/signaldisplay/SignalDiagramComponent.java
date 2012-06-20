@@ -247,23 +247,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
       configureEnclosingScrollPane();
 
-      final IActionManager actionManager = this.controller.getActionManager();
-
-      // Wrap the original zoom-actions so that we can update its state upon
-      // each invocation...
-      Action zoomInAction = actionManager.getAction( ZoomInAction.ID );
-      Action zoomOutAction = actionManager.getAction( ZoomOutAction.ID );
-      Action zoomAllAction = actionManager.getAction( ZoomAllAction.ID );
-      Action zoomOriginalAction = actionManager.getAction( ZoomOriginalAction.ID );
-
-      registerKeyBinding( this, '+', zoomInAction );
-      registerKeyBinding( this, '=', zoomInAction );
-      registerKeyBinding( this, '-', zoomOutAction );
-      registerKeyBinding( this, '_', zoomOutAction );
-      registerKeyBinding( this, '[', zoomAllAction );
-      registerKeyBinding( this, ']', zoomOriginalAction );
-
-      KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher( new GlobalKeyListener() );
+      registerKeyBindings();
 
       revalidate();
     }
@@ -639,6 +623,55 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
       scrollPane.addComponentListener( this.componentHandler );
     }
+  }
+
+  /**
+   * Registers all key bindings this component supports.
+   */
+  private void registerKeyBindings()
+  {
+    final IActionManager actionManager = this.controller.getActionManager();
+
+    // Wrap the original zoom-actions so that we can update its state upon
+    // each invocation...
+    Action zoomInAction = actionManager.getAction( ZoomInAction.ID );
+    Action zoomOutAction = actionManager.getAction( ZoomOutAction.ID );
+    Action zoomAllAction = actionManager.getAction( ZoomAllAction.ID );
+    Action zoomOriginalAction = actionManager.getAction( ZoomOriginalAction.ID );
+
+    registerKeyBinding( this, '+', zoomInAction );
+    registerKeyBinding( this, '=', zoomInAction );
+    registerKeyBinding( this, '-', zoomOutAction );
+    registerKeyBinding( this, '_', zoomOutAction );
+    registerKeyBinding( this, '[', zoomAllAction );
+    registerKeyBinding( this, ']', zoomOriginalAction );
+
+    int[] modifiers = { 0, InputEvent.SHIFT_DOWN_MASK, InputEvent.ALT_DOWN_MASK, InputEvent.CTRL_DOWN_MASK,
+        InputEvent.META_DOWN_MASK };
+
+    Action smartJumpLeftAction = actionManager.getAction( SmartJumpAction.getJumpLeftID() );
+
+    int[] smartJumpLeftKeys = { KeyEvent.VK_LEFT, KeyEvent.VK_KP_LEFT };
+    for ( int key : smartJumpLeftKeys )
+    {
+      for ( int modifier : modifiers )
+      {
+        registerKeyBinding( this, KeyStroke.getKeyStroke( key, modifier, true /* onKeyRelease */), smartJumpLeftAction );
+      }
+    }
+
+    Action smartJumpRightAction = actionManager.getAction( SmartJumpAction.getJumpRightID() );
+
+    int[] smartJumpRightKeys = { KeyEvent.VK_RIGHT, KeyEvent.VK_KP_RIGHT };
+    for ( int key : smartJumpRightKeys )
+    {
+      for ( int modifier : modifiers )
+      {
+        registerKeyBinding( this, KeyStroke.getKeyStroke( key, modifier, true /* onKeyRelease */), smartJumpRightAction );
+      }
+    }
+
+    KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher( new GlobalKeyListener() );
   }
 
   /**

@@ -20,6 +20,8 @@
 package nl.lxtreme.ols.client.signaldisplay;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
 import java.beans.*;
 
@@ -36,6 +38,8 @@ import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
+import nl.lxtreme.ols.client.signaldisplay.util.*;
+import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -421,6 +425,47 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
+   * @param aPosition
+   */
+  public void setSelectedChannel( final Point aPosition )
+  {
+    SignalDiagramModel model = getSignalDiagramModel();
+
+    final SignalElement signalElement = model.findSignalElement( aPosition );
+
+    int oldIndex = model.getSelectedChannelIndex();
+    int newIndex = -1;
+
+    if ( ( signalElement != null ) && signalElement.isDigitalSignal() )
+    {
+      // Update the selected channel index...
+      newIndex = signalElement.getChannel().getIndex();
+    }
+
+    if ( oldIndex != newIndex )
+    {
+      model.setSelectedChannelIndex( newIndex );
+
+      ChannelLabelsView channelLabelsView = getChannelLabelsView();
+      if ( channelLabelsView != null )
+      {
+        int width = channelLabelsView.getWidth();
+
+        // Repaint the affected areas
+        Rectangle rect1 = new Rectangle( 0, signalElement.getYposition(), width, signalElement.getHeight() );
+        channelLabelsView.repaint( rect1 );
+
+        SignalElement currentElement = model.getSignalElementManager().getChannelByIndex( oldIndex );
+        if ( currentElement != null )
+        {
+          Rectangle rect2 = new Rectangle( 0, currentElement.getYposition(), width, currentElement.getHeight() );
+          channelLabelsView.repaint( rect2 );
+        }
+      }
+    }
+  }
+
+  /**
    * Disables the cursor "snap" mode.
    * 
    * @param aSnapMode
@@ -430,6 +475,23 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   public void setSnapModeEnabled( final boolean aSnapMode )
   {
     getSignalDiagramModel().setSnapCursor( aSnapMode );
+  }
+
+  /**
+   * @param aChannelIndex
+   * @param aType
+   * @param aDirection
+   */
+  public void smartJump( final int aChannelIndex, final SmartJumpAction.JumpType aType,
+      final SmartJumpAction.JumpDirection aDirection )
+  {
+    SmartJumpHelper jumpHelper = new SmartJumpHelper( this, aDirection, aType );
+
+    long timestamp = jumpHelper.getSmartJumpPosition( aChannelIndex );
+    if ( timestamp >= 0 )
+    {
+      scrollToTimestamp( timestamp );
+    }
   }
 
   /**
@@ -449,6 +511,16 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   final void setSignalDiagramModel( final SignalDiagramModel aSignalDiagramModel )
   {
     this.signalDiagramModel = aSignalDiagramModel;
+  }
+
+  private ChannelLabelsView getChannelLabelsView()
+  {
+    JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
+    if ( scrollPane != null )
+    {
+      return ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+    }
+    return null;
   }
 
   /**
