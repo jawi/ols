@@ -576,7 +576,7 @@ public class SignalUI extends ComponentUI
         final int trailingZeros = Long.numberOfTrailingZeros( mask );
         final int onesCount = Long.SIZE - Long.numberOfLeadingZeros( mask ) - trailingZeros;
         final long maxValue = ( ( 1L << onesCount ) - 1L ) & 0xFFFFFFFFL;
-        double scaleFactor = signalElement.getHeight() / maxValue;
+        double scaleFactor = ( maxValue == 0L ) ? 1.0 : signalElement.getHeight() / ( double )maxValue;
 
         // Make sure we always start with time 0...
         int p = 0;
