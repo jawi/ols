@@ -456,11 +456,14 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
   @Override
   protected void setControlsEnabled( final boolean aEnable )
   {
+    this.spifiMode.setEnabled( aEnable );
     this.reportCS.setEnabled( aEnable );
     this.honourCS.setEnabled( aEnable );
     this.sck.setEnabled( aEnable );
     this.miso.setEnabled( aEnable );
     this.mosi.setEnabled( aEnable );
+    this.io2.setEnabled( aEnable );
+    this.io3.setEnabled( aEnable );
     this.cs.setEnabled( aEnable );
     this.mode.setEnabled( aEnable );
     this.bits.setEnabled( aEnable );
