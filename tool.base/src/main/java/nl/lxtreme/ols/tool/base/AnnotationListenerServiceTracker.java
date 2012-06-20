@@ -85,7 +85,14 @@ public class AnnotationListenerServiceTracker implements AnnotationListener
    */
   public void close()
   {
-    this.annotationListenerHelper.close();
+    try
+    {
+      this.annotationListenerHelper.close();
+    }
+    catch ( IllegalStateException exception )
+    {
+      // Ignore; bundle context probably is incorrect...
+    }
   }
 
   /**

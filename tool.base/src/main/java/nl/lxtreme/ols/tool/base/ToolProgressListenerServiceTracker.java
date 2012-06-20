@@ -55,7 +55,14 @@ public class ToolProgressListenerServiceTracker implements ToolProgressListener
    */
   public void close()
   {
-    this.toolProgressListenerHelper.close();
+    try
+    {
+      this.toolProgressListenerHelper.close();
+    }
+    catch ( IllegalStateException exception )
+    {
+      // Ignore; bundle context probably is incorrect...
+    }
   }
 
   /**

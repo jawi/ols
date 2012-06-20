@@ -62,10 +62,9 @@ public class TaskExecutionServiceTracker implements TaskExecutionService
     {
       this.taskExecutionServiceHelper.close();
     }
-    catch ( RuntimeException exception )
+    catch ( IllegalStateException exception )
     {
-      // TODO Auto-generated catch block
-      exception.printStackTrace();
+      // Ignore; bundle context probably is incorrect...
     }
   }
 
