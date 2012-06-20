@@ -51,6 +51,20 @@ public class ChannelLabelAnnotation implements Annotation<String>
    * {@inheritDoc}
    */
   @Override
+  public int compareTo( final Annotation<String> aOther )
+  {
+    int result = ( this.channelIdx - aOther.getChannel() );
+    if ( result == 0 )
+    {
+      result = getAnnotation().compareTo( aOther.getAnnotation() );
+    }
+    return result;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public String getAnnotation()
   {
     return this.label;

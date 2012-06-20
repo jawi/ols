@@ -24,7 +24,7 @@ package nl.lxtreme.ols.api.data.annotation;
 /**
  * Denotes an annotation.
  */
-public interface Annotation<ANNOTATION_TYPE>
+public interface Annotation<ANNOTATION_TYPE> extends Comparable<Annotation<ANNOTATION_TYPE>>
 {
   // METHODS
 

@@ -64,6 +64,37 @@ public class SampleDataAnnotation implements DataAnnotation<String>
    * {@inheritDoc}
    */
   @Override
+  public int compareTo( final Annotation<String> aOther )
+  {
+    int result = ( this.channelIdx - aOther.getChannel() );
+    if ( result == 0 )
+    {
+      if ( aOther instanceof DataAnnotation )
+      {
+        DataAnnotation<?> dataAnnotation = ( DataAnnotation<?> )aOther;
+
+        result = ( int )( this.startTimestamp - dataAnnotation.getStartTimestamp() );
+        if ( result == 0 )
+        {
+          result = ( int )( this.endTimestamp - dataAnnotation.getEndTimestamp() );
+          if ( result == 0 )
+          {
+            result = getAnnotation().compareTo( aOther.getAnnotation() );
+          }
+        }
+      }
+      else
+      {
+        result = getAnnotation().compareTo( aOther.getAnnotation() );
+      }
+    }
+    return result;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public String getAnnotation()
   {
     return this.text;
