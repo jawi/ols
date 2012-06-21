@@ -123,7 +123,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         }
 
         final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, ( Component )aEvent.getSource() );
-        if ( scrollPane != null )
+        if ( ( scrollPane != null ) && ( this.lastClickPosition != null ) )
         {
           final JViewport viewPort = scrollPane.getViewport();
           final Component signalView = this.controller.getSignalDiagram().getSignalView();
