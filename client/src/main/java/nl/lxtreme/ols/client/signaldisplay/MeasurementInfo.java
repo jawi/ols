@@ -387,8 +387,7 @@ public final class MeasurementInfo
     result = ( prime * result ) + this.channelIdx;
     result = ( prime * result ) + ( ( this.endTimestamp == null ) ? 0 : this.endTimestamp.hashCode() );
     result = ( prime * result ) + ( ( this.midSamplePos == null ) ? 0 : this.midSamplePos.hashCode() );
-    long temp;
-    temp = Double.doubleToLongBits( this.refTime );
+    long temp = Double.doubleToLongBits( this.refTime );
     result = ( prime * result ) + ( int )( temp ^ ( temp >>> 32 ) );
     result = ( prime * result ) + ( ( this.startTimestamp == null ) ? 0 : this.startTimestamp.hashCode() );
     return result;

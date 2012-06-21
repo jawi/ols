@@ -36,7 +36,6 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -125,46 +124,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     }
   }
 
-  /**
-   * Provides a global key listener for listening to certain modifier keys.
-   */
-  final class GlobalKeyListener implements KeyEventDispatcher
-  {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean dispatchKeyEvent( final KeyEvent aEvent )
-    {
-      if ( isTimestampWarpKeyEvent( aEvent ) )
-      {
-        setCursor( CURSOR_MOVE_TIMESTAMP );
-      }
-      else
-      {
-        setCursor( null );
-      }
-      return false;
-    }
-
-    /**
-     * @param aEvent
-     * @return
-     */
-    boolean isTimestampWarpKeyEvent( final KeyEvent aEvent )
-    {
-      if ( !hasData() )
-      {
-        return false;
-      }
-      if ( !SwingComponentUtils.isActivelyShown( SignalDiagramComponent.this ) )
-      {
-        return false;
-      }
-      return SignalView.isTimestampWarpModifier( aEvent );
-    }
-  }
-
   // CONSTANTS
 
   static final java.awt.Cursor CURSOR_WAIT = java.awt.Cursor.getPredefinedCursor( java.awt.Cursor.WAIT_CURSOR );
@@ -204,6 +163,8 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     add( this.signalView, BorderLayout.CENTER );
 
     setOpaque( false );
+    // Enable synthetic drag events (even when mouse is outside window)...
+    setAutoscrolls( true );
   }
 
   // METHODS
@@ -646,7 +607,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     registerKeyBinding( this, '[', zoomAllAction );
     registerKeyBinding( this, ']', zoomOriginalAction );
 
-    int[] modifiers = { 0, InputEvent.SHIFT_DOWN_MASK, InputEvent.ALT_DOWN_MASK, InputEvent.CTRL_DOWN_MASK,
+    int[] modifiers = { InputEvent.SHIFT_DOWN_MASK, InputEvent.ALT_DOWN_MASK, InputEvent.CTRL_DOWN_MASK,
         InputEvent.META_DOWN_MASK };
 
     Action smartJumpLeftAction = actionManager.getAction( SmartJumpAction.getJumpLeftID() );
@@ -656,7 +617,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     {
       for ( int modifier : modifiers )
       {
-        registerKeyBinding( this, KeyStroke.getKeyStroke( key, modifier, true /* onKeyRelease */), smartJumpLeftAction );
+        registerKeyBinding( this, KeyStroke.getKeyStroke( key, modifier ), smartJumpLeftAction );
       }
     }
 
@@ -667,11 +628,9 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     {
       for ( int modifier : modifiers )
       {
-        registerKeyBinding( this, KeyStroke.getKeyStroke( key, modifier, true /* onKeyRelease */), smartJumpRightAction );
+        registerKeyBinding( this, KeyStroke.getKeyStroke( key, modifier ), smartJumpRightAction );
       }
     }
-
-    KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher( new GlobalKeyListener() );
   }
 
   /**

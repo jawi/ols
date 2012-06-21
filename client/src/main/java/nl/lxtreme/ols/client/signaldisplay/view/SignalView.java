@@ -22,6 +22,9 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 import java.awt.*;
 import java.awt.event.*;
+
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.getAncestorOfClass;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
@@ -63,7 +66,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     protected final SignalDiagramController controller;
 
     private volatile int movingCursor;
-    private volatile Point rubberBandStartPoint = null;
+    private volatile Point lastClickPosition = null;
 
     // CONSTRUCTORS
 
@@ -114,13 +117,50 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
       }
       else
       {
-        if ( this.rubberBandStartPoint == null )
+        if ( ( this.lastClickPosition == null ) && ( ( aEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK ) != 0 ) )
         {
-          this.rubberBandStartPoint = new Point( point );
+          this.lastClickPosition = new Point( point );
+        }
+
+        final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, ( Component )aEvent.getSource() );
+        if ( scrollPane != null )
+        {
+          final JViewport viewPort = scrollPane.getViewport();
+          final Component signalView = this.controller.getSignalDiagram().getSignalView();
+
+          boolean horizontalOnly = ( aEvent.getModifiersEx() & InputEvent.ALT_DOWN_MASK ) != 0;
+          boolean verticalOnly = horizontalOnly && ( ( aEvent.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK ) != 0 );
+
+          int dx = aEvent.getX() - this.lastClickPosition.x;
+          int dy = aEvent.getY() - this.lastClickPosition.y;
+
+          Point scrollPosition = viewPort.getViewPosition();
+          int newX = scrollPosition.x;
+          if ( !verticalOnly )
+          {
+            newX -= dx;
+          }
+          int newY = scrollPosition.y;
+          if ( verticalOnly || !horizontalOnly )
+          {
+            newY -= dy;
+          }
+
+          int diagramWidth = signalView.getWidth();
+          int viewportWidth = viewPort.getWidth();
+          int maxX = diagramWidth - viewportWidth - 1;
+          scrollPosition.x = Math.max( 0, Math.min( maxX, newX ) );
+
+          int diagramHeight = signalView.getHeight();
+          int viewportHeight = viewPort.getHeight();
+          int maxY = diagramHeight - viewportHeight;
+          scrollPosition.y = Math.max( 0, Math.min( maxY, newY ) );
+
+          viewPort.setViewPosition( scrollPosition );
         }
 
         // Use UNCONVERTED/ORIGINAL mouse event!
-        handleZoomRegion( aEvent, this.rubberBandStartPoint );
+        handleZoomRegion( aEvent, this.lastClickPosition );
       }
     }
 
@@ -174,6 +214,11 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
             this.movingCursor = -1;
           }
         }
+
+        if ( ( aEvent.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK ) != 0 )
+        {
+          this.lastClickPosition = point;
+        }
       }
     }
 
@@ -196,11 +241,12 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         this.movingCursor = -1;
       }
 
-      if ( this.rubberBandStartPoint != null )
+      if ( ( aEvent.getModifiersEx() & InputEvent.BUTTON1_MASK ) != 0 )
       {
         // Use UNCONVERTED/ORIGINAL mouse event!
-        handleZoomRegion( aEvent, this.rubberBandStartPoint );
-        this.rubberBandStartPoint = null;
+        handleZoomRegion( aEvent, this.lastClickPosition );
+
+        this.lastClickPosition = null;
       }
     }
 
@@ -606,43 +652,6 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     aController.addMeasurementListener( signalView );
 
     return signalView;
-  }
-
-  /**
-   * Returns whether or not the given input event can be interpreted as a 'edge
-   * warp' trigger event.
-   * 
-   * @param aEvent
-   *          the input event to test, cannot be <code>null</code>.
-   * @return <code>true</code> if the given input event is a 'edge warp' trigger
-   *         event, <code>false</code> otherwise.
-   */
-  public static boolean isTimestampWarpModifier( final InputEvent aEvent )
-  {
-    boolean modifierDown;
-    if ( isMacOS() )
-    {
-      // Is the CMD key...
-      modifierDown = aEvent.isMetaDown();
-    }
-    else
-    {
-      modifierDown = aEvent.isControlDown();
-    }
-    // Only consider the left mouse button...
-    return modifierDown && ( ( aEvent.getModifiers() & InputEvent.BUTTON1_MASK ) != 0 );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Mac OS X.
-   * 
-   * @return <code>true</code> if running on Mac OS X, <code>false</code>
-   *         otherwise.
-   */
-  private static boolean isMacOS()
-  {
-    final String osName = System.getProperty( "os.name" );
-    return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
   }
 
   /**
