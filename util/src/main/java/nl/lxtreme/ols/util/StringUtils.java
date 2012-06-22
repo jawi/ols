@@ -53,26 +53,14 @@ public final class StringUtils
   public static String integerToBinString( final int aValue, final int aFieldWidth )
   {
     // first build a mask to cut off the signed extension
-    final int mask = ( int )Math.pow( 2.0, aFieldWidth ) - 1;
+    final long mask = ( long )( Math.pow( 2.0, aFieldWidth ) - 1L );
 
-    StringBuilder sb = new StringBuilder( Integer.toBinaryString( aValue & mask ) );
+    StringBuilder sb = new StringBuilder( Long.toBinaryString( aValue & mask ) );
 
-    int numberOfLeadingZeros = aFieldWidth - sb.length();
-    if ( numberOfLeadingZeros < 0 )
+    int numberOfLeadingZeros = Math.max( 0, aFieldWidth - sb.length() );
+    for ( ; numberOfLeadingZeros > 0; numberOfLeadingZeros-- )
     {
-      numberOfLeadingZeros = 0;
-    }
-    if ( numberOfLeadingZeros > aFieldWidth )
-    {
-      numberOfLeadingZeros = aFieldWidth;
-    }
-
-    if ( numberOfLeadingZeros > 0 )
-    {
-      for ( ; numberOfLeadingZeros > 0; numberOfLeadingZeros-- )
-      {
-        sb.insert( 0, '0' );
-      }
+      sb.insert( 0, '0' );
     }
 
     return sb.toString();
@@ -90,25 +78,17 @@ public final class StringUtils
   public static String integerToHexString( final int aValue, final int aFieldWidth )
   {
     // first build a mask to cut off the signed extension
-    final int mask = ( int )Math.pow( 16.0, aFieldWidth ) - 1;
+    final long mask = ( long )( Math.pow( 16.0, aFieldWidth ) - 1L );
 
-    String str = Integer.toHexString( aValue & mask );
-    int numberOfLeadingZeros = aFieldWidth - str.length();
-    if ( numberOfLeadingZeros < 0 )
+    StringBuilder sb = new StringBuilder( Long.toHexString( aValue & mask ) );
+
+    int numberOfLeadingZeros = Math.max( 0, aFieldWidth - sb.length() );
+    for ( ; numberOfLeadingZeros > 0; numberOfLeadingZeros-- )
     {
-      numberOfLeadingZeros = 0;
+      sb.insert( 0, '0' );
     }
-    if ( numberOfLeadingZeros > aFieldWidth )
-    {
-      numberOfLeadingZeros = aFieldWidth;
-    }
-    char zeros[] = new char[numberOfLeadingZeros];
-    for ( int i = 0; i < zeros.length; i++ )
-    {
-      zeros[i] = '0';
-    }
-    String ldz = new String( zeros );
-    return ldz.concat( str );
+
+    return sb.toString();
   }
 
   /**
