@@ -367,8 +367,6 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
       this.misoLabel.setText( "IO1" );
 
       enabled = SPIFIMode.QUAD.equals( aMode );
-
-      this.bits.setSelectedIndex( 4 );
     }
 
     this.io2Label.setEnabled( enabled );
@@ -645,6 +643,11 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     } );
     settings.add( this.spifiMode );
 
+    settings.add( createRightAlignedLabel( "/CS" ) );
+    this.cs = SwingComponentUtils.createChannelSelector( channelCount );
+    this.cs.setSelectedIndex( 3 );
+    settings.add( this.cs );
+
     settings.add( createRightAlignedLabel( "SCK" ) );
     this.sck = SwingComponentUtils.createChannelSelector( channelCount );
     this.sck.setSelectedIndex( 0 );
@@ -678,11 +681,6 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     this.io3.setSelectedIndex( 0 );
     settings.add( this.io3 );
 
-    settings.add( createRightAlignedLabel( "/CS" ) );
-    this.cs = SwingComponentUtils.createChannelSelector( channelCount );
-    this.cs.setSelectedIndex( 3 );
-    settings.add( this.cs );
-
     settings.add( createRightAlignedLabel( "SPI Mode" ) );
     this.mode = new JComboBox( SPIMode.values() );
     this.mode.setSelectedIndex( 2 );
@@ -690,11 +688,12 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     settings.add( this.mode );
 
     settings.add( createRightAlignedLabel( "Bits" ) );
-    String[] bitarray = new String[13];
-    for ( int i = 0; i < bitarray.length; i++ )
-    {
-      bitarray[i] = String.format( "%d", Integer.valueOf( i + 4 ) );
-    }
+    // #106: support up to 32 bits; not all intermediary values should be
+    // necessary, I guess. Alternatively, we could use /CS as indicator for
+    // the symbol-size, though that would imply that master and slave always
+    // talk in the same symbol-size during a transaction...
+    String[] bitarray = new String[] { "4", "5", "6", "7", "8", "9", "10", "11", //
+        "12", "13", "14", "15", "16", "24", "32" };
     this.bits = new JComboBox( bitarray );
     this.bits.setSelectedIndex( 4 );
     settings.add( this.bits );
@@ -977,9 +976,9 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
         final String mosiDataBin = StringUtils.integerToBinString( aValue, bitCount );
         final String mosiDataDec = String.valueOf( aValue );
         final String mosiDataASCII;
-        if ( ( bitCount == 8 ) && Character.isLetterOrDigit( ( char )aValue ) )
+        if ( Character.isLetterOrDigit( aValue ) )
         {
-          mosiDataASCII = String.valueOf( ( char )aValue );
+          mosiDataASCII = Character.toString( ( char )aValue );
         }
         else
         {
