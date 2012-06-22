@@ -368,7 +368,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
         // it could be that we're waiting until a next clock cycle comes along;
         // however, the /CS signal might be going up before that cycle actually
         // comes...
-        if ( bitIdx == 0 )
+        if ( bitIdx <= 0 )
         {
           // Full datagram decoded...
           reportData( aDataSet, dataStartIdx, idx, mosivalue, misovalue );
@@ -436,13 +436,14 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
         else if ( SPIFIMode.DUAL.equals( this.protocol ) )
         {
           // Sample both MOSI/IO0 & MISO/IO1 here; they form two bits of our
-          // symbol...
-          if ( ( dataSample & mosiMask ) != 0 )
+          // symbol; we do MSB first, as the decoded symbol will be corrected
+          // later on...
+          if ( ( dataSample & misoMask ) != 0 )
           {
             mosivalue |= ( 1 << bitIdx );
           }
           bitIdx--;
-          if ( ( dataSample & misoMask ) != 0 )
+          if ( ( dataSample & mosiMask ) != 0 )
           {
             mosivalue |= ( 1 << bitIdx );
           }
@@ -451,13 +452,9 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
         else if ( SPIFIMode.QUAD.equals( this.protocol ) )
         {
           // Sample both MOSI/IO0, MISO/IO1, IO2 & IO3 here; they form four bits
-          // of our symbol...
-          if ( ( dataSample & mosiMask ) != 0 )
-          {
-            mosivalue |= ( 1 << bitIdx );
-          }
-          bitIdx--;
-          if ( ( dataSample & misoMask ) != 0 )
+          // of our symbol; we do MSB first, as the decoded symbol will be
+          // corrected later on...
+          if ( ( dataSample & io3Mask ) != 0 )
           {
             mosivalue |= ( 1 << bitIdx );
           }
@@ -467,7 +464,12 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
             mosivalue |= ( 1 << bitIdx );
           }
           bitIdx--;
-          if ( ( dataSample & io3Mask ) != 0 )
+          if ( ( dataSample & misoMask ) != 0 )
+          {
+            mosivalue |= ( 1 << bitIdx );
+          }
+          bitIdx--;
+          if ( ( dataSample & mosiMask ) != 0 )
           {
             mosivalue |= ( 1 << bitIdx );
           }
@@ -639,8 +641,14 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
         // Perform bit-order conversion on the full byte...
         final int mosivalue = NumberUtils.convertBitOrder( aMosiValue, ( this.bitCount + 1 ), this.bitOrder );
 
+        String formatSpec = "0x%1$X";
+        if ( Character.isLetterOrDigit( mosivalue ) )
+        {
+          formatSpec = formatSpec.concat( " (%1$c)" );
+        }
+
         this.annotationListener.onAnnotation( new SampleDataAnnotation( this.mosiIdx, timestamps[aStartIdx],
-            timestamps[aEndIdx], String.format( "0x%1$X (%1$c)", Integer.valueOf( mosivalue ) ) ) );
+            timestamps[aEndIdx], String.format( formatSpec, Integer.valueOf( mosivalue ) ) ) );
 
         aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
       }
@@ -650,8 +658,14 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
         // Perform bit-order conversion on the full byte...
         final int misovalue = NumberUtils.convertBitOrder( aMisoValue, ( this.bitCount + 1 ), this.bitOrder );
 
+        String formatSpec = "0x%1$X";
+        if ( Character.isLetterOrDigit( misovalue ) )
+        {
+          formatSpec = formatSpec.concat( " (%1$c)" );
+        }
+
         this.annotationListener.onAnnotation( new SampleDataAnnotation( this.misoIdx, timestamps[aStartIdx],
-            timestamps[aEndIdx], String.format( "0x%1$X (%1$c)", Integer.valueOf( misovalue ) ) ) );
+            timestamps[aEndIdx], String.format( formatSpec, Integer.valueOf( misovalue ) ) ) );
 
         aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
       }
@@ -661,8 +675,14 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
       // Perform bit-order conversion on the full byte...
       final int mosivalue = NumberUtils.convertBitOrder( aMosiValue, ( this.bitCount + 1 ), this.bitOrder );
 
+      String formatSpec = "0x%1$X";
+      if ( Character.isLetterOrDigit( mosivalue ) )
+      {
+        formatSpec = formatSpec.concat( " (%1$c)" );
+      }
+
       this.annotationListener.onAnnotation( new SampleDataAnnotation( this.mosiIdx, timestamps[aStartIdx],
-          timestamps[aEndIdx], String.format( "0x%1$X (%1$c)", Integer.valueOf( mosivalue ) ) ) );
+          timestamps[aEndIdx], String.format( formatSpec, Integer.valueOf( mosivalue ) ) ) );
 
       aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
     }
