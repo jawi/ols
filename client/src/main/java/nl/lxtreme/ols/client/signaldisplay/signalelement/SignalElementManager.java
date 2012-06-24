@@ -151,6 +151,9 @@ public final class SignalElementManager implements IDataModelChangeListener
   public int calculateScreenHeight()
   {
     int height = 0;
+
+    final int spacing = UIManager.getInt( UIManagerKeys.SIGNAL_ELEMENT_SPACING );
+
     for ( ElementGroup cg : getGroups() )
     {
       if ( !cg.isVisible() )
@@ -162,19 +165,19 @@ public final class SignalElementManager implements IDataModelChangeListener
       {
         if ( element.isSignalGroup() )
         {
-          height += element.getHeight();
+          height += element.getHeight() + spacing;
         }
         else if ( element.isDigitalSignal() && cg.isShowDigitalSignals() )
         {
-          height += element.getHeight();
+          height += element.getHeight() + spacing;
         }
         else if ( element.isGroupSummary() && cg.isShowGroupSummary() )
         {
-          height += element.getHeight();
+          height += element.getHeight() + spacing;
         }
         else if ( element.isAnalogSignal() && cg.isShowAnalogSignal() )
         {
-          height += element.getHeight();
+          height += element.getHeight() + spacing;
         }
       }
     }
