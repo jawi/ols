@@ -502,13 +502,13 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     // Notify that everything needs to be revalidated as well...
     revalidateAll();
 
-    final Point location = getLocation();
+    final Point location = view.getLocation();
 
     // Recalculate the new screen position of the visible view rectangle...
     int newX = ( int )( location.getX() - ( ( mx * relZf ) - mx ) );
     int newY = ( int )( location.getY() - ( ( my * relZf ) - my ) );
 
-    setLocation( newX, newY );
+    view.setLocation( newX, newY );
 
     // Issue #100: in case the factor is changed, we need to repaint all
     // components...

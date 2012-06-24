@@ -151,15 +151,6 @@ public final class ZoomController
     }
 
     /**
-     * @return <code>true</code> if there's a change in the zoom factor,
-     *         <code>false</code> if the zoom factor remains the same.
-     */
-    public boolean isFactorChange()
-    {
-      return Double.compare( this.oldFactor, this.newFactor ) != 0;
-    }
-
-    /**
      * Returns whether or not we're zooming to fit all.
      * 
      * @return <code>true</code> if zoom-all is enabled, <code>false</code>
@@ -303,10 +294,8 @@ public final class ZoomController
     final ZoomEvent event;
     synchronized ( this.LOCK )
     {
-      // Initially, factor = NaN; so we do this trick to make sure there's a
-      // 'factor change' for the initial zoom event as well...
-      final double oldFactor = this.factor;
-      final double newFactor = getFactor();
+      final double oldFactor = getFactor();
+      final double newFactor = oldFactor;
 
       event = createZoomEvent( oldFactor, newFactor, null );
     }
