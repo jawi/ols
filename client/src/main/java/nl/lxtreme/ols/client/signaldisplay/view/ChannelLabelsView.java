@@ -38,6 +38,7 @@ import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -72,7 +73,7 @@ public class ChannelLabelsView extends AbstractViewLayer
      * {@inheritDoc}
      */
     @Override
-    public void mouseClicked( MouseEvent aEvent )
+    public void mouseClicked( final MouseEvent aEvent )
     {
       if ( !aEvent.isConsumed() && ( aEvent.getClickCount() == 2 ) )
       {
@@ -578,5 +579,37 @@ public class ChannelLabelsView extends AbstractViewLayer
   public final void updateUI()
   {
     setUI( new ChannelLabelsUI() );
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * For some strange reason it is not possible to do this from our own
+   * {@link ChannelLabelMouseHandler}. Probably due to the fact that this
+   * component is also DnD-enabled...
+   * </p>
+   */
+  @Override
+  protected void processMouseMotionEvent( final MouseEvent aEvent )
+  {
+    if ( !aEvent.isConsumed() )
+    {
+      final MouseEvent event = convertEvent( aEvent );
+      final Point point = event.getPoint();
+
+      getController().setSelectedChannel( point );
+    }
+
+    super.processMouseMotionEvent( aEvent );
+  }
+
+  /**
+   * @param aEvent
+   * @return
+   */
+  private MouseEvent convertEvent( final MouseEvent aEvent )
+  {
+    final JComponent view = SwingComponentUtils.getDeepestComponentAt( aEvent );
+    return SwingUtilities.convertMouseEvent( aEvent.getComponent(), aEvent, view );
   }
 }
