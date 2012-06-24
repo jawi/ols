@@ -688,15 +688,17 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
   @Override
   public void cursorChanged( final String aPropertyName, final Cursor aOldCursor, final Cursor aNewCursor )
   {
-    final int visibleHeight = getVisibleRect().height;
+    final Rectangle visibleRect = getVisibleRect();
+    final int y = visibleRect.y;
+    final int height = visibleRect.height;
 
     final SignalViewModel model = getModel();
 
     int cursorPos = model.timestampToCoordinate( aOldCursor.getTimestamp() );
-    repaint( 0, cursorPos - 1, 0, 2, visibleHeight );
+    repaint( 0, cursorPos - 1, y, 2, height );
 
     cursorPos = model.timestampToCoordinate( aNewCursor.getTimestamp() );
-    repaint( 0, cursorPos - 1, 0, 2, visibleHeight );
+    repaint( 0, cursorPos - 1, y, 2, height );
   }
 
   /**
