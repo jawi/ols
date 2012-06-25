@@ -881,57 +881,46 @@ public class SignalDiagramModel
   public int getVerticalBlockIncrement( final Dimension aViewDimensions, final Rectangle aVisibleRect,
       final int aDirection )
   {
-    final SignalElementMeasurer strictMeasurer = SignalElementMeasurer.STRICT_MEASURER;
-    SignalElement[] signalElements = getSignalElementManager().getSignalElements( aVisibleRect.y, aVisibleRect.height,
-        strictMeasurer );
+    final SignalElementMeasurer measurer = SignalElementMeasurer.LOOSE_MEASURER;
+    final SignalElementManager elemMgr = getSignalElementManager();
+
+    SignalElement[] signalElements = elemMgr.getSignalElements( aVisibleRect.y + 1, 1, measurer );
+    if ( signalElements.length == 0 )
+    {
+      return 0;
+    }
+
+    final int spacing = UIManager.getInt( UIManagerKeys.SIGNAL_ELEMENT_SPACING );
 
     int inc = 0;
-    if ( signalElements.length > 0 )
-    {
-      int yPos = signalElements[0].getYposition();
+    int yPos = signalElements[0].getYposition();
 
-      if ( aDirection > 0 )
+    if ( aDirection > 0 )
+    {
+      // Scroll down...
+      int height = signalElements[0].getHeight() + spacing;
+      inc = height - ( aVisibleRect.y - yPos );
+      if ( inc < 0 )
       {
-        // Scroll down...
-        int height = signalElements[0].getHeight();
-        inc = ( height - ( aVisibleRect.y - yPos ) );
-        if ( inc <= 0 )
-        {
-          inc = -inc;
-        }
+        inc = -inc;
       }
-      else if ( aDirection < 0 )
+    }
+    else if ( aDirection < 0 )
+    {
+      // Scroll up...
+      inc = ( aVisibleRect.y - yPos );
+      if ( inc <= 0 )
       {
-        // Scroll up...
-        if ( yPos == aVisibleRect.y )
+        // Determine the height of the element *before* the current one, as we
+        // need to scroll up its height...
+        signalElements = elemMgr.getSignalElements( yPos - spacing, 1, measurer );
+        if ( signalElements.length > 0 )
         {
-          if ( yPos == 0 )
-          {
-            // The first row is completely visible and it's row 0...
-            return 0;
-          }
-          else
-          {
-            // Row > 0, and completely visible; take the full height of the
-            // row prior to the top row...
-            signalElements = getSignalElementManager().getSignalElements( 0, aVisibleRect.y - 1, strictMeasurer );
-            if ( signalElements.length > 0 )
-            {
-              inc = signalElements[signalElements.length - 1].getHeight();
-            }
-          }
-        }
-        else
-        {
-          signalElements = getSignalElementManager().getSignalElements( 0, aVisibleRect.y - 1, strictMeasurer );
-          if ( signalElements.length > 0 )
-          {
-            // Make sure the first element is completely shown...
-            inc = aVisibleRect.y - signalElements[signalElements.length - 1].getYposition();
-          }
+          inc += signalElements[0].getHeight() + spacing;
         }
       }
     }
+
     return inc;
   }
 
