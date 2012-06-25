@@ -60,6 +60,8 @@ public class RemoveChannelAnnotations extends AbstractAction
 
     this.controller = aController;
     this.signalElement = aSignalElement;
+
+    setEnabled( ( this.signalElement != null ) && this.signalElement.isDigitalSignal() );
   }
 
   // METHODS

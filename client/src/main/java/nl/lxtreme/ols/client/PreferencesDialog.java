@@ -190,9 +190,10 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    * {@inheritDoc}
    */
   @Override
-  public void setDialogStatus( final DialogStatus aStatus )
+  public boolean setDialogStatus( final DialogStatus aStatus )
   {
     this.dialogResult = ( aStatus == DialogStatus.OK );
+    return true;
   }
 
   /**

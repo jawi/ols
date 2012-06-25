@@ -188,8 +188,11 @@ public final class StandardActionFactory
      * 
      * @param aStatus
      *          the status of the dialog, never <code>null</code>.
+     * @return <code>true</code> if setting the dialog status was acknowledged,
+     *         <code>false</code> if it was not (in which case the dialog will
+     *         not be closed).
      */
-    void setDialogStatus( DialogStatus aStatus );
+    boolean setDialogStatus( DialogStatus aStatus );
   }
 
   /**
@@ -232,13 +235,15 @@ public final class StandardActionFactory
           throw new RuntimeException( "Failed to find closeable parent?!" );
         }
 
-        closeableParent.setDialogStatus( this.status );
-        closeableParent.close();
-
-        // Make sure the resources held by the window are released...
-        if ( closeableParent instanceof Window )
+        if ( closeableParent.setDialogStatus( this.status ) )
         {
-          ( ( Window )closeableParent ).dispose();
+          closeableParent.close();
+
+          // Make sure the resources held by the window are released...
+          if ( closeableParent instanceof Window )
+          {
+            ( ( Window )closeableParent ).dispose();
+          }
         }
       }
     }

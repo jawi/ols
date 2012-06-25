@@ -514,7 +514,7 @@ public final class SignalElement implements Comparable<SignalElement>
     {
       if ( isGroupSummary() )
       {
-        this.group.setGroupSummary( aEnabled );
+        this.group.setShowGroupSummary( aEnabled );
       }
       else if ( isAnalogSignal() )
       {

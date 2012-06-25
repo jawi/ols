@@ -58,7 +58,6 @@ public class SignalDiagramModel
 
   // CONSTANTS
 
-  private static final int SNAP_CURSOR_MODE = ( 1 << 0 );
   private static final int MEASUREMENT_MODE = ( 1 << 1 );
 
   private static final double TIMESTAMP_FACTOR = 100.0;
@@ -1032,7 +1031,7 @@ public class SignalDiagramModel
    */
   public boolean isSnapCursor()
   {
-    return ( this.mode & SNAP_CURSOR_MODE ) != 0;
+    return UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT );
   }
 
   /**
@@ -1317,14 +1316,7 @@ public class SignalDiagramModel
    */
   public void setSnapCursor( final boolean aSnapCursor )
   {
-    if ( aSnapCursor )
-    {
-      this.mode |= SNAP_CURSOR_MODE;
-    }
-    else
-    {
-      this.mode &= ~SNAP_CURSOR_MODE;
-    }
+    UIManager.put( UIManagerKeys.SNAP_CURSORS_DEFAULT, Boolean.valueOf( aSnapCursor ) );
   }
 
   /**

@@ -56,6 +56,7 @@ public class ChannelLabelsView extends AbstractViewLayer
     // VARIABLES
 
     private final SignalDiagramController controller;
+    private final PopupFactory popupHelper;
 
     // CONSTRUCTORS
 
@@ -65,6 +66,7 @@ public class ChannelLabelsView extends AbstractViewLayer
     public ChannelLabelMouseHandler( final SignalDiagramController aController )
     {
       this.controller = aController;
+      this.popupHelper = new PopupFactory( aController );
     }
 
     // METHODS
@@ -127,30 +129,7 @@ public class ChannelLabelsView extends AbstractViewLayer
      */
     private JPopupMenu createChannelLabelPopup( final Point aRelativePoint, final Point aLocationOnScreen )
     {
-      final SignalElement signalElement = findSignalElement( aRelativePoint );
-      if ( signalElement == null )
-      {
-        return null;
-      }
-
-      JPopupMenu result = new JPopupMenu();
-      JMenuItem mi;
-
-      mi = new JMenuItem( new EditSignalElementPropertiesAction( this.controller, signalElement, aLocationOnScreen ) );
-      result.add( mi );
-
-      result.addSeparator();
-
-      mi = new JCheckBoxMenuItem( new SetSignalElementVisibilityAction( this.controller, signalElement ) );
-      result.add( mi );
-
-      if ( signalElement.isDigitalSignal() )
-      {
-        mi = new JMenuItem( new RemoveChannelAnnotations( this.controller, signalElement ) );
-        result.add( mi );
-      }
-
-      return result;
+      return this.popupHelper.createChannelLabelPopup( aRelativePoint, aLocationOnScreen );
     }
 
     /**

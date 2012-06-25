@@ -113,9 +113,10 @@ public class EditCursorPropertiesAction extends AbstractAction
      * {@inheritDoc}
      */
     @Override
-    public void setDialogStatus( final DialogStatus aStatus )
+    public boolean setDialogStatus( final DialogStatus aStatus )
     {
       this.dialogResult = ( aStatus == DialogStatus.OK );
+      return true;
     }
 
     /**

@@ -452,8 +452,11 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
         int width = channelLabelsView.getWidth();
 
         // Repaint the affected areas
-        Rectangle rect1 = new Rectangle( 0, signalElement.getYposition(), width, signalElement.getHeight() );
-        channelLabelsView.repaint( rect1 );
+        if ( signalElement != null )
+        {
+          Rectangle rect1 = new Rectangle( 0, signalElement.getYposition(), width, signalElement.getHeight() );
+          channelLabelsView.repaint( rect1 );
+        }
 
         SignalElement currentElement = model.getSignalElementManager().getChannelByIndex( oldIndex );
         if ( currentElement != null )

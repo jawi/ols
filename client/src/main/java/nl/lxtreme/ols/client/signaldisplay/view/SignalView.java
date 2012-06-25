@@ -27,10 +27,8 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.getAncestorOfClass;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.annotation.*;
-import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
@@ -64,6 +62,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     // VARIABLES
 
     protected final SignalDiagramController controller;
+    protected final PopupFactory popupHelper;
 
     private volatile int movingCursor;
     private volatile Point lastClickPosition = null;
@@ -76,6 +75,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     public BasicMouseHandler( final SignalDiagramController aController )
     {
       this.controller = aController;
+      this.popupHelper = new PopupFactory( aController );
     }
 
     // METHODS
@@ -374,45 +374,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
      */
     private JPopupMenu createCursorPopup( final Point aPoint, final Point aLocationOnScreen )
     {
-      final JPopupMenu contextMenu = new JPopupMenu();
-
-      Action smartJumpLeftAction = this.controller.getActionManager().getAction( SmartJumpAction.getJumpLeftID() );
-      Action smartJumpRightAction = this.controller.getActionManager().getAction( SmartJumpAction.getJumpRightID() );
-
-      contextMenu.add( smartJumpLeftAction );
-      contextMenu.add( smartJumpRightAction );
-      contextMenu.addSeparator();
-
-      // when an action is selected, we *no* longer know where the point was
-      // where the user clicked. Therefore, we need to store it separately
-      // for later use...
-      contextMenu.putClientProperty( "mouseLocation", aPoint );
-
-      Cursor cursor = findCursor( aPoint );
-      if ( cursor != null )
-      {
-        // Hovering above existing cursor, show remove menu...
-        contextMenu.add( new DeleteCursorAction( this.controller, cursor ) );
-        contextMenu.add( new DeleteAllCursorsAction( this.controller ) );
-
-        contextMenu.addSeparator();
-        contextMenu.add( new EditCursorPropertiesAction( this.controller, cursor ) );
-      }
-      else
-      {
-        // Not hovering above existing cursor, show add menu...
-        for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
-        {
-          final SetCursorAction action = new SetCursorAction( this.controller, i );
-          contextMenu.add( new JCheckBoxMenuItem( action ) );
-        }
-        contextMenu.addSeparator();
-        contextMenu.add( new DeleteAllCursorsAction( this.controller ) );
-
-        contextMenu.putClientProperty( SetCursorAction.KEY, getCursorDropPoint( aPoint ) );
-      }
-
-      return contextMenu;
+      return this.popupHelper.createCursorPopup( findCursor( aPoint ), aPoint, aLocationOnScreen );
     }
 
     /**

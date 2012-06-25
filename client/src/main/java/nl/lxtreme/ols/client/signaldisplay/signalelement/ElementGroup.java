@@ -483,26 +483,6 @@ public class ElementGroup
   }
 
   /**
-   * Sets whether or not the data values are to be shown.
-   * 
-   * @param aShowSummary
-   *          <code>true</code> to show the group summary, <code>false</code> to
-   *          hide it.
-   */
-  public void setGroupSummary( final boolean aShowSummary )
-  {
-    int mask = ChannelElementType.GROUP_SUMMARY.getMask();
-    if ( aShowSummary )
-    {
-      this.viewOptions |= mask;
-    }
-    else
-    {
-      this.viewOptions &= ~mask;
-    }
-  }
-
-  /**
    * Sets the label for the group summary of this channel group.
    * 
    * @param aSummaryLabel
@@ -561,6 +541,26 @@ public class ElementGroup
   {
     int mask = ChannelElementType.DIGITAL_SIGNAL.getMask();
     if ( aShowDigitalSignals )
+    {
+      this.viewOptions |= mask;
+    }
+    else
+    {
+      this.viewOptions &= ~mask;
+    }
+  }
+
+  /**
+   * Sets whether or not the data values are to be shown.
+   * 
+   * @param aShowSummary
+   *          <code>true</code> to show the group summary, <code>false</code> to
+   *          hide it.
+   */
+  public void setShowGroupSummary( final boolean aShowSummary )
+  {
+    int mask = ChannelElementType.GROUP_SUMMARY.getMask();
+    if ( aShowSummary )
     {
       this.viewOptions |= mask;
     }

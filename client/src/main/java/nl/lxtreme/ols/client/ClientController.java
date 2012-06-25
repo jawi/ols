@@ -1605,7 +1605,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         final boolean projectChanged = isProjectChanged();
         final boolean projectSavedBefore = !isAnonymousProject();
         final boolean dataAvailable = hasCapturedData();
-        final boolean triggerEnable = dataAvailable && hasTriggerData();
+        final boolean hasTriggerData = hasTriggerData();
         final boolean cursorsEnabled = areCursorsEnabled();
         final boolean enableCursors = dataAvailable && cursorsEnabled;
 
@@ -1613,7 +1613,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( SaveProjectAsAction.ID ).setEnabled( projectSavedBefore && projectChanged );
         getAction( SaveDataFileAction.ID ).setEnabled( dataAvailable );
 
-        getAction( GotoTriggerAction.ID ).setEnabled( triggerEnable );
+        getAction( GotoTriggerAction.ID ).setEnabled( dataAvailable && hasTriggerData );
 
         // Update the cursor actions accordingly...
         getAction( SetCursorModeAction.ID ).setEnabled( dataAvailable );

@@ -24,9 +24,9 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
 
 
 /**
@@ -55,13 +55,15 @@ public class SetSignalElementVisibilityAction extends AbstractAction
    */
   public SetSignalElementVisibilityAction( final SignalDiagramController aController, final SignalElement aSignalElement )
   {
-    super();
+    if ( aSignalElement.isSignalGroup() )
+    {
+      throw new IllegalArgumentException();
+    }
 
     this.signalElement = aSignalElement;
     this.controller = aController;
 
-    putValue( Action.NAME, getLabel( aSignalElement ) );
-    putValue( Action.SELECTED_KEY, Boolean.valueOf( aSignalElement.isEnabled() ) );
+    putValue( Action.NAME, getLabel( aSignalElement.getType(), aSignalElement.isEnabled() ) );
   }
 
   // METHODS
@@ -69,36 +71,35 @@ public class SetSignalElementVisibilityAction extends AbstractAction
   /**
    * Determines the label for this action.
    * 
-   * @param aSignalElement
+   * @param aType
    *          the signal element to determine the label of this action for,
-   *          cannot be <code>null</code>.
+   *          cannot be <code>null</code>;
+   * @param aVisible
+   *          <code>true</code> if the signal element is currently visible,
+   *          <code>false</code> if it is currently invisible.
    * @return a label, never <code>null</code>.
    */
-  private static String getLabel( final SignalElement aSignalElement )
+  private static String getLabel( final SignalElementType aType, final boolean aVisible )
   {
-    String prefix = "Show";
-    if ( aSignalElement.isEnabled() )
-    {
-      prefix = "Hide";
-    }
+    String prefix = aVisible ? "Hide" : "Show";
 
     String suffix;
-    if ( aSignalElement.isDigitalSignal() )
+    if ( aType == SignalElementType.DIGITAL_SIGNAL )
     {
-      Channel channel = aSignalElement.getChannel();
-      suffix = "channel " + channel.getIndex();
+      prefix = aVisible ? "Disable" : "Enable";
+      suffix = "digital signal";
     }
-    else if ( aSignalElement.isAnalogSignal() )
+    else if ( aType == SignalElementType.ANALOG_SIGNAL )
     {
       suffix = "analog signal";
     }
-    else if ( aSignalElement.isGroupSummary() )
+    else if ( aType == SignalElementType.GROUP_SUMMARY )
     {
       suffix = "group summary";
     }
-    else if ( aSignalElement.isSignalGroup() )
+    else if ( aType == SignalElementType.SIGNAL_GROUP )
     {
-      suffix = "digital signals";
+      suffix = "signal group";
     }
     else
     {
@@ -114,11 +115,26 @@ public class SetSignalElementVisibilityAction extends AbstractAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final JCheckBoxMenuItem menuitem = ( JCheckBoxMenuItem )aEvent.getSource();
+    this.signalElement.setEnabled( !this.signalElement.isEnabled() );
 
-    this.signalElement.setEnabled( menuitem.getState() );
+    if ( this.signalElement.isDigitalSignal() )
+    {
+      // Digital signal stays on screen; so we can redraw this easily...
+      getSignalDiagram().repaintSignalElement( this.signalElement );
+    }
+    else
+    {
+      // Group summary and analog scope are really hidden, so we need to repaint
+      // the entire frame...
+      this.controller.recalculateDimensions();
+    }
+  }
 
-    // TODO: this can be made smarter...
-    this.controller.recalculateDimensions();
+  /**
+   * @return the signal diagram component, never <code>null</code>.
+   */
+  private SignalDiagramComponent getSignalDiagram()
+  {
+    return this.controller.getSignalDiagram();
   }
 }

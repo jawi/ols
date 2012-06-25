@@ -25,7 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
-
+import javax.swing.event.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
@@ -191,9 +191,20 @@ public class EditSignalElementPropertiesAction extends AbstractAction
      * {@inheritDoc}
      */
     @Override
-    public void setDialogStatus( final DialogStatus aStatus )
+    public boolean setDialogStatus( final DialogStatus aStatus )
     {
-      this.dialogResult = ( aStatus == DialogStatus.OK );
+      boolean isOkButton = ( aStatus == DialogStatus.OK );
+      String text = this.labelEditor.getText();
+
+      if ( isOkButton && ( ( text == null ) || "".equals( text ) ) )
+      {
+        JOptionPane.showMessageDialog( getParent(), "No label defined!", //
+            "Invalid properties", JOptionPane.ERROR_MESSAGE );
+        return false;
+      }
+
+      this.dialogResult = isOkButton;
+      return true;
     }
 
     /**
@@ -228,8 +239,37 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     {
       setTitle( getTitle( aSignalElement ) );
 
+      final JButton okButton = StandardActionFactory.createOkButton();
+      final JButton cancelButton = StandardActionFactory.createCancelButton();
+
       JLabel labelEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Label" );
       this.labelEditor = new JTextField( aSignalElement.getLabel(), 10 );
+      this.labelEditor.getDocument().addDocumentListener( new DocumentListener()
+      {
+        @Override
+        public void changedUpdate( final DocumentEvent aEvent )
+        {
+          updateOkButton( aEvent );
+        }
+
+        @Override
+        public void insertUpdate( final DocumentEvent aEvent )
+        {
+          updateOkButton( aEvent );
+        }
+
+        @Override
+        public void removeUpdate( final DocumentEvent aEvent )
+        {
+          updateOkButton( aEvent );
+        }
+
+        private void updateOkButton( final DocumentEvent aEvent )
+        {
+          String text = EditPropertiesDialog.this.labelEditor.getText();
+          okButton.setEnabled( ( text != null ) && !"".equals( text.trim() ) );
+        }
+      } );
 
       JLabel colorEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Color" );
       this.colorEditor = new JColorEditor( aSignalElement.getColor() );
@@ -248,9 +288,6 @@ public class EditSignalElementPropertiesAction extends AbstractAction
       this.signalAlignmentEditor = new JComboBox( SignalAlignment.values() );
       this.signalAlignmentEditor.setRenderer( new SignalAlignmentComboBoxRenderer() );
       this.signalAlignmentEditor.setSelectedItem( aSignalElement.getSignalAlignment() );
-
-      final JButton okButton = StandardActionFactory.createOkButton();
-      final JButton cancelButton = StandardActionFactory.createCancelButton();
 
       final JButton resetButton = new JButton( "Reset to defaults" );
       resetButton.addActionListener( new ActionListener()
@@ -501,6 +538,8 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     this.controller = aController;
     this.signalElement = aSignalElement;
     this.dialogLocation = new Point( aChannelLocation.x + 15, aChannelLocation.y + 5 );
+
+    setEnabled( this.signalElement != null );
   }
 
   // METHODS
