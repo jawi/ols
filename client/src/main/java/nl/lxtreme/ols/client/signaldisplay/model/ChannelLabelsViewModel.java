@@ -29,6 +29,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
@@ -109,7 +110,8 @@ public class ChannelLabelsViewModel extends AbstractViewModel
     SignalElement signalElement = findSignalElement( aCoordinate );
     if ( signalElement != null )
     {
-      return signalElement.getYposition() + signalElement.getHeight();
+      final int spacing = UIManager.getInt( UIManagerKeys.SIGNAL_ELEMENT_SPACING ) / 2;
+      return signalElement.getYposition() + signalElement.getHeight() + spacing;
     }
     return -1;
   }
