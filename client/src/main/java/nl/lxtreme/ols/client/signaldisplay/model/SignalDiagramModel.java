@@ -968,6 +968,15 @@ public class SignalDiagramModel
   }
 
   /**
+   * @return <code>true</code> if the analog scope is by default visible,
+   *         <code>false</code> if it is default hidden.
+   */
+  public boolean isAnalogScopeDefaultVisible()
+  {
+    return UIManager.getBoolean( UIManagerKeys.ANALOG_SCOPE_VISIBLE_DEFAULT );
+  }
+
+  /**
    * {@inheritDoc}
    */
   public boolean isCursorDefined( final int aCursorIdx )
@@ -989,6 +998,15 @@ public class SignalDiagramModel
   public boolean isCursorMode()
   {
     return ( this.dataSet != null ) && this.dataSet.isCursorsEnabled();
+  }
+
+  /**
+   * @return <code>true</code> if the group summary is by default visible,
+   *         <code>false</code> if it is default hidden.
+   */
+  public boolean isGroupSummaryDefaultVisible()
+  {
+    return UIManager.getBoolean( UIManagerKeys.GROUP_SUMMARY_VISIBLE_DEFAULT );
   }
 
   /**

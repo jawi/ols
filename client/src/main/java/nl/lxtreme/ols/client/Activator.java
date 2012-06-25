@@ -122,6 +122,15 @@ public class Activator extends DependencyActivatorBase
             .setInterface( ManagedService.class.getName(), props ) //
             .setImplementation( UIManagerConfigurator.class ) );
 
+    props.put( Constants.SERVICE_PID, UIColorSchemeManager.PID );
+
+    // UI Manager Configuration...
+    aManager.add( //
+        createComponent() //
+            .setInterface(
+                new String[] { UIColorSchemeManager.class.getName(), ManagedServiceFactory.class.getName() }, props ) //
+            .setImplementation( UIColorSchemeManager.class ) );
+
     // User session manager...
     aManager.add( //
         createComponent() //
@@ -162,6 +171,10 @@ public class Activator extends DependencyActivatorBase
             ) //
             .add( createServiceDependency() //
                 .setService( DataAcquisitionService.class ) //
+                .setRequired( true ) //
+            ) //
+            .add( createServiceDependency() //
+                .setService( UIColorSchemeManager.class ) //
                 .setRequired( true ) //
             ) //
             .add( createServiceDependency() //

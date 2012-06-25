@@ -208,21 +208,6 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
-   * Returns the background color for the labels themselves.
-   * 
-   * @return a color, never <code>null</code>.
-   */
-  public Color getLabelBackgroundColor()
-  {
-    Color color = UIManager.getColor( CHANNELLABELS_LABEL_BACKGROUND_COLOR );
-    if ( color == null )
-    {
-      color = Color.BLACK;
-    }
-    return color;
-  }
-
-  /**
    * Returns the font for the labels.
    * 
    * @return a font, never <code>null</code>.
@@ -248,6 +233,36 @@ public class ChannelLabelsViewModel extends AbstractViewModel
     if ( color == null )
     {
       color = Color.WHITE;
+    }
+    return color;
+  }
+
+  /**
+   * Returns the background color for the labels themselves.
+   * 
+   * @return a color, never <code>null</code>.
+   */
+  public Color getLabelGradientColor1()
+  {
+    Color color = UIManager.getColor( CHANNELLABELS_LABEL_GRADIENT_COLOR1 );
+    if ( color == null )
+    {
+      color = Color.BLACK;
+    }
+    return color;
+  }
+
+  /**
+   * Returns the background color for the labels themselves.
+   * 
+   * @return a color, never <code>null</code>.
+   */
+  public Color getLabelGradientColor2()
+  {
+    Color color = UIManager.getColor( CHANNELLABELS_LABEL_GRADIENT_COLOR2 );
+    if ( color == null )
+    {
+      color = Color.BLACK;
     }
     return color;
   }

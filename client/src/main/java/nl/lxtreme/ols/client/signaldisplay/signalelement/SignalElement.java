@@ -104,7 +104,6 @@ public final class SignalElement implements Comparable<SignalElement>
     final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, aGroup.getMask() );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( ANALOG_SCOPE_HEIGHT );
-    channelElement.color = getUIManagerValue( CHANNEL_DEFAULT_COLOR, Color.CYAN );
     return channelElement;
   }
 
@@ -123,7 +122,6 @@ public final class SignalElement implements Comparable<SignalElement>
     channelElement.channel = aChannel;
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( CHANNEL_HEIGHT );
-    channelElement.color = getUIManagerValue( CHANNEL_DEFAULT_COLOR, Color.CYAN );
     channelElement.signalHeight = UIManager.getInt( DIGITAL_SIGNAL_HEIGHT );
     channelElement.alignment = SignalAlignment.valueOf( getUIManagerValue( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) );
     return channelElement;
@@ -143,7 +141,6 @@ public final class SignalElement implements Comparable<SignalElement>
     final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, aGroup.getMask() );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( GROUP_SUMMARY_HEIGHT );
-    channelElement.color = getUIManagerValue( CHANNEL_DEFAULT_COLOR, Color.CYAN );
     return channelElement;
   }
 
@@ -161,7 +158,6 @@ public final class SignalElement implements Comparable<SignalElement>
     final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, aGroup.getMask() );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( SIGNAL_GROUP_HEIGHT );
-    channelElement.color = getUIManagerValue( CHANNEL_DEFAULT_COLOR, Color.CYAN );
     return channelElement;
   }
 

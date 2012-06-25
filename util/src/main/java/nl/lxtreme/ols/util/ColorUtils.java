@@ -72,6 +72,25 @@ public final class ColorUtils
   }
 
   /**
+   * Calculates a highlight color for the given color.
+   * 
+   * @param aColor
+   *          the color to create a highlight color for, cannot be
+   *          <code>null</code>;
+   * @param aFactor
+   *          the highlight factor to apply, &gt;= 0.0 && &lt;= 1.0f;
+   * @return a highlighting color, never <code>null</code>.
+   */
+  public static Color getHighlightColor( final Color aColor, final float aFactor )
+  {
+    float[] hsb = Color.RGBtoHSB( aColor.getRed(), aColor.getGreen(), aColor.getBlue(), null );
+
+    hsb[2] = Math.min( 1.0f, hsb[2] * aFactor );
+
+    return new Color( Color.HSBtoRGB( hsb[0], hsb[1], hsb[2] ) );
+  }
+
+  /**
    * Returns the Digital CCIR601 luminance value of the given color.
    * 
    * @param aColor

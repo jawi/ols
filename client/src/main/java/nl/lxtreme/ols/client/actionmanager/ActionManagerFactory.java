@@ -105,8 +105,6 @@ public final class ActionManagerFactory
     aActionManager.add( new SetMeasurementModeAction( signalDiagramController ) ).setEnabled( false );
 
     aActionManager.add( new ShowPreferencesDialogAction( aController ) );
-    aActionManager.add( new ShowDiagramModeSettingsDialogAction( aController ) );
-    aActionManager.add( new ShowChannelLabelsDialogAction( aController ) );
 
     aActionManager.add( new HelpAboutAction( aController ) );
     aActionManager.add( new ShowBundlesAction( aController ) );

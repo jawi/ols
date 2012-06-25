@@ -29,6 +29,7 @@ import javax.swing.plaf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -178,14 +179,14 @@ public class ChannelLabelsUI extends ComponentUI
     final int width = aWidth + arcWidth;
     final int height = aElement.getHeight();
 
-    Color labelBackgroundColor = aModel.getLabelBackgroundColor();
-    Color newBrighterColor = labelBackgroundColor.brighter();
+    Color color1 = aModel.getLabelGradientColor1();
+    Color color2 = aModel.getLabelGradientColor2();
     if ( isSelectedElement( aElement, aModel ) )
     {
-      newBrighterColor = newBrighterColor.brighter();
+      color2 = ColorUtils.getHighlightColor( color2, 2.0f );
     }
 
-    final GradientPaint paint = new GradientPaint( x, y - 5, newBrighterColor, x, height + 10, labelBackgroundColor );
+    final GradientPaint paint = new GradientPaint( x, y - 5, color2, x, height + 7, color1 );
     final Paint oldPaint = aCanvas.getPaint();
 
     aCanvas.setPaint( paint );
@@ -250,14 +251,14 @@ public class ChannelLabelsUI extends ComponentUI
         labelYpos = ( int )( middle - labelFm.getDescent() );
       }
 
-      Color color = aModel.getLabelForegroundColor();
+      Color labelColor = aModel.getLabelForegroundColor();
       if ( isSelectedElement( aElement, aModel ) )
       {
-        color = color.brighter();
+        labelColor = ColorUtils.getHighlightColor( labelColor, 2.0f );
       }
 
       aCanvas.setFont( labelFont );
-      drawLabel( aCanvas, aModel, label, color, labelXpos, labelYpos );
+      drawLabel( aCanvas, aModel, label, labelColor, labelXpos, labelYpos );
     }
 
     if ( indexDefined )

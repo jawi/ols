@@ -21,12 +21,13 @@
 package nl.lxtreme.ols.client.signaldisplay.signalelement;
 
 
-import static nl.lxtreme.ols.util.ColorUtils.*;
-
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import javax.swing.*;
+
+import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
 
 
@@ -82,10 +83,6 @@ public class ElementGroup
     }
   }
 
-  // CONSTANTS
-
-  private static final Color DEFAULT_COLOR = parseColor( "7bf9dd" );
-
   // VARIABLES
 
   private final List<SignalElement> elements;
@@ -129,9 +126,25 @@ public class ElementGroup
     // By default visible...
     this.visible = true;
     // By default only the digital signals are shown...
-    this.viewOptions = ChannelElementType.DIGITAL_SIGNAL.mask | ChannelElementType.GROUP_SUMMARY.mask
-        | ChannelElementType.ANALOG_SIGNAL.mask;
-    this.color = DEFAULT_COLOR;
+    this.viewOptions = ChannelElementType.DIGITAL_SIGNAL.mask;
+
+    if ( UIManager.getBoolean( UIManagerKeys.ANALOG_SCOPE_VISIBLE_DEFAULT ) )
+    {
+      this.viewOptions |= ChannelElementType.ANALOG_SIGNAL.mask;
+    }
+    if ( UIManager.getBoolean( UIManagerKeys.GROUP_SUMMARY_VISIBLE_DEFAULT ) )
+    {
+      this.viewOptions |= ChannelElementType.GROUP_SUMMARY.mask;
+    }
+
+    String key = String.format( "ols.channelgroup%d.default.color", Integer.valueOf( ( aIndex + 1 ) % 4 ) );
+    Color defaultColor = UIManager.getColor( key );
+    if ( defaultColor == null )
+    {
+      defaultColor = Color.WHITE;
+    }
+
+    this.color = defaultColor;
 
     this.elements = new ArrayList<SignalElement>();
   }
@@ -172,6 +185,11 @@ public class ElementGroup
       this.elements.add( signalElement );
       // Make sure the channel links back to this channel group...
       signalElement.setGroup( this );
+
+      if ( signalElement.getColor() == null )
+      {
+        signalElement.setColor( getColor() );
+      }
 
       // Update our local mask...
       this.mask |= aElement.getMask();

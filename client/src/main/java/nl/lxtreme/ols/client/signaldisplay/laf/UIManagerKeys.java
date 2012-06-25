@@ -35,8 +35,22 @@ public interface UIManagerKeys
   String SIGNAL_ELEMENT_SPACING = "ols.signal.element.spacer.height";
   /** Whether or not the mouse wheel by defaults zooms in/out. */
   String MOUSEWHEEL_ZOOM_DEFAULT = "ols.mousewheel.zoom.default.boolean";
-  /** The default color for channels, groups and scopes. */
-  String CHANNEL_DEFAULT_COLOR = "ols.channel.default.color";
+  /** Whether or not the cursors should snap to signal edges. */
+  String SNAP_CURSORS_DEFAULT = "ols.snap.cursors.default.boolean";
+  /** Whether or not the tool windows are shown by default. */
+  String SHOW_TOOL_WINDOWS_DEFAULT = "ols.show.tool.windows.default.boolean";
+  /** The current active color scheme. */
+  String COLOR_SCHEME = "ols.current.color.scheme.enum";
+
+  /** The default color for channels, group summary and the scope of group 1. */
+  String CHANNEL_GROUP1_DEFAULT_COLOR = "ols.channelgroup1.default.color";
+  /** The default color for channels, group summary and the scope of group 2. */
+  String CHANNEL_GROUP2_DEFAULT_COLOR = "ols.channelgroup2.default.color";
+  /** The default color for channels, group summary and the scope of group 3. */
+  String CHANNEL_GROUP3_DEFAULT_COLOR = "ols.channelgroup3.default.color";
+  /** The default color for channels, group summary and the scope of group 4. */
+  String CHANNEL_GROUP4_DEFAULT_COLOR = "ols.channelgroup4.default.color";
+
   /** The height of the signal group, in pixels. */
   String SIGNAL_GROUP_HEIGHT = "ols.signalgroup.height";
   /** The height of the digital channels, in pixels. */
@@ -45,8 +59,13 @@ public interface UIManagerKeys
   String DIGITAL_SIGNAL_HEIGHT = "ols.digitalsignal.height";
   /** The height of the group summary, in pixels. */
   String GROUP_SUMMARY_HEIGHT = "ols.groupsummary.height";
+  /** Whether or not the group summary is visible by default. */
+  String GROUP_SUMMARY_VISIBLE_DEFAULT = "ols.groupsummary.default.visible.boolean";
   /** The height of the analog scope, in pixels. */
   String ANALOG_SCOPE_HEIGHT = "ols.analogscope.height";
+  /** Whether or not the analog scope is by default visible. */
+  String ANALOG_SCOPE_VISIBLE_DEFAULT = "ols.analogscope.default.visible.boolean";
+
   /** The background color for the channel labels. */
   String CHANNELLABELS_BACKGROUND_COLOR = "ols.channellabels.background.color";
   /** The minimal width of the channel labels, in pixels. */
@@ -77,8 +96,10 @@ public interface UIManagerKeys
   String CHANNELLABELS_LABEL_FONT = "ols.channellabels.label.font";
   /** The foreground color used to display the channel label texts. */
   String CHANNELLABELS_LABEL_FOREGROUND_COLOR = "ols.channellabels.label.foreground.color";
-  /** The background (fill) color used to display the channel label texts. */
-  String CHANNELLABELS_LABEL_BACKGROUND_COLOR = "ols.channellabels.label.background.color";
+  /** The first gradient color used as background for the channel labels. */
+  String CHANNELLABELS_LABEL_GRADIENT_COLOR1 = "ols.channellabels.label.gradient.1.color";
+  /** The second gradient color used as background for the channel labels. */
+  String CHANNELLABELS_LABEL_GRADIENT_COLOR2 = "ols.channellabels.label.gradient.2.color";
   /** The background color for the corners. */
   String CORNER_BACKGROUND_COLOR = "ols.corner.background.color";
   /** The color used for DnD operations. */

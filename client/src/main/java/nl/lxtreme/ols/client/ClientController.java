@@ -34,7 +34,8 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.api.data.annotation.Annotation;
+import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
 import nl.lxtreme.ols.api.data.export.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.devices.*;
@@ -43,7 +44,7 @@ import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.diagram.settings.*;
+import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -283,6 +284,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private volatile DataAcquisitionService dataAcquisitionService;
   private volatile MainFrame mainFrame;
   private volatile HostProperties hostProperties;
+  private volatile UIColorSchemeManager colorSchemeManager;
 
   private volatile long acquisitionStartTime;
 
@@ -736,40 +738,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     Arrays.sort( result );
 
     return result;
-  }
-
-  /**
-   * Returns the current diagram settings.
-   * 
-   * @return the current diagram settings, can be <code>null</code> if there is
-   *         no main frame to take the settings from.
-   */
-  @Deprecated
-  public final DiagramSettings getDiagramSettings()
-  {
-    final Project currentProject = getCurrentProject();
-    final UserSettings settings = currentProject.getSettings( MutableDiagramSettings.NAME );
-    if ( settings instanceof DiagramSettings )
-    {
-      return ( DiagramSettings )settings;
-    }
-
-    // Overwrite the default created user settings object with our own. This
-    // should be done implicitly, so make sure we keep the project's change flag
-    // in the correct state...
-    final MutableDiagramSettings diagramSettings = new MutableDiagramSettings( settings );
-
-    final boolean oldChangedFlag = currentProject.isChanged();
-    try
-    {
-      currentProject.setSettings( diagramSettings );
-    }
-    finally
-    {
-      currentProject.setChanged( oldChangedFlag );
-    }
-
-    return diagramSettings;
   }
 
   /**
@@ -1354,26 +1322,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Deprecated
-  public void showDiagramModeSettingsDialog( final Window aParent )
-  {
-    if ( this.mainFrame != null )
-    {
-      final ModeSettingsDialog dialog = new ModeSettingsDialog( aParent, getDiagramSettings() );
-      if ( dialog.showDialog() )
-      {
-        final DiagramSettings settings = dialog.getDiagramSettings();
-        getCurrentProject().setSettings( settings );
-        diagramSettingsUpdated();
-      }
-
-      dialog.dispose();
-    }
-  }
-
-  /**
    * Shows the global preferences dialog.
    * 
    * @param aParent
@@ -1381,15 +1329,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void showPreferencesDialog( final Window aParent )
   {
-    final GeneralSettingsDialog dialog = new GeneralSettingsDialog( aParent, getDiagramSettings() );
+    final PreferencesDialog dialog = new PreferencesDialog( aParent, this.colorSchemeManager );
     if ( dialog.showDialog() )
     {
-      final DiagramSettings settings = dialog.getDiagramSettings();
-      getCurrentProject().setSettings( settings );
-      diagramSettingsUpdated();
-    }
+      // Ensure all UI-related changes are immediately visible...
+      repaintMainFrame();
 
-    dialog.dispose();
+      // TODO persist the settings...
+    }
   }
 
   /**
@@ -1841,19 +1788,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
 
     return new DefaultToolContext( startOfDecode, endOfDecode, dataSet );
-  }
-
-  /**
-   * Should be called after the diagram settings are changed. This method will
-   * cause the main frame to be updated.
-   */
-  private void diagramSettingsUpdated()
-  {
-    if ( this.mainFrame != null )
-    {
-      this.mainFrame.diagramSettingsUpdated();
-      repaintMainFrame();
-    }
   }
 
   /**

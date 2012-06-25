@@ -1030,9 +1030,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     diagramMenu.addSeparator();
     diagramMenu.add( this.controller.getAction( RemoveAnnotationsAction.ID ) );
-    diagramMenu.addSeparator();
-    diagramMenu.add( this.controller.getAction( ShowDiagramModeSettingsDialogAction.ID ) );
-    diagramMenu.add( this.controller.getAction( ShowChannelLabelsDialogAction.ID ) );
 
     this.toolsMenu = bar.add( new JMenu( "Tools" ) );
     this.toolsMenu.setMnemonic( 'T' );
