@@ -50,7 +50,10 @@ import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
+import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
+import org.osgi.service.cm.*;
 
 
 /**
@@ -1330,13 +1333,31 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public void showPreferencesDialog( final Window aParent )
   {
     final PreferencesDialog dialog = new PreferencesDialog( aParent, this.colorSchemeManager );
-    if ( dialog.showDialog() )
-    {
-      // Ensure all UI-related changes are immediately visible...
-      repaintMainFrame();
 
-      // TODO persist the settings...
-    }
+    final DependencyManager dm = new DependencyManager( this.bundleContext );
+    final Component comp = dm.createComponent();
+
+    comp.setImplementation( dialog ).add( dm.createServiceDependency() //
+        .setService( ConfigurationAdmin.class ) //
+        .setInstanceBound( true ) //
+        .setRequired( true ) ) //
+        .addStateListener( new ComponentStateAdapter()
+        {
+          @Override
+          public void started( final Component aComponent )
+          {
+            if ( dialog.showDialog() )
+            {
+              // Ensure all UI-related changes are immediately visible...
+              repaintMainFrame();
+            }
+
+            // All changes are persisted automatically...
+            dm.remove( comp );
+          }
+        } );
+
+    dm.add( comp );
   }
 
   /**

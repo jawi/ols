@@ -26,12 +26,16 @@ import static nl.lxtreme.ols.util.swing.SpringLayoutUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
+import java.io.*;
 import java.util.*;
 
 import javax.swing.*;
 
+import org.osgi.service.cm.*;
+
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
@@ -137,18 +141,19 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   // VARIABLES
 
   private final UIColorSchemeManager colorSchemeManager;
+  private final JCheckBox mouseWheelZooms;
+  private final JCheckBox cursorSnapToEdge;
+  private final JCheckBox showGroupSummary;
+  private final JCheckBox showAnalogScope;
+  private final JCheckBox showToolWindows;
+  private final JCheckBox showChannelIndexes;
+  private final JComboBox annotationAlignment;
+  private final JComboBox signalAlignment;
+  private final JComboBox colorScheme;
 
   private volatile boolean dialogResult;
-
-  private JCheckBox mouseWheelZooms;
-  private JCheckBox cursorSnapToEdge;
-  private JCheckBox showGroupSummary;
-  private JCheckBox showAnalogScope;
-  private JCheckBox showToolWindows;
-  private JCheckBox showChannelIndexes;
-  private JComboBox annotationAlignment;
-  private JComboBox signalAlignment;
-  private JComboBox colorScheme;
+  private volatile ConfigurationAdmin configAdmin;
+  private volatile Configuration config;
 
   // CONSTRUCTORS
 
@@ -166,7 +171,38 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
     this.colorSchemeManager = aColorSchemeManager;
 
-    initDialog();
+    // @formatter:off
+    this.mouseWheelZooms = new JCheckBox();
+    this.mouseWheelZooms.setToolTipText( "Whether the mouse wheel by default zooms in or out, or scrolls the view. Will be applied immediately." );
+
+    this.cursorSnapToEdge = new JCheckBox();
+    this.cursorSnapToEdge.setToolTipText( "Whether or not cursors by default snap to signal edges. Will be applied immediately." );
+
+    this.showGroupSummary = new JCheckBox();
+    this.showGroupSummary.setToolTipText( "Whether or not the group (byte) summary is shown by default for each acquisition. Will be applied after an acquisition." );
+
+    this.showAnalogScope = new JCheckBox();
+    this.showAnalogScope.setToolTipText( "Whether or not the analog scope is shown by default for each acquisition. Will be applied after an acquisition." );
+
+    this.showChannelIndexes = new JCheckBox();
+    this.showChannelIndexes.setToolTipText( "Whether or not channel indexes are shown beside the labels. Will be applied immediately." );
+
+    this.showToolWindows = new JCheckBox();
+    this.showToolWindows.setToolTipText( "Whether or not the tool windows are shown by default. Will be applied after a restart." );
+
+    this.signalAlignment = new JComboBox( SignalAlignment.values() );
+    this.signalAlignment.setToolTipText( "The vertical alignment of the signals itself. Will be applied after an acquisition." );
+    this.signalAlignment.setRenderer( new SignalAlignmentRenderer() );
+
+    this.annotationAlignment = new JComboBox( SignalAlignment.values() );
+    this.annotationAlignment.setToolTipText( "The vertical aligment of the annotations. Will be applied immediately." );
+    this.annotationAlignment.setRenderer( new SignalAlignmentRenderer() );
+
+    this.colorScheme = new JComboBox( new ColorSchemeModel() );
+    this.colorScheme.setToolTipText( "What color scheme is to be used. Will be applied immediately." );
+    // @formatter:on
+
+    buildDialog();
   }
 
   // METHODS
@@ -182,7 +218,14 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
     if ( this.dialogResult )
     {
-      applyNewPreferences();
+      try
+      {
+        applyNewPreferences();
+      }
+      catch ( IOException exception )
+      {
+        JErrorDialog.showDialog( getOwner(), "Failed to apply preferences!", exception );
+      }
     }
   }
 
@@ -211,24 +254,64 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   }
 
   /**
-   * Applies all (new) preferences.
+   * Called upon start of this component by the dependency manager.
    */
-  private void applyNewPreferences()
+  @SuppressWarnings( "unchecked" )
+  protected void start() throws IOException
   {
-    UIManager.put( MOUSEWHEEL_ZOOM_DEFAULT, Boolean.valueOf( this.mouseWheelZooms.isSelected() ) );
-    UIManager.put( SNAP_CURSORS_DEFAULT, Boolean.valueOf( this.cursorSnapToEdge.isSelected() ) );
-    UIManager.put( GROUP_SUMMARY_VISIBLE_DEFAULT, Boolean.valueOf( this.showGroupSummary.isSelected() ) );
-    UIManager.put( ANALOG_SCOPE_VISIBLE_DEFAULT, Boolean.valueOf( this.showAnalogScope.isSelected() ) );
-    UIManager.put( SHOW_TOOL_WINDOWS_DEFAULT, Boolean.valueOf( this.showToolWindows.isSelected() ) );
-    UIManager.put( CHANNELLABELS_SHOW_CHANNEL_INDEX, Boolean.valueOf( this.showChannelIndexes.isSelected() ) );
+    this.config = this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
 
-    UIManager.put( SIGNALVIEW_SIGNAL_ALIGNMENT, this.signalAlignment.getSelectedItem().toString() );
-    UIManager.put( SIGNALVIEW_ANNOTATION_ALIGNMENT, this.annotationAlignment.getSelectedItem().toString() );
+    // The properties are in string format; so we need to do some conversions
+    // prior to applying them to our components...
+    Dictionary<Object, Object> properties = this.config.getProperties();
+
+    // Apply values to our components...
+    this.mouseWheelZooms.setSelected( getBoolean( properties.get( MOUSEWHEEL_ZOOM_DEFAULT ) ) );
+    this.cursorSnapToEdge.setSelected( getBoolean( properties.get( SNAP_CURSORS_DEFAULT ) ) );
+    this.showGroupSummary.setSelected( getBoolean( properties.get( GROUP_SUMMARY_VISIBLE_DEFAULT ) ) );
+    this.showAnalogScope.setSelected( getBoolean( properties.get( ANALOG_SCOPE_VISIBLE_DEFAULT ) ) );
+    this.showChannelIndexes.setSelected( getBoolean( properties.get( CHANNELLABELS_SHOW_CHANNEL_INDEX ) ) );
+    this.showToolWindows.setSelected( getBoolean( properties.get( SHOW_TOOL_WINDOWS_DEFAULT ) ) );
+
+    this.signalAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_SIGNAL_ALIGNMENT ) ) );
+    this.annotationAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_ANNOTATION_ALIGNMENT ) ) );
+    this.colorScheme.setSelectedItem( String.valueOf( properties.get( COLOR_SCHEME ) ) );
+  }
+
+  /**
+   * Called upon stop of this component by the dependency manager.
+   */
+  protected void stop()
+  {
+    // Nop...
+  }
+
+  /**
+   * Applies all (new) preferences by updating the <em>original</em>
+   * configuration object (from the ConfigurationAdmin service) with the changed
+   * preferences. The reason for this is that the changes will now be persisted
+   * automatically.
+   */
+  @SuppressWarnings( "unchecked" )
+  private void applyNewPreferences() throws IOException
+  {
+    // The properties are in string format; so we need to do some conversions
+    // prior to persisting them...
+    Dictionary<Object, Object> properties = this.config.getProperties();
+    properties.put( MOUSEWHEEL_ZOOM_DEFAULT, Boolean.toString( this.mouseWheelZooms.isSelected() ) );
+    properties.put( SNAP_CURSORS_DEFAULT, Boolean.toString( this.cursorSnapToEdge.isSelected() ) );
+    properties.put( GROUP_SUMMARY_VISIBLE_DEFAULT, Boolean.toString( this.showGroupSummary.isSelected() ) );
+    properties.put( ANALOG_SCOPE_VISIBLE_DEFAULT, Boolean.toString( this.showAnalogScope.isSelected() ) );
+    properties.put( SHOW_TOOL_WINDOWS_DEFAULT, Boolean.toString( this.showToolWindows.isSelected() ) );
+    properties.put( CHANNELLABELS_SHOW_CHANNEL_INDEX, Boolean.toString( this.showChannelIndexes.isSelected() ) );
+
+    properties.put( SIGNALVIEW_SIGNAL_ALIGNMENT, String.valueOf( this.signalAlignment.getSelectedItem() ) );
+    properties.put( SIGNALVIEW_ANNOTATION_ALIGNMENT, String.valueOf( this.annotationAlignment.getSelectedItem() ) );
 
     String colorScheme = ( String )this.colorScheme.getSelectedItem();
     if ( colorScheme != null )
     {
-      UIManager.put( COLOR_SCHEME, colorScheme );
+      properties.put( COLOR_SCHEME, colorScheme );
 
       Properties props = this.colorSchemeManager.getColorScheme( colorScheme );
       if ( props != null )
@@ -236,120 +319,22 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
         for ( Object key : props.keySet() )
         {
           Object value = props.get( key );
-          UIManager.put( key, value );
+          if ( value instanceof Color )
+          {
+            properties.put( key, ColorUtils.toHexString( ( Color )value ) );
+          }
         }
       }
     }
+
+    // Update the configuration, so it will be persisted...
+    this.config.update( properties );
   }
 
   /**
-   * @return a tab pane for the general settings, never <code>null</code>.
+   * Builds this dialog by adding all components to it.
    */
-  private JComponent createGeneralSettingsTab()
-  {
-    JPanel pane = new JPanel( new SpringLayout() );
-
-    addSeparator( pane, "Look and feel defaults" );
-
-    this.mouseWheelZooms = new JCheckBox();
-    this.mouseWheelZooms
-        .setToolTipText( "Whether the mouse wheel by default zooms in or out, or scrolls the view. Will be applied immediately." );
-    this.mouseWheelZooms.setSelected( UIManager.getBoolean( MOUSEWHEEL_ZOOM_DEFAULT ) );
-
-    pane.add( createRightAlignedLabel( "Mouse wheel zooms?" ) );
-    pane.add( this.mouseWheelZooms );
-
-    this.cursorSnapToEdge = new JCheckBox();
-    this.cursorSnapToEdge
-        .setToolTipText( "Whether or not cursors by default snap to signal edges. Will be applied immediately." );
-    this.cursorSnapToEdge.setSelected( UIManager.getBoolean( SNAP_CURSORS_DEFAULT ) );
-
-    pane.add( createRightAlignedLabel( "Snap cursor to edge?" ) );
-    pane.add( this.cursorSnapToEdge );
-
-    this.showGroupSummary = new JCheckBox();
-    this.showGroupSummary
-        .setToolTipText( "Whether or not the group (byte) summary is shown by default for each acquisition. Will be applied after an acquisition." );
-    this.showGroupSummary.setSelected( UIManager.getBoolean( GROUP_SUMMARY_VISIBLE_DEFAULT ) );
-
-    pane.add( createRightAlignedLabel( "Show group summary?" ) );
-    pane.add( this.showGroupSummary );
-
-    this.showAnalogScope = new JCheckBox();
-    this.showAnalogScope
-        .setToolTipText( "Whether or not the analog scope is shown by default for each acquisition. Will be applied after an acquisition." );
-    this.showAnalogScope.setSelected( UIManager.getBoolean( ANALOG_SCOPE_VISIBLE_DEFAULT ) );
-
-    pane.add( createRightAlignedLabel( "Show analog scope?" ) );
-    pane.add( this.showAnalogScope );
-
-    this.showChannelIndexes = new JCheckBox();
-    this.showChannelIndexes
-        .setToolTipText( "Whether or not channel indexes are shown beside the labels. Will be applied immediately." );
-    this.showChannelIndexes.setSelected( UIManager.getBoolean( CHANNELLABELS_SHOW_CHANNEL_INDEX ) );
-
-    pane.add( createRightAlignedLabel( "Show channel indexes?" ) );
-    pane.add( this.showChannelIndexes );
-
-    this.showToolWindows = new JCheckBox();
-    this.showToolWindows
-        .setToolTipText( "Whether or not the tool windows are shown by default. Will be applied after a restart." );
-    this.showToolWindows.setSelected( UIManager.getBoolean( SHOW_TOOL_WINDOWS_DEFAULT ) );
-
-    pane.add( createRightAlignedLabel( "Show tool windows?" ) );
-    pane.add( this.showToolWindows );
-
-    this.signalAlignment = new JComboBox( SignalAlignment.values() );
-    this.signalAlignment.setSelectedItem( getSignalAlignment( SIGNALVIEW_SIGNAL_ALIGNMENT ) );
-    this.signalAlignment
-        .setToolTipText( "The vertical alignment of the signals itself. Will be applied after an acquisition." );
-    this.signalAlignment.setRenderer( new SignalAlignmentRenderer() );
-
-    pane.add( createRightAlignedLabel( "Signal alignment" ) );
-    pane.add( this.signalAlignment );
-
-    this.annotationAlignment = new JComboBox( SignalAlignment.values() );
-    this.annotationAlignment.setSelectedItem( getSignalAlignment( SIGNALVIEW_ANNOTATION_ALIGNMENT ) );
-    this.annotationAlignment.setToolTipText( "The vertical aligment of the annotations. Will be applied immediately." );
-    this.annotationAlignment.setRenderer( new SignalAlignmentRenderer() );
-
-    pane.add( createRightAlignedLabel( "Annotation alignment" ) );
-    pane.add( this.annotationAlignment );
-
-    addSeparator( pane, "Color scheme" );
-
-    this.colorScheme = new JComboBox( new ColorSchemeModel() );
-    this.colorScheme.setSelectedItem( UIManager.getString( COLOR_SCHEME ) );
-    this.colorScheme.setToolTipText( "What color scheme is to be used. Will be applied immediately." );
-
-    pane.add( createRightAlignedLabel( "Default scheme" ) );
-    pane.add( this.colorScheme );
-
-    makeEditorGrid( pane, 10, 10 );
-    return pane;
-  }
-
-  /**
-   * Returns the {@link SignalAlignment} for the given key from the
-   * {@link UIManager}.
-   * 
-   * @param aKey
-   * @return
-   */
-  private SignalAlignment getSignalAlignment( final String aKey )
-  {
-    String value = UIManager.getString( aKey );
-    if ( value != null )
-    {
-      return SignalAlignment.valueOf( value.toUpperCase() );
-    }
-    return SignalAlignment.CENTER;
-  }
-
-  /**
-   * Initializes this dialog.
-   */
-  private void initDialog()
+  private void buildDialog()
   {
     setTitle( "Preferences" );
 
@@ -365,5 +350,82 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     setContentPane( contentPane );
 
     pack();
+  }
+
+  /**
+   * @return a tab pane for the general settings, never <code>null</code>.
+   */
+  private JComponent createGeneralSettingsTab()
+  {
+    JPanel pane = new JPanel( new SpringLayout() );
+
+    addSeparator( pane, "Look and feel defaults" );
+
+    pane.add( createRightAlignedLabel( "Mouse wheel zooms?" ) );
+    pane.add( this.mouseWheelZooms );
+
+    pane.add( createRightAlignedLabel( "Snap cursor to edge?" ) );
+    pane.add( this.cursorSnapToEdge );
+
+    pane.add( createRightAlignedLabel( "Show group summary?" ) );
+    pane.add( this.showGroupSummary );
+
+    pane.add( createRightAlignedLabel( "Show analog scope?" ) );
+    pane.add( this.showAnalogScope );
+
+    pane.add( createRightAlignedLabel( "Show channel indexes?" ) );
+    pane.add( this.showChannelIndexes );
+
+    pane.add( createRightAlignedLabel( "Show tool windows?" ) );
+    pane.add( this.showToolWindows );
+
+    pane.add( createRightAlignedLabel( "Signal alignment" ) );
+    pane.add( this.signalAlignment );
+
+    pane.add( createRightAlignedLabel( "Annotation alignment" ) );
+    pane.add( this.annotationAlignment );
+
+    addSeparator( pane, "Color scheme" );
+
+    pane.add( createRightAlignedLabel( "Default scheme" ) );
+    pane.add( this.colorScheme );
+
+    makeEditorGrid( pane, 10, 10 );
+    return pane;
+  }
+
+  /**
+   * Returns the boolean value for the given value representation.
+   * 
+   * @param aValue
+   *          the value to parse as boolean, can be <code>null</code>.
+   * @return a boolean representation for the given value, defaults to
+   *         <code>false</code>.
+   */
+  private boolean getBoolean( final Object aValue )
+  {
+    if ( aValue instanceof Boolean )
+    {
+      return ( ( Boolean )aValue ).booleanValue();
+    }
+    return Boolean.parseBoolean( String.valueOf( aValue ) );
+  }
+
+  /**
+   * Returns the {@link SignalAlignment} for the given value representation.
+   * 
+   * @param aValue
+   *          the value parse as {@link SignalAlignment}, can be
+   *          <code>null</code>.
+   * @return a {@link SignalAlignment} value, defaults to
+   *         {@link SignalAlignment#CENTER}.
+   */
+  private SignalAlignment getSignalAlignment( final Object aValue )
+  {
+    if ( aValue == null )
+    {
+      return SignalAlignment.CENTER;
+    }
+    return SignalAlignment.valueOf( aValue.toString().toUpperCase() );
   }
 }
