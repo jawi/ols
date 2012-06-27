@@ -87,10 +87,7 @@ public final class Runner
     System.setProperty( "felix.fileinstall.noInitialDelay", Boolean.toString( true ) );
     System.setProperty( "felix.fileinstall.dir", pluginDir );
     System.setProperty( "felix.fileinstall.start.level", "2" );
-    // NOTE: the 'false' actually *disables* config save! See
-    // <https://issues.apache.org/jira/browse/FELIX-2763> for more
-    // information...
-    System.setProperty( "felix.fileinstall.disableConfigSave", Boolean.toString( false ) );
+    System.setProperty( "felix.fileinstall.enableConfigSave", Boolean.toString( true ) );
     final String logLevel = isDebugMode() ? "4" : "1";
     System.setProperty( "felix.fileinstall.log.level", logLevel );
 
