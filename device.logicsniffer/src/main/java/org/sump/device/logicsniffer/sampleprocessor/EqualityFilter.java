@@ -39,14 +39,14 @@ public final class EqualityFilter implements SampleProcessor
   // CONSTRUCTORS
 
   /**
+   * @param aConfig
+   *          the configuration to use;
    * @param aBuffer
    *          the buffer with sample data to decode.
    * @param aTrigCount
    *          the trigcount value;
    * @param aCallback
    *          the callback to use.
-   * @param aLogicSnifferDevice
-   *          TODO
    */
   public EqualityFilter( final LogicSnifferConfig aConfig, final int[] aBuffer, final int aTrigCount,
       final SampleProcessorCallback aCallback )
@@ -74,20 +74,25 @@ public final class EqualityFilter implements SampleProcessor
 
     final int samples = this.buffer.length;
 
-    int oldSample = 0; // first value doesn't really matter
+    int lastSample = 0; // first value doesn't really matter
     for ( int i = 0; i < samples; i++ )
     {
       final int newSample = this.buffer[i];
 
-      if ( ( i == 0 ) || ( oldSample != newSample ) )
+      if ( ( i == 0 ) || ( lastSample != newSample ) )
       {
         // add the read sample & add a timestamp value as well...
         this.callback.addValue( newSample, time );
       }
 
-      oldSample = newSample;
+      lastSample = newSample;
       time++;
     }
+
+    // Ensure the last sample is shown as well (even if there was a lot of time
+    // between the last real sample and the end of the capture; i.e., constant
+    // data)...
+    this.callback.addValue( lastSample, time );
 
     // XXX JaWi: why is this correction needed?
     int correction = 2;

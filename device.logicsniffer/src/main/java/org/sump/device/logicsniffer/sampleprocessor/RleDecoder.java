@@ -102,7 +102,7 @@ public final class RleDecoder implements SampleProcessor
   {
     long time = 0;
     long rleTrigPos = 0;
-    int oldSample = -1;
+    int lastSample = -1;
 
     // if msb set increment time by the count value
     // else save sample check trigger pos and increment time by 1
@@ -136,7 +136,7 @@ public final class RleDecoder implements SampleProcessor
           count = 2L * ddrCount;
         }
 
-        if ( oldSample >= 0 )
+        if ( lastSample >= 0 )
         {
           time += count;
         }
@@ -148,7 +148,7 @@ public final class RleDecoder implements SampleProcessor
       else
       {
         // this is a data value only save data if different to last
-        if ( sampleValue != oldSample )
+        if ( sampleValue != lastSample )
         {
           // set the trigger position as a time value
           if ( ( i >= this.trigCount ) && ( rleTrigPos == 0 ) )
@@ -158,14 +158,19 @@ public final class RleDecoder implements SampleProcessor
 
           // add the read sample & add a timestamp value as well...
           this.callback.addValue( sampleValue, time );
-          oldSample = sampleValue;
+          lastSample = sampleValue;
         }
         time++;
       }
     }
 
+    // Ensure the last sample is shown as well (even if there was a lot of time
+    // between the last real sample and the end of the capture; i.e., constant
+    // data)...
+    this.callback.addValue( lastSample, time );
+
     // Take the last seen time value as "absolete" length of this trace...
-    this.callback.ready( time - 1, rleTrigPos - 1 );
+    this.callback.ready( time + 1, rleTrigPos - 1 );
   }
 
   /**
