@@ -34,6 +34,11 @@ public interface LineDecoderToolContext extends ToolContext
   /**
    * @return
    */
+  int getClockSpeed();
+
+  /**
+   * @return
+   */
   int[] getLineChannels();
 
   /**

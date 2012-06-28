@@ -39,8 +39,10 @@ public class LineDecoderTask implements ToolTask<AcquisitionResult>
   private volatile LineDecoder decoder;
   private volatile int[] lines;
   private volatile boolean inverted;
+  private volatile int clockSpeed;
 
   private final ToolContext context;
+  private final AnnotationListener annotationListener;
   private final ToolProgressListener progressListener;
 
   // CONSTRUCTORS
@@ -61,6 +63,7 @@ public class LineDecoderTask implements ToolTask<AcquisitionResult>
       final AnnotationListener aAnnotationListener )
   {
     this.context = aContext;
+    this.annotationListener = aAnnotationListener;
     this.progressListener = aProgressListener;
   }
 
@@ -73,9 +76,9 @@ public class LineDecoderTask implements ToolTask<AcquisitionResult>
   public AcquisitionResult call() throws Exception
   {
     final LineDecoderToolContextImpl decoderContext = new LineDecoderToolContextImpl( this.context, this.lines,
-        this.inverted );
+        this.inverted, this.clockSpeed );
 
-    this.decoder.decode( decoderContext, this.progressListener );
+    this.decoder.decode( decoderContext, this.annotationListener, this.progressListener );
 
     return null;
   }
@@ -86,6 +89,14 @@ public class LineDecoderTask implements ToolTask<AcquisitionResult>
   public void setChannels( final int[] aChannels )
   {
     this.lines = Arrays.copyOf( aChannels, aChannels.length );
+  }
+
+  /**
+   * @param aSpeed
+   */
+  public void setClockSpeed( final int aSpeed )
+  {
+    this.clockSpeed = aSpeed;
   }
 
   /**

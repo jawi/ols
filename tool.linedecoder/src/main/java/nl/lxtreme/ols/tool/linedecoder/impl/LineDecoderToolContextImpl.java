@@ -37,17 +37,20 @@ public class LineDecoderToolContextImpl implements LineDecoderToolContext
   private final ToolContext toolContext;
   private final int[] lines;
   private final boolean inverted;
+  private final int clockSpeed;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new LineDecoderToolContextImpl instance.
    */
-  public LineDecoderToolContextImpl( final ToolContext aContext, final int[] aLines, final boolean aInverted )
+  public LineDecoderToolContextImpl( final ToolContext aContext, final int[] aLines, final boolean aInverted,
+      final int aClockSpeed )
   {
     this.toolContext = aContext;
     this.lines = aLines;
     this.inverted = aInverted;
+    this.clockSpeed = aClockSpeed;
   }
 
   // METHODS
@@ -59,6 +62,16 @@ public class LineDecoderToolContextImpl implements LineDecoderToolContext
   public int getChannels()
   {
     return this.toolContext.getChannels();
+  }
+
+  /**
+   * Returns the current value of clockSpeed.
+   * 
+   * @return the clockSpeed
+   */
+  public int getClockSpeed()
+  {
+    return this.clockSpeed;
   }
 
   /**

@@ -34,6 +34,7 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.tool.linedecoder.*;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
@@ -77,6 +78,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
   private JComboBox lineDecoders;
   private JComboBox[] lines;
   private JCheckBox inverted;
+  private JTextField clockSpeed;
 
   private Action closeAction;
   private RestorableAction runAnalysisAction;
@@ -171,10 +173,13 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
       channels[i] = this.lines[i].getSelectedIndex();
     }
 
+    int clockSpeed = NumberUtils.safeParseInt( this.clockSpeed.getText() );
+
     final LineDecoderTask toolTask = ( LineDecoderTask )aToolTask;
     toolTask.setLineDecoder( ( LineDecoder )this.lineDecoders.getSelectedItem() );
     toolTask.setChannels( channels );
     toolTask.setInverted( this.inverted.isSelected() );
+    toolTask.setClockSpeed( clockSpeed );
   }
 
   /**
@@ -222,6 +227,10 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
     final JPanel panel = new JPanel( new SpringLayout() );
 
     SpringLayoutUtils.addSeparator( panel, "General settings" );
+
+    this.clockSpeed = new JTextField();
+    panel.add( createRightAlignedLabel( "Clock speed" ) );
+    panel.add( this.clockSpeed );
 
     panel.add( createRightAlignedLabel( "Line Decoder" ) );
     this.lineDecoders = new JComboBox( getLineDecoders() );

@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.linedecoder;
 
 
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.api.tools.*;
 
 
@@ -41,10 +42,12 @@ public interface LineDecoder
 
   /**
    * @param aContext
+   * @param aAnnotationListener
    * @param aListener
    * @throws Exception
    */
-  AcquisitionResult decode( LineDecoderToolContext aContext, ToolProgressListener aListener ) throws Exception;
+  AcquisitionResult decode( LineDecoderToolContext aContext, AnnotationListener aAnnotationListener,
+      ToolProgressListener aListener ) throws Exception;
 
   /**
    * Provides some metadata about the number of lines/channels that are needed

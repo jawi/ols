@@ -21,11 +21,13 @@
 package nl.lxtreme.ols.tool.linedecoder.impl.decoders;
 
 
+import java.util.*;
+
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.linedecoder.*;
-import nl.lxtreme.ols.util.analysis.*;
 
 
 /**
@@ -33,13 +35,6 @@ import nl.lxtreme.ols.util.analysis.*;
  */
 public class ManchesterLineDecoder implements LineDecoder
 {
-  // INNER TYPES
-
-  static enum State
-  {
-    IDLE, SYNC, DECODE, ERROR;
-  }
-
   // METHODS
 
   /**
@@ -55,119 +50,55 @@ public class ManchesterLineDecoder implements LineDecoder
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionResult decode( final LineDecoderToolContext aContext, final ToolProgressListener aListener )
-      throws Exception
+  public AcquisitionResult decode( final LineDecoderToolContext aContext, final AnnotationListener aAnnotationListener,
+      final ToolProgressListener aListener ) throws Exception
   {
-    final int lineIdx = aContext.getLineChannels()[0];
-    final boolean inverted = aContext.isInverted();
-
-    final int mask = ( 1 << lineIdx );
-
-    final int startIdx = aContext.getStartSampleIndex();
-    final int endIdx = aContext.getEndSampleIndex();
-
     final AcquisitionResult inputData = aContext.getData();
+
+    final int expectedBitSize = ( int )( ( 1.0 / aContext.getClockSpeed() ) * inputData.getSampleRate() );
 
     final int[] values = inputData.getValues();
     final long[] timestamps = inputData.getTimestamps();
 
-    Frequency<Long> frequencyMap = new Frequency<Long>();
-
-    int oldIndex = startIdx;
-    int oldValue = values[startIdx] & mask;
-
-    // Pass 1: count the various low/high times...
-    for ( int i = startIdx + 1; i < endIdx; i++ )
+    int startIdx = aContext.getStartSampleIndex();
+    int endIdx = aContext.getEndSampleIndex();
+    // Find first edge...
+    int oldValue = values[startIdx];
+    while ( ( startIdx < endIdx ) && ( values[startIdx] == oldValue ) )
     {
-      int value = values[i] & mask;
-      if ( value != oldValue )
-      {
-        long t1 = timestamps[oldIndex];
-        long t2 = timestamps[i];
-
-        frequencyMap.addValue( Long.valueOf( t2 - t1 ) );
-
-        oldIndex = i;
-        oldValue = value;
-      }
+      startIdx++;
     }
 
-    // Pass 2: determine the smallest and highest times...
-    long min = Long.MAX_VALUE;
-    long max = Long.MIN_VALUE;
-    long threshold = frequencyMap.getTotalCount() / 10;
-    for ( Long value : frequencyMap.values() )
+    final int channelIdx = aContext.getLineChannels()[0];
+
+    aAnnotationListener.clearAnnotations( channelIdx );
+
+    int symbolSize = 8;
+    int bitCount = -1;
+    int symbol = 0;
+
+    long startTime = timestamps[startIdx];
+    long endTime = timestamps[endIdx];
+    long timePtr = startTime + expectedBitSize;
+
+    while ( timePtr < endTime )
     {
-      if ( frequencyMap.getCount( value ) < threshold )
+      int value = getDataValue( aContext, timePtr );
+      if ( ++bitCount == symbolSize )
       {
-        // Skip spurious values...
-        continue;
+        aAnnotationListener.onAnnotation( new SampleDataAnnotation( channelIdx, startTime, timePtr - expectedBitSize,
+            String.format( "%1$c (%1$x)", Integer.valueOf( symbol ) ) ) );
+
+        symbol = 0;
+        bitCount = 0;
+        startTime = timePtr - expectedBitSize;
       }
-      final long v = value.longValue();
-      min = Math.min( min, v );
-      max = Math.max( max, v );
-    }
-
-    // Pass 3: decode the data using the minimal and maximal timing values...
-    oldIndex = startIdx;
-    oldValue = ( values[startIdx] & mask ) >> lineIdx;
-    boolean inSymbol = false;
-    int curSymbol = 0;
-    int curBitCount = 0;
-
-    for ( int i = startIdx + 1; i < endIdx; i++ )
-    {
-      int curValue = ( values[i] & mask ) >> lineIdx;
-
-      Edge e = Edge.toEdge( oldValue, curValue );
-      if ( !e.isNone() )
+      symbol <<= 1;
+      if ( value != 0 )
       {
-        long t = timestamps[i] - timestamps[oldIndex];
-
-        if ( inWindow( min, t ) )
-        {
-          if ( !inSymbol )
-          {
-            // sample point;
-            inSymbol = true;
-
-            curSymbol <<= 1;
-            curSymbol |= ( inverted ? oldValue : curValue );
-            curBitCount++;
-          }
-          else
-          {
-            // bit boundary;
-            inSymbol = false;
-          }
-        }
-        else if ( inWindow( max, t ) )
-        {
-          // If we're in the middle of a symbol; we stay in the middle of a
-          // symbol...
-          if ( inSymbol )
-          {
-            curSymbol <<= 1;
-            curSymbol |= ( inverted ? oldValue : curValue );
-            curBitCount++;
-          }
-        }
-        else
-        {
-          inSymbol = false;
-        }
-
-        if ( curBitCount == 9 )
-        {
-          curSymbol &= 0xFF;
-          System.out.println( "DECODED = " + ( char )curSymbol + " (0x" + Integer.toHexString( curSymbol ) + ")" );
-          curSymbol = 0;
-          curBitCount = 0;
-        }
-
-        oldIndex = i;
-        oldValue = curValue;
+        symbol |= 1;
       }
+      timePtr += expectedBitSize;
     }
 
     return null;
@@ -191,8 +122,33 @@ public class ManchesterLineDecoder implements LineDecoder
     return "Manchester";
   }
 
-  private boolean inWindow( final long aMatchedValue, final long aValue )
+  /**
+   * Returns the data value for the given time stamp.
+   * 
+   * @param aTimeValue
+   *          the time stamp to return the data value for.
+   * @return the data value of the sample index right before the given time
+   *         value.
+   */
+  protected final int getDataValue( final LineDecoderToolContext aContext, final long aTimeValue )
   {
-    return Math.abs( aMatchedValue - aValue ) < 5L;
+    final AcquisitionResult inputData = aContext.getData();
+    final int[] values = inputData.getValues();
+    final long[] timestamps = inputData.getTimestamps();
+    final int mask = ( 1 << aContext.getLineChannels()[0] );
+
+    int k = Arrays.binarySearch( timestamps, aTimeValue );
+    if ( k < 0 )
+    {
+      k = -( k + 1 );
+    }
+
+    int value = ( ( k == 0 ) ? values[0] : values[k - 1] );
+    if ( aContext.isInverted() )
+    {
+      value = ~value;
+    }
+
+    return value & mask;
   }
 }
