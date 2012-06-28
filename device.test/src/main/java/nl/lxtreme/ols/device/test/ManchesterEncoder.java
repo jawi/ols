@@ -58,13 +58,13 @@ final class ManchesterEncoder
     // Write some initial stuff bits...
     for ( int i = 0; i < ( 5 * this.bitBoundary ); i++ )
     {
-      this.data.add( Integer.valueOf( 0 ) );
+      this.data.add( Integer.valueOf( 1 << LINE_IDX ) );
     }
 
     this.trigger = this.data.size();
 
     // Synchronize byte...
-    write( ( byte )0x01 );
+    write( ( byte )0xaa );
   }
 
   // METHODS
@@ -114,7 +114,7 @@ final class ManchesterEncoder
     // Some additional stuff bits...
     for ( int i = 0; i < ( 3 * this.bitBoundary ); i++ )
     {
-      this.data.add( Integer.valueOf( 0 ) );
+      this.data.add( Integer.valueOf( 1 << LINE_IDX ) );
     }
     this.data.add( Integer.valueOf( 1 ) );
   }
@@ -125,7 +125,7 @@ final class ManchesterEncoder
    */
   private void write( final byte aByte )
   {
-    for ( int i = 8; i >= 0; i-- )
+    for ( int i = 7; i >= 0; i-- )
     {
       int b = ( aByte & ( 1 << i ) );
       writeBit( b );
