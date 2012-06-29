@@ -40,6 +40,8 @@ public class GenericBundleAdapter<TYPE>
   private final String headerKey;
 
   private volatile Bundle bundle; // = adapted bundle
+  private volatile DependencyManager manager; // injected
+  private volatile Component serviceComponent; // = added service
 
   // CONSTRUCTORS
 
@@ -55,7 +57,18 @@ public class GenericBundleAdapter<TYPE>
   // METHODS
 
   /**
-   * Called by Depdendency Manager upon initialization of this component.
+   * Called by Dependency Manager upon destruction of this component.
+   */
+  public void destroy( final Component aComponent ) throws Exception
+  {
+    if ( this.serviceComponent != null )
+    {
+      this.manager.remove( this.serviceComponent );
+    }
+  }
+
+  /**
+   * Called by Dependency Manager upon initialization of this component.
    */
   public void init( final Component aComponent ) throws Exception
   {
@@ -71,15 +84,14 @@ public class GenericBundleAdapter<TYPE>
 
     Properties serviceProps = copyOlsProperties( bundleProps );
 
-    DependencyManager dm = new DependencyManager( this.bundle.getBundleContext() );
-    dm.add( dm.createComponent() //
+    this.serviceComponent = this.manager.createComponent() //
         .setInterface( this.serviceClass.getName(), serviceProps ) //
         .setImplementation( implClass ) //
-        .add( dm.createServiceDependency() //
+        .add( this.manager.createServiceDependency() //
             .setService( LogService.class ) //
             .setRequired( false ) //
-        ) //
-    );
+        );
+    this.manager.add( this.serviceComponent );
   }
 
   /**
