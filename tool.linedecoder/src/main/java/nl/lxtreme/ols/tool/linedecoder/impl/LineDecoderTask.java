@@ -39,6 +39,7 @@ public class LineDecoderTask implements ToolTask<AcquisitionResult>
   private volatile LineDecoder decoder;
   private volatile int[] lines;
   private volatile boolean inverted;
+  private volatile boolean recoverClock;
   private volatile int clockSpeed;
 
   private final ToolContext context;
@@ -76,7 +77,7 @@ public class LineDecoderTask implements ToolTask<AcquisitionResult>
   public AcquisitionResult call() throws Exception
   {
     final LineDecoderToolContextImpl decoderContext = new LineDecoderToolContextImpl( this.context, this.lines,
-        this.inverted, this.clockSpeed );
+        this.inverted, this.recoverClock, this.clockSpeed );
 
     this.decoder.decode( decoderContext, this.annotationListener, this.progressListener );
 
@@ -120,5 +121,16 @@ public class LineDecoderTask implements ToolTask<AcquisitionResult>
   public void setLineDecoder( final LineDecoder aDecoder )
   {
     this.decoder = aDecoder;
+  }
+
+  /**
+   * Sets recoverClock to the given value.
+   * 
+   * @param aRecoverClock
+   *          the recoverClock to set.
+   */
+  public void setRecoverClock( final boolean aRecoverClock )
+  {
+    this.recoverClock = aRecoverClock;
   }
 }

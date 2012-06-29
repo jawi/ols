@@ -41,6 +41,12 @@ public interface LineDecoder
   boolean canHandleInversion();
 
   /**
+   * @return <code>true</code> if this decoder can recover a clock signal,
+   *         <code>false</code> if not.
+   */
+  boolean canRecoverClock();
+
+  /**
    * @param aContext
    * @param aAnnotationListener
    * @param aListener
@@ -63,4 +69,11 @@ public interface LineDecoder
    * @return a name, never <code>null</code> or an empty string.
    */
   String getName();
+
+  /**
+   * @return <code>true</code> if a clock speed is to be given, or should be
+   *         recovered, <code>false</code> if the clock speed is not needed for
+   *         this decoder.
+   */
+  boolean needClockSpeed();
 }

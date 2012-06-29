@@ -45,4 +45,9 @@ public interface LineDecoderToolContext extends ToolContext
    * @return
    */
   boolean isInverted();
+
+  /**
+   * @return
+   */
+  boolean isRecoverClock();
 }

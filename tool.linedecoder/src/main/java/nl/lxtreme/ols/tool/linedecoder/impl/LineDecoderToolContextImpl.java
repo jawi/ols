@@ -37,6 +37,7 @@ public class LineDecoderToolContextImpl implements LineDecoderToolContext
   private final ToolContext toolContext;
   private final int[] lines;
   private final boolean inverted;
+  private final boolean recoverClock;
   private final int clockSpeed;
 
   // CONSTRUCTORS
@@ -45,11 +46,12 @@ public class LineDecoderToolContextImpl implements LineDecoderToolContext
    * Creates a new LineDecoderToolContextImpl instance.
    */
   public LineDecoderToolContextImpl( final ToolContext aContext, final int[] aLines, final boolean aInverted,
-      final int aClockSpeed )
+      final boolean aRecoverClock, final int aClockSpeed )
   {
     this.toolContext = aContext;
     this.lines = aLines;
     this.inverted = aInverted;
+    this.recoverClock = aRecoverClock;
     this.clockSpeed = aClockSpeed;
   }
 
@@ -144,5 +146,14 @@ public class LineDecoderToolContextImpl implements LineDecoderToolContext
   public boolean isInverted()
   {
     return this.inverted;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isRecoverClock()
+  {
+    return this.recoverClock;
   }
 }

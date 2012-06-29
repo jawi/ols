@@ -50,6 +50,15 @@ public class ManchesterLineDecoder implements LineDecoder
    * {@inheritDoc}
    */
   @Override
+  public boolean canRecoverClock()
+  {
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public AcquisitionResult decode( final LineDecoderToolContext aContext, final AnnotationListener aAnnotationListener,
       final ToolProgressListener aListener ) throws Exception
   {
@@ -120,6 +129,15 @@ public class ManchesterLineDecoder implements LineDecoder
   public String getName()
   {
     return "Manchester";
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean needClockSpeed()
+  {
+    return true;
   }
 
   /**

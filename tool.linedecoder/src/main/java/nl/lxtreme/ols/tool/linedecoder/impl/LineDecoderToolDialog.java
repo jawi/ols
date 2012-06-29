@@ -78,6 +78,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
   private JComboBox lineDecoders;
   private JComboBox[] lines;
   private JCheckBox inverted;
+  private JCheckBox recoverClock;
   private JTextField clockSpeed;
 
   private Action closeAction;
@@ -179,6 +180,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
     toolTask.setLineDecoder( ( LineDecoder )this.lineDecoders.getSelectedItem() );
     toolTask.setChannels( channels );
     toolTask.setInverted( this.inverted.isSelected() );
+    toolTask.setRecoverClock( this.recoverClock.isSelected() );
     toolTask.setClockSpeed( clockSpeed );
   }
 
@@ -192,6 +194,22 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
   {
     aPanel.removeAll();
     SpringLayoutUtils.addSeparator( aPanel, "Decoder settings" );
+
+    this.clockSpeed = new JTextField();
+
+    if ( aLineDecoder.needClockSpeed() || aLineDecoder.canRecoverClock() )
+    {
+      aPanel.add( createRightAlignedLabel( "Clock speed" ) );
+      aPanel.add( this.clockSpeed );
+    }
+
+    this.recoverClock = new JCheckBox( "", false /* selected */);
+
+    if ( aLineDecoder.canRecoverClock() )
+    {
+      aPanel.add( createRightAlignedLabel( "Recover clock?" ) );
+      aPanel.add( this.recoverClock );
+    }
 
     final int channelCount = getData().getChannels();
 
@@ -227,10 +245,6 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
     final JPanel panel = new JPanel( new SpringLayout() );
 
     SpringLayoutUtils.addSeparator( panel, "General settings" );
-
-    this.clockSpeed = new JTextField();
-    panel.add( createRightAlignedLabel( "Clock speed" ) );
-    panel.add( this.clockSpeed );
 
     panel.add( createRightAlignedLabel( "Line Decoder" ) );
     this.lineDecoders = new JComboBox( getLineDecoders() );
