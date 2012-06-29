@@ -25,9 +25,11 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.util.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
@@ -131,8 +133,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   static final java.awt.Cursor CURSOR_MOVE_CURSOR = java.awt.Cursor.getPredefinedCursor( java.awt.Cursor.HAND_CURSOR );
   static final java.awt.Cursor CURSOR_MOVE_TIMESTAMP = java.awt.Cursor
       .getPredefinedCursor( java.awt.Cursor.E_RESIZE_CURSOR );
-
-  private static final boolean DEBUG = true;
 
   private static final long serialVersionUID = 1L;
 
@@ -325,7 +325,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   @Override
   public void paint( final Graphics aGraphics )
   {
-    if ( DEBUG )
+    if ( Activator.isDebugMode() )
     {
       final long startTime = System.nanoTime();
       try

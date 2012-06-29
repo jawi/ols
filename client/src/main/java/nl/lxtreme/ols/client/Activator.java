@@ -68,6 +68,17 @@ public class Activator extends DependencyActivatorBase
   // METHODS
 
   /**
+   * Returns whether or not we're running in debug mode.
+   * 
+   * @return <code>true</code> if debug mode is enabled, <code>false</code>
+   *         otherwise.
+   */
+  public static boolean isDebugMode()
+  {
+    return Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override

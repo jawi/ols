@@ -58,8 +58,9 @@ public class BundlesDialog extends JDialog implements Closeable
 
     /**
      * Creates a new TableModel instance.
-     *
-     * @param aBundles the current active bundles, cannot be <code>null</code>.
+     * 
+     * @param aBundles
+     *          the current active bundles, cannot be <code>null</code>.
      */
     public TableModel( final Bundle[] aBundles )
     {
@@ -179,7 +180,7 @@ public class BundlesDialog extends JDialog implements Closeable
       // Under certain circumstances, the bundles may be enabled/disabled...
       if ( aColumn == 0 )
       {
-        return isDebugMode();
+        return Activator.isDebugMode();
       }
       else
       {
@@ -227,10 +228,12 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Creates a new BundlesDialog instance.
-   *
-   * @param aOwner         the owning window, can be <code>null</code>;
-   * @param aBundleContext the bundle context to use for communicating with the OSGi
-   *                       framework, cannot be <code>null</code>.
+   * 
+   * @param aOwner
+   *          the owning window, can be <code>null</code>;
+   * @param aBundleContext
+   *          the bundle context to use for communicating with the OSGi
+   *          framework, cannot be <code>null</code>.
    */
   public BundlesDialog( final Window aOwner, final BundleContext aBundleContext )
   {
@@ -246,17 +249,6 @@ public class BundlesDialog extends JDialog implements Closeable
   // METHODS
 
   /**
-   * Returns whether or not we're running in debug mode.
-   *
-   * @return <code>true</code> if debug mode is enabled, <code>false</code>
-   *         otherwise.
-   */
-  private static boolean isDebugMode()
-  {
-    return Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
-  }
-
-  /**
    * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
    */
   @Override
@@ -268,7 +260,7 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Display the bundles dialog.
-   *
+   * 
    * @return always <code>true</code>.
    */
   public boolean showDialog()
@@ -279,8 +271,9 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Starts all bundles.
-   *
-   * @param aBundles the bundles to start, cannot be <code>null</code>.
+   * 
+   * @param aBundles
+   *          the bundles to start, cannot be <code>null</code>.
    */
   final void startAllBundles( final Bundle[] aBundles )
   {
@@ -294,8 +287,9 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Starts the given bundle.
-   *
-   * @param aBundle the bundle to start, cannot be <code>null</code>.
+   * 
+   * @param aBundle
+   *          the bundle to start, cannot be <code>null</code>.
    */
   final void startBundle( final Bundle aBundle )
   {
@@ -314,8 +308,9 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Stops all bundles.
-   *
-   * @param aBundles the bundles to stop, cannot be <code>null</code>.
+   * 
+   * @param aBundles
+   *          the bundles to stop, cannot be <code>null</code>.
    */
   final void stopAllBundles( final Bundle[] aBundles )
   {
@@ -329,8 +324,9 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Stops the given bundle.
-   *
-   * @param aBundle the bundle to stop, cannot be <code>null</code>.
+   * 
+   * @param aBundle
+   *          the bundle to stop, cannot be <code>null</code>.
    */
   final void stopBundle( final Bundle aBundle )
   {
@@ -349,7 +345,7 @@ public class BundlesDialog extends JDialog implements Closeable
 
   /**
    * Creates the bundle view pane.
-   *
+   * 
    * @return a bundle view pane.
    */
   private JPanel createBundleViewPane()
@@ -367,7 +363,7 @@ public class BundlesDialog extends JDialog implements Closeable
 
         if ( !result.getBackground().equals( getSelectionBackground() ) )
         {
-          result.setBackground( ( aRow % 2 != 0 ? ALT_COLOR : NEW_COLOR ) );
+          result.setBackground( ( ( aRow % 2 ) != 0 ? ALT_COLOR : NEW_COLOR ) );
         }
         if ( result instanceof JComponent )
         {
@@ -392,8 +388,10 @@ public class BundlesDialog extends JDialog implements Closeable
 
     this.table.getSelectionModel().setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 
+    final boolean visible = Activator.isDebugMode();
+
     final JButton selectAll = new JButton( "Select all" );
-    selectAll.setVisible( isDebugMode() );
+    selectAll.setVisible( visible );
     selectAll.addActionListener( new ActionListener()
     {
       @Override
@@ -404,7 +402,7 @@ public class BundlesDialog extends JDialog implements Closeable
     } );
 
     final JButton deselectAll = new JButton( "Deselect all" );
-    deselectAll.setVisible( isDebugMode() );
+    deselectAll.setVisible( visible );
     deselectAll.addActionListener( new ActionListener()
     {
       @Override
@@ -415,7 +413,7 @@ public class BundlesDialog extends JDialog implements Closeable
     } );
 
     final JButton crashTest = new JButton( "Crash test" );
-    crashTest.setVisible( isDebugMode() );
+    crashTest.setVisible( visible );
     crashTest.addActionListener( new ActionListener()
     {
       @Override

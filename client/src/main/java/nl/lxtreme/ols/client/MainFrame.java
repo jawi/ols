@@ -453,10 +453,13 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       final Point newPoint = SwingUtilities.convertPoint( aEvent.getComponent(), aEvent.getPoint(), destination );
 
       final int r = aEvent.getWheelRotation();
-      if ( r != 0 )
+      if ( r < 0 )
       {
-        final int direction = ( r < 0 ) ? ZoomController.ZOOM_IN : ZoomController.ZOOM_OUT;
-        this.zoomController.zoom( direction, newPoint );
+        this.zoomController.zoomIn( newPoint );
+      }
+      else if ( r > 0 )
+      {
+        this.zoomController.zoomOut( newPoint );
       }
 
       aEvent.consume();

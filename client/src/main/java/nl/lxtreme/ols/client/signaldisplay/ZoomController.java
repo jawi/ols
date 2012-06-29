@@ -21,12 +21,9 @@
 package nl.lxtreme.ols.client.signaldisplay;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
-
 import java.awt.*;
 import java.util.*;
 
-import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.client.signaldisplay.model.*;
@@ -46,8 +43,8 @@ public final class ZoomController
   {
     // VARIABLES
 
-    private final boolean zoomAll;
     private final double minZoomLevel;
+    private final double defaultZoomLevel;
     private final double maxZoomLevel;
     private final double newFactor;
     private final double oldFactor;
@@ -62,13 +59,13 @@ public final class ZoomController
      * @param aMinZoomLevel
      * @param aMaxZoomLevel
      */
-    public ZoomEvent( final boolean isZoomAll, final double aNewFactor, final double aOldFactor,
-        final double aMinZoomLevel, final double aMaxZoomLevel, final Point aHotSpot )
+    public ZoomEvent( final double aNewFactor, final double aOldFactor, final double aMinZoomLevel,
+        final double aDefaultLevel, final double aMaxZoomLevel, final Point aHotSpot )
     {
-      this.zoomAll = isZoomAll;
       this.newFactor = aNewFactor;
       this.oldFactor = aOldFactor;
       this.minZoomLevel = aMinZoomLevel;
+      this.defaultZoomLevel = aDefaultLevel;
       this.maxZoomLevel = aMaxZoomLevel;
       this.hotSpot = aHotSpot == null ? null : new Point( aHotSpot );
     }
@@ -158,7 +155,16 @@ public final class ZoomController
      */
     public boolean isZoomAll()
     {
-      return this.zoomAll;
+      return Math.abs( this.newFactor - this.minZoomLevel ) < 1.0E-6;
+    }
+
+    /**
+     * @return <code>true</code> if the default zoom level is selected,
+     *         <code>false</code> otherwise.
+     */
+    public boolean isZoomMaximum()
+    {
+      return Math.abs( this.newFactor - this.maxZoomLevel ) < 1.0E-6;
     }
 
     /**
@@ -167,7 +173,7 @@ public final class ZoomController
      */
     public boolean isZoomOriginal()
     {
-      return getFactor() == DEFAULT_ZOOM_FACTOR;
+      return Math.abs( this.newFactor - this.defaultZoomLevel ) < 1.0E-6;
     }
   }
 
@@ -188,12 +194,26 @@ public final class ZoomController
     void notifyZoomChange( ZoomEvent aEvent );
   }
 
-  // CONSTANTS
+  /**
+   * Denotes the value with which zooming in/out should happen.
+   */
+  public static enum ZoomValue
+  {
+    // CONSTANTS
 
-  /** Tells the zoom controller to zoom in with a factor of 2. */
-  public static int ZOOM_IN = -1;
-  /** Tells the zoom controller to zoom out with a factor of 2. */
-  public static int ZOOM_OUT = 1;
+    /** Zooms in with a constant factor. */
+    IN,
+    /** Zooms out with a constant factor. */
+    OUT,
+    /** Zooms to a default level. */
+    DEFAULT,
+    /** Zooms to a least possible zoom level, showing everything in one view. */
+    ALL,
+    /** Zooms to a maximum possible zoom level, showing the most detailed view. */
+    MAXIMUM;
+  }
+
+  // CONSTANTS
 
   /** The default/original zoom factor. */
   private static final double DEFAULT_ZOOM_FACTOR = 1.0;
@@ -207,8 +227,8 @@ public final class ZoomController
 
   private final Object LOCK = new Object();
 
-  private boolean zoomAll = false;
-  private double factor = Double.NaN;
+  private volatile ZoomValue value = ZoomValue.DEFAULT;
+  private volatile double factor = DEFAULT_ZOOM_FACTOR;
 
   // CONSTRUCTORS
 
@@ -262,7 +282,7 @@ public final class ZoomController
   {
     synchronized ( this.LOCK )
     {
-      return this.zoomAll;
+      return ( this.value == ZoomValue.ALL );
     }
   }
 
@@ -270,9 +290,12 @@ public final class ZoomController
    * @return <code>true</code> if the default zoom level is selected,
    *         <code>false</code> otherwise.
    */
-  public boolean isZoomOriginal()
+  public boolean isZoomDefault()
   {
-    return getFactor() == DEFAULT_ZOOM_FACTOR;
+    synchronized ( this.LOCK )
+    {
+      return ( this.value == ZoomValue.DEFAULT );
+    }
   }
 
   /**
@@ -291,78 +314,61 @@ public final class ZoomController
    */
   public void restoreZoomLevel()
   {
-    final ZoomEvent event;
+    ZoomValue _value;
+    double _factor;
     synchronized ( this.LOCK )
     {
-      final double oldFactor = getFactor();
-      final double newFactor = oldFactor;
-
-      event = createZoomEvent( oldFactor, newFactor, null );
+      _value = this.value;
+      _factor = this.factor;
     }
-    fireZoomEvent( event );
+
+    zoom( _value, _factor, null );
   }
 
   /**
-   * Zooms in with a factor 2.
-   */
-  public void zoom( final int aDirection )
-  {
-    zoom( aDirection, null );
-  }
-
-  /**
-   * Zooms in with a factor 2.
-   */
-  public void zoom( final int aDirection, final Point aHotSpot )
-  {
-    final ZoomEvent event;
-    synchronized ( this.LOCK )
-    {
-      double oldFactor = getFactor();
-      double newFactor = setFactor( calculateNewFactor( aDirection == ZOOM_IN ? DEFAULT_ZOOM_RATIO
-          : 1.0 / DEFAULT_ZOOM_RATIO ) );
-
-      this.zoomAll = false;
-
-      event = createZoomEvent( oldFactor, newFactor, aHotSpot );
-    }
-    fireZoomEvent( event );
-  }
-
-  /**
-   * Zooms to make all data visible in one screen.
+   * Zooms to make the entire view visible.
    */
   public void zoomAll()
   {
-    final ZoomEvent event;
-    synchronized ( this.LOCK )
-    {
-      double oldFactor = getFactor();
-      double newFactor = setFactor( getMinZoomLevel() );
-
-      this.zoomAll = true;
-
-      event = createZoomEvent( oldFactor, newFactor, null );
-    }
-    fireZoomEvent( event );
+    zoom( ZoomValue.ALL, getMinZoomLevel(), null );
   }
 
   /**
-   * Zooms to a factor of 1.0.
+   * Zooms to the default zoom level.
    */
-  public void zoomOriginal()
+  public void zoomDefault()
   {
-    final ZoomEvent event;
-    synchronized ( this.LOCK )
-    {
-      double oldFactor = getFactor();
-      double newFactor = setFactor( DEFAULT_ZOOM_FACTOR );
+    zoom( ZoomValue.DEFAULT, getDefaultZoomLevel(), null );
+  }
 
-      this.zoomAll = false;
+  /**
+   * Zooms in with a constant factor.
+   * 
+   * @param aCenterPoint
+   *          the center point for the zoom action, may be <code>null</code>.
+   */
+  public void zoomIn( final Point aCenterPoint )
+  {
+    zoom( ZoomValue.IN, DEFAULT_ZOOM_RATIO, aCenterPoint );
+  }
 
-      event = createZoomEvent( oldFactor, newFactor, null );
-    }
-    fireZoomEvent( event );
+  /**
+   * Zooms to make the most detailed view possible.
+   */
+  public void zoomMaximum()
+  {
+    zoom( ZoomValue.ALL, getMaxZoomLevel(), null );
+  }
+
+  /**
+   * Zooms out with a constant factor.
+   * 
+   * @param aCenterPoint
+   *          the center point for the zoom action, may be <code>null</code>.
+   */
+  public void zoomOut( final Point aCenterPoint )
+  {
+    zoom( ZoomValue.OUT, 1.0 / DEFAULT_ZOOM_RATIO, aCenterPoint );
   }
 
   /**
@@ -400,9 +406,7 @@ public final class ZoomController
 
       Point hs = new Point( ( int )( ts * oldFactor ), 0 );
 
-      double newFactor = setFactor( ( viewSize.width / ( double )width ) );
-
-      this.zoomAll = false;
+      double newFactor = ( viewSize.width / ( double )width );
 
       event = createZoomEvent( oldFactor, newFactor, hs );
     }
@@ -413,25 +417,13 @@ public final class ZoomController
   }
 
   /**
-   * Calculates the new zoom-factor, based on a given zoom ratio.
-   * 
-   * @param aZoomRatio
-   *          the zoom-ratio to use, != 0.0.
-   * @return a new zoom factor, bounded to the minimum and maximum zoom levels.
-   */
-  private double calculateNewFactor( final double aZoomRatio )
-  {
-    return Math.max( getMinZoomLevel(), Math.min( getMaxZoomLevel(), aZoomRatio * getFactor() ) );
-  }
-
-  /**
    * Creates a new ZoomEvent instance, based on the current situation.
    * 
    * @return a new {@link ZoomEvent} instance, never <code>null</code>.
    */
   private ZoomEvent createZoomEvent( final double aOldFactor, final double aNewFactor, final Point aHotSpot )
   {
-    return new ZoomEvent( this.zoomAll, aNewFactor, aOldFactor, getMinZoomLevel(), getMaxZoomLevel(), aHotSpot );
+    return new ZoomEvent( aNewFactor, aOldFactor, getMinZoomLevel(), getDefaultZoomLevel(), getMaxZoomLevel(), aHotSpot );
   }
 
   /**
@@ -447,6 +439,19 @@ public final class ZoomController
     {
       listener.notifyZoomChange( aEvent );
     }
+  }
+
+  /**
+   * @return the default zoom level.
+   */
+  private double getDefaultZoomLevel()
+  {
+    double minLevel = getMinZoomLevel();
+    if ( minLevel > DEFAULT_ZOOM_FACTOR )
+    {
+      return minLevel;
+    }
+    return DEFAULT_ZOOM_FACTOR;
   }
 
   /**
@@ -485,20 +490,8 @@ public final class ZoomController
       return DEFAULT_ZOOM_FACTOR;
     }
 
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this.controller.getSignalDiagram() );
+    final double width = getVisibleViewSize().getWidth();
     final double length = model.getAbsoluteLength();
-
-    final int width;
-    if ( scrollPane != null )
-    {
-      final JViewport viewport = scrollPane.getViewport();
-
-      width = viewport.getWidth();
-    }
-    else
-    {
-      width = this.controller.getSignalDiagram().getWidth();
-    }
 
     return width / length;
   }
@@ -512,17 +505,76 @@ public final class ZoomController
   }
 
   /**
-   * Sets the new zoom factor to the one given.
-   * <p>
-   * SHOULD ONLY BE CALLED FROM A SYNCHRONIZED BLOCK!
-   * </p>
-   * 
-   * @param aFactor
-   *          the new zoom factor to set.
+   * @return the view size of the current view, never <code>null</code>.
    */
-  private double setFactor( final double aFactor )
+  private Rectangle getVisibleViewSize()
   {
-    System.out.println( "SET FACTOR = " + aFactor );
-    return this.factor = aFactor;
+    return this.controller.getSignalDiagram().getVisibleViewSize();
+  }
+
+  /**
+   * Zooms in with a factor 2.
+   */
+  private void zoom( final ZoomValue aZoomValue, final double aFactor, final Point aHotSpot )
+  {
+    final ZoomEvent event;
+    synchronized ( this.LOCK )
+    {
+      double oldFactor = getFactor();
+      double newFactor;
+      ZoomValue newValue = aZoomValue;
+
+      if ( ( aZoomValue == ZoomValue.IN ) || ( aZoomValue == ZoomValue.OUT ) )
+      {
+        // The given factor is relative...
+        newFactor = aFactor * oldFactor;
+      }
+      else
+      {
+        // The given factor is absolute...
+        newFactor = aFactor;
+      }
+
+      // Ensure the zoom level is always bounded to the current view and the
+      // number of samples...
+      final Rectangle visibleViewSize = getVisibleViewSize();
+      final SignalDiagramModel model = getModel();
+
+      double width = visibleViewSize.getWidth();
+      double absLength = model.getAbsoluteLength();
+
+      double result = absLength * oldFactor;
+      if ( result < width )
+      {
+        newFactor = width / absLength;
+      }
+
+      double defaultZoomLevel = getDefaultZoomLevel();
+      double minZoomLevel = getMinZoomLevel();
+      double maxZoomLevel = getMaxZoomLevel();
+
+      if ( Math.abs( newFactor - defaultZoomLevel ) < 1.0e-6 )
+      {
+        newFactor = defaultZoomLevel;
+        newValue = ZoomValue.DEFAULT;
+      }
+      else if ( Double.compare( newFactor, minZoomLevel ) <= 0.0 )
+      {
+        newFactor = minZoomLevel;
+        newValue = ZoomValue.ALL;
+      }
+      else if ( Double.compare( newFactor, maxZoomLevel ) >= 0.0 )
+      {
+        newFactor = maxZoomLevel;
+        newValue = ZoomValue.MAXIMUM;
+      }
+
+      this.factor = newFactor;
+      this.value = newValue;
+
+      event = new ZoomEvent( newFactor, oldFactor, minZoomLevel, defaultZoomLevel, maxZoomLevel, aHotSpot );
+    }
+
+    fireZoomEvent( event );
   }
 }
