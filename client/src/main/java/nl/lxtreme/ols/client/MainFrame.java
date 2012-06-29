@@ -40,7 +40,7 @@ import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -575,7 +575,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // VARIABLES
 
     private final MouseWheelZoomAdapter zoomAdapter;
-    private final SignalDiagramModel diagramModel;
 
     private volatile List<MouseWheelListener> originalListeners;
 
@@ -593,7 +592,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       super( aController.getSignalDiagram() );
 
       this.zoomAdapter = new MouseWheelZoomAdapter( aController.getZoomController() );
-      this.diagramModel = aController.getSignalDiagramModel();
 
       setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED );
       setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED );
@@ -690,6 +688,31 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     }
 
     /**
+     * @return the input modifier to distinguish between scroll events and zoom
+     *         events.
+     */
+    private int getMouseWheelZoomModifier()
+    {
+      final HostInfo hostInfo = HostUtils.getHostInfo();
+      if ( hostInfo.isMacOS() )
+      {
+        return InputEvent.META_DOWN_MASK;
+      }
+
+      return InputEvent.CTRL_DOWN_MASK;
+    }
+
+    /**
+     * @return <code>true</code> if the default mouse-wheel behavior is to zoom,
+     *         <code>false</code> if the default mouse-wheel behavior is to
+     *         scroll.
+     */
+    private boolean isMouseWheelZoomDefault()
+    {
+      return UIManager.getBoolean( UIManagerKeys.MOUSEWHEEL_ZOOM_DEFAULT );
+    }
+
+    /**
      * Tests whether the given {@link MouseWheelEvent} is a zooming event.
      * 
      * @param aEvent
@@ -705,9 +728,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
         return false;
       }
 
-      boolean invert = this.diagramModel.isMouseWheelZoomDefault();
+      boolean invert = isMouseWheelZoomDefault();
 
-      final int modifier = this.diagramModel.getMouseWheelZoomModifier();
+      final int modifier = getMouseWheelZoomModifier();
       final int result = ( aEvent.getModifiersEx() & modifier );
       return invert ? ( result == 0 ) : ( result != 0 );
     }
@@ -765,13 +788,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     setLocationByPlatform( true );
 
     this.controller = aController;
+    SignalDiagramController signalDiagramController = this.controller.getSignalDiagramController();
 
-    this.signalDiagram = SignalDiagramComponent.create( aController.getSignalDiagramController() );
+    this.signalDiagram = signalDiagramController.getSignalDiagram();
     this.status = new JTextStatusBar();
 
-    this.captureDetails = AcquisitionDetailsView.create( this.controller.getSignalDiagramController() );
-    this.cursorDetails = CursorDetailsView.create( this.controller.getSignalDiagramController() );
-    this.measurementDetails = MeasurementView.create( this.controller.getSignalDiagramController() );
+    this.captureDetails = AcquisitionDetailsView.create( signalDiagramController );
+    this.cursorDetails = CursorDetailsView.create( signalDiagramController );
+    this.measurementDetails = MeasurementView.create( signalDiagramController );
 
     // Docking mechanism...
     this.dockController = new DockController();

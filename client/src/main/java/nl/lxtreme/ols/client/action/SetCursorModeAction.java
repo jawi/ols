@@ -47,7 +47,7 @@ public class SetCursorModeAction extends AbstractAction implements IManagedActio
   // CONSTRUCTORS
 
   /**
-   * Creates a new SetCursorModeAction instance.
+   * Creates a new {@link SetCursorModeAction} instance.
    * 
    * @param aController
    *          the controller to use for this action.

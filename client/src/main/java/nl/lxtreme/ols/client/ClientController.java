@@ -311,11 +311,20 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     this.tools = new ArrayList<Tool<?>>();
     this.exporters = new ArrayList<Exporter>();
 
-    this.actionManager = ActionManagerFactory.createActionManager();
+    this.actionManager = new ActionManager();
 
     this.signalDiagramController = new SignalDiagramController( this.actionManager );
 
-    ActionManagerFactory.fillActionManager( this.actionManager, this );
+    Runnable runner = new Runnable()
+    {
+      public void run()
+      {
+        ClientController.this.signalDiagramController.initialize();
+
+        ActionManagerFactory.fillActionManager( ClientController.this.actionManager, ClientController.this );
+      }
+    };
+    SwingComponentUtils.invokeOnEDT( runner );
 
     this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
     this.repaintAccumulatingRunnable = new AccumulatingRepaintingRunnable();
@@ -1385,6 +1394,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
         // ensure that all changes to cursors are reflected in the UI...
         ClientController.this.signalDiagramController.addCursorChangeListener( new CursorActionListener() );
+        ClientController.this.signalDiagramController.setDefaultSettings();
 
         mf.setTitle( hostProperties.getFullName() );
         mf.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
@@ -1652,6 +1662,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
           final boolean gotoCursorNEnabled = enableCursors && cursorPositionSet;
           getAction( GotoNthCursorAction.getID( c ) ).setEnabled( gotoCursorNEnabled );
         }
+
+        final boolean snapCursorMode = getSignalDiagramController().getSignalDiagramModel().isSnapCursorMode();
+        getAction( SetCursorSnapModeAction.ID ).putValue( Action.SELECTED_KEY, Boolean.valueOf( snapCursorMode ) );
 
         getAction( GotoFirstCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );
         getAction( GotoLastCursorAction.ID ).setEnabled( enableCursors && anyCursorSet );

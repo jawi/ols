@@ -55,7 +55,10 @@ public class SetCursorSnapModeAction extends AbstractAction implements IManagedA
   public SetCursorSnapModeAction( final SignalDiagramController aController )
   {
     super( "Snap cursors" );
+
     this.controller = aController;
+
+    putValue( SELECTED_KEY, Boolean.valueOf( aController.getSignalDiagramModel().isSnapCursorMode() ) );
   }
 
   // METHODS

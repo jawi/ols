@@ -46,19 +46,6 @@ public final class ActionManagerFactory
   // METHODS
 
   /**
-   * Creates a new action manager instance, filled with all actions.
-   * 
-   * @param aController
-   *          the controller to use for the actions, cannot be <code>null</code>
-   *          .
-   */
-  public static ActionManager createActionManager()
-  {
-    final ActionManager actionManager = new ActionManager();
-    return actionManager;
-  }
-
-  /**
    * Fills the given action manager with all its actions.
    * 
    * @param aActionManager

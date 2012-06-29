@@ -35,6 +35,7 @@ import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomListener;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
+import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
@@ -67,6 +68,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   public SignalDiagramController( final IActionManager aActionManager )
   {
     this.actionManager = aActionManager;
+
     this.dndTargetController = new DragAndDropTargetController( this );
   }
 
@@ -194,6 +196,27 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   public ZoomController getZoomController()
   {
     return this.signalDiagramModel.getZoomController();
+  }
+
+  /**
+   * Factory method to create a new {@link SignalDiagramController} instance.
+   * 
+   * @param aActionManager
+   *          the action manager to use for the controller instance, cannot be
+   *          <code>null</code>.
+   * @return a new {@link SignalDiagramController} instance, never
+   *         <code>null</code>.
+   */
+  public void initialize()
+  {
+    final SignalDiagramModel model = new SignalDiagramModel( this );
+    setSignalDiagramModel( model );
+
+    // Register our controller as listener for zooming events...
+    model.getZoomController().addZoomListener( this );
+
+    final SignalDiagramComponent diagram = new SignalDiagramComponent( this );
+    setSignalDiagram( diagram );
   }
 
   /**
@@ -413,6 +436,15 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
+   * Starts this component.
+   */
+  public void setDefaultSettings()
+  {
+    // Set the correct defaults...
+    setSnapModeEnabled( UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT ) );
+  }
+
+  /**
    * Enables or disables the measurement mode.
    * 
    * @param aEnabled
@@ -477,7 +509,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public void setSnapModeEnabled( final boolean aSnapMode )
   {
-    getSignalDiagramModel().setSnapCursor( aSnapMode );
+    getSignalDiagramModel().setSnapCursorMode( aSnapMode );
   }
 
   /**
@@ -516,6 +548,9 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
     this.signalDiagramModel = aSignalDiagramModel;
   }
 
+  /**
+   * @return
+   */
   private ChannelLabelsView getChannelLabelsView()
   {
     JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getSignalDiagram() );

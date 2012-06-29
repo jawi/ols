@@ -39,7 +39,7 @@ public final class ActionManager implements IActionManager
   /**
    * Creates a new {@link ActionManager} instance.
    */
-  ActionManager()
+  public ActionManager()
   {
     this.registry = new ConcurrentHashMap<String, IManagedAction>();
   }

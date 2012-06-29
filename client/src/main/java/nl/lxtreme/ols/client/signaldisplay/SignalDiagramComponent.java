@@ -150,7 +150,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
    * @param aController
    *          the controller to use, cannot be <code>null</code>.
    */
-  private SignalDiagramComponent( final SignalDiagramController aController )
+  SignalDiagramComponent( final SignalDiagramController aController )
   {
     super( new BorderLayout() );
 
@@ -168,29 +168,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   }
 
   // METHODS
-
-  /**
-   * Factory method to create a new {@link SignalDiagramComponent} instance.
-   * 
-   * @param aController
-   *          the controller to use for the SignalDiagramComponent instance,
-   *          cannot be <code>null</code>.
-   * @return a new {@link SignalDiagramComponent} instance, never
-   *         <code>null</code>.
-   */
-  public static SignalDiagramComponent create( final SignalDiagramController aController )
-  {
-    final SignalDiagramModel model = new SignalDiagramModel( aController );
-    aController.setSignalDiagramModel( model );
-
-    // Register our controller as listener for zooming events...
-    model.getZoomController().addZoomListener( aController );
-
-    final SignalDiagramComponent result = new SignalDiagramComponent( aController );
-    aController.setSignalDiagram( result );
-
-    return result;
-  }
 
   /**
    * Installs all listeners and the support for DnD.

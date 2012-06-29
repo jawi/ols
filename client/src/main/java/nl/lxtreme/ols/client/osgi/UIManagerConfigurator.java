@@ -22,7 +22,6 @@ package nl.lxtreme.ols.client.osgi;
 
 
 import java.awt.*;
-import java.beans.*;
 import java.util.*;
 import java.util.List;
 import java.util.regex.*;
@@ -38,7 +37,7 @@ import org.osgi.service.cm.*;
  * Provides a managed service that is used to initialize the {@link UIManager}
  * with its default values for the OLS client.
  */
-public class UIManagerConfigurator implements ManagedService, PropertyChangeListener
+public class UIManagerConfigurator implements ManagedService
 {
   // CONSTANTS
 
@@ -57,20 +56,6 @@ public class UIManagerConfigurator implements ManagedService, PropertyChangeList
    * {@inheritDoc}
    */
   @Override
-  public void propertyChange( final PropertyChangeEvent aEvt )
-  {
-    String propertyName = aEvt.getPropertyName();
-    if ( propertyName.startsWith( PREFIX ) )
-    {
-      System.out.println( "Property changed: " + propertyName + " (old = " + aEvt.getOldValue() + ", new = "
-          + aEvt.getNewValue() + ")" );
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   @SuppressWarnings( "rawtypes" )
   public void updated( final Dictionary aProperties ) throws ConfigurationException
   {
@@ -84,24 +69,6 @@ public class UIManagerConfigurator implements ManagedService, PropertyChangeList
       // Apply the specific values to the UIManager...
       applyOlsSpecificKeys( aProperties );
     }
-  }
-
-  /**
-   * Called when this component is started by the dependency manager.
-   */
-  protected void start()
-  {
-    UIManager.addPropertyChangeListener( this );
-    UIManager.getDefaults().addPropertyChangeListener( this );
-  }
-
-  /**
-   * Called when this component is stopped by the dependency manager.
-   */
-  protected void stop()
-  {
-    UIManager.getDefaults().removePropertyChangeListener( this );
-    UIManager.removePropertyChangeListener( this );
   }
 
   /**

@@ -22,7 +22,6 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 
 import java.awt.*;
-import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
 import java.util.List;
@@ -37,7 +36,6 @@ import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -58,6 +56,7 @@ public class SignalDiagramModel
 
   // CONSTANTS
 
+  private static final int SNAP_CURSOR_MODE = ( 1 << 0 );
   private static final int MEASUREMENT_MODE = ( 1 << 1 );
 
   private static final double TIMESTAMP_FACTOR = 100.0;
@@ -498,21 +497,6 @@ public class SignalDiagramModel
     }
 
     return inc;
-  }
-
-  /**
-   * @return the input modifier to distinguish between scroll events and zoom
-   *         events.
-   */
-  public int getMouseWheelZoomModifier()
-  {
-    final HostInfo hostInfo = HostUtils.getHostInfo();
-    if ( hostInfo.isMacOS() )
-    {
-      return InputEvent.META_DOWN_MASK;
-    }
-
-    return InputEvent.CTRL_DOWN_MASK;
   }
 
   /**
@@ -1017,21 +1001,12 @@ public class SignalDiagramModel
   }
 
   /**
-   * @return <code>true</code> if the default mouse-wheel behavior is to zoom,
-   *         <code>false</code> if the default mouse-wheel behavior is to
-   *         scroll.
+   * @return <code>true</code> if the snap cursor mode is enabled,
+   *         <code>false</code> otherwise.
    */
-  public boolean isMouseWheelZoomDefault()
+  public boolean isSnapCursorMode()
   {
-    return UIManager.getBoolean( UIManagerKeys.MOUSEWHEEL_ZOOM_DEFAULT );
-  }
-
-  /**
-   * @return the snapCursor
-   */
-  public boolean isSnapCursor()
-  {
-    return UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT );
+    return ( this.mode & SNAP_CURSOR_MODE ) != 0;
   }
 
   /**
@@ -1311,12 +1286,19 @@ public class SignalDiagramModel
   }
 
   /**
-   * @param aSnapCursor
+   * @param aSnapCursors
    *          the snapCursor to set
    */
-  public void setSnapCursor( final boolean aSnapCursor )
+  public void setSnapCursorMode( final boolean aSnapCursors )
   {
-    UIManager.put( UIManagerKeys.SNAP_CURSORS_DEFAULT, Boolean.valueOf( aSnapCursor ) );
+    if ( aSnapCursors )
+    {
+      this.mode |= SNAP_CURSOR_MODE;
+    }
+    else
+    {
+      this.mode &= ~SNAP_CURSOR_MODE;
+    }
   }
 
   /**

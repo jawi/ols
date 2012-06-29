@@ -130,8 +130,10 @@ public class Activator extends DependencyActivatorBase
     // UI Manager Configuration...
     aManager.add( //
         createComponent() //
-            .setInterface( ManagedService.class.getName(), props ) //
-            .setImplementation( UIManagerConfigurator.class ) );
+            .setInterface( new String[] { UIManagerConfigurator.class.getName(), ManagedService.class.getName() },
+                props ) //
+            .setImplementation( UIManagerConfigurator.class ) //
+        );
 
     props.put( Constants.SERVICE_PID, UIColorSchemeManager.PID );
 
@@ -208,6 +210,8 @@ public class Activator extends DependencyActivatorBase
                 .setCallbacks( "addExporter", "removeExporter" ) //
                 .setRequired( false ) //
             ) //
+            .add( createConfigurationDependency() //
+                .setPid( UIManagerConfigurator.PID ) ) //
         );
   }
 }

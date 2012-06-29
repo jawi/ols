@@ -402,7 +402,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
     {
       Point dropPoint = new Point( aCoordinate );
 
-      if ( getModel().isSnapCursor() )
+      if ( getModel().isSnapCursorMode() )
       {
         final MeasurementInfo signalHover = getModel().getSignalHover( aCoordinate );
         if ( ( signalHover != null ) && !signalHover.isEmpty() )
