@@ -199,6 +199,7 @@ public class LogicSnifferRleTimingComponentTest
   private final int enabledChannelMask;
   private final boolean ddrMode;
   private final int startTime;
+  private final int sampleCount;
 
   private VirtualLogicSnifferDevice device;
 
@@ -213,6 +214,7 @@ public class LogicSnifferRleTimingComponentTest
     this.enabledChannelMask = aChannelMask;
     this.ddrMode = aDdrMode;
     this.startTime = aStartTime;
+    this.sampleCount = 4096;
 
     this.provider = new RleSampleProvider( aWidth, PWM_RATIO, aChannelMask );
   }
@@ -255,7 +257,7 @@ public class LogicSnifferRleTimingComponentTest
     config.setEnabledChannels( this.enabledChannelMask );
     config.setRatio( 0.5 );
     config.setRleEnabled( true );
-    config.setSampleCount( 4096 );
+    config.setSampleCount( this.sampleCount );
     config.setSampleRate( this.ddrMode ? 200000000 : 100000000 );
     config.setTriggerEnabled( false );
   }
@@ -300,7 +302,7 @@ public class LogicSnifferRleTimingComponentTest
 
     long expectedTimeStamp = 0;
 
-    for ( int i = 0; i < values.length; i++ )
+    for ( int i = 0; i < ( this.sampleCount / 2 ); i++ )
     {
       final boolean sampleLevel = ( ( ( i + 0 ) % 2 ) != 0 );
 

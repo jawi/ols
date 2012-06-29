@@ -448,14 +448,14 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   public void assertConstantDataStream( final AcquisitionResult aResult, final int aExpectedValue,
       final long aExpectedLength ) throws IOException
   {
-    final int[] expectedValues = new int[1];
+    final int[] expectedValues = new int[2];
     Arrays.fill( expectedValues, aExpectedValue );
 
     final int[] actualValues = aResult.getValues();
     Assert.assertArrayEquals( "Sample values not as expected?!", expectedValues, actualValues );
 
-    final long[] expectedTimestamps = new long[1];
-    Arrays.fill( expectedTimestamps, 0L );
+    final long[] expectedTimestamps = new long[] { 0L, aExpectedLength };
+    // Arrays.fill( expectedTimestamps, 0L );
 
     final long[] actualTimestamps = aResult.getTimestamps();
     Assert.assertArrayEquals( "Timestamps not as expected?!", expectedTimestamps, actualTimestamps );
