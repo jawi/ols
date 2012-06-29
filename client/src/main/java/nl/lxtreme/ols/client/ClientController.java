@@ -1411,6 +1411,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public final void stop()
   {
+    this.devices.clear();
+    this.tools.clear();
+    this.exporters.clear();
+
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
     SwingUtilities.invokeLater( new Runnable()

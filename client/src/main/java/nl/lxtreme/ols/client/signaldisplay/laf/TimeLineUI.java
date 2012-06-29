@@ -61,8 +61,10 @@ public class TimeLineUI extends ComponentUI
     final int index;
     final Rectangle boundaries;
     String text;
+    boolean mirrored;
 
-    private int altStyleIdx;
+    private final List<LabelPlacement> placements = new ArrayList<LabelPlacement>();
+    private volatile ListIterator<LabelPlacement> placementIter;
 
     // CONSTRUCTORS
 
@@ -74,7 +76,6 @@ public class TimeLineUI extends ComponentUI
       this.index = aIndex;
       this.text = aText;
       this.boundaries = aBoundaries;
-      this.altStyleIdx = 0;
     }
 
     // METHODS
@@ -97,12 +98,36 @@ public class TimeLineUI extends ComponentUI
       return result;
     }
 
+    public Polygon getPolygon()
+    {
+      int x = this.boundaries.x;
+      int w = this.boundaries.width;
+      int y = this.boundaries.y;
+      int h = this.boundaries.height;
+
+      Polygon flagPoly = new Polygon();
+      if ( this.mirrored )
+      {
+        flagPoly.xpoints = new int[] { x, x + w, x + w, x + ( h / 3 ), x };
+        flagPoly.ypoints = new int[] { y, y, y + h, y + h, y + ( ( 2 * h ) / 3 ) };
+        flagPoly.npoints = 5;
+      }
+      else
+      {
+        flagPoly.xpoints = new int[] { x, x + w, x + w, ( x + w ) - ( h / 3 ), x };
+        flagPoly.ypoints = new int[] { y, y, y + ( ( 2 * h ) / 3 ), y + h, y + h };
+        flagPoly.npoints = 5;
+      }
+      return flagPoly;
+    }
+
     /**
-     * @return
+     * @return <code>true</code> if there are more placements to use,
+     *         <code>false</code> if no more placements.
      */
     public boolean hasMoreStyles()
     {
-      return ( this.altStyleIdx < PLACEMENTS.length );
+      return this.placementIter.hasNext();
     }
 
     /**
@@ -120,11 +145,36 @@ public class TimeLineUI extends ComponentUI
     }
 
     /**
+     * Determines if this cursor label is entirely visible using the given clip
+     * boundaries.
+     * 
+     * @param aClipBounds
+     *          the clip bounds to check against, cannot be <code>null</code>.
+     * @return <code>true</code> if this cursor label is completely visible,
+     *         <code>false</code> otherwise.
+     */
+    public boolean isCompletelyVisible( final Rectangle aClipBounds )
+    {
+      return aClipBounds.contains( this.boundaries );
+    }
+
+    /**
      * Returns to the default label placement style.
      */
-    public void resetStyle( final TimeLineViewModel aModel, final FontMetrics aFM )
+    public void resetStyle( final Rectangle aClipBounds, final TimeLineViewModel aModel, final FontMetrics aFM )
     {
-      this.altStyleIdx = 0;
+      // Determine what possible placements we've got for this label...
+      this.placements.clear();
+
+      for ( LabelPlacement element : PLACEMENTS )
+      {
+        if ( isValidPlacement( element, aClipBounds, aModel, aFM ) )
+        {
+          this.placements.add( element );
+        }
+      }
+
+      this.placementIter = this.placements.listIterator();
       recalculateBoundaries( aModel, aFM );
     }
 
@@ -134,8 +184,7 @@ public class TimeLineUI extends ComponentUI
     @Override
     public String toString()
     {
-      return "CursorLabel [index=" + this.index + ", boundaries=" + this.boundaries + ", text=" + this.text
-          + ", altStyleIdx=" + this.altStyleIdx + "]";
+      return "CursorLabel [index=" + this.index + ", boundaries=" + this.boundaries + ", text=" + this.text + "]";
     }
 
     /**
@@ -143,10 +192,34 @@ public class TimeLineUI extends ComponentUI
      */
     public void useNextStyle( final TimeLineViewModel aModel, final FontMetrics aFM )
     {
-      if ( this.altStyleIdx++ < ( PLACEMENTS.length - 1 ) )
+      if ( this.placementIter.hasNext() )
       {
         recalculateBoundaries( aModel, aFM );
       }
+    }
+
+    /**
+     * @param labelPlacement
+     * @param aClipBounds
+     * @param aModel
+     * @param aFM
+     * @return
+     */
+    private boolean isValidPlacement( final LabelPlacement labelPlacement, final Rectangle aClipBounds,
+        final TimeLineViewModel aModel, final FontMetrics aFM )
+    {
+      // Modify the label style of the previous label...
+      String flagText = aModel.getCursorFlagText( this.index, labelPlacement.style );
+
+      Rectangle rect = new Rectangle( this.boundaries );
+      rect.width = aFM.stringWidth( flagText ) + PADDING_WIDTH;
+      rect.x = aModel.getCursorScreenCoordinate( this.index );
+      if ( labelPlacement.mirrored )
+      {
+        rect.x = Math.max( 0, rect.x - rect.width );
+      }
+
+      return aClipBounds.contains( rect );
     }
 
     /**
@@ -155,7 +228,11 @@ public class TimeLineUI extends ComponentUI
      */
     private void recalculateBoundaries( final TimeLineViewModel aModel, final FontMetrics aFM )
     {
-      final LabelPlacement labelPlacement = PLACEMENTS[this.altStyleIdx];
+      if ( ( this.placementIter == null ) || !this.placementIter.hasNext() )
+      {
+        throw new IllegalStateException( "Cannot recalculate boundaries; no more placements available!" );
+      }
+      final LabelPlacement labelPlacement = this.placementIter.next();
 
       // Modify the label style of the previous label...
       String flagText = aModel.getCursorFlagText( this.index, labelPlacement.style );
@@ -163,7 +240,9 @@ public class TimeLineUI extends ComponentUI
       this.text = flagText;
       this.boundaries.width = aFM.stringWidth( flagText ) + PADDING_WIDTH;
       this.boundaries.x = aModel.getCursorScreenCoordinate( this.index );
-      if ( labelPlacement.mirrored )
+      this.mirrored = labelPlacement.mirrored;
+
+      if ( this.mirrored )
       {
         this.boundaries.x = Math.max( 0, this.boundaries.x - this.boundaries.width );
       }
@@ -206,9 +285,10 @@ public class TimeLineUI extends ComponentUI
   // CONSTANTS
 
   private static final int PADDING_TOP = 2;
-  private static final int PADDING_LEFT = 3;
+  private static final int PADDING_LEFT = 2;
+  private static final int PADDING_RIGHT = 1;
 
-  private static final int PADDING_WIDTH = 2 * PADDING_LEFT;
+  private static final int PADDING_WIDTH = PADDING_LEFT + PADDING_RIGHT;
   private static final int PADDING_HEIGHT = 2 * PADDING_TOP;
 
   /** The horizontal padding for all texts. */
@@ -499,7 +579,7 @@ public class TimeLineUI extends ComponentUI
       boundaries.height = fm.getHeight() + PADDING_HEIGHT;
       boundaries.width = fm.stringWidth( flagText ) + PADDING_WIDTH;
       boundaries.x = aModel.getCursorScreenCoordinate( i );
-      boundaries.y = aComponent.getHeight() - boundaries.height - PADDING_TOP;
+      boundaries.y = aComponent.getHeight() - boundaries.height - 1;
 
       if ( ( boundaries.x < 0 ) || !clip.intersects( boundaries ) )
       {
@@ -515,25 +595,36 @@ public class TimeLineUI extends ComponentUI
     Collections.sort( labels );
 
     // Phase 3: try to optimize the overlapping labels...
-    placeLabels( aModel, labels, fm );
+    placeLabels( clip, aModel, labels, fm );
+
+    final AlphaComposite alphaComposite = AlphaComposite.SrcOver.derive( 0.7f );
 
     // Phase 4: draw the labels...
     for ( CursorLabel label : labels )
     {
       final Rectangle boundaries = label.boundaries;
       final Color cursorColor = aModel.getCursorColor( label.index );
+      final Color cursorTextColor = aModel.getCursorTextColor( label.index );
 
-      // aCanvas.setColor( cursorColor );
-      // aCanvas.fillRect( boundaries.x, boundaries.y, boundaries.width,
-      // boundaries.height );
+      final Composite oldComposite = aCanvas.getComposite();
+      final Stroke oldStroke = aCanvas.getStroke();
+
+      aCanvas.setComposite( alphaComposite );
+
+      Polygon flagPoly = label.getPolygon();
+
+      aCanvas.setColor( cursorTextColor );
+      aCanvas.fillPolygon( flagPoly );
+
+      aCanvas.setComposite( oldComposite );
+      aCanvas.setStroke( oldStroke );
 
       aCanvas.setColor( cursorColor );
-      aCanvas.drawRect( boundaries.x, boundaries.y, boundaries.width, boundaries.height );
+      aCanvas.drawPolygon( flagPoly );
 
-      final int textXpos = boundaries.x + PADDING_LEFT;
+      final int textXpos = boundaries.x + ( label.mirrored ? PADDING_LEFT : PADDING_RIGHT );
       final int textYpos = boundaries.y + yOffset;
 
-      aCanvas.setColor( aModel.getCursorTextColor( label.index ) );
       aCanvas.drawString( label.text, textXpos, textYpos );
     }
   }
@@ -546,6 +637,8 @@ public class TimeLineUI extends ComponentUI
    * optimal solution, hence overlap still may occur.
    * </p>
    * 
+   * @param aClipBounds
+   *          the clipping region to use;
    * @param aModel
    *          the model to use;
    * @param aLabels
@@ -553,8 +646,14 @@ public class TimeLineUI extends ComponentUI
    * @param aFM
    *          the font metrics to use.
    */
-  private void placeLabels( final TimeLineViewModel aModel, final List<CursorLabel> aLabels, final FontMetrics aFM )
+  private void placeLabels( final Rectangle aClipBounds, final TimeLineViewModel aModel,
+      final List<CursorLabel> aLabels, final FontMetrics aFM )
   {
+    for ( int i = 0; i < aLabels.size(); i++ )
+    {
+      aLabels.get( i ).resetStyle( aClipBounds, aModel, aFM );
+    }
+
     // The labels are sorted from left to right (regarding screen coordinates),
     // place them in reverse order to minimize the overlap...
     for ( int li = aLabels.size() - 1; li > 0; li-- )
@@ -569,13 +668,14 @@ public class TimeLineUI extends ComponentUI
           // Modify the label style of the previous label...
           previousLabel.useNextStyle( aModel, aFM );
         }
-        while ( previousLabel.intersects( currentLabel ) && previousLabel.hasMoreStyles() );
+        while ( previousLabel.hasMoreStyles()
+            && ( previousLabel.intersects( currentLabel ) || !previousLabel.isCompletelyVisible( aClipBounds ) ) );
 
-        if ( previousLabel.intersects( currentLabel ) )
+        if ( previousLabel.intersects( currentLabel ) || !currentLabel.isCompletelyVisible( aClipBounds ) )
         {
           // Ok; still overlapping labels, use an alternative style for the
           // current label and try again...
-          previousLabel.resetStyle( aModel, aFM );
+          previousLabel.resetStyle( aClipBounds, aModel, aFM );
 
           // Try next style in the next loop...
           currentLabel.useNextStyle( aModel, aFM );

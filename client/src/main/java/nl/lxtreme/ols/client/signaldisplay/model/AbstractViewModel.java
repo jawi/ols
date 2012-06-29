@@ -32,6 +32,7 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.LabelStyle;
+import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -117,7 +118,7 @@ public abstract class AbstractViewModel
    */
   public Color getCursorTextColor( final int aCursorIndex )
   {
-    return ( getCursorColor( aCursorIndex ) );
+    return ColorUtils.getContrastColor( getCursorColor( aCursorIndex ) );
   }
 
   /**
