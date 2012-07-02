@@ -225,7 +225,8 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
 
       ChannelImpl channel;
       // Only use an initial version of channel if the channel indexes match...
-      if ( ( j < aInitialValues.length ) && ( j < chCount ) && ( aInitialValues[j].getIndex() == i ) )
+      if ( ( j < aInitialValues.length ) && ( j < chCount ) && ( aInitialValues[j] != null )
+          && ( aInitialValues[j].getIndex() == i ) )
       {
         channel = new ChannelImpl( aInitialValues[j] );
       }

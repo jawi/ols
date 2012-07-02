@@ -47,10 +47,11 @@ public final class OlsDataHelper
   /** The regular expression used to parse an (OLS-datafile) data value. */
   private static final Pattern OLS_DATA_PATTERN = Pattern.compile( "^([0-9a-fA-F]+)@(\\d+)$" );
   /**
-   * The time margin that is added to the last timestamp to obtain the absolute
-   * length.
+   * The margin that is used to determine whether we need to insert an
+   * additional sample at the absolute length of the captured data in case the
+   * last timestamp deviates too much.
    */
-  static final int ABS_TIME_MARGIN = 4;
+  static final int ABS_TIME_MARGIN = 20;
 
   // METHODS
 
@@ -219,6 +220,18 @@ public final class OlsDataHelper
     // Allow the absolute length to be undefined, in which case the last
     // time stamp is used...
     long absoluteLength = Math.max( absLen, timestamps[size - 1] );
+    // Make sure the last timestamp does not deviate too much from the absolute
+    // length of the trace...
+    if ( ( absLen - timestamps[size - 1] ) > ABS_TIME_MARGIN )
+    {
+      values = Arrays.copyOf( values, size + 1 );
+      // Copy the last value...
+      values[size] = values[size - 1];
+
+      timestamps = Arrays.copyOf( timestamps, size + 1 );
+      // Insert the absolute length as timestamp...
+      timestamps[size] = absLen - 1;
+    }
 
     // Finally set the captured data, and notify all event listeners...
     capturedData = new CapturedData( values, timestamps, triggerPos, rate, channels, enabledChannels, absoluteLength );
