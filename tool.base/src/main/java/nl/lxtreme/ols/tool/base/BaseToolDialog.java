@@ -42,8 +42,6 @@ import org.osgi.framework.*;
 public abstract class BaseToolDialog<RESULT_TYPE> extends JDialog implements ToolDialog, TaskStatusListener,
     Configurable, Closeable
 {
-  // INNER TYPES
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
