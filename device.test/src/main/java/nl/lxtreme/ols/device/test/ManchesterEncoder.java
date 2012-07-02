@@ -49,8 +49,8 @@ final class ManchesterEncoder
   {
     this.data = new ArrayList<Integer>();
 
-    this.clockSpeed = 10000; // 10kHz
-    this.sampleRate = 2500000; // 2.5MHz
+    this.clockSpeed = 1020304; // 1.020304MHz
+    this.sampleRate = 2750000; // 2.75MHz
 
     this.bitBoundary = ( int )( Math.rint( this.sampleRate / ( double )this.clockSpeed ) );
     this.setupPoint = this.bitBoundary / 2;
