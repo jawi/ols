@@ -56,12 +56,12 @@ public interface LineDecoder
       ToolProgressListener aListener ) throws Exception;
 
   /**
-   * Provides some metadata about the number of lines/channels that are needed
-   * to decode the signal.
+   * Provides the names of the lines/channels that are needed by this line
+   * decoder.
    * 
-   * @return a line count, > 0.
+   * @return an array with line names, never <code>null</code> or empty.
    */
-  int getLineCount();
+  String[] getLineNames();
 
   /**
    * Returns a name for this line decoder.
@@ -69,11 +69,4 @@ public interface LineDecoder
    * @return a name, never <code>null</code> or an empty string.
    */
   String getName();
-
-  /**
-   * @return <code>true</code> if a clock speed is to be given, or should be
-   *         recovered, <code>false</code> if the clock speed is not needed for
-   *         this decoder.
-   */
-  boolean needClockSpeed();
 }

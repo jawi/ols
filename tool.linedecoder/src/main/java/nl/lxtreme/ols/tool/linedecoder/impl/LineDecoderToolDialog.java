@@ -35,6 +35,7 @@ import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.tool.linedecoder.*;
 import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.osgi.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
@@ -75,6 +76,8 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
 
   // VARIABLES
 
+  private final WhiteboardHelper<AcquisitionDataListener> acquisitionDataListenerHelper;
+
   private JComboBox lineDecoders;
   private JComboBox[] lines;
   private JCheckBox inverted;
@@ -100,6 +103,8 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
     super( aOwner, aContext, aBundleContext, aTool );
 
     this.lines = new JComboBox[0];
+    this.acquisitionDataListenerHelper = new WhiteboardHelper<AcquisitionDataListener>( aBundleContext,
+        AcquisitionDataListener.class );
 
     initDialog();
 
@@ -114,7 +119,15 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    // TODO Auto-generated method stub
+    this.lineDecoders.setSelectedIndex( aSettings.getInt( "decoder", this.lineDecoders.getSelectedIndex() ) );
+    this.clockSpeed.setText( aSettings.get( "clockSpeed", this.clockSpeed.getText() ) );
+    this.inverted.setSelected( aSettings.getBoolean( "inverted", this.inverted.isSelected() ) );
+    this.recoverClock.setSelected( aSettings.getBoolean( "recoverClock", this.recoverClock.isSelected() ) );
+
+    for ( int i = 0; i < this.lines.length; i++ )
+    {
+      this.lines[i].setSelectedIndex( aSettings.getInt( "decoder.line." + i, this.lines[i].getSelectedIndex() ) );
+    }
   }
 
   /**
@@ -132,7 +145,15 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
   @Override
   public void writePreferences( final UserSettings aSettings )
   {
-    // TODO Auto-generated method stub
+    aSettings.putInt( "decoder", this.lineDecoders.getSelectedIndex() );
+    aSettings.put( "clockSpeed", this.clockSpeed.getText() );
+    aSettings.putBoolean( "inverted", this.inverted.isSelected() );
+    aSettings.putBoolean( "recoverClock", this.recoverClock.isSelected() );
+
+    for ( int i = 0; i < this.lines.length; i++ )
+    {
+      aSettings.putInt( "decoder.line." + i, this.lines[i].getSelectedIndex() );
+    }
   }
 
   /**
@@ -149,8 +170,22 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
   @Override
   protected void onToolEnded( final AcquisitionResult aResult )
   {
+    this.acquisitionDataListenerHelper.accept( new WhiteboardHelper.Visitor<AcquisitionDataListener>()
+    {
+      @Override
+      public void visit( final AcquisitionDataListener aService )
+      {
+        if ( aResult != null )
+        {
+          aService.acquisitionComplete( aResult );
+        }
+      }
+    } );
+
     this.closeAction.setEnabled( true );
     this.runAnalysisAction.restore();
+
+    this.acquisitionDataListenerHelper.close();
   }
 
   /**
@@ -160,6 +195,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
   protected void onToolStarted()
   {
     this.closeAction.setEnabled( false );
+    this.acquisitionDataListenerHelper.open();
   }
 
   /**
@@ -196,25 +232,29 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
     SpringLayoutUtils.addSeparator( aPanel, "Decoder settings" );
 
     this.clockSpeed = new JTextField();
-
-    if ( aLineDecoder.needClockSpeed() || aLineDecoder.canRecoverClock() )
-    {
-      aPanel.add( createRightAlignedLabel( "Clock speed" ) );
-      aPanel.add( this.clockSpeed );
-    }
-
     this.recoverClock = new JCheckBox( "", false /* selected */);
+    this.recoverClock.addItemListener( new ItemListener()
+    {
+      @Override
+      public void itemStateChanged( final ItemEvent aEvent )
+      {
+        LineDecoderToolDialog.this.clockSpeed.setEnabled( !LineDecoderToolDialog.this.recoverClock.isSelected() );
+      }
+    } );
 
     if ( aLineDecoder.canRecoverClock() )
     {
       aPanel.add( createRightAlignedLabel( "Recover clock?" ) );
       aPanel.add( this.recoverClock );
+
+      aPanel.add( createRightAlignedLabel( "Clock speed" ) );
+      aPanel.add( this.clockSpeed );
     }
 
     final int channelCount = getData().getChannels();
 
-    final int lineCount = aLineDecoder.getLineCount();
-    this.lines = new JComboBox[lineCount];
+    final String[] lines = aLineDecoder.getLineNames();
+    this.lines = new JComboBox[lines.length];
 
     this.inverted = new JCheckBox( "", false /* selected */);
 
@@ -224,11 +264,17 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
       aPanel.add( this.inverted );
     }
 
-    for ( int i = 0; i < lineCount; i++ )
+    for ( int i = 0; i < lines.length; i++ )
     {
       this.lines[i] = SwingComponentUtils.createChannelSelector( channelCount );
 
-      aPanel.add( createRightAlignedLabel( "Channel " + ( i + 1 ) ) );
+      String label = "Channel " + ( i + 1 );
+      if ( ( lines[i] != null ) && !"".equals( lines[i].trim() ) )
+      {
+        label = lines[i];
+      }
+
+      aPanel.add( createRightAlignedLabel( label ) );
       aPanel.add( this.lines[i] );
     }
 

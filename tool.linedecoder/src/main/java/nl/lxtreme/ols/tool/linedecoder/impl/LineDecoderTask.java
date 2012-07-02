@@ -79,9 +79,7 @@ public class LineDecoderTask implements ToolTask<AcquisitionResult>
     final LineDecoderToolContextImpl decoderContext = new LineDecoderToolContextImpl( this.context, this.lines,
         this.inverted, this.recoverClock, this.clockSpeed );
 
-    this.decoder.decode( decoderContext, this.annotationListener, this.progressListener );
-
-    return null;
+    return this.decoder.decode( decoderContext, this.annotationListener, this.progressListener );
   }
 
   /**

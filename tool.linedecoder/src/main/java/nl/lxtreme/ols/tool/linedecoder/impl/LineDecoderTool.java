@@ -57,6 +57,7 @@ public class LineDecoderTool implements Tool<AcquisitionResult>
     this.lineDecoders = new ArrayList<LineDecoder>();
 
     this.lineDecoders.add( new ManchesterLineDecoder() );
+    this.lineDecoders.add( new NonReturnToZeroDecoder() );
   }
 
   // METHODS
@@ -112,7 +113,7 @@ public class LineDecoderTool implements Tool<AcquisitionResult>
   }
 
   /**
-   * Called by the dependency manager when a new linedecoder is registered.
+   * Called by the dependency manager when a new line decoder is registered.
    * 
    * @param aLineDecoder
    *          the line decoder to register, cannot be <code>null</code>.
