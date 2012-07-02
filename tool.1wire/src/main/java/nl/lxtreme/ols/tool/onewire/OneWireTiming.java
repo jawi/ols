@@ -53,7 +53,9 @@ final class OneWireTiming
     // Taken from: <http://www.maxim-ic.com/app-notes/index.mvp/id/126>
     if ( OneWireBusMode.STANDARD == aMode )
     {
-      this.aMin = 5;
+      // Issue #76, take 3: make the minimum level for writing a 'one' even
+      // shorter...
+      this.aMin = 3;
       this.aMax = 15;
       this.bMin = 59;
       this.cMin = 60;
