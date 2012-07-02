@@ -26,6 +26,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.logging.*;
 
 import javax.swing.*;
@@ -276,9 +277,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private final ActionManager actionManager;
   private final SignalDiagramController signalDiagramController;
 
-  private final List<Device> devices;
-  private final List<Tool<?>> tools;
-  private final List<Exporter> exporters;
+  private final ConcurrentMap<String, Device> devices;
+  private final ConcurrentMap<String, Tool<?>> tools;
+  private final ConcurrentMap<String, Exporter> exporters;
 
   private final ProgressUpdatingRunnable progressAccumulatingRunnable;
   private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
@@ -307,9 +308,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     this.bundleContext = aBundleContext;
 
-    this.devices = new ArrayList<Device>();
-    this.tools = new ArrayList<Tool<?>>();
-    this.exporters = new ArrayList<Exporter>();
+    this.devices = new ConcurrentHashMap<String, Device>();
+    this.tools = new ConcurrentHashMap<String, Tool<?>>();
+    this.exporters = new ConcurrentHashMap<String, Exporter>();
 
     this.actionManager = new ActionManager();
 
@@ -409,10 +410,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void addDevice( final Device aDevice )
   {
-    synchronized ( this.devices )
+    if ( this.devices.putIfAbsent( aDevice.getName(), aDevice ) == null )
     {
-      this.devices.add( aDevice );
-
       this.actionManager.add( new SelectDeviceAction( this, aDevice.getName() ) );
     }
   }
@@ -428,10 +427,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void addExporter( final Exporter aExporter )
   {
-    synchronized ( this.exporters )
+    if ( this.exporters.putIfAbsent( aExporter.getName(), aExporter ) == null )
     {
-      this.exporters.add( aExporter );
-
       this.actionManager.add( new ExportAction( this, aExporter.getName() ) );
     }
   }
@@ -480,10 +477,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void addTool( final Tool<?> aTool )
   {
-    synchronized ( this.tools )
+    if ( this.tools.putIfAbsent( aTool.getName(), aTool ) == null )
     {
-      this.tools.add( aTool );
-
       this.actionManager.add( new RunToolAction( this, aTool.getName() ) );
     }
   }
@@ -734,22 +729,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public String[] getDeviceNames()
   {
-    final String[] result;
-
-    synchronized ( this.devices )
-    {
-      result = new String[this.devices.size()];
-
-      int i = 0;
-      for ( Device device : this.devices )
-      {
-        result[i++] = device.getName();
-      }
-    }
+    List<String> result = new ArrayList<String>( this.devices.keySet() );
     // Make sure we've got a predictable order of names...
-    Arrays.sort( result );
+    Collections.sort( result );
 
-    return result;
+    return result.toArray( new String[result.size()] );
   }
 
   /**
@@ -757,17 +741,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public Exporter getExporter( final String aName ) throws IllegalArgumentException
   {
-    synchronized ( this.exporters )
-    {
-      for ( Exporter exporter : this.exporters )
-      {
-        if ( aName.equals( exporter.getName() ) )
-        {
-          return exporter;
-        }
-      }
-    }
-    return null;
+    return this.exporters.get( aName );
   }
 
   /**
@@ -778,22 +752,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public String[] getExporterNames()
   {
-    final String[] result;
-
-    synchronized ( this.exporters )
-    {
-      result = new String[this.exporters.size()];
-
-      int i = 0;
-      for ( Exporter exporter : this.exporters )
-      {
-        result[i++] = exporter.getName();
-      }
-    }
+    List<String> result = new ArrayList<String>( this.exporters.keySet() );
     // Make sure we've got a predictable order of names...
-    Arrays.sort( result );
+    Collections.sort( result );
 
-    return result;
+    return result.toArray( new String[result.size()] );
   }
 
   /**
@@ -854,22 +817,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public String[] getToolNames()
   {
-    final String[] result;
-
-    synchronized ( this.tools )
-    {
-      result = new String[this.tools.size()];
-
-      int i = 0;
-      for ( Tool<?> tool : this.tools )
-      {
-        result[i++] = tool.getName();
-      }
-    }
+    List<String> result = new ArrayList<String>( this.tools.keySet() );
     // Make sure we've got a predictable order of names...
-    Arrays.sort( result );
+    Collections.sort( result );
 
-    return result;
+    return result.toArray( new String[result.size()] );
   }
 
   /**
@@ -1092,9 +1044,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     synchronized ( this.devices )
     {
-      this.devices.remove( aDevice );
-
       final String deviceName = aDevice.getName();
+
+      this.devices.remove( deviceName );
 
       try
       {
@@ -1123,9 +1075,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     synchronized ( this.exporters )
     {
-      this.exporters.remove( aExporter );
-
       final String exporterName = aExporter.getName();
+
+      this.exporters.remove( exporterName );
 
       try
       {
@@ -1183,9 +1135,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     synchronized ( this.tools )
     {
-      this.tools.remove( aTool );
-
       final String toolName = aTool.getName();
+
+      this.tools.remove( toolName );
 
       try
       {
@@ -1860,17 +1812,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private Device getDevice( final String aName ) throws IllegalArgumentException
   {
-    synchronized ( this.devices )
-    {
-      for ( Device device : this.devices )
-      {
-        if ( aName.equals( device.getName() ) )
-        {
-          return device;
-        }
-      }
-    }
-    return null;
+    return this.devices.get( aName );
   }
 
   /**
@@ -1878,17 +1820,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private Tool<?> getTool( final String aName ) throws IllegalArgumentException
   {
-    synchronized ( this.tools )
-    {
-      for ( Tool<?> tool : this.tools )
-      {
-        if ( aName.equals( tool.getName() ) )
-        {
-          return tool;
-        }
-      }
-    }
-    return null;
+    return this.tools.get( aName );
   }
 
   /**

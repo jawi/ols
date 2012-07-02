@@ -230,7 +230,7 @@ public class TimeLineUI extends ComponentUI
     {
       if ( ( this.placementIter == null ) || !this.placementIter.hasNext() )
       {
-        throw new IllegalStateException( "Cannot recalculate boundaries; no more placements available!" );
+        return;
       }
       final LabelPlacement labelPlacement = this.placementIter.next();
 
