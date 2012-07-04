@@ -53,13 +53,14 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
    * @param aOld
    *          the old data set to template.
    */
-  public DataSetImpl( final AcquisitionResult aCapturedData, final DataSet aOld )
+  public DataSetImpl( final AcquisitionResult aCapturedData, final DataSet aOld, final boolean aRetainAnnotations )
   {
     this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.capturedData = aCapturedData;
     this.cursorsEnabled = aOld.isCursorsEnabled();
-    this.channels = createChannels( aCapturedData.getChannels(), aCapturedData.getEnabledChannels(), aOld.getChannels() );
+    this.channels = createChannels( aCapturedData.getChannels(), aCapturedData.getEnabledChannels(),
+        aRetainAnnotations, aOld.getChannels() );
     this.cursors = createCursors( Ols.MAX_CURSORS, aOld.getCursors() );
   }
 
@@ -72,7 +73,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
 
     this.capturedData = null;
     this.cursors = createCursors( Ols.MAX_CURSORS );
-    this.channels = createChannels( Ols.MAX_CHANNELS, 0xFFFFFFFF );
+    this.channels = createChannels( Ols.MAX_CHANNELS, 0xFFFFFFFF, false /* aRetainAnnotations */);
     this.cursorsEnabled = true;
   }
 
@@ -209,7 +210,8 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
    *          the number of channels to create, >= 0.
    * @return an array with channels, never <code>null</code>.
    */
-  private Channel[] createChannels( final int aCount, final int aMask, final Channel... aInitialValues )
+  private Channel[] createChannels( final int aCount, final int aMask, final boolean aRetainAnnotations,
+      final Channel... aInitialValues )
   {
     final int chCount = ( this.capturedData == null ) ? aCount : this.capturedData.getChannels();
 
@@ -228,7 +230,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
       if ( ( j < aInitialValues.length ) && ( j < chCount ) && ( aInitialValues[j] != null )
           && ( aInitialValues[j].getIndex() == i ) )
       {
-        channel = new ChannelImpl( aInitialValues[j] );
+        channel = new ChannelImpl( aInitialValues[j], aRetainAnnotations );
       }
       else
       {

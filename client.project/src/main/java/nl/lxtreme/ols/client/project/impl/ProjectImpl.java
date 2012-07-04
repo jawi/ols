@@ -26,6 +26,8 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.project.*;
@@ -191,8 +193,9 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   public void setCapturedData( final AcquisitionResult aCapturedData )
   {
     final DataSetImpl old = this.dataSet;
+    final boolean retainAnnotations = UIManager.getBoolean( "ols.retain.annotations.boolean" );
 
-    setDataSet( new DataSetImpl( aCapturedData, old ) );
+    setDataSet( new DataSetImpl( aCapturedData, old, retainAnnotations ) );
 
     // Mark this project as modified...
     setChanged( true );

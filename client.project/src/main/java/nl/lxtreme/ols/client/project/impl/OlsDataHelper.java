@@ -236,7 +236,7 @@ public final class OlsDataHelper
     // Finally set the captured data, and notify all event listeners...
     capturedData = new CapturedData( values, timestamps, triggerPos, rate, channels, enabledChannels, absoluteLength );
 
-    return new DataSetImpl( capturedData, tempDataSet );
+    return new DataSetImpl( capturedData, tempDataSet, false /* aRetainAnnotations */);
   }
 
   /**

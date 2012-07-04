@@ -57,9 +57,12 @@ public final class ChannelImpl implements Channel
    * Creates a new {@link ChannelImpl} instance based on a given channel.
    * 
    * @param aChannel
-   *          the channel to copy, cannot be <code>null</code>.
+   *          the channel to copy, cannot be <code>null</code>;
+   * @param aRetainAnnotation
+   *          <code>true</code> if any annotations should be retained,
+   *          <code>false</code> otherwise.
    */
-  public ChannelImpl( final Channel aChannel )
+  public ChannelImpl( final Channel aChannel, final boolean aRetainAnnotation )
   {
     if ( aChannel == null )
     {
@@ -73,7 +76,11 @@ public final class ChannelImpl implements Channel
     this.label = aChannel.getLabel();
     this.enabled = aChannel.isEnabled();
 
-    this.annotations = new CopyOnWriteArrayList<Annotation<?>>( aChannel.getAnnotations() );
+    this.annotations = new CopyOnWriteArrayList<Annotation<?>>();
+    if ( aRetainAnnotation )
+    {
+      this.annotations.addAll( aChannel.getAnnotations() );
+    }
   }
 
   /**
