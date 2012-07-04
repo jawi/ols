@@ -31,6 +31,8 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.linedecoder.*;
 import nl.lxtreme.ols.tool.linedecoder.impl.decoders.*;
 
+import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 
 
@@ -45,6 +47,7 @@ public class LineDecoderTool implements Tool<AcquisitionResult>
   private final List<LineDecoder> lineDecoders;
   // Injected by DependencyManager...
   private volatile BundleContext context;
+  private volatile DependencyManager dependencyManager;
 
   // CONSTRUCTORS
 
@@ -131,7 +134,7 @@ public class LineDecoderTool implements Tool<AcquisitionResult>
   /**
    * Called when this tool is destroyed by the client framework.
    */
-  protected void destroy()
+  protected void destroy( final Component aComponent )
   {
     // No-op
   }
@@ -139,21 +142,16 @@ public class LineDecoderTool implements Tool<AcquisitionResult>
   /**
    * Called when this tool is initialized by the client framework.
    * 
-   * @param aContext
-   *          the bundle context to use, never <code>null</code>.
+   * @param aComponent
+   *          the DM component to use, never <code>null</code>.
    */
-  protected void init()
+  protected void init( final Component aComponent )
   {
-    // TODO this will cause an infite loop with ourselves...
-    // DependencyManager manager = new DependencyManager( this.context );
-    //
-    // manager.add( manager.createComponent() //
-    // .setImplementation( this ) //
-    // .add( manager.createServiceDependency() //
-    // .setService( LineDecoder.class ) //
-    // .setCallbacks( "addLineDecoder", "removeLineDecoder" ) //
-    // .setRequired( false ) //
-    // ) );
+    aComponent.add( this.dependencyManager.createServiceDependency() //
+        .setService( LineDecoder.class ) //
+        .setCallbacks( "addLineDecoder", "removeLineDecoder" ) //
+        .setRequired( false ) //
+        );
   }
 
   /**

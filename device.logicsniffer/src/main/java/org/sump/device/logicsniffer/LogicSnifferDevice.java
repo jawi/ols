@@ -32,6 +32,7 @@ import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.osgi.service.io.*;
@@ -53,10 +54,9 @@ public class LogicSnifferDevice implements Device
 
   // VARIABLES
 
-  private DependencyManager dependencyManager;
   private LogicSnifferConfig config;
 
-  private volatile BundleContext context;
+  private volatile DependencyManager dependencyManager;
   private volatile ManagedServiceFactory deviceProfileManagerServiceFactory;
   private volatile ConnectorService connectorService;
   private volatile StreamConnection connection;
@@ -182,7 +182,7 @@ public class LogicSnifferDevice implements Device
   /**
    * Called when this class is unregistered as OSGi service.
    */
-  protected void destroy()
+  protected void destroy( final Component aComponent )
   {
     disposeConfigDialog();
   }
@@ -190,25 +190,24 @@ public class LogicSnifferDevice implements Device
   /**
    * Called when this class is registered as OSGi service.
    * 
-   * @param aBundleContext
+   * @param aComponent
    *          the bundle context to use, cannot be <code>null</code>.
    */
-  protected void init()
+  protected void init( final Component aComponent )
   {
     final String pmFilter = String.format( "(%s=%s)", Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
 
-    this.dependencyManager = new DependencyManager( this.context );
-    this.dependencyManager.add( this.dependencyManager.createComponent() //
-        .setImplementation( this ) //
+    aComponent //
         .add( this.dependencyManager.createServiceDependency() //
             .setService( ManagedServiceFactory.class, pmFilter ) //
             .setAutoConfig( "deviceProfileManagerServiceFactory" ) //
-            .setRequired( true ) //
-        ).add( this.dependencyManager.createServiceDependency() //
+            .setInstanceBound( true ) //
+            .setRequired( true ) ) //
+        .add( this.dependencyManager.createServiceDependency() //
             .setService( ConnectorService.class ) //
             .setAutoConfig( "connectorService" ) //
+            .setInstanceBound( true ) //
             .setRequired( true ) //
-        ) //
         );
   }
 
