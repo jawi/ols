@@ -385,7 +385,7 @@ public final class ZoomController
     // Zoom region...
 
     final SignalDiagramModel model = this.controller.getSignalDiagramModel();
-    final Rectangle viewSize = this.controller.getSignalDiagram().getVisibleViewSize();
+    final Rectangle viewSize = getSignalDiagram().getVisibleViewSize();
 
     final int width = Math.abs( aPoint2.x - aPoint1.x );
     final Long triggerPos = model.getTriggerPosition();
@@ -505,11 +505,19 @@ public final class ZoomController
   }
 
   /**
+   * @return
+   */
+  private SignalDiagramComponent getSignalDiagram()
+  {
+    return this.controller.getSignalDiagram();
+  }
+
+  /**
    * @return the view size of the current view, never <code>null</code>.
    */
   private Rectangle getVisibleViewSize()
   {
-    return this.controller.getSignalDiagram().getVisibleViewSize();
+    return getSignalDiagram().getVisibleViewSize();
   }
 
   /**
@@ -517,59 +525,97 @@ public final class ZoomController
    */
   private void zoom( final ZoomValue aZoomValue, final double aFactor, final Point aHotSpot )
   {
+    double oldFactor = getFactor();
+    double newFactor = aFactor; // assume the factor is absolute...
+    ZoomValue newValue = aZoomValue;
+
+    // Ensure the zoom level is always bounded to the current view and the
+    // number of samples...
+    final Rectangle visibleViewSize = getVisibleViewSize();
+    final SignalDiagramModel model = getModel();
+
+    double currentViewWidth = visibleViewSize.getWidth();
+    double absLength = model.getAbsoluteLength();
+
+    // Make sure less samples do not cause empty bars on the screen...
+    double oldViewWidth = absLength * oldFactor;
+
+    if ( ( aZoomValue == ZoomValue.IN ) || ( aZoomValue == ZoomValue.OUT ) )
+    {
+      // The given factor is relative...
+      newFactor = aFactor * oldFactor;
+      newValue = null;
+    }
+    else if ( aZoomValue == ZoomValue.ALL )
+    {
+      newFactor = currentViewWidth / absLength;
+    }
+
+    if ( oldViewWidth < currentViewWidth )
+    {
+      newFactor = currentViewWidth / absLength;
+    }
+
+    double defaultZoomLevel = getDefaultZoomLevel();
+    double minZoomLevel = getMinZoomLevel();
+    double maxZoomLevel = getMaxZoomLevel();
+
+    if ( Math.abs( newFactor - defaultZoomLevel ) < 1.0e-6 )
+    {
+      newFactor = defaultZoomLevel;
+      newValue = ZoomValue.DEFAULT;
+    }
+
+    if ( Double.compare( newFactor, minZoomLevel ) <= 0.0 )
+    {
+      newFactor = minZoomLevel;
+      newValue = ZoomValue.ALL;
+    }
+    else if ( Double.compare( newFactor, maxZoomLevel ) >= 0.0 )
+    {
+      newFactor = maxZoomLevel;
+      newValue = ZoomValue.MAXIMUM;
+    }
+
+    if ( ( aZoomValue == ZoomValue.IN ) || ( aZoomValue == ZoomValue.OUT ) )
+    {
+      // Idea based on <http://stackoverflow.com/questions/115103>
+      SignalDiagramComponent signalDiagram = getSignalDiagram();
+
+      // Take the visibleRect of the signal diagram, as it tells us where we're
+      // located in the scrollpane; this information we need to allow
+      // dead-center zooming...
+      double mx = signalDiagram.getVisibleRect().getCenterX();
+      double my = 0;
+
+      if ( aHotSpot != null )
+      {
+        mx = aHotSpot.x;
+      }
+
+      // Calculate the timestamp from the center position of the visible view
+      // rectangle; after which we lookup the exact timestamp that is at that
+      // position. If found, we'll use that timestamp to recalculate the new
+      // center position in the new zoom factor...
+      final long timestamp = ( long )( mx / oldFactor );
+      final int tsIdx = model.getTimestampIndex( timestamp );
+
+      mx = Math.floor( model.getTimestamps()[tsIdx] * oldFactor );
+
+      // Take the location of the signal diagram component, as it is the only
+      // one that is shifted in location by its (parent) scrollpane...
+      final Point location = signalDiagram.getLocation();
+
+      // Recalculate the new screen position of the visible view rectangle...
+      int newX = ( int )( location.getX() - ( ( mx * aFactor ) - mx ) );
+      int newY = ( int )( location.getY() - ( ( my * aFactor ) - my ) );
+
+      signalDiagram.setLocation( newX, newY );
+    }
+
     final ZoomEvent event;
     synchronized ( this.LOCK )
     {
-      double oldFactor = getFactor();
-      double newFactor;
-      ZoomValue newValue = aZoomValue;
-
-      if ( ( aZoomValue == ZoomValue.IN ) || ( aZoomValue == ZoomValue.OUT ) )
-      {
-        // The given factor is relative...
-        newFactor = aFactor * oldFactor;
-      }
-      else
-      {
-        // The given factor is absolute...
-        newFactor = aFactor;
-      }
-
-      // Ensure the zoom level is always bounded to the current view and the
-      // number of samples...
-      final Rectangle visibleViewSize = getVisibleViewSize();
-      final SignalDiagramModel model = getModel();
-
-      double width = visibleViewSize.getWidth();
-      double absLength = model.getAbsoluteLength();
-
-      // Make sure less samples do not cause empty bars on the screen...
-      double result = absLength * oldFactor;
-      if ( result < width )
-      {
-        newFactor = width / absLength;
-      }
-
-      double defaultZoomLevel = getDefaultZoomLevel();
-      double minZoomLevel = getMinZoomLevel();
-      double maxZoomLevel = getMaxZoomLevel();
-
-      if ( Math.abs( newFactor - defaultZoomLevel ) < 1.0e-6 )
-      {
-        newFactor = defaultZoomLevel;
-        newValue = ZoomValue.DEFAULT;
-      }
-      else if ( Double.compare( newFactor, minZoomLevel ) <= 0.0 )
-      {
-        newFactor = minZoomLevel;
-        newValue = ZoomValue.ALL;
-      }
-      else if ( Double.compare( newFactor, maxZoomLevel ) >= 0.0 )
-      {
-        newFactor = maxZoomLevel;
-        newValue = ZoomValue.MAXIMUM;
-      }
-
       this.factor = newFactor;
       this.value = newValue;
 

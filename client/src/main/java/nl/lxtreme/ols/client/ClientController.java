@@ -350,7 +350,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     finally
     {
       updateActionsOnEDT();
-      restoreZoomLevel();
     }
   }
 
@@ -991,9 +990,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     finally
     {
       HostUtils.closeResource( reader );
-
-      resetZoomLevel();
-
       updateActionsOnEDT();
     }
   }
@@ -1024,9 +1020,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     finally
     {
       HostUtils.closeResource( fis );
-
-      resetZoomLevel();
-
       updateActionsOnEDT();
     }
   }
@@ -1887,22 +1880,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         }
       } );
     }
-  }
-
-  /**
-   * Resets the zoom-level to show everything in one screen.
-   */
-  private void resetZoomLevel()
-  {
-    this.signalDiagramController.getZoomController().zoomAll();
-  }
-
-  /**
-   * Restores the zoom-level to the last zoom-level.
-   */
-  private void restoreZoomLevel()
-  {
-    this.signalDiagramController.getZoomController().restoreZoomLevel();
   }
 
   /**

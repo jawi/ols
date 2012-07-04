@@ -32,7 +32,6 @@ import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
@@ -110,14 +109,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       try
       {
         final ZoomController zoomCtrl = this.controller.getZoomController();
-        if ( zoomCtrl.isZoomAll() )
-        {
-          zoomCtrl.zoomAll();
-        }
-        else
-        {
-          zoomCtrl.restoreZoomLevel();
-        }
+        zoomCtrl.restoreZoomLevel();
       }
       finally
       {
@@ -430,68 +422,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   final boolean hasData()
   {
     return getModel().hasData();
-  }
-
-  /**
-   * @param aEvent
-   */
-  final void notifyZoomChange( final ZoomEvent aEvent )
-  {
-    final SignalDiagramModel model = getModel();
-    if ( !model.hasData() )
-    {
-      return;
-    }
-
-    // Idea based on <http://stackoverflow.com/questions/115103>
-
-    final SignalView view = getSignalView();
-
-    double mx;
-    double my = 0;
-
-    Point hotSpot = aEvent.getHotSpot();
-    if ( hotSpot != null )
-    {
-      mx = hotSpot.x;
-    }
-    else
-    {
-      mx = view.getVisibleRect().getCenterX();
-    }
-
-    final double newZf = aEvent.getFactor();
-    final double oldZf = aEvent.getOldFactor();
-    final double relZf = newZf / oldZf;
-
-    // Calculate the timestamp from the center position of the visible view
-    // rectangle; after which we lookup the exact timestamp that is at that
-    // position. If found, we'll use that timestamp to recalculate the new
-    // center position in the new zoom factor...
-    final long timestamp = ( long )Math.ceil( mx / oldZf );
-    final int tsIdx = model.getTimestampIndex( timestamp );
-
-    mx = Math.floor( model.getTimestamps()[tsIdx] * oldZf );
-
-    // Recalculate all dimensions...
-    calculateDimensions();
-
-    // Notify that everything needs to be revalidated as well...
-    revalidateAll();
-
-    // Take the location of _this_ component, as it is the only one that is
-    // shifted in location by its (parent) scrollpane...
-    final Point location = getLocation();
-
-    // Recalculate the new screen position of the visible view rectangle...
-    int newX = ( int )( location.getX() - ( ( mx * relZf ) - mx ) );
-    int newY = ( int )( location.getY() - ( ( my * relZf ) - my ) );
-
-    setLocation( newX, newY );
-
-    // Issue #100: in case the factor is changed, we need to repaint all
-    // components...
-    repaintAll();
   }
 
   /**

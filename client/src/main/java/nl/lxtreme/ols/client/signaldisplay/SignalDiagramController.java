@@ -288,7 +288,14 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
         // Update the main component's state...
         final SignalDiagramComponent diagram = getSignalDiagram();
-        diagram.notifyZoomChange( aEvent );
+
+        // Recalculate all dimensions...
+        diagram.calculateDimensions();
+        // Notify that everything needs to be revalidated as well...
+        diagram.revalidateAll();
+        // Issue #100: in case the factor is changed, we need to repaint all
+        // components...
+        diagram.repaintAll();
       }
     } );
   }
@@ -309,6 +316,9 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
     {
       DataSet dataSet = ( DataSet )aEvent.getNewValue();
       setDataModel( dataSet );
+
+      // Make sure the view is updated accordingly...
+      getZoomController().restoreZoomLevel();
     }
   }
 
