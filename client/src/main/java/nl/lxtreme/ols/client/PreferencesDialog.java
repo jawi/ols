@@ -147,6 +147,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   private final JCheckBox showAnalogScope;
   private final JCheckBox showToolWindows;
   private final JCheckBox showChannelIndexes;
+  private final JCheckBox retainAnnotations;
   private final JComboBox annotationAlignment;
   private final JComboBox signalAlignment;
   private final JComboBox colorScheme;
@@ -187,6 +188,9 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     this.showChannelIndexes = new JCheckBox();
     this.showChannelIndexes.setToolTipText( "Whether or not channel indexes are shown beside the labels. Will be applied immediately." );
 
+    this.retainAnnotations = new JCheckBox();
+    this.retainAnnotations.setToolTipText( "Whether or not annotations should be retained after a recapture. Will be applied immediately." );
+    
     this.showToolWindows = new JCheckBox();
     this.showToolWindows.setToolTipText( "Whether or not the tool windows are shown by default. Will be applied after a restart." );
 
@@ -271,6 +275,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     this.showGroupSummary.setSelected( getBoolean( properties.get( GROUP_SUMMARY_VISIBLE_DEFAULT ) ) );
     this.showAnalogScope.setSelected( getBoolean( properties.get( ANALOG_SCOPE_VISIBLE_DEFAULT ) ) );
     this.showChannelIndexes.setSelected( getBoolean( properties.get( CHANNELLABELS_SHOW_CHANNEL_INDEX ) ) );
+    this.retainAnnotations.setSelected( getBoolean( properties.get( RETAIN_ANNOTATIONS_WITH_RECAPTURE ) ) );
     this.showToolWindows.setSelected( getBoolean( properties.get( SHOW_TOOL_WINDOWS_DEFAULT ) ) );
 
     this.signalAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_SIGNAL_ALIGNMENT ) ) );
@@ -304,6 +309,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     properties.put( ANALOG_SCOPE_VISIBLE_DEFAULT, Boolean.toString( this.showAnalogScope.isSelected() ) );
     properties.put( SHOW_TOOL_WINDOWS_DEFAULT, Boolean.toString( this.showToolWindows.isSelected() ) );
     properties.put( CHANNELLABELS_SHOW_CHANNEL_INDEX, Boolean.toString( this.showChannelIndexes.isSelected() ) );
+    properties.put( RETAIN_ANNOTATIONS_WITH_RECAPTURE, Boolean.toString( this.retainAnnotations.isSelected() ) );
 
     properties.put( SIGNALVIEW_SIGNAL_ALIGNMENT, String.valueOf( this.signalAlignment.getSelectedItem() ) );
     properties.put( SIGNALVIEW_ANNOTATION_ALIGNMENT, String.valueOf( this.annotationAlignment.getSelectedItem() ) );
@@ -375,6 +381,9 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
     pane.add( createRightAlignedLabel( "Show channel indexes?" ) );
     pane.add( this.showChannelIndexes );
+
+    pane.add( createRightAlignedLabel( "Retain annotations?" ) );
+    pane.add( this.retainAnnotations );
 
     pane.add( createRightAlignedLabel( "Show tool windows?" ) );
     pane.add( this.showToolWindows );

@@ -41,6 +41,11 @@ public interface UIManagerKeys
   String SHOW_TOOL_WINDOWS_DEFAULT = "ols.show.tool.windows.default.boolean";
   /** The current active color scheme. */
   String COLOR_SCHEME = "ols.current.color.scheme.enum";
+  /**
+   * Whether or not annotations of a channel should be retained after a
+   * recapture.
+   */
+  String RETAIN_ANNOTATIONS_WITH_RECAPTURE = "ols.retain.annotations.boolean";
 
   /** The default color for channels, group summary and the scope of group 1. */
   String CHANNEL_GROUP1_DEFAULT_COLOR = "ols.channelgroup1.default.color";
