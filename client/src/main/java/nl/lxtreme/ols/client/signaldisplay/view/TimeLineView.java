@@ -29,7 +29,6 @@ import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
-import nl.lxtreme.ols.client.signaldisplay.view.SignalView.BasicMouseHandler;
 
 
 /**
@@ -41,9 +40,9 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
   // INNER TYPES
 
   /**
-   * Handles all specific mouse events for this view.
+   * Provides a concrete mouse handler for this view.
    */
-  private final class MouseHandler extends BasicMouseHandler
+  private final class MouseHandler extends AbstractMouseHandler
   {
     // CONSTRUCTORS
 
