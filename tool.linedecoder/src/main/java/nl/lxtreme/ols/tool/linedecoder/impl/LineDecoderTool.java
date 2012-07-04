@@ -31,7 +31,6 @@ import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.tool.linedecoder.*;
 import nl.lxtreme.ols.tool.linedecoder.impl.decoders.*;
 
-import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 
 
@@ -145,15 +144,16 @@ public class LineDecoderTool implements Tool<AcquisitionResult>
    */
   protected void init()
   {
-    DependencyManager manager = new DependencyManager( this.context );
-
-    manager.add( manager.createComponent() //
-        .setImplementation( this ) //
-        .add( manager.createServiceDependency() //
-            .setService( LineDecoder.class ) //
-            .setCallbacks( "addLineDecoder", "removeLineDecoder" ) //
-            .setRequired( false ) //
-        ) );
+    // TODO this will cause an infite loop with ourselves...
+    // DependencyManager manager = new DependencyManager( this.context );
+    //
+    // manager.add( manager.createComponent() //
+    // .setImplementation( this ) //
+    // .add( manager.createServiceDependency() //
+    // .setService( LineDecoder.class ) //
+    // .setCallbacks( "addLineDecoder", "removeLineDecoder" ) //
+    // .setRequired( false ) //
+    // ) );
   }
 
   /**
