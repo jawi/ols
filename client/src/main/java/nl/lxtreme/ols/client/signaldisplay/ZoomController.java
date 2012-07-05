@@ -538,7 +538,7 @@ public final class ZoomController
     double absLength = model.getAbsoluteLength();
 
     // Make sure less samples do not cause empty bars on the screen...
-    double oldViewWidth = absLength * oldFactor;
+    double oldViewWidth = Math.round( absLength * oldFactor );
 
     if ( ( aZoomValue == ZoomValue.IN ) || ( aZoomValue == ZoomValue.OUT ) )
     {

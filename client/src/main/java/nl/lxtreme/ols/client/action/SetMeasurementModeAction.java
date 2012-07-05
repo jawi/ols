@@ -69,8 +69,8 @@ public class SetMeasurementModeAction extends AbstractAction implements IManaged
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
-    this.controller.setMeasurementMode( menuItem.getState() );
+    final AbstractButton button = ( AbstractButton )aEvent.getSource();
+    this.controller.setMeasurementMode( button.isSelected() );
   }
 
   /**

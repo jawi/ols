@@ -157,6 +157,9 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     setOpaque( false );
     // Enable synthetic drag events (even when mouse is outside window)...
     setAutoscrolls( true );
+    // We can receive the focus...
+    setFocusable( true );
+    setRequestFocusEnabled( true );
   }
 
   // METHODS

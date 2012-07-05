@@ -51,13 +51,8 @@ public class ChannelLabelsView extends AbstractViewLayer
   /**
    * Provides a mouse-event hand
    */
-  static final class ChannelLabelMouseHandler extends MouseAdapter
+  static final class ChannelLabelMouseHandler extends AbstractMouseHandler
   {
-    // VARIABLES
-
-    private final SignalDiagramController controller;
-    private final PopupFactory popupHelper;
-
     // CONSTRUCTORS
 
     /**
@@ -65,8 +60,7 @@ public class ChannelLabelsView extends AbstractViewLayer
      */
     public ChannelLabelMouseHandler( final SignalDiagramController aController )
     {
-      this.controller = aController;
-      this.popupHelper = new PopupFactory( aController );
+      super( aController );
     }
 
     // METHODS
@@ -77,6 +71,9 @@ public class ChannelLabelsView extends AbstractViewLayer
     @Override
     public void mouseClicked( final MouseEvent aEvent )
     {
+      // Ensure the focus is moved to the main signal diagram component...
+      getSignalDiagram().requestFocusInWindow();
+
       if ( !aEvent.isConsumed() && ( aEvent.getClickCount() == 2 ) )
       {
         final SignalElement signalElement = findSignalElement( aEvent.getPoint() );

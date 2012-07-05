@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 
 import static nl.lxtreme.ols.client.signaldisplay.view.ViewUtils.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -33,6 +34,8 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
@@ -320,8 +323,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     public SignalMeasurerWorker( final Channel aChannel, final Cursor aCursorA, final Cursor aCursorB )
     {
       this.index = aChannel.getIndex();
-      this.startTimestamp = aCursorA.getTimestamp();
-      this.endTimestamp = aCursorB.getTimestamp();
+      this.startTimestamp = aCursorA != null ? aCursorA.getTimestamp() : -1L;
+      this.endTimestamp = aCursorB != null ? aCursorB.getTimestamp() : -1L;
     }
 
     // METHODS
@@ -334,7 +337,18 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     {
       final SignalDiagramModel model = getSignalDiagramModel();
 
-      return new SignalMeasurer( model.getCapturedData(), this.index, this.startTimestamp, this.endTimestamp ).run();
+      long start = this.startTimestamp;
+      if ( start < 0L )
+      {
+        start = model.getTimestamps()[0];
+      }
+      long end = this.endTimestamp;
+      if ( end < 0L )
+      {
+        end = model.getAbsoluteLength();
+      }
+
+      return new SignalMeasurer( model.getCapturedData(), this.index, start, end ).run();
     }
 
     /**
@@ -369,6 +383,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
   // VARIABLES
 
+  private JCheckBox enableMeasurementMode;
   private JComboBox measureChannel;
   private JComboBox cursorA;
   private JComboBox cursorB;
@@ -393,6 +408,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   private volatile boolean listening;
   private volatile SignalMeasurerWorker signalMeasurerWorker;
 
+  private final List<Component> comps;
+
   // CONSTRUCTORS
 
   /**
@@ -403,6 +420,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   public MeasurementView( final SignalDiagramController aController )
   {
     super( aController );
+
+    this.comps = new ArrayList<Component>();
 
     this.mi_channel = new JLabel();
     this.mi_referenceLabel = new JLabel( "Time:" );
@@ -746,6 +765,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       {
         updateChannelComboBoxModel( MeasurementView.this.measureChannel, aChannels );
 
+        updatePulseCountInformation( null );
+
         updateMeasurementInfo();
 
         repaint( 50L );
@@ -766,6 +787,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
         updateCursorComboBoxModel( MeasurementView.this.cursorA );
         updateCursorComboBoxModel( MeasurementView.this.cursorB );
 
+        updatePulseCountInformation( null );
+
         updateMeasurementInfo();
 
         repaint( 50L );
@@ -781,7 +804,10 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    */
   private boolean canPerformMeasurement()
   {
-    final SignalDiagramModel model = getSignalDiagramModel();
+    if ( !getController().getSignalDiagramModel().isMeasurementMode() )
+    {
+      return false;
+    }
 
     Channel channel = ( Channel )this.measureChannel.getSelectedItem();
     if ( ( channel == null ) || !channel.isEnabled() )
@@ -789,24 +815,24 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       return false;
     }
 
-    if ( !model.isCursorMode() )
-    {
-      return false;
-    }
-
     Cursor selectedCursorA = ( Cursor )this.cursorA.getSelectedItem();
-    if ( ( selectedCursorA == null ) || !selectedCursorA.isDefined() )
+    if ( ( selectedCursorA != null ) && !selectedCursorA.isDefined() )
     {
       return false;
     }
 
     Cursor selectedCursorB = ( Cursor )this.cursorB.getSelectedItem();
-    if ( ( selectedCursorB == null ) || !selectedCursorB.isDefined() )
+    if ( ( selectedCursorB != null ) && !selectedCursorB.isDefined() )
     {
       return false;
     }
 
-    return selectedCursorA != selectedCursorB;
+    if ( ( selectedCursorA != null ) && ( selectedCursorB != null ) )
+    {
+      return selectedCursorA != selectedCursorB;
+    }
+
+    return true;
   }
 
   /**
@@ -842,6 +868,12 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    */
   private void initComponent()
   {
+    IActionManager actionManager = getController().getActionManager();
+    Action enableMeasurementModeAction = actionManager.getAction( SetMeasurementModeAction.ID );
+
+    this.enableMeasurementMode = new JCheckBox( enableMeasurementModeAction );
+    this.enableMeasurementMode.setText( "" );
+
     this.measureChannel = updateChannelComboBoxModel( new JComboBox(), Collections.<Channel> emptyList() );
     this.measureChannel.setRenderer( new ChannelComboBoxRenderer() );
     this.measureChannel.addActionListener( new CursorActionListener() );
@@ -878,70 +910,64 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     // ROW 0 -- HEADER
     SpringLayoutUtils.addSeparator( panel, "Measurement" );
 
-    // ROW 1
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Channel:" ) );
-    panel.add( this.mi_channel );
+    panel.add( createRightAlignedLabel( "Enabled" ) );
+    panel.add( this.enableMeasurementMode );
 
-    // ROW 2
-    panel.add( this.mi_referenceLabel );
-    panel.add( this.mi_reference );
+    this.comps.add( panel.add( createRightAlignedLabel( "Channel:" ) ) );
+    this.comps.add( panel.add( this.mi_channel ) );
 
-    // ROW 3
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Period:" ) );
-    panel.add( this.mi_period );
+    this.comps.add( panel.add( this.mi_referenceLabel ) );
+    this.comps.add( panel.add( this.mi_reference ) );
 
-    // ROW 4
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Frequency:" ) );
-    panel.add( this.mi_frequency );
+    this.comps.add( panel.add( createRightAlignedLabel( "Period:" ) ) );
+    this.comps.add( panel.add( this.mi_period ) );
 
-    // ROW 5
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Width (H):" ) );
-    panel.add( this.mi_widthHigh );
+    this.comps.add( panel.add( createRightAlignedLabel( "Frequency:" ) ) );
+    this.comps.add( panel.add( this.mi_frequency ) );
 
-    // ROW 6
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Width (L):" ) );
-    panel.add( this.mi_widthLow );
+    this.comps.add( panel.add( createRightAlignedLabel( "Width (H):" ) ) );
+    this.comps.add( panel.add( this.mi_widthHigh ) );
 
-    // ROW 7
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Duty cycle:" ) );
-    panel.add( this.mi_dutyCycle );
+    this.comps.add( panel.add( createRightAlignedLabel( "Width (L):" ) ) );
+    this.comps.add( panel.add( this.mi_widthLow ) );
+
+    this.comps.add( panel.add( createRightAlignedLabel( "Duty cycle:" ) ) );
+    this.comps.add( panel.add( this.mi_dutyCycle ) );
 
     // ROW 8 -- HEADER
     SpringLayoutUtils.addSeparator( panel, "Pulse counter" );
 
-    // ROW 9
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Channel:" ) );
-    panel.add( this.measureChannel );
+    this.comps.add( panel.add( createRightAlignedLabel( "Channel:" ) ) );
+    this.comps.add( panel.add( this.measureChannel ) );
 
-    // ROW 10
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Cursor A:" ) );
-    panel.add( this.cursorA );
+    this.comps.add( panel.add( createRightAlignedLabel( "Cursor A:" ) ) );
+    this.comps.add( panel.add( this.cursorA ) );
 
-    // ROW 11
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Cursor B:" ) );
-    panel.add( this.cursorB );
+    this.comps.add( panel.add( createRightAlignedLabel( "Cursor B:" ) ) );
+    this.comps.add( panel.add( this.cursorB ) );
 
-    // ROW 12
-    panel.add( this.pci_pulseCountLabel );
-    panel.add( this.pci_pulseCount );
+    this.comps.add( panel.add( this.pci_pulseCountLabel ) );
+    this.comps.add( panel.add( this.pci_pulseCount ) );
 
-    // ROW 13
-    panel.add( this.pci_timeLabel );
-    panel.add( this.pci_time );
+    this.comps.add( panel.add( this.pci_timeLabel ) );
+    this.comps.add( panel.add( this.pci_time ) );
 
-    // ROW 14
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Frequency:" ) );
-    panel.add( this.pci_frequency );
+    this.comps.add( panel.add( createRightAlignedLabel( "Frequency:" ) ) );
+    this.comps.add( panel.add( this.pci_frequency ) );
 
-    // ROW 15
-    panel.add( SwingComponentUtils.createRightAlignedLabel( "Duty cycle:" ) );
-    panel.add( this.pci_dutyCycle );
+    this.comps.add( panel.add( createRightAlignedLabel( "Duty cycle:" ) ) );
+    this.comps.add( panel.add( this.pci_dutyCycle ) );
 
-    // ROW 16
     panel.add( new JLabel( "" ) );
     panel.add( this.indicator );
 
     SpringLayoutUtils.makeEditorGrid( panel, 10, 10 );
+
+    // Synchronize model state with UI state...
+    setState( this.enableMeasurementMode.isSelected() );
+
+    updateMeasurementInformation( null );
+    updatePulseCountInformation( null );
 
     add( panel, BorderLayout.NORTH );
   }
@@ -956,9 +982,10 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       @Override
       public void run()
       {
-        MeasurementView.this.measureChannel.setEnabled( aEnabled );
-        MeasurementView.this.cursorA.setEnabled( aEnabled );
-        MeasurementView.this.cursorB.setEnabled( aEnabled );
+        for ( Component label : MeasurementView.this.comps )
+        {
+          label.setEnabled( aEnabled );
+        }
       }
     } );
   }
@@ -1020,10 +1047,6 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
           this.signalMeasurerWorker = new SignalMeasurerWorker( channel, cursorA, cursorB );
           this.signalMeasurerWorker.execute();
         }
-      }
-      else
-      {
-        updatePulseCountInformation( null );
       }
     }
     finally

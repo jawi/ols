@@ -78,6 +78,9 @@ abstract class AbstractMouseHandler extends MouseAdapter
   @Override
   public void mouseClicked( final MouseEvent aEvent )
   {
+    // Ensure the focus is moved to the main signal diagram component...
+    getSignalDiagram().requestFocusInWindow();
+
     if ( getModel().isCursorMode() && ( aEvent.getClickCount() == 2 ) )
     {
       final MouseEvent event = convertEvent( aEvent );
@@ -261,6 +264,14 @@ abstract class AbstractMouseHandler extends MouseAdapter
   protected final SignalDiagramModel getModel()
   {
     return this.controller.getSignalDiagramModel();
+  }
+
+  /**
+   * @return the {@link SignalDiagramComponent}, never <code>null</code>.
+   */
+  protected final SignalDiagramComponent getSignalDiagram()
+  {
+    return this.controller.getSignalDiagram();
   }
 
   /**
