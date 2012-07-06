@@ -73,14 +73,20 @@ public class DMX512SerialDataDecoder extends AsyncSerialDataDecoder
     // frame size...
     if ( ( time2 - time ) > this.configuration.getFrameSize( sampleRate ) )
     {
+      // Mark-after-break found; search again for the next start-bit...
+      long time3 = super.findEdge( aChannelIdx, aEdge, time2, aEndOfDecode );
+
       SerialDecoderCallback callback = getCallback();
       if ( callback != null )
       {
-        callback.onEvent( aChannelIdx, DMX512DataSet.EVENT_MAB, time, time2 );
+        // The first part is the start-before-break...
+        callback.onEvent( aChannelIdx, DMX512DataSet.EVENT_SBB, time, time2 );
+        // The second part is the mark-after-break...
+        callback.onEvent( aChannelIdx, DMX512DataSet.EVENT_MAB, time2, time3 );
       }
 
-      // Mark-after-break found; search again for the next start-bit...
-      time = super.findEdge( aChannelIdx, aEdge, time2, aEndOfDecode );
+      // Continue the decoding after the MaB...
+      time = time3;
     }
 
     return time;

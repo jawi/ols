@@ -33,7 +33,14 @@ public class DMX512DataSet extends BaseDataSet<DMX512Data>
 {
   // CONSTANTS
 
-  public static final String EVENT_MAB = "MAB";
+  /**
+   * The space-before-break used as preamble for the actual data frame.
+   */
+  public static final String EVENT_SBB = "Start before break";
+  /**
+   * The mark-after-break used as preamble for the actual data frame.
+   */
+  public static final String EVENT_MAB = "Mark after break";
 
   // VARIABLES
 
