@@ -216,7 +216,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
     final int chCount = ( this.capturedData == null ) ? aCount : this.capturedData.getChannels();
 
     Channel[] result = new Channel[aCount];
-    for ( int i = 0, j = 0; i < Ols.MAX_CHANNELS; i++ )
+    for ( int i = 0, j = 0; ( j < aCount ) && ( i < Ols.MAX_CHANNELS ); i++ )
     {
       final int mask = ( 1 << i );
       // Issue #99: demultiplex the channels to the right group...
