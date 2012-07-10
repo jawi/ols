@@ -412,9 +412,12 @@ abstract class AbstractMouseHandler extends MouseAdapter
     if ( popupTrigger )
     {
       JPopupMenu contextMenu = createCursorPopup( aPoint, aEvent.getLocationOnScreen() );
-      contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
-      // Mark the event as consumed...
-      aEvent.consume();
+      if ( contextMenu != null )
+      {
+        contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
+        // Mark the event as consumed...
+        aEvent.consume();
+      }
     }
     return popupTrigger;
   }

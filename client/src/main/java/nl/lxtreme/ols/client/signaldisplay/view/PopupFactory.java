@@ -146,6 +146,11 @@ final class PopupFactory
     if ( aHoveredCursor == null )
     {
       final SignalElement signalElement = findSignalElement( aPoint );
+      if ( signalElement == null )
+      {
+        // Not above a cursor, nor above a signal element...
+        return null;
+      }
 
       if ( signalElement.isSignalGroup() )
       {

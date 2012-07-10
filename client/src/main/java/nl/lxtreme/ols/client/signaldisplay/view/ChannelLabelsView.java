@@ -157,8 +157,11 @@ public class ChannelLabelsView extends AbstractViewLayer
       if ( aEvent.isPopupTrigger() )
       {
         JPopupMenu contextMenu = createChannelLabelPopup( aEvent.getPoint(), aEvent.getLocationOnScreen() );
-        contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
-        result = true;
+        if ( contextMenu != null )
+        {
+          contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
+          result = true;
+        }
       }
 
       return result;
