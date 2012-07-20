@@ -24,9 +24,11 @@ package nl.lxtreme.ols.client;
 import java.awt.*;
 import java.util.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
-import nl.lxtreme.ols.util.swing.*;
 
 import org.noos.xing.mydoggy.*;
 import org.noos.xing.mydoggy.plaf.*;
@@ -34,24 +36,23 @@ import org.noos.xing.mydoggy.plaf.ui.content.*;
 
 
 /**
- * 
+ * Provides a simple controller for the dock windows.
  */
 public class DockController
 {
-  // INNER TYPES
-
   // CONSTANTS
 
   public static final String TW_ACQUISITION = AcquisitionDetailsView.ID;
   public static final String TW_MEASURE = MeasurementView.ID;
   public static final String TW_CURSORS = CursorDetailsView.ID;
 
-  public static final String GROUP_SIGNAL = "Signal";
-  public static final String GROUP_MEASURE = "Measure";
+  public static final String GROUP_DEFAULT = "Default";
 
   // VARIABLES
 
   private final MyDoggyToolWindowManager windowManager;
+
+  // CONSTRUCTORS
 
   /**
    * Creates a new {@link DockController} instance.
@@ -73,10 +74,15 @@ public class DockController
   /**
    * @param aWindow
    */
-  private static void tweakToolWindow( final ToolWindow aWindow, final int aDockLength )
+  private static void tweakToolWindow( final ToolWindow aWindow )
   {
     RepresentativeAnchorDescriptor<?> anchorDesc = aWindow.getRepresentativeAnchorDescriptor();
+    anchorDesc.setTitle( aWindow.getTitle() );
     anchorDesc.setPreviewEnabled( false );
+    if ( aWindow.getIcon() != null )
+    {
+      anchorDesc.setIcon( aWindow.getIcon() );
+    }
 
     final ToolWindowType[] types = ToolWindowType.values();
     for ( ToolWindowType type : types )
@@ -92,11 +98,11 @@ public class DockController
     }
 
     DockedTypeDescriptor desc = ( DockedTypeDescriptor )aWindow.getTypeDescriptor( ToolWindowType.DOCKED );
-    desc.setMinimumDockLength( aDockLength );
     desc.setPopupMenuEnabled( false );
 
     aWindow.setAvailable( true );
     aWindow.setHideOnZeroTabs( false );
+    aWindow.setVisible( UIManager.getBoolean( UIManagerKeys.SHOW_TOOL_WINDOWS_DEFAULT ) );
   }
 
   /**
@@ -120,11 +126,7 @@ public class DockController
     group.setImplicit( false );
     group.addToolWindow( tw );
 
-    // Given string is based on some experiments with the best "default"
-    // length...
-    final int dockLength = SwingComponentUtils.getStringWidth( "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" );
-
-    tweakToolWindow( tw, dockLength );
+    tweakToolWindow( tw );
   }
 
   /**
@@ -134,5 +136,4 @@ public class DockController
   {
     this.windowManager.setMainContent( aComponent );
   }
-
 }

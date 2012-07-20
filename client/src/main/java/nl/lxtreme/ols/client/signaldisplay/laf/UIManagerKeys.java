@@ -46,6 +46,11 @@ public interface UIManagerKeys
    * recapture.
    */
   String RETAIN_ANNOTATIONS_WITH_RECAPTURE = "ols.retain.annotations.boolean";
+  /**
+   * Disables the sloppy drawing of scopes (and group summary) when too many
+   * transitions are shown.
+   */
+  String DISABLE_SLOPPY_SCOPE_PAINTING = "ols.disble.sloppy.scope.painting.boolean";
 
   /** The default color for channels, group summary and the scope of group 1. */
   String CHANNEL_GROUP1_DEFAULT_COLOR = "ols.channelgroup1.default.color";

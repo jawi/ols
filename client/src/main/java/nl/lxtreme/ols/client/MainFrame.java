@@ -787,6 +787,12 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // gives it more or less a native feel...
     setLocationByPlatform( true );
 
+    setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
+    setSize( 1024, 600 );
+
+    // Add the window icon...
+    setIconImages( internalGetIconImages() );
+
     this.controller = aController;
     SignalDiagramController signalDiagramController = this.controller.getSignalDiagramController();
 
@@ -800,19 +806,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // Docking mechanism...
     this.dockController = new DockController();
 
-    setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
-    setSize( 1200, 600 );
+    this.dockController.registerToolWindow( this.cursorDetails, DockController.GROUP_DEFAULT );
+    this.dockController.registerToolWindow( this.captureDetails, DockController.GROUP_DEFAULT );
+    this.dockController.registerToolWindow( this.measurementDetails, DockController.GROUP_DEFAULT );
 
     final JToolBar tools = createMenuBars();
 
     // Create a scrollpane for the diagram...
-    final JScrollPane scrollPane = new ZoomCapableScrollPane( aController.getSignalDiagramController() );
-
-    this.dockController.registerToolWindow( this.measurementDetails, DockController.GROUP_MEASURE );
-    this.dockController.registerToolWindow( this.captureDetails, DockController.GROUP_SIGNAL );
-    this.dockController.registerToolWindow( this.cursorDetails, DockController.GROUP_SIGNAL );
-
-    this.dockController.setMainContent( scrollPane );
+    this.dockController.setMainContent( new ZoomCapableScrollPane( aController.getSignalDiagramController() ) );
 
     final JPanel contentPane = new JPanel( new BorderLayout() );
     contentPane.add( tools, BorderLayout.PAGE_START );
@@ -820,9 +821,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     contentPane.add( this.status, BorderLayout.PAGE_END );
 
     setContentPane( contentPane );
-
-    // Add the window icon...
-    setIconImages( internalGetIconImages() );
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );

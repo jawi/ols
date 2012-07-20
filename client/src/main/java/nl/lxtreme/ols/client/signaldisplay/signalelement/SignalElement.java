@@ -101,7 +101,7 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public static SignalElement createAnalogScopeElement( final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, aGroup.getMask() );
+    final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, -1 );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( ANALOG_SCOPE_HEIGHT );
     return channelElement;
@@ -138,7 +138,7 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public static SignalElement createGroupSummaryElement( final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, aGroup.getMask() );
+    final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, -1 );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( GROUP_SUMMARY_HEIGHT );
     return channelElement;
@@ -155,7 +155,7 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public static SignalElement createSignalGroupElement( final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, aGroup.getMask() );
+    final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, -1 );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( SIGNAL_GROUP_HEIGHT );
     return channelElement;
@@ -303,6 +303,12 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public int getMask()
   {
+    if ( !isDigitalSignal() )
+    {
+      // For group summary & analog scope, we always use the mask of the entire
+      // group...
+      return this.group.getMask();
+    }
     return this.mask;
   }
 

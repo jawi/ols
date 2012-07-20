@@ -43,6 +43,11 @@ public class SignalUI extends ComponentUI
 
   /** The maximum number of points in a polyline. */
   private static final int POINT_COUNT = 1000000;
+  /**
+   * The number of samples that are shown in a single view upon which is decided
+   * to draw the group summary and scope a bit sloppy.
+   */
+  private static final int SLOPPY_DRAW_THRESHOLD = 10000;
 
   // VARIABLES
 
@@ -445,7 +450,8 @@ public class SignalUI extends ComponentUI
     // Start drawing at the correct position in the clipped region...
     aCanvas.translate( 0, aSignalElements[0].getYposition() );
 
-    final int sampleIncr = 1;
+    final boolean enableSloppyScopePainting = aModel.isSloppyScopeRenderingAllowed();
+    int lastP = 0;
 
     for ( SignalElement signalElement : aSignalElements )
     {
@@ -509,10 +515,18 @@ public class SignalUI extends ComponentUI
           }
 
           aCanvas.drawPolyline( x, y, p );
+
+          lastP = ( int )( ( p * 0.1 ) + ( lastP * 0.9 ) );
         }
 
         // Move back to the original position...
         aCanvas.translate( 0, -signalOffset );
+      }
+
+      int sampleIncr = 1;
+      if ( enableSloppyScopePainting && ( lastP > SLOPPY_DRAW_THRESHOLD ) )
+      {
+        sampleIncr = ( int )Math.max( 1.0, ( 1.0 / zoomFactor ) );
       }
 
       if ( signalElement.isGroupSummary() )
@@ -592,7 +606,7 @@ public class SignalUI extends ComponentUI
           {
             long timestamp = timestamps[sampleIdx];
 
-            int sampleValue = 0;
+            int sampleValue = ( int )( ( values[sampleIdx] & mask ) >> trailingZeros );
             final int i_max = Math.min( endIdx, ( sampleIdx + sampleIncr ) - 1 );
             for ( int i = sampleIdx + 1; i < i_max; i++ )
             {

@@ -273,4 +273,16 @@ public class SignalViewModel extends AbstractViewModel
   {
     return UIManager.getBoolean( SIGNALVIEW_ANALOG_SCOPE_RENDER_AA );
   }
+
+  /**
+   * Returns whether or not the "sloppy" rendering for scopes and signal groups
+   * should be used.
+   * 
+   * @return <code>true</code> if sloppy rendering is allowed,
+   *         <code>false</code> otherwise.
+   */
+  public boolean isSloppyScopeRenderingAllowed()
+  {
+    return !UIManager.getBoolean( DISABLE_SLOPPY_SCOPE_PAINTING );
+  }
 }
