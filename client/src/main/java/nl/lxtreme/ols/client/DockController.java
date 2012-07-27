@@ -36,7 +36,6 @@ import nl.lxtreme.ols.util.swing.*;
 
 import org.noos.xing.mydoggy.*;
 import org.noos.xing.mydoggy.plaf.*;
-import org.osgi.framework.*;
 
 
 /**
@@ -54,18 +53,24 @@ public class DockController implements IMeasurementListener
 
   // VARIABLES
 
+  private final File dataStorage;
   private final AtomicReference<MyDoggyToolWindowManager> windowManagerRef;
 
-  private volatile BundleContext context;
   private volatile boolean wasHidden = false;
+
+  private AcquisitionDetailsView captureDetails;
+  private CursorDetailsView cursorDetails;
+  private MeasurementView measurementDetails;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new {@link DockController} instance.
    */
-  public DockController()
+  public DockController( final File aDataStorage, final SignalDiagramController aSignalDiagramController )
   {
+    this.dataStorage = aDataStorage;
+
     this.windowManagerRef = new AtomicReference<MyDoggyToolWindowManager>();
 
     SwingComponentUtils.invokeOnEDT( new Runnable()
@@ -73,6 +78,10 @@ public class DockController implements IMeasurementListener
       @Override
       public void run()
       {
+        DockController.this.captureDetails = AcquisitionDetailsView.create( aSignalDiagramController );
+        DockController.this.cursorDetails = CursorDetailsView.create( aSignalDiagramController );
+        DockController.this.measurementDetails = MeasurementView.create( aSignalDiagramController );
+
         final MyDoggyToolWindowManager wm = new MyDoggyToolWindowManager( Locale.getDefault(),
             MyDoggyToolWindowManager.class.getClassLoader() );
         wm.setDockableMainContentMode( false );
@@ -183,18 +192,20 @@ public class DockController implements IMeasurementListener
     group.addToolWindow( tw );
 
     tweakToolWindow( tw );
-
-    // wm.addAlias( tw, aToolWindow.getId() );
   }
 
   /**
    * @param aComponent
+   *          the main content to set, should not be <code>null</code>.
    */
   public void setMainContent( final Component aComponent )
   {
     getManager().setMainContent( aComponent );
   }
 
+  /**
+   * @return the current tool window manager, cannot be <code>null</code>.
+   */
   final MyDoggyToolWindowManager getManager()
   {
     return this.windowManagerRef.get();
@@ -205,8 +216,12 @@ public class DockController implements IMeasurementListener
    */
   void start()
   {
-    File dataFile = this.context.getDataFile( "dock.settings" );
-    if ( ( dataFile == null ) || !dataFile.exists() )
+    registerToolWindow( this.cursorDetails, DockController.GROUP_DEFAULT );
+    registerToolWindow( this.captureDetails, DockController.GROUP_DEFAULT );
+    registerToolWindow( this.measurementDetails, DockController.GROUP_DEFAULT );
+
+    File dataFile = new File( this.dataStorage, "dock.settings" );
+    if ( ( this.dataStorage == null ) || !dataFile.exists() )
     {
       // Don't do anything when there's no file...
       return;
@@ -234,13 +249,13 @@ public class DockController implements IMeasurementListener
    */
   void stop()
   {
-    File dataFile = this.context.getDataFile( "dock.settings" );
-    if ( dataFile == null )
+    if ( this.dataStorage == null )
     {
       // Don't do anything when there's no file...
       return;
     }
 
+    File dataFile = new File( this.dataStorage, "dock.settings" );
     FileOutputStream fos = null;
 
     try

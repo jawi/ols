@@ -284,7 +284,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private final ProgressUpdatingRunnable progressAccumulatingRunnable;
   private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
 
-  private volatile DockController dockController;
   private volatile ProjectManager projectManager;
   private volatile DataAcquisitionService dataAcquisitionService;
   private volatile MainFrame mainFrame;
@@ -1335,7 +1334,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         // Cause exceptions to be shown in a more user-friendly way...
         JErrorDialog.installSwingExceptionHandler();
 
-        final MainFrame mf = new MainFrame( ClientController.this.dockController, ClientController.this );
+        final File dataStorage = ClientController.this.bundleContext.getDataFile( "" );
+
+        final MainFrame mf = new MainFrame( new DockController( dataStorage, getSignalDiagramController() ),
+            ClientController.this );
         setMainFrame( mf );
 
         // ensure that all changes to cursors are reflected in the UI...
@@ -1382,7 +1384,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
             window.dispose();
           }
           // release all resources...
-          mf.dispose();
+          mf.close();
           // Make sure the event listeners are deregistered...
           removeMainFrame( mf );
         }
@@ -1449,16 +1451,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * @param aController
-   */
-  final void removeDockController( final DockController aController )
-  {
-    this.dockController = null;
-
-    this.signalDiagramController.removeMeasurementListener( aController );
-  }
-
-  /**
    * @param aMainFrame
    *          the main frame to remove, cannot be <code>null</code>.
    */
@@ -1491,16 +1483,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
 
     this.projectManager = null;
-  }
-
-  /**
-   * @param aController
-   */
-  final void setDockController( final DockController aController )
-  {
-    this.dockController = aController;
-
-    this.signalDiagramController.addMeasurementListener( aController );
   }
 
   /**

@@ -157,15 +157,6 @@ public class Activator extends DependencyActivatorBase
             .setRequired( false ) //
         ) );
 
-    // Dock controller
-    aManager.add( createComponent() //
-        .setInterface( DockController.class.getName(), null ) //
-        .setImplementation( DockController.class ) //
-        .add( createServiceDependency() //
-            .setService( LogService.class ) //
-            .setRequired( false ) //
-        ) );
-
     // All the interfaces we're registering the client controller under...
     serviceNames = new String[] { AcquisitionDataListener.class.getName(), AcquisitionProgressListener.class.getName(),
         AcquisitionStatusListener.class.getName(), AnnotationListener.class.getName(),
@@ -185,10 +176,6 @@ public class Activator extends DependencyActivatorBase
         .add( createServiceDependency() //
             .setService( DataAcquisitionService.class ) //
             .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( DockController.class ) //
-            .setRequired( true ) //
-            .setCallbacks( "setDockController", "removeDockController" ) ) //
         .add( createServiceDependency() //
             .setService( UIColorSchemeManager.class ) //
             .setRequired( true ) ) //

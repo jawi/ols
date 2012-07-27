@@ -41,7 +41,6 @@ import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
-import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
@@ -755,7 +754,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   // VARIABLES
 
-  // private final Diagram diagram;
   private final SignalDiagramComponent signalDiagram;
   private final JTextStatusBar status;
   private final ClientController controller;
@@ -767,10 +765,6 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   private JMenu exportMenu;
   private JMenu cursorsMenu;
 
-  private final AcquisitionDetailsView captureDetails;
-  private final CursorDetailsView cursorDetails;
-  private final MeasurementView measurementDetails;
-
   private volatile String lastSelectedDeviceName;
 
   // CONSTRUCTORS
@@ -778,11 +772,16 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   /**
    * Creates a new MainFrame instance.
    * 
+   * @param aDockController
+   *          the dock controller to use, cannot be <code>null</code>;
    * @param aClientController
    *          the client controller to use, cannot be <code>null</code>.
    */
   public MainFrame( final DockController aDockController, final ClientController aClientController )
   {
+    this.controller = aClientController;
+    this.dockController = aDockController;
+
     // Let the host platform determine where this diagram should be displayed;
     // gives it more or less a native feel...
     setLocationByPlatform( true );
@@ -793,27 +792,15 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // Add the window icon...
     setIconImages( internalGetIconImages() );
 
-    this.controller = aClientController;
     SignalDiagramController signalDiagramController = this.controller.getSignalDiagramController();
 
     this.signalDiagram = signalDiagramController.getSignalDiagram();
     this.status = new JTextStatusBar();
 
-    this.captureDetails = AcquisitionDetailsView.create( signalDiagramController );
-    this.cursorDetails = CursorDetailsView.create( signalDiagramController );
-    this.measurementDetails = MeasurementView.create( signalDiagramController );
-
-    // Docking mechanism...
-    this.dockController = aDockController;
-
-    this.dockController.registerToolWindow( this.cursorDetails, DockController.GROUP_DEFAULT );
-    this.dockController.registerToolWindow( this.captureDetails, DockController.GROUP_DEFAULT );
-    this.dockController.registerToolWindow( this.measurementDetails, DockController.GROUP_DEFAULT );
-
     final JToolBar tools = createMenuBars();
 
     // Create a scrollpane for the diagram...
-    this.dockController.setMainContent( new ZoomCapableScrollPane( aClientController.getSignalDiagramController() ) );
+    this.dockController.setMainContent( new ZoomCapableScrollPane( signalDiagramController ) );
 
     final JPanel contentPane = new JPanel( new BorderLayout() );
     contentPane.add( tools, BorderLayout.PAGE_START );
@@ -824,6 +811,9 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
+
+    // Start the actual dock controller...
+    this.dockController.start();
   }
 
   // METHODS
@@ -836,6 +826,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   {
     setVisible( false );
     dispose();
+
+    this.dockController.stop();
 
     // Make sure that if this frame is closed, the entire application is
     // shutdown as well...
