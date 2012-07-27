@@ -22,23 +22,27 @@ package nl.lxtreme.ols.client;
 
 
 import java.awt.*;
+import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.noos.xing.mydoggy.*;
 import org.noos.xing.mydoggy.plaf.*;
-import org.noos.xing.mydoggy.plaf.ui.content.*;
+import org.osgi.framework.*;
 
 
 /**
  * Provides a simple controller for the dock windows.
  */
-public class DockController
+public class DockController implements IMeasurementListener
 {
   // CONSTANTS
 
@@ -50,7 +54,10 @@ public class DockController
 
   // VARIABLES
 
-  private final MyDoggyToolWindowManager windowManager;
+  private final AtomicReference<MyDoggyToolWindowManager> windowManagerRef;
+
+  private volatile BundleContext context;
+  private volatile boolean wasHidden = false;
 
   // CONSTRUCTORS
 
@@ -59,14 +66,21 @@ public class DockController
    */
   public DockController()
   {
-    final MyDoggyToolWindowManager wm = new MyDoggyToolWindowManager( Locale.getDefault(),
-        MyDoggyToolWindowManager.class.getClassLoader() );
-    wm.setDockableMainContentMode( false );
+    this.windowManagerRef = new AtomicReference<MyDoggyToolWindowManager>();
 
-    final ContentManager contentManager = wm.getContentManager();
-    contentManager.setContentManagerUI( new MyDoggyMultiSplitContentManagerUI() );
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        final MyDoggyToolWindowManager wm = new MyDoggyToolWindowManager( Locale.getDefault(),
+            MyDoggyToolWindowManager.class.getClassLoader() );
+        wm.setDockableMainContentMode( false );
 
-    this.windowManager = wm;
+        // First one wins...
+        DockController.this.windowManagerRef.compareAndSet( null, wm );
+      }
+    } );
   }
 
   // METHODS
@@ -106,11 +120,51 @@ public class DockController
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void disableMeasurementMode()
+  {
+    ToolWindow toolWindow = getManager().getToolWindow( TW_MEASURE );
+    toolWindow.setVisible( this.wasHidden );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void enableMeasurementMode()
+  {
+    ToolWindow toolWindow = getManager().getToolWindow( TW_MEASURE );
+    this.wasHidden = toolWindow.isVisible();
+
+    toolWindow.setVisible( true );
+  }
+
+  /**
    * @return
    */
   public Component get()
   {
-    return this.windowManager;
+    return getManager();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void handleMeasureEvent( final MeasurementInfo aEvent )
+  {
+    // nop
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isListening()
+  {
+    return true;
   }
 
   /**
@@ -119,14 +173,18 @@ public class DockController
    */
   public void registerToolWindow( final IToolWindow aToolWindow, final String aGroupName )
   {
-    ToolWindow tw = this.windowManager.registerToolWindow( aToolWindow.getId(), aToolWindow.getName(),
-        aToolWindow.getIcon(), ( Component )aToolWindow, ToolWindowAnchor.RIGHT );
+    MyDoggyToolWindowManager wm = getManager();
 
-    final ToolWindowGroup group = this.windowManager.getToolWindowGroup( aGroupName );
+    ToolWindow tw = wm.registerToolWindow( aToolWindow.getId(), aToolWindow.getName(), aToolWindow.getIcon(),
+        ( Component )aToolWindow, ToolWindowAnchor.RIGHT );
+
+    final ToolWindowGroup group = wm.getToolWindowGroup( aGroupName );
     group.setImplicit( false );
     group.addToolWindow( tw );
 
     tweakToolWindow( tw );
+
+    // wm.addAlias( tw, aToolWindow.getId() );
   }
 
   /**
@@ -134,6 +192,69 @@ public class DockController
    */
   public void setMainContent( final Component aComponent )
   {
-    this.windowManager.setMainContent( aComponent );
+    getManager().setMainContent( aComponent );
+  }
+
+  final MyDoggyToolWindowManager getManager()
+  {
+    return this.windowManagerRef.get();
+  }
+
+  /**
+   * Starts this dock controller.
+   */
+  void start()
+  {
+    File dataFile = this.context.getDataFile( "dock.settings" );
+    if ( ( dataFile == null ) || !dataFile.exists() )
+    {
+      // Don't do anything when there's no file...
+      return;
+    }
+
+    FileInputStream fis = null;
+
+    try
+    {
+      fis = new FileInputStream( dataFile );
+      getManager().getPersistenceDelegate().apply( fis );
+    }
+    catch ( FileNotFoundException exception )
+    {
+      // Ignore; we shouldn't be here anyways due to dataFile.exists...
+    }
+    finally
+    {
+      HostUtils.closeResource( fis );
+    }
+  }
+
+  /**
+   * Closes this dock controller.
+   */
+  void stop()
+  {
+    File dataFile = this.context.getDataFile( "dock.settings" );
+    if ( dataFile == null )
+    {
+      // Don't do anything when there's no file...
+      return;
+    }
+
+    FileOutputStream fos = null;
+
+    try
+    {
+      fos = new FileOutputStream( dataFile );
+      getManager().getPersistenceDelegate().save( fos );
+    }
+    catch ( FileNotFoundException exception )
+    {
+      // Ignore; we shouldn't be here anyways due to dataFile.exists...
+    }
+    finally
+    {
+      HostUtils.closeResource( fos );
+    }
   }
 }

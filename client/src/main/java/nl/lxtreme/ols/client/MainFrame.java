@@ -778,10 +778,10 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   /**
    * Creates a new MainFrame instance.
    * 
-   * @param aController
+   * @param aClientController
    *          the client controller to use, cannot be <code>null</code>.
    */
-  public MainFrame( final ClientController aController )
+  public MainFrame( final DockController aDockController, final ClientController aClientController )
   {
     // Let the host platform determine where this diagram should be displayed;
     // gives it more or less a native feel...
@@ -793,7 +793,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // Add the window icon...
     setIconImages( internalGetIconImages() );
 
-    this.controller = aController;
+    this.controller = aClientController;
     SignalDiagramController signalDiagramController = this.controller.getSignalDiagramController();
 
     this.signalDiagram = signalDiagramController.getSignalDiagram();
@@ -804,7 +804,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.measurementDetails = MeasurementView.create( signalDiagramController );
 
     // Docking mechanism...
-    this.dockController = new DockController();
+    this.dockController = aDockController;
 
     this.dockController.registerToolWindow( this.cursorDetails, DockController.GROUP_DEFAULT );
     this.dockController.registerToolWindow( this.captureDetails, DockController.GROUP_DEFAULT );
@@ -813,7 +813,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     final JToolBar tools = createMenuBars();
 
     // Create a scrollpane for the diagram...
-    this.dockController.setMainContent( new ZoomCapableScrollPane( aController.getSignalDiagramController() ) );
+    this.dockController.setMainContent( new ZoomCapableScrollPane( aClientController.getSignalDiagramController() ) );
 
     final JPanel contentPane = new JPanel( new BorderLayout() );
     contentPane.add( tools, BorderLayout.PAGE_START );

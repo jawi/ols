@@ -99,119 +99,117 @@ public class Activator extends DependencyActivatorBase
     String filter;
     filter = String.format( "(&(%s=%s)(%s=*))", OLS_COMPONENT_PROVIDER_MAGIC_KEY, OLS_COMPONENT_PROVIDER_MAGIC_VALUE,
         OLS_COMPONENT_PROVIDER_CLASS_KEY );
-    aManager.add( //
-        createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
-            .setImplementation(
-                new GenericBundleAdapter<ComponentProvider>( ComponentProvider.class, OLS_COMPONENT_PROVIDER_CLASS_KEY ) ) //
+    aManager.add( createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
+        .setImplementation(
+            new GenericBundleAdapter<ComponentProvider>( ComponentProvider.class, OLS_COMPONENT_PROVIDER_CLASS_KEY ) ) //
         );
 
     filter = String.format( "(&(%s=%s)(%s=*))", OLS_TOOL_MAGIC_KEY, OLS_TOOL_MAGIC_VALUE, OLS_TOOL_CLASS_KEY );
-    aManager.add( //
-        createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
-            .setImplementation( new GenericBundleAdapter<Tool>( Tool.class, OLS_TOOL_CLASS_KEY ) ) //
+    aManager.add( createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
+        .setImplementation( new GenericBundleAdapter<Tool>( Tool.class, OLS_TOOL_CLASS_KEY ) ) //
         );
 
     filter = String.format( "(&(%s=%s)(%s=*))", OLS_DEVICE_MAGIC_KEY, OLS_DEVICE_MAGIC_VALUE, OLS_DEVICE_CLASS_KEY );
-    aManager.add( //
-        createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
-            .setImplementation( new GenericBundleAdapter<Device>( Device.class, OLS_DEVICE_CLASS_KEY ) ) //
+    aManager.add( createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
+        .setImplementation( new GenericBundleAdapter<Device>( Device.class, OLS_DEVICE_CLASS_KEY ) ) //
         );
 
     filter = String.format( "(&(%s=%s)(%s=*))", OLS_EXPORTER_MAGIC_KEY, OLS_EXPORTER_MAGIC_VALUE,
         OLS_EXPORTER_CLASS_KEY );
-    aManager.add( //
-        createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
-            .setImplementation( new GenericBundleAdapter<Exporter>( Exporter.class, OLS_EXPORTER_CLASS_KEY ) ) //
+    aManager.add( createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
+        .setImplementation( new GenericBundleAdapter<Exporter>( Exporter.class, OLS_EXPORTER_CLASS_KEY ) ) //
         );
 
     Properties props = new Properties();
     props.put( Constants.SERVICE_PID, UIManagerConfigurator.PID );
 
+    String[] serviceNames = new String[] { UIManagerConfigurator.class.getName(), ManagedService.class.getName() };
+
     // UI Manager Configuration...
-    aManager.add( //
-        createComponent() //
-            .setInterface( new String[] { UIManagerConfigurator.class.getName(), ManagedService.class.getName() },
-                props ) //
-            .setImplementation( UIManagerConfigurator.class ) //
+    aManager.add( createComponent() //
+        .setInterface( serviceNames, props ) //
+        .setImplementation( UIManagerConfigurator.class ) //
         );
 
     props.put( Constants.SERVICE_PID, UIColorSchemeManager.PID );
 
+    serviceNames = new String[] { UIColorSchemeManager.class.getName(), ManagedServiceFactory.class.getName() };
+
     // UI Manager Configuration...
-    aManager.add( //
-        createComponent() //
-            .setInterface(
-                new String[] { UIColorSchemeManager.class.getName(), ManagedServiceFactory.class.getName() }, props ) //
-            .setImplementation( UIColorSchemeManager.class ) );
+    aManager.add( createComponent() //
+        .setInterface( serviceNames, props ) //
+        .setImplementation( UIColorSchemeManager.class ) );
 
     // User session manager...
-    aManager.add( //
-        createComponent() //
-            .setImplementation( new UserSessionManager() ) //
-            .add( createServiceDependency() //
-                .setService( ProjectManager.class ) //
-                .setRequired( true ) ) //
-            .add( createServiceDependency() //
-                .setService( UserSettingsManager.class ) //
-                .setRequired( true ) ) //
-            .add( createServiceDependency() //
-                .setService( PreferencesService.class ) //
-                .setRequired( true ) //
-            ).add( createServiceDependency() //
-                .setService( LogService.class ) //
-                .setRequired( false ) //
-            ) //
-        );
+    aManager.add( createComponent() //
+        .setImplementation( new UserSessionManager() ) //
+        .add( createServiceDependency() //
+            .setService( ProjectManager.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( UserSettingsManager.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( PreferencesService.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) //
+        ) );
+
+    // Dock controller
+    aManager.add( createComponent() //
+        .setInterface( DockController.class.getName(), null ) //
+        .setImplementation( DockController.class ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) //
+        ) );
 
     // All the interfaces we're registering the client controller under...
-    final String[] interfaceNames = new String[] { AcquisitionDataListener.class.getName(),
-        AcquisitionProgressListener.class.getName(), AcquisitionStatusListener.class.getName(),
-        AnnotationListener.class.getName(), ApplicationCallback.class.getName() };
+    serviceNames = new String[] { AcquisitionDataListener.class.getName(), AcquisitionProgressListener.class.getName(),
+        AcquisitionStatusListener.class.getName(), AnnotationListener.class.getName(),
+        ApplicationCallback.class.getName() };
 
     // Client controller...
-    aManager.add( //
-        createComponent() //
-            .setInterface( interfaceNames, null ) //
-            .setImplementation( clientController ) //
-            .add( createServiceDependency() //
-                .setService( HostProperties.class ) //
-                .setRequired( true ) //
-            ) //
-            .add( createServiceDependency() //
-                .setService( ProjectManager.class ) //
-                .setRequired( true ) //
-                .setCallbacks( "setProjectManager", "removeProjectManager" ) //
-            ) //
-            .add( createServiceDependency() //
-                .setService( DataAcquisitionService.class ) //
-                .setRequired( true ) //
-            ) //
-            .add( createServiceDependency() //
-                .setService( UIColorSchemeManager.class ) //
-                .setRequired( true ) //
-            ) //
-            .add( createServiceDependency() //
-                .setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ) //
-                .setCallbacks( "addMenu", "removeMenu" ) //
-                .setRequired( false ) //
-            ) //
-            .add( createServiceDependency() //
-                .setService( Device.class ) //
-                .setCallbacks( "addDevice", "removeDevice" ) //
-                .setRequired( false ) //
-            ) //
-            .add( createServiceDependency() //
-                .setService( Tool.class ) //
-                .setCallbacks( "addTool", "removeTool" ) //
-                .setRequired( false ) //
-            ) //
-            .add( createServiceDependency() //
-                .setService( Exporter.class ) //
-                .setCallbacks( "addExporter", "removeExporter" ) //
-                .setRequired( false ) //
-            ) //
-            .add( createConfigurationDependency() //
-                .setPid( UIManagerConfigurator.PID ) ) //
+    aManager.add( createComponent() //
+        .setInterface( serviceNames, null ) //
+        .setImplementation( clientController ) //
+        .add( createServiceDependency() //
+            .setService( HostProperties.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( ProjectManager.class ) //
+            .setRequired( true ) //
+            .setCallbacks( "setProjectManager", "removeProjectManager" ) ) //
+        .add( createServiceDependency() //
+            .setService( DataAcquisitionService.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( DockController.class ) //
+            .setRequired( true ) //
+            .setCallbacks( "setDockController", "removeDockController" ) ) //
+        .add( createServiceDependency() //
+            .setService( UIColorSchemeManager.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ) //
+            .setCallbacks( "addMenu", "removeMenu" ) //
+            .setRequired( false ) ) //
+        .add( createServiceDependency() //
+            .setService( Device.class ) //
+            .setCallbacks( "addDevice", "removeDevice" ) //
+            .setRequired( false ) ) //
+        .add( createServiceDependency() //
+            .setService( Tool.class ) //
+            .setCallbacks( "addTool", "removeTool" ) //
+            .setRequired( false ) ) //
+        .add( createServiceDependency() //
+            .setService( Exporter.class ) //
+            .setCallbacks( "addExporter", "removeExporter" ) //
+            .setRequired( false ) ) //
+        .add( createConfigurationDependency() //
+            .setPid( UIManagerConfigurator.PID ) ) //
         );
   }
 }
