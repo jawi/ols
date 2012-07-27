@@ -227,8 +227,7 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionResult>
   {
     final int channelCount = getData().getChannels();
 
-    this.channelSelect = SwingComponentUtils.createChannelSelector( channelCount );
-    this.channelSelect.setSelectedIndex( 0 );
+    this.channelSelect = SwingComponentUtils.createChannelSelector( channelCount, 0 );
 
     this.edgeSelect = new JComboBox( new Edge[] { Edge.RISING, Edge.FALLING } );
     this.edgeSelect.setSelectedIndex( 0 );

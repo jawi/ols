@@ -301,8 +301,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
     SpringLayoutUtils.addSeparator( panel, "Settings" );
 
     panel.add( createRightAlignedLabel( "1-Wire Line" ) );
-    this.owLine = SwingComponentUtils.createChannelSelector( channelCount );
-    this.owLine.setSelectedIndex( 0 );
+    this.owLine = SwingComponentUtils.createChannelSelector( channelCount, 0 );
     panel.add( this.owLine );
 
     panel.add( createRightAlignedLabel( "Bus Mode" ) );

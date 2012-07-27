@@ -181,7 +181,22 @@ public final class SwingComponentUtils
    */
   public static JComboBox createChannelSelector( final int aChannelCount )
   {
-    return internalCreateChannelSelector( aChannelCount, false /* aAddUnusedOption */);
+    return internalCreateChannelSelector( aChannelCount, -1, false /* aAddUnusedOption */);
+  }
+
+  /**
+   * Creates a channel selector combobox, where only a valid channel can be
+   * selected.
+   * 
+   * @param aChannelCount
+   *          the number of channels to include in the combobox options;
+   * @param aDefaultSelectedIndex
+   *          the default selected index for the created combobox.
+   * @return a combobox with channel selector options.
+   */
+  public static JComboBox createChannelSelector( final int aChannelCount, final int aDefaultSelectedIndex )
+  {
+    return internalCreateChannelSelector( aChannelCount, aDefaultSelectedIndex, false /* aAddUnusedOption */);
   }
 
   /**
@@ -232,7 +247,22 @@ public final class SwingComponentUtils
    */
   public static JComboBox createOptionalChannelSelector( final int aChannelCount )
   {
-    return internalCreateChannelSelector( aChannelCount, true /* aAddUnusedOption */);
+    return internalCreateChannelSelector( aChannelCount, -1, true /* aAddUnusedOption */);
+  }
+
+  /**
+   * Creates a channel selector combobox, where optionally a channel can be
+   * selected.
+   * 
+   * @param aChannelCount
+   *          the number of channels to include in the combobox options;
+   * @param aDefaultSelectedIndex
+   *          the default selected index for the created combobox.
+   * @return a combobox with channel selector options.
+   */
+  public static JComboBox createOptionalChannelSelector( final int aChannelCount, final int aDefaultSelectedIndex )
+  {
+    return internalCreateChannelSelector( aChannelCount, aDefaultSelectedIndex, true /* aAddUnusedOption */);
   }
 
   /**
@@ -1139,12 +1169,15 @@ public final class SwingComponentUtils
    * 
    * @param aChannelCount
    *          the number of channels to include in the combobox options;
+   * @param aDefaultSelectedindex
+   *          the default selected index;
    * @param aAddUnusedOption
    *          <code>true</code> to add "unused" as first option,
    *          <code>false</code> to omit this option.
    * @return a combobox with channel selector options.
    */
-  private static JComboBox internalCreateChannelSelector( final int aChannelCount, final boolean aAddUnusedOption )
+  private static JComboBox internalCreateChannelSelector( final int aChannelCount, final int aDefaultSelectedindex,
+      final boolean aAddUnusedOption )
   {
     int modelSize = Math.max( 0, Math.min( 32, aChannelCount ) );
     if ( aAddUnusedOption )
@@ -1165,11 +1198,10 @@ public final class SwingComponentUtils
       dataChannels[i] = String.format( "Channel %d", Integer.valueOf( index ) );
     }
 
+    int selectedIndex = aDefaultSelectedindex < 0 ? 0 : aDefaultSelectedindex % modelSize;
+
     final JComboBox result = new JComboBox( dataChannels );
-    if ( aAddUnusedOption )
-    {
-      result.setSelectedIndex( 0 );
-    }
+    result.setSelectedIndex( selectedIndex );
     return result;
   }
 

@@ -44,6 +44,7 @@ import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.framework.*;
 
@@ -265,6 +266,24 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected boolean validateToolSettings()
+  {
+    boolean result = super.validateToolSettings();
+
+    if ( result && ( getContext().getChannels() != Ols.MAX_CHANNELS ) )
+    {
+      JErrorDialog.showDialog( getOwner(), "Cannot start analysis!", "Not enough channels!",
+          "For the Asm45 decoder, you need to have 32 channels enabled." );
+      result = false;
+    }
+
+    return result;
+  }
+
+  /**
    * Creates the HTML template for exports to HTML.
    * 
    * @param aExporter
@@ -394,38 +413,31 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     panel.add( this.bscLinesConfigLabel );
 
     panel.add( this.lineSMCLabel );
-    this.lineSMC = SwingComponentUtils.createChannelSelector( channelCount );
-    this.lineSMC.setSelectedIndex( 22 );
+    this.lineSMC = SwingComponentUtils.createChannelSelector( channelCount, 22 );
     panel.add( this.lineSMC );
 
     panel.add( this.lineSTMLabel );
-    this.lineSTM = SwingComponentUtils.createChannelSelector( channelCount );
-    this.lineSTM.setSelectedIndex( 23 );
+    this.lineSTM = SwingComponentUtils.createChannelSelector( channelCount, 23 );
     panel.add( this.lineSTM );
 
     panel.add( this.lineEBGLabel );
-    this.lineEBG = SwingComponentUtils.createChannelSelector( channelCount );
-    this.lineEBG.setSelectedIndex( 25 );
+    this.lineEBG = SwingComponentUtils.createChannelSelector( channelCount, 25 );
     panel.add( this.lineEBG );
 
     panel.add( this.lineBYTELabel );
-    this.lineBYTE = SwingComponentUtils.createChannelSelector( channelCount );
-    this.lineBYTE.setSelectedIndex( 26 );
+    this.lineBYTE = SwingComponentUtils.createChannelSelector( channelCount, 26 );
     panel.add( this.lineBYTE );
 
     panel.add( this.lineBLLabel );
-    this.lineBL = SwingComponentUtils.createChannelSelector( channelCount );
-    this.lineBL.setSelectedIndex( 27 );
+    this.lineBL = SwingComponentUtils.createChannelSelector( channelCount, 27 );
     panel.add( this.lineBL );
 
     panel.add( this.lineWRTLabel );
-    this.lineWRT = SwingComponentUtils.createChannelSelector( channelCount );
-    this.lineWRT.setSelectedIndex( 29 );
+    this.lineWRT = SwingComponentUtils.createChannelSelector( channelCount, 29 );
     panel.add( this.lineWRT );
 
     panel.add( this.lineSYNCLabel );
-    this.lineSYNC = SwingComponentUtils.createChannelSelector( channelCount );
-    this.lineSYNC.setSelectedIndex( 30 );
+    this.lineSYNC = SwingComponentUtils.createChannelSelector( channelCount, 30 );
     panel.add( this.lineSYNC );
 
     this.showInst = new JCheckBox();

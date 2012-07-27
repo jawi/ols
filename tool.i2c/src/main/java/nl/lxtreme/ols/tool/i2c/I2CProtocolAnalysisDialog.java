@@ -412,13 +412,11 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
     this.lineBLabel = createRightAlignedLabel( "Line B" );
 
     panel.add( this.lineALabel );
-    this.lineA = SwingComponentUtils.createChannelSelector( channelCount );
-    this.lineA.setSelectedIndex( 0 );
+    this.lineA = SwingComponentUtils.createChannelSelector( channelCount, 0 );
     panel.add( this.lineA );
 
     panel.add( this.lineBLabel );
-    this.lineB = SwingComponentUtils.createChannelSelector( channelCount );
-    this.lineB.setSelectedIndex( 1 );
+    this.lineB = SwingComponentUtils.createChannelSelector( channelCount, 1 );
     panel.add( this.lineB );
 
     this.detectSDA_SCL = new JCheckBox();

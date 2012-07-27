@@ -317,23 +317,19 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     SpringLayoutUtils.addSeparator( settings, "Settings" );
 
     settings.add( createRightAlignedLabel( "TCK" ) );
-    this.tck = SwingComponentUtils.createChannelSelector( channelCount );
-    this.tck.setSelectedIndex( 0 );
+    this.tck = SwingComponentUtils.createChannelSelector( channelCount, 0 );
     settings.add( this.tck );
 
     settings.add( createRightAlignedLabel( "TMS" ) );
-    this.tms = SwingComponentUtils.createChannelSelector( channelCount );
-    this.tms.setSelectedIndex( 1 );
+    this.tms = SwingComponentUtils.createChannelSelector( channelCount, 1 );
     settings.add( this.tms );
 
     settings.add( createRightAlignedLabel( "TDI" ) );
-    this.tdi = SwingComponentUtils.createOptionalChannelSelector( channelCount );
-    this.tdi.setSelectedIndex( 3 );
+    this.tdi = SwingComponentUtils.createOptionalChannelSelector( channelCount, 3 );
     settings.add( this.tdi );
 
     settings.add( createRightAlignedLabel( "TDO" ) );
-    this.tdo = SwingComponentUtils.createOptionalChannelSelector( channelCount );
-    this.tdo.setSelectedIndex( 4 );
+    this.tdo = SwingComponentUtils.createOptionalChannelSelector( channelCount, 4 );
     settings.add( this.tdo );
 
     SpringLayoutUtils.makeEditorGrid( settings, 10, 4 );

@@ -644,41 +644,35 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     settings.add( this.spifiMode );
 
     settings.add( createRightAlignedLabel( "/CS" ) );
-    this.cs = SwingComponentUtils.createChannelSelector( channelCount );
-    this.cs.setSelectedIndex( 3 );
+    this.cs = SwingComponentUtils.createChannelSelector( channelCount, 3 );
     settings.add( this.cs );
 
     settings.add( createRightAlignedLabel( "SCK" ) );
-    this.sck = SwingComponentUtils.createChannelSelector( channelCount );
-    this.sck.setSelectedIndex( 0 );
+    this.sck = SwingComponentUtils.createChannelSelector( channelCount, 0 );
     settings.add( this.sck );
 
     this.mosiLabel = createRightAlignedLabel( "MOSI" );
 
     settings.add( this.mosiLabel );
-    this.mosi = SwingComponentUtils.createOptionalChannelSelector( channelCount );
-    this.mosi.setSelectedIndex( 3 );
+    this.mosi = SwingComponentUtils.createOptionalChannelSelector( channelCount, 3 );
     settings.add( this.mosi );
 
     this.misoLabel = createRightAlignedLabel( "MISO" );
 
     settings.add( this.misoLabel );
-    this.miso = SwingComponentUtils.createOptionalChannelSelector( channelCount );
-    this.miso.setSelectedIndex( 2 );
+    this.miso = SwingComponentUtils.createOptionalChannelSelector( channelCount, 2 );
     settings.add( this.miso );
 
     this.io2Label = createRightAlignedLabel( "IO2" );
 
     settings.add( this.io2Label );
-    this.io2 = SwingComponentUtils.createOptionalChannelSelector( channelCount );
-    this.io2.setSelectedIndex( 0 );
+    this.io2 = SwingComponentUtils.createOptionalChannelSelector( channelCount, 0 );
     settings.add( this.io2 );
 
     this.io3Label = createRightAlignedLabel( "IO3" );
 
     settings.add( this.io3Label );
-    this.io3 = SwingComponentUtils.createOptionalChannelSelector( channelCount );
-    this.io3.setSelectedIndex( 0 );
+    this.io3 = SwingComponentUtils.createOptionalChannelSelector( channelCount, 0 );
     settings.add( this.io3 );
 
     settings.add( createRightAlignedLabel( "SPI Mode" ) );
