@@ -137,6 +137,8 @@ dl.faq dd {
 	
     <h3 class="content">News</h3>
     <ul>
+      <li>August Xth, 2012, OLS version 0.9.6 released. Major highlights: new signal display component is in place, added DMX512 decoder and
+        a simple (Manchester) line decoder, many long-pending features were implemented;</li>
       <li>January 8th, 2012, OLS version 0.9.5 released. Major highlights: Asm45 decoder tool added, support for running on Java 7, included <a 
         href="http://www.sparetimelabs.com/purejavacomm/index.html">PureJavacomm</a> as replacement for RXTX, many small changes and updates;</li>
       <li>April 20th, 2011, OLS version 0.9.4 released. Major highlights: better support for BusPirate, LogicShrimp, IRToy and other SUMP-compatible devices,
@@ -191,10 +193,11 @@ dl.faq dd {
 	
     <h3 class="content">Download</h3>
     <p>
-      The current release of Logic Sniffer is <strong><a href="ols-0.9.5-full.tar.gz">0.9.5</a></strong>.
+      The current release of Logic Sniffer is <strong><a href="ols-0.9.6-full.tar.gz">0.9.6</a></strong>.
       Older releases, for historical reasons:
     </p>
     <ul id="releases">
+    <li>ols-0.9.6 [<a href="ols-0.9.6-full.tar.gz">tar.gz</a>] [<a href="ols-0.9.6-full.zip">zip</a>] [<a href="ols-0.9.6-full.dmg">dmg</a>] [<a href="ols-0.9.6-api.zip">API</a>] <span>released <em>August Xth, 2012</em>, 4.4M;</span></li>
     <li>ols-0.9.5 [<a href="ols-0.9.5-full.tar.gz">tar.gz</a>] [<a href="ols-0.9.5-full.zip">zip</a>] [<a href="ols-0.9.5-full.dmg">dmg</a>] [<a href="ols-0.9.5-api.zip">API</a>] <span>released <em>January 8th, 2012</em>, 3.8M;</span></li>
     <li>ols-0.9.4 [<a href="ols-0.9.4-full.tar.gz">tar.gz</a>] [<a href="ols-0.9.4-full.zip">zip</a>] [<a href="ols-0.9.4-full.dmg">dmg</a>] [<a href="ols-0.9.4-api.zip">API</a>] <span>released <em>April 20th, 2011</em>, 2.6M;</span></li>
     <li>ols-0.9.3 SP1 [<a href="ols-0.9.3.1.tar.gz">tar.gz</a>] [<a href="ols-0.9.3.1.zip">zip</a>] [<a href="ols-0.9.3.1.dmg">dmg</a>] <span>released <em>February 7th, 2011</em>, 2.3M;</span></li>
@@ -218,17 +221,8 @@ dl.faq dd {
     
 	<h3 class="content">Screenshots</h3>
     <p>
-      Screenshots of the 0.8.5 release, running on Mac OSX (10.6, 64-bit):
+      Screenshots of the OLS client are available on <a href="screenshots.html">this page</a>.
     </p>
-    <ul class="screenshots">
-      <li><a href="img/main_window_scope.png"><img src="img/main_window_scope.png" alt="Main window (light theme) with scope." /></a></li>
-      <li><a href="img/main_window_tooltip.png"><img src="img/main_window_tooltip.png" alt="Main window (light theme) with measure tooltip." /></a></li>
-      <li><a href="img/main_window.png"><img src="img/main_window.png" alt="Main window (dark theme)." /></a></li>
-      <li><a href="img/measure_tool.png"><img src="img/measure_tool.png" alt="Measurement tool." /></a></li>
-      <li><a href="img/ols_config_general.png"><img src="img/ols_config_general.png" alt="OLS general settings." /></a></li>
-      <li><a href="img/ols_config_triggers.png"><img src="img/ols_config_triggers.png" alt="OLS trigger settings." /></a></li>
-      <li><a href="img/preferences.png"><img src="img/preferences.png" alt="General preferences." /></a></li>
-    </ul>
     
     <h3 class="content">Development</h3>
     <p>
@@ -240,10 +234,10 @@ dl.faq dd {
         href="http://www.github.com">GitHub</a>, and the main repository can be found on
         <tt><a href="http://github.com/jawi/ols">http://github.com/jawi/ols</a></tt>.
     </p>
-    
+
     <h3 class="content">License</h3>
     <p>
-      The alternative Java client is developed and released under the <em>General Public License, version 2</em>.
+      The OLS client is developed and released under the <em>General Public License, version 2</em>.
       For the license details, see the full <a href="http://www.gnu.org/licenses/gpl-2.0-standalone.html">license 
       text</a>.
     </p>
@@ -256,6 +250,8 @@ dl.faq dd {
        <span>the Open Bench Logic Sniffer project page at Dangerous Prototypes</span>;</li>
       <li><a href="http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/">http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/</a> 
        <span>the Butterfly Logic board on which the Open Bench Logic Sniffer is based</span>.</li>
+      <li><a href="http://www.www.mygizmos.org/ols/">http://www.www.mygizmos.org/ols/</a> <span>the homepage of the Verilog port of the OBLS firmware
+       containing advanced trigger functionality as can be found in the HP16550a logic analyzer</span>.</li>
     </ul>
     <ul>
       <li><a href="http://dangerousprototypes.com/category/Prototypes/">http://dangerousprototypes.com/category/Prototypes/</a>
@@ -281,7 +277,7 @@ dl.faq dd {
     </ul>
 	<hr/>
 	<p class="x-small right">
-	  &copy; Copyright 2010, 2011 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
+	  &copy; Copyright 2010-2012 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
 	</p>
 <!-- optimized for loading. -->
 <script type="text/javascript">
@@ -304,7 +300,6 @@ dl.faq dd {
 <script type="text/javascript" src="js/dots/galleria.dots.js"></script>
 <script type="text/javascript">
 /* <![CDATA[ */
-    $('.screenshots').galleria({transition: 'fade', popup_links: true});
     $("#reflect").reflect({});
     $.toc('h3.content').prependTo('#toc');
 /* ]]> */

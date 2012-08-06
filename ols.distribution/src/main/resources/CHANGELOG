@@ -3,6 +3,21 @@ OpenBench LogicSniffer Client ChangeLog
 J.W. Janssen, <j.w.janssen@lxtreme.nl>
 
 
+Release 0.9.6:
+- New signal display component in place, with most of the long-promised 
+  functionality now in place;
+- new default look and feel, thanks to Marius Jonsson;
+- allow OLS to be used over a network, thanks to Marcin Zapolski; 
+- allow data to be exported as CSV (issue #95);
+- added DMX512 decoder tool;
+- added simple Manchester line decoder tool;
+- extended SPI decoder to support dual/quad SPI mode (SPIFI), thanks to 
+  Benjamin Vernoux for testing this;
+- fixed issues #107, #106, #105, #103, #101, #100, #99, #98, #95, #94, #91, 
+  #90, #84, #76, #73, #71, #67, #59, #55, #52, #49, #38, #25, #19, #18, #15, 
+  #14, #13, #12, #11, #7;
+- as usual, small improvements and cleanups.
+
 Release 0.9.5:
 - Fixed cancel capture issue.
 
