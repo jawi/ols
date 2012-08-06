@@ -644,8 +644,8 @@ public final class DeviceProfile implements Cloneable
         continue;
       }
 
-      final String value = ( String )aProperties.get( key );
-      newProps.put( key, value );
+      final String value = aProperties.get( key ).toString();
+      newProps.put( key, value.trim() );
     }
 
     // Verify whether all known keys are defined...

@@ -188,7 +188,14 @@ public final class LogicSnifferConfig
    */
   public int getEnabledChannelsCount()
   {
-    return getEnabledGroupCount() * 8;
+    int result = getEnabledGroupCount() * 8;
+    if ( this.deviceProfile != null )
+    {
+      // Make sure we adhere to the maximum number of channels of a device...
+      result = Math.min( result, this.deviceProfile.getChannelCount() );
+    }
+
+    return result;
   }
 
   /**
