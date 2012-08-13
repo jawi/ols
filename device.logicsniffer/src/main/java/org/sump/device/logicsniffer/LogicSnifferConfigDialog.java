@@ -1501,11 +1501,24 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   {
     boolean result = true;
 
+    if ( this.deviceProfile == null )
+    {
+      if ( aWarnUserIfConfigIncorrect )
+      {
+        JOptionPane.showMessageDialog( this, "No device profile is selected/found!\n"
+            + "Did you forget to press the 'Detect' button while auto-detect is ticked?\n"
+            + "Is the device(port) properly configurated?", "Invalid settings detected!", JOptionPane.WARNING_MESSAGE );
+      }
+
+      // Consider this to be fatal enough to stop immediately...
+      return false;
+    }
+
     // set trigger
     final boolean triggerEnabled = this.triggerEnable.isSelected();
     if ( triggerEnabled )
     {
-      for ( int stage = 0; stage < LogicSnifferConfig.TRIGGER_STAGES; stage++ )
+      for ( int stage = 0; result && ( stage < LogicSnifferConfig.TRIGGER_STAGES ); stage++ )
       {
         final Integer delay = getNumericValue( this.triggerDelay[stage] );
 

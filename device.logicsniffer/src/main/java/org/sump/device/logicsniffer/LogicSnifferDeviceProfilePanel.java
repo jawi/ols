@@ -221,6 +221,9 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
       + "<tr><th>%s</th><td>%s</td></tr>" //
       + "</table></body></html>";
 
+  private static final String ERROR_TMPL = "<html><style>body { font-family: sans-serif; font-size: 9px; margin-left: 8px; } th { text-align: right; }</style><body><table>"
+      + "<tr><th>Detection failed!</th></tr><tr><td>%s</td></tr></table></body></html>";
+
   // VARIABLES
 
   private final LogicSnifferDevice device;
@@ -323,6 +326,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
       catch ( IOException exception )
       {
         LOG.log( Level.INFO, "Failed to detect device!", exception );
+        details = getErrorMetadataDetails( exception );
       }
 
       if ( metadata != null )
@@ -365,7 +369,16 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    */
   private String getEmtpyMetadataDetails()
   {
-    return String.format( DETAILS_TMPL, "", "&#160;", "&#160;", "&#160;", "&#160;", "&#160;", "&#160;" );
+    return String.format( DETAILS_TMPL, "&#160;", "&#160;", "&#160;", "&#160;", "&#160;", "&#160;", "&#160;" );
+  }
+
+  /**
+   * @param aMetadata
+   * @return
+   */
+  private String getErrorMetadataDetails( final IOException exception )
+  {
+    return String.format( ERROR_TMPL, exception.getMessage() );
   }
 
   /**
