@@ -105,8 +105,9 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
       }
 
       final long absLength = timestamps[idx - 1];
+      final int enabledChannels = ( 1 << channels ) - 1;
 
-      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels, channels, absLength );
+      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels, enabledChannels, absLength );
     }
     catch ( IOException exception )
     {
