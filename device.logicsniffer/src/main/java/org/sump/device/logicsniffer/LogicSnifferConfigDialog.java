@@ -156,31 +156,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   }
 
   /**
-   * Provides a combobox renderer for device profiles.
-   */
-  static final class DeviceProfileTypeComboBoxRenderer extends BasicComboBoxRenderer
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-        final boolean aIsSelected, final boolean aCellHasFocus )
-    {
-      Object value = aValue;
-      if ( value instanceof DeviceProfile )
-      {
-        final DeviceProfile profile = ( DeviceProfile )value;
-        value = profile.getDescription();
-        if ( ( value == null ) || ( String.valueOf( value ).isEmpty() ) )
-        {
-          value = profile.getType();
-        }
-      }
-      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
-    }
-  }
-
-  /**
    * Renders a numbering scheme.
    */
   static final class NumberSchemeComboBoxRenderer extends EnumItemRenderer<NumberingScheme>
@@ -707,14 +682,22 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   /**
    * Updates the controls to a given device type.
    * 
-   * @param aType
-   *          the device type to update the controls for, cannot be
-   *          <code>null</code>.
+   * @param aProfile
+   *          the device type to update the controls for, can be
+   *          <code>null</code> if no device profile is set.
    */
-  final void updateDeviceType( final DeviceProfile aProfile )
+  final void updateDeviceProfile( final DeviceProfile aProfile )
   {
     // "Publish" the device type to the device configuration...
     this.deviceProfile = aProfile;
+
+    // Notify the user something is wrong when we've got no profile...
+    this.captureButton.setEnabled( aProfile != null );
+
+    if ( aProfile == null )
+    {
+      return;
+    }
 
     // Noise filter supported?
     updateCheckBoxState( this.filterEnable, aProfile.isNoiseFilterSupported() );
@@ -799,14 +782,14 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
    */
   private void buildDialog()
   {
+    this.captureButton = new JButton( "Capture" );
+    final JButton cancel = StandardActionFactory.createCloseButton();
+
     final JTabbedPane tabs = new JTabbedPane( SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT );
     tabs.addTab( "Connection", createConnectionSettingsPane() );
     tabs.addTab( "Acquisition", createAcquisitionSettingsPane() );
     tabs.addTab( "Triggers", createTriggerPane() );
 
-    final JButton cancel = StandardActionFactory.createCloseButton();
-
-    this.captureButton = new JButton( "Capture" );
     this.captureButton.addActionListener( new ActionListener()
     {
       @Override
@@ -930,7 +913,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       @Override
       protected void updateDeviceProfile( final DeviceProfile aProfile )
       {
-        updateDeviceType( aProfile );
+        LogicSnifferConfigDialog.this.updateDeviceProfile( aProfile );
       }
     };
 
@@ -1505,8 +1488,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     {
       if ( aWarnUserIfConfigIncorrect )
       {
-        JOptionPane.showMessageDialog( this, "No device profile is selected/found!\n"
-            + "Did you forget to press the 'Detect' button while auto-detect is ticked?\n"
+        JOptionPane.showMessageDialog( this, "No device profile is selected!\n"
             + "Is the device(port) properly configurated?", "Invalid settings detected!", JOptionPane.WARNING_MESSAGE );
       }
 

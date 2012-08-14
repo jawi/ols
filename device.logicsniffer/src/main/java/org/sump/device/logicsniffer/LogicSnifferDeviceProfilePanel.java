@@ -21,18 +21,20 @@
 package org.sump.device.logicsniffer;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.*;
 import java.util.List;
 import java.util.logging.*;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.*;
 
 import nl.lxtreme.ols.api.*;
-import org.sump.device.logicsniffer.LogicSnifferConfigDialog.DeviceProfileTypeComboBoxRenderer;
+import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.util.swing.*;
+
 import org.sump.device.logicsniffer.profile.*;
 
 
@@ -42,87 +44,6 @@ import org.sump.device.logicsniffer.profile.*;
 public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 {
   // INNER TYPES
-
-  /**
-   * Provides an action to toggle between auto-detection of the device type and
-   * manual override.
-   */
-  final class AutoDetectDeviceTypeAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new LogicSnifferDeviceProfilePanel.AutoDetectDeviceTypeAction
-     * instance.
-     */
-    public AutoDetectDeviceTypeAction()
-    {
-      super( "Auto detect device type?" );
-      putValue( Action.LONG_DESCRIPTION, "When checked the device type will be autodetected." );
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      final JCheckBox source = ( JCheckBox )aEvent.getSource();
-      // Update the component states...
-      setAutoDetectDeviceType( source.isSelected() );
-    }
-  }
-
-  /**
-   * Provides an action to invoke the detect device type.
-   */
-  final class DetectDeviceTypeAction extends AbstractAction
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new LogicSnifferDeviceProfilePanel.DetectDeviceTypeAction
-     * instance.
-     */
-    public DetectDeviceTypeAction()
-    {
-      super( "Detect ..." );
-      putValue( Action.LONG_DESCRIPTION,
-          "Tries to detect the current device type using the values entered in this dialog." );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      final Component component = ( Component )aEvent.getSource();
-
-      component.setCursor( Cursor.getPredefinedCursor( Cursor.WAIT_CURSOR ) );
-      setEnabled( false );
-
-      try
-      {
-        detectDeviceType();
-      }
-      finally
-      {
-        component.setCursor( Cursor.getDefaultCursor() );
-        setEnabled( true );
-      }
-    }
-  }
 
   /**
    * Provides a combobox model for device profile types.
@@ -203,26 +124,150 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     }
   }
 
+  /**
+   * Provides a combobox renderer for device profiles.
+   */
+  static final class DeviceProfileTypeComboBoxRenderer extends BasicComboBoxRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      Object value = aValue;
+      if ( value instanceof DeviceProfile )
+      {
+        final DeviceProfile profile = ( DeviceProfile )value;
+        value = profile.getDescription();
+        if ( ( value == null ) || ( String.valueOf( value ).isEmpty() ) )
+        {
+          value = profile.getType();
+        }
+      }
+      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
+
+  /**
+   * Provides a {@link DeviceMetadata} implementation that doesn't return any
+   * information.
+   */
+  static final class EmptyDeviceMetadata implements DeviceMetadata
+  {
+    @Override
+    public String getAncillaryVersion()
+    {
+      return null;
+    }
+
+    @Override
+    public Integer getDynamicMemoryDepth()
+    {
+      return null;
+    }
+
+    @Override
+    public String getFpgaVersion()
+    {
+      return null;
+    }
+
+    @Override
+    public Integer getMaxSampleRate()
+    {
+      return null;
+    }
+
+    @Override
+    public String getName()
+    {
+      return null;
+    }
+
+    @Override
+    public Integer getProbeCount()
+    {
+      return null;
+    }
+
+    @Override
+    public Integer getProtocolVersion()
+    {
+      return null;
+    }
+
+    @Override
+    public Integer getSampleMemoryDepth()
+    {
+      return null;
+    }
+
+    @Override
+    public Iterator<Object> iterator()
+    {
+      return null;
+    }
+  }
+
+  /**
+   * Provides an action to invoke the detect device type.
+   */
+  final class ShowDeviceMetadataAction extends AbstractAction
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link ShowDeviceMetadataAction} instance.
+     */
+    public ShowDeviceMetadataAction()
+    {
+      super( "Show device metadata" );
+      putValue( Action.LONG_DESCRIPTION, "Returns the results of the 'metadata' command." );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      setEnabled( false );
+
+      try
+      {
+        obtainDeviceMetadata();
+      }
+      finally
+      {
+        setEnabled( true );
+      }
+    }
+  }
+
   // VARIABLES
 
-  private JButton detectDeviceButton;
+  private JButton showMetadataButton;
   private JComboBox deviceTypeSelect;
-  private JCheckBox autoDetectDeviceType;
   private JEditorPane deviceTypeDetails;
 
   // CONSTANTS
 
   private static final Logger LOG = Logger.getLogger( LogicSnifferDeviceProfilePanel.class.getName() );
 
-  private static final String DETAILS_TMPL = "<html><style>body { font-family: sans-serif; font-size: 9px; margin-left: 8px; } th { text-align: right; }</style><body><table>"
-      + "<tr><th colspan=2>%s</th></tr>"
-      + "<tr><th>%s</th><td>%s</td></tr>"
-      + "<tr><th>%s</th><td>%s</td></tr>"
+  private static final String DETAILS_TMPL = "<html><style>body { font-family: sans-serif; font-size: 8px; margin-left: 8px; } th { text-align: right; }</style><body><table>"
+      + "<tr><th>%s</th><td>%s</td></tr>" //
+      + "<tr><th>%s</th><td>%s</td></tr>" //
+      + "<tr><th>%s</th><td>%s</td></tr>" //
       + "<tr><th>%s</th><td>%s</td></tr>" //
       + "</table></body></html>";
 
-  private static final String ERROR_TMPL = "<html><style>body { font-family: sans-serif; font-size: 9px; margin-left: 8px; } th { text-align: right; }</style><body><table>"
-      + "<tr><th>Detection failed!</th></tr><tr><td>%s</td></tr></table></body></html>";
+  private static final String ERROR_TMPL = "<html><style>body { font-family: sans-serif; font-size: 8px; margin-left: 8px; } th { text-align: right; }</style><body><table>"
+      + "<tr><th>Detection failed!</th></tr><tr><td>%s</td></tr><tr><td>&#160;</td></tr><tr><td>&#160;</td></tr></table></body></html>";
 
   // VARIABLES
 
@@ -249,14 +294,11 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    */
   public void buildPanel( final Container aContainer )
   {
-    aContainer.add( createRightAlignedLabel( "Device type" ) );
-    aContainer.add( this.autoDetectDeviceType );
-
-    aContainer.add( new JLabel( "" ) );
-    aContainer.add( this.detectDeviceButton );
-
-    aContainer.add( new JLabel( "" ) );
+    aContainer.add( SwingComponentUtils.createRightAlignedLabel( "Device type" ) );
     aContainer.add( this.deviceTypeSelect );
+
+    aContainer.add( new JLabel( "" ) );
+    aContainer.add( this.showMetadataButton );
 
     aContainer.add( new JLabel( "" ) );
     aContainer.add( this.deviceTypeDetails );
@@ -281,18 +323,6 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
   }
 
   /**
-   * @param aAutoDetect
-   */
-  public void setAutoDetectDeviceType( final boolean aAutoDetect )
-  {
-    this.detectDeviceButton.setEnabled( aAutoDetect );
-    this.deviceTypeSelect.setEnabled( !aAutoDetect );
-
-    // Empty the details as to indicate this switch...
-    this.deviceTypeDetails.setText( getEmtpyMetadataDetails() );
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
@@ -307,10 +337,9 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    * @throws IOException
    *           in case of I/O problems.
    */
-  final void detectDeviceType()
+  final void obtainDeviceMetadata()
   {
-    // Make sure we don't allow this method to be called concurrently!
-    this.detectDeviceButton.setEnabled( false );
+    SwingComponentUtils.getCurrentWindow().setCursor( Cursor.getPredefinedCursor( Cursor.WAIT_CURSOR ) );
 
     LogicSnifferDetectionTask detectTask = new LogicSnifferDetectionTask( this.device, getConnectionURI() );
 
@@ -332,14 +361,15 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
       if ( metadata != null )
       {
         final DeviceProfile deviceProfile = metadata.getDeviceProfile();
-        if ( deviceProfile != null )
+        if ( deviceProfile == null )
         {
-          // Update the selection of the combobox directly; causing everything
-          // to be synchronized nicely...
-          this.deviceTypeSelect.setSelectedItem( deviceProfile );
-          // Ensure it is updated immediately...
-          this.deviceTypeSelect.repaint();
+          LOG.info( "No device profile obtained from metadata!" );
         }
+        // Update the selection of the combobox directly; causing everything
+        // to be synchronized nicely...
+        this.deviceTypeSelect.setSelectedItem( deviceProfile );
+        // Ensure it is updated immediately...
+        this.deviceTypeSelect.repaint();
 
         details = getMetadataDetailsAsText( metadata );
       }
@@ -348,8 +378,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     }
     finally
     {
-      // Restore the state of this button...
-      this.detectDeviceButton.setEnabled( true );
+      SwingComponentUtils.getCurrentWindow().setCursor( null );
     }
   }
 
@@ -360,6 +389,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
   /**
    * @param aProfile
+   *          the device profile to update to, can be <code>null</code>.
    */
   protected abstract void updateDeviceProfile( final DeviceProfile aProfile );
 
@@ -369,7 +399,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    */
   private String getEmtpyMetadataDetails()
   {
-    return String.format( DETAILS_TMPL, "&#160;", "&#160;", "&#160;", "&#160;", "&#160;", "&#160;", "&#160;" );
+    return getMetadataDetailsAsText( new EmptyDeviceMetadata() );
   }
 
   /**
@@ -385,30 +415,32 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    * @param aMetadata
    * @return
    */
-  private String getMetadataDetailsAsText( final LogicSnifferMetadata aMetadata )
+  private String getMetadataDetailsAsText( final DeviceMetadata aMetadata )
   {
-    String header1 = "&#160;", text1 = "";
-    String header2 = "&#160;", text2 = "";
-    String header3 = "&#160;", text3 = "";
+    String header1 = "Device type", text1 = "?";
+    String header2 = "   Firmware", text2 = "?";
+    String header3 = "   Protocol", text3 = "?";
+    String header4 = "  Ancillary", text4 = "?";
 
     Object version;
+    if ( ( version = aMetadata.getName() ) != null )
+    {
+      text1 = String.valueOf( version );
+    }
     if ( ( version = aMetadata.getFpgaVersion() ) != null )
     {
-      header1 = "Firmware version";
-      text1 = String.valueOf( version );
+      text2 = String.valueOf( version );
     }
     if ( ( version = aMetadata.getProtocolVersion() ) != null )
     {
-      header2 = "Protocol version";
-      text2 = String.valueOf( version );
+      text3 = String.valueOf( version );
     }
     if ( ( version = aMetadata.getAncillaryVersion() ) != null )
     {
-      header3 = "Ancillary version";
-      text3 = String.valueOf( version );
+      text4 = String.valueOf( version );
     }
 
-    return String.format( DETAILS_TMPL, "Firmware details", header1, text1, header2, text2, header3, text3 );
+    return String.format( DETAILS_TMPL, header1, text1, header2, text2, header3, text3, header4, text4 );
   }
 
   /**
@@ -416,41 +448,34 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    */
   private void initPanel()
   {
-    this.detectDeviceButton = new JButton( new DetectDeviceTypeAction() );
-
-    this.autoDetectDeviceType = new JCheckBox( new AutoDetectDeviceTypeAction() );
+    this.showMetadataButton = new JButton( new ShowDeviceMetadataAction() );
 
     this.deviceTypeDetails = new JEditorPane( "text/html", getEmtpyMetadataDetails() );
     this.deviceTypeDetails.setEditable( false );
-    this.deviceTypeDetails.setEnabled( false );
+    this.deviceTypeDetails.setEnabled( true );
     this.deviceTypeDetails.setOpaque( false );
 
     // NOTE: create this component as last component, as it will fire an event
     // that uses all other components!!!
     this.deviceTypeSelect = new JComboBox( new DeviceProfileTypeComboBoxModel( this.device.getDeviceProfileManager() ) );
 
-    // Don't auto-detect at first...
-    setAutoDetectDeviceType( false );
-
     this.deviceTypeSelect.setRenderer( new DeviceProfileTypeComboBoxRenderer() );
-    this.deviceTypeSelect.addItemListener( new ItemListener()
+    this.deviceTypeSelect.addActionListener( new ActionListener()
     {
-      /**
-       * @see java.awt.event.ItemListener#itemStateChanged(java.awt.event.ItemEvent)
-       */
       @Override
-      public void itemStateChanged( final ItemEvent aEvent )
+      public void actionPerformed( final ActionEvent aEvent )
       {
         final JComboBox combobox = ( JComboBox )aEvent.getSource();
         final DeviceProfile profile = ( DeviceProfile )combobox.getSelectedItem();
-        if ( profile != null )
-        {
-          updateDeviceProfile( profile );
-        }
+        updateDeviceProfile( profile );
       }
     } );
-    // By default, select the "OLS" device, if available...
-    this.deviceTypeSelect.setSelectedItem( this.device.getDefaultProfile() );
-  }
 
+    DeviceProfile defaultProfile = this.device.getDefaultProfile();
+    if ( defaultProfile != null )
+    {
+      // By default, select the "OLS" device, if available...
+      this.deviceTypeSelect.setSelectedItem( defaultProfile );
+    }
+  }
 }

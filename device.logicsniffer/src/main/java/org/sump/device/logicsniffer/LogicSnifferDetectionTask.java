@@ -95,9 +95,13 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
 
       if ( gotResponse = readMetadata( inputStream, metadata ) )
       {
+        // Log the read results...
+        LOG.log( Level.INFO, "Detected device type: {0}", metadata.getName() );
+        LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
+
         // Determine the device profile based on the information of the
         // metadata; it will be placed in the given metadata object...
-        getDeviceProfile( metadata );
+        metadata.setDeviceProfile( getDeviceProfile( metadata.getName() ) );
       }
 
       return metadata;
@@ -133,38 +137,33 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
    * profile provides us with detailed information about the capabilities of a
    * certain SUMP-compatible device.
    * 
-   * @param aMetadata
-   *          the device metadata, can be <code>null</code>.
+   * @param aName
+   *          the name of the device, can be <code>null</code>.
    * @return a device profile, or <code>null</code> if no such profile could be
    *         determined.
    */
-  private DeviceProfile getDeviceProfile( final LogicSnifferMetadata aMetadata )
+  private DeviceProfile getDeviceProfile( final String aName )
   {
     DeviceProfile profile = null;
-    if ( aMetadata != null )
+
+    if ( aName != null )
     {
-      // Log the read results...
-      LOG.log( Level.INFO, "Detected device type: {0}", aMetadata.getName() );
-      LOG.log( Level.FINE, "Device metadata = \n{0}", aMetadata.toString() );
+      profile = this.device.getDeviceProfileManager().findProfile( aName );
 
-      final String name = aMetadata.getName();
-      if ( name != null )
+      if ( profile != null )
       {
-        profile = this.device.getDeviceProfileManager().findProfile( name );
-
-        if ( profile != null )
-        {
-          LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
-        }
-        else
-        {
-          LOG.log( Level.SEVERE, "No device profile found matching: {0}", name );
-        }
-
-        // Publish the found device profile...
-        aMetadata.setDeviceProfile( profile );
+        LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
+      }
+      else
+      {
+        LOG.log( Level.SEVERE, "No device profile found matching: {0}", aName );
       }
     }
+    else
+    {
+      LOG.log( Level.SEVERE, "No device name provided by metadata! Cannot determine device profile..." );
+    }
+
     return profile;
   }
 

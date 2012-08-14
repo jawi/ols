@@ -437,97 +437,12 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
 
     if ( id == SLA_V0 )
     { // SLA0
-      throw new IOException( "Device is obsolete. Please upgrade Firmware." );
+      throw new IOException( "Device is obsolete. Please upgrade firmware." );
     }
     else if ( id != SLA_V1 )
     { // SLA1
       throw new IOException( "Device not found!" );
     }
-
-    // Try to find the metadata of the device, if returned, we can use it to
-    // determine the capacities of the device...
-    final LogicSnifferMetadata metadata = getDeviceMetadata();
-    if ( metadata != null )
-    {
-      final DeviceProfile profile = getDeviceProfile( metadata );
-      this.config.setDeviceProfile( profile );
-    }
-  }
-
-  /**
-   * Tries to obtain the OLS device's metadata.
-   * 
-   * @return the device metadata, can be not populated, but never
-   *         <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  private LogicSnifferMetadata getDeviceMetadata() throws IOException
-  {
-    // Make sure nothing is left in our input buffer...
-    this.inputStream.flush();
-
-    // Ok; device appears to be good and willing to communicate; let's get its
-    // metadata...
-    this.outputStream.writeCmdGetMetadata();
-
-    boolean gotResponse = false;
-
-    try
-    {
-      final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
-
-      gotResponse = this.inputStream.readMetadata( metadata );
-
-      return metadata;
-    }
-    finally
-    {
-      if ( !gotResponse )
-      {
-        // Reset the device again; this ensures correct working for devices
-        // whose firmware do not understand the metadata command...
-        this.outputStream.writeCmdReset();
-      }
-    }
-  }
-
-  /**
-   * Determines the device profile for the current attached device. The device
-   * profile provides us with detailed information about the capabilities of a
-   * certain SUMP-compatible device.
-   * 
-   * @param aMetadata
-   *          the device metadata, can be <code>null</code>.
-   * @return a device profile, or <code>null</code> if no such profile could be
-   *         determined.
-   */
-  private DeviceProfile getDeviceProfile( final LogicSnifferMetadata aMetadata )
-  {
-    DeviceProfile profile = null;
-    if ( aMetadata != null )
-    {
-      // Log the read results...
-      LOG.log( Level.INFO, "Detected device type: {0}", aMetadata.getName() );
-      LOG.log( Level.FINE, "Device metadata = \n{0}", aMetadata.toString() );
-
-      final String name = aMetadata.getName();
-      if ( name != null )
-      {
-        final DeviceProfileManager manager = getDeviceProfileManager();
-        profile = manager.findProfile( name );
-
-        if ( profile != null )
-        {
-          LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
-        }
-        else
-        {
-          LOG.log( Level.SEVERE, "No device profile found matching: {0}", name );
-        }
-      }
-    }
-    return profile;
   }
 
   /**
