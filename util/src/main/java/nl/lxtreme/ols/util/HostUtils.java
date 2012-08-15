@@ -176,9 +176,8 @@ public final class HostUtils implements HostInfo
   {
     if ( aResource != null )
     {
-      while ( aResource.available() > 0 )
+      while ( aResource.read() >= 0 )
       {
-        aResource.read();
       }
     }
   }
