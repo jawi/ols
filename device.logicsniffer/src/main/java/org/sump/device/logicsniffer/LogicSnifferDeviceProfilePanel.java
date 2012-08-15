@@ -417,10 +417,10 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
    */
   private String getMetadataDetailsAsText( final DeviceMetadata aMetadata )
   {
-    String header1 = "Device type", text1 = "?";
-    String header2 = "   Firmware", text2 = "?";
-    String header3 = "   Protocol", text3 = "?";
-    String header4 = "  Ancillary", text4 = "?";
+    String header1 = "Device type", text1 = "-";
+    String header2 = "   Firmware", text2 = "-";
+    String header3 = "   Protocol", text3 = "-";
+    String header4 = "  Ancillary", text4 = "-";
 
     Object version;
     if ( ( version = aMetadata.getName() ) != null )

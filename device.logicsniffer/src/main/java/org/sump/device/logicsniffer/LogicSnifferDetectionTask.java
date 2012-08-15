@@ -84,31 +84,48 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
       inputStream = connection.openDataInputStream();
       outputStream = connection.openDataOutputStream();
 
-      // Make sure nothing is left in our input buffer...
-      HostUtils.flushInputStream( inputStream );
-
-      // Ok; device appears to be good and willing to communicate; let's get its
-      // metadata...
-      writeCmdGetMetadata( outputStream );
-
       final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
+      int tries = 3;
 
-      if ( gotResponse = readMetadata( inputStream, metadata ) )
+      do
       {
-        // Log the read results...
-        LOG.log( Level.INFO, "Detected device type: {0}", metadata.getName() );
-        LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
+        // Make sure nothing is left in our input buffer...
+        HostUtils.flushInputStream( inputStream );
 
-        // Determine the device profile based on the information of the
-        // metadata; it will be placed in the given metadata object...
-        metadata.setDeviceProfile( getDeviceProfile( metadata.getName() ) );
+        writeCmdReset( outputStream );
+
+        // Force the device into SUMP mode; this is necessary for multi-purpose
+        // devices as the IRToy, and BusPirate...
+        writeCmdGetDeviceId( outputStream );
+        readDeviceId( inputStream );
+
+        LOG.log( Level.INFO, "Detected SUMP-compatible device ..." );
+
+        // Make sure nothing is left in our input buffer...
+        HostUtils.flushInputStream( inputStream );
+
+        // Ok; device appears to be good and willing to communicate;
+        // let's get its metadata...
+        writeCmdGetMetadata( outputStream );
+
+        if ( gotResponse = readMetadata( inputStream, metadata ) )
+        {
+          // Log the read results...
+          LOG.log( Level.INFO, "Found device type: {0}", metadata.getName() );
+          LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
+
+          // Determine the device profile based on the information of the
+          // metadata; it will be placed in the given metadata object...
+          metadata.setDeviceProfile( getDeviceProfile( metadata.getName() ) );
+        }
       }
+      while ( !Thread.currentThread().isInterrupted() && !gotResponse && ( tries-- > 0 ) );
 
       return metadata;
     }
     finally
     {
-      if ( !gotResponse && ( outputStream != null ) )
+      if ( outputStream != null )
       {
         // Reset the device again; this ensures correct working for devices
         // whose firmware do not understand the metadata command...
@@ -165,6 +182,30 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
     }
 
     return profile;
+  }
+
+  /**
+   * @return the found device ID, or -1 if no suitable device ID was found.
+   * @throws IOException
+   */
+  private int readDeviceId( final DataInputStream aInputStream ) throws IOException
+  {
+    int id = aInputStream.readInt();
+
+    if ( id == SLA_V0 )
+    {
+      LOG.log( Level.INFO, "Found (unsupported!) Sump Logic Analyzer ...", Integer.toHexString( id ) );
+    }
+    else if ( id == SLA_V1 )
+    {
+      LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer compatible device ...", Integer.toHexString( id ) );
+    }
+    else
+    {
+      LOG.log( Level.INFO, "Found unknown device: 0x{0} ...", Integer.toHexString( id ) );
+      id = -1;
+    }
+    return id;
   }
 
   /**
@@ -260,6 +301,16 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
   }
 
   /**
+   * @param aOutputStream
+   * @throws IOException
+   */
+  private void writeCmdGetDeviceId( final DataOutputStream aOutputStream ) throws IOException
+  {
+    aOutputStream.writeByte( CMD_ID );
+    aOutputStream.flush();
+  }
+
+  /**
    * @throws IOException
    */
   private void writeCmdGetMetadata( final DataOutputStream aOutputStream ) throws IOException
@@ -281,5 +332,4 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
     aOutputStream.write( resetSequence );
     aOutputStream.flush();
   }
-
 }

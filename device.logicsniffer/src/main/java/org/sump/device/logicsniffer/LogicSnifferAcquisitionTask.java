@@ -392,16 +392,10 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
    */
   private void detectDevice() throws IOException
   {
-    int tries = 15;
+    int tries = 3;
     int id = -1;
-    while ( ( tries-- >= 0 ) && ( id != SLA_V0 ) && ( id != SLA_V1 ) )
+    do
     {
-      // make sure we're not blocking longer than strictly necessary...
-      if ( Thread.currentThread().isInterrupted() )
-      {
-        return;
-      }
-
       // Make sure nothing is left in our input buffer...
       this.inputStream.flush();
 
@@ -415,14 +409,14 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
       {
         id = this.inputStream.readDeviceId();
       }
-      catch ( final EOFException exception )
+      catch ( EOFException exception )
       {
         // We're not able to finish our read; no further effort in detecting the
         // device is to be taken...
         id = -1;
         tries = -1;
       }
-      catch ( final IOException exception )
+      catch ( IOException exception )
       {
         /* don't care */
         id = -1;
@@ -434,6 +428,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
         }
       }
     }
+    while ( !Thread.currentThread().isInterrupted() && ( tries-- > 0 ) && ( id < 0 ) );
 
     if ( id == SLA_V0 )
     { // SLA0
