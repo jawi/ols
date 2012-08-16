@@ -184,7 +184,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
       startCondFound = true;
     }
 
-    for ( ; idx < ( i2cDataSet.getEndOfDecode() - 1 ); idx++ )
+    for ( ; idx < i2cDataSet.getEndOfDecode(); idx++ )
     {
       final int dataValue = values[idx];
 
