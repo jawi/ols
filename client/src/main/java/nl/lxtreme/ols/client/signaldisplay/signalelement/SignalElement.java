@@ -248,7 +248,14 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public Color getColor()
   {
-    return this.color;
+    Color result = this.color;
+
+    if ( result == null )
+    {
+      result = getDefaultColor();
+    }
+
+    return result;
   }
 
   /**
@@ -654,6 +661,16 @@ public final class SignalElement implements Comparable<SignalElement>
   final void setYposition( final int aYPosition )
   {
     this.yPosition = aYPosition;
+  }
+
+  /**
+   * Returns the default color for this signal element.
+   * 
+   * @return a color, never <code>null</code>.
+   */
+  private Color getDefaultColor()
+  {
+    return ( this.group != null ) ? this.group.getColor() : Color.WHITE;
   }
 
   /**

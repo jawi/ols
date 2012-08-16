@@ -137,19 +137,8 @@ public class ElementGroup
       this.viewOptions |= ChannelElementType.GROUP_SUMMARY.mask;
     }
 
-    String key = String.format( "ols.channelgroup%d.default.color", Integer.valueOf( ( aIndex + 1 ) % 4 ) );
-    Color defaultColor = UIManager.getColor( key );
-    if ( defaultColor == null )
-    {
-      defaultColor = Color.WHITE;
-    }
-
-    this.color = defaultColor;
-
     this.elements = new ArrayList<SignalElement>();
   }
-
-  // METHODS
 
   /**
    * Adds a given signal element to this group.
@@ -186,15 +175,12 @@ public class ElementGroup
       // Make sure the channel links back to this channel group...
       signalElement.setGroup( this );
 
-      if ( signalElement.getColor() == null )
-      {
-        signalElement.setColor( getColor() );
-      }
-
       // Update our local mask...
       this.mask |= aElement.getMask();
     }
   }
+
+  // METHODS
 
   /**
    * {@inheritDoc}
@@ -269,11 +255,18 @@ public class ElementGroup
   /**
    * Returns the color of this channel group.
    * 
-   * @return the color used by this channel group.
+   * @return the color used by this channel group, never <code>null</code>.
    */
   public Color getColor()
   {
-    return this.color;
+    Color result = this.color;
+
+    if ( result == null )
+    {
+      result = getDefaultGroupColor( this.index );
+    }
+
+    return result;
   }
 
   /**
@@ -682,6 +675,24 @@ public class ElementGroup
   private String getDefaultAnalogSignalName()
   {
     return String.format( "Scope-%d", Integer.valueOf( getIndex() + 1 ) );
+  }
+
+  /**
+   * Returns the default group color, as stored in the UIManager.
+   * 
+   * @param aIndex
+   *          the group index to return the color for.
+   * @return a color, never <code>null</code>.
+   */
+  private Color getDefaultGroupColor( final int aIndex )
+  {
+    String key = String.format( "ols.channelgroup%d.default.color", Integer.valueOf( ( aIndex + 1 ) % 4 ) );
+    Color defaultColor = UIManager.getColor( key );
+    if ( defaultColor == null )
+    {
+      defaultColor = Color.WHITE;
+    }
+    return defaultColor;
   }
 
   /**
