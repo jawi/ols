@@ -47,23 +47,78 @@ import org.osgi.service.prefs.*;
  */
 public class Activator extends DependencyActivatorBase
 {
+  // INNER TYPES
+
+  static class ComponentProviderBundleAdapter extends GenericBundleAdapter<ComponentProvider>
+  {
+    /**
+     * Creates a new Activator.ComponentProviderBundleAdapter instance.
+     */
+    public ComponentProviderBundleAdapter()
+    {
+      super( ComponentProvider.class, OLS_COMPONENT_PROVIDER_CLASS_KEY );
+    }
+  }
+
+  static class DeviceBundleAdapter extends GenericBundleAdapter<Device>
+  {
+    /**
+     * Creates a new {@link DeviceBundleAdapter} instance.
+     */
+    public DeviceBundleAdapter()
+    {
+      super( Device.class, OLS_DEVICE_CLASS_KEY );
+    }
+  }
+
+  static class ExporterBundleAdapter extends GenericBundleAdapter<Exporter>
+  {
+    /**
+     * Creates a new Activator.ExporterBundleAdapter instance.
+     */
+    public ExporterBundleAdapter()
+    {
+      super( Exporter.class, OLS_EXPORTER_CLASS_KEY );
+    }
+  }
+
+  @SuppressWarnings( "rawtypes" )
+  static class ToolBundleAdapter extends GenericBundleAdapter<Tool>
+  {
+    /**
+     * Creates a new {@link ToolBundleAdapter} instance.
+     */
+    public ToolBundleAdapter()
+    {
+      super( Tool.class, OLS_TOOL_CLASS_KEY );
+    }
+  }
+
   // CONSTANTS
 
   private static final String OLS_TOOL_MAGIC_KEY = "OLS-Tool";
   private static final String OLS_TOOL_MAGIC_VALUE = "1.0";
   private static final String OLS_TOOL_CLASS_KEY = "OLS-ToolClass";
+  private static final String TOOL_BUNDLE_FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_TOOL_MAGIC_KEY,
+      OLS_TOOL_MAGIC_VALUE, OLS_TOOL_CLASS_KEY );
 
   private static final String OLS_DEVICE_MAGIC_KEY = "OLS-Device";
   private static final String OLS_DEVICE_MAGIC_VALUE = "1.0";
   private static final String OLS_DEVICE_CLASS_KEY = "OLS-DeviceClass";
+  private static final String DEVICE_BUNDLE_FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_DEVICE_MAGIC_KEY,
+      OLS_DEVICE_MAGIC_VALUE, OLS_DEVICE_CLASS_KEY );
 
   private static final String OLS_EXPORTER_MAGIC_KEY = "OLS-Exporter";
   private static final String OLS_EXPORTER_MAGIC_VALUE = "1.0";
   private static final String OLS_EXPORTER_CLASS_KEY = "OLS-ExporterClass";
+  private static final String EXPORTER_BUNDLE_FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_EXPORTER_MAGIC_KEY,
+      OLS_EXPORTER_MAGIC_VALUE, OLS_EXPORTER_CLASS_KEY );
 
   private static final String OLS_COMPONENT_PROVIDER_MAGIC_KEY = "OLS-ComponentProvider";
   private static final String OLS_COMPONENT_PROVIDER_MAGIC_VALUE = "Menu";
   private static final String OLS_COMPONENT_PROVIDER_CLASS_KEY = "OLS-ComponentProviderClass";
+  private static final String CP_BUNDLE_FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_COMPONENT_PROVIDER_MAGIC_KEY,
+      OLS_COMPONENT_PROVIDER_MAGIC_VALUE, OLS_COMPONENT_PROVIDER_CLASS_KEY );
 
   // METHODS
 
@@ -91,34 +146,21 @@ public class Activator extends DependencyActivatorBase
    * {@inheritDoc}
    */
   @Override
-  @SuppressWarnings( "rawtypes" )
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
     final ClientController clientController = new ClientController( aContext );
 
-    String filter;
-    filter = String.format( "(&(%s=%s)(%s=*))", OLS_COMPONENT_PROVIDER_MAGIC_KEY, OLS_COMPONENT_PROVIDER_MAGIC_VALUE,
-        OLS_COMPONENT_PROVIDER_CLASS_KEY );
-    aManager.add( createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
-        .setImplementation(
-            new GenericBundleAdapter<ComponentProvider>( ComponentProvider.class, OLS_COMPONENT_PROVIDER_CLASS_KEY ) ) //
-        );
+    aManager.add( createBundleAdapterService( Bundle.ACTIVE, CP_BUNDLE_FILTER, true /* propagate */) //
+        .setImplementation( ComponentProviderBundleAdapter.class ) );
 
-    filter = String.format( "(&(%s=%s)(%s=*))", OLS_TOOL_MAGIC_KEY, OLS_TOOL_MAGIC_VALUE, OLS_TOOL_CLASS_KEY );
-    aManager.add( createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
-        .setImplementation( new GenericBundleAdapter<Tool>( Tool.class, OLS_TOOL_CLASS_KEY ) ) //
-        );
+    aManager.add( createBundleAdapterService( Bundle.ACTIVE, TOOL_BUNDLE_FILTER, true /* propagate */) //
+        .setImplementation( ToolBundleAdapter.class ) );
 
-    filter = String.format( "(&(%s=%s)(%s=*))", OLS_DEVICE_MAGIC_KEY, OLS_DEVICE_MAGIC_VALUE, OLS_DEVICE_CLASS_KEY );
-    aManager.add( createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
-        .setImplementation( new GenericBundleAdapter<Device>( Device.class, OLS_DEVICE_CLASS_KEY ) ) //
-        );
+    aManager.add( createBundleAdapterService( Bundle.ACTIVE, DEVICE_BUNDLE_FILTER, true /* propagate */) //
+        .setImplementation( DeviceBundleAdapter.class ) );
 
-    filter = String.format( "(&(%s=%s)(%s=*))", OLS_EXPORTER_MAGIC_KEY, OLS_EXPORTER_MAGIC_VALUE,
-        OLS_EXPORTER_CLASS_KEY );
-    aManager.add( createBundleAdapterService( Bundle.ACTIVE, filter, true /* propagate */) //
-        .setImplementation( new GenericBundleAdapter<Exporter>( Exporter.class, OLS_EXPORTER_CLASS_KEY ) ) //
-        );
+    aManager.add( createBundleAdapterService( Bundle.ACTIVE, EXPORTER_BUNDLE_FILTER, true /* propagate */) //
+        .setImplementation( ExporterBundleAdapter.class ) );
 
     Properties props = new Properties();
     props.put( Constants.SERVICE_PID, UIManagerConfigurator.PID );
