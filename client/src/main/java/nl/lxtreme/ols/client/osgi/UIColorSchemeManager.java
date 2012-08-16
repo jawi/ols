@@ -62,8 +62,7 @@ public class UIColorSchemeManager implements ManagedServiceFactory
    * Retrieves the color scheme by its name.
    * 
    * @param aName
-   *          the name of the color scheme, cannot be <code>null</code> or
-   *          empty.
+   *          the name of the color scheme, can be <code>null</code> or empty.
    * @return a {@link Properties} map with the requested color scheme, or
    *         <code>null</code> if no such scheme exists.
    */
@@ -71,7 +70,7 @@ public class UIColorSchemeManager implements ManagedServiceFactory
   {
     for ( Properties props : this.colorSchemes.values() )
     {
-      if ( aName.equals( props.getProperty( SCHEME_NAME ) ) )
+      if ( props.getProperty( SCHEME_NAME ).equals( aName ) )
       {
         Properties result = new Properties();
         result.putAll( props );

@@ -292,6 +292,34 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   }
 
   /**
+   * Applies the new color scheme by copying its colors to the given dictionary.
+   * 
+   * @param colorScheme
+   *          the name of the new color scheme to apply;
+   * @param dictionary
+   *          the dictionary to fill with the new color scheme.
+   */
+  private void applyNewColorScheme( final String colorScheme, final Dictionary<Object, Object> dictionary )
+  {
+    dictionary.put( COLOR_SCHEME, colorScheme );
+
+    Properties props = this.colorSchemeManager.getColorScheme( colorScheme );
+    if ( props == null )
+    {
+      return;
+    }
+
+    for ( Object key : props.keySet() )
+    {
+      Object value = props.get( key );
+      if ( value instanceof Color )
+      {
+        dictionary.put( key, ColorUtils.toHexString( ( Color )value ) );
+      }
+    }
+  }
+
+  /**
    * Applies all (new) preferences by updating the <em>original</em>
    * configuration object (from the ConfigurationAdmin service) with the changed
    * preferences. The reason for this is that the changes will now be persisted
@@ -317,20 +345,11 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     String colorScheme = ( String )this.colorScheme.getSelectedItem();
     if ( colorScheme != null )
     {
-      properties.put( COLOR_SCHEME, colorScheme );
+      // Remove old color scheme, as it might contain keys that aren't defined
+      // in the new scheme...
+      purgeOldColorScheme( properties );
 
-      Properties props = this.colorSchemeManager.getColorScheme( colorScheme );
-      if ( props != null )
-      {
-        for ( Object key : props.keySet() )
-        {
-          Object value = props.get( key );
-          if ( value instanceof Color )
-          {
-            properties.put( key, ColorUtils.toHexString( ( Color )value ) );
-          }
-        }
-      }
+      applyNewColorScheme( colorScheme, properties );
     }
 
     // Update the configuration, so it will be persisted...
@@ -436,5 +455,30 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
       return SignalAlignment.CENTER;
     }
     return SignalAlignment.valueOf( aValue.toString().toUpperCase() );
+  }
+
+  /**
+   * Purges the current color scheme from the given dictionary.
+   * 
+   * @param dictionary
+   *          the dictionary to purge any existing color scheme from.
+   */
+  private void purgeOldColorScheme( final Dictionary<Object, Object> dictionary )
+  {
+    String oldColorScheme = ( String )dictionary.get( COLOR_SCHEME );
+    Properties props = this.colorSchemeManager.getColorScheme( oldColorScheme );
+    if ( props == null )
+    {
+      return;
+    }
+
+    for ( Object key : props.keySet() )
+    {
+      Object value = props.get( key );
+      if ( value instanceof Color )
+      {
+        dictionary.remove( key );
+      }
+    }
   }
 }

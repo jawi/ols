@@ -59,12 +59,10 @@ public class UIManagerConfigurator implements ManagedService
   @SuppressWarnings( "rawtypes" )
   public void updated( final Dictionary aProperties ) throws ConfigurationException
   {
-    if ( aProperties == null )
-    {
-      // Fall back to the defaults by removing all keys from UIManager...
-      removeOlsSpecificKeys();
-    }
-    else
+    // Fall back to the defaults by removing all keys from UIManager...
+    removeOlsSpecificKeys();
+
+    if ( aProperties != null )
     {
       // Apply the specific values to the UIManager...
       applyOlsSpecificKeys( aProperties );

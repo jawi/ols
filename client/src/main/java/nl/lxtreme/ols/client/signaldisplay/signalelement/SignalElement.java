@@ -670,7 +670,32 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   private Color getDefaultColor()
   {
-    return ( this.group != null ) ? this.group.getColor() : Color.WHITE;
+    Color result = null;
+
+    if ( this.group != null )
+    {
+      if ( isDigitalSignal() )
+      {
+        Integer groupIdx = Integer.valueOf( ( this.group.getIndex() + 1 ) % 4 );
+        Integer channelIdx = Integer.valueOf( this.channel.getIndex() + 1 );
+        String key = String.format( "ols.channelgroup%d.channel%d.default.color", groupIdx, channelIdx );
+        result = UIManager.getColor( key );
+      }
+
+      if ( result == null )
+      {
+        // Fall back to group color...
+        result = this.group.getColor();
+      }
+    }
+
+    if ( result == null )
+    {
+      // Fall back to a constant value...
+      result = Color.white;
+    }
+
+    return result;
   }
 
   /**
