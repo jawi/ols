@@ -292,8 +292,6 @@ public class SignalUI extends ComponentUI
             final String annText = ann.getAnnotation().toString();
 
             final int annotationWidth = ( x2 - x1 ) + 2;
-            final int textWidth = fm.stringWidth( annText );
-            final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
 
             final Composite oldComposite = aCanvas.getComposite();
             final Stroke oldStroke = aCanvas.getStroke();
@@ -321,13 +319,16 @@ public class SignalUI extends ComponentUI
 
             aCanvas.setStroke( oldStroke );
 
+            final int textWidth = fm.stringWidth( annText );
+            final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
+
             if ( textXoffset > 0 )
             {
               int x3 = ( x1 + textXoffset );
               if ( annotationRenderStyle && ( ( x3 - 4 ) > 0 ) )
               {
                 aCanvas.drawLine( x1, midY, x3 - 4, midY );
-                aCanvas.drawLine( x3 + textWidth + 4, midY, x2, midY );
+                aCanvas.drawLine( x3 + textWidth + 8, midY, x2, midY );
               }
 
               aCanvas.drawString( annText, x1 + textXoffset, y1 + fontHeight );
