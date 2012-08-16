@@ -90,7 +90,7 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
       do
       {
         // Make sure nothing is left in our input buffer...
-        HostUtils.flushInputStream( inputStream );
+        flushInputStream( inputStream );
 
         writeCmdReset( outputStream );
 
@@ -102,7 +102,7 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
         LOG.log( Level.INFO, "Detected SUMP-compatible device ..." );
 
         // Make sure nothing is left in our input buffer...
-        HostUtils.flushInputStream( inputStream );
+        flushInputStream( inputStream );
 
         // Ok; device appears to be good and willing to communicate;
         // let's get its metadata...
@@ -145,6 +145,25 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
       catch ( IOException exception )
       {
         LOG.log( Level.INFO, "I/O connection while trying to close connection after device detect!", exception );
+      }
+    }
+  }
+
+  /**
+   * Flushes the given input stream by reading as many bytes as there are still
+   * available.
+   * 
+   * @param aResource
+   *          the resource to flush, can be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems/
+   */
+  private void flushInputStream( final InputStream aResource ) throws IOException
+  {
+    if ( aResource != null )
+    {
+      while ( ( aResource.available() > 0 ) && ( aResource.read() >= 0 ) )
+      {
       }
     }
   }

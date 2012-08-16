@@ -76,7 +76,12 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
    */
   public void flush() throws IOException
   {
-    HostUtils.flushInputStream( this.inputStream );
+    if ( this.inputStream != null )
+    {
+      while ( ( this.inputStream.available() > 0 ) && ( this.inputStream.read() >= 0 ) )
+      {
+      }
+    }
   }
 
   /**
