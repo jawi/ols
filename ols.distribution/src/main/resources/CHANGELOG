@@ -7,7 +7,8 @@ Release 0.9.6:
 - New signal display component in place, with most of the long-promised 
   functionality now in place;
 - new default look and feel, thanks to Marius Jonsson;
-- allow OLS to be used over a network, thanks to Marcin Zapolski; 
+- allow OLS to be used over a network, thanks to Marcin Zapolski;
+- improved detection of SUMP-compatible devices, thanks to JTR; 
 - allow data to be exported as CSV (issue #95);
 - added DMX512 decoder tool;
 - added simple Manchester line decoder tool;
