@@ -59,7 +59,6 @@ public final class SignalElement implements Comparable<SignalElement>
   private Channel channel;
   /** the group we belong to, should always be non-null. */
   private ElementGroup group;
-  private Color color;
 
   private int height;
   private int yPosition;
@@ -248,11 +247,27 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public Color getColor()
   {
-    Color result = this.color;
+    Color result = null;
+
+    if ( this.group != null )
+    {
+      if ( isDigitalSignal() )
+      {
+        String key = getColorKey();
+        result = UIManager.getColor( key );
+      }
+
+      if ( result == null )
+      {
+        // Fall back to group color...
+        result = this.group.getColor();
+      }
+    }
 
     if ( result == null )
     {
-      result = getDefaultColor();
+      // Fall back to a constant value...
+      result = Color.WHITE;
     }
 
     return result;
@@ -507,7 +522,7 @@ public final class SignalElement implements Comparable<SignalElement>
     {
       throw new IllegalArgumentException( "Color cannot be null!" );
     }
-    this.color = aColor;
+    UIManager.put( getColorKey(), aColor );
   }
 
   /**
@@ -664,38 +679,13 @@ public final class SignalElement implements Comparable<SignalElement>
   }
 
   /**
-   * Returns the default color for this signal element.
-   * 
-   * @return a color, never <code>null</code>.
+   * @return
    */
-  private Color getDefaultColor()
+  private String getColorKey()
   {
-    Color result = null;
-
-    if ( this.group != null )
-    {
-      if ( isDigitalSignal() )
-      {
-        Integer groupIdx = Integer.valueOf( ( this.group.getIndex() + 1 ) % 4 );
-        Integer channelIdx = Integer.valueOf( this.channel.getIndex() + 1 );
-        String key = String.format( "ols.channelgroup%d.channel%d.default.color", groupIdx, channelIdx );
-        result = UIManager.getColor( key );
-      }
-
-      if ( result == null )
-      {
-        // Fall back to group color...
-        result = this.group.getColor();
-      }
-    }
-
-    if ( result == null )
-    {
-      // Fall back to a constant value...
-      result = Color.white;
-    }
-
-    return result;
+    Integer groupIdx = Integer.valueOf( ( this.group.getIndex() % 4 ) + 1 );
+    Integer channelIdx = Integer.valueOf( ( this.channel.getIndex() % 8 ) + 1 );
+    return String.format( "ols.channelgroup%d.channel%d.default.color", groupIdx, channelIdx );
   }
 
   /**

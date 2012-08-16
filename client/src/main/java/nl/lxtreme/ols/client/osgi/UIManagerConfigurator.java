@@ -151,13 +151,15 @@ public class UIManagerConfigurator implements ManagedService
     // Replace all placeholders with real values...
     replacePlaceholders( config );
 
+    final UIDefaults defaults = UIManager.getDefaults();
+
     // Write all values to the UIManager...
     for ( Map.Entry<Object, Object> entry : config.entrySet() )
     {
       Object key = entry.getKey();
       Object value = entry.getValue();
 
-      UIManager.put( key, value );
+      defaults.put( key, value );
     }
   }
 
@@ -251,13 +253,15 @@ public class UIManagerConfigurator implements ManagedService
    */
   private void removeOlsSpecificKeys()
   {
-    final Enumeration<Object> keys = UIManager.getDefaults().keys();
+    final UIDefaults defaults = UIManager.getDefaults();
+
+    final Enumeration<Object> keys = defaults.keys();
     while ( keys.hasMoreElements() )
     {
       Object key = keys.nextElement();
       if ( key.toString().startsWith( PREFIX ) )
       {
-        UIManager.put( key, null );
+        defaults.put( key, null );
       }
     }
   }

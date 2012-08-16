@@ -234,7 +234,7 @@ public class DockController implements IMeasurementListener
       fis = new FileInputStream( dataFile );
       getManager().getPersistenceDelegate().apply( fis );
     }
-    catch ( FileNotFoundException exception )
+    catch ( Throwable exception )
     {
       // Ignore; we shouldn't be here anyways due to dataFile.exists...
     }
@@ -263,7 +263,7 @@ public class DockController implements IMeasurementListener
       fos = new FileOutputStream( dataFile );
       getManager().getPersistenceDelegate().save( fos );
     }
-    catch ( FileNotFoundException exception )
+    catch ( Throwable exception )
     {
       // Ignore; we shouldn't be here anyways due to dataFile.exists...
     }

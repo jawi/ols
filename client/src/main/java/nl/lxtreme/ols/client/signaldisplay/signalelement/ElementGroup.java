@@ -95,8 +95,6 @@ public class ElementGroup
   private String summaryLabel;
   /** The label used for the analog signal. */
   private String analogSignalLabel;
-  /** The color used as default for this channel group. */
-  private Color color;
   private boolean visible;
   private int viewOptions;
 
@@ -259,13 +257,11 @@ public class ElementGroup
    */
   public Color getColor()
   {
-    Color result = this.color;
-
+    Color result = UIManager.getColor( getColorKey() );
     if ( result == null )
     {
-      result = getDefaultGroupColor( this.index );
+      result = Color.WHITE;
     }
-
     return result;
   }
 
@@ -472,7 +468,11 @@ public class ElementGroup
    */
   public void setColor( final Color aColor )
   {
-    this.color = aColor;
+    if ( aColor == null )
+    {
+      throw new IllegalArgumentException( "Color cannot be null!" );
+    }
+    UIManager.put( getColorKey(), aColor );
   }
 
   /**
@@ -668,6 +668,15 @@ public class ElementGroup
   }
 
   /**
+   * @return a key to access the color for this element group, never
+   *         <code>null</code>.
+   */
+  private String getColorKey()
+  {
+    return String.format( "ols.channelgroup%d.default.color", Integer.valueOf( ( this.index % 4 ) + 1 ) );
+  }
+
+  /**
    * Crafts a default name for use when an analog scope has no label set.
    * 
    * @return an analog scope name, never <code>null</code>.
@@ -675,24 +684,6 @@ public class ElementGroup
   private String getDefaultAnalogSignalName()
   {
     return String.format( "Scope-%d", Integer.valueOf( getIndex() + 1 ) );
-  }
-
-  /**
-   * Returns the default group color, as stored in the UIManager.
-   * 
-   * @param aIndex
-   *          the group index to return the color for.
-   * @return a color, never <code>null</code>.
-   */
-  private Color getDefaultGroupColor( final int aIndex )
-  {
-    String key = String.format( "ols.channelgroup%d.default.color", Integer.valueOf( ( aIndex + 1 ) % 4 ) );
-    Color defaultColor = UIManager.getColor( key );
-    if ( defaultColor == null )
-    {
-      defaultColor = Color.WHITE;
-    }
-    return defaultColor;
   }
 
   /**
