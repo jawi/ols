@@ -120,7 +120,6 @@ public final class ChannelImpl implements Channel
     }
     else
     {
-      // TODO ensure it is a channel label annotation?!
       setLabel( aAnnotation.toString() );
     }
   }
@@ -199,7 +198,7 @@ public final class ChannelImpl implements Channel
   @Override
   public String getLabel()
   {
-    if ( ( this.label == null ) || this.label.trim().isEmpty() )
+    if ( ( this.label == null ) || "".equals( this.label.trim() ) )
     {
       return getDefaultName();
     }
