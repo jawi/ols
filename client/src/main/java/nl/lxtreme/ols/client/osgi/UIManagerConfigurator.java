@@ -135,7 +135,10 @@ public class UIManagerConfigurator implements ManagedService
       try
       {
         Object value = parseAsValue( key, aProperties.get( key ) );
-        config.put( key, value );
+        if ( value != null )
+        {
+          config.put( key, value );
+        }
       }
       catch ( Exception exception )
       {
@@ -166,6 +169,11 @@ public class UIManagerConfigurator implements ManagedService
   private Object parseAsValue( final String aKey, final Object aObject )
   {
     String value = aObject.toString().trim();
+    if ( "".equals( value ) )
+    {
+      return null;
+    }
+
     if ( aKey.endsWith( BOOLEAN_SUFFIX ) )
     {
       // Parse as boolean value...
@@ -173,7 +181,7 @@ public class UIManagerConfigurator implements ManagedService
     }
     else if ( aKey.endsWith( COLOR_SUFFIX ) )
     {
-      // Parse as color
+      // Parse as color; allowing empty values to be supplied...
       return ColorUtils.parseColor( value );
     }
     else if ( aKey.endsWith( ENUM_SUFFIX ) )

@@ -477,7 +477,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
       Object value = props.get( key );
       if ( value instanceof Color )
       {
-        dictionary.remove( key );
+        dictionary.put( key, "" );
       }
     }
   }
