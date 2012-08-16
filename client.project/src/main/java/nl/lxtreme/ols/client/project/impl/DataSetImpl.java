@@ -199,7 +199,13 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
     int channelCount = Math.min( aLabels.size(), this.channels.length );
     for ( int i = 0; i < channelCount; i++ )
     {
-      this.channels[i].setLabel( aLabels.get( i ) );
+      Channel channel = this.channels[i];
+      // Channels might be null, especially when importing projects from older
+      // versions of the client...
+      if ( channel != null )
+      {
+        channel.setLabel( aLabels.get( i ) );
+      }
     }
   }
 
