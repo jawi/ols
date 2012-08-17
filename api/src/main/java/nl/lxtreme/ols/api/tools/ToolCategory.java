@@ -20,14 +20,15 @@
  */
 package nl.lxtreme.ols.api.tools;
 
+
 /**
  * Provides a category for pluggable tools.
  */
 public enum ToolCategory
 {
-  /** Denotes a tool that decodes something. */
+  /** Denotes a tool that processes and decodes acquisition data. */
   DECODER,
-  /** Denotes a tool that measures something. */
+  /** Denotes a tool that measures something on acquisition data. */
   MEASURE,
   /** For tools that neither decode nor measure something. */
   OTHER;
