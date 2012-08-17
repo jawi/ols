@@ -43,6 +43,7 @@ public class RunToolAction extends BaseAction
   // VARIABLES
 
   private final String toolName;
+  private final ToolCategory category;
 
   // CONSTRUCTORS
 
@@ -52,13 +53,16 @@ public class RunToolAction extends BaseAction
    * @param aController
    *          the controller to use for this action;
    * @param aToolName
-   *          the name of the tool to invoke in this action.
+   *          the name of the tool to invoke in this action;
+   * @param aCategory
+   *          the category of the tool.
    */
-  public RunToolAction( final ClientController aController, final String aToolName )
+  public RunToolAction( final ClientController aController, final String aToolName, final ToolCategory aCategory )
   {
     super( getID( aToolName ), aController, aToolName, "Run ".concat( aToolName ) );
 
     this.toolName = aToolName;
+    this.category = aCategory;
   }
 
   // METHODS
@@ -103,6 +107,16 @@ public class RunToolAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
     getController().invokeTool( this.toolName, owner );
+  }
+
+  /**
+   * Returns the current value of category.
+   * 
+   * @return the tool category, never <code>null</code>.
+   */
+  public ToolCategory getCategory()
+  {
+    return this.category;
   }
 }
 

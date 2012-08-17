@@ -478,7 +478,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     if ( this.tools.putIfAbsent( aTool.getName(), aTool ) == null )
     {
-      this.actionManager.add( new RunToolAction( this, aTool.getName() ) );
+      this.actionManager.add( new RunToolAction( this, aTool.getName(), aTool.getCategory() ) );
     }
   }
 
@@ -1630,7 +1630,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         final IManagedAction[] toolActions = getActionsByType( RunToolAction.class );
         for ( final IManagedAction toolAction : toolActions )
         {
-          toolAction.setEnabled( dataAvailable );
+          if ( !ToolCategory.OTHER.equals( ( ( RunToolAction )toolAction ).getCategory() ) )
+          {
+            toolAction.setEnabled( dataAvailable );
+          }
         }
 
         // Update the exporters...
@@ -1735,42 +1738,33 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     final DataSet dataSet = getCurrentDataSet();
     final AcquisitionResult capturedData = dataSet.getCapturedData();
 
-    final int dataLength = capturedData.getValues().length;
-    if ( areCursorsEnabled() )
+    if ( capturedData != null )
     {
-      if ( isCursorSet( 0 ) )
+      final int dataLength = capturedData.getValues().length;
+      if ( areCursorsEnabled() )
       {
-        final Cursor cursor1 = dataSet.getCursor( 0 );
-        startOfDecode = capturedData.getSampleIndex( cursor1.getTimestamp() ) - 1;
+        if ( isCursorSet( 0 ) )
+        {
+          final Cursor cursor1 = dataSet.getCursor( 0 );
+          startOfDecode = capturedData.getSampleIndex( cursor1.getTimestamp() ) - 1;
+        }
+        if ( isCursorSet( 1 ) )
+        {
+          final Cursor cursor2 = dataSet.getCursor( 1 );
+          endOfDecode = capturedData.getSampleIndex( cursor2.getTimestamp() ) + 1;
+        }
       }
-      if ( isCursorSet( 1 ) )
+      else
       {
-        final Cursor cursor2 = dataSet.getCursor( 1 );
-        endOfDecode = capturedData.getSampleIndex( cursor2.getTimestamp() ) + 1;
+        startOfDecode = 0;
+        endOfDecode = dataLength;
       }
-    }
-    else
-    {
-      startOfDecode = 0;
-      endOfDecode = dataLength;
-    }
 
-    startOfDecode = Math.max( 0, startOfDecode );
-    if ( ( endOfDecode < 0 ) || ( endOfDecode >= dataLength ) )
-    {
-      endOfDecode = dataLength - 1;
-    }
-
-    int channels = capturedData.getChannels();
-    if ( channels == Ols.NOT_AVAILABLE )
-    {
-      channels = Ols.MAX_CHANNELS;
-    }
-
-    int enabledChannels = capturedData.getEnabledChannels();
-    if ( enabledChannels == Ols.NOT_AVAILABLE )
-    {
-      enabledChannels = NumberUtils.getBitMask( channels );
+      startOfDecode = Math.max( 0, startOfDecode );
+      if ( ( endOfDecode < 0 ) || ( endOfDecode >= dataLength ) )
+      {
+        endOfDecode = dataLength - 1;
+      }
     }
 
     return new DefaultToolContext( startOfDecode, endOfDecode, dataSet );
