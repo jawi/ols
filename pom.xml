@@ -56,6 +56,7 @@
 		<module>tool.uart</module>
 		<module>tool.dmx512</module>
 		<module>tool.linedecoder</module>
+		<module>tool.serialconsole</module>
 		<module>export.image</module>
 		<module>export.vcd</module>
 		<module>export.csv</module>
@@ -309,6 +310,11 @@
 			<dependency>
 				<groupId>nl.lxtreme.ols.tool</groupId>
 				<artifactId>asm45</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+			<dependency>
+				<groupId>nl.lxtreme.ols.tool</groupId>
+				<artifactId>serialconsole</artifactId>
 				<version>1.0.0</version>
 			</dependency>
 			<dependency>
