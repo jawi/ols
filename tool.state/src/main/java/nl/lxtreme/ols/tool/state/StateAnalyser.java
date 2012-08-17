@@ -56,7 +56,7 @@ public class StateAnalyser implements Tool<AcquisitionResult>
   @Override
   public ToolCategory getCategory()
   {
-    return ToolCategory.OTHER;
+    return ToolCategory.DECODER;
   }
 
   /**
