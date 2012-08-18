@@ -211,14 +211,16 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    this.rxd.setSelectedIndex( aSettings.getInt( "rxd", this.rxd.getSelectedIndex() ) );
-    this.txd.setSelectedIndex( aSettings.getInt( "txd", this.txd.getSelectedIndex() ) );
-    this.cts.setSelectedIndex( aSettings.getInt( "cts", this.cts.getSelectedIndex() ) );
-    this.rts.setSelectedIndex( aSettings.getInt( "rts", this.rts.getSelectedIndex() ) );
-    this.dtr.setSelectedIndex( aSettings.getInt( "dtr", this.dtr.getSelectedIndex() ) );
-    this.dsr.setSelectedIndex( aSettings.getInt( "dsr", this.dsr.getSelectedIndex() ) );
-    this.dcd.setSelectedIndex( aSettings.getInt( "dcd", this.dcd.getSelectedIndex() ) );
-    this.ri.setSelectedIndex( aSettings.getInt( "ri", this.ri.getSelectedIndex() ) );
+    // Issue #114: avoid setting illegal values...
+    setComboBoxIndex( this.rxd, aSettings, "rxd" );
+    setComboBoxIndex( this.txd, aSettings, "txd" );
+    setComboBoxIndex( this.cts, aSettings, "cts" );
+    setComboBoxIndex( this.rts, aSettings, "rts" );
+    setComboBoxIndex( this.dtr, aSettings, "dtr" );
+    setComboBoxIndex( this.dsr, aSettings, "dsr" );
+    setComboBoxIndex( this.dcd, aSettings, "dcd" );
+    setComboBoxIndex( this.ri, aSettings, "ri" );
+
     this.parity.setSelectedIndex( aSettings.getInt( "parity", this.parity.getSelectedIndex() ) );
     this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
     this.stop.setSelectedIndex( aSettings.getInt( "stop", this.stop.getSelectedIndex() ) );

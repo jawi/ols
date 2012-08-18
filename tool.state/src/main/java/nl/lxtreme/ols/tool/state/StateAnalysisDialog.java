@@ -122,8 +122,10 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionResult>
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
+    // Issue #114: avoid setting illegal values...
+    setComboBoxIndex( this.channelSelect, aSettings, "channel" );
+
     this.edgeSelect.setSelectedIndex( aSettings.getInt( "edge", this.edgeSelect.getSelectedIndex() ) );
-    this.channelSelect.setSelectedIndex( aSettings.getInt( "channel", this.channelSelect.getSelectedIndex() ) );
   }
 
   /**

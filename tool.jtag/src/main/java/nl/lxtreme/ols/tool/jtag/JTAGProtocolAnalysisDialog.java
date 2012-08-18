@@ -120,10 +120,11 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    this.tck.setSelectedIndex( aSettings.getInt( "tck", this.tck.getSelectedIndex() ) );
-    this.tms.setSelectedIndex( aSettings.getInt( "tms", this.tms.getSelectedIndex() ) );
-    this.tdi.setSelectedIndex( aSettings.getInt( "tdi", this.tdi.getSelectedIndex() ) );
-    this.tdo.setSelectedIndex( aSettings.getInt( "tdo", this.tdo.getSelectedIndex() ) );
+    // Issue #114: avoid setting illegal values...
+    setComboBoxIndex( this.tck, aSettings, "tck" );
+    setComboBoxIndex( this.tms, aSettings, "tms" );
+    setComboBoxIndex( this.tdi, aSettings, "tdi" );
+    setComboBoxIndex( this.tdo, aSettings, "tdo" );
   }
 
   /**

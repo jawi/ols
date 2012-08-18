@@ -115,8 +115,10 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
+    // Issue #114: avoid setting illegal values...
+    setComboBoxIndex( this.owLine, aSettings, "owLine" );
+
     this.owMode.setSelectedIndex( aSettings.getInt( "owMode", this.owMode.getSelectedIndex() ) );
-    this.owLine.setSelectedIndex( aSettings.getInt( "owLine", this.owLine.getSelectedIndex() ) );
   }
 
   /**

@@ -126,7 +126,8 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
 
     for ( int i = 0; i < this.lines.length; i++ )
     {
-      this.lines[i].setSelectedIndex( aSettings.getInt( "decoder.line." + i, this.lines[i].getSelectedIndex() ) );
+      // Issue #114: avoid setting illegal values...
+      setComboBoxIndex( this.lines[i], aSettings, "decoder.line." + i );
     }
   }
 
