@@ -264,6 +264,24 @@ public class ToolUtils
   }
 
   /**
+   * @param aComboBox
+   * @param aIndex
+   */
+  public static void setComboBoxIndex( final JComboBox aComboBox, final int aIndex )
+  {
+    int idx = aIndex;
+    if ( idx < 0 )
+    {
+      idx = aComboBox.getSelectedIndex();
+    }
+    else if ( idx > aComboBox.getItemCount() )
+    {
+      idx = idx % aComboBox.getItemCount();
+    }
+    aComboBox.setSelectedIndex( idx );
+  }
+
+  /**
    * Convenience method to show an error message.
    * 
    * @param aParent

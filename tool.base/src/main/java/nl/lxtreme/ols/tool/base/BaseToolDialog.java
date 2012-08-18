@@ -26,6 +26,7 @@ import java.util.concurrent.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.Configurable;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.task.*;
@@ -382,6 +383,22 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JDialog implements Too
   protected void prepareToolTask( final ToolTask<RESULT_TYPE> aToolTask )
   {
     // NO-op
+  }
+
+  /**
+   * Convenience method to set the combobox index to a "safe" value, based on
+   * the given user settings.
+   * 
+   * @param aComboBox
+   *          the combobox to set the selected index for;
+   * @param aSettings
+   *          the user settings to take the selected index from;
+   * @param aSettingName
+   *          the name of the user setting to use.
+   */
+  protected final void setComboBoxIndex( final JComboBox aComboBox, final UserSettings aSettings, final String aSettingName )
+  {
+    ToolUtils.setComboBoxIndex( aComboBox, aSettings.getInt( aSettingName, -1 ) );
   }
 
   /**

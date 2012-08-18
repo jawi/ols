@@ -167,8 +167,9 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    this.lineA.setSelectedIndex( aSettings.getInt( "lineA", this.lineA.getSelectedIndex() ) );
-    this.lineB.setSelectedIndex( aSettings.getInt( "lineB", this.lineB.getSelectedIndex() ) );
+    // Issue #114: avoid setting illegal values...
+    setComboBoxIndex( this.lineA, aSettings, "lineA" );
+    setComboBoxIndex( this.lineB, aSettings, "lineB" );
 
     this.detectSDA_SCL.setSelected( aSettings.getBoolean( "detectSDA_SCL", this.detectSDA_SCL.isSelected() ) );
     this.detectSTART.setSelected( aSettings.getBoolean( "detectStart", this.detectSTART.isSelected() ) );

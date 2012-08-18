@@ -135,13 +135,15 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
    */
   public void readPreferences( final UserSettings aSettings )
   {
-    this.lineSMC.setSelectedIndex( aSettings.getInt( "lineSMC", this.lineSMC.getSelectedIndex() ) );
-    this.lineSTM.setSelectedIndex( aSettings.getInt( "lineSTM", this.lineSTM.getSelectedIndex() ) );
-    this.lineEBG.setSelectedIndex( aSettings.getInt( "lineEBG", this.lineEBG.getSelectedIndex() ) );
-    this.lineBYTE.setSelectedIndex( aSettings.getInt( "lineBYTE", this.lineBYTE.getSelectedIndex() ) );
-    this.lineBL.setSelectedIndex( aSettings.getInt( "lineBL", this.lineBL.getSelectedIndex() ) );
-    this.lineWRT.setSelectedIndex( aSettings.getInt( "lineWRT", this.lineWRT.getSelectedIndex() ) );
-    this.lineSYNC.setSelectedIndex( aSettings.getInt( "lineSYNC", this.lineSYNC.getSelectedIndex() ) );
+    // Issue #114: avoid setting illegal values...
+    setComboBoxIndex( this.lineSMC, aSettings, "lineSMC" );
+    setComboBoxIndex( this.lineSTM, aSettings, "lineSTM" );
+    setComboBoxIndex( this.lineEBG, aSettings, "lineEBG" );
+    setComboBoxIndex( this.lineBYTE, aSettings, "lineBYTE" );
+    setComboBoxIndex( this.lineBL, aSettings, "lineBL" );
+    setComboBoxIndex( this.lineWRT, aSettings, "lineWRT" );
+    setComboBoxIndex( this.lineSYNC, aSettings, "lineSYNC" );
+
     this.showInst.setSelected( aSettings.getBoolean( "showInst", this.showInst.isSelected() ) );
     this.showData.setSelected( aSettings.getBoolean( "showData", this.showData.isSelected() ) );
     this.showBusGrants.setSelected( aSettings.getBoolean( "showBusGrants", this.showBusGrants.isSelected() ) );

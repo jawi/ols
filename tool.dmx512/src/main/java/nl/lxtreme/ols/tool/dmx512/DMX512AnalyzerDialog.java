@@ -117,7 +117,8 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
   @Override
   public void readPreferences( final UserSettings aSettings )
   {
-    this.dataLine.setSelectedIndex( aSettings.getInt( "dataLine", this.dataLine.getSelectedIndex() ) );
+    // Issue #114: avoid setting illegal values...
+    setComboBoxIndex( this.dataLine, aSettings, "dataLine" );
   }
 
   /**

@@ -287,12 +287,15 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     this.spifiMode.setSelectedIndex( aSettings.getInt( "protocol", this.spifiMode.getSelectedIndex() ) );
     this.reportCS.setSelected( aSettings.getBoolean( "reportCS", this.reportCS.isSelected() ) );
     this.honourCS.setSelected( aSettings.getBoolean( "honourCS", this.honourCS.isSelected() ) );
-    this.sck.setSelectedIndex( aSettings.getInt( "sck", this.sck.getSelectedIndex() ) );
-    this.miso.setSelectedIndex( aSettings.getInt( "miso", this.miso.getSelectedIndex() ) );
-    this.mosi.setSelectedIndex( aSettings.getInt( "mosi", this.mosi.getSelectedIndex() ) );
-    this.io2.setSelectedIndex( aSettings.getInt( "io2", this.io2.getSelectedIndex() ) );
-    this.io3.setSelectedIndex( aSettings.getInt( "io3", this.io3.getSelectedIndex() ) );
-    this.cs.setSelectedIndex( aSettings.getInt( "cs", this.cs.getSelectedIndex() ) );
+
+    // Issue #114: avoid setting illegal values...
+    setComboBoxIndex( this.sck, aSettings, "sck" );
+    setComboBoxIndex( this.miso, aSettings, "miso" );
+    setComboBoxIndex( this.mosi, aSettings, "mosi" );
+    setComboBoxIndex( this.io2, aSettings, "io2" );
+    setComboBoxIndex( this.io3, aSettings, "io3" );
+    setComboBoxIndex( this.cs, aSettings, "cs" );
+
     this.mode.setSelectedIndex( aSettings.getInt( "mode", this.mode.getSelectedIndex() ) );
     this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
     this.order.setSelectedIndex( aSettings.getInt( "order", this.order.getSelectedIndex() ) );
