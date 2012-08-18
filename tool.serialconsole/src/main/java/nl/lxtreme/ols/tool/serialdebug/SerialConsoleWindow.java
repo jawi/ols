@@ -31,8 +31,6 @@ import java.util.List;
 
 import javax.microedition.io.*;
 import javax.swing.*;
-import javax.swing.text.*;
-
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -50,319 +48,6 @@ import purejavacomm.*;
  */
 public abstract class SerialConsoleWindow extends JDialog implements Closeable
 {
-  // INNER TYPES
-
-  /**
-   * @see http
-   *      ://javatechniques.com/blog/faster-jtextpane-text-insertion-part-ii/
-   */
-  static class BatchDocument extends DefaultStyledDocument
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    private static final char[] EOL_ARRAY = { '\n' };
-
-    // VARIABLES
-
-    private final List<ElementSpec> batch;
-
-    // CONSTRUCTORS
-
-    public BatchDocument()
-    {
-      this.batch = new ArrayList<ElementSpec>();
-    }
-
-    // METHODS
-
-    /**
-     * Adds a linefeed for later batch processing
-     */
-    public void appendBatchLineFeed( final AttributeSet aAttributeSet )
-    {
-      synchronized ( this.batch )
-      {
-        // Add a spec with the linefeed characters
-        this.batch.add( new ElementSpec( aAttributeSet, ElementSpec.ContentType, EOL_ARRAY, 0, 1 ) );
-
-        // Then add attributes for element start/end tags. Ideally
-        // we'd get the attributes for the current position, but we
-        // don't know what those are yet if we have unprocessed
-        // batch inserts. Alternatives would be to get the last
-        // paragraph element (instead of the first), or to process
-        // any batch changes when a linefeed is inserted.
-        Element paragraph = getParagraphElement( 0 );
-        AttributeSet pattr = paragraph.getAttributes();
-        this.batch.add( new ElementSpec( null, ElementSpec.EndTagType ) );
-        this.batch.add( new ElementSpec( pattr, ElementSpec.StartTagType ) );
-      }
-    }
-
-    /**
-     * Adds a String (assumed to not contain linefeeds) for later batch
-     * insertion.
-     */
-    public void appendBatchString( final String aText, AttributeSet aAttributeSet )
-    {
-      synchronized ( this.batch )
-      {
-        // Make a copy of the attributes, since we will hang onto
-        // them indefinitely and the caller might change them
-        // before they are processed.
-        aAttributeSet = aAttributeSet.copyAttributes();
-        char[] chars = aText.toCharArray();
-        this.batch.add( new ElementSpec( aAttributeSet, ElementSpec.ContentType, chars, 0, aText.length() ) );
-      }
-    }
-
-    public void processBatchUpdates() throws BadLocationException
-    {
-      processBatchUpdates( getLength() );
-    }
-
-    public void processBatchUpdates( final int aOffset ) throws BadLocationException
-    {
-      synchronized ( this.batch )
-      {
-        // Process all of the inserts in bulk
-        super.insert( aOffset, this.batch.toArray( new ElementSpec[this.batch.size()] ) );
-        this.batch.clear();
-      }
-    }
-  }
-
-  /**
-   * Serial reader that asynchronously reads data from an inputstream and
-   * displays it on a text area.
-   */
-  static class SerialReaderWorker extends SwingWorker<Void, Integer>
-  {
-    // VARIABLES
-
-    private final SerialTextOutput output;
-    private final InputStream inputStream;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link SerialReaderWorker} instance.
-     */
-    public SerialReaderWorker( final SerialTextOutput aOutput, final InputStream aInputStream )
-    {
-      this.output = aOutput;
-      this.inputStream = aInputStream;
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Void doInBackground() throws Exception
-    {
-      while ( !isCancelled() && !Thread.currentThread().isInterrupted() )
-      {
-        int i = this.inputStream.read();
-        if ( i >= 0 )
-        {
-          publish( Integer.valueOf( i ) );
-        }
-      }
-      return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void process( final List<Integer> aReadChars )
-    {
-      for ( Integer value : aReadChars )
-      {
-        this.output.appendText( convertToText( value ) );
-      }
-
-      this.output.flush();
-    }
-
-    /**
-     * Converts the given (byte, ASCII) value into a text representation.
-     * 
-     * @param aValue
-     *          the value to convert, cannot be <code>null</code>.
-     * @return a text representation of the given (ASCII) value.
-     */
-    private String convertToText( final Integer aValue )
-    {
-      String text;
-
-      int intValue = aValue.intValue();
-      if ( intValue < ASCII_NAMES.length )
-      {
-        text = ASCII_NAMES[intValue];
-      }
-      else
-      {
-        text = String.format( "<%02d>", aValue );
-      }
-      return text;
-    }
-  }
-
-  /**
-   * Wrapper for JTextPane that controls how text is appended.
-   */
-  final class SerialTextOutput
-  {
-    // VARIABLES
-
-    private final JTextPane output;
-    private final BatchDocument document;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link SerialTextOutput} instance.
-     */
-    public SerialTextOutput( final JTextPane aOutput )
-    {
-      this.output = aOutput;
-      this.document = new BatchDocument();
-
-      this.output.setDocument( this.document );
-      this.output.setEditable( false );
-      this.output.addKeyListener( new KeyAdapter()
-      {
-        @Override
-        public void keyTyped( final KeyEvent aEvent )
-        {
-          sendData( ( byte )aEvent.getKeyChar() );
-        }
-      } );
-
-      ActionMap actionMap = this.output.getActionMap();
-      // By default, the DefaultEditorKit & StyledEditorKit uses this action to
-      // insert newlines, as our JTextPane is non-editable, it will not do any-
-      // thing, but beep, which is annoying, hence we're overruling this action.
-      actionMap.put( DefaultEditorKit.insertBreakAction, DUMMY_ACTION );
-    }
-
-    // METHODS
-
-    /**
-     * Appends the given status text to the current document.
-     * 
-     * @param aText
-     *          the status text to append, cannot be <code>null</code>.
-     */
-    public void appendStatusText( final String aText )
-    {
-      internalAppendText( "\n", getStatusTextAttributes() );
-      internalAppendText( aText, getStatusTextAttributes() );
-      internalAppendText( "\n", getStatusTextAttributes() );
-      flush();
-    }
-
-    /**
-     * Appends the given text to the current document.
-     * 
-     * @param aText
-     *          the text to append, cannot be <code>null</code>.
-     */
-    public void appendText( final String aText )
-    {
-      internalAppendText( aText, getTextAttributes( aText ) );
-    }
-
-    /**
-     * Flushes all pending changes to the document.
-     */
-    public void flush()
-    {
-      try
-      {
-        this.document.processBatchUpdates();
-        // Move caret to last position in document...
-        this.output.setCaretPosition( this.document.getLength() - 1 );
-      }
-      catch ( IllegalArgumentException exception )
-      {
-        // Ignore; don't update caret position...
-      }
-      catch ( BadLocationException exception )
-      {
-        throw new RuntimeException( "BadLocationException while processing batch updates?!", exception );
-      }
-    }
-
-    /**
-     * @return a new attribute set, never <code>null</code>.
-     */
-    private SimpleAttributeSet createAttributeSet()
-    {
-      SimpleAttributeSet attrs = new SimpleAttributeSet();
-      StyleConstants.setFontFamily( attrs, "Monospaced" );
-      StyleConstants.setFontSize( attrs, 14 );
-      return attrs;
-    }
-
-    /**
-     * Returns the status text attributes for the given text.
-     * 
-     * @return a attribute set, never <code>null</code>.
-     */
-    private AttributeSet getStatusTextAttributes()
-    {
-      SimpleAttributeSet attrs = createAttributeSet();
-      StyleConstants.setForeground( attrs, STATUS_TEXT_COLOR );
-      StyleConstants.setBold( attrs, true );
-      return attrs;
-    }
-
-    /**
-     * Returns the text attributes for the given text.
-     * 
-     * @param aText
-     *          the text to create the text attributes for, cannot be
-     *          <code>null</code>.
-     * @return a attribute set, never <code>null</code>.
-     */
-    private AttributeSet getTextAttributes( final String aText )
-    {
-      SimpleAttributeSet attrs = createAttributeSet();
-
-      // ignore any trailing newlines/spaces and such...
-      String text = aText.trim();
-
-      if ( text.startsWith( "<" ) && text.endsWith( ">" ) )
-      {
-        StyleConstants.setForeground( attrs, ESCAPED_TEXT_COLOR );
-      }
-      else
-      {
-        StyleConstants.setForeground( attrs, PLAIN_TEXT_COLOR );
-      }
-      return attrs;
-    }
-
-    /**
-     * @param aText
-     * @param aAttributes
-     */
-    private void internalAppendText( final String aText, final AttributeSet aAttributes )
-    {
-      this.document.appendBatchString( aText, aAttributes );
-
-      if ( aText.endsWith( "\n" ) )
-      {
-        this.document.appendBatchLineFeed( aAttributes );
-      }
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -375,35 +60,6 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   private static final String[] PARITIES = { "None", "Odd", "Even" };
   private static final String[] STOPBITS = { "1", "1.5", "2" };
   private static final String[] FLOWCONTROLS = { "Off", "XON/XOFF (software)", "RTS/CTS (hardware)" };
-
-  private static final String[] ASCII_NAMES = { "<nul>", "<soh>", "<stx>", "<etx>", "<eot>", "<enq>", "<ack>",
-      "<bell>", "<bs>", "\t", "\n", "<vt>", "<np>", "\r", "<so>", "<si>", "<dle>", "<dc1>", "<dc2>", "<dc3>", "<dc4>",
-      "<nak>", "<syn>", "<etb>", "<can>", "<em>", "<sub>", "<esc>", "<fs>", "<gs>", "<rs>", "<us>", " ", "!", "\"",
-      "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8",
-      "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
-      "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "\\", "]", "^", "_", "`", "a", "b", "c", "d",
-      "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-      "{", "|", "}", "~", "<del>" };
-
-  private static final Action DUMMY_ACTION = new AbstractAction()
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // METHODS
-
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      // Nop...
-    }
-  };
-
-  private static final Color ESCAPED_TEXT_COLOR = new Color( 0x00, 0x80, 0xFF );
-  private static final Color PLAIN_TEXT_COLOR = new Color( 0xE6, 0xE6, 0xE6 );
-  private static final Color STATUS_TEXT_COLOR = new Color( 0xFF, 0x80, 0x00 );
-  private static final Color BACKGROUND_COLOR = new Color( 0x1E, 0x21, 0x26 );
 
   // VARIABLES
 
@@ -418,8 +74,7 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   private JComboBox paritySelect;
   private JComboBox flowControlSelect;
 
-  private JTextPane serialOutputTextPane;
-  private SerialTextOutput serialTextOutput;
+  private ConsolePane consolePane;
   private JTextField serialInputTextField;
   private JButton sendButton;
   private JButton connectButton;
@@ -429,7 +84,6 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   private volatile StreamConnection connection;
   private volatile InputStream serialInput;
   private volatile OutputStream serialOutput;
-  private volatile SerialReaderWorker worker;
 
   // CONSTRUCTORS
 
@@ -486,12 +140,11 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
       this.serialInput = this.connection.openInputStream();
       this.serialOutput = this.connection.openOutputStream();
 
-      this.worker = new SerialReaderWorker( this.serialTextOutput, this.serialInput );
-      this.worker.execute();
+      this.consolePane.connect( this.serialInput, this.serialOutput );
 
       disableControls();
 
-      this.serialTextOutput.appendStatusText( "Connected to " + this.portSelect.getSelectedItem() + " @ "
+      this.consolePane.appendStatusText( "Connected to " + this.portSelect.getSelectedItem() + " @ "
           + this.portRateSelect.getSelectedItem() );
     }
     catch ( IOException exception )
@@ -509,15 +162,11 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
     {
       enableControls();
 
-      if ( this.worker != null )
-      {
-        this.worker.cancel( false /* mayInterruptIfRunning */);
-        this.worker = null;
-      }
+      this.consolePane.disconnect();
 
       if ( this.connection != null )
       {
-        this.serialTextOutput.appendStatusText( "Disconnected ..." );
+        this.consolePane.appendStatusText( "Disconnected ..." );
 
         HostUtils.closeResource( this.serialInput );
         HostUtils.closeResource( this.serialOutput );
@@ -622,7 +271,7 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   {
     final JPanel output = new JPanel( new GridBagLayout() );
 
-    output.add( new JScrollPane( this.serialOutputTextPane ), new GridBagConstraints( 0, 0, 2, 1, 1.0, 1.0,
+    output.add( new JScrollPane( this.consolePane ), new GridBagConstraints( 0, 0, 2, 1, 1.0, 1.0,
         GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets( 4, 4, 4, 4 ), 0, 0 ) );
 
     output.add( this.serialInputTextField, new GridBagConstraints( 0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.SOUTH,
@@ -704,7 +353,7 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
     this.disconnectButton.setEnabled( true );
     this.sendButton.setEnabled( true );
     this.serialInputTextField.setEnabled( true );
-    this.serialOutputTextPane.setEnabled( true );
+    this.consolePane.setEnabled( true );
 
     this.portSelect.setEnabled( false );
     this.portRateSelect.setEnabled( false );
@@ -724,7 +373,7 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
     this.disconnectButton.setEnabled( false );
     this.sendButton.setEnabled( false );
     this.serialInputTextField.setEnabled( false );
-    this.serialOutputTextPane.setEnabled( false );
+    this.consolePane.setEnabled( false );
 
     this.portSelect.setEnabled( true );
     this.portRateSelect.setEnabled( true );
@@ -833,11 +482,16 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
       }
     } );
 
-    this.serialOutputTextPane = new JTextPane();
-    this.serialOutputTextPane.setBackground( BACKGROUND_COLOR );
-    this.serialOutputTextPane.setBorder( BorderFactory.createEmptyBorder() );
-
-    this.serialTextOutput = new SerialTextOutput( this.serialOutputTextPane );
+    this.consolePane = new ConsolePane();
+    this.consolePane.setBackground( ConsolePane.BACKGROUND_COLOR );
+    this.consolePane.setBorder( BorderFactory.createEmptyBorder() );
+    // InputMap inputMap = this.consolePane.getInputMap();
+    // // Press C+d to send EOF
+    // inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_D, InputEvent.CTRL_MASK
+    // ), new EOFAction() );
+    // // Press C+z to detach process
+    // inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_Z, InputEvent.CTRL_MASK
+    // ), new DetachAction() );
 
     this.serialInputTextField = new JTextField( 80 );
     this.serialInputTextField.setToolTipText( "Enter raw commands here. Use $xx to enter ASCII characters directly." );
