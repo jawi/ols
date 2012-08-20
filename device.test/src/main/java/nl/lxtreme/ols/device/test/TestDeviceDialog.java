@@ -42,7 +42,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   private static final long serialVersionUID = 1L;
 
   static final String[] DATA_FUNCTIONS = new String[] { "Sawtooth", "All zeros", "Sine", "odd-even", "0x55-0xAA",
-      "Random", "I2C sample", "1-Wire sample", "Manchester encoded" };
+      "Random", "I2C sample", "1-Wire sample", "Manchester encoded", "0x80-0x00" };
   static final Integer[] CHANNELS = new Integer[] { 1, 4, 8, 16, 32 };
   static final Integer[] DATA_LENGTH = new Integer[] { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072 };
 

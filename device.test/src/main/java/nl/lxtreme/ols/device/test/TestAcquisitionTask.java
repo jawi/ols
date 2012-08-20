@@ -70,6 +70,7 @@ public class TestAcquisitionTask implements AcquisitionTask
     final int[] data;
     int rate = 1000000000;
     int trigger = -1;
+    int enabledChannels = ( int )( ( 1L << channels ) - 1 );
 
     final double max = ( ( ( 1L << Math.min( 16, channels ) ) - 1L ) & 0xFFFFFFFFL );
     final double half = ( max / 2.0 );
@@ -103,6 +104,8 @@ public class TestAcquisitionTask implements AcquisitionTask
     {
       final Random rnd = new Random();
 
+      boolean state = false;
+
       data = new int[dataLength];
       for ( int i = 0; i < data.length; i++ )
       {
@@ -132,6 +135,15 @@ public class TestAcquisitionTask implements AcquisitionTask
         {
           data[i] = rnd.nextInt();
         }
+        else if ( DATA_FUNCTIONS[9].equals( dataFunction ) )
+        {
+          if ( ( i % 4 ) == 0 )
+          {
+            state = !state;
+          }
+          data[i] = state ? 0x00 : 0x8000;
+          enabledChannels = 0x0000FF00;
+        }
 
         this.progressListener.acquisitionInProgress( ( int )( ( i * 100.0 ) / data.length ) );
       }
@@ -139,6 +151,6 @@ public class TestAcquisitionTask implements AcquisitionTask
       trigger = ( int )( data.length * 0.25 );
     }
 
-    return new CapturedData( data, trigger, rate, channels, ( int )( ( 1L << channels ) - 1 ) );
+    return new CapturedData( data, trigger, rate, channels, enabledChannels );
   }
 }
