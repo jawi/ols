@@ -80,6 +80,7 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
   private JButton connectButton;
   private JButton disconnectButton;
   private JCheckBox sendEnter;
+  private JCheckBox rawMode;
 
   private volatile StreamConnection connection;
   private volatile InputStream serialInput;
@@ -313,6 +314,9 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
 
     SpringLayoutUtils.addSeparator( panel, "Terminal settings" );
 
+    panel.add( createRightAlignedLabel( "Raw mode" ) );
+    panel.add( this.rawMode );
+
     panel.add( createRightAlignedLabel( "Send newlines?" ) );
     panel.add( this.sendEnter );
 
@@ -482,16 +486,19 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
       }
     } );
 
+    this.rawMode = new JCheckBox();
+    this.rawMode.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        JCheckBox cb = ( JCheckBox )aEvent.getSource();
+        SerialConsoleWindow.this.consolePane.setRawMode( cb.isSelected() );
+      }
+    } );
+
     this.consolePane = new ConsolePane();
-    this.consolePane.setBackground( ConsolePane.BACKGROUND_COLOR );
     this.consolePane.setBorder( BorderFactory.createEmptyBorder() );
-    // InputMap inputMap = this.consolePane.getInputMap();
-    // // Press C+d to send EOF
-    // inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_D, InputEvent.CTRL_MASK
-    // ), new EOFAction() );
-    // // Press C+z to detach process
-    // inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_Z, InputEvent.CTRL_MASK
-    // ), new DetachAction() );
 
     this.serialInputTextField = new JTextField( 80 );
     this.serialInputTextField.setToolTipText( "Enter raw commands here. Use $xx to enter ASCII characters directly." );

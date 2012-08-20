@@ -30,6 +30,7 @@ import java.util.concurrent.*;
 import javax.swing.*;
 import javax.swing.text.*;
 
+import nl.lxtreme.ols.tool.serialdebug.AnsiInterpreter.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -57,56 +58,59 @@ public class ConsolePane extends JTextPane
     public void insertString( final FilterBypass aFb, final int aOffset, final String aString, final AttributeSet aAttr )
         throws BadLocationException
     {
-      final Document doc = aFb.getDocument();
-
-      aFb.insertString( aOffset, aString, aAttr );
+      int inputStart = getInputStart();
 
       if ( ConsolePane.this.mux.isReadMode() )
       {
-        sendData( doc, aOffset, aString.length() );
+        sendData( aString );
+
+        setInputStart( inputStart - aString.length() );
+      }
+      else
+      {
+        aFb.insertString( aOffset, aString, aAttr );
+
+        setInputStart( inputStart + aString.length() );
       }
     }
 
     @Override
     public void remove( final FilterBypass aFb, final int aOffset, final int aLength ) throws BadLocationException
     {
+      int inputStart = getInputStart();
+
       if ( ConsolePane.this.mux.isReadMode() )
       {
-        sendData( "\b" );
-      }
+        for ( int i = 0; i < aLength; i++ )
+        {
+          sendData( "\b" );
+        }
 
-      aFb.remove( aOffset, aLength );
+        setInputStart( inputStart - aLength );
+      }
+      else
+      {
+        aFb.remove( aOffset, aLength );
+      }
     }
 
     @Override
     public void replace( final FilterBypass aFb, final int aOffset, final int aLength, final String aText,
         final AttributeSet aAttrs ) throws BadLocationException
     {
-      final Document doc = aFb.getDocument();
-
-      aFb.replace( aOffset, aLength, aText, aAttrs );
+      int inputStart = getInputStart();
 
       if ( ConsolePane.this.mux.isReadMode() )
       {
-        sendData( doc, aOffset, aText.length() );
-      }
-    }
+        sendData( aText );
 
-    /**
-     * @param aFilter
-     * @param offset
-     * @param length
-     */
-    private void sendData( final Document aDocument, final int offset, final int length )
-    {
-      try
-      {
-        sendData( aDocument.getText( offset, length ) );
+        setInputStart( inputStart - aText.length() );
       }
-      catch ( BadLocationException exception )
+      else
       {
-        // TODO Auto-generated catch block
-        exception.printStackTrace();
+        aFb.replace( aOffset, aLength, aText, aAttrs );
+
+        setInputStart( inputStart + aText.length() );
       }
     }
 
@@ -186,7 +190,8 @@ public class ConsolePane extends JTextPane
   }
 
   /**
-   * 
+   * Provides a multiplexer for writing to a document from two individual
+   * sources.
    */
   static class DocumentMultiplexer
   {
@@ -232,49 +237,6 @@ public class ConsolePane extends JTextPane
   }
 
   /**
-   * 
-   */
-  static class EchoBuffer
-  {
-    // VARIABLES
-
-    private final StringBuilder sb = new StringBuilder();
-
-    // METHODS
-
-    public void append( final String aText )
-    {
-      synchronized ( this.sb )
-      {
-        this.sb.append( aText );
-      }
-    }
-
-    public void clear()
-    {
-      synchronized ( this.sb )
-      {
-        this.sb.setLength( 0 );
-      }
-    }
-
-    public boolean shouldEcho( final String aText )
-    {
-      synchronized ( this.sb )
-      {
-        if ( this.sb.indexOf( aText ) == 0 )
-        {
-          String remainder = this.sb.substring( aText.length() );
-          this.sb.setLength( 0 );
-          this.sb.append( remainder );
-          return false;
-        }
-        return true;
-      }
-    }
-  }
-
-  /**
    * Provides an action to go to the beginning of the user input.
    */
   class HomeAction extends AbstractAction
@@ -292,11 +254,14 @@ public class ConsolePane extends JTextPane
    * Serial reader that asynchronously reads data from an inputstream and
    * displays it on a text area.
    */
-  final class InputStreamWorker extends SwingWorker<Void, Integer>
+  final class InputStreamWorker extends SwingWorker<Void, Integer> implements TermCallback
   {
     // VARIABLES
 
     private final InputStream inputStream;
+    private final AnsiInterpreter ansiInterpreter;
+
+    private volatile AttributeSet attrs;
 
     // CONSTRUCTORS
 
@@ -306,9 +271,116 @@ public class ConsolePane extends JTextPane
     public InputStreamWorker( final InputStream aInputStream )
     {
       this.inputStream = aInputStream;
+      this.ansiInterpreter = new AnsiInterpreter( this );
     }
 
     // METHODS
+
+    public void onAttributeChange( final AttributeSet aAttributes )
+    {
+      this.attrs = aAttributes;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onClearLine( final int aMode )
+    {
+      Document doc = getDocument();
+
+      Element rootElem = doc.getDefaultRootElement();
+      Element lineElem = rootElem.getElement( rootElem.getElementCount() - 1 );
+
+      int lineStart = lineElem.getStartOffset();
+      int lineEnd = lineElem.getEndOffset() - 1;
+
+      if ( aMode == 1 )
+      {
+        // clear from cursor to start of line...
+        removeText( doc, lineStart, lineEnd - lineStart );
+      }
+      else if ( aMode == 2 )
+      {
+        // clear entire line...
+        removeText( doc, lineStart, lineEnd - lineStart );
+      }
+      else
+      {
+        // clear from cursor to end of line...
+        removeText( doc, lineEnd - 1, 1 );
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onClearScreen( final int aMode )
+    {
+      setDocument( new DefaultStyledDocument() );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onMoveCursor( final int aXpos, final int aYpos )
+    {
+      Document doc = getDocument();
+
+      Element rootElem = doc.getDefaultRootElement();
+      Element lineElem = rootElem.getElement( rootElem.getElementCount() - 1 );
+
+      int lineStart = lineElem.getStartOffset();
+      int lineEnd = lineElem.getEndOffset() - 1;
+
+      if ( aXpos >= 0 )
+      {
+        setCaretPosition( Math.min( lineEnd, lineStart + aXpos ) );
+      }
+
+      if ( aYpos >= 0 )
+      {
+        // XXX
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onText( final char aChar )
+    {
+      final AbstractDocument doc = ( AbstractDocument )getDocument();
+      final AttributeSet _attrs = this.attrs;
+
+      Element rootElem = doc.getDefaultRootElement();
+      Element lineElem = rootElem.getElement( rootElem.getElementCount() - 1 );
+
+      int lineStart = lineElem.getStartOffset();
+      int lineEnd = lineElem.getEndOffset() - 1;
+
+      try
+      {
+        int caret = getCaretPosition();
+        // When the caret is not at the end, and we did not obtain a linefeed
+        // (\n), we should replace the current line...
+        if ( ( caret >= lineStart ) && ( caret < lineEnd ) && ( aChar != '\n' ) )
+        {
+          doc.replace( caret, lineEnd - caret, Character.toString( aChar ), _attrs );
+        }
+        else
+        {
+          doc.insertString( lineEnd, Character.toString( aChar ), _attrs );
+          setCaretPosition( lineEnd + 1 );
+        }
+      }
+      catch ( BadLocationException exception )
+      {
+        throw new RuntimeException( exception );
+      }
+    }
 
     @Override
     protected Void doInBackground() throws Exception
@@ -335,41 +407,37 @@ public class ConsolePane extends JTextPane
 
       try
       {
-        final Document doc = getDocument();
-
-        for ( Integer i : aReadChars )
+        if ( isRawMode() )
         {
-          String c = convertToText( i );
-          if ( !ConsolePane.this.echoBuffer.shouldEcho( c ) )
-          {
-            System.out.println( "S[" + c + "]" );
-            continue;
-          }
-
-          AttributeSet attrs = getPlainTextAttributes();
-          if ( c.startsWith( "<" ) && c.endsWith( ">" ) )
-          {
-            attrs = getEscapeAttributes();
-          }
-
-          try
-          {
-            int offset = doc.getLength();
-
-            doc.insertString( offset, c, attrs );
-          }
-          catch ( BadLocationException exception )
-          {
-            throw new RuntimeException( exception );
-          }
-
-          setInputStart( doc.getLength() );
-          setCaretPosition( doc.getLength() );
+          handleRawText( aReadChars );
+        }
+        else
+        {
+          handleAnsiText( aReadChars );
         }
       }
       finally
       {
         ConsolePane.this.mux.switchToReadMode();
+      }
+    }
+
+    /**
+     * @param aDocument
+     * @param aOffset
+     * @param aText
+     * @param aAttributes
+     */
+    private void appendText( final Document aDocument, final int aOffset, final String aText,
+        final AttributeSet aAttributes )
+    {
+      try
+      {
+        aDocument.insertString( aOffset, aText, aAttributes );
+      }
+      catch ( BadLocationException exception )
+      {
+        throw new RuntimeException( exception );
       }
     }
 
@@ -396,6 +464,65 @@ public class ConsolePane extends JTextPane
       return text;
     }
 
+    /**
+     * @param aDoc
+     * @param aChar
+     */
+    private void handleAnsiText( final List<Integer> aChars )
+    {
+      this.ansiInterpreter.append( aChars );
+    }
+
+    /**
+     * @param aDoc
+     * @param aChar
+     */
+    private void handleRawText( final List<Integer> aChars )
+    {
+      final Document doc = getDocument();
+      for ( Integer i : aChars )
+      {
+        String c = convertToText( i );
+
+        AttributeSet attrs = getPlainTextAttributes();
+        if ( c.startsWith( "<" ) && c.endsWith( ">" ) )
+        {
+          attrs = getEscapeAttributes();
+        }
+
+        int offset = doc.getLength();
+
+        int charValue = i.intValue();
+        if ( charValue == '\b' )
+        {
+          removeText( doc, offset - 1, 1 );
+        }
+        else if ( charValue == '\u0007' )
+        {
+          Toolkit.getDefaultToolkit().beep();
+        }
+        else
+        {
+          appendText( doc, offset, c, attrs );
+        }
+      }
+    }
+
+    /**
+     * @param aDocument
+     * @param aOffset
+     */
+    private void removeText( final Document aDocument, final int aOffset, final int aLength )
+    {
+      try
+      {
+        aDocument.remove( aOffset, aLength );
+      }
+      catch ( BadLocationException exception )
+      {
+        throw new RuntimeException( exception );
+      }
+    }
   }
 
   final class OutputStreamWorker implements Closeable
@@ -431,10 +558,6 @@ public class ConsolePane extends JTextPane
 
     public void write( final String aData ) throws IOException
     {
-      System.out.println( ">>> " + aData );
-
-      ConsolePane.this.echoBuffer.append( aData );
-
       this.outputStream.write( aData.getBytes() );
       this.outputStream.flush();
     }
@@ -463,6 +586,7 @@ public class ConsolePane extends JTextPane
 
   private static final long serialVersionUID = 1L;
 
+  /** Contains an integer value representing the start of input. */
   private static final String PROPERTY_INPUTSTART = "InputStart";
 
   private static final String[] ASCII_NAMES = { "<nul>", "<soh>", "<stx>", "<etx>", "<eot>", "<enq>", "<ack>",
@@ -478,7 +602,8 @@ public class ConsolePane extends JTextPane
 
   private final DocumentFilter documentFilter;
   private final DocumentMultiplexer mux;
-  private final EchoBuffer echoBuffer;
+
+  private volatile boolean rawMode;
 
   private volatile InputStreamWorker inputStreamWorker;
   private volatile OutputStreamWorker outputStreamWorker;
@@ -492,7 +617,6 @@ public class ConsolePane extends JTextPane
   {
     this.documentFilter = new AppendOnlyDocumentFilter();
     this.mux = new DocumentMultiplexer();
-    this.echoBuffer = new EchoBuffer();
 
     final InputMap inputMap = getInputMap();
     inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_BACK_SPACE, 0 ), new BackspaceAction() );
@@ -501,6 +625,12 @@ public class ConsolePane extends JTextPane
 
     setDocument( getDocument() );
     setInputStart( 0 );
+
+    setBackground( BACKGROUND_COLOR );
+    setCaretColor( PLAIN_TEXT_COLOR );
+
+    getCaret().setVisible( true );
+    getCaret().setBlinkRate( 500 );
   }
 
   // METHODS
@@ -592,6 +722,16 @@ public class ConsolePane extends JTextPane
     setEditable( false );
   }
 
+  /**
+   * Returns the current value of rawMode.
+   * 
+   * @return the rawMode
+   */
+  public boolean isRawMode()
+  {
+    return this.rawMode;
+  }
+
   @Override
   public void setDocument( final Document aDocument )
   {
@@ -607,6 +747,19 @@ public class ConsolePane extends JTextPane
     }
 
     super.setDocument( aDocument );
+  }
+
+  /**
+   * Sets whether or not the "raw" mode is enabled. In raw mode, all
+   * non-displayable ASCII characters are represented by their name
+   * representations.
+   * 
+   * @param aRawMode
+   *          the rawMode to set.
+   */
+  public void setRawMode( final boolean aRawMode )
+  {
+    this.rawMode = aRawMode;
   }
 
   /**
@@ -641,7 +794,7 @@ public class ConsolePane extends JTextPane
    * 
    * @return a attribute set, never <code>null</code>.
    */
-  private AttributeSet getEscapeAttributes()
+  private SimpleAttributeSet getEscapeAttributes()
   {
     SimpleAttributeSet attrs = createAttributeSet();
     StyleConstants.setForeground( attrs, ESCAPED_TEXT_COLOR );
@@ -653,7 +806,7 @@ public class ConsolePane extends JTextPane
    * 
    * @return a attribute set, never <code>null</code>.
    */
-  private AttributeSet getPlainTextAttributes()
+  private SimpleAttributeSet getPlainTextAttributes()
   {
     SimpleAttributeSet attrs = createAttributeSet();
     StyleConstants.setForeground( attrs, PLAIN_TEXT_COLOR );
@@ -665,7 +818,7 @@ public class ConsolePane extends JTextPane
    * 
    * @return a attribute set, never <code>null</code>.
    */
-  private AttributeSet getStatusTextAttributes()
+  private SimpleAttributeSet getStatusTextAttributes()
   {
     SimpleAttributeSet attrs = createAttributeSet();
     StyleConstants.setForeground( attrs, STATUS_TEXT_COLOR );
