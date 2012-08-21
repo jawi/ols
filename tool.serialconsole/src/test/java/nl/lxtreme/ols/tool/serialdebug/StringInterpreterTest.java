@@ -53,12 +53,12 @@ public class StringInterpreterTest
    * emitted if this setting is enabled.
    */
   @Test
-  public void testInterpretEmtpyStringWithAppendNewLine()
+  public void testInterpretEmtpyStringWithAppendNewLine() throws Exception
   {
     this.interpreter.setAppendNewLine( true );
 
-    assertArrayEquals( new byte[] { '\n' }, this.interpreter.interpret( "" ) );
-    assertArrayEquals( new byte[] { '\n' }, this.interpreter.interpret( null ) );
+    assertInterpretation( "", '\n' );
+    assertInterpretation( null, '\n' );
   }
 
   /**
@@ -66,75 +66,76 @@ public class StringInterpreterTest
    * emitted if this setting is disable.
    */
   @Test
-  public void testInterpretEmtpyStringWithoutAppendNewLine()
+  public void testInterpretEmtpyStringWithoutAppendNewLine() throws Exception
   {
-    assertArrayEquals( new byte[0], this.interpreter.interpret( "" ) );
-    assertArrayEquals( new byte[0], this.interpreter.interpret( null ) );
+    assertInterpretation( "" );
+    assertInterpretation( null );
   }
 
   /**
    * Tests that interpreting '\\' works.
    */
   @Test
-  public void testInterpretEscapedBackslashCharOk()
+  public void testInterpretEscapedBackslashCharOk() throws Exception
   {
-    assertEquals( "\\", interpret( "\\\\" ) );
+    assertInterpretation( "\\\\", '\\' );
   }
 
   /**
    * Tests that interpreting hex digits as '\n' works.
    */
   @Test
-  public void testInterpretEscapedCharsOk()
+  public void testInterpretEscapedCharsOk() throws Exception
   {
-    assertEquals( "\\a\r\n", interpret( "\\a\\r\\n" ) );
+    assertInterpretation( "\\a\\r\\n", '\\', 'a', '\r', '\n' );
   }
 
   /**
    * Tests that interpreting hex digits as '\00' works.
    */
   @Test
-  public void testInterpretEscapedDigitsOk()
+  public void testInterpretEscapedDigitsOk() throws Exception
   {
-    assertEquals( "\0\1\2\3\4\5\6", interpret( "\\00\\01\\02\\03\\04\\5\\6" ) );
-    assertEquals( "\1\1\1\0001", interpret( "\\1\\01\\001\\0001" ) );
-    assertEquals( "\u00ff", interpret( "\\255" ) );
-    assertEquals( "\\255", interpret( "\\\\255" ) );
-    assertEquals( "\\256", interpret( "\\256" ) );
-    assertEquals( "\\256", interpret( "\\\\256" ) );
+    assertInterpretation( "\\00\\01\\02\\03\\04", 0, 1, 2, 3, 4 );
+    assertInterpretation( "\\5\\6", 5, 6 );
+    assertInterpretation( "\\1\\01\\001\\0001", 1, 1, 1, 0, '1' );
+    assertInterpretation( "\\255", 255 );
+    assertInterpretation( "\\\\255", '\\', '2', '5', '5' );
+    assertInterpretation( "\\256", '\\', '2', '5', '6' );
+    assertInterpretation( "\\\\256", '\\', '2', '5', '6' );
   }
 
   /**
    * Tests that interpreting '$$' works.
    */
   @Test
-  public void testInterpretEscapedStringCharOk()
+  public void testInterpretEscapedStringCharOk() throws Exception
   {
-    assertEquals( "$", interpret( "$$" ) );
+    assertInterpretation( "$$", '$' );
   }
 
   /**
    * Tests that interpreting hex digits as '$00' works.
    */
   @Test
-  public void testInterpretHexDigitsOk()
+  public void testInterpretHexDigitsOk() throws Exception
   {
-    assertEquals( "\u0000\u0001\u0002\u0003\u0004", interpret( "$00$01$02$03$04" ) );
-    assertEquals( "\u0001\u0001\u0001\u00001", interpret( "$1$01$001$0001" ) );
-    assertEquals( "\u00ff", interpret( "$255" ) );
-    assertEquals( "$255", interpret( "$$255" ) );
-    assertEquals( "$256", interpret( "$256" ) );
-    assertEquals( "$256", interpret( "$$256" ) );
+    assertInterpretation( "$00$01$02$03$04", 0, 1, 2, 3, 4 );
+    assertInterpretation( "$1$01$001$0001", 1, 1, 1, 0, '1' );
+    assertInterpretation( "$255", 255 );
+    assertInterpretation( "$$255", '$', '2', '5', '5' );
+    assertInterpretation( "$256", '$', '2', '5', '6' );
+    assertInterpretation( "$$256", '$', '2', '5', '6' );
   }
 
   /**
    * Tests the handling for non-escaped characters.
    */
   @Test
-  public void testInterpretNonEscapedTextOk()
+  public void testInterpretNonEscapedTextOk() throws Exception
   {
-    assertEquals( "The quick brown fox jumped over the lazy dog!",
-        interpret( "The quick brown fox jumped over the lazy dog!" ) );
+    assertArrayEquals( "The quick brown fox jumped over the lazy dog!".getBytes(),
+        this.interpreter.interpret( "The quick brown fox jumped over the lazy dog!" ) );
   }
 
   /**
@@ -142,12 +143,12 @@ public class StringInterpreterTest
    * literally.
    */
   @Test
-  public void testInterpretUnescapedBackslashAtEndOk()
+  public void testInterpretUnescapedBackslashAtEndOk() throws Exception
   {
-    assertEquals( "\\", interpret( "\\" ) );
-    assertEquals( "\\", interpret( "\\\\" ) );
-    assertEquals( "\\\\", interpret( "\\\\\\" ) );
-    assertEquals( "test\\", interpret( "test\\" ) );
+    assertInterpretation( "\\", '\\' );
+    assertInterpretation( "\\\\", '\\' );
+    assertInterpretation( "\\\\\\", '\\', '\\' );
+    assertInterpretation( "test\\", 't', 'e', 's', 't', '\\' );
   }
 
   /**
@@ -155,20 +156,36 @@ public class StringInterpreterTest
    * literally.
    */
   @Test
-  public void testInterpretUnescapedStringCharAtEndOk()
+  public void testInterpretUnescapedStringCharAtEndOk() throws Exception
   {
-    assertEquals( "$", interpret( "$" ) );
-    assertEquals( "$", interpret( "$$" ) );
-    assertEquals( "$$", interpret( "$$$" ) );
-    assertEquals( "test$", interpret( "test$" ) );
+    assertInterpretation( "$", '$' );
+    assertInterpretation( "$$", '$' );
+    assertInterpretation( "$$$", '$', '$' );
+    assertInterpretation( "test$", 't', 'e', 's', 't', '$' );
   }
 
   /**
-   * @param input
-   * @return
+   * Tests that given a unicode character, the result will be an UTF-8 encoded
+   * byte value.
    */
-  private String interpret( final String input )
+  @Test
+  public void testInterpretUnicodeOk() throws Exception
   {
-    return new String( this.interpreter.interpret( input ) );
+    assertInterpretation( "\u1234", 0xE1, 0x88, 0xB4 );
+    assertInterpretation( "\u00e9", 0xC3, 0xA9 );
+  }
+
+  /**
+   * @param aInput
+   * @param aExpectedValues
+   */
+  private void assertInterpretation( final String aInput, final int... aExpectedValues )
+  {
+    byte[] result = this.interpreter.interpret( aInput );
+    for ( int i = 0; i < result.length; i++ )
+    {
+      assertEquals( ( byte )aExpectedValues[i], result[i] );
+    }
+    assertEquals( aExpectedValues.length, result.length );
   }
 }

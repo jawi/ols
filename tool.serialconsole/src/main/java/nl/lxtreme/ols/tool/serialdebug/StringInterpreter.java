@@ -21,6 +21,10 @@
 package nl.lxtreme.ols.tool.serialdebug;
 
 
+import java.io.*;
+import java.util.*;
+
+
 /**
  * Provides a simple interpreter for handling escapes in strings, such as "$00"
  * or "\00".
@@ -33,59 +37,69 @@ final class StringInterpreter
 
   // METHODS
 
+  /**
+   * @param aText
+   * @return
+   */
   public byte[] interpret( final String aText )
   {
-    StringBuilder sb = new StringBuilder();
+    List<Byte> result = new ArrayList<Byte>();
 
-    if ( ( aText != null ) && !"".equals( aText.trim() ) )
+    if ( aText != null )
     {
-      char[] chars = aText.toCharArray();
-      for ( int i = 0; i < chars.length; i++ )
+      final byte[] bytes;
+      try
       {
-        int c = chars[i];
-        int la = i < ( chars.length - 1 ) ? chars[i + 1] : -1;
+        bytes = aText.getBytes( "UTF-8" );
+      }
+      catch ( UnsupportedEncodingException exception )
+      {
+        throw new RuntimeException( "UTF-8 not supported?!" );
+      }
+
+      for ( int i = 0; i < bytes.length; i++ )
+      {
+        byte c = bytes[i];
+        byte la = i < ( bytes.length - 1 ) ? bytes[i + 1] : -1;
 
         if ( c == '$' )
         {
           if ( la == '$' )
           {
             // Escaped string character...
-            sb.append( '$' );
+            result.add( Byte.valueOf( ( byte )'$' ) );
             i++;
           }
           else if ( Character.isDigit( la ) )
           {
             // Escaped digit, pick up to 3 digits...
-            int value = ( la - '0' );
-            i++;
+            int value = 0;
+            int origI = i; // points to the '$'!
 
-            la = i < ( chars.length - 1 ) ? chars[i + 1] : -1;
-            if ( Character.isDigit( la ) )
+            do
             {
               value = ( value * 10 ) + ( la - '0' );
               i++;
-
-              la = i < ( chars.length - 1 ) ? chars[i + 1] : -1;
-              if ( Character.isDigit( la ) )
-              {
-                value = ( value * 10 ) + ( la - '0' );
-                i++;
-              }
+              la = i < ( bytes.length - 1 ) ? bytes[i + 1] : -1;
             }
+            while ( ( ( i - origI ) < 3 ) && Character.isDigit( la ) );
 
             if ( value > 255 )
             {
-              sb.append( "$" ).append( Integer.toString( value ) );
+              for ( int j = origI; j <= i; j++ )
+              {
+                result.add( Byte.valueOf( bytes[j] ) );
+              }
             }
             else
             {
-              sb.append( ( char )value );
+              result.add( Byte.valueOf( ( byte )value ) );
             }
           }
           else
           {
             // Unknown...
-            sb.append( ( char )c );
+            result.add( Byte.valueOf( c ) );
           }
         }
         else if ( c == '\\' )
@@ -93,65 +107,63 @@ final class StringInterpreter
           if ( la == '\\' )
           {
             // Escaped backslash...
-            sb.append( "\\" );
+            result.add( Byte.valueOf( ( byte )'\\' ) );
             i++;
           }
           else if ( Character.isDigit( la ) )
           {
             // Escaped digit, pick up to 3 digits...
-            int value = ( la - '0' );
-            i++;
+            int value = 0;
+            int origI = i; // points to the '\\'!
 
-            la = i < ( chars.length - 1 ) ? chars[i + 1] : -1;
-            if ( Character.isDigit( la ) )
+            do
             {
               value = ( value * 10 ) + ( la - '0' );
               i++;
-
-              la = i < ( chars.length - 1 ) ? chars[i + 1] : -1;
-              if ( Character.isDigit( la ) )
-              {
-                value = ( value * 10 ) + ( la - '0' );
-                i++;
-              }
+              la = i < ( bytes.length - 1 ) ? bytes[i + 1] : -1;
             }
+            while ( ( ( i - origI ) < 3 ) && Character.isDigit( la ) );
 
             if ( value > 255 )
             {
-              sb.append( "\\" ).append( Integer.toString( value ) );
+              for ( int j = origI; j <= i; j++ )
+              {
+                result.add( Byte.valueOf( bytes[j] ) );
+              }
             }
             else
             {
-              sb.append( ( char )value );
+              result.add( Byte.valueOf( ( byte )value ) );
             }
           }
           else if ( Character.isLetter( la ) )
           {
             // Escaped letter...
-            switch ( ( char )la )
+            switch ( la )
             {
               case 'r':
-                sb.append( "\r" );
+                result.add( Byte.valueOf( ( byte )'\r' ) );
                 i++;
                 break;
               case 'n':
-                sb.append( "\n" );
+                result.add( Byte.valueOf( ( byte )'\n' ) );
                 i++;
                 break;
               case 'b':
-                sb.append( "\b" );
+                result.add( Byte.valueOf( ( byte )'\b' ) );
                 i++;
                 break;
               case 't':
-                sb.append( "\t" );
+                result.add( Byte.valueOf( ( byte )'\t' ) );
                 i++;
                 break;
               case 'f':
-                sb.append( "\f" );
+                result.add( Byte.valueOf( ( byte )'\f' ) );
                 i++;
                 break;
               default:
-                sb.append( "\\" ).append( ( char )la );
+                result.add( Byte.valueOf( ( byte )'\\' ) );
+                result.add( Byte.valueOf( la ) );
                 i++;
                 break;
             }
@@ -159,22 +171,29 @@ final class StringInterpreter
           else
           {
             // Unknown...
-            sb.append( ( char )c );
+            result.add( Byte.valueOf( c ) );
           }
         }
         else
         {
-          sb.append( ( char )c );
+          // Non-escaped byte...
+          result.add( Byte.valueOf( c ) );
         }
       }
     }
 
     if ( this.appendNewLine )
     {
-      sb.append( "\n" );
+      result.add( Byte.valueOf( ( byte )'\n' ) );
     }
 
-    return sb.toString().getBytes();
+    byte[] resultValue = new byte[result.size()];
+    for ( int i = 0; i < resultValue.length; i++ )
+    {
+      resultValue[i] = result.get( i ).byteValue();
+    }
+
+    return resultValue;
   }
 
   /**
