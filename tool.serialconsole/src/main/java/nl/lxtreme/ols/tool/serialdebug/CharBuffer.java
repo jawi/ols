@@ -26,10 +26,16 @@ import java.util.concurrent.atomic.*;
 
 
 /**
- * Provides a, thread-safe, mini character buffer which can append a list of
+ * Provides a thread-safe character buffer which can append a list of
  * characters, or remove a number of characters from the front.
+ * <p>
+ * This buffer is designed for atomicity regarding the appending and removal of
+ * items. There are no ordering guarantees when multiple threads are
+ * concurrently appending, the only thing that is guaranteed is that the append
+ * itself is performed atomicly.
+ * </p>
  */
-class CharBuffer implements CharSequence
+final class CharBuffer implements CharSequence
 {
   // INNER TYPES
 
@@ -70,12 +76,23 @@ class CharBuffer implements CharSequence
   }
 
   /**
-   * Creates a new {@link CharBuffer} instance.
+   * Creates a new {@link CharBuffer} instance with a given initial value.
+   * 
+   * @param aInitialValue
+   *          the initial value of this buffer, cannot be <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given list was <code>null</code>.
    */
   public CharBuffer( final Integer... aInitialValue )
   {
+    if ( aInitialValue == null )
+    {
+      throw new IllegalArgumentException( "InitialValue cannot be null!" );
+    }
+
     Integer[] initialValue = Arrays.copyOf( aInitialValue, aInitialValue.length + 10 );
     int appendPos = aInitialValue.length;
+
     this.stateRef = new AtomicReference<CharBufferState>( new CharBufferState( initialValue, appendPos ) );
   }
 
@@ -96,21 +113,32 @@ class CharBuffer implements CharSequence
       throw new IllegalArgumentException( "Chars cannot be null!" );
     }
 
-    CharBufferState state = this.stateRef.get();
-    Integer[] chars = state.chars;
-    int appendPos = state.appendPos;
+    // Two options for concurrency while we're appending:
+    // 1) another thread removed data -> append still is valid;
+    // 2) another thread also appended new data -> append is still valid.
 
-    if ( ( appendPos + aChars.size() ) >= chars.length )
-    {
-      // Enlarge array...
-      chars = Arrays.copyOf( chars, chars.length + aChars.size() + 10 );
-    }
-    for ( int i = 0; i < aChars.size(); i++ )
-    {
-      chars[appendPos++] = aChars.get( i );
-    }
+    CharBufferState curState, newState;
 
-    this.stateRef.compareAndSet( state, new CharBufferState( chars, appendPos ) );
+    do
+    {
+      curState = this.stateRef.get();
+      Integer[] curArray = curState.chars;
+      int curAppendPos = curState.appendPos;
+
+      if ( ( curAppendPos + aChars.size() ) >= curArray.length )
+      {
+        // Enlarge array...
+        curArray = Arrays.copyOf( curArray, curArray.length + aChars.size() + 10 );
+      }
+
+      for ( int i = 0; i < aChars.size(); i++ )
+      {
+        curArray[curAppendPos++] = aChars.get( i );
+      }
+
+      newState = new CharBufferState( curArray, curAppendPos );
+    }
+    while ( !this.stateRef.compareAndSet( curState, newState ) );
   }
 
   /**
@@ -143,42 +171,77 @@ class CharBuffer implements CharSequence
   }
 
   /**
-   * Removes all characters until the given position.
+   * Removes all characters until (but not including) the given position.
    * 
    * @param aPosition
-   *          the position until which the characters should be removed.
+   *          the position until which the characters should be removed, with 0
+   *          meaning nothing will be removed, 1 meaning the first character
+   *          will be removed, and so on.
    */
   public void removeUntil( final int aPosition )
   {
-    CharBufferState state = this.stateRef.get();
-    int appendPos = state.appendPos;
+    CharBufferState curState, newState;
+    int oldAppendPos = -1;
 
-    if ( ( aPosition < 0 ) || ( aPosition > appendPos ) )
-    {
-      throw new IndexOutOfBoundsException();
-    }
+    // Two options for concurrency while we're removing:
+    // __ 1) another thread appends new data -> remove still is valid;
+    // __ 2) another thread also removes data:
+    // ____ a) it removed data up to our position -> remove still is valid;
+    // ____ b) it removed data beyond our position -> our no longer holds.
 
-    if ( aPosition == 0 )
+    do
     {
-      // Nothing to do...
-      return;
-    }
-    else if ( aPosition >= ( appendPos - 1 ) )
-    {
-      // Remove all...
-      this.stateRef.compareAndSet( state, new CharBufferState( new Integer[10], 0 ) );
-    }
-    else
-    {
-      // Remove otherwise...
-      final Integer[] oldArray = state.chars;
-      final int newSize = oldArray.length - aPosition;
-      final Integer[] newArray = new Integer[newSize];
-      final int newAppendPos = appendPos - aPosition;
-      System.arraycopy( oldArray, aPosition, newArray, 0, newSize );
+      curState = this.stateRef.get();
 
-      this.stateRef.compareAndSet( state, new CharBufferState( newArray, newAppendPos ) );
+      int position = aPosition;
+      int curAppendPos = curState.appendPos;
+      Integer[] curArray = curState.chars;
+
+      if ( oldAppendPos >= 0 )
+      {
+        // CAS failed, find out what the resolution should be...
+        if ( oldAppendPos > curAppendPos )
+        {
+          // Data is removed, do only remove the difference in positions...
+          position -= ( oldAppendPos - curAppendPos );
+        }
+
+        // In case oldAppendPos < appendPos, there's data appended, which makes
+        // our remove still valid. In case oldAppendPos == appendPos, then
+        // something strange is going on, as we've lost our CAS, but neither an
+        // add, nor an remove is performed. In that case, simply proceed as
+        // normal...
+      }
+      else
+      {
+        // First time we're in this loop; do a simple bounds check...
+        if ( ( position < 0 ) || ( position > curAppendPos ) )
+        {
+          throw new IndexOutOfBoundsException( "Position cannot be negative or beyond the length of this buffer!" );
+        }
+      }
+
+      // Initially, position cannot be less than zero (is checked in the above
+      // else condition), however, if the CAS fails, we might have updated the
+      // position thereby making it possible to let it be negative...
+      if ( position <= 0 )
+      {
+        // Nothing to do...
+        return;
+      }
+
+      // Perform the actual removal...
+      int newSize = Math.max( 0, curArray.length - position );
+      Integer[] newArray = new Integer[newSize];
+      System.arraycopy( curArray, position, newArray, 0, newSize );
+
+      int newAppendPos = Math.max( 0, curAppendPos - position );
+
+      newState = new CharBufferState( newArray, newAppendPos );
+
+      oldAppendPos = curAppendPos;
     }
+    while ( !this.stateRef.compareAndSet( curState, newState ) );
   }
 
   /**
@@ -188,5 +251,15 @@ class CharBuffer implements CharSequence
   public CharSequence subSequence( final int aStart, final int aEnd )
   {
     throw new UnsupportedOperationException();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String toString()
+  {
+    CharBufferState state = this.stateRef.get();
+    return Arrays.toString( state.chars ) + " (" + state.appendPos + ")";
   }
 }

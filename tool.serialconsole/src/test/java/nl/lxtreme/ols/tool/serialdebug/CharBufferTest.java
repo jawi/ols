@@ -24,6 +24,7 @@ package nl.lxtreme.ols.tool.serialdebug;
 import static org.junit.Assert.*;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 import org.junit.*;
 
@@ -132,6 +133,184 @@ public class CharBufferTest
   }
 
   /**
+   * Tests that if two threads are concurrently appending and removing data,
+   * that these appends occur atomically and do not fail.
+   */
+  @Test
+  public void testConcurrentAppendAndRemoveOk() throws Exception
+  {
+    final CountDownLatch startLatch = new CountDownLatch( 1 );
+    final CountDownLatch stopLatch = new CountDownLatch( 2 );
+
+    final CharBuffer cb = new CharBuffer();
+    final int runCount = 10000;
+
+    Thread t1 = new Thread()
+    {
+      @Override
+      public void run()
+      {
+        List<Integer> buffer = Arrays.asList( 1, 2, 3, 4 );
+        int rc = runCount;
+
+        try
+        {
+          startLatch.await( 5L, TimeUnit.SECONDS );
+        }
+        catch ( InterruptedException exception )
+        {
+          throw new RuntimeException( "Await failed!" );
+        }
+
+        while ( rc-- > 0 )
+        {
+          cb.append( buffer );
+        }
+
+        stopLatch.countDown();
+      }
+    };
+
+    Thread t2 = new Thread()
+    {
+      @Override
+      public void run()
+      {
+        int rc = runCount;
+
+        try
+        {
+          startLatch.await( 5L, TimeUnit.SECONDS );
+        }
+        catch ( InterruptedException exception )
+        {
+          throw new RuntimeException( "Await failed!" );
+        }
+
+        while ( rc-- > 0 )
+        {
+          if ( cb.length() > 4 )
+          {
+            cb.removeUntil( 4 );
+          }
+        }
+
+        stopLatch.countDown();
+      }
+    };
+
+    t1.start();
+    t2.start();
+
+    startLatch.countDown();
+
+    stopLatch.await( 10L, TimeUnit.SECONDS );
+
+    t1.join();
+    t2.join();
+
+    // Check that all appends & removes are performed atomically...
+    for ( int i = 0; i < cb.length(); i += 4 )
+    {
+      for ( int j = 0; j < 4; j++ )
+      {
+        assertEquals( j + 1, cb.charAt( j + i ) );
+      }
+    }
+  }
+
+  /**
+   * Tests that if two threads are concurrently appending data, that these
+   * appends occur atomically and do not fail.
+   */
+  @Test
+  public void testConcurrentAppendsOk() throws Exception
+  {
+    final CountDownLatch startLatch = new CountDownLatch( 1 );
+    final CountDownLatch stopLatch = new CountDownLatch( 2 );
+
+    final CharBuffer cb = new CharBuffer();
+    final int runCount = 10000;
+
+    Thread t1 = new Thread()
+    {
+      @Override
+      public void run()
+      {
+        List<Integer> buffer = Arrays.asList( 1, 2, 3, 4 );
+        int rc = runCount;
+
+        try
+        {
+          startLatch.await( 5L, TimeUnit.SECONDS );
+        }
+        catch ( InterruptedException exception )
+        {
+          throw new RuntimeException( "Await failed!" );
+        }
+
+        while ( rc-- > 0 )
+        {
+          cb.append( buffer );
+        }
+
+        stopLatch.countDown();
+      }
+    };
+
+    Thread t2 = new Thread()
+    {
+      @Override
+      public void run()
+      {
+        List<Integer> buffer = Arrays.asList( 5, 6, 7, 8 );
+        int rc = runCount;
+
+        try
+        {
+          startLatch.await( 5L, TimeUnit.SECONDS );
+        }
+        catch ( InterruptedException exception )
+        {
+          throw new RuntimeException( "Await failed!" );
+        }
+
+        while ( rc-- > 0 )
+        {
+          cb.append( buffer );
+        }
+
+        stopLatch.countDown();
+      }
+    };
+
+    t1.start();
+    t2.start();
+
+    startLatch.countDown();
+
+    stopLatch.await( 10L, TimeUnit.SECONDS );
+
+    t1.join();
+    t2.join();
+
+    // Check that we've got 2 * 4 * runCount characters in our buffer...
+    assertEquals( 8 * runCount, cb.length() );
+
+    // Check that all appends are performed atomically...
+    for ( int i = 0; i < cb.length(); i += 4 )
+    {
+      assertTrue( ( cb.charAt( i ) == 1 ) || ( cb.charAt( i ) == 5 ) );
+
+      int offset = cb.charAt( i ) == 1 ? 1 : 5;
+      for ( int j = i + 1; j < 4; j++ )
+      {
+        assertEquals( j + offset, cb.charAt( j ) );
+      }
+    }
+  }
+
+  /**
    * Tests that the length for an empty buffer is zero.
    */
   @Test
@@ -205,12 +384,26 @@ public class CharBufferTest
    * two yields an empty charbuffer.
    */
   @Test
+  public void testRemoveUntilWithPositionThreeOk()
+  {
+    CharBuffer cb = new CharBuffer( 1, 2, 3 );
+    cb.removeUntil( 3 );
+
+    assertEquals( 0, cb.length() );
+  }
+
+  /**
+   * Tests that calling {@link CharBuffer#removeUntil(int)} with a position of
+   * two yields an empty charbuffer.
+   */
+  @Test
   public void testRemoveUntilWithPositionTwoOk()
   {
     CharBuffer cb = new CharBuffer( 1, 2, 3 );
     cb.removeUntil( 2 );
 
-    assertEquals( 0, cb.length() );
+    assertEquals( 1, cb.length() );
+    assertEquals( ( char )3, cb.charAt( 0 ) );
   }
 
   /**
