@@ -13,14 +13,14 @@
 
 	<target name="build" depends="init" description="Sets up a project structure for running OLS">
 		<!-- extract distribution file to target directory -->
-		<unzip dest="${ols.ide.base.dir}">
+		<untar compression="gzip" dest="${ols.ide.base.dir}">
 			<fileset refid="ols.distribution.tarball" />
 			<patternset>
 				<include name="**/bin/*.jar" />
 				<include name="**/plugins/*.jar" />
 			</patternset>
 			<cutdirsmapper dirs="1" />
-		</unzip>
+		</untar>
 		<!-- copy the individual bundles as well -->
 		<copy todir="${ols.ide.plugin.target.dir}">
 			<fileset refid="ols.plugins" />
@@ -56,6 +56,8 @@
 		<!-- searches for all latest greatest bundle files -->
 		<fileset dir="${ols.base.dir}" id="ols.plugins">
 			<include name="**/target/*.jar" />
+			<exclude name="**/*-javadoc.jar" />
+			<exclude name="**/test.util/**" />
 		</fileset>
 		<!-- searches for all configuration files -->
 		<fileset dir="${ols.base.dir}" id="ols.configfiles">
@@ -63,7 +65,7 @@
 		</fileset>
 		<!-- searches for the latest tarball matching '*.tar.gz' -->
 		<fileset dir="${ols.base.dir}/ols.distribution/target" id="ols.distribution.tarball">
-			<include name="*-full.zip" />
+			<include name="*-full.tar.gz" />
 		</fileset>
 		<!-- create target directories -->
 		<mkdir dir="${ols.ide.plugin.target.dir}" />
