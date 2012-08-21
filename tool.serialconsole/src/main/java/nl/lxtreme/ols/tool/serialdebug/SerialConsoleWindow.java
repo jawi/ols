@@ -498,7 +498,6 @@ public abstract class SerialConsoleWindow extends JDialog implements Closeable
     } );
 
     this.consolePane = new ConsolePane();
-    this.consolePane.setBorder( BorderFactory.createEmptyBorder() );
 
     this.serialInputTextField = new JTextField( 80 );
     this.serialInputTextField.setToolTipText( "Enter raw commands here. Use $xx to enter ASCII characters directly." );

@@ -271,11 +271,17 @@ public class ConsolePane extends JTextPane
     public InputStreamWorker( final InputStream aInputStream )
     {
       this.inputStream = aInputStream;
-      this.ansiInterpreter = new AnsiInterpreter( this );
+      this.ansiInterpreter = new AnsiInterpreter();
+
+      this.attrs = getPlainTextAttributes();
     }
 
     // METHODS
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void onAttributeChange( final AttributeSet aAttributes )
     {
       this.attrs = aAttributes;
@@ -289,8 +295,11 @@ public class ConsolePane extends JTextPane
     {
       Document doc = getDocument();
 
+      int caretPos = getCaretPosition();
+
       Element rootElem = doc.getDefaultRootElement();
-      Element lineElem = rootElem.getElement( rootElem.getElementCount() - 1 );
+      int lineIndex = rootElem.getElementIndex( caretPos );
+      Element lineElem = rootElem.getElement( lineIndex );
 
       int lineStart = lineElem.getStartOffset();
       int lineEnd = lineElem.getEndOffset() - 1;
@@ -298,7 +307,10 @@ public class ConsolePane extends JTextPane
       if ( aMode == 1 )
       {
         // clear from cursor to start of line...
-        removeText( doc, lineStart, lineEnd - lineStart );
+        if ( caretPos > lineStart )
+        {
+          removeText( doc, lineStart, caretPos - lineStart );
+        }
       }
       else if ( aMode == 2 )
       {
@@ -308,7 +320,10 @@ public class ConsolePane extends JTextPane
       else
       {
         // clear from cursor to end of line...
-        removeText( doc, lineEnd - 1, 1 );
+        if ( caretPos < lineEnd )
+        {
+          removeText( doc, caretPos, lineEnd - caretPos );
+        }
       }
     }
 
@@ -325,7 +340,7 @@ public class ConsolePane extends JTextPane
      * {@inheritDoc}
      */
     @Override
-    public void onMoveCursor( final int aXpos, final int aYpos )
+    public void onMoveCursorAbsolute( final int aXpos, final int aYpos )
     {
       Document doc = getDocument();
 
@@ -341,6 +356,34 @@ public class ConsolePane extends JTextPane
       }
 
       if ( aYpos >= 0 )
+      {
+        // XXX
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onMoveCursorRelative( final int aXpos, final int aYpos )
+    {
+      Document doc = getDocument();
+
+      int caretPosition = getCaretPosition();
+
+      Element rootElem = doc.getDefaultRootElement();
+      int lineIndex = rootElem.getElementIndex( caretPosition );
+      Element lineElem = rootElem.getElement( lineIndex );
+
+      int lineStart = lineElem.getStartOffset();
+      int lineEnd = lineElem.getEndOffset() - 1;
+
+      if ( aXpos != 0 )
+      {
+        setCaretPosition( Math.min( doc.getLength(), caretPosition + aXpos ) );
+      }
+
+      if ( aYpos < 0 )
       {
         // XXX
       }
@@ -373,7 +416,7 @@ public class ConsolePane extends JTextPane
         else
         {
           doc.insertString( lineEnd, Character.toString( aChar ), _attrs );
-          setCaretPosition( lineEnd + 1 );
+          setCaretPosition( doc.getLength() );
         }
       }
       catch ( BadLocationException exception )
@@ -471,6 +514,7 @@ public class ConsolePane extends JTextPane
     private void handleAnsiText( final List<Integer> aChars )
     {
       this.ansiInterpreter.append( aChars );
+      this.ansiInterpreter.interpret( this );
     }
 
     /**
@@ -556,10 +600,15 @@ public class ConsolePane extends JTextPane
       }
     }
 
+    public void write( final byte... aData ) throws IOException
+    {
+      this.outputStream.write( aData );
+      this.outputStream.flush();
+    }
+
     public void write( final String aData ) throws IOException
     {
-      this.outputStream.write( aData.getBytes() );
-      this.outputStream.flush();
+      write( aData.getBytes() );
     }
   }
 
@@ -574,6 +623,42 @@ public class ConsolePane extends JTextPane
     public void actionPerformed( final ActionEvent aEvent )
     {
       select( getInputStart(), getCaretPosition() );
+    }
+  }
+
+  /**
+   * Sends literal data.
+   */
+  final class SendLiteralDataAction extends AbstractAction
+  {
+    private static final long serialVersionUID = 1L;
+
+    private final byte[] data;
+
+    /**
+     * Creates a new ConsolePane.SendLiteralDataAction instance.
+     */
+    public SendLiteralDataAction( final int... aData )
+    {
+      this.data = new byte[aData.length];
+      for ( int i = 0; i < aData.length; i++ )
+      {
+        this.data[i] = ( byte )aData[i];
+      }
+    }
+
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      try
+      {
+        ConsolePane.this.outputStreamWorker.write( this.data );
+      }
+      catch ( IOException exception )
+      {
+        // TODO Auto-generated catch block
+        exception.printStackTrace();
+      }
     }
   }
 
@@ -622,6 +707,24 @@ public class ConsolePane extends JTextPane
     inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_BACK_SPACE, 0 ), new BackspaceAction() );
     inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_HOME, 0 ), new HomeAction() );
     inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_HOME, InputEvent.SHIFT_MASK ), new SelectHomeAction() );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_UP, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 0x41 ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_DOWN, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 0x42 ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_RIGHT, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 0x43 ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_LEFT, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 0x44 ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F1, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'P' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F2, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'Q' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F3, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'R' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F4, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'S' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F5, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 't' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F6, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'u' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F7, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'v' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F8, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'I' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F9, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'w' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F10, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'x' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_C, InputEvent.CTRL_MASK ), new SendLiteralDataAction( 0x1B, 0x21,
+        0x40, 0x03 ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_D, InputEvent.CTRL_MASK ), new SendLiteralDataAction( 0x04 ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_Z, InputEvent.CTRL_MASK ), new SendLiteralDataAction( 0x1A ) );
 
     setDocument( getDocument() );
     setInputStart( 0 );
@@ -634,25 +737,6 @@ public class ConsolePane extends JTextPane
   }
 
   // METHODS
-
-  /**
-   * @param aDocument
-   * @return
-   */
-  static final int getInputStart( final Document aDocument )
-  {
-    final Integer i = ( Integer )aDocument.getProperty( PROPERTY_INPUTSTART );
-    return ( i == null ) ? 0 : i.intValue();
-  }
-
-  /**
-   * @param aDocument
-   * @param aPosition
-   */
-  static final void setInputStart( final Document aDocument, final int aPosition )
-  {
-    aDocument.putProperty( PROPERTY_INPUTSTART, new Integer( aPosition ) );
-  }
 
   /**
    * Appends the given status text to the current document.
@@ -767,7 +851,8 @@ public class ConsolePane extends JTextPane
    */
   final int getInputStart()
   {
-    return ConsolePane.getInputStart( getDocument() );
+    final Integer i = ( Integer )getDocument().getProperty( ConsolePane.PROPERTY_INPUTSTART );
+    return ( i == null ) ? 0 : i.intValue();
   }
 
   /**
@@ -775,7 +860,7 @@ public class ConsolePane extends JTextPane
    */
   final void setInputStart( final int aPosition )
   {
-    ConsolePane.setInputStart( getDocument(), aPosition );
+    getDocument().putProperty( ConsolePane.PROPERTY_INPUTSTART, new Integer( aPosition ) );
   }
 
   /**

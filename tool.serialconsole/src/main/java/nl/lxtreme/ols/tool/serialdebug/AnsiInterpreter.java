@@ -71,13 +71,28 @@ class AnsiInterpreter
      * Moves the cursor to the given X,Y position.
      * 
      * @param aXpos
-     *          a X-position, zero-based (zero meaning start of current line).
-     *          If -1, then the X-position is unchanged;
+     *          the absolute X-position, zero-based (zero meaning start of
+     *          current line). If -1, then the current X-position is unchanged.
      * @param aYpos
-     *          a Y-position, zero-based (zero meaning start of current screen).
-     *          If -1, then the Y-position is unchanged.
+     *          the absolute Y-position, zero-based (zero meaning start of
+     *          current screen). If -1, then the current Y-position is
+     *          unchanged.
      */
-    void onMoveCursor( int aXpos, int aYpos );
+    void onMoveCursorAbsolute( int aXpos, int aYpos );
+
+    /**
+     * Moves the cursor relatively to the given X,Y position.
+     * 
+     * @param aXpos
+     *          the relative X-position to move. If > 0, then move to the right;
+     *          if 0, then the X-position is unchanged; if < 0, then move to the
+     *          left;
+     * @param aYpos
+     *          the relative Y-position to move. If > 0, then move to the
+     *          bottom; if 0, then the Y-position is unchanged; if < 0, then
+     *          move to the top.
+     */
+    void onMoveCursorRelative( int aXpos, int aYpos );
 
     /**
      * Displays the given character as literal text.
@@ -122,7 +137,6 @@ class AnsiInterpreter
   // VARIABLES
 
   private final CharBuffer buffer;
-  private final TermCallback callback;
 
   private volatile SimpleAttributeSet attrs = createAttributeSet();
 
@@ -131,40 +145,57 @@ class AnsiInterpreter
   /**
    * Creates a new {@link AnsiInterpreter} instance.
    */
-  public AnsiInterpreter( final TermCallback aCallback )
+  public AnsiInterpreter()
   {
-    if ( aCallback == null )
-    {
-      throw new IllegalArgumentException( "Callback cannot be null!" );
-    }
-    this.callback = aCallback;
     this.buffer = new CharBuffer();
   }
 
   // METHODS
 
   /**
-   * @param aCharList
+   * Appends the given buffer with characters to this interpreter for
+   * interpretation.
+   * 
+   * @param aBuffer
+   *          the buffer to add, cannot be <code>null</code>.
    */
-  public void append( final List<Integer> aCharList )
+  public void append( final List<Integer> aBuffer )
   {
-    this.buffer.append( aCharList );
+    this.buffer.append( aBuffer );
+  }
 
-    int lastPos = interpret( this.buffer );
+  /**
+   * Interprets the current buffer, and calls the corresponding callback methods
+   * on the given callback for each found ANSI sequence.
+   * 
+   * @param aCallback
+   *          the callback to call, cannot be <code>null</code>.
+   */
+  public void interpret( final TermCallback aCallback )
+  {
+    if ( aCallback == null )
+    {
+      throw new IllegalArgumentException( "Callback cannot be null!" );
+    }
 
+    int lastPos = interpret( aCallback, this.buffer );
     this.buffer.removeUntil( lastPos );
   }
 
   /**
-   * Tries to interpretate the current sequence.
+   * Tries to interpret the current sequence.
    * 
+   * @param aCallback
+   *          the callback to call, cannot be <code>null</code>;
    * @param aText
+   *          the text to interpret, cannot be <code>null</code>.
    * @return the last interpreted position, >= 0.
    */
-  final int interpret( final CharSequence aText )
+  final int interpret( final TermCallback aCallback, final CharSequence aText )
   {
     boolean echo = true;
     boolean csiFound = false;
+    boolean dec = false;
     Stack<Object> paramStack = new Stack<Object>();
     int lastPosition = 0;
 
@@ -178,6 +209,9 @@ class AnsiInterpreter
       {
         // Escape character...
         csiFound = false;
+        dec = false;
+        paramStack.clear();
+
         if ( la == '[' )
         {
           // CSI found...
@@ -189,17 +223,37 @@ class AnsiInterpreter
           // APC found; ignore all text until <ESC>\ is found...
           echo = false;
           i++;
+          lastPosition = i;
         }
         else if ( la == '\\' )
         {
           // ST found; re-enable echo...
           echo = true;
           i++;
+          lastPosition = i;
         }
-        else
+        else if ( ( la == 'D' ) || ( la == 'E' ) || ( la == 'H' ) || ( la == 'M' ) || ( la == 'N' ) || ( la == 'O' )
+            || ( la == 'P' ) || ( la == 'V' ) || ( la == 'W' ) || ( la == 'X' ) || ( la == 'Z' ) //
+            || ( la == ']' ) || ( la == '^' ) )
+        {
+          // simple C1 characters we simply ignore...
+          i++;
+          lastPosition = i;
+        }
+        else if ( ( la == ' ' ) || ( la == '#' ) || ( la == '%' ) || ( la == '(' ) || ( la == ')' ) || ( la == '*' )
+            || ( la == '+' ) )
+        {
+          // VT100 commands, take one character as parameter which we'll
+          // ignore...
+          i += 2;
+          lastPosition = i;
+        }
+        else if ( la >= 0 )
         {
           // Unknown C1...
+          System.out.printf( "Unknown C1: %c %n", la );
           i++;
+          lastPosition = i;
         }
       }
       else if ( c == '\007' )
@@ -209,12 +263,13 @@ class AnsiInterpreter
       }
       else if ( c == '\010' )
       {
-        // Backspace, tab or VT; ignore...
+        // Backspace...
+        aCallback.onMoveCursorRelative( -1, 0 );
       }
       else if ( c == '\r' )
       {
         // Carriage return...
-        this.callback.onMoveCursor( 0, -1 );
+        aCallback.onMoveCursorAbsolute( 0, -1 );
       }
       else
       {
@@ -223,7 +278,7 @@ class AnsiInterpreter
         {
           if ( echo )
           {
-            this.callback.onText( ( char )c );
+            aCallback.onText( ( char )c );
           }
           lastPosition = i;
         }
@@ -231,18 +286,138 @@ class AnsiInterpreter
         {
           switch ( c )
           {
+            case 'c':
+            {
+              // Send Device Attributes (Primary DA)
+              int arg = getInteger( paramStack, 0 );
+              if ( arg != 0 )
+              {
+                System.out.printf( "Unknown DA: %d %n", arg );
+              }
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            // case 'f' is handled with case 'H'!
+
+            case 'h':
+            {
+              // Set mode / DEC Private Mode Set ...
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            case 'l':
+            {
+              // Reset mode / DEC Private Mode Reset...
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
             case 'm':
             {
-              // Turn off character attributes
+              // Turn on/off character attributes ...
               while ( !paramStack.isEmpty() )
               {
-                Object param = paramStack.pop();
-                if ( param instanceof Integer )
-                {
-                  handleGraphicsRendering( this.attrs, ( ( Integer )param ).intValue() );
-                }
+                handleGraphicsRendering( this.attrs, getInteger( paramStack, 0 ) );
               }
-              this.callback.onAttributeChange( this.attrs );
+              aCallback.onAttributeChange( this.attrs );
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            case 'n':
+            {
+              //
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            case 'r':
+            {
+              // Set scrolling region (top; bottom)...
+              int bottom = getInteger( paramStack, 1 );
+              int top = getInteger( paramStack, 1 );
+
+              System.out.printf( "TODO: set scrolling region (%d, %d)%n", top, bottom );
+
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            case 'A':
+            {
+              // Cursor Up N Times
+              int n = getInteger( paramStack, 1 );
+
+              aCallback.onMoveCursorRelative( 0, -n );
+
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            case 'B':
+            {
+              // Cursor Down N Times
+              int n = getInteger( paramStack, 1 );
+
+              aCallback.onMoveCursorRelative( 0, n );
+
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            case 'C':
+            {
+              // Cursor Forward N Times
+              int n = getInteger( paramStack, 1 );
+
+              aCallback.onMoveCursorRelative( n, 0 );
+
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            case 'D':
+            {
+              // Cursor Backward N Times
+              int n = getInteger( paramStack, 1 );
+
+              aCallback.onMoveCursorRelative( 0, -n );
+
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            case 'E':
+            {
+              // Cursor Next Line N Times
+              int n = getInteger( paramStack, 1 );
+
+              System.out.printf( "Next line: %d%n", n );
+
+              csiFound = false;
+              lastPosition = i;
+              break;
+            }
+
+            case 'F':
+            {
+              // Cursor Previous Line N Times
+              int n = getInteger( paramStack, 1 );
+
+              System.out.printf( "Previous line: %d%n", n );
+
               csiFound = false;
               lastPosition = i;
               break;
@@ -250,17 +425,11 @@ class AnsiInterpreter
 
             case 'G':
             {
-              // Move cursor to column n...
-              int x = 0;
-              if ( paramStack.size() > 1 )
-              {
-                Object param = paramStack.pop();
-                if ( param instanceof Integer )
-                {
-                  x = ( ( Integer )param ).intValue();
-                }
-              }
-              this.callback.onMoveCursor( x, -1 );
+              // Cursor Character Absolute [x] ...
+              int x = getInteger( paramStack, 0 );
+
+              aCallback.onMoveCursorAbsolute( x, -1 );
+
               csiFound = false;
               lastPosition = i;
               break;
@@ -270,30 +439,11 @@ class AnsiInterpreter
             case 'H':
             {
               // Move cursor to x,y...
-              int x = 0;
-              int y = 0;
-              if ( paramStack.size() > 2 )
-              {
-                Object param = paramStack.pop();
-                if ( param instanceof Integer )
-                {
-                  y = ( ( Integer )param ).intValue();
-                }
-                param = paramStack.pop();
-                if ( param instanceof Integer )
-                {
-                  x = ( ( Integer )param ).intValue();
-                }
-              }
-              if ( paramStack.size() > 1 )
-              {
-                Object param = paramStack.pop();
-                if ( param instanceof Integer )
-                {
-                  x = ( ( Integer )param ).intValue();
-                }
-              }
-              this.callback.onMoveCursor( x, y );
+              int x = getInteger( paramStack, 1 );
+              int y = getInteger( paramStack, 1 );
+
+              aCallback.onMoveCursorAbsolute( x - 1, y - 1 );
+
               csiFound = false;
               lastPosition = i;
               break;
@@ -302,16 +452,10 @@ class AnsiInterpreter
             case 'J':
             {
               // Clear screen...
-              int mode = 0;
-              if ( paramStack.size() > 1 )
-              {
-                Object param = paramStack.pop();
-                if ( param instanceof Integer )
-                {
-                  mode = ( ( Integer )param ).intValue() % 3;
-                }
-              }
-              this.callback.onClearScreen( mode );
+              int mode = getInteger( paramStack, 0 );
+
+              aCallback.onClearScreen( mode );
+
               csiFound = false;
               lastPosition = i;
               break;
@@ -320,16 +464,10 @@ class AnsiInterpreter
             case 'K':
             {
               // Clear line...
-              int mode = 0;
-              if ( paramStack.size() > 1 )
-              {
-                Object param = paramStack.pop();
-                if ( param instanceof Integer )
-                {
-                  mode = ( ( Integer )param ).intValue() % 3;
-                }
-              }
-              this.callback.onClearLine( mode );
+              int mode = getInteger( paramStack, 0 );
+
+              aCallback.onClearLine( mode );
+
               csiFound = false;
               lastPosition = i;
               break;
@@ -363,8 +501,26 @@ class AnsiInterpreter
               // Param separator...
               break;
 
+            case '?':
+            {
+              // DEC specific...
+              dec = true;
+              break;
+            }
+
             default:
               // Unknown
+              System.out.printf( "UNRECOGNIZED: csi" );
+              if ( dec )
+              {
+                System.out.printf( " ?" );
+              }
+              while ( !paramStack.isEmpty() )
+              {
+                System.out.printf( " %s", paramStack.firstElement() );
+                paramStack.pop();
+              }
+              System.out.printf( " %c %n", c );
               csiFound = false;
               lastPosition = i;
               break;
@@ -377,8 +533,11 @@ class AnsiInterpreter
   }
 
   /**
+   * Converts a given index to a color value.
+   * 
    * @param aIndex
-   * @return
+   *          the color index to return as color, >= 0 && <= 7.
+   * @return a color value, never <code>null</code>.
    */
   private Color convertToColor( final int aIndex )
   {
@@ -396,6 +555,25 @@ class AnsiInterpreter
     StyleConstants.setForeground( attrs, ConsolePane.PLAIN_TEXT_COLOR );
     StyleConstants.setBackground( attrs, ConsolePane.BACKGROUND_COLOR );
     return attrs;
+  }
+
+  /**
+   * @param aParamStack
+   * @param aDefault
+   * @return
+   */
+  private int getInteger( final Stack<Object> aParamStack, final int aDefault )
+  {
+    int result = aDefault;
+    if ( !aParamStack.isEmpty() )
+    {
+      Object param = aParamStack.pop();
+      if ( param instanceof Integer )
+      {
+        result = ( ( Integer )param ).intValue();
+      }
+    }
+    return result;
   }
 
   /**
