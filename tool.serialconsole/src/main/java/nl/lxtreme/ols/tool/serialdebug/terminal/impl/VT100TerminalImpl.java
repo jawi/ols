@@ -18,118 +18,22 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool.serialdebug;
+package nl.lxtreme.ols.tool.serialdebug.terminal.impl;
 
 
 import java.awt.*;
 import java.util.*;
-import java.util.List;
+
 import javax.swing.text.*;
+
+import nl.lxtreme.ols.tool.serialdebug.*;
 
 
 /**
- * Provides an ANSI sequence interpreter.
+ * Represents a VT100 terminal implementation.
  */
-class AnsiInterpreter
+public class VT100TerminalImpl extends TerminalImpl
 {
-  // INNER TYPES
-
-  /**
-   * Implementors will be called upon each complete ANSI sequence.
-   */
-  static interface TermCallback
-  {
-    // METHODS
-
-    /**
-     * Called to set the new terminal attributes.
-     * 
-     * @param aAttributes
-     *          the attributes to set, can be <code>null</code>.
-     */
-    void onAttributeChange( AttributeSet aAttributes );
-
-    /**
-     * Clears the current line.
-     * 
-     * @param aMode
-     *          the clear modus: 0 = erase from cursor to right (default), 1 =
-     *          erase from cursor to left, 2 = erase entire line.
-     */
-    void onClearLine( int aMode );
-
-    /**
-     * Clears the screen.
-     * 
-     * @param aMode
-     *          the clear modus: 0 = erase from cursor to below (default), 1 =
-     *          erase from cursor to top, 2 = erase entire screen.
-     */
-    void onClearScreen( int aMode );
-
-    /**
-     * Moves the cursor to the given X,Y position.
-     * 
-     * @param aXpos
-     *          the absolute X-position, zero-based (zero meaning start of
-     *          current line). If -1, then the current X-position is unchanged.
-     * @param aYpos
-     *          the absolute Y-position, zero-based (zero meaning start of
-     *          current screen). If -1, then the current Y-position is
-     *          unchanged.
-     */
-    void onMoveCursorAbsolute( int aXpos, int aYpos );
-
-    /**
-     * Moves the cursor relatively to the given X,Y position.
-     * 
-     * @param aXpos
-     *          the relative X-position to move. If > 0, then move to the right;
-     *          if 0, then the X-position is unchanged; if < 0, then move to the
-     *          left;
-     * @param aYpos
-     *          the relative Y-position to move. If > 0, then move to the
-     *          bottom; if 0, then the Y-position is unchanged; if < 0, then
-     *          move to the top.
-     */
-    void onMoveCursorRelative( int aXpos, int aYpos );
-
-    /**
-     * Displays the given character as literal text.
-     * 
-     * @param aChar
-     *          the character to display.
-     */
-    void onText( char aChar );
-
-    /**
-     * Sends the given bytes as raw data.
-     * 
-     * @param aBytes
-     *          the bytes to send, cannot be <code>null</code>.
-     */
-    void sendRaw( byte... aBytes );
-  }
-
-  static class TermState
-  {
-    public final int x;
-    public final int y;
-    public final AttributeSet attrs;
-    public final boolean clear;
-
-    /**
-     * Creates a new {@link TermState} instance.
-     */
-    TermState( final int aX, final int aY, final AttributeSet aAttrs, final boolean aClear )
-    {
-      this.x = aX;
-      this.y = aY;
-      this.attrs = aAttrs;
-      this.clear = aClear;
-    }
-  }
-
   // CONSTANTS
 
   private static final Color[] XTERM_COLORS = { new Color( 0, 0, 0 ), // Black
@@ -142,70 +46,37 @@ class AnsiInterpreter
       new Color( 229, 229, 229 ), // White
   };
 
-  // VARIABLES
-
-  private final CharBuffer buffer;
-
-  private volatile SimpleAttributeSet attrs = createAttributeSet();
-
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link AnsiInterpreter} instance.
+   * Creates a new {@link VT100TerminalImpl} instance.
+   * 
+   * @param aWidth
+   *          the width of this terminal, in characters;
+   * @param aHeight
+   *          the height of this terminal, in characters.
    */
-  public AnsiInterpreter()
+  public VT100TerminalImpl( final int aWidth, final int aHeight )
   {
-    this.buffer = new CharBuffer();
+    super( aWidth, aHeight );
   }
 
   // METHODS
 
   /**
-   * Appends the given buffer with characters to this interpreter for
-   * interpretation.
-   * 
-   * @param aBuffer
-   *          the buffer to add, cannot be <code>null</code>.
+   * {@inheritDoc}
    */
-  public void append( final List<Integer> aBuffer )
-  {
-    this.buffer.append( aBuffer );
-  }
-
-  /**
-   * Interprets the current buffer, and calls the corresponding callback methods
-   * on the given callback for each found ANSI sequence.
-   * 
-   * @param aCallback
-   *          the callback to call, cannot be <code>null</code>.
-   */
-  public void interpret( final TermCallback aCallback )
-  {
-    if ( aCallback == null )
-    {
-      throw new IllegalArgumentException( "Callback cannot be null!" );
-    }
-
-    int lastPos = interpret( aCallback, this.buffer );
-    this.buffer.removeUntil( lastPos );
-  }
-
-  /**
-   * Tries to interpret the current sequence.
-   * 
-   * @param aCallback
-   *          the callback to call, cannot be <code>null</code>;
-   * @param aText
-   *          the text to interpret, cannot be <code>null</code>.
-   * @return the last interpreted position, >= 0.
-   */
-  final int interpret( final TermCallback aCallback, final CharSequence aText )
+  @Override
+  public int writeText( final CharSequence aText )
   {
     boolean echo = true;
     boolean csiFound = false;
     boolean dec = false;
     Stack<Object> paramStack = new Stack<Object>();
+
     int lastPosition = 0;
+
+    int idx = getAbsoluteCursorIndex();
 
     final int length = aText.length();
     for ( int i = 0; i < length; i++ )
@@ -272,12 +143,17 @@ class AnsiInterpreter
       else if ( c == '\010' )
       {
         // Backspace...
-        aCallback.onMoveCursorRelative( -1, 0 );
+        idx--;
+      }
+      else if ( c == '\n' )
+      {
+        // Linefeed...
+        idx += getWidth();
       }
       else if ( c == '\r' )
       {
         // Carriage return...
-        aCallback.onMoveCursorAbsolute( 0, -1 );
+        idx -= ( idx % getWidth() );
       }
       else
       {
@@ -286,7 +162,7 @@ class AnsiInterpreter
         {
           if ( echo )
           {
-            aCallback.onText( ( char )c );
+            idx = writeChar( idx, ( char )c ) + 1;
           }
           lastPosition = i;
         }
@@ -304,8 +180,9 @@ class AnsiInterpreter
               }
               else
               {
-                // Send back that we're a VT220...
-                aCallback.sendRaw( ( byte )'\033', ( byte )'[', ( byte )'6', ( byte )'c' );
+                // Send back that we're a VT220... XXX
+                // aCallback.sendRaw( ( byte )'\033', ( byte )'[', ( byte )'6',
+                // ( byte )'c' );
               }
               csiFound = false;
               lastPosition = i;
@@ -333,11 +210,12 @@ class AnsiInterpreter
             case 'm':
             {
               // Turn on/off character attributes ...
+              SimpleAttributeSet attrs = createSimpleAttributeSet();
               while ( !paramStack.isEmpty() )
               {
-                handleGraphicsRendering( this.attrs, getInteger( paramStack, 0 ) );
+                handleGraphicsRendering( attrs, getInteger( paramStack, 0 ) );
               }
-              aCallback.onAttributeChange( this.attrs );
+              changeAttribute( attrs );
               csiFound = false;
               lastPosition = i;
               break;
@@ -369,7 +247,7 @@ class AnsiInterpreter
               // Cursor Up N Times
               int n = getInteger( paramStack, 1 );
 
-              aCallback.onMoveCursorRelative( 0, -n );
+              idx = Math.max( getFirstAbsoluteIndex(), idx - ( n * getWidth() ) );
 
               csiFound = false;
               lastPosition = i;
@@ -381,7 +259,7 @@ class AnsiInterpreter
               // Cursor Down N Times
               int n = getInteger( paramStack, 1 );
 
-              aCallback.onMoveCursorRelative( 0, n );
+              idx = Math.min( getLastAbsoluteIndex(), idx + ( n * getWidth() ) );
 
               csiFound = false;
               lastPosition = i;
@@ -393,7 +271,7 @@ class AnsiInterpreter
               // Cursor Forward N Times
               int n = getInteger( paramStack, 1 );
 
-              aCallback.onMoveCursorRelative( n, 0 );
+              idx = Math.min( getLastAbsoluteIndex(), idx + n );
 
               csiFound = false;
               lastPosition = i;
@@ -405,7 +283,7 @@ class AnsiInterpreter
               // Cursor Backward N Times
               int n = getInteger( paramStack, 1 );
 
-              aCallback.onMoveCursorRelative( 0, -n );
+              idx = Math.max( getFirstAbsoluteIndex(), idx - n );
 
               csiFound = false;
               lastPosition = i;
@@ -441,7 +319,7 @@ class AnsiInterpreter
               // Cursor Character Absolute [x] ...
               int x = getInteger( paramStack, 0 );
 
-              aCallback.onMoveCursorAbsolute( x, -1 );
+              idx = Math.max( getFirstAbsoluteIndex(), ( idx - ( idx % getWidth() ) ) + x );
 
               csiFound = false;
               lastPosition = i;
@@ -455,7 +333,7 @@ class AnsiInterpreter
               int x = getInteger( paramStack, 1 );
               int y = getInteger( paramStack, 1 );
 
-              aCallback.onMoveCursorAbsolute( x - 1, y - 1 );
+              idx = getAbsoluteIndex( x - 1, y - 1 );
 
               csiFound = false;
               lastPosition = i;
@@ -467,7 +345,7 @@ class AnsiInterpreter
               // Clear screen...
               int mode = getInteger( paramStack, 0 );
 
-              aCallback.onClearScreen( mode );
+              clearScreen( mode, idx );
 
               csiFound = false;
               lastPosition = i;
@@ -479,7 +357,7 @@ class AnsiInterpreter
               // Clear line...
               int mode = getInteger( paramStack, 0 );
 
-              aCallback.onClearLine( mode );
+              clearLine( mode, idx );
 
               csiFound = false;
               lastPosition = i;
@@ -542,7 +420,9 @@ class AnsiInterpreter
       }
     }
 
-    return lastPosition + 1;
+    updateCursorByAbsoluteIndex( idx );
+
+    return lastPosition;
   }
 
   /**
@@ -560,13 +440,18 @@ class AnsiInterpreter
   /**
    * @return a new attribute set, never <code>null</code>.
    */
-  private SimpleAttributeSet createAttributeSet()
+  private SimpleAttributeSet createSimpleAttributeSet()
   {
     SimpleAttributeSet attrs = new SimpleAttributeSet();
     StyleConstants.setFontFamily( attrs, "Monospaced" );
     StyleConstants.setFontSize( attrs, 14 );
     StyleConstants.setForeground( attrs, ConsolePane.PLAIN_TEXT_COLOR );
     StyleConstants.setBackground( attrs, ConsolePane.BACKGROUND_COLOR );
+    AttributeSet existingAttributes = getAttributes();
+    if ( existingAttributes != null )
+    {
+      attrs.addAttributes( existingAttributes );
+    }
     return attrs;
   }
 

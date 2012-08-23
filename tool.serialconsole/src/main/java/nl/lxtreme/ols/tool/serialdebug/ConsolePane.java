@@ -30,7 +30,7 @@ import java.util.concurrent.*;
 import javax.swing.*;
 import javax.swing.text.*;
 
-import nl.lxtreme.ols.tool.serialdebug.AnsiInterpreter.*;
+import nl.lxtreme.ols.tool.serialdebug.terminal.impl.*;
 import nl.lxtreme.ols.util.*;
 
 
@@ -254,14 +254,13 @@ public class ConsolePane extends JTextPane
    * Serial reader that asynchronously reads data from an inputstream and
    * displays it on a text area.
    */
-  final class InputStreamWorker extends SwingWorker<Void, Integer> implements TermCallback
+  final class InputStreamWorker extends SwingWorker<Void, Integer>
   {
     // VARIABLES
 
     private final InputStream inputStream;
-    private final AnsiInterpreter ansiInterpreter;
-
-    private volatile AttributeSet attrs;
+    private final VT100TerminalImpl terminal;
+    private final CharBuffer buffer;
 
     // CONSTRUCTORS
 
@@ -271,159 +270,11 @@ public class ConsolePane extends JTextPane
     public InputStreamWorker( final InputStream aInputStream )
     {
       this.inputStream = aInputStream;
-      this.ansiInterpreter = new AnsiInterpreter();
-
-      this.attrs = getPlainTextAttributes();
+      this.terminal = new VT100TerminalImpl( 80, 25 );
+      this.buffer = new CharBuffer();
     }
 
     // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onAttributeChange( final AttributeSet aAttributes )
-    {
-      this.attrs = aAttributes;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onClearLine( final int aMode )
-    {
-      Document doc = getDocument();
-
-      int caretPos = getCaretPosition();
-
-      Element rootElem = doc.getDefaultRootElement();
-      int lineIndex = rootElem.getElementIndex( caretPos );
-      Element lineElem = rootElem.getElement( lineIndex );
-
-      int lineStart = lineElem.getStartOffset();
-      int lineEnd = lineElem.getEndOffset() - 1;
-
-      if ( aMode == 1 )
-      {
-        // clear from cursor to start of line...
-        if ( caretPos > lineStart )
-        {
-          removeText( doc, lineStart, caretPos - lineStart );
-        }
-      }
-      else if ( aMode == 2 )
-      {
-        // clear entire line...
-        removeText( doc, lineStart, lineEnd - lineStart );
-      }
-      else
-      {
-        // clear from cursor to end of line...
-        if ( caretPos < lineEnd )
-        {
-          removeText( doc, caretPos, lineEnd - caretPos );
-        }
-      }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onClearScreen( final int aMode )
-    {
-      setDocument( new DefaultStyledDocument() );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onMoveCursorAbsolute( final int aXpos, final int aYpos )
-    {
-      Document doc = getDocument();
-
-      Element rootElem = doc.getDefaultRootElement();
-      Element lineElem = rootElem.getElement( rootElem.getElementCount() - 1 );
-
-      int lineStart = lineElem.getStartOffset();
-      int lineEnd = lineElem.getEndOffset() - 1;
-
-      if ( aXpos >= 0 )
-      {
-        setCaretPosition( Math.min( lineEnd, lineStart + aXpos ) );
-      }
-
-      if ( aYpos >= 0 )
-      {
-        // XXX
-      }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onMoveCursorRelative( final int aXpos, final int aYpos )
-    {
-      Document doc = getDocument();
-
-      int caretPosition = getCaretPosition();
-
-      Element rootElem = doc.getDefaultRootElement();
-      int lineIndex = rootElem.getElementIndex( caretPosition );
-      Element lineElem = rootElem.getElement( lineIndex );
-
-      int lineStart = lineElem.getStartOffset();
-      int lineEnd = lineElem.getEndOffset() - 1;
-
-      if ( aXpos != 0 )
-      {
-        setCaretPosition( Math.min( doc.getLength(), caretPosition + aXpos ) );
-      }
-
-      if ( aYpos < 0 )
-      {
-        // XXX
-      }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onText( final char aChar )
-    {
-      final AbstractDocument doc = ( AbstractDocument )getDocument();
-      final AttributeSet _attrs = this.attrs;
-
-      Element rootElem = doc.getDefaultRootElement();
-      Element lineElem = rootElem.getElement( rootElem.getElementCount() - 1 );
-
-      int lineStart = lineElem.getStartOffset();
-      int lineEnd = lineElem.getEndOffset() - 1;
-
-      try
-      {
-        int caret = getCaretPosition();
-        // When the caret is not at the end, and we did not obtain a linefeed
-        // (\n), we should replace the current line...
-        if ( ( caret >= lineStart ) && ( caret < lineEnd ) && ( aChar != '\n' ) )
-        {
-          doc.replace( caret, lineEnd - caret, Character.toString( aChar ), _attrs );
-        }
-        else
-        {
-          doc.insertString( lineEnd, Character.toString( aChar ), _attrs );
-          setCaretPosition( doc.getLength() );
-        }
-      }
-      catch ( BadLocationException exception )
-      {
-        throw new RuntimeException( exception );
-      }
-    }
 
     @Override
     protected Void doInBackground() throws Exception
@@ -450,14 +301,19 @@ public class ConsolePane extends JTextPane
 
       try
       {
+        this.buffer.append( aReadChars );
+
+        int consumedUntil;
         if ( isRawMode() )
         {
-          handleRawText( aReadChars );
+          consumedUntil = handleRawText();
         }
         else
         {
-          handleAnsiText( aReadChars );
+          consumedUntil = handleAnsiText();
         }
+
+        this.buffer.removeUntil( consumedUntil );
       }
       finally
       {
@@ -511,22 +367,39 @@ public class ConsolePane extends JTextPane
      * @param aDoc
      * @param aChar
      */
-    private void handleAnsiText( final List<Integer> aChars )
+    private int handleAnsiText()
     {
-      this.ansiInterpreter.append( aChars );
-      this.ansiInterpreter.interpret( this );
+      int result = this.terminal.writeText( this.buffer );
+
+      // XXX
+      StyledDocument newDoc = this.terminal.getAsDocument();
+      setDocument( newDoc );
+
+      Integer cursorPos = ( ( Integer )newDoc.getProperty( "cursor" ) );
+      if ( cursorPos != null )
+      {
+        setCaretPosition( cursorPos.intValue() );
+      }
+      else
+      {
+        setCaretPosition( newDoc.getLength() );
+      }
+
+      return result;
     }
 
     /**
      * @param aDoc
      * @param aChar
      */
-    private void handleRawText( final List<Integer> aChars )
+    private int handleRawText()
     {
       final Document doc = getDocument();
-      for ( Integer i : aChars )
+      int length = this.buffer.length();
+      for ( int i = 0; i < length; i++ )
       {
-        String c = convertToText( i );
+        int charValue = this.buffer.charAt( i );
+        String c = convertToText( charValue );
 
         AttributeSet attrs = getPlainTextAttributes();
         if ( c.startsWith( "<" ) && c.endsWith( ">" ) )
@@ -536,7 +409,6 @@ public class ConsolePane extends JTextPane
 
         int offset = doc.getLength();
 
-        int charValue = i.intValue();
         if ( charValue == '\b' )
         {
           removeText( doc, offset - 1, 1 );
@@ -550,6 +422,7 @@ public class ConsolePane extends JTextPane
           appendText( doc, offset, c, attrs );
         }
       }
+      return length;
     }
 
     /**
@@ -707,20 +580,20 @@ public class ConsolePane extends JTextPane
     inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_BACK_SPACE, 0 ), new BackspaceAction() );
     inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_HOME, 0 ), new HomeAction() );
     inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_HOME, InputEvent.SHIFT_MASK ), new SelectHomeAction() );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_UP, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 0x41 ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_DOWN, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 0x42 ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_RIGHT, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 0x43 ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_LEFT, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 0x44 ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F1, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'P' ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F2, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'Q' ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F3, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'R' ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F4, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'S' ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F5, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 't' ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F6, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'u' ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F7, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'v' ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F8, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'I' ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F9, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'w' ) );
-    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F10, 0 ), new SendLiteralDataAction( 0x1b, 0x4f, 'x' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_UP, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'A' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_DOWN, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'B' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_RIGHT, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'C' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_LEFT, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'D' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F1, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'P' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F2, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'Q' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F3, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'R' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F4, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'S' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F5, 0 ), new SendLiteralDataAction( 0x1b, 'O', 't' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F6, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'u' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F7, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'v' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F8, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'I' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F9, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'w' ) );
+    inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F10, 0 ), new SendLiteralDataAction( 0x1b, 'O', 'x' ) );
     inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_C, InputEvent.CTRL_MASK ), new SendLiteralDataAction( 0x1B, 0x21,
         0x40, 0x03 ) );
     inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_D, InputEvent.CTRL_MASK ), new SendLiteralDataAction( 0x04 ) );
