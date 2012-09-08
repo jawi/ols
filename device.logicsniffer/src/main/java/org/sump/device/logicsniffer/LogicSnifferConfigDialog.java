@@ -239,7 +239,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
 
   /** The serial port baudrates that can be chosen. */
   private static final String[] BAUDRATES = { "921600bps", "460800bps", "230400bps", "115200bps", "57600bps",
-      "38400bps", "19200bps" };
+      "38400bps", "19200bps", "14400bps", "9600bps", "4800bps" };
 
   // VARIABLES
 
@@ -499,7 +499,21 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     {
       this.portSelect.setSelectedItem( preferredPortName );
     }
-    this.portRateSelect.setSelectedIndex( aSettings.getInt( "portRate", this.portRateSelect.getSelectedIndex() ) );
+    final String preferredPortRate = aSettings.get( "portRate", null );
+    if ( ( preferredPortRate != null ) && !"null".equals( preferredPortRate ) )
+    {
+      int value = NumberUtils.safeParseInt( preferredPortRate, -1 );
+      if ( ( value >= 0 ) && ( value < BAUDRATES.length ) )
+      {
+        // Regard this as an index...
+        this.portRateSelect.setSelectedIndex( value );
+      }
+      else
+      {
+        // Regard this as a baud rate...
+        this.portRateSelect.setSelectedItem( preferredPortRate );
+      }
+    }
     this.sourceSelect.setSelectedIndex( aSettings.getInt( "source", this.sourceSelect.getSelectedIndex() ) );
     this.numberSchemeSelect.setSelectedIndex( aSettings.getInt( "numberScheme",
         this.numberSchemeSelect.getSelectedIndex() ) );
@@ -582,7 +596,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     aSettings.put( "remAddress", this.remAddress.getText() );
     aSettings.putInt( "remPort", NumberUtils.smartParseInt( this.remPort.getText() ) );
     aSettings.put( "port", String.valueOf( this.portSelect.getSelectedItem() ) );
-    aSettings.putInt( "portRate", this.portRateSelect.getSelectedIndex() );
+    aSettings.put( "portRate", String.valueOf( this.portRateSelect.getSelectedItem() ) );
     aSettings.putInt( "source", this.sourceSelect.getSelectedIndex() );
     aSettings.putInt( "numberScheme", this.numberSchemeSelect.getSelectedIndex() );
     aSettings.putBoolean( "testMode", this.testModeEnable.isSelected() );
@@ -1182,6 +1196,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     this.portSelect.setEditable( true );
 
     this.portRateSelect = new JComboBox( BAUDRATES );
+    this.portRateSelect.setEditable( true );
     this.portRateSelect.setSelectedIndex( 3 ); // 115k2
 
     this.numberSchemeSelect = new JComboBox();
