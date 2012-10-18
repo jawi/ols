@@ -81,7 +81,7 @@ public class BackgroundTaskExecutionService implements TaskExecutionService
     {
       try
       {
-        if ( this.executorService.awaitTermination( 100L, TimeUnit.MILLISECONDS ) )
+        if ( this.executorService.awaitTermination( 500L, TimeUnit.MILLISECONDS ) )
         {
           LOG.fine( "All running threads are terminated ..." );
         }
@@ -93,7 +93,7 @@ public class BackgroundTaskExecutionService implements TaskExecutionService
       }
     }
 
-    LOG.info( "Background task execution service closed ..." );
+    LOG.fine( "Background task execution service closed ..." );
   }
 
   /**
@@ -127,6 +127,7 @@ public class BackgroundTaskExecutionService implements TaskExecutionService
         }
         catch ( Exception exception )
         {
+          LOG.log( Level.FINE, "Task execution failed!", exception );
           this.tsl.taskFailed( aTask, exception );
           throw exception;
         }

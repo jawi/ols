@@ -104,7 +104,7 @@ public class BackgroundTaskExecutionServiceTest
   @Test( expected = CancellationException.class )
   public void testExecuteCancelOk() throws Exception
   {
-    final Task<Object> task = createMockTask( 200 );
+    final Task<Object> task = createMockTask( 500 );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockTaskStatusListener );
@@ -114,6 +114,8 @@ public class BackgroundTaskExecutionServiceTest
     sleep( 100 ); // sleep long enough for the entire method to complete...
 
     future.cancel( true /* mayInterruptIfRunning */);
+
+    sleep( 50 ); // sleep long enough to allow callbacks to be invoked...
 
     inOrder.verify( this.mockTaskStatusListener ).taskStarted( eq( task ) );
     inOrder.verify( this.mockTaskStatusListener ).taskFailed( eq( task ), Matchers.<Exception> any() );
@@ -131,7 +133,7 @@ public class BackgroundTaskExecutionServiceTest
   @Test( expected = ExecutionException.class )
   public void testExecuteCloseCancelsRunningToolsOk() throws Exception
   {
-    final Task<Object> task = createMockTask( 200 );
+    final Task<Object> task = createMockTask( 500 );
 
     // Test whether the callback methods are called in the correct order...
     InOrder inOrder = inOrder( this.mockTaskStatusListener );
@@ -141,6 +143,8 @@ public class BackgroundTaskExecutionServiceTest
     sleep( 10 ); // sleep long enough for the entire method to complete...
 
     this.service.close();
+
+    sleep( 50 ); // sleep long enough to allow callbacks to be invoked...
 
     inOrder.verify( this.mockTaskStatusListener ).taskStarted( eq( task ) );
     inOrder.verify( this.mockTaskStatusListener ).taskFailed( eq( task ), Matchers.<Exception> any() );
@@ -168,6 +172,8 @@ public class BackgroundTaskExecutionServiceTest
     sleep( 200 ); // sleep long enough for the entire method to complete...
 
     this.service.close();
+
+    sleep( 50 ); // sleep long enough to allow callbacks to be invoked...
 
     inOrder.verify( this.mockTaskStatusListener ).taskStarted( eq( task ) );
     inOrder.verify( this.mockTaskStatusListener ).taskEnded( eq( task ), anyObject() );
