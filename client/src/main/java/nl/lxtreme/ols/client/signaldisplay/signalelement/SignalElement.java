@@ -684,8 +684,13 @@ public final class SignalElement implements Comparable<SignalElement>
   private String getColorKey()
   {
     Integer groupIdx = Integer.valueOf( ( this.group.getIndex() % 4 ) + 1 );
-    Integer channelIdx = Integer.valueOf( ( this.channel.getIndex() % 8 ) + 1 );
-    return String.format( "ols.channelgroup%d.channel%d.default.color", groupIdx, channelIdx );
+    // Issue #121: channel can be null for non-digital channels...
+    if ( this.channel != null )
+    {
+      Integer channelIdx = Integer.valueOf( ( this.channel.getIndex() % 8 ) + 1 );
+      return String.format( "ols.channelgroup%d.channel%d.default.color", groupIdx, channelIdx );
+    }
+    return String.format( "ols.channelgroup%d.default.color", groupIdx );
   }
 
   /**
