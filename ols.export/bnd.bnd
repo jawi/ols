@@ -1,0 +1,8 @@
+-sub: *.bnd
+-buildpath: osgi.core;version=4.2,\
+	osgi.cmpn;version=4.2,\
+	org.apache.felix.dependencymanager;version=3.0.0,\
+	junit.osgi;version=3.8.2,\
+	org.mockito.mockito-all;version=1.8.5,\
+	lib.testutil;version=latest,\
+	ols.common;version=latest

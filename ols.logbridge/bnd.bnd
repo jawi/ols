@@ -1,0 +1,8 @@
+-buildpath: osgi.core;version=4.2,\
+	osgi.cmpn;version=4.2,\
+	org.apache.felix.dependencymanager;version=3.0.0
+Bundle-Description: Provides a log bridge between JUL and OSGi.
+Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2012
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+Bundle-Activator: nl.lxtreme.ols.logbridge.Activator
+Private-Package: nl.lxtreme.ols.logbridge

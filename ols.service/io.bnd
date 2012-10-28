@@ -1,0 +1,4 @@
+Private-Package: nl.lxtreme.ols.io,\
+	nl.lxtreme.ols.io.serial,\
+	nl.lxtreme.ols.io.socket
+Bundle-Activator: nl.lxtreme.ols.io.Activator

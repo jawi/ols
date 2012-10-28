@@ -1,0 +1,62 @@
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+	<id>api</id>
+	<formats>
+		<format>zip</format>
+	</formats>
+	<dependencySets>
+		<dependencySet>
+            <!-- exclude the (non-existing) project artifacts of *this* project. -->
+            <useProjectArtifact>false</useProjectArtifact>
+			<outputDirectory>lib</outputDirectory>
+			<includes>
+				<include>nl.lxtreme.ols:api</include>
+				<include>nl.lxtreme.ols:util</include>
+				<include>nl.lxtreme.ols.tool:base</include>
+				<include>nl.lxtreme.ols:test.util</include>
+				<include>org.osgi:org.osgi.core</include>
+				<include>org.osgi:org.osgi.compendium</include>
+			</includes>
+            <directoryMode>0755</directoryMode>
+		</dependencySet>
+	</dependencySets>
+	
+	<fileSets>
+		<fileSet>
+			<directory>${project.basedir}/target/apidocs</directory>
+			<outputDirectory>javadoc</outputDirectory>
+			<useDefaultExcludes>true</useDefaultExcludes>
+			<includes>
+				<include>*-javadoc.jar</include>
+			</includes>
+			<fileMode>0644</fileMode>
+		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/src/main/resources</directory>
+			<outputDirectory>/</outputDirectory>
+			<useDefaultExcludes>true</useDefaultExcludes>
+			<includes>
+				<include>AUTHOR</include>
+				<include>README</include>
+				<include>LICENSE</include>
+				<include>install-to-maven.bat</include>
+			</includes>
+			<lineEnding>dos</lineEnding>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0644</fileMode>
+		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/src/main/resources</directory>
+			<outputDirectory>/</outputDirectory>
+			<useDefaultExcludes>true</useDefaultExcludes>
+			<includes>
+				<include>install-to-maven.sh</include>
+			</includes>
+			<lineEnding>unix</lineEnding>
+            <directoryMode>0755</directoryMode>
+			<fileMode>0755</fileMode>
+		</fileSet>
+	</fileSets>
+</assembly>

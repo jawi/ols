@@ -1,0 +1,7 @@
+Export-Package: nl.lxtreme.ols.common,\
+	nl.lxtreme.ols.common.acquisition,\
+	nl.lxtreme.ols.common.annotation,\
+	nl.lxtreme.ols.common.session,\
+    nl.lxtreme.ols.common.timeline,\
+	nl.lxtreme.ols.common.util
+-buildpath: junit.osgi;version=3.8.2

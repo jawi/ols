@@ -1,0 +1,6 @@
+Private-Package: nl.lxtreme.ols.export.image
+Bundle-Description: An image exporter for the OLS client.
+Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2012
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+OLS-Exporter: 1.0
+OLS-ExporterClass: nl.lxtreme.ols.export.image.ImageExporter

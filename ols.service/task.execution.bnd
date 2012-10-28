@@ -1,0 +1,3 @@
+Private-Package: nl.lxtreme.ols.task.execution.impl
+Bundle-Activator: nl.lxtreme.ols.task.execution.impl.Activator
+Export-Package: nl.lxtreme.ols.task.execution

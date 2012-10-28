@@ -1,0 +1,4 @@
+-buildpath: osgi.core;version=4.2,\
+	osgi.cmpn;version=4.2
+Private-Package: nl.lxtreme.ols.run
+Bundle-Activator: nl.lxtreme.ols.run.Activator

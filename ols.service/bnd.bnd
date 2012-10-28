@@ -1,0 +1,9 @@
+-buildpath: \
+    osgi.core;version=4.2,\
+	osgi.cmpn;version=4.2,\
+	org.apache.felix.dependencymanager;version=3.0.0,\
+	javax.microedition.io;version=latest,\
+	purejavacomm;version=0.0.9,\
+	junit.osgi;version=3.8.2,\
+	org.mockito.mockito-all;version=1.8.5
+-sub: *.bnd

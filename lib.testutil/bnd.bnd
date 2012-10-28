@@ -1,0 +1,4 @@
+-buildpath: junit.osgi;version=3.8.2,\
+	org.mockito.mockito-all;version=1.8.5,\
+	ols.common;version=latest
+Export-Package: nl.lxtreme.ols.testutil

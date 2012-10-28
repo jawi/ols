@@ -1,0 +1,50 @@
+OpenBench LogicSniffer Client ChangeLog
+=======================================
+J.W. Janssen, <j.w.janssen@lxtreme.nl>
+
+
+Release 0.9.6:
+- New signal display component in place, with most of the long-promised 
+  functionality now in place;
+- new default look and feel, thanks to Marius Jonsson;
+- allow OLS to be used over a network, thanks to Marcin Zapolski;
+- improved detection of SUMP-compatible devices, thanks to JTR; 
+- allow data to be exported as CSV (issue #95);
+- added DMX512 decoder tool;
+- added simple Manchester line decoder tool;
+- extended SPI decoder to support dual/quad SPI mode (SPIFI), thanks to 
+  Benjamin Vernoux for testing this;
+- allow communication with OLBS at any serial port speed;
+- fixed issues #107, #106, #105, #103, #101, #100, #99, #98, #95, #94, #91, 
+  #90, #84, #76, #73, #71, #67, #59, #55, #52, #49, #38, #25, #19, #18, #15, 
+  #14, #13, #12, #11, #7;
+- as usual, small improvements and cleanups.
+
+Release 0.9.5:
+- Fixed cancel capture issue.
+
+Release 0.9.5 (beta 2):
+- Fixed issues #81 and #82;
+- Ensured that the selected capture device is retained between user sessions;
+- Updated the about box to include the proper copyright years;
+- Small cleanups.
+
+Release 0.9.5 (beta 1):
+- Fixed issues #79, #77, #76, #75, #74, #70 and #40;
+- Use PureJavacomm (see [1]) as experimental serial library instead of RXTX;
+- Major cleanups in Tool/Device API making it easier to implement and test new
+  tools and/or devices;
+- Hide more of the OSGi complexity in the "main" code;
+- Ansgar Kueckes donated an new decoder tool to decode ASM45 signals (see [2])
+  as part of the HP 9845 project;
+- OLS trigger mask/value can now be entered as hex-value (patch provided by 
+  Ansgar Kueckes);
+- Several small cleanups and improvements.
+
+
+Older releases:
+- see <https://github.com/jawi/ols/blob/master/ChangeLog>
+
+
+1. http://www.sparetimelabs.com/purejavacomm/index.html
+2. http://www.hp9845.net/9845/projects/assembler/
