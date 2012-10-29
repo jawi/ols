@@ -3,6 +3,9 @@ OpenBench LogicSniffer Client ChangeLog
 J.W. Janssen, <j.w.janssen@lxtreme.nl>
 
 
+Release 0.9.6.1:
+- Fixed issue #120, serial problems on recent Linux kernels.
+
 Release 0.9.6:
 - New signal display component in place, with most of the long-promised 
   functionality now in place;
