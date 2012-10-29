@@ -36,14 +36,14 @@
             <artifactId>purejavacomm</artifactId>
             <version>1.0.0</version>
             <scope>system</scope>
-            <systemPath>${basedir}/purejavacomm.jar</systemPath>
+            <systemPath>${basedir}/purejavacomm-0.0.10.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>purejavacomm</groupId>
             <artifactId>jna</artifactId>
             <version>1.0.0</version>
             <scope>system</scope>
-            <systemPath>${basedir}/jna.jar</systemPath>
+            <systemPath>${basedir}/jna-3.5.1.jar</systemPath>
         </dependency>
         <!-- 
 		<dependency>
