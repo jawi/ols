@@ -112,24 +112,26 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
     // closable behavior...
     Callable<AcquisitionData> task = new CancellableTask<AcquisitionData>()
     {
+      private final long startTime = System.currentTimeMillis();
+
       @Override
       public AcquisitionData call() throws Exception
       {
         final String name = aDevice.getName();
 
-        fireAcquisitionStartedEvent( name );
+        fireAcquisitionStartedEvent( name, this.startTime );
 
         try
         {
           final AcquisitionData result = aDevice.acquireData( BackgroundDataAcquisitionService.this );
 
-          fireAcquisitionEndedEvent( name, result );
+          fireAcquisitionEndedEvent( name, result, this.startTime );
 
           return result;
         }
         catch ( Exception exception )
         {
-          fireAcquisitionFailedEvent( name, exception );
+          fireAcquisitionFailedEvent( name, exception, this.startTime );
 
           throw exception;
         }
@@ -142,7 +144,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
       @Override
       public void cancel()
       {
-        fireAcquisitionCancelledEvent( aDevice.getName() );
+        fireAcquisitionCancelledEvent( aDevice.getName(), this.startTime );
       }
     };
 
@@ -176,11 +178,12 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   /**
    * 
    */
-  private void fireAcquisitionCancelledEvent( final String aDeviceName )
+  private void fireAcquisitionCancelledEvent( final String aDeviceName, final long aStartTime )
   {
     final Map<String, Object> props = new HashMap<String, Object>();
-    props.put( DataAcquisitionService.KEY_DEVICE, aDeviceName );
     props.put( DataAcquisitionService.KEY_STATUS, DataAcquisitionService.STATUS_CANCELLED );
+    props.put( DataAcquisitionService.KEY_START_TIME, Long.valueOf( aStartTime ) );
+    props.put( DataAcquisitionService.KEY_DEVICE, aDeviceName );
 
     this.eventAdmin.postEvent( new Event( DataAcquisitionService.TOPIC_ACQUISITION_STATUS, props ) );
 
@@ -190,11 +193,12 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   /**
    * @param aData
    */
-  private void fireAcquisitionEndedEvent( final String aDeviceName, final AcquisitionData aData )
+  private void fireAcquisitionEndedEvent( final String aDeviceName, final AcquisitionData aData, final long aStartTime )
   {
     final Map<String, Object> props = new HashMap<String, Object>();
-    props.put( DataAcquisitionService.KEY_DEVICE, aDeviceName );
     props.put( DataAcquisitionService.KEY_STATUS, DataAcquisitionService.STATUS_SUCCESS );
+    props.put( DataAcquisitionService.KEY_START_TIME, Long.valueOf( aStartTime ) );
+    props.put( DataAcquisitionService.KEY_DEVICE, aDeviceName );
 
     this.eventAdmin.postEvent( new Event( DataAcquisitionService.TOPIC_ACQUISITION_STATUS, props ) );
 
@@ -206,12 +210,13 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   /**
    * @param aException
    */
-  private void fireAcquisitionFailedEvent( final String aDeviceName, final Throwable aException )
+  private void fireAcquisitionFailedEvent( final String aDeviceName, final Throwable aException, final long aStartTime )
   {
     final Map<String, Object> props = new HashMap<String, Object>();
-    props.put( DataAcquisitionService.KEY_DEVICE, aDeviceName );
     props.put( DataAcquisitionService.KEY_STATUS, DataAcquisitionService.STATUS_FAILED );
+    props.put( DataAcquisitionService.KEY_START_TIME, Long.valueOf( aStartTime ) );
     props.put( DataAcquisitionService.KEY_EXCEPTION, aException );
+    props.put( DataAcquisitionService.KEY_DEVICE, aDeviceName );
 
     this.eventAdmin.postEvent( new Event( DataAcquisitionService.TOPIC_ACQUISITION_STATUS, props ) );
 
@@ -220,14 +225,13 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
 
   /**
    * Fires an event to notify listers that an acquisition is started.
-   * 
-   * @param aString
    */
-  private void fireAcquisitionStartedEvent( final String aDeviceName )
+  private void fireAcquisitionStartedEvent( final String aDeviceName, final long aStartTime )
   {
     final Map<String, Object> props = new HashMap<String, Object>();
-    props.put( DataAcquisitionService.KEY_DEVICE, aDeviceName );
     props.put( DataAcquisitionService.KEY_STATUS, DataAcquisitionService.STATUS_STARTED );
+    props.put( DataAcquisitionService.KEY_START_TIME, Long.valueOf( aStartTime ) );
+    props.put( DataAcquisitionService.KEY_DEVICE, aDeviceName );
 
     this.eventAdmin.postEvent( new Event( DataAcquisitionService.TOPIC_ACQUISITION_STATUS, props ) );
 

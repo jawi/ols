@@ -49,9 +49,27 @@ public interface DataAcquisitionService
   /** All topics. */
   String TOPIC_ANY = TOPIC_PREFIX + "/*";
 
+  /**
+   * Provides information about the status of the acquisition. The value is of
+   * type String and equals to one of the <tt>STATUS_*</tt> values defined in
+   * this same interface.
+   */
   String KEY_STATUS = "status";
+  /**
+   * Provides information about failures during an acquisition. The value is of
+   * type {@link Exception}.
+   */
   String KEY_EXCEPTION = "exception";
+  /**
+   * Provides information about the device which is acquiring. The value is of
+   * type String and equals to the name of the device.
+   */
   String KEY_DEVICE = "device";
+  /**
+   * Provides information about when the acquisition was started. The value is
+   * of type Long and denotes the time in milliseconds (Epoch time).
+   */
+  String KEY_START_TIME = "startTime";
 
   String STATUS_STARTED = "started";
   String STATUS_FAILED = "failed";
