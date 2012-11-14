@@ -27,8 +27,8 @@ import java.util.List;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
+import nl.lxtreme.ols.client.signaldisplay.view.*;
 
 
 /**
@@ -38,7 +38,7 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalEle
  * This class is thread-safe.
  * </p>
  */
-public class ElementGroup
+class ElementGroup
 {
   // INNER TYPES
 

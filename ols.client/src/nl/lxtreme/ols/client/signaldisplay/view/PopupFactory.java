@@ -25,21 +25,20 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.action.*;
-import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.cursor.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
 import nl.lxtreme.ols.common.*;
-import nl.lxtreme.ols.common.Cursor;
 
 
 /**
  * Provides a helper class for handling popups in the various views.
  */
-final class PopupFactory
+public final class PopupFactory
 {
   // VARIABLES
 
@@ -83,7 +82,8 @@ final class PopupFactory
    *          the location on screen, cannot be <code>null</code>.
    * @return a popup menu, never <code>null</code>.
    */
-  public JPopupMenu createCursorPopup( final Cursor aHoveredCursor, final Point aPoint, final Point aLocationOnScreen )
+  public JPopupMenu createCursorPopup( final CursorElement aHoveredCursor, final Point aPoint,
+      final Point aLocationOnScreen )
   {
     return createPopup( aPoint, aLocationOnScreen, aHoveredCursor, true /* aShowCursors */);
   }
@@ -97,9 +97,9 @@ final class PopupFactory
    * @param aPoint
    *          the current mouse location, cannot be <code>null</code>.
    */
-  private void addCursorActions( final JPopupMenu aMenu, final Cursor aHoveredCursor, final Point aPoint )
+  private void addCursorActions( final JPopupMenu aMenu, final CursorElement aHoveredCursor, final Point aPoint )
   {
-    Cursor cursor = aHoveredCursor;
+    CursorElement cursor = aHoveredCursor;
     if ( cursor != null )
     {
       // Hovering above existing cursor, show remove menu...
@@ -129,10 +129,10 @@ final class PopupFactory
    * @param aShowCursorSection
    * @return
    */
-  private JPopupMenu createPopup( final Point aPoint, final Point aLocationOnScreen, final Cursor aHoveredCursor,
-      final boolean aShowCursorSection )
+  private JPopupMenu createPopup( final Point aPoint, final Point aLocationOnScreen,
+      final CursorElement aHoveredCursor, final boolean aShowCursorSection )
   {
-    IActionManager actionMgr = this.controller.getActionManager();
+    ActionManager actionMgr = Client.getInstance().getActionManager();
 
     final JPopupMenu contextMenu = new JPopupMenu();
 

@@ -21,12 +21,15 @@
 package nl.lxtreme.ols.client.action;
 
 
+import static nl.lxtreme.ols.client.icons.IconLocator.*;
+
 import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -34,7 +37,7 @@ import nl.lxtreme.ols.util.swing.*;
  * Provides a "capture" action in which the current device controller is asked
  * to start a data capture.
  */
-public class CaptureAction extends BaseAction
+public class CaptureAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -45,56 +48,54 @@ public class CaptureAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new CaptureAction instance.
-   * 
-   * @param aController
-   *          the controller to use for this action.
+   * Creates a new {@link CaptureAction} instance.
    */
-  public CaptureAction( final ClientController aController )
+  public CaptureAction()
   {
-    this( ID, ICON_CAPTURE_DATA, "Begin capture", "Start capturing data from the logic analyser", aController );
+    putValue( NAME, "Begin capture" );
+    putValue( SHORT_DESCRIPTION, "Start capturing data from the logic analyser" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( ICON_CAPTURE_DATA ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_B ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_B ) );
-  }
-
-  /**
-   * Creates a new CaptureAction instance.
-   * 
-   * @param aID
-   *          the ID of this action;
-   * @param aIconName
-   *          the name of the icon to use for this action;
-   * @param aName
-   *          the name of this action;
-   * @param aDescription
-   *          the description (tooltip) to use for this action;
-   * @param aController
-   *          the controller to use for this action.
-   */
-  protected CaptureAction( final String aID, final String aIconName, final String aName, final String aDescription,
-      final ClientController aController )
-  {
-    super( aID, aController, aIconName, aName, aDescription );
   }
 
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
   public final void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+    getAcquisitionController().captureData( owner );
+  }
 
-    if ( !getController().isDeviceSelected() )
-    {
-      JOptionPane.showMessageDialog( owner, "No capturing device was set!", "Acquisition error",
-          JOptionPane.ERROR_MESSAGE );
-      return;
-    }
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
 
-    getController().captureData( owner );
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    setEnabled( getAcquisitionController().isDeviceSelected() );
+  }
+
+  /**
+   * @return the {@link AcquisitionController} instance, never <code>null</code>
+   *         .
+   */
+  private AcquisitionController getAcquisitionController()
+  {
+    return Client.getInstance().getAcquisitionController();
   }
 }
 

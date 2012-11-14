@@ -21,9 +21,12 @@
 package nl.lxtreme.ols.client.action;
 
 
+import static nl.lxtreme.ols.client.icons.IconLocator.*;
+
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -41,14 +44,13 @@ public class SaveProjectAsAction extends SaveProjectAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new SaveProjectAsAction instance.
-   * 
-   * @param aController
-   *          the controller to use.
+   * Creates a new {@link SaveProjectAsAction} instance.
    */
-  public SaveProjectAsAction( final ClientController aController )
+  public SaveProjectAsAction()
   {
-    super( ID, aController, ICON_SAVE_PROJECT, "Save project as ...", "Save the current project under a different name" );
+    putValue( NAME, "Save project as ..." );
+    putValue( SHORT_DESCRIPTION, "Save the current project under a different name" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( ICON_SAVE_PROJECT ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_S, InputEvent.SHIFT_MASK ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
   }
@@ -56,7 +58,26 @@ public class SaveProjectAsAction extends SaveProjectAction
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.client.action.SaveProjectAction#showFileChooserDialogNeeded()
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    ProjectController controller = Client.getInstance().getProjectController();
+    setEnabled( controller.isProjectChanged() && !controller.isAnonymousProject() );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
    */
   @Override
   protected boolean showFileChooserDialogNeeded()

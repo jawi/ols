@@ -24,19 +24,22 @@ package nl.lxtreme.ols.client.tool;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.common.Configuration;
+import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
 import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
+import org.osgi.service.event.*;
+import org.osgi.service.event.Event;
 import org.osgi.service.log.*;
 import org.osgi.service.metatype.*;
 
@@ -47,90 +50,6 @@ import org.osgi.service.metatype.*;
 public class ToolInvokerImpl implements ToolInvoker
 {
   // INNER TYPES
-
-  /**
-   * Provides a generic editor for a tool configuration.
-   */
-  final class GenericToolConfigurationEditor extends JDialog implements StatusAwareCloseableDialog
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // VARIABLES
-
-    private final ToolConfigPanel configPanel;
-    private final String pid;
-    private DialogStatus status;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link GenericToolConfigurationEditor} instance.
-     * 
-     * @param aContext
-     */
-    public GenericToolConfigurationEditor( final Window aParent, final String aPID, final ObjectClassDefinition aOCD,
-        final ToolContext aContext, final Map<Object, Object> aSettings )
-    {
-      super( aParent, ModalityType.APPLICATION_MODAL );
-
-      setTitle( aOCD.getName() );
-
-      // Avoid the dialog to be resized automatically...
-      getRootPane().putClientProperty( "unmanaged", Boolean.TRUE );
-
-      this.pid = aPID;
-      this.configPanel = new ToolConfigPanel( aOCD, aContext, aSettings );
-
-      final JButton closeButton = StandardActionFactory.createCloseButton();
-      final JButton okButton = StandardActionFactory.createOkButton();
-
-      final JComponent buttonBar = SwingComponentUtils.createButtonPane( okButton, closeButton );
-
-      SwingComponentUtils.setupDialogContentPane( this, this.configPanel, buttonBar, closeButton );
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void close()
-    {
-      if ( this.status == DialogStatus.OK )
-      {
-        // Update the configuration...
-        updateConfiguration( this, this.pid, this.configPanel.getProperties() );
-      }
-
-      setVisible( false );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean setDialogStatus( final DialogStatus aStatus )
-    {
-      if ( ( aStatus == DialogStatus.OK ) && !this.configPanel.areSettingsValid() )
-      {
-        return false;
-      }
-      this.status = aStatus;
-      return true;
-    }
-
-    /**
-     * @return
-     */
-    public boolean showDialog()
-    {
-      setVisible( true );
-      return this.status == DialogStatus.OK;
-    }
-  }
 
   /**
    * Provides a thread-safe version of {@link Configuration}.
@@ -212,8 +131,10 @@ public class ToolInvokerImpl implements ToolInvoker
 
   // Injected by Felix DM...
   private volatile MetaTypeService metaTypeService;
+  private volatile EventAdmin eventAdmin;
   private volatile ConfigurationAdmin configAdmin;
-  private volatile LogService logService;
+  private volatile LogService log;
+  private volatile Session session;
 
   // CONSTRUCTORS
 
@@ -230,22 +151,40 @@ public class ToolInvokerImpl implements ToolInvoker
    * {@inheritDoc}
    */
   @Override
-  public boolean configure( final Window aParent, final ToolContext aContext )
+  public boolean configure( final Window aParent )
   {
-    MetaTypeInformation metaTypeInformation = getMetaTypeInfo();
-    if ( ( metaTypeInformation == null ) || ( metaTypeInformation.getPids().length != 1 ) )
+    MetaTypeInformation metaTypeInfo = getMetaTypeInfo();
+    if ( ( metaTypeInfo == null ) || ( metaTypeInfo.getPids().length != 1 ) )
     {
+      // Not metatyped; assume it has no configuration to be performed...
+      this.log.log( LogService.LOG_INFO,
+          "No metatype information to base tool configuration on; assuming no configuration is needed..." );
       return true;
     }
 
-    String pid = metaTypeInformation.getPids()[0];
+    String pid = metaTypeInfo.getPids()[0];
+    ObjectClassDefinition ocd = metaTypeInfo.getObjectClassDefinition( pid, aParent.getLocale().toString() );
 
-    ObjectClassDefinition ocd = metaTypeInformation.getObjectClassDefinition( pid, aParent.getLocale().toString() );
+    AcquisitionDataInfo dataInfo = new AcquisitionDataInfo( this.session );
 
-    GenericToolConfigurationEditor editor = new GenericToolConfigurationEditor( aParent, pid, ocd, aContext,
-        this.configuration.asMap() );
+    ToolConfigurationEditor editor = new ToolConfigurationEditor( aParent, ocd, dataInfo, this.configuration.asMap() );
 
-    return editor.showDialog();
+    final boolean result = editor.showDialog();
+    if ( result )
+    {
+      try
+      {
+        // Post back the configuration to ConfigAdmin...
+        updateConfiguration( pid, editor.getProperties() );
+      }
+      catch ( IOException exception )
+      {
+        this.log.log( LogService.LOG_WARNING, "Failed to update configuration!", exception );
+        JErrorDialog.showDialog( aParent, "Failed to update configuration!", exception );
+      }
+    }
+
+    return result;
   }
 
   // METHODS
@@ -272,10 +211,99 @@ public class ToolInvokerImpl implements ToolInvoker
    * {@inheritDoc}
    */
   @Override
-  public void invoke( final ToolContext aContext ) throws ToolException
+  public void invoke() throws ToolException
   {
-    this.logService.log( LogService.LOG_DEBUG, "Invoking tool: " + getName() );
-    this.delegate.invoke( aContext, this.configuration );
+    this.log.log( LogService.LOG_DEBUG, "Invoking tool: " + getName() );
+
+    final SwingWorker<Void, Integer> worker = new SwingWorker<Void, Integer>()
+    {
+      // VARIABLES
+
+      private final Tool delegate = ToolInvokerImpl.this.delegate;
+      private final Session session = ToolInvokerImpl.this.session;
+      private final EventAdmin eventAdmin = ToolInvokerImpl.this.eventAdmin;
+      private final Configuration configuration = ToolInvokerImpl.this.configuration;
+      private final Long startTime = Long.valueOf( System.currentTimeMillis() );
+
+      // METHODS
+
+      @Override
+      protected Void doInBackground() throws Exception
+      {
+        final ToolContext context = new ToolContextImpl( this.session, new ToolProgressListener()
+        {
+          @Override
+          public void setProgress( final int aPercentage )
+          {
+            publish( Integer.valueOf( aPercentage ) );
+          }
+        } );
+
+        this.eventAdmin.postEvent( createEvent( TOOL_STATUS_STARTED, null ) );
+
+        this.delegate.invoke( context, this.configuration );
+
+        return null;
+      }
+
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      protected void process( final List<Integer> aChunks )
+      {
+        if ( !aChunks.isEmpty() )
+        {
+          Integer lastValue = aChunks.get( aChunks.size() - 1 );
+
+          this.eventAdmin.postEvent( createEvent( lastValue ) );
+        }
+      }
+
+      @Override
+      protected void done()
+      {
+        String state;
+        Throwable ex = null;
+        try
+        {
+          // This should return immediately...
+          get();
+
+          state = TOOL_STATUS_SUCCESS;
+        }
+        catch ( InterruptedException exception )
+        {
+          state = TOOL_STATUS_CANCELLED;
+        }
+        catch ( ExecutionException exception )
+        {
+          state = TOOL_STATUS_FAILED;
+          ex = exception.getCause();
+        }
+        this.eventAdmin.postEvent( createEvent( state, ex ) );
+      }
+
+      private Event createEvent( final String aState, final Throwable aException )
+      {
+        Map<Object, Object> props = new HashMap<Object, Object>();
+        props.put( KEY_TOOL_NAME, this.delegate.getName() );
+        props.put( KEY_TOOL_START_TIME, this.startTime );
+        props.put( KEY_TOOL_EXCEPTION, aException );
+        props.put( KEY_TOOL_STATE, aState );
+        return new Event( TOPIC_TOOL_STATUS, props );
+      }
+
+      private Event createEvent( final Integer aPercentage )
+      {
+        Map<Object, Object> props = new HashMap<Object, Object>();
+        props.put( KEY_TOOL_NAME, this.delegate.getName() );
+        props.put( KEY_TOOL_START_TIME, this.startTime );
+        props.put( KEY_TOOL_PROGRESS, aPercentage );
+        return new Event( TOPIC_TOOL_PROGRESS, props );
+      }
+    };
+    worker.execute();
   }
 
   /**
@@ -285,7 +313,7 @@ public class ToolInvokerImpl implements ToolInvoker
   @SuppressWarnings( "rawtypes" )
   public void updated( final Dictionary aProperties ) throws ConfigurationException
   {
-    this.logService.log( LogService.LOG_DEBUG, "Tool configuration updated for: " + getName() );
+    this.log.log( LogService.LOG_DEBUG, "Tool configuration updated for: " + getName() );
     this.configuration.set( aProperties );
   }
 
@@ -305,32 +333,25 @@ public class ToolInvokerImpl implements ToolInvoker
   }
 
   /**
-   * @param aOwner
-   * @param aPid
-   * @param aProperties
-   */
-  final void updateConfiguration( final Window aOwner, final String aPid, final Dictionary<Object, Object> aProperties )
-  {
-    try
-    {
-      org.osgi.service.cm.Configuration config = this.configAdmin.getConfiguration( aPid );
-      config.update( aProperties );
-
-      this.configuration.set( aProperties );
-    }
-    catch ( IOException exception )
-    {
-      this.logService.log( LogService.LOG_WARNING, "Failed to retrieve configuration!", exception );
-      JErrorDialog.showDialog( aOwner, "Failed to retrieve configuration!", exception );
-    }
-  }
-
-  /**
    * @return a {@link MetaTypeInformation} instance, never <code>null</code>.
    */
   private MetaTypeInformation getMetaTypeInfo()
   {
     Bundle bundle = FrameworkUtil.getBundle( this.delegate.getClass() );
     return this.metaTypeService.getMetaTypeInformation( bundle );
+  }
+
+  /**
+   * @param aOwner
+   * @param aPid
+   * @param aProperties
+   */
+  private void updateConfiguration( final String aPid, final Dictionary<Object, Object> aProperties )
+      throws IOException
+  {
+    org.osgi.service.cm.Configuration config = this.configAdmin.getConfiguration( aPid );
+    config.update( aProperties );
+
+    this.configuration.set( aProperties );
   }
 }

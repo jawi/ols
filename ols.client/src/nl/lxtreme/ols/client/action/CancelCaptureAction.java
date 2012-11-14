@@ -21,17 +21,20 @@
 package nl.lxtreme.ols.client.action;
 
 
+import static nl.lxtreme.ols.client.icons.IconLocator.*;
+
 import java.awt.event.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.icons.*;
 
 
 /**
- * @author jawi
+ * Provides an action to cancel an ongoing acquisition.
  */
-public class CancelCaptureAction extends BaseAction
+public class CancelCaptureAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -42,14 +45,13 @@ public class CancelCaptureAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new CancelCaptureAction instance.
-   * 
-   * @param aController
-   *          the controller to use.
+   * Creates a new {@link CancelCaptureAction} instance.
    */
-  public CancelCaptureAction( final ClientController aController )
+  public CancelCaptureAction()
   {
-    super( ID, aController, ICON_CANCEL_CAPTURE, "Cancel capture", "Cancel the current capture" );
+    putValue( NAME, "Cancel capture" );
+    putValue( SHORT_DESCRIPTION, "Cancel the current capture" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( ICON_CANCEL_CAPTURE ) );
     putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke( KeyEvent.VK_ESCAPE, 0 ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_C ) );
   }
@@ -57,11 +59,38 @@ public class CancelCaptureAction extends BaseAction
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().cancelCapture();
+    getAcquisitionController().cancelCapture();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    setEnabled( getAcquisitionController().isDeviceCapturing() );
+  }
+
+  /**
+   * @return the {@link AcquisitionController} instance, never <code>null</code>
+   *         .
+   */
+  private AcquisitionController getAcquisitionController()
+  {
+    return Client.getInstance().getAcquisitionController();
   }
 }

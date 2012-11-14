@@ -24,14 +24,18 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
+
+import org.osgi.framework.*;
 
 
 /**
  * Provides an action that shows a dialog with all OSGi bundles.
  */
-public class ShowBundlesAction extends BaseAction
+public class ShowBundlesAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -39,19 +43,15 @@ public class ShowBundlesAction extends BaseAction
 
   public static final String ID = "ShowBundles";
 
-  // VARIABLES
-
   // CONSTRUCTORS
 
   /**
-   * Creates a new ShowBundlesAction instance.
-   * 
-   * @param aController
-   *          the controller to use, cannot be <code>null</code>.
+   * Creates a new {@link ShowBundlesAction} instance.
    */
-  public ShowBundlesAction( final ClientController aController )
+  public ShowBundlesAction()
   {
-    super( ID, aController, "Show Bundles", "Show all available OSGi bundles." );
+    putValue( NAME, "Show Bundles" );
+    putValue( SHORT_DESCRIPTION, "Show all available OSGi bundles." );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_B ) );
   }
 
@@ -64,6 +64,32 @@ public class ShowBundlesAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-    getController().showBundlesDialog( owner );
+
+    final BundleContext bundleContext = Client.getInstance().getBundleContext();
+
+    final BundlesDialog dialog = new BundlesDialog( owner, bundleContext );
+    if ( dialog.showDialog() )
+    {
+      dialog.dispose();
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    // Always enabled...
+    setEnabled( true );
   }
 }

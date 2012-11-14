@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.client;
 
 
-import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+import static nl.lxtreme.ols.client.signaldisplay.view.UIManagerKeys.*;
 import static nl.lxtreme.ols.util.swing.SpringLayoutUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
@@ -31,8 +31,7 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.osgi.*;
-import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
+import nl.lxtreme.ols.client.signaldisplay.SignalDiagramModel.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
@@ -69,7 +68,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     @Override
     public Object getElementAt( final int aIndex )
     {
-      java.util.List<String> schemes = PreferencesDialog.this.colorSchemeManager.getColorSchemes();
+      java.util.List<String> schemes = getColorSchemeManager().getColorSchemes();
       if ( ( aIndex < 0 ) || ( aIndex >= schemes.size() ) )
       {
         return null;
@@ -92,7 +91,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     @Override
     public int getSize()
     {
-      return PreferencesDialog.this.colorSchemeManager.getColorSchemeCount();
+      return getColorSchemeManager().getColorSchemeCount();
     }
 
     /**
@@ -101,7 +100,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     @Override
     public void setSelectedItem( final Object aItem )
     {
-      java.util.List<String> schemes = PreferencesDialog.this.colorSchemeManager.getColorSchemes();
+      java.util.List<String> schemes = getColorSchemeManager().getColorSchemes();
       this.selected = schemes.indexOf( aItem );
     }
   }
@@ -140,6 +139,8 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   // VARIABLES
 
   private final UIColorSchemeManager colorSchemeManager;
+  private final Configuration config;
+
   private final JCheckBox mouseWheelZooms;
   private final JCheckBox cursorSnapToEdge;
   private final JCheckBox showGroupSummary;
@@ -151,9 +152,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   private final JComboBox signalAlignment;
   private final JComboBox colorScheme;
 
-  private volatile boolean dialogResult;
-  private volatile ConfigurationAdmin configAdmin;
-  private volatile Configuration config;
+  private boolean dialogResult;
 
   // CONSTRUCTORS
 
@@ -165,11 +164,13 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    * @param aColorSchemeManager
    *          the color scheme manager to use, cannot be <code>null</code>.
    */
-  public PreferencesDialog( final Window aParent, final UIColorSchemeManager aColorSchemeManager )
+  public PreferencesDialog( final Window aParent, final UIColorSchemeManager aColorSchemeManager,
+      final Configuration aConfiguration )
   {
     super( aParent, "", ModalityType.APPLICATION_MODAL );
 
     this.colorSchemeManager = aColorSchemeManager;
+    this.config = aConfiguration;
 
     // @formatter:off
     this.mouseWheelZooms = new JCheckBox();
@@ -247,9 +248,27 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    * 
    * @return always <code>true</code>.
    */
+  @SuppressWarnings( "unchecked" )
   public boolean showDialog()
   {
     this.dialogResult = false;
+
+    // The properties are in string format; so we need to do some conversions
+    // prior to applying them to our components...
+    Dictionary<Object, Object> properties = this.config.getProperties();
+
+    // Apply values to our components...
+    this.mouseWheelZooms.setSelected( getBoolean( properties, MOUSEWHEEL_ZOOM_DEFAULT ) );
+    this.cursorSnapToEdge.setSelected( getBoolean( properties, SNAP_CURSORS_DEFAULT ) );
+    this.showGroupSummary.setSelected( getBoolean( properties, GROUP_SUMMARY_VISIBLE_DEFAULT ) );
+    this.showAnalogScope.setSelected( getBoolean( properties, ANALOG_SCOPE_VISIBLE_DEFAULT ) );
+    this.showChannelIndexes.setSelected( getBoolean( properties, CHANNELLABELS_SHOW_CHANNEL_INDEX ) );
+    this.retainAnnotations.setSelected( getBoolean( properties, RETAIN_ANNOTATIONS_WITH_RECAPTURE ) );
+    this.showToolWindows.setSelected( getBoolean( properties, SHOW_TOOL_WINDOWS_DEFAULT ) );
+
+    this.signalAlignment.setSelectedItem( getSignalAlignment( properties, SIGNALVIEW_SIGNAL_ALIGNMENT ) );
+    this.annotationAlignment.setSelectedItem( getSignalAlignment( properties, SIGNALVIEW_ANNOTATION_ALIGNMENT ) );
+    this.colorScheme.setSelectedItem( getString( properties, COLOR_SCHEME ) );
 
     setVisible( true );
 
@@ -257,37 +276,11 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   }
 
   /**
-   * Called upon start of this component by the dependency manager.
+   * @return the current color scheme manager, never <code>null</code>.
    */
-  @SuppressWarnings( "unchecked" )
-  protected void start() throws IOException
+  final UIColorSchemeManager getColorSchemeManager()
   {
-    this.config = this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
-
-    // The properties are in string format; so we need to do some conversions
-    // prior to applying them to our components...
-    Dictionary<Object, Object> properties = this.config.getProperties();
-
-    // Apply values to our components...
-    this.mouseWheelZooms.setSelected( getBoolean( properties.get( MOUSEWHEEL_ZOOM_DEFAULT ) ) );
-    this.cursorSnapToEdge.setSelected( getBoolean( properties.get( SNAP_CURSORS_DEFAULT ) ) );
-    this.showGroupSummary.setSelected( getBoolean( properties.get( GROUP_SUMMARY_VISIBLE_DEFAULT ) ) );
-    this.showAnalogScope.setSelected( getBoolean( properties.get( ANALOG_SCOPE_VISIBLE_DEFAULT ) ) );
-    this.showChannelIndexes.setSelected( getBoolean( properties.get( CHANNELLABELS_SHOW_CHANNEL_INDEX ) ) );
-    this.retainAnnotations.setSelected( getBoolean( properties.get( RETAIN_ANNOTATIONS_WITH_RECAPTURE ) ) );
-    this.showToolWindows.setSelected( getBoolean( properties.get( SHOW_TOOL_WINDOWS_DEFAULT ) ) );
-
-    this.signalAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_SIGNAL_ALIGNMENT ) ) );
-    this.annotationAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_ANNOTATION_ALIGNMENT ) ) );
-    this.colorScheme.setSelectedItem( String.valueOf( properties.get( COLOR_SCHEME ) ) );
-  }
-
-  /**
-   * Called upon stop of this component by the dependency manager.
-   */
-  protected void stop()
-  {
-    // Nop...
+    return this.colorSchemeManager;
   }
 
   /**
@@ -302,7 +295,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   {
     dictionary.put( COLOR_SCHEME, colorScheme );
 
-    Properties props = this.colorSchemeManager.getColorScheme( colorScheme );
+    Properties props = getColorSchemeManager().getColorScheme( colorScheme );
     if ( props == null )
     {
       return;
@@ -327,9 +320,14 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   @SuppressWarnings( "unchecked" )
   private void applyNewPreferences() throws IOException
   {
+    Dictionary<Object, Object> properties = this.config.getProperties();
+    if ( properties == null )
+    {
+      properties = new Hashtable<Object, Object>();
+    }
+
     // The properties are in string format; so we need to do some conversions
     // prior to persisting them...
-    Dictionary<Object, Object> properties = this.config.getProperties();
     properties.put( MOUSEWHEEL_ZOOM_DEFAULT, Boolean.toString( this.mouseWheelZooms.isSelected() ) );
     properties.put( SNAP_CURSORS_DEFAULT, Boolean.toString( this.cursorSnapToEdge.isSelected() ) );
     properties.put( GROUP_SUMMARY_VISIBLE_DEFAULT, Boolean.toString( this.showGroupSummary.isSelected() ) );
@@ -424,36 +422,77 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   /**
    * Returns the boolean value for the given value representation.
    * 
-   * @param aValue
-   *          the value to parse as boolean, can be <code>null</code>.
+   * @param aProperties
+   *          the properties to retrieve the boolean from, may be
+   *          <code>null</code>;
+   * @param aKey
+   *          the key under which the property should be retrieved, cannot be
+   *          <code>null</code>.
    * @return a boolean representation for the given value, defaults to
    *         <code>false</code>.
    */
-  private boolean getBoolean( final Object aValue )
+  private static boolean getBoolean( final Dictionary<Object, Object> aProperties, final String aKey )
   {
-    if ( aValue instanceof Boolean )
+    if ( aProperties == null )
     {
-      return ( ( Boolean )aValue ).booleanValue();
+      return false;
     }
-    return Boolean.parseBoolean( String.valueOf( aValue ) );
+
+    Object value = aProperties.get( aKey );
+    if ( value instanceof Boolean )
+    {
+      return ( ( Boolean )value ).booleanValue();
+    }
+    return Boolean.parseBoolean( String.valueOf( value ) );
+  }
+
+  /**
+   * Returns the string value for the given value representation.
+   * 
+   * @param aProperties
+   *          the properties to retrieve the string from, may be
+   *          <code>null</code>;
+   * @param aKey
+   *          the key under which the property should be retrieved, cannot be
+   *          <code>null</code>.
+   * @return a boolean representation for the given value, defaults to
+   *         <code>""</code> (an empty string).
+   */
+  private static String getString( final Dictionary<Object, Object> aProperties, final String aKey )
+  {
+    if ( aProperties == null )
+    {
+      return "";
+    }
+
+    Object value = aProperties.get( aKey );
+    return String.valueOf( value );
   }
 
   /**
    * Returns the {@link SignalAlignment} for the given value representation.
    * 
-   * @param aValue
-   *          the value parse as {@link SignalAlignment}, can be
+   * @param aProperties
+   *          the properties to retrieve the boolean from, may be
+   *          <code>null</code>;
+   * @param aKey
+   *          the key under which the property should be retrieved, cannot be
    *          <code>null</code>.
    * @return a {@link SignalAlignment} value, defaults to
    *         {@link SignalAlignment#CENTER}.
    */
-  private SignalAlignment getSignalAlignment( final Object aValue )
+  private static SignalAlignment getSignalAlignment( final Dictionary<Object, Object> aProperties, final String aKey )
   {
-    if ( aValue == null )
+    SignalAlignment result = SignalAlignment.CENTER;
+    if ( aProperties != null )
     {
-      return SignalAlignment.CENTER;
+      Object value = aProperties.get( aKey );
+      if ( value != null )
+      {
+        result = SignalAlignment.valueOf( value.toString().toUpperCase() );
+      }
     }
-    return SignalAlignment.valueOf( aValue.toString().toUpperCase() );
+    return result;
   }
 
   /**
@@ -465,7 +504,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   private void purgeOldColorScheme( final Dictionary<Object, Object> dictionary )
   {
     String oldColorScheme = ( String )dictionary.get( COLOR_SCHEME );
-    Properties props = this.colorSchemeManager.getColorScheme( oldColorScheme );
+    Properties props = getColorSchemeManager().getColorScheme( oldColorScheme );
     if ( props == null )
     {
       return;

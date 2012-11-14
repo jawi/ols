@@ -25,13 +25,13 @@ import java.util.*;
 
 import nl.lxtreme.ols.acquisition.service.*;
 import nl.lxtreme.ols.client.acquisition.*;
+import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.componentprovider.*;
-import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.project.impl.*;
 import nl.lxtreme.ols.client.session.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.tool.*;
-import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.*;
@@ -135,8 +135,39 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    final ClientController clientController = new ClientController( aContext );
+    registerBundleAdapters( aManager );
+    registerApplicationCallbackFacade( aManager );
 
+    registerUIManagerConfigurator( aManager );
+    registerUIColorSchemeManager( aManager );
+
+    registerDataAcquirer( aManager );
+    registerSession( aManager );
+
+    registerUserSettingsManager( aManager );
+    registerUserSessionManager( aManager );
+
+    registerClient( aManager );
+  }
+
+  /**
+   * Registers a facade for the {@link ApplicationCallback} service.
+   */
+  private void registerApplicationCallbackFacade( final DependencyManager aManager )
+  {
+    aManager.add( createComponent() //
+        .setImplementation( ApplicationCallbackFacade.class ) //
+        .add( createServiceDependency() //
+            .setService( ApplicationCallback.class ) //
+            .setRequired( true ) ) //
+        );
+  }
+
+  /**
+   * Registers the various bundle adapters.
+   */
+  private void registerBundleAdapters( final DependencyManager aManager )
+  {
     aManager.add( createBundleAdapterService( Bundle.ACTIVE, CP_BUNDLE_FILTER, true /* propagate */) //
         .setImplementation( ComponentProviderBundleAdapter.class ) );
 
@@ -148,11 +179,158 @@ public class Activator extends DependencyActivatorBase
         );
 
     aManager.add( createBundleAdapterService( Bundle.ACTIVE, DEVICE_BUNDLE_FILTER, true /* propagate */) //
-        .setImplementation( DeviceBundleAdapter.class ) );
+        .setImplementation( DeviceBundleAdapter.class ) //
+        .add( createServiceDependency() //
+            .setService( MetaTypeService.class ) //
+            .setRequired( true ) ) //
+        );
 
     aManager.add( createBundleAdapterService( Bundle.ACTIVE, EXPORTER_BUNDLE_FILTER, true /* propagate */) //
-        .setImplementation( ExporterBundleAdapter.class ) );
+        .setImplementation( ExporterBundleAdapter.class ) //
+        .add( createServiceDependency() //
+            .setService( MetaTypeService.class ) //
+            .setRequired( true ) ) //
+        );
+  }
 
+  /**
+   * @param aManager
+   */
+  private void registerClient( final DependencyManager aManager )
+  {
+    final String[] interfaces = new String[] { EventHandler.class.getName(), ApplicationCallback.class.getName(),
+        StatusListener.class.getName() };
+
+    Properties props = new Properties();
+    props.put( EventConstants.EVENT_TOPIC, new String[] { Session.TOPIC_ANY, DataAcquisitionService.TOPIC_ANY,
+        ToolInvoker.TOPIC_ANY } );
+
+    final Client client = Client.getInstance();
+
+    // Expose all of our "static" controllers as OSGi-managed components...
+    // @formatter:off
+    aManager.add( createComponent()
+        .setInterface( ActionManager.class.getName(), null )
+        .setImplementation( client.getActionManager() ) 
+    );
+    aManager.add( createComponent()
+        .setInterface( CursorController.class.getName(), null )
+        .setImplementation( client.getCursorController() )
+        .add( createServiceDependency().setService( Session.class ).setInstanceBound( true ).setRequired( true ) ) 
+    );
+    aManager.add( createComponent()
+        .setInterface( DeviceController.class.getName(), null )
+        .setImplementation( client.getDeviceController() )
+        .add( createServiceDependency().setService( Device.class ).setCallbacks( "addDevice", "removeDevice" ).setRequired( false ) )
+        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
+        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) ) 
+    );
+    aManager.add( createComponent()
+        .setInterface( ImportExportController.class.getName(), null )
+        .setImplementation( client.getImportExportController() )
+        .add( createServiceDependency().setService( Exporter.class ).setCallbacks( "addExporter", "removeExporter" ).setRequired( false ) )
+        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
+        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) ) 
+    );
+    aManager.add( createComponent()
+        .setInterface( ToolController.class.getName(), null )
+        .setImplementation( client.getToolController() )
+        .add( createServiceDependency().setService( ToolInvoker.class ).setCallbacks( "addTool", "removeTool" ).setRequired( false ) )
+        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
+        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) ) 
+    );
+    aManager.add( createComponent()
+        .setInterface( ProjectController.class.getName(), null )
+        .setImplementation( client.getProjectController() )
+        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
+        .add( createServiceDependency().setService( Session.class ).setInstanceBound( true ).setRequired( true ) ) 
+        .add( createServiceDependency().setService( StatusListener.class ).setRequired( false ) ) 
+    );
+    aManager.add( createComponent()
+        .setInterface( SignalDiagramController.class.getName(), null )
+        .setImplementation( client.getSignalDiagramController() )
+        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
+        .add( createServiceDependency().setService( Session.class ).setInstanceBound( true ).setRequired( true ) ) 
+    );
+    aManager.add( createComponent()
+        .setInterface( AcquisitionController.class.getName(), null )
+        .setImplementation( client.getAcquisitionController() )
+        .add( createServiceDependency().setService( DeviceController.class ).setInstanceBound( true ).setRequired( true ) ) 
+        .add( createServiceDependency().setService( IDataAcquirer.class ).setInstanceBound( true ).setRequired( true ) ) 
+        .add( createServiceDependency().setService( StatusListener.class ).setRequired( false ) ) 
+        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) ) 
+    );
+    aManager.add( createComponent()
+        .setInterface( interfaces, props )
+        .setImplementation( client )
+        .add( createServiceDependency().setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ).setCallbacks( "addMenu", "removeMenu" ).setRequired( false ) )
+        .add( createServiceDependency().setService( UIColorSchemeManager.class ).setRequired( true ) )
+        .add( createServiceDependency().setService( MetaTypeService.class ).setRequired( true ) )
+        .add( createServiceDependency().setService( ConfigurationAdmin.class ).setRequired( true ) )
+        .add( createServiceDependency().setService( HostProperties.class ).setRequired( true ) )
+        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) )
+        .add( createServiceDependency().setService( Session.class ).setRequired( true ) )
+    );
+    // @formatter:on
+  }
+
+  /**
+   * Registers the {@link IDataAcquirer} service.
+   */
+  private void registerDataAcquirer( final DependencyManager aManager )
+  {
+    Properties props;
+    props = new Properties();
+    props.put( EventConstants.EVENT_TOPIC, new String[] { DataAcquisitionService.TOPIC_ACQUISITION_STATUS } );
+
+    aManager.add( createComponent() //
+        .setInterface( new String[] { IDataAcquirer.class.getName(), EventHandler.class.getName() }, props ) //
+        .setImplementation( DataAcquirerImpl.class ) //
+        .add( createServiceDependency() //
+            .setService( DataAcquisitionService.class ) //
+            .setRequired( false ) ) //
+        );
+  }
+
+  /**
+   * @param aManager
+   */
+  private void registerSession( final DependencyManager aManager )
+  {
+    aManager.add( createComponent() //
+        .setInterface( Session.class.getName(), null ) //
+        .setImplementation( SessionImpl.class ) //
+        .setComposition( "getComposition" ) //
+        .add( createServiceDependency() //
+            .setService( EventAdmin.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        );
+  }
+
+  /**
+   * Registers the {@link UIColorSchemeManager} as service.
+   */
+  private void registerUIColorSchemeManager( final DependencyManager aManager )
+  {
+    Properties props = new Properties();
+    props.put( Constants.SERVICE_PID, UIColorSchemeManager.PID );
+
+    String[] serviceNames = new String[] { UIColorSchemeManager.class.getName(), ManagedServiceFactory.class.getName() };
+
+    // UI Manager Configuration...
+    aManager.add( createComponent() //
+        .setInterface( serviceNames, props ) //
+        .setImplementation( UIColorSchemeManager.class ) );
+  }
+
+  /**
+   * Register the {@link UIManagerConfigurator} as service.
+   */
+  private void registerUIManagerConfigurator( final DependencyManager aManager )
+  {
     Properties props = new Properties();
     props.put( Constants.SERVICE_PID, UIManagerConfigurator.PID );
 
@@ -163,21 +341,18 @@ public class Activator extends DependencyActivatorBase
         .setInterface( serviceNames, props ) //
         .setImplementation( UIManagerConfigurator.class ) //
         );
+  }
 
-    props.put( Constants.SERVICE_PID, UIColorSchemeManager.PID );
-
-    serviceNames = new String[] { UIColorSchemeManager.class.getName(), ManagedServiceFactory.class.getName() };
-
-    // UI Manager Configuration...
-    aManager.add( createComponent() //
-        .setInterface( serviceNames, props ) //
-        .setImplementation( UIColorSchemeManager.class ) );
-
+  /**
+   * @param aManager
+   */
+  private void registerUserSessionManager( final DependencyManager aManager )
+  {
     // User session manager...
     aManager.add( createComponent() //
         .setImplementation( new UserSessionManager() ) //
         .add( createServiceDependency() //
-            .setService( ProjectManager.class ) //
+            .setService( ProjectController.class ) //
             .setRequired( true ) ) //
         .add( createServiceDependency() //
             .setService( UserSettingsManager.class ) //
@@ -189,26 +364,13 @@ public class Activator extends DependencyActivatorBase
             .setService( LogService.class ) //
             .setRequired( false ) //
         ) );
+  }
 
-    aManager.add( createComponent() //
-        .setImplementation( ApplicationCallbackFacade.class ) //
-        .add( createServiceDependency() //
-            .setService( ApplicationCallback.class ) //
-            .setRequired( false ) ) //
-        );
-
-    aManager.add( createComponent() //
-        .setInterface( Session.class.getName(), null ) //
-        .setImplementation( SessionImpl.class ) //
-        .add( createServiceDependency() //
-            .setService( EventAdmin.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( LogService.class ) //
-            .setRequired( false ) ) //
-        );
-
-    // Project manager...
+  /**
+   * @param aManager
+   */
+  private void registerUserSettingsManager( final DependencyManager aManager )
+  {
     aManager.add( //
         createComponent() //
             .setInterface( UserSettingsManager.class.getName(), null ) //
@@ -217,79 +379,6 @@ public class Activator extends DependencyActivatorBase
                 .setService( LogService.class ) //
                 .setRequired( false ) //
             ) //
-        );
-
-    aManager.add( //
-        createComponent() //
-            .setInterface( ProjectManager.class.getName(), null ) //
-            .setImplementation( new ProjectManagerImpl() ) //
-            .add( createServiceDependency() //
-                .setService( HostProperties.class ) //
-                .setRequired( true ) //
-            ) //
-            .add( createServiceDependency() //
-                .setService( LogService.class ) //
-                .setRequired( false ) //
-            ) //
-        );
-
-    props = new Properties();
-    props.put( EventConstants.EVENT_TOPIC, new String[] { DataAcquisitionService.TOPIC_ACQUISITION_STATUS } );
-
-    aManager.add( createComponent() //
-        .setInterface( new String[] { DataAcquirer.class.getName(), EventHandler.class.getName() }, props ) //
-        .setImplementation( DataAcquirerImpl.class ) //
-        .add( createServiceDependency() //
-            .setService( DataAcquisitionService.class ) //
-            .setRequired( false ) ) //
-        );
-
-    // All the interfaces we're registering the client controller under...
-    serviceNames = new String[] { EventHandler.class.getName(), AnnotationListener.class.getName(),
-        ApplicationCallback.class.getName() };
-
-    props = new Properties();
-    props.put( EventConstants.EVENT_TOPIC, new String[] { Session.TOPIC_ACQUISITION_DATA_CHANGED,
-        DataAcquisitionService.TOPIC_ANY } );
-
-    // Client controller...
-    aManager.add( createComponent() //
-        .setInterface( serviceNames, props ) //
-        .setImplementation( clientController ) //
-        .add( createServiceDependency() //
-            .setService( HostProperties.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( Session.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( ProjectManager.class ) //
-            .setRequired( true ) //
-            .setCallbacks( "setProjectManager", "removeProjectManager" ) ) //
-        .add( createServiceDependency() //
-            .setService( DataAcquirer.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( UIColorSchemeManager.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ) //
-            .setCallbacks( "addMenu", "removeMenu" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( Device.class ) //
-            .setCallbacks( "addDevice", "removeDevice" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( ToolInvoker.class ) //
-            .setCallbacks( "addTool", "removeTool" ) //
-            .setRequired( false ) ) //
-        .add( createServiceDependency() //
-            .setService( Exporter.class ) //
-            .setCallbacks( "addExporter", "removeExporter" ) //
-            .setRequired( false ) ) //
-        .add( createConfigurationDependency() //
-            .setPid( UIManagerConfigurator.PID ) ) //
         );
   }
 }

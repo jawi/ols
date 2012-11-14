@@ -25,8 +25,8 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.common.session.*;
 
 
 /**
@@ -40,22 +40,13 @@ public class SetCursorModeAction extends AbstractAction implements IManagedActio
 
   public static final String ID = "SetCursorMode";
 
-  // VARIABLES
-
-  private final SignalDiagramController controller;
-
   // CONSTRUCTORS
 
   /**
    * Creates a new {@link SetCursorModeAction} instance.
-   * 
-   * @param aController
-   *          the controller to use for this action.
    */
-  public SetCursorModeAction( final SignalDiagramController aController )
+  public SetCursorModeAction()
   {
-    this.controller = aController;
-
     putValue( NAME, "Toggle visibility of all cursors" );
     putValue( SHORT_DESCRIPTION, "Toggle visibility of all cursors in the diagram" );
 
@@ -71,7 +62,7 @@ public class SetCursorModeAction extends AbstractAction implements IManagedActio
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
-    this.controller.setCursorMode( menuItem.getState() );
+    getCursorController().setCursorsVisible( menuItem.getState() );
   }
 
   /**
@@ -81,6 +72,34 @@ public class SetCursorModeAction extends AbstractAction implements IManagedActio
   public String getId()
   {
     return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    final boolean cursorsEnabled = getCursorController().isCursorsVisible();
+
+    setEnabled( getSession().hasData() );
+    putValue( Action.SELECTED_KEY, Boolean.valueOf( cursorsEnabled ) );
+  }
+
+  /**
+   * @return a {@link CursorController} instance, never <code>null</code>.
+   */
+  private CursorController getCursorController()
+  {
+    return Client.getInstance().getCursorController();
+  }
+
+  /**
+   * @return a {@link Session} instance, never <code>null</code>.
+   */
+  private Session getSession()
+  {
+    return Client.getInstance().getSession();
   }
 }
 

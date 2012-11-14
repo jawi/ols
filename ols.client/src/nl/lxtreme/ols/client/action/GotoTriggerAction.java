@@ -21,18 +21,24 @@
 package nl.lxtreme.ols.client.action;
 
 
+import static nl.lxtreme.ols.client.icons.IconLocator.*;
+
 import java.awt.event.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.session.*;
 
 
 /**
  * Provides an action that goes to the trigger point in the captured data, if
  * present.
  */
-public class GotoTriggerAction extends BaseAction
+public class GotoTriggerAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -43,14 +49,14 @@ public class GotoTriggerAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new GotoTriggerAction instance.
-   * 
-   * @param aController
-   *          the controller to use for this action.
+   * Creates a new {@link GotoTriggerAction} instance.
    */
-  public GotoTriggerAction( final ClientController aController )
+  public GotoTriggerAction()
   {
-    super( ID, aController, ICON_GOTO_TRIGGER, "Go to Trigger", "Go to trigger moment in diagram" );
+    putValue( NAME, "Go to Trigger" );
+    putValue( SHORT_DESCRIPTION, "Go to trigger moment in diagram" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( ICON_GOTO_TRIGGER ) );
+
     putValue( ACCELERATOR_KEY, KeyStroke.getKeyStroke( KeyEvent.VK_HOME, 0 ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_0 ) );
   }
@@ -63,7 +69,45 @@ public class GotoTriggerAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().gotoTriggerPosition();
+    Client client = Client.getInstance();
+
+    Session session = client.getSession();
+
+    AcquisitionData capturedData = session.getAcquisitionData();
+    if ( ( capturedData != null ) && capturedData.hasTriggerData() )
+    {
+      final long position = capturedData.getTriggerPosition();
+
+      SignalDiagramController controller = client.getSignalDiagramController();
+      controller.scrollToTimestamp( Long.valueOf( position ) );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    final Session session = Client.getInstance().getSession();
+
+    boolean enabled = false;
+    if ( session.hasData() )
+    {
+      AcquisitionData capturedData = session.getAcquisitionData();
+      enabled = capturedData.hasTriggerData();
+    }
+
+    setEnabled( enabled );
   }
 }
 

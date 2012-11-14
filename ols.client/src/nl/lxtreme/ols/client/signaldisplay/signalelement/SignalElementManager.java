@@ -29,9 +29,10 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.ISignalElementChangeListener.ElementMoveEvent;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.ISignalElementChangeListener.*;
+import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
@@ -189,16 +190,16 @@ public final class SignalElementManager implements IDataModelChangeListener
    * {@inheritDoc}
    */
   @Override
-  public void dataModelChanged( final DataSet aCapturedData )
+  public void dataModelChanged( final AcquisitionData aData )
   {
     // Make sure only a single thread at a time modifies us...
     synchronized ( this.lock )
     {
-      final Channel[] newChannelList = aCapturedData.getChannels();
+      final int channelCount = aData.getChannelCount();
 
       // Reset channel groups so they align with the given data model...
-      final int groupCount = Math.max( 1, ( int )Math.ceil( newChannelList.length / ( double )Ols.CHANNELS_PER_BLOCK ) );
-      final int channelsPerGroup = ( int )Math.ceil( newChannelList.length / ( double )groupCount );
+      final int groupCount = Math.max( 1, ( int )Math.ceil( channelCount / ( double )Ols.CHANNELS_PER_BLOCK ) );
+      final int channelsPerGroup = ( int )Math.ceil( channelCount / ( double )groupCount );
 
       this.elements.clear();
       this.groups.clear();
@@ -213,11 +214,11 @@ public final class SignalElementManager implements IDataModelChangeListener
         for ( int c = 0; c < channelsPerGroup; c++ )
         {
           final int channelIdx = ( g * channelsPerGroup ) + c;
-          if ( newChannelList[channelIdx] == null )
+          final Channel channel = aData.getChannel( channelIdx );
+          if ( channel != null )
           {
-            continue;
+            addSignalElement( group, createDigitalSignalElement( channel, group ) );
           }
-          addSignalElement( group, createDigitalSignalElement( newChannelList[channelIdx], group ) );
         }
 
         addSignalElement( group, createGroupSummaryElement( group ) );
@@ -396,41 +397,33 @@ public final class SignalElementManager implements IDataModelChangeListener
   }
 
   /**
-   * Moves a given signal element from its current position to a new group with
-   * a new index.
+   * Moves a given signal element to an insertion point denoted by the other
+   * given signal element.
    * 
    * @param aMovedElement
-   *          the signal element to move, cannot be <code>null</code>;
-   * @param aNewGroup
-   *          the new element group to move the signal element to, can be equal
-   *          to the current group of the moved signal element but never
-   *          <code>null</code>;
-   * @param aNewIndex
-   *          the new index of the moved signal element.
+   * @param aInsertElement
    */
-  public void moveElement( final SignalElement aMovedElement, final ElementGroup aNewGroup, final int aNewIndex )
+  public void moveElement( final SignalElement aMovedElement, final SignalElement aInsertElement )
   {
-    if ( aMovedElement == null )
+    final ElementGroup oldGroup = aMovedElement.getGroup();
+    final ElementGroup newGroup = aInsertElement.getGroup();
+
+    int newIndex;
+    if ( aInsertElement.isDigitalSignal() )
     {
-      throw new IllegalArgumentException( "Moved signal element cannot be null!" );
+      int offset = ( oldGroup != newGroup ) ? 1 : 0;
+      newIndex = aInsertElement.getVirtualIndex() + offset;
     }
-    if ( aNewGroup == null )
+    else if ( aInsertElement.isSignalGroup() )
     {
-      throw new IllegalArgumentException( "New group cannot be null!" );
+      newIndex = 0; //
     }
-    if ( ( aNewIndex < 0 ) || ( aNewIndex > Ols.MAX_CHANNELS ) )
+    else
     {
-      throw new IllegalArgumentException( "Invalid new index: " + aNewIndex + "!" );
+      newIndex = newGroup.getElementCount();
     }
 
-    final ElementGroup oldCG = aMovedElement.getGroup();
-    final int oldIndex = aMovedElement.getVirtualIndex();
-
-    // Perform the actual move itself...
-    aNewGroup.moveChannel( aMovedElement, aNewIndex );
-
-    // Fire an event to all interested listeners...
-    fireChannelMoveEvent( new ElementMoveEvent( aMovedElement, oldCG, oldIndex ) );
+    moveElement( aMovedElement, newGroup, newIndex );
   }
 
   /**
@@ -657,5 +650,43 @@ public final class SignalElementManager implements IDataModelChangeListener
     }
 
     return null;
+  }
+
+  /**
+   * Moves a given signal element from its current position to a new group with
+   * a new index.
+   * 
+   * @param aMovedElement
+   *          the signal element to move, cannot be <code>null</code>;
+   * @param aNewGroup
+   *          the new element group to move the signal element to, can be equal
+   *          to the current group of the moved signal element but never
+   *          <code>null</code>;
+   * @param aNewIndex
+   *          the new index of the moved signal element.
+   */
+  private void moveElement( final SignalElement aMovedElement, final ElementGroup aNewGroup, final int aNewIndex )
+  {
+    if ( aMovedElement == null )
+    {
+      throw new IllegalArgumentException( "Moved signal element cannot be null!" );
+    }
+    if ( aNewGroup == null )
+    {
+      throw new IllegalArgumentException( "New group cannot be null!" );
+    }
+    if ( ( aNewIndex < 0 ) || ( aNewIndex > Ols.MAX_CHANNELS ) )
+    {
+      throw new IllegalArgumentException( "Invalid new index: " + aNewIndex + "!" );
+    }
+
+    final ElementGroup oldCG = aMovedElement.getGroup();
+    final int oldIndex = aMovedElement.getVirtualIndex();
+
+    // Perform the actual move itself...
+    aNewGroup.moveChannel( aMovedElement, aNewIndex );
+
+    // Fire an event to all interested listeners...
+    fireChannelMoveEvent( new ElementMoveEvent( aMovedElement, oldCG, oldIndex ) );
   }
 }

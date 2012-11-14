@@ -29,11 +29,10 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.action.*;
-import nl.lxtreme.ols.client.signaldisplay.model.*;
-import nl.lxtreme.ols.client.signaldisplay.util.*;
-import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
-import nl.lxtreme.ols.common.Cursor;
+import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.view.glasspane.*;
+import nl.lxtreme.ols.client.signaldisplay.view.signals.*;
+import nl.lxtreme.ols.client.signaldisplay.view.timeline.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -41,7 +40,7 @@ import nl.lxtreme.ols.util.swing.*;
  * Provides an abstract mouse handler for the {@link SignalDiagramComponent}
  * views, such as {@link SignalView} and {@link TimeLineView}.
  */
-abstract class AbstractMouseHandler extends MouseAdapter
+public abstract class AbstractMouseHandler extends MouseAdapter
 {
   // CONSTANTS
 
@@ -50,6 +49,15 @@ abstract class AbstractMouseHandler extends MouseAdapter
    * before the cursor can be moved.
    */
   private static final int CURSOR_SENSITIVITY_AREA = 4;
+
+  protected static final java.awt.Cursor CURSOR_WAIT = java.awt.Cursor
+      .getPredefinedCursor( java.awt.Cursor.WAIT_CURSOR );
+  protected static final java.awt.Cursor CURSOR_HOVER = java.awt.Cursor
+      .getPredefinedCursor( java.awt.Cursor.CROSSHAIR_CURSOR );
+  protected static final java.awt.Cursor CURSOR_MOVE_CURSOR = java.awt.Cursor
+      .getPredefinedCursor( java.awt.Cursor.HAND_CURSOR );
+  protected static final java.awt.Cursor CURSOR_MOVE_TIMESTAMP = java.awt.Cursor
+      .getPredefinedCursor( java.awt.Cursor.E_RESIZE_CURSOR );
 
   // VARIABLES
 
@@ -85,7 +93,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
     {
       final MouseEvent event = convertEvent( aEvent );
 
-      final Cursor hoveredCursor = findCursor( event.getPoint() );
+      final CursorElement hoveredCursor = findCursor( event.getPoint() );
       if ( hoveredCursor != null )
       {
         editCursorProperties( hoveredCursor );
@@ -124,7 +132,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
       if ( ( scrollPane != null ) && ( this.lastClickPosition != null ) )
       {
         final JViewport viewPort = scrollPane.getViewport();
-        final Component signalView = this.controller.getSignalDiagram().getSignalView();
+        final Component signalView = viewPort.getView();
 
         boolean horizontalOnly = ( aEvent.getModifiersEx() & InputEvent.ALT_DOWN_MASK ) != 0;
         boolean verticalOnly = horizontalOnly && ( ( aEvent.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK ) != 0 );
@@ -175,11 +183,11 @@ abstract class AbstractMouseHandler extends MouseAdapter
     {
       if ( getModel().isCursorMode() )
       {
-        Cursor hoveredCursor = findCursor( point );
+        CursorElement hoveredCursor = findCursor( point );
         if ( hoveredCursor != null )
         {
           this.movingCursor = hoveredCursor.getIndex();
-          setMouseCursor( aEvent, SignalView.CURSOR_MOVE_CURSOR );
+          setMouseCursor( aEvent, CURSOR_MOVE_CURSOR );
         }
         else
         {
@@ -240,14 +248,14 @@ abstract class AbstractMouseHandler extends MouseAdapter
    *          <code>null</code>.
    * @return the cursor index, or -1 if not found.
    */
-  protected final Cursor findCursor( final Point aPoint )
+  protected final CursorElement findCursor( final Point aPoint )
   {
     final SignalDiagramModel model = getModel();
 
     final long refIdx = model.locationToTimestamp( aPoint );
     final double snapArea = CURSOR_SENSITIVITY_AREA / model.getZoomFactor();
 
-    for ( Cursor cursor : model.getDefinedCursors() )
+    for ( CursorElement cursor : model.getDefinedCursors() )
     {
       if ( cursor.inArea( refIdx, snapArea ) )
       {
@@ -364,7 +372,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
    *          the cursor to edit the properties for, cannot be <code>null</code>
    *          .
    */
-  private void editCursorProperties( final Cursor aCursor )
+  private void editCursorProperties( final CursorElement aCursor )
   {
     ActionEvent stubEvent = new ActionEvent( this, ActionEvent.ACTION_PERFORMED, "" );
     new EditCursorPropertiesAction( this.controller, aCursor ).actionPerformed( stubEvent );

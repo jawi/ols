@@ -24,385 +24,117 @@ package nl.lxtreme.ols.client;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
-import java.text.*;
+import java.io.*;
 import java.util.*;
 import java.util.List;
-import java.util.logging.*;
+import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
 import javax.swing.plaf.*;
 
-import nl.lxtreme.ols.client.about.*;
-import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.laf.*;
-import nl.lxtreme.ols.common.*;
-import nl.lxtreme.ols.common.Cursor;
+import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.client.signaldisplay.view.toolwindow.*;
 import nl.lxtreme.ols.host.*;
+import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.Configurable;
 import nl.lxtreme.ols.util.swing.component.*;
+
+import org.noos.xing.mydoggy.*;
+import org.noos.xing.mydoggy.plaf.*;
+import org.osgi.framework.*;
 
 
 /**
- * Denotes the main UI.
+ * Denotes the frame of the main UI.
  */
-public final class MainFrame extends JFrame implements Closeable, PropertyChangeListener, Configurable
+public final class MainFrame extends JFrame implements PropertyChangeListener, Configurable
 {
   // INNER TYPES
 
   /**
-   * Provides an adapter class for {@link MenuListener} allowing a menu to be
-   * recreated each time it is selected.
+   * Provides a {@link AccumulatingRunnable} that repaints the entire main frame
+   * once in a while. This is necessary if a tool produces lots of annotations
+   * in a short time-frame, which would otherwise cause the UI to become slow
+   * due to the many repaint requests.
    */
-  static abstract class AbstractMenuBuilder implements MenuListener
+  final class AccumulatingRepaintingRunnable extends AccumulatingRunnable<Void>
   {
-    // CONSTANTS
-
-    private static final Logger LOG = Logger.getLogger( AbstractMenuBuilder.class.getName() );
-
-    // VARIABLES
-
-    protected final ClientController controller;
-
-    private final ButtonGroup group = new ButtonGroup();
-
-    // CONSTRUCTORS
-
     /**
-     * Creates a new MainFrame.AbstractMenuBuilder instance.
+     * {@inheritDoc}
      */
-    public AbstractMenuBuilder( final ClientController aController )
+    @Override
+    protected void run( final Deque<Void> aArgs )
     {
-      this.controller = aController;
+      repaint( 50L );
     }
+  }
 
+  /**
+   * Provides a listener for cursor changes that reflects all changes to their
+   * corresponding actions.
+   */
+  final class CursorActionListener implements ICursorChangeListener
+  {
     // METHODS
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void menuCanceled( final MenuEvent aEvent )
+    public void cursorAdded( final CursorElement aCursor )
     {
-      // No-op
+      updateActionStates();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void menuDeselected( final MenuEvent aEvent )
+    public void cursorChanged( final String aPropertyName, final CursorElement aNewCursor )
     {
-      // No-op
+      // Nothing...
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void menuSelected( final MenuEvent aEvent )
+    public void cursorMoved( final long aOldTimestamp, final long aNewTimestamp )
     {
-      // Build the menu dynamically...
-      final JMenu menu = ( JMenu )aEvent.getSource();
-
-      String[] names = getMenuItemNames();
-      if ( names.length == 0 )
-      {
-        for ( int i = 0, size = menu.getItemCount(); i < size; i++ )
-        {
-          final JMenuItem item = menu.getItem( i );
-          if ( item instanceof AbstractButton )
-          {
-            this.group.remove( item );
-          }
-          menu.remove( item );
-        }
-
-        JMenuItem noDevicesItem = new JMenuItem( getNoItemsName() );
-        noDevicesItem.setEnabled( false );
-
-        menu.add( noDevicesItem );
-      }
-      else
-      {
-        names = removeObsoleteMenuItems( menu, names );
-        for ( String name : names )
-        {
-          try
-          {
-            final JMenuItem menuItem = createMenuItem( name );
-            if ( menuItem != null )
-            {
-              this.group.add( menuItem );
-              menu.add( menuItem );
-            }
-          }
-          catch ( Exception exception )
-          {
-            LOG.log( Level.FINE, "Exception thrown while creating menu item!", exception );
-          }
-        }
-      }
-
-      // Make sure the action reflect the current situation...
-      this.controller.updateActionsOnEDT();
-    }
-
-    /**
-     * Factory method for creating a menu item for the given name.
-     * 
-     * @param aName
-     *          the name of the menu item, never <code>null</code>.
-     * @return a new menu item instance, never <code>null</code>.
-     */
-    protected abstract JMenuItem createMenuItem( String aName );
-
-    /**
-     * Returns all names of menu items.
-     * 
-     * @return an array of menu item names, never <code>null</code>.
-     */
-    protected abstract String[] getMenuItemNames();
-
-    /**
-     * Returns the name to display in case no other menu items are available.
-     * 
-     * @return a 'no items' menu item name, never <code>null</code>.
-     */
-    protected abstract String getNoItemsName();
-
-    /**
-     * Returns whether or not the given menu item is "persistent", i.e., it
-     * should not be removed automagically from the menu.
-     * 
-     * @param aMenuItem
-     *          the menu item to test, cannot be <code>null</code>.
-     * @return <code>true</code> if the menu item is persistent,
-     *         <code>false</code> otherwise.
-     */
-    private boolean isPersistentMenuItem( final JMenuItem aMenuItem )
-    {
-      final Object isPersistent = aMenuItem.getClientProperty( PERSISTENT_MENU_ITEM_KEY );
-      return Boolean.TRUE.equals( isPersistent );
-    }
-
-    /**
-     * Removes all obsolete menu items from the given menu, meaning that all
-     * items that are not persistent and are not contained in the given list of
-     * menu items are removed.
-     * 
-     * @param aMenu
-     *          the menu to remove the obsolete items from;
-     * @param aMenuItems
-     *          the menu items that should either remain or be added to the
-     *          menu.
-     * @return an array of menu items that are to be added to the given menu.
-     */
-    private String[] removeObsoleteMenuItems( final JMenu aMenu, final String[] aMenuItems )
-    {
-      List<String> result = new ArrayList<String>( Arrays.asList( aMenuItems ) );
-      // Remove all obsolete menu items from the menu...
-      for ( int i = aMenu.getItemCount() - 1; i >= 0; i-- )
-      {
-        final JMenuItem menuItem = aMenu.getItem( i );
-        if ( menuItem == null )
-        {
-          // Not a menu item; simply ignore it and continue...
-          continue;
-        }
-
-        final String itemText = menuItem.getText();
-        if ( !result.contains( itemText ) && !isPersistentMenuItem( menuItem ) )
-        {
-          // Remove this menu item from the menu; it is obsolete...
-          aMenu.remove( i );
-        }
-        else
-        {
-          // Remove the checked item; it should not be (re)added to the menu...
-          result.remove( itemText );
-        }
-      }
-
-      return result.toArray( new String[result.size()] );
-    }
-  }
-
-  /**
-   * Provides a builder for building the cursors menu upon selection of the
-   * menu.
-   */
-  static class CursorMenuBuilder extends AbstractMenuBuilder
-  {
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new MainFrame.CursorMenuBuilder instance.
-     */
-    public CursorMenuBuilder( final ClientController aController )
-    {
-      super( aController );
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected JMenuItem createMenuItem( final String aName )
-    {
-      try
-      {
-        int idx = Integer.parseInt( aName );
-        if ( idx >= 0 )
-        {
-          final Action action = this.controller.getAction( GotoNthCursorAction.getID( idx ) );
-          return new JMenuItem( action );
-        }
-      }
-      catch ( NumberFormatException exception )
-      {
-        // Ignore...
-      }
-      return null;
+      // Nothing...
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected String[] getMenuItemNames()
+    public void cursorRemoved( final CursorElement aOldCursor )
     {
-      final Cursor[] cursors = this.controller.getCurrentDataSet().getCursors();
-      final List<String> result = new ArrayList<String>();
-      for ( Cursor cursor : cursors )
-      {
-        if ( cursor.isDefined() )
-        {
-          result.add( Integer.toString( cursor.getIndex() ) );
-        }
-      }
-      return result.toArray( new String[result.size()] );
+      updateActionStates();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected String getNoItemsName()
+    public void cursorsInvisible()
     {
-      return "No cursors set.";
-    }
-  }
-
-  /**
-   * Provides a builder for building the devices menu upon selection of the
-   * menu.
-   */
-  static class DeviceMenuBuilder extends AbstractMenuBuilder
-  {
-    // VARIABLES
-
-    private final MainFrame mainFrame;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new MainFrame.DeviceMenuBuilder instance.
-     */
-    public DeviceMenuBuilder( final ClientController aController, final MainFrame aMainFrame )
-    {
-      super( aController );
-      this.mainFrame = aMainFrame;
+      updateActionStates();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected JMenuItem createMenuItem( final String aDeviceName )
+    public void cursorsVisible()
     {
-      final Action action = this.controller.getAction( SelectDeviceAction.getID( aDeviceName ) );
-      action.putValue( Action.SELECTED_KEY, isDeviceToBeSelected( aDeviceName ) );
-      return new JRadioButtonMenuItem( action );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String[] getMenuItemNames()
-    {
-      return this.controller.getDeviceNames();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getNoItemsName()
-    {
-      return "No devices.";
-    }
-
-    /**
-     * Returns whether or not the given device name is to be selected in the
-     * menu.
-     * 
-     * @param aDeviceName
-     *          the name of the device to test.
-     * @return {@link Boolean#TRUE} if the device is to be selected,
-     *         {@link Boolean#FALSE} otherwise.
-     */
-    private Boolean isDeviceToBeSelected( final String aDeviceName )
-    {
-      return Boolean.valueOf( aDeviceName.equals( this.mainFrame.lastSelectedDeviceName ) );
-    }
-  }
-
-  /**
-   * Provides a builder for building the export menu upon selection of the menu.
-   */
-  static class ExportMenuBuilder extends AbstractMenuBuilder
-  {
-    /**
-     * Creates a new MainFrame.ExportMenuBuilder instance.
-     */
-    public ExportMenuBuilder( final ClientController aController )
-    {
-      super( aController );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected JMenuItem createMenuItem( final String aExporterName )
-    {
-      return new JMenuItem( new ExportAction( this.controller, aExporterName ) );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String[] getMenuItemNames()
-    {
-      return this.controller.getExporterNames();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getNoItemsName()
-    {
-      return "No exporters.";
+      updateActionStates();
     }
   }
 
@@ -473,93 +205,20 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   }
 
   /**
-   * Provides a builder for building the tools menu upon selection of the menu.
+   * A runnable implementation that accumulates several calls to avoid an
+   * avalanche of events on the EDT.
    */
-  static class ToolMenuBuilder extends AbstractMenuBuilder
+  final class ProgressUpdatingRunnable extends AccumulatingRunnable<Integer>
   {
     /**
-     * Creates a new MainFrame.ToolMenuBuilder instance.
-     */
-    public ToolMenuBuilder( final ClientController aController )
-    {
-      super( aController );
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
-    protected JMenuItem createMenuItem( final String aToolName )
+    protected void run( final Deque<Integer> aArgs )
     {
-      return new JMenuItem( this.controller.getAction( RunToolAction.getID( aToolName ) ) );
-    }
+      final Integer percentage = aArgs.getLast();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String[] getMenuItemNames()
-    {
-      return this.controller.getToolNames();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getNoItemsName()
-    {
-      return "No tools.";
-    }
-  }
-
-  /**
-   * Provides a builder for building the window menu upon selection of the menu.
-   */
-  static class WindowMenuBuilder extends AbstractMenuBuilder
-  {
-    /**
-     * Creates a new MainFrame.WindowMenuBuilder instance.
-     */
-    public WindowMenuBuilder( final ClientController aController )
-    {
-      super( aController );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected JMenuItem createMenuItem( final String aWindowName )
-    {
-      return new JCheckBoxMenuItem( new FocusWindowAction( aWindowName ) );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String[] getMenuItemNames()
-    {
-      final Window[] windows = Window.getWindows();
-      final List<String> titles = new ArrayList<String>();
-      for ( Window window : windows )
-      {
-        if ( window.isDisplayable() )
-        {
-          titles.add( FocusWindowAction.getTitle( window ) );
-        }
-      }
-      return titles.toArray( new String[titles.size()] );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getNoItemsName()
-    {
-      return "No windows.";
+      doSetProgress( Math.max( 0, Math.min( 100, percentage.intValue() ) ) );
     }
   }
 
@@ -699,13 +358,24 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
      */
     private int getMouseWheelZoomModifier()
     {
-      final HostProperties hostProps = MainFrame.this.controller.getHostProperties();
-      if ( hostProps.isMacOS() )
+      if ( isMacOS() )
       {
         return InputEvent.META_DOWN_MASK;
       }
 
       return InputEvent.CTRL_DOWN_MASK;
+    }
+
+    /**
+     * Returns whether the current host's operating system is Mac OS X.
+     * 
+     * @return <code>true</code> if running on Mac OS X, <code>false</code>
+     *         otherwise.
+     */
+    private boolean isMacOS()
+    {
+      final String osName = System.getProperty( "os.name" );
+      return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
     }
 
     /**
@@ -757,40 +427,49 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   private static final long serialVersionUID = 1L;
 
-  private static final String PERSISTENT_MENU_ITEM_KEY = "persistentMenuItem";
+  public static final String TW_ACQUISITION = AcquisitionDetailsView.ID;
+  public static final String TW_MEASURE = MeasurementView.ID;
+  public static final String TW_CURSORS = CursorDetailsView.ID;
+
+  public static final String GROUP_DEFAULT = "Default";
 
   // VARIABLES
 
-  private final SignalDiagramComponent signalDiagram;
+  private final ActionManager actionManager;
+  private final DeviceController deviceController;
+  private final HostProperties hostProperties;
+
+  private final AtomicReference<MyDoggyToolWindowManager> windowManagerRef;
+  private final ProgressUpdatingRunnable progressAccumulatingRunnable;
+  private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
   private final JTextStatusBar status;
-  private final ClientController controller;
-  private final DockController dockController;
 
-  private JMenu deviceMenu;
-  private JMenu toolsMenu;
-  private JMenu windowMenu;
-  private JMenu exportMenu;
-  private JMenu cursorsMenu;
+  private volatile boolean wasHidden = false;
+  private volatile File dataStorage;
 
-  private volatile String lastSelectedDeviceName;
+  private AcquisitionDetailsView captureDetails;
+  private CursorDetailsView cursorDetails;
+  private MeasurementView measurementDetails;
+  private AnnotationOverview annotationOverview;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new MainFrame instance.
-   * 
-   * @param aDockController
-   *          the dock controller to use, cannot be <code>null</code>;
-   * @param aClientController
-   *          the client controller to use, cannot be <code>null</code>.
+   * Creates a new {@link MainFrame} instance.
    */
-  public MainFrame( final DockController aDockController, final ClientController aClientController )
+  public MainFrame( final ActionManager aActionManager, final DeviceController aDeviceController,
+      final HostProperties aHostProperties )
   {
-    this.controller = aClientController;
-    this.dockController = aDockController;
+    this.actionManager = aActionManager;
+    this.deviceController = aDeviceController;
+    this.hostProperties = aHostProperties;
 
-    // Let the host platform determine where this diagram should be displayed;
-    // gives it more or less a native feel...
+    this.windowManagerRef = new AtomicReference<MyDoggyToolWindowManager>();
+    this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
+    this.repaintAccumulatingRunnable = new AccumulatingRepaintingRunnable();
+
+    // Let the host platform determine where this diagram should be
+    // displayed; gives it more or less a native feel...
     setLocationByPlatform( true );
 
     setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
@@ -799,61 +478,48 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     // Add the window icon...
     setIconImages( internalGetIconImages() );
 
-    SignalDiagramController signalDiagramController = this.controller.getSignalDiagramController();
-
-    this.signalDiagram = signalDiagramController.getSignalDiagram();
     this.status = new JTextStatusBar();
 
-    final JToolBar tools = createMenuBars();
-
-    // Create a scrollpane for the diagram...
-    this.dockController.setMainContent( new ZoomCapableScrollPane( signalDiagramController ) );
-
-    final JPanel contentPane = new JPanel( new BorderLayout() );
-    contentPane.add( tools, BorderLayout.PAGE_START );
-    contentPane.add( this.dockController.get(), BorderLayout.CENTER );
-    contentPane.add( this.status, BorderLayout.PAGE_END );
-
-    setContentPane( contentPane );
+    setContentPane( new JPanel( new BorderLayout() ) );
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
-
-    // Start the actual dock controller...
-    this.dockController.start();
   }
 
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
+   * @param aWindow
    */
-  @Override
-  public void close()
+  private static void tweakToolWindow( final ToolWindow aWindow )
   {
-    close( true /* aExitApp */);
-  }
+    RepresentativeAnchorDescriptor<?> anchorDesc = aWindow.getRepresentativeAnchorDescriptor();
+    anchorDesc.setTitle( aWindow.getTitle() );
+    anchorDesc.setPreviewEnabled( false );
+    if ( aWindow.getIcon() != null )
+    {
+      anchorDesc.setIcon( aWindow.getIcon() );
+    }
 
-  /**
-   * Returns the name of the current selected device in the devices menu.
-   * 
-   * @return the name of the current selected device, or <code>null</code> if no
-   *         device is selected.
-   */
-  public final String getSelectedDeviceName()
-  {
-    return this.lastSelectedDeviceName;
-  }
+    final ToolWindowType[] types = ToolWindowType.values();
+    for ( ToolWindowType type : types )
+    {
+      ToolWindowTypeDescriptor desc = aWindow.getTypeDescriptor( type );
+      desc.setAnimating( false );
+      desc.setAutoHide( false );
+      desc.setEnabled( true );
+      desc.setHideRepresentativeButtonOnVisible( false );
+      desc.setIdVisibleOnTitleBar( false );
+      desc.setTitleBarButtonsVisible( false );
+      desc.setTitleBarVisible( false );
+    }
 
-  /**
-   * Sets the view to the position indicated by the given sample position.
-   * 
-   * @param aSamplePos
-   *          the sample position, >= 0.
-   */
-  public void gotoPosition( final int aChannelIdx, final long aSamplePos )
-  {
-    this.signalDiagram.scrollToTimestamp( aSamplePos );
+    DockedTypeDescriptor desc = ( DockedTypeDescriptor )aWindow.getTypeDescriptor( ToolWindowType.DOCKED );
+    desc.setPopupMenuEnabled( false );
+
+    aWindow.setAvailable( true );
+    aWindow.setHideOnZeroTabs( false );
+    aWindow.setVisible( UIManager.getBoolean( UIManagerKeys.SHOW_TOOL_WINDOWS_DEFAULT ) );
   }
 
   /**
@@ -862,19 +528,19 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   @Override
   public void propertyChange( final PropertyChangeEvent aEvent )
   {
-    final String propertyName = aEvent.getPropertyName();
-    if ( "project".equals( propertyName ) )
-    {
-      Project project = ( Project )aEvent.getNewValue();
+    // final String propertyName = aEvent.getPropertyName();
+    // if ( "project".equals( propertyName ) )
+    // {
+    // Project project = ( Project )aEvent.getNewValue();
+    //
+    // updateWindowDecorations( project );
+    // }
+    // else if ( "capturedData".equals( propertyName ) )
+    // {
+    // updateWindowDecorations( this.controller.getCurrentProject() );
+    // }
 
-      updateWindowDecorations( project );
-    }
-    else if ( "capturedData".equals( propertyName ) )
-    {
-      updateWindowDecorations( this.controller.getCurrentProject() );
-    }
-
-    this.controller.updateActionsOnEDT();
+    this.actionManager.updateActionStates();
   }
 
   /**
@@ -885,7 +551,80 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   {
     // Detour: make sure the controller does this, so the actions are correctly
     // synchronized; make sure the OLS device is selected by default...
-    this.controller.selectDevice( aSettings.get( "selectedDevice", "OpenBench LogicSniffer" ) );
+    this.deviceController.setSelectedDeviceName( aSettings.get( "selectedDevice", "OpenBench LogicSniffer" ) );
+  }
+
+  /**
+   * @param aToolWindow
+   * @param aGroupName
+   */
+  public final void registerToolWindow( final IToolWindow aToolWindow, final String aGroupName )
+  {
+    MyDoggyToolWindowManager wm = getManager();
+
+    ToolWindow tw = wm.registerToolWindow( aToolWindow.getId(), aToolWindow.getName(), aToolWindow.getIcon(),
+        ( java.awt.Component )aToolWindow, ToolWindowAnchor.RIGHT );
+
+    final ToolWindowGroup group = wm.getToolWindowGroup( aGroupName );
+    group.setImplicit( false );
+    group.addToolWindow( tw );
+
+    tweakToolWindow( tw );
+  }
+
+  /**
+   * Schedules a progress update.
+   * 
+   * @param aPercentage
+   *          the percentage to set, cannot be <code>null</code>.
+   */
+  public final void scheduleProgressUpdate( final Integer aPercentage )
+  {
+    this.progressAccumulatingRunnable.add( aPercentage );
+  }
+
+  /**
+   * Schedules a repaint of this entire component.
+   */
+  public final void scheduleRepaint()
+  {
+    this.repaintAccumulatingRunnable.add( ( Void )null );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void writePreferences( final UserSettings aSettings )
+  {
+    String selectedDevice = this.deviceController.getSelectedDeviceName();
+    if ( selectedDevice == null )
+    {
+      // We cannot put null values into the settings!
+      selectedDevice = "";
+    }
+    aSettings.put( "selectedDevice", selectedDevice );
+  }
+
+  /**
+   * Closes this main frame.
+   * 
+   * @param aExitApp
+   *          <code>true</code> if the application should exit,
+   *          <code>false</code> if it should keep running.
+   */
+  final void close()
+  {
+    setVisible( false );
+    dispose();
+  }
+
+  /**
+   * @return the current tool window manager, cannot be <code>null</code>.
+   */
+  final MyDoggyToolWindowManager getManager()
+  {
+    return this.windowManagerRef.get();
   }
 
   /**
@@ -894,7 +633,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * @param aPercentage
    *          the percentage to set, >= 0 && <= 100.
    */
-  public void setProgress( final int aPercentage )
+  final void doSetProgress( final int aPercentage )
   {
     this.status.setProgress( aPercentage );
   }
@@ -907,229 +646,134 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    * @param aMessageArgs
    *          the (optional) message arguments.
    */
-  public void setStatus( final String aMessage, final Object... aMessageArgs )
+  final void doSetStatus( final String aMessage )
   {
-    String message = aMessage;
-    if ( ( aMessageArgs != null ) && ( aMessageArgs.length > 0 ) )
-    {
-      message = MessageFormat.format( message, aMessageArgs );
-    }
-    this.status.setText( message );
+    this.status.setText( aMessage );
     this.status.setProgress( 0 );
   }
 
   /**
-   * Shows the main about box.
+   * Called by Felix DM when starting this component.
    */
-  public void showAboutBox()
+  final void startOnEDT( final BundleContext aContext, final SignalDiagramController aController )
   {
-    final HostProperties hostProperties = this.controller.getHostProperties();
-    final AboutBox aboutDialog = new AboutBox( hostProperties.getShortName(), hostProperties.getVersion() );
-    aboutDialog.showDialog();
+    // ensure that all changes to cursors are reflected in the UI...
+    aController.addCursorChangeListener( new CursorActionListener() );
+    aController.setDefaultSettings();
+
+    // Ensure we've got a proper signal diagram to display...
+    SignalDiagramComponent signalDiagram = new SignalDiagramComponent( aController );
+    aController.setSignalDiagram( signalDiagram );
+
+    final MyDoggyToolWindowManager wm = new MyDoggyToolWindowManager( Locale.getDefault(),
+        MyDoggyToolWindowManager.class.getClassLoader() );
+    wm.setDockableMainContentMode( false );
+
+    // First one wins...
+    this.windowManagerRef.compareAndSet( null, wm );
+
+    this.cursorDetails = CursorDetailsView.create( aController );
+    registerToolWindow( this.cursorDetails, GROUP_DEFAULT );
+
+    this.captureDetails = AcquisitionDetailsView.create( aController );
+    registerToolWindow( this.captureDetails, GROUP_DEFAULT );
+
+    this.measurementDetails = MeasurementView.create( aController );
+    registerToolWindow( this.measurementDetails, GROUP_DEFAULT );
+
+    this.annotationOverview = AnnotationOverview.create( aController );
+    registerToolWindow( this.annotationOverview, GROUP_DEFAULT );
+
+    wm.setMainContent( new ZoomCapableScrollPane( aController ) );
+
+    final MenuBarFactory menuBarFactory = new MenuBarFactory();
+
+    setJMenuBar( menuBarFactory.createMenuBar() );
+
+    Container contentPane = getContentPane();
+    contentPane.add( menuBarFactory.createToolBar(), BorderLayout.PAGE_START );
+    contentPane.add( wm, BorderLayout.CENTER );
+    contentPane.add( this.status, BorderLayout.PAGE_END );
+
+    setTitle( this.hostProperties.getFullName() );
+    doSetStatus( String.format( "%s v%s ready ...", this.hostProperties.getShortName(),
+        this.hostProperties.getVersion() ) );
+
+    this.dataStorage = aContext.getDataFile( "" );
+
+    File dataFile = new File( this.dataStorage, "dock.settings" );
+    if ( ( this.dataStorage != null ) && dataFile.exists() )
+    {
+      FileInputStream fis = null;
+
+      try
+      {
+        fis = new FileInputStream( dataFile );
+        getManager().getPersistenceDelegate().apply( fis );
+      }
+      catch ( FileNotFoundException exception )
+      {
+        // Ignore; we shouldn't be here anyways due to dataFile.exists...
+      }
+      finally
+      {
+        IOUtil.closeResource( fis );
+      }
+    }
+
+    // Make main frame visible on screen...
+    setVisible( true );
   }
 
   /**
-   * {@inheritDoc}
+   * @param aContext
    */
-  @Override
-  public void writePreferences( final UserSettings aSettings )
-  {
-    // We cannot put null values into the settings!
-    final String selectedDevice = this.lastSelectedDeviceName != null ? this.lastSelectedDeviceName : "";
-    aSettings.put( "selectedDevice", selectedDevice );
-  }
-
-  /**
-   * Closes this main frame.
-   * 
-   * @param aExitApp
-   *          <code>true</code> if the application should exit,
-   *          <code>false</code> if it should keep running.
-   */
-  final void close( final boolean aExitApp )
+  final void stopOnEDT()
   {
     setVisible( false );
     dispose();
 
-    this.dockController.stop();
-
-    if ( aExitApp )
+    // Safety guard: also loop through all unclosed frames and close them
+    // as well...
+    final Window[] openWindows = Window.getWindows();
+    for ( Window window : openWindows )
     {
-      // Make sure that if this frame is closed, the entire application is
-      // shutdown as well...
-      this.controller.exit();
+      window.setVisible( false );
+      window.dispose();
     }
+
+    if ( this.dataStorage == null )
+    {
+      // Don't do anything when there's no file...
+      return;
+    }
+
+    File dataFile = new File( this.dataStorage, "dock.settings" );
+    FileOutputStream fos = null;
+
+    try
+    {
+      fos = new FileOutputStream( dataFile );
+      getManager().getPersistenceDelegate().save( fos );
+    }
+    catch ( FileNotFoundException exception )
+    {
+      // Ignore; we shouldn't be here anyways due to dataFile.exists...
+    }
+    finally
+    {
+      IOUtil.closeResource( fos );
+    }
+
+    JErrorDialog.uninstallSwingExceptionHandler();
   }
 
   /**
-   * Should be called to apply new diagram settings.
+   * Updates the states of the various actions.
    */
-  final void diagramSettingsUpdated()
+  void updateActionStates()
   {
-    this.signalDiagram.revalidate();
-  }
-
-  /**
-   * Returns the scroll pane of the current diagram instance.
-   * 
-   * @return a scroll pane instance, can be <code>null</code>.
-   */
-  final JComponent getDiagramScrollPane()
-  {
-    final Container viewport = this.signalDiagram.getParent();
-    return ( JComponent )viewport.getParent();
-  }
-
-  /**
-   * Sets the name of the current selected device in the devices menu.
-   * 
-   * @param aSelectedDeviceName
-   *          the name of the selected device, can be <code>null</code>.
-   */
-  final void setSelectedDeviceName( final String aSelectedDeviceName )
-  {
-    this.lastSelectedDeviceName = aSelectedDeviceName;
-  }
-
-  /**
-   * Creates the menu bar with all menu's and the accompanying toolbar.
-   * 
-   * @return the toolbar, never <code>null</code>.
-   */
-  private JToolBar createMenuBars()
-  {
-    final JMenuBar bar = new JMenuBar();
-    setJMenuBar( bar );
-
-    this.exportMenu = new JMenu( "Export ..." );
-    this.exportMenu.setMnemonic( 'e' );
-    this.exportMenu.addMenuListener( new ExportMenuBuilder( this.controller ) );
-
-    final JMenu fileMenu = new JMenu( "File" );
-    fileMenu.setMnemonic( 'F' );
-    bar.add( fileMenu );
-
-    fileMenu.add( this.controller.getAction( NewProjectAction.ID ) );
-    fileMenu.add( this.controller.getAction( OpenProjectAction.ID ) );
-    fileMenu.add( this.controller.getAction( SaveProjectAction.ID ) );
-    fileMenu.add( this.controller.getAction( SaveProjectAsAction.ID ) );
-    fileMenu.addSeparator();
-    fileMenu.add( this.controller.getAction( OpenDataFileAction.ID ) );
-    fileMenu.add( this.controller.getAction( SaveDataFileAction.ID ) );
-    fileMenu.addSeparator();
-    fileMenu.add( this.exportMenu );
-
-    final HostProperties hostProps = this.controller.getHostProperties();
-    if ( hostProps.needsExitMenuItem() )
-    {
-      fileMenu.add( new JSeparator() );
-      fileMenu.add( this.controller.getAction( ExitAction.ID ) );
-    }
-
-    if ( hostProps.needsPreferencesMenuItem() )
-    {
-      final JMenu editMenu = bar.add( new JMenu( "Edit" ) );
-      editMenu.setMnemonic( 'E' );
-      editMenu.add( this.controller.getAction( ShowPreferencesDialogAction.ID ) );
-    }
-
-    JMenu captureMenu = bar.add( new JMenu( "Capture" ) );
-    captureMenu.setMnemonic( 'C' );
-
-    this.deviceMenu = new JMenu( "Device" );
-    this.deviceMenu.setMnemonic( 'D' );
-    this.deviceMenu.addMenuListener( new DeviceMenuBuilder( this.controller, this ) );
-
-    captureMenu.add( this.controller.getAction( CaptureAction.ID ) );
-    captureMenu.add( this.controller.getAction( RepeatCaptureAction.ID ) );
-    captureMenu.add( this.controller.getAction( CancelCaptureAction.ID ) );
-    captureMenu.addSeparator();
-    captureMenu.add( this.deviceMenu );
-
-    final JMenu diagramMenu = bar.add( new JMenu( "Diagram" ) );
-    diagramMenu.setMnemonic( 'D' );
-
-    diagramMenu.add( this.controller.getAction( ZoomInAction.ID ) );
-    diagramMenu.add( this.controller.getAction( ZoomOutAction.ID ) );
-    diagramMenu.add( this.controller.getAction( ZoomOriginalAction.ID ) );
-    diagramMenu.add( this.controller.getAction( ZoomAllAction.ID ) );
-    diagramMenu.addSeparator();
-    diagramMenu.add( this.controller.getAction( GotoTriggerAction.ID ) );
-    diagramMenu.addSeparator();
-    diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorModeAction.ID ) ) );
-    diagramMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetCursorSnapModeAction.ID ) ) );
-    diagramMenu.add( this.controller.getAction( DeleteAllCursorsAction.ID ) );
-    diagramMenu.add( this.controller.getAction( GotoFirstCursorAction.ID ) );
-    diagramMenu.add( this.controller.getAction( GotoLastCursorAction.ID ) );
-
-    this.cursorsMenu = new JMenu( "Cursors" );
-    this.cursorsMenu.setMnemonic( 'C' );
-    this.cursorsMenu.addMenuListener( new CursorMenuBuilder( this.controller ) );
-    diagramMenu.add( this.cursorsMenu );
-
-    diagramMenu.addSeparator();
-    diagramMenu.add( this.controller.getAction( RemoveAnnotationsAction.ID ) );
-
-    this.toolsMenu = bar.add( new JMenu( "Tools" ) );
-    this.toolsMenu.setMnemonic( 'T' );
-    this.toolsMenu.add( new JCheckBoxMenuItem( this.controller.getAction( SetMeasurementModeAction.ID ) ) ) //
-        .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
-    this.toolsMenu.addSeparator();
-    this.toolsMenu.addMenuListener( new ToolMenuBuilder( this.controller ) );
-
-    if ( hostProps.isMacOS() )
-    {
-      this.windowMenu = bar.add( new JMenu( "Window" ) );
-      this.windowMenu.setMnemonic( 'W' );
-
-      // Add two items that remain constant for the remainder of the lifetime of
-      // this client...
-      this.windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) ) //
-          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
-      this.windowMenu.add( new JMenuItem( new MinimizeWindowAction() ) ) //
-          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
-
-      this.windowMenu.addSeparator();
-
-      this.windowMenu.addMenuListener( new WindowMenuBuilder( this.controller ) );
-    }
-
-    final JMenu helpMenu = bar.add( new JMenu( "Help" ) );
-    helpMenu.setMnemonic( 'H' );
-    helpMenu.add( this.controller.getAction( ShowBundlesAction.ID ) );
-
-    if ( hostProps.needsAboutMenuItem() )
-    {
-      helpMenu.addSeparator();
-      helpMenu.add( this.controller.getAction( HelpAboutAction.ID ) );
-    }
-
-    final JToolBar toolbar = new JToolBar();
-    toolbar.setRollover( true );
-    toolbar.setFloatable( false );
-
-    toolbar.add( this.controller.getAction( OpenProjectAction.ID ) );
-    toolbar.add( this.controller.getAction( SaveProjectAction.ID ) );
-    toolbar.addSeparator();
-
-    toolbar.add( this.controller.getAction( CaptureAction.ID ) );
-    toolbar.add( this.controller.getAction( CancelCaptureAction.ID ) );
-    toolbar.add( this.controller.getAction( RepeatCaptureAction.ID ) );
-    toolbar.addSeparator();
-
-    toolbar.add( this.controller.getAction( ZoomInAction.ID ) );
-    toolbar.add( this.controller.getAction( ZoomOutAction.ID ) );
-    toolbar.add( this.controller.getAction( ZoomOriginalAction.ID ) );
-    toolbar.add( this.controller.getAction( ZoomAllAction.ID ) );
-    toolbar.addSeparator();
-
-    toolbar.add( this.controller.getAction( GotoTriggerAction.ID ) );
-    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
-    {
-      toolbar.add( this.controller.getAction( GotoNthCursorAction.getID( c ) ) );
-    }
-
-    return toolbar;
+    this.actionManager.updateActionStates();
   }
 
   /**
@@ -1157,7 +801,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   private void updateWindowDecorations( final Project aProject )
   {
-    String title = this.controller.getHostProperties().getFullName();
+    String title = this.hostProperties.getFullName();
     if ( ( aProject != null ) && ( aProject.getName() != null ) && !"".equals( aProject.getName().trim() ) )
     {
       // Denote the project file in the title of the main window...

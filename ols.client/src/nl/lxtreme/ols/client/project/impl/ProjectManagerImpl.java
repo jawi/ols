@@ -28,6 +28,7 @@ import java.util.zip.*;
 
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.host.*;
 import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -94,7 +95,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.ProjectManager#getCurrentProject()
+   * @see nl.lxtreme.ols.api.data.project.ProjectManager#getProject()
    */
   @Override
   public Project getCurrentProject()
@@ -162,7 +163,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
       // Merge the channel labels with the channel-data in the project's data
       // set; this is not the nicest way of doing this, but we otherwise have to
       // break our project file-format, which is not done at the moment...
-      newProject.getDataSet().mergeChannelLabels( labels );
+      // newProject.getDataSet().mergeChannelLabels( labels ); XXX
 
       // Mark the project as no longer changed...
       newProject.setChanged( false );
@@ -214,7 +215,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     {
       storeProjectMetadata( this.project, zipOS );
       // Store the channel labels...
-      storeChannelLabels( this.project.getDataSet(), zipOS );
+      // storeChannelLabels( this.project.getDataSet(), zipOS );
       // Store the settings...
       storeProjectSettings( this.project, zipOS );
       // Store the last capture results...
@@ -253,7 +254,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
    */
   protected void loadCapturedResults( final Project aProject, final ZipInputStream aZipIS ) throws IOException
   {
-    aProject.readData( new InputStreamReader( aZipIS ) );
+    // aProject.readData( new InputStreamReader( aZipIS ) );
   }
 
   /**
@@ -359,16 +360,16 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
    */
   protected void storeCapturedResults( final Project aProject, final ZipOutputStream aZipOS ) throws IOException
   {
-    final DataSet dataSet = aProject.getDataSet();
-    if ( dataSet.getCapturedData() == null )
-    {
-      return;
-    }
+    // final AcquisitionDataModel dataSet = aProject.getDataSet();
+    // if ( dataSet.getCapturedData() == null )
+    // {
+    // return;
+    // }
 
     final ZipEntry zipEntry = new ZipEntry( FILENAME_CAPTURE_RESULTS );
     aZipOS.putNextEntry( zipEntry );
 
-    aProject.writeData( new OutputStreamWriter( aZipOS ) );
+    // aProject.writeData( new OutputStreamWriter( aZipOS ) );
   }
 
   /**
@@ -385,9 +386,9 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void storeChannelLabels( final DataSet aDataSet, final ZipOutputStream aZipOS ) throws IOException
+  protected void storeChannelLabels( final AcquisitionData aDataSet, final ZipOutputStream aZipOS ) throws IOException
   {
-    final Channel[] channels = aDataSet.getChannels();
+    // final Channel[] channels = aDataSet.getCapturedData().getChannels();
 
     final ZipEntry zipEntry = new ZipEntry( FILENAME_CHANNEL_LABELS );
     aZipOS.putNextEntry( zipEntry );
@@ -397,10 +398,11 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
 
     try
     {
-      for ( Channel channel : channels )
-      {
-        out.println( ( channel != null ) && channel.hasName() ? channel.getLabel() : "" );
-      }
+      // for ( Channel channel : channels )
+      // {
+      // out.println( ( channel != null ) && channel.hasName() ?
+      // channel.getLabel() : "" );
+      // }
     }
     finally
     {

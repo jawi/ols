@@ -27,7 +27,6 @@ import java.io.*;
 
 import junit.framework.*;
 import nl.lxtreme.ols.client.project.*;
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.host.*;
 import nl.lxtreme.ols.testutil.*;
@@ -44,6 +43,33 @@ public class ProjectManagerImplTest extends TestCase
   private ProjectManagerImpl projectManager;
 
   // METHODS
+
+  public static void assertArrayEquals( final int[] expected, final int[] input )
+  {
+    Assert.assertEquals( "Length mismatch!", expected.length, input.length );
+    for ( int i = 0; i < expected.length; i++ )
+    {
+      Assert.assertEquals( "Element @ " + i, expected[i], input[i] );
+    }
+  }
+
+  public static void assertArrayEquals( final long[] expected, final long[] input )
+  {
+    Assert.assertEquals( "Length mismatch!", expected.length, input.length );
+    for ( int i = 0; i < expected.length; i++ )
+    {
+      Assert.assertEquals( "Element @ " + i, expected[i], input[i] );
+    }
+  }
+
+  public static void assertArrayEquals( final Object[] expected, final Object[] input )
+  {
+    Assert.assertEquals( "Length mismatch!", expected.length, input.length );
+    for ( int i = 0; i < expected.length; i++ )
+    {
+      Assert.assertEquals( "Element @ " + i, expected[i], input[i] );
+    }
+  }
 
   /**
    * Test method for {@link SimpleProjectManager#createNewProject()}.
@@ -116,8 +142,7 @@ public class ProjectManagerImplTest extends TestCase
     final ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
     this.projectManager.loadProject( bais );
 
-    assertEquals( "Invalid capture data!", mockedCapturedData, this.projectManager.getCurrentProject().getDataSet()
-        .getCapturedData() );
+    assertEquals( "Invalid capture data!", mockedCapturedData, this.projectManager.getCurrentProject().getDataSet() );
   }
 
   /**
@@ -133,7 +158,7 @@ public class ProjectManagerImplTest extends TestCase
     };
 
     final Project project = this.projectManager.getCurrentProject();
-    final DataSet dataSet = project.getDataSet();
+    final AcquisitionData dataSet = project.getDataSet();
     for ( int i = 0; i < labels.length; i++ )
     {
       dataSet.getChannel( i ).setLabel( labels[i] );
@@ -148,7 +173,7 @@ public class ProjectManagerImplTest extends TestCase
     final ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
     this.projectManager.loadProject( bais );
 
-    final DataSet loadedDataSet = this.projectManager.getCurrentProject().getDataSet();
+    final AcquisitionData loadedDataSet = this.projectManager.getCurrentProject().getDataSet();
 
     for ( int i = 0; i < labels.length; i++ )
     {
@@ -238,7 +263,8 @@ public class ProjectManagerImplTest extends TestCase
     Assert.assertEquals( aExpected.getSampleRate(), aTested.getSampleRate() );
     Assert.assertEquals( aExpected.hasTimingData(), aTested.hasTimingData() );
     Assert.assertEquals( aExpected.hasTriggerData(), aTested.hasTriggerData() );
-    StubDataSet.assertArrayEquals( aExpected.getTimestamps(), aTested.getTimestamps() );
-    StubDataSet.assertArrayEquals( aExpected.getValues(), aTested.getValues() );
+    assertArrayEquals( aExpected.getTimestamps(), aTested.getTimestamps() );
+    assertArrayEquals( aExpected.getValues(), aTested.getValues() );
   }
+
 }

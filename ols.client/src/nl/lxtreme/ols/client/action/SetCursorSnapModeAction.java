@@ -25,8 +25,9 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.common.session.*;
 
 
 /**
@@ -40,25 +41,16 @@ public class SetCursorSnapModeAction extends AbstractAction implements IManagedA
 
   public static final String ID = "SnapCursors";
 
-  // VARIABLES
-
-  private final SignalDiagramController controller;
-
   // CONSTRUCTORS
 
   /**
-   * Creates a new SnapCursorsAction instance.
-   * 
-   * @param aController
-   *          the controller to use, cannot be <code>null</code>.
+   * Creates a new {@link SetCursorSnapModeAction} instance.
    */
-  public SetCursorSnapModeAction( final SignalDiagramController aController )
+  public SetCursorSnapModeAction()
   {
     super( "Snap cursors" );
 
-    this.controller = aController;
-
-    putValue( SELECTED_KEY, Boolean.valueOf( aController.getSignalDiagramModel().isSnapCursorMode() ) );
+    putValue( SELECTED_KEY, Boolean.valueOf( getSignalDiagramController().isSnapCursorMode() ) );
   }
 
   // METHODS
@@ -70,7 +62,7 @@ public class SetCursorSnapModeAction extends AbstractAction implements IManagedA
   public void actionPerformed( final ActionEvent aEvent )
   {
     final JCheckBoxMenuItem menuItem = ( JCheckBoxMenuItem )aEvent.getSource();
-    this.controller.setSnapModeEnabled( menuItem.getState() );
+    getSignalDiagramController().setSnapModeEnabled( menuItem.getState() );
   }
 
   /**
@@ -80,5 +72,32 @@ public class SetCursorSnapModeAction extends AbstractAction implements IManagedA
   public String getId()
   {
     return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    setEnabled( getSession().hasData() );
+    putValue( Action.SELECTED_KEY, Boolean.valueOf( getSignalDiagramController().isSnapCursorMode() ) );
+  }
+
+  /**
+   * @return a {@link Session} instance, never <code>null</code>.
+   */
+  private Session getSession()
+  {
+    return Client.getInstance().getSession();
+  }
+
+  /**
+   * @return a {@link SignalDiagramController} instance, never <code>null</code>
+   *         .
+   */
+  private SignalDiagramController getSignalDiagramController()
+  {
+    return Client.getInstance().getSignalDiagramController();
   }
 }

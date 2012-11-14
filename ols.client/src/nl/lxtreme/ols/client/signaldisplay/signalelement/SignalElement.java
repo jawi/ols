@@ -21,14 +21,14 @@
 package nl.lxtreme.ols.client.signaldisplay.signalelement;
 
 
-import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+import static nl.lxtreme.ols.client.signaldisplay.view.UIManagerKeys.*;
 
 import java.awt.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.client.signaldisplay.SignalDiagramModel.SignalAlignment;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
@@ -211,7 +211,7 @@ public final class SignalElement implements Comparable<SignalElement>
     {
       return false;
     }
-    if ( this.channel != other.channel )
+    if ( this.channel.getIndex() != other.channel.getIndex() )
     {
       return false;
     }
@@ -250,19 +250,15 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     Color result = null;
 
-    if ( this.group != null )
+    if ( isDigitalSignal() )
     {
-      if ( isDigitalSignal() )
-      {
-        String key = getColorKey();
-        result = UIManager.getColor( key );
-      }
+      result = UIManager.getColor( getColorKey() );
+    }
 
-      if ( result == null )
-      {
-        // Fall back to group color...
-        result = this.group.getColor();
-      }
+    if ( ( result == null ) && ( this.group != null ) )
+    {
+      // Fall back to group color...
+      result = this.group.getColor();
     }
 
     if ( result == null )
@@ -317,6 +313,23 @@ public final class SignalElement implements Comparable<SignalElement>
       return this.group.getName();
     }
     return getDefaultName();
+  }
+
+  /**
+   * @param aElement
+   * @return
+   */
+  public String getCombinedLabel( final SignalElement aElement )
+  {
+    final String label = getLabel();
+
+    final ElementGroup channelGroupFor = aElement.getGroup();
+    if ( channelGroupFor != null )
+    {
+      return label.concat( "  " ).concat( channelGroupFor.getName() );
+    }
+
+    return label;
   }
 
   /**

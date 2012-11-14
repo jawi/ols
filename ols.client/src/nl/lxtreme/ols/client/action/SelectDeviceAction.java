@@ -31,7 +31,7 @@ import nl.lxtreme.ols.client.*;
 /**
  * Provides an action that selects a particular capturing device.
  */
-public class SelectDeviceAction extends BaseAction
+public class SelectDeviceAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -41,25 +41,30 @@ public class SelectDeviceAction extends BaseAction
 
   // VARIABLES
 
+  private final DeviceController deviceController;
   private final String deviceName;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new SelectDeviceAction instance.
+   * Creates a new {@link SelectDeviceAction} instance.
    * 
    * @param aController
    *          the controller to use;
    * @param aDeviceName
    *          the name of the device this action represents; not null.
    */
-  public SelectDeviceAction( final ClientController aController, final String aDeviceName )
+  public SelectDeviceAction( final DeviceController aController, final String aDeviceName )
   {
-    super( getID( aDeviceName ), aController, aDeviceName, "Selects ".concat( aDeviceName ).concat(
-        " as current capturing device" ) );
+    this.deviceController = aController;
     this.deviceName = aDeviceName;
-    // if the first character of the name isAlpha, use it as mnemonic
-    // (there is no direct conversion between char and KeyEvent available yet)
+
+    putValue( NAME, aDeviceName );
+    putValue( SHORT_DESCRIPTION, "Selects ".concat( aDeviceName ).concat( " as current capturing device" ) );
+
+    // if the first character of the name is a letter or a digit, use it as
+    // mnemonic (there is no direct conversion between char and KeyEvent
+    // available yet)
     char mnemonic = Character.toUpperCase( aDeviceName.charAt( 0 ) );
     if ( Character.isLetterOrDigit( mnemonic ) )
     {
@@ -84,15 +89,40 @@ public class SelectDeviceAction extends BaseAction
   }
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final JMenuItem menuItem = ( JMenuItem )aEvent.getSource();
-    getController().selectDevice( menuItem.isSelected() ? this.deviceName : null );
+    JMenuItem menuItem = ( JMenuItem )aEvent.getSource();
+
+    String newDeviceName = null;
+    if ( menuItem.isSelected() )
+    {
+      newDeviceName = this.deviceName;
+    }
+
+    this.deviceController.setSelectedDeviceName( newDeviceName );
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return getID( this.deviceName );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    // Always enabled...
+    setEnabled( true );
+  }
 }
 
 /* EOF */

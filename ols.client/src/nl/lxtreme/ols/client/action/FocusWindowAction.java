@@ -32,13 +32,11 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Provides an action to give a certain window the current focus.
  */
-public class FocusWindowAction extends AbstractAction
+public class FocusWindowAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
-
-  private static final String ID_PREFIX = "FocusWindow.";
 
   // CONSTRUCTORS
 
@@ -51,8 +49,7 @@ public class FocusWindowAction extends AbstractAction
    */
   public FocusWindowAction( final String aWindowTitle )
   {
-    super( ID_PREFIX.concat( aWindowTitle ) );
-    putValue( NAME, aWindowTitle );
+    super( aWindowTitle );
     putValue( SELECTED_KEY, hasFocus( aWindowTitle ) );
   }
 
@@ -118,7 +115,7 @@ public class FocusWindowAction extends AbstractAction
   }
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
@@ -141,6 +138,25 @@ public class FocusWindowAction extends AbstractAction
         }
       }
     } );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ( String )getValue( NAME );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    // Always enabled...
+    setEnabled( true );
   }
 
   /**

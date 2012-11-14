@@ -23,6 +23,8 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -30,7 +32,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Provides an exit action that shuts down the client entirely.
  */
-public class ExitAction extends BaseAction
+public class ExitAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -41,15 +43,12 @@ public class ExitAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new ExitAction instance.
-   * 
-   * @param aController
-   *          the controller to use for this action.
+   * Creates a new {@link ExitAction} instance.
    */
-  public ExitAction( final ClientController aController )
+  public ExitAction()
   {
-    super( ID, aController, "Quit", "Quit LogicSniffer Client" );
-
+    putValue( NAME, "Quit" );
+    putValue( SHORT_DESCRIPTION, "Quit LogicSniffer Client" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_Q ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_Q ) );
   }
@@ -57,12 +56,31 @@ public class ExitAction extends BaseAction
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().exit();
+    Client.getInstance().handleQuit();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    // Always enabled...
+    setEnabled( true );
   }
 }
 

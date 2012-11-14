@@ -23,6 +23,8 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.*;
 
 
@@ -30,7 +32,7 @@ import nl.lxtreme.ols.client.*;
  * Shows some information about this client (version stuff, legal stuff, and
  * such).
  */
-public class HelpAboutAction extends BaseAction
+public class HelpAboutAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -41,25 +43,41 @@ public class HelpAboutAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new HelpAboutAction instance.
-   * 
-   * @param aController
-   *          the client controller to use, cannot be <code>null</code>.
+   * Creates a new {@link HelpAboutAction} instance.
    */
-  public HelpAboutAction( final ClientController aController )
+  public HelpAboutAction()
   {
-    super( ID, aController, "About OLS", "" );
+    putValue( NAME, "About OLS" );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
   }
 
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().showAboutBox();
+    Client.getInstance().handleAbout();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    // Always enabled...
+    setEnabled( true );
   }
 }

@@ -21,48 +21,44 @@
 package nl.lxtreme.ols.client.action;
 
 
+import static nl.lxtreme.ols.client.icons.IconLocator.*;
+import static nl.lxtreme.ols.client.action.FileExtensionUtils.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.logging.*;
 
-import javax.swing.filechooser.*;
-import javax.swing.filechooser.FileFilter;
-
+import javax.swing.*;
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
+
+import org.osgi.service.log.*;
 
 
 /**
  * Provides an "open data file" action.
  */
-public class OpenDataFileAction extends BaseAction
+public class OpenDataFileAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
-
-  private static final Logger LOG = Logger.getLogger( OpenDataFileAction.class.getName() );
 
   private static final long serialVersionUID = 1L;
 
   public static final String ID = "OpenDataFile";
 
-  public static final String OLS_FILE_EXTENSION = "ols";
-  public static final FileFilter OLS_FILEFILTER = new FileNameExtensionFilter( "OpenLogic Sniffer data file",
-      OLS_FILE_EXTENSION );
-
   // CONSTRUCTORS
 
   /**
-   * Creates a new OpenDataFileAction instance.
-   * 
-   * @param aController
-   *          the controller to use for this action.
+   * Creates a new {@link OpenDataFileAction} instance.
    */
-  public OpenDataFileAction( final ClientController aController )
+  public OpenDataFileAction()
   {
-    super( ID, aController, ICON_OPEN_DATAFILE, "Open ...", "Open an existing data file" );
+    putValue( NAME, "Open ..." );
+    putValue( SHORT_DESCRIPTION, "Open an existing data file" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( ICON_OPEN_DATAFILE ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_O ) );
   }
 
@@ -74,27 +70,53 @@ public class OpenDataFileAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+    final Client client = Client.getInstance();
 
-    final File file = SwingComponentUtils.showFileOpenDialog( owner, OLS_FILEFILTER );
+    ProjectController controller = client.getProjectController();
+    LogService log = client.getLogService();
+
+    Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+    File file = SwingComponentUtils.showFileOpenDialog( owner, OLS_FILEFILTER );
     if ( file != null )
     {
-      LOG.log( Level.INFO, "Loading capture data from file {0}", file );
-
       try
       {
-        getController().openDataFile( file );
+        controller.openDataFile( file );
+
+        client.setStatus( "Data file ({0}) loaded successfully ...", file.getName() );
       }
       catch ( IOException exception )
       {
         // Make sure to handle IO-interrupted exceptions properly!
         if ( !IOUtil.handleInterruptedException( exception ) )
         {
-          LOG.log( Level.WARNING, "Loading OLS file failed!", exception );
-          JErrorDialog.showDialog( owner, "Loading the capture data failed!", exception );
+          log.log( LogService.LOG_WARNING, "Loading OLS data file failed!", exception );
+
+          JErrorDialog.showDialog( owner, "Loading OLS data file failed!", exception );
+
+          client.setStatus( "Data file ({0}) loading failed ...", file.getName() );
         }
       }
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    // Always enabled...
+    setEnabled( true );
   }
 }
 

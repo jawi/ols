@@ -27,10 +27,11 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -50,21 +51,17 @@ public class GotoNthCursorAction extends AbstractAction implements IManagedActio
   // VARIABLES
 
   private final int index;
-  private final SignalDiagramController controller;
 
   // METHODS
 
   /**
-   * Creates a new GotoNthCursorAction instance.
+   * Creates a new {@link GotoNthCursorAction} instance.
    * 
-   * @param aController
-   *          the controller to use for this action;
    * @param aIndex
    *          the (zero-based) index of the cursor.
    */
-  public GotoNthCursorAction( final SignalDiagramController aController, final int aIndex )
+  public GotoNthCursorAction( final int aIndex )
   {
-    this.controller = aController;
     this.index = aIndex;
 
     final String cursorStr = String.valueOf( aIndex + 1 );
@@ -133,17 +130,18 @@ public class GotoNthCursorAction extends AbstractAction implements IManagedActio
   }
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Cursor[] definedCursors = this.controller.getDefinedCursors();
+    final Cursor[] definedCursors = getCursorController().getDefinedCursors();
     for ( Cursor cursor : definedCursors )
     {
       if ( ( this.index == cursor.getIndex() ) && cursor.isDefined() )
       {
-        this.controller.scrollToTimestamp( cursor.getTimestamp() );
+        Long timestamp = Long.valueOf( cursor.getTimestamp() );
+        getSignalDiagramController().scrollToTimestamp( timestamp );
       }
     }
   }
@@ -155,5 +153,32 @@ public class GotoNthCursorAction extends AbstractAction implements IManagedActio
   public String getId()
   {
     return getID( this.index );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    final Cursor cursor = getCursorController().getCursor( this.index );
+    setEnabled( ( cursor != null ) && cursor.isDefined() );
+  }
+
+  /**
+   * @return a {@link CursorController} instance, never <code>null</code>.
+   */
+  private CursorController getCursorController()
+  {
+    return Client.getInstance().getCursorController();
+  }
+
+  /**
+   * @return a {@link SignalDiagramController} instance, never <code>null</code>
+   *         .
+   */
+  private SignalDiagramController getSignalDiagramController()
+  {
+    return Client.getInstance().getSignalDiagramController();
   }
 }

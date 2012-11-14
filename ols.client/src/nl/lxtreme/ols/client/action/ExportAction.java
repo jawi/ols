@@ -30,15 +30,20 @@ import javax.swing.*;
 import javax.swing.filechooser.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.common.session.*;
+import nl.lxtreme.ols.export.*;
 import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
+
+import org.osgi.service.log.*;
 
 
 /**
  * Provides a export to file functionality.
  */
-public class ExportAction extends BaseAction
+public class ExportAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -50,6 +55,7 @@ public class ExportAction extends BaseAction
 
   // VARIABLES
 
+  private final ImportExportController exportController;
   private final String exporterName;
 
   // CONSTRUCTORS
@@ -57,17 +63,18 @@ public class ExportAction extends BaseAction
   /**
    * Creates a new ExportAction instance.
    * 
-   * @param aController
+   * @param aImportExportController
    *          the client controller to use;
    * @param aExporterName
    *          the name of the exporter to invoke in this action.
    */
-  public ExportAction( final ClientController aController, final String aExporterName )
+  public ExportAction( final ImportExportController aImportExportController, final String aExporterName )
   {
-    super( getID( aExporterName ), aController, aExporterName, "Export the current diagram to a " + aExporterName
-        + " file" );
-
+    this.exportController = aImportExportController;
     this.exporterName = aExporterName;
+
+    putValue( NAME, aExporterName );
+    putValue( SHORT_DESCRIPTION, "Export the current diagram to a " + aExporterName + " file" );
   }
 
   // METHODS
@@ -94,15 +101,13 @@ public class ExportAction extends BaseAction
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
-    final ClientController controller = getController();
-
-    if ( !controller.hasCapturedData() )
+    if ( !hasCapturedData() )
     {
       JOptionPane.showMessageDialog( owner, "Nothing to export!", "Error", JOptionPane.ERROR_MESSAGE );
       return;
     }
 
-    final String[] extensions = controller.getExportExtensions( this.exporterName );
+    final String[] extensions = this.exportController.getExportExtensions( this.exporterName );
     final String preferredExtension = ( extensions.length == 0 ) ? "" : extensions[0];
 
     final File exportFileName = SwingComponentUtils.showFileSaveDialog( owner, //
@@ -118,7 +123,7 @@ public class ExportAction extends BaseAction
 
       try
       {
-        controller.exportTo( this.exporterName, actualFile );
+        exportTo( this.exporterName, actualFile );
       }
       catch ( IOException exception )
       {
@@ -130,5 +135,76 @@ public class ExportAction extends BaseAction
         }
       }
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return getID( this.exporterName );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    setEnabled( hasCapturedData() );
+  }
+
+  /**
+   * Exports the current data set to a file using an {@link Exporter} with a
+   * given name.
+   * 
+   * @param aExporterName
+   *          the name of the exporter to use, cannot be <code>null</code>;
+   * @param aExportFile
+   *          the file to export the results to, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems during the export.
+   */
+  private void exportTo( final String aExporterName, final File aExportFile ) throws IOException
+  {
+    final Client client = Client.getInstance();
+
+    Session session = client.getSession();
+    if ( !session.hasData() )
+    {
+      client.getLogService().log( LogService.LOG_INFO, "No data to export, not doing anything..." );
+      return;
+    }
+
+    OutputStream writer = null;
+
+    try
+    {
+      writer = new FileOutputStream( aExportFile );
+
+      final SignalDiagramController signalDiagramController = Client.getInstance().getSignalDiagramController();
+
+      final Exporter exporter = this.exportController.getExporter( aExporterName );
+      exporter.export( session.getAcquisitionData(), signalDiagramController.getSignalDiagram(), writer );
+
+      client.setStatus( "Export to {0} succesful ...", aExporterName );
+    }
+    finally
+    {
+      IOUtil.closeResource( writer );
+    }
+  }
+
+  /**
+   * @return <code>true</code> if there is data captured to export,
+   *         <code>false</code> otherwise.
+   */
+  private boolean hasCapturedData()
+  {
+    final Session session = Client.getInstance().getSession();
+    // Session can only be null in cases where the client is starting up or
+    // shutting down...
+    return ( session != null ) && session.hasData();
   }
 }

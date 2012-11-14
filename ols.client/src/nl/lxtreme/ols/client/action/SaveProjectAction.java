@@ -21,27 +21,32 @@
 package nl.lxtreme.ols.client.action;
 
 
+import static nl.lxtreme.ols.client.icons.IconLocator.*;
+import static nl.lxtreme.ols.client.action.FileExtensionUtils.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.logging.*;
+
+import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
+
+import org.osgi.service.log.*;
 
 
 /**
  * Provides a "save" functionality for (existing) project.
  */
-public class SaveProjectAction extends BaseAction
+public class SaveProjectAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
-
-  private static final Logger LOG = Logger.getLogger( SaveProjectAction.class.getName() );
 
   public static final String ID = "SaveProject";
 
@@ -53,29 +58,11 @@ public class SaveProjectAction extends BaseAction
    * @param aController
    *          the controller to use in this action.
    */
-  public SaveProjectAction( final ClientController aController )
+  public SaveProjectAction()
   {
-    this( ID, aController, ICON_SAVE_PROJECT, "Save project", "Save the current project" );
-  }
-
-  /**
-   * Creates a new SaveProjectAction instance.
-   * 
-   * @param aID
-   *          the ID of this action;
-   * @param aController
-   *          the controller to use;
-   * @param aIconName
-   *          the (optional) name of the icon;
-   * @param aName
-   *          the name of this action;
-   * @param aDescription
-   *          the description/tooltip of this action.
-   */
-  protected SaveProjectAction( final String aID, final ClientController aController, final String aIconName,
-      final String aName, final String aDescription )
-  {
-    super( aID, aController, aIconName, aName, aDescription );
+    putValue( NAME, "Save project" );
+    putValue( SHORT_DESCRIPTION, "Save the current project" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( ICON_SAVE_PROJECT ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_S ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_A ) );
   }
@@ -86,9 +73,9 @@ public class SaveProjectAction extends BaseAction
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
   @Override
-  public void actionPerformed( final ActionEvent aEvent )
+  public final void actionPerformed( final ActionEvent aEvent )
   {
-    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+    Window owner = SwingComponentUtils.getOwningWindow( aEvent );
 
     File file = getProjectFilename();
     if ( showFileChooserDialogNeeded() )
@@ -106,64 +93,22 @@ public class SaveProjectAction extends BaseAction
   }
 
   /**
-   * Asks the user to specify a filename.
-   * 
-   * @param owner
-   *          the parent/owner window of the file chooser dialog, can be
-   *          <code>null</code>.
-   * @return the file specified by the user, or <code>null</code> if the user
-   *         has cancelled the action.
+   * {@inheritDoc}
    */
-  protected File askForFilename( final Window owner )
+  @Override
+  public String getId()
   {
-    final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenProjectAction.OLS_PROJECT_FILTER );
-    if ( file != null )
-    {
-      return FileExtensionUtils.setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
-    }
-    return file;
+    return ID;
   }
 
   /**
-   * Returns the project's filename.
-   * 
-   * @return a file object denoting the project file to save the project to, can
-   *         be <code>null</code> if no name is yet defined for the project.
+   * {@inheritDoc}
    */
-  protected File getProjectFilename()
+  @Override
+  public void updateState()
   {
-    return getController().getProjectFilename();
-  }
-
-  /**
-   * Saves the project file.
-   * 
-   * @param aOwner
-   *          the owning/parent window;
-   * @param aFile
-   *          the file to save the project to.
-   */
-  protected void saveProjectFile( final Window aOwner, final File aFile )
-  {
-    LOG.log( Level.INFO, "Saving project data to file: {0}", aFile );
-
-    // Strip any "known" file extensions from the given value...
-    final String projectName = FileExtensionUtils.stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
-        OpenProjectAction.OLS_PROJECT_EXTENSION );
-
-    try
-    {
-      getController().saveProjectFile( projectName, aFile );
-    }
-    catch ( IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !IOUtil.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "Saving OLS project failed!", exception );
-        JErrorDialog.showDialog( aOwner, "Saving the project data failed!", exception );
-      }
-    }
+    ProjectController controller = Client.getInstance().getProjectController();
+    setEnabled( controller.isProjectChanged() );
   }
 
   /**
@@ -175,6 +120,75 @@ public class SaveProjectAction extends BaseAction
   protected boolean showFileChooserDialogNeeded()
   {
     return getProjectFilename() == null;
+  }
+
+  /**
+   * Asks the user to specify a filename.
+   * 
+   * @param owner
+   *          the parent/owner window of the file chooser dialog, can be
+   *          <code>null</code>.
+   * @return the file specified by the user, or <code>null</code> if the user
+   *         has cancelled the action.
+   */
+  private File askForFilename( final Window owner )
+  {
+    final File file = SwingComponentUtils.showFileSaveDialog( owner, OLS_PROJECT_FILTER );
+    if ( file != null )
+    {
+      return FileExtensionUtils.setFileExtension( file, OLS_PROJECT_EXTENSION );
+    }
+    return file;
+  }
+
+  /**
+   * Returns the project's filename.
+   * 
+   * @return a file object denoting the project file to save the project to, can
+   *         be <code>null</code> if no name is yet defined for the project.
+   */
+  private File getProjectFilename()
+  {
+    ProjectController controller = Client.getInstance().getProjectController();
+    return controller.getProjectFile();
+  }
+
+  /**
+   * Saves the project file.
+   * 
+   * @param aOwner
+   *          the owning/parent window;
+   * @param aFile
+   *          the file to save the project to.
+   */
+  private void saveProjectFile( final Window aOwner, final File aFile )
+  {
+    final Client client = Client.getInstance();
+
+    ProjectController controller = client.getProjectController();
+    LogService log = client.getLogService();
+
+    // Strip any "known" file extensions from the given value...
+    final String projectName = FileExtensionUtils.stripFileExtension( aFile, OLS_FILE_EXTENSION, OLS_PROJECT_EXTENSION );
+
+    try
+    {
+      controller.saveProjectFile( projectName, aFile );
+
+      client.setStatus( "Project file ({0}) saved successfully ...", aFile.getName() );
+    }
+    catch ( IOException exception )
+    {
+      // Make sure to handle IO-interrupted exceptions properly!
+      if ( !IOUtil.handleInterruptedException( exception ) )
+      {
+        log.log( LogService.LOG_WARNING, "Saving OLS project file failed!", exception );
+
+        JErrorDialog.showDialog( aOwner, "Saving OLS project file failed!", exception );
+
+        client.setStatus( "Project file ({0}) saving failed ...", aFile.getName() );
+      }
+    }
   }
 }
 

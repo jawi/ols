@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.client.tool;
 
 
-import static nl.lxtreme.ols.client.tool.EditorUtils.*;
+import static nl.lxtreme.ols.client.editor.EditorUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -32,7 +32,6 @@ import java.util.Map.Entry;
 import javax.swing.*;
 import javax.swing.text.*;
 
-import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.service.metatype.*;
@@ -41,7 +40,7 @@ import org.osgi.service.metatype.*;
 /**
  * Provides a panel for configuring tools.
  */
-public class ToolConfigPanel extends JPanel
+final class ToolConfigPanel extends JPanel
 {
   // CONSTANTS
 
@@ -50,7 +49,6 @@ public class ToolConfigPanel extends JPanel
   // VARIABLES
 
   private final ObjectClassDefinition ocd;
-  private final ToolContext context;
   private final Map<AttributeDefinition, JComponent> components;
 
   // CONSTRUCTORS
@@ -60,17 +58,16 @@ public class ToolConfigPanel extends JPanel
    * 
    * @param aSettings
    */
-  public ToolConfigPanel( final ObjectClassDefinition aOCD, final ToolContext aContext,
+  public ToolConfigPanel( final ObjectClassDefinition aOCD, final AcquisitionDataInfo aContext,
       final Map<Object, Object> aSettings )
   {
     super( new SpringLayout() );
 
     this.ocd = aOCD;
-    this.context = aContext;
 
     this.components = new HashMap<AttributeDefinition, JComponent>();
 
-    initPanel( aSettings );
+    initPanel( aContext, aSettings );
   }
 
   // METHODS
@@ -116,18 +113,21 @@ public class ToolConfigPanel extends JPanel
   /**
    * Initializes this panel.
    * 
+   * @param aContext
    * @param aSettings
    */
-  final void initPanel( final Map<Object, Object> aSettings )
+  final void initPanel( final AcquisitionDataInfo aContext, final Map<Object, Object> aSettings )
   {
     SpringLayoutUtils.addSeparator( this, "Settings" );
+
+    final ToolEditorUtils editorUtils = new ToolEditorUtils( aContext );
 
     AttributeDefinition[] ads = this.ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
     for ( AttributeDefinition ad : ads )
     {
       Object initialValue = aSettings.get( ad.getID() );
 
-      JComponent comp = createEditorComponent( ad, this.context, initialValue );
+      JComponent comp = editorUtils.createEditor( ad, initialValue );
       if ( comp != null )
       {
         add( createRightAlignedLabel( ad.getName() ) );
@@ -229,21 +229,9 @@ public class ToolConfigPanel extends JPanel
         }
       }
     }
-    else if ( aComponent instanceof JTextComponent )
+    else
     {
-      // TODO
-    }
-    else if ( aComponent instanceof JList )
-    {
-      // TODO
-    }
-    else if ( aComponent instanceof JSlider )
-    {
-      // TODO
-    }
-    else if ( aComponent instanceof JSpinner )
-    {
-      // TODO
+      throw new RuntimeException( "Cannot add listener to component: " + aComponent );
     }
   }
 

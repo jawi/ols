@@ -21,12 +21,14 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.*;
+import static nl.lxtreme.ols.client.icons.IconLocator.*;
+
 import java.awt.event.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -34,7 +36,7 @@ import nl.lxtreme.ols.util.swing.*;
  * Provides a "repeat capture" action which simply repeats the capture with the
  * current settings.
  */
-public class RepeatCaptureAction extends BaseAction
+public class RepeatCaptureAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -45,14 +47,13 @@ public class RepeatCaptureAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new RepeatCaptureAction instance.
-   * 
-   * @param aController
-   *          the controller to use for this action.
+   * Creates a new {@link RepeatCaptureAction} instance.
    */
-  public RepeatCaptureAction( final ClientController aController )
+  public RepeatCaptureAction()
   {
-    super( ID, aController, ICON_RECAPTURE_DATA, "Repeat capture", "Repeat capture with current device settings" );
+    putValue( NAME, "Repeat capture" );
+    putValue( SHORT_DESCRIPTION, "Repeat capture with current device settings" );
+    putValue( LARGE_ICON_KEY, IconFactory.createIcon( ICON_RECAPTURE_DATA ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_R ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_R ) );
   }
@@ -60,26 +61,40 @@ public class RepeatCaptureAction extends BaseAction
   // METHODS
 
   /**
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * {@inheritDoc}
    */
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
+    getAcquisitionController().repeatCaptureData();
+  }
 
-    if ( !getController().isDeviceSelected() )
-    {
-      JOptionPane.showMessageDialog( owner, "No capturing device found!", "Capture error", JOptionPane.ERROR_MESSAGE );
-      return;
-    }
-    if ( !getController().isDeviceSetup() )
-    {
-      JOptionPane.showMessageDialog( owner, "Capturing device is not setup!", "Capture error",
-          JOptionPane.ERROR_MESSAGE );
-      return;
-    }
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
 
-    getController().repeatCaptureData();
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    final AcquisitionController acquisitionController = getAcquisitionController();
+    setEnabled( acquisitionController.isDeviceSelected() && acquisitionController.isDeviceSetup() );
+  }
+
+  /**
+   * @return the {@link AcquisitionController} instance, never <code>null</code>
+   *         .
+   */
+  private AcquisitionController getAcquisitionController()
+  {
+    return Client.getInstance().getAcquisitionController();
   }
 }
 

@@ -30,6 +30,7 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -47,7 +48,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   private final PropertyChangeSupport propertyChangeSupport;
   private final Map<String, UserSettings> settings;
 
-  private DataSetImpl dataSet;
+  private AcquisitionData dataSet;
   private String name;
   private boolean changed;
   private Date lastModified;
@@ -63,8 +64,6 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   {
     this.propertyChangeSupport = new PropertyChangeSupport( this );
     this.settings = new HashMap<String, UserSettings>();
-
-    setDataSet( new DataSetImpl() );
 
     this.changed = false;
   }
@@ -86,16 +85,16 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
    * {@inheritDoc}
    */
   @Override
-  public DataSetImpl getDataSet()
+  public AcquisitionData getDataSet()
   {
     return this.dataSet;
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getFilename()
+   * @see nl.lxtreme.ols.api.data.project.Project#getFile()
    */
   @Override
-  public File getFilename()
+  public File getFile()
   {
     return this.filename;
   }
@@ -170,9 +169,9 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
    * {@inheritDoc}
    */
   @Override
-  public final void readData( final Reader aReader ) throws IOException
+  public final void readData( final Session aSession, final Reader aReader ) throws IOException
   {
-    setDataSet( OlsDataHelper.read( aReader ) );
+    OlsDataHelper.read( aSession, aReader );
   }
 
   /**
@@ -192,10 +191,13 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   @Override
   public void setCapturedData( final AcquisitionData aCapturedData )
   {
-    final DataSetImpl old = this.dataSet;
-    final boolean retainAnnotations = UIManager.getBoolean( "ols.retain.annotations.boolean" );
+    final AcquisitionData old = this.dataSet;
 
-    setDataSet( new DataSetImpl( aCapturedData, old, retainAnnotations ) );
+    final boolean retainAnnotations = UIManager.getBoolean( "ols.retain.annotations.boolean" );
+    if ( !retainAnnotations )
+    {
+      // TODO
+    }
 
     // Mark this project as modified...
     setChanged( true );
@@ -318,9 +320,9 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
    * {@inheritDoc}
    */
   @Override
-  public void writeData( final Writer aWriter ) throws IOException
+  public void writeData( final Session aSession, final Writer aWriter ) throws IOException
   {
-    OlsDataHelper.write( this.dataSet, aWriter );
+    OlsDataHelper.write( aSession, aWriter );
   }
 
   /**
@@ -339,23 +341,15 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
    * @param aDataSet
    *          the data set to set, cannot be <code>null</code>.
    */
-  final void setDataSet( final DataSetImpl aDataSet )
+  final void setDataSet( final AcquisitionData aDataSet )
   {
     if ( aDataSet == null )
     {
       throw new IllegalArgumentException();
     }
-    if ( this.dataSet != null )
-    {
-      this.dataSet.removePropertyChangeListener( this );
-    }
 
-    final DataSetImpl old = this.dataSet;
-
-    this.dataSet = aDataSet;
-
-    this.dataSet.addPropertyChangeListener( this );
-
-    this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA, old, this.dataSet );
+    // TODO
+    // this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA,
+    // old, this.dataSet );
   }
 }

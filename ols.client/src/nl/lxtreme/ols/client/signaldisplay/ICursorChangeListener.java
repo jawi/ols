@@ -22,7 +22,7 @@ package nl.lxtreme.ols.client.signaldisplay;
 
 import java.util.*;
 
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.client.signaldisplay.cursor.*;
 
 
 /**
@@ -33,7 +33,6 @@ public interface ICursorChangeListener extends EventListener
 {
   // CONSTANTS
 
-  public static final String PROPERTY_TIMESTAMP = "timestamp";
   public static final String PROPERTY_COLOR = "color";
   public static final String PROPERTY_LABEL = "label";
 
@@ -45,7 +44,7 @@ public interface ICursorChangeListener extends EventListener
    * @param aCursor
    *          the cursor that is added, cannot be <code>null</code>.
    */
-  void cursorAdded( Cursor aCursor );
+  void cursorAdded( CursorElement aCursor );
 
   /**
    * Called when a property of a single cursor is changed/moved.
@@ -57,7 +56,17 @@ public interface ICursorChangeListener extends EventListener
    * @param aNewCursor
    *          the new cursor, cannot be <code>null</code>.
    */
-  void cursorChanged( String aPropertyName, Cursor aOldCursor, Cursor aNewCursor );
+  void cursorChanged( String aPropertyName, CursorElement aNewCursor );
+
+  /**
+   * Called when a cursor is moved.
+   * 
+   * @param aOldTimestamp
+   *          the old timestamp, cannot be <code>null</code>;
+   * @param aNewTimestamp
+   *          the new timestamp, cannot be <code>null</code>.
+   */
+  void cursorMoved( long aOldTimestamp, long aNewTimestamp );
 
   /**
    * Called when a single cursor is removed.
@@ -65,7 +74,7 @@ public interface ICursorChangeListener extends EventListener
    * @param aOldCursor
    *          the old cursor (before removal), cannot be <code>null</code>.
    */
-  void cursorRemoved( Cursor aOldCursor );
+  void cursorRemoved( CursorElement aOldCursor );
 
   /**
    * Called when the cursors are made invisible.

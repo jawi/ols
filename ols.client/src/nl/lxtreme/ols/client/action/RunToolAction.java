@@ -24,7 +24,10 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -32,7 +35,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Provides a "run"-action for any analysis/decoder tool.
  */
-public class RunToolAction extends BaseAction
+public class RunToolAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -42,6 +45,7 @@ public class RunToolAction extends BaseAction
 
   // VARIABLES
 
+  private final ToolController toolController;
   private final String toolName;
   private final ToolCategory category;
 
@@ -57,12 +61,14 @@ public class RunToolAction extends BaseAction
    * @param aCategory
    *          the category of the tool.
    */
-  public RunToolAction( final ClientController aController, final String aToolName, final ToolCategory aCategory )
+  public RunToolAction( final ToolController aController, final String aToolName, final ToolCategory aCategory )
   {
-    super( getID( aToolName ), aController, aToolName, "Run ".concat( aToolName ) );
-
+    this.toolController = aController;
     this.toolName = aToolName;
     this.category = aCategory;
+
+    putValue( NAME, aToolName );
+    putValue( SHORT_DESCRIPTION, "Run ".concat( aToolName ) );
   }
 
   // METHODS
@@ -90,7 +96,16 @@ public class RunToolAction extends BaseAction
   public void actionPerformed( final ActionEvent aEvent )
   {
     final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-    getController().invokeTool( this.toolName, owner );
+    this.toolController.invokeTool( this.toolName, owner );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return getID( this.toolName );
   }
 
   /**
@@ -101,6 +116,27 @@ public class RunToolAction extends BaseAction
   public ToolCategory getCategory()
   {
     return this.category;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    setEnabled( ToolCategory.OTHER.equals( getCategory() ) || hasCapturedData() );
+  }
+
+  /**
+   * @return <code>true</code> if there is data captured to run a tool on,
+   *         <code>false</code> otherwise.
+   */
+  private boolean hasCapturedData()
+  {
+    final Session session = Client.getInstance().getSession();
+    // Session can only be null in cases where the client is starting up or
+    // shutting down...
+    return ( session != null ) && session.hasData();
   }
 }
 

@@ -31,19 +31,49 @@ import nl.lxtreme.ols.tool.api.*;
  */
 public interface ToolInvoker extends org.osgi.service.cm.ManagedService
 {
+  // CONSTANTS
+
+  /** The topic prefix */
+  String TOPIC_PREFIX = ToolInvoker.class.getPackage().getName().replaceAll( "\\.", "/" );
+
+  /** All of the topics used by this event producer. */
+  String TOPIC_ANY = TOPIC_PREFIX.concat( "/*" );
+
+  /**
+   * Used to report the progress of the running tool. The event provides
+   * information about the tool itself, the date on which it was started and the
+   * progress of the tool.
+   */
+  String TOPIC_TOOL_PROGRESS = TOPIC_PREFIX.concat( "/progress" );
+  /**
+   * Used to report the status of the running tool. The event provides
+   * information about the tool itself, the date on which it was started and the
+   * state of the tool.
+   */
+  String TOPIC_TOOL_STATUS = TOPIC_PREFIX.concat( "/status" );
+
+  String KEY_TOOL_NAME = "toolName";
+  String KEY_TOOL_START_TIME = "startTime";
+  String KEY_TOOL_PROGRESS = "progress";
+  String KEY_TOOL_STATE = "state";
+  String KEY_TOOL_EXCEPTION = "exception";
+
+  String TOOL_STATUS_STARTED = "started";
+  String TOOL_STATUS_CANCELLED = "cancelled";
+  String TOOL_STATUS_FAILED = "failed";
+  String TOOL_STATUS_SUCCESS = "success";
+
   // METHODS
 
   /**
    * Configures this tool by showing a configuration dialog on screen.
    * 
    * @param aParent
-   *          the parent window to use for the dialog to show;
-   * @param aContext
-   *          the tool context to use.
+   *          the parent window to use for the dialog to show.
    * @return <code>true</code> if the tool was correctly configured,
    *         <code>false</code> otherwise (user pressed cancel).
    */
-  boolean configure( Window aParent, ToolContext aContext );
+  boolean configure( Window aParent );
 
   /**
    * Returns the category for this tool.
@@ -76,6 +106,6 @@ public interface ToolInvoker extends org.osgi.service.cm.ManagedService
    * @throws ToolException
    *           in case of errors during the invocation of the tool.
    */
-  void invoke( ToolContext aContext ) throws ToolException;
+  void invoke() throws ToolException;
 
 }

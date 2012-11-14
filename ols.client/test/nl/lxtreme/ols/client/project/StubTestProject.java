@@ -28,8 +28,8 @@ import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.client.project.impl.*;
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -42,7 +42,7 @@ public class StubTestProject implements Project
 {
   // VARIABLES
 
-  private final StubDataSet dataSet;
+  private AcquisitionData dataSet;
   private String sourceVersion;
   private final Map<String, UserSettings> settings = new HashMap<String, UserSettings>();
   private String name;
@@ -57,7 +57,6 @@ public class StubTestProject implements Project
    */
   public StubTestProject()
   {
-    this.dataSet = new StubDataSet();
   }
 
   // METHODS
@@ -66,16 +65,16 @@ public class StubTestProject implements Project
    * {@inheritDoc}
    */
   @Override
-  public DataSet getDataSet()
+  public AcquisitionData getDataSet()
   {
     return this.dataSet;
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getFilename()
+   * @see nl.lxtreme.ols.api.data.project.Project#getFile()
    */
   @Override
-  public File getFilename()
+  public File getFile()
   {
     return this.file;
   }
@@ -134,9 +133,9 @@ public class StubTestProject implements Project
    * {@inheritDoc}
    */
   @Override
-  public void readData( final Reader aReader ) throws IOException
+  public void readData( final Session aSession, final Reader aReader ) throws IOException
   {
-    // OlsDataHelper.read( this.dataSet, aReader );
+    OlsDataHelper.read( aSession, aReader );
   }
 
   /**
@@ -145,7 +144,7 @@ public class StubTestProject implements Project
   @Override
   public void setCapturedData( final AcquisitionData aCapturedData )
   {
-    this.dataSet.setCapturedData( aCapturedData );
+    this.dataSet = aCapturedData;
   }
 
   /**
@@ -225,8 +224,8 @@ public class StubTestProject implements Project
    * {@inheritDoc}
    */
   @Override
-  public void writeData( final Writer aWriter ) throws IOException
+  public void writeData( final Session aSession, final Writer aWriter ) throws IOException
   {
-    OlsDataHelper.write( this.dataSet, aWriter );
+    OlsDataHelper.write( aSession, aWriter );
   }
 }

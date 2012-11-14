@@ -25,8 +25,9 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.common.session.*;
 
 
 /**
@@ -40,25 +41,16 @@ public class SetMeasurementModeAction extends AbstractAction implements IManaged
 
   public static final String ID = "SetMeasurementMode";
 
-  // VARIABLES
-
-  private final SignalDiagramController controller;
-
   // CONSTRUCTORS
 
   /**
-   * Creates a new SetMeasurementModeAction instance.
-   * 
-   * @param aController
-   *          the controller to use, cannot be <code>null</code>.
+   * Creates a new {@link SetMeasurementModeAction} instance.
    */
-  public SetMeasurementModeAction( final SignalDiagramController aController )
+  public SetMeasurementModeAction()
   {
     super( "Measurement mode" );
 
-    this.controller = aController;
-
-    putValue( SELECTED_KEY, Boolean.valueOf( aController.getSignalDiagramModel().isMeasurementMode() ) );
+    putValue( SELECTED_KEY, Boolean.valueOf( getSignalDiagramController().isMeasurementMode() ) );
   }
 
   // METHODS
@@ -70,7 +62,7 @@ public class SetMeasurementModeAction extends AbstractAction implements IManaged
   public void actionPerformed( final ActionEvent aEvent )
   {
     final AbstractButton button = ( AbstractButton )aEvent.getSource();
-    this.controller.setMeasurementMode( button.isSelected() );
+    getSignalDiagramController().setMeasurementMode( button.isSelected() );
   }
 
   /**
@@ -80,5 +72,32 @@ public class SetMeasurementModeAction extends AbstractAction implements IManaged
   public String getId()
   {
     return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    setEnabled( getSession().hasData() );
+    putValue( SELECTED_KEY, Boolean.valueOf( getSignalDiagramController().isMeasurementMode() ) );
+  }
+
+  /**
+   * @return a {@link Session} instance, never <code>null</code>.
+   */
+  private Session getSession()
+  {
+    return Client.getInstance().getSession();
+  }
+
+  /**
+   * @return a {@link SignalDiagramController} instance, never <code>null</code>
+   *         .
+   */
+  private SignalDiagramController getSignalDiagramController()
+  {
+    return Client.getInstance().getSignalDiagramController();
   }
 }

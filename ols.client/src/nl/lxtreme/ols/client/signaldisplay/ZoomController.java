@@ -26,8 +26,6 @@ import java.util.*;
 
 import javax.swing.event.*;
 
-import nl.lxtreme.ols.client.signaldisplay.model.*;
-
 
 /**
  * Defines a zoom factor, with a ratio and some additional properties.

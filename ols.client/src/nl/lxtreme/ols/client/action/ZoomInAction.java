@@ -25,7 +25,7 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -43,22 +43,13 @@ public class ZoomInAction extends AbstractAction implements IManagedAction
 
   public static final String ID = "ZoomIn";
 
-  // VARIABLES
-
-  private final SignalDiagramController controller;
-
   // CONSTRUCTORS
 
   /**
-   * Creates a new ZoomInAction instance.
-   * 
-   * @param aController
-   *          the controller to use for this action.
+   * Creates a new {@link ZoomInAction} instance.
    */
-  public ZoomInAction( final SignalDiagramController aController )
+  public ZoomInAction()
   {
-    this.controller = aController;
-
     putValue( NAME, "Zoom in" );
     putValue( SHORT_DESCRIPTION, "Zooms in with a factor" );
     putValue( LARGE_ICON_KEY, IconFactory.createIcon( IconLocator.ICON_ZOOM_IN ) );
@@ -87,11 +78,29 @@ public class ZoomInAction extends AbstractAction implements IManagedAction
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    setEnabled( getSignalDiagramController().getSignalDiagramModel().hasData() );
+  }
+
+  /**
    * @return the signal diagram's zoom controller, never <code>null</code>.
    */
   private ZoomController getZoomController()
   {
-    return this.controller.getZoomController();
+    return getSignalDiagramController().getZoomController();
+  }
+
+  /**
+   * @return a {@link SignalDiagramController} instance, never <code>null</code>
+   *         .
+   */
+  private SignalDiagramController getSignalDiagramController()
+  {
+    return Client.getInstance().getSignalDiagramController();
   }
 }
 

@@ -147,18 +147,18 @@ public class ProjectImplTest extends TestCase
     final AcquisitionData data = DataTestUtils.getMockedCapturedData();
     this.project.setCapturedData( data );
 
-    assertSame( data, this.project.getDataSet().getCapturedData() );
+    assertSame( data, this.project.getDataSet() );
     assertTrue( this.project.isChanged() );
   }
 
   /**
-   * Test method for {@link ProjectImpl#setCursorsEnabled(boolean)}.
+   * Test method for {@link ProjectImpl#setCursorsVisible(boolean)}.
    */
   public void testSetCursorsEnabled()
   {
-    this.project.getDataSet().setCursorsEnabled( false );
+    this.project.getDataSet().setCursorsVisible( false );
 
-    assertFalse( this.project.getDataSet().isCursorsEnabled() );
+    assertFalse( this.project.getDataSet().isCursorsVisible() );
     assertTrue( this.project.isChanged() );
   }
 
@@ -170,7 +170,7 @@ public class ProjectImplTest extends TestCase
     final File filename = new File( "." );
     this.project.setFilename( filename );
 
-    assertEquals( filename, this.project.getFilename() );
+    assertEquals( filename, this.project.getFile() );
     assertFalse( this.project.isChanged() );
   }
 

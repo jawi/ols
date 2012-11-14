@@ -35,7 +35,7 @@ import org.osgi.framework.*;
 
 
 /**
- * @author jawi
+ * Provides a simple dialog to show the various bundles.
  */
 public class BundlesDialog extends JDialog implements Closeable
 {
@@ -180,7 +180,7 @@ public class BundlesDialog extends JDialog implements Closeable
       // Under certain circumstances, the bundles may be enabled/disabled...
       if ( aColumn == 0 )
       {
-        return Activator.isDebugMode();
+        return isDebugMode();
       }
       else
       {
@@ -267,6 +267,15 @@ public class BundlesDialog extends JDialog implements Closeable
   {
     setVisible( true );
     return true;
+  }
+
+  /**
+   * @return <code>true</code> if running in debug mode, <code>false</code>
+   *         otherwise.
+   */
+  final boolean isDebugMode()
+  {
+    return Client.getInstance().getHostProperties().isDebugMode();
   }
 
   /**
@@ -388,7 +397,7 @@ public class BundlesDialog extends JDialog implements Closeable
 
     this.table.getSelectionModel().setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 
-    final boolean visible = Activator.isDebugMode();
+    final boolean visible = isDebugMode();
 
     final JButton selectAll = new JButton( "Select all" );
     selectAll.setVisible( visible );

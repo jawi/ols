@@ -24,6 +24,8 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -31,7 +33,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Provides a "new project" action.
  */
-public class NewProjectAction extends BaseAction
+public class NewProjectAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -42,14 +44,12 @@ public class NewProjectAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new NewProjectAction instance.
-   * 
-   * @param aController
-   *          the client controller to use.
+   * Creates a new {@link NewProjectAction} instance.
    */
-  public NewProjectAction( final ClientController aController )
+  public NewProjectAction()
   {
-    super( ID, aController, "New project ...", "Create a new project" );
+    putValue( NAME, "New project ..." );
+    putValue( SHORT_DESCRIPTION, "Create a new project" );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_N ) );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_N ) );
   }
@@ -62,9 +62,8 @@ public class NewProjectAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
-
-    final ClientController controller = getController();
+    Window parent = SwingComponentUtils.getOwningWindow( aEvent );
+    ProjectController controller = Client.getInstance().getProjectController();
 
     // Issue #62: in case the user does NOT confirm to lose its changes, we
     // should bail out immediately, otherwise continue normally...
@@ -76,5 +75,24 @@ public class NewProjectAction extends BaseAction
     }
 
     controller.createNewProject();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    // Always enabled...
+    setEnabled( true );
   }
 }

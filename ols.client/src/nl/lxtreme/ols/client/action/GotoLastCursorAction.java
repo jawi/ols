@@ -25,10 +25,10 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
@@ -42,22 +42,13 @@ public class GotoLastCursorAction extends AbstractAction implements IManagedActi
 
   public static final String ID = "GotoLastCursor";
 
-  // VARIABLES
-
-  private final SignalDiagramController controller;
-
   // CONSTRUCTORS
 
   /**
    * Creates a new {@link GotoLastCursorAction} instance.
-   * 
-   * @param aController
-   *          the controller to use for this action.
    */
-  public GotoLastCursorAction( final SignalDiagramController aController )
+  public GotoLastCursorAction()
   {
-    this.controller = aController;
-
     putValue( NAME, "Go to highest cursor" );
     putValue( SHORT_DESCRIPTION, "Go to the cursor with highest index in diagram" );
     putValue( LARGE_ICON_KEY, IconLocator.ICON_GOTO_LAST_CURSOR );
@@ -72,10 +63,11 @@ public class GotoLastCursorAction extends AbstractAction implements IManagedActi
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Cursor[] definedCursors = this.controller.getDefinedCursors();
+    final Cursor[] definedCursors = getCursorController().getDefinedCursors();
     if ( definedCursors.length > 0 )
     {
-      this.controller.scrollToTimestamp( definedCursors[definedCursors.length - 1].getTimestamp() );
+      Long timestamp = Long.valueOf( definedCursors[definedCursors.length - 1].getTimestamp() );
+      getSignalDiagramController().scrollToTimestamp( timestamp );
     }
   }
 
@@ -86,6 +78,33 @@ public class GotoLastCursorAction extends AbstractAction implements IManagedActi
   public String getId()
   {
     return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    Cursor[] cursors = getCursorController().getDefinedCursors();
+    setEnabled( cursors.length > 0 );
+  }
+
+  /**
+   * @return a {@link CursorController} instance, never <code>null</code>.
+   */
+  private CursorController getCursorController()
+  {
+    return Client.getInstance().getCursorController();
+  }
+
+  /**
+   * @return a {@link SignalDiagramController} instance, never <code>null</code>
+   *         .
+   */
+  private SignalDiagramController getSignalDiagramController()
+  {
+    return Client.getInstance().getSignalDiagramController();
   }
 }
 

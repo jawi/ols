@@ -21,18 +21,18 @@
 package nl.lxtreme.ols.client.action;
 
 
-import java.awt.*;
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * Provides a "show preferences" action, allowing the general settings to be
  * edited.
  */
-public class ShowPreferencesDialogAction extends BaseAction
+public class ShowPreferencesDialogAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -43,14 +43,12 @@ public class ShowPreferencesDialogAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new ShowPreferencesDialogAction instance.
-   * 
-   * @param aController
-   *          the controller to use for this action.
+   * Creates a new {@link ShowPreferencesDialogAction} instance.
    */
-  public ShowPreferencesDialogAction( final ClientController aController )
+  public ShowPreferencesDialogAction()
   {
-    super( ID, aController, "Preferences", "Show the preferences dialog" );
+    putValue( NAME, "Preferences" );
+    putValue( SHORT_DESCRIPTION, "Opens the preferences dialog" );
     putValue( MNEMONIC_KEY, Integer.valueOf( KeyEvent.VK_P ) );
   }
 
@@ -62,8 +60,26 @@ public class ShowPreferencesDialogAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final Window owner = SwingComponentUtils.getOwningWindow( aEvent );
-    getController().showPreferencesDialog( owner );
+    Client.getInstance().handlePreferences();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    // Always enabled...
+    setEnabled( true );
   }
 }
 

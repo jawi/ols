@@ -30,11 +30,13 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.client.signaldisplay.util.*;
-import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.client.signaldisplay.view.channellabels.*;
+import nl.lxtreme.ols.client.signaldisplay.view.corner.*;
+import nl.lxtreme.ols.client.signaldisplay.view.glasspane.*;
+import nl.lxtreme.ols.client.signaldisplay.view.signals.*;
+import nl.lxtreme.ols.client.signaldisplay.view.timeline.*;
 import nl.lxtreme.ols.common.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -137,12 +139,12 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   // CONSTRUCTORS
 
   /**
-   * Creates a new SampleViewComponent instance.
+   * Creates a new {@link SignalDiagramComponent} instance.
    * 
    * @param aController
    *          the controller to use, cannot be <code>null</code>.
    */
-  SignalDiagramComponent( final SignalDiagramController aController )
+  public SignalDiagramComponent( final SignalDiagramController aController )
   {
     super( new BorderLayout() );
 
@@ -503,7 +505,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
    */
   private void registerKeyBindings()
   {
-    final IActionManager actionManager = this.controller.getActionManager();
+    final ActionManager actionManager = Client.getInstance().getActionManager();
 
     // Wrap the original zoom-actions so that we can update its state upon
     // each invocation...

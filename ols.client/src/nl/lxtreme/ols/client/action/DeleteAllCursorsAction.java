@@ -24,10 +24,9 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.actionmanager.*;
-import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.action.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -42,19 +41,14 @@ public class DeleteAllCursorsAction extends AbstractAction implements IManagedAc
 
   public static final String ID = "DeleteAllCursors";
 
-  // VARIABLES
-
-  private final SignalDiagramController controller;
-
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link DeleteCursorAction} instance.
+   * Creates a new {@link DeleteAllCursorAction} instance.
    */
-  public DeleteAllCursorsAction( final SignalDiagramController aController )
+  public DeleteAllCursorsAction()
   {
     super( "Delete all cursors" );
-    this.controller = aController;
 
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createKeyMask( KeyEvent.VK_DELETE, InputEvent.SHIFT_DOWN_MASK ) );
   }
@@ -69,7 +63,7 @@ public class DeleteAllCursorsAction extends AbstractAction implements IManagedAc
   {
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
     {
-      this.controller.removeCursor( i );
+      getCursorController().removeCursor( i );
     }
   }
 
@@ -80,5 +74,25 @@ public class DeleteAllCursorsAction extends AbstractAction implements IManagedAc
   public String getId()
   {
     return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    final CursorController controller = getCursorController();
+
+    Cursor[] cursors = controller.getDefinedCursors();
+    setEnabled( controller.isCursorsVisible() && ( cursors.length > 0 ) );
+  }
+
+  /**
+   * @return a {@link CursorController} instance, never <code>null</code>.
+   */
+  private CursorController getCursorController()
+  {
+    return Client.getInstance().getCursorController();
   }
 }

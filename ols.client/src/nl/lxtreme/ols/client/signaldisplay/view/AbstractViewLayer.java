@@ -23,13 +23,12 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.dnd.*;
 
 
 /**
  * Provides a common base class for view components.
  */
-abstract class AbstractViewLayer extends JComponent
+public abstract class AbstractViewLayer extends JComponent
 {
   // CONSTANTS
 

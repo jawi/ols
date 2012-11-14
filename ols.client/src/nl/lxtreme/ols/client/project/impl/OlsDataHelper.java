@@ -27,6 +27,7 @@ import java.util.regex.*;
 
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.session.*;
 
 
 /**
@@ -55,13 +56,12 @@ public final class OlsDataHelper
    * @throws IOException
    *           in case of I/O problems.
    */
-  public static DataSetImpl read( final Reader aReader ) throws IOException
+  public static void read( final Session aSession, final Reader aReader ) throws IOException
   {
     // assume 'new' file format is in use, don't support uncompressed ones...
     boolean compressed = true;
 
     final AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
-    DataSetImpl tempDataSet = new DataSetImpl();
 
     final BufferedReader br = new BufferedReader( aReader );
     if ( LOG.isLoggable( Level.INFO ) )
@@ -111,7 +111,7 @@ public final class OlsDataHelper
         }
         else if ( "CursorEnabled".equals( instrKey ) )
         {
-          tempDataSet.setCursorsEnabled( Boolean.parseBoolean( instrValue ) );
+          builder.setCursorsVisible( Boolean.parseBoolean( instrValue ) );
         }
         else if ( "Compressed".equals( instrKey ) )
         {
@@ -126,7 +126,7 @@ public final class OlsDataHelper
           final long value = safeParseLong( instrValue );
           if ( value > Long.MIN_VALUE )
           {
-            tempDataSet.getCursor( 0 ).setTimestamp( value );
+            builder.setCursorTimestamp( 0, value );
           }
         }
         else if ( "CursorB".equals( instrKey ) )
@@ -134,7 +134,7 @@ public final class OlsDataHelper
           final long value = safeParseLong( instrValue );
           if ( value > Long.MIN_VALUE )
           {
-            tempDataSet.getCursor( 1 ).setTimestamp( value );
+            builder.setCursorTimestamp( 1, value );
           }
         }
         else if ( instrKey.startsWith( "Cursor" ) )
@@ -143,7 +143,7 @@ public final class OlsDataHelper
           final long pos = Long.parseLong( instrValue );
           if ( pos > Long.MIN_VALUE )
           {
-            tempDataSet.getCursor( idx ).setTimestamp( pos );
+            builder.setCursorTimestamp( idx, pos );
           }
         }
       }
@@ -154,28 +154,25 @@ public final class OlsDataHelper
       throw new IOException( "Uncompressed data file found! Please send this file to the OLS developers!" );
     }
 
-    return new DataSetImpl( builder.build(), tempDataSet, false /* aRetainAnnotations */);
+    // Publish the acquisition data to our session...
+    aSession.setAcquisitionData( builder.build() );
   }
 
   /**
    * Writes the data to the given writer.
    * 
-   * @param aProject
-   *          the project to write the settings for, cannot be <code>null</code>
-   *          ;
+   * @param aSession
+   *          the session data to write, cannot be <code>null</code>;
    * @param aWriter
    *          the writer to write the data to, cannot be <code>null</code>.
    * @throws IOException
    *           in case of I/O problems.
    */
-  public static void write( final DataSet aDataSet, final Writer aWriter ) throws IOException
+  public static void write( final Session aSession, final Writer aWriter ) throws IOException
   {
     final BufferedWriter bw = new BufferedWriter( aWriter );
 
-    final AcquisitionData data = aDataSet.getCapturedData();
-
-    final Cursor[] cursors = aDataSet.getCursors();
-    final boolean cursorsEnabled = aDataSet.isCursorsEnabled();
+    final AcquisitionData data = aSession.getAcquisitionData();
 
     try
     {
@@ -214,15 +211,16 @@ public final class OlsDataHelper
       bw.newLine();
 
       bw.write( ";CursorEnabled: " );
-      bw.write( Boolean.toString( cursorsEnabled ) );
+      bw.write( Boolean.toString( data.isCursorsVisible() ) );
       bw.newLine();
 
-      for ( int i = 0; cursorsEnabled && ( i < cursors.length ); i++ )
+      for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
       {
-        if ( cursors[i].isDefined() )
+        Cursor cursor = data.getCursor( i );
+        if ( cursor.isDefined() )
         {
           bw.write( String.format( ";Cursor%d: ", Integer.valueOf( i ) ) );
-          bw.write( Long.toString( cursors[i].getTimestamp() ) );
+          bw.write( Long.toString( cursor.getTimestamp() ) );
           bw.newLine();
         }
       }

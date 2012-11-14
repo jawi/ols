@@ -21,18 +21,22 @@
 package nl.lxtreme.ols.client.action;
 
 
+import java.awt.*;
 import java.awt.event.*;
+
+import javax.swing.*;
 
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.common.session.*;
 
 
 /**
  * Provides a "smart jump" action, allowing to navigate to the next/previous
  * edge, cursor or annotation.
  */
-public class SmartJumpAction extends BaseAction
+public class SmartJumpAction extends AbstractAction implements IManagedAction
 {
   // INNER TYPES
 
@@ -75,11 +79,12 @@ public class SmartJumpAction extends BaseAction
   /**
    * Creates a new {@link SmartJumpAction} instance.
    */
-  public SmartJumpAction( final JumpDirection aDirection, final ClientController aController )
+  public SmartJumpAction( final JumpDirection aDirection )
   {
-    super( getID( aDirection ), aController, getTitle( aDirection ), getDescription( aDirection ) );
-
     this.direction = aDirection;
+
+    putValue( NAME, getTitle( aDirection ) );
+    putValue( SHORT_DESCRIPTION, getDescription( aDirection ) );
   }
 
   // METHODS
@@ -155,9 +160,35 @@ public class SmartJumpAction extends BaseAction
 
     if ( type != null )
     {
+      final SignalElement element = getSignalDiagramModel().getSelectedChannel();
+
       SignalDiagramController controller = getSignalDiagramController();
-      controller.smartJump( getSignalDiagramModel().getSelectedChannelIndex(), type, this.direction );
+
+      SmartJumpHelper jumpHelper = new SmartJumpHelper( controller, this.direction, type );
+      Rectangle viewSize = ( ( JComponent )aEvent.getSource() ).getVisibleRect();
+
+      Long timestamp = jumpHelper.getSmartJumpPosition( element, viewSize );
+
+      controller.scrollToTimestamp( timestamp );
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return getID( this.direction );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    setEnabled( hasCapturedData() );
   }
 
   /**
@@ -165,7 +196,7 @@ public class SmartJumpAction extends BaseAction
    */
   private SignalDiagramController getSignalDiagramController()
   {
-    return getController().getSignalDiagramController();
+    return Client.getInstance().getSignalDiagramController();
   }
 
   /**
@@ -174,5 +205,15 @@ public class SmartJumpAction extends BaseAction
   private SignalDiagramModel getSignalDiagramModel()
   {
     return getSignalDiagramController().getSignalDiagramModel();
+  }
+
+  /**
+   * @return <code>true</code> if there is data captured to export,
+   *         <code>false</code> otherwise.
+   */
+  private boolean hasCapturedData()
+  {
+    final Session session = Client.getInstance().getSession();
+    return session.hasData();
   }
 }

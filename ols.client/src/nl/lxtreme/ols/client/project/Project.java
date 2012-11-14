@@ -24,8 +24,8 @@ package nl.lxtreme.ols.client.project;
 import java.io.*;
 import java.util.*;
 
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -42,7 +42,7 @@ public interface Project
    * 
    * @return a data set, can be <code>null</code> if there is no data yet.
    */
-  DataSet getDataSet();
+  AcquisitionData getDataSet();
 
   /**
    * Returns the path to the project file.
@@ -50,7 +50,7 @@ public interface Project
    * @return a file object denoting the filename of this project, can be
    *         <code>null</code> in case this project is not yet saved.
    */
-  File getFilename();
+  File getFile();
 
   /**
    * Returns the date on which the project is last saved.
@@ -107,7 +107,7 @@ public interface Project
    * @throws IOException
    *           in case of I/O problems.
    */
-  void readData( Reader aReader ) throws IOException;
+  void readData( Session aSession, Reader aReader ) throws IOException;
 
   /**
    * Sets the captured data of this project.
@@ -186,5 +186,5 @@ public interface Project
    *           in case of I/O problems.
    * @see #readData(Reader)
    */
-  void writeData( Writer aWriter ) throws IOException;
+  void writeData( Session aSession, Writer aWriter ) throws IOException;
 }

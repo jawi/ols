@@ -11,5 +11,6 @@
 	ols.export.api;version=latest,\
 	ols.tool.api;version=latest,\
 	ols.acquisition.service;version=latest,\
-	ols.host.api;version=latest
+	ols.host.api;version=latest,\
+	biz.aQute.bnd.annotation
 -sub: *.bnd

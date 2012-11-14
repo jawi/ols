@@ -34,7 +34,7 @@ import org.osgi.service.event.*;
 /**
  * Provides a front end for acquiring data.
  */
-public class DataAcquirerImpl implements EventHandler, DataAcquirer
+public class DataAcquirerImpl implements EventHandler, IDataAcquirer
 {
   // VARIABLES
 

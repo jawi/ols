@@ -23,13 +23,16 @@ package nl.lxtreme.ols.client.action;
 
 import java.awt.event.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.common.session.*;
 
 
 /**
  * Removes all current annotations from the current signal display.
  */
-public class RemoveAnnotationsAction extends BaseAction
+public class RemoveAnnotationsAction extends AbstractAction implements IManagedAction
 {
   // CONSTANTS
 
@@ -40,14 +43,12 @@ public class RemoveAnnotationsAction extends BaseAction
   // CONSTRUCTORS
 
   /**
-   * Creates a new ClearAnnotationsAction instance.
-   * 
-   * @param aController
-   *          the controller to use.
+   * Creates a new {@link RemoveAnnotationsAction} instance.
    */
-  public RemoveAnnotationsAction( final ClientController aController )
+  public RemoveAnnotationsAction()
   {
-    super( ID, aController, "Remove annotations", "Removes all existing annotations from the signal display." );
+    putValue( NAME, "Remove annotations" );
+    putValue( SHORT_DESCRIPTION, "Removes all existing annotations from the signal display." );
   }
 
   // METHODS
@@ -58,6 +59,36 @@ public class RemoveAnnotationsAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    getController().clearAnnotations();
+    Session session = Client.getInstance().getSession();
+
+    session.getAnnotationData().clearAll();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getId()
+  {
+    return ID;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateState()
+  {
+    setEnabled( hasCapturedData() );
+  }
+
+  /**
+   * @return <code>true</code> if there is data captured to export,
+   *         <code>false</code> otherwise.
+   */
+  private boolean hasCapturedData()
+  {
+    final Session session = Client.getInstance().getSession();
+    return session.hasData();
   }
 }

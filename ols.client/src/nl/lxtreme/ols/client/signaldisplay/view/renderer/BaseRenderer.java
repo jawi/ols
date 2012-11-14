@@ -26,7 +26,7 @@ import java.awt.*;
 /**
  * Provides an abstract base class for a renderer.
  */
-abstract class BaseRenderer implements Renderer
+public abstract class BaseRenderer implements Renderer
 {
   // METHODS
 

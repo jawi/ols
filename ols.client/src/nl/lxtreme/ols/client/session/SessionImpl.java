@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.session;
 import java.util.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
 
 import org.osgi.service.event.*;
@@ -37,6 +38,8 @@ import org.osgi.service.log.*;
 public class SessionImpl implements Session
 {
   // VARIABLES
+
+  private final AnnotationData annotationData;
 
   // Injected by Felix DM...
   private volatile EventAdmin eventAdmin;
@@ -52,6 +55,7 @@ public class SessionImpl implements Session
   public SessionImpl()
   {
     this.data = null;
+    this.annotationData = new AnnotationDataImpl();
   }
 
   // METHODS
@@ -63,6 +67,25 @@ public class SessionImpl implements Session
   public AcquisitionData getAcquisitionData()
   {
     return this.data;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public AnnotationData getAnnotationData()
+  {
+    return this.annotationData;
+  }
+
+  /**
+   * Returns the composition.
+   * 
+   * @return an array of objects forming the composition.
+   */
+  public Object[] getComposition()
+  {
+    return new Object[] { this, this.annotationData };
   }
 
   /**
@@ -81,6 +104,7 @@ public class SessionImpl implements Session
   public void reset()
   {
     this.data = null;
+    this.annotationData.clearAll();
 
     this.logService.log( LogService.LOG_INFO, "Resetting session ..." );
 

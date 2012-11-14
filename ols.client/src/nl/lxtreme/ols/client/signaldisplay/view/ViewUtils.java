@@ -23,14 +23,14 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.common.util.*;
 
 
 /**
  * Some commonly used methods.
  */
-final class ViewUtils
+public final class ViewUtils
 {
   // METHODS
 

@@ -23,12 +23,25 @@ package nl.lxtreme.ols.client.action;
 
 import java.io.*;
 
+import javax.swing.filechooser.*;
+import javax.swing.filechooser.FileFilter;
+
 
 /**
- * 
+ * Provides some utility methods for handling file extensions.
  */
 class FileExtensionUtils
 {
+  // CONSTANTS
+
+  public static final String OLS_FILE_EXTENSION = "ols";
+  public static final FileFilter OLS_FILEFILTER = new FileNameExtensionFilter( "OpenLogic Sniffer data file",
+      OLS_FILE_EXTENSION );
+
+  public static final String OLS_PROJECT_EXTENSION = "olp";
+  public static final FileFilter OLS_PROJECT_FILTER = new FileNameExtensionFilter( "OpenLogic Sniffer project file",
+      OLS_PROJECT_EXTENSION );
+
   // CONSTRUCTORS
 
   /**
