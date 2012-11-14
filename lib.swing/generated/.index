@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<repository increment='1351081396699' name='lib.swing' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+<repository increment='1352899146084' name='lib.swing' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
   <resource>
     <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='lib.swing'/>
@@ -7,9 +7,9 @@
       <attribute name='version' type='Version' value='0.0.0'/>
     </capability>
     <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='d5addb52899f784fa1b95ac08afa9dad13a8e67e9e0863f512e1ebf03c405e1d'/>
+      <attribute name='osgi.content' value='33134323b9763d647a3effed4a4b944fa4e188533f378f0aca8550c16deb51c6'/>
       <attribute name='url' value='generated/lib.swing.jar'/>
-      <attribute name='size' type='Long' value='137797'/>
+      <attribute name='size' type='Long' value='147461'/>
       <attribute name='mime' value='application/vnd.osgi.bundle'/>
     </capability>
     <capability namespace='osgi.wiring.bundle'>
@@ -25,7 +25,7 @@
       <attribute name='version' type='Version' value='1.0.0'/>
       <attribute name='bundle-symbolic-name' value='lib.swing'/>
       <attribute name='bundle-version' type='Version' value='0.0.0'/>
-      <directive name='uses' value='org.osgi.service.prefs,javax.swing.filechooser,javax.swing'/>
+      <directive name='uses' value='javax.swing.filechooser,javax.swing,org.osgi.service.prefs'/>
     </capability>
     <capability namespace='osgi.wiring.package'>
       <attribute name='osgi.wiring.package' value='nl.lxtreme.ols.util.swing.component'/>
