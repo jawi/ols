@@ -22,6 +22,7 @@ package nl.lxtreme.ols.common.session;
 
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
@@ -35,14 +36,53 @@ public interface Session
   /** The topic prefix */
   String TOPIC_PREFIX = Session.class.getPackage().getName().replaceAll( "\\.", "/" );
 
-  /** Denotes the topic at which changes in */
+  /**
+   * Denotes all topics used by this interface.
+   */
+  String TOPIC_ANY = TOPIC_PREFIX + "/*";
+
+  /**
+   * Denotes the topic at which changes in. The associated event contains a
+   * single property, {@link #KEY_ACQUISITION_DATA}, which contains the
+   * <em>new</em> acquisition data.
+   */
   String TOPIC_ACQUISITION_DATA_CHANGED = TOPIC_PREFIX + "/dataChanged";
+
+  /**
+   * Denotes the topic to listen for when an annotation is added. The associated
+   * event contains a single property, {@link #KEY_ANNOTATION}, which denotes
+   * the added annotation.
+   */
+  String TOPIC_ANNOTATION_ADDED = TOPIC_PREFIX + "/annotation/added";
+
+  /**
+   * Denotes the topic to listen for when an annotation is cleared. The
+   * associated event contains a single property, {@link #KEY_CHANNEL}, which if
+   * non-null represents the channel on which the annotations should be cleared.
+   * If null, all annotations on all channels should be cleared.
+   */
+  String TOPIC_ANNOTATION_CLEARED = TOPIC_PREFIX + "/annotation/cleared";
 
   /**
    * Denotes the event property that contains the changed acquisition data. The
    * value is an {@link AcquisitionData} value, which can be <code>null</code>.
    */
   String KEY_ACQUISITION_DATA = "acquisitionData";
+
+  /**
+   * Denotes the event property that contains the added annotation. The value is
+   * a {@link Annotation} value, which is never <code>null</code>.
+   */
+  String KEY_ANNOTATION = "annotation";
+
+  /**
+   * Denotes the event property that represent the channel index (as
+   * {@link Integer}) for which an annotation is added or for which the
+   * annotations should be cleared. In the latter case, if the value of this
+   * property is <code>null</code>, all annotations on all channels should be
+   * cleared.
+   */
+  String KEY_CHANNEL = "channel";
 
   // METHODS
 
@@ -53,6 +93,14 @@ public interface Session
    *         data is available.
    */
   AcquisitionData getAcquisitionData();
+
+  /**
+   * Returns the current annotation data.
+   * 
+   * @return the annotation data container, can only be <code>null</code> if no
+   *         data is available.
+   */
+  AnnotationData getAnnotationData();
 
   /**
    * Returns whether or not there is data present.

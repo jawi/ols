@@ -18,12 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.common;
-
-
-import java.util.*;
-
-import nl.lxtreme.ols.common.annotation.*;
+package nl.lxtreme.ols.common.acquisition;
 
 
 /**
@@ -32,27 +27,6 @@ import nl.lxtreme.ols.common.annotation.*;
 public interface Channel extends Comparable<Channel>
 {
   // METHODS
-
-  /**
-   * Adds a new annotation to this channel.
-   * 
-   * @param aAnnotation
-   *          the annotation to add, cannot be <code>null</code>.
-   */
-  void addAnnotation( Annotation aAnnotation );
-
-  /**
-   * Clears all annotations from this channel.
-   */
-  void clearAnnotations();
-
-  /**
-   * Returns all available annotations for this channel.
-   * 
-   * @return an immutable collection of this channel's annotations, never
-   *         <code>null</code>, never <code>null</code>.
-   */
-  Collection<Annotation> getAnnotations();
 
   /**
    * Returns the index of this channel.
@@ -91,7 +65,8 @@ public interface Channel extends Comparable<Channel>
    * disabled, it is masked out from the signal diagram.
    * </p>
    * 
-   * @return the enabled
+   * @return <code>true</code> if the channel is enabled, <code>false</code>
+   *         otherwise.
    */
   boolean isEnabled();
 
@@ -99,7 +74,8 @@ public interface Channel extends Comparable<Channel>
    * Sets enabled to the given value.
    * 
    * @param aEnabled
-   *          the enabled to set.
+   *          <code>true</code> if the channel is to be enabled,
+   *          <code>false</code> otherwise.
    */
   void setEnabled( final boolean aEnabled );
 

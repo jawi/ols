@@ -37,12 +37,12 @@ public interface DataAnnotation extends Annotation
    * additional type information and so on.
    * 
    * @return a map of additional properties, cannot be <code>null</code> but may
-   *         be emtpy.
+   *         be empty.
    */
   Map<String, Object> getProperties();
 
   /**
-   * Returns the ending timecstamp of this annotation.
+   * Returns the ending time stamp of this annotation.
    * 
    * @return a time stamp, >= 0.
    */

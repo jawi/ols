@@ -21,6 +21,9 @@
 package nl.lxtreme.ols.common.acquisition;
 
 
+import nl.lxtreme.ols.common.*;
+
+
 /**
  * Denotes sample data acquired from a device.
  */
@@ -37,6 +40,19 @@ public interface AcquisitionData
   long getAbsoluteLength();
 
   /**
+   * Returns the channel information for the channel with the given index.
+   * 
+   * @param aIndex
+   *          the index of the channel to return, >= 0 && <
+   *          {@link #getChannelCount()}.
+   * @return a channel, never <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given index is less than zero or more than
+   *           {@link #getChannelCount()}.
+   */
+  Channel getChannel( int aIndex );
+
+  /**
    * Returns the total number of channels in the sample data, and therefore, the
    * width of a single sample in bits.
    * <p>
@@ -51,30 +67,17 @@ public interface AcquisitionData
   int getChannelCount();
 
   /**
-   * Returns the channel labels describing what kind of data a channel is
-   * supposed to represent.
-   * <p>
-   * The array returned by this method is always equal to the value returned by
-   * {@link #getChannelCount()}.
-   * </p>
-   * <p>
-   * Users of this method <b>may</b> change its contents to change a channel
-   * label. Any kind of value is allowed, even <code>null</code> which denotes
-   * that the default label for a channel should be used.
-   * </p>
+   * Returns the cursor information for the cursor with the given index.
    * 
-   * @return an array of channel labels, never <code>null</code>.
+   * @param aIndex
+   *          the index of the cursor to return, >= 0 && <
+   *          {@value Ols#MAX_CURSORS}.
+   * @return a cursor, never <code>null</code>.
+   * @throws IllegalArgumentException
+   *           in case the given index is less than zero or more than
+   *           {@value Ols#MAX_CURSORS}.
    */
-  String[] getChannelLabels();
-
-  /**
-   * Returns the number of channels in the sample data.
-   * 
-   * @return the channel count, >= 0.
-   * @deprecated use {@link #getChannelCount()}
-   */
-  @Deprecated
-  int getChannels();
+  Cursor getCursor( int aIndex );
 
   /**
    * Returns a bitmask of enabled channels in the sample data.
@@ -170,5 +173,22 @@ public interface AcquisitionData
    *         <code>false</code> otherwise.
    */
   boolean hasTriggerData();
+
+  /**
+   * Returns whether or not the cursors are visible on screen.
+   * 
+   * @return <code>true</code> if the cursors are to be made visible,
+   *         <code>false</code> if they are hidden.
+   */
+  boolean isCursorsVisible();
+
+  /**
+   * Sets whether or not the cursors are visible.
+   * 
+   * @param aVisible
+   *          <code>true</code> to make the cursors visible (if defined),
+   *          <code>false</code> to hide the cursors.
+   */
+  void setCursorsVisible( boolean aVisible );
 
 }

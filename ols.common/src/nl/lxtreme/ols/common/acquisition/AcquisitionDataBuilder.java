@@ -22,7 +22,10 @@ package nl.lxtreme.ols.common.acquisition;
 
 
 import static nl.lxtreme.ols.common.Ols.*;
+
 import java.util.*;
+
+import nl.lxtreme.ols.common.*;
 
 
 /**
@@ -41,28 +44,23 @@ public final class AcquisitionDataBuilder
 
     private final int[] values;
     private final long[] timestamps;
-    private final String[] channelLabels;
     private final long triggerPosition;
     private final int sampleRate;
     private final int channelCount;
     private final int enabledChannels;
     private final long absoluteLength;
+    private final List<Channel> channels;
+    private final Cursor[] cursors;
+    private boolean cursorsVisible;
 
     // CONSTRUCTORS
 
     /**
      * Creates a new {@link AcquisitionDataImpl} instance.
-     * 
-     * @param aValues
-     * @param aTimestamps
-     * @param aTriggerPosition
-     * @param aSampleRate
-     * @param aChannelCount
-     * @param aEnabledChannels
-     * @param aAbsoluteLength
      */
     AcquisitionDataImpl( final int[] aValues, final long[] aTimestamps, final long aTriggerPosition,
-        final int aSampleRate, final int aChannelCount, final int aEnabledChannels, final long aAbsoluteLength )
+        final int aSampleRate, final int aChannelCount, final int aEnabledChannels, final long aAbsoluteLength,
+        final Cursor[] aCursors, final boolean aCursorsVisible )
     {
       this.values = aValues;
       this.timestamps = aTimestamps;
@@ -78,7 +76,17 @@ public final class AcquisitionDataBuilder
       this.enabledChannels = aEnabledChannels;
       this.absoluteLength = aAbsoluteLength;
 
-      this.channelLabels = new String[this.channelCount];
+      this.cursors = Arrays.copyOf( aCursors, Ols.MAX_CURSORS );
+      this.cursorsVisible = aCursorsVisible;
+
+      this.channels = new ArrayList<Channel>( this.channelCount );
+      for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
+      {
+        if ( ( this.enabledChannels & ( 1 << i ) ) != 0 )
+        {
+          this.channels.add( new ChannelImpl( i ) );
+        }
+      }
     }
 
     // METHODS
@@ -149,10 +157,26 @@ public final class AcquisitionDataBuilder
       return mid;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public final long getAbsoluteLength()
     {
       return this.absoluteLength;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Channel getChannel( final int aIndex )
+    {
+      if ( ( aIndex < 0 ) || ( aIndex >= getChannelCount() ) )
+      {
+        throw new IllegalArgumentException( "Invalid channel index!" );
+      }
+      return this.channels.get( aIndex );
     }
 
     @Override
@@ -161,16 +185,17 @@ public final class AcquisitionDataBuilder
       return this.channelCount;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public String[] getChannelLabels()
+    public Cursor getCursor( final int aIndex )
     {
-      return this.channelLabels;
-    }
-
-    @Override
-    public int getChannels()
-    {
-      return this.channelCount;
+      if ( ( aIndex < 0 ) || ( aIndex >= Ols.MAX_CURSORS ) )
+      {
+        throw new IllegalArgumentException( "Invalid cursor index!" );
+      }
+      return this.cursors[aIndex];
     }
 
     @Override
@@ -219,6 +244,261 @@ public final class AcquisitionDataBuilder
     public boolean hasTriggerData()
     {
       return ( this.triggerPosition != NOT_AVAILABLE );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCursorsVisible()
+    {
+      return this.cursorsVisible;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setCursorsVisible( final boolean aVisible )
+    {
+      this.cursorsVisible = aVisible;
+    }
+  }
+
+  /**
+   * Provides a default implementation of {@link Channel}.
+   */
+  static final class ChannelImpl implements Channel
+  {
+    // VARIABLES
+
+    private final int index;
+    private final int mask;
+
+    private String label;
+    private boolean enabled;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link ChannelImpl} instance.
+     */
+    public ChannelImpl( final int aIndex )
+    {
+      this.index = aIndex;
+      this.mask = 1 << aIndex;
+      this.label = getDefaultLabel( aIndex );
+      this.enabled = true;
+    }
+
+    // METHODS
+
+    /**
+     * Returns the default label for a channel.
+     * 
+     * @param aIndex
+     *          the index of the channel to create the label for.
+     * @return a default label, never <code>null</code>.
+     */
+    private static String getDefaultLabel( final int aIndex )
+    {
+      return String.format( "Channel %d", Integer.valueOf( aIndex ) );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int compareTo( final Channel aOther )
+    {
+      return getIndex() - aOther.getIndex();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getIndex()
+    {
+      return this.index;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getLabel()
+    {
+      return this.label;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getMask()
+    {
+      return this.mask;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasName()
+    {
+      return ( this.label != null ) && !"".equals( this.label.trim() );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isEnabled()
+    {
+      return this.enabled;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setEnabled( final boolean aEnabled )
+    {
+      this.enabled = aEnabled;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setLabel( final String aName )
+    {
+      if ( ( aName == null ) || "".equals( aName.trim() ) )
+      {
+        this.label = getDefaultLabel( this.index );
+      }
+      else
+      {
+        this.label = aName.trim();
+      }
+    }
+  }
+
+  /**
+   * Provides a default implementation of {@link Cursor}.
+   */
+  static final class CursorImpl implements Cursor
+  {
+    // VARIABLES
+
+    private final int index;
+
+    private String label;
+    private long timestamp;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link CursorImpl} instance.
+     */
+    public CursorImpl( final int aIndex )
+    {
+      this.index = aIndex;
+      this.timestamp = -1L;
+    }
+
+    /**
+     * Creates a new {@link CursorImpl} instance.
+     */
+    public CursorImpl( final Cursor aCursor )
+    {
+      this.index = aCursor.getIndex();
+      this.timestamp = aCursor.getTimestamp();
+      this.label = aCursor.getLabel();
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clear()
+    {
+      this.timestamp = -1L;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int compareTo( final Cursor aOther )
+    {
+      return getIndex() - aOther.getIndex();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getIndex()
+    {
+      return this.index;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getLabel()
+    {
+      return this.label;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getTimestamp()
+    {
+      return this.timestamp;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasLabel()
+    {
+      return ( this.label != null ) && !"".equals( this.label.trim() );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDefined()
+    {
+      return this.timestamp >= 0L;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setLabel( final String aLabel )
+    {
+      this.label = aLabel;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setTimestamp( final long aTimestamp )
+    {
+      this.timestamp = aTimestamp;
     }
   }
 
@@ -293,8 +573,10 @@ public final class AcquisitionDataBuilder
   private int channelCount;
   private int enabledChannelMask;
   private final SortedSet<Sample> sampleData;
+  private final Cursor[] cursors;
   private int sampleRate;
   private long triggerPosition;
+  private boolean cursorsVisible;
 
   // CONSTRUCTORS
 
@@ -304,11 +586,18 @@ public final class AcquisitionDataBuilder
   public AcquisitionDataBuilder()
   {
     this.sampleData = new TreeSet<Sample>();
+    this.cursors = new Cursor[Ols.MAX_CURSORS];
     this.absoluteLength = NOT_AVAILABLE;
     this.channelCount = 0;
     this.enabledChannelMask = 0;
     this.triggerPosition = NOT_AVAILABLE;
     this.sampleRate = NOT_AVAILABLE; // state values
+    this.cursorsVisible = true; // by default
+
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    {
+      this.cursors[i] = new CursorImpl( i );
+    }
   }
 
   /**
@@ -325,11 +614,19 @@ public final class AcquisitionDataBuilder
   public AcquisitionDataBuilder( final AcquisitionData aData, final boolean aIncludeSamples )
   {
     this.sampleData = new TreeSet<Sample>();
+    this.cursors = new Cursor[Ols.MAX_CURSORS];
     this.absoluteLength = aData.getAbsoluteLength();
     this.channelCount = aData.getChannelCount();
     this.enabledChannelMask = aData.getEnabledChannels();
     this.triggerPosition = aData.getTriggerPosition();
     this.sampleRate = aData.getSampleRate();
+    this.cursorsVisible = true; // by default
+
+    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    {
+      // Create real copies of the cursors to make them independent...
+      this.cursors[i] = new CursorImpl( aData.getCursor( i ) );
+    }
 
     if ( aIncludeSamples )
     {
@@ -449,7 +746,7 @@ public final class AcquisitionDataBuilder
         : this.absoluteLength;
 
     return new AcquisitionDataImpl( values, timestamps, this.triggerPosition, this.sampleRate, this.channelCount,
-        this.enabledChannelMask, absLength );
+        this.enabledChannelMask, absLength, this.cursors, this.cursorsVisible );
   }
 
   /**
@@ -515,6 +812,60 @@ public final class AcquisitionDataBuilder
     }
     this.channelCount = aChannelCount;
     this.enabledChannelMask = ( int )( ( 1L << aChannelCount ) - 1L );
+    return this;
+  }
+
+  /**
+   * Sets the label for a particular cursor.
+   * 
+   * @param aIndex
+   *          the index of the cursor to set, >= 0 && < {@value Ols#MAX_CURSORS}
+   *          ;
+   * @param aLabel
+   *          the label of the cursor to set.
+   * @throws IllegalArgumentException
+   *           in case of an invalid cursor index.
+   */
+  public AcquisitionDataBuilder setCursorLabel( final int aIndex, final String aLabel )
+  {
+    if ( ( aIndex < 0 ) || ( aIndex >= Ols.MAX_CURSORS ) )
+    {
+      throw new IllegalArgumentException( "Invalid cursor index!" );
+    }
+    this.cursors[aIndex].setLabel( aLabel );
+    return this;
+  }
+
+  /**
+   * Sets whether or not cursors are visible.
+   * 
+   * @param aCursorsVisible
+   * @return this builder.
+   */
+  public AcquisitionDataBuilder setCursorsVisible( final boolean aCursorsVisible )
+  {
+    this.cursorsVisible = aCursorsVisible;
+    return this;
+  }
+
+  /**
+   * Sets the timestamp for a particular cursor.
+   * 
+   * @param aIndex
+   *          the index of the cursor to set, >= 0 && < {@value Ols#MAX_CURSORS}
+   *          ;
+   * @param aTimestamp
+   *          the timestamp of the cursor to set.
+   * @throws IllegalArgumentException
+   *           in case of an invalid cursor index.
+   */
+  public AcquisitionDataBuilder setCursorTimestamp( final int aIndex, final long aTimestamp )
+  {
+    if ( ( aIndex < 0 ) || ( aIndex >= Ols.MAX_CURSORS ) )
+    {
+      throw new IllegalArgumentException( "Invalid cursor index!" );
+    }
+    this.cursors[aIndex].setTimestamp( aTimestamp );
     return this;
   }
 

@@ -111,7 +111,6 @@ public class AcquisitionDataBuilderTest extends TestCase
 
     assertEquals( 1, data.getValues().length );
     assertEquals( 1, data.getTimestamps().length );
-    assertEquals( 1, data.getChannelLabels().length );
   }
 
   /**
@@ -136,7 +135,6 @@ public class AcquisitionDataBuilderTest extends TestCase
 
     assertEquals( 3, data.getValues().length );
     assertEquals( 3, data.getTimestamps().length );
-    assertEquals( 1, data.getChannelLabels().length );
   }
 
   /**
