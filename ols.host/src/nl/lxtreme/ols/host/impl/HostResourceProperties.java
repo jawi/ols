@@ -77,7 +77,7 @@ public class HostResourceProperties implements HostProperties
       }
       catch ( IOException exception )
       {
-        // XXX
+        throw new RuntimeException( "Failed to read host properties!", exception );
       }
       finally
       {
