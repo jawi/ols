@@ -40,7 +40,7 @@ public class TestToolContext implements ToolContext
   private final int startSampleIdx;
   private final int endSampleIdx;
   private final ToolProgressListener progressListener;
-  private final AnnotationListener annotationListener;
+  private final AnnotationCollector annotationCollector;
 
   // CONSTRUCTORS
 
@@ -50,7 +50,7 @@ public class TestToolContext implements ToolContext
    * @param aData
    * @param aListener
    */
-  public TestToolContext( final AcquisitionData aData, final AnnotationListener aListener )
+  public TestToolContext( final AcquisitionData aData, final AnnotationCollector aListener )
   {
     this( aData, Math.max( 0, aData.getSampleIndex( aData.getTriggerPosition() ) - 1 ), aData.getValues().length - 1,
         aListener );
@@ -65,12 +65,12 @@ public class TestToolContext implements ToolContext
    * @param aListener
    */
   public TestToolContext( final AcquisitionData aData, final int aStartSampleIdx, final int aEndSampleIdx,
-      final AnnotationListener aListener )
+      final AnnotationCollector aListener )
   {
     this.startSampleIdx = Math.max( 0, aStartSampleIdx );
     this.endSampleIdx = Math.min( aEndSampleIdx, aData.getValues().length - 1 );
     this.progressListener = Mockito.mock( ToolProgressListener.class );
-    this.annotationListener = aListener;
+    this.annotationCollector = aListener;
 
     this.session = new Session()
     {
@@ -99,6 +99,15 @@ public class TestToolContext implements ToolContext
       {
         return this.data;
       }
+
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      public AnnotationData getAnnotationData()
+      {
+        return TestToolContext.this.annotationCollector;
+      }
     };
   }
 
@@ -108,7 +117,8 @@ public class TestToolContext implements ToolContext
   @Override
   public void addAnnotation( final Annotation aAnnotation )
   {
-    this.annotationListener.onAnnotation( aAnnotation );
+    AnnotationData data = this.session.getAnnotationData();
+    data.add( aAnnotation );
   }
 
   /**
@@ -117,9 +127,10 @@ public class TestToolContext implements ToolContext
   @Override
   public void clearAnnotations( final int... aChannelIdxs )
   {
+    AnnotationData data = this.session.getAnnotationData();
     for ( int channelIdx : aChannelIdxs )
     {
-      this.annotationListener.clearAnnotations( channelIdx );
+      data.clear( channelIdx );
     }
   }
 

@@ -33,45 +33,45 @@ public class ToolException extends RuntimeException
   // CONSTRUCTORS
 
   /**
-   * Creates a new ToolException instance.
+   * Creates a new {@link ToolException} instance.
    */
   public ToolException()
   {
-    // TODO Auto-generated constructor stub
+    super();
   }
 
   /**
-   * Creates a new ToolException instance.
+   * Creates a new {@link ToolException} instance.
    * 
    * @param aMessage
+   *          the message describing the possible cause.
    */
   public ToolException( final String aMessage )
   {
     super( aMessage );
-    // TODO Auto-generated constructor stub
   }
 
   /**
-   * Creates a new ToolException instance.
+   * Creates a new {@link ToolException} instance.
    * 
    * @param aMessage
+   *          the message additionally describing the cause;
    * @param aCause
+   *          the originating cause of this exception.
    */
   public ToolException( final String aMessage, final Throwable aCause )
   {
     super( aMessage, aCause );
-    // TODO Auto-generated constructor stub
   }
 
   /**
-   * Creates a new ToolException instance.
+   * Creates a new {@link ToolException} instance.
    * 
    * @param aCause
+   *          the originating cause of this exception.
    */
   public ToolException( final Throwable aCause )
   {
     super( aCause );
-    // TODO Auto-generated constructor stub
   }
-
 }

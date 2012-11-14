@@ -33,7 +33,7 @@ import nl.lxtreme.ols.common.annotation.*;
  * Provides a collector for annotations, splitting them out to type and keep
  * them sorted on their time stamps.
  */
-public class AnnotationCollector implements AnnotationListener
+public class AnnotationCollector implements AnnotationData
 {
   // VARIABLES
 
@@ -49,6 +49,22 @@ public class AnnotationCollector implements AnnotationListener
   {
     this.dataAnnotations = new TreeSet<DataAnnotation>();
     this.annotations = new TreeSet<Annotation>();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void add( final Annotation aAnnotation )
+  {
+    if ( aAnnotation instanceof DataAnnotation )
+    {
+      this.dataAnnotations.add( ( DataAnnotation )aAnnotation );
+    }
+    else
+    {
+      this.annotations.add( aAnnotation );
+    }
   }
 
   /**
@@ -113,17 +129,7 @@ public class AnnotationCollector implements AnnotationListener
    * {@inheritDoc}
    */
   @Override
-  public void clearAnnotations()
-  {
-    this.annotations.clear();
-    this.dataAnnotations.clear();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void clearAnnotations( final int aChannelIdx )
+  public void clear( final int aChannelIdx )
   {
     Iterator<DataAnnotation> dataAnnotationIter = this.dataAnnotations.iterator();
     while ( dataAnnotationIter.hasNext() )
@@ -144,6 +150,16 @@ public class AnnotationCollector implements AnnotationListener
         annotationIter.remove();
       }
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void clearAll()
+  {
+    this.annotations.clear();
+    this.dataAnnotations.clear();
   }
 
   /**
@@ -229,23 +245,29 @@ public class AnnotationCollector implements AnnotationListener
   }
 
   /**
-   * Returns an annotation with the given symbol.
-   * 
-   * @param aSymbol
-   *          the symbol to search for, cannot be <code>null</code>.
-   * @return the first annotation (in time) that contains the given symbol, or
-   *         <code>null</code> if no annotation matched the given symbol.
+   * {@inheritDoc}
    */
-  public DataAnnotation getDataAnnotation( final Object aSymbol )
+  @Override
+  public SortedSet<Annotation> getAnnotations()
   {
-    for ( DataAnnotation annotation : this.dataAnnotations )
+    return this.annotations;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public SortedSet<Annotation> getAnnotations( final int aChannelIdx )
+  {
+    TreeSet<Annotation> result = new TreeSet<Annotation>();
+    for ( Annotation annotation : this.annotations )
     {
-      if ( aSymbol.equals( annotation.getData() ) )
+      if ( annotation.getChannelIndex() == aChannelIdx )
       {
-        return annotation;
+        result.add( annotation );
       }
     }
-    return null;
+    return result;
   }
 
   /**
@@ -270,19 +292,23 @@ public class AnnotationCollector implements AnnotationListener
   }
 
   /**
-   * {@inheritDoc}
+   * Returns an annotation with the given symbol.
+   * 
+   * @param aSymbol
+   *          the symbol to search for, cannot be <code>null</code>.
+   * @return the first annotation (in time) that contains the given symbol, or
+   *         <code>null</code> if no annotation matched the given symbol.
    */
-  @Override
-  public void onAnnotation( final Annotation aAnnotation )
+  public DataAnnotation getDataAnnotation( final Object aSymbol )
   {
-    if ( aAnnotation instanceof DataAnnotation )
+    for ( DataAnnotation annotation : this.dataAnnotations )
     {
-      this.dataAnnotations.add( ( DataAnnotation )aAnnotation );
+      if ( aSymbol.equals( annotation.getData() ) )
+      {
+        return annotation;
+      }
     }
-    else
-    {
-      this.annotations.add( aAnnotation );
-    }
+    return null;
   }
 
   /**
