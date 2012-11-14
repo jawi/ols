@@ -25,7 +25,6 @@ import java.io.*;
 import java.net.*;
 import java.util.regex.*;
 
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
 
@@ -111,9 +110,9 @@ public final class DataTestUtils
    *          container, > 0 && < 32.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static DataSet createStubDataSet( final int aChannelCount )
+  public static AcquisitionData generateAcquisitionData( final int aChannelCount )
   {
-    return createStubDataSet( 16, aChannelCount );
+    return generateAcquisitionData( 16, aChannelCount );
   }
 
   /**
@@ -127,9 +126,9 @@ public final class DataTestUtils
    *          container, > 0 && < 32.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static DataSet createStubDataSet( final int aDataSize, final int aChannelCount )
+  public static AcquisitionData generateAcquisitionData( final int aDataSize, final int aChannelCount )
   {
-    return createStubDataSet( aDataSize, aChannelCount, 1000000 );
+    return generateAcquisitionData( aDataSize, aChannelCount, 1000000, -1 );
   }
 
   /**
@@ -145,9 +144,11 @@ public final class DataTestUtils
    *          the sample rate (in Hertz), > 0.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static DataSet createStubDataSet( final int aDataSize, final int aChannelCount, final int aSampleRate )
+  public static AcquisitionData generateAcquisitionData( final int aDataSize, final int aChannelCount,
+      final int aSampleRate, final int aTriggerPos )
   {
-    return createStubDataSet( aDataSize, aChannelCount, aSampleRate, new DefaultTestDataProvider( aChannelCount ) );
+    return generateAcquisitionData( aDataSize, aChannelCount, aSampleRate, aTriggerPos, new DefaultTestDataProvider(
+        aChannelCount ) );
   }
 
   /**
@@ -165,62 +166,18 @@ public final class DataTestUtils
    *          the test data provider to use, cannot be <code>null</code>.
    * @return a mocked data container, never <code>null</code>.
    */
-  public static DataSet createStubDataSet( final int aDataSize, final int aEnabledChannelCount, final int aSampleRate,
-      final TestDataProvider aProvider )
+  public static AcquisitionData generateAcquisitionData( final int aDataSize, final int aEnabledChannelCount,
+      final int aSampleRate, final long aTriggerPos, final TestDataProvider aProvider )
   {
     final int[] values = new int[aDataSize];
     final long[] timestamps = new long[aDataSize];
 
     aProvider.fillData( values, timestamps, aDataSize );
 
-    int bitMask = ( int )( ( 1L << aEnabledChannelCount ) - 1L );
+    final int bitMask = ( int )( ( 1L << aEnabledChannelCount ) - 1L );
 
-    final AcquisitionData result = createAcquisitionResult( values, timestamps, -1, 1000000, aEnabledChannelCount,
-        bitMask, timestamps[aDataSize - 1] + 1L );
-
-    return new DataSet()
-    {
-      @Override
-      public AcquisitionData getCapturedData()
-      {
-        return result;
-      }
-
-      @Override
-      public Channel getChannel( final int aIndex )
-      {
-        return null;
-      }
-
-      @Override
-      public Channel[] getChannels()
-      {
-        return new Channel[0];
-      }
-
-      @Override
-      public Cursor getCursor( final int aIndex )
-      {
-        return null;
-      }
-
-      @Override
-      public Cursor[] getCursors()
-      {
-        return new Cursor[0];
-      }
-
-      @Override
-      public boolean isCursorsEnabled()
-      {
-        return false;
-      }
-
-      @Override
-      public void setCursorsEnabled( final boolean aEnabled )
-      {
-      }
-    };
+    return createAcquisitionResult( values, timestamps, aTriggerPos, aSampleRate, aEnabledChannelCount, bitMask,
+        timestamps[aDataSize - 1] + 1L );
   }
 
   /**
@@ -260,27 +217,27 @@ public final class DataTestUtils
       }
 
       @Override
+      public Channel getChannel( final int aIndex )
+      {
+        return null;
+      }
+
+      @Override
       public int getChannelCount()
       {
         return 8;
       }
 
       @Override
-      public int getChannels()
+      public Cursor getCursor( final int aIndex )
       {
-        return getChannelCount();
+        return null;
       }
 
       @Override
       public int getEnabledChannels()
       {
         return 0xFF;
-      }
-
-      @Override
-      public String[] getChannelLabels()
-      {
-        return new String[8];
       }
 
       @Override
@@ -324,6 +281,18 @@ public final class DataTestUtils
       {
         return false;
       }
+
+      @Override
+      public boolean isCursorsVisible()
+      {
+        return true;
+      }
+
+      @Override
+      public void setCursorsVisible( final boolean aVisible )
+      {
+        // Nop
+      }
     };
   }
 
@@ -350,21 +319,21 @@ public final class DataTestUtils
       }
 
       @Override
+      public Channel getChannel( final int aIndex )
+      {
+        return null;
+      }
+
+      @Override
       public int getChannelCount()
       {
         return aChannels;
       }
 
       @Override
-      public int getChannels()
+      public Cursor getCursor( final int aIndex )
       {
-        return getChannelCount();
-      }
-
-      @Override
-      public String[] getChannelLabels()
-      {
-        return new String[getChannelCount()];
+        return null;
       }
 
       @Override
@@ -413,6 +382,18 @@ public final class DataTestUtils
       public boolean hasTriggerData()
       {
         return ( aTriggerPos >= 0 );
+      }
+
+      @Override
+      public boolean isCursorsVisible()
+      {
+        return true;
+      }
+
+      @Override
+      public void setCursorsVisible( final boolean aVisible )
+      {
+        // Nop
       }
     };
   }
