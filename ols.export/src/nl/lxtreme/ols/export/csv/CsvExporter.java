@@ -57,7 +57,7 @@ public class CsvExporter implements Exporter
    * {@inheritDoc}
    */
   @Override
-  public void export( final DataSet aDataSet, final JComponent aComponent, final OutputStream aStream )
+  public void export( final AcquisitionData aData, final JComponent aComponent, final OutputStream aStream )
       throws IOException
   {
     final PrintStream stream = new PrintStream( aStream );
@@ -65,21 +65,19 @@ public class CsvExporter implements Exporter
     try
     {
       // Write header row...
-      writeHeaderRow( stream, createHeaderRowValues( aDataSet ) );
+      writeHeaderRow( stream, createHeaderRowValues( aData ) );
 
-      final Channel[] channels = aDataSet.getChannels();
-
-      final AcquisitionData capturedData = aDataSet.getCapturedData();
-      final int sampleRate = capturedData.getSampleRate();
-      final int[] values = capturedData.getValues();
-      final long[] timestamps = capturedData.getTimestamps();
-      final long triggerPos = capturedData.getTriggerPosition();
+      final int sampleRate = aData.getSampleRate();
+      final int[] values = aData.getValues();
+      final long[] timestamps = aData.getTimestamps();
+      final long triggerPos = aData.getTriggerPosition();
 
       // Write data...
       for ( int i = 0; i < values.length; i++ )
       {
         // Write data row...
-        writeDataRow( stream, timestamps[i], triggerPos, sampleRate, values[i], channels );
+        writeDataRow( stream, timestamps[i], triggerPos, sampleRate, values[i], aData.getChannelCount(),
+            aData.getEnabledChannels() );
       }
     }
     finally
@@ -110,12 +108,12 @@ public class CsvExporter implements Exporter
    * @param aChannelCount
    * @return
    */
-  private void createChannelHeaders( final List<String> aList, final Channel[] aChannels )
+  private void createChannelHeaders( final List<String> aList, final AcquisitionData aData )
   {
     final int insertIdx = aList.size();
-    for ( int i = 0; i < aChannels.length; i++ )
+    for ( int i = 0; i < aData.getChannelCount(); i++ )
     {
-      String label = aChannels[i].getLabel();
+      String label = aData.getChannel( i ).getLabel();
       if ( label == null )
       {
         label = String.format( "Ch.%d", Integer.valueOf( i ) );
@@ -126,16 +124,13 @@ public class CsvExporter implements Exporter
   }
 
   /**
-   * @param aDataSet
+   * @param aData
    * @return
    */
-  private String[] createHeaderRowValues( final DataSet aDataSet )
+  private String[] createHeaderRowValues( final AcquisitionData aData )
   {
-    final Channel[] channels = aDataSet.getChannels();
-
-    final AcquisitionData capturedData = aDataSet.getCapturedData();
-    final long triggerPos = capturedData.getTriggerPosition();
-    final int sampleRate = capturedData.getSampleRate();
+    final long triggerPos = aData.getTriggerPosition();
+    final int sampleRate = aData.getSampleRate();
 
     List<String> result = new ArrayList<String>();
     if ( sampleRate > 0 )
@@ -164,7 +159,7 @@ public class CsvExporter implements Exporter
       result.add( "sample rate (Hz)" );
     }
 
-    createChannelHeaders( result, channels );
+    createChannelHeaders( result, aData );
 
     return result.toArray( new String[result.size()] );
   }
@@ -189,7 +184,7 @@ public class CsvExporter implements Exporter
    *           in case of I/O problems.
    */
   private void writeDataRow( final PrintStream aStream, final long aAbsTime, final long aTriggerPos,
-      final int aSampleRate, final int aValue, final Channel[] aChannels ) throws IOException
+      final int aSampleRate, final int aValue, final int aChannelCount, final int aEnabledChannels ) throws IOException
   {
     aStream.print( aAbsTime );
 
@@ -204,15 +199,20 @@ public class CsvExporter implements Exporter
       aStream.print( aSampleRate );
     }
 
-    if ( aChannels != null )
+    if ( aEnabledChannels != 0 )
     {
-      int l = aChannels.length;
-      for ( int i = 0; i < l; i++ )
+      for ( int i = Ols.MAX_CHANNELS - 1; i >= 0; i-- )
       {
-        Channel channel = aChannels[l - i - 1];
-        int v = ( aValue & channel.getMask() ) >> channel.getIndex();
-        aStream.print( this.colSeparator );
-        aStream.print( v );
+        final int mask = ( 1 << i );
+        final boolean enabled = ( ( aEnabledChannels & mask ) != 0 );
+
+        if ( enabled )
+        {
+          aStream.print( this.colSeparator );
+
+          int v = ( aValue & mask ) >> i;
+          aStream.print( v );
+        }
       }
     }
 

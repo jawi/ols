@@ -25,7 +25,7 @@ import java.io.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
@@ -39,7 +39,7 @@ public interface Exporter
   /**
    * Exports the given data container to the given writer.
    * 
-   * @param aDataSet
+   * @param aData
    *          the current project with all data to export, can never be
    *          <code>null</code>;
    * @param aComponent
@@ -52,7 +52,8 @@ public interface Exporter
    * @throws IOException
    *           in case of I/O problems.
    */
-  void export( final DataSet aDataSet, final JComponent aComponent, final OutputStream aStream ) throws IOException;
+  void export( final AcquisitionData aData, final JComponent aComponent, final OutputStream aStream )
+      throws IOException;
 
   /**
    * Returns the file extensions supported by this exporter.

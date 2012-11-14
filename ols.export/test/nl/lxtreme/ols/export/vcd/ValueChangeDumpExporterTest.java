@@ -29,7 +29,7 @@ import java.io.*;
 import javax.swing.*;
 
 import junit.framework.*;
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.testutil.*;
 
 
@@ -56,11 +56,11 @@ public class ValueChangeDumpExporterTest extends TestCase
    */
   public void testExport16ChannelDataDumpOk() throws IOException
   {
-    DataSet dataSet = DataTestUtils.createStubDataSet( 16 );
+    AcquisitionData data = DataTestUtils.generateAcquisitionData( 16 );
 
-    this.exporter.export( dataSet, this.component, this.nullOutputStream );
+    this.exporter.export( data, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( data ) );
     verify( this.exporter, times( 16 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
     verify( this.exporter, times( 2 ) ).writeVariableData( any( PrintWriter.class ), eq( 16 ), eq( 65535 ), anyInt(),
         anyInt(), anyBoolean() );
@@ -77,11 +77,11 @@ public class ValueChangeDumpExporterTest extends TestCase
    */
   public void testExport8ChannelDataDumpOk() throws IOException
   {
-    DataSet dataSet = DataTestUtils.createStubDataSet( 8 );
+    AcquisitionData data = DataTestUtils.generateAcquisitionData( 8 );
 
-    this.exporter.export( dataSet, this.component, this.nullOutputStream );
+    this.exporter.export( data, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( data ) );
     verify( this.exporter, times( 8 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
     verify( this.exporter, times( 4 ) ).writeVariableData( any( PrintWriter.class ), eq( 8 ), eq( 255 ), anyInt(),
         anyInt(), anyBoolean() );
@@ -98,13 +98,13 @@ public class ValueChangeDumpExporterTest extends TestCase
    */
   public void testExportDataDumpOk() throws IOException
   {
-    DataSet dataSet = DataTestUtils.createStubDataSet( 8 );
+    AcquisitionData data = DataTestUtils.generateAcquisitionData( 8 );
 
     ByteArrayOutputStream os = new ByteArrayOutputStream( 1024 );
 
     try
     {
-      this.exporter.export( dataSet, this.component, os );
+      this.exporter.export( data, this.component, os );
     }
     finally
     {
@@ -122,11 +122,11 @@ public class ValueChangeDumpExporterTest extends TestCase
    */
   public void testExportSingleChannelDataDumpOk() throws IOException
   {
-    DataSet dataSet = DataTestUtils.createStubDataSet( 1 );
+    AcquisitionData data = DataTestUtils.generateAcquisitionData( 1 );
 
-    this.exporter.export( dataSet, this.component, this.nullOutputStream );
+    this.exporter.export( data, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( data ) );
     verify( this.exporter, times( 1 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
     verify( this.exporter, times( 16 ) ).writeVariableData( any( PrintWriter.class ), eq( 1 ), eq( 1 ), anyInt(),
         anyInt(), anyBoolean() );

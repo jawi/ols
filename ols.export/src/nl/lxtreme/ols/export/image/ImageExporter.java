@@ -29,7 +29,7 @@ import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.export.*;
 
 
@@ -51,7 +51,7 @@ public class ImageExporter implements Exporter
    * {@inheritDoc}
    */
   @Override
-  public void export( final DataSet aDataSet, final JComponent aComponent, final OutputStream aStream )
+  public void export( final AcquisitionData aData, final JComponent aComponent, final OutputStream aStream )
       throws IOException
   {
     final Dimension dims = getExportSize( aComponent );

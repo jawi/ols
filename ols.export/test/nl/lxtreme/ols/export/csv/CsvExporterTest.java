@@ -22,11 +22,12 @@ package nl.lxtreme.ols.export.csv;
 
 
 import static org.mockito.Mockito.*;
+
 import java.io.*;
 import javax.swing.*;
 
 import junit.framework.*;
-import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.testutil.*;
 import nl.lxtreme.ols.testutil.DataTestUtils.TestDataProvider;
 
@@ -65,9 +66,9 @@ public class CsvExporterTest extends TestCase
     final int sampleRate = -1;
     final long triggerPos = -1;
 
-    final DataSet dataSet = createTestDataSet( channelCount, dataSize, sampleRate, triggerPos );
+    final AcquisitionData data = generateAcquisitionData( channelCount, dataSize, sampleRate, triggerPos );
 
-    this.exporter.export( dataSet, this.component, this.outputStream );
+    this.exporter.export( data, this.component, this.outputStream );
 
     String[] results = getCsvData();
     assertNotNull( results );
@@ -92,9 +93,9 @@ public class CsvExporterTest extends TestCase
     final int sampleRate = -1;
     final long triggerPos = 10;
 
-    final DataSet dataSet = createTestDataSet( channelCount, dataSize, sampleRate, triggerPos );
+    final AcquisitionData data = generateAcquisitionData( channelCount, dataSize, sampleRate, triggerPos );
 
-    this.exporter.export( dataSet, this.component, this.outputStream );
+    this.exporter.export( data, this.component, this.outputStream );
 
     String[] results = getCsvData();
     assertNotNull( results );
@@ -119,9 +120,9 @@ public class CsvExporterTest extends TestCase
     final int sampleRate = SAMPLE_RATE;
     final long triggerPos = 10;
 
-    final DataSet dataSet = createTestDataSet( channelCount, dataSize, sampleRate, triggerPos );
+    final AcquisitionData data = generateAcquisitionData( channelCount, dataSize, sampleRate, triggerPos );
 
-    this.exporter.export( dataSet, this.component, this.outputStream );
+    this.exporter.export( data, this.component, this.outputStream );
 
     String[] results = getCsvData();
     assertNotNull( results );
@@ -146,9 +147,9 @@ public class CsvExporterTest extends TestCase
     final int sampleRate = SAMPLE_RATE;
     final long triggerPos = -1;
 
-    final DataSet dataSet = createTestDataSet( channelCount, dataSize, sampleRate, triggerPos );
+    final AcquisitionData data = generateAcquisitionData( channelCount, dataSize, sampleRate, triggerPos );
 
-    this.exporter.export( dataSet, this.component, this.outputStream );
+    this.exporter.export( data, this.component, this.outputStream );
 
     String[] results = getCsvData();
     assertNotNull( results );
@@ -181,31 +182,32 @@ public class CsvExporterTest extends TestCase
 
     for ( String csvDataRow : aCsvData )
     {
-      assertEquals( "Column count mismatch for: " + csvDataRow, aExpectedCols, getCsvCols( csvDataRow ).length );
+      String[] csvColumns = getCsvCols( csvDataRow );
+      assertEquals( "Column count mismatch for: " + csvDataRow, aExpectedCols, csvColumns.length );
     }
   }
 
   /**
-   * @param aChannelCount
-   * @return
+   * Generates acquisition data for use in the test cases.
    */
-  private DataSet createTestDataSet( final int aChannelCount, final int aSize, final int aSampleRate,
+  private AcquisitionData generateAcquisitionData( final int aChannelCount, final int aSize, final int aSampleRate,
       final long aTriggerPos )
   {
-    return DataTestUtils.createStubDataSet( aSize, aChannelCount, aSampleRate, new TestDataProvider()
-    {
-      @Override
-      public void fillData( final int[] aValues, final long[] aTimestamps, final int aDataSize )
-      {
-        int mask = ( int )( ( 1L << aChannelCount ) - 1L );
-        for ( int i = 0, value = 0; i < aSize; i++, value++ )
+    return DataTestUtils.generateAcquisitionData( aSize, aChannelCount, aSampleRate, aTriggerPos,
+        new TestDataProvider()
         {
-          aValues[i] = value & mask;
-          aTimestamps[i] = value;
-          value++;
-        }
-      }
-    } );
+          @Override
+          public void fillData( final int[] aValues, final long[] aTimestamps, final int aDataSize )
+          {
+            int mask = ( int )( ( 1L << aChannelCount ) - 1L );
+            for ( int i = 0, value = 0; i < aSize; i++, value++ )
+            {
+              aValues[i] = value & mask;
+              aTimestamps[i] = value;
+              value++;
+            }
+          }
+        } );
   }
 
   /**
