@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<repository increment='1351429113980' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+<repository increment='1352998311168' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
   <resource>
     <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='purejavacomm'/>
@@ -32,6 +32,53 @@
       <attribute name='bundle-symbolic-name' value='purejavacomm'/>
       <attribute name='bundle-version' type='Version' value='0.0.9'/>
     </capability>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.apache.felix.metatype'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='1.0.7.SNAPSHOT'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='810993edb44f792a0e4ab6a46337e951d5f4a042f1001fb641286ca89ce0d9fc'/>
+      <attribute name='url' value='org.apache.felix.metatype/org.apache.felix.metatype-1.0.7.jar'/>
+      <attribute name='size' type='Long' value='71813'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='org.apache.felix.metatype'/>
+      <attribute name='bundle-version' type='Version' value='1.0.7.SNAPSHOT'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='org.apache.felix.metatype'/>
+      <attribute name='bundle-version' type='Version' value='1.0.7.SNAPSHOT'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.felix.metatype'/>
+      <attribute name='version' type='Version' value='1.2.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.felix.metatype'/>
+      <attribute name='bundle-version' type='Version' value='1.0.7.SNAPSHOT'/>
+      <directive name='uses' value='org.osgi.service.metatype,org.osgi.framework'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.osgi.service.metatype'/>
+      <attribute name='version' type='Version' value='1.2.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.felix.metatype'/>
+      <attribute name='bundle-version' type='Version' value='1.0.7.SNAPSHOT'/>
+      <directive name='uses' value='org.osgi.framework'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.metatype)(version&gt;=1.2.0)(!(version&gt;=1.3.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.util.tracker)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
   </resource>
   <resource>
     <capability namespace='osgi.identity'>
