@@ -130,6 +130,7 @@ public class ToolInvokerImpl implements ToolInvoker
   private final MutableConfiguration configuration;
 
   // Injected by Felix DM...
+  private volatile BundleContext bundleContext;
   private volatile MetaTypeService metaTypeService;
   private volatile EventAdmin eventAdmin;
   private volatile ConfigurationAdmin configAdmin;
@@ -337,8 +338,7 @@ public class ToolInvokerImpl implements ToolInvoker
    */
   private MetaTypeInformation getMetaTypeInfo()
   {
-    Bundle bundle = FrameworkUtil.getBundle( this.delegate.getClass() );
-    return this.metaTypeService.getMetaTypeInformation( bundle );
+    return this.metaTypeService.getMetaTypeInformation( this.bundleContext.getBundle() );
   }
 
   /**

@@ -46,7 +46,7 @@ public class EditorUtils
    */
   public EditorUtils()
   {
-    // Not intended for instantiation.
+    // Nop
   }
 
   // METHODS
@@ -55,7 +55,10 @@ public class EditorUtils
    * Creates an editor component for the given {@link AttributeDefinition}.
    * 
    * @param aAttributeDef
+   *          the attribute definition to base the editor component on, cannot
+   *          be <code>null</code>;
    * @param aInitialValue
+   *          the (optional) initial value to apply, can be <code>null</code>.
    * @return a editor component, can be <code>null</code> in case no editor
    *         component could be created.
    */
@@ -63,42 +66,76 @@ public class EditorUtils
   {
     JComponent result = null;
 
-    int type = aAttributeDef.getType();
-    switch ( type )
+    String[] optionValues = aAttributeDef.getOptionValues();
+    String[] optionLabels = aAttributeDef.getOptionLabels();
+
+    if ( ( ( optionValues != null ) && ( optionValues.length > 0 ) )
+        || ( ( optionLabels != null ) && ( optionLabels.length > 0 ) ) )
     {
-      case AttributeDefinition.BOOLEAN:
+      result = createFixedChoiceEditor( aAttributeDef, aInitialValue );
+    }
+    else
+    {
+      int type = aAttributeDef.getType();
+      switch ( type )
       {
-        result = createBooleanEditor( type, aAttributeDef, aInitialValue );
-        break;
-      }
+        case AttributeDefinition.BOOLEAN:
+        {
+          boolean initialValue = getDefaultBooleanValue( aAttributeDef, aInitialValue );
+          result = createBooleanEditor( aAttributeDef, initialValue );
+          break;
+        }
 
-      case AttributeDefinition.BYTE:
-      case AttributeDefinition.CHARACTER:
-      case AttributeDefinition.DOUBLE:
-      case AttributeDefinition.FLOAT:
-      case AttributeDefinition.INTEGER:
-      case AttributeDefinition.SHORT:
-      {
-        result = createNumericEditor( type, aAttributeDef, aInitialValue );
-        break;
-      }
+        case AttributeDefinition.BYTE:
+        case AttributeDefinition.CHARACTER:
+        case AttributeDefinition.DOUBLE:
+        case AttributeDefinition.FLOAT:
+        case AttributeDefinition.INTEGER:
+        case AttributeDefinition.SHORT:
+        {
+          String initialValue = getDefaultStringValue( aAttributeDef, aInitialValue );
+          result = createNumericEditor( aAttributeDef, initialValue );
+          break;
+        }
 
-      case AttributeDefinition.STRING:
-      {
-        result = createStringEditor( type, aAttributeDef, aInitialValue );
-        break;
+        case AttributeDefinition.STRING:
+        {
+          String initialValue = getDefaultStringValue( aAttributeDef, aInitialValue );
+          result = createStringEditor( aAttributeDef, initialValue );
+          break;
+        }
       }
     }
 
+    if ( hasMetaTags( aAttributeDef ) )
+    {
+      parseMetaTags( result, aAttributeDef );
+    }
+
+    // Keep track of invalid inputs...
+    EditorInputVerifier.install( result, aAttributeDef );
+
     // Set the name of attribute definition...
     result.setName( aAttributeDef.getID() );
+
+    // Set the (optional) description as tool tip...
+    String desc = getDescription( aAttributeDef );
+    if ( ( desc != null ) && !"".equals( desc.trim() ) )
+    {
+      result.setToolTipText( desc );
+    }
 
     return result;
   }
 
   /**
+   * Returns whether or not the given attribute definition has meta-tags in its
+   * description field.
+   * 
    * @param aAttributeDef
-   * @return
+   *          the attribute definition to test, cannot be <code>null</code>.
+   * @return <code>true</code> if the given attribute definition has meta tags
+   *         in its description field, <code>false</code> otherwise.
    */
   public boolean hasMetaTags( final AttributeDefinition aAttributeDef )
   {
@@ -121,35 +158,79 @@ public class EditorUtils
   }
 
   /**
-   * Creates a boolean editor component.
+   * Tries to apply a default selection to the given combobox component.
    * 
-   * @param aType
+   * @param aComboBox
+   *          the combobox to apply the selection to;
    * @param aAttributeDef
-   * @param aContext
+   *          the attribute definition to use;
    * @param aInitialValue
-   * @return
+   *          the (optional) initial value to use.
    */
-  protected JCheckBox createBooleanEditor( final int aType, final AttributeDefinition aAttributeDef,
+  protected void applyDefaultSelection( final JComboBox aComboBox, final AttributeDefinition aAttributeDef,
       final Object aInitialValue )
   {
-    JCheckBox result = new JCheckBox( "", getDefaultBooleanValue( aAttributeDef, aInitialValue ) );
-    if ( hasMetaTags( aAttributeDef ) )
+    final ComboBoxModel model = aComboBox.getModel();
+
+    int selectedIdx = -1;
+
+    // Try to determine the type of this initial value...
+    String value = getDefaultStringValue( aAttributeDef, aInitialValue );
+    if ( value.matches( "\\d+" ) )
     {
-      parseMetaTags( result, aAttributeDef );
+      // Integer value lets use it as starter for the index...
+      int idx = Integer.parseInt( value );
+      if ( ( idx >= 0 ) && ( idx < model.getSize() ) )
+      {
+        // Presume it is a valid index...
+        selectedIdx = idx;
+      }
     }
-    return result;
+
+    if ( selectedIdx < 0 )
+    {
+      // Try to match based on actual model value...
+      for ( int i = 0; ( selectedIdx < 0 ) && ( i < model.getSize() ); i++ )
+      {
+        String modelValue = String.valueOf( model.getElementAt( i ) );
+        if ( modelValue.equals( value ) )
+        {
+          selectedIdx = i;
+        }
+      }
+    }
+
+    // Apply the actual selection...
+    if ( selectedIdx >= 0 )
+    {
+      aComboBox.setSelectedIndex( selectedIdx );
+    }
   }
 
   /**
-   * Creates an editor component for an enumeration defined by the given
-   * {@link AttributeDefinition}.
+   * Creates a boolean editor component.
    * 
    * @param aAttributeDef
-   * @param aContext
+   *          the attribute definition to use;
    * @param aInitialValue
-   * @return
+   *          the (optional) initial value to use.
+   * @return an editor component, never <code>null</code>.
    */
-  protected JComboBox createEnumEditor( final AttributeDefinition aAttributeDef, final Object aInitialValue )
+  protected JCheckBox createBooleanEditor( final AttributeDefinition aAttributeDef, final boolean aInitialValue )
+  {
+    return new JCheckBox( "", aInitialValue );
+  }
+
+  /**
+   * Creates an editor component for a fixed number of options.
+   * 
+   * @param aAttributeDef
+   *          the attribute definition to use;
+   * @param aInitialValue
+   *          the initial value to use.
+   * @return an editor component, never <code>null</code>.
+   */
+  protected JComboBox createFixedChoiceEditor( final AttributeDefinition aAttributeDef, final Object aInitialValue )
   {
     final boolean isRequired = isRequired( aAttributeDef );
     String[] optionValues = aAttributeDef.getOptionValues();
@@ -160,13 +241,8 @@ public class EditorUtils
       System.arraycopy( optionValues, 0, optionValues, 1, length );
       optionValues[0] = "";
     }
-    int defaultSelectedIndex = getDefaultIntValue( aAttributeDef, aInitialValue );
 
     final JComboBox result = new JComboBox( optionValues );
-    if ( ( defaultSelectedIndex >= 0 ) && ( defaultSelectedIndex < optionValues.length ) )
-    {
-      result.setSelectedIndex( defaultSelectedIndex );
-    }
     result.setRenderer( new DefaultListCellRenderer()
     {
       private static final long serialVersionUID = 1L;
@@ -198,11 +274,8 @@ public class EditorUtils
         return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
       }
     } );
-
-    if ( hasMetaTags( aAttributeDef ) )
-    {
-      parseMetaTags( result, aAttributeDef );
-    }
+    // Try to make a default selection...
+    applyDefaultSelection( result, aAttributeDef, aInitialValue );
 
     return result;
   }
@@ -210,64 +283,40 @@ public class EditorUtils
   /**
    * Creates a numeric editor component.
    * 
-   * @param aType
    * @param aAttributeDef
-   * @param aContext
+   *          the attribute definition to use;
    * @param aInitialValue
-   * @return
+   *          the initial value to use.
+   * @return an editor component, never <code>null</code>.
    */
-  protected JComponent createNumericEditor( final int aType, final AttributeDefinition aAttributeDef,
-      final Object aInitialValue )
+  protected JComponent createNumericEditor( final AttributeDefinition aAttributeDef, final String aInitialValue )
   {
-    String[] optionValues = aAttributeDef.getOptionValues();
-    String[] optionLabels = aAttributeDef.getOptionLabels();
-    if ( ( ( optionValues != null ) && ( optionValues.length > 0 ) )
-        || ( ( optionLabels != null ) && ( optionLabels.length > 0 ) ) )
-    {
-      return createEnumEditor( aAttributeDef, aInitialValue );
-    }
-
-    JTextField editor = new JTextField( Integer.toString( getDefaultIntValue( aAttributeDef, aInitialValue ) ) );
-
-    if ( hasMetaTags( aAttributeDef ) )
-    {
-      parseMetaTags( editor, aAttributeDef );
-    }
-
-    return editor;
+    return new JTextField( aInitialValue );
   }
 
   /**
-   * @param aType
+   * Creates a string editor component.
+   * 
    * @param aAttributeDef
-   * @param aContext
+   *          the attribute definition to use;
    * @param aInitialValue
-   * @return
+   *          the initial value to use.
+   * @return an editor component, never <code>null</code>.
    */
-  protected JComponent createStringEditor( final int aType, final AttributeDefinition aAttributeDef,
-      final Object aInitialValue )
+  protected JComponent createStringEditor( final AttributeDefinition aAttributeDef, final String aInitialValue )
   {
-    String[] optionValues = aAttributeDef.getOptionValues();
-    String[] optionLabels = aAttributeDef.getOptionLabels();
-    if ( ( ( optionValues != null ) && ( optionValues.length > 0 ) )
-        || ( ( optionLabels != null ) && ( optionLabels.length > 0 ) ) )
-    {
-      return createEnumEditor( aAttributeDef, aInitialValue );
-    }
-
-    JTextField editor = new JTextField( getDefaultStringValue( aAttributeDef, aInitialValue ) );
-
-    if ( hasMetaTags( aAttributeDef ) )
-    {
-      parseMetaTags( editor, aAttributeDef );
-    }
-
-    return editor;
+    return new JTextField( aInitialValue );
   }
 
   /**
+   * Returns the default boolean value for the given attribute definition.
+   * 
    * @param aAttributeDef
-   * @return
+   *          the attribute definition to retrieve the boolean default for,
+   *          cannot be <code>null</code>;
+   * @param aInitialValue
+   *          the (optional) initial value to interpret as boolean value.
+   * @return a boolean value, defaults to <code>false</code>.
    */
   protected final boolean getDefaultBooleanValue( final AttributeDefinition aAttributeDef, final Object aInitialValue )
   {
@@ -285,39 +334,14 @@ public class EditorUtils
   }
 
   /**
+   * Returns the default string value for the given attribute definition.
+   * 
    * @param aAttributeDef
-   * @return
-   */
-  protected final int getDefaultIntValue( final AttributeDefinition aAttributeDef, final Object aInitialValue )
-  {
-    int defaultValue = -1;
-
-    try
-    {
-      if ( aInitialValue != null )
-      {
-        defaultValue = Integer.parseInt( String.valueOf( aInitialValue ) );
-      }
-      else
-      {
-        String[] defaultValues = aAttributeDef.getDefaultValue();
-        if ( ( defaultValues != null ) && ( defaultValues.length > 0 ) )
-        {
-          defaultValue = Integer.parseInt( defaultValues[0] );
-        }
-      }
-    }
-    catch ( NumberFormatException ignored )
-    {
-      // Ignored...
-    }
-
-    return defaultValue;
-  }
-
-  /**
-   * @param aAttributeDef
-   * @return
+   *          the attribute definition to retrieve the string default for,
+   *          cannot be <code>null</code>;
+   * @param aInitialValue
+   *          the (optional) initial value to interpret as string value.
+   * @return a string value, defaults to <code>""</code>.
    */
   protected final String getDefaultStringValue( final AttributeDefinition aAttributeDef, final Object aInitialValue )
   {
@@ -338,22 +362,36 @@ public class EditorUtils
   }
 
   /**
+   * Returns the (optional) description defined in the given attribute
+   * definition.
+   * 
    * @param aAttributeDef
-   * @return
+   *          the attribute definition to obtain the description from, cannot be
+   *          <code>null</code>.
+   * @return a description, can be <code>null</code>.
    */
-  protected final String[] getTags( final AttributeDefinition aAttributeDef )
+  protected final String getDescription( final AttributeDefinition aAttributeDef )
   {
     String description = aAttributeDef.getDescription();
+    if ( ( description == null ) || "".equals( description.trim() ) )
+    {
+      return "";
+    }
+
     int openCurlyIdx = description.indexOf( '{' );
     int closeCurlyIdx = description.lastIndexOf( '}' );
     if ( ( openCurlyIdx < 0 ) || ( closeCurlyIdx < 0 ) )
     {
-      return new String[0];
+      return description;
     }
 
-    description = description.substring( openCurlyIdx + 1, closeCurlyIdx );
-    String[] parts = description.split( "\\s*[=,]\\s*" );
-    return parts;
+    StringBuilder sb = new StringBuilder();
+    if ( openCurlyIdx > 0 )
+    {
+      sb.append( description.substring( 0, openCurlyIdx ) );
+    }
+    sb.append( description.substring( closeCurlyIdx + 1 ) );
+    return sb.toString();
   }
 
   /**
@@ -384,17 +422,17 @@ public class EditorUtils
     for ( int i = 0; i < tags.length; i++ )
     {
       String tag = tags[i];
-      if ( "readonly".equals( tag ) )
+      if ( PROPERTY_READONLY.equals( tag ) )
       {
         Boolean value = Boolean.valueOf( tags[++i] );
         aComponent.putClientProperty( PROPERTY_READONLY, value );
       }
-      else if ( "editable".equals( tag ) )
+      else if ( PROPERTY_EDITABLE.equals( tag ) )
       {
         Boolean value = Boolean.valueOf( tags[++i] );
         aComponent.putClientProperty( PROPERTY_EDITABLE, value );
       }
-      else if ( "listen".equals( tag ) || "listener".equals( tag ) )
+      else if ( PROPERTY_LISTENER.equals( tag ) )
       {
         String value = tags[++i];
         Object curValue = aComponent.getClientProperty( PROPERTY_LISTENER );
@@ -410,5 +448,27 @@ public class EditorUtils
         }
       }
     }
+  }
+
+  /**
+   * Returns all meta tags from the given attribute definition.
+   * 
+   * @param aAttributeDef
+   *          the attribute definition to get all meta tags from, cannot be
+   *          <code>null</code>.
+   * @return an array of meta tags, never <code>null</code>.
+   */
+  private String[] getTags( final AttributeDefinition aAttributeDef )
+  {
+    String description = aAttributeDef.getDescription();
+    int openCurlyIdx = description.indexOf( '{' );
+    int closeCurlyIdx = description.lastIndexOf( '}' );
+    if ( ( openCurlyIdx < 0 ) || ( closeCurlyIdx < 0 ) )
+    {
+      return new String[0];
+    }
+
+    description = description.substring( openCurlyIdx + 1, closeCurlyIdx );
+    return description.split( "\\s*[=,]\\s*" );
   }
 }

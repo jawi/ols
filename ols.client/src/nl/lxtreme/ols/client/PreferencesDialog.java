@@ -22,8 +22,8 @@ package nl.lxtreme.ols.client;
 
 
 import static nl.lxtreme.ols.client.signaldisplay.view.UIManagerKeys.*;
-import static nl.lxtreme.ols.util.swing.SpringLayoutUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+import static nl.lxtreme.ols.client.editor.EditorPanel.*;
 
 import java.awt.*;
 import java.io.*;
@@ -31,13 +31,14 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.signaldisplay.SignalDiagramModel.*;
+import nl.lxtreme.ols.client.editor.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
 import nl.lxtreme.ols.util.swing.component.*;
 
 import org.osgi.service.cm.*;
+import org.osgi.service.metatype.*;
 
 
 /**
@@ -105,33 +106,6 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     }
   }
 
-  /**
-   * Provides a combobox renderer for ColorScheme values.
-   */
-  static final class SignalAlignmentRenderer extends EnumItemRenderer<SignalAlignment>
-  {
-    // CONSTANTS
-
-    private static final long serialVersionUID = 1L;
-
-    // METHODS
-
-    @Override
-    protected String getDisplayValue( final SignalAlignment aValue )
-    {
-      switch ( aValue )
-      {
-        case BOTTOM:
-          return "Bottom";
-        case CENTER:
-          return "Center";
-        case TOP:
-          return "Top";
-      }
-      return super.getDisplayValue( aValue );
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -139,17 +113,9 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   // VARIABLES
 
   private final UIColorSchemeManager colorSchemeManager;
+  private final ObjectClassDefinition ocd;
   private final Configuration config;
-
-  private final JCheckBox mouseWheelZooms;
-  private final JCheckBox cursorSnapToEdge;
-  private final JCheckBox showGroupSummary;
-  private final JCheckBox showAnalogScope;
-  private final JCheckBox showToolWindows;
-  private final JCheckBox showChannelIndexes;
-  private final JCheckBox retainAnnotations;
-  private final JComboBox annotationAlignment;
-  private final JComboBox signalAlignment;
+  private final EditorPanel editorPanel;
   private final JComboBox colorScheme;
 
   private boolean dialogResult;
@@ -163,50 +129,43 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
    *          the parent of the preferences window, can be <code>null</code>;
    * @param aColorSchemeManager
    *          the color scheme manager to use, cannot be <code>null</code>.
+   * @param aOcd
    */
+  @SuppressWarnings( "unchecked" )
   public PreferencesDialog( final Window aParent, final UIColorSchemeManager aColorSchemeManager,
-      final Configuration aConfiguration )
+      final Configuration aConfiguration, final ObjectClassDefinition aOCD )
   {
-    super( aParent, "", ModalityType.APPLICATION_MODAL );
+    super( aParent, aOCD.getName(), ModalityType.APPLICATION_MODAL );
 
     this.colorSchemeManager = aColorSchemeManager;
     this.config = aConfiguration;
+    this.ocd = aOCD;
 
-    // @formatter:off
-    this.mouseWheelZooms = new JCheckBox();
-    this.mouseWheelZooms.setToolTipText( "Whether the mouse wheel by default zooms in or out, or scrolls the view. Will be applied immediately." );
+    // Avoid the dialog to be resized automatically...
+    getRootPane().putClientProperty( "unmanaged", Boolean.TRUE );
 
-    this.cursorSnapToEdge = new JCheckBox();
-    this.cursorSnapToEdge.setToolTipText( "Whether or not cursors by default snap to signal edges. Will be applied immediately." );
+    JButton okButton = StandardActionFactory.createOkButton();
+    JButton cancelButton = StandardActionFactory.createCancelButton();
 
-    this.showGroupSummary = new JCheckBox();
-    this.showGroupSummary.setToolTipText( "Whether or not the group (byte) summary is shown by default for each acquisition. Will be applied after an acquisition." );
-
-    this.showAnalogScope = new JCheckBox();
-    this.showAnalogScope.setToolTipText( "Whether or not the analog scope is shown by default for each acquisition. Will be applied after an acquisition." );
-
-    this.showChannelIndexes = new JCheckBox();
-    this.showChannelIndexes.setToolTipText( "Whether or not channel indexes are shown beside the labels. Will be applied immediately." );
-
-    this.retainAnnotations = new JCheckBox();
-    this.retainAnnotations.setToolTipText( "Whether or not annotations should be retained after a recapture. Will be applied immediately." );
-    
-    this.showToolWindows = new JCheckBox();
-    this.showToolWindows.setToolTipText( "Whether or not the tool windows are shown by default. Will be applied after a restart." );
-
-    this.signalAlignment = new JComboBox( SignalAlignment.values() );
-    this.signalAlignment.setToolTipText( "The vertical alignment of the signals itself. Will be applied after an acquisition." );
-    this.signalAlignment.setRenderer( new SignalAlignmentRenderer() );
-
-    this.annotationAlignment = new JComboBox( SignalAlignment.values() );
-    this.annotationAlignment.setToolTipText( "The vertical aligment of the annotations. Will be applied immediately." );
-    this.annotationAlignment.setRenderer( new SignalAlignmentRenderer() );
+    JComponent buttonPane = createButtonPane( okButton, cancelButton );
 
     this.colorScheme = new JComboBox( new ColorSchemeModel() );
     this.colorScheme.setToolTipText( "What color scheme is to be used. Will be applied immediately." );
-    // @formatter:on
 
-    buildDialog();
+    Dictionary<Object, Object> settings = aConfiguration.getProperties();
+    this.editorPanel = new EditorPanel( this.ocd, settings );
+
+    // Adjust the editor panel a bit to suite our needs...
+    SpringLayoutUtils.addSeparator( this.editorPanel, "Color scheme" );
+
+    this.editorPanel.add( createRightAlignedLabel( "Color scheme" ) );
+    this.editorPanel.add( this.colorScheme );
+
+    SpringLayoutUtils.makeEditorGrid( this.editorPanel, PADDING, PADDING, PADDING, PADDING );
+
+    setupDialogContentPane( this, this.editorPanel, buttonPane, cancelButton );
+
+    pack();
   }
 
   // METHODS
@@ -239,8 +198,9 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   @Override
   public boolean setDialogStatus( final DialogStatus aStatus )
   {
-    this.dialogResult = ( aStatus == DialogStatus.OK );
-    return true;
+    boolean settingsValid = this.editorPanel.areSettingsValid();
+    this.dialogResult = settingsValid && ( aStatus == DialogStatus.OK );
+    return settingsValid || ( aStatus == DialogStatus.CANCEL );
   }
 
   /**
@@ -258,17 +218,19 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     Dictionary<Object, Object> properties = this.config.getProperties();
 
     // Apply values to our components...
-    this.mouseWheelZooms.setSelected( getBoolean( properties, MOUSEWHEEL_ZOOM_DEFAULT ) );
-    this.cursorSnapToEdge.setSelected( getBoolean( properties, SNAP_CURSORS_DEFAULT ) );
-    this.showGroupSummary.setSelected( getBoolean( properties, GROUP_SUMMARY_VISIBLE_DEFAULT ) );
-    this.showAnalogScope.setSelected( getBoolean( properties, ANALOG_SCOPE_VISIBLE_DEFAULT ) );
-    this.showChannelIndexes.setSelected( getBoolean( properties, CHANNELLABELS_SHOW_CHANNEL_INDEX ) );
-    this.retainAnnotations.setSelected( getBoolean( properties, RETAIN_ANNOTATIONS_WITH_RECAPTURE ) );
-    this.showToolWindows.setSelected( getBoolean( properties, SHOW_TOOL_WINDOWS_DEFAULT ) );
-
-    this.signalAlignment.setSelectedItem( getSignalAlignment( properties, SIGNALVIEW_SIGNAL_ALIGNMENT ) );
-    this.annotationAlignment.setSelectedItem( getSignalAlignment( properties, SIGNALVIEW_ANNOTATION_ALIGNMENT ) );
-    this.colorScheme.setSelectedItem( getString( properties, COLOR_SCHEME ) );
+    // @formatter:off
+//    this.mouseWheelZooms.setSelected( getBoolean( properties, MOUSEWHEEL_ZOOM_DEFAULT ) );
+//    this.cursorSnapToEdge.setSelected( getBoolean( properties, SNAP_CURSORS_DEFAULT ) );
+//    this.showGroupSummary.setSelected( getBoolean( properties, GROUP_SUMMARY_VISIBLE_DEFAULT ) );
+//    this.showAnalogScope.setSelected( getBoolean( properties, ANALOG_SCOPE_VISIBLE_DEFAULT ) );
+//    this.showChannelIndexes.setSelected( getBoolean( properties, CHANNELLABELS_SHOW_CHANNEL_INDEX ) );
+//    this.retainAnnotations.setSelected( getBoolean( properties, RETAIN_ANNOTATIONS_WITH_RECAPTURE ) );
+//    this.showToolWindows.setSelected( getBoolean( properties, SHOW_TOOL_WINDOWS_DEFAULT ) );
+//
+//    this.signalAlignment.setSelectedItem( getSignalAlignment( properties, SIGNALVIEW_SIGNAL_ALIGNMENT ) );
+//    this.annotationAlignment.setSelectedItem( getSignalAlignment( properties, SIGNALVIEW_ANNOTATION_ALIGNMENT ) );
+//    this.colorScheme.setSelectedItem( getString( properties, COLOR_SCHEME ) );
+    // @formatter:on
 
     setVisible( true );
 
@@ -328,171 +290,31 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
     // The properties are in string format; so we need to do some conversions
     // prior to persisting them...
-    properties.put( MOUSEWHEEL_ZOOM_DEFAULT, Boolean.toString( this.mouseWheelZooms.isSelected() ) );
-    properties.put( SNAP_CURSORS_DEFAULT, Boolean.toString( this.cursorSnapToEdge.isSelected() ) );
-    properties.put( GROUP_SUMMARY_VISIBLE_DEFAULT, Boolean.toString( this.showGroupSummary.isSelected() ) );
-    properties.put( ANALOG_SCOPE_VISIBLE_DEFAULT, Boolean.toString( this.showAnalogScope.isSelected() ) );
-    properties.put( SHOW_TOOL_WINDOWS_DEFAULT, Boolean.toString( this.showToolWindows.isSelected() ) );
-    properties.put( CHANNELLABELS_SHOW_CHANNEL_INDEX, Boolean.toString( this.showChannelIndexes.isSelected() ) );
-    properties.put( RETAIN_ANNOTATIONS_WITH_RECAPTURE, Boolean.toString( this.retainAnnotations.isSelected() ) );
-
-    properties.put( SIGNALVIEW_SIGNAL_ALIGNMENT, String.valueOf( this.signalAlignment.getSelectedItem() ) );
-    properties.put( SIGNALVIEW_ANNOTATION_ALIGNMENT, String.valueOf( this.annotationAlignment.getSelectedItem() ) );
-
-    String colorScheme = ( String )this.colorScheme.getSelectedItem();
-    if ( colorScheme != null )
-    {
-      // Remove old color scheme, as it might contain keys that aren't defined
-      // in the new scheme...
-      purgeOldColorScheme( properties );
-
-      applyNewColorScheme( colorScheme, properties );
-    }
+    // @formatter:off
+//    properties.put( MOUSEWHEEL_ZOOM_DEFAULT, Boolean.toString( this.mouseWheelZooms.isSelected() ) );
+//    properties.put( SNAP_CURSORS_DEFAULT, Boolean.toString( this.cursorSnapToEdge.isSelected() ) );
+//    properties.put( GROUP_SUMMARY_VISIBLE_DEFAULT, Boolean.toString( this.showGroupSummary.isSelected() ) );
+//    properties.put( ANALOG_SCOPE_VISIBLE_DEFAULT, Boolean.toString( this.showAnalogScope.isSelected() ) );
+//    properties.put( SHOW_TOOL_WINDOWS_DEFAULT, Boolean.toString( this.showToolWindows.isSelected() ) );
+//    properties.put( CHANNELLABELS_SHOW_CHANNEL_INDEX, Boolean.toString( this.showChannelIndexes.isSelected() ) );
+//    properties.put( RETAIN_ANNOTATIONS_WITH_RECAPTURE, Boolean.toString( this.retainAnnotations.isSelected() ) );
+//
+//    properties.put( SIGNALVIEW_SIGNAL_ALIGNMENT, String.valueOf( this.signalAlignment.getSelectedItem() ) );
+//    properties.put( SIGNALVIEW_ANNOTATION_ALIGNMENT, String.valueOf( this.annotationAlignment.getSelectedItem() ) );
+//
+//    String colorScheme = ( String )this.colorScheme.getSelectedItem();
+//    if ( colorScheme != null )
+//    {
+//      // Remove old color scheme, as it might contain keys that aren't defined
+//      // in the new scheme...
+//      purgeOldColorScheme( properties );
+//
+//      applyNewColorScheme( colorScheme, properties );
+//    }
+    // @formatter:on
 
     // Update the configuration, so it will be persisted...
     this.config.update( properties );
-  }
-
-  /**
-   * Builds this dialog by adding all components to it.
-   */
-  private void buildDialog()
-  {
-    setTitle( "Preferences" );
-
-    JButton okButton = StandardActionFactory.createOkButton();
-    JButton cancelButton = StandardActionFactory.createCancelButton();
-
-    JComponent buttonPane = SwingComponentUtils.createButtonPane( okButton, cancelButton );
-
-    JPanel contentPane = new JPanel( new BorderLayout( 4, 4 ) );
-    contentPane.add( createGeneralSettingsTab(), BorderLayout.CENTER );
-    contentPane.add( buttonPane, BorderLayout.PAGE_END );
-
-    setContentPane( contentPane );
-
-    pack();
-  }
-
-  /**
-   * @return a tab pane for the general settings, never <code>null</code>.
-   */
-  private JComponent createGeneralSettingsTab()
-  {
-    JPanel pane = new JPanel( new SpringLayout() );
-
-    addSeparator( pane, "Look and feel defaults" );
-
-    pane.add( createRightAlignedLabel( "Mouse wheel zooms?" ) );
-    pane.add( this.mouseWheelZooms );
-
-    pane.add( createRightAlignedLabel( "Snap cursor to edge?" ) );
-    pane.add( this.cursorSnapToEdge );
-
-    pane.add( createRightAlignedLabel( "Show group summary?" ) );
-    pane.add( this.showGroupSummary );
-
-    pane.add( createRightAlignedLabel( "Show analog scope?" ) );
-    pane.add( this.showAnalogScope );
-
-    pane.add( createRightAlignedLabel( "Show channel indexes?" ) );
-    pane.add( this.showChannelIndexes );
-
-    pane.add( createRightAlignedLabel( "Retain annotations?" ) );
-    pane.add( this.retainAnnotations );
-
-    pane.add( createRightAlignedLabel( "Show tool windows?" ) );
-    pane.add( this.showToolWindows );
-
-    pane.add( createRightAlignedLabel( "Signal alignment" ) );
-    pane.add( this.signalAlignment );
-
-    pane.add( createRightAlignedLabel( "Annotation alignment" ) );
-    pane.add( this.annotationAlignment );
-
-    addSeparator( pane, "Color scheme" );
-
-    pane.add( createRightAlignedLabel( "Default scheme" ) );
-    pane.add( this.colorScheme );
-
-    makeEditorGrid( pane, 10, 10 );
-    return pane;
-  }
-
-  /**
-   * Returns the boolean value for the given value representation.
-   * 
-   * @param aProperties
-   *          the properties to retrieve the boolean from, may be
-   *          <code>null</code>;
-   * @param aKey
-   *          the key under which the property should be retrieved, cannot be
-   *          <code>null</code>.
-   * @return a boolean representation for the given value, defaults to
-   *         <code>false</code>.
-   */
-  private static boolean getBoolean( final Dictionary<Object, Object> aProperties, final String aKey )
-  {
-    if ( aProperties == null )
-    {
-      return false;
-    }
-
-    Object value = aProperties.get( aKey );
-    if ( value instanceof Boolean )
-    {
-      return ( ( Boolean )value ).booleanValue();
-    }
-    return Boolean.parseBoolean( String.valueOf( value ) );
-  }
-
-  /**
-   * Returns the string value for the given value representation.
-   * 
-   * @param aProperties
-   *          the properties to retrieve the string from, may be
-   *          <code>null</code>;
-   * @param aKey
-   *          the key under which the property should be retrieved, cannot be
-   *          <code>null</code>.
-   * @return a boolean representation for the given value, defaults to
-   *         <code>""</code> (an empty string).
-   */
-  private static String getString( final Dictionary<Object, Object> aProperties, final String aKey )
-  {
-    if ( aProperties == null )
-    {
-      return "";
-    }
-
-    Object value = aProperties.get( aKey );
-    return String.valueOf( value );
-  }
-
-  /**
-   * Returns the {@link SignalAlignment} for the given value representation.
-   * 
-   * @param aProperties
-   *          the properties to retrieve the boolean from, may be
-   *          <code>null</code>;
-   * @param aKey
-   *          the key under which the property should be retrieved, cannot be
-   *          <code>null</code>.
-   * @return a {@link SignalAlignment} value, defaults to
-   *         {@link SignalAlignment#CENTER}.
-   */
-  private static SignalAlignment getSignalAlignment( final Dictionary<Object, Object> aProperties, final String aKey )
-  {
-    SignalAlignment result = SignalAlignment.CENTER;
-    if ( aProperties != null )
-    {
-      Object value = aProperties.get( aKey );
-      if ( value != null )
-      {
-        result = SignalAlignment.valueOf( value.toString().toUpperCase() );
-      }
-    }
-    return result;
   }
 
   /**

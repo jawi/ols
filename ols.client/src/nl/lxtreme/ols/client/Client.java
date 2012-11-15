@@ -379,7 +379,14 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
   @Override
   public final boolean handlePreferences()
   {
-    showPreferencesDialog( getMainFrame() );
+    SwingComponentUtils.invokeOnEDT( new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        showPreferencesOnEDT( getMainFrame() );
+      }
+    } );
     return true;
   }
 
@@ -409,11 +416,21 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
   /**
    * Called by Felix DM when initializing this component.
    */
+  @SuppressWarnings( "unchecked" )
   public void init( final Component aComponent )
   {
     // The things done in this method need to be done as early as possible,
     // hence we're doing this in the init() method...
     initOSSpecifics();
+
+    MetaTypeInformation metaTypeInfo = getMetaTypeInfo();
+    if ( ( metaTypeInfo != null ) && ( metaTypeInfo.getPids().length == 1 ) )
+    {
+      Dictionary<Object, Object> dict = aComponent.getServiceProperties();
+      dict.put( Constants.SERVICE_PID, metaTypeInfo.getPids()[0] );
+
+      aComponent.setServiceProperties( dict );
+    }
   }
 
   /**
@@ -525,6 +542,8 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
    */
   void startOnEDT()
   {
+    assert SwingUtilities.isEventDispatchThread();
+
     // Construct the action manager...
     ActionManagerFactory.createActions( getActionManager() );
 
@@ -540,12 +559,49 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
    */
   void stopOnEDT()
   {
+    assert SwingUtilities.isEventDispatchThread();
+
     MainFrame mf = this.mainFrame;
     if ( mf != null )
     {
       mf.stopOnEDT();
 
       this.mainFrame = null;
+    }
+  }
+
+  /**
+   * Shows the preferences dialog on the EDT.
+   */
+  void showPreferencesOnEDT( final Window aParent )
+  {
+    assert SwingUtilities.isEventDispatchThread();
+
+    try
+    {
+      Configuration config = this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
+
+      MetaTypeInformation metaTypeInfo = this.metaTypeService.getMetaTypeInformation( this.bundleContext.getBundle() );
+      if ( ( metaTypeInfo == null ) || ( metaTypeInfo.getPids().length != 1 ) )
+      {
+        // Not metatyped; assume it has no configuration to be performed...
+        this.log.log( LogService.LOG_INFO,
+            "No metatype information to base preferences on; assuming no configuration is needed..." );
+      }
+
+      String pid = metaTypeInfo.getPids()[0];
+      ObjectClassDefinition ocd = metaTypeInfo.getObjectClassDefinition( pid, aParent.getLocale().toString() );
+
+      final PreferencesDialog dialog = new PreferencesDialog( aParent, this.colorSchemeManager, config, ocd );
+      if ( dialog.showDialog() )
+      {
+        // Ensure all UI-related changes are immediately visible...
+        scheduleRepaint();
+      }
+    }
+    catch ( IOException exception )
+    {
+      JErrorDialog.showDialog( aParent, "Failed to obtain preferences!", exception );
     }
   }
 
@@ -591,6 +647,14 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
   private MainFrame getMainFrame()
   {
     return this.mainFrame;
+  }
+
+  /**
+   * @return a {@link MetaTypeInformation} instance, never <code>null</code>.
+   */
+  private MetaTypeInformation getMetaTypeInfo()
+  {
+    return this.metaTypeService.getMetaTypeInformation( this.bundleContext.getBundle() );
   }
 
   /**
@@ -698,37 +762,5 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
         setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
       }
     }
-  }
-
-  /**
-   * Shows the global preferences dialog.
-   * 
-   * @param aParent
-   *          the parent window of the dialog, can be <code>null</code>.
-   */
-  private void showPreferencesDialog( final Window aParent )
-  {
-    SwingComponentUtils.invokeOnEDT( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        try
-        {
-          Configuration config = Client.this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
-
-          final PreferencesDialog dialog = new PreferencesDialog( aParent, Client.this.colorSchemeManager, config );
-          if ( dialog.showDialog() )
-          {
-            // Ensure all UI-related changes are immediately visible...
-            scheduleRepaint();
-          }
-        }
-        catch ( IOException exception )
-        {
-          JErrorDialog.showDialog( aParent, "Failed to obtain preferences!", exception );
-        }
-      }
-    } );
   }
 }

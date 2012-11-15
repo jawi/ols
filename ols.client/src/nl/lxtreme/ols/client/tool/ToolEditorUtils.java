@@ -54,16 +54,17 @@ final class ToolEditorUtils extends EditorUtils
    * {@inheritDoc}
    */
   @Override
-  protected JComponent createNumericEditor( final int aType, final AttributeDefinition aAttributeDef,
-      final Object aInitialValue )
+  protected JComponent createNumericEditor( final AttributeDefinition aAttributeDef, final String aInitialValue )
   {
     // For integer values ending with "Idx" create a channel selector instead...
-    if ( ( aType == AttributeDefinition.INTEGER ) && aAttributeDef.getID().endsWith( "Idx" ) )
+    int type = aAttributeDef.getType();
+    if ( ( type == AttributeDefinition.INTEGER ) && aAttributeDef.getID().endsWith( "Idx" ) )
     {
-      return createChannelSelector( aAttributeDef, aInitialValue );
+      int initialSelectedIdx = getInitialSelectedIdx( aAttributeDef, aInitialValue );
+      return createChannelSelector( aAttributeDef, initialSelectedIdx );
     }
 
-    return super.createNumericEditor( aType, aAttributeDef, aInitialValue );
+    return super.createNumericEditor( aAttributeDef, aInitialValue );
   }
 
   /**
@@ -71,16 +72,15 @@ final class ToolEditorUtils extends EditorUtils
    * 
    * @param aAttributeDef
    *          the {@link AttributeDefinition} to create a channel selector for;
-   * @param aContext
-   *          the tool context to use.
+   * @param aInitialSelectedIdx
+   *          the initial selected index of the selector.
    * @return a channel selector component, never <code>null</code>.
    */
-  private JComboBox createChannelSelector( final AttributeDefinition aAttributeDef, final Object aInitialValue )
+  private JComboBox createChannelSelector( final AttributeDefinition aAttributeDef, final int aInitialSelectedIdx )
   {
     final int bitmask = this.dataInfo.getEnabledChannelMask();
-    final int channelCount = Integer.bitCount( bitmask );
+    final int channelCount = this.dataInfo.getChannelCount();
     final boolean addUnusedOption = !isRequired( aAttributeDef );
-    int defaultSelectedIndex = getDefaultIntValue( aAttributeDef, aInitialValue );
 
     int modelSize = Math.max( 0, Math.min( Integer.SIZE, channelCount ) );
     if ( addUnusedOption )
@@ -104,7 +104,7 @@ final class ToolEditorUtils extends EditorUtils
     }
 
     final JComboBox result = new JComboBox( dataChannels );
-    int selectedIndex = ( defaultSelectedIndex < 0 ) ? 0 : ( defaultSelectedIndex % modelSize );
+    int selectedIndex = ( aInitialSelectedIdx < 0 ) ? 0 : ( aInitialSelectedIdx % modelSize );
     result.setSelectedIndex( selectedIndex );
     result.setRenderer( new DefaultListCellRenderer()
     {
@@ -153,5 +153,38 @@ final class ToolEditorUtils extends EditorUtils
     }
 
     return result;
+  }
+
+  /**
+   * Tries to determine the default initial selected index for a channel
+   * selector.
+   * 
+   * @param aAttributeDef
+   * @param aInitialValue
+   * @return an index, < 0 if no index could be determined, otherwise, >= 0.
+   */
+  private int getInitialSelectedIdx( final AttributeDefinition aAttributeDef, final String aInitialValue )
+  {
+    int idx = -1;
+    try
+    {
+      if ( aInitialValue != null )
+      {
+        idx = Integer.parseInt( aInitialValue );
+      }
+      else
+      {
+        String[] defaults = aAttributeDef.getDefaultValue();
+        if ( ( defaults != null ) && ( defaults.length > 0 ) )
+        {
+          idx = Integer.parseInt( defaults[0] );
+        }
+      }
+    }
+    catch ( NumberFormatException exception )
+    {
+      // Ignore...
+    }
+    return idx;
   }
 }

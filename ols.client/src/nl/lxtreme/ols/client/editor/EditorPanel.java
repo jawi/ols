@@ -46,6 +46,8 @@ public class EditorPanel extends JPanel
 
   private static final long serialVersionUID = 1L;
 
+  public static final int PADDING = 6;
+
   // VARIABLES
 
   private final ObjectClassDefinition ocd;
@@ -57,19 +59,54 @@ public class EditorPanel extends JPanel
    * Creates a new {@link EditorPanel} instance.
    * 
    * @param aSettings
+   *          the settings to use as initial values for the editor components.
+   */
+  public EditorPanel( final ObjectClassDefinition aOCD, final Dictionary<Object, Object> aSettings )
+  {
+    this( aOCD, asMap( aSettings ) );
+  }
+
+  /**
+   * Creates a new {@link EditorPanel} instance.
+   * 
+   * @param aSettings
+   *          the settings to use as initial values for the editor components.
    */
   public EditorPanel( final ObjectClassDefinition aOCD, final Map<Object, Object> aSettings )
   {
     super( new SpringLayout() );
 
     this.ocd = aOCD;
-
     this.components = new HashMap<AttributeDefinition, JComponent>();
 
     initPanel( aSettings );
   }
 
   // METHODS
+
+  /**
+   * Converts a given {@link Dictionary} to a {@link Map}.
+   * 
+   * @param aValue
+   *          the dictionary to convert, can be <code>null</code>.
+   * @return a map representation of the given {@link Dictionary}, or an empty
+   *         map is the given value was <code>null</code>.
+   */
+  @SuppressWarnings( "rawtypes" )
+  private static Map<Object, Object> asMap( final Dictionary aValue )
+  {
+    HashMap<Object, Object> result = new HashMap<Object, Object>();
+    if ( aValue != null )
+    {
+      Enumeration keys = aValue.keys();
+      while ( keys.hasMoreElements() )
+      {
+        Object key = keys.nextElement();
+        result.put( key, aValue.get( key ) );
+      }
+    }
+    return result;
+  }
 
   /**
    * @return <code>true</code> if the settings are valid, <code>false</code>
@@ -138,7 +175,7 @@ public class EditorPanel extends JPanel
 
     applyComponentProperties( this.components.values() );
 
-    SpringLayoutUtils.makeEditorGrid( this, 6, 4, 6, 6 );
+    SpringLayoutUtils.makeEditorGrid( this, PADDING, PADDING, PADDING, PADDING );
   }
 
   /**
