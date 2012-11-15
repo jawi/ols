@@ -58,7 +58,7 @@
 	org.apache.felix.gogo.runtime;version='[0.10.0,0.10.1)',\
 	org.apache.felix.gogo.shell;version='[0.10.0,0.10.1)',\
 	org.apache.felix.log;version='[1.0.1,1.0.2)',\
-	org.apache.felix.metatype;version='[1.0.5,1.0.6)',\
+	org.apache.felix.metatype;version='[1.0.7,1.0.8)',\
 	org.apache.felix.prefs;version='[1.0.4,1.0.5)',\
     javax.microedition.io;version=latest,\
 	lib.ioutil;version=latest,\
