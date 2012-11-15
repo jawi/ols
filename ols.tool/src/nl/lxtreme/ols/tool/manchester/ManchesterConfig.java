@@ -38,7 +38,7 @@ public interface ManchesterConfig
    * @return <code>true</code> if the clock should be recovered,
    *         <code>false</code> if the given clock should be used.
    */
-  @Meta.AD( name = "Recover clock", description = "{listen=!clock}", deflt = "true" )
+  @Meta.AD( name = "Recover clock", deflt = "true", description = "{listener=!clock}Whether or not to recover the clock from the original signal." )
   boolean recoverClock();
 
   /**
@@ -46,7 +46,7 @@ public interface ManchesterConfig
    * 
    * @return a clock speed, in Hertz, > 0.
    */
-  @Meta.AD( name = "Clock speed", deflt = "" )
+  @Meta.AD( name = "Clock speed", deflt = "1000", min = "1", description = "The clock speed in Hertz (Hz)." )
   int clock();
 
   /**

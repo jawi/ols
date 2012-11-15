@@ -89,7 +89,7 @@ public interface UARTConfig
   /**
    * @return
    */
-  @Meta.AD( name = "Auto-detect baudrate", description = "{listen=!baudrate}", deflt = "false" )
+  @Meta.AD( name = "Auto-detect baudrate", description = "{listener=!baudrate}", deflt = "false" )
   boolean autodetectBaudrate();
 
   /**

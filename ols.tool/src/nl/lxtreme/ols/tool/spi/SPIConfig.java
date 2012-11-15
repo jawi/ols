@@ -35,7 +35,7 @@ public interface SPIConfig
   /**
    * @return the protocol mode, never <code>null</code>.
    */
-  @Meta.AD( name = "Protocol mode", description = "{listen=!io2Idx:!io2Idx:io2Idx,listen=!io3Idx:!io3Idx:io3Idx}", optionLabels = {
+  @Meta.AD( name = "Protocol mode", description = "{listener=!io2Idx:!io2Idx:io2Idx,listener=!io3Idx:!io3Idx:io3Idx}", optionLabels = {
       "Standard", "Dual mode", "Quad mode" }, deflt = "0", required = true )
   SPIFIMode protocol();
 
