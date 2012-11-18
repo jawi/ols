@@ -279,11 +279,18 @@ public class AnnotationCollector implements AnnotationData
    *         <code>null</code> if no annotation matched the given class.
    */
   @SuppressWarnings( "unchecked" )
-  public <T extends DataAnnotation> T getDataAnnotation( final Class<T> aClass )
+  public <T extends Annotation> T getFirstAnnotation( final Class<T> aClass, final int aChannelIdx )
   {
+    for ( Annotation annotation : this.annotations )
+    {
+      if ( annotation.getClass().isAssignableFrom( aClass ) && ( annotation.getChannelIndex() == aChannelIdx ) )
+      {
+        return ( T )annotation;
+      }
+    }
     for ( DataAnnotation annotation : this.dataAnnotations )
     {
-      if ( aClass.equals( annotation.getClass() ) )
+      if ( annotation.getClass().isAssignableFrom( aClass ) && ( annotation.getChannelIndex() == aChannelIdx ) )
       {
         return ( T )annotation;
       }
@@ -299,16 +306,25 @@ public class AnnotationCollector implements AnnotationData
    * @return the first annotation (in time) that contains the given symbol, or
    *         <code>null</code> if no annotation matched the given symbol.
    */
-  public DataAnnotation getDataAnnotation( final Object aSymbol )
+  public DataAnnotation getFirstDataAnnotation( final Object aSymbol, final int aChannelIdx )
   {
     for ( DataAnnotation annotation : this.dataAnnotations )
     {
-      if ( aSymbol.equals( annotation.getData() ) )
+      if ( ( annotation.getChannelIndex() == aChannelIdx ) && aSymbol.equals( annotation.getData() ) )
       {
         return annotation;
       }
     }
     return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean hasAnnotations( final Class<? extends Annotation> aType, final int aChannelIdx )
+  {
+    return getFirstAnnotation( aType, aChannelIdx ) != null;
   }
 
   /**

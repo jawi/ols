@@ -25,7 +25,10 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.common.annotation.*;
+import nl.lxtreme.ols.common.session.*;
 
 
 /**
@@ -39,6 +42,7 @@ public class RemoveChannelAnnotations extends AbstractAction
 
   // VARIABLES
 
+  private final int channelIndex;
   private final SignalElement signalElement;
   private final SignalDiagramController controller;
 
@@ -58,8 +62,7 @@ public class RemoveChannelAnnotations extends AbstractAction
 
     this.controller = aController;
     this.signalElement = aSignalElement;
-
-    setEnabled( ( this.signalElement != null ) && this.signalElement.isDigitalSignal() );
+    this.channelIndex = aSignalElement.getChannel().getIndex();
   }
 
   // METHODS
@@ -70,8 +73,8 @@ public class RemoveChannelAnnotations extends AbstractAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    // getChannel().clearAnnotations();
-    System.out.println( "TODO" ); // XXX
+    // Clear the annotations for the channel...
+    getAnnotationData().clear( this.channelIndex );
 
     // Repaint the affected area...
     getSignalDiagram().repaintSignalElement( this.signalElement );
@@ -105,7 +108,16 @@ public class RemoveChannelAnnotations extends AbstractAction
    */
   private boolean hasAnnotations()
   {
-    // return !getChannel().getAnnotations().isEmpty();
-    return false;
+    return getAnnotationData().hasAnnotations( DataAnnotation.class, this.channelIndex );
+  }
+
+  /**
+   * @return the {@link AnnotationData} for the current session, never
+   *         <code>null</code>.
+   */
+  private AnnotationData getAnnotationData()
+  {
+    final Session session = Client.getInstance().getSession();
+    return session.getAnnotationData();
   }
 }

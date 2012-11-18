@@ -81,12 +81,12 @@ public class I2CAnalyserWorkerDataFilesTest extends TestCase
       AnnotationCollector result = analyseDataFile( resource, lineAidx, lineBidx, detectLines );
       if ( detectLines )
       {
-        assertEquals( "SCL not correctly detected?!", lineAidx, this.sclIdx );
-        assertEquals( "SDA not correctly detected?!", lineBidx, this.sdaIdx );
+        assertEquals( "Input: " + resource + "; SCL not correctly detected?!", lineAidx, this.sclIdx );
+        assertEquals( "Input: " + resource + "; SDA not correctly detected?!", lineBidx, this.sdaIdx );
       }
 
-      assertEquals( symbols, result.countSymbols() );
-      assertEquals( errors, result.countDataErrors() );
+      assertEquals( "Input: " + resource, symbols, result.countSymbols() );
+      assertEquals( "Input: " + resource, errors, result.countDataErrors() );
     }
   }
 

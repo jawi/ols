@@ -436,7 +436,7 @@ public class I2CAnalyserTask implements Callable<Void>
     {
       // no idle state could be found
       LOG.log( Level.WARNING, "No IDLE state found in data; aborting analysis..." );
-      throw new IllegalStateException( "No IDLE state found!" );
+      throw new ToolException( "No IDLE state found!" );
     }
 
     // a is now the start of idle, now find the first start condition
@@ -476,7 +476,7 @@ public class I2CAnalyserTask implements Callable<Void>
     {
       // no start condition could be found
       LOG.log( Level.WARNING, "No START condition found! Analysis aborted..." );
-      throw new IllegalStateException( "No START condition found!" );
+      throw new ToolException( "No START condition found!" );
     }
 
     return sampleIdx;

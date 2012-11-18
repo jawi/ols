@@ -58,28 +58,56 @@ public class EditorPanel extends JPanel
   /**
    * Creates a new {@link EditorPanel} instance.
    * 
+   * @param aOCD
+   *          the object class definition containing the attribute definitions
+   *          to create editors for, cannot be <code>null</code>;
    * @param aSettings
-   *          the settings to use as initial values for the editor components.
+   *          the (optional) settings to use as initial values for the editor
+   *          components, may be <code>null</code>;
+   * @param aTitle
+   *          the (optional) title to display above the editors, may be
+   *          <code>null</code>;
+   * @param aProvider
+   *          the (optional) editor provider to supply custom editors for
+   *          unmanaged attributes, may be <code>null</code>.
    */
-  public EditorPanel( final ObjectClassDefinition aOCD, final Dictionary<Object, Object> aSettings )
+  public EditorPanel( final ObjectClassDefinition aOCD, final Dictionary<Object, Object> aSettings,
+      final String aTitle, final IEditorProvider aProvider )
   {
-    this( aOCD, asMap( aSettings ) );
+    this( aOCD, asMap( aSettings ), aTitle, aProvider );
   }
 
   /**
    * Creates a new {@link EditorPanel} instance.
    * 
+   * @param aOCD
+   *          the object class definition containing the attribute definitions
+   *          to create editors for, cannot be <code>null</code>;
    * @param aSettings
-   *          the settings to use as initial values for the editor components.
+   *          the (optional) settings to use as initial values for the editor
+   *          components, may be <code>null</code>;
+   * @param aTitle
+   *          the (optional) title to display above the editors, may be
+   *          <code>null</code>;
+   * @param aProvider
+   *          the (optional) editor provider to supply custom editors for
+   *          unmanaged attributes, may be <code>null</code>.
    */
-  public EditorPanel( final ObjectClassDefinition aOCD, final Map<Object, Object> aSettings )
+  public EditorPanel( final ObjectClassDefinition aOCD, final Properties aSettings, final String aTitle,
+      final IEditorProvider aProvider )
   {
     super( new SpringLayout() );
 
     this.ocd = aOCD;
     this.components = new HashMap<AttributeDefinition, JComponent>();
 
-    initPanel( aSettings );
+    Map<Object, Object> settings = aSettings;
+    if ( settings == null )
+    {
+      settings = Collections.emptyMap();
+    }
+
+    initPanel( settings, aTitle, aProvider );
   }
 
   // METHODS
@@ -93,9 +121,9 @@ public class EditorPanel extends JPanel
    *         map is the given value was <code>null</code>.
    */
   @SuppressWarnings( "rawtypes" )
-  private static Map<Object, Object> asMap( final Dictionary aValue )
+  private static Properties asMap( final Dictionary aValue )
   {
-    HashMap<Object, Object> result = new HashMap<Object, Object>();
+    Properties result = new Properties();
     if ( aValue != null )
     {
       Enumeration keys = aValue.keys();
@@ -131,16 +159,16 @@ public class EditorPanel extends JPanel
   /**
    * @return the properties with the current values, never <code>null</code>.
    */
-  public Dictionary<Object, Object> getProperties()
+  public final Properties getProperties()
   {
-    Hashtable<Object, Object> result = new Hashtable<Object, Object>();
+    Properties result = new Properties();
     for ( Entry<AttributeDefinition, JComponent> entry : this.components.entrySet() )
     {
       Object value = getComponentValue( entry.getValue() );
 
       if ( value != null )
       {
-        result.put( entry.getKey().getID(), value );
+        result.put( entry.getKey().getID(), String.valueOf( value ) );
       }
     }
     return result;
@@ -149,21 +177,33 @@ public class EditorPanel extends JPanel
   /**
    * Initializes this panel.
    * 
-   * @param aContext
    * @param aSettings
+   *          the settings to use, cannot be <code>null</code>;
+   * @param aTitle
+   *          the (optional) title to display above all editors;
+   * @param aProvider
+   *          the editor provider to use, can be <code>null</code>.
    */
-  final void initPanel( final Map<Object, Object> aSettings )
+  final void initPanel( final Map<Object, Object> aSettings, final String aTitle, final IEditorProvider aProvider )
   {
-    SpringLayoutUtils.addSeparator( this, "Settings" );
+    if ( ( aTitle != null ) && !"".equals( aTitle.trim() ) )
+    {
+      SpringLayoutUtils.addSeparator( this, aTitle );
+    }
 
     final EditorUtils editorUtils = new EditorUtils();
 
     AttributeDefinition[] ads = this.ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
     for ( AttributeDefinition ad : ads )
     {
-      Object initialValue = aSettings.get( ad.getID() );
+      Object initialValue = editorUtils.getDefaultValue( ad, aSettings.get( ad.getID() ) );
 
       JComponent comp = editorUtils.createEditor( ad, initialValue );
+      if ( !isManagedComponent( comp ) && ( aProvider != null ) )
+      {
+        comp = aProvider.createEditor( ad, initialValue );
+      }
+
       if ( comp != null )
       {
         add( createRightAlignedLabel( ad.getName() ) );
@@ -347,5 +387,24 @@ public class EditorPanel extends JPanel
       value = ( ( JSpinner )aComponent ).getValue();
     }
     return value;
+  }
+
+  /**
+   * Returns whether the given component is managed or not.
+   * 
+   * @param aComponent
+   *          the component to test, can be <code>null</code>.
+   * @return <code>true</code> if the given component is a managed component,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isManagedComponent( final JComponent aComponent )
+  {
+    if ( aComponent == null )
+    {
+      return false;
+    }
+
+    Object managed = aComponent.getClientProperty( PROPERTY_MANAGED );
+    return ( managed == null ) || Boolean.TRUE.equals( managed );
   }
 }

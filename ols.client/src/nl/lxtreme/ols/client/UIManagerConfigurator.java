@@ -35,7 +35,7 @@ import org.osgi.service.cm.*;
 
 /**
  * Provides a managed service that is used to initialize the {@link UIManager}
- * with its default values for the OLS client.
+ * with proper default values for the OLS client.
  */
 public class UIManagerConfigurator implements ManagedService
 {

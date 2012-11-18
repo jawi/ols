@@ -98,6 +98,9 @@ public class ToolBundleAdapter
     Class<Tool> toolImpl = this.bundle.loadClass( entry );
     String[] interfaces = { ToolInvoker.class.getName(), ManagedService.class.getName() };
 
+    // NOTE: the service.pid property is set in the ToolInvokerImpl#init()
+    // method as it is based on the metatype PID...
+
     this.serviceComponent = this.manager.createComponent() //
         .setInterface( interfaces, new Properties() ) //
         .setImplementation( new ToolInvokerImpl( toolImpl.newInstance() ) ) //

@@ -132,6 +132,26 @@ public class AnnotationDataImpl implements AnnotationData
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean hasAnnotations( final Class<? extends Annotation> aType, final int aChannelIdx )
+  {
+    SortedSet<Annotation> result = this.annotations.get( Integer.valueOf( aChannelIdx ) );
+    if ( result != null )
+    {
+      for ( Annotation annotation : result )
+      {
+        if ( aType.isAssignableFrom( annotation.getClass() ) )
+        {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
    * Creates a event for posting to the {@link EventAdmin}.
    * 
    * @param aAnnotation

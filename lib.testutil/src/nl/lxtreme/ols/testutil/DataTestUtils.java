@@ -455,7 +455,11 @@ public final class DataTestUtils
         }
         else if ( "TriggerPosition".equals( instrKey ) )
         {
-          builder.setTriggerPosition( Long.parseLong( instrValue ) );
+          long triggerPos = Long.parseLong( instrValue );
+          if ( triggerPos >= 0 )
+          {
+            builder.setTriggerPosition( triggerPos );
+          }
         }
         else if ( "EnabledChannels".equals( instrKey ) )
         {

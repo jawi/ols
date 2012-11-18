@@ -21,8 +21,12 @@
 package nl.lxtreme.ols.client;
 
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
+
+import javax.swing.*;
 
 import nl.lxtreme.ols.util.swing.*;
 
@@ -34,7 +38,7 @@ import org.osgi.service.cm.*;
  * schemes to be defined by means of adding a configuration file.
  */
 @SuppressWarnings( "rawtypes" )
-public class UIColorSchemeManager implements ManagedServiceFactory
+public class ColorSchemeManager implements ManagedServiceFactory
 {
   // CONSTANTS
 
@@ -47,7 +51,40 @@ public class UIColorSchemeManager implements ManagedServiceFactory
 
   private final ConcurrentMap<String, Properties> colorSchemes = new ConcurrentHashMap<String, Properties>();
 
+  private volatile String schemaName;
+
   // METHODS
+
+  /**
+   * Applies the color scheme identified by the given name.
+   * 
+   * @param aName
+   *          the name of the schema to apply, cannot be <code>null</code> or
+   *          empty.
+   */
+  public void applyColorScheme( final String aName )
+  {
+    if ( this.schemaName != null )
+    {
+      removeColorScheme( this.schemaName );
+    }
+    this.schemaName = aName;
+
+    Properties props = getColorScheme( aName );
+    if ( props == null )
+    {
+      return;
+    }
+
+    for ( Object key : props.keySet() )
+    {
+      Object value = props.get( key );
+      if ( value instanceof Color )
+      {
+        UIManager.put( key, value );
+      }
+    }
+  }
 
   /**
    * {@inheritDoc}
@@ -56,28 +93,6 @@ public class UIColorSchemeManager implements ManagedServiceFactory
   public void deleted( final String aPid )
   {
     this.colorSchemes.remove( aPid );
-  }
-
-  /**
-   * Retrieves the color scheme by its name.
-   * 
-   * @param aName
-   *          the name of the color scheme, can be <code>null</code> or empty.
-   * @return a {@link Properties} map with the requested color scheme, or
-   *         <code>null</code> if no such scheme exists.
-   */
-  public Properties getColorScheme( final String aName )
-  {
-    for ( Properties props : this.colorSchemes.values() )
-    {
-      if ( props.getProperty( SCHEME_NAME ).equals( aName ) )
-      {
-        Properties result = new Properties();
-        result.putAll( props );
-        return result;
-      }
-    }
-    return null;
   }
 
   /**
@@ -121,6 +136,28 @@ public class UIColorSchemeManager implements ManagedServiceFactory
   }
 
   /**
+   * Retrieves the color scheme by its name.
+   * 
+   * @param aName
+   *          the name of the color scheme, can be <code>null</code> or empty.
+   * @return a {@link Properties} map with the requested color scheme, or
+   *         <code>null</code> if no such scheme exists.
+   */
+  private Properties getColorScheme( final String aName )
+  {
+    for ( Properties props : this.colorSchemes.values() )
+    {
+      if ( props.getProperty( SCHEME_NAME ).equals( aName ) )
+      {
+        Properties result = new Properties();
+        result.putAll( props );
+        return result;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Parses the given dictionary as color scheme and returns it as a
    * {@link Properties} object.
    * 
@@ -158,5 +195,30 @@ public class UIColorSchemeManager implements ManagedServiceFactory
     }
 
     return properties;
+  }
+
+  /**
+   * Removes the color schema identified by the given name.
+   * 
+   * @param aName
+   *          the name of the schema to remove the keys from, cannot be
+   *          <code>null</code>.
+   */
+  private void removeColorScheme( final String aName )
+  {
+    Properties props = getColorScheme( aName );
+    if ( props == null )
+    {
+      return;
+    }
+
+    for ( Object key : props.keySet() )
+    {
+      Object value = props.get( key );
+      if ( value instanceof Color )
+      {
+        UIManager.put( key, "" );
+      }
+    }
   }
 }

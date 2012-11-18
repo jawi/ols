@@ -54,10 +54,10 @@ public interface ClientConfig
   @Meta.AD( name = "Show tool windows?", deflt = "false", description = "Whether or not the tool windows are shown by default. Will be applied after a restart." )
   boolean showToolWindows();
 
-  @Meta.AD( name = "Signal alignment", optionLabels = { "Top", "Center", "Bottom" }, deflt = "1", required = true, description = "The vertical alignment of the signals itself. Will be applied after an acquisition." )
+  @Meta.AD( name = "Signal alignment", optionLabels = { "Top", "Center", "Bottom" }, deflt = "CENTER", required = true, description = "The vertical alignment of the signals itself. Will be applied after an acquisition." )
   SignalAlignment signalAlignment();
 
-  @Meta.AD( name = "Annotation alignment", optionLabels = { "Top", "Center", "Bottom" }, deflt = "0", required = true, description = "The vertical aligment of the annotations. Will be applied immediately." )
+  @Meta.AD( name = "Annotation alignment", optionLabels = { "Top", "Center", "Bottom" }, deflt = "CENTER", required = true, description = "The vertical aligment of the annotations. Will be applied immediately." )
   SignalAlignment annotationAlignment();
 
   @Meta.AD( name = "Channel height", deflt = "36", required = true, description = "The height (in pixels) of the channels." )
@@ -71,5 +71,8 @@ public interface ClientConfig
 
   @Meta.AD( name = "Analog scope height", deflt = "96", required = true, description = "The height (in pixels) of the analog scope." )
   int analogScopeHeight();
+
+  @Meta.AD( name = "Color scheme", deflt = "Default", required = true, description = "{managed=false}What color scheme is to be used. Will be applied immediately." )
+  String colorScheme();
 
 }

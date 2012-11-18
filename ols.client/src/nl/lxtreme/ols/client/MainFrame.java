@@ -76,6 +76,24 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
   }
 
   /**
+   * Provides a {@link AccumulatingRunnable} that repaints the entire main frame
+   * once in a while. This is necessary if a tool produces lots of annotations
+   * in a short time-frame, which would otherwise cause the UI to become slow
+   * due to the many repaint requests.
+   */
+  final class AccumulatingUpdateActionsRunnable extends AccumulatingRunnable<Void>
+  {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void run( final Deque<Void> aArgs )
+    {
+      updateActionStates();
+    }
+  }
+
+  /**
    * Provides a listener for cursor changes that reflects all changes to their
    * corresponding actions.
    */
@@ -89,7 +107,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     @Override
     public void cursorAdded( final CursorElement aCursor )
     {
-      updateActionStates();
+      scheduleActionsUpdate();
     }
 
     /**
@@ -116,7 +134,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     @Override
     public void cursorRemoved( final CursorElement aOldCursor )
     {
-      updateActionStates();
+      scheduleActionsUpdate();
     }
 
     /**
@@ -125,7 +143,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     @Override
     public void cursorsInvisible()
     {
-      updateActionStates();
+      scheduleActionsUpdate();
     }
 
     /**
@@ -134,7 +152,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     @Override
     public void cursorsVisible()
     {
-      updateActionStates();
+      scheduleActionsUpdate();
     }
   }
 
@@ -423,36 +441,36 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     }
   }
 
-  // CONSTANTS
-
   private static final long serialVersionUID = 1L;
 
+  // CONSTANTS
+
   public static final String TW_ACQUISITION = AcquisitionDetailsView.ID;
+
   public static final String TW_MEASURE = MeasurementView.ID;
   public static final String TW_CURSORS = CursorDetailsView.ID;
-
   public static final String GROUP_DEFAULT = "Default";
+
+  private final ActionManager actionManager;
 
   // VARIABLES
 
-  private final ActionManager actionManager;
   private final DeviceController deviceController;
   private final HostProperties hostProperties;
-
   private final AtomicReference<MyDoggyToolWindowManager> windowManagerRef;
   private final ProgressUpdatingRunnable progressAccumulatingRunnable;
   private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
+  private final AccumulatingUpdateActionsRunnable updateActionsRunnable;
   private final JTextStatusBar status;
 
   private volatile boolean wasHidden = false;
-  private volatile File dataStorage;
 
+  private volatile File dataStorage;
   private AcquisitionDetailsView captureDetails;
+
   private CursorDetailsView cursorDetails;
   private MeasurementView measurementDetails;
   private AnnotationOverview annotationOverview;
-
-  // CONSTRUCTORS
 
   /**
    * Creates a new {@link MainFrame} instance.
@@ -467,6 +485,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     this.windowManagerRef = new AtomicReference<MyDoggyToolWindowManager>();
     this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
     this.repaintAccumulatingRunnable = new AccumulatingRepaintingRunnable();
+    this.updateActionsRunnable = new AccumulatingUpdateActionsRunnable();
 
     // Let the host platform determine where this diagram should be
     // displayed; gives it more or less a native feel...
@@ -486,7 +505,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     addWindowListener( new MainFrameListener() );
   }
 
-  // METHODS
+  // CONSTRUCTORS
 
   /**
    * @param aWindow
@@ -522,6 +541,8 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     aWindow.setVisible( UIManager.getBoolean( UIManagerKeys.SHOW_TOOL_WINDOWS_DEFAULT ) );
   }
 
+  // METHODS
+
   /**
    * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
    */
@@ -540,7 +561,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     // updateWindowDecorations( this.controller.getCurrentProject() );
     // }
 
-    this.actionManager.updateActionStates();
+    scheduleActionsUpdate();
   }
 
   /**
@@ -570,6 +591,14 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     group.addToolWindow( tw );
 
     tweakToolWindow( tw );
+  }
+
+  /**
+   * Schedules an update of the actions.
+   */
+  public void scheduleActionsUpdate()
+  {
+    this.updateActionsRunnable.add( ( Void )null );
   }
 
   /**
@@ -620,14 +649,6 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
   }
 
   /**
-   * @return the current tool window manager, cannot be <code>null</code>.
-   */
-  final MyDoggyToolWindowManager getManager()
-  {
-    return this.windowManagerRef.get();
-  }
-
-  /**
    * Updates the progress bar to the given percentage.
    * 
    * @param aPercentage
@@ -650,6 +671,14 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
   {
     this.status.setText( aMessage );
     this.status.setProgress( 0 );
+  }
+
+  /**
+   * @return the current tool window manager, cannot be <code>null</code>.
+   */
+  final MyDoggyToolWindowManager getManager()
+  {
+    return this.windowManagerRef.get();
   }
 
   /**

@@ -86,6 +86,9 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     this.type = aType;
     this.mask = aMask;
+
+    this.height = -1;
+    this.signalHeight = -1;
   }
 
   // METHODS
@@ -103,7 +106,6 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, -1 );
     channelElement.group = aGroup;
-    channelElement.height = UIManager.getInt( ANALOG_SCOPE_HEIGHT );
     return channelElement;
   }
 
@@ -121,9 +123,6 @@ public final class SignalElement implements Comparable<SignalElement>
     final SignalElement channelElement = new SignalElement( SignalElementType.DIGITAL_SIGNAL, aChannel.getMask() );
     channelElement.channel = aChannel;
     channelElement.group = aGroup;
-    channelElement.height = UIManager.getInt( CHANNEL_HEIGHT );
-    channelElement.signalHeight = UIManager.getInt( DIGITAL_SIGNAL_HEIGHT );
-    channelElement.alignment = SignalAlignment.valueOf( getUIManagerValue( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) );
     return channelElement;
   }
 
@@ -140,7 +139,6 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, -1 );
     channelElement.group = aGroup;
-    channelElement.height = UIManager.getInt( GROUP_SUMMARY_HEIGHT );
     return channelElement;
   }
 
@@ -157,7 +155,6 @@ public final class SignalElement implements Comparable<SignalElement>
   {
     final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, -1 );
     channelElement.group = aGroup;
-    channelElement.height = UIManager.getInt( SIGNAL_GROUP_HEIGHT );
     return channelElement;
   }
 
@@ -211,9 +208,23 @@ public final class SignalElement implements Comparable<SignalElement>
     {
       return false;
     }
-    if ( this.channel.getIndex() != other.channel.getIndex() )
+    if ( this.channel != null )
     {
-      return false;
+      if ( other.channel == null )
+      {
+        return false;
+      }
+      if ( this.channel.getIndex() != other.channel.getIndex() )
+      {
+        return false;
+      }
+    }
+    else
+    {
+      if ( other.channel != null )
+      {
+        return false;
+      }
     }
     if ( this.group != other.group )
     {
@@ -271,6 +282,23 @@ public final class SignalElement implements Comparable<SignalElement>
   }
 
   /**
+   * @param aElement
+   * @return
+   */
+  public String getCombinedLabel( final SignalElement aElement )
+  {
+    final String label = getLabel();
+
+    final ElementGroup channelGroupFor = aElement.getGroup();
+    if ( channelGroupFor != null )
+    {
+      return label.concat( "  " ).concat( channelGroupFor.getName() );
+    }
+
+    return label;
+  }
+
+  /**
    * Returns the element group this element belongs to.
    * 
    * @return a group, can be <code>null</code>.
@@ -285,6 +313,10 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public int getHeight()
   {
+    if ( this.height <= 0 )
+    {
+      return getDefaultHeight();
+    }
     return this.height;
   }
 
@@ -316,23 +348,6 @@ public final class SignalElement implements Comparable<SignalElement>
   }
 
   /**
-   * @param aElement
-   * @return
-   */
-  public String getCombinedLabel( final SignalElement aElement )
-  {
-    final String label = getLabel();
-
-    final ElementGroup channelGroupFor = aElement.getGroup();
-    if ( channelGroupFor != null )
-    {
-      return label.concat( "  " ).concat( channelGroupFor.getName() );
-    }
-
-    return label;
-  }
-
-  /**
    * Returns the current value of mask.
    * 
    * @return the mask
@@ -354,7 +369,7 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public int getOffset()
   {
-    return getOffset( this.alignment );
+    return getOffset( getSignalAlignment() );
   }
 
   /**
@@ -367,11 +382,11 @@ public final class SignalElement implements Comparable<SignalElement>
     final int signalOffset;
     if ( SignalAlignment.BOTTOM.equals( aAlignment ) )
     {
-      signalOffset = ( this.height - this.signalHeight );
+      signalOffset = ( getHeight() - getSignalHeight() );
     }
     else if ( SignalAlignment.CENTER.equals( aAlignment ) )
     {
-      signalOffset = ( int )( ( this.height - this.signalHeight ) / 2.0 );
+      signalOffset = ( int )( ( getHeight() - getSignalHeight() ) / 2.0 );
     }
     else
     {
@@ -388,16 +403,25 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public SignalAlignment getSignalAlignment()
   {
+    if ( this.alignment == null )
+    {
+      return SignalAlignment.valueOf( getUIManagerValue( SIGNALVIEW_SIGNAL_ALIGNMENT, "CENTER" ) );
+    }
     return this.alignment;
   }
 
   /**
    * Returns the current value of signalHeight.
    * 
-   * @return the signalHeight
+   * @return the signal height, in pixels.
    */
   public int getSignalHeight()
   {
+    if ( this.signalHeight <= 0 )
+    {
+      return UIManager.getInt( DIGITAL_SIGNAL_HEIGHT );
+
+    }
     return this.signalHeight;
   }
 
@@ -705,6 +729,35 @@ public final class SignalElement implements Comparable<SignalElement>
       return String.format( "ols.channelgroup%d.channel%d.default.color", groupIdx, channelIdx );
     }
     return String.format( "ols.channelgroup%d.default.color", groupIdx );
+  }
+
+  /**
+   * @return a default height of the total element, in pixels.
+   */
+  private int getDefaultHeight()
+  {
+    int result;
+    if ( isAnalogSignal() )
+    {
+      result = UIManager.getInt( ANALOG_SCOPE_HEIGHT );
+    }
+    else if ( isDigitalSignal() )
+    {
+      result = UIManager.getInt( CHANNEL_HEIGHT );
+    }
+    else if ( isGroupSummary() )
+    {
+      result = UIManager.getInt( GROUP_SUMMARY_HEIGHT );
+    }
+    else if ( isSignalGroup() )
+    {
+      result = UIManager.getInt( SIGNAL_GROUP_HEIGHT );
+    }
+    else
+    {
+      result = 20;
+    }
+    return result;
   }
 
   /**

@@ -52,8 +52,7 @@ public class TestToolContext implements ToolContext
    */
   public TestToolContext( final AcquisitionData aData, final AnnotationCollector aListener )
   {
-    this( aData, Math.max( 0, aData.getSampleIndex( aData.getTriggerPosition() ) - 1 ), aData.getValues().length - 1,
-        aListener );
+    this( aData, 0, aData.getValues().length - 1, aListener );
   }
 
   /**

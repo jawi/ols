@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client;
 
 
 import static nl.lxtreme.ols.acquisition.service.DataAcquisitionService.*;
+import static nl.lxtreme.ols.client.signaldisplay.view.UIManagerKeys.*;
 import static nl.lxtreme.ols.client.tool.ToolInvoker.*;
 import static nl.lxtreme.ols.common.session.Session.*;
 
@@ -45,6 +46,7 @@ import nl.lxtreme.ols.host.*;
 import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
+import nl.lxtreme.osgi.metatype.*;
 
 import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
@@ -68,7 +70,7 @@ import org.osgi.service.metatype.*;
  * massive tree of dependencies for all components.
  * </p>
  */
-public class Client implements StatusListener, ApplicationCallback, EventHandler
+public class Client implements ManagedService, StatusListener, ApplicationCallback, EventHandler
 {
   // CONSTANTS
 
@@ -87,7 +89,7 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
   private final SignalDiagramController signalDiagramController;
 
   // Injected by Felix DM...
-  private volatile UIColorSchemeManager colorSchemeManager;
+  private volatile ColorSchemeManager colorSchemeManager;
   private volatile MetaTypeService metaTypeService;
   private volatile ConfigurationAdmin configAdmin;
   private volatile HostProperties hostProperties;
@@ -96,6 +98,7 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
   private volatile LogService log;
 
   private volatile MainFrame mainFrame;
+  private volatile Properties configuration;
 
   // CONSTRUCTORS
 
@@ -299,7 +302,9 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
       AcquisitionData newData = ( AcquisitionData )aEvent.getProperty( KEY_ACQUISITION_DATA );
 
       getSignalDiagramController().setAcquisitionData( newData );
-      getActionManager().updateActionStates();
+
+      scheduleActionsUpdate();
+      scheduleRepaint();
     }
     else if ( TOPIC_ANNOTATION_ADDED.equals( topic ) || TOPIC_ANNOTATION_CLEARED.equals( topic ) )
     {
@@ -337,7 +342,7 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
         setStatus( "Acquisition cancelled for {0}.", device );
       }
 
-      getActionManager().updateActionStates();
+      scheduleActionsUpdate();
     }
     else if ( TOPIC_TOOL_PROGRESS.equals( topic ) )
     {
@@ -369,7 +374,7 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
         setStatus( "Tool {1} was cancelled.", tool );
       }
 
-      getActionManager().updateActionStates();
+      scheduleActionsUpdate();
     }
   }
 
@@ -416,21 +421,42 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
   /**
    * Called by Felix DM when initializing this component.
    */
-  @SuppressWarnings( "unchecked" )
   public void init( final Component aComponent )
   {
     // The things done in this method need to be done as early as possible,
     // hence we're doing this in the init() method...
     initOSSpecifics();
+  }
 
-    MetaTypeInformation metaTypeInfo = getMetaTypeInfo();
-    if ( ( metaTypeInfo != null ) && ( metaTypeInfo.getPids().length == 1 ) )
+  /**
+   * Removes the given component provider from this controller, and does this
+   * synchronously on the EDT.
+   * <p>
+   * This method is called by the Dependency Manager.
+   * </p>
+   * 
+   * @param aProvider
+   *          the menu component provider, cannot be <code>null</code>.
+   */
+  public void removeMenu( final ComponentProvider aProvider )
+  {
+    SwingComponentUtils.invokeOnEDT( new Runnable()
     {
-      Dictionary<Object, Object> dict = aComponent.getServiceProperties();
-      dict.put( Constants.SERVICE_PID, metaTypeInfo.getPids()[0] );
+      @Override
+      public void run()
+      {
+        final JMenuBar menuBar = getMainFrame().getJMenuBar();
+        if ( menuBar != null )
+        {
+          aProvider.removedFromContainer();
 
-      aComponent.setServiceProperties( dict );
-    }
+          menuBar.remove( aProvider.getComponent() );
+
+          menuBar.revalidate();
+          menuBar.repaint();
+        }
+      }
+    } );
   }
 
   /**
@@ -477,37 +503,6 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
   }
 
   /**
-   * Removes the given component provider from this controller, and does this
-   * synchronously on the EDT.
-   * <p>
-   * This method is called by the Dependency Manager.
-   * </p>
-   * 
-   * @param aProvider
-   *          the menu component provider, cannot be <code>null</code>.
-   */
-  public void removeMenu( final ComponentProvider aProvider )
-  {
-    SwingComponentUtils.invokeOnEDT( new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        final JMenuBar menuBar = getMainFrame().getJMenuBar();
-        if ( menuBar != null )
-        {
-          aProvider.removedFromContainer();
-
-          menuBar.remove( aProvider.getComponent() );
-
-          menuBar.revalidate();
-          menuBar.repaint();
-        }
-      }
-    } );
-  }
-
-  /**
    * Called by Felix DM when starting this component.
    */
   public void start( final Component aComponent )
@@ -535,6 +530,104 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
         stopOnEDT();
       }
     } );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @SuppressWarnings( { "rawtypes" } )
+  @Override
+  public void updated( final Dictionary aProperties )
+  {
+    this.log.log( LogService.LOG_INFO, "Client configuration updated ..." );
+
+    this.configuration = new Properties();
+    // Ensure there's a default color scheme...
+    this.configuration.put( "colorScheme", "Default" );
+
+    if ( aProperties != null )
+    {
+      final Enumeration keys = aProperties.keys();
+      while ( keys.hasMoreElements() )
+      {
+        Object key = keys.nextElement();
+        Object value = aProperties.get( key );
+        this.configuration.put( key, value );
+      }
+    }
+
+    final ClientConfig clientConfig = Config.create( ClientConfig.class, this.configuration );
+
+    // Update the UIManager with the new properties, so we can directly
+    // use them...
+    this.colorSchemeManager.applyColorScheme( clientConfig.colorScheme() );
+
+    try
+    {
+      UIManager.put( MOUSEWHEEL_ZOOM_DEFAULT, Boolean.valueOf( clientConfig.mouseWheelZooms() ) );
+      UIManager.put( SNAP_CURSORS_DEFAULT, Boolean.valueOf( clientConfig.snapCursorToEdge() ) );
+      UIManager.put( GROUP_SUMMARY_VISIBLE_DEFAULT, Boolean.valueOf( clientConfig.showGroupSummary() ) );
+      UIManager.put( ANALOG_SCOPE_VISIBLE_DEFAULT, Boolean.valueOf( clientConfig.showAnalogScope() ) );
+      UIManager.put( SHOW_TOOL_WINDOWS_DEFAULT, Boolean.valueOf( clientConfig.showToolWindows() ) );
+      UIManager.put( CHANNELLABELS_SHOW_CHANNEL_INDEX, Boolean.valueOf( clientConfig.showChannelIndexes() ) );
+      UIManager.put( RETAIN_ANNOTATIONS_WITH_RECAPTURE, Boolean.valueOf( clientConfig.retainAnnotations() ) );
+
+      UIManager.put( SIGNALVIEW_SIGNAL_ALIGNMENT, String.valueOf( clientConfig.signalAlignment() ) );
+      UIManager.put( SIGNALVIEW_ANNOTATION_ALIGNMENT, String.valueOf( clientConfig.annotationAlignment() ) );
+
+      UIManager.put( CHANNEL_HEIGHT, Integer.valueOf( clientConfig.channelHeight() ) );
+      UIManager.put( DIGITAL_SIGNAL_HEIGHT, Integer.valueOf( clientConfig.signalHeight() ) );
+      UIManager.put( GROUP_SUMMARY_HEIGHT, Integer.valueOf( clientConfig.groupSummaryHeight() ) );
+      UIManager.put( ANALOG_SCOPE_HEIGHT, Integer.valueOf( clientConfig.analogScopeHeight() ) );
+    }
+    catch ( Exception exception )
+    {
+      // TODO Auto-generated catch block
+      exception.printStackTrace();
+    }
+
+    // Ensure all UI-related changes are immediately visible...
+    scheduleRepaint();
+  }
+
+  /**
+   * Shows the preferences dialog on the EDT.
+   */
+  void showPreferencesOnEDT( final Window aParent )
+  {
+    assert SwingUtilities.isEventDispatchThread();
+
+    try
+    {
+      MetaTypeInformation metaTypeInfo = getMetaTypeInfo();
+      if ( ( metaTypeInfo == null ) || ( metaTypeInfo.getPids().length != 1 ) )
+      {
+        // Not metatyped; assume it has no configuration to be performed...
+        this.log.log( LogService.LOG_INFO,
+            "No metatype information to base preferences on; assuming no configuration is needed..." );
+      }
+      else
+      {
+        String pid = metaTypeInfo.getPids()[0];
+        ObjectClassDefinition ocd = metaTypeInfo.getObjectClassDefinition( pid, aParent.getLocale().toString() );
+
+        final PreferencesDialog dialog = new PreferencesDialog( aParent, this.colorSchemeManager, ocd,
+            this.configuration );
+        if ( dialog.showDialog() )
+        {
+          final Properties properties = dialog.getProperties();
+
+          // Update the original configuration as well; will eventually call us
+          // back on #updated
+          Configuration config = this.configAdmin.getConfiguration( pid );
+          config.update( properties );
+        }
+      }
+    }
+    catch ( IOException exception )
+    {
+      JErrorDialog.showDialog( aParent, "Failed to obtain preferences!", exception );
+    }
   }
 
   /**
@@ -567,41 +660,6 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
       mf.stopOnEDT();
 
       this.mainFrame = null;
-    }
-  }
-
-  /**
-   * Shows the preferences dialog on the EDT.
-   */
-  void showPreferencesOnEDT( final Window aParent )
-  {
-    assert SwingUtilities.isEventDispatchThread();
-
-    try
-    {
-      Configuration config = this.configAdmin.getConfiguration( UIManagerConfigurator.PID );
-
-      MetaTypeInformation metaTypeInfo = this.metaTypeService.getMetaTypeInformation( this.bundleContext.getBundle() );
-      if ( ( metaTypeInfo == null ) || ( metaTypeInfo.getPids().length != 1 ) )
-      {
-        // Not metatyped; assume it has no configuration to be performed...
-        this.log.log( LogService.LOG_INFO,
-            "No metatype information to base preferences on; assuming no configuration is needed..." );
-      }
-
-      String pid = metaTypeInfo.getPids()[0];
-      ObjectClassDefinition ocd = metaTypeInfo.getObjectClassDefinition( pid, aParent.getLocale().toString() );
-
-      final PreferencesDialog dialog = new PreferencesDialog( aParent, this.colorSchemeManager, config, ocd );
-      if ( dialog.showDialog() )
-      {
-        // Ensure all UI-related changes are immediately visible...
-        scheduleRepaint();
-      }
-    }
-    catch ( IOException exception )
-    {
-      JErrorDialog.showDialog( aParent, "Failed to obtain preferences!", exception );
     }
   }
 
@@ -654,7 +712,8 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
    */
   private MetaTypeInformation getMetaTypeInfo()
   {
-    return this.metaTypeService.getMetaTypeInformation( this.bundleContext.getBundle() );
+    Bundle bundle = FrameworkUtil.getBundle( getClass() );
+    return this.metaTypeService.getMetaTypeInformation( bundle );
   }
 
   /**
@@ -713,6 +772,17 @@ public class Client implements StatusListener, ApplicationCallback, EventHandler
 
     // Cause exceptions to be shown in a more user-friendly way...
     JErrorDialog.installSwingExceptionHandler();
+  }
+
+  /**
+   * Schedules an update of all managed actions.
+   */
+  private void scheduleActionsUpdate()
+  {
+    if ( this.mainFrame != null )
+    {
+      this.mainFrame.scheduleActionsUpdate();
+    }
   }
 
   /**

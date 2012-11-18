@@ -81,7 +81,7 @@ public class UARTAnalyserWorkerDataFilesTest extends TestCase
       assertEquals( errorCount, result.countDataErrors() );
       assertEquals( symbolCount, result.countSymbols() );
 
-      BaudrateAnnotation baudrateAnnotation = result.getDataAnnotation( BaudrateAnnotation.class );
+      BaudrateAnnotation baudrateAnnotation = result.getFirstAnnotation( BaudrateAnnotation.class, channels[0] );
 
       assertEquals( expectedBaudrate, baudrateAnnotation.getProperties().get( "baudrate" ) );
     }

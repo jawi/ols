@@ -23,7 +23,6 @@ package nl.lxtreme.ols.client;
 
 import java.io.*;
 
-import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.project.impl.*;
 import nl.lxtreme.ols.common.session.*;
@@ -41,7 +40,6 @@ public final class ProjectController
 
   // Injected by Felix DM...
   private volatile StatusListener statusListener;
-  private volatile ActionManager actionManager;
   private volatile Session session;
 
   // CONSTRUCTORS
@@ -129,7 +127,6 @@ public final class ProjectController
     finally
     {
       IOUtil.closeResource( reader );
-      this.actionManager.updateActionStates();
     }
   }
 
@@ -159,7 +156,6 @@ public final class ProjectController
     finally
     {
       IOUtil.closeResource( fis );
-      this.actionManager.updateActionStates();
     }
   }
 

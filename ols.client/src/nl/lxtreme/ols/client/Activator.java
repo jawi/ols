@@ -198,13 +198,6 @@ public class Activator extends DependencyActivatorBase
    */
   private void registerClient( final DependencyManager aManager )
   {
-    final String[] interfaces = new String[] { EventHandler.class.getName(), ApplicationCallback.class.getName(),
-        StatusListener.class.getName() };
-
-    Properties props = new Properties();
-    props.put( EventConstants.EVENT_TOPIC, new String[] { Session.TOPIC_ANY, DataAcquisitionService.TOPIC_ANY,
-        ToolInvoker.TOPIC_ANY } );
-
     final Client client = Client.getInstance();
 
     // Expose all of our "static" controllers as OSGi-managed components...
@@ -242,7 +235,6 @@ public class Activator extends DependencyActivatorBase
     aManager.add( createComponent()
         .setInterface( ProjectController.class.getName(), null )
         .setImplementation( client.getProjectController() )
-        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
         .add( createServiceDependency().setService( Session.class ).setInstanceBound( true ).setRequired( true ) ) 
         .add( createServiceDependency().setService( StatusListener.class ).setRequired( false ) ) 
     );
@@ -260,11 +252,20 @@ public class Activator extends DependencyActivatorBase
         .add( createServiceDependency().setService( StatusListener.class ).setRequired( false ) ) 
         .add( createServiceDependency().setService( LogService.class ).setRequired( false ) ) 
     );
+    
+    final String[] interfaces = new String[] { EventHandler.class.getName(), ApplicationCallback.class.getName(),
+        StatusListener.class.getName(), ManagedService.class.getName() };
+
+    Properties props = new Properties();
+    props.put( Constants.SERVICE_PID, ClientConfig.class.getName() );
+    props.put( EventConstants.EVENT_TOPIC, new String[] { Session.TOPIC_ANY, DataAcquisitionService.TOPIC_ANY,
+        ToolInvoker.TOPIC_ANY } );
+
     aManager.add( createComponent()
         .setInterface( interfaces, props )
         .setImplementation( client )
         .add( createServiceDependency().setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ).setCallbacks( "addMenu", "removeMenu" ).setRequired( false ) )
-        .add( createServiceDependency().setService( UIColorSchemeManager.class ).setRequired( true ) )
+        .add( createServiceDependency().setService( ColorSchemeManager.class ).setRequired( true ) )
         .add( createServiceDependency().setService( MetaTypeService.class ).setRequired( true ) )
         .add( createServiceDependency().setService( ConfigurationAdmin.class ).setRequired( true ) )
         .add( createServiceDependency().setService( HostProperties.class ).setRequired( true ) )
@@ -311,19 +312,19 @@ public class Activator extends DependencyActivatorBase
   }
 
   /**
-   * Registers the {@link UIColorSchemeManager} as service.
+   * Registers the {@link ColorSchemeManager} as service.
    */
   private void registerUIColorSchemeManager( final DependencyManager aManager )
   {
     Properties props = new Properties();
-    props.put( Constants.SERVICE_PID, UIColorSchemeManager.PID );
+    props.put( Constants.SERVICE_PID, ColorSchemeManager.PID );
 
-    String[] serviceNames = new String[] { UIColorSchemeManager.class.getName(), ManagedServiceFactory.class.getName() };
+    String[] serviceNames = new String[] { ColorSchemeManager.class.getName(), ManagedServiceFactory.class.getName() };
 
     // UI Manager Configuration...
     aManager.add( createComponent() //
         .setInterface( serviceNames, props ) //
-        .setImplementation( UIColorSchemeManager.class ) );
+        .setImplementation( ColorSchemeManager.class ) );
   }
 
   /**

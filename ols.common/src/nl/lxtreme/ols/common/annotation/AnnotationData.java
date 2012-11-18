@@ -83,4 +83,19 @@ public interface AnnotationData
    *           in case the given channel index was invalid.
    */
   SortedSet<Annotation> getAnnotations( int aChannelIdx );
+
+  /**
+   * Returns whether or not annotations are present for the channel with the
+   * given index.
+   * 
+   * @param aType
+   *          the type of annotations that should be present on the channel,
+   *          cannot be <code>null</code>;
+   * @param aChannelIdx
+   *          the index of the channel to test, &gt;= 0 && &lt; 32.
+   * @return <code>true</code> if there are annotations present for the
+   *         requested channel, <code>false</code> if no annotations are
+   *         present.
+   */
+  boolean hasAnnotations( Class<? extends Annotation> aType, int aChannelIdx );
 }

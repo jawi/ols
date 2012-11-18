@@ -36,7 +36,7 @@ public class AnnotationHelper
   /**
    * Provides an annotation implementation for use as channel label annotation.
    */
-  static class ChannelLabelAnnotation implements Annotation
+  static class ChannelLabelAnnotation implements LabelAnnotation
   {
     // VARIABLES
 

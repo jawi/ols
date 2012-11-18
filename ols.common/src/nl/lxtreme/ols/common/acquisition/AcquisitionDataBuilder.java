@@ -80,12 +80,10 @@ public final class AcquisitionDataBuilder
       this.cursorsVisible = aCursorsVisible;
 
       this.channels = new ArrayList<Channel>( this.channelCount );
-      for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
+      for ( int i = 0; i < this.channelCount; i++ )
       {
-        if ( ( this.enabledChannels & ( 1 << i ) ) != 0 )
-        {
-          this.channels.add( new ChannelImpl( i ) );
-        }
+        boolean enabled = ( this.enabledChannels & ( 1 << i ) ) != 0;
+        this.channels.add( new ChannelImpl( i, enabled ) );
       }
     }
 
@@ -282,13 +280,19 @@ public final class AcquisitionDataBuilder
 
     /**
      * Creates a new {@link ChannelImpl} instance.
+     * 
+     * @param aIndex
+     *          the index of the channel to represent;
+     * @param aEnabled
+     *          <code>true</code> if the channel is enabled, <code>false</code>
+     *          otherwise.
      */
-    public ChannelImpl( final int aIndex )
+    public ChannelImpl( final int aIndex, final boolean aEnabled )
     {
       this.index = aIndex;
+      this.enabled = aEnabled;
       this.mask = 1 << aIndex;
       this.label = getDefaultLabel( aIndex );
-      this.enabled = true;
     }
 
     // METHODS
@@ -531,7 +535,12 @@ public final class AcquisitionDataBuilder
     @Override
     public int compareTo( final Sample aSample )
     {
-      return ( int )( this.timestamp - aSample.timestamp );
+      int result = ( this.timestamp < aSample.timestamp ) ? -1 : ( ( this.timestamp == aSample.timestamp ) ? 0 : 1 );
+      if ( result == 0 )
+      {
+        result = ( this.value - aSample.value );
+      }
+      return result;
     }
 
     /**
@@ -920,7 +929,7 @@ public final class AcquisitionDataBuilder
   {
     if ( aTriggerPosition < 0 )
     {
-      throw new IllegalArgumentException( "Timestamp cannot be negative!" );
+      throw new IllegalArgumentException( "Trigger position cannot be negative!" );
     }
     this.triggerPosition = aTriggerPosition;
     return this;

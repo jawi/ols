@@ -395,9 +395,9 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
    */
   public void setAcquisitionData( final AcquisitionData aData )
   {
-    getSignalDiagramModel().setAcquisitionData( aData );
-
     this.annotationsHelper = new AnnotationsHelper( this.session );
+
+    getSignalDiagramModel().setAcquisitionData( aData );
 
     recalculateDimensions();
   }

@@ -38,6 +38,7 @@ public class EditorUtils
   public static final String PROPERTY_READONLY = "readonly";
   public static final String PROPERTY_EDITABLE = "editable";
   public static final String PROPERTY_LISTENER = "listener";
+  public static final String PROPERTY_MANAGED = "managed";
 
   // CONSTRUCTORS
 
@@ -126,6 +127,41 @@ public class EditorUtils
     }
 
     return result;
+  }
+
+  /**
+   * Returns the default value for the given attribute definition.
+   * 
+   * @param aAttributeDef
+   *          the attribute definition to use, cannot be <code>null</code>;
+   * @param aInitialValue
+   *          the initial value, if defined, will have precedence on the default
+   *          defined in the given attribute definition. May be
+   *          <code>null</code>.
+   * @return a default value, can be <code>null</code>.
+   */
+  public Object getDefaultValue( final AttributeDefinition aAttributeDef, final Object aInitialValue )
+  {
+    String[] optionValues = aAttributeDef.getOptionValues();
+    String[] optionLabels = aAttributeDef.getOptionLabels();
+
+    if ( ( ( optionValues != null ) && ( optionValues.length > 0 ) )
+        || ( ( optionLabels != null ) && ( optionLabels.length > 0 ) ) )
+    {
+      return getDefaultStringValue( aAttributeDef, aInitialValue );
+    }
+    else
+    {
+      int type = aAttributeDef.getType();
+      switch ( type )
+      {
+        case AttributeDefinition.BOOLEAN:
+          return Boolean.valueOf( getDefaultBooleanValue( aAttributeDef, aInitialValue ) );
+
+        default:
+          return getDefaultStringValue( aAttributeDef, aInitialValue );
+      }
+    }
   }
 
   /**
@@ -446,6 +482,11 @@ public class EditorUtils
           newValue[newValue.length - 1] = value;
           aComponent.putClientProperty( PROPERTY_LISTENER, newValue );
         }
+      }
+      else if ( PROPERTY_MANAGED.equals( tag ) )
+      {
+        Boolean value = Boolean.valueOf( tags[++i] );
+        aComponent.putClientProperty( PROPERTY_MANAGED, value );
       }
     }
   }

@@ -60,6 +60,12 @@ final class ToolContextImpl implements ToolContext
   public void addAnnotation( final Annotation aAnnotation )
   {
     AnnotationData data = this.session.getAnnotationData();
+    if ( aAnnotation instanceof LabelAnnotation )
+    {
+      LabelAnnotation label = ( LabelAnnotation )aAnnotation;
+      final Channel channel = this.session.getAcquisitionData().getChannel( label.getChannelIndex() );
+      channel.setLabel( label.getData() );
+    }
     data.add( aAnnotation );
   }
 

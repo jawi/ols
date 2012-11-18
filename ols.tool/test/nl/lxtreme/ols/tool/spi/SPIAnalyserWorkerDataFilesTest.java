@@ -48,7 +48,7 @@ public class SPIAnalyserWorkerDataFilesTest extends TestCase
     return Arrays.asList( new Object[][] { //
         // { filename, datagram size (bits), MiSo symbol count, MoSi symbol
         // count, (MISO, MOSI, CS, SCLK) }
-            { "spi_8bit_1.ols", 8, 11, 11, SPIMode.MODE_2, BitOrder.MSB_FIRST, true, new int[] { 0, 1, 3, 2 } }, //
+            { "spi_8bit_1.ols", 8, 0, 11, SPIMode.MODE_2, BitOrder.MSB_FIRST, true, new int[] { -1, 1, 3, 2 } }, //
             { "spi_8bit_2.ols", 8, 195, 195, SPIMode.MODE_2, BitOrder.MSB_FIRST, true, new int[] { 0, 1, 3, 2 } }, //
             { "spi_9bit_3.ols", 9, 17, 17, SPIMode.MODE_2, BitOrder.LSB_FIRST, true, new int[] { 0, 3, 1, 2 } }, //
             { "spi_8bit_4.ols", 8, 0, 53, SPIMode.MODE_0, BitOrder.MSB_FIRST, false, new int[] { -1, 1, 0, 3 } }, //

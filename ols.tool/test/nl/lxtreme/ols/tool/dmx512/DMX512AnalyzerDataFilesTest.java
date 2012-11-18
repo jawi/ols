@@ -72,7 +72,7 @@ public class DMX512AnalyzerDataFilesTest extends TestCase
       assertEquals( errorCount, result.countDataErrors() );
       assertEquals( symbolCount, result.countSymbols() );
 
-      DataAnnotation packetAnn = result.getDataAnnotation( DMX512AnalyzerTask.EVENT_PACKET );
+      DataAnnotation packetAnn = result.getFirstDataAnnotation( DMX512AnalyzerTask.EVENT_PACKET, dataLine );
 
       assertNotNull( packetAnn );
       assertEquals( slotCount, packetAnn.getProperties().get( DMX512AnalyzerTask.KEY_SLOT_COUNT ) );
