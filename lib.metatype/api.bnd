@@ -1,0 +1,3 @@
+Export-Package: nl.lxtreme.osgi.metatype
+Bundle-Name: OSGi MetaType annotation bundle
+Bundle-Version: 1.0.0
