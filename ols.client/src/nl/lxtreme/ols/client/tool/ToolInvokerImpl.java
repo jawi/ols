@@ -288,7 +288,7 @@ public class ToolInvokerImpl implements ToolInvoker
       private Event createEvent( final String aState, final Throwable aException )
       {
         Map<Object, Object> props = new HashMap<Object, Object>();
-        props.put( KEY_TOOL_NAME, this.delegate.getName() );
+        props.put( KEY_TOOL_NAME, getToolName() );
         props.put( KEY_TOOL_START_TIME, this.startTime );
         props.put( KEY_TOOL_EXCEPTION, aException );
         props.put( KEY_TOOL_STATE, aState );
@@ -298,10 +298,23 @@ public class ToolInvokerImpl implements ToolInvoker
       private Event createEvent( final Integer aPercentage )
       {
         Map<Object, Object> props = new HashMap<Object, Object>();
-        props.put( KEY_TOOL_NAME, this.delegate.getName() );
+        props.put( KEY_TOOL_NAME, getToolName() );
         props.put( KEY_TOOL_START_TIME, this.startTime );
         props.put( KEY_TOOL_PROGRESS, aPercentage );
         return new Event( TOPIC_TOOL_PROGRESS, props );
+      }
+
+      /**
+       * @return a tool name, never <code>null</code>.
+       */
+      private String getToolName()
+      {
+        String result = this.delegate.getName();
+        if ( result.endsWith( "..." ) )
+        {
+          result = result.substring( 0, result.length() - 3 );
+        }
+        return result.trim();
       }
     };
     worker.execute();

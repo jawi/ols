@@ -36,6 +36,7 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.channellabels.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -183,6 +184,23 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   public ZoomController getZoomController()
   {
     return this.signalDiagramModel.getZoomController();
+  }
+
+  /**
+   * Handles the given annotation for further processing.
+   * 
+   * @param aAnnotation
+   *          the annotation to handle, cannot be <code>null</code>.
+   */
+  public void handleAnnotation( final Annotation aAnnotation )
+  {
+    // For label annotations we should set the channel label...
+    if ( aAnnotation instanceof LabelAnnotation )
+    {
+      LabelAnnotation label = ( LabelAnnotation )aAnnotation;
+      SignalElement channel = getSignalDiagramModel().getSignalElement( label.getChannelIndex() );
+      channel.setLabel( label.getData() );
+    }
   }
 
   /**

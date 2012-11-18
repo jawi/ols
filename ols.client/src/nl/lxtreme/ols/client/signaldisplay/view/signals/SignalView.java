@@ -114,7 +114,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
           if ( annotation != null )
           {
             SignalView view = ( SignalView )aEvent.getSource();
-            view.setToolTipText( annotation.getData().toString() );
+            view.setToolTipText( helper.getDescription( annotation ) );
 
             aEvent.consume();
           }

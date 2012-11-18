@@ -40,6 +40,8 @@ import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.componentprovider.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
+import nl.lxtreme.ols.common.annotation.Annotation;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.common.util.*;
 import nl.lxtreme.ols.host.*;
@@ -308,6 +310,10 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
     }
     else if ( TOPIC_ANNOTATION_ADDED.equals( topic ) || TOPIC_ANNOTATION_CLEARED.equals( topic ) )
     {
+      Annotation annotation = ( Annotation )aEvent.getProperty( KEY_ANNOTATION );
+
+      getSignalDiagramController().handleAnnotation( annotation );
+
       // Accumulate repaint events to avoid an avalanche of events on the
       // EDT...
       scheduleRepaint();

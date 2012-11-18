@@ -42,7 +42,7 @@ import nl.lxtreme.ols.common.acquisition.Cursor;
 /**
  * The main model for the {@link SignalDiagramComponent}.
  */
-public class SignalDiagramModel
+public final class SignalDiagramModel
 {
   // INNER TYPES
 
@@ -100,99 +100,6 @@ public class SignalDiagramModel
   // METHODS
 
   /**
-   * Provides a binary search for arrays of long-values.
-   * <p>
-   * This implementation is directly copied from the JDK
-   * {@link Arrays#binarySearch(long[], long)} implementation, slightly modified
-   * to only perform a single comparison-action.
-   * </p>
-   * 
-   * @param aArray
-   *          the array of long values to search in;
-   * @param aFromIndex
-   *          the from index to search from;
-   * @param aToIndex
-   *          the to index to search up and until;
-   * @param aKey
-   *          the value to search for.
-   * @return the index of the given key, which is either the greatest index of
-   *         the value less or equal to the given key.
-   * @see Arrays#binarySearch(long[], long)
-   */
-  static final int binarySearch( final long[] aArray, final int aFromIndex, final int aToIndex, final long aKey )
-  {
-    int mid = -1;
-    int low = aFromIndex;
-    int high = aToIndex - 1;
-
-    while ( low <= high )
-    {
-      mid = ( low + high ) >>> 1;
-      final long midVal = aArray[mid];
-
-      final int c = ( aKey < midVal ? -1 : ( aKey == midVal ? 0 : 1 ) );
-      if ( c > 0 )
-      {
-        low = mid + 1;
-      }
-      else if ( c < 0 )
-      {
-        high = mid - 1;
-      }
-      else
-      {
-        return mid; // key found
-      }
-    }
-
-    if ( mid < 0 )
-    {
-      return low;
-    }
-
-    // Determine the insertion point, avoid crossing the array boundaries...
-    if ( mid < ( aToIndex - 1 ) )
-    {
-      // If the searched value is greater than the value of the found index,
-      // insert it after this value, otherwise before it (= the last return)...
-      if ( aKey > aArray[mid] )
-      {
-        return mid + 1;
-      }
-    }
-
-    return mid;
-  }
-
-  /**
-   * Moves an element from a "old" position to a "new" position, shifting all
-   * other elements.
-   * <p>
-   * NOTE: the given array's contents will be mutated!
-   * </p>
-   * 
-   * @param aInput
-   *          the input array to move the elements from, cannot be
-   *          <code>null</code>;
-   * @param aOldIdx
-   *          the index of the element to move;
-   * @param aNewIdx
-   *          the index to move the element to.
-   */
-  static final void shiftElements( final int[] aInput, final int aOldIdx, final int aNewIdx )
-  {
-    final int length = aInput.length;
-
-    final int moved = aInput[aOldIdx];
-    // Delete element from array...
-    System.arraycopy( aInput, aOldIdx + 1, aInput, aOldIdx, length - 1 - aOldIdx );
-    // Make space for new element...
-    System.arraycopy( aInput, aNewIdx, aInput, aNewIdx + 1, length - 1 - aNewIdx );
-    // Set actual (inserted) element...
-    aInput[aNewIdx] = moved;
-  }
-
-  /**
    * Adds a cursor change listener.
    * 
    * @param aListener
@@ -241,7 +148,7 @@ public class SignalDiagramModel
    * @param aTimestamp
    * @return
    */
-  public final long findEdgeAfter( final SignalElement aSignalElement, final long aTimestamp )
+  public long findEdgeAfter( final SignalElement aSignalElement, final long aTimestamp )
   {
     final long[] timestamps = getTimestamps();
     final int[] values = getValues();
@@ -276,7 +183,7 @@ public class SignalDiagramModel
    * @param aTimestamp
    * @return
    */
-  public final long findEdgeBefore( final SignalElement aSignalElement, final long aTimestamp )
+  public long findEdgeBefore( final SignalElement aSignalElement, final long aTimestamp )
   {
     final long[] timestamps = getTimestamps();
     final int[] values = getValues();
@@ -380,7 +287,7 @@ public class SignalDiagramModel
   }
 
   /**
-   * @return
+   * @return the acquired data, can be <code>null</code>.
    */
   public AcquisitionData getCapturedData()
   {
@@ -388,11 +295,15 @@ public class SignalDiagramModel
   }
 
   /**
-   * {@inheritDoc}
+   * Returns the cursor with the given index.
+   * 
+   * @param aIndex
+   *          the index of the cursor to retrieve, >= 0.
+   * @return a cursor element, never <code>null</code>.
    */
-  public CursorElement getCursor( final int aCursorIdx )
+  public CursorElement getCursor( final int aIndex )
   {
-    return new CursorElement( this.data.getCursor( aCursorIdx ) );
+    return new CursorElement( this.data.getCursor( aIndex ) );
   }
 
   /**
@@ -529,11 +440,24 @@ public class SignalDiagramModel
   }
 
   /**
+   * Returns the signal element representing the digital channel with the given
+   * index.
+   * 
+   * @param aIndex
+   *          the index of the signal element to return, >= 0.
+   * @return a signal element, can be <code>null</code>.
+   */
+  public SignalElement getSignalElement( final int aIndex )
+  {
+    return getSignalElementManager().getChannelByIndex( aIndex );
+  }
+
+  /**
    * Returns channel group manager.
    * 
    * @return the channel group manager, never <code>null</code>.
    */
-  public final SignalElementManager getSignalElementManager()
+  public SignalElementManager getSignalElementManager()
   {
     return this.channelGroupManager;
   }
@@ -548,7 +472,7 @@ public class SignalDiagramModel
    * @return the rectangle of the signal the given coordinate contains,
    *         <code>null</code> if not found.
    */
-  public final MeasurementInfo getSignalHover( final Point aPoint )
+  public MeasurementInfo getSignalHover( final Point aPoint )
   {
     final SignalElement signalElement = findSignalElement( aPoint );
     if ( ( signalElement == null ) || !signalElement.isDigitalSignal() )
@@ -905,7 +829,7 @@ public class SignalDiagramModel
    * 
    * @return the zoom controller, never <code>null</code>.
    */
-  public final ZoomController getZoomController()
+  public ZoomController getZoomController()
   {
     return this.zoomController;
   }
@@ -915,7 +839,7 @@ public class SignalDiagramModel
    * 
    * @return a zoom factor.
    */
-  public final double getZoomFactor()
+  public double getZoomFactor()
   {
     return getZoomController().getFactor();
   }
@@ -926,7 +850,7 @@ public class SignalDiagramModel
    * @return <code>true</code> if there is any data to display,
    *         <code>false</code> otherwise.
    */
-  public final boolean hasData()
+  public boolean hasData()
   {
     return ( this.data != null ) && ( getCapturedData() != null );
   }
@@ -1151,6 +1075,21 @@ public class SignalDiagramModel
   /**
    * Returns the color for a cursor with the given index.
    * 
+   * @param aCursorIndex
+   *          the index of the cursor to retrieve the color for.
+   * @return a cursor color, never <code>null</code>.
+   */
+  public void setCursorColor( final int aCursorIndex, final Color aColor )
+  {
+    final CursorElement cursor = getCursor( aCursorIndex );
+    cursor.setColor( aColor );
+
+    fireCursorChangeEvent( ICursorChangeListener.PROPERTY_COLOR, cursor );
+  }
+
+  /**
+   * Returns the color for a cursor with the given index.
+   * 
    * @param aCursorIdx
    *          the index of the cursor to retrieve the color for;
    * @param aLabel
@@ -1165,21 +1104,6 @@ public class SignalDiagramModel
     cursor.setLabel( aLabel );
 
     fireCursorChangeEvent( ICursorChangeListener.PROPERTY_LABEL, cursor );
-  }
-
-  /**
-   * Returns the color for a cursor with the given index.
-   * 
-   * @param aCursorIndex
-   *          the index of the cursor to retrieve the color for.
-   * @return a cursor color, never <code>null</code>.
-   */
-  public final void setCursorColor( final int aCursorIndex, final Color aColor )
-  {
-    final CursorElement cursor = getCursor( aCursorIndex );
-    cursor.setColor( aColor );
-
-    fireCursorChangeEvent( ICursorChangeListener.PROPERTY_COLOR, cursor );
   }
 
   /**

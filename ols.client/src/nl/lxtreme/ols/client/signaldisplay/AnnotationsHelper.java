@@ -21,6 +21,9 @@
 package nl.lxtreme.ols.client.signaldisplay;
 
 
+import static nl.lxtreme.ols.tool.api.AnnotationHelper.*;
+
+import java.awt.event.*;
 import java.util.*;
 
 import nl.lxtreme.ols.common.annotation.*;
@@ -224,6 +227,106 @@ public final class AnnotationsHelper
   }
 
   /**
+   * Returns a text representation for the given annotation.
+   * 
+   * @param aAnnotation
+   *          the annotation to get a text representation for, cannot be
+   *          <code>null</code>.
+   * @return a text representation, never <code>null</code>.
+   */
+  public String getText( final DataAnnotation aAnnotation )
+  {
+    String result = null;
+
+    Object data = aAnnotation.getData();
+    Map<String, Object> props = aAnnotation.getProperties();
+
+    boolean symbol = Boolean.TRUE.equals( props.get( KEY_SYMBOL ) );
+    if ( symbol )
+    {
+      if ( data instanceof Integer )
+      {
+        int value = ( ( Integer )data ).intValue();
+        if ( ( value >= 0 ) && isPrintableChar( ( char )value ) )
+        {
+          result = String.format( "%1$c", data );
+        }
+      }
+    }
+
+    if ( result == null )
+    {
+      result = String.format( "(%1$s)", String.valueOf( data ) );
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns a text description for the given annotation, useful for tooltips.
+   * 
+   * @param aAnnotation
+   *          the annotation to get a description for, cannot be
+   *          <code>null</code>.
+   * @return an annotation description, never <code>null</code>.
+   */
+  public String getDescription( final Annotation aAnnotation )
+  {
+    Object data = aAnnotation.getData();
+
+    String description = null;
+    boolean symbol = false;
+    boolean error = false;
+
+    if ( aAnnotation instanceof DataAnnotation )
+    {
+      Map<String, Object> props = ( ( DataAnnotation )aAnnotation ).getProperties();
+
+      symbol = Boolean.TRUE.equals( props.get( KEY_SYMBOL ) );
+      error = Boolean.TRUE.equals( props.get( KEY_ERROR ) );
+      description = ( String )props.get( KEY_DESCRIPTION );
+    }
+
+    StringBuilder sb = new StringBuilder( "<html><head><style>th { text-align: left; }</style></head><body><table>" );
+
+    if ( symbol )
+    {
+      sb.append( "<tr><th>Symbol:</th><td>" );
+      if ( data instanceof Integer )
+      {
+        int value = ( ( Integer )data ).intValue();
+        String text;
+        if ( ( value >= 0 ) && isPrintableChar( ( char )value ) )
+        {
+          text = String.format( "'%1$c' (%1$d, 0x%1$x, 0%1$o)", data );
+        }
+        else
+        {
+          text = String.format( "%1$d (0x%1$x, 0%1$o)", data );
+        }
+        sb.append( text );
+      }
+      else
+      {
+        sb.append( data );
+      }
+      sb.append( "</td></tr>" );
+    }
+
+    if ( error )
+    {
+      sb.append( "<tr><th>Error</th><td>" ).append( data ).append( "</td></tr>" );
+    }
+
+    if ( description != null )
+    {
+      sb.append( "<tr><td colspan='2'>" ).append( description ).append( "</td></tr>" );
+    }
+
+    return sb.append( "</table></body></html>" ).toString();
+  }
+
+  /**
    * @param aChannelIdx
    * @return
    */
@@ -231,5 +334,19 @@ public final class AnnotationsHelper
   {
     final AnnotationData annotationData = this.session.getAnnotationData();
     return annotationData.getAnnotations( aChannelIdx );
+  }
+
+  /**
+   * @param aChar
+   * @return
+   */
+  private boolean isPrintableChar( final char aChar )
+  {
+    if ( Character.isISOControl( aChar ) || ( aChar == KeyEvent.CHAR_UNDEFINED ) )
+    {
+      return false;
+    }
+    Character.UnicodeBlock block = Character.UnicodeBlock.of( aChar );
+    return ( block != null ) && ( block != Character.UnicodeBlock.SPECIALS );
   }
 }

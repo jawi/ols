@@ -286,7 +286,7 @@ public class SignalUI extends ComponentUI
             int y2 = y1 + signalElement.getSignalHeight();
             int midY = y1 + ( ( y2 - y1 ) / 2 );
 
-            final String annText = ann.getData().toString();
+            final String annText = helper.getText( ann );
 
             final int annotationWidth = ( x2 - x1 ) + 2;
 
