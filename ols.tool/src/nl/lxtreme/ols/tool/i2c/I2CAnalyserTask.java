@@ -197,7 +197,7 @@ public class I2CAnalyserTask implements Callable<Void>
       if ( this.reportStart )
       {
         annotationHelper.addAnnotation( this.sdaIdx, timestamps[startOfDecode], timestamps[startOfDecode] + 1,
-            EVENT_START, KEY_COLOR, "#e0e0e0" );
+            EVENT_START, KEY_COLOR, "#e0e0e0", KEY_DESCRIPTION, "Start condition" );
       }
     }
 
@@ -258,8 +258,7 @@ public class I2CAnalyserTask implements Callable<Void>
           }
           else
           {
-            desc = String.format( "%s data: 0x%X (%c)", ( direction == 1 ) ? "Read" : "Write",
-                Integer.valueOf( byteValue ), Integer.valueOf( byteValue ) );
+            desc = String.format( "%s data", ( direction == 1 ) ? "Read" : "Write" );
           }
 
           annotationHelper.addAnnotation( this.sdaIdx, timestamps[prevIdx], timestamps[idx],
@@ -298,7 +297,7 @@ public class I2CAnalyserTask implements Callable<Void>
               if ( this.reportNACK )
               {
                 annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_NACK,
-                    KEY_COLOR, "#ffc0c0" );
+                    KEY_COLOR, "#ffc0c0", KEY_DESCRIPTION, "Not acknowledged by slave" );
               }
             }
             else
@@ -307,7 +306,7 @@ public class I2CAnalyserTask implements Callable<Void>
               if ( this.reportACK )
               {
                 annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_ACK,
-                    KEY_COLOR, "#c0ffc0" );
+                    KEY_COLOR, "#c0ffc0", KEY_DESCRIPTION, "Acknowledged by slave" );
               }
             }
 
@@ -337,7 +336,7 @@ public class I2CAnalyserTask implements Callable<Void>
             if ( this.reportStop )
             {
               annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_STOP, KEY_COLOR,
-                  "#e0e0e0" );
+                  "#e0e0e0", KEY_DESCRIPTION, "Stop condition" );
             }
 
             slaveAddress = 0x00;
@@ -349,7 +348,7 @@ public class I2CAnalyserTask implements Callable<Void>
             if ( this.reportStart )
             {
               annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_START,
-                  KEY_COLOR, "#e0e0e0" );
+                  KEY_COLOR, "#e0e0e0", KEY_DESCRIPTION, "Start condition" );
             }
 
             startCondFound = true;
