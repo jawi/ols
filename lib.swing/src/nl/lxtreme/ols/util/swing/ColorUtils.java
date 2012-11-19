@@ -174,7 +174,7 @@ public final class ColorUtils
     }
     catch ( NumberFormatException exception )
     {
-      throw new IllegalArgumentException( "Given string does NOT represent a valid color!" );
+      throw new IllegalArgumentException( "Given string (" + aColor + ") does NOT represent a valid color!" );
     }
   }
 
