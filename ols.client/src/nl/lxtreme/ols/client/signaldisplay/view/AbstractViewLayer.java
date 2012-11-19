@@ -70,4 +70,12 @@ public abstract class AbstractViewLayer extends JComponent
   {
     return this.controller;
   }
+
+  /**
+   * @return a {@link SignalDiagramModel} instance, never <code>null</code>.
+   */
+  protected final SignalDiagramModel getSignalDiagramModel()
+  {
+    return getController().getSignalDiagramModel();
+  }
 }

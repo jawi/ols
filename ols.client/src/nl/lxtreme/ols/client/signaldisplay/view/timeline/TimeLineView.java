@@ -208,7 +208,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
   }
 
   /**
-   * @return
+   * @return a {@link TimeLineViewModel} instance, never <code>null</code>.
    */
   public TimeLineViewModel getModel()
   {

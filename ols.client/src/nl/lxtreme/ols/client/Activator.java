@@ -241,6 +241,7 @@ public class Activator extends DependencyActivatorBase
     aManager.add( createComponent()
         .setInterface( SignalDiagramController.class.getName(), null )
         .setImplementation( client.getSignalDiagramController() )
+        .setComposition( "getComposition" )
         .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
         .add( createServiceDependency().setService( Session.class ).setInstanceBound( true ).setRequired( true ) ) 
     );

@@ -23,26 +23,26 @@ package nl.lxtreme.ols.client.signaldisplay.view.toolwindow;
 
 import java.awt.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
 import javax.swing.table.*;
 
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.util.*;
-import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * Provides a dockable tool-window that presents an overview of the annotations.
  */
-public class AnnotationOverview extends AbstractViewLayer implements IToolWindow, IDataModelChangeListener
+public class AnnotationOverview extends AbstractViewLayer implements IToolWindow, IDataModelChangeListener,
+    IAnnotationDataChangedListener
 {
   // INNER TYPES
 
@@ -57,126 +57,37 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
 
     // VARIABLES
 
-    private final double sampleRate;
-    private final long triggerPos;
-    private final AnnotationsHelper annotationsHelper;
-    private final AcquisitionData data;
-    private final ConcurrentNavigableMap<AnnotationKey, List<DataAnnotation>> map;
-    private final List<String> columns;
-    private final List<String> defaultColumns;
+    private final SignalDiagramController controller;
+    private final AtomicReference<DataHolder> dataRef;
 
     // CONSTRUCTORS
 
     /**
      * Creates a new {@link AnnotationContainer} instance.
      */
-    public AnnotationContainer( final SignalDiagramController aController, final AcquisitionData aData )
+    public AnnotationContainer( final SignalDiagramController aController )
     {
-      this.data = aData;
-      this.annotationsHelper = aController.getAnnotationsHelper();
-
-      this.map = new ConcurrentSkipListMap<AnnotationKey, List<DataAnnotation>>();
-      this.defaultColumns = Arrays.asList( "#", "Start", "Stop" );
-      this.columns = new CopyOnWriteArrayList<String>( this.defaultColumns );
-
-      this.sampleRate = aData.getSampleRate();
-      this.triggerPos = aData.hasTriggerData() ? aData.getTriggerPosition() : 0L;
+      this.controller = aController;
+      this.dataRef = new AtomicReference<DataHolder>();
     }
 
     // METHODS
 
     /**
-     * @param aAnnotation
-     *          the annotation to add, cannot be <code>null</code>.
+     * Clears this structure, removing all of its data.
      */
-    public void add( final Annotation aAnnotation )
+    public void clearStructure( final Integer aChannelIdx )
     {
-      if ( aAnnotation instanceof DataAnnotation )
+      if ( aChannelIdx == null )
       {
-        DataAnnotation annotation = ( DataAnnotation )aAnnotation;
+        this.dataRef.set( null );
 
-        AnnotationKey key = new AnnotationKey( annotation.getStartTimestamp(), annotation.getEndTimestamp() );
-
-        List<DataAnnotation> values = this.map.get( key );
-        if ( values == null )
-        {
-          values = new ArrayList<DataAnnotation>();
-          this.map.putIfAbsent( key, values );
-        }
-        values.add( annotation );
-
-        String name = getChannelName( aAnnotation );
-        if ( !this.columns.contains( name ) )
-        {
-          this.columns.add( name );
-          fireTableStructureChanged();
-        }
-        else
-        {
-          fireTableRowsInserted( this.map.size() - 1, this.map.size() - 1 );
-        }
+        fireTableStructureChanged();
       }
-    }
-
-    /**
-     * Clears this container.
-     */
-    public void clear()
-    {
-      this.map.clear();
-      this.columns.retainAll( this.defaultColumns );
-
-      fireTableStructureChanged();
-    }
-
-    /**
-     * Clears the annotations for the given channel index.
-     * 
-     * @param aChannelIdx
-     *          the channel index to clear the annotations for.
-     */
-    public void clear( final int aChannelIdx )
-    {
-      List<Entry<AnnotationKey, List<DataAnnotation>>> entrySet = new ArrayList<Map.Entry<AnnotationKey, List<DataAnnotation>>>(
-          this.map.entrySet() );
-      for ( Entry<AnnotationKey, List<DataAnnotation>> entry : entrySet )
+      else
       {
-        List<DataAnnotation> values = new ArrayList<DataAnnotation>( entry.getValue() );
-        for ( DataAnnotation annotation : values )
-        {
-          if ( annotation.getChannelIndex() == aChannelIdx )
-          {
-            entry.getValue().remove( annotation );
-          }
-        }
-
-        if ( entry.getValue().isEmpty() )
-        {
-          this.map.remove( entry.getKey() );
-        }
+        updateStructure();
       }
-      fireTableStructureChanged();
-    }
-
-    public DataAnnotation getAnnotation( final int aRowIndex, final int aColumnIndex )
-    {
-      List<AnnotationKey> keySet = new ArrayList<AnnotationKey>( this.map.keySet() );
-      if ( aRowIndex < keySet.size() )
-      {
-        List<DataAnnotation> list = this.map.get( keySet.get( aRowIndex ) );
-        int defaultColumnCount = this.defaultColumns.size();
-
-        if ( aColumnIndex < defaultColumnCount )
-        {
-          return null;
-        }
-        int idx = aColumnIndex - defaultColumnCount;
-        if ( idx < list.size() )
-        {
-          return list.get( idx );
-        }
-      }
-      return null;
     }
 
     /**
@@ -192,7 +103,7 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
 
         case 1:
         case 2:
-          return String.class;
+          return Double.class;
 
         default:
           return DataAnnotation.class;
@@ -205,7 +116,13 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     @Override
     public int getColumnCount()
     {
-      return this.columns.size();
+      final DataHolder dataHolder = this.dataRef.get();
+      if ( dataHolder == null )
+      {
+        return 3;
+      }
+
+      return dataHolder.columnNames.length;
     }
 
     /**
@@ -214,7 +131,23 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     @Override
     public String getColumnName( final int aColumn )
     {
-      return this.columns.get( aColumn );
+      final DataHolder dataHolder = this.dataRef.get();
+      if ( dataHolder == null )
+      {
+        switch ( aColumn )
+        {
+          case 0:
+            return "#";
+          case 1:
+            return "Start";
+          case 2:
+            return "End";
+          default:
+            return null;
+        }
+      }
+
+      return dataHolder.columnNames[aColumn];
     }
 
     /**
@@ -223,7 +156,13 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     @Override
     public int getRowCount()
     {
-      return this.map.size();
+      final DataHolder dataHolder = this.dataRef.get();
+      if ( dataHolder == null )
+      {
+        return 0;
+      }
+
+      return dataHolder.data.length;
     }
 
     /**
@@ -232,137 +171,145 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     @Override
     public Object getValueAt( final int aRowIndex, final int aColumnIndex )
     {
-      List<AnnotationKey> keySet = new ArrayList<AnnotationKey>( this.map.keySet() );
-      if ( aRowIndex < keySet.size() )
+      final DataHolder dataHolder = this.dataRef.get();
+      if ( dataHolder == null )
       {
-        AnnotationKey key = keySet.get( aRowIndex );
-
-        List<DataAnnotation> annotations = this.map.get( key );
-
-        switch ( aColumnIndex )
-        {
-          case 0:
-            return Integer.valueOf( aRowIndex );
-
-          case 1:
-            return formatRelativeTime( key.startTime );
-
-          case 2:
-            return formatRelativeTime( key.endTime );
-
-          default:
-            int idx = aColumnIndex - this.defaultColumns.size();
-            if ( idx < annotations.size() )
-            {
-              return annotations.get( idx );
-            }
-        }
+        return null;
       }
-      return null;
+
+      return dataHolder.data[aRowIndex][aColumnIndex];
     }
 
     /**
-     * @param aTime
-     * @return
+     * Updates the structure of this table, which is a <em>heavy</em> operation
+     * and should be called with care!
      */
-    private String formatAbsoluteTime( final long aTime )
+    public void updateStructure()
     {
-      double value = ( aTime / this.sampleRate );
-      return UnitOfTime.format( value );
-    }
+      final AnnotationData data = getModel().getAnnotationData();
+      final SortedSet<Annotation> annotations = data.getAnnotations();
 
-    /**
-     * @param aTime
-     * @return
-     */
-    private String formatRelativeTime( final long aTime )
-    {
-      return formatAbsoluteTime( aTime - this.triggerPos );
-    }
+      SortedMap<AnnotationKey, List<DataAnnotation>> dataAnnotations = new TreeMap<AnnotationKey, List<DataAnnotation>>();
+      Map<Integer, String> channelNames = new HashMap<Integer, String>();
 
-    /**
-     * @param aAnnotation
-     * @return
-     */
-    private String getChannelName( final Annotation aAnnotation )
-    {
-      int channelIdx = aAnnotation.getChannelIndex();
-      Channel channel = this.data.getChannel( channelIdx );
-      if ( channel == null )
+      // Step 1: determine dimensions of the table...
+      for ( Annotation annotation : annotations )
       {
-        // TODO verify!!!
-        System.err.println( "!!! Invalid channel index: " + channelIdx );
-        new RuntimeException().printStackTrace();
-        return String.format( "ch.%d", channelIdx );
-      }
-      return channel.getLabel();
-    }
-  }
+        final Integer channelIdx = Integer.valueOf( annotation.getChannelIndex() );
 
-  /**
-   * Provides a table cell renderer for {@link DataAnnotation}s.
-   */
-  private static class DataAnnotationCellRenderer extends DefaultTableCellRenderer
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public Component getTableCellRendererComponent( final JTable aTable, final Object aValue,
-        final boolean aIsSelected, final boolean aHasFocus, final int aRow, final int aColumn )
-    {
-      String text = "";
-      String tooltip = "";
-
-      final DataAnnotation annotation = ( DataAnnotation )aValue;
-
-      if ( annotation != null )
-      {
-        final Map<String, Object> properties = annotation.getProperties();
-        Object data = annotation.getData();
-
-        text = String.valueOf( data );
-
-        if ( Boolean.TRUE.equals( properties.get( AnnotationHelper.KEY_SYMBOL ) ) )
+        if ( annotation instanceof DataAnnotation )
         {
-          // Normal symbol; show the value in pretty form...
-          if ( data instanceof Number )
+          if ( !channelNames.containsKey( channelIdx ) )
           {
-            int value = ( ( Number )data ).intValue();
-
-            if ( ( value >= 32 ) && ( value < 128 ) )
-            {
-              // plain 7-bit ASCII value
-              text = String.format( "%1$d [0x%1$x] (%1$c)", data );
-            }
-            else
-            {
-              text = String.format( "%1$d [0x%1$x]", data );
-            }
+            channelNames.put( channelIdx, null );
           }
-        }
 
-        if ( properties.containsKey( AnnotationHelper.KEY_DESCRIPTION ) )
+          final DataAnnotation dataAnnotation = ( DataAnnotation )annotation;
+
+          AnnotationKey key = new AnnotationKey( dataAnnotation );
+          List<DataAnnotation> values = dataAnnotations.get( key );
+          if ( values == null )
+          {
+            values = new ArrayList<DataAnnotation>();
+            dataAnnotations.put( key, values );
+          }
+          values.add( dataAnnotation );
+        }
+        else if ( annotation instanceof LabelAnnotation )
         {
-          tooltip = ( String )properties.get( AnnotationHelper.KEY_DESCRIPTION );
-          text = "<html><body><p>" + text + "</p><p>" + tooltip + "</p></body></html>";
+          channelNames.put( channelIdx, ( ( LabelAnnotation )annotation ).getData() );
         }
       }
 
-      JLabel result = ( JLabel )super.getTableCellRendererComponent( aTable, text, aIsSelected, aHasFocus, aRow,
-          aColumn );
-      if ( !"".equals( tooltip ) )
+      // Step 2: remove empty columns...
+      SortedSet<Integer> seenChannels = new TreeSet<Integer>();
+      for ( List<DataAnnotation> entry : dataAnnotations.values() )
       {
-        result.setToolTipText( tooltip );
+        for ( DataAnnotation annotation : entry )
+        {
+          seenChannels.add( Integer.valueOf( annotation.getChannelIndex() ) );
+        }
       }
 
-      // Make sure the row height is sufficient to fill all text...
-      int prefHeight = getPreferredSize().height;
-      if ( aTable.getRowHeight( aRow ) < prefHeight )
+      // Step 3: normalize column indices...
+      SortedMap<Integer, Integer> columnIndices = new TreeMap<Integer, Integer>();
+      int column = 0;
+      for ( Integer channelIdx : seenChannels )
       {
-        aTable.setRowHeight( aRow, prefHeight );
+        columnIndices.put( channelIdx, Integer.valueOf( column++ ) );
       }
 
-      return result;
+      // Step 4: create data structure...
+      final int columnCount = 3 + columnIndices.size();
+      Object[][] newData = new Object[dataAnnotations.size()][columnCount];
+
+      final long triggerPos = getTriggerPosition();
+      final double sampleRate = getSampleRate();
+
+      // Step 5: fill data structure...
+      int row = 0;
+      for ( Map.Entry<AnnotationKey, List<DataAnnotation>> entry : dataAnnotations.entrySet() )
+      {
+        AnnotationKey key = entry.getKey();
+
+        Object[] columnData = new Object[columnCount];
+
+        columnData[0] = Integer.valueOf( row );
+        columnData[1] = Double.valueOf( ( key.startTime - triggerPos ) / sampleRate );
+        columnData[2] = Double.valueOf( ( key.endTime - triggerPos ) / sampleRate );
+        for ( DataAnnotation annotation : entry.getValue() )
+        {
+          int idx = columnIndices.get( Integer.valueOf( annotation.getChannelIndex() ) ).intValue();
+          columnData[idx + 3] = annotation;
+        }
+        newData[row++] = columnData;
+      }
+
+      // Step 6: create column headers...
+      String[] colHeaders = new String[columnCount];
+      column = 0;
+      colHeaders[column++] = "#";
+      colHeaders[column++] = "Start";
+      colHeaders[column++] = "End";
+      for ( Integer channelIdx : seenChannels )
+      {
+        colHeaders[column++] = channelNames.get( channelIdx );
+      }
+
+      // Swap...
+      DataHolder dataHolder = new DataHolder( newData, colHeaders );
+      this.dataRef.set( dataHolder );
+
+      fireTableStructureChanged();
+    }
+
+    /**
+     * @return
+     */
+    private SignalDiagramModel getModel()
+    {
+      return this.controller.getSignalDiagramModel();
+    }
+
+    /**
+     * @return
+     */
+    private double getSampleRate()
+    {
+      return getModel().getSampleRate();
+    }
+
+    /**
+     * @return
+     */
+    private long getTriggerPosition()
+    {
+      final Long result = getModel().getTriggerPosition();
+      if ( result == null )
+      {
+        return 0L;
+      }
+      return result.longValue();
     }
   }
 
@@ -387,14 +334,18 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
 
       setCellSelectionEnabled( false );
       setColumnSelectionAllowed( false );
-      setRowSelectionAllowed( true );
+      setRowSelectionAllowed( false );
 
       setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
-      setIntercellSpacing( new Dimension( 0, 0 ) );
+
+      setAutoCreateColumnsFromModel( true );
+      setFillsViewportHeight( true );
+      setIntercellSpacing( new Dimension( 2, 2 ) );
       setAutoCreateRowSorter( true );
       setShowGrid( false );
 
       setDefaultRenderer( DataAnnotation.class, new DataAnnotationCellRenderer() );
+      setDefaultRenderer( Double.class, new TimeCellRenderer() );
     }
 
     @Override
@@ -425,17 +376,16 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
         Font f = comp.getFont();
         this.font = new Font( Font.MONOSPACED, Font.PLAIN, ( int )( 0.95 * f.getSize() ) );
       }
-
       comp.setFont( this.font );
 
       if ( !isSelected )
       {
         Color bg = ( ( aRow % 2 ) != 0 ) ? ALT_ROW_COLOR : ROW_COLOR;
 
-        DataAnnotation annotation = model.getAnnotation( aRow, aColumn );
-        if ( annotation != null )
+        Object modelValue = model.getValueAt( aRow, aColumn );
+        if ( modelValue instanceof DataAnnotation )
         {
-          Object val = annotation.getProperties().get( AnnotationHelper.KEY_COLOR );
+          Object val = ( ( DataAnnotation )modelValue ).getProperties().get( DataAnnotation.KEY_COLOR );
           if ( val instanceof String )
           {
             bg = ColorUtils.parseColor( ( String )val );
@@ -464,6 +414,14 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     final long endTime;
 
     // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link AnnotationKey} instance.
+     */
+    public AnnotationKey( final DataAnnotation aAnnotation )
+    {
+      this( aAnnotation.getStartTimestamp(), aAnnotation.getEndTimestamp() );
+    }
 
     /**
      * Creates a new {@link AnnotationKey} instance.
@@ -528,6 +486,108 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     }
   }
 
+  /**
+   * Provides a table cell renderer for {@link DataAnnotation}s.
+   */
+  private static class DataAnnotationCellRenderer extends DefaultTableCellRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    private final AnnotationHelper annotationHelper;
+
+    /**
+     * Creates a new {@link DataAnnotationCellRenderer} instance.
+     */
+    public DataAnnotationCellRenderer()
+    {
+      final SignalDiagramController controller = Client.getInstance().getSignalDiagramController();
+
+      this.annotationHelper = controller.getAnnotationsHelper();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Component getTableCellRendererComponent( final JTable aTable, final Object aValue,
+        final boolean aIsSelected, final boolean aHasFocus, final int aRow, final int aColumn )
+    {
+      String text = "";
+      String tooltip = "";
+
+      final DataAnnotation annotation = ( DataAnnotation )aValue;
+
+      if ( annotation != null )
+      {
+        text = this.annotationHelper.getText( annotation );
+        tooltip = this.annotationHelper.getDescription( annotation );
+      }
+
+      JLabel result = ( JLabel )super.getTableCellRendererComponent( aTable, text, aIsSelected, aHasFocus, aRow,
+          aColumn );
+      if ( !"".equals( tooltip ) )
+      {
+        result.setToolTipText( tooltip );
+      }
+
+      // Make sure the row height is sufficient to fill all text...
+      int prefHeight = getPreferredSize().height;
+      if ( aTable.getRowHeight( aRow ) < prefHeight )
+      {
+        aTable.setRowHeight( aRow, prefHeight );
+      }
+
+      return result;
+    }
+  }
+
+  /**
+   * Data holder for the {@link AnnotationContainer}.
+   */
+  private static class DataHolder
+  {
+    // VARIABLES
+
+    final Object[][] data;
+    final String[] columnNames;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link DataHolder} instance.
+     */
+    public DataHolder( final Object[][] aData, final String[] aColumnNames )
+    {
+      this.data = aData;
+      this.columnNames = aColumnNames;
+    }
+  }
+
+  /**
+   * Proivdes a table cell renderer for relative time.
+   */
+  private static class TimeCellRenderer extends DefaultTableCellRenderer
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getTableCellRendererComponent( final JTable aTable, final Object aValue,
+        final boolean aIsSelected, final boolean aHasFocus, final int aRow, final int aColumn )
+    {
+      Object value = aValue;
+      if ( value instanceof Double )
+      {
+        value = UnitOfTime.format( ( ( Double )value ).doubleValue() );
+      }
+
+      JLabel label = ( JLabel )super.getTableCellRendererComponent( aTable, value, aIsSelected, //
+          aHasFocus, aRow, aColumn );
+      label.setHorizontalAlignment( SwingConstants.RIGHT );
+
+      return label;
+    }
+  }
+
   // CONSTANTS
 
   /** The identifier of this tool-window view. */
@@ -537,9 +597,10 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
 
   // VARIABLES
 
-  private AnnotationContainer container;
+  private final AnnotationContainer container;
 
-  private volatile JTable table;
+  private JTable table;
+  private JButton exportButton;
 
   // CONSTRUCTORS
 
@@ -549,6 +610,8 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
   public AnnotationOverview( final SignalDiagramController aController )
   {
     super( aController );
+
+    this.container = new AnnotationContainer( aController );
   }
 
   // METHODS
@@ -565,6 +628,7 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
   {
     final AnnotationOverview result = new AnnotationOverview( aController );
 
+    aController.addAnnotationDataChangedListener( result );
     aController.addDataModelChangeListener( result );
 
     result.initComponent();
@@ -576,17 +640,30 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
    * {@inheritDoc}
    */
   @Override
+  public void annotationDataChanged( final AnnotationData aData )
+  {
+    this.container.updateStructure();
+    updateButtonState();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void annotationDataCleared( final Integer aChannelIdx )
+  {
+    this.container.clearStructure( aChannelIdx );
+    updateButtonState();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void dataModelChanged( final AcquisitionData aData )
   {
-    if ( aData != null )
-    {
-      this.container = new AnnotationContainer( getController(), aData );
-      this.table.setModel( this.container );
-    }
-    else
-    {
-      this.container = null;
-    }
+    this.container.updateStructure();
+    updateButtonState();
   }
 
   /**
@@ -617,9 +694,22 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     setName( "Annotations" );
 
     this.table = new AnnotationJTable( this.container );
-    this.table.setAutoCreateColumnsFromModel( true );
-    this.table.setFillsViewportHeight( true );
+
+    this.exportButton = new JButton( "Export ..." );
+    this.exportButton.setEnabled( false );
+
+    JComponent buttonPane = SwingComponentUtils.createButtonPane( this.exportButton );
 
     add( new JScrollPane( this.table ), BorderLayout.CENTER );
+    add( buttonPane, BorderLayout.PAGE_END );
+  }
+
+  /**
+   * Updates the export button state.
+   */
+  private void updateButtonState()
+  {
+    final int rowCount = this.table.getModel().getRowCount();
+    this.exportButton.setEnabled( rowCount > 0 );
   }
 }

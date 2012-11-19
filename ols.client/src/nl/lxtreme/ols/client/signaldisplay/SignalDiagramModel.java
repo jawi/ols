@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client.signaldisplay;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.view.UIManagerKeys.*;
+
 import java.awt.*;
 import java.beans.*;
 import java.util.*;
@@ -32,11 +34,11 @@ import javax.swing.event.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.signaldisplay.cursor.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.*;
-import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.common.acquisition.Cursor;
+import nl.lxtreme.ols.common.annotation.*;
+import nl.lxtreme.ols.common.session.*;
 
 
 /**
@@ -66,10 +68,12 @@ public final class SignalDiagramModel
 
   private volatile int mode;
   private volatile int selectedChannelIndex;
-  private volatile AcquisitionData data;
+  private AnnotationHelper annotationsHelper;
+
+  // Injected by Felix DM...
+  private volatile Session session;
 
   private final SignalDiagramController controller;
-  private final ZoomController zoomController;
   private final SignalElementManager channelGroupManager;
   private final EventListenerList eventListeners;
   private final PropertyChangeSupport propertyChangeSupport;
@@ -85,11 +89,10 @@ public final class SignalDiagramModel
   public SignalDiagramModel( final SignalDiagramController aController )
   {
     this.controller = aController;
-    this.zoomController = new ZoomController( aController );
 
     this.channelGroupManager = new SignalElementManager();
-
     this.eventListeners = new EventListenerList();
+
     this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.mode = 0;
@@ -98,6 +101,17 @@ public final class SignalDiagramModel
   }
 
   // METHODS
+
+  /**
+   * Adds an annotation data change listener.
+   * 
+   * @param aListener
+   *          the listener to add, cannot be <code>null</code>.
+   */
+  public void addAnnotationDataChangedListener( final IAnnotationDataChangedListener aListener )
+  {
+    this.eventListeners.add( IAnnotationDataChangedListener.class, aListener );
+  }
 
   /**
    * Adds a cursor change listener.
@@ -257,7 +271,7 @@ public final class SignalDiagramModel
       return 0L;
     }
 
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     return capturedData.getAbsoluteLength();
   }
 
@@ -289,9 +303,27 @@ public final class SignalDiagramModel
   /**
    * @return the acquired data, can be <code>null</code>.
    */
-  public AcquisitionData getCapturedData()
+  public AcquisitionData getAcquisitionData()
   {
-    return this.data;
+    return this.session.getAcquisitionData();
+  }
+
+  /**
+   * @return the annotation data, never <code>null</code>.
+   */
+  public AnnotationData getAnnotationData()
+  {
+    return this.session.getAnnotationData();
+  }
+
+  /**
+   * Returns the current value of annotationsHelper.
+   * 
+   * @return the annotation helper, never <code>null</code>.
+   */
+  public AnnotationHelper getAnnotationHelper()
+  {
+    return this.annotationsHelper;
   }
 
   /**
@@ -303,7 +335,8 @@ public final class SignalDiagramModel
    */
   public CursorElement getCursor( final int aIndex )
   {
-    return new CursorElement( this.data.getCursor( aIndex ) );
+    final AcquisitionData data = getAcquisitionData();
+    return new CursorElement( data.getCursor( aIndex ) );
   }
 
   /**
@@ -319,10 +352,10 @@ public final class SignalDiagramModel
     {
       for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
       {
-        Cursor c = this.data.getCursor( i );
+        CursorElement c = getCursor( i );
         if ( c.isDefined() )
         {
-          result.add( new CursorElement( c ) );
+          result.add( c );
         }
       }
     }
@@ -407,12 +440,12 @@ public final class SignalDiagramModel
    */
   public int getSampleRate()
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return -1;
     }
-    return getCapturedData().getSampleRate();
+    return getAcquisitionData().getSampleRate();
   }
 
   /**
@@ -420,7 +453,7 @@ public final class SignalDiagramModel
    */
   public int getSampleWidth()
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return 0;
@@ -707,7 +740,7 @@ public final class SignalDiagramModel
    */
   public int getTimestampIndex( final long aValue )
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return 0;
@@ -720,7 +753,7 @@ public final class SignalDiagramModel
    */
   public long[] getTimestamps()
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return new long[0];
@@ -736,7 +769,7 @@ public final class SignalDiagramModel
    */
   public Long getTriggerPosition()
   {
-    AcquisitionData capturedData = getCapturedData();
+    AcquisitionData capturedData = getAcquisitionData();
     if ( ( capturedData == null ) || !capturedData.hasTriggerData() )
     {
       return null;
@@ -749,7 +782,7 @@ public final class SignalDiagramModel
    */
   public int[] getValues()
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return new int[0];
@@ -790,7 +823,7 @@ public final class SignalDiagramModel
       return 0;
     }
 
-    final int spacing = UIManager.getInt( UIManagerKeys.SIGNAL_ELEMENT_SPACING );
+    final int spacing = UIManager.getInt( SIGNAL_ELEMENT_SPACING );
 
     int inc = 0;
     int yPos = signalElements[0].getYposition();
@@ -825,23 +858,13 @@ public final class SignalDiagramModel
   }
 
   /**
-   * Returns the zoom controller of this diagram.
-   * 
-   * @return the zoom controller, never <code>null</code>.
-   */
-  public ZoomController getZoomController()
-  {
-    return this.zoomController;
-  }
-
-  /**
    * Returns the current zoom factor.
    * 
    * @return a zoom factor.
    */
   public double getZoomFactor()
   {
-    return getZoomController().getFactor();
+    return this.controller.getZoomController().getFactor();
   }
 
   /**
@@ -852,7 +875,7 @@ public final class SignalDiagramModel
    */
   public boolean hasData()
   {
-    return ( this.data != null ) && ( getCapturedData() != null );
+    return ( getAcquisitionData() != null );
   }
 
   /**
@@ -863,7 +886,7 @@ public final class SignalDiagramModel
    */
   public boolean hasTimingData()
   {
-    AcquisitionData captureData = getCapturedData();
+    AcquisitionData captureData = getAcquisitionData();
     return ( captureData != null ) && captureData.hasTimingData();
   }
 
@@ -873,7 +896,7 @@ public final class SignalDiagramModel
    */
   public boolean isAnalogScopeDefaultVisible()
   {
-    return UIManager.getBoolean( UIManagerKeys.ANALOG_SCOPE_VISIBLE_DEFAULT );
+    return UIManager.getBoolean( ANALOG_SCOPE_VISIBLE_DEFAULT );
   }
 
   /**
@@ -902,7 +925,7 @@ public final class SignalDiagramModel
    */
   public boolean isGroupSummaryDefaultVisible()
   {
-    return UIManager.getBoolean( UIManagerKeys.GROUP_SUMMARY_VISIBLE_DEFAULT );
+    return UIManager.getBoolean( GROUP_SUMMARY_VISIBLE_DEFAULT );
   }
 
   /**
@@ -965,6 +988,17 @@ public final class SignalDiagramModel
       return -1;
     }
     return timestamp;
+  }
+
+  /**
+   * Removes an annotation data change listener.
+   * 
+   * @param aListener
+   *          the listener to remove, cannot be <code>null</code>.
+   */
+  public void removeAnnotationDataChangedListener( final IAnnotationDataChangedListener aListener )
+  {
+    this.eventListeners.remove( IAnnotationDataChangedListener.class, aListener );
   }
 
   /**
@@ -1041,13 +1075,14 @@ public final class SignalDiagramModel
       throw new IllegalArgumentException( "Data cannot be null!" );
     }
 
-    this.data = aData;
+    this.annotationsHelper = new AnnotationHelper( this.session );
 
-    final IDataModelChangeListener[] listeners = this.eventListeners.getListeners( IDataModelChangeListener.class );
-    for ( IDataModelChangeListener listener : listeners )
+    if ( !UIManager.getBoolean( RETAIN_ANNOTATIONS_WITH_RECAPTURE ) )
     {
-      listener.dataModelChanged( aData );
+      this.session.getAnnotationData().clearAll();
     }
+
+    fireDataModelChangedEvent();
   }
 
   /**
@@ -1188,6 +1223,46 @@ public final class SignalDiagramModel
   }
 
   /**
+   * Fires an event that the annotation data has been changed.
+   */
+  void fireAnnotationDataChangedEvent()
+  {
+    IAnnotationDataChangedListener[] listeners = this.eventListeners
+        .getListeners( IAnnotationDataChangedListener.class );
+    for ( IAnnotationDataChangedListener listener : listeners )
+    {
+      listener.annotationDataChanged( getAnnotationData() );
+    }
+  }
+
+  /**
+   * Notifies listeners that either all annotations or annotations of a single
+   * channel are cleared.
+   * 
+   * @param aChannelIdx
+   *          the channel index of the channel whose annotations are cleared, or
+   *          <code>null</code> if all annotations are cleared.
+   */
+  final void fireAnnotationDataClearedEvent( final Integer aChannelIdx )
+  {
+    IAnnotationDataChangedListener[] listeners = this.eventListeners
+        .getListeners( IAnnotationDataChangedListener.class );
+    for ( IAnnotationDataChangedListener listener : listeners )
+    {
+      listener.annotationDataCleared( aChannelIdx );
+    }
+  }
+
+  /**
+   * Called by Felix DM upon initialization of this component.
+   */
+  void init( final org.apache.felix.dm.Component aComponent )
+  {
+    // Session is injected by now; create our annotation helper...
+    this.annotationsHelper = new AnnotationHelper( this.session );
+  }
+
+  /**
    * @param aOldCursor
    * @param aCursor
    */
@@ -1235,6 +1310,19 @@ public final class SignalDiagramModel
     for ( ICursorChangeListener listener : listeners )
     {
       listener.cursorRemoved( aCursor );
+    }
+  }
+
+  /**
+   * Fires an event to all {@link IDataModelChangeListener}s that the data model
+   * is changed.
+   */
+  private void fireDataModelChangedEvent()
+  {
+    final IDataModelChangeListener[] listeners = this.eventListeners.getListeners( IDataModelChangeListener.class );
+    for ( IDataModelChangeListener listener : listeners )
+    {
+      listener.dataModelChanged( getAcquisitionData() );
     }
   }
 

@@ -15,30 +15,38 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * Copyright (C) 2010-2011 - J.W. Janssen, <http://www.lxtreme.nl>
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.client.signaldisplay;
 
 
 import java.util.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 
 
 /**
- * Allows implementors to listen for changes to the captured data.
+ * Allows implementations to listen for changes to the annotation data.
  */
-public interface IDataModelChangeListener extends EventListener
+public interface IAnnotationDataChangedListener extends EventListener
 {
-  // METHODS
+  // METHDOS
 
   /**
-   * Called when new data is available, or when annotations are added. Use the
-   * {@link SignalDiagramModel model} to obtain specific information about the
-   * new data.
+   * Called when the annotation data is changed.
    * 
    * @param aData
-   *          the new acquisition data, can be <code>null</code>.
+   *          the changed annotation data, never <code>null</code>.
    */
-  void dataModelChanged( AcquisitionData aData );
+  void annotationDataChanged( AnnotationData aData );
+
+  /**
+   * Called when the annotation data is cleared.
+   * 
+   * @param aChannelIdx
+   *          the channel index of the channel whose annotations are cleared, or
+   *          <code>null</code> if all annotations are cleared.
+   */
+  void annotationDataCleared( Integer aChannelIdx );
 }

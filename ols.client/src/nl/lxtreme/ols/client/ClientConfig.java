@@ -51,6 +51,9 @@ public interface ClientConfig
   @Meta.AD( name = "Retain annotations?", deflt = "false", description = "Whether or not annotations should be retained after a recapture. Will be applied immediately." )
   boolean retainAnnotations();
 
+  @Meta.AD( name = "Use colored annotations?", deflt = "false", description = "Show colorized annotations instead on the default color. Will be applied immediately." )
+  boolean useColoredAnnotations();
+
   @Meta.AD( name = "Show tool windows?", deflt = "false", description = "Whether or not the tool windows are shown by default. Will be applied after a restart." )
   boolean showToolWindows();
 

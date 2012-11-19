@@ -1,5 +1,5 @@
 /*
- * OpenBench LogicSniffer / SUMP project 
+ø * OpenBench LogicSniffer / SUMP project 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -348,7 +348,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
         end = model.getAbsoluteLength();
       }
 
-      return new SignalMeasurer( model.getCapturedData(), this.index, start, end ).run();
+      return new SignalMeasurer( model.getAcquisitionData(), this.index, start, end ).run();
     }
 
     /**
@@ -646,14 +646,6 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   final Collection<Channel> getAllChannels()
   {
     return getAllChannels( getSignalElementManager().getAllElements() );
-  }
-
-  /**
-   * @return a signal diagram model, never <code>null</code>.
-   */
-  final SignalDiagramModel getSignalDiagramModel()
-  {
-    return getController().getSignalDiagramModel();
   }
 
   /**

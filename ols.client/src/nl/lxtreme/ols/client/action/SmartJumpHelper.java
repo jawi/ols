@@ -94,7 +94,7 @@ final class SmartJumpHelper
   private Long getAnnotationJumpPosition( final SignalElement aSignalElement, final long aReferenceTime )
   {
     int channelIdx = aSignalElement.getChannel().getIndex();
-    AnnotationsHelper helper = this.controller.getAnnotationsHelper();
+    AnnotationHelper helper = this.controller.getAnnotationsHelper();
 
     DataAnnotation annotation = null;
     if ( this.direction.isLeft() )
@@ -123,7 +123,7 @@ final class SmartJumpHelper
    */
   private Long getCursorJumpPosition( final long refTimestamp )
   {
-    final AcquisitionData data = getSignalDiagramModel().getCapturedData();
+    final AcquisitionData data = getSignalDiagramModel().getAcquisitionData();
 
     long result = this.direction.isLeft() ? Long.MIN_VALUE : Long.MAX_VALUE;
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )

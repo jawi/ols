@@ -106,7 +106,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
         if ( ( element != null ) && element.isDigitalSignal() )
         {
           int channelIdx = element.getChannel().getIndex();
-          AnnotationsHelper helper = getController().getAnnotationsHelper();
+          AnnotationHelper helper = getController().getAnnotationsHelper();
 
           long timestamp = getModel().locationToTimestamp( point );
 
@@ -374,13 +374,5 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
   public final void updateUI()
   {
     setUI( new SignalUI() );
-  }
-
-  /**
-   * @return the current signal diagram model, never <code>null</code>.
-   */
-  private SignalDiagramModel getSignalDiagramModel()
-  {
-    return getController().getSignalDiagramModel();
   }
 }

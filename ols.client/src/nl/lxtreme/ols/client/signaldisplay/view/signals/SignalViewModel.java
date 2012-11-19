@@ -54,7 +54,7 @@ public class SignalViewModel extends AbstractViewModel
   /**
    * @return the current annotation data, never <code>null</code>.
    */
-  public AnnotationsHelper getAnnotationsHelper()
+  public AnnotationHelper getAnnotationsHelper()
   {
     return this.controller.getAnnotationsHelper();
   }

@@ -195,7 +195,7 @@ public final class SignalElementManager implements IDataModelChangeListener
     // Make sure only a single thread at a time modifies us...
     synchronized ( this.lock )
     {
-      final int channelCount = aData.getChannelCount();
+      final int channelCount = ( aData == null ) ? 0 : aData.getChannelCount();
 
       // Reset channel groups so they align with the given data model...
       final int groupCount = Math.max( 1, ( int )Math.ceil( channelCount / ( double )Ols.CHANNELS_PER_BLOCK ) );

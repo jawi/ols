@@ -251,7 +251,7 @@ public class SignalUI extends ComponentUI
     aCanvas.translate( 0, aSignalElements[0].getYposition() );
 
     final boolean annotationRenderStyle = aModel.isRenderAnnotationAlternatively();
-    final AnnotationsHelper helper = aModel.getAnnotationsHelper();
+    final AnnotationHelper helper = aModel.getAnnotationsHelper();
 
     // Some drawing primitives we're going to re-use over and over...
     final Stroke stroke = getAnnotationLineStroke( annotationRenderStyle, zoomFactor );
@@ -287,6 +287,7 @@ public class SignalUI extends ComponentUI
             int midY = y1 + ( ( y2 - y1 ) / 2 );
 
             final String annText = helper.getText( ann );
+            final Color annColor = helper.getColor( ann, aModel.getAnnotationColor() );
 
             final int annotationWidth = ( x2 - x1 ) + 2;
 
@@ -309,7 +310,7 @@ public class SignalUI extends ComponentUI
             aCanvas.setComposite( oldComposite );
 
             // Draw the thick white boundaries...
-            aCanvas.setColor( aModel.getAnnotationColor() );
+            aCanvas.setColor( annColor );
             aCanvas.setStroke( stroke );
             aCanvas.drawLine( x1, y1 + 2, x1, y2 - 2 );
             aCanvas.drawLine( x2, y1 + 2, x2, y2 - 2 );

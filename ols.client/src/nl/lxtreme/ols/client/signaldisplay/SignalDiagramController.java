@@ -37,7 +37,6 @@ import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.channellabels.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
-import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -51,12 +50,11 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   private final DragAndDropTargetController dndTargetController;
 
   private final SignalDiagramModel signalDiagramModel;
+  private final ZoomController zoomController;
   private SignalDiagramComponent signalDiagram;
-  private AnnotationsHelper annotationsHelper;
 
   // Injected by Felix DM...
   private volatile ActionManager actionManager;
-  private volatile Session session;
 
   // CONSTRUCTORS
 
@@ -67,12 +65,24 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   {
     this.dndTargetController = new DragAndDropTargetController( this );
 
+    this.zoomController = new ZoomController( this );
     this.signalDiagramModel = new SignalDiagramModel( this );
     // Register our controller as listener for zooming events...
-    this.signalDiagramModel.getZoomController().addZoomListener( this );
+    this.zoomController.addZoomListener( this );
   }
 
   // METHODS
+
+  /**
+   * Adds an annotation data change listener.
+   * 
+   * @param aListener
+   *          the listener to add, cannot be <code>null</code>.
+   */
+  public void addAnnotationDataChangedListener( final IAnnotationDataChangedListener aListener )
+  {
+    getSignalDiagramModel().addAnnotationDataChangedListener( aListener );
+  }
 
   /**
    * Adds a channel change listener.
@@ -130,11 +140,23 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   }
 
   /**
+   * Called when annotations are cleared.
+   * 
+   * @param aChannelIdx
+   *          the channel index of the channel whose annotations are cleared, or
+   *          <code>null</code> if all annotations are cleared.
+   */
+  public void clearAnnotations( final Integer aChannelIdx )
+  {
+    getSignalDiagramModel().fireAnnotationDataClearedEvent( aChannelIdx );
+  }
+
+  /**
    * @return the current annotation data, never <code>null</code>.
    */
-  public final AnnotationsHelper getAnnotationsHelper()
+  public final AnnotationHelper getAnnotationsHelper()
   {
-    return this.annotationsHelper;
+    return getSignalDiagramModel().getAnnotationHelper();
   }
 
   /**
@@ -181,9 +203,9 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
    * 
    * @return the zoom controller, never <code>null</code>.
    */
-  public ZoomController getZoomController()
+  public final ZoomController getZoomController()
   {
-    return this.signalDiagramModel.getZoomController();
+    return this.zoomController;
   }
 
   /**
@@ -272,7 +294,8 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
       @Override
       public void run()
       {
-        // Update the zoom action's state...
+        // Update the zoom action's state... TODO move this logic to the
+        // Actions!!!
         Action zoomInAction = am.getAction( ZoomInAction.ID );
         zoomInAction.setEnabled( dataAvailable && aEvent.canZoomIn() );
 
@@ -321,6 +344,17 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
     this.signalDiagram.calculateDimensions();
     this.signalDiagram.revalidateAll();
     this.signalDiagram.repaintAll();
+  }
+
+  /**
+   * Removes an annotation data change listener.
+   * 
+   * @param aListener
+   *          the listener to remove, cannot be <code>null</code>.
+   */
+  public void removeAnnotationDataChangedListener( final IAnnotationDataChangedListener aListener )
+  {
+    getSignalDiagramModel().removeAnnotationDataChangedListener( aListener );
   }
 
   /**
@@ -413,8 +447,6 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
    */
   public void setAcquisitionData( final AcquisitionData aData )
   {
-    this.annotationsHelper = new AnnotationsHelper( this.session );
-
     getSignalDiagramModel().setAcquisitionData( aData );
 
     recalculateDimensions();
@@ -526,6 +558,23 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   public void setSnapModeEnabled( final boolean aSnapMode )
   {
     getSignalDiagramModel().setSnapCursorMode( aSnapMode );
+  }
+
+  /**
+   * Notifies all listeners that the annotation data is changed.
+   */
+  public void updateAnnotations()
+  {
+    // Notify all listeners that something has happened...
+    getSignalDiagramModel().fireAnnotationDataChangedEvent();
+  }
+
+  /**
+   * @return the composition for Felix DM to inject the members of.
+   */
+  final Object[] getComposition()
+  {
+    return new Object[] { this, this.signalDiagramModel, this.zoomController };
   }
 
   /**

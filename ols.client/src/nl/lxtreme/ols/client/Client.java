@@ -40,7 +40,6 @@ import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.componentprovider.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.annotation.Annotation;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.common.util.*;
@@ -308,11 +307,21 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
       scheduleActionsUpdate();
       scheduleRepaint();
     }
-    else if ( TOPIC_ANNOTATION_ADDED.equals( topic ) || TOPIC_ANNOTATION_CLEARED.equals( topic ) )
+    else if ( TOPIC_ANNOTATION_ADDED.equals( topic ) )
     {
       Annotation annotation = ( Annotation )aEvent.getProperty( KEY_ANNOTATION );
 
       getSignalDiagramController().handleAnnotation( annotation );
+
+      // Accumulate repaint events to avoid an avalanche of events on the
+      // EDT...
+      scheduleRepaint();
+    }
+    else if ( TOPIC_ANNOTATION_CLEARED.equals( topic ) )
+    {
+      Integer channel = ( Integer )aEvent.getProperty( KEY_CHANNEL );
+
+      getSignalDiagramController().clearAnnotations( channel );
 
       // Accumulate repaint events to avoid an avalanche of events on the
       // EDT...
@@ -365,6 +374,8 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
       if ( TOOL_STATUS_SUCCESS.equals( status ) )
       {
         long time = System.currentTimeMillis() - startTime.longValue();
+
+        getSignalDiagramController().updateAnnotations();
 
         setStatus( "Tool {2} finished at {0,date,medium} {0,time,medium}, and took {1}.", new Date(),
             UnitOfTime.format( time / 1.0e3 ), tool );
@@ -576,7 +587,9 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
       UIManager.put( ANALOG_SCOPE_VISIBLE_DEFAULT, Boolean.valueOf( clientConfig.showAnalogScope() ) );
       UIManager.put( SHOW_TOOL_WINDOWS_DEFAULT, Boolean.valueOf( clientConfig.showToolWindows() ) );
       UIManager.put( CHANNELLABELS_SHOW_CHANNEL_INDEX, Boolean.valueOf( clientConfig.showChannelIndexes() ) );
+
       UIManager.put( RETAIN_ANNOTATIONS_WITH_RECAPTURE, Boolean.valueOf( clientConfig.retainAnnotations() ) );
+      UIManager.put( USE_COLORIZED_ANNOTATIONS, Boolean.valueOf( clientConfig.useColoredAnnotations() ) );
 
       UIManager.put( SIGNALVIEW_SIGNAL_ALIGNMENT, String.valueOf( clientConfig.signalAlignment() ) );
       UIManager.put( SIGNALVIEW_ANNOTATION_ALIGNMENT, String.valueOf( clientConfig.annotationAlignment() ) );

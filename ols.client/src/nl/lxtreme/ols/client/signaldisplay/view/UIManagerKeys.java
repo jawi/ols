@@ -46,6 +46,8 @@ public interface UIManagerKeys
    * recapture.
    */
   String RETAIN_ANNOTATIONS_WITH_RECAPTURE = "ols.retain.annotations.boolean";
+  /** Whether or not to use the color property defined for data annotations. */
+  String USE_COLORIZED_ANNOTATIONS = "ols.use.colorized.annotations.boolean";
   /**
    * Disables the sloppy drawing of scopes (and group summary) when too many
    * transitions are shown.
