@@ -30,6 +30,34 @@ import java.util.*;
  */
 public interface DataAnnotation extends Annotation
 {
+  // CONSTANTS
+
+  /**
+   * Denotes a property to use an alternative color for the annotation. The
+   * value of this property is either a {@link java.awt.Color} object, or a
+   * triple hex-string value (e.g. "#aabbcc").
+   */
+  String KEY_COLOR = "color";
+  /**
+   * Denotes a property that provides additional human-readable information
+   * about the annotation. The value of this property should be a string.
+   */
+  String KEY_DESCRIPTION = "desc";
+  /**
+   * Denotes a property that describes what kind of annotation this is, e.g.,
+   * whether it represents a decoded data symbol, an error, etc. The value of
+   * this property should be one of {@link #TYPE_ERROR}, {@link #TYPE_EVENT} or
+   * {@link #TYPE_SYMBOL}.
+   */
+  String KEY_TYPE = "type";
+
+  /** Denotes this annotation as an error. */
+  String TYPE_ERROR = "error";
+  /** Denotes this annotation as a generic event. */
+  String TYPE_EVENT = "event";
+  /** Denotes this annotation as a symbol. */
+  String TYPE_SYMBOL = "symbol";
+
   // METHODS
 
   /**
