@@ -67,7 +67,7 @@ public class NRZDecoderTask implements Callable<Void>
   public Void call() throws ToolException
   {
     final AcquisitionData inputData = this.context.getAcquisitionData();
-    final AnnotationHelper annotationHelper = new AnnotationHelper( this.context );
+    final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
     final int[] values = inputData.getValues();
     final long[] timestamps = inputData.getTimestamps();

@@ -21,8 +21,7 @@
 package nl.lxtreme.ols.tool.dmx512;
 
 
-import static nl.lxtreme.ols.tool.api.AnnotationHelper.*;
-
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import java.util.concurrent.*;
 
 import nl.lxtreme.ols.common.*;
@@ -125,10 +124,9 @@ public class DMX512AnalyzerTask implements Callable<Void>
       throw new ToolException( "No valid data range found for DMX512 analysis!" );
     }
 
-    final AnnotationHelper annotationHelper = new AnnotationHelper( this.context );
+    final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
-    annotationHelper.clearAnnotations( this.dataLine );
-    annotationHelper.addAnnotation( this.dataLine, DMX512_DATA_LABEL );
+    annotationHelper.prepareChannel( this.dataLine, DMX512_DATA_LABEL );
 
     final SerialConfiguration config = new SerialConfiguration( BAUDRATE, DATABITS, STOPBITS, PARITY,
         false /* inverted */, false /* lsbFirst */);
@@ -150,18 +148,15 @@ public class DMX512AnalyzerTask implements Callable<Void>
         switch ( aType )
         {
           case FRAME:
-            annotationHelper.addAnnotation( aChannelIdx, aTime, aTime + 1, "Frame error", KEY_ERROR, Boolean.TRUE,
-                KEY_COLOR, "#ff6600" );
+            annotationHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Frame error", KEY_COLOR, "#ff6600" );
             break;
 
           case PARITY:
-            annotationHelper.addAnnotation( aChannelIdx, aTime, aTime + 1, "Parity error", KEY_ERROR, Boolean.TRUE,
-                KEY_COLOR, "#ff9900" );
+            annotationHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Parity error", KEY_COLOR, "#ff9900" );
             break;
 
           case START:
-            annotationHelper.addAnnotation( aChannelIdx, aTime, aTime + 1, "Start error", KEY_ERROR, Boolean.TRUE,
-                KEY_COLOR, "#ffcc00" );
+            annotationHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Start error", KEY_COLOR, "#ffcc00" );
             break;
         }
       }
@@ -169,7 +164,7 @@ public class DMX512AnalyzerTask implements Callable<Void>
       @Override
       public void onEvent( final int aChannelIdx, final String aEvent, final long aStartTime, final long aEndTime )
       {
-        annotationHelper.addAnnotation( aChannelIdx, aStartTime, aEndTime, aEvent );
+        annotationHelper.addEventAnnotation( aChannelIdx, aStartTime, aEndTime, aEvent );
 
         if ( EVENT_MAB.equals( aEvent ) )
         {
@@ -184,8 +179,8 @@ public class DMX512AnalyzerTask implements Callable<Void>
             Integer slotCount = Integer.valueOf( this.symbolsBetweenMaB - 1 );
             if ( slotCount.intValue() > 0 )
             {
-              annotationHelper.addAnnotation( aChannelIdx, this.startTimeMaB, aEndTime, EVENT_PACKET, KEY_SLOT_COUNT,
-                  slotCount, KEY_DESCRIPTION, String.format( "%d slots", slotCount ) );
+              annotationHelper.addEventAnnotation( aChannelIdx, this.startTimeMaB, aEndTime, EVENT_PACKET,
+                  KEY_SLOT_COUNT, slotCount, KEY_DESCRIPTION, String.format( "%d slots", slotCount ) );
             }
 
             this.inMaB = Boolean.FALSE;

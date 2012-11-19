@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.onewire;
 
 
-import static nl.lxtreme.ols.tool.api.AnnotationHelper.*;
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.util.concurrent.*;
@@ -91,7 +91,7 @@ public class OneWireAnalyserTask implements Callable<Void>
   public Void call() throws ToolException
   {
     final AcquisitionData data = this.context.getAcquisitionData();
-    final AnnotationHelper annotationHelper = new AnnotationHelper( this.context );
+    final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
     final int[] values = data.getValues();
 
     int sampleIdx;
@@ -125,7 +125,7 @@ public class OneWireAnalyserTask implements Callable<Void>
 
     // Update the channel label and clear any existing annotations on the
     // channel...
-    prepareResult( annotationHelper, OW_1_WIRE );
+    annotationHelper.prepareChannel( this.owLineIndex, OW_1_WIRE );
     // Decode the actual data...
     decodeData( annotationHelper, data, sampleIdx, sampleCount - 1 );
 
@@ -140,7 +140,7 @@ public class OneWireAnalyserTask implements Callable<Void>
    *          the decoded data set to add the decoding results to, cannot be
    *          <code>null</code>.
    */
-  private void decodeData( final AnnotationHelper aAnnotationHelper, final AcquisitionData aData, final int aStartIdx,
+  private void decodeData( final ToolAnnotationHelper aAnnotationHelper, final AcquisitionData aData, final int aStartIdx,
       final int aEndIdx )
   {
     final long[] timestamps = aData.getTimestamps();
@@ -189,7 +189,7 @@ public class OneWireAnalyserTask implements Callable<Void>
 
         final String desc = String.format( "Master reset, slave %s present", slavePresent ? "is" : "is NOT" );
 
-        aAnnotationHelper.addAnnotation( this.owLineIndex, fallingEdge, time, EVENT_RESET, KEY_COLOR, "#e0e0e0",
+        aAnnotationHelper.addEventAnnotation( this.owLineIndex, fallingEdge, time, EVENT_RESET, KEY_COLOR, "#e0e0e0",
             KEY_DESCRIPTION, desc, KEY_SLAVE_PRESENT, Boolean.valueOf( slavePresent ) );
       }
       else
@@ -218,8 +218,8 @@ public class OneWireAnalyserTask implements Callable<Void>
           // Unknown symbol; report it as bus error and restart our byte...
           time = ( long )( fallingEdge + ( this.owTiming.getBitFrameLength() / timingCorrection ) );
 
-          aAnnotationHelper.addAnnotation( this.owLineIndex, byteStartTime, time, EVENT_BUS_ERROR, KEY_ERROR,
-              Boolean.TRUE, KEY_COLOR, "#ff8000", KEY_DESCRIPTION, "Timing issue." );
+          aAnnotationHelper.addErrorAnnotation( this.owLineIndex, byteStartTime, time, EVENT_BUS_ERROR, KEY_COLOR,
+              "#ff8000", KEY_DESCRIPTION, "Timing issue." );
 
           byteValue = 0;
           bitCount = 8;
@@ -231,8 +231,7 @@ public class OneWireAnalyserTask implements Callable<Void>
         if ( --bitCount == 0 )
         {
           // Report the complete byte value...
-          aAnnotationHelper.addAnnotation( this.owLineIndex, byteStartTime, time, Integer.valueOf( byteValue ),
-              KEY_SYMBOL, Boolean.TRUE );
+          aAnnotationHelper.addSymbolAnnotation( this.owLineIndex, byteStartTime, time, byteValue );
 
           byteValue = 0;
           bitCount = 8;
@@ -345,18 +344,5 @@ public class OneWireAnalyserTask implements Callable<Void>
     }
 
     return this.owTiming.isSlavePresencePulse( ( fallingEdgeTimestamp - risingEdgeTimestamp ) * aTimingCorrection );
-  }
-
-  /**
-   * Determines the resulting channel label and clears any existing annotations.
-   * 
-   * @param aAnnotationHelper
-   * @param aLabel
-   *          the default label to use for the channel (in case none is set).
-   */
-  private void prepareResult( final AnnotationHelper aAnnotationHelper, final String aLabel )
-  {
-    aAnnotationHelper.clearAnnotations( this.owLineIndex );
-    aAnnotationHelper.addAnnotation( this.owLineIndex, aLabel );
   }
 }

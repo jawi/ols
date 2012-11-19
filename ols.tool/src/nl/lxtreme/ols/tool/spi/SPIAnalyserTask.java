@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.spi;
 
 
-import static nl.lxtreme.ols.tool.api.AnnotationHelper.*;
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.beans.*;
@@ -129,7 +129,7 @@ public class SPIAnalyserTask implements Callable<Void>
   @Override
   public Void call() throws ToolException
   {
-    AnnotationHelper annotationHelper = new AnnotationHelper( this.context );
+    ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
@@ -189,7 +189,7 @@ public class SPIAnalyserTask implements Callable<Void>
    *          the SPI mode defining the edges on which data can be sampled and
    *          on which edges data can change.
    */
-  private void clockDataOnEdge( final AnnotationHelper aAnnotationHelper, final SPIMode aMode,
+  private void clockDataOnEdge( final ToolAnnotationHelper aAnnotationHelper, final SPIMode aMode,
       final int aSlaveSelectedIdx )
   {
     final AcquisitionData data = this.context.getAcquisitionData();
@@ -227,8 +227,8 @@ public class SPIAnalyserTask implements Callable<Void>
       // now the trigger is in b, add trigger event to table
       if ( this.reportCS )
       {
-        aAnnotationHelper.addAnnotation( this.csIdx, timestamps[aSlaveSelectedIdx], timestamps[aSlaveSelectedIdx] + 1,
-            EVENT_CS_LOW, KEY_COLOR, "#c0ffc0" );
+        aAnnotationHelper.addEventAnnotation( this.csIdx, timestamps[aSlaveSelectedIdx],
+            timestamps[aSlaveSelectedIdx] + 1, EVENT_CS_LOW, KEY_COLOR, "#c0ffc0" );
       }
     }
 
@@ -247,8 +247,8 @@ public class SPIAnalyserTask implements Callable<Void>
       {
         if ( this.reportCS )
         {
-          aAnnotationHelper.addAnnotation( this.csIdx, timestamps[idx], timestamps[idx] + 1, EVENT_CS_LOW, KEY_COLOR,
-              "#c0ffc0" );
+          aAnnotationHelper.addEventAnnotation( this.csIdx, timestamps[idx], timestamps[idx] + 1, EVENT_CS_LOW,
+              KEY_COLOR, "#c0ffc0" );
         }
 
         slaveSelected = true;
@@ -257,8 +257,8 @@ public class SPIAnalyserTask implements Callable<Void>
       {
         if ( this.reportCS )
         {
-          aAnnotationHelper.addAnnotation( this.csIdx, timestamps[idx], timestamps[idx] + 1, EVENT_CS_HIGH, KEY_COLOR,
-              "#e0e0e0" );
+          aAnnotationHelper.addEventAnnotation( this.csIdx, timestamps[idx], timestamps[idx] + 1, EVENT_CS_HIGH,
+              KEY_COLOR, "#e0e0e0" );
         }
 
         slaveSelected = false;
@@ -470,35 +470,33 @@ public class SPIAnalyserTask implements Callable<Void>
    * 
    * @param aAnnotationHelper
    */
-  private void prepareResults( final AnnotationHelper aAnnotationHelper )
+  private void prepareResults( final ToolAnnotationHelper aAnnotationHelper )
   {
-    this.context.clearAnnotations( this.mosiIdx, this.misoIdx, this.io2Idx, this.io3Idx, this.sckIdx, this.csIdx );
-
     if ( this.mosiIdx >= 0 )
     {
       String label = ( SPIFIMode.STANDARD.equals( this.protocol ) ? SPI_MOSI : "IO0" );
-      aAnnotationHelper.addAnnotation( this.mosiIdx, label );
+      aAnnotationHelper.prepareChannel( this.mosiIdx, label );
     }
     if ( this.misoIdx >= 0 )
     {
       String label = ( SPIFIMode.STANDARD.equals( this.protocol ) ? SPI_MISO : "IO1" );
-      aAnnotationHelper.addAnnotation( this.misoIdx, label );
+      aAnnotationHelper.prepareChannel( this.misoIdx, label );
     }
     if ( this.io2Idx >= 0 )
     {
-      aAnnotationHelper.addAnnotation( this.io2Idx, "IO2" );
+      aAnnotationHelper.prepareChannel( this.io2Idx, "IO2" );
     }
     if ( this.io3Idx >= 0 )
     {
-      aAnnotationHelper.addAnnotation( this.io3Idx, "IO3" );
+      aAnnotationHelper.prepareChannel( this.io3Idx, "IO3" );
     }
     if ( this.sckIdx >= 0 )
     {
-      aAnnotationHelper.addAnnotation( this.sckIdx, SPI_SCK );
+      aAnnotationHelper.prepareChannel( this.sckIdx, SPI_SCK );
     }
     if ( this.csIdx >= 0 )
     {
-      aAnnotationHelper.addAnnotation( this.csIdx, SPI_CS );
+      aAnnotationHelper.prepareChannel( this.csIdx, SPI_CS );
     }
   }
 

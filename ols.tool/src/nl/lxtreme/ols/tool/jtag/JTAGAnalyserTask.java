@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import static nl.lxtreme.ols.tool.api.AnnotationHelper.*;
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.jtag.JTAGState.*;
 
 import java.util.concurrent.*;
@@ -94,7 +94,7 @@ public class JTAGAnalyserTask implements Callable<Void>
   @Override
   public Void call() throws ToolException
   {
-    AnnotationHelper annotationHelper = new AnnotationHelper( this.context );
+    ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
@@ -122,7 +122,7 @@ public class JTAGAnalyserTask implements Callable<Void>
    *          the JTAG mode defining the edges on which data can be sampled and
    *          on which edges data can change.
    */
-  private void decodeJtagData( final AnnotationHelper aAnnotationHelper )
+  private void decodeJtagData( final ToolAnnotationHelper aAnnotationHelper )
   {
     final AcquisitionData data = this.context.getAcquisitionData();
 
@@ -293,9 +293,9 @@ public class JTAGAnalyserTask implements Callable<Void>
             state = this.currentState.getDisplayText();
 
             aAnnotationHelper.addAnnotation( this.tdiIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                TdiData, KEY_SYMBOL, Boolean.TRUE );
+                TdiData, KEY_TYPE, TYPE_SYMBOL );
             aAnnotationHelper.addAnnotation( this.tdoIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                TdoData, KEY_SYMBOL, Boolean.TRUE );
+                TdoData, KEY_TYPE, TYPE_SYMBOL );
 
             if ( tmsValue == 0 )
             {
@@ -410,9 +410,9 @@ public class JTAGAnalyserTask implements Callable<Void>
             state = this.currentState.getDisplayText();
 
             aAnnotationHelper.addAnnotation( this.tdiIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                TdiData, KEY_SYMBOL, Boolean.TRUE );
+                TdiData, KEY_TYPE, TYPE_SYMBOL );
             aAnnotationHelper.addAnnotation( this.tdoIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                TdoData, KEY_SYMBOL, Boolean.TRUE );
+                TdoData, KEY_TYPE, TYPE_SYMBOL );
 
             if ( tmsValue == 0 )
             {
@@ -433,8 +433,8 @@ public class JTAGAnalyserTask implements Callable<Void>
             // LOG.log( Level.INFO, "state transition: " + oldJTAGState + " to "
             // + JTAGState + " (" + StartIdx + "," + idx + ")");
 
-            aAnnotationHelper.addAnnotation( this.tmsIdx, timestamps[this.startIdx], timestamps[idx], state, KEY_COLOR,
-                "#e0e0e0" );
+            aAnnotationHelper.addEventAnnotation( this.tmsIdx, timestamps[this.startIdx], timestamps[idx], state,
+                KEY_COLOR, "#e0e0e0" );
 
             this.startIdx = idx + 1;
             this.oldState = this.currentState;
@@ -450,25 +450,23 @@ public class JTAGAnalyserTask implements Callable<Void>
    * Determines the channel labels that are used in the annotations and reports
    * and clears any existing annotations on the decoded channels.
    */
-  private void prepareResults( final AnnotationHelper aAnnotationHelper )
+  private void prepareResults( final ToolAnnotationHelper aAnnotationHelper )
   {
-    aAnnotationHelper.clearAnnotations( this.tckIdx, this.tmsIdx, this.tdiIdx, this.tdoIdx );
-
     if ( this.tckIdx >= 0 )
     {
-      aAnnotationHelper.addAnnotation( this.tckIdx, JTAG_TCK );
+      aAnnotationHelper.prepareChannel( this.tckIdx, JTAG_TCK );
     }
     if ( this.tmsIdx >= 0 )
     {
-      aAnnotationHelper.addAnnotation( this.tmsIdx, JTAG_TMS );
+      aAnnotationHelper.prepareChannel( this.tmsIdx, JTAG_TMS );
     }
     if ( this.tdiIdx >= 0 )
     {
-      aAnnotationHelper.addAnnotation( this.tdiIdx, JTAG_TDI );
+      aAnnotationHelper.prepareChannel( this.tdiIdx, JTAG_TDI );
     }
     if ( this.tdoIdx >= 0 )
     {
-      aAnnotationHelper.addAnnotation( this.tdoIdx, JTAG_TDO );
+      aAnnotationHelper.prepareChannel( this.tdoIdx, JTAG_TDO );
     }
   }
 }

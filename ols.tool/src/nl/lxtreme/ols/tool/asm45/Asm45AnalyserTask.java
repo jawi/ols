@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.asm45;
 
 
-import static nl.lxtreme.ols.tool.api.AnnotationHelper.*;
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.util.*;
@@ -299,7 +299,7 @@ public class Asm45AnalyserTask implements Callable<Void>
   public Void call() throws ToolException
   {
     final AcquisitionData data = this.context.getAcquisitionData();
-    final AnnotationHelper annotationHelper = new AnnotationHelper( this.context );
+    final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
     final int[] values = data.getValues();
     final long[] timestamps = data.getTimestamps();
@@ -457,7 +457,7 @@ public class Asm45AnalyserTask implements Callable<Void>
           Map<String, Object> properties = new HashMap<String, Object>();
           properties.put( KEY_COLOR, ( triggerEvent ? "#ffa0ff" : ( type == TYPE_INSTRUCTION ? "#ffffff"
               : ( busGrant ? "#64ff64" : "#e0e0ff" ) ) ) );
-          properties.put( KEY_SYMBOL, Boolean.TRUE );
+          properties.put( KEY_TYPE, TYPE_SYMBOL );
           properties.put( KEY_BUSGRANT, busGrant );
           properties.put( KEY_ADDRESS, address );
           properties.put( KEY_CLOCKS, clocks );

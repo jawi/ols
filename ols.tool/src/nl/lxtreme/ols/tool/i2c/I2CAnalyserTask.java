@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.i2c;
 
 
-import static nl.lxtreme.ols.tool.api.AnnotationHelper.*;
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.beans.*;
@@ -133,7 +133,7 @@ public class I2CAnalyserTask implements Callable<Void>
   public Void call() throws ToolException
   {
     final AcquisitionData data = this.context.getAcquisitionData();
-    final AnnotationHelper annotationHelper = new AnnotationHelper( this.context );
+    final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
     final int[] values = data.getValues();
     final long[] timestamps = data.getTimestamps();
@@ -196,7 +196,7 @@ public class I2CAnalyserTask implements Callable<Void>
 
       if ( this.reportStart )
       {
-        annotationHelper.addAnnotation( this.sdaIdx, timestamps[startOfDecode], timestamps[startOfDecode] + 1,
+        annotationHelper.addEventAnnotation( this.sdaIdx, timestamps[startOfDecode], timestamps[startOfDecode] + 1,
             EVENT_START, KEY_COLOR, "#e0e0e0", KEY_DESCRIPTION, "Start condition" );
       }
     }
@@ -261,8 +261,8 @@ public class I2CAnalyserTask implements Callable<Void>
             desc = String.format( "%s data", ( direction == 1 ) ? "Read" : "Write" );
           }
 
-          annotationHelper.addAnnotation( this.sdaIdx, timestamps[prevIdx], timestamps[idx],
-              Integer.valueOf( byteValue ), KEY_SYMBOL, Boolean.TRUE, KEY_DESCRIPTION, desc );
+          annotationHelper.addSymbolAnnotation( this.sdaIdx, timestamps[prevIdx], timestamps[idx], byteValue,
+              KEY_DESCRIPTION, desc );
 
           byteValue = 0;
         }
@@ -273,9 +273,8 @@ public class I2CAnalyserTask implements Callable<Void>
         if ( sda != oldSDA )
         {
           // Bus error: SDA not stable...
-          annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_BUS_ERROR,
-              KEY_ERROR, Boolean.TRUE, KEY_COLOR, "#ff8000", KEY_DESCRIPTION,
-              "SDA should remain stable while SCL changes." );
+          annotationHelper.addErrorAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_BUS_ERROR,
+              KEY_COLOR, "#ff8000", KEY_DESCRIPTION, "SDA should remain stable while SCL changes." );
         }
         else
         {
@@ -296,7 +295,7 @@ public class I2CAnalyserTask implements Callable<Void>
               // NACK
               if ( this.reportNACK )
               {
-                annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_NACK,
+                annotationHelper.addEventAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_NACK,
                     KEY_COLOR, "#ffc0c0", KEY_DESCRIPTION, "Not acknowledged by slave" );
               }
             }
@@ -305,7 +304,7 @@ public class I2CAnalyserTask implements Callable<Void>
               // ACK
               if ( this.reportACK )
               {
-                annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_ACK,
+                annotationHelper.addEventAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_ACK,
                     KEY_COLOR, "#c0ffc0", KEY_DESCRIPTION, "Acknowledged by slave" );
               }
             }
@@ -324,9 +323,8 @@ public class I2CAnalyserTask implements Callable<Void>
         if ( ( bitCount > 0 ) && ( bitCount < ( I2C_BITCOUNT - 1 ) ) )
         {
           // bus error, no complete byte detected
-          annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_BUS_ERROR,
-              KEY_ERROR, Boolean.TRUE, KEY_COLOR, "#ff8000", KEY_DESCRIPTION, "Incomplete byte read (only " + bitCount
-                  + " bits)." );
+          annotationHelper.addErrorAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_BUS_ERROR,
+              KEY_COLOR, "#ff8000", KEY_DESCRIPTION, "Incomplete byte read (only " + bitCount + " bits)." );
         }
         else
         {
@@ -335,8 +333,8 @@ public class I2CAnalyserTask implements Callable<Void>
             // SDA rises, this is a stop condition
             if ( this.reportStop )
             {
-              annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_STOP, KEY_COLOR,
-                  "#e0e0e0", KEY_DESCRIPTION, "Stop condition" );
+              annotationHelper.addEventAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_STOP,
+                  KEY_COLOR, "#e0e0e0", KEY_DESCRIPTION, "Stop condition" );
             }
 
             slaveAddress = 0x00;
@@ -347,7 +345,7 @@ public class I2CAnalyserTask implements Callable<Void>
             // SDA falls, this is a start condition
             if ( this.reportStart )
             {
-              annotationHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_START,
+              annotationHelper.addEventAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, EVENT_START,
                   KEY_COLOR, "#e0e0e0", KEY_DESCRIPTION, "Start condition" );
             }
 
@@ -484,16 +482,15 @@ public class I2CAnalyserTask implements Callable<Void>
   /**
    * Prepares everything for the upcoming results.
    */
-  private void prepareResults( final AnnotationHelper aAnnotationHelper )
+  private void prepareResults( final ToolAnnotationHelper aAnnotationHelper )
   {
     // Tell our listeners what line A & B mean...
     this.pcs.firePropertyChange( PROPERTY_AUTO_DETECT_SCL, null, this.sclIdx == this.lineAidx ? LINE_A : LINE_B );
     this.pcs.firePropertyChange( PROPERTY_AUTO_DETECT_SDA, null, this.sdaIdx == this.lineBidx ? LINE_B : LINE_A );
 
     // Update the channel labels...
-    aAnnotationHelper.clearAnnotations( this.sclIdx, this.sdaIdx );
-    aAnnotationHelper.addAnnotation( this.sclIdx, CHANNEL_SCL_NAME );
-    aAnnotationHelper.addAnnotation( this.sdaIdx, CHANNEL_SDA_NAME );
+    aAnnotationHelper.prepareChannel( this.sclIdx, CHANNEL_SCL_NAME );
+    aAnnotationHelper.prepareChannel( this.sdaIdx, CHANNEL_SDA_NAME );
   }
 }
 

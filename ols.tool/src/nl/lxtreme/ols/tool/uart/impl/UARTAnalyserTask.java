@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.uart.impl;
 
 
-import static nl.lxtreme.ols.tool.api.AnnotationHelper.*;
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.util.*;
@@ -347,15 +347,14 @@ public class UARTAnalyserTask implements Callable<Void>
       final int aEndSampleIdx )
   {
     final AcquisitionData data = this.context.getAcquisitionData();
-    final AnnotationHelper annotationHelper = new AnnotationHelper( this.context );
+    final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
       LOG.log( Level.FINE, "Decoding control: {0} ...", aName );
     }
 
-    annotationHelper.clearAnnotations( aChannelIndex );
-    annotationHelper.addAnnotation( aChannelIndex, aName );
+    annotationHelper.prepareChannel( aChannelIndex, aName );
 
     final int mask = ( 1 << aChannelIndex );
 
@@ -374,11 +373,11 @@ public class UARTAnalyserTask implements Callable<Void>
       final Edge edge = Edge.toEdge( oldValue, value );
       if ( edge.isRising() )
       {
-        annotationHelper.addAnnotation( aChannelIndex, startTime, endTime, aName + " High", KEY_COLOR, "#e0e0e0" );
+        annotationHelper.addEventAnnotation( aChannelIndex, startTime, endTime, aName + " High", KEY_COLOR, "#e0e0e0" );
       }
       if ( edge.isFalling() )
       {
-        annotationHelper.addAnnotation( aChannelIndex, startTime, endTime, aName + " Low", KEY_COLOR, "#e0e0e0" );
+        annotationHelper.addEventAnnotation( aChannelIndex, startTime, endTime, aName + " Low", KEY_COLOR, "#e0e0e0" );
       }
       oldValue = value;
 
@@ -399,10 +398,9 @@ public class UARTAnalyserTask implements Callable<Void>
       final int aStartSampleIdx, final int aEndSampleIdx )
   {
     final AcquisitionData data = this.context.getAcquisitionData();
-    final AnnotationHelper annotationHelper = new AnnotationHelper( this.context );
+    final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
-    annotationHelper.clearAnnotations( aChannelIndex );
-    annotationHelper.addAnnotation( aChannelIndex, aName );
+    annotationHelper.prepareChannel( aChannelIndex, aName );
 
     final int mask = ( 1 << aChannelIndex );
     final BaudRateAnalyzer baudrateAnalyzer = createBaudRateAnalyzer( data, mask );
@@ -441,18 +439,18 @@ public class UARTAnalyserTask implements Callable<Void>
           switch ( aType )
           {
             case FRAME:
-              annotationHelper.addAnnotation( aChannelIdx, aTime, aTime + 1, "Frame error", KEY_ERROR, Boolean.TRUE,
-                  KEY_COLOR, "#ff6600", KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
+              annotationHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Frame error", KEY_COLOR, "#ff6600",
+                  KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
               break;
 
             case PARITY:
-              annotationHelper.addAnnotation( aChannelIdx, aTime, aTime + 1, "Parity error", KEY_ERROR, Boolean.TRUE,
-                  KEY_COLOR, "#ff9900", KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
+              annotationHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Parity error", KEY_COLOR, "#ff9900",
+                  KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
               break;
 
             case START:
-              annotationHelper.addAnnotation( aChannelIdx, aTime, aTime + 1, "Start error", KEY_ERROR, Boolean.TRUE,
-                  KEY_COLOR, "#ffcc00", KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
+              annotationHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Start error", KEY_COLOR, "#ffcc00",
+                  KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
               break;
           }
         }

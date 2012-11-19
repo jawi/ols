@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool;
 
 
-import static nl.lxtreme.ols.tool.api.AnnotationHelper.*;
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import java.util.*;
 
 import junit.framework.*;
@@ -81,7 +81,7 @@ public class AnnotationCollector implements AnnotationData
     for ( DataAnnotation annotation : this.dataAnnotations )
     {
       Map<String, Object> props = annotation.getProperties();
-      if ( Boolean.TRUE.equals( props.get( KEY_SYMBOL ) ) )
+      if ( TYPE_SYMBOL.equals( props.get( KEY_TYPE ) ) )
       {
         Integer data = ( Integer )annotation.getData();
         Assert.assertEquals( "Symbol @ " + idx, aSymbols[idx++], data.intValue() );
@@ -111,7 +111,7 @@ public class AnnotationCollector implements AnnotationData
     for ( DataAnnotation annotation : this.dataAnnotations )
     {
       Map<String, Object> props = annotation.getProperties();
-      if ( ( aChannelIdx == annotation.getChannelIndex() ) && Boolean.TRUE.equals( props.get( KEY_SYMBOL ) ) )
+      if ( ( aChannelIdx == annotation.getChannelIndex() ) && TYPE_SYMBOL.equals( props.get( KEY_TYPE ) ) )
       {
         Integer data = ( Integer )annotation.getData();
         Assert.assertEquals( "Symbol @ " + idx, aSymbols[idx++], data.intValue() );
@@ -194,7 +194,7 @@ public class AnnotationCollector implements AnnotationData
     for ( DataAnnotation annotation : this.dataAnnotations )
     {
       Map<String, Object> props = annotation.getProperties();
-      if ( Boolean.TRUE.equals( props.get( KEY_ERROR ) ) )
+      if ( TYPE_ERROR.equals( props.get( KEY_TYPE ) ) )
       {
         count++;
       }
@@ -214,7 +214,7 @@ public class AnnotationCollector implements AnnotationData
     for ( DataAnnotation annotation : this.dataAnnotations )
     {
       Map<String, Object> props = annotation.getProperties();
-      if ( Boolean.TRUE.equals( props.get( KEY_SYMBOL ) ) )
+      if ( TYPE_SYMBOL.equals( props.get( KEY_TYPE ) ) )
       {
         count++;
       }
@@ -236,7 +236,7 @@ public class AnnotationCollector implements AnnotationData
     for ( DataAnnotation annotation : this.dataAnnotations )
     {
       Map<String, Object> props = annotation.getProperties();
-      if ( ( aChannelIdx == annotation.getChannelIndex() ) && Boolean.TRUE.equals( props.get( KEY_SYMBOL ) ) )
+      if ( ( aChannelIdx == annotation.getChannelIndex() ) && TYPE_SYMBOL.equals( props.get( KEY_TYPE ) ) )
       {
         count++;
       }
