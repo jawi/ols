@@ -2,7 +2,8 @@
 -runee: JavaSE-1.6
 -runproperties: \
     felix.fileinstall.dir=./conf,\
-    felix.fileinstall.filter=.*\.cfg$
+    felix.fileinstall.filter=.*\.cfg$,\
+    org.apache.felix.eventadmin.Timeout=0
 -runrequires: osgi.identity;filter:='(osgi.identity=javax.microedition.io)',\
 	osgi.identity;filter:='(osgi.identity=lib.ioutil)',\
 	osgi.identity;filter:='(osgi.identity=lib.swing)',\
