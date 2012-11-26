@@ -199,22 +199,15 @@ public class ValueChangeDumpExporter implements Exporter
    */
   protected void writeVariableDefinitions( final PrintWriter aWriter, final AcquisitionData aData )
   {
-    final int channelMask = aData.getEnabledChannels();
-
-    for ( int i = 0; i < aData.getChannelCount(); i++ )
+    for ( Channel channel : aData.getChannels() )
     {
-      if ( ( channelMask & ( 1 << i ) ) == 0 )
+      String label = channel.getLabel();
+      if ( label == null )
       {
-        continue;
+        label = String.format( "Ch.%d", Integer.valueOf( channel.getIndex() ) );
       }
 
-      String label = aData.getChannel( i ).getLabel();
-      if ( ( label == null ) || "".equals( label.trim() ) )
-      {
-        label = "channel" + i;
-      }
-
-      writeVariable( aWriter, i, label );
+      writeVariable( aWriter, channel.getIndex(), label );
     }
   }
 

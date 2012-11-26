@@ -26,7 +26,6 @@ import nl.lxtreme.ols.client.action.SmartJumpAction.JumpDirection;
 import nl.lxtreme.ols.client.action.SmartJumpAction.JumpType;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.common.annotation.*;
@@ -126,10 +125,8 @@ final class SmartJumpHelper
     final AcquisitionData data = getSignalDiagramModel().getAcquisitionData();
 
     long result = this.direction.isLeft() ? Long.MIN_VALUE : Long.MAX_VALUE;
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    for ( Cursor cursor : data.getCursors() )
     {
-      final Cursor cursor = data.getCursor( i );
-
       long timestamp = cursor.getTimestamp();
       if ( this.direction.isLeft() )
       {

@@ -98,6 +98,8 @@ public class DemoAcquisitionTask implements Callable<AcquisitionData>
 
       boolean state = false;
 
+      builder.setTriggerPosition( ( int )( dataLength * 0.25 ) );
+
       for ( int i = 0; i < dataLength; i++ )
       {
         if ( DATA_FUNCTIONS[0].equals( dataFunction ) )
@@ -141,12 +143,11 @@ public class DemoAcquisitionTask implements Callable<AcquisitionData>
           int sample = state ? 0x00 : 0x8000;
           builder.addSample( i, sample );
           builder.setEnabledChannelMask( 0xFF00 );
+          builder.clearTrigger();
         }
 
         this.progressListener.acquisitionInProgress( ( int )( ( i * 100.0 ) / dataLength ) );
       }
-
-      builder.setTriggerPosition( ( int )( dataLength * 0.25 ) );
     }
 
     return builder.build();

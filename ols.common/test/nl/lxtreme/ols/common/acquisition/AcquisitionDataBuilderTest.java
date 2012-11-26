@@ -36,23 +36,22 @@ public class AcquisitionDataBuilderTest extends TestCase
   // METHODS
 
   /**
-   * Test that building without an enabled channel mask fails.
+   * Test that building with only the second channel group enabled works.
    */
-  public void testBuildWithInvalidChannelMaskFail()
+  public void testBuildWithSecondGroupEnabledOk()
   {
-    this.builder.setChannelCount( 1 );
-    this.builder.setEnabledChannelMask( 2 );
+    this.builder.setChannelCount( 8 );
+    this.builder.setEnabledChannelMask( 0xff00 );
     this.builder.setSampleRate( 1 );
     this.builder.setTriggerPosition( 1L );
 
-    try
+    final AcquisitionData data = this.builder.build();
+
+    Channel[] channels = data.getChannels();
+    for ( int i = 0; i < channels.length; i++ )
     {
-      this.builder.build();
-      fail( "Expected IllegalArgumentException!" );
-    }
-    catch ( IllegalArgumentException exception )
-    {
-      // Ok; expected...
+      int index = ( i + 8 );
+      assertEquals( index, channels[i].getIndex() );
     }
   }
 

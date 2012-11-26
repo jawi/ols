@@ -21,9 +21,6 @@
 package nl.lxtreme.ols.common.acquisition;
 
 
-import nl.lxtreme.ols.common.*;
-
-
 /**
  * Denotes sample data acquired from a device.
  */
@@ -40,19 +37,6 @@ public interface AcquisitionData
   long getAbsoluteLength();
 
   /**
-   * Returns the channel information for the channel with the given index.
-   * 
-   * @param aIndex
-   *          the index of the channel to return, >= 0 && <
-   *          {@link #getChannelCount()}.
-   * @return a channel, never <code>null</code>.
-   * @throws IllegalArgumentException
-   *           in case the given index is less than zero or more than
-   *           {@link #getChannelCount()}.
-   */
-  Channel getChannel( int aIndex );
-
-  /**
    * Returns the total number of channels in the sample data, and therefore, the
    * width of a single sample in bits.
    * <p>
@@ -67,23 +51,25 @@ public interface AcquisitionData
   int getChannelCount();
 
   /**
-   * Returns the cursor information for the cursor with the given index.
+   * Returns the channel information for this acquisition data.
    * 
-   * @param aIndex
-   *          the index of the cursor to return, >= 0 && <
-   *          {@value Ols#MAX_CURSORS}.
-   * @return a cursor, never <code>null</code>.
-   * @throws IllegalArgumentException
-   *           in case the given index is less than zero or more than
-   *           {@value Ols#MAX_CURSORS}.
+   * @return an array with channel information, never <code>null</code>. The
+   *         length of the array equals to {@link #getChannelCount()}.
    */
-  Cursor getCursor( int aIndex );
+  Channel[] getChannels();
 
   /**
-   * Returns a bitmask of enabled channels in the sample data.
+   * Returns the cursor information for this acquisition data.
    * 
-   * @return a bitmask of enabled channels, for example, 0xFF for the first 8
-   *         channels.
+   * @return an array with cursor information, never <code>null</code>.
+   */
+  Cursor[] getCursors();
+
+  /**
+   * Returns a bit mask of enabled channels in the sample data.
+   * 
+   * @return a bit mask of enabled channels, for example, <tt>0xFF</tt> for the
+   *         first 8 channels.
    */
   int getEnabledChannels();
 
@@ -105,7 +91,8 @@ public interface AcquisitionData
   /**
    * Returns the sample rate in which this data was captured.
    * 
-   * @return a sample rate in hertz (Hz).
+   * @return a sample rate in hertz (Hz), or <tt>-1</tt> if no sample rate is
+   *         present.
    */
   int getSampleRate();
 

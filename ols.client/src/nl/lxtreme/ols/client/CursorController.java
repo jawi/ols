@@ -50,12 +50,17 @@ public final class CursorController
   public Cursor getCursor( final int aCursorIdx )
   {
     AcquisitionData acquisitionData = getAcquisitionData();
-    if ( acquisitionData == null )
+    if ( acquisitionData != null )
     {
-      return null;
+      for ( Cursor cursor : acquisitionData.getCursors() )
+      {
+        if ( cursor.getIndex() == aCursorIdx )
+        {
+          return cursor;
+        }
+      }
     }
-
-    return acquisitionData.getCursor( aCursorIdx );
+    return null;
   }
 
   /**
@@ -66,42 +71,22 @@ public final class CursorController
    */
   public Cursor[] getDefinedCursors()
   {
-    List<Cursor> cursors = new ArrayList<Cursor>();
+    List<Cursor> result = new ArrayList<Cursor>();
 
     AcquisitionData acquisitionData = getAcquisitionData();
     if ( acquisitionData != null )
     {
-      for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+      Cursor[] cursors = acquisitionData.getCursors();
+      for ( Cursor cursor : cursors )
       {
-        Cursor cursor = acquisitionData.getCursor( i );
-        if ( ( cursor != null ) && cursor.isDefined() )
+        if ( cursor.isDefined() )
         {
-          cursors.add( cursor );
+          result.add( cursor );
         }
       }
     }
 
-    return cursors.toArray( new Cursor[cursors.size()] );
-  }
-
-  /**
-   * Returns whether or not the cursor with the given index is defined.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to test, >= 0;
-   * @return <code>true</code> if the cursor with the given index has a defined
-   *         timestamp, <code>false</code> otherwise.
-   */
-  public boolean isCursorDefined( final int aCursorIdx )
-  {
-    AcquisitionData acquisitionData = getAcquisitionData();
-    if ( acquisitionData == null )
-    {
-      return false;
-    }
-
-    final Cursor cursor = acquisitionData.getCursor( aCursorIdx );
-    return ( cursor != null ) && cursor.isDefined();
+    return result.toArray( new Cursor[result.size()] );
   }
 
   /**
@@ -122,28 +107,6 @@ public final class CursorController
   }
 
   /**
-   * Sets the timestamp of the cursor with the given index to the given
-   * timestamp.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to move, >= 0;
-   * @param aTimestamp
-   *          the new timestamp of the cursor, >= 0L.
-   */
-  public void moveCursor( final int aCursorIdx, final long aTimestamp )
-  {
-    AcquisitionData acquisitionData = getAcquisitionData();
-    if ( acquisitionData != null )
-    {
-      final Cursor cursor = acquisitionData.getCursor( aCursorIdx );
-      if ( cursor != null )
-      {
-        cursor.setTimestamp( aTimestamp );
-      }
-    }
-  }
-
-  /**
    * Clears the timestamp of the cursor with the given index.
    * 
    * @param aCursorIdx
@@ -151,14 +114,10 @@ public final class CursorController
    */
   public void removeCursor( final int aCursorIdx )
   {
-    AcquisitionData acquisitionData = getAcquisitionData();
-    if ( acquisitionData != null )
+    Cursor cursor = getCursor( aCursorIdx );
+    if ( cursor != null )
     {
-      final Cursor cursor = acquisitionData.getCursor( aCursorIdx );
-      if ( cursor != null )
-      {
-        cursor.clear();
-      }
+      cursor.clear();
     }
   }
 

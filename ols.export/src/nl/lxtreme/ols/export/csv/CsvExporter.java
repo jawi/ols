@@ -111,12 +111,12 @@ public class CsvExporter implements Exporter
   private void createChannelHeaders( final List<String> aList, final AcquisitionData aData )
   {
     final int insertIdx = aList.size();
-    for ( int i = 0; i < aData.getChannelCount(); i++ )
+    for ( Channel channel : aData.getChannels() )
     {
-      String label = aData.getChannel( i ).getLabel();
+      String label = channel.getLabel();
       if ( label == null )
       {
-        label = String.format( "Ch.%d", Integer.valueOf( i ) );
+        label = String.format( "Ch.%d", Integer.valueOf( channel.getIndex() ) );
       }
       // Causes the channels to be listed in "inverse" order, MSB first...
       aList.add( insertIdx, label );

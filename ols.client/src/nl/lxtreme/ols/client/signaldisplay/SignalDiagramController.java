@@ -399,6 +399,9 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   {
     getSignalDiagramModel().setAcquisitionData( aData );
 
+    // Make sure the view is updated accordingly...
+    getZoomController().restoreZoomLevel();
+
     recalculateDimensions();
   }
 

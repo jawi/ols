@@ -25,7 +25,6 @@ import java.io.*;
 import java.util.logging.*;
 import java.util.regex.*;
 
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.session.*;
 
@@ -214,12 +213,12 @@ public final class OlsDataHelper
       bw.write( Boolean.toString( data.isCursorsVisible() ) );
       bw.newLine();
 
-      for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+      for ( Cursor cursor : data.getCursors() )
       {
-        Cursor cursor = data.getCursor( i );
         if ( cursor.isDefined() )
         {
-          bw.write( String.format( ";Cursor%d: ", Integer.valueOf( i ) ) );
+          final Integer idx = Integer.valueOf( cursor.getIndex() );
+          bw.write( String.format( ";Cursor%d: ", idx ) );
           bw.write( Long.toString( cursor.getTimestamp() ) );
           bw.newLine();
         }

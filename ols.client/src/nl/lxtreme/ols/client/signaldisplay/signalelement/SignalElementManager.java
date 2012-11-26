@@ -196,6 +196,7 @@ public final class SignalElementManager implements IDataModelChangeListener
     synchronized ( this.lock )
     {
       final int channelCount = ( aData == null ) ? 0 : aData.getChannelCount();
+      final Channel[] channels = ( aData == null ) ? new Channel[0] : aData.getChannels();
 
       // Reset channel groups so they align with the given data model...
       final int groupCount = Math.max( 1, ( int )Math.ceil( channelCount / ( double )Ols.CHANNELS_PER_BLOCK ) );
@@ -204,23 +205,29 @@ public final class SignalElementManager implements IDataModelChangeListener
       this.elements.clear();
       this.groups.clear();
 
-      for ( int g = 0; g < groupCount; g++ )
+      ElementGroup group = null;
+      for ( Channel channel : channels )
       {
-        final ElementGroup group = addGroup( "Group " + ( g + 1 ) );
+        int groupIdx = ( channel.getIndex() / channelsPerGroup );
+        String groupName = "Group " + ( groupIdx + 1 );
 
-        // We start with a signal group element...
-        addSignalElement( group, createSignalGroupElement( group ) );
-
-        for ( int c = 0; c < channelsPerGroup; c++ )
+        if ( group == null )
         {
-          final int channelIdx = ( g * channelsPerGroup ) + c;
-          final Channel channel = aData.getChannel( channelIdx );
-          if ( channel != null )
-          {
-            addSignalElement( group, createDigitalSignalElement( channel, group ) );
-          }
+          group = addGroup( groupName );
+        }
+        else if ( ( channel.getIndex() % channelsPerGroup ) == 0 )
+        {
+          addSignalElement( group, createGroupSummaryElement( group ) );
+          addSignalElement( group, createAnalogScopeElement( group ) );
+
+          group = addGroup( groupName );
         }
 
+        addSignalElement( group, createDigitalSignalElement( channel, group ) );
+      }
+
+      if ( group != null )
+      {
         addSignalElement( group, createGroupSummaryElement( group ) );
         addSignalElement( group, createAnalogScopeElement( group ) );
       }

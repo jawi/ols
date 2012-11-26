@@ -161,7 +161,7 @@ public class ProjectManagerImplTest extends TestCase
     final AcquisitionData dataSet = project.getDataSet();
     for ( int i = 0; i < labels.length; i++ )
     {
-      dataSet.getChannel( i ).setLabel( labels[i] );
+      dataSet.getChannels()[i].setLabel( labels[i] );
     }
 
     final ByteArrayOutputStream baos = new ByteArrayOutputStream( 1024 );
@@ -177,7 +177,7 @@ public class ProjectManagerImplTest extends TestCase
 
     for ( int i = 0; i < labels.length; i++ )
     {
-      assertEquals( labels[i], loadedDataSet.getChannel( i ).getLabel() );
+      assertEquals( labels[i], loadedDataSet.getChannels()[i].getLabel() );
     }
   }
 

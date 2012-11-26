@@ -49,7 +49,7 @@ public final class AcquisitionDataBuilder
     private final int channelCount;
     private final int enabledChannels;
     private final long absoluteLength;
-    private final List<Channel> channels;
+    private final Channel[] channels;
     private final Cursor[] cursors;
     private boolean cursorsVisible;
 
@@ -79,12 +79,18 @@ public final class AcquisitionDataBuilder
       this.cursors = Arrays.copyOf( aCursors, Ols.MAX_CURSORS );
       this.cursorsVisible = aCursorsVisible;
 
-      this.channels = new ArrayList<Channel>( this.channelCount );
-      for ( int i = 0; i < this.channelCount; i++ )
+      List<Channel> _channels = new ArrayList<Channel>( this.channelCount );
+
+      for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
       {
-        boolean enabled = ( this.enabledChannels & ( 1 << i ) ) != 0;
-        this.channels.add( new ChannelImpl( i, enabled ) );
+        final int mask = ( 1 << i );
+        if ( ( this.enabledChannels & mask ) != 0 )
+        {
+          _channels.add( new ChannelImpl( i, true /* enabled */) );
+        }
       }
+
+      this.channels = _channels.toArray( new Channel[_channels.size()] );
     }
 
     // METHODS
@@ -168,13 +174,9 @@ public final class AcquisitionDataBuilder
      * {@inheritDoc}
      */
     @Override
-    public Channel getChannel( final int aIndex )
+    public Channel[] getChannels()
     {
-      if ( ( aIndex < 0 ) || ( aIndex >= getChannelCount() ) )
-      {
-        throw new IllegalArgumentException( "Invalid channel index!" );
-      }
-      return this.channels.get( aIndex );
+      return this.channels;
     }
 
     @Override
@@ -187,13 +189,9 @@ public final class AcquisitionDataBuilder
      * {@inheritDoc}
      */
     @Override
-    public Cursor getCursor( final int aIndex )
+    public Cursor[] getCursors()
     {
-      if ( ( aIndex < 0 ) || ( aIndex >= Ols.MAX_CURSORS ) )
-      {
-        throw new IllegalArgumentException( "Invalid cursor index!" );
-      }
-      return this.cursors[aIndex];
+      return this.cursors;
     }
 
     @Override
@@ -717,10 +715,11 @@ public final class AcquisitionDataBuilder
     this.sampleRate = aData.getSampleRate();
     this.cursorsVisible = true; // by default
 
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    final Cursor[] _cursors = aData.getCursors();
+    for ( int i = 0; i < _cursors.length; i++ )
     {
       // Create real copies of the cursors to make them independent...
-      this.cursors[i] = new CursorImpl( aData.getCursor( i ) );
+      this.cursors[i] = new CursorImpl( _cursors[i] );
     }
 
     if ( aIncludeSamples )
@@ -776,11 +775,6 @@ public final class AcquisitionDataBuilder
     if ( this.enabledChannelMask == 0 )
     {
       throw new IllegalArgumentException( "No channel mask is defined!" );
-    }
-    int mask = ( int )( ( 1L << this.channelCount ) - 1L );
-    if ( ( mask & this.enabledChannelMask ) == 0 )
-    {
-      throw new IllegalArgumentException( "Invalid channel count and/or mask! No sample data would be returned!" );
     }
 
     int[] values;

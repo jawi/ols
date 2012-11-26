@@ -126,9 +126,10 @@ final class ToolContextImpl implements ToolContext
 
     if ( data != null )
     {
-      if ( data.isCursorsVisible() )
+      Cursor[] cursors = data.getCursors();
+      if ( data.isCursorsVisible() && ( cursors.length >= 2 ) )
       {
-        Cursor cursor = data.getCursor( 1 );
+        Cursor cursor = cursors[1];
         if ( cursor.isDefined() )
         {
           endOfDecode = data.getSampleIndex( cursor.getTimestamp() ) + 1;
@@ -185,9 +186,10 @@ final class ToolContextImpl implements ToolContext
 
     if ( data != null )
     {
-      if ( data.isCursorsVisible() )
+      Cursor[] cursors = data.getCursors();
+      if ( data.isCursorsVisible() && ( cursors.length > 1 ) )
       {
-        Cursor cursor = data.getCursor( 0 );
+        Cursor cursor = cursors[0];
         if ( cursor.isDefined() )
         {
           startOfDecode = data.getSampleIndex( cursor.getTimestamp() ) - 1;

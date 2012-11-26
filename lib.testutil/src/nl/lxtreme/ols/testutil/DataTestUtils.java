@@ -217,21 +217,21 @@ public final class DataTestUtils
       }
 
       @Override
-      public Channel getChannel( final int aIndex )
-      {
-        return null;
-      }
-
-      @Override
       public int getChannelCount()
       {
         return 8;
       }
 
       @Override
-      public Cursor getCursor( final int aIndex )
+      public Channel[] getChannels()
       {
-        return null;
+        return new Channel[0];
+      }
+
+      @Override
+      public Cursor[] getCursors()
+      {
+        return new Cursor[0];
       }
 
       @Override
@@ -319,21 +319,21 @@ public final class DataTestUtils
       }
 
       @Override
-      public Channel getChannel( final int aIndex )
-      {
-        return null;
-      }
-
-      @Override
       public int getChannelCount()
       {
         return aChannels;
       }
 
       @Override
-      public Cursor getCursor( final int aIndex )
+      public Channel[] getChannels()
       {
-        return null;
+        return new Channel[0];
+      }
+
+      @Override
+      public Cursor[] getCursors()
+      {
+        return new Cursor[0];
       }
 
       @Override

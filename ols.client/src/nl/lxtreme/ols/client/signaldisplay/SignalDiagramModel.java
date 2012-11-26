@@ -37,6 +37,7 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
 
@@ -1221,19 +1222,16 @@ public final class SignalDiagramModel implements PropertyChangeListener
     }
 
     this.markers = new Marker[Ols.MAX_CURSORS + 1];
-    for ( int i = 0; i < this.markers.length; i++ )
+    this.markers[0] = new Marker( aData.getTriggerPosition() );
+
+    int i = 1;
+    for ( Cursor cursor : aData.getCursors() )
     {
-      if ( i == 0 )
-      {
-        // First one is the trigger...
-        this.markers[i] = new Marker( aData.getTriggerPosition() );
-      }
-      else
-      {
-        this.markers[i] = new Marker( aData.getCursor( i - 1 ) );
-      }
+      final Marker marker = new Marker( cursor );
       // Register ourselves as property change listeners for this marker...
-      this.markers[i].addPropertyChangeListener( this );
+      marker.addPropertyChangeListener( this );
+
+      this.markers[i++] = marker;
     }
   }
 
