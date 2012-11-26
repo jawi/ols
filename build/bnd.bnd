@@ -1,0 +1,16 @@
+-nobundles=true
+-dependson \
+    javax.microedition.io,\
+    lib.testutil,\
+    lib.ioutil,\
+    lib.metatype,\
+    lib.swing,\
+    ols.acquisition.service,\
+    ols.client,\
+    ols.common,\
+    ols.device,\
+    ols.export,\
+    ols.host,\
+    ols.logbridge,\
+    ols.service,\
+    ols.tool

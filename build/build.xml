@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="main-build" default="build"> 
+    <import file="../cnf/build.xml"/>
+	
+	<!-- ================================= 
+          target: assembly              
+         ================================= -->
+    <target name="assembly" depends="init" description="Assembles a distribution from the current compiled libraries">
+        <!-- TODO -->
+    </target>
+
+</project>
