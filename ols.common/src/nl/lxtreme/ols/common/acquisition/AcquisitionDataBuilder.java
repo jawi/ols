@@ -322,6 +322,34 @@ public final class AcquisitionDataBuilder
      * {@inheritDoc}
      */
     @Override
+    public boolean equals( final Object aObject )
+    {
+      if ( this == aObject )
+      {
+        return true;
+      }
+      if ( ( aObject == null ) || !( aObject instanceof ChannelImpl ) )
+      {
+        return false;
+      }
+
+      ChannelImpl other = ( ChannelImpl )aObject;
+      if ( this.index != other.index )
+      {
+        return false;
+      }
+      if ( this.mask != other.mask )
+      {
+        return false;
+      }
+
+      return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int getIndex()
     {
       return this.index;
@@ -343,6 +371,19 @@ public final class AcquisitionDataBuilder
     public int getMask()
     {
       return this.mask;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode()
+    {
+      final int prime = 31;
+      int result = 1;
+      result = ( prime * result ) + this.index;
+      result = ( prime * result ) + this.mask;
+      return result;
     }
 
     /**
@@ -406,20 +447,20 @@ public final class AcquisitionDataBuilder
     /**
      * Creates a new {@link CursorImpl} instance.
      */
-    public CursorImpl( final int aIndex )
-    {
-      this.index = aIndex;
-      this.timestamp = -1L;
-    }
-
-    /**
-     * Creates a new {@link CursorImpl} instance.
-     */
     public CursorImpl( final Cursor aCursor )
     {
       this.index = aCursor.getIndex();
       this.timestamp = aCursor.getTimestamp();
       this.label = aCursor.getLabel();
+    }
+
+    /**
+     * Creates a new {@link CursorImpl} instance.
+     */
+    public CursorImpl( final int aIndex )
+    {
+      this.index = aIndex;
+      this.timestamp = -1L;
     }
 
     // METHODS
@@ -446,6 +487,34 @@ public final class AcquisitionDataBuilder
      * {@inheritDoc}
      */
     @Override
+    public boolean equals( final Object aObject )
+    {
+      if ( this == aObject )
+      {
+        return true;
+      }
+      if ( ( aObject == null ) || !( aObject instanceof CursorImpl ) )
+      {
+        return false;
+      }
+
+      CursorImpl other = ( CursorImpl )aObject;
+      if ( this.index != other.index )
+      {
+        return false;
+      }
+      if ( this.timestamp != other.timestamp )
+      {
+        return false;
+      }
+
+      return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int getIndex()
     {
       return this.index;
@@ -466,7 +535,24 @@ public final class AcquisitionDataBuilder
     @Override
     public long getTimestamp()
     {
+      if ( this.timestamp < 0L )
+      {
+        throw new IllegalStateException( "Undefined cursor!" );
+      }
       return this.timestamp;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode()
+    {
+      final int prime = 31;
+      int result = 1;
+      result = ( prime * result ) + this.index;
+      result = ( prime * result ) + ( int )( this.timestamp ^ ( this.timestamp >>> 32 ) );
+      return result;
     }
 
     /**
