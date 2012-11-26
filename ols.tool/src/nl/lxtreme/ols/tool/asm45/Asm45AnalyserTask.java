@@ -57,7 +57,7 @@ public class Asm45AnalyserTask implements Callable<Void>
    * one of "I"=instruction, "DW"=data word, "DBL"=data byte left, "DBR"=data
    * byte right
    */
-  static final String KEY_TYPE = "type";
+  static final String KEY_ASM45TYPE = "asm45type";
   /** 16-bit data */
   static final String KEY_IDA = "ida";
   /** true if external bus grant/DMA active */
@@ -369,7 +369,7 @@ public class Asm45AnalyserTask implements Callable<Void>
           {
             if ( address < 32 )
             {
-              event = Asm45AnalyserTask.REGISTERS[address] + String.format( "&rarr;$%04x", ida );
+              event = REGISTERS[address] + String.format( "&rarr;$%04x", ida );
             }
             else
             {
@@ -380,7 +380,7 @@ public class Asm45AnalyserTask implements Callable<Void>
           {
             if ( address < 32 )
             {
-              event = Asm45AnalyserTask.REGISTERS[address] + String.format( "&larr;$%04x", ida );
+              event = REGISTERS[address] + String.format( "&larr;$%04x", ida );
             }
             else
             {
@@ -416,7 +416,7 @@ public class Asm45AnalyserTask implements Callable<Void>
             {
               if ( address < 32 )
               {
-                event = Asm45AnalyserTask.REGISTERS[address] + String.format( "&rarr;$%04x", ida );
+                event = REGISTERS[address] + String.format( "&rarr;$%04x", ida );
               }
               else
               {
@@ -427,7 +427,7 @@ public class Asm45AnalyserTask implements Callable<Void>
             {
               if ( address < 32 )
               {
-                event = Asm45AnalyserTask.REGISTERS[address] + String.format( "&larr;$%04x", ida );
+                event = REGISTERS[address] + String.format( "&larr;$%04x", ida );
               }
               else
               {
@@ -462,7 +462,7 @@ public class Asm45AnalyserTask implements Callable<Void>
           properties.put( KEY_ADDRESS, address );
           properties.put( KEY_CLOCKS, clocks );
           properties.put( KEY_BLOCK, block );
-          properties.put( KEY_TYPE, type );
+          properties.put( KEY_ASM45TYPE, type );
           properties.put( KEY_IDA, ida );
 
           // event == decoded 9845 assembler instruction / data transfer
