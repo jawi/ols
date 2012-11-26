@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signaldisplay.cursor;
+package nl.lxtreme.ols.client.signaldisplay.marker;
 
 
 import java.awt.*;
@@ -26,7 +26,6 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
@@ -36,14 +35,14 @@ import nl.lxtreme.ols.util.swing.component.*;
 /**
  * Provides an action to edit a cursor label.
  */
-public class EditCursorPropertiesAction extends AbstractAction
+public class EditMarkerPropertiesAction extends AbstractAction
 {
   // INNER TYPES
 
   /**
-   * Provides a Swing dialog for editing a cursor label.
+   * Provides a Swing dialog for editing a marker label and color.
    */
-  static final class EditCursorDialog extends JDialog implements StatusAwareCloseableDialog
+  static final class EditMarkerDialog extends JDialog implements StatusAwareCloseableDialog
   {
     // CONSTANTS
 
@@ -64,16 +63,16 @@ public class EditCursorPropertiesAction extends AbstractAction
     /**
      * Creates a new EditCursorLabelAction.EditCursorDialog instance.
      */
-    public EditCursorDialog( final Window aParent, final CursorElement aCursor )
+    public EditMarkerDialog( final Window aParent, final Marker aMarker )
     {
       super( aParent, ModalityType.DOCUMENT_MODAL );
 
       setResizable( false );
 
-      this.defaultLabel = aCursor.getLabel();
-      this.defaultColor = aCursor.getColor();
+      this.defaultLabel = aMarker.getLabel();
+      this.defaultColor = aMarker.getColor();
 
-      initDialog( aCursor );
+      initDialog( aMarker );
     }
 
     // METHODS
@@ -89,9 +88,9 @@ public class EditCursorPropertiesAction extends AbstractAction
     }
 
     /**
-     * Returns the new cursor color.
+     * Returns the new marker color.
      * 
-     * @return the cursor color, can be <code>null</code>.
+     * @return the new color, can be <code>null</code>.
      */
     public Color getColor()
     {
@@ -99,9 +98,9 @@ public class EditCursorPropertiesAction extends AbstractAction
     }
 
     /**
-     * Returns the new cursor label.
+     * Returns the new marker label.
      * 
-     * @return the cursor label, can be <code>null</code>.
+     * @return the new label, can be <code>null</code>.
      */
     public String getLabel()
     {
@@ -143,15 +142,15 @@ public class EditCursorPropertiesAction extends AbstractAction
     /**
      * Initializes this dialog.
      */
-    private void initDialog( final CursorElement aCursor )
+    private void initDialog( final Marker aMarker )
     {
-      setTitle( "Edit cursor properties" );
+      setTitle( String.format( "Edit %s properties", aMarker.isMoveable() ? "cursor" : "trigger" ) );
 
       JLabel labelEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Label" );
-      this.labelEditor = new JTextField( aCursor.getLabel(), 10 );
+      this.labelEditor = new JTextField( aMarker.getLabel(), 10 );
 
       JLabel colorEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Color" );
-      this.colorEditor = new JColorEditor( aCursor.getColor() );
+      this.colorEditor = new JColorEditor( aMarker.getColor() );
 
       final JButton okButton = StandardActionFactory.createOkButton();
       final JButton cancelButton = StandardActionFactory.createCancelButton();
@@ -199,25 +198,21 @@ public class EditCursorPropertiesAction extends AbstractAction
 
   // VARIABLES
 
-  private final SignalDiagramController controller;
-  private final CursorElement cursor;
+  private final Marker marker;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new EditCursorLabelAction instance.
+   * Creates a new {@link EditMarkerPropertiesAction} instance.
    * 
-   * @param aController
-   *          the {@link SignalDiagramController} to use;
-   * @param aCursor
-   *          the cursor to edit the label for.
+   * @param aMarker
+   *          the marker to edit the label & color for.
    */
-  public EditCursorPropertiesAction( final SignalDiagramController aController, final CursorElement aCursor )
+  public EditMarkerPropertiesAction( final Marker aMarker )
   {
-    super( "Cursor Properties" );
+    super( String.format( "%s Properties", aMarker.isMoveable() ? "Cursor" : "Trigger" ) );
 
-    this.controller = aController;
-    this.cursor = aCursor;
+    this.marker = aMarker;
   }
 
   // METHODS
@@ -228,15 +223,12 @@ public class EditCursorPropertiesAction extends AbstractAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    final EditCursorDialog dialog = new EditCursorDialog( SwingComponentUtils.getOwningWindow( aEvent ), this.cursor );
+    final EditMarkerDialog dialog = new EditMarkerDialog( SwingComponentUtils.getOwningWindow( aEvent ), this.marker );
     if ( dialog.showDialog() )
     {
-      final SignalDiagramModel model = this.controller.getSignalDiagramModel();
-
-      // Set the new properties through the model so that all registered
-      // listeners are invoked...
-      model.setCursorLabel( this.cursor.getIndex(), dialog.getLabel() );
-      model.setCursorColor( this.cursor.getIndex(), dialog.getColor() );
+      // Update the properties...
+      this.marker.setLabel( dialog.getLabel() );
+      this.marker.setColor( dialog.getColor() );
     }
   }
 }

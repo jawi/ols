@@ -36,7 +36,7 @@ import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.toolwindow.*;
 import nl.lxtreme.ols.host.*;
@@ -97,7 +97,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
    * Provides a listener for cursor changes that reflects all changes to their
    * corresponding actions.
    */
-  final class CursorActionListener implements ICursorChangeListener
+  final class CursorActionListener implements IMarkerChangeListener
   {
     // METHODS
 
@@ -105,7 +105,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
      * {@inheritDoc}
      */
     @Override
-    public void cursorAdded( final CursorElement aCursor )
+    public void markerAdded( final Marker aCursor )
     {
       scheduleActionsUpdate();
     }
@@ -114,7 +114,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
      * {@inheritDoc}
      */
     @Override
-    public void cursorChanged( final String aPropertyName, final CursorElement aNewCursor )
+    public void markerChanged( final String aPropertyName, final Marker aNewCursor )
     {
       // Nothing...
     }
@@ -123,7 +123,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
      * {@inheritDoc}
      */
     @Override
-    public void cursorMoved( final long aOldTimestamp, final long aNewTimestamp )
+    public void markerMoved( final long aOldTimestamp, final long aNewTimestamp )
     {
       // Nothing...
     }
@@ -132,7 +132,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
      * {@inheritDoc}
      */
     @Override
-    public void cursorRemoved( final CursorElement aOldCursor )
+    public void markerRemoved( final Marker aOldCursor )
     {
       scheduleActionsUpdate();
     }

@@ -29,7 +29,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.CursorFlagTextFormatter.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.view.toolwindow.ClickableLink.LinkListener;
@@ -41,7 +41,7 @@ import nl.lxtreme.ols.util.swing.*;
  * Provides a dockable tool window that shows the details of the defined
  * cursors.
  */
-public class CursorDetailsView extends AbstractViewLayer implements IToolWindow, ICursorChangeListener,
+public class CursorDetailsView extends AbstractViewLayer implements IToolWindow, IMarkerChangeListener,
     IDataModelChangeListener, LinkListener
 {
   // CONSTANTS
@@ -90,7 +90,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
    * {@inheritDoc}
    */
   @Override
-  public void cursorAdded( final CursorElement aCursor )
+  public void markerAdded( final Marker aCursor )
   {
     updateViewText();
   }
@@ -99,9 +99,9 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
    * {@inheritDoc}
    */
   @Override
-  public void cursorChanged( final String aPropertyName, final CursorElement aNewCursor )
+  public void markerChanged( final String aPropertyName, final Marker aNewCursor )
   {
-    if ( !ICursorChangeListener.PROPERTY_COLOR.equals( aPropertyName ) )
+    if ( !IMarkerChangeListener.PROPERTY_COLOR.equals( aPropertyName ) )
     {
       updateViewText();
     }
@@ -111,7 +111,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
    * {@inheritDoc}
    */
   @Override
-  public void cursorMoved( final long aOldTimestamp, final long aNewTimestamp )
+  public void markerMoved( final long aOldTimestamp, final long aNewTimestamp )
   {
     updateViewText();
   }
@@ -120,7 +120,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
    * {@inheritDoc}
    */
   @Override
-  public void cursorRemoved( final CursorElement aOldCursor )
+  public void markerRemoved( final Marker aOldCursor )
   {
     updateViewText();
   }
@@ -190,7 +190,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
   {
     setOpaque( false );
     setLayout( new BorderLayout() );
-    setName( "Cursor details" );
+    setName( "Marker details" );
 
     updateViewText();
   }
@@ -205,15 +205,15 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
     final SignalDiagramModel model = ctrl.getSignalDiagramModel();
 
     final boolean cursorsEnabled;
-    final CursorElement[] cursors;
+    final Marker[] markers;
     if ( model != null )
     {
-      cursors = model.getDefinedCursors();
+      markers = getDefinedMarkers();
       cursorsEnabled = model.isCursorMode();
     }
     else
     {
-      cursors = new CursorElement[0];
+      markers = new Marker[0];
       cursorsEnabled = false;
     }
 
@@ -224,21 +224,26 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
       {
         final JPanel panel = new JPanel( new SpringLayout() );
 
-        addSeparator( panel, "Cursors" );
+        addSeparator( panel, "Markers" );
 
-        for ( CursorElement cursor : cursors )
+        for ( Marker marker : markers )
         {
-          String label = "" + ( cursor.getIndex() + 1 );
-          if ( cursor.hasLabel() )
+          if ( !marker.isDefined() )
           {
-            label = label.concat( ", " ).concat( cursor.getLabel() );
+            continue;
+          }
+
+          String label = "" + ( marker.getIndex() + 1 );
+          if ( marker.hasLabel() )
+          {
+            label = label.concat( ", " ).concat( marker.getLabel() );
           }
 
           panel.add( createRightAlignedLabel( label.concat( ":" ) ) );
 
-          String linkText = getCursorFlagText( model, cursor, LabelStyle.TIME_ONLY );
+          String linkText = getCursorFlagText( model, marker, LabelStyle.TIME_ONLY );
 
-          ClickableLink link = new ClickableLink( linkText, Long.valueOf( cursor.getTimestamp() ) );
+          ClickableLink link = new ClickableLink( linkText, Long.valueOf( marker.getTimestamp() ) );
           link.setLinkListener( CursorDetailsView.this );
           link.setEnabled( cursorsEnabled );
           link.setForeground( Color.BLUE );
@@ -246,10 +251,10 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
           panel.add( link );
         }
 
-        if ( cursors.length == 0 )
+        if ( markers.length == 0 )
         {
           panel.add( createRightAlignedLabel( "No" ) );
-          panel.add( new JLabel( "cursors defined." ) );
+          panel.add( new JLabel( "markers defined." ) );
         }
 
         makeEditorGrid( panel, 10, 10 );

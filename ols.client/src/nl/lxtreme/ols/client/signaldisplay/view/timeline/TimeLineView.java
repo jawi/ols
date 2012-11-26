@@ -24,7 +24,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
@@ -33,7 +33,7 @@ import nl.lxtreme.ols.common.acquisition.*;
  * Provides a time line view, displaying ticks at regular intervals along with
  * timing information.
  */
-public class TimeLineView extends AbstractViewLayer implements ICursorChangeListener, IDataModelChangeListener
+public class TimeLineView extends AbstractViewLayer implements IMarkerChangeListener, IDataModelChangeListener
 {
   // INNER TYPES
 
@@ -66,8 +66,8 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
       final SignalDiagramModel model = getModel();
       if ( model.isCursorMode() )
       {
-        final CursorElement hoveredCursor = findCursor( point );
-        if ( hoveredCursor != null )
+        final Marker hoveredMarker = findMarker( point );
+        if ( hoveredMarker != null )
         {
           setMouseCursor( aEvent, CURSOR_MOVE_CURSOR );
           aEvent.consume();
@@ -149,7 +149,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
    * {@inheritDoc}
    */
   @Override
-  public void cursorAdded( final CursorElement aCursor )
+  public void markerAdded( final Marker aCursor )
   {
     repaint( 50L );
   }
@@ -158,7 +158,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
    * {@inheritDoc}
    */
   @Override
-  public void cursorChanged( final String aPropertyName, final CursorElement aNewCursor )
+  public void markerChanged( final String aPropertyName, final Marker aNewCursor )
   {
     repaint( 50L );
   }
@@ -166,7 +166,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
   /**
    * {@inheritDoc}
    */
-  public void cursorMoved( final long aOldTimestamp, final long aNewTimestamp )
+  public void markerMoved( final long aOldTimestamp, final long aNewTimestamp )
   {
     repaint( 50L );
   }
@@ -175,7 +175,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
    * {@inheritDoc}
    */
   @Override
-  public void cursorRemoved( final CursorElement aOldCursor )
+  public void markerRemoved( final Marker aOldCursor )
   {
     repaint( 50L );
   }

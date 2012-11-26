@@ -24,7 +24,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.common.annotation.*;
@@ -33,7 +33,7 @@ import nl.lxtreme.ols.common.annotation.*;
 /**
  * Provides a view for the signal data as individual channels.
  */
-public class SignalView extends AbstractViewLayer implements IMeasurementListener, ICursorChangeListener
+public class SignalView extends AbstractViewLayer implements IMeasurementListener, IMarkerChangeListener
 {
   // INNER TYPES
 
@@ -80,7 +80,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
 
           if ( this.lastMeasurementInfo != null )
           {
-            setMouseCursor( aEvent, CURSOR_HOVER );
+            setMouseCursor( aEvent, CURSOR_MEASURE );
 
             model.fireMeasurementEvent( this.lastMeasurementInfo );
             aEvent.consume();
@@ -89,8 +89,8 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
 
         if ( model.isCursorMode() )
         {
-          final CursorElement hoveredCursor = findCursor( point );
-          if ( hoveredCursor != null )
+          final Marker hoveredMarker = findMarker( point );
+          if ( hoveredMarker != null )
           {
             setMouseCursor( aEvent, CURSOR_MOVE_CURSOR );
             aEvent.consume();
@@ -198,7 +198,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
    * {@inheritDoc}
    */
   @Override
-  public void cursorAdded( final CursorElement aCursor )
+  public void markerAdded( final Marker aCursor )
   {
     final int visibleHeight = getVisibleRect().height;
 
@@ -212,7 +212,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
    * {@inheritDoc}
    */
   @Override
-  public void cursorChanged( final String aPropertyName, final CursorElement aNewCursor )
+  public void markerChanged( final String aPropertyName, final Marker aNewCursor )
   {
     final Rectangle visibleRect = getVisibleRect();
     final int y = visibleRect.y;
@@ -228,7 +228,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
    * {@inheritDoc}
    */
   @Override
-  public void cursorMoved( final long aOldTimestamp, final long aNewTimestamp )
+  public void markerMoved( final long aOldTimestamp, final long aNewTimestamp )
   {
     final Rectangle visibleRect = getVisibleRect();
     final int y = visibleRect.y;
@@ -247,7 +247,7 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
    * {@inheritDoc}
    */
   @Override
-  public void cursorRemoved( final CursorElement aOldCursor )
+  public void markerRemoved( final Marker aOldCursor )
   {
     final int visibleHeight = getVisibleRect().height;
 

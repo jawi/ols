@@ -35,7 +35,7 @@ import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.CursorFlagTextFormatter.LabelStyle;
@@ -50,7 +50,7 @@ import nl.lxtreme.ols.util.swing.component.*;
  * signals, such as frequency, # of pulses and so on.
  */
 public class MeasurementView extends AbstractViewLayer implements IToolWindow, ISignalElementChangeListener,
-    ICursorChangeListener, IMeasurementListener
+    IMarkerChangeListener, IMeasurementListener
 {
   // INNER TYPES
 
@@ -123,9 +123,9 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
         final boolean aIsSelected, final boolean aCellHasFocus )
     {
       String text;
-      if ( ( aValue != null ) && ( aValue instanceof CursorElement ) )
+      if ( ( aValue != null ) && ( aValue instanceof Marker ) )
       {
-        final CursorElement cursor = ( CursorElement )aValue;
+        final Marker cursor = ( Marker )aValue;
         text = CursorFlagTextFormatter.getCursorFlagText( getSignalDiagramModel(), cursor, LabelStyle.LABEL_TIME );
       }
       else if ( aValue != null )
@@ -320,7 +320,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
      * @param aCursorB
      *          the cursor denoting the end of measurement.
      */
-    public SignalMeasurerWorker( final Channel aChannel, final CursorElement aCursorA, final CursorElement aCursorB )
+    public SignalMeasurerWorker( final Channel aChannel, final Marker aCursorA, final Marker aCursorB )
     {
       this.index = aChannel.getIndex();
       this.startTimestamp = aCursorA != null ? aCursorA.getTimestamp() : -1L;
@@ -472,7 +472,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    * {@inheritDoc}
    */
   @Override
-  public void cursorAdded( final CursorElement aCursor )
+  public void markerAdded( final Marker aCursor )
   {
     if ( this.listening )
     {
@@ -484,9 +484,9 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    * {@inheritDoc}
    */
   @Override
-  public void cursorChanged( final String aPropertyName, final CursorElement aNewCursor )
+  public void markerChanged( final String aPropertyName, final Marker aNewCursor )
   {
-    if ( this.listening && !ICursorChangeListener.PROPERTY_COLOR.equals( aPropertyName ) )
+    if ( this.listening && !IMarkerChangeListener.PROPERTY_COLOR.equals( aPropertyName ) )
     {
       updateCursorModels();
     }
@@ -496,7 +496,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    * {@inheritDoc}
    */
   @Override
-  public void cursorMoved( final long aOldTimestamp, final long aNewTimestamp )
+  public void markerMoved( final long aOldTimestamp, final long aNewTimestamp )
   {
     if ( this.listening )
     {
@@ -508,7 +508,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    * {@inheritDoc}
    */
   @Override
-  public void cursorRemoved( final CursorElement aOldCursor )
+  public void markerRemoved( final Marker aOldCursor )
   {
     if ( this.listening )
     {
@@ -819,13 +819,13 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       return false;
     }
 
-    CursorElement selectedCursorA = ( CursorElement )this.cursorA.getSelectedItem();
+    Marker selectedCursorA = ( Marker )this.cursorA.getSelectedItem();
     if ( ( selectedCursorA != null ) && !selectedCursorA.isDefined() )
     {
       return false;
     }
 
-    CursorElement selectedCursorB = ( CursorElement )this.cursorB.getSelectedItem();
+    Marker selectedCursorB = ( Marker )this.cursorB.getSelectedItem();
     if ( ( selectedCursorB != null ) && !selectedCursorB.isDefined() )
     {
       return false;
@@ -944,10 +944,10 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     this.comps.add( panel.add( createRightAlignedLabel( "Channel:" ) ) );
     this.comps.add( panel.add( this.measureChannel ) );
 
-    this.comps.add( panel.add( createRightAlignedLabel( "Cursor A:" ) ) );
+    this.comps.add( panel.add( createRightAlignedLabel( "Marker A:" ) ) );
     this.comps.add( panel.add( this.cursorA ) );
 
-    this.comps.add( panel.add( createRightAlignedLabel( "Cursor B:" ) ) );
+    this.comps.add( panel.add( createRightAlignedLabel( "Marker B:" ) ) );
     this.comps.add( panel.add( this.cursorB ) );
 
     this.comps.add( panel.add( this.pci_pulseCountLabel ) );
@@ -1019,8 +1019,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
    */
   private JComboBox updateCursorComboBoxModel( final JComboBox aComboBox )
   {
-    final CursorElement[] cursors = getSignalDiagramModel().getDefinedCursors();
-    ComboBoxModel model = new DefaultComboBoxModel( cursors );
+    ComboBoxModel model = new DefaultComboBoxModel( getDefinedMarkers() );
 
     final Object oldSelectedItem = aComboBox.getSelectedItem();
     aComboBox.setModel( model );
@@ -1045,8 +1044,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
           this.indicator.setVisible( true );
 
           Channel channel = ( Channel )MeasurementView.this.measureChannel.getSelectedItem();
-          CursorElement cursorA = ( CursorElement )MeasurementView.this.cursorA.getSelectedItem();
-          CursorElement cursorB = ( CursorElement )MeasurementView.this.cursorB.getSelectedItem();
+          Marker cursorA = ( Marker )MeasurementView.this.cursorA.getSelectedItem();
+          Marker cursorB = ( Marker )MeasurementView.this.cursorB.getSelectedItem();
 
           this.signalMeasurerWorker = new SignalMeasurerWorker( channel, cursorA, cursorB );
           this.signalMeasurerWorker.execute();

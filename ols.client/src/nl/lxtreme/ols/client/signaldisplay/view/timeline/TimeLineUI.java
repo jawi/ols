@@ -30,9 +30,10 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.view.CursorFlagTextFormatter.LabelStyle;
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -43,9 +44,9 @@ public class TimeLineUI extends ComponentUI
   // INNER TYPES
 
   /**
-   * Helper class for the placement of cursor labels.
+   * Helper class for the placement of marker labels.
    */
-  private static class CursorLabel implements Comparable<CursorLabel>
+  private static class MarkerLabel implements Comparable<MarkerLabel>
   {
     // CONSTANTS
 
@@ -56,7 +57,7 @@ public class TimeLineUI extends ComponentUI
 
     // VARIABLES
 
-    final int index;
+    final Marker marker;
     final Rectangle boundaries;
     String text;
     boolean mirrored;
@@ -67,11 +68,11 @@ public class TimeLineUI extends ComponentUI
     // CONSTRUCTORS
 
     /**
-     * Creates a new TimeLineUI.CursorLabel instance.
+     * Creates a new {@link MarkerLabel} instance.
      */
-    public CursorLabel( final int aIndex, final String aText, final Rectangle aBoundaries )
+    public MarkerLabel( final Marker aMarker, final String aText, final Rectangle aBoundaries )
     {
-      this.index = aIndex;
+      this.marker = aMarker;
       this.text = aText;
       this.boundaries = aBoundaries;
     }
@@ -82,7 +83,7 @@ public class TimeLineUI extends ComponentUI
      * {@inheritDoc}
      */
     @Override
-    public int compareTo( final CursorLabel aLabel )
+    public int compareTo( final MarkerLabel aLabel )
     {
       int result = this.boundaries.x - aLabel.boundaries.x;
       if ( result == 0 )
@@ -120,6 +121,16 @@ public class TimeLineUI extends ComponentUI
     }
 
     /**
+     * Returns the text color for this label.
+     * 
+     * @return a text color, never <code>null</code>.
+     */
+    public Color getTextColor()
+    {
+      return ColorUtils.getContrastColor( this.marker.getColor() );
+    }
+
+    /**
      * @return <code>true</code> if there are more placements to use,
      *         <code>false</code> if no more placements.
      */
@@ -137,7 +148,7 @@ public class TimeLineUI extends ComponentUI
      * @return <code>true</code> if this cursor label intersects the given
      *         cursor label, <code>false</code> otherwise.
      */
-    public boolean intersects( final CursorLabel aLabel )
+    public boolean intersects( final MarkerLabel aLabel )
     {
       return this.boundaries.intersects( aLabel.boundaries );
     }
@@ -177,15 +188,6 @@ public class TimeLineUI extends ComponentUI
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString()
-    {
-      return "CursorLabel [index=" + this.index + ", boundaries=" + this.boundaries + ", text=" + this.text + "]";
-    }
-
-    /**
      * Recalculates the boundaries for this label.
      */
     public void useNextStyle( final TimeLineViewModel aModel, final FontMetrics aFM )
@@ -207,11 +209,11 @@ public class TimeLineUI extends ComponentUI
         final TimeLineViewModel aModel, final FontMetrics aFM )
     {
       // Modify the label style of the previous label...
-      String flagText = aModel.getCursorFlagText( this.index, labelPlacement.style );
+      String flagText = aModel.getMarkerFlagText( this.marker, labelPlacement.style );
 
       Rectangle rect = new Rectangle( this.boundaries );
+      rect.x = aModel.timestampToCoordinate( this.marker.getTimestamp() );
       rect.width = aFM.stringWidth( flagText ) + PADDING_WIDTH;
-      rect.x = aModel.getCursorScreenCoordinate( this.index );
       if ( labelPlacement.mirrored )
       {
         rect.x = Math.max( 0, rect.x - rect.width );
@@ -233,11 +235,11 @@ public class TimeLineUI extends ComponentUI
       final LabelPlacement labelPlacement = this.placementIter.next();
 
       // Modify the label style of the previous label...
-      String flagText = aModel.getCursorFlagText( this.index, labelPlacement.style );
+      String flagText = aModel.getMarkerFlagText( this.marker, labelPlacement.style );
 
       this.text = flagText;
       this.boundaries.width = aFM.stringWidth( flagText ) + PADDING_WIDTH;
-      this.boundaries.x = aModel.getCursorScreenCoordinate( this.index );
+      this.boundaries.x = aModel.timestampToCoordinate( this.marker.getTimestamp() );
       this.mirrored = labelPlacement.mirrored;
 
       if ( this.mirrored )
@@ -445,7 +447,7 @@ public class TimeLineUI extends ComponentUI
       // Draw the cursor "flags"...
       if ( model.isCursorMode() )
       {
-        paintCursorFlags( model, canvas, aComponent );
+        paintMarkerFlags( model, canvas, aComponent );
       }
     }
     finally
@@ -552,9 +554,9 @@ public class TimeLineUI extends ComponentUI
    * @param aCanvas
    *          the canvas to paint the cursor (flags) on;
    */
-  private void paintCursorFlags( final TimeLineViewModel aModel, final Graphics2D aCanvas, final JComponent aComponent )
+  private void paintMarkerFlags( final TimeLineViewModel aModel, final Graphics2D aCanvas, final JComponent aComponent )
   {
-    final LinkedList<CursorLabel> labels = new LinkedList<CursorLabel>();
+    final LinkedList<MarkerLabel> labels = new LinkedList<MarkerLabel>();
 
     final Rectangle clip = aCanvas.getClipBounds();
 
@@ -566,17 +568,18 @@ public class TimeLineUI extends ComponentUI
 
     // Phase 1: determine the boundaries of each defined cursor that should be
     // shown in the current clip boundaries...
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    Marker[] markers = aModel.getDefinedMarkers();
+    for ( Marker marker : markers )
     {
       // TODO persist the cursor labels between paints so we can perform smart
       // redraws...
       final Rectangle boundaries = new Rectangle();
 
-      final String flagText = aModel.getCursorFlagText( i, LabelStyle.LABEL_TIME );
+      final String flagText = aModel.getMarkerFlagText( marker, LabelStyle.LABEL_TIME );
 
       boundaries.height = fm.getHeight() + PADDING_HEIGHT;
       boundaries.width = fm.stringWidth( flagText ) + PADDING_WIDTH;
-      boundaries.x = aModel.getCursorScreenCoordinate( i );
+      boundaries.x = aModel.timestampToCoordinate( marker.getTimestamp() );
       boundaries.y = aComponent.getHeight() - boundaries.height - 1;
 
       if ( ( boundaries.x < 0 ) || !clip.intersects( boundaries ) )
@@ -585,7 +588,7 @@ public class TimeLineUI extends ComponentUI
         continue;
       }
 
-      labels.add( new CursorLabel( i, flagText, boundaries ) );
+      labels.add( new MarkerLabel( marker, flagText, boundaries ) );
     }
 
     // Phase 2: sort the labels so they are ordered from left to right on
@@ -598,11 +601,11 @@ public class TimeLineUI extends ComponentUI
     final AlphaComposite alphaComposite = AlphaComposite.SrcOver.derive( 0.7f );
 
     // Phase 4: draw the labels...
-    for ( CursorLabel label : labels )
+    for ( MarkerLabel label : labels )
     {
       final Rectangle boundaries = label.boundaries;
-      final Color cursorColor = aModel.getCursorColor( label.index );
-      final Color cursorTextColor = aModel.getCursorTextColor( label.index );
+      final Color cursorColor = label.marker.getColor();
+      final Color cursorTextColor = label.getTextColor();
 
       final Composite oldComposite = aCanvas.getComposite();
       final Stroke oldStroke = aCanvas.getStroke();
@@ -645,7 +648,7 @@ public class TimeLineUI extends ComponentUI
    *          the font metrics to use.
    */
   private void placeLabels( final Rectangle aClipBounds, final TimeLineViewModel aModel,
-      final List<CursorLabel> aLabels, final FontMetrics aFM )
+      final List<MarkerLabel> aLabels, final FontMetrics aFM )
   {
     for ( int i = 0; i < aLabels.size(); i++ )
     {
@@ -656,8 +659,8 @@ public class TimeLineUI extends ComponentUI
     // place them in reverse order to minimize the overlap...
     for ( int li = aLabels.size() - 1; li > 0; li-- )
     {
-      final CursorLabel previousLabel = aLabels.get( li - 1 );
-      final CursorLabel currentLabel = aLabels.get( li );
+      final MarkerLabel previousLabel = aLabels.get( li - 1 );
+      final MarkerLabel currentLabel = aLabels.get( li );
 
       while ( previousLabel.intersects( currentLabel ) && currentLabel.hasMoreStyles() )
       {

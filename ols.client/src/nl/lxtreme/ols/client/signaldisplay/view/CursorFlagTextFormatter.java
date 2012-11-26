@@ -22,7 +22,7 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.common.util.*;
 
 
@@ -70,10 +70,10 @@ public final class CursorFlagTextFormatter
    * @return a cursor flag text, or an empty string if the cursor with the given
    *         index is undefined.
    */
-  public static String getCursorFlagText( final SignalDiagramModel aModel, final CursorElement aCursor,
+  public static String getCursorFlagText( final SignalDiagramModel aModel, final Marker aCursor,
       final LabelStyle aStyle )
   {
-    return new CursorFlagTextFormatter( aModel ).getCursorFlagText( aCursor, aStyle );
+    return new CursorFlagTextFormatter( aModel ).getMarkerFlagText( aCursor, aStyle );
   }
 
   /**
@@ -86,7 +86,7 @@ public final class CursorFlagTextFormatter
    * @return a cursor flag text, or an empty string if the cursor with the given
    *         index is undefined.
    */
-  public String getCursorFlagText( final CursorElement aCursor, final LabelStyle aStyle )
+  public String getMarkerFlagText( final Marker aCursor, final LabelStyle aStyle )
   {
     if ( !aCursor.isDefined() )
     {

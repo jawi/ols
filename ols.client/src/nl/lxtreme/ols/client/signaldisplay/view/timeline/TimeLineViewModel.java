@@ -27,7 +27,9 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.client.signaldisplay.view.CursorFlagTextFormatter.*;
 
 
 /**
@@ -35,6 +37,10 @@ import nl.lxtreme.ols.client.signaldisplay.view.*;
  */
 public class TimeLineViewModel extends AbstractViewModel
 {
+  // VARIABLES
+
+  private final CursorFlagTextFormatter cursorFlagRender;
+
   // CONSTRUCTORS
 
   /**
@@ -46,6 +52,8 @@ public class TimeLineViewModel extends AbstractViewModel
   public TimeLineViewModel( final SignalDiagramController aController )
   {
     super( aController );
+
+    this.cursorFlagRender = new CursorFlagTextFormatter( aController.getSignalDiagramModel() );
   }
 
   // METHODS
@@ -63,6 +71,20 @@ public class TimeLineViewModel extends AbstractViewModel
       color = Color.BLACK;
     }
     return color;
+  }
+
+  /**
+   * Returns the cursor flag text for a cursor with the given index.
+   * 
+   * @param aCursorIndex
+   *          the index of the cursor to retrieve the flag text for;
+   * @param aStyle
+   *          the style of the cursor flag text, cannot be <code>null</code>.
+   * @return a cursor flag text, never <code>null</code>.
+   */
+  public String getMarkerFlagText( final Marker aMarker, final LabelStyle aStyle )
+  {
+    return this.cursorFlagRender.getMarkerFlagText( aMarker, aStyle );
   }
 
   /**
@@ -287,6 +309,36 @@ public class TimeLineViewModel extends AbstractViewModel
   public int getTimeLineHeight()
   {
     return UIManager.getInt( TIMELINE_HEIGHT );
+  }
+
+  /**
+   * Returns the color to use for painting a trigger moment.
+   * 
+   * @return the trigger color, never <code>null</code>.
+   */
+  public Color getTriggerColor()
+  {
+    Color color = UIManager.getColor( SIGNALVIEW_TRIGGER_COLOR );
+    if ( color == null )
+    {
+      color = Color.WHITE;
+    }
+    return color;
+  }
+
+  /**
+   * Returns the trigger position, as relative offset from zero.
+   * 
+   * @return a trigger position, as offset.
+   */
+  public long getTriggerOffset()
+  {
+    final Long triggerPosition = getSignalDiagramModel().getTriggerPosition();
+    if ( triggerPosition == null )
+    {
+      return 0L;
+    }
+    return triggerPosition.longValue();
   }
 
   /**

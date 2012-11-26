@@ -101,7 +101,7 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
-  public void addCursorChangeListener( final ICursorChangeListener aListener )
+  public void addCursorChangeListener( final IMarkerChangeListener aListener )
   {
     getSignalDiagramModel().addCursorChangeListener( aListener );
   }
@@ -226,17 +226,6 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   }
 
   /**
-   * Returns whether or not the cursor mode is enabled.
-   * 
-   * @return <code>true</code> if the cursor mode is enabled, <code>false</code>
-   *         otherwise.
-   */
-  public boolean isCursorMode()
-  {
-    return getSignalDiagramModel().isCursorMode();
-  }
-
-  /**
    * @return <code>true</code> if in measurement mode, <code>false</code>
    *         otherwise.
    */
@@ -252,32 +241,6 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   public boolean isSnapCursorMode()
   {
     return getSignalDiagramModel().isSnapCursorMode();
-  }
-
-  /**
-   * @param aPoint
-   * @return
-   */
-  public long locationToTimestamp( final Point aPoint )
-  {
-    return this.signalDiagram.getModel().locationToTimestamp( aPoint );
-  }
-
-  /**
-   * Drags a cursor with a given index to a given point, possibly snapping to a
-   * signal edge.
-   * 
-   * @param aCursorIdx
-   *          the cursor index to move, should be &gt;= 0 && &lt; 10;
-   * @param aPoint
-   *          the new point of the cursor. In case of snapping, this point
-   *          should match a signal edge, cannot be <code>null</code>.
-   */
-  public final void moveCursor( final int aCursorIdx, final Point aPoint )
-  {
-    final long newCursorTimestamp = locationToTimestamp( aPoint );
-
-    getSignalDiagramModel().setCursor( aCursorIdx, newCursorTimestamp );
   }
 
   /**
@@ -369,25 +332,12 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   }
 
   /**
-   * Removes the cursor denoted by the given index. If the cursor with the given
-   * index is <em>undefined</em> this method does nothing (not even call event
-   * listeners!).
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to remove.
-   */
-  public void removeCursor( final int aCursorIdx )
-  {
-    getSignalDiagramModel().removeCursor( aCursorIdx );
-  }
-
-  /**
    * Removes a cursor change listener.
    * 
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
-  public void removeCursorChangeListener( final ICursorChangeListener aListener )
+  public void removeCursorChangeListener( final IMarkerChangeListener aListener )
   {
     getSignalDiagramModel().removeCursorChangeListener( aListener );
   }

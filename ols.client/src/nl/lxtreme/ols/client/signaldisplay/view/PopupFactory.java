@@ -29,10 +29,9 @@ import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
-import nl.lxtreme.ols.common.*;
 
 
 /**
@@ -69,56 +68,65 @@ public final class PopupFactory
    */
   public JPopupMenu createChannelLabelPopup( final Point aRelativePoint, final Point aLocationOnScreen )
   {
-    return createPopup( aRelativePoint, aLocationOnScreen, null, false /* aShowCursors */);
+    return createPopup( aRelativePoint, aLocationOnScreen, null, false /* aShowMarkers */);
   }
 
   /**
-   * Creates the context-sensitive popup menu for cursors.
+   * Creates the context-sensitive popup menu for markers.
    * 
+   * @param aMarker
+   *          the optional hovered marker to create the popup for, can be
+   *          <code>null</code>;
    * @param aPoint
-   *          the current mouse location to show the cursor, cannot be
+   *          the current mouse location to show the marker, cannot be
    *          <code>null</code>;
    * @param aLocationOnScreen
    *          the location on screen, cannot be <code>null</code>.
    * @return a popup menu, never <code>null</code>.
    */
-  public JPopupMenu createCursorPopup( final CursorElement aHoveredCursor, final Point aPoint,
-      final Point aLocationOnScreen )
+  public JPopupMenu createCursorPopup( final Marker aMarker, final Point aPoint, final Point aLocationOnScreen )
   {
-    return createPopup( aPoint, aLocationOnScreen, aHoveredCursor, true /* aShowCursors */);
+    return createPopup( aPoint, aLocationOnScreen, aMarker, true /* aShowMarkers */);
   }
 
   /**
    * @param aMenu
-   *          the popup menu to add the cursor actions to;
-   * @param aHoveredCursor
-   *          the current cursor, can be <code>null</code> if not hovering above
-   *          a cursor;
+   *          the popup menu to add the marker actions to;
+   * @param aMarker
+   *          the current marker, can be <code>null</code> if not hovering above
+   *          a marker;
    * @param aPoint
    *          the current mouse location, cannot be <code>null</code>.
    */
-  private void addCursorActions( final JPopupMenu aMenu, final CursorElement aHoveredCursor, final Point aPoint )
+  private void addMarkerActions( final JPopupMenu aMenu, final Marker aMarker, final Point aPoint )
   {
-    CursorElement cursor = aHoveredCursor;
-    if ( cursor != null )
+    if ( aMarker != null )
     {
-      // Hovering above existing cursor, show remove menu...
-      aMenu.add( new EditCursorPropertiesAction( this.controller, cursor ) );
+      // Hovering above existing marker, show properties & remove items...
+      aMenu.add( new EditMarkerPropertiesAction( aMarker ) );
 
-      aMenu.addSeparator();
+      if ( aMarker.isMoveable() )
+      {
+        // Only cursors can be removed; so don't bother to show this option for
+        // trigger(s)...
+        aMenu.addSeparator();
 
-      aMenu.add( new DeleteCursorAction( this.controller, cursor ) );
+        aMenu.add( new DeleteMarkerAction( aMarker ) );
+      }
     }
     else
     {
-      // Not hovering above existing cursor, show add menu...
-      for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+      final SignalDiagramModel model = this.controller.getSignalDiagramModel();
+
+      // Not hovering above existing marker, show add menu...
+      final Marker[] markers = model.getMoveableMarkers();
+      for ( Marker marker : markers )
       {
-        final SetCursorAction action = new SetCursorAction( this.controller, i );
+        final SetMarkerAction action = new SetMarkerAction( marker );
         aMenu.add( new JCheckBoxMenuItem( action ) );
       }
 
-      aMenu.putClientProperty( SetCursorAction.KEY, getCursorDropPoint( aPoint ) );
+      aMenu.putClientProperty( SetMarkerAction.KEY, getMarkerDropPoint( aPoint ) );
     }
   }
 
@@ -129,8 +137,8 @@ public final class PopupFactory
    * @param aShowCursorSection
    * @return
    */
-  private JPopupMenu createPopup( final Point aPoint, final Point aLocationOnScreen,
-      final CursorElement aHoveredCursor, final boolean aShowCursorSection )
+  private JPopupMenu createPopup( final Point aPoint, final Point aLocationOnScreen, final Marker aHoveredCursor,
+      final boolean aShowCursorSection )
   {
     ActionManager actionMgr = Client.getInstance().getActionManager();
 
@@ -185,7 +193,7 @@ public final class PopupFactory
         contextMenu.addSeparator();
       }
 
-      addCursorActions( contextMenu, aHoveredCursor, aPoint );
+      addMarkerActions( contextMenu, aHoveredCursor, aPoint );
     }
 
     contextMenu.addSeparator();
@@ -209,28 +217,33 @@ public final class PopupFactory
   }
 
   /**
-   * Calculates the drop point for the cursor under the given coordinate.
+   * Calculates the drop point for the marker under the given coordinate.
    * 
    * @param aCoordinate
-   *          the coordinate to return the channel drop point for, cannot be
+   *          the coordinate to return the marker drop point for, cannot be
    *          <code>null</code>.
    * @return a drop point, never <code>null</code>.
    */
-  private Point getCursorDropPoint( final Point aCoordinate )
+  private Long getMarkerDropPoint( final Point aCoordinate )
   {
-    Point dropPoint = new Point( aCoordinate );
+    int result = aCoordinate.x;
 
     if ( getModel().isSnapCursorMode() )
     {
       final MeasurementInfo signalHover = getModel().getSignalHover( aCoordinate );
       if ( ( signalHover != null ) && !signalHover.isEmpty() )
       {
-        dropPoint.x = signalHover.getMidSamplePos().intValue();
+        result = signalHover.getMidSamplePos().intValue();
       }
     }
-    dropPoint.y = 0;
 
-    return dropPoint;
+    long markerLocation = getModel().locationToTimestamp( new Point( result, 0 ) ); // XXX
+    if ( markerLocation < 0L )
+    {
+      return null;
+    }
+
+    return Long.valueOf( markerLocation );
   }
 
   /**

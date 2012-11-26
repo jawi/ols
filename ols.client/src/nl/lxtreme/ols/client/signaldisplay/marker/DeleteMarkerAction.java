@@ -17,21 +17,20 @@
  *
  * Copyright (C) 2010-2011 - J.W. Janssen, <http://www.lxtreme.nl>
  */
-package nl.lxtreme.ols.client.signaldisplay.cursor;
+package nl.lxtreme.ols.client.signaldisplay.marker;
 
 
 import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * Provides a UI-action to delete a single cursor.
+ * Provides a UI-action to delete a single marker.
  */
-public class DeleteCursorAction extends AbstractAction
+public class DeleteMarkerAction extends AbstractAction
 {
   // CONSTANTS
 
@@ -39,21 +38,23 @@ public class DeleteCursorAction extends AbstractAction
 
   // VARIABLES
 
-  private final SignalDiagramController controller;
-  private final int cursorIdx;
+  private final Marker marker;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link DeleteCursorAction} instance.
+   * Creates a new {@link DeleteMarkerAction} instance.
    */
-  public DeleteCursorAction( final SignalDiagramController aController, final CursorElement aCursor )
+  public DeleteMarkerAction( final Marker aMarker )
   {
-    super( "Delete cursor " + ( aCursor.getIndex() + 1 ) );
+    if ( ( aMarker == null ) || !aMarker.isMoveable() )
+    {
+      throw new IllegalArgumentException( "Marker cannot be null or a trigger!" );
+    }
 
-    this.controller = aController;
-    this.cursorIdx = aCursor.getIndex();
+    this.marker = aMarker;
 
+    putValue( NAME, "Delete cursor " + ( aMarker.getIndex() + 1 ) );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createKeyMask( KeyEvent.VK_DELETE ) );
   }
 
@@ -65,6 +66,6 @@ public class DeleteCursorAction extends AbstractAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    this.controller.removeCursor( this.cursorIdx );
+    this.marker.clear();
   }
 }

@@ -29,7 +29,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.view.glasspane.*;
 import nl.lxtreme.ols.client.signaldisplay.view.signals.*;
 import nl.lxtreme.ols.client.signaldisplay.view.timeline.*;
@@ -50,21 +50,17 @@ public abstract class AbstractMouseHandler extends MouseAdapter
    */
   private static final int CURSOR_SENSITIVITY_AREA = 4;
 
-  protected static final java.awt.Cursor CURSOR_WAIT = java.awt.Cursor
-      .getPredefinedCursor( java.awt.Cursor.WAIT_CURSOR );
-  protected static final java.awt.Cursor CURSOR_HOVER = java.awt.Cursor
+  protected static final java.awt.Cursor CURSOR_MEASURE = java.awt.Cursor
       .getPredefinedCursor( java.awt.Cursor.CROSSHAIR_CURSOR );
   protected static final java.awt.Cursor CURSOR_MOVE_CURSOR = java.awt.Cursor
       .getPredefinedCursor( java.awt.Cursor.HAND_CURSOR );
-  protected static final java.awt.Cursor CURSOR_MOVE_TIMESTAMP = java.awt.Cursor
-      .getPredefinedCursor( java.awt.Cursor.E_RESIZE_CURSOR );
 
   // VARIABLES
 
   protected final SignalDiagramController controller;
   protected final PopupFactory popupHelper;
 
-  private volatile int movingCursor;
+  private volatile Marker movingMarker;
   private volatile Point lastClickPosition = null;
 
   // CONSTRUCTORS
@@ -93,10 +89,10 @@ public abstract class AbstractMouseHandler extends MouseAdapter
     {
       final MouseEvent event = convertEvent( aEvent );
 
-      final CursorElement hoveredCursor = findCursor( event.getPoint() );
-      if ( hoveredCursor != null )
+      final Marker hoveredMarker = findMarker( event.getPoint() );
+      if ( hoveredMarker != null )
       {
-        editCursorProperties( hoveredCursor );
+        editMarkerProperties( hoveredMarker );
         // Consume the event to stop further processing...
         aEvent.consume();
       }
@@ -115,9 +111,13 @@ public abstract class AbstractMouseHandler extends MouseAdapter
     // Update the selected channel while dragging...
     this.controller.setSelectedChannel( point );
 
-    if ( getModel().isCursorMode() && ( this.movingCursor >= 0 ) )
+    if ( getModel().isCursorMode() && ( this.movingMarker != null ) && this.movingMarker.isMoveable() )
     {
-      this.controller.moveCursor( this.movingCursor, getCursorDropPoint( point ) );
+      final Long timestamp = getMarkerDropPoint( point );
+      if ( timestamp != null )
+      {
+        this.movingMarker.setTimestamp( timestamp.longValue() );
+      }
 
       aEvent.consume();
     }
@@ -183,15 +183,15 @@ public abstract class AbstractMouseHandler extends MouseAdapter
     {
       if ( getModel().isCursorMode() )
       {
-        CursorElement hoveredCursor = findCursor( point );
-        if ( hoveredCursor != null )
+        Marker marker = findMarker( point );
+        if ( ( marker != null ) && marker.isMoveable() )
         {
-          this.movingCursor = hoveredCursor.getIndex();
+          this.movingMarker = marker;
           setMouseCursor( aEvent, CURSOR_MOVE_CURSOR );
         }
         else
         {
-          this.movingCursor = -1;
+          this.movingMarker = null;
         }
       }
 
@@ -211,14 +211,14 @@ public abstract class AbstractMouseHandler extends MouseAdapter
     final MouseEvent event = convertEvent( aEvent );
     final Point point = event.getPoint();
 
-    if ( !isCursorHover( event ) )
+    if ( !isMarkerHover( event ) )
     {
       setMouseCursor( event, null );
     }
 
     if ( !handlePopupTrigger( point, aEvent ) )
     {
-      this.movingCursor = -1;
+      this.movingMarker = null;
     }
 
     if ( ( aEvent.getModifiersEx() & InputEvent.BUTTON1_MASK ) != 0 )
@@ -241,25 +241,25 @@ public abstract class AbstractMouseHandler extends MouseAdapter
   }
 
   /**
-   * Finds the cursor under the given point.
+   * Finds the marker under the given point.
    * 
    * @param aPoint
-   *          the coordinate of the potential cursor, cannot be
+   *          the coordinate of the potential marker, cannot be
    *          <code>null</code>.
-   * @return the cursor index, or -1 if not found.
+   * @return the hovered marker, or <code>null</code> if not found.
    */
-  protected final CursorElement findCursor( final Point aPoint )
+  protected final Marker findMarker( final Point aPoint )
   {
     final SignalDiagramModel model = getModel();
 
     final long refIdx = model.locationToTimestamp( aPoint );
     final double snapArea = CURSOR_SENSITIVITY_AREA / model.getZoomFactor();
 
-    for ( CursorElement cursor : model.getDefinedCursors() )
+    for ( Marker marker : model.getDefinedMarkers() )
     {
-      if ( cursor.inArea( refIdx, snapArea ) )
+      if ( marker.inArea( refIdx, snapArea ) )
       {
-        return cursor;
+        return marker;
       }
     }
 
@@ -360,47 +360,52 @@ public abstract class AbstractMouseHandler extends MouseAdapter
    *          the location on screen, cannot be <code>null</code>.
    * @return a popup menu, never <code>null</code>.
    */
-  private JPopupMenu createCursorPopup( final Point aPoint, final Point aLocationOnScreen )
+  private JPopupMenu createMarkerPopup( final Point aPoint, final Point aLocationOnScreen )
   {
-    return this.popupHelper.createCursorPopup( findCursor( aPoint ), aPoint, aLocationOnScreen );
+    return this.popupHelper.createCursorPopup( findMarker( aPoint ), aPoint, aLocationOnScreen );
   }
 
   /**
-   * Shows the "edit properties" dialog for the given cursor.
+   * Shows the "edit properties" dialog for the given marker.
    * 
-   * @param aCursor
-   *          the cursor to edit the properties for, cannot be <code>null</code>
+   * @param aMarker
+   *          the marker to edit the properties for, cannot be <code>null</code>
    *          .
    */
-  private void editCursorProperties( final CursorElement aCursor )
+  private void editMarkerProperties( final Marker aMarker )
   {
     ActionEvent stubEvent = new ActionEvent( this, ActionEvent.ACTION_PERFORMED, "" );
-    new EditCursorPropertiesAction( this.controller, aCursor ).actionPerformed( stubEvent );
+    new EditMarkerPropertiesAction( aMarker ).actionPerformed( stubEvent );
   }
 
   /**
-   * Calculates the drop point for the cursor under the given coordinate.
+   * Calculates the drop point for the marker for the given coordinate.
    * 
    * @param aCoordinate
-   *          the coordinate to return the channel drop point for, cannot be
+   *          the coordinate to return the marker drop point for, cannot be
    *          <code>null</code>.
    * @return a drop point, never <code>null</code>.
    */
-  private Point getCursorDropPoint( final Point aCoordinate )
+  private Long getMarkerDropPoint( final Point aCoordinate )
   {
-    Point dropPoint = new Point( aCoordinate );
+    int result = aCoordinate.x;
 
     if ( getModel().isSnapCursorMode() )
     {
       final MeasurementInfo signalHover = getModel().getSignalHover( aCoordinate );
       if ( ( signalHover != null ) && !signalHover.isEmpty() )
       {
-        dropPoint.x = signalHover.getMidSamplePos().intValue();
+        result = signalHover.getMidSamplePos().intValue();
       }
     }
-    dropPoint.y = 0;
 
-    return dropPoint;
+    long markerLocation = getModel().locationToTimestamp( new Point( result, 0 ) ); // XXX
+    if ( markerLocation < 0L )
+    {
+      return null;
+    }
+
+    return Long.valueOf( markerLocation );
   }
 
   /**
@@ -416,15 +421,16 @@ public abstract class AbstractMouseHandler extends MouseAdapter
    */
   private boolean handlePopupTrigger( final Point aPoint, final MouseEvent aEvent )
   {
-    final boolean popupTrigger = isCursorPopupTrigger( aEvent );
+    final boolean popupTrigger = isMarkerPopupTrigger( aEvent );
     if ( popupTrigger )
     {
-      JPopupMenu contextMenu = createCursorPopup( aPoint, aEvent.getLocationOnScreen() );
+      JPopupMenu contextMenu = createMarkerPopup( aPoint, aEvent.getLocationOnScreen() );
       if ( contextMenu != null )
       {
-        contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
         // Mark the event as consumed...
         aEvent.consume();
+
+        contextMenu.show( aEvent.getComponent(), aEvent.getX(), aEvent.getY() );
       }
     }
     return popupTrigger;
@@ -435,15 +441,15 @@ public abstract class AbstractMouseHandler extends MouseAdapter
    *          the event to test, may be <code>null</code>.
    * @return
    */
-  private boolean isCursorHover( final MouseEvent aEvent )
+  private boolean isMarkerHover( final MouseEvent aEvent )
   {
-    if ( !isCursorPopupTrigger( aEvent ) )
+    if ( !isMarkerPopupTrigger( aEvent ) )
     {
       return false;
     }
 
     final Point point = aEvent.getPoint();
-    return ( findCursor( point ) != null );
+    return ( findMarker( point ) != null );
   }
 
   /**
@@ -454,7 +460,7 @@ public abstract class AbstractMouseHandler extends MouseAdapter
    * @return <code>true</code> if the 'edit cursor' popup is to be shown,
    *         <code>false</code> otherwise.
    */
-  private boolean isCursorPopupTrigger( final MouseEvent aEvent )
+  private boolean isMarkerPopupTrigger( final MouseEvent aEvent )
   {
     return !aEvent.isConsumed() && aEvent.isPopupTrigger();
   }

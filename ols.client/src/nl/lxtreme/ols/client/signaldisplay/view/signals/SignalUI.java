@@ -26,8 +26,8 @@ import javax.swing.*;
 import javax.swing.plaf.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.annotation.*;
 
 
@@ -52,9 +52,6 @@ public class SignalUI extends ComponentUI
   private volatile MeasurementInfo measurementInfo;
   private volatile Rectangle measurementRect;
 
-  private final int[] x = new int[2 * POINT_COUNT];
-  private final int[] y = new int[2 * POINT_COUNT];
-
   // METHODS
 
   /**
@@ -74,7 +71,7 @@ public class SignalUI extends ComponentUI
   /**
    * Creates the rendering hints for this view.
    */
-  private static RenderingHints createCursorRenderingHints()
+  private static RenderingHints createMarkerRenderingHints()
   {
     RenderingHints hints = new RenderingHints( RenderingHints.KEY_INTERPOLATION,
         RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR );
@@ -181,7 +178,7 @@ public class SignalUI extends ComponentUI
       // Draw the cursor "flags"...
       if ( model.isCursorMode() )
       {
-        paintCursors( canvas, model );
+        paintMarkers( canvas, model );
       }
 
       // Draw the measurement stuff...
@@ -341,24 +338,24 @@ public class SignalUI extends ComponentUI
   }
 
   /**
-   * Paints the cursors over the signals.
+   * Paints the markers over the signals.
    * 
    * @param aCanvas
-   *          the canvas to paint the cursor on;
+   *          the canvas to paint the markers on;
    * @param aModel
    *          the model to use;
    */
-  private void paintCursors( final Graphics2D aCanvas, final SignalViewModel aModel )
+  private void paintMarkers( final Graphics2D aCanvas, final SignalViewModel aModel )
   {
     final Rectangle clip = aCanvas.getClipBounds();
 
     // Tell Swing how we would like to render ourselves...
-    aCanvas.setRenderingHints( createCursorRenderingHints() );
+    aCanvas.setRenderingHints( createMarkerRenderingHints() );
 
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    Marker[] markers = aModel.getDefinedMarkers();
+    for ( Marker marker : markers )
     {
-      int cursorXpos = aModel.getCursorScreenCoordinate( i );
-
+      int cursorXpos = aModel.timestampToCoordinate( marker.getTimestamp() );
       if ( ( cursorXpos < 0 ) || !clip.contains( cursorXpos, clip.y ) )
       {
         // Trivial reject: don't paint undefined cursors, or cursors outside the
@@ -366,8 +363,7 @@ public class SignalUI extends ComponentUI
         continue;
       }
 
-      aCanvas.setColor( aModel.getCursorColor( i ) );
-
+      aCanvas.setColor( marker.getColor() );
       aCanvas.drawLine( cursorXpos, clip.y, cursorXpos, clip.y + clip.height );
     }
   }
@@ -433,24 +429,14 @@ public class SignalUI extends ComponentUI
 
     final double zoomFactor = aModel.getZoomFactor();
 
-    if ( aModel.hasTriggerData() )
-    {
-      final long triggerOffset = aModel.getTriggerOffset();
-      if ( ( timestamps[startIdx] <= triggerOffset ) && ( timestamps[endIdx] >= triggerOffset ) )
-      {
-        // Draw a line denoting the trigger position...
-        final int x = ( int )Math.round( triggerOffset * zoomFactor ) - 1;
-
-        aCanvas.setColor( aModel.getTriggerColor() );
-        aCanvas.drawLine( x, clip.y, x, clip.y + clip.height );
-      }
-    }
-
     // Start drawing at the correct position in the clipped region...
     aCanvas.translate( 0, aSignalElements[0].getYposition() );
 
     final boolean enableSloppyScopePainting = aModel.isSloppyScopeRenderingAllowed();
     int lastP = 0;
+
+    int[] x = new int[2 * POINT_COUNT];
+    int[] y = new int[2 * POINT_COUNT];
 
     for ( SignalElement signalElement : aSignalElements )
     {
@@ -488,8 +474,8 @@ public class SignalUI extends ComponentUI
           int xValue = ( int )( zoomFactor * timestamp );
           int yValue = ( prevSampleValue == 0 ? signalHeight : 0 );
 
-          this.x[0] = xValue;
-          this.y[0] = yValue;
+          x[0] = xValue;
+          y[0] = yValue;
           int p = 1;
 
           for ( int sampleIdx = startIdx + 1; ( p < POINT_COUNT ) && ( sampleIdx <= endIdx ); sampleIdx++ )
@@ -501,19 +487,19 @@ public class SignalUI extends ComponentUI
 
             if ( prevSampleValue != sampleValue )
             {
-              this.x[p] = xValue;
-              this.y[p] = ( prevSampleValue == 0 ? signalHeight : 0 );
+              x[p] = xValue;
+              y[p] = ( prevSampleValue == 0 ? signalHeight : 0 );
               p++;
             }
 
-            this.x[p] = xValue;
-            this.y[p] = ( sampleValue == 0 ? signalHeight : 0 );
+            x[p] = xValue;
+            y[p] = ( sampleValue == 0 ? signalHeight : 0 );
             p++;
 
             prevSampleValue = sampleValue;
           }
 
-          aCanvas.drawPolyline( this.x, this.y, p );
+          aCanvas.drawPolyline( x, y, p );
 
           lastP = ( int )( ( p * 0.1 ) + ( lastP * 0.9 ) );
         }
@@ -551,12 +537,12 @@ public class SignalUI extends ComponentUI
 
           if ( sampleValue != prevSampleValue )
           {
-            int x = ( int )( zoomFactor * timestamps[sampleIdx] );
+            int xPos = ( int )( zoomFactor * timestamps[sampleIdx] );
 
             String text = String.format( "%02X", Integer.valueOf( prevSampleValue ) );
 
             int textWidth = fm.stringWidth( text ) + ( 2 * padding );
-            int cellWidth = x - prevX;
+            int cellWidth = xPos - prevX;
             if ( textWidth < cellWidth )
             {
               int textXpos = prevX + ( int )( ( cellWidth - textWidth ) / 2.0 ) + padding;
@@ -569,9 +555,9 @@ public class SignalUI extends ComponentUI
             aCanvas.setColor( aModel.getGroupSummaryBarColor() );
 
             // draw a small line...
-            aCanvas.drawLine( x, padding, x, signalElement.getHeight() - padding );
+            aCanvas.drawLine( xPos, padding, xPos, signalElement.getHeight() - padding );
 
-            prevX = x;
+            prevX = xPos;
           }
 
           prevSampleValue = sampleValue;
@@ -595,8 +581,8 @@ public class SignalUI extends ComponentUI
         int p = 0;
         if ( startIdx == endIdx )
         {
-          this.x[p] = clip.x;
-          this.y[p] = signalElement.getHeight();
+          x[p] = clip.x;
+          y[p] = signalElement.getHeight();
           p++;
         }
         else
@@ -613,18 +599,18 @@ public class SignalUI extends ComponentUI
             }
             sampleValue = ( int )( maxValue - ( sampleValue / ( double )sampleIncr ) );
 
-            this.x[p] = ( int )( zoomFactor * timestamp );
-            this.y[p] = ( int )( scaleFactor * sampleValue );
+            x[p] = ( int )( zoomFactor * timestamp );
+            y[p] = ( int )( scaleFactor * sampleValue );
             p++;
           }
         }
 
         // Make sure we end at the last visible sample index...
-        this.x[p] = clip.x + clip.width;
-        this.y[p] = this.y[p - 1];
+        x[p] = clip.x + clip.width;
+        y[p] = y[p - 1];
         p++;
 
-        aCanvas.drawPolyline( this.x, this.y, p );
+        aCanvas.drawPolyline( x, y, p );
       }
 
       // advance to the next element...

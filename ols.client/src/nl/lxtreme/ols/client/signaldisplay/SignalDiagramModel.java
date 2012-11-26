@@ -32,7 +32,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
 import nl.lxtreme.ols.common.*;
@@ -44,7 +44,7 @@ import nl.lxtreme.ols.common.session.*;
 /**
  * The main model for the {@link SignalDiagramComponent}.
  */
-public final class SignalDiagramModel
+public final class SignalDiagramModel implements PropertyChangeListener
 {
   // INNER TYPES
 
@@ -68,7 +68,8 @@ public final class SignalDiagramModel
 
   private volatile int mode;
   private volatile int selectedChannelIndex;
-  private AnnotationHelper annotationsHelper;
+  private volatile Marker[] markers;
+  private volatile AnnotationHelper annotationsHelper;
 
   // Injected by Felix DM...
   private volatile Session session;
@@ -119,9 +120,9 @@ public final class SignalDiagramModel
    * @param aListener
    *          the listener to add, cannot be <code>null</code>.
    */
-  public void addCursorChangeListener( final ICursorChangeListener aListener )
+  public void addCursorChangeListener( final IMarkerChangeListener aListener )
   {
-    this.eventListeners.add( ICursorChangeListener.class, aListener );
+    this.eventListeners.add( IMarkerChangeListener.class, aListener );
   }
 
   /**
@@ -327,40 +328,25 @@ public final class SignalDiagramModel
   }
 
   /**
-   * Returns the cursor with the given index.
+   * Returns all defined markers, that is, all markers that have a defined time
+   * stamp.
    * 
-   * @param aIndex
-   *          the index of the cursor to retrieve, >= 0.
-   * @return a cursor element, never <code>null</code>.
+   * @return an array of defined markers, never <code>null</code>.
    */
-  public CursorElement getCursor( final int aIndex )
+  public Marker[] getDefinedMarkers()
   {
-    final AcquisitionData data = getAcquisitionData();
-    return new CursorElement( data.getCursor( aIndex ) );
-  }
-
-  /**
-   * Returns all defined cursors.
-   * 
-   * @return an array of defined cursors, never <code>null</code>.
-   */
-  public CursorElement[] getDefinedCursors()
-  {
-    List<CursorElement> result = new ArrayList<CursorElement>();
-
-    if ( hasData() )
+    List<Marker> result = new ArrayList<Marker>();
+    if ( this.markers != null )
     {
-      for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+      for ( Marker marker : this.markers )
       {
-        CursorElement c = getCursor( i );
-        if ( c.isDefined() )
+        if ( marker.isDefined() )
         {
-          result.add( c );
+          result.add( marker );
         }
       }
     }
-
-    return result.toArray( new CursorElement[result.size()] );
+    return result.toArray( new Marker[result.size()] );
   }
 
   /**
@@ -433,6 +419,27 @@ public final class SignalDiagramModel
     }
 
     return inc;
+  }
+
+  /**
+   * Returns all movable markers.
+   * 
+   * @return an array with moveable markers, never <code>null</code>.
+   */
+  public Marker[] getMoveableMarkers()
+  {
+    List<Marker> result = new ArrayList<Marker>();
+    if ( this.markers != null )
+    {
+      for ( Marker marker : this.markers )
+      {
+        if ( marker.isMoveable() )
+        {
+          result.add( marker );
+        }
+      }
+    }
+    return result.toArray( new Marker[result.size()] );
   }
 
   /**
@@ -711,28 +718,7 @@ public final class SignalDiagramModel
    */
   public double getTimestamp( final Point aPoint )
   {
-    // Calculate the "absolute" time based on the mouse position, use a
-    // "over sampling" factor to allow intermediary (between two time stamps)
-    // time value to be shown...
-    final double zoomFactor = getZoomFactor();
-    final double scaleFactor = TIMESTAMP_FACTOR * zoomFactor;
-
-    // Convert mouse position to absolute timestamp...
-    double x = aPoint.x / zoomFactor;
-    // Take (optional) trigger position into account...
-    final Long triggerPos = getTriggerPosition();
-    if ( triggerPos != null )
-    {
-      x -= triggerPos.longValue();
-    }
-    // If no sample rate is available, we use a factor of 1; which doesn't
-    // make a difference in the result...
-    if ( !hasTimingData() )
-    {
-      return ( scaleFactor * x ) / scaleFactor;
-    }
-
-    return ( scaleFactor * x ) / ( scaleFactor * getSampleRate() );
+    return getTimestamp( ( long )( aPoint.x / getZoomFactor() ) );
   }
 
   /**
@@ -900,14 +886,6 @@ public final class SignalDiagramModel
   }
 
   /**
-   * {@inheritDoc}
-   */
-  public boolean isCursorDefined( final int aCursorIdx )
-  {
-    return getCursor( aCursorIdx ).isDefined();
-  }
-
-  /**
    * Returns whether or not the cursor-mode is enabled.
    * 
    * @return <code>true</code> if cursor-mode is enabled, thereby making all
@@ -991,6 +969,44 @@ public final class SignalDiagramModel
   }
 
   /**
+   * Converts the given {@link PropertyChangeEvent} to a cursor event.
+   */
+  @Override
+  public void propertyChange( final PropertyChangeEvent aEvent )
+  {
+    if ( aEvent.getSource() instanceof Marker )
+    {
+      Marker marker = ( Marker )aEvent.getSource();
+
+      if ( ( aEvent.getOldValue() == null ) && ( aEvent.getNewValue() != null ) )
+      {
+        // Marker was added...
+        fireMarkerAddedEvent( marker );
+      }
+      else if ( ( aEvent.getOldValue() != null ) && ( aEvent.getNewValue() == null ) )
+      {
+        // Marker was removed...
+        fireMarkerRemovedEvent( marker );
+      }
+      else
+      {
+        // Property changed...
+        String name = aEvent.getPropertyName();
+        if ( "timestamp".equals( name ) )
+        {
+          long oldValue = ( ( Long )aEvent.getOldValue() ).longValue();
+          long newValue = ( ( Long )aEvent.getNewValue() ).longValue();
+          fireMarkerMoveEvent( marker, oldValue, newValue );
+        }
+        else
+        {
+          fireMarkerChangeEvent( name, marker );
+        }
+      }
+    }
+  }
+
+  /**
    * Removes an annotation data change listener.
    * 
    * @param aListener
@@ -1002,31 +1018,14 @@ public final class SignalDiagramModel
   }
 
   /**
-   * @param aCursorIdx
-   */
-  public void removeCursor( final int aCursorIdx )
-  {
-    final CursorElement cursor = getCursor( aCursorIdx );
-    if ( !cursor.isDefined() )
-    {
-      // Nothing to do; the cursor is not defined...
-      return;
-    }
-
-    fireCursorRemovedEvent( cursor );
-
-    cursor.clear();
-  }
-
-  /**
    * Removes a cursor change listener.
    * 
    * @param aListener
    *          the listener to remove, cannot be <code>null</code>.
    */
-  public void removeCursorChangeListener( final ICursorChangeListener aListener )
+  public void removeCursorChangeListener( final IMarkerChangeListener aListener )
   {
-    this.eventListeners.remove( ICursorChangeListener.class, aListener );
+    this.eventListeners.remove( IMarkerChangeListener.class, aListener );
   }
 
   /**
@@ -1082,63 +1081,9 @@ public final class SignalDiagramModel
       this.session.getAnnotationData().clearAll();
     }
 
+    createMarkers( aData );
+
     fireDataModelChangedEvent();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void setCursor( final int aCursorIdx, final long aTimestamp )
-  {
-    final CursorElement cursor = getCursor( aCursorIdx );
-
-    long oldTimestamp = cursor.getTimestamp();
-    boolean wasDefined = cursor.isDefined();
-    // Update the time stamp of the cursor...
-    cursor.setTimestamp( aTimestamp );
-
-    if ( !wasDefined )
-    {
-      fireCursorAddedEvent( cursor );
-    }
-    else
-    {
-      fireCursorMoveEvent( cursor, oldTimestamp, aTimestamp );
-    }
-  }
-
-  /**
-   * Returns the color for a cursor with the given index.
-   * 
-   * @param aCursorIndex
-   *          the index of the cursor to retrieve the color for.
-   * @return a cursor color, never <code>null</code>.
-   */
-  public void setCursorColor( final int aCursorIndex, final Color aColor )
-  {
-    final CursorElement cursor = getCursor( aCursorIndex );
-    cursor.setColor( aColor );
-
-    fireCursorChangeEvent( ICursorChangeListener.PROPERTY_COLOR, cursor );
-  }
-
-  /**
-   * Returns the color for a cursor with the given index.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to retrieve the color for;
-   * @param aLabel
-   *          the label to set, cannot be <code>null</code>.
-   * @return a cursor color, never <code>null</code>.
-   */
-  public void setCursorLabel( final int aCursorIdx, final String aLabel )
-  {
-    final CursorElement cursor = getCursor( aCursorIdx );
-
-    // Update the label of the cursor...
-    cursor.setLabel( aLabel );
-
-    fireCursorChangeEvent( ICursorChangeListener.PROPERTY_LABEL, cursor );
   }
 
   /**
@@ -1153,8 +1098,8 @@ public final class SignalDiagramModel
     CursorController controller = Client.getInstance().getCursorController();
     controller.setCursorsVisible( aCursorMode );
 
-    ICursorChangeListener[] listeners = this.eventListeners.getListeners( ICursorChangeListener.class );
-    for ( ICursorChangeListener listener : listeners )
+    IMarkerChangeListener[] listeners = this.eventListeners.getListeners( IMarkerChangeListener.class );
+    for ( IMarkerChangeListener listener : listeners )
     {
       if ( aCursorMode )
       {
@@ -1263,53 +1208,32 @@ public final class SignalDiagramModel
   }
 
   /**
-   * @param aOldCursor
-   * @param aCursor
+   * @param aData
    */
-  private void fireCursorAddedEvent( final CursorElement aCursor )
+  private void createMarkers( final AcquisitionData aData )
   {
-    ICursorChangeListener[] listeners = this.eventListeners.getListeners( ICursorChangeListener.class );
-    for ( ICursorChangeListener listener : listeners )
+    if ( this.markers != null )
     {
-      listener.cursorAdded( aCursor );
+      for ( Marker marker : this.markers )
+      {
+        marker.removePropertyChangeListener( this );
+      }
     }
-  }
 
-  /**
-   * @param aOldCursor
-   * @param aCursor
-   */
-  private void fireCursorChangeEvent( final String aPropertyName, final CursorElement aCursor )
-  {
-    ICursorChangeListener[] listeners = this.eventListeners.getListeners( ICursorChangeListener.class );
-    for ( ICursorChangeListener listener : listeners )
+    this.markers = new Marker[Ols.MAX_CURSORS + 1];
+    for ( int i = 0; i < this.markers.length; i++ )
     {
-      listener.cursorChanged( aPropertyName, aCursor );
-    }
-  }
-
-  /**
-   * @param aOldCursor
-   * @param aCursor
-   */
-  private void fireCursorMoveEvent( final CursorElement aCursor, final long aOldTimestamp, final long aNewTimestamp )
-  {
-    ICursorChangeListener[] listeners = this.eventListeners.getListeners( ICursorChangeListener.class );
-    for ( ICursorChangeListener listener : listeners )
-    {
-      listener.cursorMoved( aOldTimestamp, aNewTimestamp );
-    }
-  }
-
-  /**
-   * @param aCursor
-   */
-  private void fireCursorRemovedEvent( final CursorElement aCursor )
-  {
-    ICursorChangeListener[] listeners = this.eventListeners.getListeners( ICursorChangeListener.class );
-    for ( ICursorChangeListener listener : listeners )
-    {
-      listener.cursorRemoved( aCursor );
+      if ( i == 0 )
+      {
+        // First one is the trigger...
+        this.markers[i] = new Marker( aData.getTriggerPosition() );
+      }
+      else
+      {
+        this.markers[i] = new Marker( aData.getCursor( i - 1 ) );
+      }
+      // Register ourselves as property change listeners for this marker...
+      this.markers[i].addPropertyChangeListener( this );
     }
   }
 
@@ -1323,6 +1247,57 @@ public final class SignalDiagramModel
     for ( IDataModelChangeListener listener : listeners )
     {
       listener.dataModelChanged( getAcquisitionData() );
+    }
+  }
+
+  /**
+   * @param aOldCursor
+   * @param aCursor
+   */
+  private void fireMarkerAddedEvent( final Marker aCursor )
+  {
+    IMarkerChangeListener[] listeners = this.eventListeners.getListeners( IMarkerChangeListener.class );
+    for ( IMarkerChangeListener listener : listeners )
+    {
+      listener.markerAdded( aCursor );
+    }
+  }
+
+  /**
+   * @param aOldCursor
+   * @param aCursor
+   */
+  private void fireMarkerChangeEvent( final String aPropertyName, final Marker aCursor )
+  {
+    IMarkerChangeListener[] listeners = this.eventListeners.getListeners( IMarkerChangeListener.class );
+    for ( IMarkerChangeListener listener : listeners )
+    {
+      listener.markerChanged( aPropertyName, aCursor );
+    }
+  }
+
+  /**
+   * @param aOldCursor
+   * @param aCursor
+   */
+  private void fireMarkerMoveEvent( final Marker aCursor, final long aOldTimestamp, final long aNewTimestamp )
+  {
+    IMarkerChangeListener[] listeners = this.eventListeners.getListeners( IMarkerChangeListener.class );
+    for ( IMarkerChangeListener listener : listeners )
+    {
+      listener.markerMoved( aOldTimestamp, aNewTimestamp );
+    }
+  }
+
+  /**
+   * @param aCursor
+   */
+  private void fireMarkerRemovedEvent( final Marker aCursor )
+  {
+    IMarkerChangeListener[] listeners = this.eventListeners.getListeners( IMarkerChangeListener.class );
+    for ( IMarkerChangeListener listener : listeners )
+    {
+      listener.markerRemoved( aCursor );
     }
   }
 

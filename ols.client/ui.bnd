@@ -11,7 +11,7 @@ Private-Package: nl.lxtreme.ols.client,\
     nl.lxtreme.ols.client.project.impl,\
     nl.lxtreme.ols.client.session,\
     nl.lxtreme.ols.client.signaldisplay,\
-    nl.lxtreme.ols.client.signaldisplay.cursor,\
+    nl.lxtreme.ols.client.signaldisplay.marker,\
     nl.lxtreme.ols.client.signaldisplay.signalelement,\
     nl.lxtreme.ols.client.signaldisplay.view,\
     nl.lxtreme.ols.client.signaldisplay.view.channellabels,\

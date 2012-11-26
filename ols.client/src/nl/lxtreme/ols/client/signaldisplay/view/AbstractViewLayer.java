@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 
 
 /**
@@ -77,5 +78,13 @@ public abstract class AbstractViewLayer extends JComponent
   protected final SignalDiagramModel getSignalDiagramModel()
   {
     return getController().getSignalDiagramModel();
+  }
+
+  /**
+   * @return an array of all defined markers.
+   */
+  protected final Marker[] getDefinedMarkers()
+  {
+    return getSignalDiagramModel().getDefinedMarkers();
   }
 }

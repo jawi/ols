@@ -235,17 +235,6 @@ public class SignalViewModel extends AbstractViewModel
   }
 
   /**
-   * Returns whether or not there is trigger data present.
-   * 
-   * @return <code>true</code> if there is trigger data present,
-   *         <code>false</code> otherwise.
-   */
-  public boolean hasTriggerData()
-  {
-    return getSignalDiagramModel().getTriggerPosition() != null;
-  }
-
-  /**
    * @return <code>true</code> if measurement mode is enabled,
    *         <code>false</code> otherwise.
    */

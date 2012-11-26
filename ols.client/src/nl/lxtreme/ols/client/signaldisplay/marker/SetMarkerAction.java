@@ -17,55 +17,70 @@
  *
  * Copyright (C) 2010-2011 - J.W. Janssen, <http://www.lxtreme.nl>
  */
-package nl.lxtreme.ols.client.signaldisplay.cursor;
+package nl.lxtreme.ols.client.signaldisplay.marker;
 
 
-import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
 /**
- * Provides an action to set a cursor on a certain location.
+ * Provides an action to set a marker to a certain location.
  */
-public class SetCursorAction extends AbstractAction
+public class SetMarkerAction extends AbstractAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  public static final String KEY = "SetCursorAction";
+  public static final String KEY = "SetMarkerAction";
 
   // VARIABLES
 
-  private final SignalDiagramController controller;
-  private final int cursorIdx;
+  private final Marker marker;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link SetCursorAction} instance.
+   * Creates a new {@link SetMarkerAction} instance.
+   * 
+   * @param aMarker
+   *          the marker to set, cannot be <code>null</code>.
    */
-  public SetCursorAction( final SignalDiagramController aController, final int aCursorIdx )
+  public SetMarkerAction( final Marker aMarker )
   {
-    super( "Set cursor " + ( aCursorIdx + 1 ) );
+    if ( ( aMarker == null ) || !aMarker.isMoveable() )
+    {
+      throw new IllegalArgumentException( "Invalid marker, cannot be null or a trigger!" );
+    }
+    this.marker = aMarker;
 
-    this.controller = aController;
-    this.cursorIdx = aCursorIdx;
+    final Integer logicalIdx = Integer.valueOf( aMarker.getIndex() + 1 );
+    putValue( NAME, String.format( "Set cursor %d", logicalIdx ) );
 
-    int keyStroke = KeyEvent.VK_0 + ( ( aCursorIdx + 1 ) % Ols.MAX_CURSORS );
+    int keyStroke = KeyEvent.VK_0 + ( ( aMarker.getIndex() + 1 ) % Ols.MAX_CURSORS );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createKeyMask( keyStroke ) );
 
-    CursorElement cursor = aController.getSignalDiagramModel().getCursor( aCursorIdx );
-    putValue( Action.SELECTED_KEY, Boolean.valueOf( cursor.isDefined() ) );
+    putValue( Action.SELECTED_KEY, Boolean.valueOf( this.marker.isDefined() ) );
   }
 
   // METHODS
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void actionPerformed( final ActionEvent aEvent )
+  {
+    final JMenuItem menuitem = ( JMenuItem )aEvent.getSource();
+    final long timestamp = getTimestampFromContextMenu( menuitem );
+
+    this.marker.setTimestamp( timestamp );
+  }
 
   /**
    * Returns the context menu location client property of the given menu item's
@@ -77,35 +92,17 @@ public class SetCursorAction extends AbstractAction
    * @return a location denoting the context menu's position, never
    *         <code>null</code>.
    */
-  private static Point getContextMenuLocation( final JMenuItem aMenuItem )
+  private long getTimestampFromContextMenu( final JMenuItem aMenuItem )
   {
     final JComponent container = ( JComponent )aMenuItem.getParent();
 
-    Point location = ( Point )container.getClientProperty( KEY );
+    Long location = ( Long )container.getClientProperty( KEY );
     if ( location == null )
     {
-      // Make sure we return a defined point...
-      return new Point( 0, 0 );
+      // Make sure we return a defined timestamp...
+      return Ols.NOT_AVAILABLE;
     }
 
-    return location;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void actionPerformed( final ActionEvent aEvent )
-  {
-    final JMenuItem menuitem = ( JMenuItem )aEvent.getSource();
-
-    // Implicitly enable the cursor mode when a cursor is defined...
-    if ( !this.controller.isCursorMode() )
-    {
-      this.controller.setCursorMode( true );
-    }
-
-    final Point location = getContextMenuLocation( menuitem );
-    this.controller.moveCursor( this.cursorIdx, location );
+    return location.longValue();
   }
 }

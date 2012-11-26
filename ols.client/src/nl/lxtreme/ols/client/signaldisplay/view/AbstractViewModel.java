@@ -22,16 +22,12 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 import static nl.lxtreme.ols.client.signaldisplay.view.UIManagerKeys.*;
 
-import java.awt.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElementManager.SignalElementMeasurer;
-import nl.lxtreme.ols.client.signaldisplay.view.CursorFlagTextFormatter.LabelStyle;
-import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -42,7 +38,6 @@ public abstract class AbstractViewModel
   // VARIABLES
 
   protected final SignalDiagramController controller;
-  private final CursorFlagTextFormatter cursorFlagRender;
 
   // CONSTRUCTORS
 
@@ -55,69 +50,16 @@ public abstract class AbstractViewModel
   protected AbstractViewModel( final SignalDiagramController aController )
   {
     this.controller = aController;
-
-    this.cursorFlagRender = new CursorFlagTextFormatter( this.controller.getSignalDiagramModel() );
   }
 
   // METHODS
 
   /**
-   * Returns the color for a cursor with the given index.
-   * 
-   * @param aCursorIndex
-   *          the index of the cursor to retrieve the color for.
-   * @return a cursor color, never <code>null</code>.
+   * @return an array of defined markers, never <code>null</code>.
    */
-  public final Color getCursorColor( final int aCursorIndex )
+  public Marker[] getDefinedMarkers()
   {
-    final CursorElement cursor = getSignalDiagramModel().getCursor( aCursorIndex );
-    return cursor.getColor();
-  }
-
-  /**
-   * Returns the cursor flag text for a cursor with the given index.
-   * 
-   * @param aCursorIndex
-   *          the index of the cursor to retrieve the flag text for;
-   * @param aStyle
-   *          the style of the cursor flag text, cannot be <code>null</code>.
-   * @return a cursor flag text, never <code>null</code>.
-   */
-  public String getCursorFlagText( final int aCursorIndex, final LabelStyle aStyle )
-  {
-    final CursorElement cursor = getSignalDiagramModel().getCursor( aCursorIndex );
-    return this.cursorFlagRender.getCursorFlagText( cursor, aStyle );
-  }
-
-  /**
-   * Returns the X-position of the cursor with the given index, for displaying
-   * purposes on screen.
-   * 
-   * @param aCursorIdx
-   *          the index of the cursor to retrieve the X-position for, >= 0.
-   * @return the screen X-position of the cursor with the given index, or -1 if
-   *         the cursor is not defined.
-   */
-  public int getCursorScreenCoordinate( final int aCursorIndex )
-  {
-    CursorElement cursorTimestamp = getSignalDiagramModel().getCursor( aCursorIndex );
-    if ( !cursorTimestamp.isDefined() )
-    {
-      return -1;
-    }
-    return timestampToCoordinate( cursorTimestamp.getTimestamp() );
-  }
-
-  /**
-   * Returns the text color for a cursor with the given index.
-   * 
-   * @param aCursorIndex
-   *          the index of the cursor to retrieve the color for.
-   * @return a cursor text color, never <code>null</code>.
-   */
-  public Color getCursorTextColor( final int aCursorIndex )
-  {
-    return ColorUtils.getContrastColor( getCursorColor( aCursorIndex ) );
+    return getSignalDiagramModel().getDefinedMarkers();
   }
 
   /**
@@ -155,36 +97,6 @@ public abstract class AbstractViewModel
   }
 
   /**
-   * Returns the color to use for painting a trigger moment.
-   * 
-   * @return the trigger color, never <code>null</code>.
-   */
-  public Color getTriggerColor()
-  {
-    Color color = UIManager.getColor( SIGNALVIEW_TRIGGER_COLOR );
-    if ( color == null )
-    {
-      color = Color.WHITE;
-    }
-    return color;
-  }
-
-  /**
-   * Returns the trigger position, as relative offset from zero.
-   * 
-   * @return a trigger position, as offset.
-   */
-  public long getTriggerOffset()
-  {
-    final Long triggerPosition = getSignalDiagramModel().getTriggerPosition();
-    if ( triggerPosition == null )
-    {
-      return 0L;
-    }
-    return triggerPosition.longValue();
-  }
-
-  /**
    * Returns the current zoom factor that is used to display the signals with.
    * 
    * @return a zoom factor, >= 0.0.
@@ -206,7 +118,8 @@ public abstract class AbstractViewModel
   }
 
   /**
-   * @return
+   * @return <code>true</code> if cursors are to be displayed,
+   *         <code>false</code> otherwise.
    */
   public boolean isCursorMode()
   {
@@ -231,7 +144,7 @@ public abstract class AbstractViewModel
   }
 
   /**
-   * @return
+   * @return the signal diagram model, never <code>null</code>.
    */
   protected final SignalDiagramModel getSignalDiagramModel()
   {

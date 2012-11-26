@@ -22,14 +22,14 @@ package nl.lxtreme.ols.client.signaldisplay;
 
 import java.util.*;
 
-import nl.lxtreme.ols.client.signaldisplay.cursor.*;
+import nl.lxtreme.ols.client.signaldisplay.marker.*;
 
 
 /**
- * Denotes a listener for cursor changes, such as setting, removing or moving
- * cursors.
+ * Denotes a listener for marker changes, such as setting, removing or moving
+ * markers.
  */
-public interface ICursorChangeListener extends EventListener
+public interface IMarkerChangeListener extends EventListener
 {
   // CONSTANTS
 
@@ -39,42 +39,40 @@ public interface ICursorChangeListener extends EventListener
   // METHODS
 
   /**
-   * Called when a cursor is "added" on screen.
+   * Called when a marker is "added" on screen.
    * 
-   * @param aCursor
-   *          the cursor that is added, cannot be <code>null</code>.
+   * @param aMarker
+   *          the marker that is added, cannot be <code>null</code>.
    */
-  void cursorAdded( CursorElement aCursor );
+  void markerAdded( Marker aMarker );
 
   /**
-   * Called when a property of a single cursor is changed/moved.
+   * Called when a property of a single marker is changed/moved.
    * 
    * @param aPropertyName
    *          the name of the property that is changed, never <code>null</code>;
-   * @param aOldCursor
-   *          the old cursor, cannot be <code>null</code>;
-   * @param aNewCursor
-   *          the new cursor, cannot be <code>null</code>.
+   * @param aNewMarker
+   *          the new/changed marker, cannot be <code>null</code>.
    */
-  void cursorChanged( String aPropertyName, CursorElement aNewCursor );
+  void markerChanged( String aPropertyName, Marker aNewMarker );
 
   /**
-   * Called when a cursor is moved.
+   * Called when a marker is moved.
    * 
    * @param aOldTimestamp
    *          the old timestamp, cannot be <code>null</code>;
    * @param aNewTimestamp
    *          the new timestamp, cannot be <code>null</code>.
    */
-  void cursorMoved( long aOldTimestamp, long aNewTimestamp );
+  void markerMoved( long aOldTimestamp, long aNewTimestamp );
 
   /**
-   * Called when a single cursor is removed.
+   * Called when a single marker is removed.
    * 
-   * @param aOldCursor
-   *          the old cursor (before removal), cannot be <code>null</code>.
+   * @param aOldMarker
+   *          the old marker (before removal), cannot be <code>null</code>.
    */
-  void cursorRemoved( CursorElement aOldCursor );
+  void markerRemoved( Marker aOldMarker );
 
   /**
    * Called when the cursors are made invisible.
