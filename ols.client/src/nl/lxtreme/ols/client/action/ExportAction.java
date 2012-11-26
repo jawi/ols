@@ -24,8 +24,6 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.logging.*;
-
 import javax.swing.*;
 import javax.swing.filechooser.*;
 
@@ -50,8 +48,6 @@ public class ExportAction extends AbstractAction implements IManagedAction
   private static final long serialVersionUID = 1L;
 
   private static final String ID = "ExportAction.";
-
-  private static final Logger LOG = Logger.getLogger( ExportAction.class.getName() );
 
   // VARIABLES
 
@@ -116,10 +112,6 @@ public class ExportAction extends AbstractAction implements IManagedAction
     if ( exportFileName != null )
     {
       final File actualFile = FileExtensionUtils.setFileExtension( exportFileName, preferredExtension );
-      if ( LOG.isLoggable( Level.INFO ) )
-      {
-        LOG.info( "Exporting capture data to file: " + actualFile );
-      }
 
       try
       {
@@ -130,7 +122,6 @@ public class ExportAction extends AbstractAction implements IManagedAction
         // Make sure to handle IO-interrupted exceptions properly!
         if ( !IOUtil.handleInterruptedException( exception ) )
         {
-          LOG.log( Level.WARNING, "Export with '" + this.exporterName + "' failed!", exception );
           JErrorDialog.showDialog( owner, "Export capture data failed!", exception );
         }
       }
