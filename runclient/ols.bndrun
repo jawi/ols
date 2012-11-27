@@ -10,6 +10,8 @@
 	osgi.identity;filter:='(osgi.identity=lib.swing)',\
 	osgi.identity;filter:='(osgi.identity=ols.acquisition.service)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.api)',\
+    osgi.identity;filter:='(osgi.identity=ols.client.acquisition)',\
+    osgi.identity;filter:='(osgi.identity=ols.client.session)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.ui)',\
 	osgi.identity;filter:='(osgi.identity=ols.common)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.api)',\
@@ -93,6 +95,8 @@
 	ols.tool.spi;version=latest,\
 	ols.tool.state;version=latest,\
 	ols.tool.uart;version=latest,\
-	ols.client.api;version=latest,\
+    ols.client.api;version=latest,\
+	ols.client.acquisition;version=latest,\
+    ols.client.session;version=latest,\
 	ols.client.ui;version=latest,\
 	purejavacomm;version=0.0.9
