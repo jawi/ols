@@ -46,7 +46,6 @@ public final class ToolController
   private final ConcurrentMap<String, ToolInvoker> tools;
 
   // Injected by Felix DM...
-  private volatile ActionManager actionManager;
   private volatile LogService log;
 
   // CONSTRUCTORS
@@ -127,19 +126,21 @@ public final class ToolController
    */
   final void addTool( final ToolInvoker aToolInvoker )
   {
+    ActionManager actionManager = getActionManager();
+
     String name = aToolInvoker.getName();
     if ( this.tools.putIfAbsent( name, aToolInvoker ) == null )
     {
       this.log.log( LogService.LOG_INFO, "Added tool '" + name + "' ..." );
 
-      this.actionManager.add( new RunToolAction( this, name, aToolInvoker.getCategory() ) );
+      actionManager.add( new RunToolAction( this, name, aToolInvoker.getCategory() ) );
     }
     else
     {
       this.log.log( LogService.LOG_INFO, "Add of tool '" + name + "' failed!" );
     }
 
-    this.actionManager.updateActionStates();
+    actionManager.updateActionStates();
   }
 
   /**
@@ -153,18 +154,28 @@ public final class ToolController
    */
   final void removeTool( final ToolInvoker aTool )
   {
+    ActionManager actionManager = getActionManager();
+
     String name = aTool.getName();
     if ( this.tools.remove( name, aTool ) )
     {
       this.log.log( LogService.LOG_INFO, "Removed tool '" + name + "' ..." );
 
-      this.actionManager.remove( RunToolAction.getID( name ) );
+      actionManager.remove( RunToolAction.getID( name ) );
     }
     else
     {
       this.log.log( LogService.LOG_INFO, "Removal of tool '" + name + "' failed!" );
     }
 
-    this.actionManager.updateActionStates();
+    actionManager.updateActionStates();
+  }
+
+  /**
+   * @return the current action manager, never <code>null</code>.
+   */
+  private ActionManager getActionManager()
+  {
+    return Client.getInstance().getActionManager();
   }
 }

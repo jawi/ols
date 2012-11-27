@@ -39,7 +39,6 @@ import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.client.signaldisplay.view.toolwindow.*;
-import nl.lxtreme.ols.host.*;
 import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.Configurable;
@@ -376,24 +375,12 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
      */
     private int getMouseWheelZoomModifier()
     {
-      if ( isMacOS() )
+      if ( Platform.isMacOS() )
       {
         return InputEvent.META_DOWN_MASK;
       }
 
       return InputEvent.CTRL_DOWN_MASK;
-    }
-
-    /**
-     * Returns whether the current host's operating system is Mac OS X.
-     * 
-     * @return <code>true</code> if running on Mac OS X, <code>false</code>
-     *         otherwise.
-     */
-    private boolean isMacOS()
-    {
-      final String osName = System.getProperty( "os.name" );
-      return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
     }
 
     /**
@@ -456,7 +443,6 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
   // VARIABLES
 
   private final DeviceController deviceController;
-  private final HostProperties hostProperties;
   private final AtomicReference<MyDoggyToolWindowManager> windowManagerRef;
   private final ProgressUpdatingRunnable progressAccumulatingRunnable;
   private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
@@ -475,12 +461,10 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
   /**
    * Creates a new {@link MainFrame} instance.
    */
-  public MainFrame( final ActionManager aActionManager, final DeviceController aDeviceController,
-      final HostProperties aHostProperties )
+  public MainFrame( final ActionManager aActionManager, final DeviceController aDeviceController )
   {
     this.actionManager = aActionManager;
     this.deviceController = aDeviceController;
-    this.hostProperties = aHostProperties;
 
     this.windowManagerRef = new AtomicReference<MyDoggyToolWindowManager>();
     this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
@@ -724,9 +708,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     contentPane.add( wm, BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
 
-    setTitle( this.hostProperties.getFullName() );
-    doSetStatus( String.format( "%s v%s ready ...", this.hostProperties.getShortName(),
-        this.hostProperties.getVersion() ) );
+    setTitle( Platform.getFullName() );
 
     this.dataStorage = aContext.getDataFile( "" );
 
@@ -830,7 +812,7 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
    */
   private void updateWindowDecorations( final Project aProject )
   {
-    String title = this.hostProperties.getFullName();
+    String title = Platform.getFullName();
     if ( ( aProject != null ) && ( aProject.getName() != null ) && !"".equals( aProject.getName().trim() ) )
     {
       // Denote the project file in the title of the main window...

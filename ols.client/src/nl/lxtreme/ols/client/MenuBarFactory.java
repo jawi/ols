@@ -32,7 +32,6 @@ import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
-import nl.lxtreme.ols.host.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.service.log.*;
@@ -502,7 +501,6 @@ public class MenuBarFactory
   public JMenuBar createMenuBar()
   {
     final ActionManager actionManager = Client.getInstance().getActionManager();
-    final HostProperties hostProperties = Client.getInstance().getHostProperties();
 
     JMenuBar menuBar = new JMenuBar();
 
@@ -524,13 +522,13 @@ public class MenuBarFactory
     fileMenu.addSeparator();
     fileMenu.add( exportMenu );
 
-    if ( hostProperties.needsExitMenuItem() )
+    if ( Platform.needsExitMenuItem() )
     {
       fileMenu.add( new JSeparator() );
       fileMenu.add( actionManager.getAction( ExitAction.ID ) );
     }
 
-    if ( hostProperties.needsPreferencesMenuItem() )
+    if ( Platform.needsPreferencesMenuItem() )
     {
       final JMenu editMenu = menuBar.add( new JMenu( "Edit" ) );
       editMenu.setMnemonic( 'E' );
@@ -581,7 +579,7 @@ public class MenuBarFactory
     toolsMenu.addSeparator();
     toolsMenu.addMenuListener( new ToolMenuBuilder( actionManager ) );
 
-    if ( hostProperties.isMacOS() )
+    if ( Platform.isMacOS() )
     {
       JMenu windowMenu = menuBar.add( new JMenu( "Window" ) );
       windowMenu.setMnemonic( 'W' );
@@ -602,7 +600,7 @@ public class MenuBarFactory
     helpMenu.setMnemonic( 'H' );
     helpMenu.add( actionManager.getAction( ShowBundlesAction.ID ) );
 
-    if ( hostProperties.needsAboutMenuItem() )
+    if ( Platform.needsAboutMenuItem() )
     {
       helpMenu.addSeparator();
       helpMenu.add( actionManager.getAction( HelpAboutAction.ID ) );

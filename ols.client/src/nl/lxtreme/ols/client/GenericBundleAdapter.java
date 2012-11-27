@@ -64,6 +64,7 @@ public class GenericBundleAdapter<TYPE>
     if ( this.serviceComponent != null )
     {
       this.manager.remove( this.serviceComponent );
+      this.serviceComponent = null;
     }
   }
 

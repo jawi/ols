@@ -41,7 +41,6 @@ public final class ImportExportController
   private final ConcurrentMap<String, Exporter> exporters;
 
   // Injected by Felix DM...
-  private volatile ActionManager actionManager;
   private volatile LogService logService;
 
   // CONSTRUCTORS
@@ -104,19 +103,21 @@ public final class ImportExportController
    */
   final void addExporter( final Exporter aExporter )
   {
+    ActionManager actionManager = getActionManager();
+
     String name = aExporter.getName();
     if ( this.exporters.putIfAbsent( name, aExporter ) == null )
     {
       this.logService.log( LogService.LOG_INFO, "Added exporter '" + name + "' ..." );
 
-      this.actionManager.add( new ExportAction( this, name ) );
+      actionManager.add( new ExportAction( this, name ) );
     }
     else
     {
       this.logService.log( LogService.LOG_INFO, "Add of exporter '" + name + "' failed!" );
     }
 
-    this.actionManager.updateActionStates();
+    actionManager.updateActionStates();
   }
 
   /**
@@ -130,18 +131,28 @@ public final class ImportExportController
    */
   final void removeExporter( final Exporter aExporter )
   {
+    ActionManager actionManager = getActionManager();
+
     String name = aExporter.getName();
     if ( this.exporters.remove( name, aExporter ) )
     {
       this.logService.log( LogService.LOG_INFO, "Removed exporter '" + name + "' ..." );
 
-      this.actionManager.remove( ExportAction.getID( name ) );
+      actionManager.remove( ExportAction.getID( name ) );
     }
     else
     {
       this.logService.log( LogService.LOG_INFO, "Removal of exporter '" + name + "' failed!" );
     }
 
-    this.actionManager.updateActionStates();
+    actionManager.updateActionStates();
+  }
+
+  /**
+   * @return the current action manager, never <code>null</code>.
+   */
+  private ActionManager getActionManager()
+  {
+    return Client.getInstance().getActionManager();
   }
 }

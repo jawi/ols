@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client.action;
 
 
+import static nl.lxtreme.ols.client.Platform.*;
+
 import java.io.*;
 
 import junit.framework.*;
@@ -139,72 +141,4 @@ public class FileExtensionUtilsTest extends TestCase
       fail( exception.getMessage() );
     }
   }
-
-  /**
-   * Returns whether the current host's operating system is Linux or any other
-   * UNIX-like operating system, such as Solaris (SunOS).
-   * 
-   * @return <code>true</code> if running on Linux or any other UNIX system,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isLinux()
-  {
-    String osName = System.getProperty( "os.name" ).toLowerCase();
-    return ( osName.indexOf( "linux" ) >= 0 );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Mac OS X.
-   * 
-   * @return <code>true</code> if running on Mac OS X, <code>false</code>
-   *         otherwise.
-   */
-  private boolean isMacOS()
-  {
-    final String osName = System.getProperty( "os.name" );
-    return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Sun/Open Solaris.
-   * 
-   * @return <code>true</code> if running on Sun/Open Solaris system,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isSolaris()
-  {
-    String osName = System.getProperty( "os.name" ).toLowerCase();
-    return ( osName.indexOf( "solaris" ) >= 0 ) || //
-        ( osName.indexOf( "sunos" ) >= 0 );
-  }
-
-  /**
-   * Returns whether the current host's operating system is Linux or any other
-   * UNIX-like operating system, such as Solaris (SunOS).
-   * 
-   * @return <code>true</code> if running on Linux or any other UNIX system,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isUnix()
-  {
-    String osName = System.getProperty( "os.name" ).toLowerCase();
-    return ( osName.indexOf( "nix" ) >= 0 ) || //
-        // linux
-        isLinux() ||
-        // solaris
-        isSolaris();
-  }
-
-  /**
-   * Returns whether the current host's operating system is Windows.
-   * 
-   * @return <code>true</code> if running on Windows, <code>false</code>
-   *         otherwise.
-   */
-  private boolean isWindows()
-  {
-    final String osName = System.getProperty( "os.name" ).toLowerCase();
-    return osName.indexOf( "win" ) >= 0;
-  }
-
 }

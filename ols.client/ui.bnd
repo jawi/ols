@@ -21,6 +21,8 @@ Private-Package: nl.lxtreme.ols.client,\
     nl.lxtreme.ols.client.signaldisplay.view.toolwindow,\
     nl.lxtreme.ols.client.tool
 Bundle-Activator: nl.lxtreme.ols.client.Activator
-ols.version: 0.9.7-beta
-Include-Resource: resource, {host.properties} 
+ols.version: 0.9.7-${tstamp}
+Include-Resource: resource 
 -metatype: *Config
+X-ClientVersion = ${ols.version}
+X-ClientIncidentAddress = info+v${ols.version}@lxtreme.nl

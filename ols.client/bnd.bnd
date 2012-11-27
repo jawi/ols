@@ -1,7 +1,6 @@
--buildpath: \
-    biz.aQute.bnd.annotation,\
-    lib.metatype.api;version=1.0.0,\
-    osgi.core;version=4.2,\
+-buildpath: biz.aQute.bnd.annotation,\
+	lib.metatype.api;version=1.0.0,\
+	osgi.core;version=4.2,\
 	osgi.cmpn;version=4.2,\
 	junit.osgi;version=3.8.2,\
 	org.mockito.mockito-all;version=1.8.5,\
@@ -12,7 +11,6 @@
 	ols.common;version=latest,\
 	ols.device.api;version=latest,\
 	ols.export.api;version=latest,\
-	ols.host.api;version=latest,\
 	ols.tool.api;version=latest,\
 	ols.acquisition.service;version=latest
 -sub: *.bnd

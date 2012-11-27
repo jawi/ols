@@ -25,17 +25,13 @@ import java.util.*;
 
 import nl.lxtreme.ols.acquisition.service.*;
 import nl.lxtreme.ols.client.acquisition.*;
-import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.componentprovider.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.project.impl.*;
-import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.tool.*;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.*;
-import nl.lxtreme.ols.host.*;
-
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
@@ -198,58 +194,6 @@ public class Activator extends DependencyActivatorBase
 
     // Expose all of our "static" controllers as OSGi-managed components...
     // @formatter:off
-    aManager.add( createComponent()
-        .setInterface( ActionManager.class.getName(), null )
-        .setImplementation( client.getActionManager() ) 
-    );
-    aManager.add( createComponent()
-        .setInterface( CursorController.class.getName(), null )
-        .setImplementation( client.getCursorController() )
-        .add( createServiceDependency().setService( Session.class ).setInstanceBound( true ).setRequired( true ) ) 
-    );
-    aManager.add( createComponent()
-        .setInterface( DeviceController.class.getName(), null )
-        .setImplementation( client.getDeviceController() )
-        .add( createServiceDependency().setService( Device.class ).setCallbacks( "addDevice", "removeDevice" ).setRequired( false ) )
-        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
-        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) ) 
-    );
-    aManager.add( createComponent()
-        .setInterface( ImportExportController.class.getName(), null )
-        .setImplementation( client.getImportExportController() )
-        .add( createServiceDependency().setService( Exporter.class ).setCallbacks( "addExporter", "removeExporter" ).setRequired( false ) )
-        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
-        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) ) 
-    );
-    aManager.add( createComponent()
-        .setInterface( ToolController.class.getName(), null )
-        .setImplementation( client.getToolController() )
-        .add( createServiceDependency().setService( ToolInvoker.class ).setCallbacks( "addTool", "removeTool" ).setRequired( false ) )
-        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
-        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) ) 
-    );
-    aManager.add( createComponent()
-        .setInterface( ProjectController.class.getName(), null )
-        .setImplementation( client.getProjectController() )
-        .add( createServiceDependency().setService( Session.class ).setInstanceBound( true ).setRequired( true ) ) 
-        .add( createServiceDependency().setService( StatusListener.class ).setRequired( false ) ) 
-    );
-    aManager.add( createComponent()
-        .setInterface( SignalDiagramController.class.getName(), null )
-        .setImplementation( client.getSignalDiagramController() )
-        .setComposition( "getComposition" )
-        .add( createServiceDependency().setService( ActionManager.class ).setInstanceBound( true ).setRequired( true ) ) 
-        .add( createServiceDependency().setService( Session.class ).setInstanceBound( true ).setRequired( true ) ) 
-    );
-    aManager.add( createComponent()
-        .setInterface( AcquisitionController.class.getName(), null )
-        .setImplementation( client.getAcquisitionController() )
-        .add( createServiceDependency().setService( DeviceController.class ).setInstanceBound( true ).setRequired( true ) ) 
-        .add( createServiceDependency().setService( IDataAcquirer.class ).setInstanceBound( true ).setRequired( true ) ) 
-        .add( createServiceDependency().setService( StatusListener.class ).setRequired( false ) ) 
-        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) ) 
-    );
-    
     final String[] interfaces = new String[] { EventHandler.class.getName(), ApplicationCallback.class.getName(),
         StatusListener.class.getName(), ManagedService.class.getName() };
 
@@ -259,14 +203,19 @@ public class Activator extends DependencyActivatorBase
         ToolInvoker.TOPIC_ANY } );
 
     aManager.add( createComponent()
-        .setInterface( interfaces, props )
         .setImplementation( client )
+        .setInterface( interfaces, props )
+        .setComposition( "getComposition" )
         .add( createServiceDependency().setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ).setCallbacks( "addMenu", "removeMenu" ).setRequired( false ) )
+        .add( createServiceDependency().setService( Exporter.class ).setCallbacks( client.getImportExportController(), "addExporter", "removeExporter" ).setRequired( false ) )
+        .add( createServiceDependency().setService( Device.class ).setCallbacks( client.getDeviceController(), "addDevice", "removeDevice" ).setRequired( false ) )
+        .add( createServiceDependency().setService( ToolInvoker.class ).setCallbacks( client.getToolController(), "addTool", "removeTool" ).setRequired( false ) )
         .add( createServiceDependency().setService( UIManagerConfigurator.class ).setRequired( true ) )
         .add( createServiceDependency().setService( ColorSchemeManager.class ).setRequired( true ) )
         .add( createServiceDependency().setService( ConfigurationAdmin.class ).setRequired( true ) )
         .add( createServiceDependency().setService( MetaTypeService.class ).setRequired( true ) )
-        .add( createServiceDependency().setService( HostProperties.class ).setRequired( true ) )
+        .add( createServiceDependency().setService( StatusListener.class ).setRequired( false ) )
+        .add( createServiceDependency().setService( IDataAcquirer.class ).setRequired( true ) ) 
         .add( createServiceDependency().setService( LogService.class ).setRequired( false ) )
         .add( createServiceDependency().setService( Session.class ).setRequired( true ) )
     );

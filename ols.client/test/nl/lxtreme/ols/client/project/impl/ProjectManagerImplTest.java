@@ -21,14 +21,11 @@
 package nl.lxtreme.ols.client.project.impl;
 
 
-import static org.mockito.Mockito.*;
-
 import java.io.*;
 
 import junit.framework.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.host.*;
 import nl.lxtreme.ols.testutil.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -235,11 +232,7 @@ public class ProjectManagerImplTest extends TestCase
   @Override
   protected void setUp() throws Exception
   {
-    HostProperties mockProperties = mock( HostProperties.class );
-    when( mockProperties.getFullName() ).thenReturn( "OLS" );
-
     this.projectManager = new ProjectManagerImpl();
-    this.projectManager.setHostProperties( mockProperties );
   }
 
   /**

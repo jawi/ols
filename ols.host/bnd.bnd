@@ -1,4 +1,0 @@
--sub: *.bnd
--buildpath: osgi.core;version=4.2,\
-	osgi.cmpn;version=4.2,\
-	org.apache.felix.dependencymanager;version=3.0.0

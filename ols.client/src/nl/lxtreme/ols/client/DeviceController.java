@@ -41,7 +41,6 @@ public final class DeviceController
   private final ConcurrentMap<String, Device> devices;
 
   // Injected by Felix DM...
-  private volatile ActionManager actionManager;
   private volatile LogService logService;
 
   // Holds the current selected device...
@@ -116,7 +115,7 @@ public final class DeviceController
   {
     this.currentDevice = aDeviceName;
 
-    this.actionManager.updateActionStates();
+    getActionManager().updateActionStates();
   }
 
   /**
@@ -130,10 +129,12 @@ public final class DeviceController
    */
   final void addDevice( final Device aDevice )
   {
+    ActionManager actionManager = getActionManager();
+
     String deviceName = aDevice.getName();
     if ( this.devices.putIfAbsent( deviceName, aDevice ) == null )
     {
-      this.actionManager.add( new SelectDeviceAction( this, deviceName ) );
+      actionManager.add( new SelectDeviceAction( this, deviceName ) );
 
       this.logService.log( LogService.LOG_INFO, "Added device '" + deviceName + "' ..." );
     }
@@ -142,7 +143,7 @@ public final class DeviceController
       this.logService.log( LogService.LOG_INFO, "Add of device '" + deviceName + "' failed!" );
     }
 
-    this.actionManager.updateActionStates();
+    actionManager.updateActionStates();
   }
 
   /**
@@ -156,18 +157,28 @@ public final class DeviceController
    */
   final void removeDevice( final Device aDevice )
   {
+    ActionManager actionManager = getActionManager();
+
     String deviceName = aDevice.getName();
     if ( this.devices.remove( deviceName, aDevice ) )
     {
       this.logService.log( LogService.LOG_INFO, "Removed device '" + deviceName + "' ..." );
 
-      this.actionManager.remove( SelectDeviceAction.getID( deviceName ) );
+      actionManager.remove( SelectDeviceAction.getID( deviceName ) );
     }
     else
     {
       this.logService.log( LogService.LOG_INFO, "Removing device '" + deviceName + "' failed!" );
     }
 
-    this.actionManager.updateActionStates();
+    actionManager.updateActionStates();
+  }
+
+  /**
+   * @return the current action manager, never <code>null</code>.
+   */
+  private ActionManager getActionManager()
+  {
+    return Client.getInstance().getActionManager();
   }
 }

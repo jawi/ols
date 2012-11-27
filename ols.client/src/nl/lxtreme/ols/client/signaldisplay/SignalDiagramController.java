@@ -27,7 +27,7 @@ import java.beans.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.action.manager.*;
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomListener;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
@@ -41,7 +41,7 @@ import nl.lxtreme.ols.util.swing.*;
 /**
  * Provides the main component controller for the signal diagram component.
  */
-public class SignalDiagramController implements ZoomListener, PropertyChangeListener
+public class SignalDiagramController implements ZoomListener
 {
   // VARIABLES
 
@@ -50,9 +50,6 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   private final SignalDiagramModel signalDiagramModel;
   private final ZoomController zoomController;
   private SignalDiagramComponent signalDiagram;
-
-  // Injected by Felix DM...
-  private volatile ActionManager actionManager;
 
   // CONSTRUCTORS
 
@@ -258,16 +255,6 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void propertyChange( final PropertyChangeEvent aEvent )
-  {
-    String name = aEvent.getPropertyName();
-    System.out.println( "PropertyChanged: " + name ); // XXX
-  }
-
-  /**
    * Recalculates the dimensions of the various components and repaints the
    * entire component.
    * <p>
@@ -285,7 +272,7 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
     this.signalDiagram.repaintAll();
 
     // Ensure the actions reflect the latest changes as well...
-    this.actionManager.updateActionStates();
+    Client.getInstance().getActionManager().updateActionStates();
   }
 
   /**
@@ -499,14 +486,6 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   {
     // Notify all listeners that something has happened...
     getSignalDiagramModel().fireAnnotationDataChangedEvent();
-  }
-
-  /**
-   * @return the composition for Felix DM to inject the members of.
-   */
-  final Object[] getComposition()
-  {
-    return new Object[] { this, this.signalDiagramModel, this.zoomController };
   }
 
   /**

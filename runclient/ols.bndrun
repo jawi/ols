@@ -22,7 +22,6 @@
 	osgi.identity;filter:='(osgi.identity=ols.export.csv)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.image)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.vcd)',\
-	osgi.identity;filter:='(osgi.identity=ols.host.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.logbridge)',\
 	osgi.identity;filter:='(osgi.identity=ols.service.io)',\
 	osgi.identity;filter:='(osgi.identity=ols.service.task.execution)',\
@@ -83,7 +82,6 @@
 	ols.export.image;version=latest,\
 	ols.export.vcd;version=latest,\
 	ols.export.api;version=latest,\
-	ols.host.api;version=latest,\
 	ols.tool.api;version=latest,\
 	ols.tool.1wire;version=latest,\
 	ols.tool.asm45;version=latest,\

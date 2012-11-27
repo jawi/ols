@@ -40,7 +40,6 @@ public final class AcquisitionController
   // VARIABLES
 
   // Injected by Felix DM...
-  private volatile DeviceController deviceController;
   private volatile IDataAcquirer dataAcquirer;
   private volatile StatusListener statusListener;
   private volatile LogService log;
@@ -52,7 +51,7 @@ public final class AcquisitionController
    */
   public void cancelCapture()
   {
-    Device device = this.deviceController.getSelectedDevice();
+    Device device = getCurrentSelectedDevice();
     if ( device == null )
     {
       this.log.log( LogService.LOG_WARNING, "No device is selected, cannot cancel data acquisition!" );
@@ -90,7 +89,7 @@ public final class AcquisitionController
    */
   public boolean captureData( final Window aParent )
   {
-    Device device = this.deviceController.getSelectedDevice();
+    Device device = getCurrentSelectedDevice();
     if ( device == null )
     {
       this.log.log( LogService.LOG_WARNING, "No device is selected, cannot start data acquisition!" );
@@ -130,7 +129,7 @@ public final class AcquisitionController
    */
   public boolean isDeviceCapturing()
   {
-    Device device = this.deviceController.getSelectedDevice();
+    Device device = getCurrentSelectedDevice();
     if ( device == null )
     {
       return false;
@@ -147,7 +146,7 @@ public final class AcquisitionController
    */
   public boolean isDeviceSelected()
   {
-    return ( this.deviceController.getSelectedDevice() != null );
+    return ( getCurrentSelectedDevice() != null );
   }
 
   /**
@@ -155,7 +154,7 @@ public final class AcquisitionController
    */
   public boolean isDeviceSetup()
   {
-    final Device device = this.deviceController.getSelectedDevice();
+    final Device device = getCurrentSelectedDevice();
     return ( device != null ) && device.isSetup();
   }
 
@@ -165,7 +164,7 @@ public final class AcquisitionController
    */
   public void repeatCaptureData()
   {
-    Device device = this.deviceController.getSelectedDevice();
+    Device device = getCurrentSelectedDevice();
     if ( device == null )
     {
       this.log.log( LogService.LOG_WARNING, "No device is selected, cannot repeat data acquisition!" );
@@ -195,5 +194,22 @@ public final class AcquisitionController
         this.statusListener.setStatus( "I/O problem: " + exception.getMessage() );
       }
     }
+  }
+
+  /**
+   * @return the current selected device, can be <code>null</code> if no device
+   *         is selected.
+   */
+  private Device getCurrentSelectedDevice()
+  {
+    return getDeviceController().getSelectedDevice();
+  }
+
+  /**
+   * @return the current device controller, never <code>null</code>.
+   */
+  private DeviceController getDeviceController()
+  {
+    return Client.getInstance().getDeviceController();
   }
 }

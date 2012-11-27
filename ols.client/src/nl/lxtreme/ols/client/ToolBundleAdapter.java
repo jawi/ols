@@ -75,6 +75,7 @@ public class ToolBundleAdapter
     if ( this.serviceComponent != null )
     {
       this.manager.remove( this.serviceComponent );
+      this.serviceComponent = null;
     }
   }
 

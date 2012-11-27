@@ -25,6 +25,7 @@ import static nl.lxtreme.ols.acquisition.service.DataAcquisitionService.*;
 import static nl.lxtreme.ols.client.signaldisplay.view.UIManagerKeys.*;
 import static nl.lxtreme.ols.client.tool.ToolInvoker.*;
 import static nl.lxtreme.ols.common.session.Session.*;
+import static nl.lxtreme.ols.client.Platform.*;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -43,7 +44,6 @@ import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.Annotation;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.common.util.*;
-import nl.lxtreme.ols.host.*;
 import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -93,7 +93,6 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
   private volatile ColorSchemeManager colorSchemeManager;
   private volatile MetaTypeService metaTypeService;
   private volatile ConfigurationAdmin configAdmin;
-  private volatile HostProperties hostProperties;
   private volatile BundleContext bundleContext;
   private volatile Session session;
   private volatile LogService log;
@@ -204,14 +203,6 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
   }
 
   /**
-   * @return the current host properties, never <code>null</code>.
-   */
-  public final HostProperties getHostProperties()
-  {
-    return this.hostProperties;
-  }
-
-  /**
    * @return the import/export controller, never <code>null</code>.
    */
   public final ImportExportController getImportExportController()
@@ -277,14 +268,12 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
   @Override
   public final boolean handleAbout()
   {
-    final HostProperties hp = getHostProperties();
-
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
       @Override
       public void run()
       {
-        new AboutBox( hp.getShortName(), hp.getVersion() ).showDialog();
+        new AboutBox( Platform.getShortName(), getVersion() ).showDialog();
       }
     } );
 
@@ -524,6 +513,8 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
    */
   public void start( final Component aComponent )
   {
+    logPlatformInformation();
+
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
       @Override
@@ -610,6 +601,44 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
   }
 
   /**
+   * @return an array with the composition of objects for Felix DM to inject the
+   *         members in.
+   */
+  final Object[] getComposition()
+  {
+    // @formatter:off
+    return new Object[] { this, 
+        this.acquisitionController,
+        this.cursorController,
+        this.deviceController,
+        this.importExportController, 
+        this.projectController, 
+        this.toolController,
+        this.signalDiagramController, 
+        this.signalDiagramController.getSignalDiagramModel(),
+        this.signalDiagramController.getZoomController() };
+    // @formatter:on
+  }
+
+  /**
+   * @return the version of this client, never <code>null</code>.
+   */
+  final String getReportIncidentAddress()
+  {
+    Dictionary<?, ?> headers = this.bundleContext.getBundle().getHeaders();
+    return ( String )headers.get( "X-ClientIncidentAddress" );
+  }
+
+  /**
+   * @return the version of this client, never <code>null</code>.
+   */
+  final String getVersion()
+  {
+    Dictionary<?, ?> headers = this.bundleContext.getBundle().getHeaders();
+    return ( String )headers.get( "X-ClientVersion" );
+  }
+
+  /**
    * Shows the preferences dialog on the EDT.
    */
   void showPreferencesOnEDT( final Window aParent )
@@ -660,10 +689,12 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
     ActionManagerFactory.createActions( getActionManager() );
 
     // Construct the main frame...
-    final MainFrame mf = new MainFrame( this.actionManager, this.deviceController, this.hostProperties );
+    final MainFrame mf = new MainFrame( this.actionManager, this.deviceController );
     this.mainFrame = mf;
 
     mf.startOnEDT( this.bundleContext, this.signalDiagramController );
+
+    setStatus( String.format( "%s v%s ready ...", Platform.getShortName(), getVersion() ) );
   }
 
   /**
@@ -740,12 +771,12 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
    */
   private void initOSSpecifics()
   {
-    if ( this.hostProperties.isMacOS() )
+    if ( isMacOS() )
     {
       // Moves the main menu bar to the screen menu bar location...
       System.setProperty( "apple.laf.useScreenMenuBar", "true" );
       System.setProperty( "apple.awt.graphics.EnableQ2DX", "true" );
-      System.setProperty( "com.apple.mrj.application.apple.menu.about.name", this.hostProperties.getShortName() );
+      System.setProperty( "com.apple.mrj.application.apple.menu.about.name", Platform.getShortName() );
       System.setProperty( "com.apple.mrj.application.growbox.intrudes", "false" );
       System.setProperty( "com.apple.mrj.application.live-resize", "false" );
       System.setProperty( "com.apple.macos.smallTabs", "true" );
@@ -763,22 +794,21 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
       UIManager.put( "OptionPane.windowBindings", //
           new Object[] { SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ), "close", "ESCAPE", "close" } );
     }
-    else if ( this.hostProperties.isUnix() )
+    else if ( isUnix() )
     {
       UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
       setLookAndFeel( "com.jgoodies.looks.plastic.Plastic3DLookAndFeel" );
     }
-    else if ( this.hostProperties.isWindows() )
+    else if ( isWindows() )
     {
       UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
       setLookAndFeel( "com.jgoodies.looks.plastic.PlasticXPLookAndFeel" );
     }
 
     // Use the defined email address...
-    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS,
-        this.hostProperties.getReportIncidentAddress() );
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, getReportIncidentAddress() );
 
-    if ( this.hostProperties.isDebugMode() )
+    if ( Platform.isDebugMode() )
     {
       // Install a custom repaint manager that detects whether Swing
       // components are created outside the EDT; if so, it will yield a
@@ -791,6 +821,22 @@ public class Client implements ManagedService, StatusListener, ApplicationCallba
 
     // Cause exceptions to be shown in a more user-friendly way...
     JErrorDialog.installSwingExceptionHandler();
+  }
+
+  /**
+   * Logs some information about the platform this client runs on.
+   */
+  private void logPlatformInformation()
+  {
+    final String osName = this.bundleContext.getProperty( Constants.FRAMEWORK_OS_NAME );
+    final String osVersion = this.bundleContext.getProperty( Constants.FRAMEWORK_OS_VERSION );
+    final String processor = this.bundleContext.getProperty( Constants.FRAMEWORK_PROCESSOR );
+
+    StringBuilder sb = new StringBuilder();
+    sb.append( getShortName() ).append( " running on " ).append( osName ).append( ", v" ).append( osVersion )
+        .append( " (" ).append( processor ).append( "); " ).append( getExecutionEnvironment() ).append( "." );
+
+    this.log.log( LogService.LOG_INFO, sb.toString() );
   }
 
   /**

@@ -26,10 +26,10 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.*;
 
+import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.host.*;
 import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -48,8 +48,6 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   private static final String FILENAME_CAPTURE_RESULTS = "data.ols";
 
   // VARIABLES
-
-  private volatile HostProperties hostProperties;
 
   private final PropertyChangeSupport propertyChangeSupport;
 
@@ -209,7 +207,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     final BufferedOutputStream os = new BufferedOutputStream( aOutput );
     final ZipOutputStream zipOS = new ZipOutputStream( os );
 
-    zipOS.setComment( this.hostProperties.getFullName().concat( " project file" ) );
+    zipOS.setComment( Platform.getFullName().concat( " project file" ) );
 
     try
     {
@@ -229,17 +227,6 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
       IOUtil.closeResource( zipOS );
       IOUtil.closeResource( os );
     }
-  }
-
-  /**
-   * Sets hostProperties to the given value.
-   * 
-   * @param aHostProperties
-   *          the hostProperties to set.
-   */
-  public void setHostProperties( final HostProperties aHostProperties )
-  {
-    this.hostProperties = aHostProperties;
   }
 
   /**
@@ -442,7 +429,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     try
     {
       out.println( name );
-      out.println( this.hostProperties.getVersion() );
+      // out.println( this.hostProperties.getVersion() );
       out.println( System.currentTimeMillis() );
     }
     finally

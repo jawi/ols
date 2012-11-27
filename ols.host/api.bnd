@@ -1,5 +1,0 @@
-Private-Package: nl.lxtreme.ols.host.impl
-Export-Package: nl.lxtreme.ols.host
-Bundle-Activator: nl.lxtreme.ols.host.impl.Activator
-ols.version: 0.9.7-${tstamp}
-Include-Resource: {host.properties}

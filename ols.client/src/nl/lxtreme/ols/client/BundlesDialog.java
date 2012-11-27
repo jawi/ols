@@ -275,7 +275,7 @@ public class BundlesDialog extends JDialog implements Closeable
    */
   final boolean isDebugMode()
   {
-    return Client.getInstance().getHostProperties().isDebugMode();
+    return Platform.isDebugMode();
   }
 
   /**
