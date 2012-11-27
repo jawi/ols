@@ -1,0 +1,3 @@
+Private-Package: nl.lxtreme.ols.client.acquisition.impl
+Bundle-Activator: nl.lxtreme.ols.client.acquisition.impl.Activator
+Export-Package: nl.lxtreme.ols.client.acquisition

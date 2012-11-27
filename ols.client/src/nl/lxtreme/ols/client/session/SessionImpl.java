@@ -35,7 +35,7 @@ import org.osgi.service.log.*;
  * Provides a default implementation of {@link Session} that posts events using
  * {@link EventAdmin} in case of changes in the acquisition data.
  */
-public class SessionImpl implements Session
+class SessionImpl implements Session
 {
   // VARIABLES
 

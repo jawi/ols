@@ -35,7 +35,7 @@ import nl.lxtreme.ols.common.session.*;
  * Provides a default implementation of {@link AnnotationData}, which also acts
  * as {@link AnnotationListener} to collect all emitted annotations.
  */
-public class AnnotationDataImpl implements AnnotationData
+class AnnotationDataImpl implements AnnotationData
 {
   // VARIABLES
 

@@ -1206,6 +1206,9 @@ public final class SignalDiagramModel implements PropertyChangeListener
   {
     // Session is injected by now; create our annotation helper...
     this.annotationsHelper = new AnnotationHelper( this.session );
+
+    // Restore the acquisition data of the session...
+    setAcquisitionData( this.session.getAcquisitionData() );
   }
 
   /**

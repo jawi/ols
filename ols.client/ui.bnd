@@ -1,6 +1,5 @@
 Private-Package: nl.lxtreme.ols.client,\
     nl.lxtreme.ols.client.about,\
-    nl.lxtreme.ols.client.acquisition,\
     nl.lxtreme.ols.client.action,\
     nl.lxtreme.ols.client.action.manager,\
     nl.lxtreme.ols.client.editor,\
@@ -9,7 +8,6 @@ Private-Package: nl.lxtreme.ols.client,\
     nl.lxtreme.ols.client.icons,\
     nl.lxtreme.ols.client.project,\
     nl.lxtreme.ols.client.project.impl,\
-    nl.lxtreme.ols.client.session,\
     nl.lxtreme.ols.client.signaldisplay,\
     nl.lxtreme.ols.client.signaldisplay.marker,\
     nl.lxtreme.ols.client.signaldisplay.signalelement,\

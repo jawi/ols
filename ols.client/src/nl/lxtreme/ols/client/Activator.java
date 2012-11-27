@@ -29,7 +29,6 @@ import nl.lxtreme.ols.client.action.manager.*;
 import nl.lxtreme.ols.client.componentprovider.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.project.impl.*;
-import nl.lxtreme.ols.client.session.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.tool.*;
 import nl.lxtreme.ols.common.session.*;
@@ -140,9 +139,6 @@ public class Activator extends DependencyActivatorBase
 
     registerUIManagerConfigurator( aManager );
     registerUIColorSchemeManager( aManager );
-
-    registerDataAcquirer( aManager );
-    registerSession( aManager );
 
     registerUserSettingsManager( aManager );
     registerUserSessionManager( aManager );
@@ -275,42 +271,6 @@ public class Activator extends DependencyActivatorBase
         .add( createServiceDependency().setService( Session.class ).setRequired( true ) )
     );
     // @formatter:on
-  }
-
-  /**
-   * Registers the {@link IDataAcquirer} service.
-   */
-  private void registerDataAcquirer( final DependencyManager aManager )
-  {
-    Properties props;
-    props = new Properties();
-    props.put( EventConstants.EVENT_TOPIC, new String[] { DataAcquisitionService.TOPIC_ACQUISITION_STATUS } );
-
-    aManager.add( createComponent() //
-        .setInterface( new String[] { IDataAcquirer.class.getName(), EventHandler.class.getName() }, props ) //
-        .setImplementation( DataAcquirerImpl.class ) //
-        .add( createServiceDependency() //
-            .setService( DataAcquisitionService.class ) //
-            .setRequired( false ) ) //
-        );
-  }
-
-  /**
-   * @param aManager
-   */
-  private void registerSession( final DependencyManager aManager )
-  {
-    aManager.add( createComponent() //
-        .setInterface( Session.class.getName(), null ) //
-        .setImplementation( SessionImpl.class ) //
-        .setComposition( "getComposition" ) //
-        .add( createServiceDependency() //
-            .setService( EventAdmin.class ) //
-            .setRequired( true ) ) //
-        .add( createServiceDependency() //
-            .setService( LogService.class ) //
-            .setRequired( false ) ) //
-        );
   }
 
   /**
