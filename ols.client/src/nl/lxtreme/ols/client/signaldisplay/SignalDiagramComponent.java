@@ -203,6 +203,47 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   }
 
   /**
+   * Returns the outer dimensions of the visible view, taking care of view ports
+   * and scrollbars (such as used in {@link JScrollPane}).
+   * 
+   * @return a visible view size, as {@link Dimension}, never <code>null</code>.
+   */
+  public final Rectangle getOuterViewSize()
+  {
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, getSignalView() );
+
+    final Rectangle rect;
+    if ( scrollPane != null )
+    {
+      rect = new Rectangle( scrollPane.getViewport().getBounds() );
+
+      // Take care of the fact that scrollbars *can* be visible, which is not
+      // what we want here. We want to have the outside boundaries, including
+      // the scrollbars...
+      JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+      if ( scrollBar.isVisible() )
+      {
+        rect.width += scrollBar.getWidth();
+      }
+      scrollBar = scrollPane.getHorizontalScrollBar();
+      if ( scrollBar.isVisible() )
+      {
+        rect.height += scrollBar.getHeight();
+      }
+
+      final Insets insets = scrollPane.getViewport().getInsets();
+      rect.width -= ( insets.left + insets.right );
+      rect.height -= ( insets.top + insets.bottom );
+    }
+    else
+    {
+      rect = getVisibleRect();
+    }
+
+    return rect;
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -266,31 +307,6 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
   public final SignalView getSignalView()
   {
     return this.signalView;
-  }
-
-  /**
-   * Returns the dimensions of the visible view, taking care of viewports (such
-   * as used in {@link JScrollPane}).
-   * 
-   * @return a visible view size, as {@link Dimension}, never <code>null</code>.
-   */
-  public final Rectangle getVisibleViewSize()
-  {
-    final JComponent component = getSignalView();
-
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, component );
-
-    final Rectangle rect;
-    if ( scrollPane != null )
-    {
-      rect = scrollPane.getViewport().getBounds();
-    }
-    else
-    {
-      rect = getVisibleRect();
-    }
-
-    return rect;
   }
 
   /**
@@ -383,24 +399,33 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, view );
     if ( scrollPane != null )
     {
-      final Rectangle viewPortSize = scrollPane.getViewport().getVisibleRect();
+      final Rectangle viewSize = getOuterViewSize();
 
-      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
-      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+      // Stretch the width to fill the entire viewport...
+      int newWidth = Math.max( viewSize.width, model.getMaximalScreenWidth() );
 
-      final int clWidth = channelLabels.getPreferredWidth();
-      final int tlHeight = timeline.getTimeLineHeight();
-
-      final int newWidth = Math.max( viewPortSize.width, model.getAbsoluteScreenWidth() );
-      final int newHeight = Math.max( viewPortSize.height, model.getAbsoluteScreenHeight() );
+      // If the width is more than the viewport size, the horizontal scrollbar
+      // will show up, in which case we should check whether we can suppress the
+      // vertical scrollbar...
+      int newHeight = viewSize.height;
+      if ( newWidth > viewSize.width )
+      {
+        // Horizontal scrollbar will be visible; try to suppress the horizontal
+        // scrollbar by reducing the height of the view...
+        newHeight -= scrollPane.getHorizontalScrollBar().getHeight();
+      }
+      // Stretch the height to fill the entire viewport...
+      newHeight = Math.max( newHeight, model.getMinimalScreenHeight() );
 
       // the timeline component always follows the width of the signal view, but
       // with a fixed height...
-      timeline.setPreferredSize( new Dimension( newWidth, tlHeight ) );
+      TimeLineView timeline = ( TimeLineView )scrollPane.getColumnHeader().getView();
+      timeline.setPreferredSize( new Dimension( newWidth, timeline.getMinimumHeight() ) );
 
       // the channel label component calculates its own 'optimal' width, but
       // doesn't know squat about the correct height...
-      channelLabels.setPreferredSize( new Dimension( clWidth, newHeight ) );
+      ChannelLabelsView channelLabels = ( ChannelLabelsView )scrollPane.getRowHeader().getView();
+      channelLabels.setPreferredSize( new Dimension( channelLabels.getMinimumWidth(), newHeight ) );
 
       view.setPreferredSize( new Dimension( newWidth, newHeight ) );
     }
@@ -411,8 +436,8 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
       final int minWidth = Math.max( viewSize.width, frameSize.width );
 
-      final int newWidth = Math.max( minWidth, model.getAbsoluteScreenWidth() );
-      final int newHeight = Math.max( viewSize.height, model.getAbsoluteScreenHeight() );
+      final int newWidth = Math.max( minWidth, model.getMaximalScreenWidth() );
+      final int newHeight = Math.max( viewSize.height, model.getMinimalScreenHeight() );
 
       view.setPreferredSize( new Dimension( newWidth, newHeight ) );
     }

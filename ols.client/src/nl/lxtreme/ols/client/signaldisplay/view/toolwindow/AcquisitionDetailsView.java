@@ -28,7 +28,6 @@ import java.text.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomListener;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.common.acquisition.*;
@@ -175,9 +174,8 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
    * {@inheritDoc}
    */
   @Override
-  public void notifyZoomChange( final ZoomEvent aEvent )
+  public void notifyZoomChange()
   {
-
     final SignalDiagramModel model = getController().getSignalDiagramModel();
 
     final Double dt = model.getDisplayedTimeInterval();

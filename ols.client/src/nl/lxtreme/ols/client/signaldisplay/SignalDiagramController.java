@@ -27,9 +27,7 @@ import java.beans.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.action.manager.*;
-import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomListener;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.*;
@@ -247,40 +245,14 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
    * {@inheritDoc}
    */
   @Override
-  public void notifyZoomChange( final ZoomEvent aEvent )
+  public void notifyZoomChange()
   {
-    final boolean dataAvailable = getSignalDiagramModel().hasData();
-    final ActionManager am = this.actionManager;
-
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
       @Override
       public void run()
       {
-        // Update the zoom action's state... TODO move this logic to the
-        // Actions!!!
-        Action zoomInAction = am.getAction( ZoomInAction.ID );
-        zoomInAction.setEnabled( dataAvailable && aEvent.canZoomIn() );
-
-        Action zoomOutAction = am.getAction( ZoomOutAction.ID );
-        zoomOutAction.setEnabled( dataAvailable && aEvent.canZoomOut() );
-
-        Action zoomAllAction = am.getAction( ZoomAllAction.ID );
-        zoomAllAction.setEnabled( dataAvailable && !aEvent.isZoomAll() );
-
-        Action zoomOriginalAction = am.getAction( ZoomOriginalAction.ID );
-        zoomOriginalAction.setEnabled( dataAvailable && !aEvent.isZoomOriginal() );
-
-        // Update the main component's state...
-        final SignalDiagramComponent diagram = getSignalDiagram();
-
-        // Recalculate all dimensions...
-        diagram.calculateDimensions();
-        // Notify that everything needs to be revalidated as well...
-        diagram.revalidateAll();
-        // Issue #100: in case the factor is changed, we need to repaint all
-        // components...
-        diagram.repaintAll();
+        recalculateDimensions();
       }
     } );
   }
@@ -304,9 +276,16 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
    */
   public void recalculateDimensions()
   {
+    // Recalculate all dimensions...
     this.signalDiagram.calculateDimensions();
+    // Notify that everything needs to be revalidated as well...
     this.signalDiagram.revalidateAll();
+    // Issue #100: in case the factor is changed, we need to repaint all
+    // components...
     this.signalDiagram.repaintAll();
+
+    // Ensure the actions reflect the latest changes as well...
+    this.actionManager.updateActionStates();
   }
 
   /**
@@ -406,7 +385,7 @@ public class SignalDiagramController implements ZoomListener, PropertyChangeList
   }
 
   /**
-   * Enables or disables the cursor mode, which in effect, Ttrns the visibility
+   * Enables or disables the cursor mode, which in effect, turns the visibility
    * of all cursors either on or off.
    * <p>
    * This method does <em>not</em> modify any cursor, only whether they are

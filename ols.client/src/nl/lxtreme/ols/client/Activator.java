@@ -266,9 +266,10 @@ public class Activator extends DependencyActivatorBase
         .setInterface( interfaces, props )
         .setImplementation( client )
         .add( createServiceDependency().setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ).setCallbacks( "addMenu", "removeMenu" ).setRequired( false ) )
+        .add( createServiceDependency().setService( UIManagerConfigurator.class ).setRequired( true ) )
         .add( createServiceDependency().setService( ColorSchemeManager.class ).setRequired( true ) )
-        .add( createServiceDependency().setService( MetaTypeService.class ).setRequired( true ) )
         .add( createServiceDependency().setService( ConfigurationAdmin.class ).setRequired( true ) )
+        .add( createServiceDependency().setService( MetaTypeService.class ).setRequired( true ) )
         .add( createServiceDependency().setService( HostProperties.class ).setRequired( true ) )
         .add( createServiceDependency().setService( LogService.class ).setRequired( false ) )
         .add( createServiceDependency().setService( Session.class ).setRequired( true ) )
@@ -342,6 +343,8 @@ public class Activator extends DependencyActivatorBase
     aManager.add( createComponent() //
         .setInterface( serviceNames, props ) //
         .setImplementation( UIManagerConfigurator.class ) //
+        .add( createConfigurationDependency() //
+            .setPid( UIManagerConfigurator.PID ) ) //
         );
   }
 

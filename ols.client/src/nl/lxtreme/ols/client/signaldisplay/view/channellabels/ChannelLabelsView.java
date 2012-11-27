@@ -488,7 +488,7 @@ public class ChannelLabelsView extends AbstractViewLayer
    * 
    * @return a width, in pixels.
    */
-  public int getPreferredWidth()
+  public int getMinimumWidth()
   {
     int minWidth = 0;
 

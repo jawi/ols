@@ -278,31 +278,6 @@ public final class SignalDiagramModel implements PropertyChangeListener
   }
 
   /**
-   * Returns the absolute height of the screen.
-   * 
-   * @return a screen height, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
-   */
-  public int getAbsoluteScreenHeight()
-  {
-    return getSignalElementManager().calculateScreenHeight();
-  }
-
-  /**
-   * Returns the absolute width of the screen.
-   * 
-   * @return a screen width, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
-   */
-  public int getAbsoluteScreenWidth()
-  {
-    final double result = Math.floor( getAbsoluteLength() * getZoomFactor() );
-    if ( result > Integer.MAX_VALUE )
-    {
-      return Integer.MAX_VALUE;
-    }
-    return ( int )result;
-  }
-
-  /**
    * @return the acquired data, can be <code>null</code>.
    */
   public AcquisitionData getAcquisitionData()
@@ -357,7 +332,7 @@ public final class SignalDiagramModel implements PropertyChangeListener
    */
   public Double getDisplayedTimeInterval()
   {
-    final Rectangle visibleRect = this.controller.getSignalDiagram().getVisibleViewSize();
+    final Rectangle visibleRect = this.controller.getSignalDiagram().getOuterViewSize();
     if ( ( visibleRect == null ) || !hasData() )
     {
       return null;
@@ -420,6 +395,31 @@ public final class SignalDiagramModel implements PropertyChangeListener
     }
 
     return inc;
+  }
+
+  /**
+   * Returns the maximum width of the screen.
+   * 
+   * @return a screen width, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
+   */
+  public int getMaximalScreenWidth()
+  {
+    final double result = Math.floor( getAbsoluteLength() * getZoomFactor() );
+    if ( result > Integer.MAX_VALUE )
+    {
+      return Integer.MAX_VALUE;
+    }
+    return ( int )result;
+  }
+
+  /**
+   * Returns the minimum height of the screen.
+   * 
+   * @return a screen height, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
+   */
+  public int getMinimalScreenHeight()
+  {
+    return getSignalElementManager().calculateScreenHeight();
   }
 
   /**

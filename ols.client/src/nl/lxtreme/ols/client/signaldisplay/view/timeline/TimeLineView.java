@@ -149,6 +149,49 @@ public class TimeLineView extends AbstractViewLayer implements IMarkerChangeList
    * {@inheritDoc}
    */
   @Override
+  public void cursorsInvisible()
+  {
+    repaint( 50L );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void cursorsVisible()
+  {
+    repaint( 50L );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void dataModelChanged( final AcquisitionData aData )
+  {
+    repaint( 50L );
+  }
+
+  /**
+   * @return the minimum height for this view, in pixels.
+   */
+  public int getMinimumHeight()
+  {
+    return getModel().getTimeLineHeight();
+  }
+
+  /**
+   * @return a {@link TimeLineViewModel} instance, never <code>null</code>.
+   */
+  public TimeLineViewModel getModel()
+  {
+    return this.model;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void markerAdded( final Marker aCursor )
   {
     repaint( 50L );
@@ -178,49 +221,6 @@ public class TimeLineView extends AbstractViewLayer implements IMarkerChangeList
   public void markerRemoved( final Marker aOldCursor )
   {
     repaint( 50L );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void cursorsInvisible()
-  {
-    repaint( 50L );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void cursorsVisible()
-  {
-    repaint( 50L );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void dataModelChanged( final AcquisitionData aData )
-  {
-    repaint( 50L );
-  }
-
-  /**
-   * @return a {@link TimeLineViewModel} instance, never <code>null</code>.
-   */
-  public TimeLineViewModel getModel()
-  {
-    return this.model;
-  }
-
-  /**
-   * @return
-   */
-  public int getTimeLineHeight()
-  {
-    return getModel().getTimeLineHeight();
   }
 
   /**

@@ -35,147 +35,6 @@ public final class ZoomController
   // INNER TYPES
 
   /**
-   * Denotes a zoom-event.
-   */
-  public static final class ZoomEvent
-  {
-    // VARIABLES
-
-    private final double minZoomLevel;
-    private final double defaultZoomLevel;
-    private final double maxZoomLevel;
-    private final double newFactor;
-    private final double oldFactor;
-    private final Point hotSpot;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link ZoomEvent} instance.
-     * 
-     * @param aFactor
-     * @param aMinZoomLevel
-     * @param aMaxZoomLevel
-     */
-    public ZoomEvent( final double aNewFactor, final double aOldFactor, final double aMinZoomLevel,
-        final double aDefaultLevel, final double aMaxZoomLevel, final Point aHotSpot )
-    {
-      this.newFactor = aNewFactor;
-      this.oldFactor = aOldFactor;
-      this.minZoomLevel = aMinZoomLevel;
-      this.defaultZoomLevel = aDefaultLevel;
-      this.maxZoomLevel = aMaxZoomLevel;
-      this.hotSpot = aHotSpot == null ? null : new Point( aHotSpot );
-    }
-
-    // METHODS
-
-    /**
-     * Returns whether or not we can zoom in further.
-     * 
-     * @return <code>true</code> if we can zoom in, <code>false</code> if the
-     *         maximum zoom level has been reached.
-     */
-    public boolean canZoomIn()
-    {
-      final double maxZoomLevel = getMaxZoomLevel();
-      return getFactor() < maxZoomLevel;
-    }
-
-    /**
-     * Returns whether or not we can zoom out further.
-     * 
-     * @return <code>true</code> if we can zoom out, <code>false</code> if the
-     *         maximum zoom level has been reached.
-     */
-    public boolean canZoomOut()
-    {
-      final double minZoomLevel = getMinZoomLevel();
-      return getFactor() > minZoomLevel;
-    }
-
-    /**
-     * Returns the current value of factor.
-     * 
-     * @return the factor
-     */
-    public double getFactor()
-    {
-      return this.newFactor;
-    }
-
-    /**
-     * Returns the "hot spot" of this zoom event, e.g., where center location of
-     * the zoom in/out action.
-     * 
-     * @return the "hot spot" on screen, can be <code>null</code>.
-     */
-    public Point getHotSpot()
-    {
-      return this.hotSpot;
-    }
-
-    /**
-     * Returns the current value of maxZoomLevel.
-     * 
-     * @return the maxZoomLevel
-     */
-    public double getMaxZoomLevel()
-    {
-      return this.maxZoomLevel;
-    }
-
-    /**
-     * Returns the current value of minZoomLevel.
-     * 
-     * @return the minZoomLevel
-     */
-    public double getMinZoomLevel()
-    {
-      return this.minZoomLevel;
-    }
-
-    /**
-     * Returns the current value of oldFactor.
-     * 
-     * @return the oldFactor
-     */
-    public double getOldFactor()
-    {
-      return this.oldFactor;
-    }
-
-    /**
-     * Returns whether or not we're zooming to fit all.
-     * 
-     * @return <code>true</code> if zoom-all is enabled, <code>false</code>
-     *         otherwise.
-     */
-    public boolean isZoomAll()
-    {
-      return Math.abs( this.newFactor - this.minZoomLevel ) < 1.0E-6;
-    }
-
-    /**
-     * @return <code>true</code> if the default zoom level is selected,
-     *         <code>false</code> otherwise.
-     */
-    public boolean isZoomMaximum()
-    {
-      return Math.abs( this.newFactor - this.maxZoomLevel ) < 1.0E-6;
-    }
-
-    /**
-     * @return <code>true</code> if the default zoom level is selected,
-     *         <code>false</code> otherwise.
-     */
-    public boolean isZoomOriginal()
-    {
-      return Math.abs( this.newFactor - this.defaultZoomLevel ) < 1.0E-6;
-    }
-  }
-
-  /**
    * Provides an interface for interchanging zooming events.
    */
   public static interface ZoomListener extends EventListener
@@ -184,12 +43,8 @@ public final class ZoomController
 
     /**
      * Called upon each change of zoom factor.
-     * 
-     * @param aEvent
-     *          the zoom event with current zoom information, never
-     *          <code>null</code>.
      */
-    void notifyZoomChange( ZoomEvent aEvent );
+    void notifyZoomChange();
   }
 
   /**
@@ -253,6 +108,32 @@ public final class ZoomController
   public void addZoomListener( final ZoomListener aListener )
   {
     this.eventListeners.add( ZoomListener.class, aListener );
+  }
+
+  /**
+   * Returns whether or not we can zoom in further.
+   * 
+   * @return <code>true</code> if we can zoom in, <code>false</code> if the
+   *         maximum zoom level has been reached.
+   */
+  public boolean canZoomIn()
+  {
+    final double maxZoomLevel = getMaxZoomLevel();
+    final double zoomFactor = getFactor();
+    return zoomFactor < maxZoomLevel;
+  }
+
+  /**
+   * Returns whether or not we can zoom out further.
+   * 
+   * @return <code>true</code> if we can zoom out, <code>false</code> if the
+   *         maximum zoom level has been reached.
+   */
+  public boolean canZoomOut()
+  {
+    final double minZoomLevel = getMinZoomLevel();
+    final double zoomFactor = getFactor();
+    return zoomFactor > minZoomLevel;
   }
 
   /**
@@ -381,14 +262,14 @@ public final class ZoomController
     }
 
     // Zoom region...
-
+    // @formatter:off
+/*
     final SignalDiagramModel model = this.controller.getSignalDiagramModel();
-    final Rectangle viewSize = getSignalDiagram().getVisibleViewSize();
+    final Rectangle viewSize = getSignalDiagram().getOuterViewSize();
 
     final int width = Math.abs( aPoint2.x - aPoint1.x );
     final Long triggerPos = model.getTriggerPosition();
 
-    ZoomEvent event;
     long ts;
     synchronized ( this.LOCK )
     {
@@ -403,39 +284,24 @@ public final class ZoomController
       }
 
       Point hs = new Point( ( int )( ts * oldFactor ), 0 );
-
       double newFactor = ( viewSize.width / ( double )width );
-
-      event = createZoomEvent( oldFactor, newFactor, hs );
     }
 
-    fireZoomEvent( event );
-
+    fireZoomEvent();
+*/
+    // @formatter:on
     return true;
   }
 
   /**
-   * Creates a new ZoomEvent instance, based on the current situation.
-   * 
-   * @return a new {@link ZoomEvent} instance, never <code>null</code>.
+   * Fires an event to all interested listeners that the zoom level has changed.
    */
-  private ZoomEvent createZoomEvent( final double aOldFactor, final double aNewFactor, final Point aHotSpot )
-  {
-    return new ZoomEvent( aNewFactor, aOldFactor, getMinZoomLevel(), getDefaultZoomLevel(), getMaxZoomLevel(), aHotSpot );
-  }
-
-  /**
-   * Fires a given {@link ZoomEvent} to all interested listeners.
-   * 
-   * @param aEvent
-   *          the event to fire, cannot be <code>null</code>.
-   */
-  private void fireZoomEvent( final ZoomEvent aEvent )
+  private void fireZoomEvent()
   {
     ZoomListener[] listeners = this.eventListeners.getListeners( ZoomListener.class );
     for ( ZoomListener listener : listeners )
     {
-      listener.notifyZoomChange( aEvent );
+      listener.notifyZoomChange();
     }
   }
 
@@ -515,7 +381,7 @@ public final class ZoomController
    */
   private Rectangle getVisibleViewSize()
   {
-    return getSignalDiagram().getVisibleViewSize();
+    return getSignalDiagram().getOuterViewSize();
   }
 
   /**
@@ -611,15 +477,12 @@ public final class ZoomController
       signalDiagram.setLocation( newX, newY );
     }
 
-    final ZoomEvent event;
     synchronized ( this.LOCK )
     {
       this.factor = newFactor;
       this.value = newValue;
-
-      event = new ZoomEvent( newFactor, oldFactor, minZoomLevel, defaultZoomLevel, maxZoomLevel, aHotSpot );
     }
 
-    fireZoomEvent( event );
+    fireZoomEvent();
   }
 }

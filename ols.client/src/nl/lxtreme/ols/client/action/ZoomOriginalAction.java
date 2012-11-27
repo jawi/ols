@@ -28,6 +28,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -83,7 +84,9 @@ public class ZoomOriginalAction extends AbstractAction implements IManagedAction
   @Override
   public void updateState()
   {
-    setEnabled( getSignalDiagramController().getSignalDiagramModel().hasData() );
+    boolean dataAvailable = hasData();
+    boolean isZoomOriginal = getZoomController().isZoomDefault();
+    setEnabled( dataAvailable && !isZoomOriginal );
   }
 
   /**
@@ -91,17 +94,17 @@ public class ZoomOriginalAction extends AbstractAction implements IManagedAction
    */
   private ZoomController getZoomController()
   {
-    return getSignalDiagramController().getZoomController();
+    final SignalDiagramController controller = Client.getInstance().getSignalDiagramController();
+    return controller.getZoomController();
   }
 
   /**
-   * @return a {@link SignalDiagramController} instance, never <code>null</code>
-   *         .
+   * @return <code>true</code> if there's data available to display,
+   *         <code>false</code> otherwise.
    */
-  private SignalDiagramController getSignalDiagramController()
+  private boolean hasData()
   {
-    return Client.getInstance().getSignalDiagramController();
+    final Session session = Client.getInstance().getSession();
+    return session.hasData();
   }
 }
-
-/* EOF */
