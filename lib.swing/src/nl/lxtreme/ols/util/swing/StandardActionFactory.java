@@ -26,8 +26,6 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-
 
 /**
  * Provides a Swing {@link Action}-factory for some commonly used actions.
@@ -59,23 +57,8 @@ public final class StandardActionFactory
   /**
    * Provides a generic close dialog action.
    */
-  public static final class CloseAction extends AbstractAction
+  public static final class CloseAction extends AbstractStatusAction
   {
-    // INNER TYPES
-
-    /**
-     * Denotes a window/dialog/frame that can be closed through a
-     * {@link CloseAction}.
-     */
-    public static interface Closeable
-    {
-      /**
-       * Closes this dialog, effectively setting its visibilty to
-       * <code>false</code> and disposes it.
-       */
-      void close();
-    }
-
     // CONSTANTS
 
     private static final long serialVersionUID = 1L;
@@ -87,7 +70,9 @@ public final class StandardActionFactory
      */
     public CloseAction()
     {
-      super( "Close" );
+      super( DialogStatus.CANCEL );
+
+      putValue( NAME, "Close" );
       putValue( SHORT_DESCRIPTION, "Closes this dialog" );
 
       if ( isMacOS() )
@@ -102,33 +87,8 @@ public final class StandardActionFactory
       }
     }
 
-    /**
-     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      if ( aEvent.getSource() instanceof Component )
-      {
-        final Component source = ( Component )aEvent.getSource();
-
-        final Closeable closeableParent = findCloseableParent( source, Closeable.class );
-        if ( closeableParent == null )
-        {
-          throw new RuntimeException( "Failed to find closeable parent?!" );
-        }
-
-        closeableParent.close();
-
-        // Make sure the resources held by the window are released...
-        if ( closeableParent instanceof Window )
-        {
-          ( ( Window )closeableParent ).dispose();
-        }
-      }
-    }
-
     // METHODS
+
     /**
      * Returns whether the current host's operating system is Mac OS X.
      * 
@@ -189,20 +149,46 @@ public final class StandardActionFactory
   }
 
   /**
-   * 
+   * Denotes a dialog that can be validated for its settings.
    */
-  public static interface StatusAwareCloseableDialog extends Closeable
+  public static interface ValidatableDialog
   {
+    // METHODS
+
     /**
-     * Reports back what the status of a dialog is.
+     * Validates this dialog and returns an error message stating what might be
+     * wrong with this dialog.
+     * 
+     * @return a non-null, non-empty string with a reason about the possible
+     *         problem of this dialog, or an empty string or <code>null</code>
+     *         if the dialog is valid.
+     */
+    String validateDialog();
+  }
+
+  /**
+   * Denotes a dialog that is aware of its status.
+   */
+  public static interface StatusAwareDialog
+  {
+    // METHODS
+
+    /**
+     * Returns the dialog status, if set.
+     * 
+     * @return the dialog status, can be <code>null</code> as long as it is not
+     *         set.
+     * @see #setDialogStatus(DialogStatus)
+     */
+    DialogStatus getDialogStatus();
+
+    /**
+     * Reports back what the status of the implementing dialog is.
      * 
      * @param aStatus
-     *          the status of the dialog, never <code>null</code>.
-     * @return <code>true</code> if setting the dialog status was acknowledged,
-     *         <code>false</code> if it was not (in which case the dialog will
-     *         not be closed).
+     *          the status of the dialog, can be <code>null</code>.
      */
-    boolean setDialogStatus( DialogStatus aStatus );
+    void setDialogStatus( DialogStatus aStatus );
   }
 
   /**
@@ -238,31 +224,28 @@ public final class StandardActionFactory
       {
         final Component source = ( Component )aEvent.getSource();
 
-        final StatusAwareCloseableDialog closeableParent = findCloseableParent( source,
-            StatusAwareCloseableDialog.class );
-        if ( closeableParent == null )
+        final Window window = findParent( source, Window.class );
+
+        if ( window instanceof StatusAwareDialog )
         {
-          throw new RuntimeException( "Failed to find closeable parent?!" );
+          ( ( StatusAwareDialog )window ).setDialogStatus( this.status );
         }
 
-        if ( closeableParent.setDialogStatus( this.status ) )
+        boolean closeOk = true;
+        if ( ( this.status == DialogStatus.OK ) && ( window instanceof ValidatableDialog ) )
         {
-          closeableParent.close();
+          String validationResult = ( ( ValidatableDialog )window ).validateDialog();
 
-          // Make sure the resources held by the window are released...
-          if ( closeableParent instanceof Window )
-          {
-            ( ( Window )closeableParent ).dispose();
-          }
+          closeOk = ( validationResult == null ) || "".equals( validationResult );
+        }
+
+        if ( closeOk && ( window != null ) )
+        {
+          window.dispose();
         }
       }
     }
   }
-
-  // CONSTANTS
-
-  /** Denotes the ID of a "close"/"cancel" action. */
-  public static final String CLOSE_ACTION_ID = "CloseAction";
 
   // CONSTRUCTORS
 
@@ -378,8 +361,7 @@ public final class StandardActionFactory
    * @return the closeable parent, or <code>null</code> if no such parent was
    *         found (or the given component was <code>null</code>).
    */
-  private static <T extends Closeable> T findCloseableParent( final Component aComponent,
-      final Class<T> aImplementingType )
+  private static <T> T findParent( final Component aComponent, final Class<T> aImplementingType )
   {
     T closeableParent;
 
@@ -388,12 +370,12 @@ public final class StandardActionFactory
     if ( aComponent instanceof JMenuItem )
     {
       final Component parent = ( ( JMenuItem )aComponent ).getParent();
-      closeableParent = findCloseableParent( parent, aImplementingType );
+      closeableParent = findParent( parent, aImplementingType );
     }
     else if ( aComponent instanceof JPopupMenu )
     {
       final Component invoker = ( ( JPopupMenu )aComponent ).getInvoker();
-      closeableParent = findCloseableParent( invoker, aImplementingType );
+      closeableParent = findParent( invoker, aImplementingType );
     }
     else
     {

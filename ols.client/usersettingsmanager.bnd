@@ -1,0 +1,2 @@
+Private-Package: nl.lxtreme.ols.client.usersettings
+Bundle-Activator: nl.lxtreme.ols.client.usersettings.Activator

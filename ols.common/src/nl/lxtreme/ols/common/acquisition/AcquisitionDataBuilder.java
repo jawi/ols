@@ -433,6 +433,10 @@ public final class AcquisitionDataBuilder
    */
   static final class CursorImpl implements Cursor
   {
+    // CONSTANTS
+
+    private static final long UNDEFINED = -1L;
+
     // VARIABLES
 
     private final int index;
@@ -448,7 +452,7 @@ public final class AcquisitionDataBuilder
     public CursorImpl( final Cursor aCursor )
     {
       this.index = aCursor.getIndex();
-      this.timestamp = aCursor.getTimestamp();
+      this.timestamp = aCursor.isDefined() ? aCursor.getTimestamp() : UNDEFINED;
       this.label = aCursor.getLabel();
     }
 
@@ -458,7 +462,7 @@ public final class AcquisitionDataBuilder
     public CursorImpl( final int aIndex )
     {
       this.index = aIndex;
-      this.timestamp = -1L;
+      this.timestamp = UNDEFINED;
     }
 
     // METHODS
@@ -469,7 +473,7 @@ public final class AcquisitionDataBuilder
     @Override
     public void clear()
     {
-      this.timestamp = -1L;
+      this.timestamp = UNDEFINED;
     }
 
     /**
