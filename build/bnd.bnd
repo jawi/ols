@@ -10,7 +10,6 @@
     ols.common,\
     ols.device,\
     ols.export,\
-    ols.host,\
     ols.logbridge,\
     ols.service,\
     ols.tool
