@@ -121,11 +121,12 @@ public class ManchesterDecoderTask implements Callable<Void>
           // edge and this edge.
           long diff = timestamps[i] - lastTimestamp;
 
-          if ( halfCycle < 0L )
+          if ( halfCycle <= 0L )
           {
-            // Initialization: we've not calculated a half-cycle before, so lets
-            // presume the current difference is an indication for it. We divide
-            // the timestamp by two to ensure we always start with T...
+            // Initialization: we've not calculated a half-cycle before (or let
+            // it diverge to zero), so lets presume the current difference is an
+            // indication for it. We divide the timestamp by two to ensure we
+            // always start with T...
             halfCycle = edge.isFalling() ? diff / 2 : diff;
             // Assume an initial value for our jitter coefficient...
             jitter = diff / 2;
@@ -187,28 +188,6 @@ public class ManchesterDecoderTask implements Callable<Void>
       lastValue = value;
     }
 
-    // No more edges; we need to check whether we've missed the very last bit...
-    if ( bitCount < symbolSize )
-    {
-      lastTimestamp += halfCycle;
-      // Since there's no more signal transitions; we simply determine the last
-      // bit value and use that for the missing bits...
-      int sampleValue = getDataValue( this.context, lastTimestamp );
-      while ( bitCount++ < symbolSize )
-      {
-        // To determine where the symbol ends...
-        lastTimestamp += halfCycle;
-
-        symbol <<= 1;
-        if ( ( sampleValue & dataMask ) != 0 )
-        {
-          symbol |= 1;
-        }
-      }
-
-      annotationHelper.addSymbolAnnotation( this.dataIdx, symbolStartTime, lastTimestamp, symbol );
-    }
-
     lastTimestamp += halfCycle;
 
     String format = FrequencyUnit.format( inputData.getSampleRate() / ( 2.0 * halfCycle ) );
@@ -220,8 +199,8 @@ public class ManchesterDecoderTask implements Callable<Void>
       newSamples.put( timestamps[i], values[i] );
     }
 
-    boolean clockLow = false;
-    for ( long time = firstSignalEdge + halfCycle; time < lastTimestamp; time += halfCycle )
+    boolean clockLow = true;
+    for ( long time = firstSignalEdge; time < lastTimestamp; time += halfCycle )
     {
       int sampleValue = getDataValue( this.context, time );
       if ( clockLow )
