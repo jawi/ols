@@ -36,8 +36,10 @@ import javax.swing.plaf.basic.*;
 
 import nl.lxtreme.ols.common.util.*;
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
 import nl.lxtreme.ols.util.swing.SwingComponentUtils.UnitDefinition;
+import nl.lxtreme.ols.util.swing.WindowManager.Configurable;
+import nl.lxtreme.ols.util.swing.WindowManager.UserSettings;
 import nl.lxtreme.ols.util.swing.component.*;
 
 import org.sump.device.logicsniffer.profile.*;
@@ -53,7 +55,7 @@ import purejavacomm.*;
 /**
  * Provides the configuration dialog for the Open Bench Logic Sniffer device.
  */
-public final class LogicSnifferConfigDialog extends JDialog implements Configurable, Closeable
+public final class LogicSnifferConfigDialog extends JDialog implements StatusAwareDialog, Configurable
 {
   // INNER TYPES
 
@@ -271,7 +273,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   private JCheckBox[] channelGroup;
   private JButton captureButton;
   private JComponent groupsPanel;
-  private boolean dialogResult;
+  private DialogStatus status;
   private JSlider ratioSlider;
   private JLabel ratioLabel;
   private JLabel warningLabel;
@@ -353,18 +355,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     {
       return "";
     }
-  }
-
-  /**
-   * Properly closes the dialog. This method makes sure timer and worker thread
-   * are stopped before the dialog is closed.
-   * 
-   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
-   */
-  public final void close()
-  {
-    setVisible( false );
-    dispose();
   }
 
   /**
@@ -482,6 +472,15 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public DialogStatus getDialogStatus()
+  {
+    return this.status;
+  }
+
+  /**
    * @see nl.lxtreme.ols.util.swing.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
   public void readPreferences( final UserSettings aSettings )
@@ -573,16 +572,12 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   }
 
   /**
-   * @return
+   * {@inheritDoc}
    */
-  public boolean showDialog()
+  @Override
+  public void setDialogStatus( final DialogStatus aStatus )
   {
-    // make sure we've got a predictable result; otherwise it causes
-    // (re)captures successive uses; Thanks to erik for reporting this issue.
-    this.dialogResult = false;
-
-    setVisible( true );
-    return this.dialogResult;
+    this.status = aStatus;
   }
 
   /**
@@ -807,13 +802,10 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       @Override
       public void actionPerformed( final ActionEvent aEvent )
       {
-        boolean configCorrect = verifyConfiguration( true /* aWarnUserIfConfigIncorrect */);
-
-        LogicSnifferConfigDialog.this.dialogResult = configCorrect;
-
-        if ( configCorrect )
+        if ( verifyConfiguration( true /* aWarnUserIfConfigIncorrect */) )
         {
-          close();
+          setDialogStatus( DialogStatus.OK );
+          setVisible( false );
         }
       }
     } );

@@ -27,14 +27,15 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.WindowManager.Configurable;
+import nl.lxtreme.ols.util.swing.WindowManager.UserSettings;
 
 
 /**
  * @author jawi
  */
 @SuppressWarnings( "boxing" )
-public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
+public class DemoDeviceDialog extends JDialog implements Configurable
 {
   // CONSTANTS
 
@@ -71,16 +72,6 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
   }
 
   // METHODS
-
-  /**
-   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
-   */
-  @Override
-  public void close()
-  {
-    setVisible( false );
-    dispose();
-  }
 
   /**
    * @return the channels
@@ -155,7 +146,7 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
     this.dataFunction = ( String )this.dataFunctionCombo.getSelectedItem();
     this.dataLength = ( Integer )this.dataLengthCombo.getSelectedItem();
 
-    close();
+    setVisible( false );
   }
 
   /**

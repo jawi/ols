@@ -33,6 +33,8 @@ import javax.swing.plaf.basic.*;
 
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.WindowManager.Configurable;
+import nl.lxtreme.ols.util.swing.WindowManager.UserSettings;
 
 import org.sump.device.logicsniffer.profile.*;
 

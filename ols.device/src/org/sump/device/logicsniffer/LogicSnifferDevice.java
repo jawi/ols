@@ -30,7 +30,7 @@ import javax.microedition.io.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.util.swing.*;
-
+import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
@@ -121,12 +121,14 @@ public class LogicSnifferDevice implements Device
 
     try
     {
-      boolean configConfirmed = this.configDialog.showDialog();
-      if ( configConfirmed )
+      this.configDialog.setVisible( true ); // Blocks...
+
+      DialogStatus status = this.configDialog.getDialogStatus();
+      if ( status == DialogStatus.OK )
       {
         this.config = this.configDialog.getConfiguration();
       }
-      return configConfirmed;
+      return status == DialogStatus.OK;
     }
     finally
     {

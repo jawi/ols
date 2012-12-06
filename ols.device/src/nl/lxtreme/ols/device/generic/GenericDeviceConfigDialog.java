@@ -29,14 +29,15 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.WindowManager.Configurable;
+import nl.lxtreme.ols.util.swing.WindowManager.UserSettings;
 import nl.lxtreme.ols.util.swing.validation.*;
 
 
 /**
  * @author jawi
  */
-public class GenericDeviceConfigDialog extends JDialog implements Configurable, Closeable
+public class GenericDeviceConfigDialog extends JDialog implements Configurable
 {
   // CONSTANTS
 
@@ -68,16 +69,6 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
   }
 
   // METHODS
-
-  /**
-   * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
-   */
-  @Override
-  public void close()
-  {
-    setVisible( false );
-    dispose();
-  }
 
   /**
    * Returns the number of channels in each sample.
@@ -272,7 +263,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
       public void actionPerformed( final ActionEvent aEvent )
       {
         GenericDeviceConfigDialog.this.setupConfirmed = true;
-        close();
+        setVisible( false );
       }
     } );
 
