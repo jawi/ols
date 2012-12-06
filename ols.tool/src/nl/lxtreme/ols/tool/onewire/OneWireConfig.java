@@ -45,6 +45,6 @@ public interface OneWireConfig
    * 
    * @return the bus mode, never <code>null</code>.
    */
-  @Meta.AD( name = "Bus mode", optionLabels = { "Standard", "Overdrive" }, deflt = "0" )
+  @Meta.AD( name = "Bus mode", optionLabels = { "Standard", "Overdrive" }, deflt = "0", required = true )
   OneWireBusMode busMode();
 }
