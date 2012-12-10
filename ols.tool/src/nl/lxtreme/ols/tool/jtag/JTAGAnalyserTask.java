@@ -24,14 +24,14 @@ package nl.lxtreme.ols.tool.jtag;
 import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.jtag.JTAGState.*;
 
+import java.math.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-
-import aQute.bnd.annotation.metatype.*;
 
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
+import aQute.bnd.annotation.metatype.*;
 
 
 /**
@@ -143,14 +143,13 @@ public class JTAGAnalyserTask implements Callable<Void>
     String state;
     int startTdiDataIdx = 0;
     int endTdiDataIdx = 0;
-    String TdiData = "";
-    String TdoData = "";
+
+    String tdiData = null;
+    String tdoData = null;
 
     this.currentState = TEST_LOGIC_RESET;
     this.oldState = TEST_LOGIC_RESET;
     this.startIdx = startOfDecode;
-
-    LOG.log( Level.INFO, "decodeJtagData: " + startOfDecode + " to " + endOfDecode );
 
     final double length = endOfDecode - startOfDecode;
     for ( int idx = startOfDecode + 1; idx < endOfDecode; idx++ )
@@ -167,9 +166,6 @@ public class JTAGAnalyserTask implements Callable<Void>
 
         if ( tckValue != 0 )
         {
-          // LOG.log( Level.INFO, "TCK rising edge  (" + idx + ", TMS: " +
-          // tmsValue + ",  State: " + JTAGState + ")");
-
           if ( this.currentState == TEST_LOGIC_RESET )
           { // state 0: Test Logic Reset
             state = this.currentState.getDisplayText();
@@ -205,8 +201,9 @@ public class JTAGAnalyserTask implements Callable<Void>
           else if ( this.currentState == CAPTURE_DR )
           { // state 3: Capture DR
             state = this.currentState.getDisplayText();
-            TdiData = "";
-            TdoData = "";
+
+            tdiData = null;
+            tdoData = null;
             if ( tmsValue == 0 )
             {
               this.currentState = SHIFT_DR;
@@ -219,35 +216,34 @@ public class JTAGAnalyserTask implements Callable<Void>
           else if ( this.currentState == SHIFT_DR )
           { // state 4: Shift DR
             state = this.currentState.getDisplayText();
-            if ( TdiData == "" )
+            if ( tdiData == null )
             {
               startTdiDataIdx = idx;
+
+              tdiData = "";
+              tdoData = "";
             }
             endTdiDataIdx = idx;
 
             if ( tdiValue == 0 )
             {
-              TdiData = "0" + TdiData;
+              tdiData = "0" + tdiData;
             }
             else
             {
-              TdiData = "1" + TdiData;
+              tdiData = "1" + tdiData;
             }
 
             if ( tdoValue == 0 )
             {
-              TdoData = "0" + TdoData;
+              tdoData = "0" + tdoData;
             }
             else
             {
-              TdoData = "1" + TdoData;
+              tdoData = "1" + tdoData;
             }
 
-            if ( tmsValue == 0 )
-            {
-              ;
-            }
-            else
+            if ( tmsValue != 0 )
             {
               this.currentState = EXIT1_DR;
             }
@@ -293,9 +289,9 @@ public class JTAGAnalyserTask implements Callable<Void>
             state = this.currentState.getDisplayText();
 
             aAnnotationHelper.addAnnotation( this.tdiIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                TdiData, KEY_TYPE, TYPE_SYMBOL );
+                new BigInteger( tdiData, 2 ), KEY_TYPE, TYPE_SYMBOL );
             aAnnotationHelper.addAnnotation( this.tdoIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                TdoData, KEY_TYPE, TYPE_SYMBOL );
+                new BigInteger( tdoData, 2 ), KEY_TYPE, TYPE_SYMBOL );
 
             if ( tmsValue == 0 )
             {
@@ -321,8 +317,9 @@ public class JTAGAnalyserTask implements Callable<Void>
           else if ( this.currentState == CAPTURE_IR )
           { // state 10: Capture IR
             state = this.currentState.getDisplayText();
-            TdiData = "";
-            TdoData = "";
+
+            tdiData = null;
+            tdoData = null;
             if ( tmsValue == 0 )
             {
               this.currentState = SHIFT_IR;
@@ -336,35 +333,34 @@ public class JTAGAnalyserTask implements Callable<Void>
           { // state 11: Shift IR
             state = this.currentState.getDisplayText();
 
-            if ( TdiData == "" )
+            if ( tdiData == null )
             {
               startTdiDataIdx = idx;
+
+              tdiData = "";
+              tdoData = "";
             }
             endTdiDataIdx = idx;
 
             if ( tdiValue == 0 )
             {
-              TdiData = "0" + TdiData;
+              tdiData = "0" + tdiData;
             }
             else
             {
-              TdiData = "1" + TdiData;
+              tdiData = "1" + tdiData;
             }
 
             if ( tdoValue == 0 )
             {
-              TdoData = "0" + TdoData;
+              tdoData = "0" + tdoData;
             }
             else
             {
-              TdoData = "1" + TdoData;
+              tdoData = "1" + tdoData;
             }
 
-            if ( tmsValue == 0 )
-            {
-              ;
-            }
-            else
+            if ( tmsValue != 0 )
             {
               this.currentState = EXIT1_IR;
             }
@@ -410,9 +406,9 @@ public class JTAGAnalyserTask implements Callable<Void>
             state = this.currentState.getDisplayText();
 
             aAnnotationHelper.addAnnotation( this.tdiIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                TdiData, KEY_TYPE, TYPE_SYMBOL );
+                new BigInteger( tdiData, 2 ), KEY_TYPE, TYPE_SYMBOL );
             aAnnotationHelper.addAnnotation( this.tdoIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                TdoData, KEY_TYPE, TYPE_SYMBOL );
+                new BigInteger( tdoData, 2 ), KEY_TYPE, TYPE_SYMBOL );
 
             if ( tmsValue == 0 )
             {
@@ -430,9 +426,6 @@ public class JTAGAnalyserTask implements Callable<Void>
 
           if ( this.oldState != this.currentState )
           {
-            // LOG.log( Level.INFO, "state transition: " + oldJTAGState + " to "
-            // + JTAGState + " (" + StartIdx + "," + idx + ")");
-
             aAnnotationHelper.addEventAnnotation( this.tmsIdx, timestamps[this.startIdx], timestamps[idx], state,
                 KEY_COLOR, "#e0e0e0" );
 
