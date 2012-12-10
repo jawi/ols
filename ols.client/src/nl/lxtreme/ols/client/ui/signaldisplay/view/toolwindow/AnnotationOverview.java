@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.ui.signaldisplay.view.toolwindow;
 
 
 import java.awt.*;
+import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
 import java.util.List;
@@ -218,6 +219,32 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     // METHODS
 
     /**
+     * @return
+     */
+    private static TableColumn[] createDefaultColumns()
+    {
+      return createDefaultColumns( new TableColumn[3] );
+    }
+
+    /**
+     * @return
+     */
+    private static TableColumn[] createDefaultColumns( final TableColumn[] aColumns )
+    {
+      assert aColumns.length >= 3 : "Too little columns!";
+      aColumns[0] = new TableColumn( 0, 50 );
+      aColumns[0].setIdentifier( COL_ID );
+      aColumns[0].setHeaderValue( "#" );
+      aColumns[1] = new TableColumn( 1, 100 );
+      aColumns[1].setIdentifier( COL_START_TIME );
+      aColumns[1].setHeaderValue( "Start" );
+      aColumns[2] = new TableColumn( 2, 100 );
+      aColumns[2].setIdentifier( COL_END_TIME );
+      aColumns[2].setHeaderValue( "End" );
+      return aColumns;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -250,6 +277,30 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
       {
         updateStructure();
       }
+    }
+
+    /**
+     * Returns the data annotation for the row identified by the given index.
+     * 
+     * @param aRowIndex
+     *          the row index of the row to return the data annotation for.
+     * @return a data annotation, can be <code>null</code>.
+     */
+    public DataAnnotation getAnnotation( final int aRowIndex )
+    {
+      final DataHolder dataHolder = getDataHolder();
+      final int colCount = dataHolder.columns.length;
+
+      for ( int i = Math.min( 3, colCount - 1 ); i < colCount; i++ )
+      {
+        Object value = dataHolder.data[aRowIndex][i];
+        if ( value instanceof DataAnnotation )
+        {
+          return ( DataAnnotation )value;
+        }
+      }
+
+      return null;
     }
 
     /**
@@ -681,32 +732,6 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     }
 
     /**
-     * @return
-     */
-    private static TableColumn[] createDefaultColumns()
-    {
-      return createDefaultColumns( new TableColumn[3] );
-    }
-
-    /**
-     * @return
-     */
-    private static TableColumn[] createDefaultColumns( final TableColumn[] aColumns )
-    {
-      assert aColumns.length >= 3 : "Too little columns!";
-      aColumns[0] = new TableColumn( 0, 50 );
-      aColumns[0].setIdentifier( COL_ID );
-      aColumns[0].setHeaderValue( "#" );
-      aColumns[1] = new TableColumn( 1, 100 );
-      aColumns[1].setIdentifier( COL_START_TIME );
-      aColumns[1].setHeaderValue( "Start" );
-      aColumns[2] = new TableColumn( 2, 100 );
-      aColumns[2].setIdentifier( COL_END_TIME );
-      aColumns[2].setHeaderValue( "End" );
-      return aColumns;
-    }
-
-    /**
      * Notifies all listeners that have registered interest for notification on
      * this event type. The event instance is lazily created using the
      * parameters passed into the fire method.
@@ -906,18 +931,18 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     /**
      * Creates a new {@link DataHolder} instance.
      */
-    public DataHolder( final TableColumn[] aColumns )
+    public DataHolder( final Object[][] aData, final TableColumn[] aColumns )
     {
-      this.data = new Object[0][0];
+      this.data = aData;
       this.columns = aColumns;
     }
 
     /**
      * Creates a new {@link DataHolder} instance.
      */
-    public DataHolder( final Object[][] aData, final TableColumn[] aColumns )
+    public DataHolder( final TableColumn[] aColumns )
     {
-      this.data = aData;
+      this.data = new Object[0][0];
       this.columns = aColumns;
     }
   }
@@ -1044,6 +1069,23 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
   }
 
   /**
+   * Jumps to the given annotation in the current signal diagram.
+   * 
+   * @param aAnnotation
+   *          the annotation to jump to, cannot be <code>null</code>.
+   */
+  final void jumpTo( final DataAnnotation aAnnotation )
+  {
+    long start = aAnnotation.getStartTimestamp();
+    long end = aAnnotation.getEndTimestamp();
+
+    // determine the middle of the annotation...
+    Long ptr = Long.valueOf( start + ( ( end - start ) / 2 ) );
+
+    getController().scrollToTimestamp( ptr );
+  }
+
+  /**
    * Initializes this component.
    */
   private void initComponent()
@@ -1064,6 +1106,27 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
     this.table.setShowGrid( false );
     this.table.setDefaultRenderer( DataAnnotation.class, new DataAnnotationCellRenderer() );
     this.table.setDefaultRenderer( Double.class, new TimeCellRenderer() );
+    this.table.addMouseListener( new MouseAdapter()
+    {
+      @Override
+      public void mouseClicked( final MouseEvent aEvent )
+      {
+        if ( aEvent.getClickCount() == 2 )
+        {
+          // double clicked...
+          JTable source = ( JTable )aEvent.getSource();
+          int rowIdx = source.getSelectedRow();
+
+          AnnotationTableModel model = ( AnnotationTableModel )source.getModel();
+
+          DataAnnotation annotation = model.getAnnotation( rowIdx );
+          if ( annotation != null )
+          {
+            jumpTo( annotation );
+          }
+        }
+      }
+    } );
 
     this.exportButton = new JButton( "Export ..." );
     this.exportButton.setEnabled( false );
