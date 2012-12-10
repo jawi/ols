@@ -25,6 +25,7 @@ import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.math.*;
 import java.util.*;
 import java.util.List;
 
@@ -284,7 +285,7 @@ public final class AnnotationHelper
     Map<String, Object> props = aAnnotation.getProperties();
 
     boolean symbol = TYPE_SYMBOL.equals( props.get( KEY_TYPE ) );
-    if ( symbol )
+    if ( symbol && ( data instanceof Number ) )
     {
       if ( data instanceof Integer )
       {
@@ -293,6 +294,10 @@ public final class AnnotationHelper
         {
           result = String.format( "%1$c", data );
         }
+      }
+      else
+      {
+        result = String.format( "0x%1$x", data );
       }
     }
 
@@ -341,7 +346,8 @@ public final class AnnotationHelper
       symbol = TYPE_SYMBOL.equals( type );
     }
 
-    StringBuilder sb = new StringBuilder( "<html><head><style>th{text-align:left;}</style></head><body><table>" );
+    StringBuilder sb = new StringBuilder(
+        "<html><head><style>th{text-align:right;} td{padding:0; margin:0;}</style></head><body><table border='0'>" );
 
     if ( description != null )
     {
@@ -349,29 +355,45 @@ public final class AnnotationHelper
     }
     if ( startTime >= 0 )
     {
-      sb.append( "<tr><th>Start:</th><td>" ).append( formatTime( startTime ) ).append( "</td></tr>" );
+      sb.append( "<tr><th>Start</th><td>" ).append( formatTime( startTime ) ).append( "</td></tr>" );
     }
     if ( endTime >= 0 )
     {
-      sb.append( "<tr><th>Stop:</th><td>" ).append( formatTime( endTime ) ).append( "</td></tr>" );
+      sb.append( "<tr><th>Stop</th><td>" ).append( formatTime( endTime ) ).append( "</td></tr>" );
     }
 
     if ( symbol )
     {
-      sb.append( "<tr><th>Symbol:</th><td>" );
-      if ( data instanceof Integer )
+      sb.append( "<tr><th>Symbol</th><td>" );
+
+      if ( data instanceof Number )
       {
-        int value = ( ( Integer )data ).intValue();
-        String text;
-        if ( ( value >= 0 ) && isPrintableChar( ( char )value ) )
+        sb.append( "<table border='0'>" );
+        if ( data instanceof Integer )
         {
-          text = String.format( "'%1$c' (%1$d, 0x%1$x, 0%1$o)", data );
+          int value = ( ( Integer )data ).intValue();
+          if ( ( value >= 0 ) && isPrintableChar( ( char )value ) )
+          {
+            sb.append( "<tr><th valign='top'>char</th><td>'" ).append( ( char )value ).append( "'</td></tr>" );
+          }
+        }
+
+        sb.append( "<tr><th>dec</th><td>" ).append( String.format( "%d", data ) ).append( "</td></tr>" );
+        sb.append( "<tr><th>hex</th><td>" ).append( String.format( "%x", data ) ).append( "</td></tr>" );
+        sb.append( "<tr><th>oct</th><td>" ).append( String.format( "%o", data ) ).append( "</td></tr>" );
+
+        String binary;
+        if ( data instanceof BigInteger )
+        {
+          binary = ( ( BigInteger )data ).toString( 2 );
         }
         else
         {
-          text = String.format( "%1$d (0x%1$x, 0%1$o)", data );
+          binary = Long.toBinaryString( ( ( Number )data ).longValue() );
         }
-        sb.append( text );
+
+        sb.append( "<tr><th>bin</th><td>" ).append( binary ).append( "</td></tr>" );
+        sb.append( "</table>" );
       }
       else
       {
@@ -382,18 +404,17 @@ public final class AnnotationHelper
 
     if ( event )
     {
-      sb.append( "<tr><th>Event:</th><td>" ).append( data ).append( "</td></tr>" );
+      sb.append( "<tr><th>Event</th><td>" ).append( data ).append( "</td></tr>" );
     }
 
     if ( error )
     {
-      sb.append( "<tr><th>Error:</th><td>" ).append( data ).append( "</td></tr>" );
+      sb.append( "<tr><th>Error</th><td>" ).append( data ).append( "</td></tr>" );
     }
 
     for ( Map.Entry<String, Object> entry : props.entrySet() )
     {
-      String header = String.format( "%s:", entry.getKey() );
-      sb.append( "<tr><th>" ).append( header ).append( "</th><td>" );
+      sb.append( "<tr><th>" ).append( entry.getKey() ).append( "</th><td>" );
       sb.append( entry.getValue() ).append( "</td></tr>" );
     }
 
