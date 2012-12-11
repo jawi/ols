@@ -67,7 +67,7 @@ public final class JTAGDataSet extends BaseDataSet<JTAGData>
   public void reportJTAGTdiData( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final JTAGState aState, final String aTdiData )
   {
     final int idx = size();
-    addData( new JTAGData( idx, aChannelIdx, JTAG_TDI, new BigInteger( aTdiData ), aStartIdx, aEndIdx ) );
+    addData( new JTAGData( idx, aChannelIdx, JTAG_TDI, new BigInteger( aTdiData, 2 ), aStartIdx, aEndIdx ) );
   }
 
   /**
@@ -76,7 +76,7 @@ public final class JTAGDataSet extends BaseDataSet<JTAGData>
   public void reportJTAGTdoData( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final JTAGState aState, final String aTdoData )
   {
     final int idx = size();
-    addData( new JTAGData( idx, aChannelIdx, JTAG_TDO, new BigInteger( aTdoData ), aStartIdx, aEndIdx ) );
+    addData( new JTAGData( idx, aChannelIdx, JTAG_TDO, new BigInteger( aTdoData, 2 ), aStartIdx, aEndIdx ) );
   }
 
   /**

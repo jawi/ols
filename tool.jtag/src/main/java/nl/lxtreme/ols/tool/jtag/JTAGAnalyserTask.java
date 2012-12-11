@@ -21,14 +21,34 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import static nl.lxtreme.ols.tool.jtag.JTAGState.*;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.CAPTURE_DR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.CAPTURE_IR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.EXIT1_DR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.EXIT1_IR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.EXIT2_DR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.EXIT2_IR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.PAUSE_DR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.PAUSE_IR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.RUN_TEST_IDLE;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.SELECT_DR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.SELECT_IR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.SHIFT_DR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.SHIFT_IR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.TEST_LOGIC_RESET;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.UPDATE_DR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.UPDATE_IR;
 
-import java.util.logging.*;
+import java.math.BigInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
 import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
-import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.tool.base.annotation.*;
+import nl.lxtreme.ols.api.tools.ToolContext;
+import nl.lxtreme.ols.api.tools.ToolProgressListener;
+import nl.lxtreme.ols.api.tools.ToolTask;
+import nl.lxtreme.ols.tool.base.annotation.ChannelLabelAnnotation;
+import nl.lxtreme.ols.tool.base.annotation.SampleDataAnnotation;
 
 
 /**
@@ -336,9 +356,12 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
             state = this.currentState.getDisplayText();
 
             this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdiIdx, timestamps[startTdiDataIdx],
-                timestamps[endTdiDataIdx], tdiData ) );
+                timestamps[endTdiDataIdx], String.format( "0x%x", new BigInteger( tdiData, 2 ) ) ) );
             this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdoIdx, timestamps[startTdiDataIdx],
-                timestamps[endTdiDataIdx], tdoData ) );
+                timestamps[endTdiDataIdx], String.format( "0x%x", new BigInteger( tdoData, 2 ) ) ) );
+
+            aDataSet.reportJTAGTdiData( tdiIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdiData );
+            aDataSet.reportJTAGTdoData( tdoIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdoData );
 
             if ( tmsValue == 0 )
             {
@@ -454,10 +477,10 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
             state = this.currentState.getDisplayText();
 
             this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdiIdx, timestamps[startTdiDataIdx],
-                timestamps[endTdiDataIdx], tdiData ) );
+                timestamps[endTdiDataIdx], String.format( "0x%x", new BigInteger( tdiData, 2 ) ) ) );
 
             this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdoIdx, timestamps[startTdiDataIdx],
-                timestamps[endTdiDataIdx], tdoData ) );
+                timestamps[endTdiDataIdx], String.format( "0x%x", new BigInteger( tdoData, 2 ) ) ) );
 
             aDataSet.reportJTAGTdiData( tdiIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdiData );
             aDataSet.reportJTAGTdoData( tdoIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdoData );
