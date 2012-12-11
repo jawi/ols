@@ -1,0 +1,24 @@
+Bundle-Version: 1.0.0
+Bundle-Name: JGoodies library
+Fragment-Host: system.bundle; extension:=framework
+Export-Package: \
+    com.jgoodies.*,\
+    com.sun.imageio.metadata,\
+    com.sun.imageio.plugins.bmp,\
+    com.sun.imageio.plugins.common,\
+    com.sun.imageio.plugins.gif,\
+    com.sun.imageio.plugins.jpeg,\
+    com.sun.imageio.plugins.png,\
+    com.sun.imageio.plugins.tiff,\
+    com.sun.imageio.plugins.wbmp,\
+    com.sun.imageio.spi,\
+    com.sun.imageio.stream,\
+    com.sun.java.swing.plaf,\
+    com.sun.java.swing.plaf.gtk,\
+    com.sun.java.swing.plaf.motif,\
+    com.sun.java.swing.plaf.nimbus,\
+    com.sun.java.swing.plaf.windows
+Import-Package:
+Include-Resource: \
+    @lib/jgoodies-common-1.4.0.jar,\
+    @lib/jgoodies-looks-2.5.2.jar
