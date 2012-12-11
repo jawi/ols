@@ -21,32 +21,60 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.DIV;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.H1;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.HR;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TABLE;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TBODY;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TD;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TH;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.THEAD;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TR;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
 
-import java.awt.*;
-import java.io.*;
-import java.text.*;
-import java.util.*;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Window;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.List;
-import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import javax.swing.*;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SpringLayout;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.api.util.*;
-import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.api.UserSettings;
+import nl.lxtreme.ols.api.tools.ToolContext;
+import nl.lxtreme.ols.api.tools.ToolTask;
+import nl.lxtreme.ols.api.util.UnitOfTime;
+import nl.lxtreme.ols.tool.base.BaseToolDialog;
+import nl.lxtreme.ols.tool.base.ExportAware;
+import nl.lxtreme.ols.tool.base.ToolUtils;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.ExportUtils;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.HostUtils;
+import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
+import nl.lxtreme.ols.util.swing.SwingComponentUtils;
 
-import org.osgi.framework.*;
+import org.osgi.framework.BundleContext;
 
 
 /**
@@ -278,9 +306,9 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     tr.addChild( TH ).addAttribute( "class", "w28" ).addAttribute( "colspan", "2" ).addContent( "TDI" );
     tr.addChild( TH ).addAttribute( "class", "w28" ).addAttribute( "colspan", "2" ).addContent( "TDO" );
     tr = thead.addChild( TR );
-    tr.addChild( TH ).addAttribute( "class", "w7" ).addContent( "Index" );
-    tr.addChild( TH ).addAttribute( "class", "w12" ).addContent( "Time" );
-    tr.addChild( TH ).addAttribute( "class", "w25" ).addContent( "State" );
+    tr.addChild( TH ).addAttribute( "class", "w5" ).addContent( "Index" );
+    tr.addChild( TH ).addAttribute( "class", "w10" ).addContent( "Time" );
+    tr.addChild( TH ).addAttribute( "class", "w28" ).addContent( "State" );
     tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "Hex" );
     tr.addChild( TH ).addAttribute( "class", "w20" ).addContent( "Bin" );
     tr.addChild( TH ).addAttribute( "class", "w8" ).addContent( "Hex" );
@@ -412,9 +440,9 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
         final JTAGData data = dataSet.get( i );
 
         final String time = UnitOfTime.format( aDataSet.getTime( data.getStartSampleIndex() ) );
-        final String event = data.isEvent() ? data.getEventName() : data.getDataValue().getDisplayText();
-        final String tdiDataValue = data.isTdiData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
-        final String tdoDataValue = data.isTdoData() ? Integer.toString( data.getDataValue().ordinal() ) : null;
+        final String event = data.isEvent() ? data.getEventName() : data.getDataValue().toString();
+        final String tdiDataValue = data.isTdiData() ? String.valueOf( data.getDataValue() ) : null;
+        final String tdoDataValue = data.isTdoData() ? String.valueOf( data.getDataValue() ) : null;
 
         exporter.addRow( Integer.valueOf( i ), time, event, tdiDataValue, tdoDataValue );
       }
@@ -490,27 +518,64 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
 
             if ( data.isEvent() )
             {
-              // this is an event
-              final String event = data.getEventName();
-
-              String bgColor = "#e0e0e0";
-
-              tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
+              tr = aParent.addChild( TR ).addAttribute( "style", "background-color: #fefeff;" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
               tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
-              tr.addChild( TD ).addContent( event );
-              tr.addChild( TD );
-              tr.addChild( TD );
-              tr.addChild( TD );
+              tr.addChild( TD ).addContent( String.valueOf( data.getDataValue() ) );
+              tr.addChild( TD ).addAttribute( "colspan", "4" );
             }
             else
             {
-              final JTAGState value = data.getDataValue();
-
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
               tr.addChild( TD ).addContent( UnitOfTime.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
-              tr.addChild( TD ).addContent( value.getDisplayText() );
+              tr.addChild( TD ).addContent( data.getEventName() );
+
+              BigInteger tdiData = null;
+              BigInteger tdoData = null;
+
+              // Try to coalesce equal timestamps...
+              if ( ( i + 1 ) < dataSet.size() )
+              {
+                final JTAGData next = dataSet.get( i + 1 );
+                if ( next.getStartSampleIndex() == data.getStartSampleIndex() )
+                {
+                  tdiData = ( BigInteger )( next.isTdiData() ? next.getDataValue() : data.getDataValue() );
+                  tdoData = ( BigInteger )( next.isTdoData() ? next.getDataValue() : data.getDataValue() );
+                  // Make sure to skip this entry in the next iteration...
+                  i++;
+                }
+              }
+              
+              if ( ( tdiData == null ) && data.isTdiData() )
+              {
+                tdiData = ( BigInteger )data.getDataValue();
+                tdoData = null;
+              }
+              else if ( ( tdoData == null ) && data.isTdoData() )
+              {
+                tdiData = null;
+                tdoData = ( BigInteger )data.getDataValue();
+              }
+
+              if ( tdiData != null )
+              {
+                tr.addChild( TD ).addContent( "0x" + tdiData.toString( 16 ) );
+                tr.addChild( TD ).addContent( "0b" + tdiData.toString( 2 ) );
+              }
+              else
+              {
+                tr.addChild( TD ).addAttribute( "colspan", "2" );
+              }
+              if ( tdoData != null )
+              {
+                tr.addChild( TD ).addContent( "0x" + tdoData.toString( 16 ) );
+                tr.addChild( TD ).addContent( "0b" + tdoData.toString( 2 ) );
+              }
+              else
+              {
+                tr.addChild( TD ).addAttribute( "colspan", "2" );
+              }
             }
           }
         }

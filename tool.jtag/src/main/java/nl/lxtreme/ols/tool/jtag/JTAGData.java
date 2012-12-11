@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.api.data.BaseData;
 
 
 /**
@@ -35,20 +35,22 @@ public final class JTAGData extends BaseData<JTAGData>
 {
   // VARIABLES
 
-  private final JTAGState dataValue;
+  private final Object dataValue;
   private final String dataName;
 
   // CONSTRUCTORS
 
   /**
    * @param aTime
-   * @param aEvent
+   * @param aMoSiValue
+   * @param aMiSoValue
    */
-  public JTAGData( final int aIdx, final int aChannelIdx, final String aEvent, final int aSampleIdx )
+  public JTAGData( final int aIdx, final int aChannelIdx, JTAGState aState,
+      final int aStartSampleIdx, final int aEndSampleIdx )
   {
-    super( aIdx, aChannelIdx, aSampleIdx, aEvent );
-    this.dataValue = null;
-    this.dataName = null;
+    super( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx, JTAGDataSet.JTAG_TMS );
+    this.dataName = JTAGDataSet.JTAG_TMS;
+    this.dataValue = aState;
   }
 
   /**
@@ -56,7 +58,7 @@ public final class JTAGData extends BaseData<JTAGData>
    * @param aMoSiValue
    * @param aMiSoValue
    */
-  public JTAGData( final int aIdx, final int aChannelIdx, final String aDataName, final JTAGState aDataValue,
+  public JTAGData( final int aIdx, final int aChannelIdx, final String aDataName, final Object aDataValue,
       final int aStartSampleIdx, final int aEndSampleIdx )
   {
     super( aIdx, aChannelIdx, aStartSampleIdx, aEndSampleIdx );
@@ -65,6 +67,15 @@ public final class JTAGData extends BaseData<JTAGData>
   }
 
   // METHODS
+
+  /**
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+  @Override
+  public int compareTo( final JTAGData aComparable )
+  {
+    return ( getStartSampleIndex() - aComparable.getStartSampleIndex() );
+  }
 
   /**
    * @see java.lang.Object#equals(java.lang.Object)
@@ -103,7 +114,7 @@ public final class JTAGData extends BaseData<JTAGData>
   /**
    * @return the TDO/TDI data value.
    */
-  public final JTAGState getDataValue()
+  public final Object getDataValue()
   {
     return this.dataValue;
   }

@@ -21,8 +21,10 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
+import java.math.BigInteger;
+
+import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
+import nl.lxtreme.ols.api.data.BaseDataSet;
 
 
 /**
@@ -53,9 +55,36 @@ public final class JTAGDataSet extends BaseDataSet<JTAGData>
   /**
    * @param aTimeValue
    */
-  public void reportJTAGState( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final JTAGState aDataValue )
+  public void reportJTAGState( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final JTAGState aState )
   {
     final int idx = size();
-    addData( new JTAGData( idx, aChannelIdx, JTAG_TMS, aDataValue, aStartIdx, aEndIdx ) );
+    addData( new JTAGData( idx, aChannelIdx, aState, aStartIdx, aEndIdx ) );
+  }
+
+  /**
+   * @param aTimeValue
+   */
+  public void reportJTAGTdiData( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final JTAGState aState, final String aTdiData )
+  {
+    final int idx = size();
+    addData( new JTAGData( idx, aChannelIdx, JTAG_TDI, new BigInteger( aTdiData ), aStartIdx, aEndIdx ) );
+  }
+
+  /**
+   * @param aTimeValue
+   */
+  public void reportJTAGTdoData( final int aChannelIdx, final int aStartIdx, final int aEndIdx, final JTAGState aState, final String aTdoData )
+  {
+    final int idx = size();
+    addData( new JTAGData( idx, aChannelIdx, JTAG_TDO, new BigInteger( aTdoData ), aStartIdx, aEndIdx ) );
+  }
+
+  /**
+   * @see nl.lxtreme.ols.api.data.BaseDataSet#sort()
+   */
+  @Override
+  public void sort()
+  {
+    super.sort();
   }
 }

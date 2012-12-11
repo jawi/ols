@@ -105,6 +105,9 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
 
     // Perform the actual decoding of the data line(s)...
     clockDataOnEdge( decodedData, startOfDecode );
+    
+    // Sort the data on the starting timestamp...
+    decodedData.sort();
 
     return decodedData;
   }
@@ -183,8 +186,9 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
     String state;
     int startTdiDataIdx = 0;
     int endTdiDataIdx = 0;
-    String TdiData = "";
-    String TdoData = "";
+    
+    String tdiData = null;
+    String tdoData = null;
 
     this.currentState = TEST_LOGIC_RESET;
     this.oldState = TEST_LOGIC_RESET;
@@ -207,9 +211,6 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
 
         if ( tckValue != 0 )
         {
-          // LOG.log( Level.INFO, "TCK rising edge  (" + idx + ", TMS: " +
-          // tmsValue + ",  State: " + JTAGState + ")");
-
           if ( this.currentState == TEST_LOGIC_RESET )
           { // state 0: Test Logic Reset
             state = this.currentState.getDisplayText();
@@ -245,8 +246,10 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
           else if ( this.currentState == CAPTURE_DR )
           { // state 3: Capture DR
             state = this.currentState.getDisplayText();
-            TdiData = "";
-            TdoData = "";
+            
+            tdiData = null;
+            tdoData = null;
+            
             if ( tmsValue == 0 )
             {
               this.currentState = SHIFT_DR;
@@ -259,35 +262,35 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
           else if ( this.currentState == SHIFT_DR )
           { // state 4: Shift DR
             state = this.currentState.getDisplayText();
-            if ( TdiData == "" )
+            
+            if ( tdiData == null )
             {
               startTdiDataIdx = idx;
+              
+              tdiData = "";
+              tdoData = "";
             }
             endTdiDataIdx = idx;
 
             if ( tdiValue == 0 )
             {
-              TdiData = "0" + TdiData;
+              tdiData = "0" + tdiData;
             }
             else
             {
-              TdiData = "1" + TdiData;
+              tdiData = "1" + tdiData;
             }
 
             if ( tdoValue == 0 )
             {
-              TdoData = "0" + TdoData;
+              tdoData = "0" + tdoData;
             }
             else
             {
-              TdoData = "1" + TdoData;
+              tdoData = "1" + tdoData;
             }
 
-            if ( tmsValue == 0 )
-            {
-              ;
-            }
-            else
+            if ( tmsValue != 0 )
             {
               this.currentState = EXIT1_DR;
             }
@@ -333,9 +336,9 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
             state = this.currentState.getDisplayText();
 
             this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdiIdx, timestamps[startTdiDataIdx],
-                timestamps[endTdiDataIdx], TdiData ) );
+                timestamps[endTdiDataIdx], tdiData ) );
             this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdoIdx, timestamps[startTdiDataIdx],
-                timestamps[endTdiDataIdx], TdoData ) );
+                timestamps[endTdiDataIdx], tdoData ) );
 
             if ( tmsValue == 0 )
             {
@@ -361,8 +364,10 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
           else if ( this.currentState == CAPTURE_IR )
           { // state 10: Capture IR
             state = this.currentState.getDisplayText();
-            TdiData = "";
-            TdoData = "";
+            
+            tdiData = null;
+            tdoData = null;
+            
             if ( tmsValue == 0 )
             {
               this.currentState = SHIFT_IR;
@@ -376,35 +381,34 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
           { // state 11: Shift IR
             state = this.currentState.getDisplayText();
 
-            if ( TdiData == "" )
+            if ( tdiData == null )
             {
               startTdiDataIdx = idx;
+              
+              tdiData = "";
+              tdoData = "";
             }
             endTdiDataIdx = idx;
 
             if ( tdiValue == 0 )
             {
-              TdiData = "0" + TdiData;
+              tdiData = "0" + tdiData;
             }
             else
             {
-              TdiData = "1" + TdiData;
+              tdiData = "1" + tdiData;
             }
 
             if ( tdoValue == 0 )
             {
-              TdoData = "0" + TdoData;
+              tdoData = "0" + tdoData;
             }
             else
             {
-              TdoData = "1" + TdoData;
+              tdoData = "1" + tdoData;
             }
 
-            if ( tmsValue == 0 )
-            {
-              ;
-            }
-            else
+            if ( tmsValue != 0 )
             {
               this.currentState = EXIT1_IR;
             }
@@ -450,14 +454,13 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
             state = this.currentState.getDisplayText();
 
             this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdiIdx, timestamps[startTdiDataIdx],
-                timestamps[endTdiDataIdx], TdiData ) );
-            // aDataSet.reportJTAGState( this.tdiIdx, startTdiDataIdx,
-            // endTdiDataIdx, TdiData );
+                timestamps[endTdiDataIdx], tdiData ) );
 
             this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tdoIdx, timestamps[startTdiDataIdx],
-                timestamps[endTdiDataIdx], TdoData ) );
-            // aDataSet.reportJTAGState( this.tdoIdx, startTdiDataIdx,
-            // endTdiDataIdx, TdoData );
+                timestamps[endTdiDataIdx], tdoData ) );
+
+            aDataSet.reportJTAGTdiData( tdiIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdiData );
+            aDataSet.reportJTAGTdoData( tdoIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdoData );
 
             if ( tmsValue == 0 )
             {
@@ -475,9 +478,6 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
 
           if ( this.oldState != this.currentState )
           {
-            // LOG.log( Level.INFO, "state transition: " + oldJTAGState + " to "
-            // + JTAGState + " (" + StartIdx + "," + idx + ")");
-
             this.annotationListener.onAnnotation( new SampleDataAnnotation( this.tmsIdx, timestamps[this.startIdx],
                 timestamps[idx], state ) );
 

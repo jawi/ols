@@ -65,4 +65,13 @@ public enum JTAGState
   {
     return this.displayText;
   }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String toString() 
+  {
+	return getDisplayText();
+  }
 }
