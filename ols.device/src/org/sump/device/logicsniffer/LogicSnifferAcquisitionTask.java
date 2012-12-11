@@ -119,19 +119,17 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
     builder.setChannelCount( this.config.getEnabledChannelsCount() );
     builder.setEnabledChannelMask( this.config.getEnabledChannelsMask() );
 
-    final int[] buffer = new int[sampleCount];
-    int sampleIdx = awaitTrigger( buffer );
+    // read all samples
+    int[] samples = readSamples( this.config.getEnabledGroupCount(), sampleCount );
 
-    if ( LOG.isLoggable( Level.FINE ) && ( sampleIdx < sampleCount ) )
+    if ( samples.length < sampleCount )
     {
-      LOG.log( Level.FINE, "Trigger(s) fired! Reading {0} samples of {1} bytes ...",
-          new Object[] { Integer.valueOf( sampleCount ), Integer.valueOf( this.config.getEnabledGroupCount() ) } );
+      LOG.log( Level.INFO, "Only {0} samples read!", Integer.valueOf( samples.length ) );
     }
-
-    // read all other samples
-    sampleIdx = readSamples( sampleIdx, buffer );
-
-    LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( sampleCount - sampleIdx - 1 ) );
+    else
+    {
+      LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( sampleCount ) );
+    }
 
     // collect additional information for CapturedData; we use arrays here,
     // as their values are to be filled from anonymous inner classes...
@@ -154,7 +152,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
       }
     };
     // Process the actual samples...
-    createSampleProcessor( sampleCount, buffer, callback ).process();
+    createSampleProcessor( sampleCount, samples, callback ).process();
 
     // Close the connection...
     close();
@@ -292,7 +290,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
       }
 
       this.outputStream = new SumpCommandWriter( this.config, conn.openDataOutputStream() );
-      this.inputStream = new SumpResultReader( this.config, conn.openDataInputStream() );
+      this.inputStream = new SumpResultReader( conn.openDataInputStream() );
 
       // We don't expect any data, so flush all data pending in the given
       // input stream. See issue #34.
@@ -309,47 +307,6 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
         throw new IOException( "Failed to open connection! Possible reason: " + exception.getMessage() );
       }
     }
-  }
-
-  /**
-   * Waits until the trigger is fired, or when the first sample is available (in
-   * case no triggers are defined).
-   * 
-   * @param aBuffer
-   *          the buffer to fill with the read sample.
-   * @return the sample index after the first read/trigger.
-   * @throws IOException
-   *           in case of I/O problems;
-   * @throws InterruptedException
-   *           in case the acquisition is interrupted.
-   */
-  private int awaitTrigger( final int[] aBuffer ) throws IOException, InterruptedException
-  {
-    int sampleIdx = aBuffer.length - 1;
-    boolean waiting = ( sampleIdx >= 0 );
-
-    LOG.log( Level.FINE, "Awaiting trigger ..." );
-
-    // wait for first byte forever (trigger could cause long initial delays)
-    while ( waiting && !Thread.currentThread().isInterrupted() )
-    {
-      try
-      {
-        aBuffer[sampleIdx] = this.inputStream.readSample();
-        sampleIdx--;
-        waiting = false;
-      }
-      catch ( IOException exception )
-      {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !IOUtil.handleInterruptedException( exception ) )
-        {
-          throw exception;
-        }
-      }
-    }
-
-    return sampleIdx;
   }
 
   /**
@@ -437,36 +394,45 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
   }
 
   /**
-   * Reads the remaining samples.
+   * Reads all (or as many as possible) samples from the OLS device.
    * 
-   * @param aSampleIdx
-   *          the sample index where to start filling samples in the given
-   *          buffer;
-   * @param aBuffer
-   *          the buffer to fill with sample data.
-   * @return the final sample index, >= 0 && < aBuffer.length.
+   * @param aEnabledGroupCount
+   *          the number of enabled groups (denotes the number of bytes for one sample);
+   * @param aSampleCount
+   *          the number of samples to read.
+   * @return the read samples, normalized to match the layout of the enabled groups.
    * @throws IOException
    *           in case of I/O problems;
    * @throws InterruptedException
    *           in case the current thread was interrupted.
    */
-  private int readSamples( int aSampleIdx, final int[] aBuffer ) throws IOException, InterruptedException
+  private int[] readSamples( final int aEnabledGroupCount, int aSampleCount ) throws IOException, InterruptedException
   {
+    final int length = aEnabledGroupCount * aSampleCount;
+    final byte[] rawData = new byte[length];
+
     try
     {
-      for ( ; ( aSampleIdx >= 0 ) && !Thread.currentThread().isInterrupted(); aSampleIdx-- )
+      int offset = 0;
+      int count = length;
+      while ( !Thread.currentThread().isInterrupted() && ( offset >= 0 ) && ( offset < length ) )
       {
-        aBuffer[aSampleIdx] = this.inputStream.readSample();
+        int read = this.inputStream.readRawData( rawData, offset, count );
+        if ( read < 0 )
+        {
+          throw new EOFException();
+        }
+        else
+        {
+          count -= read;
+          offset += read;
+        }
 
-        final int percentage = ( int )( 100.0 - ( ( 100.0 * aSampleIdx ) / aBuffer.length ) );
-        this.acquisitionProgressListener.acquisitionInProgress( percentage );
+        this.acquisitionProgressListener.acquisitionInProgress( ( 100 * offset ) / length );
       }
     }
     catch ( IOException exception )
     {
-      // Make sure we leave the device in a correct state...
-      this.outputStream.writeCmdReset();
-
       // Make sure to handle IO-interrupted exceptions properly!
       if ( !IOUtil.handleInterruptedException( exception ) )
       {
@@ -475,17 +441,41 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
     }
     finally
     {
+      // Make sure we leave the device in a correct state...
+      this.outputStream.writeCmdReset();
+
       this.acquisitionProgressListener.acquisitionInProgress( 100 );
+    }
+    
+    if ( Thread.currentThread().isInterrupted() )
+    {
+      // We're interrupted while read samples, do not proceed...
+      throw new InterruptedException();
+    }
+    
+    final int groupCount = this.config.getGroupCount();
+    
+    // Normalize the raw data into the sample data, as expected...
+    int[] samples = new int[aSampleCount];
+    for ( int i = samples.length - 1, j = 0; i >= 0; i-- )
+    {
+      for ( int g = 0; g < groupCount; g++ )
+      {
+        if ( this.config.isGroupEnabled( g ) )
+        {
+          samples[i] |= ( rawData[j++] << ( 8 * g ) );
+        }
+      }
     }
 
     // In case the device sends its samples in "reverse" order, we need to
     // revert it now, before processing them further...
     if ( this.config.isSamplesInReverseOrder() )
     {
-      reverse( aBuffer );
+      reverse( samples );
     }
 
-    return aSampleIdx;
+    return samples;
   }
 
   /**
