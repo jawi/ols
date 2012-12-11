@@ -467,7 +467,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
       {
         if ( this.config.isGroupEnabled( g ) )
         {
-          samples[i] |= ( rawData[j++] << ( 8 * g ) );
+          samples[i] |= ( ( rawData[j++] & 0xff ) << ( 8 * g ) );
         }
       }
     }
