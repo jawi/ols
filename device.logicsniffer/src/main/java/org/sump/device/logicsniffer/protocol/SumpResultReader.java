@@ -40,7 +40,6 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
 
   // VARIABLES
 
-  private final LogicSnifferConfig config;
   private final DataInputStream inputStream;
 
   // CONSTRUCTORS
@@ -48,15 +47,12 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
   /**
    * Creates a new {@link SumpResultReader} instance.
    * 
-   * @param aConfiguration
-   *          the configuration to use, cannot be <code>null</code>;
    * @param aInputStream
    *          the {@link DataInputStream} to read from, cannot be
    *          <code>null</code>.
    */
-  public SumpResultReader( final LogicSnifferConfig aConfiguration, final DataInputStream aInputStream )
+  public SumpResultReader( final DataInputStream aInputStream )
   {
-    this.config = aConfiguration;
     this.inputStream = aInputStream;
   }
 
@@ -179,54 +175,16 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
   }
 
   /**
-   * Reads a single sample (= 1..4 bytes) from the serial input stream.
-   * <p>
-   * This method will take the enabled channel groups into consideration, making
-   * it possible that the returned value contains "gaps".
-   * </p>
+   * Reads raw data from the contained input stream.
    * 
    * @return the integer sample value containing up to four read bytes, not
    *         aligned.
    * @throws IOException
    *           if stream reading fails.
    */
-  public int readSample() throws IOException
+  public int readRawData( byte[] aBuffer, int aOffset, int aCount ) throws IOException
   {
-    final int groupCount = this.config.getGroupCount();
-    byte[] buf = new byte[groupCount];
-
-    final int enabledGroupCount = this.config.getEnabledGroupCount();
-    assert enabledGroupCount > 0 : "Internal error: enabled group count should be at least 1!";
-    assert enabledGroupCount <= groupCount : "Internal error: enabled group count be at most " + groupCount;
-
-    int read, offset = 0;
-    do
-    {
-      // Issue #81: read the same amount of bytes as given in the enabled group
-      // count; otherwise succeeding reads might fail and/or data offset errors
-      // could occur...
-      read = this.inputStream.read( buf, offset, enabledGroupCount - offset );
-      if ( read < 0 )
-      {
-        throw new EOFException( "Data readout interrupted: EOF." );
-      }
-      offset += read;
-    }
-    while ( !Thread.currentThread().isInterrupted() && ( offset < enabledGroupCount ) );
-
-    // "Expand" the read sample-bytes into a single sample value...
-    int value = 0;
-
-    for ( int i = 0, j = 0; i < groupCount; i++ )
-    {
-      // in case the group is disabled, simply set it to zero...
-      if ( this.config.isGroupEnabled( i ) )
-      {
-        value |= ( ( buf[j++] & 0xff ) << ( 8 * i ) );
-      }
-    }
-
-    return value;
+    return this.inputStream.read( aBuffer, aOffset, aCount );
   }
 
   /**
