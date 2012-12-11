@@ -11,6 +11,7 @@
 	osgi.identity;filter:='(osgi.identity=ols.acquisition.service)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.api)',\
     osgi.identity;filter:='(osgi.identity=ols.client.acquisition)',\
+    osgi.identity;filter:='(osgi.identity=ols.client.jgoodies)',\
     osgi.identity;filter:='(osgi.identity=ols.client.session)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.ui)',\
 	osgi.identity;filter:='(osgi.identity=ols.common)',\
@@ -68,6 +69,7 @@
     javax.microedition.io;version=latest,\
 	lib.ioutil;version=latest,\
 	lib.swing;version=latest,\
+	ols.client.jgoodies;version=latest,\
 	mydoggy-osgi;version='[1.5.0,1.5.1)',\
 	ols.common;version=latest,\
 	ols.service.io;version=latest,\
