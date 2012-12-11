@@ -440,9 +440,37 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
         final JTAGData data = dataSet.get( i );
 
         final String time = UnitOfTime.format( aDataSet.getTime( data.getStartSampleIndex() ) );
-        final String event = data.isEvent() ? data.getEventName() : data.getDataValue().toString();
-        final String tdiDataValue = data.isTdiData() ? String.valueOf( data.getDataValue() ) : null;
-        final String tdoDataValue = data.isTdoData() ? String.valueOf( data.getDataValue() ) : null;
+        final String event = data.isEvent() ? data.getEventName() : null;
+
+        BigInteger tdiData = null;
+        BigInteger tdoData = null;
+
+        // Try to coalesce equal timestamps...
+        if ( ( i + 1 ) < dataSet.size() )
+        {
+          final JTAGData next = dataSet.get( i + 1 );
+          if ( next.getStartSampleIndex() == data.getStartSampleIndex() )
+          {
+            tdiData = ( BigInteger )( next.isTdiData() ? next.getDataValue() : data.getDataValue() );
+            tdoData = ( BigInteger )( next.isTdoData() ? next.getDataValue() : data.getDataValue() );
+            // Make sure to skip this entry in the next iteration...
+            i++;
+          }
+        }
+        
+        if ( ( tdiData == null ) && data.isTdiData() )
+        {
+          tdiData = ( BigInteger )data.getDataValue();
+          tdoData = null;
+        }
+        else if ( ( tdoData == null ) && data.isTdoData() )
+        {
+          tdiData = null;
+          tdoData = ( BigInteger )data.getDataValue();
+        }
+        
+        final String tdiDataValue = tdiData != null ? "0x" + tdiData.toString( 16 ) : null;
+        final String tdoDataValue = tdoData != null ? "0x" + tdoData.toString( 16 ) : null;
 
         exporter.addRow( Integer.valueOf( i ), time, event, tdiDataValue, tdoDataValue );
       }
