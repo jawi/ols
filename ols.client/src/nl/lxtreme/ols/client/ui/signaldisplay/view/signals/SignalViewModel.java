@@ -153,11 +153,10 @@ public class SignalViewModel extends AbstractViewModel
    * @param aClip
    * @return
    */
-  public int getEndIndex( final Rectangle aClip, final int aLength )
+  public int getEndIndex( final Rectangle aClip )
   {
     final Point location = new Point( aClip.x + aClip.width, 0 );
-    int index = locationToSampleIndex( location );
-    return Math.min( index + 1, aLength - 1 );
+    return locationToSampleIndex( location );
   }
 
   /**

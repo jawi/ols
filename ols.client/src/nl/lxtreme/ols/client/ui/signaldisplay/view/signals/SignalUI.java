@@ -237,7 +237,7 @@ public class SignalUI extends ComponentUI
 
     final Rectangle clip = aCanvas.getClipBounds();
     final int startIdx = aModel.getStartIndex( clip );
-    final int endIdx = aModel.getEndIndex( clip, timestamps.length );
+    final int endIdx = aModel.getEndIndex( clip );
 
     final long startTimestamp = timestamps[startIdx];
     final long endTimestamp = timestamps[endIdx];
@@ -420,12 +420,13 @@ public class SignalUI extends ComponentUI
     final long[] timestamps = aModel.getTimestamps();
 
     final Rectangle clip = aCanvas.getClipBounds();
+    final int clipWidth = clip.x + clip.width;
 
     aCanvas.setBackground( aModel.getBackgroundColor() );
     aCanvas.clearRect( clip.x, clip.y, clip.width, clip.height );
 
     final int startIdx = aModel.getStartIndex( clip );
-    final int endIdx = aModel.getEndIndex( clip, values.length );
+    final int endIdx = aModel.getEndIndex( clip );
 
     final double zoomFactor = aModel.getZoomFactor();
 
@@ -460,7 +461,7 @@ public class SignalUI extends ComponentUI
         if ( !signalElement.isEnabled() || ( startIdx == endIdx ) )
         {
           // Forced zero'd channel is *very* easy to draw...
-          aCanvas.drawLine( clip.x, signalHeight, clip.x + clip.width, signalHeight );
+          aCanvas.drawLine( clip.x, signalHeight, clipWidth, signalHeight );
         }
         else
         {
@@ -478,7 +479,7 @@ public class SignalUI extends ComponentUI
           y[0] = yValue;
           int p = 1;
 
-          for ( int sampleIdx = startIdx + 1; ( p < POINT_COUNT ) && ( sampleIdx <= endIdx ); sampleIdx++ )
+          for ( int sampleIdx = startIdx; ( p < POINT_COUNT ) && ( sampleIdx <= endIdx ); sampleIdx++ )
           {
             timestamp = timestamps[sampleIdx];
             int sampleValue = ( values[sampleIdx] & mask );
@@ -497,6 +498,14 @@ public class SignalUI extends ComponentUI
             p++;
 
             prevSampleValue = sampleValue;
+          }
+
+          // Fill until the right side of the display is reached...
+          if ( ( p > 0 ) && ( x[p - 1] < clipWidth ) )
+          {
+            x[p] = clipWidth;
+            y[p] = y[p - 1];
+            p++;
           }
 
           aCanvas.drawPolyline( x, y, p );
@@ -531,7 +540,7 @@ public class SignalUI extends ComponentUI
         FontMetrics fm = aCanvas.getFontMetrics();
         int textYpos = ( int )( ( signalElement.getHeight() + fm.getLeading() + fm.getMaxAscent() ) / 2.0 ) - padding;
 
-        for ( int sampleIdx = startIdx + 1; sampleIdx < endIdx; sampleIdx += sampleIncr )
+        for ( int sampleIdx = startIdx + 1; sampleIdx <= endIdx; sampleIdx += sampleIncr )
         {
           int sampleValue = ( values[sampleIdx] & mask );
 
@@ -543,10 +552,10 @@ public class SignalUI extends ComponentUI
 
             int textWidth = fm.stringWidth( text ) + ( 2 * padding );
             int cellWidth = xPos - prevX;
+            int textXpos = prevX + ( int )( ( cellWidth - textWidth ) / 2.0 ) + padding;
+
             if ( textWidth < cellWidth )
             {
-              int textXpos = prevX + ( int )( ( cellWidth - textWidth ) / 2.0 ) + padding;
-
               aCanvas.setColor( signalElement.getColor() );
 
               aCanvas.drawString( text, textXpos, textYpos );
@@ -561,6 +570,23 @@ public class SignalUI extends ComponentUI
           }
 
           prevSampleValue = sampleValue;
+        }
+
+        // Trailing...
+        if ( prevX < clipWidth )
+        {
+          String text = String.format( "%02X", Integer.valueOf( prevSampleValue ) );
+
+          int textWidth = fm.stringWidth( text ) + ( 2 * padding );
+          int cellWidth = clipWidth - prevX;
+          if ( textWidth < cellWidth )
+          {
+            int textXpos = prevX + ( int )( ( cellWidth - textWidth ) / 2.0 ) + padding;
+
+            aCanvas.setColor( signalElement.getColor() );
+
+            aCanvas.drawString( text, textXpos, textYpos );
+          }
         }
       }
 
@@ -587,7 +613,7 @@ public class SignalUI extends ComponentUI
         }
         else
         {
-          for ( int sampleIdx = startIdx; ( p < POINT_COUNT ) && ( sampleIdx < endIdx ); sampleIdx += sampleIncr )
+          for ( int sampleIdx = startIdx; ( p < POINT_COUNT ) && ( sampleIdx <= endIdx ); sampleIdx += sampleIncr )
           {
             long timestamp = timestamps[sampleIdx];
 
