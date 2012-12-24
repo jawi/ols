@@ -405,9 +405,10 @@ public final class SignalDiagramModel implements PropertyChangeListener
   public int getMaximalScreenWidth()
   {
     final double result = Math.floor( getAbsoluteLength() * getZoomFactor() );
-    if ( result > Integer.MAX_VALUE )
+    final double maxValue = ZoomController.MAX_COMP_WIDTH;
+    if ( result > maxValue )
     {
-      return Integer.MAX_VALUE;
+      return ( int )maxValue;
     }
     return ( int )result;
   }

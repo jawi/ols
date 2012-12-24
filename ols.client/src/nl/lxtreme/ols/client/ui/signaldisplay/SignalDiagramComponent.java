@@ -379,10 +379,12 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
     final SignalView signalView = getSignalView();
     final Rectangle visibleRect = signalView.getVisibleRect();
 
+    int maxX = ZoomController.MAX_COMP_WIDTH - visibleRect.width;
+
     Rectangle rect = new Rectangle();
     rect.width = visibleRect.width;
     rect.height = visibleRect.height;
-    rect.x = ( int )( ( getModel().getZoomFactor() * aTimestamp ) - rect.getCenterX() );
+    rect.x = ( int )Math.min( maxX, ( getModel().getZoomFactor() * aTimestamp ) - rect.getCenterX() );
     rect.y = visibleRect.y;
 
     signalView.scrollRectToVisible( rect );

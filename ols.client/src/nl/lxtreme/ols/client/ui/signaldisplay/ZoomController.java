@@ -34,6 +34,54 @@ public final class ZoomController
 {
   // INNER TYPES
 
+  public static final class ZoomEvent
+  {
+    private final double oldFactor;
+    private final double newFactor;
+    private final ZoomValue value;
+    private final Point centerPoint;
+
+    /**
+     * Creates a new ZoomController.ZoomEvent instance.
+     */
+    public ZoomEvent( final double aOldFactor, final double aNewFactor, final ZoomValue aValue, final Point aCenterPoint )
+    {
+      this.oldFactor = aOldFactor;
+      this.newFactor = aNewFactor;
+      this.value = aValue;
+      this.centerPoint = aCenterPoint;
+    }
+
+    /**
+     * Returns the current value of center point.
+     * 
+     * @return the center point of the zoom action, never <code>null</code>.
+     */
+    public Point getCenterPoint()
+    {
+      return this.centerPoint;
+    }
+
+    /**
+     * Returns the <em>relative</em> zoom factor.
+     * 
+     * @return the relative zoom factor, >= 0.0.
+     */
+    public double getFactor()
+    {
+      return this.newFactor / this.oldFactor;
+    }
+
+    /**
+     * @return <code>true</code> if this event is fired due to zooming in or
+     *         out, <code>false</code> otherwise.
+     */
+    public boolean isZoomInOrOut()
+    {
+      return ( ZoomValue.IN == this.value ) || ( ZoomValue.OUT == this.value );
+    }
+  }
+
   /**
    * Provides an interface for interchanging zooming events.
    */
@@ -43,8 +91,11 @@ public final class ZoomController
 
     /**
      * Called upon each change of zoom factor.
+     * 
+     * @param aEvent
+     *          the zoom event details.
      */
-    void notifyZoomChange();
+    void notifyZoomChange( ZoomEvent aEvent );
   }
 
   /**
@@ -72,6 +123,19 @@ public final class ZoomController
   private static final double DEFAULT_ZOOM_FACTOR = 1.0;
   /** The zoom-ratio to use when zooming in (or out, if you use the inverse). */
   private static final double DEFAULT_ZOOM_RATIO = 2.0;
+
+  /**
+   * This is what the width of the view component can be at maximum. Swing is
+   * entirely based 32-bit signed values, meaning that the theoretical width
+   * could be {@link Integer#MAX_VALUE}. However, due the use signed integers,
+   * most calculations done with a component of with {@link Integer#MAX_VALUE}
+   * will cause an "overflow" and make the values wrap around to negative
+   * values. This is especially done when determining whether or not values are
+   * in the clipping region of the component. To overcome this, we zero out the
+   * lowest 16-bits in order to have enough head-room for integer calculations
+   * without "overflowing".
+   */
+  static final int MAX_COMP_WIDTH = 0x7fff0000;
 
   // VARIABLES
 
@@ -296,12 +360,12 @@ public final class ZoomController
   /**
    * Fires an event to all interested listeners that the zoom level has changed.
    */
-  private void fireZoomEvent()
+  private void fireZoomEvent( final ZoomEvent aEvent )
   {
     ZoomListener[] listeners = this.eventListeners.getListeners( ZoomListener.class );
     for ( ZoomListener listener : listeners )
     {
-      listener.notifyZoomChange();
+      listener.notifyZoomChange( aEvent );
     }
   }
 
@@ -337,7 +401,9 @@ public final class ZoomController
     }
 
     final double length = model.getAbsoluteLength();
-    return Math.floor( Integer.MAX_VALUE / length );
+    final double max = Integer.MAX_VALUE / MAX_COMP_WIDTH;
+
+    return Math.max( max, Integer.MAX_VALUE / length );
   }
 
   /**
@@ -356,8 +422,9 @@ public final class ZoomController
 
     final double width = getVisibleViewSize().getWidth();
     final double length = model.getAbsoluteLength();
+    final double min = 1.0 / MAX_COMP_WIDTH;
 
-    return width / length;
+    return Math.max( min, width / length );
   }
 
   /**
@@ -387,7 +454,7 @@ public final class ZoomController
   /**
    * Zooms in with a factor 2.
    */
-  private void zoom( final ZoomValue aZoomValue, final double aFactor, final Point aHotSpot )
+  private void zoom( final ZoomValue aZoomValue, final double aFactor, final Point aCenterPoint )
   {
     double oldFactor = getFactor();
     double newFactor = aFactor; // assume the factor is absolute...
@@ -420,6 +487,13 @@ public final class ZoomController
       newFactor = currentViewWidth / absLength;
     }
 
+    Point centerPoint = aCenterPoint;
+    if ( centerPoint == null )
+    {
+      Rectangle dims = getSignalDiagram().getVisibleRect();
+      centerPoint = new Point( ( int )dims.getCenterX(), 0 );
+    }
+
     double defaultZoomLevel = getDefaultZoomLevel();
     double minZoomLevel = getMinZoomLevel();
     double maxZoomLevel = getMaxZoomLevel();
@@ -441,48 +515,12 @@ public final class ZoomController
       newValue = ZoomValue.MAXIMUM;
     }
 
-    if ( ( aZoomValue == ZoomValue.IN ) || ( aZoomValue == ZoomValue.OUT ) )
-    {
-      // Idea based on <http://stackoverflow.com/questions/115103>
-      SignalDiagramComponent signalDiagram = getSignalDiagram();
-
-      // Take the visibleRect of the signal diagram, as it tells us where we're
-      // located in the scrollpane; this information we need to allow
-      // dead-center zooming...
-      double mx = signalDiagram.getVisibleRect().getCenterX();
-      double my = 0;
-
-      if ( aHotSpot != null )
-      {
-        mx = aHotSpot.x;
-      }
-
-      // Calculate the timestamp from the center position of the visible view
-      // rectangle; after which we lookup the exact timestamp that is at that
-      // position. If found, we'll use that timestamp to recalculate the new
-      // center position in the new zoom factor...
-      final long timestamp = ( long )( mx / oldFactor );
-      final int tsIdx = model.getTimestampIndex( timestamp );
-
-      mx = Math.floor( model.getTimestamps()[tsIdx] * oldFactor );
-
-      // Take the location of the signal diagram component, as it is the only
-      // one that is shifted in location by its (parent) scrollpane...
-      final Point location = signalDiagram.getLocation();
-
-      // Recalculate the new screen position of the visible view rectangle...
-      int newX = ( int )( location.getX() - ( ( mx * aFactor ) - mx ) );
-      int newY = ( int )( location.getY() - ( ( my * aFactor ) - my ) );
-
-      signalDiagram.setLocation( newX, newY );
-    }
-
     synchronized ( this.LOCK )
     {
       this.factor = newFactor;
       this.value = newValue;
     }
 
-    fireZoomEvent();
+    fireZoomEvent( new ZoomEvent( oldFactor, newFactor, aZoomValue, centerPoint ) );
   }
 }

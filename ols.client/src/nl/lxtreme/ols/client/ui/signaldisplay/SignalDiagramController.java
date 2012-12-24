@@ -28,7 +28,7 @@ import java.beans.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.ui.*;
-import nl.lxtreme.ols.client.ui.signaldisplay.ZoomController.ZoomListener;
+import nl.lxtreme.ols.client.ui.signaldisplay.ZoomController.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.signalelement.SignalElement.SignalElementType;
 import nl.lxtreme.ols.client.ui.signaldisplay.view.*;
@@ -242,7 +242,7 @@ public class SignalDiagramController implements ZoomListener
    * {@inheritDoc}
    */
   @Override
-  public void notifyZoomChange()
+  public void notifyZoomChange( final ZoomEvent aEvent )
   {
     SwingComponentUtils.invokeOnEDT( new Runnable()
     {
@@ -250,6 +250,45 @@ public class SignalDiagramController implements ZoomListener
       public void run()
       {
         recalculateDimensions();
+
+        if ( aEvent.isZoomInOrOut() )
+        {
+          // Idea based on <http://stackoverflow.com/questions/115103>
+          JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
+          if ( scrollPane == null )
+          {
+            // Nothing to do...
+            return;
+          }
+
+          JViewport viewport = scrollPane.getViewport();
+
+          // Take the location of the signal diagram component, as it is the
+          // only one that is shifted in location by its (parent) scrollpane...
+          final Point location = viewport.getViewPosition();
+
+          // Take the visibleRect of the signal diagram, as it tells us where
+          // we're located in the scrollpane; this information we need to allow
+          // dead-center zooming...
+          int mx = aEvent.getCenterPoint().x;
+          int my = aEvent.getCenterPoint().y;
+
+          double zf = aEvent.getFactor();
+
+          Component view = viewport.getView();
+          Rectangle visibleRect = viewport.getVisibleRect();
+
+          int maxX = view.getWidth() - visibleRect.width;
+          int maxY = view.getHeight() - visibleRect.height;
+
+          // Recalculate the new screen position of the visible view
+          // rectangle...
+          int newX = ( int )Math.min( maxX, Math.max( 0.0, location.getX() + ( ( int )( mx * zf ) - mx ) ) );
+          int newY = ( int )Math.min( maxY, Math.max( 0.0, location.getY() + ( ( int )( my * zf ) - my ) ) );
+
+          Point newLocation = new Point( newX, newY );
+          viewport.setViewPosition( newLocation );
+        }
       }
     } );
   }
