@@ -2,7 +2,7 @@
 */target/
 eclipse/run/
 cnf/cache/*
-*/.DS_Store/
+**/.DS_Store
 **/.settings/
 **/generated/
 **/bin_test/
@@ -10,12 +10,7 @@ cnf/cache/*
 **/*.iml
 **/*.ipr
 **/*.iws
-*.ipr
-*.iml
-*.iws
 .idea/
 .metadata/
-.DS_Store?
-ehthumbs.db
-Thumbs.db
 Scratchpad
+RemoteSystemsTempFiles/
