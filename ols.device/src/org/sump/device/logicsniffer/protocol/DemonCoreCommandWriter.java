@@ -252,7 +252,7 @@ public class DemonCoreCommandWriter extends SumpCommandWriter
    * @param aOutputStream
    *          the {@link DataOutputStream} to use.
    */
-  public DemonCoreCommandWriter( final LogicSnifferConfig aConfiguration, final DataOutputStream aOutputStream )
+  public DemonCoreCommandWriter( final LogicSnifferConfigImpl aConfiguration, final DataOutputStream aOutputStream )
   {
     super( aConfiguration, aOutputStream );
   }

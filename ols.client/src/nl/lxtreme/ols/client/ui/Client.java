@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.client.ui;
 
 
-import static nl.lxtreme.ols.acquisition.service.DataAcquisitionService.*;
+import static nl.lxtreme.ols.client.acquisition.IDataAcquirer.*;
 import static nl.lxtreme.ols.client.ui.Platform.*;
 import static nl.lxtreme.ols.client.ui.signaldisplay.view.UIManagerKeys.*;
 import static nl.lxtreme.ols.client.ui.tool.ToolInvoker.*;

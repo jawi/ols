@@ -22,12 +22,15 @@ package nl.lxtreme.ols.device.generic;
 
 
 import java.io.*;
+import java.nio.*;
+import java.nio.channels.*;
 import java.util.concurrent.*;
-import java.util.logging.*;
 
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.ioutil.*;
+import aQute.bnd.annotation.metatype.*;
 
 
 /**
@@ -35,31 +38,92 @@ import nl.lxtreme.ols.ioutil.*;
  */
 public final class GenericDeviceAcquisitionTask implements Callable<AcquisitionData>
 {
-  // CONSTANTS
+  // INNER TYPES
 
-  private static final Logger LOG = Logger.getLogger( GenericDeviceAcquisitionTask.class.getName() );
+  /**
+   * Provides a in-memory {@link WritableByteChannel} that writes all data to a
+   * byte-array.
+   */
+  static class MemoryWritableByteBuffer implements WritableByteChannel
+  {
+    // VARIABLES
+
+    private final ByteBuffer buffer;
+    private final byte[] data;
+    private volatile boolean open = true;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link MemoryWritableByteBuffer} instance.
+     */
+    public MemoryWritableByteBuffer( final int size )
+    {
+      this.data = new byte[size];
+      this.buffer = ByteBuffer.wrap( this.data );
+    }
+
+    // METHODS
+
+    /**
+     * Returns the current value of array.
+     * 
+     * @return the array
+     */
+    public byte[] getData()
+    {
+      return this.data;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isOpen()
+    {
+      return this.open;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws IOException
+    {
+      this.open = false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int write( final ByteBuffer aSrc ) throws IOException
+    {
+      int pos = this.buffer.position();
+      this.buffer.put( aSrc );
+      return this.buffer.position() - pos;
+    }
+  }
 
   // VARIABLES
 
   private final DeviceProgressListener progressListener;
-  private final GenericDeviceConfigDialog deviceConfig;
-
-  private InputStream inputStream;
+  private final GenericConfig configuration;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new GenericDevice instance.
+   * Creates a new {@link GenericDeviceAcquisitionTask} instance.
    * 
-   * @param aContext
-   *          the bundle context to use;
-   * @param aDeviceConfig
-   *          the device configuration to use.
+   * @param aConfiguration
+   *          the device configuration to use;
+   * @param aProgressListener
+   *          the callback to report the progress to.
    */
-  public GenericDeviceAcquisitionTask( final GenericDeviceConfigDialog aDeviceConfig,
+  public GenericDeviceAcquisitionTask( final Configuration aConfiguration,
       final DeviceProgressListener aProgressListener )
   {
-    this.deviceConfig = aDeviceConfig;
+    this.configuration = Configurable.createConfigurable( GenericConfig.class, aConfiguration.asMap() );
     this.progressListener = aProgressListener;
 
   }
@@ -70,77 +134,64 @@ public final class GenericDeviceAcquisitionTask implements Callable<AcquisitionD
    * {@inheritDoc}
    */
   @Override
+  @SuppressWarnings( "resource" )
   public AcquisitionData call() throws IOException
   {
-    final AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
-    builder.setSampleRate( this.deviceConfig.getSampleRate() );
-    builder.setChannelCount( this.deviceConfig.getChannelCount() );
+    FileChannel channel = new FileInputStream( this.configuration.path() ).getChannel();
 
-    final int width = this.deviceConfig.getSampleWidth();
-    final int depth = this.deviceConfig.getSampleDepth();
-    final int count = depth * width;
+    final int width = this.configuration.sampleWidth(); // in bytes
+    final int depth = this.configuration.sampleDepth(); // #
+    final int size = depth * width; // total # of bytes to read...
 
-    this.inputStream = new FileInputStream( this.deviceConfig.getDevicePath() );
+    MemoryWritableByteBuffer target = new MemoryWritableByteBuffer( size );
 
     try
     {
-      int idx = 0;
-      while ( !Thread.currentThread().isInterrupted() && ( idx < count ) )
+      int offset = 0;
+      int byteCount = size;
+      while ( !Thread.currentThread().isInterrupted() && ( byteCount > 0 ) )
       {
-        final int sample = readSample( width );
-
-        if ( LOG.isLoggable( Level.FINE ) )
+        // Using this NIO construct allows us to have non-blocking I/O; making
+        // it possible to interrupt the acquisition from this device...
+        long read = channel.transferTo( offset, Math.max( 1, channel.size() ), target );
+        if ( read < 0 )
         {
-          LOG.log( Level.FINE, "Read: 0x{0}", Integer.toHexString( sample ) );
+          channel.close();
+
+          throw new EOFException( "Only " + offset + " bytes read!" );
+        }
+        else
+        {
+          byteCount -= read;
+          offset += read;
         }
 
-        builder.addSample( idx, sample );
-
         // Update the progress...
-        this.progressListener.acquisitionInProgress( ( int )( ( idx++ * 100.0 ) / count ) );
+        this.progressListener.acquisitionInProgress( ( 100 * offset ) / size );
+      }
+
+      // Build the resulting acquisition data...
+      AcquisitionDataBuilder builder = new AcquisitionDataBuilder() //
+          .setTriggerPosition( 0L ) //
+          .setSampleRate( this.configuration.sampleRate() ) //
+          .setChannelCount( this.configuration.channelCount() );
+
+      // Normalize sample data...
+      for ( int i = 0, j = 0; i < depth; i++ )
+      {
+        int sample = 0;
+        for ( int k = 0; k < width; k++ )
+        {
+          sample |= ( target.data[j++] << ( 8 * k ) );
+        }
+        builder.addSample( i, sample );
       }
 
       return builder.build();
     }
-    catch ( IOException exception )
-    {
-      // Rethrow the caught exception...
-      throw exception;
-    }
     finally
     {
-      IOUtil.closeResource( this.inputStream );
+      IOUtil.closeResource( channel );
     }
   }
-
-  /**
-   * Reads <code>channels</code> / 8 bytes from stream and compiles them into a
-   * single integer.
-   * 
-   * @param aChannelCount
-   *          number of channels to read (must be multiple of 8)
-   * @return integer containing four bytes read
-   * @throws IOException
-   *           if stream reading fails
-   */
-  private int readSample( final int aSampleWidth ) throws IOException
-  {
-    int v, value = 0;
-
-    for ( int i = 0; !Thread.currentThread().isInterrupted() && ( i < aSampleWidth ); i++ )
-    {
-      v = this.inputStream.read();
-
-      // Any timeouts/interrupts occurred?
-      if ( v < 0 )
-      {
-        throw new EOFException( "Data readout interrupted: EOF." );
-      }
-
-      value |= v << ( 8 * i );
-    }
-
-    return value;
-  }
-
 }

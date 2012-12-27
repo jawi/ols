@@ -278,7 +278,7 @@ public class LogicSnifferRleComponentTest extends TestCase
   @Override
   protected void setUp() throws IOException, ConfigurationException
   {
-    final LogicSnifferConfig config = new LogicSnifferConfig();
+    final LogicSnifferConfigImpl config = new LogicSnifferConfigImpl();
     this.device = new VirtualLogicSnifferDevice( config, this.provider );
 
     final DeviceProfile deviceProfile = this.device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );

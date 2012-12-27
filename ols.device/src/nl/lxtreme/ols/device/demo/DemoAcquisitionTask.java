@@ -26,6 +26,9 @@ import static nl.lxtreme.ols.device.demo.DemoDeviceDialog.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import aQute.bnd.annotation.metatype.*;
+
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 
@@ -38,7 +41,7 @@ public class DemoAcquisitionTask implements Callable<AcquisitionData>
 {
   // VARIABLES
 
-  private final DemoDeviceDialog configDialog;
+  private final DemoConfig configuration;
   private final DeviceProgressListener progressListener;
 
   // CONSTRUCTORS
@@ -49,9 +52,9 @@ public class DemoAcquisitionTask implements Callable<AcquisitionData>
    * @param aConfigDialog
    * @param aProgressListener
    */
-  public DemoAcquisitionTask( final DemoDeviceDialog aConfigDialog, final DeviceProgressListener aProgressListener )
+  public DemoAcquisitionTask( final Configuration aConfiguration, final DeviceProgressListener aProgressListener )
   {
-    this.configDialog = aConfigDialog;
+    this.configuration = Configurable.createConfigurable( DemoConfig.class, aConfiguration.asMap() );
     this.progressListener = aProgressListener;
   }
 
@@ -63,9 +66,9 @@ public class DemoAcquisitionTask implements Callable<AcquisitionData>
   @Override
   public AcquisitionData call()
   {
-    final String dataFunction = this.configDialog.getDataFunction();
-    final int dataLength = this.configDialog.getDataLength();
-    final int channels = this.configDialog.getChannels();
+    final String dataFunction = this.configuration.dataFunction();
+    final int dataLength = this.configuration.dataLength();
+    final int channels = this.configuration.channels();
 
     final AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
     builder.setChannelCount( channels );

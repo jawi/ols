@@ -23,12 +23,11 @@ package nl.lxtreme.ols.client.ui;
 
 import java.util.*;
 
-import nl.lxtreme.ols.acquisition.service.*;
 import nl.lxtreme.ols.client.acquisition.*;
 import nl.lxtreme.ols.client.componentprovider.*;
+import nl.lxtreme.ols.client.ui.device.*;
 import nl.lxtreme.ols.client.ui.tool.*;
 import nl.lxtreme.ols.common.session.*;
-import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.*;
 import nl.lxtreme.ols.util.swing.WindowManager.WindowStateManager;
 
@@ -48,8 +47,19 @@ public class Activator extends DependencyActivatorBase
 {
   // INNER TYPES
 
-  static class ComponentProviderBundleAdapter extends GenericBundleAdapter<ComponentProvider>
+  static class ComponentProviderBundleAdapter extends AbstractBundleAdapter<ComponentProvider>
   {
+    // CONSTANTS
+
+    private static final String OLS_COMPONENT_PROVIDER_MAGIC_KEY = "OLS-ComponentProvider";
+    private static final String OLS_COMPONENT_PROVIDER_MAGIC_VALUE = "Menu";
+    private static final String OLS_COMPONENT_PROVIDER_CLASS_KEY = "OLS-ComponentProviderClass";
+
+    public static final String FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_COMPONENT_PROVIDER_MAGIC_KEY,
+        OLS_COMPONENT_PROVIDER_MAGIC_VALUE, OLS_COMPONENT_PROVIDER_CLASS_KEY );
+
+    // CONSTRUCTORS
+
     /**
      * Creates a new Activator.ComponentProviderBundleAdapter instance.
      */
@@ -59,19 +69,19 @@ public class Activator extends DependencyActivatorBase
     }
   }
 
-  static class DeviceBundleAdapter extends GenericBundleAdapter<Device>
+  static class ExporterBundleAdapter extends AbstractBundleAdapter<Exporter>
   {
-    /**
-     * Creates a new {@link DeviceBundleAdapter} instance.
-     */
-    public DeviceBundleAdapter()
-    {
-      super( Device.class, OLS_DEVICE_CLASS_KEY );
-    }
-  }
+    // CONSTANTS
 
-  static class ExporterBundleAdapter extends GenericBundleAdapter<Exporter>
-  {
+    private static final String OLS_EXPORTER_MAGIC_KEY = "OLS-Exporter";
+    private static final String OLS_EXPORTER_MAGIC_VALUE = "1.0";
+    private static final String OLS_EXPORTER_CLASS_KEY = "OLS-ExporterClass";
+
+    public static final String FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_EXPORTER_MAGIC_KEY,
+        OLS_EXPORTER_MAGIC_VALUE, OLS_EXPORTER_CLASS_KEY );
+
+    // CONSTRUCTORS
+
     /**
      * Creates a new Activator.ExporterBundleAdapter instance.
      */
@@ -82,24 +92,6 @@ public class Activator extends DependencyActivatorBase
   }
 
   // CONSTANTS
-
-  private static final String OLS_DEVICE_MAGIC_KEY = "OLS-Device";
-  private static final String OLS_DEVICE_MAGIC_VALUE = "1.0";
-  private static final String OLS_DEVICE_CLASS_KEY = "OLS-DeviceClass";
-  private static final String DEVICE_BUNDLE_FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_DEVICE_MAGIC_KEY,
-      OLS_DEVICE_MAGIC_VALUE, OLS_DEVICE_CLASS_KEY );
-
-  private static final String OLS_EXPORTER_MAGIC_KEY = "OLS-Exporter";
-  private static final String OLS_EXPORTER_MAGIC_VALUE = "1.0";
-  private static final String OLS_EXPORTER_CLASS_KEY = "OLS-ExporterClass";
-  private static final String EXPORTER_BUNDLE_FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_EXPORTER_MAGIC_KEY,
-      OLS_EXPORTER_MAGIC_VALUE, OLS_EXPORTER_CLASS_KEY );
-
-  private static final String OLS_COMPONENT_PROVIDER_MAGIC_KEY = "OLS-ComponentProvider";
-  private static final String OLS_COMPONENT_PROVIDER_MAGIC_VALUE = "Menu";
-  private static final String OLS_COMPONENT_PROVIDER_CLASS_KEY = "OLS-ComponentProviderClass";
-  private static final String CP_BUNDLE_FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_COMPONENT_PROVIDER_MAGIC_KEY,
-      OLS_COMPONENT_PROVIDER_MAGIC_VALUE, OLS_COMPONENT_PROVIDER_CLASS_KEY );
 
   // METHODS
 
@@ -142,28 +134,28 @@ public class Activator extends DependencyActivatorBase
    */
   private void registerBundleAdapters( final DependencyManager aManager )
   {
-    aManager.add( createBundleAdapterService( Bundle.ACTIVE, CP_BUNDLE_FILTER, true /* propagate */) //
-        .setImplementation( ComponentProviderBundleAdapter.class ) );
+    int mask = Bundle.ACTIVE;
 
-    aManager.add( createBundleAdapterService( Bundle.ACTIVE, ToolBundleAdapter.TOOL_BUNDLE_FILTER, true ) //
+    aManager.add( createBundleAdapterService( mask, ToolBundleAdapter.FILTER, true ) //
         .setImplementation( ToolBundleAdapter.class ) //
         .add( createServiceDependency() //
             .setService( MetaTypeService.class ) //
             .setRequired( true ) ) //
         );
 
-    aManager.add( createBundleAdapterService( Bundle.ACTIVE, DEVICE_BUNDLE_FILTER, true /* propagate */) //
+    aManager.add( createBundleAdapterService( mask, DeviceBundleAdapter.FILTER, true ) //
         .setImplementation( DeviceBundleAdapter.class ) //
         .add( createServiceDependency() //
             .setService( MetaTypeService.class ) //
             .setRequired( true ) ) //
         );
 
-    aManager.add( createBundleAdapterService( Bundle.ACTIVE, EXPORTER_BUNDLE_FILTER, true /* propagate */) //
+    aManager.add( createBundleAdapterService( mask, ExporterBundleAdapter.FILTER, true ) //
         .setImplementation( ExporterBundleAdapter.class ) //
-        .add( createServiceDependency() //
-            .setService( MetaTypeService.class ) //
-            .setRequired( true ) ) //
+        );
+
+    aManager.add( createBundleAdapterService( mask, ComponentProviderBundleAdapter.FILTER, true ) //
+        .setImplementation( ComponentProviderBundleAdapter.class ) //
         );
   }
 
@@ -180,8 +172,7 @@ public class Activator extends DependencyActivatorBase
 
     Properties props = new Properties();
     props.put( Constants.SERVICE_PID, ClientConfig.class.getName() );
-    props.put( EventConstants.EVENT_TOPIC, new String[] { Session.TOPIC_ANY, DataAcquisitionService.TOPIC_ANY,
-        ToolInvoker.TOPIC_ANY } );
+    props.put( EventConstants.EVENT_TOPIC, new String[] { Session.TOPIC_ANY, IDataAcquirer.TOPIC_ANY, ToolInvoker.TOPIC_ANY } );
 
     aManager.add( createComponent()
         .setImplementation( client )
@@ -189,7 +180,7 @@ public class Activator extends DependencyActivatorBase
         .setComposition( "getComposition" )
         .add( createServiceDependency().setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ).setCallbacks( "addMenu", "removeMenu" ).setRequired( false ) )
         .add( createServiceDependency().setService( Exporter.class ).setCallbacks( client.getImportExportController(), "addExporter", "removeExporter" ).setRequired( false ) )
-        .add( createServiceDependency().setService( Device.class ).setCallbacks( client.getDeviceController(), "addDevice", "removeDevice" ).setRequired( false ) )
+        .add( createServiceDependency().setService( DeviceInvoker.class ).setCallbacks( client.getDeviceController(), "addDevice", "removeDevice" ).setRequired( false ) )
         .add( createServiceDependency().setService( ToolInvoker.class ).setCallbacks( client.getToolController(), "addTool", "removeTool" ).setRequired( false ) )
         .add( createServiceDependency().setService( UIManagerConfigurator.class ).setRequired( true ) )
         .add( createServiceDependency().setService( ColorSchemeManager.class ).setRequired( true ) )

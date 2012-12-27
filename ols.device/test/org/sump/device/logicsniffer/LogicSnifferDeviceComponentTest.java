@@ -150,7 +150,7 @@ public class LogicSnifferDeviceComponentTest extends TestCase
   @Override
   protected void setUp() throws Exception
   {
-    LogicSnifferConfig config = new LogicSnifferConfig();
+    LogicSnifferConfigImpl config = new LogicSnifferConfigImpl();
     this.device = new VirtualLogicSnifferDevice( config );
 
     final DeviceProfile deviceProfile = this.device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );

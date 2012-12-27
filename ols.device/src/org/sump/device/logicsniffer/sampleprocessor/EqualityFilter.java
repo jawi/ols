@@ -31,7 +31,7 @@ public final class EqualityFilter implements SampleProcessor
 {
   // VARIABLES
 
-  private final LogicSnifferConfig config;
+  private final LogicSnifferConfigImpl config;
   private final int[] buffer;
   private final int trigCount;
   private final SampleProcessorCallback callback;
@@ -48,7 +48,7 @@ public final class EqualityFilter implements SampleProcessor
    * @param aCallback
    *          the callback to use.
    */
-  public EqualityFilter( final LogicSnifferConfig aConfig, final int[] aBuffer, final int aTrigCount,
+  public EqualityFilter( final LogicSnifferConfigImpl aConfig, final int[] aBuffer, final int aTrigCount,
       final SampleProcessorCallback aCallback )
   {
     if ( aBuffer == null )

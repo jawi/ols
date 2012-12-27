@@ -6,5 +6,6 @@ Bundle-Activator: org.sump.device.logicsniffer.Activator
 Bundle-Description: A OLS-device driver for the OLS client.
 Bundle-Copyright: Michael Poppitz (sump.org), J.W. Janssen (lxtreme.nl) (C) 2010-2011
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+-metatype: *Config
 OLS-Device: 1.0
 OLS-DeviceClass: org.sump.device.logicsniffer.LogicSnifferDevice

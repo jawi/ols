@@ -21,8 +21,9 @@
 package nl.lxtreme.ols.device.generic;
 
 
-import java.awt.*;
 import java.io.*;
+
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 
@@ -37,29 +38,25 @@ public class GenericDevice implements Device
 
   private static final String NAME = "Generic I/O";
 
-  // VARIABLES
-
-  private GenericDeviceConfigDialog deviceConfig = null;
-  private boolean setup = false;
-
   // METHODS
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionData acquireData( final DeviceProgressListener aProgressListener ) throws IOException
+  public AcquisitionData acquireData( final Configuration aConfiguration, final DeviceProgressListener aProgressListener )
+      throws IOException, InterruptedException
   {
-    return new GenericDeviceAcquisitionTask( this.deviceConfig, aProgressListener ).call();
+    return new GenericDeviceAcquisitionTask( aConfiguration, aProgressListener ).call();
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void close() throws IOException
+  public void cancelAcquisition() throws IllegalStateException
   {
-    // No-op...
+    // Nop
   }
 
   /**
@@ -69,35 +66,5 @@ public class GenericDevice implements Device
   public String getName()
   {
     return NAME;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isSetup()
-  {
-    return this.setup;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean setupCapture( final Window aParent )
-  {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.deviceConfig != null ) && ( this.deviceConfig.getOwner() != aParent ) )
-    {
-      this.deviceConfig.dispose();
-      this.deviceConfig = null;
-    }
-    // if no valid dialog exists, create one
-    if ( this.deviceConfig == null )
-    {
-      this.deviceConfig = new GenericDeviceConfigDialog( aParent );
-    }
-
-    return ( this.setup = this.deviceConfig.showDialog() );
   }
 }

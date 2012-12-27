@@ -26,10 +26,12 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.util.*;
 import java.util.Map.Entry;
 
 import javax.swing.*;
+import javax.swing.event.*;
 import javax.swing.text.*;
 
 import nl.lxtreme.ols.util.swing.*;
@@ -42,6 +44,80 @@ import org.osgi.service.metatype.*;
  */
 public class EditorPanel extends JPanel
 {
+  // INNER TYPES
+
+  /**
+   * Converts the various UI-change events to single property change events.
+   */
+  protected final class ChangeReflector implements ActionListener, ChangeListener, ListSelectionListener,
+      DocumentListener
+  {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      firePropertyChangeEvent();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void changedUpdate( final DocumentEvent aEvent )
+    {
+      firePropertyChangeEvent();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void insertUpdate( final DocumentEvent aEvent )
+    {
+      firePropertyChangeEvent();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeUpdate( final DocumentEvent aEvent )
+    {
+      firePropertyChangeEvent();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stateChanged( final ChangeEvent aEvent )
+    {
+      firePropertyChangeEvent();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void valueChanged( final ListSelectionEvent aEvent )
+    {
+      if ( !aEvent.getValueIsAdjusting() )
+      {
+        firePropertyChangeEvent();
+      }
+    }
+
+    /**
+     * 
+     */
+    private void firePropertyChangeEvent()
+    {
+      firePropertyChange( "changed", null, this );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -71,14 +147,18 @@ public class EditorPanel extends JPanel
    *          the (optional) editor provider to supply custom editors for
    *          unmanaged attributes, may be <code>null</code>.
    */
-  public EditorPanel( final ObjectClassDefinition aOCD, final Dictionary<Object, Object> aSettings,
-      final String aTitle, final IEditorProvider aProvider )
+  protected EditorPanel( final ObjectClassDefinition aOCD )
   {
-    this( aOCD, asMap( aSettings ), aTitle, aProvider );
+    super( new SpringLayout() );
+
+    this.ocd = aOCD;
+    this.components = new HashMap<AttributeDefinition, JComponent>();
   }
 
+  // METHODS
+
   /**
-   * Creates a new {@link EditorPanel} instance.
+   * Factory method for creating a new {@link EditorPanel} instance.
    * 
    * @param aOCD
    *          the object class definition containing the attribute definitions
@@ -92,14 +172,37 @@ public class EditorPanel extends JPanel
    * @param aProvider
    *          the (optional) editor provider to supply custom editors for
    *          unmanaged attributes, may be <code>null</code>.
+   * @return a new, initialized {@link EditorPanel} instance, never
+   *         <code>null</code>.
    */
-  public EditorPanel( final ObjectClassDefinition aOCD, final Properties aSettings, final String aTitle,
-      final IEditorProvider aProvider )
+  public static EditorPanel create( final ObjectClassDefinition aOCD, final Dictionary<Object, Object> aSettings,
+      final String aTitle, final IEditorProvider aProvider )
   {
-    super( new SpringLayout() );
+    return create( aOCD, asMap( aSettings ), aTitle, aProvider );
+  }
 
-    this.ocd = aOCD;
-    this.components = new HashMap<AttributeDefinition, JComponent>();
+  /**
+   * Factory method for creating a new {@link EditorPanel} instance.
+   * 
+   * @param aOCD
+   *          the object class definition containing the attribute definitions
+   *          to create editors for, cannot be <code>null</code>;
+   * @param aSettings
+   *          the (optional) settings to use as initial values for the editor
+   *          components, may be <code>null</code>;
+   * @param aTitle
+   *          the (optional) title to display above the editors, may be
+   *          <code>null</code>;
+   * @param aProvider
+   *          the (optional) editor provider to supply custom editors for
+   *          unmanaged attributes, may be <code>null</code>.
+   * @return a new, initialized {@link EditorPanel} instance, never
+   *         <code>null</code>.
+   */
+  public static EditorPanel create( final ObjectClassDefinition aOCD, final Map<Object, Object> aSettings,
+      final String aTitle, final IEditorProvider aProvider )
+  {
+    EditorPanel result = new EditorPanel( aOCD );
 
     Map<Object, Object> settings = aSettings;
     if ( settings == null )
@@ -107,10 +210,9 @@ public class EditorPanel extends JPanel
       settings = Collections.emptyMap();
     }
 
-    initPanel( settings, aTitle, aProvider );
+    result.initPanel( settings, aTitle, aProvider );
+    return result;
   }
-
-  // METHODS
 
   /**
    * Converts a given {@link Dictionary} to a {@link Map}.
@@ -121,7 +223,7 @@ public class EditorPanel extends JPanel
    *         map is the given value was <code>null</code>.
    */
   @SuppressWarnings( "rawtypes" )
-  private static Properties asMap( final Dictionary aValue )
+  protected static Map<Object, Object> asMap( final Dictionary aValue )
   {
     Properties result = new Properties();
     if ( aValue != null )
@@ -159,7 +261,7 @@ public class EditorPanel extends JPanel
   /**
    * @return the properties with the current values, never <code>null</code>.
    */
-  public final Properties getProperties()
+  public Properties getProperties()
   {
     Properties result = new Properties();
     for ( Entry<AttributeDefinition, JComponent> entry : this.components.entrySet() )
@@ -175,6 +277,94 @@ public class EditorPanel extends JPanel
   }
 
   /**
+   * @param aComponents
+   */
+  protected void applyComponentProperties( final Collection<JComponent> aComponents )
+  {
+    // Create an index on the component's name...
+    Map<String, JComponent> nameIndex = new HashMap<String, JComponent>();
+    for ( JComponent comp : aComponents )
+    {
+      nameIndex.put( comp.getName(), comp );
+    }
+
+    // Process the component's properties...
+    for ( JComponent comp : aComponents )
+    {
+      Object value = comp.getClientProperty( PROPERTY_READONLY );
+      if ( Boolean.TRUE.equals( value ) )
+      {
+        comp.setEnabled( false );
+      }
+
+      value = comp.getClientProperty( PROPERTY_EDITABLE );
+      if ( Boolean.TRUE.equals( value ) )
+      {
+        if ( comp instanceof JComboBox )
+        {
+          ( ( JComboBox )comp ).setEditable( true );
+        }
+        else if ( comp instanceof JTextComponent )
+        {
+          ( ( JTextComponent )comp ).setEditable( true );
+        }
+      }
+
+      value = comp.getClientProperty( PROPERTY_LISTENER );
+      if ( value != null )
+      {
+        for ( String descriptor : ( String[] )value )
+        {
+          addListener( nameIndex, comp, descriptor );
+        }
+      }
+    }
+  }
+
+  /**
+   * @return
+   */
+  protected EditorUtils createEditorUtils()
+  {
+    return new EditorUtils();
+  }
+
+  /**
+   * @param aComponent
+   * @return
+   */
+  @SuppressWarnings( "boxing" )
+  protected Object getComponentValue( final Component aComponent )
+  {
+    Object value = null;
+    if ( aComponent instanceof AbstractButton )
+    {
+      value = ( ( AbstractButton )aComponent ).isSelected();
+    }
+    else if ( aComponent instanceof JComboBox )
+    {
+      value = ( ( JComboBox )aComponent ).getSelectedItem();
+    }
+    else if ( aComponent instanceof JTextComponent )
+    {
+      value = ( ( JTextComponent )aComponent ).getText();
+    }
+    else if ( aComponent instanceof JList )
+    {
+      value = ( ( JList )aComponent ).getSelectedIndex();
+    }
+    else if ( aComponent instanceof JSlider )
+    {
+      value = ( ( JSlider )aComponent ).getValue();
+    }
+    else if ( aComponent instanceof JSpinner )
+    {
+      value = ( ( JSpinner )aComponent ).getValue();
+    }
+    return value;
+  }
+
+  /**
    * Initializes this panel.
    * 
    * @param aSettings
@@ -184,14 +374,14 @@ public class EditorPanel extends JPanel
    * @param aProvider
    *          the editor provider to use, can be <code>null</code>.
    */
-  final void initPanel( final Map<Object, Object> aSettings, final String aTitle, final IEditorProvider aProvider )
+  protected void initPanel( final Map<Object, Object> aSettings, final String aTitle, final IEditorProvider aProvider )
   {
     if ( ( aTitle != null ) && !"".equals( aTitle.trim() ) )
     {
       SpringLayoutUtils.addSeparator( this, aTitle );
     }
 
-    final EditorUtils editorUtils = new EditorUtils();
+    final EditorUtils editorUtils = createEditorUtils();
 
     AttributeDefinition[] ads = this.ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
     for ( AttributeDefinition ad : ads )
@@ -215,7 +405,44 @@ public class EditorPanel extends JPanel
 
     applyComponentProperties( this.components.values() );
 
+    wireChangeListeners( new ChangeReflector() );
+
     SpringLayoutUtils.makeEditorGrid( this, PADDING, PADDING, PADDING, PADDING );
+  }
+
+  /**
+   * Wires all components on this panel to fire a {@link PropertyChangeEvent} in
+   * case their value changes.
+   */
+  protected void wireChangeListeners( final ChangeReflector changeReflector )
+  {
+    for ( JComponent comp : this.components.values() )
+    {
+      if ( comp instanceof AbstractButton )
+      {
+        ( ( AbstractButton )comp ).addActionListener( changeReflector );
+      }
+      else if ( comp instanceof JComboBox )
+      {
+        ( ( JComboBox )comp ).addActionListener( changeReflector );
+      }
+      else if ( comp instanceof JTextComponent )
+      {
+        ( ( JTextComponent )comp ).getDocument().addDocumentListener( changeReflector );
+      }
+      else if ( comp instanceof JList )
+      {
+        ( ( JList )comp ).addListSelectionListener( changeReflector );
+      }
+      else if ( comp instanceof JSlider )
+      {
+        ( ( JSlider )comp ).addChangeListener( changeReflector );
+      }
+      else if ( comp instanceof JSpinner )
+      {
+        ( ( JSpinner )comp ).addChangeListener( changeReflector );
+      }
+    }
   }
 
   /**
@@ -309,84 +536,6 @@ public class EditorPanel extends JPanel
     {
       throw new RuntimeException( "Cannot add listener to component: " + aComponent );
     }
-  }
-
-  /**
-   * @param aComponents
-   */
-  private void applyComponentProperties( final Collection<JComponent> aComponents )
-  {
-    // Create an index on the component's name...
-    Map<String, JComponent> nameIndex = new HashMap<String, JComponent>();
-    for ( JComponent comp : aComponents )
-    {
-      nameIndex.put( comp.getName(), comp );
-    }
-
-    // Process the component's properties...
-    for ( JComponent comp : aComponents )
-    {
-      Object value = comp.getClientProperty( PROPERTY_READONLY );
-      if ( Boolean.TRUE.equals( value ) )
-      {
-        comp.setEnabled( false );
-      }
-      value = comp.getClientProperty( PROPERTY_EDITABLE );
-      if ( Boolean.TRUE.equals( value ) )
-      {
-        if ( comp instanceof JComboBox )
-        {
-          ( ( JComboBox )comp ).setEditable( true );
-        }
-        else if ( comp instanceof JTextComponent )
-        {
-          ( ( JTextComponent )comp ).setEditable( true );
-        }
-      }
-      value = comp.getClientProperty( PROPERTY_LISTENER );
-      if ( value != null )
-      {
-        for ( String descriptor : ( String[] )value )
-        {
-          addListener( nameIndex, comp, descriptor );
-        }
-      }
-    }
-  }
-
-  /**
-   * @param aComponent
-   * @return
-   */
-  @SuppressWarnings( "boxing" )
-  private Object getComponentValue( final Component aComponent )
-  {
-    Object value = null;
-    if ( aComponent instanceof AbstractButton )
-    {
-      value = ( ( AbstractButton )aComponent ).isSelected();
-    }
-    else if ( aComponent instanceof JComboBox )
-    {
-      value = ( ( JComboBox )aComponent ).getSelectedItem();
-    }
-    else if ( aComponent instanceof JTextComponent )
-    {
-      value = ( ( JTextComponent )aComponent ).getText();
-    }
-    else if ( aComponent instanceof JList )
-    {
-      value = ( ( JList )aComponent ).getSelectedIndex();
-    }
-    else if ( aComponent instanceof JSlider )
-    {
-      value = ( ( JSlider )aComponent ).getValue();
-    }
-    else if ( aComponent instanceof JSpinner )
-    {
-      value = ( ( JSpinner )aComponent ).getValue();
-    }
-    return value;
   }
 
   /**

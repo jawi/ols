@@ -26,12 +26,11 @@ import static nl.lxtreme.ols.client.ui.signaldisplay.view.UIManagerKeys.*;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
-
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.acquisition.*;
+import nl.lxtreme.ols.client.ui.device.*;
 import nl.lxtreme.ols.common.annotation.*;
-import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.ioutil.*;
 
 import org.osgi.service.log.*;
@@ -56,7 +55,7 @@ public final class AcquisitionController
    */
   public void cancelCapture()
   {
-    Device device = getCurrentSelectedDevice();
+    final DeviceInvoker device = getCurrentSelectedDevice();
     if ( device == null )
     {
       this.log.log( LogService.LOG_WARNING, "No device is selected, cannot cancel data acquisition!" );
@@ -94,7 +93,7 @@ public final class AcquisitionController
    */
   public boolean captureData( final Window aParent )
   {
-    Device device = getCurrentSelectedDevice();
+    DeviceInvoker device = getCurrentSelectedDevice();
     if ( device == null )
     {
       this.log.log( LogService.LOG_WARNING, "No device is selected, cannot start data acquisition!" );
@@ -105,7 +104,7 @@ public final class AcquisitionController
     {
       this.log.log( LogService.LOG_INFO, "Starting data acquisition for '" + device.getName() + "' ..." );
 
-      if ( device.setupCapture( aParent ) )
+      if ( device.configure( aParent ) )
       {
         this.statusListener.setStatus( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", //
             device.getName(), new Date() );
@@ -134,7 +133,7 @@ public final class AcquisitionController
    */
   public boolean isDeviceCapturing()
   {
-    Device device = getCurrentSelectedDevice();
+    DeviceInvoker device = getCurrentSelectedDevice();
     if ( device == null )
     {
       return false;
@@ -159,7 +158,7 @@ public final class AcquisitionController
    */
   public boolean isDeviceSetup()
   {
-    final Device device = getCurrentSelectedDevice();
+    final DeviceInvoker device = getCurrentSelectedDevice();
     return ( device != null ) && device.isSetup();
   }
 
@@ -169,7 +168,7 @@ public final class AcquisitionController
    */
   public void repeatCaptureData()
   {
-    Device device = getCurrentSelectedDevice();
+    DeviceInvoker device = getCurrentSelectedDevice();
     if ( device == null )
     {
       this.log.log( LogService.LOG_WARNING, "No device is selected, cannot repeat data acquisition!" );
@@ -218,7 +217,7 @@ public final class AcquisitionController
    * @return the current selected device, can be <code>null</code> if no device
    *         is selected.
    */
-  private Device getCurrentSelectedDevice()
+  private DeviceInvoker getCurrentSelectedDevice()
   {
     return getDeviceController().getSelectedDevice();
   }

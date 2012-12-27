@@ -21,14 +21,13 @@
 package nl.lxtreme.ols.client.acquisition.impl;
 
 
-import java.util.*;
-
-import nl.lxtreme.ols.acquisition.service.*;
 import nl.lxtreme.ols.client.acquisition.*;
+import nl.lxtreme.ols.common.session.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 import org.osgi.service.event.*;
+import org.osgi.service.log.*;
 
 
 /**
@@ -53,15 +52,17 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    Properties props;
-    props = new Properties();
-    props.put( EventConstants.EVENT_TOPIC, new String[] { DataAcquisitionService.TOPIC_ACQUISITION_STATUS } );
-
     aManager.add( createComponent() //
-        .setInterface( new String[] { IDataAcquirer.class.getName(), EventHandler.class.getName() }, props ) //
+        .setInterface( IDataAcquirer.class.getName(), null ) //
         .setImplementation( DataAcquirerImpl.class ) //
         .add( createServiceDependency() //
-            .setService( DataAcquisitionService.class ) //
+            .setService( Session.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( EventAdmin.class ) //
+            .setRequired( true ) ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
             .setRequired( false ) ) //
         );
   }

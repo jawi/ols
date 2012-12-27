@@ -37,6 +37,74 @@ final class ToolEditorUtils extends EditorUtils
 {
   // VARIABLES
 
+  /**
+   * Provides a renderer for channel labels.
+   */
+  static final class ChannelLabelRenderer extends DefaultListCellRenderer
+  {
+    // VARIABLES
+
+    private final JComboBox result;
+    private final boolean addUnusedOption;
+    private final AttributeDefinition attributeDef;
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link ChannelLabelRenderer} instance.
+     * 
+     * @param aResult
+     * @param aAddUnusedOption
+     * @param aAttributeDef
+     */
+    ChannelLabelRenderer( final JComboBox aResult, final boolean aAddUnusedOption,
+        final AttributeDefinition aAttributeDef )
+    {
+      this.result = aResult;
+      this.addUnusedOption = aAddUnusedOption;
+      this.attributeDef = aAttributeDef;
+    }
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      final String[] optionLabels = this.attributeDef.getOptionLabels();
+
+      int idx = aIndex;
+      if ( idx < 0 )
+      {
+        // When rendering the combobox in collapsed state, the given index is
+        // -1, use the selected index from the model instead...
+        idx = this.result.getSelectedIndex();
+      }
+      if ( this.addUnusedOption )
+      {
+        idx--;
+      }
+
+      Object value;
+      Integer v = ( Integer )aValue;
+      if ( v.intValue() < 0 )
+      {
+        value = "Unused";
+      }
+      else
+      {
+        value = String.format( "Channel %d", ( Integer )aValue );
+      }
+      if ( ( optionLabels != null ) && ( idx >= 0 ) && ( idx < optionLabels.length ) )
+      {
+        value = optionLabels[idx];
+      }
+
+      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
+
+  // VARIABLES
+
   private final AcquisitionDataInfo dataInfo;
 
   // CONSTRUCTORS
@@ -107,46 +175,7 @@ final class ToolEditorUtils extends EditorUtils
     final JComboBox result = new JComboBox( dataChannels );
     int selectedIndex = ( aInitialSelectedIdx < 0 ) ? 0 : ( aInitialSelectedIdx % modelSize );
     result.setSelectedIndex( selectedIndex );
-    result.setRenderer( new DefaultListCellRenderer()
-    {
-      private static final long serialVersionUID = 1L;
-
-      @Override
-      public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-          final boolean aIsSelected, final boolean aCellHasFocus )
-      {
-        final String[] optionLabels = aAttributeDef.getOptionLabels();
-
-        int idx = aIndex;
-        if ( idx < 0 )
-        {
-          // When rendering the combobox in collapsed state, the given index is
-          // -1, use the selected index from the model instead...
-          idx = result.getSelectedIndex();
-        }
-        if ( addUnusedOption )
-        {
-          idx--;
-        }
-
-        Object value;
-        Integer v = ( Integer )aValue;
-        if ( v.intValue() < 0 )
-        {
-          value = "Unused";
-        }
-        else
-        {
-          value = String.format( "Channel %d", ( Integer )aValue );
-        }
-        if ( ( optionLabels != null ) && ( idx >= 0 ) && ( idx < optionLabels.length ) )
-        {
-          value = optionLabels[idx];
-        }
-
-        return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
-      }
-    } );
+    result.setRenderer( new ChannelLabelRenderer( result, addUnusedOption, aAttributeDef ) );
 
     if ( hasMetaTags( aAttributeDef ) )
     {

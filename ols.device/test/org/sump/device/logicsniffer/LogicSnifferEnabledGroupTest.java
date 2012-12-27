@@ -39,7 +39,7 @@ public class LogicSnifferEnabledGroupTest extends TestCase
   // VARIABLES
 
   private VirtualLogicSnifferDevice device;
-  private LogicSnifferConfig config;
+  private LogicSnifferConfigImpl config;
 
   private final int enabledGroupMask;
   private final boolean enableDdrMode;
@@ -122,7 +122,7 @@ public class LogicSnifferEnabledGroupTest extends TestCase
   @Override
   protected void setUp() throws Exception
   {
-    this.config = new LogicSnifferConfig();
+    this.config = new LogicSnifferConfigImpl();
     this.device = new VirtualLogicSnifferDevice( this.config );
 
     final DeviceProfile deviceProfile = this.device.addDeviceProfile( "VirtualLS", "\"Virtual LogicSniffer\"" );

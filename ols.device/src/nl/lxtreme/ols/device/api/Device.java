@@ -22,6 +22,8 @@ package nl.lxtreme.ols.device.api;
 
 
 import java.io.*;
+
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
 
@@ -29,21 +31,34 @@ import nl.lxtreme.ols.common.acquisition.*;
  * Interface for implementing device controllers. Each supported device must
  * implement at least this interface.
  */
-public interface Device extends Closeable
+public interface Device
 {
   // METHODS
 
   /**
-   * Acquires the data from the device.
+   * Acquires the data from the device using the given context.
    * 
+   * @param aConfiguration
+   *          the (acquisition) configuration of the device, cannot be
+   *          <code>null</code>;
    * @param aProgressListener
-   *          the acquisition progress listener the acquisition task can use to
-   *          report its progress, cannot be <code>null</code>.
+   *          the callback to report the progress of the acquisition to, cannot
+   *          be <code>null</code>.
    * @return the acquired data, never <code>null</code>.
    * @throws IOException
    *           in case of I/O problems during the acquisition.
    */
-  AcquisitionData acquireData( DeviceProgressListener aProgressListener ) throws IOException, InterruptedException;
+  AcquisitionData acquireData( Configuration aConfiguration, DeviceProgressListener aProgressListener )
+      throws IOException, InterruptedException;
+
+  /**
+   * Cancels an ongoing acquisition, allowing this device to perform cleanups of
+   * resources and so on.
+   * 
+   * @throws IllegalStateException
+   *           in case no acquisition is currently going on.
+   */
+  void cancelAcquisition() throws IllegalStateException;
 
   /**
    * Returns a descriptive name of this device controller.
@@ -51,25 +66,4 @@ public interface Device extends Closeable
    * @return name of the controller, cannot be <code>null</code>.
    */
   public String getName();
-
-  /**
-   * Returns whether this device is already set up or not.
-   * 
-   * @return <code>true</code> if there is a "valid" setup for this device,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isSetup();
-
-  /**
-   * Allows this device controller to set up the device by means of presenting
-   * an UI.
-   * 
-   * @param aParent
-   *          the parent window that can be used to display (modal) dialogs, can
-   *          be <code>null</code>.
-   * @return <code>true</code> if the setup is successfully completed (the user
-   *         acknowledged the setup), <code>false</code> if the setup is aborted
-   *         by the user.
-   */
-  public boolean setupCapture( final java.awt.Window aParent );
 }

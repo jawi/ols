@@ -50,7 +50,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
 
   private final DeviceProfileManager deviceProfileManager;
   private final DeviceProgressListener acquisitionProgressListener;
-  private final LogicSnifferConfig config;
+  private final LogicSnifferConfigImpl config;
 
   private StreamConnection connection;
   private SumpResultReader inputStream;
@@ -62,7 +62,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
   /**
    * Creates a new LogicSnifferDevice instance.
    */
-  public LogicSnifferAcquisitionTask( final LogicSnifferConfig aConfig, final StreamConnection aConnection,
+  public LogicSnifferAcquisitionTask( final LogicSnifferConfigImpl aConfig, final StreamConnection aConnection,
       final DeviceProfileManager aDeviceProfileManager, final DeviceProgressListener aProgressListener )
   {
     this.config = aConfig;
@@ -241,7 +241,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
    * 
    * @return a device configuration, never <code>null</code>.
    */
-  protected final LogicSnifferConfig getConfig()
+  protected final LogicSnifferConfigImpl getConfig()
   {
     return this.config;
   }
@@ -397,16 +397,18 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
    * Reads all (or as many as possible) samples from the OLS device.
    * 
    * @param aEnabledGroupCount
-   *          the number of enabled groups (denotes the number of bytes for one sample);
+   *          the number of enabled groups (denotes the number of bytes for one
+   *          sample);
    * @param aSampleCount
    *          the number of samples to read.
-   * @return the read samples, normalized to match the layout of the enabled groups.
+   * @return the read samples, normalized to match the layout of the enabled
+   *         groups.
    * @throws IOException
    *           in case of I/O problems;
    * @throws InterruptedException
    *           in case the current thread was interrupted.
    */
-  private int[] readSamples( final int aEnabledGroupCount, int aSampleCount ) throws IOException, InterruptedException
+  private int[] readSamples( final int aEnabledGroupCount, final int aSampleCount ) throws IOException, InterruptedException
   {
     final int length = aEnabledGroupCount * aSampleCount;
     final byte[] rawData = new byte[length];
@@ -417,6 +419,10 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
       int count = length;
       while ( !Thread.currentThread().isInterrupted() && ( offset >= 0 ) && ( offset < length ) )
       {
+        // Issue #127: read the raw data as quickly as possible, deferring the
+        // post-processing of the data to sample values after we've read *all*
+        // data. This way, we can hugely decrease the time needed to read the
+        // raw data from the device...
         int read = this.inputStream.readRawData( rawData, offset, count );
         if ( read < 0 )
         {
@@ -446,15 +452,15 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Calla
 
       this.acquisitionProgressListener.acquisitionInProgress( 100 );
     }
-    
+
     if ( Thread.currentThread().isInterrupted() )
     {
       // We're interrupted while read samples, do not proceed...
       throw new InterruptedException();
     }
-    
+
     final int groupCount = this.config.getGroupCount();
-    
+
     // Normalize the raw data into the sample data, as expected...
     int[] samples = new int[aSampleCount];
     for ( int i = samples.length - 1, j = 0; i >= 0; i-- )

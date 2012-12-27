@@ -374,7 +374,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   /**
    * Creates a new VirtualLogicSnifferDevice instance.
    */
-  public VirtualLogicSnifferDevice( final LogicSnifferConfig aConfig ) throws IOException
+  public VirtualLogicSnifferDevice( final LogicSnifferConfigImpl aConfig ) throws IOException
   {
     this( aConfig, new SimpleSampleProvider() );
   }
@@ -382,7 +382,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
   /**
    * Creates a new VirtualLogicSnifferDevice instance.
    */
-  public VirtualLogicSnifferDevice( final LogicSnifferConfig aConfig, final SampleProvider aSampleProvider )
+  public VirtualLogicSnifferDevice( final LogicSnifferConfigImpl aConfig, final SampleProvider aSampleProvider )
       throws IOException
   {
     super( aConfig, null /* aConnection */, new DeviceProfileManager(), new NullAcquisitionProgressListener() );
@@ -519,7 +519,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
    */
   public void assertSampleRate( final int aExpectedSampleRate )
   {
-    final LogicSnifferConfig config = getConfig();
+    final LogicSnifferConfigImpl config = getConfig();
 
     int clock = config.getClockspeed();
     if ( config.isDoubleDataRateEnabled() )

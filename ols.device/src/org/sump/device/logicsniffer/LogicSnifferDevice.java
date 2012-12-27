@@ -27,6 +27,7 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
+import nl.lxtreme.ols.common.Configuration;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -54,7 +55,7 @@ public class LogicSnifferDevice implements Device
 
   // VARIABLES
 
-  private LogicSnifferConfig config;
+  private LogicSnifferConfigImpl config;
 
   private volatile DependencyManager dependencyManager;
   private volatile ManagedServiceFactory deviceProfileManagerServiceFactory;
@@ -68,8 +69,8 @@ public class LogicSnifferDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionData acquireData( final DeviceProgressListener aProgressListener ) throws IOException,
-      InterruptedException
+  public AcquisitionData acquireData( final Configuration aConfiguration, final DeviceProgressListener aProgressListener )
+      throws IOException, InterruptedException
   {
     return new LogicSnifferAcquisitionTask( this.config, getStreamConnection(), getDeviceProfileManager(),
         aProgressListener ).call();
@@ -79,12 +80,20 @@ public class LogicSnifferDevice implements Device
    * {@inheritDoc}
    */
   @Override
-  public void close() throws IOException
+  public void cancelAcquisition() throws IllegalStateException
   {
-    if ( this.connection != null )
+    try
     {
-      this.connection.close();
-      this.connection = null;
+      if ( this.connection != null )
+      {
+        this.connection.close();
+        this.connection = null;
+      }
+    }
+    catch ( IOException exception )
+    {
+      // TODO Auto-generated catch block
+      exception.printStackTrace();
     }
   }
 
@@ -99,7 +108,6 @@ public class LogicSnifferDevice implements Device
   /**
    * @see nl.lxtreme.ols.api.devices.Device#isSetup()
    */
-  @Override
   public boolean isSetup()
   {
     return this.config != null;
@@ -111,7 +119,6 @@ public class LogicSnifferDevice implements Device
    * 
    * @see nl.lxtreme.ols.api.devices.Device#setupCapture()
    */
-  @Override
   public boolean setupCapture( final Window aOwner )
   {
     // Just to be sure...

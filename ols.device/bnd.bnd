@@ -1,5 +1,6 @@
 -buildpath: osgi.core;version=4.2,\
 	osgi.cmpn;version=4.2,\
+    biz.aQute.bnd.annotation;version=1.52.3,\
 	org.apache.felix.dependencymanager;version=3.0.0,\
 	javax.microedition.io;version=latest,\
 	purejavacomm;version=0.0.9,\

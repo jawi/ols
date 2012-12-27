@@ -21,9 +21,9 @@
 package nl.lxtreme.ols.client.ui;
 
 
-import nl.lxtreme.ols.client.ui.tool.*;
+import nl.lxtreme.ols.client.ui.device.*;
 import nl.lxtreme.ols.common.session.*;
-import nl.lxtreme.ols.tool.api.*;
+import nl.lxtreme.ols.device.api.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.service.cm.*;
@@ -32,27 +32,27 @@ import org.osgi.service.metatype.*;
 
 
 /**
- * Provides a bundle adapter for handling tools.
+ * Provides a bundle adapter for all device-registering bundles.
  */
-public class ToolBundleAdapter extends AbstractBundleAdapter<Tool>
+public class DeviceBundleAdapter extends AbstractBundleAdapter<Device>
 {
   // CONSTANTS
 
-  private static final String OLS_TOOL_MAGIC_KEY = "OLS-Tool";
-  private static final String OLS_TOOL_MAGIC_VALUE = "1.0";
-  private static final String OLS_TOOL_CLASS_KEY = "OLS-ToolClass";
+  private static final String OLS_DEVICE_MAGIC_KEY = "OLS-Device";
+  private static final String OLS_DEVICE_MAGIC_VALUE = "1.0";
+  private static final String OLS_DEVICE_CLASS_KEY = "OLS-DeviceClass";
 
-  public static final String FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_TOOL_MAGIC_KEY, OLS_TOOL_MAGIC_VALUE,
-      OLS_TOOL_CLASS_KEY );
+  public static final String FILTER = String.format( "(&(%s=%s)(%s=*))", OLS_DEVICE_MAGIC_KEY, OLS_DEVICE_MAGIC_VALUE,
+      OLS_DEVICE_CLASS_KEY );
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link ToolBundleAdapter} instance.
+   * Creates a new {@link DeviceBundleAdapter} instance.
    */
-  public ToolBundleAdapter()
+  public DeviceBundleAdapter()
   {
-    super( Tool.class, OLS_TOOL_CLASS_KEY );
+    super( Device.class, OLS_DEVICE_CLASS_KEY );
   }
 
   // METHODS
@@ -81,9 +81,9 @@ public class ToolBundleAdapter extends AbstractBundleAdapter<Tool>
    * {@inheritDoc}
    */
   @Override
-  protected Object getImplementation( final Class<Tool> aType ) throws Exception
+  protected Object getImplementation( final Class<Device> aType ) throws Exception
   {
-    return new ToolInvokerImpl( aType.newInstance() );
+    return new DeviceInvokerImpl( aType.newInstance() );
   }
 
   /**
@@ -92,6 +92,6 @@ public class ToolBundleAdapter extends AbstractBundleAdapter<Tool>
   @Override
   protected Class<?>[] getPublishedInterfaces()
   {
-    return new Class<?>[] { ToolInvoker.class, ManagedService.class };
+    return new Class<?>[] { DeviceInvoker.class, ManagedService.class };
   }
 }

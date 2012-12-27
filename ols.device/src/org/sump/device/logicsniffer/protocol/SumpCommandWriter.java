@@ -81,7 +81,7 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
 
   // VARIABLES
 
-  protected final LogicSnifferConfig config;
+  protected final LogicSnifferConfigImpl config;
   private final DataOutputStream outputStream;
 
   // CONSTRUCTORS
@@ -94,7 +94,7 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
    * @param aOutputStream
    *          the {@link DataOutputStream} to wrap, cannot be <code>null</code>.
    */
-  public SumpCommandWriter( final LogicSnifferConfig aConfiguration, final DataOutputStream aOutputStream )
+  public SumpCommandWriter( final LogicSnifferConfigImpl aConfiguration, final DataOutputStream aOutputStream )
   {
     this.config = aConfiguration;
     this.outputStream = aOutputStream;
@@ -405,7 +405,7 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
     {
       sendCommand( SETTRIGMASK, 0 );
       sendCommand( SETTRIGVAL, 0 );
-      sendCommand( SETTRIGCFG, LogicSnifferConfig.TRIGGER_CAPTURE );
+      sendCommand( SETTRIGCFG, LogicSnifferConfigImpl.TRIGGER_CAPTURE );
       effectiveStopCounter = this.config.getReadCounter();
     }
 

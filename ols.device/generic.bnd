@@ -2,5 +2,6 @@ Private-Package: nl.lxtreme.ols.device.generic
 Bundle-Description: A generic device for the OLS client.
 Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2011
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+-metatype: *Config
 OLS-Device: 1.0
 OLS-DeviceClass: nl.lxtreme.ols.device.generic.GenericDevice

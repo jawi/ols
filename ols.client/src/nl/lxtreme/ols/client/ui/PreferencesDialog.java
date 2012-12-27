@@ -147,7 +147,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareDialog
    *          the configuration values to use, cannot be <code>null</code>.
    */
   public PreferencesDialog( final Window aParent, final ColorSchemeManager aColorSchemeManager,
-      final ObjectClassDefinition aOCD, final Properties aConfiguration )
+      final ObjectClassDefinition aOCD, final Map<Object, Object> aConfiguration )
   {
     super( aParent, aOCD.getName(), ModalityType.APPLICATION_MODAL );
 
@@ -156,7 +156,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareDialog
     // Avoid the dialog to be resized automatically...
     getRootPane().putClientProperty( "unmanaged", Boolean.TRUE );
 
-    this.editorPanel = new EditorPanel( this.ocd, aConfiguration, "Preferences", new IEditorProvider()
+    this.editorPanel = EditorPanel.create( this.ocd, aConfiguration, "Preferences", new IEditorProvider()
     {
       @Override
       public JComponent createEditor( final AttributeDefinition aAttributeDefinition, final Object aInitialValue )

@@ -26,8 +26,7 @@ import java.util.concurrent.*;
 
 import nl.lxtreme.ols.client.ui.action.*;
 import nl.lxtreme.ols.client.ui.action.manager.*;
-import nl.lxtreme.ols.device.api.*;
-
+import nl.lxtreme.ols.client.ui.device.*;
 import org.osgi.service.log.*;
 
 
@@ -38,7 +37,7 @@ public final class DeviceController
 {
   // VARIABLES
 
-  private final ConcurrentMap<String, Device> devices;
+  private final ConcurrentMap<String, DeviceInvoker> devices;
 
   // Injected by Felix DM...
   private volatile LogService logService;
@@ -53,7 +52,7 @@ public final class DeviceController
    */
   public DeviceController()
   {
-    this.devices = new ConcurrentHashMap<String, Device>();
+    this.devices = new ConcurrentHashMap<String, DeviceInvoker>();
   }
 
   // METHODS
@@ -61,7 +60,7 @@ public final class DeviceController
   /**
    * {@inheritDoc}
    */
-  public Device getDevice( final String aName )
+  public DeviceInvoker getDevice( final String aName )
   {
     if ( aName == null )
     {
@@ -88,7 +87,7 @@ public final class DeviceController
    * @return the selected device, can be <code>null</code> if no device is
    *         selected.
    */
-  public Device getSelectedDevice()
+  public DeviceInvoker getSelectedDevice()
   {
     return ( this.currentDevice == null ) ? null : getDevice( this.currentDevice );
   }
@@ -127,7 +126,7 @@ public final class DeviceController
    * @param aDevice
    *          the device to add, cannot be <code>null</code>.
    */
-  final void addDevice( final Device aDevice )
+  final void addDevice( final DeviceInvoker aDevice )
   {
     ActionManager actionManager = getActionManager();
 
@@ -155,7 +154,7 @@ public final class DeviceController
    * @param aDevice
    *          the device to remove, cannot be <code>null</code>.
    */
-  final void removeDevice( final Device aDevice )
+  final void removeDevice( final DeviceInvoker aDevice )
   {
     ActionManager actionManager = getActionManager();
 

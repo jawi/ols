@@ -18,22 +18,18 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.ui.tool;
+package nl.lxtreme.ols.client.ui.device;
 
 
 import java.awt.*;
 import java.io.*;
 import java.util.*;
-import java.util.List;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-
-import javax.swing.*;
 
 import nl.lxtreme.ols.client.ui.*;
 import nl.lxtreme.ols.common.Configuration;
-import nl.lxtreme.ols.common.session.*;
-import nl.lxtreme.ols.tool.api.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -41,16 +37,14 @@ import nl.lxtreme.ols.util.swing.component.*;
 import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
-import org.osgi.service.event.*;
-import org.osgi.service.event.Event;
 import org.osgi.service.log.*;
 import org.osgi.service.metatype.*;
 
 
 /**
- * Default implementation for {@link ToolInvoker}.
+ * 
  */
-public class ToolInvokerImpl implements ToolInvoker
+public class DeviceInvokerImpl implements DeviceInvoker
 {
   // INNER TYPES
 
@@ -82,6 +76,15 @@ public class ToolInvokerImpl implements ToolInvoker
     public Map<Object, Object> asMap()
     {
       return this.mapRef.get();
+    }
+
+    /**
+     * @return <code>true</code> if this configuration is empty,
+     *         <code>false</code> otherwise.
+     */
+    public boolean isEmpty()
+    {
+      return this.mapRef.get().isEmpty();
     }
 
     /**
@@ -129,26 +132,45 @@ public class ToolInvokerImpl implements ToolInvoker
 
   // VARIABLES
 
-  private final Tool delegate;
+  private final Device delegate;
   private final MutableConfiguration configuration;
 
   // Injected by Felix DM...
   private volatile BundleContext bundleContext;
   private volatile MetaTypeService metaTypeService;
-  private volatile EventAdmin eventAdmin;
   private volatile ConfigurationAdmin configAdmin;
   private volatile LogService log;
-  private volatile Session session;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link ToolInvokerImpl} instance.
+   * Creates a new DeviceInvokerImpl instance.
    */
-  public ToolInvokerImpl( final Tool aTool )
+  public DeviceInvokerImpl( final Device aDevice )
   {
-    this.delegate = aTool;
+    this.delegate = aDevice;
     this.configuration = new MutableConfiguration();
+  }
+
+  // METHODS
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public AcquisitionData acquireData( final DeviceProgressListener aProgressListener ) throws IOException,
+      InterruptedException
+  {
+    return this.delegate.acquireData( this.configuration, aProgressListener );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void cancelAcquisition() throws IllegalStateException
+  {
+    this.delegate.cancelAcquisition();
   }
 
   /**
@@ -162,7 +184,7 @@ public class ToolInvokerImpl implements ToolInvoker
     {
       // Not metatyped; assume it has no configuration to be performed...
       this.log.log( LogService.LOG_INFO,
-          "No metatype information to base tool configuration on for " + this.delegate.getName()
+          "No metatype information to base device configuration on for " + this.delegate.getName()
               + "; assuming no configuration is needed..." );
       return true;
     }
@@ -170,10 +192,7 @@ public class ToolInvokerImpl implements ToolInvoker
     String pid = metaTypeInfo.getPids()[0];
     ObjectClassDefinition ocd = metaTypeInfo.getObjectClassDefinition( pid, aParent.getLocale().toString() );
 
-    AcquisitionDataInfo dataInfo = new AcquisitionDataInfo( this.session );
-
-    ToolConfigurationEditor editor = ToolConfigurationEditor
-        .create( aParent, ocd, this.configuration.asMap(), dataInfo );
+    DeviceConfigurationEditor editor = DeviceConfigurationEditor.create( aParent, ocd, this.configuration.asMap() );
 
     getWindowManager().show( editor ); // Blocks...
 
@@ -194,17 +213,6 @@ public class ToolInvokerImpl implements ToolInvoker
     return editor.areSettingsValid() && ( editor.getDialogStatus() == DialogStatus.OK );
   }
 
-  // METHODS
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public ToolCategory getCategory()
-  {
-    return this.delegate.getCategory();
-  }
-
   /**
    * {@inheritDoc}
    */
@@ -218,112 +226,9 @@ public class ToolInvokerImpl implements ToolInvoker
    * {@inheritDoc}
    */
   @Override
-  public void invoke() throws ToolException
+  public boolean isSetup()
   {
-    this.log.log( LogService.LOG_DEBUG, "Invoking tool: " + getName() );
-
-    final SwingWorker<Void, Integer> worker = new SwingWorker<Void, Integer>()
-    {
-      // VARIABLES
-
-      private final Tool delegate = ToolInvokerImpl.this.delegate;
-      private final Session session = ToolInvokerImpl.this.session;
-      private final EventAdmin eventAdmin = ToolInvokerImpl.this.eventAdmin;
-      private final Configuration configuration = ToolInvokerImpl.this.configuration;
-      private final Long startTime = Long.valueOf( System.currentTimeMillis() );
-
-      // METHODS
-
-      @Override
-      protected Void doInBackground() throws Exception
-      {
-        final ToolContext context = new ToolContextImpl( this.session, this.configuration, new ToolProgressListener()
-        {
-          @Override
-          public void setProgress( final int aPercentage )
-          {
-            publish( Integer.valueOf( aPercentage ) );
-          }
-        } );
-
-        this.eventAdmin.postEvent( createEvent( TOOL_STATUS_STARTED, null ) );
-
-        this.delegate.invoke( context, this.configuration );
-
-        return null;
-      }
-
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      protected void process( final List<Integer> aChunks )
-      {
-        if ( !aChunks.isEmpty() )
-        {
-          Integer lastValue = aChunks.get( aChunks.size() - 1 );
-
-          this.eventAdmin.postEvent( createEvent( lastValue ) );
-        }
-      }
-
-      @Override
-      protected void done()
-      {
-        String state;
-        Throwable ex = null;
-        try
-        {
-          // This should return immediately...
-          get();
-
-          state = TOOL_STATUS_SUCCESS;
-        }
-        catch ( InterruptedException exception )
-        {
-          state = TOOL_STATUS_CANCELLED;
-        }
-        catch ( ExecutionException exception )
-        {
-          state = TOOL_STATUS_FAILED;
-          ex = exception.getCause();
-        }
-        this.eventAdmin.postEvent( createEvent( state, ex ) );
-      }
-
-      private Event createEvent( final String aState, final Throwable aException )
-      {
-        Map<Object, Object> props = new HashMap<Object, Object>();
-        props.put( KEY_TOOL_NAME, getToolName() );
-        props.put( KEY_TOOL_START_TIME, this.startTime );
-        props.put( KEY_TOOL_EXCEPTION, aException );
-        props.put( KEY_TOOL_STATE, aState );
-        return new Event( TOPIC_TOOL_STATUS, props );
-      }
-
-      private Event createEvent( final Integer aPercentage )
-      {
-        Map<Object, Object> props = new HashMap<Object, Object>();
-        props.put( KEY_TOOL_NAME, getToolName() );
-        props.put( KEY_TOOL_START_TIME, this.startTime );
-        props.put( KEY_TOOL_PROGRESS, aPercentage );
-        return new Event( TOPIC_TOOL_PROGRESS, props );
-      }
-
-      /**
-       * @return a tool name, never <code>null</code>.
-       */
-      private String getToolName()
-      {
-        String result = this.delegate.getName();
-        if ( result.endsWith( "..." ) )
-        {
-          result = result.substring( 0, result.length() - 3 );
-        }
-        return result.trim();
-      }
-    };
-    worker.execute();
+    return !this.configuration.isEmpty();
   }
 
   /**
@@ -333,7 +238,7 @@ public class ToolInvokerImpl implements ToolInvoker
   @SuppressWarnings( "rawtypes" )
   public void updated( final Dictionary aProperties ) throws ConfigurationException
   {
-    this.log.log( LogService.LOG_DEBUG, "Tool configuration updated for: " + getName() );
+    this.log.log( LogService.LOG_DEBUG, "Device configuration updated for: " + getName() );
     this.configuration.set( aProperties );
   }
 

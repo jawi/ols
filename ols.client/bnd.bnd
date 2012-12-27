@@ -11,6 +11,5 @@
 	ols.common;version=latest,\
 	ols.device.api;version=latest,\
 	ols.export.api;version=latest,\
-	ols.tool.api;version=latest,\
-	ols.acquisition.service;version=latest
+	ols.tool.api;version=latest
 -sub: *.bnd

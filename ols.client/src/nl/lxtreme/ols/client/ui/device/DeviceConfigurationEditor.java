@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.ui.tool;
+package nl.lxtreme.ols.client.ui.device;
 
 
 import java.awt.*;
@@ -29,61 +29,44 @@ import org.osgi.service.metatype.*;
 
 
 /**
- * Provides a generic editor for a tool configuration.
+ * Provides a generic editor for a device configuration.
  */
-final class ToolConfigurationEditor extends BaseConfigurationEditor
+final class DeviceConfigurationEditor extends BaseConfigurationEditor
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  // VARIABLES
-
-  private final AcquisitionDataInfo acquisitionDataInfo;
-
   // CONSTRUCTORS
 
   /**
-   * Creates a new {@link ToolConfigurationEditor} instance.
+   * Creates a new {@link DeviceConfigurationEditor} instance.
    */
-  public ToolConfigurationEditor( final Window aParent, final String aTitle,
-      final AcquisitionDataInfo aAcquisitionDataInfo )
+  public DeviceConfigurationEditor( final Window aParent, final String aTitle )
   {
     super( aParent, aTitle );
-
-    this.acquisitionDataInfo = aAcquisitionDataInfo;
   }
 
   // METHODS
 
   /**
-   * Factory method for creating a new {@link ToolConfigurationEditor} dialog.
+   * Factor method for creating a proper {@link DeviceConfigurationEditor}
+   * instance.
    * 
    * @param aParent
    *          the parent window to use;
    * @param aOCD
    *          the object-class definition to use;
    * @param aSettings
-   *          the (initial) settings to use;
-   * @param aDataInfo
-   *          the acquisition data information to use.
-   * @return a new {@link ToolConfigurationEditor} instance, never
+   *          the (initial) settings to use.
+   * @return a new {@link DeviceConfigurationEditor} instance, never
    *         <code>null</code>.
    */
-  public static ToolConfigurationEditor create( final Window aParent, final ObjectClassDefinition aOCD,
-      final Map<Object, Object> aSettings, final AcquisitionDataInfo aDataInfo )
+  public static DeviceConfigurationEditor create( final Window aParent, final ObjectClassDefinition aOCD,
+      final Map<Object, Object> aSettings )
   {
-    ToolConfigurationEditor result = new ToolConfigurationEditor( aParent, aOCD.getName(), aDataInfo );
+    DeviceConfigurationEditor result = new DeviceConfigurationEditor( aParent, aOCD.getName() );
     result.initDialog( aOCD, aSettings );
     return result;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected EditorPanel createEditorPanel( final ObjectClassDefinition aOCD, final Map<Object, Object> aSettings )
-  {
-    return ToolConfigPanel.create( aOCD, aSettings, this.acquisitionDataInfo );
   }
 }

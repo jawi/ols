@@ -32,7 +32,7 @@ import org.osgi.service.log.*;
  * Provides a bundle adapter that instantiates a service from a bundle with a
  * particular magic key-value header.
  */
-public class GenericBundleAdapter<TYPE>
+public abstract class AbstractBundleAdapter<TYPE>
 {
   // VARIABLES
 
@@ -48,7 +48,7 @@ public class GenericBundleAdapter<TYPE>
   /**
    * Creates a new GenericBundleAdapter instance.
    */
-  public GenericBundleAdapter( final Class<? extends TYPE> aClass, final String aHeaderKey )
+  public AbstractBundleAdapter( final Class<? extends TYPE> aClass, final String aHeaderKey )
   {
     this.serviceClass = aClass;
     this.headerKey = aHeaderKey;
@@ -59,7 +59,7 @@ public class GenericBundleAdapter<TYPE>
   /**
    * Called by Dependency Manager upon destruction of this component.
    */
-  public void destroy( final Component aComponent ) throws Exception
+  public final void destroy( final Component aComponent ) throws Exception
   {
     if ( this.serviceComponent != null )
     {
@@ -71,8 +71,12 @@ public class GenericBundleAdapter<TYPE>
   /**
    * Called by Dependency Manager upon initialization of this component.
    */
-  public void init( final Component aComponent ) throws Exception
+  @SuppressWarnings( "unchecked" )
+  public final void init( final Component aComponent ) throws Exception
   {
+    // Make sure to register services on behalf of the *original* bundle!
+    this.manager = new DependencyManager( this.bundle.getBundleContext() );
+
     Dictionary<?, ?> bundleProps = this.bundle.getHeaders();
 
     String entry = ( String )bundleProps.get( this.headerKey );
@@ -81,18 +85,39 @@ public class GenericBundleAdapter<TYPE>
       throw new IllegalArgumentException( "No such header given: " + this.headerKey );
     }
 
-    Class<?> implClass = this.bundle.loadClass( entry );
+    Class<TYPE> implClass = this.bundle.loadClass( entry );
+
+    Class<?>[] interfaces = getPublishedInterfaces();
+    String[] intfNames = new String[interfaces.length];
+    for ( int i = 0; i < intfNames.length; i++ )
+    {
+      intfNames[i] = interfaces[i].getName();
+    }
 
     Properties serviceProps = copyOlsProperties( bundleProps );
 
     this.serviceComponent = this.manager.createComponent() //
-        .setInterface( this.serviceClass.getName(), serviceProps ) //
-        .setImplementation( implClass ) //
+        .setInterface( intfNames, serviceProps ) //
+        .setImplementation( getImplementation( implClass ) ) //
         .add( this.manager.createServiceDependency() //
             .setService( LogService.class ) //
             .setRequired( false ) //
         );
+    addServiceDependencies( this.manager, this.serviceComponent );
     this.manager.add( this.serviceComponent );
+  }
+
+  /**
+   * Registers additional service dependencies for the given component.
+   * 
+   * @param aManager
+   *          the dependency manager to use;
+   * @param aComponent
+   *          the component to add service dependencies for.
+   */
+  protected void addServiceDependencies( final DependencyManager aManager, final Component aComponent )
+  {
+    // Nothing...
   }
 
   /**
@@ -119,5 +144,31 @@ public class GenericBundleAdapter<TYPE>
     }
 
     return result;
+  }
+
+  /**
+   * Creates an implementation or returns an implementation=-class for the given
+   * type.
+   * 
+   * @param aType
+   *          the type to create an service implementation for, cannot be
+   *          <code>null</code>.
+   * @return a implementation type or instance, never <code>null</code>.
+   * @throws Exception
+   *           in case of problems obtaining the implementation.
+   */
+  protected Object getImplementation( final Class<TYPE> aType ) throws Exception
+  {
+    return aType;
+  }
+
+  /**
+   * Returns the interfaces the service class should publish.
+   * 
+   * @return an array with published interfaces, never <code>null</code>.
+   */
+  protected Class<?>[] getPublishedInterfaces()
+  {
+    return new Class<?>[] { this.serviceClass };
   }
 }

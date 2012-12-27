@@ -8,7 +8,6 @@
 -runrequires: osgi.identity;filter:='(osgi.identity=javax.microedition.io)',\
 	osgi.identity;filter:='(osgi.identity=lib.ioutil)',\
 	osgi.identity;filter:='(osgi.identity=lib.swing)',\
-	osgi.identity;filter:='(osgi.identity=ols.acquisition.service)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.api)',\
     osgi.identity;filter:='(osgi.identity=ols.client.acquisition)',\
     osgi.identity;filter:='(osgi.identity=ols.client.jgoodies)',\
@@ -74,7 +73,6 @@
 	ols.common;version=latest,\
 	ols.service.io;version=latest,\
 	ols.service.task.execution;version=latest,\
-	ols.acquisition.service;version=latest,\
 	ols.logbridge;version=latest,\
 	ols.device.api;version=latest,\
 	ols.device.demo;version=latest,\

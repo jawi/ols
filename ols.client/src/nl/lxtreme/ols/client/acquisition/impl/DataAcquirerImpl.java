@@ -22,27 +22,49 @@ package nl.lxtreme.ols.client.acquisition.impl;
 
 
 import java.io.*;
+import java.util.*;
 import java.util.concurrent.*;
 
-import nl.lxtreme.ols.acquisition.service.*;
 import nl.lxtreme.ols.client.acquisition.*;
+import nl.lxtreme.ols.client.ui.device.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.device.api.*;
 
 import org.osgi.service.event.*;
+import org.osgi.service.log.*;
 
 
 /**
  * Provides a front end for acquiring data.
  */
-public class DataAcquirerImpl implements EventHandler, IDataAcquirer
+public class DataAcquirerImpl implements IDataAcquirer
 {
+  // INNER TYPES
+
+  static interface CancellableTask<T> extends Callable<T>
+  {
+    // METHODS
+
+    /**
+     * Cancels this task.
+     */
+    void cancel();
+  }
+
+  // CONSTANTS
+
+  private static final int MAX_POOL_SIZE = 16;
+
   // VARIABLES
 
   // Injected by Felix DM...
-  private volatile DataAcquisitionService acquisitionService;
+  private volatile LogService logService;
+  private volatile EventAdmin eventAdmin;
+  private volatile Session session;
 
   private final ConcurrentMap<String, Future<AcquisitionData>> acquisitions;
+  private final ExecutorService executorService;
 
   // CONSTRUCTORS
 
@@ -52,6 +74,33 @@ public class DataAcquirerImpl implements EventHandler, IDataAcquirer
   public DataAcquirerImpl()
   {
     this.acquisitions = new ConcurrentHashMap<String, Future<AcquisitionData>>();
+    this.executorService = new ThreadPoolExecutor( 0, MAX_POOL_SIZE, 60L, TimeUnit.SECONDS,
+        new SynchronousQueue<Runnable>() )
+    {
+      @Override
+      protected <T> RunnableFuture<T> newTaskFor( final Callable<T> callable )
+      {
+        return new FutureTask<T>( callable )
+        {
+          @Override
+          @SuppressWarnings( "finally" )
+          public boolean cancel( final boolean mayInterruptIfRunning )
+          {
+            try
+            {
+              if ( callable instanceof CancellableTask<?> )
+              {
+                ( ( CancellableTask<?> )callable ).cancel();
+              }
+            }
+            finally
+            {
+              return super.cancel( mayInterruptIfRunning );
+            }
+          }
+        };
+      }
+    };
   }
 
   // METHODS
@@ -60,63 +109,91 @@ public class DataAcquirerImpl implements EventHandler, IDataAcquirer
    * {@inheritDoc}
    */
   @Override
-  public void acquireData( final Device aDevice ) throws IOException
+  public void acquireData( final DeviceInvoker aDevice ) throws IOException
   {
     final String name = aDevice.getName();
     if ( this.acquisitions.containsKey( name ) )
     {
-      throw new IllegalStateException( "Acquisition for " + aDevice.getName() + " already in progress!" );
+      throw new IllegalStateException( "Acquisition for " + name + " already in progress!" );
     }
 
-    this.acquisitions.putIfAbsent( name, this.acquisitionService.acquireData( aDevice ) );
+    // Wrap the actual acquisition task in order to get a kind of "auto"
+    // closable behavior...
+    Callable<AcquisitionData> task = new CancellableTask<AcquisitionData>()
+    {
+      private final long startTime = System.currentTimeMillis();
+
+      @Override
+      public AcquisitionData call() throws Exception
+      {
+        final String name = aDevice.getName();
+
+        fireAcquisitionStartedEvent( name, this.startTime );
+
+        try
+        {
+          final AcquisitionData result = aDevice.acquireData( new DeviceProgressListener()
+          {
+            @Override
+            public void acquisitionInProgress( final int aPercentage )
+            {
+              fireAcquisitionProgressEvent( name, aPercentage );
+            }
+          } );
+
+          fireAcquisitionEndedEvent( name, result, this.startTime );
+          updateAdministration( name );
+
+          return result;
+        }
+        catch ( Exception exception )
+        {
+          fireAcquisitionFailedEvent( name, exception, this.startTime );
+          updateAdministration( name );
+
+          throw exception;
+        }
+      }
+
+      @Override
+      public void cancel()
+      {
+        fireAcquisitionCancelledEvent( aDevice.getName(), this.startTime );
+        updateAdministration( name );
+
+        aDevice.cancelAcquisition();
+      }
+    };
+
+    this.acquisitions.putIfAbsent( name, this.executorService.submit( task ) );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void cancelAcquisition( final Device aDevice ) throws IOException
+  public void cancelAcquisition( final DeviceInvoker aDevice ) throws IOException
   {
     final String name = aDevice.getName();
 
-    cancelAcquisition( name );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void handleEvent( final Event aEvent )
-  {
-    String topic = aEvent.getTopic();
-    if ( DataAcquisitionService.TOPIC_ACQUISITION_STATUS.equals( topic ) )
+    Callable<Void> cancelTask = new Callable<Void>()
     {
-      String status = ( String )aEvent.getProperty( DataAcquisitionService.KEY_STATUS );
-      String name = ( String )aEvent.getProperty( DataAcquisitionService.KEY_DEVICE );
+      @Override
+      public Void call() throws Exception
+      {
+        cancelAcquisition( name );
+        return null;
+      }
+    };
 
-      if ( DataAcquisitionService.STATUS_SUCCESS.equals( status ) )
-      {
-        // Remove the future from our administration...
-        this.acquisitions.remove( name );
-      }
-      else if ( DataAcquisitionService.STATUS_FAILED.equals( status ) )
-      {
-        // Remove the future from our administration...
-        this.acquisitions.remove( name );
-      }
-      else if ( DataAcquisitionService.STATUS_CANCELLED.equals( status ) )
-      {
-        // Remove the future from our administration...
-        this.acquisitions.remove( name );
-      }
-    }
+    this.executorService.submit( cancelTask );
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public boolean isAcquisitionInProgress( final Device aDevice )
+  public boolean isAcquisitionInProgress( final DeviceInvoker aDevice )
   {
     final String name = aDevice.getName();
     final Future<AcquisitionData> future = this.acquisitions.get( name );
@@ -124,7 +201,7 @@ public class DataAcquirerImpl implements EventHandler, IDataAcquirer
   }
 
   /**
-   * Called by Felix DM upon stop of this component.
+   * Called by Felix DM when this component is stopped.
    */
   public void stop() throws InterruptedException
   {
@@ -132,6 +209,81 @@ public class DataAcquirerImpl implements EventHandler, IDataAcquirer
     {
       cancelAcquisition( deviceName );
     }
+  }
+
+  /**
+   * 
+   */
+  final void fireAcquisitionCancelledEvent( final String aDeviceName, final long aStartTime )
+  {
+    final Map<String, Object> props = new HashMap<String, Object>();
+    props.put( KEY_STATUS, STATUS_CANCELLED );
+    props.put( KEY_START_TIME, Long.valueOf( aStartTime ) );
+    props.put( KEY_DEVICE, aDeviceName );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_STATUS, props ) );
+
+    this.logService.log( LogService.LOG_WARNING, "Acquisition cancelled for " + aDeviceName );
+  }
+
+  /**
+   * @param aData
+   */
+  final void fireAcquisitionEndedEvent( final String aDeviceName, final AcquisitionData aData, final long aStartTime )
+  {
+    final Map<String, Object> props = new HashMap<String, Object>();
+    props.put( KEY_STATUS, STATUS_SUCCESS );
+    props.put( KEY_START_TIME, Long.valueOf( aStartTime ) );
+    props.put( KEY_DEVICE, aDeviceName );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_STATUS, props ) );
+
+    this.session.setAcquisitionData( aData );
+
+    this.logService.log( LogService.LOG_INFO, "Acquisition successful for " + aDeviceName );
+  }
+
+  /**
+   * @param aException
+   */
+  final void fireAcquisitionFailedEvent( final String aDeviceName, final Throwable aException, final long aStartTime )
+  {
+    final Map<String, Object> props = new HashMap<String, Object>();
+    props.put( KEY_STATUS, STATUS_FAILED );
+    props.put( KEY_START_TIME, Long.valueOf( aStartTime ) );
+    props.put( KEY_EXCEPTION, aException );
+    props.put( KEY_DEVICE, aDeviceName );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_STATUS, props ) );
+
+    this.logService.log( LogService.LOG_WARNING, "Acquisition failed for " + aDeviceName, aException );
+  }
+
+  /**
+   * @param aPercentage
+   */
+  final void fireAcquisitionProgressEvent( final String aDeviceName, final int aPercentage )
+  {
+    final Map<String, Object> props = new HashMap<String, Object>();
+    props.put( KEY_PROGRESS, Integer.valueOf( aPercentage ) );
+    props.put( KEY_DEVICE, aDeviceName );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_PROGRESS, props ) );
+  }
+
+  /**
+   * Fires an event to notify listers that an acquisition is started.
+   */
+  final void fireAcquisitionStartedEvent( final String aDeviceName, final long aStartTime )
+  {
+    final Map<String, Object> props = new HashMap<String, Object>();
+    props.put( KEY_STATUS, STATUS_STARTED );
+    props.put( KEY_START_TIME, Long.valueOf( aStartTime ) );
+    props.put( KEY_DEVICE, aDeviceName );
+
+    this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_STATUS, props ) );
+
+    this.logService.log( LogService.LOG_WARNING, "Acquisition started for " + aDeviceName );
   }
 
   /**
@@ -144,15 +296,26 @@ public class DataAcquirerImpl implements EventHandler, IDataAcquirer
    */
   private void cancelAcquisition( final String aDeviceName )
   {
-    Future<AcquisitionData> future;
-    do
+    Future<AcquisitionData> future = this.acquisitions.remove( aDeviceName );
+    if ( future != null )
     {
-      future = this.acquisitions.get( aDeviceName );
-      if ( future != null )
+      if ( !future.cancel( true /* mayInterruptIfRunning */) )
       {
-        future.cancel( true /* mayInterruptIfRunning */);
+        this.logService.log( LogService.LOG_WARNING, "Failed to cancel acquisition?!" );
       }
     }
-    while ( !this.acquisitions.remove( aDeviceName, future ) );
+  }
+
+  /**
+   * Updates our administration by removing the future associated to the given
+   * device name.
+   * 
+   * @param aDeviceName
+   *          the name of the device whose future should be removed from our
+   *          administration.
+   */
+  private void updateAdministration( final String aDeviceName )
+  {
+    this.acquisitions.remove( aDeviceName );
   }
 }

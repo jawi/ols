@@ -22,20 +22,14 @@ package nl.lxtreme.ols.client.ui.tool;
 
 
 import static nl.lxtreme.ols.client.ui.ClientSwingUtil.*;
-import static nl.lxtreme.ols.client.ui.editor.EditorUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
-import java.awt.*;
 import java.awt.event.*;
-import java.beans.*;
 import java.util.*;
-import java.util.Map.Entry;
 
 import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.text.*;
-
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.client.ui.editor.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 
 import org.osgi.service.metatype.*;
@@ -44,86 +38,15 @@ import org.osgi.service.metatype.*;
 /**
  * Provides a panel for configuring tools.
  */
-final class ToolConfigPanel extends JPanel implements Constants
+final class ToolConfigPanel extends EditorPanel implements Constants
 {
-  // INNER TYPES
-
-  private class ChangeReflector implements ActionListener, ChangeListener, ListSelectionListener, DocumentListener
-  {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void changedUpdate( final DocumentEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void insertUpdate( final DocumentEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void removeUpdate( final DocumentEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void stateChanged( final ChangeEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void valueChanged( final ListSelectionEvent aEvent )
-    {
-      if ( !aEvent.getValueIsAdjusting() )
-      {
-        firePropertyChangeEvent();
-      }
-    }
-
-    /**
-     * 
-     */
-    private void firePropertyChangeEvent()
-    {
-      firePropertyChange( "changed", null, this );
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
   // VARIABLES
 
-  private final ObjectClassDefinition ocd;
-  private final Map<AttributeDefinition, JComponent> components;
+  private final AcquisitionDataInfo acquisitionDataInfo;
 
   private JCheckBox decodeEntireTimeline;
   private JComboBox decodeMarkerA;
@@ -134,37 +57,86 @@ final class ToolConfigPanel extends JPanel implements Constants
   /**
    * Creates a new {@link ToolConfigPanel} instance.
    * 
-   * @param aSettings
+   * @param aDataInfo
+   *          the acquisition data information.
    */
-  public ToolConfigPanel( final ObjectClassDefinition aOCD, final AcquisitionDataInfo aContext,
-      final Map<Object, Object> aSettings )
+  private ToolConfigPanel( final ObjectClassDefinition aOCD, final AcquisitionDataInfo aDataInfo )
   {
-    super( new SpringLayout() );
+    super( aOCD );
 
-    this.ocd = aOCD;
-
-    this.components = new HashMap<AttributeDefinition, JComponent>();
-
-    initPanel( aContext, aSettings );
+    this.acquisitionDataInfo = aDataInfo;
   }
 
   // METHODS
 
   /**
+   * Factory method for creating a new {@link ToolConfigPanel} instance.
+   * 
+   * @param aOCD
+   *          the object class definition containing the attribute definitions
+   *          to create editors for, cannot be <code>null</code>;
+   * @param aSettings
+   *          the (optional) settings to use as initial values for the editor
+   *          components, may be <code>null</code>;
+   * @param aTitle
+   *          the (optional) title to display above the editors, may be
+   *          <code>null</code>;
+   * @param aProvider
+   *          the (optional) editor provider to supply custom editors for
+   *          unmanaged attributes, may be <code>null</code>.
+   * @return a new, initialized {@link ToolConfigPanel} instance, never
+   *         <code>null</code>.
+   */
+  public static ToolConfigPanel create( final ObjectClassDefinition aOCD, final Dictionary<Object, Object> aSettings,
+      final AcquisitionDataInfo aContext )
+  {
+    return create( aOCD, asMap( aSettings ), aContext );
+  }
+
+  /**
+   * Factory method for creating a new {@link ToolConfigPanel} instance.
+   * 
+   * @param aOCD
+   *          the object class definition containing the attribute definitions
+   *          to create editors for, cannot be <code>null</code>;
+   * @param aSettings
+   *          the (optional) settings to use as initial values for the editor
+   *          components, may be <code>null</code>;
+   * @param aTitle
+   *          the (optional) title to display above the editors, may be
+   *          <code>null</code>;
+   * @param aProvider
+   *          the (optional) editor provider to supply custom editors for
+   *          unmanaged attributes, may be <code>null</code>.
+   * @return a new, initialized {@link ToolConfigPanel} instance, never
+   *         <code>null</code>.
+   */
+  public static ToolConfigPanel create( final ObjectClassDefinition aOCD, final Map<Object, Object> aSettings,
+      final AcquisitionDataInfo aContext )
+  {
+    ToolConfigPanel result = new ToolConfigPanel( aOCD, aContext );
+
+    Map<Object, Object> settings = aSettings;
+    if ( settings == null )
+    {
+      settings = Collections.emptyMap();
+    }
+
+    result.initPanel( settings, "Settings", null /* aProvider */);
+    return result;
+  }
+
+  /**
    * @return <code>true</code> if the settings are valid, <code>false</code>
    *         otherwise.
    */
+  @Override
   public boolean areSettingsValid()
   {
-    for ( Entry<AttributeDefinition, JComponent> entry : this.components.entrySet() )
+    boolean result = super.areSettingsValid();
+    if ( !result )
     {
-      String value = String.valueOf( getComponentValue( entry.getValue() ) );
-
-      String validationResult = entry.getKey().validate( value );
-      if ( ( validationResult != null ) && !"".equals( validationResult ) )
-      {
-        return false;
-      }
+      return false;
     }
 
     if ( !this.decodeEntireTimeline.isSelected() )
@@ -184,81 +156,14 @@ final class ToolConfigPanel extends JPanel implements Constants
   /**
    * @return the properties with the current values, never <code>null</code>.
    */
-  public Dictionary<Object, Object> getProperties()
+  @Override
+  public Properties getProperties()
   {
-    Hashtable<Object, Object> result = new Hashtable<Object, Object>();
-    for ( Entry<AttributeDefinition, JComponent> entry : this.components.entrySet() )
-    {
-      Object value = getComponentValue( entry.getValue() );
-
-      if ( value != null )
-      {
-        result.put( entry.getKey().getID(), value );
-      }
-    }
+    Properties result = super.getProperties();
     result.put( PROPERTY_DECODE_ENTIRE_TIMELINE, Boolean.valueOf( this.decodeEntireTimeline.isSelected() ) );
     result.put( PROPERTY_DECODE_MARKER_A, getMarkerValue( this.decodeMarkerA ) );
     result.put( PROPERTY_DECODE_MARKER_B, getMarkerValue( this.decodeMarkerB ) );
     return result;
-  }
-
-  /**
-   * Initializes this panel.
-   * 
-   * @param aContext
-   * @param aSettings
-   */
-  final void initPanel( final AcquisitionDataInfo aContext, final Map<Object, Object> aSettings )
-  {
-    SpringLayoutUtils.addSeparator( this, "Context" );
-
-    add( createRightAlignedLabel( "Decode all?" ) );
-    this.decodeEntireTimeline = ( JCheckBox )add( new JCheckBox( "", isDecodeAll( aSettings ) ) );
-    this.decodeEntireTimeline.setEnabled( aContext.hasDefinedCursors() );
-    this.decodeEntireTimeline.addActionListener( new ActionListener()
-    {
-      @Override
-      public void actionPerformed( final ActionEvent aEvent )
-      {
-        updateContextState();
-      }
-    } );
-
-    add( createRightAlignedLabel( "Marker A" ) );
-    this.decodeMarkerA = ( JComboBox )add( createOptionalCursorSelector( aContext.getCursors(),
-        getIndexMarkerA( aContext.getCursors(), aSettings ) ) );
-
-    add( createRightAlignedLabel( "Marker B" ) );
-    this.decodeMarkerB = ( JComboBox )add( createOptionalCursorSelector( aContext.getCursors(),
-        getIndexMarkerB( aContext.getCursors(), aSettings ) ) );
-
-    // set default settings...
-    updateContextState();
-
-    SpringLayoutUtils.addSeparator( this, "Settings" );
-
-    final ToolEditorUtils editorUtils = new ToolEditorUtils( aContext );
-
-    AttributeDefinition[] ads = this.ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
-    for ( AttributeDefinition ad : ads )
-    {
-      Object initialValue = aSettings.get( ad.getID() );
-
-      JComponent comp = editorUtils.createEditor( ad, initialValue );
-      if ( comp != null )
-      {
-        add( createRightAlignedLabel( ad.getName() ) );
-        add( comp );
-
-        this.components.put( ad, comp );
-      }
-    }
-
-    applyComponentProperties( this.components.values() );
-
-    wireChangeListeners();
-
-    SpringLayoutUtils.makeEditorGrid( this, 6, 4, 6, 6 );
   }
 
   /**
@@ -272,141 +177,59 @@ final class ToolConfigPanel extends JPanel implements Constants
   }
 
   /**
-   * @param aIndex
-   * @param aComponent
-   * @param aDescriptor
+   * {@inheritDoc}
    */
-  private void addListener( final Map<String, JComponent> aIndex, final JComponent aComponent, final String aDescriptor )
+  @Override
+  protected EditorUtils createEditorUtils()
   {
-    if ( aComponent instanceof AbstractButton )
-    {
-      final AbstractButton button = ( AbstractButton )aComponent;
-      final String[] parts = aDescriptor.split( "\\s*;\\s*" );
-
-      button.addActionListener( new ActionListener()
-      {
-        @Override
-        public void actionPerformed( final ActionEvent aEvent )
-        {
-          for ( String part : parts )
-          {
-            final boolean aInvert = part.startsWith( "!" );
-            final JComponent target = aIndex.get( aInvert ? part.substring( 1 ) : part );
-            if ( target != null )
-            {
-              boolean value = button.isSelected();
-              if ( aInvert )
-              {
-                value = !value;
-              }
-              target.setEnabled( value );
-            }
-          }
-        }
-      } );
-
-      for ( String part : parts )
-      {
-        final boolean aInvert = part.startsWith( "!" );
-        final JComponent target = aIndex.get( aInvert ? part.substring( 1 ) : part );
-        if ( target != null )
-        {
-          boolean value = button.isSelected();
-          if ( aInvert )
-          {
-            value = !value;
-          }
-          target.setEnabled( value );
-        }
-      }
-    }
-    else if ( aComponent instanceof JComboBox )
-    {
-      final JComboBox combobox = ( JComboBox )aComponent;
-      final String[] parts = aDescriptor.split( "\\s*:\\s*" );
-
-      combobox.addActionListener( new ActionListener()
-      {
-        @Override
-        public void actionPerformed( final ActionEvent aEvent )
-        {
-          final int index = combobox.getSelectedIndex();
-          if ( ( index >= 0 ) && ( index < parts.length ) )
-          {
-            String part = parts[index];
-            final boolean aInvert = part.startsWith( "!" );
-            final JComponent target = aIndex.get( aInvert ? part.substring( 1 ) : part );
-            if ( target != null )
-            {
-              boolean value = aInvert ? false : true;
-              target.setEnabled( value );
-            }
-          }
-        }
-      } );
-
-      final int index = combobox.getSelectedIndex();
-      if ( ( index >= 0 ) && ( index < parts.length ) )
-      {
-        String part = parts[index];
-        final boolean aInvert = part.startsWith( "!" );
-        final JComponent target = aIndex.get( aInvert ? part.substring( 1 ) : part );
-        if ( target != null )
-        {
-          boolean value = aInvert ? false : true;
-          target.setEnabled( value );
-        }
-      }
-    }
-    else
-    {
-      throw new RuntimeException( "Cannot add listener to component: " + aComponent );
-    }
+    return new ToolEditorUtils( this.acquisitionDataInfo );
   }
 
   /**
-   * @param aComponents
+   * {@inheritDoc}
    */
-  private void applyComponentProperties( final Collection<JComponent> aComponents )
+  @Override
+  protected void initPanel( final Map<Object, Object> aSettings, final String aTitle, final IEditorProvider aProvider )
   {
-    // Create an index on the component's name...
-    Map<String, JComponent> nameIndex = new HashMap<String, JComponent>();
-    for ( JComponent comp : aComponents )
+    SpringLayoutUtils.addSeparator( this, "Context" );
+
+    add( createRightAlignedLabel( "Decode region?" ) );
+    this.decodeEntireTimeline = ( JCheckBox )add( new JCheckBox( "", isDecodeAll( aSettings ) ) );
+    this.decodeEntireTimeline.setEnabled( this.acquisitionDataInfo.hasDefinedCursors() );
+    this.decodeEntireTimeline.addActionListener( new ActionListener()
     {
-      nameIndex.put( comp.getName(), comp );
-    }
-
-    // Process the component's properties...
-    for ( JComponent comp : aComponents )
-    {
-      Object value = comp.getClientProperty( PROPERTY_READONLY );
-      if ( Boolean.TRUE.equals( value ) )
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
       {
-        comp.setEnabled( false );
+        updateContextState();
       }
+    } );
 
-      value = comp.getClientProperty( PROPERTY_EDITABLE );
-      if ( Boolean.TRUE.equals( value ) )
-      {
-        if ( comp instanceof JComboBox )
-        {
-          ( ( JComboBox )comp ).setEditable( true );
-        }
-        else if ( comp instanceof JTextComponent )
-        {
-          ( ( JTextComponent )comp ).setEditable( true );
-        }
-      }
+    Cursor[] cursors = this.acquisitionDataInfo.getCursors();
 
-      value = comp.getClientProperty( PROPERTY_LISTENER );
-      if ( value != null )
-      {
-        for ( String descriptor : ( String[] )value )
-        {
-          addListener( nameIndex, comp, descriptor );
-        }
-      }
-    }
+    add( createRightAlignedLabel( "Marker A" ) );
+    this.decodeMarkerA = ( JComboBox )add( createOptionalCursorSelector( cursors, getIndexMarkerA( cursors, aSettings ) ) );
+
+    add( createRightAlignedLabel( "Marker B" ) );
+    this.decodeMarkerB = ( JComboBox )add( createOptionalCursorSelector( cursors, getIndexMarkerB( cursors, aSettings ) ) );
+
+    // set default settings...
+    updateContextState();
+
+    super.initPanel( aSettings, "Settings", null );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void wireChangeListeners( final ChangeReflector aChangeReflector )
+  {
+    super.wireChangeListeners( aChangeReflector );
+
+    this.decodeEntireTimeline.addActionListener( aChangeReflector );
+    this.decodeMarkerA.addActionListener( aChangeReflector );
+    this.decodeMarkerB.addActionListener( aChangeReflector );
   }
 
   /**
@@ -443,49 +266,12 @@ final class ToolConfigPanel extends JPanel implements Constants
   }
 
   /**
-   * @param aComponent
-   * @return
-   */
-  @SuppressWarnings( "boxing" )
-  private Object getComponentValue( final Component aComponent )
-  {
-    Object value = null;
-    if ( aComponent instanceof AbstractButton )
-    {
-      value = ( ( AbstractButton )aComponent ).isSelected();
-    }
-    else if ( aComponent instanceof JComboBox )
-    {
-      value = ( ( JComboBox )aComponent ).getSelectedItem();
-    }
-    else if ( aComponent instanceof JTextComponent )
-    {
-      value = ( ( JTextComponent )aComponent ).getText();
-    }
-    else if ( aComponent instanceof JList )
-    {
-      value = ( ( JList )aComponent ).getSelectedIndex();
-    }
-    else if ( aComponent instanceof JSlider )
-    {
-      value = ( ( JSlider )aComponent ).getValue();
-    }
-    else if ( aComponent instanceof JSpinner )
-    {
-      value = ( ( JSpinner )aComponent ).getValue();
-    }
-    return value;
-  }
-
-  /**
    * @return the index of the first marker, >= 0 or -1.
    */
   private int getIndexMarkerA( final Cursor[] aCursors, final Map<Object, Object> aSettings )
   {
     Object value = aSettings.get( Constants.PROPERTY_DECODE_MARKER_A );
-    int idx = findIndex( aCursors, value, 1 );
-    System.out.println( "IndexMarkerA = " + idx );
-    return idx;
+    return findIndex( aCursors, value, 1 );
   }
 
   /**
@@ -494,9 +280,7 @@ final class ToolConfigPanel extends JPanel implements Constants
   private int getIndexMarkerB( final Cursor[] aCursors, final Map<Object, Object> aSettings )
   {
     Object value = aSettings.get( Constants.PROPERTY_DECODE_MARKER_B );
-    int idx = findIndex( aCursors, value, 2 );
-    System.out.println( "IndexMarkerB = " + idx );
-    return idx;
+    return findIndex( aCursors, value, 2 );
   }
 
   /**
@@ -525,46 +309,5 @@ final class ToolConfigPanel extends JPanel implements Constants
       return true;
     }
     return Boolean.TRUE.equals( value );
-  }
-
-  /**
-   * Wires all components on this panel to fire a {@link PropertyChangeEvent} in
-   * case their value changes.
-   */
-  private void wireChangeListeners()
-  {
-    final ChangeReflector changeReflector = new ChangeReflector();
-
-    this.decodeEntireTimeline.addActionListener( changeReflector );
-    this.decodeMarkerA.addActionListener( changeReflector );
-    this.decodeMarkerB.addActionListener( changeReflector );
-
-    for ( JComponent comp : this.components.values() )
-    {
-      if ( comp instanceof AbstractButton )
-      {
-        ( ( AbstractButton )comp ).addActionListener( changeReflector );
-      }
-      else if ( comp instanceof JComboBox )
-      {
-        ( ( JComboBox )comp ).addActionListener( changeReflector );
-      }
-      else if ( comp instanceof JTextComponent )
-      {
-        ( ( JTextComponent )comp ).getDocument().addDocumentListener( changeReflector );
-      }
-      else if ( comp instanceof JList )
-      {
-        ( ( JList )comp ).addListSelectionListener( changeReflector );
-      }
-      else if ( comp instanceof JSlider )
-      {
-        ( ( JSlider )comp ).addChangeListener( changeReflector );
-      }
-      else if ( comp instanceof JSpinner )
-      {
-        ( ( JSpinner )comp ).addChangeListener( changeReflector );
-      }
-    }
   }
 }

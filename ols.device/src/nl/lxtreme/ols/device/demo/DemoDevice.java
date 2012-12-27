@@ -21,50 +21,38 @@
 package nl.lxtreme.ols.device.demo;
 
 
-import java.awt.*;
 import java.io.*;
+
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 
 
 /**
- * A device for demo purposes.
+ * A device for demo purposes, providing all kinds of static/generated
+ * acquisition data.
  */
 public class DemoDevice implements Device
 {
-  // VARIABLES
-
-  private DemoDeviceDialog configDialog;
-  private boolean setup = false;
-
-  // CONSTRUCTORS
-
-  /**
-   * 
-   */
-  public DemoDevice()
-  {
-    super();
-  }
-
   // METHODS
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionData acquireData( final DeviceProgressListener aProgressListener ) throws IOException
+  public AcquisitionData acquireData( final Configuration aConfiguration, final DeviceProgressListener aProgressListener )
+      throws IOException, InterruptedException
   {
-    return new DemoAcquisitionTask( this.configDialog, aProgressListener ).call();
+    return new DemoAcquisitionTask( aConfiguration, aProgressListener ).call();
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void close() throws IOException
+  public void cancelAcquisition() throws IllegalStateException
   {
-    // No-op...
+    // Nop
   }
 
   /**
@@ -73,37 +61,7 @@ public class DemoDevice implements Device
   @Override
   public String getName()
   {
-    return "Test Device";
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isSetup()
-  {
-    return this.setup;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean setupCapture( final Window aOwner )
-  {
-    // check if dialog exists with different owner and dispose if so
-    if ( ( this.configDialog != null ) && ( this.configDialog.getOwner() != aOwner ) )
-    {
-      this.configDialog.dispose();
-      this.configDialog = null;
-    }
-    // if no valid dialog exists, create one
-    if ( this.configDialog == null )
-    {
-      this.configDialog = new DemoDeviceDialog( aOwner );
-    }
-
-    return ( this.setup = this.configDialog.showDialog() );
+    return "Demo Device";
   }
 }
 
