@@ -1,7 +1,7 @@
 */felix-cache/
 */target/
 eclipse/run/
-cnf/cache/
+cnf/cache/*
 */.DS_Store/
 **/.settings/
 **/generated/
