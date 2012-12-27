@@ -1,9 +1,0 @@
--buildpath: \
-    osgi.core;version=4.2,\
-	osgi.cmpn;version=4.2,\
-	org.apache.felix.dependencymanager;version=3.0.0,\
-	ols.common;version=latest,\
-	ols.device.api;version=latest
-Private-Package: nl.lxtreme.ols.acquisition.service.impl
-Bundle-Activator: nl.lxtreme.ols.acquisition.service.impl.Activator
-Export-Package: nl.lxtreme.ols.acquisition.service

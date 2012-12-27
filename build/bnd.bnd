@@ -5,7 +5,6 @@
     lib.ioutil,\
     lib.metatype,\
     lib.swing,\
-    ols.acquisition.service,\
     ols.client,\
     ols.common,\
     ols.device,\
