@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.ui.tool;
+package nl.lxtreme.ols.client.ui.tool.impl;
 
 
 import static nl.lxtreme.ols.client.ui.ClientSwingUtil.*;
@@ -28,9 +28,10 @@ import java.awt.event.*;
 import java.util.*;
 
 import javax.swing.*;
-import nl.lxtreme.ols.util.swing.*;
+
 import nl.lxtreme.ols.client.ui.editor.*;
-import nl.lxtreme.ols.common.acquisition.Cursor;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.service.metatype.*;
 

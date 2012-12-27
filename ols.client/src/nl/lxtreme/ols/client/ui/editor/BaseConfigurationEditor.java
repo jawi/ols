@@ -70,7 +70,22 @@ public abstract class BaseConfigurationEditor extends JDialog implements Propert
    */
   protected BaseConfigurationEditor( final Window aParent, final String aTitle )
   {
-    super( aParent, aTitle, ModalityType.MODELESS );
+    this( aParent, aTitle, ModalityType.MODELESS );
+  }
+
+  /**
+   * Creates a new {@link BaseConfigurationEditor} instance.
+   * 
+   * @param aParent
+   *          the parent of this dialog;
+   * @param aTitle
+   *          the title of this dialog;
+   * @param aModalityType
+   *          the modality type to use for this editor dialog.
+   */
+  protected BaseConfigurationEditor( final Window aParent, final String aTitle, final ModalityType aModalityType )
+  {
+    super( aParent, aTitle, aModalityType );
   }
 
   // METHODS

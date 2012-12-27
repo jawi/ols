@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.ui.device;
+package nl.lxtreme.ols.client.ui.device.impl;
 
 
 import java.awt.*;
@@ -44,7 +44,7 @@ final class DeviceConfigurationEditor extends BaseConfigurationEditor
    */
   public DeviceConfigurationEditor( final Window aParent, final String aTitle )
   {
-    super( aParent, aTitle );
+    super( aParent, aTitle, ModalityType.APPLICATION_MODAL );
   }
 
   // METHODS

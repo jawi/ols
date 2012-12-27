@@ -95,6 +95,7 @@ public abstract class AbstractBundleAdapter<TYPE>
     }
 
     Properties serviceProps = copyOlsProperties( bundleProps );
+    addServiceProperties( serviceProps );
 
     this.serviceComponent = this.manager.createComponent() //
         .setInterface( intfNames, serviceProps ) //
@@ -121,6 +122,18 @@ public abstract class AbstractBundleAdapter<TYPE>
   }
 
   /**
+   * Adds additional service properties to the given properties instance.
+   * 
+   * @param aProperties
+   *          the map to add the additional service properties to, never
+   *          <code>null</code>.
+   */
+  protected void addServiceProperties( final Properties aProperties )
+  {
+    // Nothing...
+  }
+
+  /**
    * Copies all OLS-specific properties from the original bundle header to a new
    * {@link Properties} instance.
    * 
@@ -137,7 +150,7 @@ public abstract class AbstractBundleAdapter<TYPE>
     while ( keys.hasMoreElements() )
     {
       final Object key = keys.nextElement();
-      if ( key.toString().startsWith( "OLS-" ) )
+      if ( key.toString().toLowerCase().startsWith( "ols-" ) )
       {
         result.put( key, aOriginal.get( key ) );
       }

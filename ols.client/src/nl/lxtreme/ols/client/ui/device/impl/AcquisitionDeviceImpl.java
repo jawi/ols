@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.ui.device;
+package nl.lxtreme.ols.client.ui.device.impl;
 
 
 import java.awt.*;
@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 
 import nl.lxtreme.ols.client.ui.*;
+import nl.lxtreme.ols.client.ui.device.*;
 import nl.lxtreme.ols.common.Configuration;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
@@ -44,7 +45,7 @@ import org.osgi.service.metatype.*;
 /**
  * 
  */
-public class DeviceInvokerImpl implements DeviceInvoker
+public class AcquisitionDeviceImpl implements AcquisitionDevice
 {
   // INNER TYPES
 
@@ -146,7 +147,7 @@ public class DeviceInvokerImpl implements DeviceInvoker
   /**
    * Creates a new DeviceInvokerImpl instance.
    */
-  public DeviceInvokerImpl( final Device aDevice )
+  public AcquisitionDeviceImpl( final Device aDevice )
   {
     this.delegate = aDevice;
     this.configuration = new MutableConfiguration();

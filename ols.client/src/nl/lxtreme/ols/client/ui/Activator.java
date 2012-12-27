@@ -23,7 +23,6 @@ package nl.lxtreme.ols.client.ui;
 
 import java.util.*;
 
-import nl.lxtreme.ols.client.acquisition.*;
 import nl.lxtreme.ols.client.componentprovider.*;
 import nl.lxtreme.ols.client.ui.device.*;
 import nl.lxtreme.ols.client.ui.tool.*;
@@ -33,6 +32,7 @@ import nl.lxtreme.ols.util.swing.WindowManager.WindowStateManager;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.framework.Constants;
 import org.osgi.service.cm.*;
 import org.osgi.service.event.*;
 import org.osgi.service.log.*;
@@ -172,7 +172,7 @@ public class Activator extends DependencyActivatorBase
 
     Properties props = new Properties();
     props.put( Constants.SERVICE_PID, ClientConfig.class.getName() );
-    props.put( EventConstants.EVENT_TOPIC, new String[] { Session.TOPIC_ANY, IDataAcquirer.TOPIC_ANY, ToolInvoker.TOPIC_ANY } );
+    props.put( EventConstants.EVENT_TOPIC, new String[] { Session.TOPIC_ANY, AcquisitionController.TOPIC_ANY, ToolInvoker.TOPIC_ANY } );
 
     aManager.add( createComponent()
         .setImplementation( client )
@@ -180,7 +180,7 @@ public class Activator extends DependencyActivatorBase
         .setComposition( "getComposition" )
         .add( createServiceDependency().setService( ComponentProvider.class, "(OLS-ComponentProvider=Menu)" ).setCallbacks( "addMenu", "removeMenu" ).setRequired( false ) )
         .add( createServiceDependency().setService( Exporter.class ).setCallbacks( client.getImportExportController(), "addExporter", "removeExporter" ).setRequired( false ) )
-        .add( createServiceDependency().setService( DeviceInvoker.class ).setCallbacks( client.getDeviceController(), "addDevice", "removeDevice" ).setRequired( false ) )
+        .add( createServiceDependency().setService( AcquisitionDevice.class ).setCallbacks( client.getDeviceController(), "addDevice", "removeDevice" ).setRequired( false ) )
         .add( createServiceDependency().setService( ToolInvoker.class ).setCallbacks( client.getToolController(), "addTool", "removeTool" ).setRequired( false ) )
         .add( createServiceDependency().setService( UIManagerConfigurator.class ).setRequired( true ) )
         .add( createServiceDependency().setService( ColorSchemeManager.class ).setRequired( true ) )
@@ -188,8 +188,8 @@ public class Activator extends DependencyActivatorBase
         .add( createServiceDependency().setService( WindowStateManager.class ).setRequired( true ) )
         .add( createServiceDependency().setService( MetaTypeService.class ).setRequired( true ) )
         .add( createServiceDependency().setService( StatusListener.class ).setRequired( false ) )
-        .add( createServiceDependency().setService( IDataAcquirer.class ).setRequired( true ) ) 
         .add( createServiceDependency().setService( LogService.class ).setRequired( false ) )
+        .add( createServiceDependency().setService( EventAdmin.class ).setRequired( true ) )
         .add( createServiceDependency().setService( Session.class ).setRequired( true ) )
     );
     // @formatter:on

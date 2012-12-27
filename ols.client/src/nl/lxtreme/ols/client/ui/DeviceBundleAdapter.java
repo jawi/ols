@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.ui;
 
 
 import nl.lxtreme.ols.client.ui.device.*;
+import nl.lxtreme.ols.client.ui.device.impl.*;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.device.api.*;
 
@@ -83,7 +84,7 @@ public class DeviceBundleAdapter extends AbstractBundleAdapter<Device>
   @Override
   protected Object getImplementation( final Class<Device> aType ) throws Exception
   {
-    return new DeviceInvokerImpl( aType.newInstance() );
+    return new AcquisitionDeviceImpl( aType.newInstance() );
   }
 
   /**
@@ -92,6 +93,6 @@ public class DeviceBundleAdapter extends AbstractBundleAdapter<Device>
   @Override
   protected Class<?>[] getPublishedInterfaces()
   {
-    return new Class<?>[] { DeviceInvoker.class, ManagedService.class };
+    return new Class<?>[] { AcquisitionDevice.class, ManagedService.class };
   }
 }

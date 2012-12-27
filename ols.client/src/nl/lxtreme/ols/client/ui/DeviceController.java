@@ -37,7 +37,7 @@ public final class DeviceController
 {
   // VARIABLES
 
-  private final ConcurrentMap<String, DeviceInvoker> devices;
+  private final ConcurrentMap<String, AcquisitionDevice> devices;
 
   // Injected by Felix DM...
   private volatile LogService logService;
@@ -52,7 +52,7 @@ public final class DeviceController
    */
   public DeviceController()
   {
-    this.devices = new ConcurrentHashMap<String, DeviceInvoker>();
+    this.devices = new ConcurrentHashMap<String, AcquisitionDevice>();
   }
 
   // METHODS
@@ -60,7 +60,7 @@ public final class DeviceController
   /**
    * {@inheritDoc}
    */
-  public DeviceInvoker getDevice( final String aName )
+  public AcquisitionDevice getDevice( final String aName )
   {
     if ( aName == null )
     {
@@ -87,7 +87,7 @@ public final class DeviceController
    * @return the selected device, can be <code>null</code> if no device is
    *         selected.
    */
-  public DeviceInvoker getSelectedDevice()
+  public AcquisitionDevice getSelectedDevice()
   {
     return ( this.currentDevice == null ) ? null : getDevice( this.currentDevice );
   }
@@ -126,7 +126,7 @@ public final class DeviceController
    * @param aDevice
    *          the device to add, cannot be <code>null</code>.
    */
-  final void addDevice( final DeviceInvoker aDevice )
+  final void addDevice( final AcquisitionDevice aDevice )
   {
     ActionManager actionManager = getActionManager();
 
@@ -154,7 +154,7 @@ public final class DeviceController
    * @param aDevice
    *          the device to remove, cannot be <code>null</code>.
    */
-  final void removeDevice( final DeviceInvoker aDevice )
+  final void removeDevice( final AcquisitionDevice aDevice )
   {
     ActionManager actionManager = getActionManager();
 

@@ -34,7 +34,7 @@ import nl.lxtreme.ols.device.api.*;
  * Provides an adapter for {@link Device}s to allow them to be configured from
  * the UI.
  */
-public interface DeviceInvoker extends ManagedService
+public interface AcquisitionDevice extends ManagedService
 {
   // METHODS
 

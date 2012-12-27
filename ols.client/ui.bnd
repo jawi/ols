@@ -3,6 +3,8 @@ Private-Package: \
     nl.lxtreme.ols.client.ui.about,\
     nl.lxtreme.ols.client.ui.action,\
     nl.lxtreme.ols.client.ui.action.manager,\
+    nl.lxtreme.ols.client.ui.device,\
+    nl.lxtreme.ols.client.ui.device.impl,\
     nl.lxtreme.ols.client.ui.editor,\
     nl.lxtreme.ols.client.ui.export,\
     nl.lxtreme.ols.client.ui.export.impl,\
@@ -18,8 +20,8 @@ Private-Package: \
     nl.lxtreme.ols.client.ui.signaldisplay.view.signals,\
     nl.lxtreme.ols.client.ui.signaldisplay.view.timeline,\
     nl.lxtreme.ols.client.ui.signaldisplay.view.toolwindow,\
-    nl.lxtreme.ols.client.ui.tool
-Export-Package: nl.lxtreme.ols.client.ui.device
+    nl.lxtreme.ols.client.ui.tool,\
+    nl.lxtreme.ols.client.ui.tool.impl
 Bundle-Activator: nl.lxtreme.ols.client.ui.Activator
 ols.version: 0.9.7-${tstamp}
 Include-Resource: resource 

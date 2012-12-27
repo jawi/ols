@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.ui;
 
 
 import nl.lxtreme.ols.client.ui.tool.*;
+import nl.lxtreme.ols.client.ui.tool.impl.*;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.tool.api.*;
 
