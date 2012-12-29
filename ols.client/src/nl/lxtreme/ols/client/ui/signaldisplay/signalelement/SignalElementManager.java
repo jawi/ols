@@ -211,16 +211,19 @@ public final class SignalElementManager implements IDataModelChangeListener
         int groupIdx = ( channel.getIndex() / channelsPerGroup );
         String groupName = "Group " + ( groupIdx + 1 );
 
-        if ( group == null )
-        {
-          group = addGroup( groupName );
-        }
-        else if ( ( channel.getIndex() % channelsPerGroup ) == 0 )
+        if ( ( group != null ) && ( ( channel.getIndex() % channelsPerGroup ) == 0 ) )
         {
           addSignalElement( group, createGroupSummaryElement( group ) );
           addSignalElement( group, createAnalogScopeElement( group ) );
 
+          group = null; // reset
+        }
+        if ( group == null )
+        {
           group = addGroup( groupName );
+
+          // We start with a signal group element...
+          addSignalElement( group, createSignalGroupElement( group ) );
         }
 
         addSignalElement( group, createDigitalSignalElement( channel, group ) );
