@@ -24,133 +24,44 @@ package nl.lxtreme.ols.client.ui.device.impl;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.atomic.*;
 
 import nl.lxtreme.ols.client.ui.*;
 import nl.lxtreme.ols.client.ui.device.*;
-import nl.lxtreme.ols.common.Configuration;
+import nl.lxtreme.ols.client.ui.editor.*;
+import nl.lxtreme.ols.client.ui.util.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
+import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
-import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.osgi.service.log.*;
 import org.osgi.service.metatype.*;
 
 
 /**
- * 
+ * Provides an implementation of {@link AcquisitionDevice}.
  */
-public class AcquisitionDeviceImpl implements AcquisitionDevice
+public class AcquisitionDeviceImpl extends DelegateServiceWrapper<Device> implements AcquisitionDevice
 {
-  // INNER TYPES
-
-  /**
-   * Provides a thread-safe version of {@link Configuration}.
-   */
-  static class MutableConfiguration implements Configuration
-  {
-    // VARIABLES
-
-    private final AtomicReference<Map<Object, Object>> mapRef;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link MutableConfiguration} instance.
-     */
-    public MutableConfiguration()
-    {
-      this.mapRef = new AtomicReference<Map<Object, Object>>( new HashMap<Object, Object>() );
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Map<Object, Object> asMap()
-    {
-      return this.mapRef.get();
-    }
-
-    /**
-     * @return <code>true</code> if this configuration is empty,
-     *         <code>false</code> otherwise.
-     */
-    public boolean isEmpty()
-    {
-      return this.mapRef.get().isEmpty();
-    }
-
-    /**
-     * Sets the configuration of this object to the given value.
-     * 
-     * @param aValue
-     *          the new configuration to set, cannot be <code>null</code>.
-     */
-    @SuppressWarnings( "rawtypes" )
-    public void set( final Dictionary aValue )
-    {
-      Map<Object, Object> value = asMap( aValue );
-      Map<Object, Object> old;
-      do
-      {
-        old = this.mapRef.get();
-      }
-      while ( !this.mapRef.compareAndSet( old, value ) );
-    }
-
-    /**
-     * Converts a given {@link Dictionary} to a {@link Map}.
-     * 
-     * @param aValue
-     *          the dictionary to convert, can be <code>null</code>.
-     * @return a map representation of the given {@link Dictionary}, or an empty
-     *         map is the given value was <code>null</code>.
-     */
-    @SuppressWarnings( "rawtypes" )
-    private Map<Object, Object> asMap( final Dictionary aValue )
-    {
-      HashMap<Object, Object> result = new HashMap<Object, Object>();
-      if ( aValue != null )
-      {
-        Enumeration keys = aValue.keys();
-        while ( keys.hasMoreElements() )
-        {
-          Object key = keys.nextElement();
-          result.put( key, aValue.get( key ) );
-        }
-      }
-      return result;
-    }
-  }
-
   // VARIABLES
 
-  private final Device delegate;
-  private final MutableConfiguration configuration;
-
+  private volatile DeviceConfigurationEditor configEditor;
   // Injected by Felix DM...
-  private volatile BundleContext bundleContext;
-  private volatile MetaTypeService metaTypeService;
-  private volatile ConfigurationAdmin configAdmin;
+  private volatile DependencyManager dependencyManager;
   private volatile LogService log;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new DeviceInvokerImpl instance.
+   * Creates a new {@link AcquisitionDeviceImpl} instance.
    */
   public AcquisitionDeviceImpl( final Device aDevice )
   {
-    this.delegate = aDevice;
-    this.configuration = new MutableConfiguration();
+    super( aDevice );
   }
 
   // METHODS
@@ -162,7 +73,7 @@ public class AcquisitionDeviceImpl implements AcquisitionDevice
   public AcquisitionData acquireData( final DeviceProgressListener aProgressListener ) throws IOException,
       InterruptedException
   {
-    return this.delegate.acquireData( this.configuration, aProgressListener );
+    return getDelegate().acquireData( getConfiguration(), aProgressListener );
   }
 
   /**
@@ -171,47 +82,63 @@ public class AcquisitionDeviceImpl implements AcquisitionDevice
   @Override
   public void cancelAcquisition() throws IllegalStateException
   {
-    this.delegate.cancelAcquisition();
+    getDelegate().cancelAcquisition();
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public boolean configure( final Window aParent )
+  public void configure( final Window aParent, final ConfigurationListener aListener )
   {
-    MetaTypeInformation metaTypeInfo = getMetaTypeInfo();
-    if ( ( metaTypeInfo == null ) || ( metaTypeInfo.getPids().length != 1 ) )
+    ObjectClassDefinition ocd = getOCD( aParent.getLocale() );
+    if ( ocd == null )
     {
       // Not metatyped; assume it has no configuration to be performed...
-      this.log.log( LogService.LOG_INFO,
-          "No metatype information to base device configuration on for " + this.delegate.getName()
-              + "; assuming no configuration is needed..." );
-      return true;
+      this.log.log( LogService.LOG_INFO, "No metatype information to base device configuration on for " + getName()
+          + "; assuming no configuration is needed..." );
+      return;
     }
 
-    String pid = metaTypeInfo.getPids()[0];
-    ObjectClassDefinition ocd = metaTypeInfo.getObjectClassDefinition( pid, aParent.getLocale().toString() );
-
-    DeviceConfigurationEditor editor = DeviceConfigurationEditor.create( aParent, ocd, this.configuration.asMap() );
-
-    getWindowManager().show( editor ); // Blocks...
-
-    if ( editor.areSettingsValid() )
+    this.configEditor = DeviceConfigurationEditor.create( aParent, ocd, getConfiguration().asMap() );
+    this.configEditor.addDialogStateListener( new DialogStateListener()
     {
-      try
-      {
-        // Post back the configuration to ConfigAdmin...
-        updateConfiguration( pid, editor.getProperties() );
-      }
-      catch ( IOException exception )
-      {
-        this.log.log( LogService.LOG_WARNING, "Failed to update configuration!", exception );
-        JErrorDialog.showDialog( aParent, "Failed to update configuration!", exception );
-      }
-    }
+      private final DeviceConfigurationEditor configEditor = AcquisitionDeviceImpl.this.configEditor;
+      private final DependencyManager dependencyManager = AcquisitionDeviceImpl.this.dependencyManager;
+      private final LogService log = AcquisitionDeviceImpl.this.log;
 
-    return editor.areSettingsValid() && ( editor.getDialogStatus() == DialogStatus.OK );
+      @Override
+      public void onStateChanged( final DialogStatus aState )
+      {
+        if ( ( aState == DialogStatus.OK ) && ( this.configEditor != null ) && this.configEditor.areSettingsValid() )
+        {
+          String pid = this.configEditor.getPid();
+
+          // Register a configuration listener that notifies the original
+          // callback when the configuration is actually valid...
+          Component comp = this.dependencyManager.createComponent()
+              .setInterface( ConfigurationListener.class.getName(), null ) //
+              .setImplementation( new ConfigurationListenerWrapper( aListener, pid ) );
+          this.dependencyManager.add( comp );
+
+          try
+          {
+            // Post back the configuration to ConfigAdmin...
+            updateConfiguration( pid, this.configEditor.getProperties() );
+          }
+          catch ( IOException exception )
+          {
+            this.log.log( LogService.LOG_WARNING, "Failed to update configuration!", exception );
+            JErrorDialog.showDialog( null, "Failed to update configuration!", exception );
+          }
+        }
+
+        // Clear our the reference to let it be GC'd...
+        AcquisitionDeviceImpl.this.configEditor = null;
+      }
+    } );
+
+    getWindowManager().show( this.configEditor );
   }
 
   /**
@@ -220,7 +147,7 @@ public class AcquisitionDeviceImpl implements AcquisitionDevice
   @Override
   public String getName()
   {
-    return this.delegate.getName();
+    return getDelegate().getName();
   }
 
   /**
@@ -229,7 +156,7 @@ public class AcquisitionDeviceImpl implements AcquisitionDevice
   @Override
   public boolean isSetup()
   {
-    return !this.configuration.isEmpty();
+    return !getConfiguration().isEmpty();
   }
 
   /**
@@ -240,30 +167,7 @@ public class AcquisitionDeviceImpl implements AcquisitionDevice
   public void updated( final Dictionary aProperties ) throws ConfigurationException
   {
     this.log.log( LogService.LOG_DEBUG, "Device configuration updated for: " + getName() );
-    this.configuration.set( aProperties );
-  }
-
-  /**
-   * Called by Felix DM upon initialization of this component.
-   */
-  final void init( final Component aComponent )
-  {
-    MetaTypeInformation metaTypeInfo = getMetaTypeInfo();
-    if ( ( metaTypeInfo != null ) && ( metaTypeInfo.getPids().length == 1 ) )
-    {
-      Dictionary<Object, Object> dict = new Hashtable<Object, Object>();
-      dict.put( org.osgi.framework.Constants.SERVICE_PID, metaTypeInfo.getPids()[0] );
-
-      aComponent.setServiceProperties( dict );
-    }
-  }
-
-  /**
-   * @return a {@link MetaTypeInformation} instance, never <code>null</code>.
-   */
-  private MetaTypeInformation getMetaTypeInfo()
-  {
-    return this.metaTypeService.getMetaTypeInformation( this.bundleContext.getBundle() );
+    getConfiguration().set( aProperties );
   }
 
   /**
@@ -272,19 +176,5 @@ public class AcquisitionDeviceImpl implements AcquisitionDevice
   private WindowManager getWindowManager()
   {
     return Client.getInstance().getWindowManager();
-  }
-
-  /**
-   * @param aOwner
-   * @param aPid
-   * @param aProperties
-   */
-  private void updateConfiguration( final String aPid, final Dictionary<Object, Object> aProperties )
-      throws IOException
-  {
-    org.osgi.service.cm.Configuration config = this.configAdmin.getConfiguration( aPid );
-    config.update( aProperties );
-
-    this.configuration.set( aProperties );
   }
 }

@@ -40,6 +40,7 @@ final class ToolConfigurationEditor extends BaseConfigurationEditor
 
   // VARIABLES
 
+  private final String pid;
   private final AcquisitionDataInfo acquisitionDataInfo;
 
   // CONSTRUCTORS
@@ -47,11 +48,12 @@ final class ToolConfigurationEditor extends BaseConfigurationEditor
   /**
    * Creates a new {@link ToolConfigurationEditor} instance.
    */
-  public ToolConfigurationEditor( final Window aParent, final String aTitle,
+  public ToolConfigurationEditor( final Window aParent, final String aTitle, final String aPID,
       final AcquisitionDataInfo aAcquisitionDataInfo )
   {
     super( aParent, aTitle );
 
+    this.pid = aPID;
     this.acquisitionDataInfo = aAcquisitionDataInfo;
   }
 
@@ -74,9 +76,19 @@ final class ToolConfigurationEditor extends BaseConfigurationEditor
   public static ToolConfigurationEditor create( final Window aParent, final ObjectClassDefinition aOCD,
       final Map<Object, Object> aSettings, final AcquisitionDataInfo aDataInfo )
   {
-    ToolConfigurationEditor result = new ToolConfigurationEditor( aParent, aOCD.getName(), aDataInfo );
+    ToolConfigurationEditor result = new ToolConfigurationEditor( aParent, aOCD.getName(), aOCD.getID(), aDataInfo );
     result.initDialog( aOCD, aSettings );
     return result;
+  }
+
+  /**
+   * Returns the current value of pid.
+   * 
+   * @return the pid
+   */
+  public String getPid()
+  {
+    return this.pid;
   }
 
   /**

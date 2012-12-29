@@ -32,7 +32,7 @@ import nl.lxtreme.ols.client.ui.action.*;
 import nl.lxtreme.ols.client.ui.action.manager.*;
 import nl.lxtreme.ols.client.ui.tool.*;
 import nl.lxtreme.ols.tool.api.*;
-
+import org.osgi.service.cm.*;
 import org.osgi.service.log.*;
 
 
@@ -97,8 +97,6 @@ public final class ToolController
    */
   public void invokeTool( final String aToolName, final Window aParent )
   {
-    this.log.log( LogService.LOG_INFO, "Running tool: \"" + aToolName + "\" ..." );
-
     final ToolInvoker tool = getTool( aToolName );
     if ( tool == null )
     {
@@ -108,10 +106,18 @@ public final class ToolController
     }
     else
     {
-      if ( tool.configure( aParent ) )
+      tool.configure( aParent, new ConfigurationListener()
       {
-        tool.invoke();
-      }
+        private final LogService log = ToolController.this.log;
+
+        @Override
+        public void configurationEvent( final ConfigurationEvent aEvent )
+        {
+          this.log.log( LogService.LOG_INFO, "Running tool: \"" + aToolName + "\" ..." );
+
+          tool.invoke();
+        }
+      } );
     }
   }
 

@@ -26,12 +26,13 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.ui.*;
+import nl.lxtreme.ols.client.ui.editor.*;
 import nl.lxtreme.ols.client.ui.tool.*;
+import nl.lxtreme.ols.client.ui.util.*;
 import nl.lxtreme.ols.common.Configuration;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.tool.api.*;
@@ -39,8 +40,8 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
+import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
-import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.osgi.service.event.*;
 import org.osgi.service.event.Event;
@@ -51,93 +52,14 @@ import org.osgi.service.metatype.*;
 /**
  * Default implementation for {@link ToolInvoker}.
  */
-public class ToolInvokerImpl implements ToolInvoker
+public class ToolInvokerImpl extends DelegateServiceWrapper<Tool> implements ToolInvoker
 {
-  // INNER TYPES
-
-  /**
-   * Provides a thread-safe version of {@link Configuration}.
-   */
-  static class MutableConfiguration implements Configuration
-  {
-    // VARIABLES
-
-    private final AtomicReference<Map<Object, Object>> mapRef;
-
-    // CONSTRUCTORS
-
-    /**
-     * Creates a new {@link MutableConfiguration} instance.
-     */
-    public MutableConfiguration()
-    {
-      this.mapRef = new AtomicReference<Map<Object, Object>>( new HashMap<Object, Object>() );
-    }
-
-    // METHODS
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Map<Object, Object> asMap()
-    {
-      return this.mapRef.get();
-    }
-
-    /**
-     * Sets the configuration of this object to the given value.
-     * 
-     * @param aValue
-     *          the new configuration to set, cannot be <code>null</code>.
-     */
-    @SuppressWarnings( "rawtypes" )
-    public void set( final Dictionary aValue )
-    {
-      Map<Object, Object> value = asMap( aValue );
-      Map<Object, Object> old;
-      do
-      {
-        old = this.mapRef.get();
-      }
-      while ( !this.mapRef.compareAndSet( old, value ) );
-    }
-
-    /**
-     * Converts a given {@link Dictionary} to a {@link Map}.
-     * 
-     * @param aValue
-     *          the dictionary to convert, can be <code>null</code>.
-     * @return a map representation of the given {@link Dictionary}, or an empty
-     *         map is the given value was <code>null</code>.
-     */
-    @SuppressWarnings( "rawtypes" )
-    private Map<Object, Object> asMap( final Dictionary aValue )
-    {
-      HashMap<Object, Object> result = new HashMap<Object, Object>();
-      if ( aValue != null )
-      {
-        Enumeration keys = aValue.keys();
-        while ( keys.hasMoreElements() )
-        {
-          Object key = keys.nextElement();
-          result.put( key, aValue.get( key ) );
-        }
-      }
-      return result;
-    }
-  }
-
   // VARIABLES
 
-  private final Tool delegate;
-  private final MutableConfiguration configuration;
-
+  private volatile ToolConfigurationEditor configEditor;
   // Injected by Felix DM...
-  private volatile BundleContext bundleContext;
-  private volatile MetaTypeService metaTypeService;
+  private volatile DependencyManager dependencyManager;
   private volatile EventAdmin eventAdmin;
-  private volatile ConfigurationAdmin configAdmin;
   private volatile LogService log;
   private volatile Session session;
 
@@ -148,51 +70,7 @@ public class ToolInvokerImpl implements ToolInvoker
    */
   public ToolInvokerImpl( final Tool aTool )
   {
-    this.delegate = aTool;
-    this.configuration = new MutableConfiguration();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean configure( final Window aParent )
-  {
-    MetaTypeInformation metaTypeInfo = getMetaTypeInfo();
-    if ( ( metaTypeInfo == null ) || ( metaTypeInfo.getPids().length != 1 ) )
-    {
-      // Not metatyped; assume it has no configuration to be performed...
-      this.log.log( LogService.LOG_INFO,
-          "No metatype information to base tool configuration on for " + this.delegate.getName()
-              + "; assuming no configuration is needed..." );
-      return true;
-    }
-
-    String pid = metaTypeInfo.getPids()[0];
-    ObjectClassDefinition ocd = metaTypeInfo.getObjectClassDefinition( pid, aParent.getLocale().toString() );
-
-    AcquisitionDataInfo dataInfo = new AcquisitionDataInfo( this.session );
-
-    ToolConfigurationEditor editor = ToolConfigurationEditor
-        .create( aParent, ocd, this.configuration.asMap(), dataInfo );
-
-    getWindowManager().show( editor ); // Blocks...
-
-    if ( editor.areSettingsValid() )
-    {
-      try
-      {
-        // Post back the configuration to ConfigAdmin...
-        updateConfiguration( pid, editor.getProperties() );
-      }
-      catch ( IOException exception )
-      {
-        this.log.log( LogService.LOG_WARNING, "Failed to update configuration!", exception );
-        JErrorDialog.showDialog( aParent, "Failed to update configuration!", exception );
-      }
-    }
-
-    return editor.areSettingsValid() && ( editor.getDialogStatus() == DialogStatus.OK );
+    super( aTool );
   }
 
   // METHODS
@@ -201,9 +79,66 @@ public class ToolInvokerImpl implements ToolInvoker
    * {@inheritDoc}
    */
   @Override
+  public void configure( final Window aParent, final ConfigurationListener aListener )
+  {
+    ObjectClassDefinition ocd = getOCD( aParent.getLocale() );
+    if ( ocd == null )
+    {
+      // Not metatyped; assume it has no configuration to be performed...
+      this.log.log( LogService.LOG_INFO, "No metatype information to base tool configuration on for " + getName()
+          + "; assuming no configuration is needed..." );
+      return;
+    }
+
+    this.configEditor = ToolConfigurationEditor.create( aParent, ocd, getConfiguration().asMap(),
+        new AcquisitionDataInfo( this.session ) );
+    this.configEditor.addDialogStateListener( new DialogStateListener()
+    {
+      private final ToolConfigurationEditor configEditor = ToolInvokerImpl.this.configEditor;
+      private final DependencyManager dependencyManager = ToolInvokerImpl.this.dependencyManager;
+      private final LogService log = ToolInvokerImpl.this.log;
+
+      @Override
+      public void onStateChanged( final DialogStatus aState )
+      {
+        if ( ( DialogStatus.OK == aState ) && ( this.configEditor != null ) && this.configEditor.areSettingsValid() )
+        {
+          String pid = this.configEditor.getPid();
+
+          // Register a configuration listener that notifies the original
+          // callback when the configuration is actually valid...
+          Component comp = this.dependencyManager.createComponent()
+              .setInterface( ConfigurationListener.class.getName(), null ) //
+              .setImplementation( new ConfigurationListenerWrapper( aListener, pid ) );
+          this.dependencyManager.add( comp );
+
+          try
+          {
+            // Post back the configuration to ConfigAdmin...
+            updateConfiguration( pid, this.configEditor.getProperties() );
+          }
+          catch ( IOException exception )
+          {
+            this.log.log( LogService.LOG_WARNING, "Failed to update configuration!", exception );
+            JErrorDialog.showDialog( null, "Failed to update configuration!", exception );
+          }
+        }
+
+        // Clear our the reference to let it be GC'd...
+        ToolInvokerImpl.this.configEditor = null;
+      }
+    } );
+
+    getWindowManager().show( this.configEditor ); // Blocks...
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public ToolCategory getCategory()
   {
-    return this.delegate.getCategory();
+    return getDelegate().getCategory();
   }
 
   /**
@@ -212,7 +147,7 @@ public class ToolInvokerImpl implements ToolInvoker
   @Override
   public String getName()
   {
-    return this.delegate.getName();
+    return getDelegate().getName();
   }
 
   /**
@@ -227,10 +162,10 @@ public class ToolInvokerImpl implements ToolInvoker
     {
       // VARIABLES
 
-      private final Tool delegate = ToolInvokerImpl.this.delegate;
+      private final Tool delegate = getDelegate();
+      private final Configuration configuration = getConfiguration();
       private final Session session = ToolInvokerImpl.this.session;
       private final EventAdmin eventAdmin = ToolInvokerImpl.this.eventAdmin;
-      private final Configuration configuration = ToolInvokerImpl.this.configuration;
       private final Long startTime = Long.valueOf( System.currentTimeMillis() );
 
       // METHODS
@@ -335,30 +270,7 @@ public class ToolInvokerImpl implements ToolInvoker
   public void updated( final Dictionary aProperties ) throws ConfigurationException
   {
     this.log.log( LogService.LOG_DEBUG, "Tool configuration updated for: " + getName() );
-    this.configuration.set( aProperties );
-  }
-
-  /**
-   * Called by Felix DM upon initialization of this component.
-   */
-  final void init( final Component aComponent )
-  {
-    MetaTypeInformation metaTypeInfo = getMetaTypeInfo();
-    if ( ( metaTypeInfo != null ) && ( metaTypeInfo.getPids().length == 1 ) )
-    {
-      Dictionary<Object, Object> dict = new Hashtable<Object, Object>();
-      dict.put( org.osgi.framework.Constants.SERVICE_PID, metaTypeInfo.getPids()[0] );
-
-      aComponent.setServiceProperties( dict );
-    }
-  }
-
-  /**
-   * @return a {@link MetaTypeInformation} instance, never <code>null</code>.
-   */
-  private MetaTypeInformation getMetaTypeInfo()
-  {
-    return this.metaTypeService.getMetaTypeInformation( this.bundleContext.getBundle() );
+    getConfiguration().set( aProperties );
   }
 
   /**
@@ -367,19 +279,5 @@ public class ToolInvokerImpl implements ToolInvoker
   private WindowManager getWindowManager()
   {
     return Client.getInstance().getWindowManager();
-  }
-
-  /**
-   * @param aOwner
-   * @param aPid
-   * @param aProperties
-   */
-  private void updateConfiguration( final String aPid, final Dictionary<Object, Object> aProperties )
-      throws IOException
-  {
-    org.osgi.service.cm.Configuration config = this.configAdmin.getConfiguration( aPid );
-    config.update( aProperties );
-
-    this.configuration.set( aProperties );
   }
 }

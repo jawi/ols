@@ -36,7 +36,7 @@ import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.ioutil.*;
-
+import org.osgi.service.cm.*;
 import org.osgi.service.event.*;
 import org.osgi.service.event.Event;
 import org.osgi.service.log.*;
@@ -195,40 +195,42 @@ public final class AcquisitionController
    *          the parent window to use for displaying any other dialog, can be
    *          <code>null</code>.
    */
-  public boolean captureData( final Window aParent )
+  public void captureData( final Window aParent )
   {
-    AcquisitionDevice device = getCurrentSelectedDevice();
+    final AcquisitionDevice device = getCurrentSelectedDevice();
     if ( device == null )
     {
       this.log.log( LogService.LOG_WARNING, "No device is selected, cannot start data acquisition!" );
-      return false;
+      return;
     }
 
-    try
+    device.configure( aParent, new ConfigurationListener()
     {
-      this.log.log( LogService.LOG_INFO, "Starting data acquisition for '" + device.getName() + "' ..." );
+      final LogService log = AcquisitionController.this.log;
 
-      if ( device.configure( aParent ) )
+      @Override
+      public void configurationEvent( final ConfigurationEvent aEvent )
       {
-        this.statusListener.setStatus( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", //
-            device.getName(), new Date() );
+        try
+        {
+          this.log.log( LogService.LOG_INFO, "Starting data acquisition for '" + device.getName() + "' ..." );
 
-        acquireData( device );
+          setStatus( "Capture from {0} started at {1,date,medium} {1,time,medium} ...", //
+              device.getName(), new Date() );
 
-        return true;
+          acquireData( device );
+        }
+        catch ( IOException exception )
+        {
+          // Make sure to handle IO-interrupted exceptions properly!
+          if ( !IOUtil.handleInterruptedException( exception ) )
+          {
+            this.log.log( LogService.LOG_WARNING, "Failed to start data acquisition; I/O problem!", exception );
+            setStatus( "I/O problem: " + exception.getMessage() );
+          }
+        }
       }
-    }
-    catch ( IOException exception )
-    {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !IOUtil.handleInterruptedException( exception ) )
-      {
-        this.log.log( LogService.LOG_WARNING, "Failed to start data acquisition; I/O problem!", exception );
-        this.statusListener.setStatus( "I/O problem: " + exception.getMessage() );
-      }
-    }
-
-    return false;
+    } );
   }
 
   /**
@@ -393,6 +395,15 @@ public final class AcquisitionController
     this.eventAdmin.postEvent( new Event( TOPIC_ACQUISITION_STATUS, props ) );
 
     this.log.log( LogService.LOG_WARNING, "Acquisition started for " + aDeviceName );
+  }
+
+  /**
+   * @param aMessage
+   * @param aArguments
+   */
+  final void setStatus( final String aMessage, final Object... aArguments )
+  {
+    this.statusListener.setStatus( aMessage, aArguments );
   }
 
   /**

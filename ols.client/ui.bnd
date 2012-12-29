@@ -21,7 +21,8 @@ Private-Package: \
     nl.lxtreme.ols.client.ui.signaldisplay.view.timeline,\
     nl.lxtreme.ols.client.ui.signaldisplay.view.toolwindow,\
     nl.lxtreme.ols.client.ui.tool,\
-    nl.lxtreme.ols.client.ui.tool.impl
+    nl.lxtreme.ols.client.ui.tool.impl,\
+    nl.lxtreme.ols.client.ui.util
 Bundle-Activator: nl.lxtreme.ols.client.ui.Activator
 ols.version: 0.9.7-${tstamp}
 Include-Resource: resource 

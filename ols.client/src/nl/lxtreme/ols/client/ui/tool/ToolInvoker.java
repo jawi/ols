@@ -23,6 +23,8 @@ package nl.lxtreme.ols.client.ui.tool;
 
 import java.awt.*;
 
+import org.osgi.service.cm.*;
+
 import nl.lxtreme.ols.tool.api.*;
 
 
@@ -69,11 +71,13 @@ public interface ToolInvoker extends org.osgi.service.cm.ManagedService
    * Configures this tool by showing a configuration dialog on screen.
    * 
    * @param aParent
-   *          the parent window to use for the dialog to show.
+   *          the parent window to use for the dialog to show;
+   * @param aListener
+   *          the callback to invoke when the configuration is changed.
    * @return <code>true</code> if the tool was correctly configured,
    *         <code>false</code> otherwise (user pressed cancel).
    */
-  boolean configure( Window aParent );
+  void configure( Window aParent, ConfigurationListener aListener );
 
   /**
    * Returns the category for this tool.

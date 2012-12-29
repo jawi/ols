@@ -22,10 +22,12 @@ package nl.lxtreme.ols.client.ui.editor;
 
 
 import java.awt.*;
+import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
 
 import org.osgi.service.metatype.*;
 
@@ -42,7 +44,8 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareDialog;
  * yourself.
  * </p>
  */
-public abstract class BaseConfigurationEditor extends JDialog implements PropertyChangeListener, StatusAwareDialog
+public abstract class BaseConfigurationEditor extends JDialog implements ActionListener, PropertyChangeListener,
+    StatusAwareDialog
 {
   // CONSTANTS
 
@@ -51,6 +54,8 @@ public abstract class BaseConfigurationEditor extends JDialog implements Propert
   private static final String TITLE_SETTINGS = "Settings";
 
   // VARIABLES
+
+  private final EventListenerList eventListeners;
 
   private EditorPanel configPanel;
   private JButton closeButton;
@@ -86,9 +91,36 @@ public abstract class BaseConfigurationEditor extends JDialog implements Propert
   protected BaseConfigurationEditor( final Window aParent, final String aTitle, final ModalityType aModalityType )
   {
     super( aParent, aTitle, aModalityType );
+
+    this.eventListeners = new EventListenerList();
   }
 
   // METHODS
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void actionPerformed( final ActionEvent aEvent )
+  {
+    Object source = aEvent.getSource();
+    if ( source == this.closeButton )
+    {
+      fireDialogCancelledEvent();
+    }
+    else if ( source == this.okButton )
+    {
+      fireDialogConfirmedEvent();
+    }
+  }
+
+  /**
+   * Adds a given dialog listener to this dialog.
+   */
+  public void addDialogStateListener( final DialogStateListener aListener )
+  {
+    this.eventListeners.add( DialogStateListener.class, aListener );
+  }
 
   /**
    * @return <code>true</code> if the settings of this tool are valid,
@@ -128,6 +160,14 @@ public abstract class BaseConfigurationEditor extends JDialog implements Propert
   }
 
   /**
+   * Removes a given dialog listener from this dialog.
+   */
+  public void removeDialogStateListener( final DialogStateListener aListener )
+  {
+    this.eventListeners.remove( DialogStateListener.class, aListener );
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -164,10 +204,43 @@ public abstract class BaseConfigurationEditor extends JDialog implements Propert
     this.configPanel.addPropertyChangeListener( this );
 
     this.closeButton = StandardActionFactory.createCloseButton();
+    this.closeButton.addActionListener( this );
     this.okButton = StandardActionFactory.createOkButton();
+    this.okButton.addActionListener( this );
 
     final JComponent buttonBar = SwingComponentUtils.createButtonPane( this.okButton, this.closeButton );
 
     SwingComponentUtils.setupDialogContentPane( this, this.configPanel, buttonBar, this.closeButton );
+  }
+
+  /**
+   * Fires a dialog cancel event to all interested listeners.
+   */
+  private void fireDialogCancelledEvent()
+  {
+    fireDialogStateChangeEvent( DialogStatus.CANCEL );
+  }
+
+  /**
+   * Fires a dialog confirm event to all interested listeners.
+   */
+  private void fireDialogConfirmedEvent()
+  {
+    fireDialogStateChangeEvent( DialogStatus.OK );
+  }
+
+  /**
+   * Fires a dialog state change event to all interested listeners.
+   * 
+   * @param aState
+   *          the new dialog state, cannot be <code>null</code>.
+   */
+  protected void fireDialogStateChangeEvent( final DialogStatus aState )
+  {
+    DialogStateListener[] listeners = this.eventListeners.getListeners( DialogStateListener.class );
+    for ( DialogStateListener listener : listeners )
+    {
+      listener.onStateChanged( aState );
+    }
   }
 }

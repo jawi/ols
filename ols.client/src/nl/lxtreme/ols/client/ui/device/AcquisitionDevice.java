@@ -24,10 +24,10 @@ package nl.lxtreme.ols.client.ui.device;
 import java.awt.*;
 import java.io.*;
 
-import org.osgi.service.cm.*;
-
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
+
+import org.osgi.service.cm.*;
 
 
 /**
@@ -62,11 +62,13 @@ public interface AcquisitionDevice extends ManagedService
    * Configures this device by showing a configuration dialog on screen.
    * 
    * @param aParent
-   *          the parent window to use for the dialog to show.
+   *          the parent window to use for the dialog to show;
+   * @param aListener
+   *          the callback to invoke when the configuration is changed.
    * @return <code>true</code> if the tool was correctly configured,
    *         <code>false</code> otherwise (user pressed cancel).
    */
-  boolean configure( Window aParent );
+  void configure( Window aParent, ConfigurationListener aListener );
 
   /**
    * Returns whether this device is already set up or not.

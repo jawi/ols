@@ -37,14 +37,19 @@ final class DeviceConfigurationEditor extends BaseConfigurationEditor
 
   private static final long serialVersionUID = 1L;
 
+  // VARIABLES
+
+  private final String pid;
+
   // CONSTRUCTORS
 
   /**
    * Creates a new {@link DeviceConfigurationEditor} instance.
    */
-  public DeviceConfigurationEditor( final Window aParent, final String aTitle )
+  public DeviceConfigurationEditor( final Window aParent, final String aTitle, final String aPID )
   {
     super( aParent, aTitle, ModalityType.APPLICATION_MODAL );
+    this.pid = aPID;
   }
 
   // METHODS
@@ -65,8 +70,18 @@ final class DeviceConfigurationEditor extends BaseConfigurationEditor
   public static DeviceConfigurationEditor create( final Window aParent, final ObjectClassDefinition aOCD,
       final Map<Object, Object> aSettings )
   {
-    DeviceConfigurationEditor result = new DeviceConfigurationEditor( aParent, aOCD.getName() );
+    DeviceConfigurationEditor result = new DeviceConfigurationEditor( aParent, aOCD.getName(), aOCD.getID() );
     result.initDialog( aOCD, aSettings );
     return result;
+  }
+
+  /**
+   * Returns the current value of pid.
+   * 
+   * @return the pid
+   */
+  public String getPid()
+  {
+    return this.pid;
   }
 }
