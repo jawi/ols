@@ -23,7 +23,6 @@
 	osgi.identity;filter:='(osgi.identity=ols.export.vcd)',\
 	osgi.identity;filter:='(osgi.identity=ols.logbridge)',\
 	osgi.identity;filter:='(osgi.identity=ols.service.io)',\
-	osgi.identity;filter:='(osgi.identity=ols.service.task.execution)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.1wire)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.asm45)',\
@@ -71,7 +70,6 @@
 	mydoggy-osgi;version='[1.5.0,1.5.1)',\
 	ols.common;version=latest,\
 	ols.service.io;version=latest,\
-	ols.service.task.execution;version=latest,\
 	ols.logbridge;version=latest,\
 	ols.device.api;version=latest,\
 	ols.device.demo;version=latest,\
