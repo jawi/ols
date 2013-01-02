@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package org.sump.device.logicsniffer.profile;
+package nl.lxtreme.ols.device.logicsniffer.profile;
 
 
 import java.io.*;
@@ -30,7 +30,7 @@ import java.util.logging.*;
 /**
  * Provides a device profile.
  */
-public final class DeviceProfile implements Cloneable
+public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
 {
   // INNER TYPES
 
@@ -213,6 +213,20 @@ public final class DeviceProfile implements Cloneable
     {
       throw new IllegalStateException( exception );
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public int compareTo( final DeviceProfile aProfile )
+  {
+    int result = getDescription().compareTo( aProfile.getDescription() );
+    if ( result == 0 )
+    {
+      result = getType().compareTo( aProfile.getType() );
+    }
+    return result;
   }
 
   /**
@@ -629,7 +643,7 @@ public final class DeviceProfile implements Cloneable
   /**
    * @return the properties of this device profile, never <code>null</code>.
    */
-  final Dictionary<String, String> getProperties()
+  public final Dictionary<String, String> getProperties()
   {
     return new Hashtable<String, String>( this.properties );
   }
@@ -639,7 +653,7 @@ public final class DeviceProfile implements Cloneable
    *          the updated properties.
    */
   @SuppressWarnings( "rawtypes" )
-  final void setProperties( final Dictionary aProperties )
+  public final void setProperties( final Dictionary aProperties )
   {
     final Map<String, String> newProps = new HashMap<String, String>();
 

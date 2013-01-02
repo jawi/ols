@@ -25,6 +25,8 @@ import java.util.*;
 
 import junit.framework.*;
 
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+
 import org.osgi.service.cm.*;
 
 

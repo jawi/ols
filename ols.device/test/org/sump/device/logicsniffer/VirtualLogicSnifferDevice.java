@@ -32,9 +32,9 @@ import javax.microedition.io.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.ioutil.*;
 
-import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.protocol.*;
 
 

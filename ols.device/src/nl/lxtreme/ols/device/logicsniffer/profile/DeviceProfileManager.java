@@ -18,11 +18,13 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package org.sump.device.logicsniffer.profile;
+package nl.lxtreme.ols.device.logicsniffer.profile;
 
 
 import java.util.*;
 import java.util.concurrent.*;
+
+import nl.lxtreme.ols.device.logicsniffer.*;
 
 import org.osgi.service.cm.*;
 
@@ -30,7 +32,7 @@ import org.osgi.service.cm.*;
 /**
  * Provides a device profile manager,
  */
-public class DeviceProfileManager implements ManagedServiceFactory
+public class DeviceProfileManager implements ManagedServiceFactory, DeviceProfileProvider
 {
   // CONSTANTS
 
@@ -80,7 +82,7 @@ public class DeviceProfileManager implements ManagedServiceFactory
    */
   public DeviceProfile findProfile( final String aIdentifier )
   {
-    final Collection<DeviceProfile> allProfiles = getProfiles();
+    final Collection<DeviceProfile> allProfiles = getDeviceProfiles();
 
     boolean allowWildcardMatch = false;
     for ( int tries = 0; tries < 2; tries++ )
@@ -113,6 +115,23 @@ public class DeviceProfileManager implements ManagedServiceFactory
   }
 
   /**
+   * Returns the device profile for the device type.
+   * 
+   * @param aType
+   *          the device type to get the profile for, cannot be
+   *          <code>null</code>.
+   * @return the device profile, can be <code>null</code> if no such profile is
+   *         found.
+   */
+  @Override
+  public List<DeviceProfile> getDeviceProfiles()
+  {
+    List<DeviceProfile> result = new ArrayList<DeviceProfile>();
+    result.addAll( this.profiles.values() );
+    return result;
+  }
+
+  /**
    * @see org.osgi.service.cm.ManagedServiceFactory#getName()
    */
   @Override
@@ -132,7 +151,7 @@ public class DeviceProfileManager implements ManagedServiceFactory
    */
   public DeviceProfile getProfile( final String aType )
   {
-    final Collection<DeviceProfile> allProfiles = getProfiles();
+    final Collection<DeviceProfile> allProfiles = getDeviceProfiles();
 
     for ( DeviceProfile profile : allProfiles )
     {
@@ -142,32 +161,6 @@ public class DeviceProfileManager implements ManagedServiceFactory
       }
     }
     return null;
-  }
-
-  /**
-   * Returns the device profile for the device type.
-   * 
-   * @param aType
-   *          the device type to get the profile for, cannot be
-   *          <code>null</code>.
-   * @return the device profile, can be <code>null</code> if no such profile is
-   *         found.
-   */
-  public List<DeviceProfile> getProfiles()
-  {
-    List<DeviceProfile> result = new ArrayList<DeviceProfile>();
-    result.addAll( this.profiles.values() );
-    return result;
-  }
-
-  /**
-   * Returns the number of available profile types.
-   * 
-   * @return a number profile types.
-   */
-  public int getSize()
-  {
-    return this.profiles.size();
   }
 
   /**

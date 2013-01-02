@@ -1,5 +1,8 @@
-Private-Package: org.sump.device.logicsniffer,\
-	org.sump.device.logicsniffer.profile,\
+Private-Package: \
+    nl.lxtreme.ols.device.logicsniffer,\
+    nl.lxtreme.ols.device.logicsniffer.profile,\
+    nl.lxtreme.ols.device.logicsniffer.ui,\
+    org.sump.device.logicsniffer,\
 	org.sump.device.logicsniffer.protocol,\
 	org.sump.device.logicsniffer.sampleprocessor
 Bundle-Activator: org.sump.device.logicsniffer.Activator
@@ -9,3 +12,4 @@ Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
 -metatype: *Config
 OLS-Device: 1.0
 OLS-DeviceClass: org.sump.device.logicsniffer.LogicSnifferDevice
+X-ConfigurationEditor: nl.lxtreme.ols.device.logicsniffer.LogicSnifferConfigurationEditor

@@ -21,6 +21,7 @@
 package org.sump.device.logicsniffer.profile;
 
 
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import junit.framework.*;
 
 

@@ -32,11 +32,11 @@ import javax.swing.*;
 import javax.swing.plaf.basic.*;
 
 import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.device.logicsniffer.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.WindowManager.Configurable;
 import nl.lxtreme.ols.util.swing.WindowManager.UserSettings;
-
-import org.sump.device.logicsniffer.profile.*;
 
 
 /**
@@ -89,7 +89,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     @Override
     public Object getElementAt( final int aIndex )
     {
-      final List<DeviceProfile> profiles = this.deviceProfileManager.getProfiles();
+      final List<DeviceProfile> profiles = this.deviceProfileManager.getDeviceProfiles();
       if ( profiles.isEmpty() )
       {
         return null;
@@ -112,7 +112,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
     @Override
     public int getSize()
     {
-      return this.deviceProfileManager.getSize();
+      return this.deviceProfileManager.getDeviceProfiles().size();
     }
 
     /**

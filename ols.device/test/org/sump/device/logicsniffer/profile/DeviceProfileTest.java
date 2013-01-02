@@ -26,9 +26,8 @@ import java.util.*;
 
 import junit.framework.*;
 
-import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
-import org.sump.device.logicsniffer.profile.DeviceProfile.DeviceInterface;
-import org.sump.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.*;
 
 
 /**

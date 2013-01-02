@@ -18,20 +18,17 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package org.sump.device.logicsniffer;
+package nl.lxtreme.ols.device.logicsniffer;
 
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.logging.*;
-
 import javax.microedition.io.*;
 
-import nl.lxtreme.ols.device.logicsniffer.*;
-import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.ioutil.*;
 
+import org.osgi.service.log.*;
+import org.sump.device.logicsniffer.*;
 import org.sump.device.logicsniffer.protocol.*;
 
 
@@ -39,54 +36,52 @@ import org.sump.device.logicsniffer.protocol.*;
  * Provides a task for detecting the current type of the attached logic sniffer
  * device.
  */
-public class LogicSnifferDetectionTask implements Callable<LogicSnifferMetadata>, SumpProtocolConstants
+public class LogicSnifferDetector implements SumpProtocolConstants
 {
   // CONSTANTS
 
-  private static final Logger LOG = Logger.getLogger( LogicSnifferDetectionTask.class.getName() );
+  private static final int MAX_TRIES = 3;
 
   // VARIABLES
 
-  private final LogicSnifferDevice device;
-  private final String connectionURI;
+  private final LogService logService;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new LogicSnifferDetectionTask instance.
-   * 
-   * @throws IOException
-   *           in case of I/O problems.
+   * Creates a new {@link LogicSnifferDetector} instance.
    */
-  public LogicSnifferDetectionTask( final LogicSnifferDevice aDevice, final String aConnectionURI )
+  public LogicSnifferDetector( final LogService aLogService )
   {
-    this.device = aDevice;
-    this.connectionURI = aConnectionURI;
+    this.logService = aLogService;
   }
 
   // METHODS
 
   /**
-   * {@inheritDoc}
+   * Tries to detect the Logic Sniffer device attached to the given connection.
+   * 
+   * @param aConnection
+   *          the connection to use to detect the Logic Sniffer device, cannot
+   *          be <code>null</code>.
+   * @return a {@link LogicSnifferMetadata} instance, never <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems detecting the Logic Sniffer device.
    */
-  @Override
-  public LogicSnifferMetadata call() throws IOException
+  public LogicSnifferMetadata detect( final StreamConnection aConnection ) throws IOException
   {
     DataInputStream inputStream = null;
     DataOutputStream outputStream = null;
-    StreamConnection connection = null;
 
     boolean gotResponse = false;
 
     try
     {
-      connection = this.device.createStreamConnection( this.connectionURI );
-
-      inputStream = connection.openDataInputStream();
-      outputStream = connection.openDataOutputStream();
+      inputStream = aConnection.openDataInputStream();
+      outputStream = aConnection.openDataOutputStream();
 
       final LogicSnifferMetadata metadata = new LogicSnifferMetadata();
-      int tries = 3;
+      int tries = MAX_TRIES;
 
       do
       {
@@ -100,7 +95,7 @@ public class LogicSnifferDetectionTask implements Callable<LogicSnifferMetadata>
         writeCmdGetDeviceId( outputStream );
         readDeviceId( inputStream );
 
-        LOG.log( Level.INFO, "Detected SUMP-compatible device ..." );
+        this.logService.log( LogService.LOG_INFO, "Detected SUMP-compatible device ..." );
 
         // Make sure nothing is left in our input buffer...
         flushInputStream( inputStream );
@@ -112,12 +107,8 @@ public class LogicSnifferDetectionTask implements Callable<LogicSnifferMetadata>
         if ( gotResponse = readMetadata( inputStream, metadata ) )
         {
           // Log the read results...
-          LOG.log( Level.INFO, "Found device type: {0}", metadata.getName() );
-          LOG.log( Level.FINE, "Device metadata = \n{0}", metadata.toString() );
-
-          // Determine the device profile based on the information of the
-          // metadata; it will be placed in the given metadata object...
-          metadata.setDeviceProfile( getDeviceProfile( metadata.getName() ) );
+          this.logService.log( LogService.LOG_INFO, "Found device type: " + metadata.getName() );
+          this.logService.log( LogService.LOG_DEBUG, "Device metadata = \n" + metadata.toString() );
         }
       }
       while ( !Thread.currentThread().isInterrupted() && !gotResponse && ( tries-- > 0 ) );
@@ -135,18 +126,6 @@ public class LogicSnifferDetectionTask implements Callable<LogicSnifferMetadata>
 
       IOUtil.closeResource( inputStream );
       IOUtil.closeResource( outputStream );
-
-      try
-      {
-        if ( connection != null )
-        {
-          connection.close();
-        }
-      }
-      catch ( IOException exception )
-      {
-        LOG.log( Level.INFO, "I/O connection while trying to close connection after device detect!", exception );
-      }
     }
   }
 
@@ -170,41 +149,6 @@ public class LogicSnifferDetectionTask implements Callable<LogicSnifferMetadata>
   }
 
   /**
-   * Determines the device profile for the current attached device. The device
-   * profile provides us with detailed information about the capabilities of a
-   * certain SUMP-compatible device.
-   * 
-   * @param aName
-   *          the name of the device, can be <code>null</code>.
-   * @return a device profile, or <code>null</code> if no such profile could be
-   *         determined.
-   */
-  private DeviceProfile getDeviceProfile( final String aName )
-  {
-    DeviceProfile profile = null;
-
-    if ( aName != null )
-    {
-      profile = this.device.getDeviceProfileManager().findProfile( aName );
-
-      if ( profile != null )
-      {
-        LOG.log( Level.INFO, "Using device profile: {0}", profile.getDescription() );
-      }
-      else
-      {
-        LOG.log( Level.SEVERE, "No device profile found matching: {0}", aName );
-      }
-    }
-    else
-    {
-      LOG.log( Level.SEVERE, "No device name provided by metadata! Cannot determine device profile..." );
-    }
-
-    return profile;
-  }
-
-  /**
    * @return the found device ID, or -1 if no suitable device ID was found.
    * @throws IOException
    */
@@ -214,15 +158,15 @@ public class LogicSnifferDetectionTask implements Callable<LogicSnifferMetadata>
 
     if ( id == SLA_V0 )
     {
-      LOG.log( Level.INFO, "Found (unsupported!) Sump Logic Analyzer ...", Integer.toHexString( id ) );
+      this.logService.log( LogService.LOG_INFO, "Found (unsupported!) Sump Logic Analyzer ..." );
     }
     else if ( id == SLA_V1 )
     {
-      LOG.log( Level.INFO, "Found Sump Logic Analyzer/LogicSniffer compatible device ...", Integer.toHexString( id ) );
+      this.logService.log( LogService.LOG_INFO, "Found Sump Logic Analyzer/LogicSniffer compatible device ..." );
     }
     else
     {
-      LOG.log( Level.INFO, "Found unknown device: 0x{0} ...", Integer.toHexString( id ) );
+      this.logService.log( LogService.LOG_INFO, "Found unknown device: 0x" + Integer.toHexString( id ) + " ..." );
       id = -1;
     }
     return id;
@@ -272,7 +216,7 @@ public class LogicSnifferDetectionTask implements Callable<LogicSnifferMetadata>
           }
           else
           {
-            LOG.log( Level.INFO, "Ignoring unknown metadata type: {0}", Integer.valueOf( type ) );
+            this.logService.log( LogService.LOG_INFO, "Ignoring unknown metadata type: " + type );
           }
         }
       }

@@ -26,15 +26,14 @@ import java.util.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.common.*;
-
-import org.sump.device.logicsniffer.profile.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.*;
 
 
 /**
  * @author jawi
  */
-final class ConfigDialogHelper
+public final class ConfigDialogHelper
 {
   // METHODS
 
@@ -42,7 +41,7 @@ final class ConfigDialogHelper
    * @param aComboBox
    * @return
    */
-  static String getComboBoxText( final JComboBox aComboBox )
+  public static String getComboBoxText( final JComboBox aComboBox )
   {
     if ( aComboBox == null )
     {
@@ -64,7 +63,7 @@ final class ConfigDialogHelper
    * @param aComboBox
    * @return
    */
-  static Integer getNumericValue( final JComboBox aTextField )
+  public static Integer getNumericValue( final JComboBox aTextField )
   {
     if ( aTextField == null )
     {
@@ -93,7 +92,7 @@ final class ConfigDialogHelper
    * @param aComboBox
    * @return
    */
-  static Integer getNumericValue( final JTextField aTextField )
+  public static Integer getNumericValue( final JTextField aTextField )
   {
     if ( aTextField == null )
     {
@@ -119,7 +118,7 @@ final class ConfigDialogHelper
    * @param aComboBox
    * @param aValues
    */
-  static void updateCaptureSpeedComboBoxModel( final JComboBox aComboBox, final DeviceProfile aProfile )
+  public static void updateCaptureSpeedComboBoxModel( final JComboBox aComboBox, final DeviceProfile aProfile )
   {
     Vector<Integer> sampleRates = new Vector<Integer>( Arrays.asList( aProfile.getSampleRates() ) );
     if ( aProfile.isDoubleDataRateSupported() )
@@ -135,7 +134,7 @@ final class ConfigDialogHelper
    * @param aChannelGroups
    * @param aProfile
    */
-  static void updateChannelGroups( final JCheckBox[] aChannelGroups, final DeviceProfile aProfile )
+  public static void updateChannelGroups( final JCheckBox[] aChannelGroups, final DeviceProfile aProfile )
   {
     assert aChannelGroups != null : "Channel groups cannot be null!";
     assert aChannelGroups.length == 4 : "There should be 4 channel groups!";
@@ -152,7 +151,7 @@ final class ConfigDialogHelper
    * Updates the enabled state of the given checkbox. If <em>not</em> enabled,
    * it will also deselect the given checkbox.
    */
-  static void updateCheckBoxState( final JCheckBox aCheckBox, final boolean aEnabled )
+  public static void updateCheckBoxState( final JCheckBox aCheckBox, final boolean aEnabled )
   {
     if ( !aEnabled )
     {
@@ -166,7 +165,7 @@ final class ConfigDialogHelper
    * @param aComboBox
    * @param aValues
    */
-  static <T> void updateComboBoxModel( final JComboBox aComboBox, final T... aValues )
+  public static <T> void updateComboBoxModel( final JComboBox aComboBox, final T... aValues )
   {
     aComboBox.setModel( new DefaultComboBoxModel( aValues ) );
   }
@@ -176,7 +175,7 @@ final class ConfigDialogHelper
    * @param aComboBox
    * @param aValues
    */
-  static <T> void updateComboBoxModel( final JComboBox aComboBox, final Vector<T> aValues )
+  public static <T> void updateComboBoxModel( final JComboBox aComboBox, final Vector<T> aValues )
   {
     aComboBox.setModel( new DefaultComboBoxModel( aValues ) );
   }
@@ -186,7 +185,7 @@ final class ConfigDialogHelper
    * @param aTriggerValues
    * @param aProfile
    */
-  static void updateTriggerChannels( final JCheckBox[][] aTriggerMasks, final JCheckBox[][] aTriggerValues,
+  public static void updateTriggerChannels( final JCheckBox[][] aTriggerMasks, final JCheckBox[][] aTriggerValues,
       final DeviceProfile aProfile )
   {
     assert aTriggerMasks != null : "Trigger masks cannot be null!";
@@ -219,7 +218,7 @@ final class ConfigDialogHelper
    * @param aComboBox
    * @param aValues
    */
-  static void updateTriggerTypeComboBoxModel( final JComboBox aComboBox, final DeviceProfile aProfile )
+  public static void updateTriggerTypeComboBoxModel( final JComboBox aComboBox, final DeviceProfile aProfile )
   {
     final boolean complexTriggersSupported = aProfile.isComplexTriggersSupported();
     final TriggerType[] values;

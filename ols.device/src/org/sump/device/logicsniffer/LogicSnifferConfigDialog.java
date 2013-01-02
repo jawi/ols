@@ -34,7 +34,10 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
 
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.util.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
 import nl.lxtreme.ols.util.swing.SwingComponentUtils.UnitDefinition;
@@ -42,11 +45,6 @@ import nl.lxtreme.ols.util.swing.WindowManager.Configurable;
 import nl.lxtreme.ols.util.swing.WindowManager.UserSettings;
 import nl.lxtreme.ols.util.swing.component.*;
 
-import org.sump.device.logicsniffer.profile.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
-import org.sump.device.logicsniffer.profile.DeviceProfile.DeviceInterface;
-import org.sump.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
-import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
 import org.sump.device.logicsniffer.protocol.*;
 
 import purejavacomm.*;
@@ -55,7 +53,8 @@ import purejavacomm.*;
 /**
  * Provides the configuration dialog for the Open Bench Logic Sniffer device.
  */
-public final class LogicSnifferConfigDialog extends JDialog implements StatusAwareDialog, Configurable
+public final class LogicSnifferConfigDialog extends JDialog implements ConfigurationEditor, StatusAwareDialog,
+    Configurable
 {
   // INNER TYPES
 
@@ -296,6 +295,19 @@ public final class LogicSnifferConfigDialog extends JDialog implements StatusAwa
    * @param aDevice
    *          the logic sniffer device to configure.
    */
+  public LogicSnifferConfigDialog( final Window aParent )
+  {
+    this( aParent, null );
+  }
+
+  /**
+   * Creates a new LogicSnifferConfigDialog instance.
+   * 
+   * @param aParent
+   *          the parent window of this dialog;
+   * @param aDevice
+   *          the logic sniffer device to configure.
+   */
   public LogicSnifferConfigDialog( final Window aParent, final LogicSnifferDevice aDevice )
   {
     super( aParent, "OLS Capture settings", ModalityType.DOCUMENT_MODAL );
@@ -355,6 +367,26 @@ public final class LogicSnifferConfigDialog extends JDialog implements StatusAwa
     {
       return "";
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void addConfigurationChangeListener( final ConfigurationChangeListener aListener )
+  {
+    // TODO Auto-generated method stub
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void removeConfigurationChangeListener( final ConfigurationChangeListener aListener )
+  {
+    // TODO Auto-generated method stub
+
   }
 
   /**

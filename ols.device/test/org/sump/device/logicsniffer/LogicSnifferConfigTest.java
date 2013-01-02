@@ -23,7 +23,8 @@ package org.sump.device.logicsniffer;
 
 import junit.framework.*;
 
-import org.sump.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+
 import org.sump.device.logicsniffer.protocol.*;
 
 

@@ -30,6 +30,7 @@ import javax.microedition.io.*;
 import nl.lxtreme.ols.common.Configuration;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import org.apache.felix.dm.*;
@@ -37,7 +38,6 @@ import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.osgi.service.io.*;
-import org.sump.device.logicsniffer.profile.*;
 
 
 /**

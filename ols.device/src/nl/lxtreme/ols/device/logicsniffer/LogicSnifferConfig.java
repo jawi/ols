@@ -18,11 +18,11 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package org.sump.device.logicsniffer;
+package nl.lxtreme.ols.device.logicsniffer;
 
 
-import org.sump.device.logicsniffer.profile.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.*;
 
 import aQute.bnd.annotation.metatype.*;
 
@@ -36,37 +36,40 @@ public interface LogicSnifferConfig
   // METHODS
 
   @Meta.AD( name = "Connection type", required = true, deflt = "SERIAL", //
-  optionLabels = { "Network", "Serial port" }, optionValues = { "NETWORK", "SERIAL" } )
+  optionLabels = { "Network", "Serial port" }, optionValues = { "NETWORK", "SERIAL" }, //
+  description = "{listener=remoteHost:!remoteHost,listener=remotePort:!remotePort,listener=!localPort:localPort,listener=!portSpeed:portSpeed}" )
   DeviceInterface deviceInterface();
 
-  @Meta.AD( name = "Remote host" )
+  @Meta.AD( name = "Remote host", deflt = "localhost" )
   String remoteHost();
 
-  @Meta.AD( name = "Remote port", min = "1", max = "65535" )
+  @Meta.AD( name = "Remote port", min = "1", max = "65535", deflt = "5678" )
   int remotePort();
 
-  @Meta.AD( name = "Analyzer port" )
+  @Meta.AD( name = "Serial port", deflt = "" )
   String localPort();
 
-  @Meta.AD( name = "Port speed", min = "1" )
+  @Meta.AD( name = "Port speed", min = "1", deflt = "115200", optionLabels = { "921600bps", "460800bps", "230400bps",
+      "115200bps", "57600bps", "38400bps", "19200bps", "14400bps", "9600bps", "4800bps" }, optionValues = { "921600",
+      "460800", "230400", "115200", "57600", "38400", "19200", "14400", "9600", "4800" } )
   int portSpeed();
 
   @Meta.AD( name = "Device profile", required = true )
   DeviceProfile deviceProfile();
 
-  @Meta.AD( name = "Number scheme", required = true, deflt = "false", //
-  optionLabels = { "Inside", "Outside" }, optionValues = { "true", "false" } )
-  boolean altNumberSchemeEnabled();
+  @Meta.AD( name = "Number scheme", required = true, deflt = "DEFAULT", //
+  optionLabels = { "Default", "Inside", "Outside" }, optionValues = { "DEFAULT", "INSIDE", "OUTSIDE" } )
+  String numberScheme();
 
   @Meta.AD( name = "Clock source", required = true, deflt = "INTERNAL", //
   optionLabels = { "Internal", "External / Falling", "External / Rising" }, optionValues = { "INTERNAL",
       "EXTERNAL_FALLING", "EXTERNAL_RISING" } )
   CaptureClockSource clockSource();
 
-  @Meta.AD( name = "Sample rate", required = true )
+  @Meta.AD( name = "Sample rate", required = true, deflt = "1000000" )
   int sampleRate();
 
-  @Meta.AD( name = "Enabled channels", required = true )
+  @Meta.AD( name = "Enabled channels", required = true, deflt = "255" )
   int enabledChannels();
 
   @Meta.AD( name = "Recording size", required = true )

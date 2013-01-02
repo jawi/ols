@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 J.W. Janssen, www.lxtreme.nl
  */
-package org.sump.device.logicsniffer.profile;
+package nl.lxtreme.ols.device.logicsniffer.profile;
 
 
 import java.util.*;
@@ -27,7 +27,7 @@ import java.util.*;
 /**
  * Provides some common string utilities.
  */
-final class StringUtils
+public final class StringUtils
 {
   // CONSTRUCTORS
 
@@ -112,7 +112,7 @@ final class StringUtils
    *         the original input was <code>null</code>.
    * @see #unquote(String, char)
    */
-  static String unquote( final String aInput )
+  public static String unquote( final String aInput )
   {
     return unquote( aInput, '"' );
   }
@@ -130,7 +130,7 @@ final class StringUtils
    *         contained leading and/or trailing whitespace, it is removed from
    *         the result.
    */
-  static String unquote( final String aInput, final char aQuoteChar )
+  public static String unquote( final String aInput, final char aQuoteChar )
   {
     if ( aInput == null )
     {

@@ -24,6 +24,7 @@ package org.sump.device.logicsniffer.protocol;
 import java.io.*;
 import java.util.logging.*;
 
+import nl.lxtreme.ols.device.logicsniffer.*;
 import nl.lxtreme.ols.ioutil.*;
 import org.sump.device.logicsniffer.*;
 

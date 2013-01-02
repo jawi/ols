@@ -18,14 +18,14 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package org.sump.device.logicsniffer;
+package nl.lxtreme.ols.device.logicsniffer;
 
 
 import java.util.*;
 
 import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 
-import org.sump.device.logicsniffer.profile.*;
 
 
 /**

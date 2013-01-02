@@ -21,12 +21,8 @@
 package org.sump.device.logicsniffer;
 
 
-import java.util.*;
-
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
-import org.osgi.service.cm.*;
-import org.sump.device.logicsniffer.profile.*;
 
 
 /**
@@ -51,13 +47,13 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    Dictionary<String, String> props = new Hashtable<String, String>();
-    props.put( Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
-
-    aManager.add( //
-        createComponent() //
-            .setInterface( ManagedServiceFactory.class.getName(), props ) //
-            .setImplementation( new DeviceProfileManager() ) //
-        );
+    // Dictionary<String, String> props = new Hashtable<String, String>();
+    // props.put( Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
+    //
+    // aManager.add( //
+    // createComponent() //
+    // .setInterface( ManagedServiceFactory.class.getName(), props ) //
+    // .setImplementation( new DeviceProfileManager() ) //
+    // );
   }
 }
