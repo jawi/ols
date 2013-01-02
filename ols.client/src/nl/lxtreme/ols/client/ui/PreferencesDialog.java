@@ -28,10 +28,10 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.ui.editor.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareDialog;
+import nl.lxtreme.ols.util.swing.editor.*;
 
 import org.osgi.service.metatype.*;
 

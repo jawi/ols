@@ -24,14 +24,15 @@ package nl.lxtreme.ols.client.ui.tool.impl;
 import static nl.lxtreme.ols.client.ui.ClientSwingUtil.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
+import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.ui.editor.*;
-import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.editor.*;
 
 import org.osgi.service.metatype.*;
 
@@ -39,8 +40,76 @@ import org.osgi.service.metatype.*;
 /**
  * Provides a panel for configuring tools.
  */
-final class ToolConfigPanel extends EditorPanel implements Constants
+final class ToolConfigPanel extends EditorPanel implements Constants, IEditorProvider
 {
+  // INNER TYPES
+
+  /**
+   * Provides a renderer for channel labels.
+   */
+  static final class ChannelLabelRenderer extends DefaultListCellRenderer
+  {
+    // VARIABLES
+
+    private final JComboBox result;
+    private final boolean addUnusedOption;
+    private final AttributeDefinition attributeDef;
+    private static final long serialVersionUID = 1L;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link ChannelLabelRenderer} instance.
+     * 
+     * @param aResult
+     * @param aAddUnusedOption
+     * @param aAttributeDef
+     */
+    ChannelLabelRenderer( final JComboBox aResult, final boolean aAddUnusedOption,
+        final AttributeDefinition aAttributeDef )
+    {
+      this.result = aResult;
+      this.addUnusedOption = aAddUnusedOption;
+      this.attributeDef = aAttributeDef;
+    }
+
+    @Override
+    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
+        final boolean aIsSelected, final boolean aCellHasFocus )
+    {
+      final String[] optionLabels = this.attributeDef.getOptionLabels();
+
+      int idx = aIndex;
+      if ( idx < 0 )
+      {
+        // When rendering the combobox in collapsed state, the given index is
+        // -1, use the selected index from the model instead...
+        idx = this.result.getSelectedIndex();
+      }
+      if ( this.addUnusedOption )
+      {
+        idx--;
+      }
+
+      Object value;
+      Integer v = ( Integer )aValue;
+      if ( v.intValue() < 0 )
+      {
+        value = "Unused";
+      }
+      else
+      {
+        value = String.format( "Channel %d", ( Integer )aValue );
+      }
+      if ( ( optionLabels != null ) && ( idx >= 0 ) && ( idx < optionLabels.length ) )
+      {
+        value = optionLabels[idx];
+      }
+
+      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -181,15 +250,6 @@ final class ToolConfigPanel extends EditorPanel implements Constants
    * {@inheritDoc}
    */
   @Override
-  protected EditorUtils createEditorUtils()
-  {
-    return new ToolEditorUtils( this.acquisitionDataInfo );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   protected void initPanel( final Map<Object, Object> aSettings, final String aTitle, final IEditorProvider aProvider )
   {
     SpringLayoutUtils.addSeparator( this, "Context" );
@@ -217,7 +277,22 @@ final class ToolConfigPanel extends EditorPanel implements Constants
     // set default settings...
     updateContextState();
 
-    super.initPanel( aSettings, "Settings", null );
+    super.initPanel( aSettings, "Settings", this );
+  }
+
+  @Override
+  public JComponent createEditor( final AttributeDefinition aAttributeDef, final Object aInitialValue )
+  {
+    // For integer values ending with "Idx" create a channel selector
+    // instead...
+    int type = aAttributeDef.getType();
+    if ( ( type == AttributeDefinition.INTEGER ) && aAttributeDef.getID().endsWith( "Idx" ) )
+    {
+      int initialSelectedIdx = getInitialSelectedIdx( aAttributeDef, aInitialValue );
+      return createChannelSelector( aAttributeDef, initialSelectedIdx );
+    }
+
+    return null;
   }
 
   /**
@@ -310,5 +385,83 @@ final class ToolConfigPanel extends EditorPanel implements Constants
       return true;
     }
     return Boolean.TRUE.equals( value );
+  }
+
+  /**
+   * Creates a channel selector component.
+   * 
+   * @param aAttributeDef
+   *          the {@link AttributeDefinition} to create a channel selector for;
+   * @param aInitialSelectedIdx
+   *          the initial selected index of the selector.
+   * @return a channel selector component, never <code>null</code>.
+   */
+  private JComboBox createChannelSelector( final AttributeDefinition aAttributeDef, final int aInitialSelectedIdx )
+  {
+    final int bitmask = this.acquisitionDataInfo.getEnabledChannelMask();
+    final int channelCount = this.acquisitionDataInfo.getChannelCount();
+    // add an unused option if the attribute is not required...
+    final boolean addUnusedOption = "".equals( aAttributeDef.validate( null ) );
+
+    int modelSize = Math.max( 0, Math.min( Integer.SIZE, channelCount ) );
+    if ( addUnusedOption )
+    {
+      modelSize++;
+    }
+
+    final Vector<Integer> dataChannels = new Vector<Integer>( modelSize );
+
+    if ( addUnusedOption )
+    {
+      dataChannels.add( Integer.valueOf( -1 ) );
+    }
+    for ( int mask = 1, i = 0; i < Integer.SIZE; i++, mask <<= 1 )
+    {
+      // Fixes #115: disabled channel groups...
+      if ( ( bitmask & mask ) != 0 )
+      {
+        dataChannels.add( Integer.valueOf( i ) );
+      }
+    }
+
+    final JComboBox result = new JComboBox( dataChannels );
+    int selectedIndex = ( aInitialSelectedIdx < 0 ) ? 0 : ( aInitialSelectedIdx % modelSize );
+    result.setSelectedIndex( selectedIndex );
+    result.setRenderer( new ChannelLabelRenderer( result, addUnusedOption, aAttributeDef ) );
+
+    return result;
+  }
+
+  /**
+   * Tries to determine the default initial selected index for a channel
+   * selector.
+   * 
+   * @param aAttributeDef
+   * @param aInitialValue
+   * @return an index, < 0 if no index could be determined, otherwise, >= 0.
+   */
+  private int getInitialSelectedIdx( final AttributeDefinition aAttributeDef, final Object aInitialValue )
+  {
+    int idx = -1;
+    try
+    {
+      if ( aInitialValue != null )
+      {
+        idx = Integer.parseInt( aInitialValue.toString() );
+      }
+      else
+      {
+        String[] defaults = aAttributeDef.getDefaultValue();
+        if ( ( defaults != null ) && ( defaults.length > 0 ) )
+        {
+          idx = Integer.parseInt( defaults[0] );
+        }
+      }
+    }
+    catch ( NumberFormatException exception )
+    {
+      // Ignore...
+    }
+    return idx;
   }
 }

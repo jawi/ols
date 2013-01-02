@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.ui.editor;
+package nl.lxtreme.ols.client.ui.util;
 
 
 import java.awt.*;
@@ -29,11 +29,13 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
-import org.osgi.service.metatype.*;
-
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareDialog;
+import nl.lxtreme.ols.util.swing.editor.*;
+
+import org.osgi.service.metatype.*;
 
 
 /**
@@ -44,8 +46,8 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareDialog;
  * yourself.
  * </p>
  */
-public abstract class BaseConfigurationEditor extends JDialog implements ActionListener, PropertyChangeListener,
-    StatusAwareDialog
+public abstract class BaseConfigurationEditor extends JDialog implements ConfigurationEditor, ActionListener,
+    PropertyChangeListener, StatusAwareDialog
 {
   // CONSTANTS
 
@@ -107,11 +109,27 @@ public abstract class BaseConfigurationEditor extends JDialog implements ActionL
     if ( source == this.closeButton )
     {
       fireDialogCancelledEvent();
+
+      fireConfigurationDiscardedEvent();
     }
     else if ( source == this.okButton )
     {
       fireDialogConfirmedEvent();
+
+      if ( areSettingsValid() )
+      {
+        fireConfigurationAcknowledgedEvent();
+      }
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void addConfigurationChangeListener( final ConfigurationChangeListener aListener )
+  {
+    this.eventListeners.add( ConfigurationChangeListener.class, aListener );
   }
 
   /**
@@ -141,6 +159,13 @@ public abstract class BaseConfigurationEditor extends JDialog implements ActionL
   }
 
   /**
+   * Returns the current value of PID.
+   * 
+   * @return the PID, cannot be <code>null</code>.
+   */
+  public abstract String getPid();
+
+  /**
    * @return the configuration properties, never <code>null</code>.
    */
   public Dictionary<Object, Object> getProperties()
@@ -157,6 +182,15 @@ public abstract class BaseConfigurationEditor extends JDialog implements ActionL
     // Update the state of the buttons to indicate what's wrong...
     this.closeButton.setEnabled( true );
     this.okButton.setEnabled( areSettingsValid() );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void removeConfigurationChangeListener( final ConfigurationChangeListener aListener )
+  {
+    this.eventListeners.remove( ConfigurationChangeListener.class, aListener );
   }
 
   /**
@@ -191,6 +225,21 @@ public abstract class BaseConfigurationEditor extends JDialog implements ActionL
   }
 
   /**
+   * Fires a dialog state change event to all interested listeners.
+   * 
+   * @param aState
+   *          the new dialog state, cannot be <code>null</code>.
+   */
+  protected void fireDialogStateChangeEvent( final DialogStatus aState )
+  {
+    DialogStateListener[] listeners = this.eventListeners.getListeners( DialogStateListener.class );
+    for ( DialogStateListener listener : listeners )
+    {
+      listener.onStateChanged( aState );
+    }
+  }
+
+  /**
    * Initializes this dialog by creating and placing its contents.
    * 
    * @param aOCD
@@ -214,6 +263,32 @@ public abstract class BaseConfigurationEditor extends JDialog implements ActionL
   }
 
   /**
+   * Fires an event to all {@link ConfigurationChangeListener}s that the
+   * configuration is acknowledged.
+   */
+  private void fireConfigurationAcknowledgedEvent()
+  {
+    ConfigurationChangeListener[] listeners = this.eventListeners.getListeners( ConfigurationChangeListener.class );
+    for ( ConfigurationChangeListener listener : listeners )
+    {
+      listener.onConfigurationAcknowledged( getPid(), getProperties() );
+    }
+  }
+
+  /**
+   * Fires an event to all {@link ConfigurationChangeListener}s that the
+   * configuration is to be discarded.
+   */
+  private void fireConfigurationDiscardedEvent()
+  {
+    ConfigurationChangeListener[] listeners = this.eventListeners.getListeners( ConfigurationChangeListener.class );
+    for ( ConfigurationChangeListener listener : listeners )
+    {
+      listener.onConfigurationDiscarded();
+    }
+  }
+
+  /**
    * Fires a dialog cancel event to all interested listeners.
    */
   private void fireDialogCancelledEvent()
@@ -227,20 +302,5 @@ public abstract class BaseConfigurationEditor extends JDialog implements ActionL
   private void fireDialogConfirmedEvent()
   {
     fireDialogStateChangeEvent( DialogStatus.OK );
-  }
-
-  /**
-   * Fires a dialog state change event to all interested listeners.
-   * 
-   * @param aState
-   *          the new dialog state, cannot be <code>null</code>.
-   */
-  protected void fireDialogStateChangeEvent( final DialogStatus aState )
-  {
-    DialogStateListener[] listeners = this.eventListeners.getListeners( DialogStateListener.class );
-    for ( DialogStateListener listener : listeners )
-    {
-      listener.onStateChanged( aState );
-    }
   }
 }

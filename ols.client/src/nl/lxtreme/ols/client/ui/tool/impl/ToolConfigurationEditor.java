@@ -24,7 +24,8 @@ package nl.lxtreme.ols.client.ui.tool.impl;
 import java.awt.*;
 import java.util.*;
 
-import nl.lxtreme.ols.client.ui.editor.*;
+import nl.lxtreme.ols.client.ui.util.*;
+import nl.lxtreme.ols.util.swing.editor.*;
 
 import org.osgi.service.metatype.*;
 
@@ -82,10 +83,9 @@ final class ToolConfigurationEditor extends BaseConfigurationEditor
   }
 
   /**
-   * Returns the current value of pid.
-   * 
-   * @return the pid
+   * {@inheritDoc}
    */
+  @Override
   public String getPid()
   {
     return this.pid;

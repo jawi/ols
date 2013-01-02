@@ -75,7 +75,7 @@ public interface ClientConfig
   @Meta.AD( name = "Analog scope height", deflt = "96", required = true, description = "The height (in pixels) of the analog scope." )
   int analogScopeHeight();
 
-  @Meta.AD( name = "Color scheme", deflt = "Default", required = true, description = "{managed=false}What color scheme is to be used. Will be applied immediately." )
+  @Meta.AD( name = "Color scheme", deflt = "Default", required = true, description = "What color scheme is to be used. Will be applied immediately." )
   String colorScheme();
 
 }

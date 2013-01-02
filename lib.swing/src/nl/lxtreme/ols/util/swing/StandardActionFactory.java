@@ -149,24 +149,6 @@ public final class StandardActionFactory
   }
 
   /**
-   * Denotes a dialog that can be validated for its settings.
-   */
-  public static interface ValidatableDialog
-  {
-    // METHODS
-
-    /**
-     * Validates this dialog and returns an error message stating what might be
-     * wrong with this dialog.
-     * 
-     * @return a non-null, non-empty string with a reason about the possible
-     *         problem of this dialog, or an empty string or <code>null</code>
-     *         if the dialog is valid.
-     */
-    String validateDialog();
-  }
-
-  /**
    * Denotes a dialog that is aware of its status.
    */
   public static interface StatusAwareDialog
@@ -232,13 +214,6 @@ public final class StandardActionFactory
         }
 
         boolean closeOk = true;
-        if ( ( this.status == DialogStatus.OK ) && ( window instanceof ValidatableDialog ) )
-        {
-          String validationResult = ( ( ValidatableDialog )window ).validateDialog();
-
-          closeOk = ( validationResult == null ) || "".equals( validationResult );
-        }
-
         if ( closeOk && ( window != null ) )
         {
           window.dispose();

@@ -22,27 +22,19 @@ package nl.lxtreme.ols.client.ui.tool.impl;
 
 
 import java.awt.*;
-import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.client.ui.*;
-import nl.lxtreme.ols.client.ui.editor.*;
 import nl.lxtreme.ols.client.ui.tool.*;
 import nl.lxtreme.ols.client.ui.util.*;
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.Configuration;
 import nl.lxtreme.ols.common.session.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
-import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.component.*;
 
-import org.apache.felix.dm.*;
-import org.apache.felix.dm.Component;
-import org.osgi.service.cm.*;
 import org.osgi.service.event.*;
 import org.osgi.service.event.Event;
 import org.osgi.service.log.*;
@@ -56,11 +48,8 @@ public class ToolInvokerImpl extends DelegateServiceWrapper<Tool> implements Too
 {
   // VARIABLES
 
-  private volatile ToolConfigurationEditor configEditor;
   // Injected by Felix DM...
-  private volatile DependencyManager dependencyManager;
   private volatile EventAdmin eventAdmin;
-  private volatile LogService log;
   private volatile Session session;
 
   // CONSTRUCTORS
@@ -74,63 +63,6 @@ public class ToolInvokerImpl extends DelegateServiceWrapper<Tool> implements Too
   }
 
   // METHODS
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void configure( final Window aParent, final ConfigurationListener aListener )
-  {
-    ObjectClassDefinition ocd = getOCD( aParent.getLocale() );
-    if ( ocd == null )
-    {
-      // Not metatyped; assume it has no configuration to be performed...
-      this.log.log( LogService.LOG_INFO, "No metatype information to base tool configuration on for " + getName()
-          + "; assuming no configuration is needed..." );
-      return;
-    }
-
-    this.configEditor = ToolConfigurationEditor.create( aParent, ocd, getConfiguration().asMap(),
-        new AcquisitionDataInfo( this.session ) );
-    this.configEditor.addDialogStateListener( new DialogStateListener()
-    {
-      private final ToolConfigurationEditor configEditor = ToolInvokerImpl.this.configEditor;
-      private final DependencyManager dependencyManager = ToolInvokerImpl.this.dependencyManager;
-      private final LogService log = ToolInvokerImpl.this.log;
-
-      @Override
-      public void onStateChanged( final DialogStatus aState )
-      {
-        if ( ( DialogStatus.OK == aState ) && ( this.configEditor != null ) && this.configEditor.areSettingsValid() )
-        {
-          String pid = this.configEditor.getPid();
-
-          // Register a configuration listener that notifies the original
-          // callback when the configuration is actually valid...
-          Component comp = this.dependencyManager.createComponent()
-              .setInterface( ConfigurationListener.class.getName(), null ) //
-              .setImplementation( new ConfigurationListenerWrapper( aListener, pid ) );
-          this.dependencyManager.add( comp );
-
-          try
-          {
-            // Post back the configuration to ConfigAdmin...
-            updateConfiguration( pid, this.configEditor.getProperties() );
-          }
-          catch ( IOException exception )
-          {
-            this.log.log( LogService.LOG_WARNING, "Failed to update configuration!", exception );
-            JErrorDialog.showDialog( null, "Failed to update configuration!", exception );
-          }
-        }
-
-        // Clear our the reference to let it be GC'd...
-        ToolInvokerImpl.this.configEditor = null;
-      }
-    } );
-
-    getWindowManager().show( this.configEditor ); // Blocks...
-  }
 
   /**
    * {@inheritDoc}
@@ -266,18 +198,9 @@ public class ToolInvokerImpl extends DelegateServiceWrapper<Tool> implements Too
    * {@inheritDoc}
    */
   @Override
-  @SuppressWarnings( "rawtypes" )
-  public void updated( final Dictionary aProperties ) throws ConfigurationException
+  protected ConfigurationEditor createEditor( final Window aParent, final ObjectClassDefinition aOCD )
   {
-    this.log.log( LogService.LOG_DEBUG, "Tool configuration updated for: " + getName() );
-    getConfiguration().set( aProperties );
-  }
-
-  /**
-   * @return the window manager, never <code>null</code>.
-   */
-  private WindowManager getWindowManager()
-  {
-    return Client.getInstance().getWindowManager();
+    return ToolConfigurationEditor.create( aParent, aOCD, getConfiguration().asMap(), new AcquisitionDataInfo(
+        this.session ) );
   }
 }

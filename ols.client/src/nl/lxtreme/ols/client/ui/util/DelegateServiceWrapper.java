@@ -21,14 +21,23 @@
 package nl.lxtreme.ols.client.ui.util;
 
 
+import java.awt.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
+import nl.lxtreme.ols.client.ui.*;
+import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.ConfigurationEditor.ConfigurationChangeListener;
 import nl.lxtreme.ols.common.Configuration;
+import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.component.*;
+
 import org.apache.felix.dm.*;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
+import org.osgi.service.log.*;
 import org.osgi.service.metatype.*;
 
 
@@ -169,10 +178,16 @@ public abstract class DelegateServiceWrapper<SERVICE>
 
   private final SERVICE delegate;
   private final MutableConfiguration configuration;
+
+  private Class<? extends ConfigurationEditor> customConfigEditorClass;
+  private ConfigurationEditor configEditor;
+
   // Injected by Felix DM...
   private volatile BundleContext bundleContext;
   private volatile MetaTypeService metaTypeService;
   private volatile ConfigurationAdmin configAdmin;
+  private volatile DependencyManager dependencyManager;
+  protected volatile LogService log;
 
   // CONSTRUCTOR
 
@@ -188,14 +203,164 @@ public abstract class DelegateServiceWrapper<SERVICE>
   // METHODS
 
   /**
-   * Returns the current value of delegate.
-   * 
-   * @return the delegate service, never <code>null</code>.
+   * @param aParent
+   * @param aListener
    */
-  protected final SERVICE getDelegate()
+  public void configure( final Window aParent, final ConfigurationListener aListener )
   {
-    return this.delegate;
+    this.configEditor = createEditor( aParent );
+    if ( this.configEditor == null )
+    {
+      this.log.log( LogService.LOG_WARNING, "Failed to configure " + getName()
+          + "; could not find its metatype information, nor a specified configuration editor!" );
+      return;
+    }
+
+    this.configEditor.addConfigurationChangeListener( new ConfigurationChangeListener()
+    {
+      private final DependencyManager dependencyManager = DelegateServiceWrapper.this.dependencyManager;
+      private final LogService log = DelegateServiceWrapper.this.log;
+
+      @Override
+      public void onConfigurationAcknowledged( final String aPID, final Dictionary<Object, Object> aConfiguration )
+      {
+        // Register a configuration listener that notifies the original
+        // callback when the configuration is actually valid...
+        Component comp = this.dependencyManager.createComponent()
+            .setInterface( ConfigurationListener.class.getName(), null ) //
+            .setImplementation( new ConfigurationListenerWrapper( aListener, aPID ) );
+        this.dependencyManager.add( comp );
+
+        try
+        {
+          // Post back the configuration to ConfigAdmin...
+          updateConfiguration( aPID, aConfiguration );
+        }
+        catch ( IOException exception )
+        {
+          this.log.log( LogService.LOG_WARNING, "Failed to update configuration!", exception );
+          JErrorDialog.showDialog( null, "Failed to update configuration!", exception );
+        }
+
+        clearEditorReference();
+      }
+
+      @Override
+      public void onConfigurationDiscarded()
+      {
+        clearEditorReference();
+      }
+    } );
+
+    showEditor();
   }
+
+  /**
+   * @return
+   */
+  public abstract String getName();
+
+  /**
+   * {@inheritDoc}
+   */
+  @SuppressWarnings( "rawtypes" )
+  public void updated( final Dictionary aProperties ) throws ConfigurationException
+  {
+    this.log.log( LogService.LOG_DEBUG, "Configuration updated for: " + getName() );
+    getConfiguration().set( aProperties );
+  }
+
+  /**
+   * Clears the editor reference after its being used.
+   */
+  final void clearEditorReference()
+  {
+    if ( this.configEditor != null )
+    {
+      ReflectionUtil.callMethod( this.configEditor, "destroy" );
+
+      // Clear our the reference to let it be GC'd...
+      this.configEditor = null;
+    }
+  }
+
+  /**
+   * Factory method for creating a new {@link ConfigurationEditor} instance.
+   * 
+   * @param aParent
+   *          the parent window to use for displaying dialogs.
+   * @return a {@link ConfigurationEditor} instance, can be <code>null</code> in
+   *         case it could not be created.
+   */
+  protected final ConfigurationEditor createEditor( final Window aParent )
+  {
+    final ObjectClassDefinition ocd = getOCD( aParent.getLocale() );
+
+    ConfigurationEditor result = null;
+
+    // A custom editor has priority over the metatype definition...
+    if ( this.customConfigEditorClass != null )
+    {
+      Class<?>[][] signatures;
+      Object[][] parameters;
+      Map<Object, Object> config = getConfiguration().asMap();
+
+      if ( ocd != null )
+      {
+        signatures = new Class<?>[][] { { Window.class, ObjectClassDefinition.class, Map.class },
+            { Window.class, Map.class }, {} };
+        parameters = new Object[][] { { aParent, ocd, config }, { aParent, config }, {} };
+      }
+      else
+      {
+        signatures = new Class<?>[][] { { Window.class, Map.class }, {} };
+        parameters = new Object[][] { { aParent, config }, {} };
+      }
+
+      try
+      {
+        result = ReflectionUtil.newInstance( this.customConfigEditorClass, signatures, parameters );
+
+        // Allow the editor to have an initialize() method to be called...
+        ReflectionUtil.callMethod( result, "initialize" );
+      }
+      catch ( Exception exception )
+      {
+        this.log.log( LogService.LOG_INFO, "Failed to create custom configuration editor for " + getName()
+            + "; trying metatype editor!", exception );
+      }
+    }
+
+    // Fall back to the generic metatype editor...
+    if ( result == null )
+    {
+      if ( ocd == null )
+      {
+        // Not metatyped; assume it has no configuration to be performed...
+        this.log.log( LogService.LOG_DEBUG, "Cannot configure " + getName() + ", as it has no metatype information!" );
+      }
+      else
+      {
+        result = createEditor( aParent, ocd );
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Factory method for creating a new {@link ConfigurationEditor} instance
+   * based on a given {@link ObjectClassDefinition}.
+   * 
+   * @param aParent
+   *          the parent window to use for displaying dialogs, can be
+   *          <code>null</code>;
+   * @param aOCD
+   *          the object class definition to use for the editor, cannot be
+   *          <code>null</code>.
+   * @return a {@link ConfigurationEditor} instance, never <code>null</code>.
+   */
+  protected abstract ConfigurationEditor createEditor( final Window aParent, ObjectClassDefinition aOCD );
 
   /**
    * Returns the current value of configuration.
@@ -205,6 +370,16 @@ public abstract class DelegateServiceWrapper<SERVICE>
   protected final MutableConfiguration getConfiguration()
   {
     return this.configuration;
+  }
+
+  /**
+   * Returns the current value of delegate.
+   * 
+   * @return the delegate service, never <code>null</code>.
+   */
+  protected final SERVICE getDelegate()
+  {
+    return this.delegate;
   }
 
   /**
@@ -236,17 +411,39 @@ public abstract class DelegateServiceWrapper<SERVICE>
   }
 
   /**
+   * @return the window manager, never <code>null</code>.
+   */
+  protected final WindowManager getWindowManager()
+  {
+    return Client.getInstance().getWindowManager();
+  }
+
+  /**
    * Called by Felix DM upon initialization of this component.
    */
+  @SuppressWarnings( "unchecked" )
   protected final void init( final Component aComponent )
   {
     MetaTypeInformation metaTypeInfo = getMetaTypeInfo();
     if ( ( metaTypeInfo != null ) && ( metaTypeInfo.getPids().length == 1 ) )
     {
-      Dictionary<Object, Object> dict = new Hashtable<Object, Object>();
-      dict.put( org.osgi.framework.Constants.SERVICE_PID, metaTypeInfo.getPids()[0] );
+      Dictionary<Object, Object> dict = aComponent.getServiceProperties();
+      dict.put( Constants.SERVICE_PID, metaTypeInfo.getPids()[0] );
 
       aComponent.setServiceProperties( dict );
+    }
+
+    findCustomConfigEditorClass();
+  }
+
+  /**
+   * Shows the current configuration editor, if it is a Swing-component.
+   */
+  protected void showEditor()
+  {
+    if ( this.configEditor instanceof Window )
+    {
+      getWindowManager().show( ( Window )this.configEditor );
     }
   }
 
@@ -261,5 +458,42 @@ public abstract class DelegateServiceWrapper<SERVICE>
     config.update( aProperties );
 
     getConfiguration().set( aProperties );
+  }
+
+  /**
+   * Tries to determine whether the bundle
+   */
+  @SuppressWarnings( { "rawtypes", "unchecked" } )
+  private void findCustomConfigEditorClass()
+  {
+    // Use the bundle of the *delegate*, so it can tell us what configuration
+    // editor we should use...
+    Bundle bundle = FrameworkUtil.getBundle( this.delegate.getClass() );
+    Dictionary headers = bundle.getHeaders();
+
+    Object customConfigurationEditorValue = headers.get( ConfigurationEditor.BUNDLE_HEADER_KEY );
+    try
+    {
+      if ( customConfigurationEditorValue != null )
+      {
+        Class clazz = bundle.loadClass( customConfigurationEditorValue.toString() );
+        if ( ConfigurationEditor.class.isAssignableFrom( clazz ) )
+        {
+          this.customConfigEditorClass = clazz;
+        }
+        else
+        {
+          this.log.log( LogService.LOG_INFO, getName() + " specified a custom configuration "
+              + " editor that is not an instance of " + ConfigurationEditor.class.getName() );
+        }
+      }
+    }
+    catch ( ClassNotFoundException exception )
+    {
+      // Log only; don't do anything about this...
+      this.log.log( LogService.LOG_INFO, "Failed to load custom configuration editor ("
+          + customConfigurationEditorValue + ")", exception );
+      exception.printStackTrace();
+    }
   }
 }

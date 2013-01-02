@@ -18,13 +18,12 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.ui.editor;
+package nl.lxtreme.ols.util.swing.editor;
 
 
-import static nl.lxtreme.ols.client.ui.editor.EditorUtils.*;
+import static nl.lxtreme.ols.util.swing.editor.EditorUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
-import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
@@ -244,9 +243,11 @@ public class EditorPanel extends JPanel
    */
   public boolean areSettingsValid()
   {
+    EditorUtils editorUtils = new EditorUtils();
+
     for ( Entry<AttributeDefinition, JComponent> entry : this.components.entrySet() )
     {
-      String value = String.valueOf( getComponentValue( entry.getValue() ) );
+      String value = String.valueOf( editorUtils.getComponentValue( entry.getValue() ) );
 
       String validationResult = entry.getKey().validate( value );
       if ( ( validationResult != null ) && !"".equals( validationResult ) )
@@ -264,104 +265,8 @@ public class EditorPanel extends JPanel
   public Properties getProperties()
   {
     Properties result = new Properties();
-    for ( Entry<AttributeDefinition, JComponent> entry : this.components.entrySet() )
-    {
-      Object value = getComponentValue( entry.getValue() );
-
-      if ( value != null )
-      {
-        result.put( entry.getKey().getID(), String.valueOf( value ) );
-      }
-    }
+    result.putAll( new EditorUtils().getComponentValues( this.components.values() ) );
     return result;
-  }
-
-  /**
-   * @param aComponents
-   */
-  protected void applyComponentProperties( final Collection<JComponent> aComponents )
-  {
-    // Create an index on the component's name...
-    Map<String, JComponent> nameIndex = new HashMap<String, JComponent>();
-    for ( JComponent comp : aComponents )
-    {
-      nameIndex.put( comp.getName(), comp );
-    }
-
-    // Process the component's properties...
-    for ( JComponent comp : aComponents )
-    {
-      Object value = comp.getClientProperty( PROPERTY_READONLY );
-      if ( Boolean.TRUE.equals( value ) )
-      {
-        comp.setEnabled( false );
-      }
-
-      value = comp.getClientProperty( PROPERTY_EDITABLE );
-      if ( Boolean.TRUE.equals( value ) )
-      {
-        if ( comp instanceof JComboBox )
-        {
-          ( ( JComboBox )comp ).setEditable( true );
-        }
-        else if ( comp instanceof JTextComponent )
-        {
-          ( ( JTextComponent )comp ).setEditable( true );
-        }
-      }
-
-      value = comp.getClientProperty( PROPERTY_LISTENER );
-      if ( value != null )
-      {
-        for ( String descriptor : ( String[] )value )
-        {
-          addListener( nameIndex, comp, descriptor );
-        }
-      }
-    }
-  }
-
-  /**
-   * @return
-   */
-  protected EditorUtils createEditorUtils()
-  {
-    return new EditorUtils();
-  }
-
-  /**
-   * @param aComponent
-   * @return
-   */
-  @SuppressWarnings( "boxing" )
-  protected Object getComponentValue( final Component aComponent )
-  {
-    Object value = null;
-    if ( aComponent instanceof AbstractButton )
-    {
-      value = ( ( AbstractButton )aComponent ).isSelected();
-    }
-    else if ( aComponent instanceof JComboBox )
-    {
-      value = ( ( JComboBox )aComponent ).getSelectedItem();
-    }
-    else if ( aComponent instanceof JTextComponent )
-    {
-      value = ( ( JTextComponent )aComponent ).getText();
-    }
-    else if ( aComponent instanceof JList )
-    {
-      value = ( ( JList )aComponent ).getSelectedIndex();
-    }
-    else if ( aComponent instanceof JSlider )
-    {
-      value = ( ( JSlider )aComponent ).getValue();
-    }
-    else if ( aComponent instanceof JSpinner )
-    {
-      value = ( ( JSpinner )aComponent ).getValue();
-    }
-    return value;
   }
 
   /**
@@ -388,14 +293,21 @@ public class EditorPanel extends JPanel
     {
       Object initialValue = editorUtils.getDefaultValue( ad, aSettings.get( ad.getID() ) );
 
-      JComponent comp = editorUtils.createEditor( ad, initialValue );
-      if ( !isManagedComponent( comp ) && ( aProvider != null ) )
+      JComponent comp = null;
+      if ( aProvider != null )
       {
         comp = aProvider.createEditor( ad, initialValue );
+      }
+      if ( comp == null )
+      {
+        comp = editorUtils.createEditor( ad, initialValue );
       }
 
       if ( comp != null )
       {
+        // Store for later use...
+        comp.putClientProperty( PROPERTY_ATTRIBUTE, ad );
+
         add( createRightAlignedLabel( ad.getName() ) );
         add( comp );
 
@@ -403,7 +315,7 @@ public class EditorPanel extends JPanel
       }
     }
 
-    applyComponentProperties( this.components.values() );
+    editorUtils.applyComponentProperties( this.components.values() );
 
     wireChangeListeners( new ChangeReflector() );
 
@@ -446,114 +358,12 @@ public class EditorPanel extends JPanel
   }
 
   /**
-   * @param aIndex
-   * @param aComponent
-   * @param aDescriptor
-   */
-  private void addListener( final Map<String, JComponent> aIndex, final JComponent aComponent, final String aDescriptor )
-  {
-    if ( aComponent instanceof AbstractButton )
-    {
-      final AbstractButton button = ( AbstractButton )aComponent;
-      final String[] parts = aDescriptor.split( "\\s*;\\s*" );
-
-      button.addActionListener( new ActionListener()
-      {
-        @Override
-        public void actionPerformed( final ActionEvent aEvent )
-        {
-          for ( String part : parts )
-          {
-            final boolean aInvert = part.startsWith( "!" );
-            final JComponent target = aIndex.get( aInvert ? part.substring( 1 ) : part );
-            if ( target != null )
-            {
-              boolean value = button.isSelected();
-              if ( aInvert )
-              {
-                value = !value;
-              }
-              target.setEnabled( value );
-            }
-          }
-        }
-      } );
-
-      for ( String part : parts )
-      {
-        final boolean aInvert = part.startsWith( "!" );
-        final JComponent target = aIndex.get( aInvert ? part.substring( 1 ) : part );
-        if ( target != null )
-        {
-          boolean value = button.isSelected();
-          if ( aInvert )
-          {
-            value = !value;
-          }
-          target.setEnabled( value );
-        }
-      }
-    }
-    else if ( aComponent instanceof JComboBox )
-    {
-      final JComboBox combobox = ( JComboBox )aComponent;
-      final String[] parts = aDescriptor.split( "\\s*:\\s*" );
-
-      combobox.addActionListener( new ActionListener()
-      {
-        @Override
-        public void actionPerformed( final ActionEvent aEvent )
-        {
-          final int index = combobox.getSelectedIndex();
-          if ( ( index >= 0 ) && ( index < parts.length ) )
-          {
-            String part = parts[index];
-            final boolean aInvert = part.startsWith( "!" );
-            final JComponent target = aIndex.get( aInvert ? part.substring( 1 ) : part );
-            if ( target != null )
-            {
-              boolean value = aInvert ? false : true;
-              target.setEnabled( value );
-            }
-          }
-        }
-      } );
-
-      final int index = combobox.getSelectedIndex();
-      if ( ( index >= 0 ) && ( index < parts.length ) )
-      {
-        String part = parts[index];
-        final boolean aInvert = part.startsWith( "!" );
-        final JComponent target = aIndex.get( aInvert ? part.substring( 1 ) : part );
-        if ( target != null )
-        {
-          boolean value = aInvert ? false : true;
-          target.setEnabled( value );
-        }
-      }
-    }
-    else
-    {
-      throw new RuntimeException( "Cannot add listener to component: " + aComponent );
-    }
-  }
-
-  /**
-   * Returns whether the given component is managed or not.
+   * Factory method for creating new {@link EditorUtils} instances.
    * 
-   * @param aComponent
-   *          the component to test, can be <code>null</code>.
-   * @return <code>true</code> if the given component is a managed component,
-   *         <code>false</code> otherwise.
+   * @return a new instance of {@link EditorUtils}, never <code>null</code>.
    */
-  private boolean isManagedComponent( final JComponent aComponent )
+  private EditorUtils createEditorUtils()
   {
-    if ( aComponent == null )
-    {
-      return false;
-    }
-
-    Object managed = aComponent.getClientProperty( PROPERTY_MANAGED );
-    return ( managed == null ) || Boolean.TRUE.equals( managed );
+    return new EditorUtils();
   }
 }

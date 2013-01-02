@@ -1,6 +1,8 @@
 -buildpath: osgi.cmpn;version=4.2.1.201001051203,\
 	junit.osgi;version=3.8.2
-Export-Package: nl.lxtreme.ols.util.swing,\
+Export-Package: \
+    nl.lxtreme.ols.util.swing,\
 	nl.lxtreme.ols.util.swing.component,\
 	nl.lxtreme.ols.util.swing.component.icon,\
+    nl.lxtreme.ols.util.swing.editor,\
 	nl.lxtreme.ols.util.swing.validation

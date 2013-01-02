@@ -18,26 +18,33 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.ui.editor;
+package nl.lxtreme.ols.util.swing.editor;
 
 
-import java.util.*;
+import javax.swing.*;
 
-import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
+import org.osgi.service.metatype.*;
 
 
 /**
- * Callback for listeners to dialog state changes.
+ * Provides a callback for unmanaged components to allow custom editors to be
+ * supplied.
  */
-public interface DialogStateListener extends EventListener
+public interface IEditorProvider
 {
   // METHODS
 
   /**
-   * Called when the dialog state changes.
+   * Creates an editor component for the given attribute definition using the
+   * given initial value.
    * 
-   * @param aState
-   *          the new dialog state, never <code>null</code>.
+   * @param aAttributeDefinition
+   *          the attribute definition to use, cannot be <code>null</code>;
+   * @param aInitialValue
+   *          the initial value to use, can be <code>null</code>.
+   * @return an editor component, may be <code>null</code> in which case the
+   *         entire editor will be ignored.
    */
-  void onStateChanged( DialogStatus aState );
+  JComponent createEditor( AttributeDefinition aAttributeDefinition, Object aInitialValue );
+
 }
