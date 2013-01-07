@@ -24,6 +24,8 @@ package nl.lxtreme.ols.device.logicsniffer;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
+import java.awt.event.*;
+import java.beans.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
@@ -37,6 +39,7 @@ import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.device.logicsniffer.ui.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.editor.util.*;
 
 import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
@@ -50,8 +53,8 @@ import org.osgi.service.metatype.*;
 /**
  * Provides a custom configuration editor for the LogicSniffer device.
  */
-public class LogicSnifferConfigurationEditor extends JDialog implements ConfigurationEditor, DeviceMetadataProvider,
-    DeviceProfileProvider
+public class LogicSnifferConfigurationEditor extends JDialog implements PropertyChangeListener, ConfigurationEditor,
+    DeviceMetadataProvider, DeviceProfileProvider
 {
   // CONSTANTS
 
@@ -59,9 +62,16 @@ public class LogicSnifferConfigurationEditor extends JDialog implements Configur
 
   // VARIABLES
 
+  private final ObjectClassDefinition ocd;
+  private final Map<Object, Object> initialValues;
   private final EventListenerList eventListeners;
 
+  private ConnectionSettingsPanel connectionSettings;
+  private AcquisitionSettingsPanel acquisitionSettings;
+  private TriggerSettingsPanel triggerSettings;
   private JTabbedPane contentPane;
+  private JButton captureButton;
+  private JButton cancelButton;
 
   private DependencyManager dm;
   private volatile DeviceProfileManager deviceProfileManager;
@@ -78,10 +88,10 @@ public class LogicSnifferConfigurationEditor extends JDialog implements Configur
   {
     super( aParent, "OLS Capture settings", ModalityType.DOCUMENT_MODAL );
 
-    this.eventListeners = new EventListenerList();
+    this.ocd = aOCD;
+    this.initialValues = new HashMap<Object, Object>( aInitialValues );
 
-    initDialog( aOCD, aInitialValues );
-    buildDialog( aOCD, aInitialValues );
+    this.eventListeners = new EventListenerList();
   }
 
   // METHODS
@@ -93,6 +103,40 @@ public class LogicSnifferConfigurationEditor extends JDialog implements Configur
   public void addConfigurationChangeListener( final ConfigurationChangeListener aListener )
   {
     this.eventListeners.add( ConfigurationChangeListener.class, aListener );
+  }
+
+  /**
+   * @return <code>true</code> if the settings are valid, <code>false</code>
+   *         otherwise.
+   */
+  public boolean areSettingsValid()
+  {
+    if ( !this.connectionSettings.areSettingsValid() )
+    {
+      return false;
+    }
+    if ( !this.acquisitionSettings.areSettingsValid() )
+    {
+      return false;
+    }
+    if ( !this.triggerSettings.areSettingsValid() )
+    {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public DeviceProfile findProfile( final String aIdentifier )
+  {
+    if ( this.deviceProfileManager == null )
+    {
+      return null;
+    }
+    return this.deviceProfileManager.findProfile( aIdentifier );
   }
 
   /**
@@ -121,6 +165,43 @@ public class LogicSnifferConfigurationEditor extends JDialog implements Configur
     }
     Collections.sort( result );
     return result;
+  }
+
+  /**
+   * Returns the current value of PID.
+   * 
+   * @return the PID, cannot be <code>null</code>.
+   */
+  public String getPid()
+  {
+    return this.ocd.getID();
+  }
+
+  /**
+   * @return the configuration properties, never <code>null</code>.
+   */
+  public Map<Object, Object> getProperties()
+  {
+    Map<Object, Object> result = new HashMap<Object, Object>();
+
+    this.connectionSettings.getConfiguration( result );
+    this.acquisitionSettings.getConfiguration( result );
+    this.triggerSettings.getConfiguration( result );
+
+    return result;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void propertyChange( final PropertyChangeEvent aEvent )
+  {
+    if ( GenericComponentChangeAdapter.PROPERTY_NAME.equals( aEvent.getPropertyName() ) )
+    {
+      this.cancelButton.setEnabled( true );
+      this.captureButton.setEnabled( areSettingsValid() );
+    }
   }
 
   /**
@@ -184,15 +265,41 @@ public class LogicSnifferConfigurationEditor extends JDialog implements Configur
   }
 
   /**
+   * Fires an event to all {@link ConfigurationChangeListener}s that the
+   * configuration is acknowledged.
+   */
+  final void fireConfigurationAcknowledgedEvent()
+  {
+    ConfigurationChangeListener[] listeners = this.eventListeners.getListeners( ConfigurationChangeListener.class );
+    for ( ConfigurationChangeListener listener : listeners )
+    {
+      listener.onConfigurationAcknowledged( getPid(), getProperties() );
+    }
+  }
+
+  /**
+   * Fires an event to all {@link ConfigurationChangeListener}s that the
+   * configuration is to be discarded.
+   */
+  final void fireConfigurationDiscardedEvent()
+  {
+    ConfigurationChangeListener[] listeners = this.eventListeners.getListeners( ConfigurationChangeListener.class );
+    for ( ConfigurationChangeListener listener : listeners )
+    {
+      listener.onConfigurationDiscarded();
+    }
+  }
+
+  /**
    * Called automatically when this editor is about to be used.
    */
   final void initialize()
   {
+    this.deviceProfileManager = new DeviceProfileManager();
+
     Bundle bundle = FrameworkUtil.getBundle( getClass() );
     if ( bundle != null )
     {
-      this.deviceProfileManager = new DeviceProfileManager();
-
       Dictionary<String, String> props = new Hashtable<String, String>();
       props.put( Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
 
@@ -217,19 +324,38 @@ public class LogicSnifferConfigurationEditor extends JDialog implements Configur
               ) );
     }
 
+    initDialog( this.ocd, this.initialValues );
+    buildDialog();
+
     updateFields();
   }
 
   /**
    * Builds this dialog.
    */
-  private void buildDialog( final ObjectClassDefinition aOCD, final Map<Object, Object> aInitialValues )
+  private void buildDialog()
   {
-    JButton captureButton = new JButton( "Capture" );
-    JButton cancelButton = StandardActionFactory.createCancelButton();
-    JComponent buttonPane = createButtonPane( captureButton, cancelButton );
+    this.captureButton = new JButton( "Capture" );
+    this.captureButton.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        fireConfigurationAcknowledgedEvent();
+      }
+    } );
+    this.cancelButton = StandardActionFactory.createCancelButton();
+    this.cancelButton.addActionListener( new ActionListener()
+    {
+      @Override
+      public void actionPerformed( final ActionEvent aEvent )
+      {
+        fireConfigurationDiscardedEvent();
+      }
+    } );
+    JComponent buttonPane = createButtonPane( this.captureButton, this.cancelButton );
 
-    setupDialogContentPane( this, this.contentPane, buttonPane, captureButton );
+    setupDialogContentPane( this, this.contentPane, buttonPane, this.captureButton );
   }
 
   /**
@@ -281,19 +407,24 @@ public class LogicSnifferConfigurationEditor extends JDialog implements Configur
    */
   private void initDialog( final ObjectClassDefinition aOCD, final Map<Object, Object> aInitialValues )
   {
-    ConnectionSettingsPanel connSettings = createConnectionSettingsPane( aOCD, aInitialValues );
-    AcquisitionSettingsPanel acquisitionSettings = createAcquisitionSettingsPane( aOCD, aInitialValues );
-    TriggerSettingsPanel triggerSettings = createTriggerPane( aOCD, aInitialValues );
+    this.connectionSettings = createConnectionSettingsPane( aOCD, aInitialValues );
+    this.connectionSettings.addPropertyChangeListener( this );
+
+    this.acquisitionSettings = createAcquisitionSettingsPane( aOCD, aInitialValues );
+    this.acquisitionSettings.addPropertyChangeListener( this );
+
+    this.triggerSettings = createTriggerPane( aOCD, aInitialValues );
+    this.triggerSettings.addPropertyChangeListener( this );
 
     // Wire all change listeners...
-    addPropertyChangeListener( "fields", connSettings );
-    connSettings.addDeviceProfileChangeListener( acquisitionSettings );
-    connSettings.addDeviceProfileChangeListener( triggerSettings );
+    addPropertyChangeListener( "fields", this.connectionSettings );
+    this.connectionSettings.addDeviceProfileChangeListener( this.acquisitionSettings );
+    this.connectionSettings.addDeviceProfileChangeListener( this.triggerSettings );
 
     this.contentPane = new JTabbedPane( SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT );
-    this.contentPane.addTab( "Connection", centerPanel( connSettings ) );
-    this.contentPane.addTab( "Acquisition", centerPanel( acquisitionSettings ) );
-    this.contentPane.addTab( "Triggers", centerPanel( triggerSettings ) );
+    this.contentPane.addTab( "Connection", centerPanel( this.connectionSettings ) );
+    this.contentPane.addTab( "Acquisition", centerPanel( this.acquisitionSettings ) );
+    this.contentPane.addTab( "Triggers", centerPanel( this.triggerSettings ) );
   }
 
   /**

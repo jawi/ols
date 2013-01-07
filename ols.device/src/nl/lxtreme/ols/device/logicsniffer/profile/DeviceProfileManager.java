@@ -82,13 +82,23 @@ public class DeviceProfileManager implements ManagedServiceFactory, DeviceProfil
    */
   public DeviceProfile findProfile( final String aIdentifier )
   {
-    final Collection<DeviceProfile> allProfiles = getDeviceProfiles();
+    if ( ( aIdentifier == null ) || "".equals( aIdentifier.trim() ) )
+    {
+      throw new IllegalArgumentException( "Identifier cannot be null!" );
+    }
+
+    Collection<DeviceProfile> allProfiles = getDeviceProfiles();
 
     boolean allowWildcardMatch = false;
     for ( int tries = 0; tries < 2; tries++ )
     {
       for ( DeviceProfile profile : allProfiles )
       {
+        if ( aIdentifier.equals( profile.getDescription() ) || aIdentifier.equals( profile.getType() ) )
+        {
+          return profile;
+        }
+
         final String[] metadataKeys = profile.getDeviceMetadataKeys();
         if ( matches( aIdentifier, allowWildcardMatch, metadataKeys ) )
         {

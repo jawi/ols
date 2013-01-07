@@ -29,9 +29,9 @@ import static org.sump.device.logicsniffer.ConfigDialogHelper.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.util.*;
 import java.util.List;
-
 import javax.swing.*;
 import javax.swing.plaf.basic.*;
 
@@ -156,6 +156,8 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
 
   // VARIABLES
 
+  private final ObjectClassDefinition ocd;
+  private final Map<Object, Object> initialValues;
   private final List<JComponent> components;
 
   private JComboBox numberScheme;
@@ -169,7 +171,7 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
   private JCheckBox rleEnabled;
   private JLabel rleWarning;
 
-  private JTextField channelGroupValue; // not visible...
+  private JTextField enabledChannelsValue; // not visible...
 
   // CONSTRUCTORS
 
@@ -179,6 +181,9 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
   public AcquisitionSettingsPanel( final ObjectClassDefinition aOCD, final Map<Object, Object> aInitialValues )
   {
     super( new SpringLayout() );
+
+    this.ocd = aOCD;
+    this.initialValues = aInitialValues;
 
     this.components = new ArrayList<JComponent>();
 
@@ -190,6 +195,35 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
   }
 
   // METHODS
+
+  /**
+   * @return <code>true</code> if the settings are valid, <code>false</code>
+   *         otherwise.
+   */
+  public boolean areSettingsValid()
+  {
+    EditorUtils editorUtils = new EditorUtils();
+
+    for ( JComponent comp : this.components )
+    {
+      String value = String.valueOf( editorUtils.getComponentValue( comp ) );
+      AttributeDefinition ad = editorUtils.getAttributeDefinition( comp );
+
+      String validationResult = ad.validate( value );
+      if ( ( validationResult != null ) && !"".equals( validationResult ) )
+      {
+        return false;
+      }
+    }
+
+    String enabledChannels = ( String )editorUtils.getComponentValue( this.enabledChannelsValue );
+    if ( ( enabledChannels == null ) || ( "0".equals( enabledChannels ) ) )
+    {
+      return false;
+    }
+
+    return true;
+  }
 
   /**
    * {@inheritDoc}
@@ -220,6 +254,8 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
       // Update the numbering schemes...
       updateComboBoxModel( this.numberScheme, aProfile.getChannelNumberingSchemes() );
     }
+
+    updateEditorDefaults();
   }
 
   /**
@@ -240,15 +276,12 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
   final void calculateChannelGroupValue()
   {
     int value = 0;
-    for ( JCheckBox element : this.enabledChannelGroups )
+    for ( int i = 0; i < this.enabledChannelGroups.length; i++ )
     {
-      if ( element.isSelected() )
-      {
-        value |= 0xFF;
-      }
-      value <<= 8;
+      boolean selected = this.enabledChannelGroups[i].isSelected();
+      value |= ( ( selected ? 0xFF : 0x00 ) << ( i * 8 ) );
     }
-    this.channelGroupValue.setText( Integer.toString( value ) );
+    this.enabledChannelsValue.setText( Integer.toString( value ) );
   }
 
   /**
@@ -260,35 +293,35 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
   }
 
   /**
-   * Updates the size selection combobox according to the max-value selection.
-   */
-  final void updateSizeSelection()
-  {
-    this.size.setEnabled( !this.useMaxSize.isSelected() );
-    if ( this.useMaxSize.isSelected() )
-    {
-      // Always select the highest value...
-      this.size.setSelectedIndex( 0 );
-    }
-  }
-
-  /**
    * Updates the channel groups according to the chosen sample rate.
    */
   final void updateEnabledChannelGroups()
   {
     Integer value = ( Integer )this.sampleRate.getSelectedItem();
-    boolean ddrMode = ( value == null ) || ( value.intValue() <= 100000000 );
+    boolean ddrMode = ( value != null ) && ( value.intValue() > 100000000 );
 
     this.enabledChannelGroups[0].setEnabled( true );
     this.enabledChannelGroups[1].setEnabled( true );
-    this.enabledChannelGroups[2].setEnabled( ddrMode );
-    this.enabledChannelGroups[3].setEnabled( ddrMode );
+    this.enabledChannelGroups[2].setEnabled( !ddrMode );
+    this.enabledChannelGroups[3].setEnabled( !ddrMode );
 
     if ( ddrMode )
     {
       this.enabledChannelGroups[2].setSelected( false );
       this.enabledChannelGroups[3].setSelected( false );
+    }
+  }
+
+  /**
+   * Updates the size selection combobox according to the max-value selection.
+   */
+  final void updateSizeSelection()
+  {
+    this.size.setEnabled( !this.useMaxSize.isSelected() );
+    if ( this.useMaxSize.isSelected() && ( this.size.getModel().getSize() > 0 ) )
+    {
+      // Always select the highest value...
+      this.size.setSelectedIndex( 0 );
     }
   }
 
@@ -376,15 +409,14 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
 
     this.numberScheme = new JComboBox();
     this.numberScheme.setRenderer( new NumberSchemeComboBoxRenderer() );
-    wireEditor( this.numberScheme, aOCD, "numberScheme", aInitialValues );
+    wireEditor( this.numberScheme, "numberScheme" );
 
     this.clockSource = new JComboBox();
     this.clockSource.setRenderer( new ClockSourceComboBoxRenderer() );
-    wireEditor( this.clockSource, aOCD, "clockSource", aInitialValues );
+    wireEditor( this.clockSource, "clockSource" );
 
     this.sampleRate = new JComboBox();
     this.sampleRate.setRenderer( new CaptureSpeedComboBoxRenderer() );
-    wireEditor( this.sampleRate, aOCD, "sampleRate", aInitialValues );
     this.sampleRate.addActionListener( new ActionListener()
     {
       @Override
@@ -393,18 +425,12 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
         updateEnabledChannelGroups();
       }
     } );
-
-    AttributeDefinition ad = getAttributeDefinition( aOCD, "enabledChannels" );
-    String deflt = String.valueOf( editorUtils.getDefaultValue( ad, aInitialValues.get( "enabledChannels" ) ) );
-    int defaultValue = Integer.parseInt( deflt );
+    wireEditor( this.sampleRate, "sampleRate" );
 
     this.enabledChannelGroups = new JCheckBox[MAX_BLOCKS];
     for ( int i = 0; i < this.enabledChannelGroups.length; i++ )
     {
-      boolean selected = ( ( defaultValue >> ( i * 8 ) ) & 0xFF ) != 0;
-
       this.enabledChannelGroups[i] = new JCheckBox( Integer.toString( i ) );
-      this.enabledChannelGroups[i].setSelected( selected );
       this.enabledChannelGroups[i].addActionListener( new ActionListener()
       {
         @Override
@@ -415,15 +441,15 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
       } );
     }
 
-    this.channelGroupValue = new JTextField();
-    this.channelGroupValue.putClientProperty( PROPERTY_ATTRIBUTE, ad );
+    this.enabledChannelsValue = new JTextField();
+    wireEditor( this.enabledChannelsValue, "enabledChannels" );
 
     this.size = new JComboBox();
     this.size.setRenderer( new BinarySizeComboBoxRenderer() );
-    wireEditor( this.size, aOCD, "size", aInitialValues );
+    wireEditor( this.size, "size" );
 
-    this.useMaxSize = new JCheckBox( "Automatic (maximum)" );
-    this.useMaxSize.setSelected( false );
+    this.useMaxSize = createEditor( aOCD, "useMaxSize", aInitialValues );
+    this.useMaxSize.setText( "Automatic (maximum)" );
     this.useMaxSize.addActionListener( new ActionListener()
     {
       @Override
@@ -447,10 +473,9 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
 
     this.rleWarning = new JLabel( RLE_WARNING );
 
-    this.components
-        .addAll( Arrays.<JComponent> asList( this.numberScheme, this.clockSource, this.sampleRate,
-            this.channelGroupValue, this.size, this.useMaxSize, this.testModeEnabled, this.filterEnabled,
-            this.rleEnabled ) );
+    this.components.addAll( Arrays.<JComponent> asList( this.numberScheme, this.clockSource, this.sampleRate,
+        this.enabledChannelsValue, this.size, this.useMaxSize, this.testModeEnabled, this.filterEnabled,
+        this.rleEnabled ) );
 
     // Ensure the initial values are correct...
     calculateChannelGroupValue();
@@ -458,20 +483,68 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
     updateEnabledChannelGroups();
     showOrHideRleWarning();
 
+    editorUtils.wireChangeListeners( new PropertyChangeListener()
+    {
+      @Override
+      public void propertyChange( final PropertyChangeEvent aEvent )
+      {
+        firePropertyChange( aEvent.getPropertyName(), aEvent.getOldValue(), aEvent.getNewValue() );
+      }
+    }, this.components );
+
     editorUtils.applyComponentProperties( this.components );
   }
 
   /**
-   * @param aComponent
-   * @param aOCD
-   * @param aPropertyName
-   * @param aInitialValues
+   * @param aAttributeName
+   * @return
    */
-  private void wireEditor( final JComboBox aComponent, final ObjectClassDefinition aOCD, final String aPropertyName,
-      final Map<Object, Object> aInitialValues )
+  private Object getDefaultValue( final String aAttributeName )
   {
-    AttributeDefinition ad = getAttributeDefinition( aOCD, aPropertyName );
-    aComponent.setSelectedItem( new EditorUtils().getDefaultValue( ad, aInitialValues.get( aPropertyName ) ) );
+    AttributeDefinition ad = getAttributeDefinition( this.ocd, aAttributeName );
+    return new EditorUtils().getDefaultValue( ad, this.initialValues.get( aAttributeName ) );
+  }
+
+  /**
+   * 
+   */
+  private void updateEditorDefaults()
+  {
+    String value;
+
+    value = ( String )getDefaultValue( "numberScheme" );
+    this.numberScheme.setSelectedItem( NumberingScheme.valueOf( value ) );
+
+    value = ( String )getDefaultValue( "clockSource" );
+    this.clockSource.setSelectedItem( CaptureClockSource.valueOf( value ) );
+
+    this.sampleRate.setSelectedItem( getDefaultValue( "sampleRate" ) );
+
+    this.size.setSelectedItem( getDefaultValue( "size" ) );
+    this.useMaxSize.setSelected( Boolean.TRUE.equals( getDefaultValue( "useMaxSize" ) ) );
+
+    int defaultValue = ( ( Integer )getDefaultValue( "enabledChannels" ) ).intValue();
+    for ( int i = 0; i < this.enabledChannelGroups.length; i++ )
+    {
+      boolean selected = ( ( defaultValue >> ( i * 8 ) ) & 0xFF ) != 0;
+      this.enabledChannelGroups[i].setSelected( selected );
+    }
+
+    // Ensure the initial values are correct...
+    calculateChannelGroupValue();
+    updateSizeSelection();
+    updateEnabledChannelGroups();
+    showOrHideRleWarning();
+  }
+
+  /**
+   * @param aComponent
+   * @param aPropertyName
+   */
+  private void wireEditor( final JComponent aComponent, final String aPropertyName )
+  {
+    AttributeDefinition ad = getAttributeDefinition( this.ocd, aPropertyName );
+    aComponent.setName( aPropertyName );
     aComponent.putClientProperty( PROPERTY_ATTRIBUTE, ad );
   }
 }

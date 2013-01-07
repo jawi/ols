@@ -25,17 +25,13 @@ import static nl.lxtreme.ols.device.logicsniffer.ui.OcdHelper.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import static org.sump.device.logicsniffer.ConfigDialogHelper.*;
 
-import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.plaf.basic.*;
-
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.device.logicsniffer.*;
 import nl.lxtreme.ols.device.logicsniffer.profile.*;
@@ -98,7 +94,7 @@ public class ConnectionSettingsPanel extends JPanel implements PropertyChangeLis
     // VARIABLES
 
     private final DeviceProfileProvider provider;
-    private volatile Object selected = null;
+    private volatile String selected = null;
 
     /**
      * Creates a new {@link DeviceProfileTypeComboBoxModel} instance.
@@ -121,18 +117,18 @@ public class ConnectionSettingsPanel extends JPanel implements PropertyChangeLis
       {
         return null;
       }
-      return profiles.get( aIndex );
+      return getStringValue( profiles.get( aIndex ) );
     }
 
     /**
      * @see javax.swing.ComboBoxModel#getSelectedItem()
      */
     @Override
-    public Object getSelectedItem()
+    public String getSelectedItem()
     {
       if ( this.selected == null )
       {
-        this.selected = this.provider.getDefaultProfile();
+        this.selected = getStringValue( this.provider.getDefaultProfile() );
       }
       return this.selected;
     }
@@ -153,32 +149,25 @@ public class ConnectionSettingsPanel extends JPanel implements PropertyChangeLis
     @Override
     public void setSelectedItem( final Object aItem )
     {
-      this.selected = aItem;
+      this.selected = ( aItem == null ? null : String.valueOf( aItem ) );
     }
-  }
 
-  /**
-   * Provides a combobox renderer for device profiles.
-   */
-  static final class DeviceProfileTypeComboBoxRenderer extends BasicComboBoxRenderer
-  {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
-        final boolean aIsSelected, final boolean aCellHasFocus )
+    /**
+     * @param aProfile
+     * @return
+     */
+    private String getStringValue( final DeviceProfile aProfile )
     {
-      Object value = aValue;
-      if ( value instanceof DeviceProfile )
+      String value = null;
+      if ( aProfile != null )
       {
-        final DeviceProfile profile = ( DeviceProfile )value;
-        value = profile.getDescription();
-        if ( ( value == null ) || ( String.valueOf( value ).isEmpty() ) )
+        value = aProfile.getDescription();
+        if ( ( value == null ) || "".equals( value.trim() ) )
         {
-          value = profile.getType();
+          value = aProfile.getType();
         }
       }
-      return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
+      return value;
     }
   }
 
@@ -280,6 +269,48 @@ public class ConnectionSettingsPanel extends JPanel implements PropertyChangeLis
   public void addDeviceProfileChangeListener( final DeviceProfileChangedListener aListener )
   {
     this.eventListeners.add( DeviceProfileChangedListener.class, aListener );
+  }
+
+  /**
+   * @return <code>true</code> if the settings are valid, <code>false</code>
+   *         otherwise.
+   */
+  public boolean areSettingsValid()
+  {
+    EditorUtils editorUtils = new EditorUtils();
+
+    for ( JComponent comp : this.components )
+    {
+      String value = String.valueOf( editorUtils.getComponentValue( comp ) );
+      AttributeDefinition ad = editorUtils.getAttributeDefinition( comp );
+
+      String validationResult = ad.validate( value );
+      if ( ( validationResult != null ) && !"".equals( validationResult ) )
+      {
+        return false;
+      }
+    }
+
+    if ( isNetworkConnection() )
+    {
+      String host = String.valueOf( editorUtils.getComponentValue( this.remoteHost ) );
+      String port = String.valueOf( editorUtils.getComponentValue( this.remotePort ) );
+      if ( "".equals( host ) || "".equals( port ) )
+      {
+        return false;
+      }
+    }
+    else if ( isSerialConnection() )
+    {
+      String port = String.valueOf( editorUtils.getComponentValue( this.port ) );
+      String speed = String.valueOf( editorUtils.getComponentValue( this.portSpeed ) );
+      if ( "".equals( port ) || "".equals( speed ) )
+      {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -525,7 +556,12 @@ public class ConnectionSettingsPanel extends JPanel implements PropertyChangeLis
    */
   private DeviceProfile getSelectedDeviceProfile()
   {
-    return ( DeviceProfile )this.deviceType.getSelectedItem();
+    String selectedItem = ( String )this.deviceType.getSelectedItem();
+    if ( selectedItem != null )
+    {
+      return this.profileProvider.findProfile( selectedItem );
+    }
+    return null;
   }
 
   /**
@@ -573,9 +609,9 @@ public class ConnectionSettingsPanel extends JPanel implements PropertyChangeLis
       }
     } );
     // allow people to put their own port name into it...
+    this.port.setEditable( true );
     this.port.setSelectedItem( editorUtils.getDefaultValue( ad, aInitialValues.get( "localPort" ) ) );
     this.port.putClientProperty( EditorUtils.PROPERTY_ATTRIBUTE, ad );
-    this.port.setEditable( true );
     this.port.addActionListener( listener );
 
     this.portSpeed = createEditor( aOCD, "portSpeed", aInitialValues );
@@ -587,7 +623,6 @@ public class ConnectionSettingsPanel extends JPanel implements PropertyChangeLis
 
     ad = OcdHelper.getAttributeDefinition( aOCD, "deviceProfile" );
     this.deviceType = new JComboBox( new DeviceProfileTypeComboBoxModel( this.profileProvider ) );
-    this.deviceType.setRenderer( new DeviceProfileTypeComboBoxRenderer() );
     this.deviceType.setSelectedItem( editorUtils.getDefaultValue( ad, aInitialValues.get( "deviceProfile" ) ) );
     this.deviceType.putClientProperty( EditorUtils.PROPERTY_ATTRIBUTE, ad );
     this.deviceType.addActionListener( new ActionListener()
@@ -604,6 +639,15 @@ public class ConnectionSettingsPanel extends JPanel implements PropertyChangeLis
 
     this.components.addAll( Arrays.<JComponent> asList( this.deviceInterface, this.remoteHost, this.remotePort,
         this.port, this.portSpeed, this.deviceType ) );
+
+    editorUtils.wireChangeListeners( new PropertyChangeListener()
+    {
+      @Override
+      public void propertyChange( final PropertyChangeEvent aEvent )
+      {
+        firePropertyChange( aEvent.getPropertyName(), aEvent.getOldValue(), aEvent.getNewValue() );
+      }
+    }, this.components );
 
     editorUtils.applyComponentProperties( this.components );
   }

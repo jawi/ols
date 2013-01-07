@@ -26,15 +26,16 @@ import static org.sump.device.logicsniffer.ConfigDialogHelper.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.util.*;
 import java.util.List;
-
 import javax.swing.*;
 import javax.swing.event.*;
 
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.editor.*;
 
 import org.osgi.service.metatype.*;
 import org.sump.device.logicsniffer.*;
@@ -129,6 +130,29 @@ public class TriggerSettingsPanel extends JPanel implements DeviceProfileChanged
   // METHODS
 
   /**
+   * @return <code>true</code> if the settings are valid, <code>false</code>
+   *         otherwise.
+   */
+  public boolean areSettingsValid()
+  {
+    EditorUtils editorUtils = new EditorUtils();
+
+    for ( JComponent comp : this.components )
+    {
+      String value = String.valueOf( editorUtils.getComponentValue( comp ) );
+      AttributeDefinition ad = editorUtils.getAttributeDefinition( comp );
+
+      String validationResult = ad.validate( value );
+      if ( ( validationResult != null ) && !"".equals( validationResult ) )
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -151,35 +175,15 @@ public class TriggerSettingsPanel extends JPanel implements DeviceProfileChanged
   }
 
   /**
-   * @param aValue
-   *          <code>true</code> to enable the trigger stages, <code>false</code>
-   *          to disable them.
+   * @param aConfiguration
+   *          the configuration map to fill with the configuration settings of
+   *          this panel, never <code>null</code>.
+   * @return the given configuration, never <code>null</code>.
    */
-  private void enableTriggerStages( final boolean aValue )
+  public Map<Object, Object> getConfiguration( final Map<Object, Object> aConfiguration )
   {
-    this.ratioLabel.setEnabled( aValue );
-    this.ratioSlider.setEnabled( aValue );
-    this.triggerTypeSelect.setEnabled( aValue );
-    this.triggerStageTabs.setEnabled( aValue );
-
-    enableTriggerStageTabs( aValue );
-  }
-
-  /**
-   * @param aValue
-   *          <code>true</code> to enable the tabs, <code>false</code> to
-   *          disable them.
-   */
-  private void enableTriggerStageTabs( final boolean aValue )
-  {
-    for ( int i = this.triggerStageTabs.getTabCount() - 1; i >= 0; i-- )
-    {
-      Component tab = this.triggerStageTabs.getComponentAt( i );
-      if ( tab != null )
-      {
-        tab.setEnabled( aValue );
-      }
-    }
+    aConfiguration.putAll( new EditorUtils().getComponentValues( this.components ) );
+    return aConfiguration;
   }
 
   /**
@@ -240,6 +244,38 @@ public class TriggerSettingsPanel extends JPanel implements DeviceProfileChanged
   }
 
   /**
+   * @param aValue
+   *          <code>true</code> to enable the trigger stages, <code>false</code>
+   *          to disable them.
+   */
+  private void enableTriggerStages( final boolean aValue )
+  {
+    this.ratioLabel.setEnabled( aValue );
+    this.ratioSlider.setEnabled( aValue );
+    this.triggerTypeSelect.setEnabled( aValue );
+    this.triggerStageTabs.setEnabled( aValue );
+
+    enableTriggerStageTabs( aValue );
+  }
+
+  /**
+   * @param aValue
+   *          <code>true</code> to enable the tabs, <code>false</code> to
+   *          disable them.
+   */
+  private void enableTriggerStageTabs( final boolean aValue )
+  {
+    for ( int i = this.triggerStageTabs.getTabCount() - 1; i >= 0; i-- )
+    {
+      Component tab = this.triggerStageTabs.getComponentAt( i );
+      if ( tab != null )
+      {
+        tab.setEnabled( aValue );
+      }
+    }
+  }
+
+  /**
    * Initializes the components used by this panel.
    * 
    * @param aOCD
@@ -247,6 +283,8 @@ public class TriggerSettingsPanel extends JPanel implements DeviceProfileChanged
    */
   private void initPanel( final ObjectClassDefinition aOCD, final Map<Object, Object> aInitialValues )
   {
+    EditorUtils editorUtils = new EditorUtils();
+
     this.triggerEnable = new JCheckBox( "Enabled" );
     this.triggerEnable.addActionListener( new ActionListener()
     {
@@ -278,5 +316,14 @@ public class TriggerSettingsPanel extends JPanel implements DeviceProfileChanged
 
     this.triggerStageTabs = new JTabbedPane();
     createSimpleTriggerEditor( LogicSnifferConfigImpl.TRIGGER_STAGES, Ols.MAX_CHANNELS );
+
+    editorUtils.wireChangeListeners( new PropertyChangeListener()
+    {
+      @Override
+      public void propertyChange( final PropertyChangeEvent aEvent )
+      {
+        firePropertyChange( aEvent.getPropertyName(), aEvent.getOldValue(), aEvent.getNewValue() );
+      }
+    }, this.components );
   }
 }

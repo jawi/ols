@@ -34,6 +34,22 @@ public interface DeviceProfileProvider
   // METHODS
 
   /**
+   * Tries to match a device profile to the given identifier. The given
+   * identifier is for example, "BPv3", or "Logic Sniffer".
+   * <p>
+   * This method will use the {@link DeviceProfile#DEVICE_METADATA_KEYS} of each
+   * known device profile to try to find a match with the given identifier.<br/>
+   * Note if one of these metadata keys is the string "*", it will always match.
+   * </p>
+   * 
+   * @param aIdentifier
+   *          the identifier as string, cannot be <code>null</code>.
+   * @return the device profile matching the given identifier, or
+   *         <code>null</code> if none is found.
+   */
+  DeviceProfile findProfile( final String aIdentifier );
+
+  /**
    * Returns the "default" profile, as convenience.
    * 
    * @return a default profile (the OpenBench LogicSniffer), or

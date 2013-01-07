@@ -21,7 +21,6 @@
 package nl.lxtreme.ols.device.logicsniffer;
 
 
-import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.*;
 
 import aQute.bnd.annotation.metatype.*;
@@ -55,7 +54,7 @@ public interface LogicSnifferConfig
   int portSpeed();
 
   @Meta.AD( name = "Device profile", required = true )
-  DeviceProfile deviceProfile();
+  String deviceProfile();
 
   @Meta.AD( name = "Number scheme", required = true, deflt = "DEFAULT", //
   optionLabels = { "Default", "Inside", "Outside" }, optionValues = { "DEFAULT", "INSIDE", "OUTSIDE" } )
@@ -74,6 +73,9 @@ public interface LogicSnifferConfig
 
   @Meta.AD( name = "Recording size", required = true )
   int size();
+
+  @Meta.AD( name = "Automatic (maximum)", required = true, deflt = "true" )
+  boolean useMaxSize();
 
   @Meta.AD( name = "Test mode", required = true, deflt = "false" )
   boolean testModeEnabled();
