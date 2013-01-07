@@ -5,4 +5,5 @@ Export-Package: \
 	nl.lxtreme.ols.util.swing.component,\
 	nl.lxtreme.ols.util.swing.component.icon,\
     nl.lxtreme.ols.util.swing.editor,\
+    nl.lxtreme.ols.util.swing.editor.util,\
 	nl.lxtreme.ols.util.swing.validation

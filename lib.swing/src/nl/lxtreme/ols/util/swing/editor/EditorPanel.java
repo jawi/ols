@@ -24,17 +24,12 @@ package nl.lxtreme.ols.util.swing.editor;
 import static nl.lxtreme.ols.util.swing.editor.EditorUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
-import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
 import java.util.Map.Entry;
 
 import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.text.*;
-
 import nl.lxtreme.ols.util.swing.*;
-
 import org.osgi.service.metatype.*;
 
 
@@ -43,80 +38,6 @@ import org.osgi.service.metatype.*;
  */
 public class EditorPanel extends JPanel
 {
-  // INNER TYPES
-
-  /**
-   * Converts the various UI-change events to single property change events.
-   */
-  protected final class ChangeReflector implements ActionListener, ChangeListener, ListSelectionListener,
-      DocumentListener
-  {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void actionPerformed( final ActionEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void changedUpdate( final DocumentEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void insertUpdate( final DocumentEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void removeUpdate( final DocumentEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void stateChanged( final ChangeEvent aEvent )
-    {
-      firePropertyChangeEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void valueChanged( final ListSelectionEvent aEvent )
-    {
-      if ( !aEvent.getValueIsAdjusting() )
-      {
-        firePropertyChangeEvent();
-      }
-    }
-
-    /**
-     * 
-     */
-    private void firePropertyChangeEvent()
-    {
-      firePropertyChange( "changed", null, this );
-    }
-  }
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -317,44 +238,21 @@ public class EditorPanel extends JPanel
 
     editorUtils.applyComponentProperties( this.components.values() );
 
-    wireChangeListeners( new ChangeReflector() );
+    wireChangeListeners( new PropertyChangeListener()
+    {
+      @Override
+      public void propertyChange( final PropertyChangeEvent aEvent )
+      {
+        firePropertyChange( aEvent.getPropertyName(), aEvent.getOldValue(), aEvent.getNewValue() );
+      }
+    } );
 
     SpringLayoutUtils.makeEditorGrid( this, PADDING, PADDING, PADDING, PADDING );
   }
 
-  /**
-   * Wires all components on this panel to fire a {@link PropertyChangeEvent} in
-   * case their value changes.
-   */
-  protected void wireChangeListeners( final ChangeReflector changeReflector )
+  protected void wireChangeListeners( final PropertyChangeListener aListener )
   {
-    for ( JComponent comp : this.components.values() )
-    {
-      if ( comp instanceof AbstractButton )
-      {
-        ( ( AbstractButton )comp ).addActionListener( changeReflector );
-      }
-      else if ( comp instanceof JComboBox )
-      {
-        ( ( JComboBox )comp ).addActionListener( changeReflector );
-      }
-      else if ( comp instanceof JTextComponent )
-      {
-        ( ( JTextComponent )comp ).getDocument().addDocumentListener( changeReflector );
-      }
-      else if ( comp instanceof JList )
-      {
-        ( ( JList )comp ).addListSelectionListener( changeReflector );
-      }
-      else if ( comp instanceof JSlider )
-      {
-        ( ( JSlider )comp ).addChangeListener( changeReflector );
-      }
-      else if ( comp instanceof JSpinner )
-      {
-        ( ( JSpinner )comp ).addChangeListener( changeReflector );
-      }
-    }
+    new EditorUtils().wireChangeListeners( aListener, this.components.values() );
   }
 
   /**

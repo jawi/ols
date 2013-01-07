@@ -23,10 +23,13 @@ package nl.lxtreme.ols.util.swing.editor;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.util.*;
 
 import javax.swing.*;
 import javax.swing.text.*;
+
+import nl.lxtreme.ols.util.swing.editor.util.*;
 
 import org.osgi.service.metatype.*;
 
@@ -202,6 +205,24 @@ public class EditorUtils
   }
 
   /**
+   * Returns the attribute definition from the given component.
+   * 
+   * @param aComponent
+   *          the component to return the attribute definition from, cannot be
+   *          <code>null</code>.
+   * @return the attribute definition, can be <code>null</code>.
+   */
+  public AttributeDefinition getAttributeDefinition( final JComponent aComponent )
+  {
+    Object result = aComponent.getClientProperty( PROPERTY_ATTRIBUTE );
+    if ( ( result == null ) || !( result instanceof AttributeDefinition ) )
+    {
+      return null;
+    }
+    return ( AttributeDefinition )result;
+  }
+
+  /**
    * @param aComponent
    * @return
    */
@@ -255,7 +276,21 @@ public class EditorUtils
           key = ad.getID();
         }
       }
+      if ( key == null )
+      {
+        throw new IllegalStateException( "Component did not specify a name, nor a valid AD!" );
+      }
+
       Object value = getComponentValue( comp );
+      if ( value != null )
+      {
+        Class<?> valueClass = value.getClass();
+        // Coerce enumerations into their string values...
+        if ( valueClass.isEnum() )
+        {
+          value = value.toString();
+        }
+      }
 
       result.put( key, value );
     }
@@ -413,6 +448,47 @@ public class EditorUtils
 
     aComponent.putClientProperty( PROPERTY_READONLY, Boolean.valueOf( readOnly ) );
     aComponent.putClientProperty( PROPERTY_EDITABLE, Boolean.valueOf( editable ) );
+  }
+
+  /**
+   * Wires all components on this panel to fire a {@link PropertyChangeEvent} in
+   * case their value changes.
+   * 
+   * @param aListener
+   *          the listener to pass all change events to;
+   * @param aComponents
+   *          the components to wire.
+   */
+  public void wireChangeListeners( final PropertyChangeListener aListener, final Iterable<JComponent> aComponents )
+  {
+    GenericComponentChangeAdapter listener = new GenericComponentChangeAdapter( aListener );
+    for ( JComponent comp : aComponents )
+    {
+      if ( comp instanceof AbstractButton )
+      {
+        ( ( AbstractButton )comp ).addActionListener( listener );
+      }
+      else if ( comp instanceof JComboBox )
+      {
+        ( ( JComboBox )comp ).addActionListener( listener );
+      }
+      else if ( comp instanceof JTextComponent )
+      {
+        ( ( JTextComponent )comp ).getDocument().addDocumentListener( listener );
+      }
+      else if ( comp instanceof JList )
+      {
+        ( ( JList )comp ).addListSelectionListener( listener );
+      }
+      else if ( comp instanceof JSlider )
+      {
+        ( ( JSlider )comp ).addChangeListener( listener );
+      }
+      else if ( comp instanceof JSpinner )
+      {
+        ( ( JSpinner )comp ).addChangeListener( listener );
+      }
+    }
   }
 
   /**
