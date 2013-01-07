@@ -26,6 +26,7 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.util.*;
 
 import javax.swing.*;
@@ -33,7 +34,6 @@ import javax.swing.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.editor.*;
-
 import org.osgi.service.metatype.*;
 
 
@@ -299,13 +299,12 @@ final class ToolConfigPanel extends EditorPanel implements Constants, IEditorPro
    * {@inheritDoc}
    */
   @Override
-  protected void wireChangeListeners( final ChangeReflector aChangeReflector )
+  protected void wireChangeListeners( final PropertyChangeListener aListener )
   {
-    super.wireChangeListeners( aChangeReflector );
+    super.wireChangeListeners( aListener );
 
-    this.decodeEntireTimeline.addActionListener( aChangeReflector );
-    this.decodeMarkerA.addActionListener( aChangeReflector );
-    this.decodeMarkerB.addActionListener( aChangeReflector );
+    new EditorUtils().wireChangeListeners( aListener,
+        Arrays.<JComponent> asList( this.decodeEntireTimeline, this.decodeMarkerA, this.decodeMarkerB ) );
   }
 
   /**

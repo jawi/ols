@@ -222,7 +222,7 @@ public abstract class DelegateServiceWrapper<SERVICE>
       private final LogService log = DelegateServiceWrapper.this.log;
 
       @Override
-      public void onConfigurationAcknowledged( final String aPID, final Dictionary<Object, Object> aConfiguration )
+      public void onConfigurationAcknowledged( final String aPID, final Map<Object, Object> aConfiguration )
       {
         // Register a configuration listener that notifies the original
         // callback when the configuration is actually valid...
@@ -451,13 +451,16 @@ public abstract class DelegateServiceWrapper<SERVICE>
    * @param aPid
    * @param aProperties
    */
-  protected final void updateConfiguration( final String aPid, final Dictionary<Object, Object> aProperties )
+  protected final void updateConfiguration( final String aPid, final Map<Object, Object> aProperties )
       throws IOException
   {
-    org.osgi.service.cm.Configuration config = this.configAdmin.getConfiguration( aPid );
-    config.update( aProperties );
+    Properties props = new Properties();
+    props.putAll( aProperties );
 
-    getConfiguration().set( aProperties );
+    org.osgi.service.cm.Configuration config = this.configAdmin.getConfiguration( aPid );
+    config.update( props );
+
+    getConfiguration().set( props );
   }
 
   /**

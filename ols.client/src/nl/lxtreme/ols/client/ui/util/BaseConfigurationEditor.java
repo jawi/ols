@@ -168,7 +168,7 @@ public abstract class BaseConfigurationEditor extends JDialog implements Configu
   /**
    * @return the configuration properties, never <code>null</code>.
    */
-  public Dictionary<Object, Object> getProperties()
+  public Map<Object, Object> getProperties()
   {
     return this.configPanel.getProperties();
   }

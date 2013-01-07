@@ -48,7 +48,7 @@ public interface ConfigurationEditor
      * @param aConfiguration
      *          the changed configuration, never <code>null</code>.
      */
-    void onConfigurationAcknowledged( String aPID, Dictionary<Object, Object> aConfiguration );
+    void onConfigurationAcknowledged( String aPID, Map<Object, Object> aConfiguration );
 
     /**
      * Called when all changes to the configuration are discarded.
