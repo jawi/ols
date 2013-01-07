@@ -25,7 +25,6 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.*;
 
@@ -191,7 +190,6 @@ public final class ConfigDialogHelper
     assert aTriggerMasks != null : "Trigger masks cannot be null!";
     assert aTriggerValues != null : "Trigger values cannot be null!";
     assert aTriggerMasks.length == aTriggerValues.length : "Trigger values length should match Trigger masks length";
-    assert aTriggerMasks.length == 4 : "There should be 4 trigger stages";
 
     final int maxStages = aProfile.getTriggerStages();
     final int maxChannels = aProfile.getChannelCount();
@@ -203,12 +201,12 @@ public final class ConfigDialogHelper
       final JCheckBox[] triggerValues = aTriggerValues[i];
 
       assert triggerMasks.length == triggerValues.length;
-      assert triggerMasks.length == Ols.MAX_CHANNELS;
 
-      for ( int j = 0; j < Ols.MAX_CHANNELS; j++ )
+      for ( int j = 0; j < triggerMasks.length; j++ )
       {
         final boolean triggerEnabled = stageEnabled && ( j < maxChannels );
         updateCheckBoxState( triggerMasks[j], triggerEnabled );
+        updateCheckBoxState( triggerValues[j], triggerEnabled );
       }
     }
   }

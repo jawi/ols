@@ -164,20 +164,6 @@ public class LogicSnifferConfigurationEditor extends JDialog implements Configur
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setVisible( final boolean aB )
-  {
-    if ( aB )
-    {
-      updateFields();
-    }
-
-    super.setVisible( aB );
-  }
-
-  /**
    * Called automatically when this editor is no longer used.
    */
   @SuppressWarnings( "unchecked" )
@@ -230,6 +216,8 @@ public class LogicSnifferConfigurationEditor extends JDialog implements Configur
                   .setRequired( false ) //
               ) );
     }
+
+    updateFields();
   }
 
   /**
