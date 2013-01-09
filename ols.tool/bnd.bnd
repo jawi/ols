@@ -5,8 +5,6 @@
 	biz.aQute.bnd.annotation;version=1.52.3,\
 	junit.osgi;version=3.8.2,\
 	org.mockito.mockito-all;version=1.8.5,\
-	lib.swing;version=latest,\
 	lib.testutil;version=latest,\
-	ols.common;version=latest,\
-	ols.service.task.execution;version=latest
+	ols.common;version=latest
 -sub: *.bnd
