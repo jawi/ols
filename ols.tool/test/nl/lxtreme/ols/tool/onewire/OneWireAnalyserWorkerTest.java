@@ -45,10 +45,14 @@ public class OneWireAnalyserWorkerTest extends TestCase
    */
   public static Collection<Object[]> getTestData()
   {
-    return Arrays.asList( new Object[][] { //
-        // { resource name, bus-mode, data-line, datagram count, error count }
-            { "ds18b20_1.ols", OneWireBusMode.STANDARD, 0, 40, 0, 13 }, // 0
-            { "ow_minimal.ols", OneWireBusMode.STANDARD, 2, 48, 0, 1 }, // 1
+    return Arrays.asList( new Object[][] {// @formatter:off
+    //  { resource name,                           bus-mode, 1w, dg#, er#, sl# }
+        { "ds18b20_1.ols",          OneWireBusMode.STANDARD,  0,  40,   0,  13 }, // 0
+        { "ow_minimal.ols",         OneWireBusMode.STANDARD,  2,  48,   0,   1 }, // 1
+        { "ow-reset-0x33.ols",      OneWireBusMode.STANDARD,  0,   1,   0,   1 }, // 2
+        { "ow-reset-0x33-0x28.ols", OneWireBusMode.STANDARD,  0,   9,   0,   1 }, // 3
+        { "ow-search-rom.ols",      OneWireBusMode.STANDARD,  0,  50,   0,   2 }, // 4
+    // @formatter:on
         } );
   }
 
@@ -69,10 +73,10 @@ public class OneWireAnalyserWorkerTest extends TestCase
 
       final AnnotationCollector result = analyseDataFile( resourceFile, dataLine, busMode );
 
-      assertEquals( errorCount, result.countDataErrors() );
-      assertEquals( datagramCount, result.countSymbols() );
-      assertEquals( slavePresentPulseCount, result.countDataAnnotations( OneWireAnalyserTask.EVENT_RESET,
-          OneWireAnalyserTask.KEY_SLAVE_PRESENT, Boolean.TRUE ) );
+      assertEquals( "Error count in " + resourceFile, errorCount, result.countDataErrors() );
+      assertEquals( "Datagram count in " + resourceFile, datagramCount, result.countSymbols() );
+      assertEquals( "Slave presence pulses in " + resourceFile, slavePresentPulseCount, result.countDataAnnotations(
+          OneWireAnalyserTask.EVENT_RESET, OneWireAnalyserTask.KEY_SLAVE_PRESENT, Boolean.TRUE ) );
     }
   }
 

@@ -100,7 +100,7 @@ final class OneWireTiming
    */
   public double getBitFrameLength()
   {
-    return Math.max( this.aMin + this.bMin, this.cMin + this.dMin ) - 1.0;
+    return Math.max( this.aMin + this.bMin, this.cMin + this.dMin );
   }
 
   /**
@@ -110,7 +110,7 @@ final class OneWireTiming
    */
   public double getResetFrameLength()
   {
-    return ( this.gMin + this.hMin + this.iMin + this.jMin ) - 1.0;
+    return ( this.gMin + this.hMin + this.iMin + this.jMin );
   }
 
   /**
@@ -125,7 +125,7 @@ final class OneWireTiming
   {
     // Issue #76: we should take the master sample time into account, otherwise
     // we're too relaxed for devices with strict timing...
-    return ( aTimeValue >= this.aMin ) && ( aTimeValue < ( ( this.aMax + this.eMax ) - 1 ) );
+    return ( aTimeValue >= this.aMin ) && ( aTimeValue <= ( this.aMax + this.eMax ) );
   }
 
   /**
@@ -139,7 +139,11 @@ final class OneWireTiming
    */
   public boolean isReset( final double aTimeValue )
   {
-    return ( aTimeValue >= this.hMin ) && ( aTimeValue <= this.hMax );
+    // Issue #128: master pulls line low for at least Hmin us, which is the
+    // lower bound.After releasing it, it has to wait at least Imax + Jmin to
+    // detect the presence of a slave, so the upper bound is defined as:
+    // Hmax + Imax + Jmin...
+    return ( aTimeValue >= this.hMin ) && ( aTimeValue <= ( this.hMax + this.iMax + this.jMin ) );
   }
 
   /**
@@ -156,7 +160,7 @@ final class OneWireTiming
   {
     // Issue #77: we're looking for a presence pulse that is at *most* iMax
     // uSecs, not between iMin and iMax uSecs...
-    return ( aTimeValue <= this.iMax );
+    return ( aTimeValue >= 0.0 ) && ( aTimeValue <= this.iMax );
   }
 
   /**

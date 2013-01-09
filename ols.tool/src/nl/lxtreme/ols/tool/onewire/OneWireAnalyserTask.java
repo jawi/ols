@@ -42,9 +42,15 @@ public class OneWireAnalyserTask implements Callable<Void>
 {
   // CONSTANTS
 
+  /** Denotes a bus-reset event. */
   static final String EVENT_RESET = "RESET";
+  /** Denotes a bus-error event. */
   static final String EVENT_BUS_ERROR = "BUS-ERROR";
-  static final String KEY_SLAVE_PRESENT = "slavePresent";
+  /**
+   * Denotes a property whose (boolean) value indicated whether or not a slave
+   * was present.
+   */
+  static final String KEY_SLAVE_PRESENT = "Slave present";
 
   private static final String OW_1_WIRE = "1-Wire";
 
@@ -92,20 +98,15 @@ public class OneWireAnalyserTask implements Callable<Void>
   {
     final AcquisitionData data = this.context.getAcquisitionData();
     final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
-    final int[] values = data.getValues();
 
-    int sampleIdx;
+    int sampleIdx = this.context.getStartSampleIndex();
+    int endIdx = this.context.getEndSampleIndex();
 
     final int dataMask = this.owLineMask;
-    final int sampleCount = values.length;
-
-    if ( LOG.isLoggable( Level.FINE ) )
-    {
-      LOG.log( Level.FINE, "1-Wire Line mask = 0x{0}", Integer.toHexString( this.owLineMask ) );
-    }
+    final int[] values = data.getValues();
 
     // Search the moment on which the 1-wire line is idle (= high)...
-    for ( sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++ )
+    for ( ; sampleIdx < endIdx; sampleIdx++ )
     {
       final int dataValue = values[sampleIdx];
 
@@ -116,7 +117,7 @@ public class OneWireAnalyserTask implements Callable<Void>
       }
     }
 
-    if ( sampleIdx == sampleCount )
+    if ( sampleIdx == endIdx )
     {
       // no idle state could be found
       LOG.log( Level.WARNING, "No IDLE state found in data; aborting analysis..." );
@@ -127,7 +128,7 @@ public class OneWireAnalyserTask implements Callable<Void>
     // channel...
     annotationHelper.prepareChannel( this.owLineIndex, OW_1_WIRE );
     // Decode the actual data...
-    decodeData( annotationHelper, data, sampleIdx, sampleCount - 1 );
+    decodeData( annotationHelper, data, sampleIdx, endIdx );
 
     return null;
   }
@@ -140,36 +141,35 @@ public class OneWireAnalyserTask implements Callable<Void>
    *          the decoded data set to add the decoding results to, cannot be
    *          <code>null</code>.
    */
-  private void decodeData( final ToolAnnotationHelper aAnnotationHelper, final AcquisitionData aData, final int aStartIdx,
-      final int aEndIdx )
+  private void decodeData( final ToolAnnotationHelper aAnnotationHelper, final AcquisitionData aData,
+      final int aStartIdx, final int aEndIdx )
   {
     final long[] timestamps = aData.getTimestamps();
+    // The timing of the 1-wire bus is done in uS, so determine what scale we've
+    // to use in order to obtain those kind of time values...
+    final double timingCorrection = 1.0e6 / aData.getSampleRate();
 
     this.progressListener.setProgress( 0 );
 
     final long startOfDecode = timestamps[aStartIdx];
     final long endOfDecode = timestamps[aEndIdx];
 
-    // The timing of the 1-wire bus is done in uS, so determine what scale we've
-    // to use in order to obtain those kind of time values...
-    final double timingCorrection = ( 1.0e6 / aData.getSampleRate() );
-
-    long time = Math.max( 0, startOfDecode );
-
     int bitCount = 8;
     int byteValue = 0;
+
+    long time = startOfDecode;
     long byteStartTime = time;
 
     while ( ( endOfDecode - time ) > 0 )
     {
-      long fallingEdge = findEdge( aData, time, endOfDecode, Edge.FALLING );
+      long fallingEdge = findFallingEdge( aData, time, endOfDecode );
       if ( fallingEdge < 0 )
       {
         LOG.log( Level.INFO, "Decoding ended at {0}; no falling edge found...",
             UnitOfTime.format( time / ( double )aData.getSampleRate() ) );
         break;
       }
-      long risingEdge = findEdge( aData, fallingEdge, endOfDecode, Edge.RISING );
+      long risingEdge = findRisingEdge( aData, fallingEdge, endOfDecode );
       if ( risingEdge < 0 )
       {
         risingEdge = endOfDecode;
@@ -178,16 +178,26 @@ public class OneWireAnalyserTask implements Callable<Void>
       // Take the difference in time, which should be an indication of what
       // symbol is transmitted...
       final double diff = ( ( risingEdge - fallingEdge ) * timingCorrection );
+
       if ( this.owTiming.isReset( diff ) )
       {
-        // Reset pulse...
+        // Take the next falling edge, whose difference with the last leading
+        // edge should indicate the presence of a slave or not...
+        final long nextFallingEdge = findFallingEdge( aData, risingEdge, endOfDecode );
+
+        boolean slavePresent = false;
+        if ( nextFallingEdge > 0 )
+        {
+          // Found, lets check whether it is a valid slave presence pulse...
+          slavePresent = this.owTiming.isSlavePresencePulse( ( nextFallingEdge - risingEdge ) * timingCorrection );
+        }
+
+        // Advance the time until *after* the reset pulse...
         time = ( long )( fallingEdge + ( this.owTiming.getResetFrameLength() / timingCorrection ) );
 
-        // Check for the existence of a "slave present" symbol...
-        final boolean slavePresent = isSlavePresent( aData, fallingEdge, time, timingCorrection );
-        LOG.log( Level.FINE, "Master bus reset; slave is {0}present...", ( slavePresent ? "" : "NOT " ) );
+        String desc = String.format( "Bus reset, slave is %spresent", slavePresent ? "" : "NOT " );
 
-        final String desc = String.format( "Master reset, slave %s present", slavePresent ? "is" : "is NOT" );
+        LOG.log( Level.FINE, desc );
 
         aAnnotationHelper.addEventAnnotation( this.owLineIndex, fallingEdge, time, EVENT_RESET, KEY_COLOR, "#e0e0e0",
             KEY_DESCRIPTION, desc, KEY_SLAVE_PRESENT, Boolean.valueOf( slavePresent ) );
@@ -250,16 +260,17 @@ public class OneWireAnalyserTask implements Callable<Void>
   }
 
   /**
-   * Find first falling edge this is the start of the start bit. If the signal
-   * is inverted, find the first rising edge.
+   * Find first falling or rising edge after the given start time stamp.
    * 
+   * @param aData
+   *          the acquisition data to search in;
    * @param aStartOfDecode
-   *          the timestamp to start searching;
+   *          the time stamp to start searching from;
    * @param aEndOfDecode
-   *          the timestamp to end the search;
-   * @param aMask
-   *          the bit-value mask to apply for finding the start bit.
-   * @return the time at which the start bit was found, -1 if it is not found.
+   *          the time stamp to end the search.
+   * @param aEdge
+   *          the edge to search for.
+   * @return the time at which the edge was found, -1L if it is not found.
    */
   private long findEdge( final AcquisitionData aData, final long aStartOfDecode, final long aEndOfDecode,
       final Edge aEdge )
@@ -284,8 +295,44 @@ public class OneWireAnalyserTask implements Callable<Void>
   }
 
   /**
+   * Find first falling edge after the given start time stamp.
+   * 
+   * @param aData
+   *          the acquisition data to search in;
+   * @param aStartOfDecode
+   *          the time stamp to start searching from;
+   * @param aEndOfDecode
+   *          the time stamp to end the search.
+   * @return the time at which the falling edge was found, -1L if it is not
+   *         found.
+   */
+  private long findFallingEdge( final AcquisitionData aData, final long aStartOfDecode, final long aEndOfDecode )
+  {
+    return findEdge( aData, aStartOfDecode, aEndOfDecode, Edge.FALLING );
+  }
+
+  /**
+   * Find first rising edge after the given start time stamp.
+   * 
+   * @param aData
+   *          the acquisition data to search in;
+   * @param aStartOfDecode
+   *          the time stamp to start searching from;
+   * @param aEndOfDecode
+   *          the time stamp to end the search.
+   * @return the time at which the rising edge was found, -1L if it is not
+   *         found.
+   */
+  private long findRisingEdge( final AcquisitionData aData, final long aStartOfDecode, final long aEndOfDecode )
+  {
+    return findEdge( aData, aStartOfDecode, aEndOfDecode, Edge.RISING );
+  }
+
+  /**
    * Returns the data value for the given time stamp.
    * 
+   * @param aData
+   *          the acquisition data to search in;
    * @param aTimeValue
    *          the time stamp to return the data value for.
    * @return the data value of the sample index right before the given time
@@ -305,44 +352,5 @@ public class OneWireAnalyserTask implements Callable<Void>
       }
     }
     return values[i - 1];
-  }
-
-  /**
-   * Returns whether between the given timestamps a slave presence pulse was
-   * found.
-   * <p>
-   * A slave presence pulse is defined as: take the difference in time between
-   * the first rising and falling edge between the given timestamps, if this
-   * difference is beyond a certain threshold this pulse can be considered a
-   * slave presence pulse.
-   * </p>
-   * 
-   * @param aStart
-   *          the start timestamp;
-   * @param aEnd
-   *          the end timestamp;
-   * @param aMask
-   *          the line mask;
-   * @param aTimingCorrection
-   *          the timing correction to correct the timestamps to microseconds.
-   * @return <code>true</code> if a slave presence pulse was found,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isSlavePresent( final AcquisitionData aData, final long aStart, final long aEnd,
-      final double aTimingCorrection )
-  {
-    final long risingEdgeTimestamp = findEdge( aData, aStart, aEnd, Edge.RISING );
-    if ( risingEdgeTimestamp < 0 )
-    {
-      return false;
-    }
-
-    final long fallingEdgeTimestamp = findEdge( aData, risingEdgeTimestamp, aEnd, Edge.FALLING );
-    if ( fallingEdgeTimestamp < 0 )
-    {
-      return false;
-    }
-
-    return this.owTiming.isSlavePresencePulse( ( fallingEdgeTimestamp - risingEdgeTimestamp ) * aTimingCorrection );
   }
 }
