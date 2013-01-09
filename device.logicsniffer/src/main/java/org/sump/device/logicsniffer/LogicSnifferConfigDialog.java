@@ -745,6 +745,22 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
    */
   final void updateFields()
   {
+    boolean mandatoryFieldsFilled = false;
+    if ( isSerialConnection() )
+    {
+      Object port = this.portSelect.getSelectedItem();
+      Object speed = this.portRateSelect.getSelectedItem();
+
+      mandatoryFieldsFilled = ( port != null ) && !"".equals( port ) && ( speed != null ) && !"".equals( speed );
+    }
+    else if ( isNetworkConnection() )
+    {
+      String host = this.remAddress.getText();
+      String port = this.remPort.getText();
+
+      mandatoryFieldsFilled = ( host != null ) && !"".equals( host ) && ( port != null ) && !"".equals( port );
+    }
+
     final int availableChannelGroups = getChannelGroupCount();
     for ( int i = 0; i < this.channelGroup.length; i++ )
     {
@@ -789,6 +805,9 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     {
       forceCaptureSizeTo( getSelectedSampleCount() );
     }
+
+    this.captureButton.setEnabled( mandatoryFieldsFilled );
+    this.deviceProfilePanel.showMetadataButton.setEnabled( mandatoryFieldsFilled );
   }
 
   /**
@@ -1168,8 +1187,11 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     this.connTypeSelect.setSelectedItem( DeviceInterface.SERIAL );
     this.connTypeSelect.addActionListener( fieldUpdater );
 
-    this.remAddress = new JTextField();
-    this.remPort = new JTextField();
+    this.remAddress = new JTextField("localhost");
+    this.remAddress.addActionListener( fieldUpdater );
+
+    this.remPort = new JTextField("5678");
+    this.remPort.addActionListener( fieldUpdater );
 
     this.portSelect = new JLazyComboBox( new JLazyComboBox.ItemProvider()
     {
@@ -1194,10 +1216,12 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     } );
     // allow people to put their own port name into it...
     this.portSelect.setEditable( true );
+    this.portSelect.addActionListener( fieldUpdater );
 
     this.portRateSelect = new JComboBox( BAUDRATES );
     this.portRateSelect.setEditable( true );
     this.portRateSelect.setSelectedIndex( 3 ); // 115k2
+    this.portRateSelect.addActionListener( fieldUpdater );
 
     this.numberSchemeSelect = new JComboBox();
     this.numberSchemeSelect.setRenderer( new NumberSchemeComboBoxRenderer() );
@@ -1426,6 +1450,24 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   private boolean isDdrMode()
   {
     return getSelectedSampleRate() > SumpProtocolConstants.CLOCK;
+  }
+
+  /**
+   * @return <code>true</code> if a serial connection is to be established,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isSerialConnection()
+  {
+    return DeviceInterface.SERIAL.equals( this.connTypeSelect.getSelectedItem() );
+  }
+
+  /**
+   * @return <code>true</code> if a network connection is to be established,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isNetworkConnection()
+  {
+    return DeviceInterface.NETWORK.equals( this.connTypeSelect.getSelectedItem() );
   }
 
   /**

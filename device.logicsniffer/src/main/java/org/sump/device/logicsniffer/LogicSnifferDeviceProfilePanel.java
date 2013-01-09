@@ -251,7 +251,7 @@ public abstract class LogicSnifferDeviceProfilePanel implements Configurable
 
   // VARIABLES
 
-  private JButton showMetadataButton;
+  JButton showMetadataButton;
   private JComboBox deviceTypeSelect;
   private JEditorPane deviceTypeDetails;
 
