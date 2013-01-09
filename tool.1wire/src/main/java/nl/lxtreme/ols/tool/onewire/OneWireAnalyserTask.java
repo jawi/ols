@@ -194,11 +194,20 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
       final double diff = ( ( risingEdge - fallingEdge ) * timingCorrection );
       if ( this.owTiming.isReset( diff ) )
       {
-        // Reset pulse...
+        // Take the next falling edge, whose difference with the last leading
+        // edge should indicate the presence of a slave or not...
+        final long nextFallingEdge = findEdge( aData, risingEdge, endOfDecode, Edge.FALLING );
+
+        boolean slavePresent = false;
+        if ( nextFallingEdge > 0 )
+        {
+          // Found, lets check whether it is a valid slave presence pulse...
+          slavePresent = this.owTiming.isSlavePresencePulse( ( nextFallingEdge - risingEdge ) * timingCorrection );
+        }
+
+        // Advance the time until *after* the reset pulse...
         time = ( long )( fallingEdge + ( this.owTiming.getResetFrameLength() / timingCorrection ) );
 
-        // Check for the existence of a "slave present" symbol...
-        final boolean slavePresent = isSlavePresent( aData, fallingEdge, time, timingCorrection );
         LOG.log( Level.FINE, "Master bus reset; slave is {0}present...", ( slavePresent ? "" : "NOT " ) );
 
         reportReset( aDataSet, fallingEdge, time, slavePresent );
@@ -311,45 +320,6 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
       }
     }
     return values[i - 1];
-  }
-
-  /**
-   * Returns whether between the given timestamps a slave presence pulse was
-   * found.
-   * <p>
-   * A slave presence pulse is defined as: take the difference in time between
-   * the first rising and falling edge between the given timestamps, if this
-   * difference is beyond a certain threshold this pulse can be considered a
-   * slave presence pulse.
-   * </p>
-   * 
-   * @param aStart
-   *          the start timestamp;
-   * @param aEnd
-   *          the end timestamp;
-   * @param aMask
-   *          the line mask;
-   * @param aTimingCorrection
-   *          the timing correction to correct the timestamps to microseconds.
-   * @return <code>true</code> if a slave presence pulse was found,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isSlavePresent( final AcquisitionResult aData, final long aStart, final long aEnd,
-      final double aTimingCorrection )
-  {
-    final long risingEdgeTimestamp = findEdge( aData, aStart, aEnd, Edge.RISING );
-    if ( risingEdgeTimestamp < 0 )
-    {
-      return false;
-    }
-
-    final long fallingEdgeTimestamp = findEdge( aData, risingEdgeTimestamp, aEnd, Edge.FALLING );
-    if ( fallingEdgeTimestamp < 0 )
-    {
-      return false;
-    }
-
-    return this.owTiming.isSlavePresencePulse( ( fallingEdgeTimestamp - risingEdgeTimestamp ) * aTimingCorrection );
   }
 
   /**
