@@ -128,6 +128,11 @@ final class SmartJumpHelper
     long result = this.direction.isLeft() ? Long.MIN_VALUE : Long.MAX_VALUE;
     for ( Cursor cursor : data.getCursors() )
     {
+      if ( !cursor.isDefined() )
+      {
+        continue;
+      }
+
       long timestamp = cursor.getTimestamp();
       if ( this.direction.isLeft() )
       {
