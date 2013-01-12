@@ -40,7 +40,6 @@ public abstract class AbstractBundleAdapter<TYPE>
   protected final String headerKey;
 
   protected volatile Bundle bundle; // = adapted bundle
-  protected volatile DependencyManager manager; // injected
   protected volatile Component serviceComponent; // = added service
 
   // CONSTRUCTORS
@@ -63,7 +62,10 @@ public abstract class AbstractBundleAdapter<TYPE>
   {
     if ( this.serviceComponent != null )
     {
-      this.manager.remove( this.serviceComponent );
+      DependencyManager dm = this.serviceComponent.getDependencyManager();
+
+      dm.remove( this.serviceComponent );
+
       this.serviceComponent = null;
     }
   }
@@ -75,7 +77,7 @@ public abstract class AbstractBundleAdapter<TYPE>
   public final void init( final Component aComponent ) throws Exception
   {
     // Make sure to register services on behalf of the *original* bundle!
-    this.manager = new DependencyManager( this.bundle.getBundleContext() );
+    DependencyManager manager = new DependencyManager( this.bundle.getBundleContext() );
 
     Dictionary<?, ?> bundleProps = this.bundle.getHeaders();
 
@@ -97,15 +99,16 @@ public abstract class AbstractBundleAdapter<TYPE>
     Properties serviceProps = copyOlsProperties( bundleProps );
     addServiceProperties( serviceProps );
 
-    this.serviceComponent = this.manager.createComponent() //
+    this.serviceComponent = manager.createComponent() //
         .setInterface( intfNames, serviceProps ) //
         .setImplementation( getImplementation( implClass ) ) //
-        .add( this.manager.createServiceDependency() //
+        .add( manager.createServiceDependency() //
             .setService( LogService.class ) //
             .setRequired( false ) //
         );
-    addServiceDependencies( this.manager, this.serviceComponent );
-    this.manager.add( this.serviceComponent );
+    addServiceDependencies( manager, this.serviceComponent );
+
+    manager.add( this.serviceComponent );
   }
 
   /**
