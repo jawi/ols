@@ -23,12 +23,12 @@ package nl.lxtreme.ols.device.logicsniffer;
 
 import java.io.*;
 import java.util.*;
+
 import javax.microedition.io.*;
 
 import nl.lxtreme.ols.ioutil.*;
 
 import org.osgi.service.log.*;
-import org.sump.device.logicsniffer.*;
 import org.sump.device.logicsniffer.protocol.*;
 
 
