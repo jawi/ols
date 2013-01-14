@@ -94,4 +94,5 @@
     ols.client.session;version=latest,\
     ols.client.usersettingsmanager;version=latest,\
 	ols.client.ui;version=latest,\
-	purejavacomm;version=0.0.9
+	purejavacomm;version=0.0.9,\
+	runclient;version=latest
