@@ -800,6 +800,10 @@ public class Client implements ManagedService, StatusListener, EventHandler
    */
   private void initOSSpecifics()
   {
+    // Issue #136: in case we cannot mail, we should be able to find the
+    // client's version by other means...
+    System.setProperty( "nl.lxtreme.ols.client.version", getVersion() );
+
     if ( isMacOS() )
     {
       // Moves the main menu bar to the screen menu bar location...

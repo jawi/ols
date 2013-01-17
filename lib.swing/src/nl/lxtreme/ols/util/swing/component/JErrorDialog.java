@@ -26,6 +26,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.util.swing.*;
@@ -215,12 +216,12 @@ public class JErrorDialog extends JDialog
      *          the incident to report through mail, cannot be <code>null</code>
      *          .
      */
-    public void reportIncident( final IncidentInfo aIncident ) throws IOException
+    public void reportIncident( final IncidentInfo aIncident )
     {
       String uriStr = String.format( "%s?subject=%s&body=%s", //
           this.mailAddress, //
           "Crash Reporter", //
-          getMessageBody( aIncident ) );
+          formatIncident( aIncident ) );
 
       try
       {
@@ -239,17 +240,27 @@ public class JErrorDialog extends JDialog
 
         Desktop.getDesktop().mail( mailURI );
       }
-      catch ( URISyntaxException exception )
+      catch ( Exception exception )
       {
-        throw new IOException( "Unsupported URI: mailto!", exception );
+        // Issue #136: in case mailing directly fails, write the report to disk
+        // and ask the user to mail its contents to us instead...
+        File report = writeIncidentReport( aIncident );
+        throw new RuntimeException(
+            "Cannot open mail client!\nInstead, the report is written to disk. Please mail the contents of:\n"
+                + report.getPath() + "\nto:\n" + this.mailAddress
+                + ", or post it on <https://github.com/jawi/ols/issues>." );
       }
     }
 
     /**
+     * Formats the given incident information into a proper text document.
+     * 
      * @param aIncident
-     * @return
+     *          the incident information to format to text, cannot be
+     *          <code>null</code>.
+     * @return a text-based version of the given incident information.
      */
-    private String getMessageBody( final IncidentInfo aIncident )
+    private String formatIncident( final IncidentInfo aIncident )
     {
       final String osName = System.getProperty( "os.name", "unknown" );
       final String osVersion = System.getProperty( "os.version", "unknown" );
@@ -261,9 +272,11 @@ public class JErrorDialog extends JDialog
       final String javaDetails = String.format( "%s v%s", javaVendor, javaVersion );
 
       final boolean debug = Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+      final String version = System.getProperty( "nl.lxtreme.ols.client.version", "<unknown>" );
 
       StringBuilder body = new StringBuilder();
 
+      body.append( "Client version  : " ).append( version ).append( '\n' );
       body.append( "Java information: " ).append( javaDetails );
       body.append( '\n' );
       body.append( "Host information: " ).append( hostDetails );
@@ -285,6 +298,50 @@ public class JErrorDialog extends JDialog
       body.append( '\n' );
 
       return body.toString();
+    }
+
+    /**
+     * Writes the given incident information down to a plain file in the user's
+     * home directory.
+     * 
+     * @param aIncident
+     *          the incident information to write to a file, cannot be
+     *          <code>null</code>.
+     * @return the written file, never <code>null</code>.
+     */
+    private File writeIncidentReport( final IncidentInfo aIncident )
+    {
+      String reportName = String.format( "ols-report-%x.txt", Long.valueOf( System.nanoTime() ) );
+      String homeDir = System.getProperty( "user.home" );
+
+      File report = new File( homeDir, reportName );
+      FileOutputStream fos = null;
+      try
+      {
+        fos = new FileOutputStream( report );
+        fos.write( formatIncident( aIncident ).getBytes() );
+        fos.flush();
+      }
+      catch ( IOException exception )
+      {
+        throw new RuntimeException( "Tried to write an incident report to disk, but even that failed!", exception );
+      }
+      finally
+      {
+        if ( fos != null )
+        {
+          try
+          {
+            fos.close();
+          }
+          catch ( IOException ignored )
+          {
+            // Ignore; nothing we can do...
+          }
+        }
+      }
+
+      return report;
     }
 
     /**
@@ -518,7 +575,7 @@ public class JErrorDialog extends JDialog
   /**
    * Reports the incident through mail.
    */
-  final void reportIncident() throws IOException
+  final void reportIncident()
   {
     final IncidentMailReporter reporter = new IncidentMailReporter( getReportIncidentAddress() );
     reporter.reportIncident( getIncidentInfo() );
@@ -619,7 +676,7 @@ public class JErrorDialog extends JDialog
         {
           reportIncident();
         }
-        catch ( IOException exception )
+        catch ( RuntimeException exception )
         {
           final Window parent1 = SwingComponentUtils.getOwningWindow( aEvent );
           JOptionPane.showMessageDialog( parent1, exception.getMessage(), "Reporting failed!",
