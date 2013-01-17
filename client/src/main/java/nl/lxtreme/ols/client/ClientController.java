@@ -1322,7 +1322,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     final HostProperties hostProperties = getHostProperties();
 
-    initOSSpecifics( hostProperties.getShortName() );
+    initOSSpecifics( hostProperties.getShortName(), hostProperties.getVersion() );
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
@@ -1819,12 +1819,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @param aApplicationName
    *          the name of the application (when this needs to be passed to the
    *          guest OS);
+   * @param aVersion
+   *          the version of the application.
    * @param aApplicationCallback
    *          the application callback used to report application events on some
    *          platforms (Mac OS), may be <code>null</code>.
    */
-  private void initOSSpecifics( final String aApplicationName )
+  private void initOSSpecifics( final String aApplicationName, String aVersion )
   {
+    System.setProperty( "nl.lxtreme.ols.client.version", aVersion );
+
     final HostInfo hostInfo = HostUtils.getHostInfo();
     if ( hostInfo.isMacOS() )
     {
