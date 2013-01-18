@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-        "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML>
 <html>
 <head>
 <title>OLS - alternative Java client</title>
@@ -102,6 +101,11 @@ dl.faq dd {
   height: 2.5em;
   vertical-align: top;
 }
+.vcenter img {
+  marign: 0px;
+  padding: 0px 0px 4px 0px;
+  vertical-align: middle;
+}
 </style>
 </head>
 
@@ -117,9 +121,23 @@ dl.faq dd {
 	</p>
 	
 	<h3>Table of contents</h3>
-	<div id="toc"></div>
-	
-	<h3 class="content">Introduction</h3>
+	<ul class="toc">
+		<li><a href="#intro">Introduction</a></li>
+		<li><a href="#news">News</a></li>
+		<li><a href="#testimonials">What other people say about...</a></li>
+		<li><a href="#features">Features</a></li>
+		<li><a href="#documentation">Documentation</a></li>
+		<li><a href="#faq">FAQ</a></li>
+		<li><a href="#download">Download</a></li>
+		<li><a href="#changelog">Changelog</a></li>
+		<li><a href="#screenshots">Screenshots</a></li>
+		<li><a href="#development">Development</a></li>
+		<li><a href="#license">License</a></li>
+		<li><a href="#links">Links &amp; acknowledgement</a></li>
+		<li><a href="#tip-jar">Tip jar</a></li>
+	</ul>
+
+	<h3 id="intro">Introduction</h3>
 	<p>
 	  The alternative OLS-client provides a software client for the <a
 	  href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">Open Bench Logic Sniffer</a> logic 
@@ -129,13 +147,13 @@ dl.faq dd {
 	  The Open Bench Logic Sniffer is the result of a collaboration between <a 
 	  href="http://www.gadgetfactory.net/">Gadget Factory</a> and <a href="http://dangerousprototypes.com/">Dangerous 
 	  Prototypes</a>. They created a cheap custom implementation of the <a href="http://www.sump.org/projects/analyzer/">SUMP 
-	  client</a> (developed by Michael Poppitz), and released it as Open Source project.<br/>
-	  The original SUMP project already contained a workable client of its own. While this client was feature complete
+	  analyzer</a> developed by Michael Poppitz, and released it as Open Source project.<br/>
+	  The original SUMP analyzer already provided a workable client on its own. While this client was feature complete
 	  and working quite well, it was no longer actively developed and maintained. Being a developer and loving Open 
-	  Source, I immediately started hacking and tweaking it. The result? <em>An alternative SUMP client</em>.
+	  Source, I immediately started hacking and tweaking it. The result? <em>An alternative OLS client</em>.
 	</p>
 	
-    <h3 class="content">News</h3>
+    <h3 id="news">News</h3>
     <ul>
       <li>October 29th, 2012, OLS version 0.9.6 SP1 released. This service pack fixes the issue that prevented the OLS client to be used on recent
         Linux kernels (see also <a href="https://github.com/jawi/ols/issues/120">issue #120</a> and <a href="https://github.com/nyholku/purejavacomm/issues/12">this issue</a>);</li>
@@ -153,7 +171,7 @@ dl.faq dd {
       <li>October 23rd, 2010: OLS version 0.9.0 released. Major highlights: added export to image and VCD.</li>
     </ul>
     
-    <h3 class="content">What other people say about...</h3>
+    <h3 id="testimonials">What other people say about...</h3>
     <blockquote>
       <p>I had to rock some intense LAing today, and I just wanted to say that the latest version is fantastic! I've completely 
       abandoned the old version for yours, and moved it to the top of the wiki software list :) It's a joy to use and it doesn't
@@ -166,7 +184,7 @@ dl.faq dd {
       Jack Gasset (Gadget Factory)</span></p>
     </blockquote>
     
-	<h3 class="content">Features</h3>
+	<h3 id="features">Features</h3>
 	<p>
 	  The alternative Java client provides the following features:
 	</p>
@@ -181,19 +199,19 @@ dl.faq dd {
 	  possible and adhering to the human interface guidelines of the platform it is running on.</li>
 	</ul>
 	
-	<h3 class="content">Documentation</h3>
+	<h3 id="documentation">Documentation</h3>
 	<p>
 	  All documentation is maintained on the <a href="https://github.com/jawi/ols/wiki">wiki</a>.
 	</p>
 	
-	<h3 class="content">FAQ</h3>
+	<h3 id="faq">FAQ</h3>
 	<p>
 	  The FAQ is moved and is maintained on the <a href="https://github.com/jawi/ols/wiki">wiki</a>. For additional 
 	  information, see the <a href="http://dangerousprototypes.com/forum/viewforum.php?f=57">OLS client</a> and the 
 	  <a href="http://dangerousprototypes.com/forum/viewforum.php?f=23">OLS hardware</a> support forums.
 	</p>
 	
-    <h3 class="content">Download</h3>
+    <h3 id="download">Download</h3>
     <p>
       The current release of Logic Sniffer is <strong><a href="ols-0.9.6.1-full.tar.gz">0.9.6 SP1</a></strong>.
       Older releases, for historical reasons:
@@ -217,17 +235,17 @@ dl.faq dd {
 	  <li>ols-0.7.0 [<a href="http://lxtreme.xs4all.nl/~jawi/ols/ols-0.7.0.tar.gz">tar.gz</a>] <span>released <em>August 9th 2010</em>, 1.3M.</span></li>
     </ul>
     
-    <h3 class="content">Changelog</h3>
+    <h3 id="changelog">Changelog</h3>
     <p>
       The most recent list of changes can always be found on <a href="http://github.com/jawi/ols/blob/master/ols.distribution/src/main/resources/CHANGELOG">GitHub</a>.
     </p>
     
-	<h3 class="content">Screenshots</h3>
+	<h3 id="screenshots">Screenshots</h3>
     <p>
       Screenshots of the OLS client are available on <a href="screenshots.html">this page</a>.
     </p>
     
-    <h3 class="content">Development</h3>
+    <h3 id="development">Development</h3>
     <p>
       Currently, the project is developed by me, Jan Willem. If you want to contribute, drop me <a 
       href="http://www.lxtreme.nl/index.pl/main/contact">a line</a>.
@@ -237,33 +255,55 @@ dl.faq dd {
         href="http://www.github.com">GitHub</a>, and the main repository can be found on
         <tt><a href="http://github.com/jawi/ols">http://github.com/jawi/ols</a></tt>.
     </p>
+    <h4>Continuous build</h4>
+    <p>
+      There is a continuous build server available at <a href="http://drone.io">drone.io</a>. There you
+      can find the latest snapshot artifacts. Beware that these artifacts are work in progress and may 
+      not be stable as official releases.<br/>
+    </p>
+    <div class="vcenter">
+      The build is currently: <a href="https://drone.io/jawi/OLS-client/latest"><img src="https://drone.io/jawi/OLS-client/status.png" /></a> 
+      (click for accessing the latest artifacts).
+    </div> 
 
-    <h3 class="content">License</h3>
+    <h3 id="license">License</h3>
     <p>
       The OLS client is developed and released under the <em>General Public License, version 2</em>.
       For the license details, see the full <a href="http://www.gnu.org/licenses/gpl-2.0-standalone.html">license 
       text</a>.
     </p>
     
-    <h3 class="content">Links</h3>
+    <h3 id="links">Links</h3>
     <ul>
-      <li><a href="http://www.sump.org/projects/analyzer/">http://www.sump.org/projects/analyzer/</a> <span>the 
+      <li><a href="http://www.sump.org/projects/analyzer/" target="_new">http://www.sump.org/projects/analyzer/</a> <span>the 
        original SUMP hardware and client</span>;</li>
-      <li><a href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer">http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer</a>
+      <li><a href="http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer" target="_new">http://dangerousprototypes.com/docs/Open_Bench_Logic_Sniffer</a>
        <span>the Open Bench Logic Sniffer project page at Dangerous Prototypes</span>;</li>
-      <li><a href="http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/">http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/</a> 
-       <span>the Butterfly Logic board on which the Open Bench Logic Sniffer is based</span>.</li>
-      <li><a href="http://www.www.mygizmos.org/ols/">http://www.www.mygizmos.org/ols/</a> <span>the homepage of the Verilog port of the OBLS firmware
-       containing advanced trigger functionality as can be found in the HP16550a logic analyzer</span>.</li>
+      <li><a href="http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/" target="_new">http://gadgetforge.gadgetfactory.net/gf/project/butterflylogic/</a> 
+       <span>the Butterfly Logic board on which the Open Bench Logic Sniffer is based</span>;</li>
+      <li><a href="http://www.www.mygizmos.org/ols/" target="_new">http://www.www.mygizmos.org/ols/</a> <span>the homepage of the Verilog port of the OBLS firmware
+       containing advanced trigger functionality as can be found in the HP1655x logic analyzer</span>;</li>
+      <li><a href="http://www.sump.org/projects/analyzer/protocol/" target="_new">http://www.sump.org/projects/analyzer/protocol/</a> 
+       <span>the documentation of the original SUMP protocol</span>;</li>
+      <li><a href="http://dangerousprototypes.com/docs/The_Logic_Sniffer%27s_extended_SUMP_protocol" target="_new">http://dangerousprototypes.com/docs/The_Logic_Sniffer's_extended_SUMP_protocol</a> 
+       <span>the documentation of the extensions made to the SUMP protocol</span>;</li>
+      <li><a href="http://www.mygizmos.org/ols/Logic-Sniffer-FPGA-Spec.pdf" target="_new">http://www.mygizmos.org/ols/Logic-Sniffer-FPGA-Spec.pdf</a> 
+       <span>provides detailed documentation on the SUMP protocol and the advanced trigger functionality</span>.</li>
     </ul>
+
+    <h4>Acknowledgement</h4>
+    <p>Aside all people who have contributed one way or the other to this project. I would like to give
+      special attention to the following people and/or companies. Without their generosity sustaining 
+      the development of this project would be a lot harder! 
     <ul>
-      <li><a href="http://dangerousprototypes.com/category/Prototypes/">http://dangerousprototypes.com/category/Prototypes/</a>
-       <span>the other projects of Dangerous Prototypes</span>;</li>
-      <li><a href="http://gadgetfactory.net/">http://gadgetfactory.net/</a> 
-       <span>the other projects of Gadget Factory</span>.</li>
+      <li><a href="http://dangerousprototypes.com">Dangerous Prototypes</a>, for providing the forum space, hardware and assistance in this project;</li>
+      <li><a href="http://gadgetfactory.net">GadgetFactory</a>, for providing binary installers for various platforms;</li>
+      <li><a href="http://github.com">GitHub</a>, for providing the central repository;</li>
+      <li><a href="http://drone.io">drone.io</a>, for providing a continuous integration platform;</li>   
+      <li><a href="http://www.jidesoft.com">JIDE software</a>, for providing an open-source license of their docking framework.</li>
     </ul>
     
-    <h3 class="content">Tip jar</h3>
+    <h3 id="tip-jar">Tip jar</h3>
     <p>
       This project is open source, and written in my (sparse) free time. You can use it free of charge 
       and without any fees. However, if you want to, you can show your appreciation on this project by 
@@ -280,7 +320,7 @@ dl.faq dd {
     </ul>
 	<hr/>
 	<p class="x-small right">
-	  &copy; Copyright 2010-2012 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
+	  &copy; Copyright 2010-2013 - <a href="mailto:j.w.janssen@lxtreme.nl">J.W. Janssen</a>.
 	</p>
 <!-- optimized for loading. -->
 <script type="text/javascript">
@@ -296,13 +336,11 @@ dl.faq dd {
     })();
 /* ]]> */
 </script>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-<script type="text/javascript" src="js/jquery.toc-0.1.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
 <script type="text/javascript" src="js/reflection.js"></script>
 <script type="text/javascript">
 /* <![CDATA[ */
     $("#reflect").reflect({});
-    $.toc('h3.content').prependTo('#toc');
 /* ]]> */
 </script>
 </body>
