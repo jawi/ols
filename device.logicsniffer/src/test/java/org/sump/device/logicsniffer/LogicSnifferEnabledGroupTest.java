@@ -134,7 +134,7 @@ public class LogicSnifferEnabledGroupTest
     this.device.open();
     this.device.configureAndArmDevice();
 
-    TimeUnit.MILLISECONDS.sleep( 10L );
+    TimeUnit.MILLISECONDS.sleep( 50L );
   }
 
   /**
