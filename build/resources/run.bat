@@ -2,9 +2,7 @@
 
 :findJavaSimple
 rem Simple check to see whether the "magic" Java binary is available on our path;
-rem based on <http://stackoverflow.com/questions/4681090/how-to-find-where-is-jdk-installed-on-my-windows-machine>
-for %i in (java.exe) do set JavaPath=%~$PATH:i
-%JavaPath% -version > NUL 2> NUL
+java -version > NUL 2> NUL
 if errorlevel 1 goto findJavaAdvanced
 goto setup
 
