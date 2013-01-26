@@ -83,7 +83,7 @@ public class EditSignalElementPropertiesAction extends AbstractAction
      */
     public EditPropertiesDialog( final Window aParent, final SignalElement aSignalElement )
     {
-      super( aParent, ModalityType.DOCUMENT_MODAL );
+      super( aParent, ModalityType.APPLICATION_MODAL );
 
       setResizable( false );
 

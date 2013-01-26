@@ -66,7 +66,7 @@ public class EditMarkerPropertiesAction extends AbstractAction
      */
     public EditMarkerDialog( final Window aParent, final Marker aMarker )
     {
-      super( aParent, ModalityType.DOCUMENT_MODAL );
+      super( aParent, ModalityType.APPLICATION_MODAL );
 
       setResizable( false );
 
