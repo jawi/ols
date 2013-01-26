@@ -148,6 +148,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
   private final JCheckBox showToolWindows;
   private final JCheckBox showChannelIndexes;
   private final JCheckBox retainAnnotations;
+  private final JCheckBox autoCenterCapture;
   private final JComboBox annotationAlignment;
   private final JComboBox signalAlignment;
   private final JComboBox colorScheme;
@@ -193,6 +194,9 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     
     this.showToolWindows = new JCheckBox();
     this.showToolWindows.setToolTipText( "Whether or not the tool windows are shown by default. Will be applied after a restart." );
+    
+    this.autoCenterCapture = new JCheckBox();
+    this.autoCenterCapture.setToolTipText( "Whether or not to auto-center the diagram to the trigger after a capture. Will be applied immediately." );
 
     this.signalAlignment = new JComboBox( SignalAlignment.values() );
     this.signalAlignment.setToolTipText( "The vertical alignment of the signals itself. Will be applied after an acquisition." );
@@ -277,6 +281,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     this.showChannelIndexes.setSelected( getBoolean( properties.get( CHANNELLABELS_SHOW_CHANNEL_INDEX ) ) );
     this.retainAnnotations.setSelected( getBoolean( properties.get( RETAIN_ANNOTATIONS_WITH_RECAPTURE ) ) );
     this.showToolWindows.setSelected( getBoolean( properties.get( SHOW_TOOL_WINDOWS_DEFAULT ) ) );
+    this.autoCenterCapture.setSelected( getBoolean( properties.get( AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE ) ) );
 
     this.signalAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_SIGNAL_ALIGNMENT ) ) );
     this.annotationAlignment.setSelectedItem( getSignalAlignment( properties.get( SIGNALVIEW_ANNOTATION_ALIGNMENT ) ) );
@@ -338,6 +343,7 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
     properties.put( SHOW_TOOL_WINDOWS_DEFAULT, Boolean.toString( this.showToolWindows.isSelected() ) );
     properties.put( CHANNELLABELS_SHOW_CHANNEL_INDEX, Boolean.toString( this.showChannelIndexes.isSelected() ) );
     properties.put( RETAIN_ANNOTATIONS_WITH_RECAPTURE, Boolean.toString( this.retainAnnotations.isSelected() ) );
+    properties.put( AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE, Boolean.toString( this.autoCenterCapture.isSelected() ) );
 
     properties.put( SIGNALVIEW_SIGNAL_ALIGNMENT, String.valueOf( this.signalAlignment.getSelectedItem() ) );
     properties.put( SIGNALVIEW_ANNOTATION_ALIGNMENT, String.valueOf( this.annotationAlignment.getSelectedItem() ) );
@@ -406,6 +412,9 @@ public class PreferencesDialog extends JDialog implements StatusAwareCloseableDi
 
     pane.add( createRightAlignedLabel( "Show tool windows?" ) );
     pane.add( this.showToolWindows );
+
+    pane.add( createRightAlignedLabel( "Auto-center on trigger?" ) );
+    pane.add( this.autoCenterCapture );
 
     pane.add( createRightAlignedLabel( "Signal alignment" ) );
     pane.add( this.signalAlignment );

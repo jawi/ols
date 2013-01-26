@@ -27,6 +27,7 @@ import java.beans.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.project.*;
@@ -442,7 +443,23 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   {
     getSignalDiagramModel().setDataModel( aDataSet );
 
+    // will update the view and show the signals...
     recalculateDimensions();
+    
+    // optionally center the view on the trigger moment...
+    boolean autoCenterOnTrigger = UIManager.getBoolean( UIManagerKeys.AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE );
+    final AcquisitionResult capturedData = aDataSet.getCapturedData();
+    
+    if ( autoCenterOnTrigger && capturedData.hasTriggerData() )
+    {
+      SwingComponentUtils.invokeOnEDT( new Runnable()
+      {
+        public void run()
+        {
+          scrollToTimestamp( capturedData.getTriggerPosition() );
+        }
+      } );
+    }
   }
 
   /**
