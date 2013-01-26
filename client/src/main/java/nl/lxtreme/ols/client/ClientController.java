@@ -1829,6 +1829,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     System.setProperty( "nl.lxtreme.ols.client.version", aVersion );
 
+    // Use the defined email address...
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, this.hostProperties.getReportIncidentAddress() );
+
+    if ( this.hostProperties.isDebugMode() )
+    {
+      // Install a custom repaint manager that detects whether Swing
+      // components are created outside the EDT; if so, it will yield a
+      // stack trace to the offending parts of the code...
+      ThreadViolationDetectionRepaintManager.install();
+    }
+
     final HostInfo hostInfo = HostUtils.getHostInfo();
     if ( hostInfo.isMacOS() )
     {

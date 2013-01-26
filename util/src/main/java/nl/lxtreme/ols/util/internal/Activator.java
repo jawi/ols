@@ -24,8 +24,6 @@ package nl.lxtreme.ols.util.internal;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.component.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
@@ -69,17 +67,6 @@ public class Activator extends DependencyActivatorBase
                 .setService( ApplicationCallback.class ) //
                 .setRequired( false ) ) //
         );
-
-    // Use the defined email address...
-    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, hostProperties.getReportIncidentAddress() );
-
-    if ( hostProperties.isDebugMode() )
-    {
-      // Install a custom repaint manager that detects whether Swing
-      // components are created outside the EDT; if so, it will yield a
-      // stack trace to the offending parts of the code...
-      ThreadViolationDetectionRepaintManager.install();
-    }
   }
 
   /**
