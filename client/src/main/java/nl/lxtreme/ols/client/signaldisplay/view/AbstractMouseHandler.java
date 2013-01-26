@@ -81,16 +81,35 @@ abstract class AbstractMouseHandler extends MouseAdapter
     // Ensure the focus is moved to the main signal diagram component...
     getSignalDiagram().requestFocusInWindow();
 
-    if ( getModel().isCursorMode() && ( aEvent.getClickCount() == 2 ) )
+    if ( aEvent.getClickCount() == 2 )
     {
-      final MouseEvent event = convertEvent( aEvent );
-
-      final Cursor hoveredCursor = findCursor( event.getPoint() );
-      if ( hoveredCursor != null )
+      MouseEvent event = convertEvent( aEvent );
+      Point point = event.getPoint();
+      
+      if ( getModel().isCursorMode() )
       {
-        editCursorProperties( hoveredCursor );
-        // Consume the event to stop further processing...
-        aEvent.consume();
+        final Cursor hoveredCursor = findCursor( point );
+        if ( hoveredCursor != null )
+        {
+          editCursorProperties( hoveredCursor );
+          // Consume the event to stop further processing...
+          aEvent.consume();
+        }
+      }
+
+      // #132: Double clicking can mean a regular zoom event...
+      if ( !aEvent.isConsumed() )
+      {
+        if ( aEvent.isAltDown() || aEvent.isShiftDown() )
+        {
+          // Zoom out...
+          this.controller.getZoomController().zoomOut( point );
+        }
+        else
+        {
+          // Zoom in...
+          this.controller.getZoomController().zoomIn( point );
+        }
       }
     }
   }
