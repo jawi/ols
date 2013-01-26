@@ -221,6 +221,7 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   @Override
   public int compareTo( final DeviceProfile aProfile )
   {
+    // Issue #123: allow device profiles to be sorted alphabetically...
     int result = getDescription().compareTo( aProfile.getDescription() );
     if ( result == 0 )
     {
