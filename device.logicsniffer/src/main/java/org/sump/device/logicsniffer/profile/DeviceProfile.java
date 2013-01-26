@@ -32,7 +32,7 @@ import nl.lxtreme.ols.util.*;
 /**
  * Provides a device profile.
  */
-public final class DeviceProfile implements Cloneable
+public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
 {
   // INNER TYPES
 
@@ -203,6 +203,21 @@ public final class DeviceProfile implements Cloneable
     {
       throw new IllegalStateException( exception );
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public int compareTo( DeviceProfile aProfile )
+  {
+    // Issue #123: allow device profiles to be sorted alphabetically...
+    int result = getDescription().compareTo( aProfile.getDescription() );
+    if ( result == 0 )
+    {
+      result = getType().compareTo( aProfile.getType() );
+    }
+    return result;
   }
 
   /**

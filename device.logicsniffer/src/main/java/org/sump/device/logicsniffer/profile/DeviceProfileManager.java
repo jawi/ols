@@ -157,6 +157,8 @@ public class DeviceProfileManager implements ManagedServiceFactory
   {
     List<DeviceProfile> result = new ArrayList<DeviceProfile>();
     result.addAll( this.profiles.values() );
+    // Issue #123: sort device profiles alphabetically...
+    Collections.sort( result );
     return result;
   }
 
