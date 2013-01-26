@@ -67,7 +67,7 @@ public class EditCursorPropertiesAction extends AbstractAction
      */
     public EditCursorDialog( final Window aParent, final Cursor aCursor )
     {
-      super( aParent, ModalityType.DOCUMENT_MODAL );
+      super( aParent, ModalityType.APPLICATION_MODAL );
 
       setResizable( false );
 
