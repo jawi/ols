@@ -16,7 +16,7 @@ goto setup
 :noJVM
 echo It appears that Java is not installed on this computer. You
 echo should download and install the latest JRE.
-prompt
+pause
 exit 1
 
 :setup
