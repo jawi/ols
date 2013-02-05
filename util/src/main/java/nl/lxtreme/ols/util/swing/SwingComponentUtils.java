@@ -808,18 +808,18 @@ public final class SwingComponentUtils
    *          the component that should appear at the bottom of the dialog
    *          (typically the buttons).
    */
-  public static void setupDialogContentPane( final JDialog aDialog, //
+  public static void setupWindowContentPane( final Window aDialog, //
       final Component aCenterComponent, final Component aButtonPane )
   {
-    setupDialogContentPane( aDialog, aCenterComponent, aButtonPane, null );
+    setupWindowContentPane( aDialog, aCenterComponent, aButtonPane, null );
   }
 
   /**
-   * Sets up the given dialog's content pane by setting its border to provide a
+   * Sets up the given window content pane by setting its border to provide a
    * good default spacer, and setting the content pane to the given components.
    * 
-   * @param aDialog
-   *          the dialog to setup, cannot be <code>null</code>;
+   * @param aWindow
+   *          the window to setup, cannot be <code>null</code>;
    * @param aCenterComponent
    *          the component that should appear at the center of the dialog;
    * @param aButtonPane
@@ -828,7 +828,7 @@ public final class SwingComponentUtils
    *          the default button for this dialog; can be null for "none".
    * @see javax.swing.JRootPane#setDefaultButton(javax.swing.JButton)
    */
-  public static void setupDialogContentPane( final JDialog aDialog, final Component aCenterComponent,
+  public static void setupWindowContentPane( final Window aWindow, final Component aCenterComponent,
       final Component aButtonPane, final JButton defaultButton )
   {
     final JPanel contentPane = new JPanel( new BorderLayout() );
@@ -838,9 +838,17 @@ public final class SwingComponentUtils
     contentPane.add( aCenterComponent, BorderLayout.CENTER );
     contentPane.add( aButtonPane, BorderLayout.PAGE_END );
 
-    aDialog.setContentPane( contentPane );
-    aDialog.getRootPane().setDefaultButton( defaultButton );
-    aDialog.pack();
+    if ( aWindow instanceof JDialog )
+    {
+      ( ( JDialog )aWindow ).setContentPane( contentPane );
+      ( ( JDialog )aWindow ).getRootPane().setDefaultButton( defaultButton );
+    }
+    else if ( aWindow instanceof JFrame )
+    {
+      ( ( JFrame )aWindow ).setContentPane( contentPane );
+      ( ( JFrame )aWindow ).getRootPane().setDefaultButton( defaultButton );
+    }
+    aWindow.pack();
   }
 
   /**

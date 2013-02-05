@@ -771,7 +771,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttons, runAnalysisButton );
   }
 
   /**

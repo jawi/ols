@@ -529,7 +529,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttonPane, runAnalysisButton );
 
     pack();
   }

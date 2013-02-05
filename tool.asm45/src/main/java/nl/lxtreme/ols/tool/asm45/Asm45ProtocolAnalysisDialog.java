@@ -549,7 +549,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttonPane, runAnalysisButton );
 
     pack();
   }

@@ -841,7 +841,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( this.captureButton, cancel );
 
-    SwingComponentUtils.setupDialogContentPane( this, tabs, buttonPane, this.captureButton );
+    SwingComponentUtils.setupWindowContentPane( this, tabs, buttonPane, this.captureButton );
 
     pack();
 

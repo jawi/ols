@@ -733,7 +733,7 @@ public class JErrorDialog extends JDialog implements Closeable
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( quit, this.reportButton, this.detailButton,
         cancel );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttonPane, cancel );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttonPane, cancel );
 
     pack();
   }

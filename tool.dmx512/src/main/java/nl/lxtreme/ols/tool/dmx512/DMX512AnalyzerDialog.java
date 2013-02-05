@@ -382,7 +382,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
 
     final JComponent buttons = SwingComponentUtils.createButtonPane( runAnalysisButton, exportButton, closeButton );
 
-    SwingComponentUtils.setupDialogContentPane( this, contentPane, buttons, runAnalysisButton );
+    SwingComponentUtils.setupWindowContentPane( this, contentPane, buttons, runAnalysisButton );
   }
 
   /**
