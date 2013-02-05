@@ -40,7 +40,14 @@
             <groupId>nl.lxtreme.ols</groupId>
             <artifactId>service.io</artifactId>
         </dependency>
-
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>jvt220</artifactId>
+			<version>1.0.0</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/jvt220-1.1.1.jar</systemPath>
+		</dependency>
+		
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>test.util</artifactId>
@@ -73,6 +80,7 @@
 						<Bundle-License>GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html</Bundle-License>
 						<OLS-Tool>1.0</OLS-Tool>
 						<OLS-ToolClass>nl.lxtreme.ols.tool.serialdebug.SerialConsoleTool</OLS-ToolClass>
+						<Embed-Dependency>*;scope=system;inline=true</Embed-Dependency>
 					</instructions>
 				</configuration>
 			</plugin>
