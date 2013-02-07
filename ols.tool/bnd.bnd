@@ -1,10 +1,13 @@
--buildpath: \
-    osgi.core;version=4.2,\
+-buildpath: osgi.core;version=4.2,\
 	osgi.cmpn;version=4.2,\
 	org.apache.felix.dependencymanager;version=3.0.0,\
 	biz.aQute.bnd.annotation;version=1.52.3,\
 	junit.osgi;version=3.8.2,\
 	org.mockito.mockito-all;version=1.8.5,\
+	jvt220;version=1.1.1,\
 	lib.testutil;version=latest,\
-	ols.common;version=latest
+	ols.common;version=latest,\
+	purejavacomm;version=latest,\
+	lib.ioutil;version=latest,\
+	lib.swing;version=latest
 -sub: *.bnd
