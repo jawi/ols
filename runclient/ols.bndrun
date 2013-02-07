@@ -31,6 +31,7 @@
 	osgi.identity;filter:='(osgi.identity=ols.tool.jtag)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.manchester)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.nrz)',\
+    osgi.identity;filter:='(osgi.identity=ols.tool.serialconsole)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.spi)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.state)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.uart)',\
@@ -87,6 +88,7 @@
 	ols.tool.jtag;version=latest,\
 	ols.tool.manchester;version=latest,\
 	ols.tool.nrz;version=latest,\
+    ols.tool.serialconsole;version=latest,\
 	ols.tool.spi;version=latest,\
 	ols.tool.state;version=latest,\
 	ols.tool.uart;version=latest,\
