@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<repository increment='1360066094344' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+<repository increment='1360929153027' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
   <resource>
     <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='purejavacomm'/>
@@ -784,6 +784,74 @@
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.util.tracker)(version&gt;=1.3.0))'/>
     </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='purejavacomm'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='0.0.16'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='c7da7c2cb6f5bb1295b8e657ef0e3d0d40b2fe790208b76c4f00d9dd39801322'/>
+      <attribute name='url' value='purejavacomm/purejavacomm-0.0.16.jar'/>
+      <attribute name='size' type='Long' value='872055'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.16'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.16'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios'/>
+      <attribute name='version' type='Version' value='0.0.16'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.16'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.freebsd'/>
+      <attribute name='version' type='Version' value='0.0.16'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.16'/>
+      <directive name='uses' value='jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.linux'/>
+      <attribute name='version' type='Version' value='0.0.16'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.16'/>
+      <directive name='uses' value='jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.macosx'/>
+      <attribute name='version' type='Version' value='0.0.16'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.16'/>
+      <directive name='uses' value='jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.solaris'/>
+      <attribute name='version' type='Version' value='0.0.16'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.16'/>
+      <directive name='uses' value='jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.windows'/>
+      <attribute name='version' type='Version' value='0.0.16'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.16'/>
+      <directive name='uses' value='jtermios'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='purejavacomm'/>
+      <attribute name='version' type='Version' value='0.0.16'/>
+      <attribute name='bundle-symbolic-name' value='purejavacomm'/>
+      <attribute name='bundle-version' type='Version' value='0.0.16'/>
+    </capability>
   </resource>
   <resource>
     <capability namespace='osgi.identity'>
