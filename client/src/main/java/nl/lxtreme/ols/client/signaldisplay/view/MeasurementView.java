@@ -712,6 +712,10 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     String pulseCountLabel = "Pulses:";
     String pulseCountText = "-";
 
+    // Issue #150: use alternative characters to denote rising/falling edges...
+    String upArrow = "\u02C4"; // \u2191 is not supported on Windows
+    String downArrow = "\u02C5"; // \u2193 is not supported on Windows
+
     if ( aPulseCountInfo != null )
     {
       hasTimingData = aPulseCountInfo.hasTimingData;
@@ -721,8 +725,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
       {
         timeText = formatTime( aPulseCountInfo.measureTime );
 
-        pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", aPulseCountInfo.pulseCount,
-            aPulseCountInfo.risingEdgeCount, aPulseCountInfo.fallingEdgeCount );
+        pulseCountText = String.format( "%d (%s%d, %s%d)", aPulseCountInfo.pulseCount, upArrow,
+            aPulseCountInfo.risingEdgeCount, downArrow, aPulseCountInfo.fallingEdgeCount );
 
         if ( hasPulses )
         {
@@ -737,8 +741,8 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
 
         pulseCountLabel = "Transitions:";
         pulseCountText = String.format( "%d", aPulseCountInfo.pulseCount );
-        pulseCountText = String.format( "%d (\u2191%d, \u2193%d)", aPulseCountInfo.totalEdgeCount,
-            aPulseCountInfo.risingEdgeCount, aPulseCountInfo.fallingEdgeCount );
+        pulseCountText = String.format( "%d (%s%d, %s%d)", aPulseCountInfo.totalEdgeCount, upArrow,
+            aPulseCountInfo.risingEdgeCount, downArrow, aPulseCountInfo.fallingEdgeCount );
 
       }
     }
