@@ -4,7 +4,8 @@
     felix.fileinstall.dir=./conf,\
     felix.fileinstall.filter=.*\.cfg$,\
     org.apache.felix.eventadmin.Timeout=0,\
-    org.osgi.framework.bootdelegation=com.yourkit.*
+    org.osgi.framework.bootdelegation="com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*",\
+    com.apple.mrj.application.apple.menu.about.name="OLS client"
 -runrequires: osgi.identity;filter:='(osgi.identity=javax.microedition.io)',\
 	osgi.identity;filter:='(osgi.identity=lib.ioutil)',\
 	osgi.identity;filter:='(osgi.identity=lib.swing)',\
@@ -35,7 +36,7 @@
 	osgi.identity;filter:='(osgi.identity=ols.tool.spi)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.state)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.uart)',\
-	osgi.identity;filter:='(&(osgi.identity=mydoggy-osgi)(version>=1.5.0))',\
+    osgi.identity;filter:='(&(osgi.identity=com.jidesoft.dock)(version>=3.5.0))',\
 	osgi.identity;filter:='(&(osgi.identity=purejavacomm)(version>=0.0.8))',\
 	osgi.identity;filter:='(&(osgi.identity=org.apache.felix.dependencymanager)(version>=3.0.0))',\
 	osgi.identity;filter:='(&(osgi.identity=org.apache.felix.dependencymanager.shell)(version>=3.0.0))',\
@@ -68,7 +69,7 @@
 	lib.ioutil;version=latest,\
 	lib.swing;version=latest,\
 	ols.client.jgoodies;version=latest,\
-	mydoggy-osgi;version='[1.5.0,1.5.1)',\
+	com.jidesoft.dock;version='[3.5.1,4.0)',\
 	ols.common;version=latest,\
 	ols.service.io;version=latest,\
 	ols.logbridge;version=latest,\
