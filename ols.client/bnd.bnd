@@ -5,11 +5,11 @@
 	junit.osgi;version=3.8.2,\
 	org.mockito.mockito-all;version=1.8.5,\
 	org.apache.felix.dependencymanager;version=3.0.0,\
-	mydoggy-osgi;version=1.5.0,\
 	lib.swing;version=latest,\
 	lib.ioutil;version=latest,\
 	ols.common;version=latest,\
 	ols.device.api;version=latest,\
 	ols.export.api;version=latest,\
-	ols.tool.api;version=latest
+	ols.tool.api;version=latest,\
+	com.jidesoft.dock;version=3.5.1
 -sub: *.bnd

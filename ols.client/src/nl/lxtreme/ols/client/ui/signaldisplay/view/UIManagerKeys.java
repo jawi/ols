@@ -39,6 +39,11 @@ public interface UIManagerKeys
   String SNAP_CURSORS_DEFAULT = "ols.snap.cursors.default.boolean";
   /** Whether or not the tool windows are shown by default. */
   String SHOW_TOOL_WINDOWS_DEFAULT = "ols.show.tool.windows.default.boolean";
+  /**
+   * Whether or not the diagram should be centered to the trigger moment after a
+   * capture.
+   */
+  String AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE = "ols.trigger.auto.center.boolean";
   /** The current active color scheme. */
   String COLOR_SCHEME = "ols.current.color.scheme.enum";
   /**

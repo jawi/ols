@@ -34,7 +34,6 @@ import javax.swing.table.*;
 
 import nl.lxtreme.ols.client.ui.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.*;
-import nl.lxtreme.ols.client.ui.signaldisplay.view.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.common.util.*;
@@ -46,7 +45,7 @@ import nl.lxtreme.ols.util.swing.component.JLxTable.TableCellRendererAdapter;
 /**
  * Provides a dockable tool-window that presents an overview of the annotations.
  */
-public class AnnotationOverview extends AbstractViewLayer implements IToolWindow, IDataModelChangeListener,
+public class AnnotationOverview extends AbstractToolWindow implements IDataModelChangeListener,
     IAnnotationDataChangedListener
 {
   // INNER TYPES
@@ -72,7 +71,7 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
       if ( this.font == null )
       {
         Font f = aCellComponent.getFont();
-        this.font = new Font( Font.MONOSPACED, Font.PLAIN, ( int )( 0.95 * f.getSize() ) );
+        this.font = new Font( Font.MONOSPACED, f.getStyle(), f.getSize() );
       }
       aCellComponent.setFont( this.font );
 
@@ -993,7 +992,7 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
    */
   public AnnotationOverview( final SignalDiagramController aController )
   {
-    super( aController );
+    super( ID, aController );
 
     this.container = new AnnotationTableModel( aController );
   }
@@ -1048,24 +1047,6 @@ public class AnnotationOverview extends AbstractViewLayer implements IToolWindow
   {
     this.container.updateStructure();
     updateButtonState();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Icon getIcon()
-  {
-    return null; // XXX
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String getId()
-  {
-    return ID;
   }
 
   /**

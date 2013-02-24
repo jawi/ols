@@ -30,7 +30,6 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.client.ui.signaldisplay.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.marker.*;
-import nl.lxtreme.ols.client.ui.signaldisplay.view.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.view.CursorFlagTextFormatter.LabelStyle;
 import nl.lxtreme.ols.client.ui.signaldisplay.view.toolwindow.ClickableLink.LinkListener;
 import nl.lxtreme.ols.common.acquisition.*;
@@ -41,13 +40,13 @@ import nl.lxtreme.ols.util.swing.*;
  * Provides a dockable tool window that shows the details of the defined
  * cursors.
  */
-public class CursorDetailsView extends AbstractViewLayer implements IToolWindow, IMarkerChangeListener,
-    IDataModelChangeListener, LinkListener
+public class MarkerDetailsView extends AbstractToolWindow implements IMarkerChangeListener, IDataModelChangeListener,
+    LinkListener
 {
   // CONSTANTS
 
   /** The identifier of this tool-window view. */
-  public static final String ID = "Cursor";
+  public static final String ID = "Markers";
 
   private static final long serialVersionUID = 1L;
 
@@ -59,9 +58,9 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
    * @param aController
    *          the diagram controller to use, cannot be <code>null</code>.
    */
-  private CursorDetailsView( final SignalDiagramController aController )
+  private MarkerDetailsView( final SignalDiagramController aController )
   {
-    super( aController );
+    super( ID, aController );
 
     initComponent();
   }
@@ -69,16 +68,16 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
   // METHODS
 
   /**
-   * Factory method to create a new {@link CursorDetailsView} instance.
+   * Factory method to create a new {@link MarkerDetailsView} instance.
    * 
    * @param aController
    *          the controller to use for the SignalDetailsView instance, cannot
    *          be <code>null</code>.
-   * @return a new {@link CursorDetailsView} instance, never <code>null</code>.
+   * @return a new {@link MarkerDetailsView} instance, never <code>null</code>.
    */
-  public static CursorDetailsView create( final SignalDiagramController aController )
+  public static MarkerDetailsView create( final SignalDiagramController aController )
   {
-    final CursorDetailsView result = new CursorDetailsView( aController );
+    final MarkerDetailsView result = new MarkerDetailsView( aController );
 
     aController.addCursorChangeListener( result );
     aController.addDataModelChangeListener( result );
@@ -153,24 +152,6 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Icon getIcon()
-  {
-    return null; // XXX
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String getId()
-  {
-    return ID;
-  }
-
-  /**
    * @param aLinkId
    */
   @Override
@@ -233,18 +214,20 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
             continue;
           }
 
-          String label = "" + ( marker.getIndex() + 1 );
+          String labelText = "" + ( marker.getIndex() + 1 );
           if ( marker.hasLabel() )
           {
-            label = label.concat( ", " ).concat( marker.getLabel() );
+            labelText = labelText.concat( ", " ).concat( marker.getLabel() );
           }
 
-          panel.add( createRightAlignedLabel( label.concat( ":" ) ) );
+          JLabel label = createRightAlignedLabel( labelText.concat( ":" ) );
+
+          panel.add( label );
 
           String linkText = getCursorFlagText( model, marker, LabelStyle.TIME_ONLY );
 
           ClickableLink link = new ClickableLink( linkText, Long.valueOf( marker.getTimestamp() ) );
-          link.setLinkListener( CursorDetailsView.this );
+          link.setLinkListener( MarkerDetailsView.this );
           link.setEnabled( cursorsEnabled );
           link.setForeground( Color.BLUE );
 

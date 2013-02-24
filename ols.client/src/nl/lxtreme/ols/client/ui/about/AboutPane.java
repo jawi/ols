@@ -40,8 +40,8 @@ final class AboutPane extends JPanel
 
   private static final String ABOUT_MESSAGE = //
   "<html><body><h3>%s</h3>" //
-      + "<p>Copyright 2006-2010 Michael Poppitz<br>" //
-      + "Copyright 2010-2011 J.W. Janssen<br><br></p>" //
+      + "<p>\u00A9 Copyright 2006-2010 Michael Poppitz<br>" //
+      + "\u00A9 Copyright 2010-2013 J.W. Janssen<br><br></p>" //
       + "<p>This software is released under the GNU GPLv2.<br><br></p>" //
       + "<p>Version: %s<br><br></p>" //
       + "<p>For more information see:</p>" //

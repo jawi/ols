@@ -27,7 +27,6 @@ import java.beans.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.atomic.*;
 
 import javax.swing.*;
 import javax.swing.plaf.*;
@@ -38,21 +37,23 @@ import nl.lxtreme.ols.client.ui.signaldisplay.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.marker.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.view.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.view.toolwindow.*;
-import nl.lxtreme.ols.ioutil.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.WindowManager.Configurable;
 import nl.lxtreme.ols.util.swing.WindowManager.UserSettings;
 import nl.lxtreme.ols.util.swing.component.*;
 
-import org.noos.xing.mydoggy.*;
-import org.noos.xing.mydoggy.plaf.*;
 import org.osgi.framework.*;
+
+import com.jidesoft.docking.*;
+import com.jidesoft.docking.DockingManager.TabbedPaneCustomizer;
+import com.jidesoft.docking.event.*;
+import com.jidesoft.swing.*;
 
 
 /**
  * Denotes the frame of the main UI.
  */
-public final class MainFrame extends JFrame implements PropertyChangeListener, Configurable
+public final class MainFrame extends DefaultDockableHolder implements PropertyChangeListener, Configurable
 {
   // INNER TYPES
 
@@ -428,22 +429,14 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     }
   }
 
-  private static final long serialVersionUID = 1L;
-
   // CONSTANTS
 
-  public static final String TW_ACQUISITION = AcquisitionDetailsView.ID;
-
-  public static final String TW_MEASURE = MeasurementView.ID;
-  public static final String TW_CURSORS = CursorDetailsView.ID;
-  public static final String GROUP_DEFAULT = "Default";
-
-  private final ActionManager actionManager;
+  private static final long serialVersionUID = 1L;
 
   // VARIABLES
 
+  private final ActionManager actionManager;
   private final DeviceController deviceController;
-  private final AtomicReference<MyDoggyToolWindowManager> windowManagerRef;
   private final ProgressUpdatingRunnable progressAccumulatingRunnable;
   private final AccumulatingRepaintingRunnable repaintAccumulatingRunnable;
   private final AccumulatingUpdateActionsRunnable updateActionsRunnable;
@@ -454,19 +447,22 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
   private volatile File dataStorage;
   private AcquisitionDetailsView captureDetails;
 
-  private CursorDetailsView cursorDetails;
+  private MarkerDetailsView cursorDetails;
   private MeasurementView measurementDetails;
   private AnnotationOverview annotationOverview;
+
+  // CONSTRUCTORS
 
   /**
    * Creates a new {@link MainFrame} instance.
    */
   public MainFrame( final ActionManager aActionManager, final DeviceController aDeviceController )
   {
+    super();
+
     this.actionManager = aActionManager;
     this.deviceController = aDeviceController;
 
-    this.windowManagerRef = new AtomicReference<MyDoggyToolWindowManager>();
     this.progressAccumulatingRunnable = new ProgressUpdatingRunnable();
     this.repaintAccumulatingRunnable = new AccumulatingRepaintingRunnable();
     this.updateActionsRunnable = new AccumulatingUpdateActionsRunnable();
@@ -487,42 +483,6 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
-  }
-
-  // CONSTRUCTORS
-
-  /**
-   * @param aWindow
-   */
-  private static void tweakToolWindow( final ToolWindow aWindow )
-  {
-    RepresentativeAnchorDescriptor<?> anchorDesc = aWindow.getRepresentativeAnchorDescriptor();
-    anchorDesc.setTitle( aWindow.getTitle() );
-    anchorDesc.setPreviewEnabled( false );
-    if ( aWindow.getIcon() != null )
-    {
-      anchorDesc.setIcon( aWindow.getIcon() );
-    }
-
-    final ToolWindowType[] types = ToolWindowType.values();
-    for ( ToolWindowType type : types )
-    {
-      ToolWindowTypeDescriptor desc = aWindow.getTypeDescriptor( type );
-      desc.setAnimating( false );
-      desc.setAutoHide( false );
-      desc.setEnabled( true );
-      desc.setHideRepresentativeButtonOnVisible( false );
-      desc.setIdVisibleOnTitleBar( false );
-      desc.setTitleBarButtonsVisible( false );
-      desc.setTitleBarVisible( false );
-    }
-
-    DockedTypeDescriptor desc = ( DockedTypeDescriptor )aWindow.getTypeDescriptor( ToolWindowType.DOCKED );
-    desc.setPopupMenuEnabled( false );
-
-    aWindow.setAvailable( true );
-    aWindow.setHideOnZeroTabs( false );
-    aWindow.setVisible( UIManager.getBoolean( UIManagerKeys.SHOW_TOOL_WINDOWS_DEFAULT ) );
   }
 
   // METHODS
@@ -561,20 +521,22 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
 
   /**
    * @param aToolWindow
-   * @param aGroupName
    */
-  public final void registerToolWindow( final IToolWindow aToolWindow, final String aGroupName )
+  public final void registerToolWindow( final IToolWindow aToolWindow )
   {
-    MyDoggyToolWindowManager wm = getManager();
+    boolean defaultVisible = UIManager.getBoolean( UIManagerKeys.SHOW_TOOL_WINDOWS_DEFAULT );
 
-    ToolWindow tw = wm.registerToolWindow( aToolWindow.getId(), aToolWindow.getName(), aToolWindow.getIcon(),
-        ( java.awt.Component )aToolWindow, ToolWindowAnchor.RIGHT );
+    DockableFrame frame = new DockableFrame( aToolWindow.getName() );
+    frame.getContentPane().add( ( Component )aToolWindow );
+    frame.setDefaultEscapeAction( DockableFrame.ESCAPE_ACTION_DO_NOTING );
+    frame.setVisible( defaultVisible );
+    frame.getDockableAction().setEnabled( false );
 
-    final ToolWindowGroup group = wm.getToolWindowGroup( aGroupName );
-    group.setImplicit( false );
-    group.addToolWindow( tw );
+    DockContext context = frame.getContext();
+    context.setInitMode( DockContext.STATE_FRAMEDOCKED );
+    context.setInitSide( DockContext.DOCK_SIDE_EAST );
 
-    tweakToolWindow( tw );
+    getDockingManager().addFrame( frame );
   }
 
   /**
@@ -628,6 +590,10 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
    */
   final void close()
   {
+    File dataFile = new File( this.dataStorage, "dock.settings" );
+
+    getDockingManager().saveLayoutDataToFile( dataFile.getAbsolutePath() );
+
     setVisible( false );
     dispose();
   }
@@ -651,23 +617,6 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     {
       // Don't do anything when there's no file...
       return;
-    }
-
-    File dataFile = new File( this.dataStorage, "dock.settings" );
-    FileOutputStream fos = null;
-
-    try
-    {
-      fos = new FileOutputStream( dataFile );
-      getManager().getPersistenceDelegate().save( fos );
-    }
-    catch ( FileNotFoundException exception )
-    {
-      // Ignore; we shouldn't be here anyways due to dataFile.exists...
-    }
-    finally
-    {
-      IOUtil.closeResource( fos );
     }
 
     JErrorDialog.uninstallSwingExceptionHandler();
@@ -699,14 +648,6 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
   }
 
   /**
-   * @return the current tool window manager, cannot be <code>null</code>.
-   */
-  final MyDoggyToolWindowManager getManager()
-  {
-    return this.windowManagerRef.get();
-  }
-
-  /**
    * Called by {@link Client} on the EDT when that component is started by Felix
    * DM.
    * 
@@ -717,6 +658,10 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
    */
   final void initialize( final BundleContext aContext, final SignalDiagramController aController )
   {
+    final MenuBarFactory menuBarFactory = new MenuBarFactory();
+
+    this.dataStorage = aContext.getDataFile( "" );
+
     // ensure that all changes to cursors are reflected in the UI...
     aController.addCursorChangeListener( new CursorActionListener() );
     aController.setDefaultSettings();
@@ -725,58 +670,86 @@ public final class MainFrame extends JFrame implements PropertyChangeListener, C
     SignalDiagramComponent signalDiagram = new SignalDiagramComponent( aController );
     aController.setSignalDiagram( signalDiagram );
 
-    final MyDoggyToolWindowManager wm = new MyDoggyToolWindowManager( Locale.getDefault(),
-        MyDoggyToolWindowManager.class.getClassLoader() );
-    wm.setDockableMainContentMode( false );
+    setTitle( Platform.getFullName() );
+    setJMenuBar( menuBarFactory.createMenuBar( this ) );
 
-    // First one wins...
-    this.windowManagerRef.compareAndSet( null, wm );
+    DockingManager dm = getDockingManager();
+    dm.setAutoDocking( true );
+    dm.setUseGlassPaneEnabled( true );
+    dm.setDockedFramesResizable( true );
+    dm.setEasyTabDock( true );
+    dm.setFloatingContainerType( DockingManager.FLOATING_CONTAINER_TYPE_WINDOW );
+    dm.setGroupAllowedOnSidePane( true );
+    dm.setHidable( false );
+    dm.setInitSplitPriority( DockingManager.SPLIT_WEST_SOUTH_EAST_NORTH );
+    dm.setLayoutDirectory( this.dataStorage.getName() );
+    dm.setOutlineMode( DockingManager.HW_OUTLINE_MODE );
+    dm.setShowContextMenu( true );
+    dm.setShowGripper( false );
+    dm.setShowWorkspace( true );
+    dm.setSidebarRollover( true );
+    dm.setUsePref( false );
 
-    this.cursorDetails = CursorDetailsView.create( aController );
-    registerToolWindow( this.cursorDetails, GROUP_DEFAULT );
+    dm.addDockableFrameListener( new DockableFrameAdapter()
+    {
+      @Override
+      public void dockableFrameFloating( final DockableFrameEvent aEvent )
+      {
+        // Show title bar for each floating dockable frame; this way, it can be
+        // identified properly, and provides access to the context menu...
+        aEvent.getDockableFrame().setShowTitleBar( true );
+      }
+
+      @Override
+      public void dockableFrameDocked( final DockableFrameEvent aEvent )
+      {
+        // Hide the title bar for docked framed...
+        aEvent.getDockableFrame().setShowTitleBar( false );
+      }
+    } );
+
+    dm.setTabbedPaneCustomizer( new TabbedPaneCustomizer()
+    {
+      @Override
+      public void customize( final JideTabbedPane tabbedPane )
+      {
+        tabbedPane.setShowIconsOnTab( false );
+        tabbedPane.setShowCloseButton( false );
+        tabbedPane.setUseDefaultShowIconsOnTab( false );
+        tabbedPane.setUseDefaultShowCloseButtonOnTab( false );
+      }
+    } );
+
+    // Start the layout of the docking frames...
+    dm.loadLayoutData();
+
+    this.cursorDetails = MarkerDetailsView.create( aController );
+    registerToolWindow( this.cursorDetails );
 
     this.captureDetails = AcquisitionDetailsView.create( aController );
-    registerToolWindow( this.captureDetails, GROUP_DEFAULT );
+    registerToolWindow( this.captureDetails );
 
     this.measurementDetails = MeasurementView.create( aController );
-    registerToolWindow( this.measurementDetails, GROUP_DEFAULT );
+    registerToolWindow( this.measurementDetails );
 
     this.annotationOverview = AnnotationOverview.create( aController );
-    registerToolWindow( this.annotationOverview, GROUP_DEFAULT );
+    registerToolWindow( this.annotationOverview );
 
-    wm.setMainContent( new ZoomCapableScrollPane( aController ) );
+    Workspace workspace = dm.getWorkspace();
+    workspace.add( new ZoomCapableScrollPane( aController ) );
 
-    final MenuBarFactory menuBarFactory = new MenuBarFactory();
-
-    setJMenuBar( menuBarFactory.createMenuBar() );
+    dm.resetToDefault();
 
     Container contentPane = getContentPane();
     contentPane.add( menuBarFactory.createToolBar(), BorderLayout.PAGE_START );
-    contentPane.add( wm, BorderLayout.CENTER );
+    contentPane.add( dm.getMainContainer(), BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
 
-    setTitle( Platform.getFullName() );
-
-    this.dataStorage = aContext.getDataFile( "" );
-
+    // Finalize the layout of the docking frames...
     File dataFile = new File( this.dataStorage, "dock.settings" );
     if ( ( this.dataStorage != null ) && dataFile.exists() )
     {
-      FileInputStream fis = null;
-
-      try
-      {
-        fis = new FileInputStream( dataFile );
-        getManager().getPersistenceDelegate().apply( fis );
-      }
-      catch ( FileNotFoundException exception )
-      {
-        // Ignore; we shouldn't be here anyways due to dataFile.exists...
-      }
-      finally
-      {
-        IOUtil.closeResource( fis );
-      }
+      dm.loadLayoutDataFromFile( dataFile.getAbsolutePath() );
     }
   }
 

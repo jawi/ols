@@ -32,7 +32,6 @@ import nl.lxtreme.ols.util.swing.WindowManager.WindowStateManager;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
-import org.osgi.framework.Constants;
 import org.osgi.service.cm.*;
 import org.osgi.service.event.*;
 import org.osgi.service.log.*;
@@ -112,7 +111,7 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    // Nothing...
+    com.jidesoft.utils.Lm.clearLicense();
   }
 
   /**
@@ -121,6 +120,8 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
+    com.jidesoft.utils.Lm.verifyLicense( "Jan Willem Janssen", "OLS client", "zGiivJPzfPBGyRP5g.0P7xl8:pdUEzR2" );
+
     registerBundleAdapters( aManager );
 
     registerUIManagerConfigurator( aManager );

@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.ui;
 
 
 import java.awt.*;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
@@ -35,6 +36,8 @@ import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.service.log.*;
+
+import com.jidesoft.docking.*;
 
 
 /**
@@ -444,6 +447,69 @@ public class MenuBarFactory
   }
 
   /**
+   * Provides a builder for selecting the tool windows.
+   */
+  static final class ToolWindowMenuBuilder extends AbstractMenuBuilder implements ActionListener
+  {
+    // VARIABLES
+
+    private final DockingManager dockingManager;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link ToolWindowMenuBuilder} instance.
+     */
+    public ToolWindowMenuBuilder( final DockingManager aDockingManager )
+    {
+      this.dockingManager = aDockingManager;
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void actionPerformed( final ActionEvent aEvent )
+    {
+      JMenuItem menuItem = ( JMenuItem )aEvent.getSource();
+      this.dockingManager.activateFrame( menuItem.getName() );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected JMenuItem createMenuItem( final String aName )
+    {
+      JMenuItem menuItem = new JMenuItem( aName );
+      menuItem.setName( aName );
+      menuItem.addActionListener( this );
+      return menuItem;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String[] getMenuItemNames()
+    {
+      List<String> names = this.dockingManager.getAllFrameNames();
+      return names.toArray( new String[names.size()] );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getNoItemsName()
+    {
+      return "No tool windows";
+    }
+  }
+
+  /**
    * Provides a builder for building the window menu upon selection of the menu.
    */
   static final class WindowMenuBuilder extends AbstractMenuBuilder
@@ -456,7 +522,7 @@ public class MenuBarFactory
     @Override
     protected JMenuItem createMenuItem( final String aWindowName )
     {
-      return new JCheckBoxMenuItem( new FocusWindowAction( aWindowName ) );
+      return new JMenuItem( new FocusWindowAction( aWindowName ) );
     }
 
     /**
@@ -498,14 +564,14 @@ public class MenuBarFactory
    * 
    * @return the menu bar instance, never <code>null</code>.
    */
-  public JMenuBar createMenuBar()
+  public JMenuBar createMenuBar( final MainFrame aMainFrame )
   {
     final ActionManager actionManager = Client.getInstance().getActionManager();
 
     JMenuBar menuBar = new JMenuBar();
 
-    JMenu exportMenu = new JMenu( "Export ..." );
-    exportMenu.setMnemonic( 'e' );
+    JMenu exportMenu = new JMenu( "Export" );
+    exportMenu.setMnemonic( 'E' );
     exportMenu.addMenuListener( new ExportMenuBuilder( actionManager ) );
 
     final JMenu fileMenu = new JMenu( "File" );
@@ -579,22 +645,26 @@ public class MenuBarFactory
     toolsMenu.addSeparator();
     toolsMenu.addMenuListener( new ToolMenuBuilder( actionManager ) );
 
-    if ( Platform.isMacOS() )
-    {
-      JMenu windowMenu = menuBar.add( new JMenu( "Window" ) );
-      windowMenu.setMnemonic( 'W' );
+    JMenu windowMenu = menuBar.add( new JMenu( "Window" ) );
+    windowMenu.setMnemonic( 'W' );
 
-      // Add two items that remain constant for the remainder of the lifetime of
-      // this client...
-      windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) ) //
-          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
-      windowMenu.add( new JMenuItem( new MinimizeWindowAction() ) ) //
-          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+    JMenu toolWindowMenu = new JMenu( "Show Tool Window" );
+    toolWindowMenu.setMnemonic( 'T' );
+    toolWindowMenu.putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+    toolWindowMenu.addMenuListener( new ToolWindowMenuBuilder( aMainFrame.getDockingManager() ) );
 
-      windowMenu.addSeparator();
+    windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) ) //
+        .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+    windowMenu.add( new JMenuItem( new MinimizeWindowAction() ) ) //
+        .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
 
-      windowMenu.addMenuListener( new WindowMenuBuilder() );
-    }
+    windowMenu.addSeparator();
+
+    windowMenu.add( toolWindowMenu );
+
+    windowMenu.addSeparator();
+
+    windowMenu.addMenuListener( new WindowMenuBuilder() );
 
     final JMenu helpMenu = menuBar.add( new JMenu( "Help" ) );
     helpMenu.setMnemonic( 'H' );

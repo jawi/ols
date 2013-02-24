@@ -162,7 +162,17 @@ public class ClickableLink extends JLabel
   {
     Rectangle rect = getVisibleRect();
 
+    RenderingHints hints = new RenderingHints( RenderingHints.KEY_INTERPOLATION,
+        RenderingHints.VALUE_INTERPOLATION_BICUBIC );
+    hints.put( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+    hints.put( RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED );
+    hints.put( RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED );
+    hints.put( RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY );
+
+    ( ( Graphics2D )aCanvas ).setRenderingHints( hints );
+
     Font f = getFont();
+
     FontMetrics fm = aCanvas.getFontMetrics( f );
 
     String text = getText();

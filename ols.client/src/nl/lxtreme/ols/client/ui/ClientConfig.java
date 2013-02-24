@@ -57,6 +57,9 @@ public interface ClientConfig
   @Meta.AD( name = "Show tool windows?", deflt = "false", description = "Whether or not the tool windows are shown by default. Will be applied after a restart." )
   boolean showToolWindows();
 
+  @Meta.AD( name = "Auto-center on trigger?", deflt = "true", description = "Whether or not to auto-center the diagram to the trigger after a capture. Will be applied immediately." )
+  boolean autoCenterCapture();
+
   @Meta.AD( name = "Signal alignment", optionLabels = { "Top", "Center", "Bottom" }, deflt = "CENTER", required = true, description = "The vertical alignment of the signals itself. Will be applied after an acquisition." )
   SignalAlignment signalAlignment();
 

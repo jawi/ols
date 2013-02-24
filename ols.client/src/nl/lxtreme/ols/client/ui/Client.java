@@ -21,8 +21,8 @@
 package nl.lxtreme.ols.client.ui;
 
 
-import static nl.lxtreme.ols.client.ui.Platform.*;
 import static nl.lxtreme.ols.client.ui.AcquisitionController.*;
+import static nl.lxtreme.ols.client.ui.Platform.*;
 import static nl.lxtreme.ols.client.ui.signaldisplay.view.UIManagerKeys.*;
 import static nl.lxtreme.ols.client.ui.tool.ToolInvoker.*;
 import static nl.lxtreme.ols.common.session.Session.*;
@@ -57,6 +57,8 @@ import org.osgi.service.event.*;
 import org.osgi.service.event.Event;
 import org.osgi.service.log.*;
 import org.osgi.service.metatype.*;
+
+import com.jidesoft.plaf.*;
 
 
 /**
@@ -618,6 +620,7 @@ public class Client implements ManagedService, StatusListener, EventHandler
       UIManager.put( ANALOG_SCOPE_VISIBLE_DEFAULT, Boolean.valueOf( clientConfig.showAnalogScope() ) );
       UIManager.put( SHOW_TOOL_WINDOWS_DEFAULT, Boolean.valueOf( clientConfig.showToolWindows() ) );
       UIManager.put( CHANNELLABELS_SHOW_CHANNEL_INDEX, Boolean.valueOf( clientConfig.showChannelIndexes() ) );
+      UIManager.put( AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE, Boolean.valueOf( clientConfig.autoCenterCapture() ) );
 
       UIManager.put( RETAIN_ANNOTATIONS_WITH_RECAPTURE, Boolean.valueOf( clientConfig.retainAnnotations() ) );
       UIManager.put( USE_COLORIZED_ANNOTATIONS, Boolean.valueOf( clientConfig.useColoredAnnotations() ) );
@@ -809,9 +812,6 @@ public class Client implements ManagedService, StatusListener, EventHandler
       // Moves the main menu bar to the screen menu bar location...
       System.setProperty( "apple.laf.useScreenMenuBar", "true" );
       System.setProperty( "apple.awt.graphics.EnableQ2DX", "true" );
-      System.setProperty( "com.apple.mrj.application.apple.menu.about.name", Platform.getShortName() );
-      System.setProperty( "com.apple.mrj.application.growbox.intrudes", "false" );
-      System.setProperty( "com.apple.mrj.application.live-resize", "false" );
       System.setProperty( "com.apple.macos.smallTabs", "true" );
       System.setProperty( "apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS" );
 
@@ -841,6 +841,9 @@ public class Client implements ManagedService, StatusListener, EventHandler
       UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
       setLookAndFeel( "com.jgoodies.looks.plastic.PlasticXPLookAndFeel" );
     }
+
+    // Install the JIDE-specific extensions...
+    LookAndFeelFactory.installJideExtension();
 
     // Use the defined email address...
     System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, getReportIncidentAddress() );

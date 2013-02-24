@@ -30,7 +30,6 @@ import javax.swing.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.ui.signaldisplay.ZoomController.ZoomListener;
-import nl.lxtreme.ols.client.ui.signaldisplay.view.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.util.swing.*;
 
@@ -39,8 +38,7 @@ import nl.lxtreme.ols.util.swing.*;
  * Provides a dockable tool window that shows details on the acquisition, like
  * sample rate, sample count, total capture time, etc.
  */
-public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWindow, IDataModelChangeListener,
-    ZoomListener
+public class AcquisitionDetailsView extends AbstractToolWindow implements IDataModelChangeListener, ZoomListener
 {
   // CONSTANTS
 
@@ -69,7 +67,7 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
    */
   private AcquisitionDetailsView( final SignalDiagramController aController )
   {
-    super( aController );
+    super( ID, aController );
 
     this.sampleRate = new JLabel( "-" );
     this.sampleCount = new JLabel( "-" );
@@ -151,24 +149,6 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
         repaint( 25L );
       };
     } );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Icon getIcon()
-  {
-    return null; // XXX
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String getId()
-  {
-    return ID;
   }
 
   /**
