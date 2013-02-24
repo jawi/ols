@@ -1,10 +1,10 @@
 -nobundles=true
 -dependson \
     javax.microedition.io,\
-    lib.testutil,\
     lib.ioutil,\
     lib.metatype,\
     lib.swing,\
+    lib.testutil,\
     ols.client,\
     ols.common,\
     ols.device,\
