@@ -8,8 +8,9 @@ if [ "$?" -ne "0" ]; then
   exit 1
 fi
 
-# determine the location this script is run in (thanks Wayoda)
-BASEDIR=$(dirname -- "${0}")
+# determine the location this script is run in
+scriptname=$(readlink -f "$0")
+BASEDIR=$(dirname "$scriptname")
 # all paths are used relatively from the base dir...
 PLUGINDIR="$BASEDIR/plugins/"
 CLASSPATH="$BASEDIR/bin/*"
