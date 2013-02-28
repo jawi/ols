@@ -11,8 +11,8 @@ fi
 # determine the location this script is run in (thanks Wayoda)
 BASEDIR=$(dirname -- "${0}")
 # all paths are used relatively from the base dir...
-PLUGINDIR=$BASEDIR/plugins
-CLASSPATH=$BASEDIR/bin/*
+PLUGINDIR="$BASEDIR/plugins/"
+CLASSPATH="$BASEDIR/bin/*"
 # give the client roughly 1gigabyte of memory 
 MEMSETTINGS=-Xmx1024m
 java "$MEMSETTINGS" -Djna.nosys=true -Dnl.lxtreme.ols.bundle.dir="$PLUGINDIR" -DPlastic.defaultTheme=SkyBluer -cp "$CLASSPATH" nl.lxtreme.ols.runner.Runner
