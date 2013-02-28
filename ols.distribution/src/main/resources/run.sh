@@ -15,7 +15,4 @@ PLUGINDIR=$BASEDIR/plugins
 CLASSPATH=$BASEDIR/bin/*
 # give the client roughly 1gigabyte of memory 
 MEMSETTINGS=-Xmx1024m
-# see: <https://github.com/jawi/ols/issues/125> & <https://github.com/jawi/ols/issues/143>
-SYSPROPS="-Djna.nosys=true -Dnl.lxtreme.ols.bundle.dir=\"$PLUGINDIR\" -DPlastic.defaultTheme=SkyBluer"
-
-java "$MEMSETTINGS" "$SYSPROPS" -cp "$CLASSPATH" nl.lxtreme.ols.runner.Runner
+java "$MEMSETTINGS" -Djna.nosys=true -Dnl.lxtreme.ols.bundle.dir="$PLUGINDIR" -DPlastic.defaultTheme=SkyBluer -cp "$CLASSPATH" nl.lxtreme.ols.runner.Runner
