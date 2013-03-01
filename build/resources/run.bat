@@ -8,8 +8,9 @@ goto setup
 
 :findJavaAdvanced
 rem See <https://github.com/jawi/ols/issues/140>
-for /F "tokens=2*" %%A in ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\TypeLib\{5852F5E0-8BF4-11D4-A245-0080C6F74284}\1.0\HELPDIR" /ve') do set JavaPath="%%B\javaw.exe"
-%JavaPath% -version > NUL 2> NUL
+for /F "tokens=2*" %%A in ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\TypeLib\{5852F5E0-8BF4-11D4-A245-0080C6F74284}\1.0\HELPDIR" /ve') do set JavaPath="%%B"
+set path=%path%;%JavaPath%
+java -version > NUL 2> NUL
 if errorlevel 1 goto noJVM
 goto setup
 
