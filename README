@@ -13,12 +13,11 @@ you should do the following:
 
   $ git clone http://github.com/jawi/ols.git
 
-For compiling the sources, you need to have at least a valid JDK (1.6+) and
-Maven2 installed. For developing, I can recommend Eclipse as development
-environment.
+For compiling the sources, you need to have at least a valid JDK (1.6+) and ANT
+installed. For developing, I recommend Eclipse as development environment.
 
-  $ cd ols/
-  $ mvn clean install
+  $ cd ols/build
+  $ ant clean build
 
 After this, you should find the latest binary ZIP or tarball in
 "ols.distribution/target".

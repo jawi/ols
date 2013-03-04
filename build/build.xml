@@ -1,12 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="main-build" default="build"> 
-    <import file="../cnf/build.xml"/>
-	
+<project name="main-build" default="build" basedir=".">
+	<import file="../cnf/build.xml" />
+
 	<!-- ================================= 
           target: assembly              
          ================================= -->
-    <target name="assembly" depends="init" description="Assembles a distribution from the current compiled libraries">
-        <!-- TODO -->
-    </target>
+	<target name="assembly" depends="init" description="Assembles a distribution from the current compiled libraries">
+		<!-- expect a valid version number -->
+		<fail message="Version property should be set!" unless="version" />
+		
+		<!-- define directory structure -->
+		<property name="assemblydir" value="${target}/ols-${version}" />
+		<property name="ols-bindir" value="${assemblydir}/bin" />
+		<property name="ols-plugindir" value="${assemblydir}/plugins" />
+		<property name="release.dir" value="assemblydir" />
 
+		<mkdir dir="${ols-bindir}" />
+		<mkdir dir="${ols-plugindir}" />
+
+		<copy-other-resources destdir="${assemblydir}" />
+		<copy-bin-resources destdir="${ols-bindir}" />
+		<copy-generated-jarfiles destdir="${ols-plugindir}" />
+	</target>
+
+	<macrodef name="copy-bin-resources">
+		<attribute name="destdir" />
+		<sequential>
+			<!-- copy bootstrap JARs -->
+		</sequential>
+	</macrodef>
+
+	<macrodef name="copy-other-resources">
+		<attribute name="destdir" />
+		<sequential>
+			<!-- copy run scripts & auxiliary files -->
+			<copy todir="@{destdir}">
+				<fileset dir="${basedir}/resources" includes="run.*" />
+				<fileset dir="${basedir}/resources" includes="AUTHOR CHANGELOG LICENSE README" />
+			</copy>
+			<chmod perm="750" dir="@{destdir}" includes="*.sh" />
+		</sequential>
+	</macrodef>
+
+	<!-- Copies all generated artifacts of the dependant projects to a separate directory. -->
+	<macrodef name="copy-generated-jarfiles">
+		<attribute name="destdir" />
+		<sequential>
+			<!-- convert the dependson clause to a path resource -->
+			<path id="paths">
+				<pathelement path="${project.dependson}" />
+			</path>
+			<!-- convert the absolute paths to relative ones, and point them to the generated JAR files. -->
+			<pathconvert property="prop.generated.jars" pathsep=" " refid="paths">
+				<mapper>
+					<mapper type="regexp" from="^${workspacedir}/(.*)$$" to="\1/generated/*.jar" />
+				</mapper>
+			</pathconvert>
+			<!-- copy all generated JAR files to our target folder. -->
+			<copy todir="@{destdir}" flatten="true">
+				<fileset dir="${workspacedir}" includes="${prop.generated.jars}" />
+			</copy>
+		</sequential>
+	</macrodef>
 </project>
