@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.client;
 
 
+import java.awt.GraphicsEnvironment;
 import java.util.*;
 
 import nl.lxtreme.ols.api.*;
@@ -148,6 +149,12 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
+    // Do not start if we're running headless...
+    if ( GraphicsEnvironment.isHeadless() )
+    {
+      throw new RuntimeException( "Cannot start client: running headless." );
+    }
+
     final ClientController clientController = new ClientController( aContext );
 
     aManager.add( createBundleAdapterService( Bundle.ACTIVE, CP_BUNDLE_FILTER, true /* propagate */) //
