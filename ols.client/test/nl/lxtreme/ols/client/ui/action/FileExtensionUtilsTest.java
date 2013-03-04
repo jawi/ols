@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.ui.action;
 
 
 import static nl.lxtreme.ols.client.ui.Platform.*;
+import static nl.lxtreme.ols.client.ui.action.FileExtensionUtils.*;
 
 import java.io.*;
 
@@ -34,6 +35,102 @@ import junit.framework.*;
 public class FileExtensionUtilsTest extends TestCase
 {
   // METHODS
+
+  /**
+   * Tests that getting a file extension under various circumstances works
+   * correctly on Unix-derivatives.
+   * 
+   * @see HostUtils#getFileExtension(java.io.File)
+   */
+  public void testGetFileExtensionOnUnixDerivatives()
+  {
+    if ( !isUnix() && !isMacOS() )
+    {
+      return;
+    }
+
+    File f;
+
+    f = new File( "/tmp/test" );
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( "/tmp/test.txt" );
+    assertEquals( "txt", getFileExtension( f ) );
+
+    f = new File( "/does/not/exist/test.txt" );
+    assertEquals( "txt", getFileExtension( f ) );
+
+    f = new File( "/does/not/exist/test" );
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( "", "" );
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( ".", ".txt" );
+    assertEquals( "txt", getFileExtension( f ) );
+
+    f = new File( System.getProperty( "java.io.tmpdir" ), "test-dir" );
+    assertTrue( f.mkdirs() );
+    f.deleteOnExit();
+
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( System.getProperty( "java.io.tmpdir" ), "test-dir.tmp" );
+    assertTrue( f.mkdirs() );
+    f.deleteOnExit();
+
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( System.getProperty( "java.io.tmpdir" ), "test-file2.tmp" );
+
+    assertEquals( "tmp", getFileExtension( f ) );
+  }
+
+  /**
+   * Tests that getting a file extension under various circumstances works
+   * correctly on the Windows platform.
+   * 
+   * @see HostUtils#getFileExtension(java.io.File)
+   */
+  public void testGetFileExtensionOnWindows()
+  {
+    if ( !isWindows() )
+    {
+      return;
+    }
+
+    File f;
+
+    f = new File( System.getProperty( "user.home" ) );
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( "c:\\does-not-exist\\test" );
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( "c:\\does-not-exist\\test.txt" );
+    assertEquals( "txt", getFileExtension( f ) );
+
+    f = new File( "q:\\does-not-exist\\test.txt" );
+    assertEquals( "txt", getFileExtension( f ) );
+
+    f = new File( "q:\\does-not-exist\\test" );
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( "", "" );
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( ".", ".txt" );
+    assertEquals( "txt", getFileExtension( f ) );
+
+    f = new File( "c:\\" );
+    assertEquals( "", getFileExtension( f ) );
+
+    f = new File( System.getProperty( "java.io.tmpdir" ), "test-dir" );
+    f.mkdirs();
+    f.deleteOnExit();
+
+    assertEquals( "", getFileExtension( f ) );
+  }
 
   /**
    * Tests that setting a file extension under various circumstances works
@@ -49,36 +146,35 @@ public class FileExtensionUtilsTest extends TestCase
     }
 
     File f = new File( System.getProperty( "user.home" ) );
-    assertEquals( new File( f, ".test" ), FileExtensionUtils.setFileExtension( f, "test" ) );
+    assertEquals( new File( f, ".test" ), setFileExtension( f, "test" ) );
 
     f = new File( "/tmp/test" );
-    assertEquals( new File( "/tmp/test.txt" ), FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( new File( "/tmp/test.txt" ), setFileExtension( f, "txt" ) );
 
     f = new File( "/tmp/test.txt" );
-    assertEquals( f, FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( f, setFileExtension( f, "txt" ) );
 
     f = new File( "/tmp/test.txt" );
-    assertEquals( f, FileExtensionUtils.setFileExtension( f, ".txt" ) );
+    assertEquals( f, setFileExtension( f, ".txt" ) );
 
     f = new File( "/does/not/exist/test.txt" );
-    assertEquals( f, FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( f, setFileExtension( f, "txt" ) );
 
     f = new File( "/does/not/exist/test" );
-    assertEquals( new File( "/does/not/exist/test.txt" ), FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( new File( "/does/not/exist/test.txt" ), setFileExtension( f, "txt" ) );
 
     f = new File( "", "" );
-    assertEquals( new File( "", ".txt" ), FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( new File( "", ".txt" ), setFileExtension( f, "txt" ) );
 
     f = new File( ".", "" );
-    assertEquals( new File( ".", ".txt" ), FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( new File( ".", ".txt" ), setFileExtension( f, "txt" ) );
 
     f = new File( System.getProperty( "java.io.tmpdir" ), "test-file" );
     f.deleteOnExit();
 
     createTestFile( f );
 
-    assertEquals( new File( System.getProperty( "java.io.tmpdir" ), "test-file.txt" ),
-        FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( new File( System.getProperty( "java.io.tmpdir" ), "test-file.txt" ), setFileExtension( f, "txt" ) );
   }
 
   /**
@@ -95,34 +191,34 @@ public class FileExtensionUtilsTest extends TestCase
     }
 
     File f = new File( System.getProperty( "user.home" ) );
-    assertEquals( new File( f, ".test" ), FileExtensionUtils.setFileExtension( f, "test" ) );
+    assertEquals( new File( f, ".test" ), setFileExtension( f, "test" ) );
 
     f = new File( "c:\\does-not-exist\\test" );
-    assertEquals( new File( "c:\\does-not-exist\\test.txt" ), FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( new File( "c:\\does-not-exist\\test.txt" ), setFileExtension( f, "txt" ) );
 
     f = new File( "c:\\does-not-exist\\test.txt" );
-    assertEquals( f, FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( f, setFileExtension( f, "txt" ) );
 
     f = new File( "c:\\does-not-exist\\testtxt" );
-    assertEquals( f, FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( f, setFileExtension( f, "txt" ) );
 
     f = new File( "c:\\does-not-exist\\test.txt" );
-    assertEquals( f, FileExtensionUtils.setFileExtension( f, ".txt" ) );
+    assertEquals( f, setFileExtension( f, ".txt" ) );
 
     f = new File( "c:\\does-not-exist\\testtxt" );
-    assertEquals( new File( "c:\\does-not-exist\\testtxt" ), FileExtensionUtils.setFileExtension( f, ".txt" ) );
+    assertEquals( new File( "c:\\does-not-exist\\testtxt" ), setFileExtension( f, ".txt" ) );
 
     f = new File( "q:\\does-not-exist\\test.txt" );
-    assertEquals( f, FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( f, setFileExtension( f, "txt" ) );
 
     f = new File( "q:\\does-not-exist\\test" );
-    assertEquals( new File( "q:\\does-not-exist\\test.txt" ), FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( new File( "q:\\does-not-exist\\test.txt" ), setFileExtension( f, "txt" ) );
 
     f = new File( "", "" );
-    assertEquals( new File( "", ".txt" ), FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( new File( "", ".txt" ), setFileExtension( f, "txt" ) );
 
     f = new File( ".", "" );
-    assertEquals( new File( ".", ".txt" ), FileExtensionUtils.setFileExtension( f, "txt" ) );
+    assertEquals( new File( ".", ".txt" ), setFileExtension( f, "txt" ) );
   }
 
   /**

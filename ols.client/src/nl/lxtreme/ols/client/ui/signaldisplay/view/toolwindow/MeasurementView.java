@@ -699,8 +699,10 @@ public class MeasurementView extends AbstractToolWindow implements ISignalElemen
     String pulseCountText = "-";
 
     // Issue #150: use alternative characters to denote rising/falling edges...
-    String upArrow = "\u02C4"; // \u2191 is not supported on Windows
-    String downArrow = "\u02C5"; // \u2193 is not supported on Windows
+    // \u2191 is not supported on Windows
+    String upArrow = Platform.isWindows() ? "\u02C4" : "\u2191";
+    // \u2193 is not supported on Windows
+    String downArrow = Platform.isWindows() ? "\u02C5" : "\u2193";
 
     if ( aPulseCountInfo != null )
     {

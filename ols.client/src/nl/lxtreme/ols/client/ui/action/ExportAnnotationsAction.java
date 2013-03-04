@@ -21,13 +21,15 @@
 package nl.lxtreme.ols.client.ui.action;
 
 
+import static nl.lxtreme.ols.client.ui.action.FileExtensionUtils.*;
+
 import java.awt.*;
+import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.io.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.*;
-
 import nl.lxtreme.ols.client.ui.*;
 import nl.lxtreme.ols.client.ui.export.*;
 import nl.lxtreme.ols.common.session.*;
@@ -41,6 +43,26 @@ import nl.lxtreme.ols.util.swing.component.*;
  */
 public class ExportAnnotationsAction extends AbstractAction implements IManagedAction
 {
+  // INNER TYPES
+
+  public static interface ExportDataProvider
+  {
+    JLxTable getTable();
+  }
+
+  private static class FakeClipboard extends Clipboard
+  {
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link FakeClipboard} instance.
+     */
+    public FakeClipboard()
+    {
+      super( "FakeClipboard" );
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -49,14 +71,18 @@ public class ExportAnnotationsAction extends AbstractAction implements IManagedA
 
   // VARIABLES
 
+  private final ExportDataProvider dataProvider;
+
   // CONSTRUCTORS
 
   /**
    * Creates a new {@link ExportAnnotationsAction} instance.
    */
-  public ExportAnnotationsAction()
+  public ExportAnnotationsAction( final ExportDataProvider aDataProvider )
   {
-    // TODO Auto-generated constructor stub
+    super( "Export ..." );
+
+    this.dataProvider = aDataProvider;
   }
 
   // METHODS
@@ -79,19 +105,42 @@ public class ExportAnnotationsAction extends AbstractAction implements IManagedA
 
     if ( exportFileName != null )
     {
-      final File actualFile = FileExtensionUtils.setFileExtension( exportFileName, preferredExtension );
+      final JTable table = this.dataProvider.getTable();
+
+      File actualFile = exportFileName;
+      String[] parts = stripFileExtension( exportFileName, extensions );
+      String extension = parts[1];
+      if ( extension == null )
+      {
+        extension = preferredExtension;
+        actualFile = setFileExtension( exportFileName, extension );
+      }
+
+      FileOutputStream fos = null;
+      BufferedWriter writer = null;
 
       try
       {
-        exportTo( actualFile );
+        DataFlavor dataFlavor = getDataFlavorByFileExtension( extension );
+        TransferHandler transferHandler = table.getTransferHandler();
+
+        fos = new FileOutputStream( actualFile );
+        writer = new BufferedWriter( new OutputStreamWriter( fos ) );
+
+        // Do not clobber the user's clipboard contents by this action...
+        FakeClipboard clipboard = new FakeClipboard();
+        transferHandler.exportToClipboard( table, clipboard, TransferHandler.COPY );
+
+        writer.write( ( String )clipboard.getData( dataFlavor ) );
       }
-      catch ( IOException exception )
+      catch ( Exception exception )
       {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !IOUtil.handleInterruptedException( exception ) )
-        {
-          JErrorDialog.showDialog( owner, "Export annotations failed!", exception );
-        }
+        JErrorDialog.showDialog( owner, "Export failed!", exception );
+      }
+      finally
+      {
+        IOUtil.closeResource( writer );
+        IOUtil.closeResource( fos );
       }
     }
   }
@@ -116,10 +165,22 @@ public class ExportAnnotationsAction extends AbstractAction implements IManagedA
 
   /**
    * @param aFile
+   * @return
+   * @throws ClassNotFoundException
    */
-  private void exportTo( final File aFile ) throws IOException
+  private DataFlavor getDataFlavorByFileExtension( final String aExtension ) throws ClassNotFoundException
   {
-    // TODO Auto-generated method stub
+    String flavor = JLxTable.DATA_FLAVOR_CSV;
+    if ( "html".equals( aExtension ) || "htm".equals( aExtension ) )
+    {
+      flavor = JLxTable.DATA_FLAVOR_HTML;
+    }
+    else if ( "text".equals( aExtension ) || "txt".equals( aExtension ) )
+    {
+      flavor = JLxTable.DATA_FLAVOR_TEXT;
+    }
+
+    return new DataFlavor( flavor.concat( ";charset=unicode;class=java.lang.String" ) );
   }
 
   /**

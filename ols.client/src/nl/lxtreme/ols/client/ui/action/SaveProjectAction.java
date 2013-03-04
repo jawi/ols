@@ -169,7 +169,7 @@ public class SaveProjectAction extends AbstractAction implements IManagedAction
     LogService log = client.getLogService();
 
     // Strip any "known" file extensions from the given value...
-    final String projectName = FileExtensionUtils.stripFileExtension( aFile, OLS_FILE_EXTENSION, OLS_PROJECT_EXTENSION );
+    final String projectName = FileExtensionUtils.stripFileExtension( aFile, OLS_FILE_EXTENSION, OLS_PROJECT_EXTENSION )[0];
 
     try
     {

@@ -35,47 +35,66 @@ public final class ExportUtils
   // INNER TYPES
 
   /**
-   * Provides a simple CSV data exporter, which is basically a set of (optional)
-   * headers at the first line followed by a number of comma-separated values.
+   * 
    */
-  public interface CsvExporter
+  public static enum ExportFormat
   {
-    // METHODS
+    CSV, HTML;
+  }
+
+  /**
+   * Provides the ability to convert any kind of object structure to a string
+   * representation.
+   */
+  public static interface DataConverter
+  {
+    /**
+     * @param aValue
+     * @return
+     */
+    boolean canHandle( Object aValue );
 
     /**
-     * Adds a new row with cell values to the CSV output.
-     * 
-     * @param aValues
-     *          the cell values to write in this row.
-     * @throws IOException
-     *           in case of I/O problems.
+     * @param aValue
+     * @return
      */
-    void addRow( final Object... aValues ) throws IOException;
+    String getAsString( Object aValue );
+  }
+
+  /**
+   * Denotes a row builder for CSV formatted structures.
+   */
+  public static interface CsvRowBuilder
+  {
+    /**
+     * @param aValue
+     * @return
+     * @throws IOException
+     */
+    CsvRowBuilder add( Object aValue ) throws IOException;
 
     /**
-     * Closes this exporter.
-     * 
+     * @return
      * @throws IOException
-     *           in case of I/O problems.
      */
-    void close() throws IOException;
+    CsvBuilder endRow() throws IOException;
+  }
 
-    /**
-     * Sets the headers of the CSV file.
-     * 
-     * @param aHeaders
-     *          the array of header names.
-     * @throws IOException
-     *           in case of I/O problems.
-     */
-    void setHeaders( final String... aHeaders ) throws IOException;
+  /**
+   * Denotes a builder for building CSV formatted structures.
+   */
+  public static interface CsvBuilder extends Closeable
+  {
+    CsvBuilder addDataConverter( DataConverter aConverter );
+
+    CsvRowBuilder addRow() throws IOException;
   }
 
   /**
    * Provides a simple HTML exporter, which is kind of a tree-structure of
    * HTML-elements (containing attributes).
    */
-  public interface HtmlExporter
+  public static interface HtmlExporter
   {
     // INNER TYPES
 
@@ -346,13 +365,13 @@ public final class ExportUtils
    * @throws IOException
    *           in case of I/O errors.
    */
-  public static CsvExporter createCsvExporter( final File aFile ) throws IOException
+  public static CsvBuilder createCsvExporter( final File aFile ) throws IOException
   {
     if ( aFile == null )
     {
       throw new IllegalArgumentException( "File cannot be null!" );
     }
-    return new CsvExporterImpl( aFile );
+    return new CsvStreamBuilder( aFile );
   }
 
   /**

@@ -314,10 +314,13 @@ public final class AnnotationHelper
    * 
    * @param aAnnotation
    *          the annotation to get a description for, cannot be
-   *          <code>null</code>.
+   *          <code>null</code>;
+   * @param aIncludeTimingData
+   *          <code>true</code> to include timing data (start & stop of
+   *          annotation), <code>false</code> to omit timing data.
    * @return an annotation description, never <code>null</code>.
    */
-  public String getDescription( final Annotation aAnnotation )
+  public String getDescription( final Annotation aAnnotation, final boolean aIncludeTimingData )
   {
     Object data = aAnnotation.getData();
 
@@ -347,17 +350,17 @@ public final class AnnotationHelper
     }
 
     StringBuilder sb = new StringBuilder(
-        "<html><head><style>th{text-align:right;} td{padding:0; margin:0;}</style></head><body><table border='0'>" );
+        "<html><head><style>th{text-align:right;} td{padding:0; margin:0;}</style></head><body><table class='desc' border='0'>" );
 
     if ( description != null )
     {
       sb.append( "<tr><td colspan='2'>" ).append( description ).append( "</td></tr>" );
     }
-    if ( startTime >= 0 )
+    if ( aIncludeTimingData && ( startTime >= 0 ) )
     {
       sb.append( "<tr><th>Start</th><td>" ).append( formatTime( startTime ) ).append( "</td></tr>" );
     }
-    if ( endTime >= 0 )
+    if ( aIncludeTimingData && ( endTime >= 0 ) )
     {
       sb.append( "<tr><th>Stop</th><td>" ).append( formatTime( endTime ) ).append( "</td></tr>" );
     }

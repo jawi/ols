@@ -22,8 +22,10 @@ package nl.lxtreme.ols.client.ui.signaldisplay.view.toolwindow;
 
 
 import java.awt.*;
+import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.beans.*;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.*;
@@ -33,6 +35,7 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 
 import nl.lxtreme.ols.client.ui.*;
+import nl.lxtreme.ols.client.ui.action.*;
 import nl.lxtreme.ols.client.ui.signaldisplay.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
@@ -45,8 +48,8 @@ import nl.lxtreme.ols.util.swing.component.JLxTable.TableCellRendererAdapter;
 /**
  * Provides a dockable tool-window that presents an overview of the annotations.
  */
-public class AnnotationOverview extends AbstractToolWindow implements IDataModelChangeListener,
-    IAnnotationDataChangedListener
+public class AnnotationOverview extends AbstractToolWindow implements ExportAnnotationsAction.ExportDataProvider,
+    IDataModelChangeListener, IAnnotationDataChangedListener
 {
   // INNER TYPES
 
@@ -177,6 +180,380 @@ public class AnnotationOverview extends AbstractToolWindow implements IDataModel
       result = ( prime * result ) + ( int )( this.endTime ^ ( this.endTime >>> 32 ) );
       result = ( prime * result ) + ( int )( this.startTime ^ ( this.startTime >>> 32 ) );
       return result;
+    }
+  }
+
+  /**
+   * 
+   */
+  private static class AnnotationsTable extends JLxTable
+  {
+    // CONSTANTS
+
+    private static final DataFlavor[] HTML_FLAVORS;
+    private static final DataFlavor[] CSV_FLAVORS;
+    private static final DataFlavor[] TEXT_FLAVORS;
+    private static final DataFlavor[] RAW_FLAVORS;
+
+    private static final long serialVersionUID = 1L;
+
+    static
+    {
+      String prefix;
+
+      try
+      {
+        HTML_FLAVORS = new DataFlavor[3];
+        prefix = DATA_FLAVOR_HTML + ";charset=unicode;class=";
+        HTML_FLAVORS[0] = new DataFlavor( prefix + "java.lang.String" );
+        HTML_FLAVORS[1] = new DataFlavor( prefix + "java.io.Reader" );
+        HTML_FLAVORS[2] = new DataFlavor( prefix + "java.io.InputStream" );
+
+        CSV_FLAVORS = new DataFlavor[3];
+        prefix = DATA_FLAVOR_CSV + ";charset=unicode;class=";
+        CSV_FLAVORS[0] = new DataFlavor( prefix + "java.lang.String" );
+        CSV_FLAVORS[1] = new DataFlavor( prefix + "java.io.Reader" );
+        CSV_FLAVORS[2] = new DataFlavor( prefix + "java.io.InputStream" );
+
+        TEXT_FLAVORS = new DataFlavor[3];
+        prefix = DATA_FLAVOR_TEXT + ";charset=unicode;class=";
+        TEXT_FLAVORS[0] = new DataFlavor( prefix + "java.lang.String" );
+        TEXT_FLAVORS[1] = new DataFlavor( prefix + "java.io.Reader" );
+        TEXT_FLAVORS[2] = new DataFlavor( prefix + "java.io.InputStream" );
+
+        RAW_FLAVORS = new DataFlavor[2];
+        prefix = DataFlavor.javaJVMLocalObjectMimeType + ";charset=unicode;class=";
+        RAW_FLAVORS[0] = new DataFlavor( prefix + "java.lang.String" );
+        RAW_FLAVORS[1] = DataFlavor.stringFlavor;
+      }
+      catch ( ClassNotFoundException exception )
+      {
+        throw new RuntimeException( exception );
+      }
+    }
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link AnnotationsTable} instance.
+     */
+    public AnnotationsTable( final AbstractTableModel aTableModel )
+    {
+      super( aTableModel, ( TableColumnModel )aTableModel );
+
+      setCellRendererAdapter( new AnnotationCellRenderer() );
+      setColumnSelectionAllowed( true );
+      setRowSelectionAllowed( true );
+      setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
+      setAutoCreateColumnsFromModel( false );
+      setFillsViewportHeight( true );
+      setIntercellSpacing( new Dimension( 2, 2 ) );
+      setAutoCreateRowSorter( false );
+      setShowGrid( false );
+
+      setDefaultRenderer( DataAnnotation.class, new DataAnnotationCellRenderer() );
+      setDefaultRenderer( Double.class, new TimeCellRenderer() );
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Object getTableData( final DataFlavor aFlavor ) throws UnsupportedFlavorException, IOException
+    {
+      int[] rows = getSelectedRows();
+      int[] cols = getSelectedColumns();
+
+      if ( ( rows.length == 0 ) || !getRowSelectionAllowed() )
+      {
+        int rowCount = getRowCount();
+
+        rows = new int[rowCount];
+        for ( int counter = 0; counter < rowCount; counter++ )
+        {
+          rows[counter] = counter;
+        }
+      }
+
+      if ( ( cols.length == 0 ) || !getColumnSelectionAllowed() )
+      {
+        int colCount = getColumnCount();
+
+        cols = new int[colCount];
+        for ( int counter = 0; counter < colCount; counter++ )
+        {
+          cols[counter] = counter;
+        }
+      }
+
+      if ( ( rows.length == 0 ) || ( cols.length == 0 ) )
+      {
+        return null;
+      }
+
+      String mimeType = aFlavor.getPrimaryType() + "/" + aFlavor.getSubType();
+      if ( DATA_FLAVOR_HTML.equals( mimeType ) )
+      {
+        return getTableDataAsHtml( rows, cols );
+      }
+      else if ( DATA_FLAVOR_CSV.equals( mimeType ) )
+      {
+        return getTableDataAsCsv( rows, cols );
+      }
+      else if ( DATA_FLAVOR_TEXT.equals( mimeType ) )
+      {
+        return getTableDataAsText( rows, cols );
+      }
+
+      return super.getTableData( aFlavor );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataFlavor[] getTableDataFlavors()
+    {
+      List<DataFlavor> result = new ArrayList<DataFlavor>();
+      result.addAll( Arrays.asList( CSV_FLAVORS ) );
+      result.addAll( Arrays.asList( HTML_FLAVORS ) );
+      result.addAll( Arrays.asList( TEXT_FLAVORS ) );
+      result.addAll( Arrays.asList( RAW_FLAVORS ) );
+      return result.toArray( new DataFlavor[result.size()] );
+    }
+
+    /**
+     * @param aComponent
+     * @return
+     */
+    private String extractHtmlFromComponent( final Component aComponent )
+    {
+      String text = "";
+      if ( aComponent instanceof JLabel )
+      {
+        JLabel label = ( JLabel )aComponent;
+        text = label.getToolTipText();
+        if ( ( text == null ) || "".equals( text.trim() ) )
+        {
+          text = label.getText();
+        }
+      }
+      else if ( aComponent instanceof AbstractButton )
+      {
+        AbstractButton button = ( AbstractButton )aComponent;
+        text = button.getToolTipText();
+        if ( ( text == null ) || "".equals( text.trim() ) )
+        {
+          text = button.getText();
+        }
+      }
+      return text;
+    }
+
+    /**
+     * @param aComponent
+     * @return
+     */
+    private String extractTextFromComponent( final Component aComponent )
+    {
+      String text = "";
+      if ( aComponent instanceof JLabel )
+      {
+        JLabel label = ( JLabel )aComponent;
+        text = label.getText();
+      }
+      else if ( aComponent instanceof AbstractButton )
+      {
+        AbstractButton button = ( AbstractButton )aComponent;
+        text = button.getText();
+      }
+      return text;
+    }
+
+    /**
+     * @param aTable
+     * @param aValue
+     * @param aRow
+     * @param aColumn
+     * @return
+     */
+    private String getRenderedValueAsHtml( final JTable aTable, final Object aValue, final int aRow, final int aColumn )
+    {
+      TableCellRenderer renderer = aTable.getCellRenderer( aRow, aColumn );
+      Component comp = renderer.getTableCellRendererComponent( aTable, aValue, false, false, aRow, aColumn );
+      String text = extractHtmlFromComponent( comp );
+      text = text.replaceAll( "<html>.*<body>(.*)</body></html>", "$1" );
+      return text;
+    }
+
+    /**
+     * @param aTable
+     * @param aValue
+     * @param aRow
+     * @param aColumn
+     * @return
+     */
+    private String getRenderedValueAsText( final JTable aTable, final Object aValue, final int aRow, final int aColumn )
+    {
+      TableCellRenderer renderer = aTable.getCellRenderer( aRow, aColumn );
+      Component comp = renderer.getTableCellRendererComponent( aTable, aValue, false, false, aRow, aColumn );
+      String text = extractTextFromComponent( comp );
+      text = text.replaceAll( "<br\\s*/?>", "\n" );
+      text = text.replaceAll( "<html>.*<body>(.*)</body></html>", "$1" );
+      return text.replaceAll( "<[^>]+>", "" );
+    }
+
+    /**
+     * @param aRowIndices
+     * @param aColumnIndices
+     * @return
+     */
+    private Object getTableDataAsCsv( final int[] aRowIndices, final int[] aColumnIndices )
+    {
+      return getTableDataAsText( aRowIndices, aColumnIndices, ',', true /* quote */);
+    }
+
+    /**
+     * @param aRowIndices
+     * @param aColumnIndices
+     * @return
+     */
+    private Object getTableDataAsHtml( final int[] aRowIndices, final int[] aColumnIndices )
+    {
+      StringBuilder buf = new StringBuilder( "<html><head><meta charset=\"utf-8\">" );
+      // @formatter:off
+      buf.append( "<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\"><style type=\"text/css\">" )
+          .append( "body{margin:2em 4em;padding:0}" )
+          .append( "body,td,th{font-family:'Avenir Next',Helvetica,Tahoma,Arial,sans-serif;font-size:13px;line-height:1.2em}" )
+          .append( "h1{font-size:3.375em}" )
+          .append( "h2{font-size:2.925em}" )
+          .append( "h3{font-size:2.25em}" )
+          .append( "h4{font-size:1.95em}" )
+          .append( "h5{font-size:1.5em}" )
+          .append( "h6{font-size:1.3em}" )
+          .append( "table{border-collapse:separate}" )
+          .append( "table.main{width:80em}" )
+          .append( "th,td{text-align:left;vertical-align:baseline;margin:0;padding:0}" )
+          .append( "thead tr{background-color:#26537c;color:#FFF}" )
+          .append( "tr.oe{border-top:solid 1px rgba(12,93,165,0.1);border-bottom:solid 1px rgba(12,93,165,0.1)}" )
+          .append( "tr.oe:nth-child(odd){background-color:rgba(255,255,255,0.75)}" )
+          .append( "tr.oe:nth-child(even){background-color:rgba(124,189,248,0.6)}" )
+          .append( "col.col1{width:3%}" )
+          .append( "col:nth-child(even){background-color:rgba(124,189,248,0.3)}" )
+          .append( ".pad{padding:.5em}" )
+          .append( "table.desc{margin-left:-.25em;width:100%}" )
+          .append( ".desc th,.desc td{padding:.25em}" )
+          .append( "table.desc tr > th{width:4em}" )
+          .append( "table.desc table[border=0] tr:nth-child(odd){background-color:rgba(124,189,248,0.2)}" )
+          .append( "col.col2,col.col3{width:7%}" )
+          .append( "</style></head><body>" );
+      // @formatter:on
+
+      buf.append( "<table class='main'><colgroup>" );
+      for ( int i = 0; i < aColumnIndices.length; i++ )
+      {
+        buf.append( "<col class=\"col" ).append( i + 1 ).append( "\">" );
+      }
+      buf.append( "</colgroup><thead><tr>" );
+      for ( int col : aColumnIndices )
+      {
+        String columnName = getColumnName( col );
+        buf.append( "<th class=\"pad\">" ).append( columnName ).append( "</th>" );
+      }
+      buf.append( "</tr></thead>" );
+
+      buf.append( "<tbody>" );
+      for ( int row : aRowIndices )
+      {
+        buf.append( "<tr class='oe'>" );
+        for ( int col : aColumnIndices )
+        {
+          Object obj = getValueAt( row, col );
+          String val = getRenderedValueAsHtml( this, obj, row, col );
+
+          buf.append( "<td class=\"pad\">" ).append( val ).append( "</td>" );
+        }
+        buf.append( "</tr>" );
+      }
+      buf.append( "</tbody>" );
+
+      buf.append( "</table></body></html>" );
+
+      return buf.toString();
+    }
+
+    /**
+     * @param aRowIndices
+     * @param aColumnIndices
+     * @return
+     */
+    private Object getTableDataAsText( final int[] aRowIndices, final int[] aColumnIndices )
+    {
+      return getTableDataAsText( aRowIndices, aColumnIndices, '\t', false /* quote */);
+    }
+
+    /**
+     * @param aRowIndices
+     * @param aColumnIndices
+     * @return
+     */
+    private Object getTableDataAsText( final int[] aRowIndices, final int[] aColumnIndices, final char aSeparator,
+        final boolean aQuoteValues )
+    {
+      // Plain text
+      StringBuilder buf = new StringBuilder();
+
+      for ( int row : aRowIndices )
+      {
+        for ( int col : aColumnIndices )
+        {
+          Object obj = getValueAt( row, col );
+          String val = getRenderedValueAsText( this, obj, row, col );
+
+          buf.append( aQuoteValues ? quote( val ) : val ).append( aSeparator );
+        }
+        // we want a newline at the end of each line and not a tab
+        buf.deleteCharAt( buf.length() - 1 ).append( "\n" );
+      }
+
+      // remove the last newline
+      buf.deleteCharAt( buf.length() - 1 );
+
+      return buf.toString();
+    }
+
+    /**
+     * @param aValue
+     * @return
+     */
+    private String quote( final Object aValue )
+    {
+      final String value;
+      if ( aValue == null )
+      {
+        value = "";
+      }
+      else
+      {
+        if ( aValue instanceof Character )
+        {
+          if ( Character.isLetterOrDigit( ( ( Character )aValue ).charValue() ) )
+          {
+            value = String.valueOf( aValue );
+          }
+          else
+          {
+            value = "";
+          }
+        }
+        else
+        {
+          value = String.valueOf( aValue );
+        }
+      }
+      return "\"" + value + "\"";
     }
   }
 
@@ -663,6 +1040,10 @@ public class AnnotationOverview extends AbstractToolWindow implements IDataModel
         {
           channelNames.put( channelIdx, ( ( LabelAnnotation )annotation ).getData() );
         }
+        else
+        {
+          System.out.println( "Ignoring annotation: " + annotation );
+        }
       }
 
       // Step 2: remove empty columns...
@@ -894,7 +1275,7 @@ public class AnnotationOverview extends AbstractToolWindow implements IDataModel
       if ( annotation != null )
       {
         text = this.annotationHelper.getText( annotation );
-        tooltip = this.annotationHelper.getDescription( annotation );
+        tooltip = this.annotationHelper.getDescription( annotation, false /* aIncludeTimingData */);
       }
 
       JLabel result = ( JLabel )super.getTableCellRendererComponent( aTable, text, aIsSelected, aHasFocus, aRow,
@@ -1050,6 +1431,15 @@ public class AnnotationOverview extends AbstractToolWindow implements IDataModel
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public JLxTable getTable()
+  {
+    return this.table;
+  }
+
+  /**
    * Jumps to the given annotation in the current signal diagram.
    * 
    * @param aAnnotation
@@ -1075,18 +1465,7 @@ public class AnnotationOverview extends AbstractToolWindow implements IDataModel
     setLayout( new BorderLayout() );
     setName( "Annotations" );
 
-    this.table = new JLxTable( this.container, this.container );
-    this.table.setCellRendererAdapter( new AnnotationCellRenderer() );
-    this.table.setColumnSelectionAllowed( true );
-    this.table.setRowSelectionAllowed( true );
-    this.table.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
-    this.table.setAutoCreateColumnsFromModel( false );
-    this.table.setFillsViewportHeight( true );
-    this.table.setIntercellSpacing( new Dimension( 2, 2 ) );
-    this.table.setAutoCreateRowSorter( false );
-    this.table.setShowGrid( false );
-    this.table.setDefaultRenderer( DataAnnotation.class, new DataAnnotationCellRenderer() );
-    this.table.setDefaultRenderer( Double.class, new TimeCellRenderer() );
+    this.table = new AnnotationsTable( this.container );
     this.table.addMouseListener( new MouseAdapter()
     {
       @Override
@@ -1109,13 +1488,17 @@ public class AnnotationOverview extends AbstractToolWindow implements IDataModel
       }
     } );
 
-    this.exportButton = new JButton( "Export ..." );
-    this.exportButton.setEnabled( false );
+    this.exportButton = new JButton( new ExportAnnotationsAction( this ) );
 
     JComponent buttonPane = SwingComponentUtils.createButtonPane( this.exportButton );
 
     add( new JScrollPane( this.table ), BorderLayout.CENTER );
     add( buttonPane, BorderLayout.PAGE_END );
+
+    // Update the structure with the current session data...
+    this.container.updateStructure();
+
+    updateButtonState();
   }
 
   /**
