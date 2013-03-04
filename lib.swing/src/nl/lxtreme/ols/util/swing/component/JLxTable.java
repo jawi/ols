@@ -25,8 +25,6 @@ import java.awt.*;
 import java.awt.datatransfer.*;
 import java.io.*;
 import java.util.*;
-import java.util.List;
-
 import javax.swing.*;
 import javax.swing.plaf.*;
 import javax.swing.table.*;
@@ -61,68 +59,21 @@ public class JLxTable extends JTable
    */
   protected static class TableDataTransferable implements Transferable
   {
-    // CONSTANTS
-
-    private static final DataFlavor[] HTML_FLAVORS;
-    private static final DataFlavor[] CSV_FLAVORS;
-    private static final DataFlavor[] TEXT_FLAVORS;
-    private static final DataFlavor[] RAW_FLAVORS;
-
-    static
-    {
-      String prefix;
-
-      try
-      {
-        HTML_FLAVORS = new DataFlavor[3];
-        prefix = DATA_FLAVOR_HTML + ";charset=unicode;class=";
-        HTML_FLAVORS[0] = new DataFlavor( prefix + "java.lang.String" );
-        HTML_FLAVORS[1] = new DataFlavor( prefix + "java.io.Reader" );
-        HTML_FLAVORS[2] = new DataFlavor( prefix + "java.io.InputStream" );
-
-        CSV_FLAVORS = new DataFlavor[3];
-        prefix = DATA_FLAVOR_CSV + ";charset=unicode;class=";
-        CSV_FLAVORS[0] = new DataFlavor( prefix + "java.lang.String" );
-        CSV_FLAVORS[1] = new DataFlavor( prefix + "java.io.Reader" );
-        CSV_FLAVORS[2] = new DataFlavor( prefix + "java.io.InputStream" );
-
-        TEXT_FLAVORS = new DataFlavor[3];
-        prefix = DATA_FLAVOR_TEXT + ";charset=unicode;class=";
-        TEXT_FLAVORS[0] = new DataFlavor( prefix + "java.lang.String" );
-        TEXT_FLAVORS[1] = new DataFlavor( prefix + "java.io.Reader" );
-        TEXT_FLAVORS[2] = new DataFlavor( prefix + "java.io.InputStream" );
-
-        RAW_FLAVORS = new DataFlavor[2];
-        prefix = DataFlavor.javaJVMLocalObjectMimeType + ";charset=unicode;class=";
-        RAW_FLAVORS[0] = new DataFlavor( prefix + "java.lang.String" );
-        RAW_FLAVORS[1] = DataFlavor.stringFlavor;
-      }
-      catch ( ClassNotFoundException exception )
-      {
-        throw new RuntimeException( exception );
-      }
-    }
-
     // VARIABLES
 
-    private final String textData;
-    private final String htmlData;
-    private final String rawData;
+    private final JLxTable table;
 
     // CONSTRUCTORS
 
     /**
      * Creates a new {@link TableDataTransferable} instance.
      * 
-     * @param aTextData
-     * @param aHtmlData
-     * @param aRawData
+     * @param aTable
+     *          the table to transfer the data of, cannot be <code>null</code>.
      */
-    public TableDataTransferable( final String aTextData, final String aHtmlData, final String aRawData )
+    public TableDataTransferable( final JLxTable aTable )
     {
-      this.textData = aTextData;
-      this.htmlData = aHtmlData;
-      this.rawData = aRawData;
+      this.table = aTable;
     }
 
     // METHODS
@@ -143,39 +94,22 @@ public class JLxTable extends JTable
     @Override
     public Object getTransferData( final DataFlavor aFlavor ) throws UnsupportedFlavorException, IOException
     {
-      String data = null;
-      if ( isHtmlFlavor( aFlavor ) )
-      {
-        data = getHtmlData();
-      }
-      else if ( isCsvFlavor( aFlavor ) )
-      {
-        data = getCsvData();
-      }
-      else if ( isTextFlavor( aFlavor ) )
-      {
-        data = getTextData();
-      }
-      else if ( isRawFlavor( aFlavor ) )
-      {
-        data = getRawData();
-        return data;
-      }
+      Object data = this.table.getTableData( aFlavor );
+
+      String text = ( data == null ) ? "" : String.valueOf( data );
 
       final Class<?> representationClass = aFlavor.getRepresentationClass();
-
-      data = ( data == null ) ? "" : data;
       if ( String.class.equals( representationClass ) )
       {
-        return data;
+        return text;
       }
       else if ( Reader.class.equals( representationClass ) )
       {
-        return new StringReader( data );
+        return new StringReader( text );
       }
       else if ( InputStream.class.equals( representationClass ) )
       {
-        return new ByteArrayInputStream( data.getBytes( "utf-8" ) );
+        return new ByteArrayInputStream( text.getBytes( "utf-8" ) );
       }
 
       throw new UnsupportedFlavorException( aFlavor );
@@ -192,24 +126,12 @@ public class JLxTable extends JTable
     @Override
     public DataFlavor[] getTransferDataFlavors()
     {
-      List<DataFlavor> dataFlavors = new ArrayList<DataFlavor>();
-      if ( isHtmlSupported() )
+      DataFlavor[] dataFlavors = this.table.getTableDataFlavors();
+      if ( dataFlavors == null )
       {
-        dataFlavors.addAll( Arrays.asList( HTML_FLAVORS ) );
+        return new DataFlavor[0];
       }
-      if ( isCsvSupported() )
-      {
-        dataFlavors.addAll( Arrays.asList( CSV_FLAVORS ) );
-      }
-      if ( isTextSupported() )
-      {
-        dataFlavors.addAll( Arrays.asList( TEXT_FLAVORS ) );
-      }
-      if ( isRawSupported() )
-      {
-        dataFlavors.addAll( Arrays.asList( RAW_FLAVORS ) );
-      }
-      return dataFlavors.toArray( new DataFlavor[dataFlavors.size()] );
+      return Arrays.copyOf( dataFlavors, dataFlavors.length );
     }
 
     /**
@@ -225,130 +147,6 @@ public class JLxTable extends JTable
     {
       DataFlavor[] flavors = getTransferDataFlavors();
       return findFlavor( flavors, aFlavor );
-    }
-
-    /**
-     * Fetch the data in a text/csv format.
-     */
-    protected String getCsvData()
-    {
-      return this.textData.replaceAll( "\t", "," );
-    }
-
-    /**
-     * Fetch the data in a text/html format
-     */
-    protected String getHtmlData()
-    {
-      return this.htmlData;
-    }
-
-    /**
-     * Fetch the data in a "raw" format.
-     */
-    protected String getRawData()
-    {
-      return this.rawData;
-    }
-
-    /**
-     * Fetch the data in a text/plain format.
-     */
-    protected String getTextData()
-    {
-      return this.textData;
-    }
-
-    /**
-     * Returns whether or not the specified data flavor is an CSV flavor that is
-     * supported.
-     * 
-     * @param aFlavor
-     *          the requested flavor for the data
-     * @return boolean indicating whether or not the data flavor is supported
-     */
-    protected boolean isCsvFlavor( final DataFlavor aFlavor )
-    {
-      DataFlavor[] flavors = CSV_FLAVORS;
-      return findFlavor( flavors, aFlavor );
-    }
-
-    /**
-     * Should the CSV flavors be offered? If so, the method getCSVData should be
-     * implemented to provide something reasonable.
-     */
-    protected boolean isCsvSupported()
-    {
-      return this.textData != null;
-    }
-
-    /**
-     * Returns whether or not the specified data flavor is an HTML flavor that
-     * is supported.
-     * 
-     * @param aFlavor
-     *          the requested flavor for the data
-     * @return boolean indicating whether or not the data flavor is supported
-     */
-    protected boolean isHtmlFlavor( final DataFlavor aFlavor )
-    {
-      DataFlavor[] flavors = HTML_FLAVORS;
-      return findFlavor( flavors, aFlavor );
-    }
-
-    /**
-     * Should the HTML flavors be offered? If so, the method getHTMLData should
-     * be implemented to provide something reasonable.
-     */
-    protected boolean isHtmlSupported()
-    {
-      return this.htmlData != null;
-    }
-
-    /**
-     * Returns whether or not the specified data flavor is a String flavor that
-     * is supported.
-     * 
-     * @param aFlavor
-     *          the requested flavor for the data
-     * @return boolean indicating whether or not the data flavor is supported
-     */
-    protected boolean isRawFlavor( final DataFlavor aFlavor )
-    {
-      DataFlavor[] flavors = RAW_FLAVORS;
-      return findFlavor( flavors, aFlavor );
-    }
-
-    /**
-     * Should the raw-data flavors be offered? If so, the method getRawData
-     * should be implemented to provide something reasonable.
-     */
-    protected boolean isRawSupported()
-    {
-      return this.rawData != null;
-    }
-
-    /**
-     * Returns whether or not the specified data flavor is an plain flavor that
-     * is supported.
-     * 
-     * @param aFlavor
-     *          the requested flavor for the data
-     * @return boolean indicating whether or not the data flavor is supported
-     */
-    protected boolean isTextFlavor( final DataFlavor aFlavor )
-    {
-      DataFlavor[] flavors = TEXT_FLAVORS;
-      return findFlavor( flavors, aFlavor );
-    }
-
-    /**
-     * Should the plain text flavors be offered? If so, the method getPlainData
-     * should be implemented to provide something reasonable.
-     */
-    protected boolean isTextSupported()
-    {
-      return this.textData != null;
     }
 
     /**
@@ -393,116 +191,18 @@ public class JLxTable extends JTable
     @Override
     protected Transferable createTransferable( final JComponent aComponent )
     {
-      if ( !( aComponent instanceof JTable ) )
+      if ( !( aComponent instanceof JLxTable ) )
       {
         return null;
       }
 
-      JTable table = ( JTable )aComponent;
+      JLxTable table = ( JLxTable )aComponent;
       if ( !table.getRowSelectionAllowed() && !table.getColumnSelectionAllowed() )
       {
         return null;
       }
 
-      int[] rows;
-      int[] cols;
-
-      if ( !table.getRowSelectionAllowed() )
-      {
-        int rowCount = table.getRowCount();
-
-        rows = new int[rowCount];
-        for ( int counter = 0; counter < rowCount; counter++ )
-        {
-          rows[counter] = counter;
-        }
-      }
-      else
-      {
-        rows = table.getSelectedRows();
-      }
-
-      if ( !table.getColumnSelectionAllowed() )
-      {
-        int colCount = table.getColumnCount();
-
-        cols = new int[colCount];
-        for ( int counter = 0; counter < colCount; counter++ )
-        {
-          cols[counter] = counter;
-        }
-      }
-      else
-      {
-        cols = table.getSelectedColumns();
-      }
-
-      if ( ( rows == null ) || ( cols == null ) || ( rows.length == 0 ) || ( cols.length == 0 ) )
-      {
-        return null;
-      }
-
-      StringBuilder rawBuf = new StringBuilder();
-      StringBuilder textBuf = new StringBuilder();
-      StringBuilder htmlBuf = new StringBuilder(
-          "<html><head><meta charset=\"utf-8\"><meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\"></head><body><table>" );
-
-      for ( int row : rows )
-      {
-        htmlBuf.append( "<tr>" );
-        for ( int col : cols )
-        {
-          Object obj = table.getValueAt( row, col );
-          String val = getRenderedValue( table, obj, row, col );
-
-          rawBuf.append( ( ( obj == null ) ? "" : obj.toString() ) ).append( "\t" );
-          textBuf.append( val ).append( "\t" );
-          htmlBuf.append( "<td>" ).append( val ).append( "</td>" );
-        }
-        // we want a newline at the end of each line and not a tab
-        textBuf.deleteCharAt( textBuf.length() - 1 ).append( "\n" );
-        htmlBuf.append( "</tr>" );
-      }
-
-      // remove the last newline
-      textBuf.deleteCharAt( textBuf.length() - 1 );
-      htmlBuf.append( "</table></body></html>" );
-
-      return new TableDataTransferable( textBuf.toString(), htmlBuf.toString(), rawBuf.toString() );
-    }
-
-    /**
-     * @param aComponent
-     * @return
-     */
-    private String extractTextFromComponent( final Component aComponent )
-    {
-      String text = "";
-      if ( aComponent instanceof JLabel )
-      {
-        text = ( ( JLabel )aComponent ).getText();
-      }
-      else if ( aComponent instanceof AbstractButton )
-      {
-        text = ( ( AbstractButton )aComponent ).getText();
-      }
-      text = text.replaceFirst( "<html><body>", "" );
-      text = text.replaceFirst( "</body></html>", "" );
-      return text;
-    }
-
-    /**
-     * @param aTable
-     * @param aValue
-     * @param aRow
-     * @param aColumn
-     * @return
-     */
-    private String getRenderedValue( final JTable aTable, final Object aValue, final int aRow, final int aColumn )
-    {
-      TableCellRenderer renderer = aTable.getCellRenderer( aRow, aColumn );
-      Component comp = renderer.getTableCellRendererComponent( aTable, aValue, false, false, aRow, aColumn );
-      return extractTextFromComponent( comp );
+      return new TableDataTransferable( table );
     }
   }
 
@@ -645,5 +345,29 @@ public class JLxTable extends JTable
       color = NORMAL_ROW_COLOR;
     }
     return color;
+  }
+
+  /**
+   * @return the data flavors supported by this table.
+   */
+  protected DataFlavor[] getTableDataFlavors()
+  {
+    return null;
+  }
+
+  /**
+   * @param aFlavor
+   *          the data flavor to get the table data for, cannot be
+   *          <code>null</code>.
+   * @return an object representing according to the requested formatting, or
+   *         <code>null</code> if no data is available.
+   * @throws UnsupportedFlavorException
+   *           in case the given flavor is not supported.
+   * @throws IOException
+   *           in case of I/O problems getting or formatting the table data.
+   */
+  protected Object getTableData( final DataFlavor aFlavor ) throws UnsupportedFlavorException, IOException
+  {
+    return null;
   }
 }

@@ -960,7 +960,7 @@ public final class SwingComponentUtils
   public static final File showFileSaveDialog( final Window aOwner,
       final javax.swing.filechooser.FileFilter... aFileFilters )
   {
-    final String currentWorkingDir = System.getProperty( "user.dir" );
+    final String currentWorkingDir = null; // System.getProperty( "user.dir" );
     return showFileSaveDialog( aOwner, currentWorkingDir, aFileFilters );
   }
 
