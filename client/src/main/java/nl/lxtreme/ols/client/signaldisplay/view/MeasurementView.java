@@ -743,7 +743,6 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
         pulseCountText = String.format( "%d", aPulseCountInfo.pulseCount );
         pulseCountText = String.format( "%d (%s%d, %s%d)", aPulseCountInfo.totalEdgeCount, upArrow,
             aPulseCountInfo.risingEdgeCount, downArrow, aPulseCountInfo.fallingEdgeCount );
-
       }
     }
 
