@@ -1302,6 +1302,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
           {
             if ( dialog.showDialog() )
             {
+              // Update the default settings (if needed)...
+              updateDefaultSettings();
+
               // Ensure all UI-related changes are immediately visible...
               repaintMainFrame();
             }
@@ -1342,7 +1345,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
         // ensure that all changes to cursors are reflected in the UI...
         ClientController.this.signalDiagramController.addCursorChangeListener( new CursorActionListener() );
-        ClientController.this.signalDiagramController.setDefaultSettings();
+        updateDefaultSettings();
 
         mf.setTitle( hostProperties.getFullName() );
         mf.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
@@ -1647,6 +1650,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
+   * Updates the default settings.
+   */
+  final void updateDefaultSettings()
+  {
+    this.signalDiagramController.setDefaultSettings();
+  }
+
+  /**
    * Returns whether or not the cursors are enabled.
    * 
    * @return <code>true</code> if cursors are enabled, <code>false</code>
@@ -1830,7 +1841,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     System.setProperty( "nl.lxtreme.ols.client.version", aVersion );
 
     // Use the defined email address...
-    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, this.hostProperties.getReportIncidentAddress() );
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS,
+        this.hostProperties.getReportIncidentAddress() );
 
     if ( this.hostProperties.isDebugMode() )
     {

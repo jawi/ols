@@ -445,11 +445,11 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
     // will update the view and show the signals...
     recalculateDimensions();
-    
+
     // optionally center the view on the trigger moment...
     boolean autoCenterOnTrigger = UIManager.getBoolean( UIManagerKeys.AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE );
     final AcquisitionResult capturedData = aDataSet.getCapturedData();
-    
+
     if ( autoCenterOnTrigger && capturedData.hasTriggerData() )
     {
       SwingComponentUtils.invokeOnEDT( new Runnable()
@@ -468,7 +468,13 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   public void setDefaultSettings()
   {
     // Set the correct defaults...
-    setSnapModeEnabled( UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT ) );
+    final boolean snapCursorsDefault = UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT );
+    final boolean snapCursorsValue = getSignalDiagramModel().isSnapCursorMode();
+
+    if ( snapCursorsValue ^ snapCursorsDefault )
+    {
+      setSnapModeEnabled( snapCursorsDefault );
+    }
   }
 
   /**
