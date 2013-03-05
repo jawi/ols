@@ -433,7 +433,13 @@ public class SignalDiagramController implements ZoomListener
   public void setDefaultSettings()
   {
     // Set the correct defaults...
-    setSnapModeEnabled( UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT ) );
+    final boolean snapCursorsDefault = UIManager.getBoolean( UIManagerKeys.SNAP_CURSORS_DEFAULT );
+    final boolean snapCursorsValue = getSignalDiagramModel().isSnapCursorMode();
+
+    if ( snapCursorsValue ^ snapCursorsDefault )
+    {
+      setSnapModeEnabled( snapCursorsDefault );
+    }
   }
 
   /**

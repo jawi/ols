@@ -639,6 +639,8 @@ public class Client implements ManagedService, StatusListener, EventHandler
       exception.printStackTrace();
     }
 
+    this.signalDiagramController.setDefaultSettings();
+
     // Ensure all UI-related changes are immediately visible...
     scheduleRepaint();
   }
