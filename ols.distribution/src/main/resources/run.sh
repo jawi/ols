@@ -10,7 +10,7 @@ fi
 
 # cross-platform "readlink -f" function; taken and modified (clean ups and made 
 # recursive) from <http://stackoverflow.com/questions/1055671>. 
-function canonical_readlink() {
+canonical_readlink() {
 	local targetFile=$1
 
 	cd $(dirname "$targetFile")
