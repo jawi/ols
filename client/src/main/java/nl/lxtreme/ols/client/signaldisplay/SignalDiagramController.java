@@ -274,6 +274,47 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
       @Override
       public void run()
       {
+        recalculateDimensions();
+
+        if ( aEvent.isZoomInOrOut() )
+        {
+          // Idea based on <http://stackoverflow.com/questions/115103>
+          JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
+          if ( scrollPane == null )
+          {
+            // Nothing to do...
+            return;
+          }
+
+          JViewport viewport = scrollPane.getViewport();
+
+          // Take the location of the signal diagram component, as it is the
+          // only one that is shifted in location by its (parent) scrollpane...
+          final Point location = viewport.getViewPosition();
+
+          // Take the visibleRect of the signal diagram, as it tells us where
+          // we're located in the scrollpane; this information we need to allow
+          // dead-center zooming...
+          int mx = aEvent.getCenterPoint().x;
+          int my = aEvent.getCenterPoint().y;
+
+          double zf = aEvent.getFactor();
+
+          Component view = viewport.getView();
+          Rectangle visibleRect = viewport.getVisibleRect();
+
+          int maxX = view.getWidth() - visibleRect.width;
+          int maxY = view.getHeight() - visibleRect.height;
+
+          // Recalculate the new screen position of the visible view
+          // rectangle...
+          int newX = ( int )Math.min( maxX, Math.max( 0.0, location.getX() + ( ( int )( mx * zf ) - mx ) ) );
+          int newY = ( int )Math.min( maxY, Math.max( 0.0, location.getY() + ( ( int )( my * zf ) - my ) ) );
+
+          Point newLocation = new Point( newX, newY );
+          viewport.setViewPosition( newLocation );
+        }
+
         // Update the zoom action's state...
         Action zoomInAction = getActionManager().getAction( ZoomInAction.ID );
         zoomInAction.setEnabled( dataAvailable && aEvent.canZoomIn() );
@@ -286,17 +327,6 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
         Action zoomOriginalAction = getActionManager().getAction( ZoomOriginalAction.ID );
         zoomOriginalAction.setEnabled( dataAvailable && !aEvent.isZoomOriginal() );
-
-        // Update the main component's state...
-        final SignalDiagramComponent diagram = getSignalDiagram();
-
-        // Recalculate all dimensions...
-        diagram.calculateDimensions();
-        // Notify that everything needs to be revalidated as well...
-        diagram.revalidateAll();
-        // Issue #100: in case the factor is changed, we need to repaint all
-        // components...
-        diagram.repaintAll();
       }
     } );
   }
