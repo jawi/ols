@@ -568,7 +568,7 @@ public class EditSignalElementPropertiesAction extends AbstractAction
 
       // Since the entire layout can be mixed up by the new label, we should
       // repaint the entire screen...
-      this.controller.recalculateDimensions();
+      this.controller.revalidateAll();
     }
   }
 }

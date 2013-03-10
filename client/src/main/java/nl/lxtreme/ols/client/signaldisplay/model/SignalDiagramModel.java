@@ -475,6 +475,14 @@ public class SignalDiagramModel
   }
 
   /**
+   * @return the minimum height of the signal diagram, in pixels, > 0.
+   */
+  public int getMinimumHeight()
+  {
+    return getSignalElementManager().calculateScreenHeight();
+  }
+
+  /**
    * {@inheritDoc}
    */
   public int getSampleRate()

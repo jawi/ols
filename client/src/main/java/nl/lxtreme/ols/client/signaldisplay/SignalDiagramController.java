@@ -262,7 +262,25 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
-   * {@inheritDoc}
+   * Called when the zoom-level is changed, or restored.
+   * <p>
+   * In case the dead-center zooming does not work, make sure that:
+   * </p>
+   * <ul>
+   * <li>the view of the viewport is updated <b>directly</b> with respect to its
+   * dimensions and location;
+   * <li>the viewport is revalidated <b>before</b> the new location is set;
+   * <li>the zoom controller calculates the correct width and height of the view
+   * using the <b>new</b> zoom factor;
+   * <li>the center point is in the correct coordinate space;
+   * <li>only the width of the component is updated;
+   * <li>the zoom level is <em>restored</em> after changing the window
+   * dimensions;
+   * <li>the timeline and channel labels follow the width/height of the signal
+   * view.
+   * </ul>
+   * 
+   * @see http://stackoverflow.com/questions/115103
    */
   @Override
   public void notifyZoomChange( final ZoomEvent aEvent )
@@ -298,33 +316,38 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
         }
 
         JViewport viewport = scrollPane.getViewport();
+        JViewport timelineViewport = scrollPane.getColumnHeader();
         Component view = viewport.getView();
 
         // Take the location of the signal diagram component, as it is the
         // only one that is shifted in location by its (parent) scrollpane...
-        final Point location = view.getLocation();
+        Point location = view.getLocation();
 
-        // Take the visibleRect of the signal diagram, as it tells us where
-        // we're located in the scrollpane; this information we need to allow
-        // dead-center zooming...
-        int mx = aEvent.getCenterPoint().x;
-
+        int mx = 0;
+        if ( aEvent.getCenterPoint() != null )
+        {
+          mx = aEvent.getCenterPoint().x;
+        }
         double zf = aEvent.getFactor();
 
         // Recalculate the new screen position of the visible view
-        // rectangle...
+        // rectangle; the X-coordinate shifts relative to the zoom
+        // factor, while the Y-coordinate remains as-is...
         int newX = location.x - ( ( int )( mx * zf ) - mx );
         int newY = location.y;
 
-        System.out.printf( "%s.%n", aEvent );
-        System.out.printf( "Old Location = %s, Old WxH = %s.%n", location, view.getPreferredSize() );
-
         view.setPreferredSize( aEvent.getDimension() );
+
+        // Make sure to make the viewport aware of the new dimensions of the
+        // view, this needs to be done *before* the view is set to its new
+        // location...
+        viewport.doLayout();
+
         view.setLocation( newX, newY );
 
-        System.out.printf( "New Location = %s, new WxH = %s.%n", view.getLocation(), view.getPreferredSize() );
-
-        recalculateDimensions();
+        // Layout the timeline as well, as it needs probably be repainted as
+        // well, since the view itself is changed...
+        timelineViewport.doLayout();
       }
     } );
   }
@@ -352,13 +375,12 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
-   * Recalculates the dimensions of the various components and repaints the
-   * entire component.
+   * Revalidates the various components and repaints the entire component.
    * <p>
    * SLOW METHOD: USE WITH CARE!
    * </p>
    */
-  public void recalculateDimensions()
+  public void revalidateAll()
   {
     this.signalDiagram.revalidateAll();
     this.signalDiagram.repaintAll();
@@ -471,7 +493,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
     getSignalDiagramModel().setDataModel( aDataSet );
 
     // will update the view and show the signals...
-    recalculateDimensions();
+    revalidateAll();
 
     // optionally center the view on the trigger moment...
     boolean autoCenterOnTrigger = UIManager.getBoolean( UIManagerKeys.AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE );

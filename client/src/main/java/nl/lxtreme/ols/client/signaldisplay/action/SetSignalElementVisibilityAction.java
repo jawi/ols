@@ -126,7 +126,7 @@ public class SetSignalElementVisibilityAction extends AbstractAction
     {
       // Group summary and analog scope are really hidden, so we need to repaint
       // the entire frame...
-      this.controller.recalculateDimensions();
+      this.controller.revalidateAll();
     }
   }
 
