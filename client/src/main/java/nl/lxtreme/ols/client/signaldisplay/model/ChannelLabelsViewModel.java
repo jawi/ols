@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
@@ -277,6 +278,56 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   public int getMinimalWidth()
   {
     return UIManager.getInt( CHANNELLABELS_MINIMAL_WIDTH );
+  }
+
+  /**
+   * @return
+   */
+  public int getPreferredHeight()
+  {
+    // channel height *always* follow the height of the main component...
+    return this.controller.getSignalDiagram().getHeight();
+  }
+
+  /**
+   * Determines the preferred width of this view, based on the current set of
+   * channel labels.
+   * 
+   * @return a width, in pixels.
+   */
+  public int getPreferredWidth()
+  {
+    int minWidth = 0;
+
+    BufferedImage dummy = new BufferedImage( 1, 1, BufferedImage.TYPE_INT_ARGB );
+    Graphics2D canvas = dummy.createGraphics();
+
+    int padding = ( 2 * getHorizontalPadding() ) + getGutterWidth();
+
+    try
+    {
+      final FontMetrics fm = canvas.getFontMetrics( getLabelFont() );
+      for ( SignalElement element : getSignalElementManager().getAllElements() )
+      {
+        String label = element.getLabel();
+        if ( label == null )
+        {
+          label = "";
+        }
+        minWidth = Math.max( minWidth, fm.stringWidth( label ) + padding );
+      }
+    }
+    finally
+    {
+      canvas.dispose();
+      canvas = null;
+      dummy = null;
+    }
+
+    // And always ensure we've got at least a minimal width...
+    minWidth = Math.max( minWidth, getMinimalWidth() );
+
+    return minWidth;
   }
 
   /**

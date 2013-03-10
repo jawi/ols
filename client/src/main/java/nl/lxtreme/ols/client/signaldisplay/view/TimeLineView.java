@@ -214,7 +214,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
    */
   public int getTimeLineHeight()
   {
-    return getModel().getTimeLineHeight();
+    return getModel().getPreferredHeight();
   }
 
   /**

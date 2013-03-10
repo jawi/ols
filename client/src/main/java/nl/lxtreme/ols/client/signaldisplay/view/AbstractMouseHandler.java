@@ -85,7 +85,7 @@ abstract class AbstractMouseHandler extends MouseAdapter
     {
       MouseEvent event = convertEvent( aEvent );
       Point point = event.getPoint();
-      
+
       if ( getModel().isCursorMode() )
       {
         final Cursor hoveredCursor = findCursor( point );
@@ -100,16 +100,9 @@ abstract class AbstractMouseHandler extends MouseAdapter
       // #132: Double clicking can mean a regular zoom event...
       if ( !aEvent.isConsumed() )
       {
-        if ( aEvent.isAltDown() || aEvent.isShiftDown() )
-        {
-          // Zoom out...
-          this.controller.getZoomController().zoomOut( point );
-        }
-        else
-        {
-          // Zoom in...
-          this.controller.getZoomController().zoomIn( point );
-        }
+        int rotation = ( aEvent.isAltDown() || aEvent.isShiftDown() ) ? 1 : -1;
+
+        this.controller.getZoomController().zoom( rotation, point );
       }
     }
   }

@@ -274,59 +274,59 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
       @Override
       public void run()
       {
-        recalculateDimensions();
-
-        if ( aEvent.isZoomInOrOut() )
-        {
-          // Idea based on <http://stackoverflow.com/questions/115103>
-          JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
-          if ( scrollPane == null )
-          {
-            // Nothing to do...
-            return;
-          }
-
-          JViewport viewport = scrollPane.getViewport();
-
-          // Take the location of the signal diagram component, as it is the
-          // only one that is shifted in location by its (parent) scrollpane...
-          final Point location = viewport.getViewPosition();
-
-          // Take the visibleRect of the signal diagram, as it tells us where
-          // we're located in the scrollpane; this information we need to allow
-          // dead-center zooming...
-          int mx = aEvent.getCenterPoint().x;
-          int my = aEvent.getCenterPoint().y;
-
-          double zf = aEvent.getFactor();
-
-          Component view = viewport.getView();
-          Rectangle visibleRect = viewport.getVisibleRect();
-
-          int maxX = view.getWidth() - visibleRect.width;
-          int maxY = view.getHeight() - visibleRect.height;
-
-          // Recalculate the new screen position of the visible view
-          // rectangle...
-          int newX = ( int )Math.min( maxX, Math.max( 0.0, location.getX() + ( ( int )( mx * zf ) - mx ) ) );
-          int newY = ( int )Math.min( maxY, Math.max( 0.0, location.getY() + ( ( int )( my * zf ) - my ) ) );
-
-          Point newLocation = new Point( newX, newY );
-          viewport.setViewPosition( newLocation );
-        }
+        final ZoomController zoomCtrl = aEvent.getZoomController();
 
         // Update the zoom action's state...
         Action zoomInAction = getActionManager().getAction( ZoomInAction.ID );
-        zoomInAction.setEnabled( dataAvailable && aEvent.canZoomIn() );
+        zoomInAction.setEnabled( dataAvailable && zoomCtrl.canZoomIn() );
 
         Action zoomOutAction = getActionManager().getAction( ZoomOutAction.ID );
-        zoomOutAction.setEnabled( dataAvailable && aEvent.canZoomOut() );
+        zoomOutAction.setEnabled( dataAvailable && zoomCtrl.canZoomOut() );
 
         Action zoomAllAction = getActionManager().getAction( ZoomAllAction.ID );
-        zoomAllAction.setEnabled( dataAvailable && !aEvent.isZoomAll() );
+        zoomAllAction.setEnabled( dataAvailable && !zoomCtrl.isZoomAll() );
 
         Action zoomOriginalAction = getActionManager().getAction( ZoomOriginalAction.ID );
-        zoomOriginalAction.setEnabled( dataAvailable && !aEvent.isZoomOriginal() );
+        zoomOriginalAction.setEnabled( dataAvailable && !zoomCtrl.isZoomDefault() );
+
+        // Idea based on <http://stackoverflow.com/questions/115103>
+        JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
+        if ( scrollPane == null )
+        {
+          // Nothing to do...
+          return;
+        }
+
+        JViewport viewport = scrollPane.getViewport();
+        Component view = viewport.getView();
+
+        // Take the location of the signal diagram component, as it is the
+        // only one that is shifted in location by its (parent) scrollpane...
+        final Point location = view.getLocation();
+
+        // Take the visibleRect of the signal diagram, as it tells us where
+        // we're located in the scrollpane; this information we need to allow
+        // dead-center zooming...
+        int mx = aEvent.getCenterPoint().x;
+
+        double zf = aEvent.getFactor();
+
+        // Recalculate the new screen position of the visible view
+        // rectangle...
+        int newX = location.x - ( ( int )( mx * zf ) - mx );
+        int newY = location.y;
+
+        System.out.printf( "%s.%n", aEvent );
+        System.out.printf( "Old Location = %s, Old WxH = %s.%n", location, view.getPreferredSize() );
+
+        view.setPreferredSize( aEvent.getDimension() );
+        view.setLocation( newX, newY );
+
+        System.out.printf( "New Location = %s, new WxH = %s.%n", view.getLocation(), view.getPreferredSize() );
+
+        view.getParent().doLayout();
+        signalDiagram.revalidateAll();
+        signalDiagram.repaintAll();
       }
     } );
   }
@@ -362,7 +362,6 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public void recalculateDimensions()
   {
-    this.signalDiagram.calculateDimensions();
     this.signalDiagram.revalidateAll();
     this.signalDiagram.repaintAll();
   }

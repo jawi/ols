@@ -311,6 +311,23 @@ public class TimeLineUI extends ComponentUI
     return hints;
   }
 
+  @Override
+  public Dimension getPreferredSize( JComponent aComponent )
+  {
+    TimeLineView view = ( TimeLineView )aComponent;
+    TimeLineViewModel model = view.getModel();
+
+    int height = 0;
+    int width = 0;
+    if ( model.hasData() )
+    {
+      height = model.getPreferredHeight();
+      width = model.getPreferredWidth();
+    }
+
+    return new Dimension( width, height );
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -325,7 +342,7 @@ public class TimeLineUI extends ComponentUI
       return;
     }
 
-    final int baseTickYpos = model.getTimeLineHeight() - VERTICAL_PADDING;
+    final int baseTickYpos = model.getPreferredHeight() - VERTICAL_PADDING;
     final int tickYpos = baseTickYpos - model.getTickHeight();
     final int majorTickYpos = baseTickYpos - model.getMajorTickHeight();
     final int minorTickYpos = baseTickYpos - model.getMinorTickHeight();

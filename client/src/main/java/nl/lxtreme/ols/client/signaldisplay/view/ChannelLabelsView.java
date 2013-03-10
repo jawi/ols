@@ -487,47 +487,6 @@ public class ChannelLabelsView extends AbstractViewLayer
   }
 
   /**
-   * Determines the preferred width of this view, based on the current set of
-   * channel labels.
-   * 
-   * @return a width, in pixels.
-   */
-  public int getPreferredWidth()
-  {
-    int minWidth = 0;
-
-    BufferedImage dummy = new BufferedImage( 1, 1, BufferedImage.TYPE_INT_ARGB );
-    Graphics2D canvas = dummy.createGraphics();
-
-    int padding = ( 2 * this.model.getHorizontalPadding() ) + this.model.getGutterWidth();
-
-    try
-    {
-      final FontMetrics fm = canvas.getFontMetrics( this.model.getLabelFont() );
-      for ( SignalElement element : this.model.getSignalElementManager().getAllElements() )
-      {
-        String label = element.getLabel();
-        if ( label == null )
-        {
-          label = "";
-        }
-        minWidth = Math.max( minWidth, fm.stringWidth( label ) + padding );
-      }
-    }
-    finally
-    {
-      canvas.dispose();
-      canvas = null;
-      dummy = null;
-    }
-
-    // And always ensure we've got at least a minimal width...
-    minWidth = Math.max( minWidth, this.model.getMinimalWidth() );
-
-    return minWidth;
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
