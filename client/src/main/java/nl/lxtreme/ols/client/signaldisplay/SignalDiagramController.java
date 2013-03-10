@@ -324,9 +324,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
         System.out.printf( "New Location = %s, new WxH = %s.%n", view.getLocation(), view.getPreferredSize() );
 
-        view.getParent().doLayout();
-        signalDiagram.revalidateAll();
-        signalDiagram.repaintAll();
+        recalculateDimensions();
       }
     } );
   }

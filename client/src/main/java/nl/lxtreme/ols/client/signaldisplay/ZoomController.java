@@ -47,7 +47,7 @@ public final class ZoomController
 
     private final double oldFactor;
     private final double newFactor;
-    private final ZoomValue value;
+    private final ZoomAction value;
     private final Point centerPoint;
     private final Dimension dimension;
 
@@ -56,7 +56,7 @@ public final class ZoomController
     /**
      * Creates a new ZoomController.ZoomEvent instance.
      */
-    public ZoomEvent( final double aOldFactor, final double aNewFactor, final ZoomValue aValue,
+    public ZoomEvent( final double aOldFactor, final double aNewFactor, final ZoomAction aValue,
         final Point aCenterPoint, final Dimension aDimension )
     {
       this.oldFactor = aOldFactor;
@@ -87,19 +87,13 @@ public final class ZoomController
     }
 
     /**
-     * Returns the <em>relative</em> zoom factor in case this event represents a
-     * zoom in/out event, or the <em>absolute</em> factor otherwise.
+     * Returns the <em>relative</em> zoom factor.
      * 
      * @return the zoom factor, >= 0.0.
-     * @see #isZoomInOrOut()
      */
     public double getFactor()
     {
-      if ( isZoomInOrOut() )
-      {
-        return this.newFactor / this.oldFactor;
-      }
-      return this.newFactor;
+      return this.newFactor / this.oldFactor;
     }
 
     /**
@@ -110,20 +104,11 @@ public final class ZoomController
       return ZoomController.this;
     }
 
-    /**
-     * @return <code>true</code> if this event is fired due to zooming in or
-     *         out, <code>false</code> otherwise.
-     */
-    public boolean isZoomInOrOut()
-    {
-      return ( ZoomValue.IN == this.value ) || ( ZoomValue.OUT == this.value );
-    }
-
     @Override
     public String toString()
     {
-      return String.format( "ZoomEvent[ZV = %s, old Zf = %f, new Zf = %f, CP = %s, Dim = %s]", value, oldFactor, newFactor,
-          centerPoint, dimension );
+      return String.format( "ZoomEvent[ZV = %s, old Zf = %f, new Zf = %f, CP = %s, Dim = %s]", value, oldFactor,
+          newFactor, centerPoint, dimension );
     }
   }
 
@@ -147,10 +132,15 @@ public final class ZoomController
   /**
    * Denotes the value with which zooming in/out should happen.
    */
-  public static enum ZoomValue
+  public static enum ZoomAction
   {
     // CONSTANTS
 
+    /**
+     * Keeps zoom-level as-is, useful for redrawing the views after changing
+     * their dimensions.
+     */
+    RESTORE,
     /** Zooms in with a constant factor. */
     IN,
     /** Zooms out with a constant factor. */
@@ -163,14 +153,26 @@ public final class ZoomController
     MAXIMUM;
   }
 
-  private static class ZoomHolder
+  /**
+   * Small container for keeping the zoom state.
+   */
+  private static class ZoomStateHolder
   {
-    final double factor;
-    final ZoomValue value;
+    // VARIABLES
 
-    public ZoomHolder( ZoomValue aValue, double aFactor )
+    final double factor;
+    final ZoomAction action;
+
+    // CONSTRUCTORS
+
+    public ZoomStateHolder()
     {
-      this.value = aValue;
+      this( ZoomAction.DEFAULT, DEFAULT_ZOOM_FACTOR );
+    }
+
+    public ZoomStateHolder( ZoomAction aAction, double aFactor )
+    {
+      this.action = aAction;
       this.factor = aFactor;
     }
   }
@@ -187,7 +189,7 @@ public final class ZoomController
   private final SignalDiagramController controller;
   private final EventListenerList eventListeners;
 
-  private final AtomicReference<ZoomHolder> zoomHolderRef;
+  private final AtomicReference<ZoomStateHolder> zoomHolderRef;
 
   // CONSTRUCTORS
 
@@ -202,7 +204,7 @@ public final class ZoomController
     this.controller = aController;
     this.eventListeners = new EventListenerList();
 
-    this.zoomHolderRef = new AtomicReference<ZoomHolder>( new ZoomHolder( ZoomValue.DEFAULT, DEFAULT_ZOOM_FACTOR ) );
+    this.zoomHolderRef = new AtomicReference<ZoomStateHolder>( new ZoomStateHolder() );
   }
 
   // METHODS
@@ -251,7 +253,7 @@ public final class ZoomController
    */
   public double getFactor()
   {
-    ZoomHolder zh = this.zoomHolderRef.get();
+    ZoomStateHolder zh = this.zoomHolderRef.get();
     double result = zh.factor;
     if ( Double.isNaN( result ) )
     {
@@ -268,10 +270,10 @@ public final class ZoomController
    */
   public boolean isZoomAll()
   {
-    ZoomHolder zh = this.zoomHolderRef.get();
-    ZoomValue value = zh.value;
+    ZoomStateHolder zh = this.zoomHolderRef.get();
+    ZoomAction value = zh.action;
 
-    return ( value == ZoomValue.ALL );
+    return ( value == ZoomAction.ALL );
   }
 
   /**
@@ -280,10 +282,10 @@ public final class ZoomController
    */
   public boolean isZoomDefault()
   {
-    ZoomHolder zh = this.zoomHolderRef.get();
-    ZoomValue value = zh.value;
+    ZoomStateHolder zh = this.zoomHolderRef.get();
+    ZoomAction value = zh.action;
 
-    return ( value == ZoomValue.DEFAULT );
+    return ( value == ZoomAction.DEFAULT );
   }
 
   /**
@@ -302,9 +304,9 @@ public final class ZoomController
    */
   public void restoreZoomLevel()
   {
-    ZoomHolder zh = this.zoomHolderRef.get();
+    ZoomStateHolder zh = this.zoomHolderRef.get();
 
-    zoom( zh.value, zh.factor, null );
+    zoom( ZoomAction.RESTORE, zh.factor, null );
   }
 
   /**
@@ -322,12 +324,12 @@ public final class ZoomController
     if ( aRotation > 0 )
     {
       double ratio = 1.0 / ( aRotation * DEFAULT_ZOOM_RATIO );
-      zoom( ZoomValue.OUT, ratio, aPoint );
+      zoom( ZoomAction.OUT, ratio, aPoint );
     }
     else if ( aRotation < 0 )
     {
       double ratio = ( -aRotation * DEFAULT_ZOOM_RATIO );
-      zoom( ZoomValue.IN, ratio, aPoint );
+      zoom( ZoomAction.IN, ratio, aPoint );
     }
   }
 
@@ -336,7 +338,7 @@ public final class ZoomController
    */
   public void zoomAll()
   {
-    zoom( ZoomValue.ALL, getMinZoomLevel(), null );
+    zoom( ZoomAction.ALL, getMinZoomLevel(), null );
   }
 
   /**
@@ -344,7 +346,7 @@ public final class ZoomController
    */
   public void zoomDefault()
   {
-    zoom( ZoomValue.DEFAULT, getDefaultZoomLevel(), null );
+    zoom( ZoomAction.DEFAULT, getDefaultZoomLevel(), null );
   }
 
   /**
@@ -352,7 +354,7 @@ public final class ZoomController
    */
   public void zoomIn()
   {
-    zoom( ZoomValue.IN, DEFAULT_ZOOM_RATIO, null );
+    zoom( ZoomAction.IN, DEFAULT_ZOOM_RATIO, null );
   }
 
   /**
@@ -360,7 +362,7 @@ public final class ZoomController
    */
   public void zoomMaximum()
   {
-    zoom( ZoomValue.ALL, getMaxZoomLevel(), null );
+    zoom( ZoomAction.MAXIMUM, getMaxZoomLevel(), null );
   }
 
   /**
@@ -368,7 +370,7 @@ public final class ZoomController
    */
   public void zoomOut()
   {
-    zoom( ZoomValue.OUT, 1.0 / DEFAULT_ZOOM_RATIO, null );
+    zoom( ZoomAction.OUT, 1.0 / DEFAULT_ZOOM_RATIO, null );
   }
 
   /**
@@ -392,7 +394,7 @@ public final class ZoomController
    * 
    * @return a new {@link ZoomEvent} instance, never <code>null</code>.
    */
-  private ZoomEvent createZoomEvent( ZoomValue aZoomValue, final double aOldFactor, final double aNewFactor,
+  private ZoomEvent createZoomEvent( ZoomAction aZoomValue, final double aOldFactor, final double aNewFactor,
       final Point aCenterPoint, final Dimension aDimension )
   {
     return new ZoomEvent( aOldFactor, aNewFactor, aZoomValue, aCenterPoint, aDimension );
@@ -495,22 +497,27 @@ public final class ZoomController
   /**
    * Zooms in with a factor 2.
    */
-  private void zoom( final ZoomValue aZoomValue, final double aFactor, final Point aCenterPoint )
+  private void zoom( final ZoomAction aZoomValue, final double aFactor, final Point aCenterPoint )
   {
     double oldFactor = getFactor();
     double newFactor = aFactor; // assume the factor is absolute...
-    ZoomValue newValue = aZoomValue;
+    ZoomAction newValue = aZoomValue;
 
-    Dimension viewSize = getSignalDiagram().getPreferredSize();
+    SignalDiagramComponent signalDiagram = getSignalDiagram();
 
-    // Ensure the zoom level is always bounded to the current view and the
-    // number of samples...
-    final Rectangle visibleViewSize = getVisibleViewSize();
-    final SignalDiagramModel model = getModel();
-    final double absLength = model.getAbsoluteLength();
+    Dimension viewSize = signalDiagram.getPreferredSize();
+    Rectangle visibleViewSize = signalDiagram.getVisibleViewSize();
+
+    SignalDiagramModel model = getModel();
+    double absLength = model.getAbsoluteLength();
 
     int newWidth;
-    int newHeight = Math.max( viewSize.height, visibleViewSize.height );
+    int newHeight = model.getSignalElementManager().calculateScreenHeight();
+    if ( newHeight < visibleViewSize.height )
+    {
+      newHeight = visibleViewSize.height;
+    }
+
     switch ( aZoomValue )
     {
       case IN:
@@ -533,23 +540,21 @@ public final class ZoomController
         break;
 
       case DEFAULT:
-      default:
         newFactor = getDefaultZoomLevel();
         newWidth = ( int )( absLength * newFactor );
         break;
-    }
-
-    // Make sure less samples do not cause empty bars on the screen...
-    double oldViewWidth = Math.round( absLength * oldFactor );
-    if ( oldViewWidth < visibleViewSize.width )
-    {
-      newFactor = visibleViewSize.width / absLength;
+        
+      case RESTORE:
+      default:
+        newFactor = oldFactor;
+        newWidth = viewSize.width;
+        break;
     }
 
     Point centerPoint = aCenterPoint;
     if ( centerPoint == null )
     {
-      Rectangle dims = getSignalDiagram().getVisibleRect();
+      Rectangle dims = signalDiagram.getVisibleRect();
       centerPoint = new Point( ( int )dims.getCenterX(), 0 );
     }
 
@@ -560,24 +565,24 @@ public final class ZoomController
     if ( Math.abs( newFactor - defaultZoomLevel ) < 1.0e-6 )
     {
       newFactor = defaultZoomLevel;
-      newValue = ZoomValue.DEFAULT;
+      newValue = ZoomAction.DEFAULT;
     }
 
     if ( Double.compare( newFactor, minZoomLevel ) < 0.0 )
     {
       newFactor = minZoomLevel;
-      newValue = ZoomValue.ALL;
+      newValue = ZoomAction.ALL;
     }
     else if ( Double.compare( newFactor, maxZoomLevel ) > 0.0 )
     {
       newFactor = maxZoomLevel;
-      newValue = ZoomValue.MAXIMUM;
+      newValue = ZoomAction.MAXIMUM;
     }
 
     Dimension dimension = new Dimension( newWidth, newHeight );
 
-    ZoomHolder newHolder = new ZoomHolder( newValue, newFactor );
-    ZoomHolder oldHolder;
+    ZoomStateHolder newHolder = new ZoomStateHolder( newValue, newFactor );
+    ZoomStateHolder oldHolder;
 
     do
     {

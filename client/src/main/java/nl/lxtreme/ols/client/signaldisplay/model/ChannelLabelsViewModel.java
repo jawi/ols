@@ -281,11 +281,11 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
-   * @return
+   * @return the preferred height of the view, in pixels, > 0.
    */
   public int getPreferredHeight()
   {
-    // channel height *always* follow the height of the main component...
+    // channel height *always* follows the height of the main component...
     return this.controller.getSignalDiagram().getHeight();
   }
 

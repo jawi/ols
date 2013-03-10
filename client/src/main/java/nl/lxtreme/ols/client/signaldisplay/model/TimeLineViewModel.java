@@ -205,7 +205,7 @@ public class TimeLineViewModel extends AbstractViewModel
    */
   public int getPreferredWidth()
   {
-    // timeline width *always* follow the width of the main component...
+    // timeline width *always* follows the width of the main component...
     return this.controller.getSignalDiagram().getWidth();
   }
 
