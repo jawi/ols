@@ -409,19 +409,19 @@ public class SignalDiagramModel
    */
   public Double getDisplayedTimeInterval()
   {
-    final Rectangle visibleRect = this.controller.getSignalDiagram().getVisibleViewSize();
-    if ( ( visibleRect == null ) || !hasData() )
+    final int width = this.controller.getSignalDiagram().getVisibleRect().width;
+    if ( !hasData() )
     {
       return null;
     }
     double result;
     if ( hasTimingData() )
     {
-      result = visibleRect.width / ( getZoomFactor() * getSampleRate() );
+      result = width / ( getZoomFactor() * getSampleRate() );
     }
     else
     {
-      result = visibleRect.width / getZoomFactor();
+      result = width / getZoomFactor();
     }
     return Double.valueOf( result );
   }

@@ -272,35 +272,22 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
    * 
    * @return a visible view size, as {@link Dimension}, never <code>null</code>.
    */
-  public final Rectangle getVisibleViewSize()
+  @Override
+  public Rectangle getVisibleRect()
   {
-    final JComponent component = getSignalView();
-
-    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, component );
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, this );
 
     final Rectangle rect;
     if ( scrollPane != null )
     {
-      rect = scrollPane.getViewport().getBounds();
+      rect = scrollPane.getViewport().getViewRect();
     }
     else
     {
-      rect = getVisibleRect();
+      rect = super.getVisibleRect();
     }
 
     return rect;
-  }
-
-  /**
-   * Calculates the preferred height.
-   * 
-   * @return the preferred height of this component, in pixels, > 0.
-   */
-  public int getPreferredHeight()
-  {
-    int height = getModel().getMinimumHeight();
-    Rectangle visibleViewSize = getVisibleViewSize();
-    return Math.max( visibleViewSize.height, height );
   }
 
   /**
@@ -321,7 +308,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
         final long endTime = System.nanoTime();
         final long renderTime = endTime - startTime;
         System.out.printf( "Rendering time = %s, View = %s.%n", UnitOfTime.format( renderTime / 1.0e9 ),
-            getVisibleViewSize() );
+            getVisibleRect() );
       }
     }
     else
