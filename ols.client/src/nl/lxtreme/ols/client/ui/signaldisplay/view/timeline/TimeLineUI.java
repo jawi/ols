@@ -246,6 +246,8 @@ public class TimeLineUI extends ComponentUI
       {
         this.boundaries.x = Math.max( 0, this.boundaries.x - this.boundaries.width );
       }
+
+      System.out.printf( "Recalculated Bounds = %s%n", this.boundaries );
     }
   }
 
@@ -605,6 +607,8 @@ public class TimeLineUI extends ComponentUI
         continue;
       }
 
+      System.out.printf( "Calculated Bounds = %s%n", boundaries );
+
       labels.add( new MarkerLabel( marker, flagText, boundaries ) );
     }
 
@@ -632,13 +636,24 @@ public class TimeLineUI extends ComponentUI
       Polygon flagPoly = label.getPolygon();
 
       aCanvas.setColor( cursorTextColor );
-      aCanvas.fillPolygon( flagPoly );
+      // See below...
+      // aCanvas.fillPolygon( flagPoly );
+      aCanvas.fillRect( label.boundaries.x, label.boundaries.y, label.boundaries.width, label.boundaries.height );
 
       aCanvas.setComposite( oldComposite );
       aCanvas.setStroke( oldStroke );
 
       aCanvas.setColor( cursorColor );
-      aCanvas.drawPolygon( flagPoly );
+      // It appears that the fill/draw polygon routines are using some kind of
+      // optimization that fails for large values, causing the flags to be
+      // painted in a weird way...
+      // aCanvas.drawPolygon( flagPoly );
+
+      aCanvas.drawLine( flagPoly.xpoints[0], flagPoly.ypoints[0], flagPoly.xpoints[1], flagPoly.ypoints[1] );
+      aCanvas.drawLine( flagPoly.xpoints[1], flagPoly.ypoints[1], flagPoly.xpoints[2], flagPoly.ypoints[2] );
+      aCanvas.drawLine( flagPoly.xpoints[2], flagPoly.ypoints[2], flagPoly.xpoints[3], flagPoly.ypoints[3] );
+      aCanvas.drawLine( flagPoly.xpoints[3], flagPoly.ypoints[3], flagPoly.xpoints[4], flagPoly.ypoints[4] );
+      aCanvas.drawLine( flagPoly.xpoints[4], flagPoly.ypoints[4], flagPoly.xpoints[0], flagPoly.ypoints[0] );
 
       final int textXpos = boundaries.x + ( label.mirrored ? PADDING_LEFT : PADDING_RIGHT );
       final int textYpos = boundaries.y + yOffset;
