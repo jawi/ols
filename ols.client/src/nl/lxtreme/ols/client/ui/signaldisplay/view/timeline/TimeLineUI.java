@@ -246,8 +246,6 @@ public class TimeLineUI extends ComponentUI
       {
         this.boundaries.x = Math.max( 0, this.boundaries.x - this.boundaries.width );
       }
-
-      System.out.printf( "Recalculated Bounds = %s%n", this.boundaries );
     }
   }
 
@@ -606,8 +604,6 @@ public class TimeLineUI extends ComponentUI
         // Trivial reject: don't paint undefined cursors...
         continue;
       }
-
-      System.out.printf( "Calculated Bounds = %s%n", boundaries );
 
       labels.add( new MarkerLabel( marker, flagText, boundaries ) );
     }
