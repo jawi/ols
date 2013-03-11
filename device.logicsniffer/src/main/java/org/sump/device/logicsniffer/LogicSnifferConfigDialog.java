@@ -65,6 +65,12 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   static final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
   {
     private static final long serialVersionUID = 1L;
+    private final LogicSnifferConfigDialog parent;
+     
+    public BinarySizeComboBoxRenderer(LogicSnifferConfigDialog dialog)
+    {
+    	this.parent = dialog;
+    }
 
     @Override
     public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
@@ -73,7 +79,31 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = SizeUnit.format( ( ( Integer )aValue ).doubleValue() );
+    	  final double US_PER_MS = 1000.0;
+    	  final double MS_PER_S = 1000.0;
+    	  final double US_PER_S = US_PER_MS * MS_PER_S;
+    	  String timeStr = "";
+    	  int chGroups = parent.getEnabledChannelGroups();
+
+    	  if (chGroups > 0)
+    	  {
+    		  int sampleRate = parent.getSelectedSampleRate();
+    		  double timeSpace = US_PER_S * ((double)(Integer)aValue) / (sampleRate * chGroups);
+
+    		  if (timeSpace >= US_PER_S)
+    		  {
+    			  timeStr = String.format(" (%.2fs)", timeSpace / US_PER_S);
+    		  }
+    		  else if (timeSpace >= US_PER_MS)
+    		  {
+    			  timeStr = String.format(" (%.2fms)", timeSpace / US_PER_MS);
+    		  }
+    		  else
+    		  {
+    			  timeStr = String.format(" (%.2fus)", timeSpace);
+    		  }
+    	  }    	  
+        value = SizeUnit.format( ( ( Integer )aValue ).doubleValue() ) + timeStr;
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -1248,7 +1278,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     }
 
     this.sizeSelect = new JComboBox();
-    this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer() );
+    this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer(this) );
     this.sizeSelect.addActionListener( fieldUpdater );
 
     this.maxSampleSize = new JCheckBox( "Automatic (maximum)" );
