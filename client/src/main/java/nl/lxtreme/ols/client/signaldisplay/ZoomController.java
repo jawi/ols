@@ -493,8 +493,9 @@ public final class ZoomController
     // only one that is shifted in location by its (parent) scrollpane...
     Point currentLocation = signalDiagram.getLocation();
 
-    int mx = ( aCenterPoint != null ) ? aCenterPoint.x : ( currentLocation.x + signalDiagram.getWidth() / 2 );
-    int currentWidth = signalDiagram.getVisibleViewSize().width;
+    Rectangle visibleViewSize = signalDiagram.getVisibleViewSize();
+    int mx = ( aCenterPoint != null ) ? aCenterPoint.x : ( int )visibleViewSize.getCenterX();
+    int currentWidth = visibleViewSize.width;
 
     Rectangle visibleRect = new Rectangle();
     // The height of the view is never changed due to a zoom event, we always
@@ -553,8 +554,13 @@ public final class ZoomController
     int maxX = ( visibleRect.width - currentWidth );
     if ( Math.abs( visibleRect.x ) > maxX )
     {
-      boolean neg = visibleRect.x < 0;
-      visibleRect.x = neg ? -maxX : maxX;
+      visibleRect.x = -maxX;
+    }
+    // View locations appear to be always negative with respect to the (0,
+    // 0)-coordinate...
+    if ( visibleRect.x > 0 )
+    {
+      visibleRect.x = -visibleRect.x;
     }
 
     return visibleRect;
