@@ -21,12 +21,20 @@
 package nl.lxtreme.ols.client.ui.signaldisplay;
 
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.concurrent.atomic.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.getAncestorOfClass;
 
-import javax.swing.event.*;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.MouseWheelEvent;
+import java.util.EventListener;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.swing.JComponent;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.event.EventListenerList;
 
 
 /**
@@ -481,8 +489,7 @@ public final class ZoomController
    * @return a rectangle denoting the visible view of the component, never
    *         <code>null</code>.
    */
-  private Rectangle calculateVisibleViewRect( final ZoomStateHolder aZoomState, final double aRelativeFactor,
-      final Point aCenterPoint )
+  private Rectangle calculateVisibleViewRect( final ZoomStateHolder aZoomState, final Point aCenterPoint )
   {
     SignalDiagramComponent signalDiagram = getSignalDiagram();
     SignalDiagramModel model = getModel();
@@ -490,66 +497,74 @@ public final class ZoomController
     // Take the location of the signal diagram component, as it is the
     // only one that is shifted in location by its (parent) scrollpane...
     Point currentLocation = signalDiagram.getLocation();
+    Rectangle currentVisibleRect = signalDiagram.getVisibleRect();
 
-    Rectangle visibleViewSize = signalDiagram.getVisibleViewSize();
-    int mx = ( aCenterPoint != null ) ? aCenterPoint.x : ( int )visibleViewSize.getCenterX();
-    int currentWidth = visibleViewSize.width;
-
+    int mx = ( aCenterPoint != null ) ? aCenterPoint.x : ( int )currentVisibleRect.getCenterX();
     Rectangle visibleRect = new Rectangle();
-    // The height of the view is never changed due to a zoom event, we always
-    // use the minimum height possible...
-    visibleRect.height = signalDiagram.getPreferredHeight();
+
+    // Calculate the relative factor we're using...
+    double relFactor = aZoomState.factor / getFactor();
 
     // Calculate the new dimensions and the new location of the view...
     switch ( aZoomState.lastAction )
     {
       case IN:
       case OUT:
+      {
         // Use the given (relative!) factor to calculate the new
         // width of the view!
         Dimension viewSize = signalDiagram.getPreferredSize();
-        visibleRect.width = ( int )( viewSize.width * aRelativeFactor );
+        visibleRect.width = ( int )( viewSize.width * relFactor );
+        visibleRect.height = currentVisibleRect.height;
         // Recalculate the new screen position of the visible view
         // rectangle; the X-coordinate shifts relative to the zoom
         // factor, while the Y-coordinate remains as-is...
-        visibleRect.x = currentLocation.x - ( ( int )( mx * aRelativeFactor ) - mx );
+        visibleRect.x = ( int )Math.round( ( currentLocation.x - ( mx * relFactor ) ) + mx );
         visibleRect.y = currentLocation.y;
         break;
-
+      }
       case ALL:
+      {
         // The new width of the view is always the same as the width of the view
         // size...
-        visibleRect.width = currentWidth;
+        Dimension outerViewSize = getOuterViewSize( signalDiagram );
+        visibleRect.width = outerViewSize.width;
+        visibleRect.height = outerViewSize.height;
         // Since everything fits on screen, we can reset the view location to
         // its initial X-coordinate...
         visibleRect.x = 0;
         visibleRect.y = currentLocation.y;
         break;
-
+      }
       case MAXIMUM:
       case DEFAULT:
+      {
         // Recalculate the new width based on the max./default zoom level...
         visibleRect.width = ( int )( model.getAbsoluteLength() * aZoomState.factor );
+        visibleRect.height = currentVisibleRect.height;
         // Recalculate the new screen position of the visible view
         // rectangle; the X-coordinate shifts relative to the zoom
         // factor, while the Y-coordinate remains as-is...
-        visibleRect.x = currentLocation.x - ( ( int )( mx * aRelativeFactor ) - mx );
+        visibleRect.x = ( int )Math.round( ( currentLocation.x - ( mx * relFactor ) ) + mx );
         visibleRect.y = currentLocation.y;
         break;
-
+      }
       case RESTORE:
       default:
+      {
         // Recalculate the new width based on the old zoom level...
         visibleRect.width = ( int )( model.getAbsoluteLength() * aZoomState.factor );
+        visibleRect.height = currentVisibleRect.height;
         // Keep the location as-is...
         visibleRect.x = currentLocation.x;
         visibleRect.y = currentLocation.y;
         break;
+      }
     }
 
     // Ensure the visible location stays in the calculated minimum and
     // maximum...
-    int maxX = ( visibleRect.width - currentWidth );
+    int maxX = ( visibleRect.width - currentVisibleRect.width );
     if ( Math.abs( visibleRect.x ) > maxX )
     {
       visibleRect.x = -maxX;
@@ -559,6 +574,32 @@ public final class ZoomController
     if ( visibleRect.x > 0 )
     {
       visibleRect.x = -visibleRect.x;
+    }
+
+    // Ensure the minimum height of the view is adhered...
+    int minimumHeight = model.getMinimumHeight();
+    if ( visibleRect.height < minimumHeight )
+    {
+      visibleRect.height = minimumHeight;
+    }
+    // Try to suppress the vertical scrollbar, if possible...
+    if ( visibleRect.width > currentVisibleRect.width )
+    {
+      JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, signalDiagram );
+      if ( scrollPane != null )
+      {
+        JScrollBar horizontalScrollBar = scrollPane.getHorizontalScrollBar();
+        int sbHeight = horizontalScrollBar.getHeight();
+        // When the width of the view is wider than we can currently view, the
+        // horizontal scrollbar is not yet visible, and we have enough room
+        // vertically, subtract the scrollbar height in order to suppress the
+        // vertical scrollbar...
+        if ( !horizontalScrollBar.isVisible() && ( visibleRect.height > ( minimumHeight + sbHeight ) )
+            && ( visibleRect.height == currentVisibleRect.height ) )
+        {
+          visibleRect.height -= sbHeight;
+        }
+      }
     }
 
     return visibleRect;
@@ -628,7 +669,7 @@ public final class ZoomController
       return DEFAULT_ZOOM_FACTOR;
     }
 
-    final double width = signalDiagram.getVisibleViewSize().getWidth();
+    final double width = getOuterViewSize( signalDiagram ).width;
     final double length = model.getAbsoluteLength();
     final double min = 1.0 / MAX_COMP_WIDTH;
 
@@ -641,6 +682,39 @@ public final class ZoomController
   private SignalDiagramModel getModel()
   {
     return this.controller.getSignalDiagramModel();
+  }
+
+  /**
+   * @return the view size of the given component, including any width/height of
+   *         visible scrollbars.
+   */
+  private Dimension getOuterViewSize( final JComponent aComponent )
+  {
+    final Rectangle rect = aComponent.getVisibleRect();
+
+    final JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, aComponent );
+    if ( scrollPane != null )
+    {
+      // Take care of the fact that scrollbars *can* be visible, which is not
+      // what we want here. We want to have the outside boundaries, including
+      // the scrollbars...
+      JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+      if ( scrollBar.isVisible() )
+      {
+        rect.width += scrollBar.getWidth();
+      }
+      scrollBar = scrollPane.getHorizontalScrollBar();
+      if ( scrollBar.isVisible() )
+      {
+        rect.height += scrollBar.getHeight();
+      }
+
+      final Insets insets = scrollPane.getViewport().getInsets();
+      rect.width -= ( insets.left + insets.right );
+      rect.height -= ( insets.top + insets.bottom );
+    }
+
+    return rect.getSize();
   }
 
   /**
@@ -662,7 +736,7 @@ public final class ZoomController
   private void performZoomAction( final ZoomAction aAction, final double aFactor, final Point aCenterPoint )
   {
     ZoomStateHolder newState = calculateNewZoomState( aAction, aFactor );
-    Rectangle visibleRect = calculateVisibleViewRect( newState, aFactor, aCenterPoint );
+    Rectangle visibleRect = calculateVisibleViewRect( newState, aCenterPoint );
 
     ZoomStateHolder oldState;
     do
