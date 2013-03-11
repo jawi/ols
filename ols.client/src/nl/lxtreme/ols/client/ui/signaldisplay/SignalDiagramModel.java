@@ -398,27 +398,9 @@ public final class SignalDiagramModel implements PropertyChangeListener
   }
 
   /**
-   * Returns the maximum width of the screen.
-   * 
-   * @return a screen width, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
+   * @return the minimum height of the signal diagram, in pixels, > 0.
    */
-  public int getMaximalScreenWidth()
-  {
-    final double result = Math.floor( getAbsoluteLength() * getZoomFactor() );
-    final double maxValue = ZoomController.MAX_COMP_WIDTH;
-    if ( result > maxValue )
-    {
-      return ( int )maxValue;
-    }
-    return ( int )result;
-  }
-
-  /**
-   * Returns the minimum height of the screen.
-   * 
-   * @return a screen height, in pixels, >= 0 && < {@value Integer#MAX_VALUE}.
-   */
-  public int getMinimalScreenHeight()
+  public int getMinimumHeight()
   {
     return getSignalElementManager().calculateScreenHeight();
   }

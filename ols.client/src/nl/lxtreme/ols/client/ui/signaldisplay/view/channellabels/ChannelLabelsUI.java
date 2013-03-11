@@ -51,6 +51,23 @@ public class ChannelLabelsUI extends ComponentUI
     return hints;
   }
 
+  @Override
+  public Dimension getPreferredSize( final JComponent aComponent )
+  {
+    ChannelLabelsView view = ( ChannelLabelsView )aComponent;
+    ChannelLabelsViewModel model = view.getModel();
+
+    int height = 0;
+    int width = 0;
+    if ( model.hasData() )
+    {
+      height = model.getPreferredHeight();
+      width = model.getPreferredWidth();
+    }
+
+    return new Dimension( width, height );
+  }
+
   /**
    * {@inheritDoc}
    */

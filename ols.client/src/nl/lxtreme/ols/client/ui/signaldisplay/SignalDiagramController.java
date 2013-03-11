@@ -249,65 +249,52 @@ public class SignalDiagramController implements ZoomListener
       @Override
       public void run()
       {
-        recalculateDimensions();
-
-        if ( aEvent.isZoomInOrOut() )
+        // Idea based on <http://stackoverflow.com/questions/115103>
+        JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
+        if ( scrollPane == null )
         {
-          // Idea based on <http://stackoverflow.com/questions/115103>
-          JScrollPane scrollPane = SwingComponentUtils.getAncestorOfClass( JScrollPane.class, getSignalDiagram() );
-          if ( scrollPane == null )
-          {
-            // Nothing to do...
-            return;
-          }
-
-          JViewport viewport = scrollPane.getViewport();
-
-          // Take the location of the signal diagram component, as it is the
-          // only one that is shifted in location by its (parent) scrollpane...
-          final Point location = viewport.getViewPosition();
-
-          // Take the visibleRect of the signal diagram, as it tells us where
-          // we're located in the scrollpane; this information we need to allow
-          // dead-center zooming...
-          int mx = aEvent.getCenterPoint().x;
-          int my = aEvent.getCenterPoint().y;
-
-          double zf = aEvent.getFactor();
-
-          Component view = viewport.getView();
-          Rectangle visibleRect = viewport.getVisibleRect();
-
-          int maxX = view.getWidth() - visibleRect.width;
-          int maxY = view.getHeight() - visibleRect.height;
-
-          // Recalculate the new screen position of the visible view
-          // rectangle...
-          int newX = ( int )Math.min( maxX, Math.max( 0.0, location.getX() + ( ( int )( mx * zf ) - mx ) ) );
-          int newY = ( int )Math.min( maxY, Math.max( 0.0, location.getY() + ( ( int )( my * zf ) - my ) ) );
-
-          Point newLocation = new Point( newX, newY );
-          viewport.setViewPosition( newLocation );
+          // Nothing to do...
+          return;
         }
+
+        JViewport viewport = scrollPane.getViewport();
+        JViewport timelineViewport = scrollPane.getColumnHeader();
+        Component view = viewport.getView();
+
+        if ( Activator.isDebugMode() )
+        {
+          System.out.printf( "Handling %s.%n", aEvent );
+        }
+
+        view.setPreferredSize( aEvent.getDimension() );
+
+        // Make sure to make the viewport aware of the new dimensions of the
+        // view, this needs to be done *before* the view is set to its new
+        // location...
+        viewport.doLayout();
+
+        view.setLocation( aEvent.getLocation() );
+
+        // Layout the timeline as well, as it needs probably be repainted as
+        // well, since the view itself is changed...
+        timelineViewport.doLayout();
+        timelineViewport.repaint();
+
+        // Ensure the actions reflect the latest changes as well...
+        Client.getInstance().getActionManager().updateActionStates();
       }
     } );
   }
 
   /**
-   * Recalculates the dimensions of the various components and repaints the
-   * entire component.
+   * Revalidates the various components and repaints the entire component.
    * <p>
    * SLOW METHOD: USE WITH CARE!
    * </p>
    */
-  public void recalculateDimensions()
+  public void revalidateAll()
   {
-    // Recalculate all dimensions...
-    this.signalDiagram.calculateDimensions();
-    // Notify that everything needs to be revalidated as well...
     this.signalDiagram.revalidateAll();
-    // Issue #100: in case the factor is changed, we need to repaint all
-    // components...
     this.signalDiagram.repaintAll();
 
     // Ensure the actions reflect the latest changes as well...
@@ -407,7 +394,7 @@ public class SignalDiagramController implements ZoomListener
     // Make sure the view is updated accordingly...
     getZoomController().restoreZoomLevel();
 
-    recalculateDimensions();
+    revalidateAll();
   }
 
   /**

@@ -173,14 +173,6 @@ public class TimeLineView extends AbstractViewLayer implements IMarkerChangeList
   }
 
   /**
-   * @return the minimum height for this view, in pixels.
-   */
-  public int getMinimumHeight()
-  {
-    return getModel().getTimeLineHeight();
-  }
-
-  /**
    * @return a {@link TimeLineViewModel} instance, never <code>null</code>.
    */
   public TimeLineViewModel getModel()

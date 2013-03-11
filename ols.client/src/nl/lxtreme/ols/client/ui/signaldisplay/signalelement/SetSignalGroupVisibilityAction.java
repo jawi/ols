@@ -117,6 +117,6 @@ public class SetSignalGroupVisibilityAction extends AbstractAction
     }
 
     // Signal group: entire display could be changed...
-    this.controller.recalculateDimensions();
+    this.controller.revalidateAll();
   }
 }

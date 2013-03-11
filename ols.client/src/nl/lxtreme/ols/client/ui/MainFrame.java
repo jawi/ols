@@ -181,6 +181,7 @@ public final class MainFrame extends DefaultDockableHolder implements PropertyCh
   {
     // VARIABLES
 
+    private final SignalDiagramController controller;
     private final ZoomController zoomController;
 
     // CONSTRUCTORS
@@ -191,9 +192,10 @@ public final class MainFrame extends DefaultDockableHolder implements PropertyCh
      * @param aZoomController
      *          the zoom controller to adapt, cannot be <code>null</code>.
      */
-    public MouseWheelZoomAdapter( final ZoomController aZoomController )
+    public MouseWheelZoomAdapter( final ZoomController aZoomController, final SignalDiagramController aController )
     {
       this.zoomController = aZoomController;
+      this.controller = aController;
     }
 
     // METHODS
@@ -205,18 +207,11 @@ public final class MainFrame extends DefaultDockableHolder implements PropertyCh
     public void mouseWheelMoved( final MouseWheelEvent aEvent )
     {
       // Convert to the component under the mouse-cursor...
-      final JComponent destination = SwingComponentUtils.getDeepestComponentAt( aEvent );
-      final Point newPoint = SwingUtilities.convertPoint( aEvent.getComponent(), aEvent.getPoint(), destination );
+      Component view = this.controller.getSignalDiagram();
+      Point newPoint = SwingUtilities.convertPoint( aEvent.getComponent(), aEvent.getPoint(), view );
 
-      final int r = aEvent.getWheelRotation();
-      if ( r < 0 )
-      {
-        this.zoomController.zoomIn( newPoint );
-      }
-      else if ( r > 0 )
-      {
-        this.zoomController.zoomOut( newPoint );
-      }
+      // Dispatch the actual zooming to the zoom controller...
+      this.zoomController.zoom( aEvent.getWheelRotation(), newPoint );
 
       aEvent.consume();
     }
@@ -274,7 +269,7 @@ public final class MainFrame extends DefaultDockableHolder implements PropertyCh
     {
       super( aController.getSignalDiagram() );
 
-      this.zoomAdapter = new MouseWheelZoomAdapter( aController.getZoomController() );
+      this.zoomAdapter = new MouseWheelZoomAdapter( aController.getZoomController(), aController );
 
       setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED );
       setVerticalScrollBarPolicy( ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED );
