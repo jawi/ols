@@ -31,6 +31,7 @@ import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.Activator;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
@@ -318,23 +319,11 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
         JViewport viewport = scrollPane.getViewport();
         JViewport timelineViewport = scrollPane.getColumnHeader();
         Component view = viewport.getView();
-
-        // Take the location of the signal diagram component, as it is the
-        // only one that is shifted in location by its (parent) scrollpane...
-        Point location = view.getLocation();
-
-        int mx = 0;
-        if ( aEvent.getCenterPoint() != null )
+        
+        if ( Activator.isDebugMode() )
         {
-          mx = aEvent.getCenterPoint().x;
+          System.out.printf("Handling %s.%n", aEvent);
         }
-        double zf = aEvent.getFactor();
-
-        // Recalculate the new screen position of the visible view
-        // rectangle; the X-coordinate shifts relative to the zoom
-        // factor, while the Y-coordinate remains as-is...
-        int newX = location.x - ( ( int )( mx * zf ) - mx );
-        int newY = location.y;
 
         view.setPreferredSize( aEvent.getDimension() );
 
@@ -343,7 +332,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
         // location...
         viewport.doLayout();
 
-        view.setLocation( newX, newY );
+        view.setLocation( aEvent.getLocation() );
 
         // Layout the timeline as well, as it needs probably be repainted as
         // well, since the view itself is changed...
