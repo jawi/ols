@@ -580,21 +580,28 @@ public final class ZoomController
       visibleRect.x = -visibleRect.x;
     }
 
+    // Ensure the minimum height of the view is adhered...
     int minimumHeight = model.getMinimumHeight();
     if ( visibleRect.height < minimumHeight )
     {
       visibleRect.height = minimumHeight;
     }
+    // Try to suppress the vertical scrollbar, if possible...
     if ( visibleRect.width > currentVisibleRect.width )
     {
       JScrollPane scrollPane = getAncestorOfClass( JScrollPane.class, signalDiagram );
       if ( scrollPane != null )
       {
         JScrollBar horizontalScrollBar = scrollPane.getHorizontalScrollBar();
-        if ( ( visibleRect.height > minimumHeight ) && ( visibleRect.height == currentVisibleRect.height )
-            && !horizontalScrollBar.isVisible() )
+        int sbHeight = horizontalScrollBar.getHeight();
+        // When the width of the view is wider than we can currently view, the
+        // horizontal scrollbar is not yet visible, and we have enough room
+        // vertically, subtract the scrollbar height in order to suppress the
+        // vertical scrollbar...
+        if ( !horizontalScrollBar.isVisible() && ( visibleRect.height > ( minimumHeight + sbHeight ) )
+            && ( visibleRect.height == currentVisibleRect.height ) )
         {
-          visibleRect.height -= horizontalScrollBar.getHeight();
+          visibleRect.height -= sbHeight;
         }
       }
     }
