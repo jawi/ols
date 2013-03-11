@@ -321,7 +321,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
         final long endTime = System.nanoTime();
         final long renderTime = endTime - startTime;
         System.out.printf( "Rendering time = %s, View = %s.%n", UnitOfTime.format( renderTime / 1.0e9 ),
-            getVisibleRect() );
+            getVisibleViewSize() );
       }
     }
     else

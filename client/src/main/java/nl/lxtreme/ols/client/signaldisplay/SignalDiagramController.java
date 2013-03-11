@@ -337,6 +337,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
         // Layout the timeline as well, as it needs probably be repainted as
         // well, since the view itself is changed...
         timelineViewport.doLayout();
+        timelineViewport.repaint();
       }
     } );
   }
