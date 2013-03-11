@@ -677,7 +677,7 @@ public final class MainFrame extends DefaultDockableHolder implements PropertyCh
     dm.setGroupAllowedOnSidePane( true );
     dm.setHidable( false );
     dm.setInitSplitPriority( DockingManager.SPLIT_WEST_SOUTH_EAST_NORTH );
-    dm.setLayoutDirectory( this.dataStorage.getName() );
+    dm.setLayoutDirectory( this.dataStorage.getAbsolutePath() );
     dm.setOutlineMode( DockingManager.HW_OUTLINE_MODE );
     dm.setShowContextMenu( true );
     dm.setShowGripper( false );
