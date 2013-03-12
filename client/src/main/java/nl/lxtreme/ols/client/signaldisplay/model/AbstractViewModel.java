@@ -149,11 +149,11 @@ public abstract class AbstractViewModel
    *          the screen height.
    * @return an array of channels, never <code>null</code>.
    */
-  public SignalElement[] getSignalElements( final int aY, final int aHeight )
+  public IUIElement[] getSignalElements( final int aY, final int aHeight )
   {
     // Return all channel elements within the given boundaries, even if they do
     // not completely fit...
-    return getSignalElementManager().getSignalElements( aY, aHeight, SignalElementMeasurer.LOOSE_MEASURER );
+    return getSignalElementManager().getUIElements( aY, aHeight, SignalElementMeasurer.LOOSE_MEASURER );
   }
 
   /**

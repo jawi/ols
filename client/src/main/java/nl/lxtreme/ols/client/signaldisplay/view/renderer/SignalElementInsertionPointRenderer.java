@@ -40,7 +40,7 @@ public class SignalElementInsertionPointRenderer extends BaseRenderer
   // VARIABLES
 
   private final ChannelLabelsViewModel model;
-  private final SignalElement signalElement;
+  private final IUIElement element;
   private volatile Point dropPoint;
 
   // CONSTRUCTORS
@@ -48,10 +48,10 @@ public class SignalElementInsertionPointRenderer extends BaseRenderer
   /**
    * Creates a new {@link SignalElementInsertionPointRenderer} instance.
    */
-  public SignalElementInsertionPointRenderer( final ChannelLabelsViewModel aModel, final SignalElement aMovedChannel )
+  public SignalElementInsertionPointRenderer( final ChannelLabelsViewModel aModel, final IUIElement aElement )
   {
     this.model = aModel;
-    this.signalElement = aMovedChannel;
+    this.element = aElement;
   }
 
   // METHODS
@@ -99,15 +99,15 @@ public class SignalElementInsertionPointRenderer extends BaseRenderer
    */
   private String getLabel()
   {
-    String result = this.signalElement.getLabel();
+    String result = this.element.getLabel();
     if ( result == null )
     {
       result = "";
     }
     if ( this.dropPoint != null )
     {
-      final SignalElement dropElement = this.model.findSignalElement( this.dropPoint );
-      if ( this.model.acceptDrop( this.signalElement, dropElement ) )
+      final IUIElement dropElement = this.model.findUIElement( this.dropPoint );
+      if ( this.model.acceptDrop( this.element, dropElement ) )
       {
         final ElementGroup channelGroupFor = dropElement.getGroup();
         if ( channelGroupFor != null )

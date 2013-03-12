@@ -81,7 +81,7 @@ public final class SmartJumpHelper
   {
     Rectangle viewSize = getSignalDiagram().getSignalView().getVisibleRect();
 
-    SignalElement signalElement = getSignalDiagramModel().getSignalElementManager().getChannelByIndex( aChannelIndex );
+    SignalElement signalElement = getSignalDiagramModel().getSignalElementManager().getDigitalSignalByChannelIndex( aChannelIndex );
     if ( signalElement != null )
     {
       Point refPoint = new Point( ( int )Math.round( viewSize.getCenterX() ), signalElement.getYposition() );

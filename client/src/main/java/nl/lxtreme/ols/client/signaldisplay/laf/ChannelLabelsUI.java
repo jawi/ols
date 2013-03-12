@@ -69,7 +69,7 @@ public class ChannelLabelsUI extends ComponentUI
 
     return new Dimension( width, height );
   }
-  
+
   /**
    * {@inheritDoc}
    */
@@ -90,8 +90,8 @@ public class ChannelLabelsUI extends ComponentUI
     {
       final Rectangle clip = canvas.getClipBounds();
 
-      final SignalElement[] signalElements = model.getSignalElements( clip.y, clip.height );
-      if ( signalElements.length == 0 )
+      final IUIElement[] elements = model.getSignalElements( clip.y, clip.height );
+      if ( elements.length == 0 )
       {
         return;
       }
@@ -106,17 +106,17 @@ public class ChannelLabelsUI extends ComponentUI
       final int spacingY = model.getSignalElementSpacing();
 
       // Start drawing at the correct position in the clipped region...
-      canvas.translate( 0, signalElements[0].getYposition() );
+      canvas.translate( 0, elements[0].getYposition() );
 
-      for ( SignalElement signalElement : signalElements )
+      for ( IUIElement element : elements )
       {
-        if ( !signalElement.isSignalGroup() )
+        if ( !( element instanceof ElementGroup ) )
         {
-          paintBackground( canvas, model, signalElement, compWidth );
-          paintLabel( canvas, model, signalElement, compWidth );
+          paintBackground( canvas, model, element, compWidth );
+          paintLabel( canvas, model, element, compWidth );
         }
 
-        canvas.translate( 0, signalElement.getHeight() + spacingY );
+        canvas.translate( 0, element.getHeight() + spacingY );
       }
     }
     finally
@@ -164,13 +164,15 @@ public class ChannelLabelsUI extends ComponentUI
    * @return <code>true</code> if the given element is the selected element,
    *         <code>false</code> otherwise.
    */
-  private boolean isSelectedElement( final SignalElement aElement, final ChannelLabelsViewModel aModel )
+  private boolean isSelectedElement( final IUIElement aElement, final ChannelLabelsViewModel aModel )
   {
-    if ( !aElement.isDigitalSignal() )
+    if ( !( aElement instanceof SignalElement ) )
     {
       return false;
     }
-    return aModel.getSelectedChannelIndex() == aElement.getChannel().getIndex();
+    SignalElement signalElement = ( SignalElement )aElement;
+    return signalElement.isDigitalSignal()
+        && ( aModel.getSelectedChannelIndex() == signalElement.getChannel().getIndex() );
   }
 
   /**
@@ -187,7 +189,7 @@ public class ChannelLabelsUI extends ComponentUI
    *          the width of the background, in pixels.
    */
   private void paintBackground( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel,
-      final SignalElement aElement, final int aWidth )
+      final IUIElement aElement, final int aWidth )
   {
     final int arcWidth = aModel.getArcWidth();
 
@@ -227,16 +229,20 @@ public class ChannelLabelsUI extends ComponentUI
    * @param aWidth
    *          the width of the channel label, in pixels.
    */
-  private void paintLabel( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel, final SignalElement aElement,
+  private void paintLabel( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel, final IUIElement aElement,
       final int aWidth )
   {
     String label = aElement.getLabel();
     int aHeight = aElement.getHeight();
 
     String index = "";
-    if ( aElement.isDigitalSignal() && aModel.isShowChannelIndex() )
+    if ( aElement instanceof SignalElement )
     {
-      index = Integer.toString( aElement.getChannel().getIndex() );
+      SignalElement signalElement = ( SignalElement )aElement;
+      if ( signalElement.isDigitalSignal() && aModel.isShowChannelIndex() )
+      {
+        index = Integer.toString( signalElement.getChannel().getIndex() );
+      }
     }
 
     boolean labelDefined = !"".equals( label.trim() );

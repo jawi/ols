@@ -55,11 +55,6 @@ public class SetSignalElementVisibilityAction extends AbstractAction
    */
   public SetSignalElementVisibilityAction( final SignalDiagramController aController, final SignalElement aSignalElement )
   {
-    if ( aSignalElement.isSignalGroup() )
-    {
-      throw new IllegalArgumentException();
-    }
-
     this.signalElement = aSignalElement;
     this.controller = aController;
 
@@ -96,10 +91,6 @@ public class SetSignalElementVisibilityAction extends AbstractAction
     else if ( aType == SignalElementType.GROUP_SUMMARY )
     {
       suffix = "group summary";
-    }
-    else if ( aType == SignalElementType.SIGNAL_GROUP )
-    {
-      suffix = "signal group";
     }
     else
     {

@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.signaldisplay.signalelement;
 
 
 import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+
 import java.awt.*;
 
 import javax.swing.*;
@@ -34,7 +35,7 @@ import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignm
  * Represents a signal element in the form of a digital signal, analog signal or
  * a group summary.
  */
-public final class SignalElement implements Comparable<SignalElement>
+public final class SignalElement implements Comparable<SignalElement>, IUIElement
 {
   // INNER TYPES
 
@@ -44,7 +45,6 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public static enum SignalElementType
   {
-    SIGNAL_GROUP, //
     DIGITAL_SIGNAL, //
     GROUP_SUMMARY, //
     ANALOG_SIGNAL; //
@@ -53,6 +53,7 @@ public final class SignalElement implements Comparable<SignalElement>
   // VARIABLES
 
   private final SignalElementType type;
+  private final int index;
   private final int mask;
 
   /** the wrapped digital channel, if type == DIGITAL_SIGNAL. */
@@ -72,6 +73,27 @@ public final class SignalElement implements Comparable<SignalElement>
   /**
    * Creates a new {@link SignalElement} instance.
    * 
+   * @param aSignalElement
+   *          the signal element to copy, cannot be <code>null</code>.
+   */
+  protected SignalElement( SignalElement aSignalElement )
+  {
+    this.index = aSignalElement.index;
+    this.type = aSignalElement.type;
+    this.mask = aSignalElement.mask;
+    this.channel = aSignalElement.channel;
+    this.height = aSignalElement.height;
+    this.yPosition = aSignalElement.yPosition;
+    this.signalHeight = aSignalElement.signalHeight;
+    this.alignment = aSignalElement.alignment;
+    
+    setEnabled( aSignalElement.isEnabled() );
+    setLabel( aSignalElement.getLabel() );
+  }
+
+  /**
+   * Creates a new {@link SignalElement} instance.
+   * 
    * @param aType
    *          the type of this signal element, cannot be <code>null</code>;
    * @param aMask
@@ -81,9 +103,10 @@ public final class SignalElement implements Comparable<SignalElement>
    * @param aHeight
    *          the height of this channel element, in pixels, >= 0.
    */
-  private SignalElement( final SignalElementType aType, final int aMask )
+  private SignalElement( final SignalElementType aType, final int aIndex, final int aMask )
   {
     this.type = aType;
+    this.index = aIndex;
     this.mask = aMask;
   }
 
@@ -100,7 +123,8 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public static SignalElement createAnalogScopeElement( final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, -1 );
+    int index = aGroup.getElementCount();
+    SignalElement channelElement = new SignalElement( SignalElementType.ANALOG_SIGNAL, index, -1 );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( ANALOG_SCOPE_HEIGHT );
     return channelElement;
@@ -117,7 +141,8 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public static SignalElement createDigitalSignalElement( final Channel aChannel, final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.DIGITAL_SIGNAL, aChannel.getMask() );
+    int index = aGroup.getElementCount();
+    SignalElement channelElement = new SignalElement( SignalElementType.DIGITAL_SIGNAL, index, aChannel.getMask() );
     channelElement.channel = aChannel;
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( CHANNEL_HEIGHT );
@@ -137,26 +162,10 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public static SignalElement createGroupSummaryElement( final ElementGroup aGroup )
   {
-    final SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, -1 );
+    int index = aGroup.getElementCount();
+    SignalElement channelElement = new SignalElement( SignalElementType.GROUP_SUMMARY, index, -1 );
     channelElement.group = aGroup;
     channelElement.height = UIManager.getInt( GROUP_SUMMARY_HEIGHT );
-    return channelElement;
-  }
-
-  /**
-   * Factory method for creating a {@link SignalElement} instance representing a
-   * a group of signals.
-   * 
-   * @param aGroup
-   *          the channel group to create a channel element for, cannot be
-   *          <code>null</code>.
-   * @return a new {@link SignalElement} instance, never <code>null</code>.
-   */
-  public static SignalElement createSignalGroupElement( final ElementGroup aGroup )
-  {
-    final SignalElement channelElement = new SignalElement( SignalElementType.SIGNAL_GROUP, -1 );
-    channelElement.group = aGroup;
-    channelElement.height = UIManager.getInt( SIGNAL_GROUP_HEIGHT );
     return channelElement;
   }
 
@@ -325,7 +334,7 @@ public final class SignalElement implements Comparable<SignalElement>
    */
   public int getMask()
   {
-    if ( !isDigitalSignal() )
+    if ( !isDigitalSignal() && ( this.group != null ) )
     {
       // For group summary & analog scope, we always use the mask of the entire
       // group...
@@ -476,10 +485,6 @@ public final class SignalElement implements Comparable<SignalElement>
       {
         return this.group.isShowAnalogSignal();
       }
-      else if ( isSignalGroup() )
-      {
-        return this.group.isShowDigitalSignals();
-      }
       else
       {
         throw new InternalError( "Unknown signal element?! Type = " + this.type );
@@ -497,17 +502,6 @@ public final class SignalElement implements Comparable<SignalElement>
   public boolean isGroupSummary()
   {
     return ( this.type == SignalElementType.GROUP_SUMMARY );
-  }
-
-  /**
-   * Returns whether we should this group at all.
-   * 
-   * @return <code>true</code> if this group is to be shown, <code>false</code>
-   *         to hide them.
-   */
-  public boolean isSignalGroup()
-  {
-    return ( this.type == SignalElementType.SIGNAL_GROUP );
   }
 
   /**
@@ -547,10 +541,6 @@ public final class SignalElement implements Comparable<SignalElement>
       else if ( isAnalogSignal() )
       {
         this.group.setShowAnalogSignal( aEnabled );
-      }
-      else if ( isSignalGroup() )
-      {
-        this.group.setShowDigitalSignals( aEnabled );
       }
       else
       {
@@ -635,21 +625,16 @@ public final class SignalElement implements Comparable<SignalElement>
   @Override
   public String toString()
   {
-    StringBuilder builder = new StringBuilder();
-    builder.append( "SignalElement [type=" );
-    builder.append( this.type );
-    if ( this.channel != null )
-    {
-      builder.append( ", channel=" );
-      builder.append( this.channel );
-    }
-    if ( this.group != null )
-    {
-      builder.append( ", channelGroup=" );
-      builder.append( this.group );
-    }
-    builder.append( "]" );
-    return builder.toString();
+    return String.format( "SignalElement[%s / %s]@%s", getLabel(), getGroup().getName(),
+        Integer.toHexString( hashCode() ) );
+  }
+
+  /**
+   * @return the (fixed) index of this signal element.
+   */
+  final int getIndex()
+  {
+    return this.index;
   }
 
   /**

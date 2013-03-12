@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.client.signaldisplay.signalelement;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -38,7 +40,7 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalEle
  * This class is thread-safe.
  * </p>
  */
-public class ElementGroup
+public class ElementGroup implements IUIElement
 {
   // INNER TYPES
 
@@ -85,9 +87,9 @@ public class ElementGroup
 
   // VARIABLES
 
+  private final int index;
   private final List<SignalElement> elements;
 
-  private final int index;
   private int mask;
   /** The name of this group. */
   private String name;
@@ -97,11 +99,44 @@ public class ElementGroup
   private String analogSignalLabel;
   private boolean visible;
   private int viewOptions;
+  //
+  private int yPosition;
+  private int height;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new ChannelGroup instance.
+   * Creates a new {@link ElementGroup} instance as deep copy of a given
+   * {@link ElementGroup}.
+   * 
+   * @param aElementGroup
+   *          the element group to copy, cannot be <code>null</code>.
+   */
+  protected ElementGroup( ElementGroup aElementGroup )
+  {
+    if ( aElementGroup == null )
+    {
+      throw new IllegalArgumentException( "ElementGroup cannot be null!" );
+    }
+
+    this.index = aElementGroup.index;
+    this.name = aElementGroup.name;
+    this.mask = aElementGroup.mask;
+    this.visible = aElementGroup.visible;
+    this.viewOptions = aElementGroup.viewOptions;
+    this.yPosition = aElementGroup.yPosition;
+    this.height = aElementGroup.height;
+
+    this.elements = new ArrayList<SignalElement>();
+
+    for ( SignalElement oldElement : aElementGroup.elements )
+    {
+      addElement( new SignalElement( oldElement ) );
+    }
+  }
+
+  /**
+   * Creates a new {@link ElementGroup} instance.
    * 
    * @param aIndex
    *          the index of this channel group, >= 0;
@@ -111,7 +146,7 @@ public class ElementGroup
    * @throws IllegalArgumentException
    *           in case the given name was <code>null</code> or empty.
    */
-  ElementGroup( final int aIndex, final String aName )
+  protected ElementGroup( final int aIndex, final String aName )
   {
     if ( ( aName == null ) || aName.trim().isEmpty() )
     {
@@ -126,6 +161,9 @@ public class ElementGroup
     // By default only the digital signals are shown...
     this.viewOptions = ChannelElementType.DIGITAL_SIGNAL.mask;
 
+    this.yPosition = 0;
+    this.height = UIManager.getInt( SIGNAL_GROUP_HEIGHT );
+
     if ( UIManager.getBoolean( UIManagerKeys.ANALOG_SCOPE_VISIBLE_DEFAULT ) )
     {
       this.viewOptions |= ChannelElementType.ANALOG_SIGNAL.mask;
@@ -137,6 +175,8 @@ public class ElementGroup
 
     this.elements = new ArrayList<SignalElement>();
   }
+
+  // METHODS
 
   /**
    * Adds a given signal element to this group.
@@ -177,8 +217,6 @@ public class ElementGroup
       this.mask |= aElement.getMask();
     }
   }
-
-  // METHODS
 
   /**
    * {@inheritDoc}
@@ -226,31 +264,6 @@ public class ElementGroup
   }
 
   /**
-   * Returns the signal element that represents the channel with the given
-   * index.
-   * 
-   * @param aChannelIndex
-   *          the index of the channel to retrieve the corresponding signal
-   *          element for.
-   * @return a signal element matching the given channel index, or
-   *         <code>null</code> if no such element was found.
-   */
-  public SignalElement getChannelByIndex( final int aChannelIndex )
-  {
-    synchronized ( this.elements )
-    {
-      for ( SignalElement element : this.elements )
-      {
-        if ( element.isDigitalSignal() && ( element.getChannel().getIndex() == aChannelIndex ) )
-        {
-          return element;
-        }
-      }
-    }
-    return null;
-  }
-
-  /**
    * Returns the color of this channel group.
    * 
    * @return the color used by this channel group, never <code>null</code>.
@@ -263,6 +276,31 @@ public class ElementGroup
       result = Color.WHITE;
     }
     return result;
+  }
+
+  /**
+   * Returns the signal element that represents the digital channel with the
+   * given index.
+   * 
+   * @param aChannelIndex
+   *          the index of the channel to retrieve the corresponding signal
+   *          element for.
+   * @return a signal element matching the given channel index, or
+   *         <code>null</code> if no such element was found.
+   */
+  public SignalElement getDigitalSignalByChannelIndex( final int aChannelIndex )
+  {
+    synchronized ( this.elements )
+    {
+      for ( SignalElement element : this.elements )
+      {
+        if ( element.isDigitalSignal() && ( element.getChannel().getIndex() == aChannelIndex ) )
+        {
+          return element;
+        }
+      }
+    }
+    return null;
   }
 
   /**
@@ -306,14 +344,23 @@ public class ElementGroup
    * 
    * @return an array of channels, never <code>null</code>.
    */
-  public Collection<SignalElement> getElements()
+  public List<SignalElement> getElements()
   {
-    Collection<SignalElement> result = new ArrayList<SignalElement>();
+    List<SignalElement> result = new ArrayList<SignalElement>();
     synchronized ( this.elements )
     {
       result.addAll( this.elements );
     }
-    return result;
+    return Collections.unmodifiableList( result );
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public ElementGroup getGroup()
+  {
+    return this;
   }
 
   /**
@@ -331,6 +378,14 @@ public class ElementGroup
   }
 
   /**
+   * @return the height of this element group, in pixels.
+   */
+  public int getHeight()
+  {
+    return this.height;
+  }
+
+  /**
    * @return the index
    */
   public int getIndex()
@@ -338,6 +393,15 @@ public class ElementGroup
     return this.index;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String getLabel()
+  {
+    return null; // XXX
+  }
+  
   /**
    * Returns the bitwise mask for all channels that belong to this channel
    * group.
@@ -357,6 +421,14 @@ public class ElementGroup
   public String getName()
   {
     return this.name;
+  }
+
+  /**
+   * @return the Y-position on screen, >= 0, in pixels.
+   */
+  public int getYposition()
+  {
+    return this.yPosition;
   }
 
   /**
@@ -403,6 +475,15 @@ public class ElementGroup
     int result = 1;
     result = ( prime * result ) + ( ( this.name == null ) ? 0 : this.name.hashCode() );
     return result;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isEnabled()
+  {
+    return true; // XXX
   }
 
   /**
@@ -459,7 +540,7 @@ public class ElementGroup
   {
     this.analogSignalLabel = aSignalLabel;
   }
-
+  
   /**
    * Sets the color of this channel group.
    * 
@@ -484,6 +565,24 @@ public class ElementGroup
   public void setGroupSummaryLabel( final String aSummaryLabel )
   {
     this.summaryLabel = aSummaryLabel;
+  }
+
+  /**
+   * @param aHeight
+   *          the new height of this element group, in pixels.
+   */
+  public void setHeight( int aHeight )
+  {
+    this.height = aHeight;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void setLabel( String aLabel )
+  {
+    // TODO Auto-generated method stub
   }
 
   /**
@@ -572,6 +671,35 @@ public class ElementGroup
   public void setVisible( final boolean aVisible )
   {
     this.visible = aVisible;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String toString()
+  {
+    return String.format( "ElementGroup[%s]@%s", getName(), Integer.toHexString( hashCode() ) );
+  }
+
+  /**
+   * @param aIndex
+   *          the index of the signal element to retrieve, cannot be
+   *          <code>null</code>.
+   * @return the signal element with the given index, or <code>null</code> if no
+   *         such element was found.
+   */
+  final SignalElement getElementByIndex( int aIndex )
+  {
+    List<SignalElement> elements = getElements();
+    for ( SignalElement element : elements )
+    {
+      if ( aIndex == element.getIndex() )
+      {
+        return element;
+      }
+    }
+    return null;
   }
 
   /**
@@ -665,6 +793,17 @@ public class ElementGroup
         this.mask &= ~aElement.getMask();
       }
     }
+  }
+
+  /**
+   * Sets yPosition to the given value.
+   * 
+   * @param aYPosition
+   *          the yPosition to set.
+   */
+  final void setYposition( final int aYPosition )
+  {
+    this.yPosition = aYPosition;
   }
 
   /**

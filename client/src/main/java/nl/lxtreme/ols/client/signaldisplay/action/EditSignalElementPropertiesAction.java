@@ -77,46 +77,59 @@ public class EditSignalElementPropertiesAction extends AbstractAction
      * 
      * @param aWindow
      *          the parent window for this dialog, can be <code>null</code>;
-     * @param aSignalElement
-     *          the signal element to edit the label for, cannot be
+     * @param aElement
+     *          the UI-element to edit the label for, cannot be
      *          <code>null</code>.
      */
-    public EditPropertiesDialog( final Window aParent, final SignalElement aSignalElement )
+    public EditPropertiesDialog( final Window aParent, final IUIElement aElement )
     {
       super( aParent, ModalityType.APPLICATION_MODAL );
 
       setResizable( false );
 
-      this.defaultLabel = aSignalElement.getLabel();
-      this.defaultColor = aSignalElement.getColor();
-      this.defaultHeight = aSignalElement.getHeight();
-      this.defaultSignalHeight = aSignalElement.getSignalHeight();
-      this.defaultAlignment = aSignalElement.getSignalAlignment();
+      this.defaultLabel = aElement.getLabel();
+      this.defaultColor = aElement.getColor();
+      this.defaultHeight = aElement.getHeight();
 
-      initDialog( aSignalElement );
+      if ( aElement instanceof SignalElement )
+      {
+        this.defaultSignalHeight = ( ( SignalElement )aElement ).getSignalHeight();
+        this.defaultAlignment = ( ( SignalElement )aElement ).getSignalAlignment();
+      }
+      else
+      {
+        this.defaultSignalHeight = 0;
+        this.defaultAlignment = null;
+      }
+
+      initDialog( aElement );
     }
 
     /**
      * Determines the title for this dialog based on the given signal element.
      * 
-     * @param aSignalElement
-     *          the signal element to determine the title for, cannot be
+     * @param aElement
+     *          the UI-element to determine the title for, cannot be
      *          <code>null</code>.
      * @return a title, never <code>null</code>.
      */
-    private static String getTitle( final SignalElement aSignalElement )
+    private static String getTitle( final IUIElement aElement )
     {
-      if ( aSignalElement.isDigitalSignal() )
+      if ( aElement instanceof SignalElement )
       {
-        return "Edit channel properties";
-      }
-      else if ( aSignalElement.isAnalogSignal() )
-      {
-        return "Edit scope properties";
-      }
-      else if ( aSignalElement.isGroupSummary() )
-      {
-        return "Edit group summary properties";
+        SignalElement signalElement = ( SignalElement )aElement;
+        if ( signalElement.isDigitalSignal() )
+        {
+          return "Edit channel properties";
+        }
+        else if ( signalElement.isAnalogSignal() )
+        {
+          return "Edit scope properties";
+        }
+        else if ( signalElement.isGroupSummary() )
+        {
+          return "Edit group summary properties";
+        }
       }
 
       return "Edit signal group properties";
@@ -235,15 +248,15 @@ public class EditSignalElementPropertiesAction extends AbstractAction
     /**
      * Initializes this dialog.
      */
-    private void initDialog( final SignalElement aSignalElement )
+    private void initDialog( final IUIElement aElement )
     {
-      setTitle( getTitle( aSignalElement ) );
+      setTitle( getTitle( aElement ) );
 
       final JButton okButton = StandardActionFactory.createOkButton();
       final JButton cancelButton = StandardActionFactory.createCancelButton();
 
       JLabel labelEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Label" );
-      this.labelEditor = new JTextField( aSignalElement.getLabel(), 10 );
+      this.labelEditor = new JTextField( aElement.getLabel(), 10 );
       this.labelEditor.getDocument().addDocumentListener( new DocumentListener()
       {
         @Override
@@ -272,22 +285,22 @@ public class EditSignalElementPropertiesAction extends AbstractAction
       } );
 
       JLabel colorEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Color" );
-      this.colorEditor = new JColorEditor( aSignalElement.getColor() );
+      this.colorEditor = new JColorEditor( aElement.getColor() );
 
       JLabel heightEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Height" );
-      this.heightEditor = new JTextField( "" + aSignalElement.getHeight(), 10 );
+      this.heightEditor = new JTextField( "" + aElement.getHeight(), 10 );
       this.heightEditor.setInputVerifier( JComponentInputVerifier.create( Integer.class,
           "Invalid height! Must be a postive whole number." ) );
 
       JLabel signalHeightEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Signal height" );
-      this.signalHeightEditor = new JTextField( "" + aSignalElement.getSignalHeight(), 10 );
+      this.signalHeightEditor = new JTextField( "" + this.defaultSignalHeight, 10 );
       this.signalHeightEditor.setInputVerifier( JComponentInputVerifier.create( Integer.class,
           "Invalid height! Must be a postive whole number." ) );
 
       JLabel signalAlignmentEditorLabel = SwingComponentUtils.createRightAlignedLabel( "Signal alignment" );
       this.signalAlignmentEditor = new JComboBox( SignalAlignment.values() );
       this.signalAlignmentEditor.setRenderer( new SignalAlignmentComboBoxRenderer() );
-      this.signalAlignmentEditor.setSelectedItem( aSignalElement.getSignalAlignment() );
+      this.signalAlignmentEditor.setSelectedItem( this.defaultAlignment );
 
       final JButton resetButton = new JButton( "Reset to defaults" );
       resetButton.addActionListener( new ActionListener()
@@ -312,7 +325,7 @@ public class EditSignalElementPropertiesAction extends AbstractAction
       editorPane.add( heightEditorLabel );
       editorPane.add( this.heightEditor );
 
-      if ( aSignalElement.isDigitalSignal() )
+      if ( ( aElement instanceof SignalElement ) && ( ( SignalElement )aElement ).isDigitalSignal() )
       {
         editorPane.add( signalHeightEditorLabel );
         editorPane.add( this.signalHeightEditor );
@@ -514,7 +527,7 @@ public class EditSignalElementPropertiesAction extends AbstractAction
 
   // VARIABLES
 
-  private final SignalElement signalElement;
+  private final IUIElement element;
   private final Point dialogLocation;
   private final SignalDiagramController controller;
 
@@ -525,21 +538,21 @@ public class EditSignalElementPropertiesAction extends AbstractAction
    * 
    * @param aController
    *          the controller to use;
-   * @param aSignalElement
-   *          the signal element to edit the label for;
+   * @param aElement
+   *          the UI-element to edit the label for;
    * @param aChannelLocation
    *          the location on screen of the channel to edit the label for.
    */
-  public EditSignalElementPropertiesAction( final SignalDiagramController aController,
-      final SignalElement aSignalElement, final Point aChannelLocation )
+  public EditSignalElementPropertiesAction( final SignalDiagramController aController, final IUIElement aElement,
+      final Point aChannelLocation )
   {
     super( "Element Properties" );
 
     this.controller = aController;
-    this.signalElement = aSignalElement;
+    this.element = aElement;
     this.dialogLocation = new Point( aChannelLocation.x + 15, aChannelLocation.y + 5 );
 
-    setEnabled( this.signalElement != null );
+    setEnabled( this.element != null );
   }
 
   // METHODS
@@ -550,20 +563,23 @@ public class EditSignalElementPropertiesAction extends AbstractAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    EditPropertiesDialog dialog = new EditPropertiesDialog( SwingComponentUtils.getOwningWindow( aEvent ),
-        this.signalElement );
+    EditPropertiesDialog dialog = new EditPropertiesDialog( SwingComponentUtils.getOwningWindow( aEvent ), this.element );
     dialog.setLocation( this.dialogLocation );
 
     if ( dialog.showDialog() )
     {
-      this.signalElement.setLabel( dialog.getLabel() );
-      this.signalElement.setColor( dialog.getColor() );
-      this.signalElement.setHeight( dialog.getElementHeight() );
+      this.element.setLabel( dialog.getLabel() );
+      this.element.setColor( dialog.getColor() );
+      this.element.setHeight( dialog.getElementHeight() );
 
-      if ( this.signalElement.isDigitalSignal() )
+      if ( ( this.element instanceof SignalElement ) )
       {
-        this.signalElement.setSignalHeight( dialog.getSignalHeight() );
-        this.signalElement.setSignalAlignment( dialog.getSignalAlignment() );
+        SignalElement signalElement = ( SignalElement )this.element;
+        if ( signalElement.isDigitalSignal() )
+        {
+          signalElement.setSignalHeight( dialog.getSignalHeight() );
+          signalElement.setSignalAlignment( dialog.getSignalAlignment() );
+        }
       }
 
       // Since the entire layout can be mixed up by the new label, we should

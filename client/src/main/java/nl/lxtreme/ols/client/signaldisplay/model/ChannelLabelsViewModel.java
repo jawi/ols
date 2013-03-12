@@ -68,11 +68,11 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    * @return <code>true</code> if the move is accepted, <code>false</code> if
    *         the move is declined.
    */
-  public boolean acceptDrop( final SignalElement aMovedElement, final SignalElement aInsertPoint )
+  public boolean acceptDrop( final IUIElement aMovedElement, final IUIElement aInsertPoint )
   {
     boolean result = false;
 
-    if ( ( aMovedElement != null ) && ( aInsertPoint != null ) )
+    if ( ( aMovedElement != null ) && ( aMovedElement instanceof SignalElement ) && ( aInsertPoint != null ) )
     {
       // result = insertChannel.getChannelGroup() ==
       // aMovedChannel.getChannelGroup();
@@ -91,9 +91,9 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    * @return the signal element at the given X,Y-coordinate, or
    *         <code>null</code> if no such signal element could be found.
    */
-  public SignalElement findSignalElement( final Point aCoordinate )
+  public IUIElement findUIElement( final Point aCoordinate )
   {
-    return getSignalDiagramModel().findSignalElement( aCoordinate );
+    return getSignalDiagramModel().findUIElement( aCoordinate );
   }
 
   /**
@@ -106,9 +106,9 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    * @return a channel row index (>= 0), or -1 if the point is nowhere near a
    *         channel row.
    */
-  public int findSignalElementVirtualOffset( final Point aCoordinate )
+  public int findUIElementVirtualOffset( final Point aCoordinate )
   {
-    SignalElement signalElement = findSignalElement( aCoordinate );
+    IUIElement signalElement = findUIElement( aCoordinate );
     if ( signalElement != null )
     {
       final int spacing = UIManager.getInt( UIManagerKeys.SIGNAL_ELEMENT_SPACING ) / 2;
@@ -370,7 +370,7 @@ public class ChannelLabelsViewModel extends AbstractViewModel
    *          the channel that the moved channel is inserted before, cannot be
    *          <code>null</code>.
    */
-  public void moveSignalElement( final SignalElement aMovedElement, final SignalElement aInsertElement )
+  public void moveSignalElement( final SignalElement aMovedElement, final IUIElement aInsertElement )
   {
     final SignalElementManager channelGroupManager = getSignalElementManager();
 
@@ -378,14 +378,11 @@ public class ChannelLabelsViewModel extends AbstractViewModel
     final ElementGroup newGroup = aInsertElement.getGroup();
 
     int newIndex;
-    if ( aInsertElement.isDigitalSignal() )
+    if ( aInsertElement instanceof SignalElement )
     {
+      SignalElement signalElement = ( SignalElement )aInsertElement;
       int offset = ( oldGroup != newGroup ) ? 1 : 0;
-      newIndex = aInsertElement.getVirtualIndex() + offset;
-    }
-    else if ( aInsertElement.isSignalGroup() )
-    {
-      newIndex = 0; //
+      newIndex = signalElement.getVirtualIndex() + offset;
     }
     else
     {

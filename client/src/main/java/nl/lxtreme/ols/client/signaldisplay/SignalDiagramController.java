@@ -186,8 +186,12 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    */
   public SignalElementType getSignalHoverType( final Point aPoint )
   {
-    final SignalElement element = getSignalDiagramModel().findSignalElement( aPoint );
-    return ( element != null ) ? element.getType() : null;
+    final IUIElement element = getSignalDiagramModel().findUIElement( aPoint );
+    if ( element instanceof SignalElement )
+    {
+      return ( ( SignalElement )element ).getType();
+    }
+    return null;
   }
 
   /**
@@ -319,10 +323,10 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
         JViewport viewport = scrollPane.getViewport();
         JViewport timelineViewport = scrollPane.getColumnHeader();
         Component view = viewport.getView();
-        
+
         if ( Activator.isDebugMode() )
         {
-          System.out.printf("Handling %s.%n", aEvent);
+          System.out.printf( "Handling %s.%n", aEvent );
         }
 
         view.setPreferredSize( aEvent.getDimension() );
@@ -535,12 +539,17 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   {
     SignalDiagramModel model = getSignalDiagramModel();
 
-    final SignalElement signalElement = model.findSignalElement( aPosition );
+    final IUIElement element = model.findUIElement( aPosition );
+    if ( !( element instanceof SignalElement ) )
+    {
+      return;
+    }
 
+    SignalElement signalElement = (SignalElement) element;
     int oldIndex = model.getSelectedChannelIndex();
     int newIndex = -1;
 
-    if ( ( signalElement != null ) && signalElement.isDigitalSignal() )
+    if ( signalElement.isDigitalSignal() )
     {
       // Update the selected channel index...
       newIndex = signalElement.getChannel().getIndex();
@@ -562,7 +571,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
           channelLabelsView.repaint( rect1 );
         }
 
-        SignalElement currentElement = model.getSignalElementManager().getChannelByIndex( oldIndex );
+        SignalElement currentElement = model.getSignalElementManager().getDigitalSignalByChannelIndex( oldIndex );
         if ( currentElement != null )
         {
           Rectangle rect2 = new Rectangle( 0, currentElement.getYposition(), width, currentElement.getHeight() );

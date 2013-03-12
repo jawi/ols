@@ -160,15 +160,15 @@ public class SignalUI extends ComponentUI
     try
     {
       final Rectangle clip = aGraphics.getClipBounds();
-      final SignalElement[] signalElements = model.getSignalElements( clip.y, clip.height );
+      final IUIElement[] elements = model.getSignalElements( clip.y, clip.height );
 
       Graphics2D canvas = ( Graphics2D )aGraphics.create();
 
       try
       {
-        if ( signalElements.length > 0 )
+        if ( elements.length > 0 )
         {
-          paintSignals( canvas, model, signalElements );
+          paintSignals( canvas, model, elements );
         }
       }
       finally
@@ -194,7 +194,7 @@ public class SignalUI extends ComponentUI
       }
 
       // Draw the annotations...
-      paintAnnotations( canvas, model, signalElements );
+      paintAnnotations( canvas, model, elements );
     }
     finally
     {
@@ -232,7 +232,7 @@ public class SignalUI extends ComponentUI
    * @param aSignalElements
    */
   private void paintAnnotations( final Graphics2D aCanvas, final SignalViewModel aModel,
-      final SignalElement[] aSignalElements )
+      final IUIElement[] aSignalElements )
   {
     final long[] timestamps = aModel.getTimestamps();
     if ( ( timestamps == null ) || ( timestamps.length == 0 ) || ( aSignalElements.length == 0 ) )
@@ -260,8 +260,14 @@ public class SignalUI extends ComponentUI
 
     final AlphaComposite alphaComposite = AlphaComposite.SrcOver.derive( aModel.getAnnotationAlpha() );
 
-    for ( SignalElement signalElement : aSignalElements )
+    for ( IUIElement element : aSignalElements )
     {
+      if ( element instanceof ElementGroup )
+      {
+        continue;
+      }
+
+      SignalElement signalElement = ( SignalElement )element;
       if ( signalElement.isDigitalSignal() )
       {
         // Tell Swing how we would like to render ourselves...
@@ -416,11 +422,10 @@ public class SignalUI extends ComponentUI
    *          the canvas to paint on, cannot be <code>null</code>;
    * @param aModel
    *          the model to use, cannot be <code>null</code>;
-   * @param aSignalElements
-   *          the signal elements to draw, cannot be <code>null</code> or empty!
+   * @param aElements
+   *          the UI-elements to draw, cannot be <code>null</code> or empty!
    */
-  private void paintSignals( final Graphics2D aCanvas, final SignalViewModel aModel,
-      final SignalElement[] aSignalElements )
+  private void paintSignals( final Graphics2D aCanvas, final SignalViewModel aModel, final IUIElement[] aElements )
   {
     final int[] values = aModel.getDataValues();
     final long[] timestamps = aModel.getTimestamps();
@@ -449,19 +454,26 @@ public class SignalUI extends ComponentUI
     }
 
     // Start drawing at the correct position in the clipped region...
-    aCanvas.translate( 0, aSignalElements[0].getYposition() );
+    aCanvas.translate( 0, aElements[0].getYposition() );
 
     final boolean enableSloppyScopePainting = aModel.isSloppyScopeRenderingAllowed();
     int lastP = 0;
 
-    for ( SignalElement signalElement : aSignalElements )
+    for ( IUIElement element : aElements )
     {
-      aCanvas.setColor( signalElement.getColor() );
-
-      if ( signalElement.isSignalGroup() )
+      if ( element instanceof ElementGroup )
       {
         // Draw nothing...
+
+        // advance to the next element...
+        aCanvas.translate( 0, element.getHeight() + aModel.getSignalElementSpacing() );
+
+        continue;
       }
+
+      aCanvas.setColor( element.getColor() );
+
+      final SignalElement signalElement = ( SignalElement )element;
 
       if ( signalElement.isDigitalSignal() )
       {

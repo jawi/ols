@@ -76,11 +76,11 @@ public class ChannelLabelsView extends AbstractViewLayer
 
       if ( !aEvent.isConsumed() && ( aEvent.getClickCount() == 2 ) )
       {
-        final SignalElement signalElement = findSignalElement( aEvent.getPoint() );
-        if ( signalElement != null )
+        final IUIElement element = findSignalElement( aEvent.getPoint() );
+        if ( element != null )
         {
           ActionEvent stubEvent = new ActionEvent( this, ActionEvent.ACTION_PERFORMED, "" );
-          new EditSignalElementPropertiesAction( this.controller, signalElement, aEvent.getLocationOnScreen() )
+          new EditSignalElementPropertiesAction( this.controller, element, aEvent.getLocationOnScreen() )
               .actionPerformed( stubEvent );
 
           // Do not process this event any further...
@@ -130,16 +130,16 @@ public class ChannelLabelsView extends AbstractViewLayer
     }
 
     /**
-     * Finds the channel under the given point.
+     * Finds the UI-element under the given point.
      * 
      * @param aPoint
      *          the coordinate of the potential channel, cannot be
      *          <code>null</code>.
      * @return the channel index, or -1 if not found.
      */
-    private SignalElement findSignalElement( final Point aPoint )
+    private IUIElement findSignalElement( final Point aPoint )
     {
-      return this.controller.getSignalDiagramModel().findSignalElement( aPoint );
+      return this.controller.getSignalDiagramModel().findUIElement( aPoint );
     }
 
     /**
@@ -200,7 +200,7 @@ public class ChannelLabelsView extends AbstractViewLayer
         final Component aTargetComponent )
     {
       final ChannelLabelsViewModel model = aView.getModel();
-      final int offset = model.findSignalElementVirtualOffset( aPoint );
+      final int offset = model.findUIElementVirtualOffset( aPoint );
 
       final Point dropPoint = new Point( 0, offset );
 
@@ -268,8 +268,8 @@ public class ChannelLabelsView extends AbstractViewLayer
       final ChannelLabelsView sourceComponent = ( ChannelLabelsView )aEvent.getComponent();
       final ChannelLabelsViewModel model = sourceComponent.getModel();
 
-      final SignalElement element = model.findSignalElement( coordinate );
-      if ( ( element == null ) || element.isSignalGroup() )
+      final IUIElement element = model.findUIElement( coordinate );
+      if ( ( element == null ) || ( element instanceof ElementGroup ) )
       {
         DragAndDropLock.releaseLock( this );
         return;
@@ -366,7 +366,7 @@ public class ChannelLabelsView extends AbstractViewLayer
         {
           final ChannelLabelsViewModel model = getModel();
 
-          final SignalElement insertElement = model.findSignalElement( aEvent.getLocation() );
+          final IUIElement insertElement = model.findUIElement( aEvent.getLocation() );
           if ( accepted = model.acceptDrop( movedElement, insertElement ) )
           {
             // Move the channel rows...
