@@ -24,7 +24,7 @@ package nl.lxtreme.ols.common.util;
 /**
  * Represents a unit of time that can be displayed has a scale factor.
  */
-public enum UnitOfTime
+enum UnitOfTime
 {
   // CONSTANTS
 

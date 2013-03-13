@@ -456,7 +456,7 @@ public final class AnnotationHelper
       }
       time = time / data.getSampleRate();
     }
-    return UnitOfTime.toUnit( time ).formatHumanReadable( time );
+    return Unit.Time.toUnit( time ).formatHumanReadable( time );
   }
 
   /**

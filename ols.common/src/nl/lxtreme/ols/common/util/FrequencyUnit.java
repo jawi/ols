@@ -25,7 +25,7 @@ package nl.lxtreme.ols.common.util;
  * Represents a frequency unit that has a displayable representation and a scale
  * factor to convert it from/to Hertz.
  */
-public enum FrequencyUnit
+enum FrequencyUnit
 {
   // CONSTANTS
 

@@ -23,49 +23,48 @@ package nl.lxtreme.ols.common.util;
 
 import java.util.*;
 
-import junit.framework.*;
+import nl.lxtreme.ols.common.util.Unit.Frequency;
 
 
 /**
- * Test cases for {@link FrequencyUnit}.
+ * Test cases for {@link Frequency}.
  */
-public class FrequencyUnitTest extends TestCase
+public class FrequencyUnitTest extends UnitTestBase
 {
   // METHODS
 
   /**
-   * Test method for
-   * {@link nl.lxtreme.ols.api.util.FrequencyUnit#format(double, int)}.
+   * Test method for {@link Frequency#format(double, int)}.
    */
   public void testFormatAutoScaleOk()
   {
-    assertEquals( "0.000Hz", FrequencyUnit.format( 0 ) );
-    assertEquals( "1.000mHz", FrequencyUnit.format( 1.0e-3 ) );
-    assertEquals( "1.000Hz", FrequencyUnit.format( 1.0 ) );
-    assertEquals( "1.000kHz", FrequencyUnit.format( 1.0e3 ) );
-    assertEquals( "1.000MHz", FrequencyUnit.format( 1.0e6 ) );
-    assertEquals( "1.000GHz", FrequencyUnit.format( 1.0e9 ) );
-    assertEquals( "1.000THz", FrequencyUnit.format( 1.0e12 ) );
-    assertEquals( "-1.000THz", FrequencyUnit.format( -1.0e12 ) );
-    assertEquals( "100.000THz", FrequencyUnit.format( 1.0e14 ) );
-    assertEquals( "333.333kHz", FrequencyUnit.format( 333333.3333333333 ) );
+    assertUnitEquals( "0.000", "Hz", Frequency.format( 0 ) );
+    assertUnitEquals( "1.000", "mHz", Frequency.format( 1.0e-3 ) );
+    assertUnitEquals( "1.000", "Hz", Frequency.format( 1.0 ) );
+    assertUnitEquals( "1.000", "kHz", Frequency.format( 1.0e3 ) );
+    assertUnitEquals( "1.000", "MHz", Frequency.format( 1.0e6 ) );
+    assertUnitEquals( "1.000", "GHz", Frequency.format( 1.0e9 ) );
+    assertUnitEquals( "1.000", "THz", Frequency.format( 1.0e12 ) );
+    assertUnitEquals( "-1.000", "THz", Frequency.format( -1.0e12 ) );
+    assertUnitEquals( "100.000", "THz", Frequency.format( 1.0e14 ) );
+    assertUnitEquals( "333.333", "kHz", Frequency.format( 333333.3333333333 ) );
   }
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.api.util.FrequencyUnit#format(double, int)}.
+   * {@link nl.lxtreme.ols.api.util.Frequency#format(double, int)}.
    */
   public void testFormatOk()
   {
-    assertEquals( "0.000Hz", FrequencyUnit.GHZ.format( 0, 3 ) );
-    assertEquals( "1.000mHz", FrequencyUnit.MiHZ.format( 1.0e-3, 3 ) );
-    assertEquals( "0.001kHz", FrequencyUnit.KHZ.format( 1.0, 3 ) );
-    assertEquals( "1.000kHz", FrequencyUnit.KHZ.format( 1.0e3, 3 ) );
-    assertEquals( "1.000MHz", FrequencyUnit.MHZ.format( 1.0e6, 3 ) );
-    assertEquals( "1.000GHz", FrequencyUnit.GHZ.format( 1.0e9, 3 ) );
-    assertEquals( "1.000THz", FrequencyUnit.THZ.format( 1.0e12, 3 ) );
-    assertEquals( "100.000THz", FrequencyUnit.THZ.format( 1.0e14, 3 ) );
-    assertEquals( "333.333kHz", FrequencyUnit.KHZ.format( 333333.3333333333, 3 ) );
+    assertUnitEquals( "0.000", "Hz", Frequency.GHZ.format( 0, 3 ) );
+    assertUnitEquals( "1.000", "mHz", Frequency.MiHZ.format( 1.0e-3, 3 ) );
+    assertUnitEquals( "0.001", "kHz", Frequency.KHZ.format( 1.0, 3 ) );
+    assertUnitEquals( "1.000", "kHz", Frequency.KHZ.format( 1.0e3, 3 ) );
+    assertUnitEquals( "1.000", "MHz", Frequency.MHZ.format( 1.0e6, 3 ) );
+    assertUnitEquals( "1.000", "GHz", Frequency.GHZ.format( 1.0e9, 3 ) );
+    assertUnitEquals( "1.000", "THz", Frequency.THZ.format( 1.0e12, 3 ) );
+    assertUnitEquals( "100.000", "THz", Frequency.THZ.format( 1.0e14, 3 ) );
+    assertUnitEquals( "333.333", "kHz", Frequency.KHZ.format( 333333.3333333333, 3 ) );
   }
 
   /**

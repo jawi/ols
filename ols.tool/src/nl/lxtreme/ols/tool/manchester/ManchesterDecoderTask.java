@@ -190,7 +190,7 @@ public class ManchesterDecoderTask implements Callable<Void>
 
     lastTimestamp += halfCycle;
 
-    String format = FrequencyUnit.format( inputData.getSampleRate() / ( 2.0 * halfCycle ) );
+    String format = Unit.Frequency.format( inputData.getSampleRate() / ( 2.0 * halfCycle ) );
     System.out.println( "Clock signal = " + format );
 
     SortedMap<Long, Integer> newSamples = new TreeMap<Long, Integer>();

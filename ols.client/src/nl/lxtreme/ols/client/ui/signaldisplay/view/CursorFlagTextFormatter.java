@@ -70,8 +70,7 @@ public final class CursorFlagTextFormatter
    * @return a cursor flag text, or an empty string if the cursor with the given
    *         index is undefined.
    */
-  public static String getCursorFlagText( final SignalDiagramModel aModel, final Marker aCursor,
-      final LabelStyle aStyle )
+  public static String getCursorFlagText( final SignalDiagramModel aModel, final Marker aCursor, final LabelStyle aStyle )
   {
     return new CursorFlagTextFormatter( aModel ).getMarkerFlagText( aCursor, aStyle );
   }
@@ -98,7 +97,7 @@ public final class CursorFlagTextFormatter
     final String timestampText;
     if ( this.model.hasTimingData() )
     {
-      timestampText = UnitOfTime.toUnit( timestamp ).formatHumanReadable( timestamp );
+      timestampText = Unit.Time.toUnit( timestamp ).formatHumanReadable( timestamp );
     }
     else
     {

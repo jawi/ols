@@ -23,13 +23,13 @@ package nl.lxtreme.ols.common.util;
 
 import java.util.*;
 
-import junit.framework.*;
+import nl.lxtreme.ols.common.util.Unit.Time;
 
 
 /**
- * Test cases for {@link UnitOfTime}.
+ * Test cases for {@link Time}.
  */
-public class UnitOfTimeTest extends TestCase
+public class UnitOfTimeTest extends UnitTestBase
 {
   // METHODS
 
@@ -39,52 +39,52 @@ public class UnitOfTimeTest extends TestCase
    */
   public void testFormatAutoScaleOk()
   {
-    assertEquals( "0.00s", UnitOfTime.format( 0 ) );
-    assertEquals( "1.00ms", UnitOfTime.format( 1.0e-3 ) );
-    assertEquals( "-1.00ms", UnitOfTime.format( -1.0e-3 ) );
-    assertEquals( "1.20ns", UnitOfTime.format( 1.2e-9 ) );
-    assertEquals( "1.00s", UnitOfTime.format( 1.0 ) );
-    assertEquals( "1000.00s", UnitOfTime.format( 1.0e3 ) );
+    assertUnitEquals( "0.00", "s", Time.format( 0 ) );
+    assertUnitEquals( "1.00", "ms", Time.format( 1.0e-3 ) );
+    assertUnitEquals( "-1.00", "ms", Time.format( -1.0e-3 ) );
+    assertUnitEquals( "1.20", "ns", Time.format( 1.2e-9 ) );
+    assertUnitEquals( "1.00", "s", Time.format( 1.0 ) );
+    assertUnitEquals( "1000.00", "s", Time.format( 1.0e3 ) );
   }
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.api.util.UnitOfTime#formatHumanReadable(double)}.
+   * {@link nl.lxtreme.ols.api.util.Time#formatHumanReadable(double)}.
    */
   public void testFormatHumanReadableOk()
   {
-    assertEquals( "0.0s", UnitOfTime.S.formatHumanReadable( 0 ) );
-    assertEquals( "1.0ms", UnitOfTime.MS.formatHumanReadable( 1.0e-3 ) );
-    assertEquals( "-1.0ms", UnitOfTime.MS.formatHumanReadable( -1.0e-3 ) );
-    assertEquals( "1.2345ns", UnitOfTime.NS.formatHumanReadable( 1.2345e-9 ) );
-    assertEquals( "1.00001s", UnitOfTime.S.formatHumanReadable( 1.00001 ) );
-    assertEquals( "1050.607s", UnitOfTime.S.formatHumanReadable( 1.050607e3 ) );
+    assertUnitEquals( "0.0", "s", Time.S.formatHumanReadable( 0 ) );
+    assertUnitEquals( "1.0", "ms", Time.MS.formatHumanReadable( 1.0e-3 ) );
+    assertUnitEquals( "-1.0", "ms", Time.MS.formatHumanReadable( -1.0e-3 ) );
+    assertUnitEquals( "1.2345", "ns", Time.NS.formatHumanReadable( 1.2345e-9 ) );
+    assertUnitEquals( "1.00001", "s", Time.S.formatHumanReadable( 1.00001 ) );
+    assertUnitEquals( "1050.607", "s", Time.S.formatHumanReadable( 1.050607e3 ) );
   }
 
   /**
-   * Test method for {@link nl.lxtreme.ols.api.util.UnitOfTime#predecessor()}.
+   * Test method for {@link nl.lxtreme.ols.api.util.Time#predecessor()}.
    */
   public void testPredecessor()
   {
-    assertNull( UnitOfTime.S.predecessor() );
-    assertNotNull( UnitOfTime.MS.predecessor() );
-    assertNotNull( UnitOfTime.US.predecessor() );
-    assertNotNull( UnitOfTime.NS.predecessor() );
-    assertNotNull( UnitOfTime.PS.predecessor() );
-    assertNotNull( UnitOfTime.FS.predecessor() );
+    assertNull( Time.S.predecessor() );
+    assertNotNull( Time.MS.predecessor() );
+    assertNotNull( Time.US.predecessor() );
+    assertNotNull( Time.NS.predecessor() );
+    assertNotNull( Time.PS.predecessor() );
+    assertNotNull( Time.FS.predecessor() );
   }
 
   /**
-   * Test method for {@link nl.lxtreme.ols.api.util.UnitOfTime#successor()}.
+   * Test method for {@link nl.lxtreme.ols.api.util.Time#successor()}.
    */
   public void testSuccessor()
   {
-    assertNotNull( UnitOfTime.S.successor() );
-    assertNotNull( UnitOfTime.MS.successor() );
-    assertNotNull( UnitOfTime.US.successor() );
-    assertNotNull( UnitOfTime.NS.successor() );
-    assertNotNull( UnitOfTime.PS.successor() );
-    assertNull( UnitOfTime.FS.successor() );
+    assertNotNull( Time.S.successor() );
+    assertNotNull( Time.MS.successor() );
+    assertNotNull( Time.US.successor() );
+    assertNotNull( Time.NS.successor() );
+    assertNotNull( Time.PS.successor() );
+    assertNull( Time.FS.successor() );
   }
 
   /**

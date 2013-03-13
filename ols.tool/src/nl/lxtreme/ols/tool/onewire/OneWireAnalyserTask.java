@@ -166,7 +166,7 @@ public class OneWireAnalyserTask implements Callable<Void>
       if ( fallingEdge < 0 )
       {
         LOG.log( Level.INFO, "Decoding ended at {0}; no falling edge found...",
-            UnitOfTime.format( time / ( double )aData.getSampleRate() ) );
+            Unit.Time.format( time / ( double )aData.getSampleRate() ) );
         break;
       }
       long risingEdge = findRisingEdge( aData, fallingEdge, endOfDecode );

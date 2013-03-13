@@ -43,6 +43,7 @@ import nl.lxtreme.ols.util.swing.component.*;
 import nl.lxtreme.ols.util.swing.editor.*;
 
 import org.osgi.service.metatype.*;
+import org.sump.device.logicsniffer.protocol.*;
 
 
 /**
@@ -55,7 +56,7 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
   /**
    * Renders a binary size.
    */
-  static final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
+  final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
   {
     private static final long serialVersionUID = 1L;
 
@@ -66,7 +67,21 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = SizeUnit.format( ( ( Integer )aValue ).doubleValue() );
+        double size = ( ( Integer )value ).doubleValue();
+
+        int enabledGroups = getEnabledChannelGroups();
+        if ( enabledGroups > 0 )
+        {
+          int sampleRate = getSelectedSampleRate();
+          double time = ( enabledGroups != 0 ) ? size / ( sampleRate * enabledGroups ) : 0.0;
+
+          value = String.format( "<html>%s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%s)</span></html>",
+              Unit.SizeSI.format( size ), Unit.Time.format( time ) );
+        }
+        else
+        {
+          value = String.format( "%s", Unit.SizeSI.format( size ) );
+        }
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -86,7 +101,7 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
       Object value = aValue;
       if ( value instanceof Number )
       {
-        value = FrequencyUnit.format( ( ( Number )value ).doubleValue() );
+        value = Unit.Frequency.format( ( ( Number )value ).doubleValue() );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -148,20 +163,22 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
     }
   }
 
-  // CONSTANTS
-
   private static final long serialVersionUID = 1L;
 
   private static final String RLE_WARNING = "<html><body><b>The last channel will always<br/>be low when RLE is enabled!</b></body></html>";
 
-  // VARIABLES
+  // CONSTANTS
 
   private final ObjectClassDefinition ocd;
-  private final Map<Object, Object> initialValues;
-  private final List<JComponent> components;
 
+  private final Map<Object, Object> initialValues;
+
+  // VARIABLES
+
+  private final List<JComponent> components;
   private JComboBox numberScheme;
   private JComboBox clockSource;
+
   private JComboBox sampleRate;
   private JCheckBox[] enabledChannelGroups;
   private JComboBox size;
@@ -170,11 +187,7 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
   private JCheckBox filterEnabled;
   private JCheckBox rleEnabled;
   private JLabel rleWarning;
-
   private JTextField enabledChannelsValue; // not visible...
-
-  // CONSTRUCTORS
-
   /**
    * Creates a new {@link AcquisitionSettingsPanel} instance.
    */
@@ -193,8 +206,6 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
     // disable all components...
     enableComponents( false );
   }
-
-  // METHODS
 
   /**
    * @return <code>true</code> if the settings are valid, <code>false</code>
@@ -224,6 +235,8 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
 
     return true;
   }
+
+  // CONSTRUCTORS
 
   /**
    * {@inheritDoc}
@@ -258,6 +271,8 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
     updateEditorDefaults();
   }
 
+  // METHODS
+
   /**
    * @param aConfiguration
    *          the configuration map to fill with the configuration settings of
@@ -282,6 +297,31 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
       value |= ( ( selected ? 0xFF : 0x00 ) << ( i * 8 ) );
     }
     this.enabledChannelsValue.setText( Integer.toString( value ) );
+  }
+
+  /**
+   * @return
+   */
+  final int getEnabledChannelGroups()
+  {
+    int enabledChannelGroups = 0;
+    for ( JCheckBox element : this.enabledChannelGroups )
+    {
+      if ( element.isSelected() )
+      {
+        enabledChannelGroups++;
+      }
+    }
+    return enabledChannelGroups;
+  }
+
+  /**
+   * @return the selected sample rate, in Hertz.
+   */
+  final int getSelectedSampleRate()
+  {
+    final String value = getComboBoxText( this.sampleRate );
+    return SwingComponentUtils.smartParseInt( value, UnitDefinition.SI, SumpProtocolConstants.CLOCK );
   }
 
   /**
@@ -398,6 +438,16 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
   }
 
   /**
+   * @param aAttributeName
+   * @return
+   */
+  private Object getDefaultValue( final String aAttributeName )
+  {
+    AttributeDefinition ad = getAttributeDefinition( this.ocd, aAttributeName );
+    return new EditorUtils().getDefaultValue( ad, this.initialValues.get( aAttributeName ) );
+  }
+
+  /**
    * Initializes the components that should be placed on this panel.
    * 
    * @param aOCD
@@ -493,16 +543,6 @@ public class AcquisitionSettingsPanel extends JPanel implements DeviceProfileCha
     }, this.components );
 
     editorUtils.applyComponentProperties( this.components );
-  }
-
-  /**
-   * @param aAttributeName
-   * @return
-   */
-  private Object getDefaultValue( final String aAttributeName )
-  {
-    AttributeDefinition ad = getAttributeDefinition( this.ocd, aAttributeName );
-    return new EditorUtils().getDefaultValue( ad, this.initialValues.get( aAttributeName ) );
   }
 
   /**

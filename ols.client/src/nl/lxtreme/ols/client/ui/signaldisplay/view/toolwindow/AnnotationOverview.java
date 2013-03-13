@@ -1341,7 +1341,7 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
       Object value = aValue;
       if ( value instanceof Double )
       {
-        value = UnitOfTime.format( ( ( Double )value ).doubleValue() );
+        value = Unit.Time.format( ( ( Double )value ).doubleValue() );
       }
 
       JLabel label = ( JLabel )super.getTableCellRendererComponent( aTable, value, aIsSelected, //

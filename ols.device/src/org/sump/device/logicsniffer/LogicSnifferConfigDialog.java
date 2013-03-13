@@ -81,11 +81,11 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
           double time = ( enabledGroups != 0 ) ? size / ( sampleRate * enabledGroups ) : 0.0;
 
           value = String.format( "<html>%s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%s)</span></html>",
-              SizeUnit.format( size ), UnitOfTime.format( time ) );
+              Unit.SizeSI.format( size ), Unit.Time.format( time ) );
         }
         else
         {
-          value = String.format( "%s", SizeUnit.format( size ) );
+          value = String.format( "%s", Unit.SizeSI.format( size ) );
         }
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
@@ -106,7 +106,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = FrequencyUnit.format( ( ( Integer )value ).doubleValue() );
+        value = Unit.Frequency.format( ( ( Integer )value ).doubleValue() );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }

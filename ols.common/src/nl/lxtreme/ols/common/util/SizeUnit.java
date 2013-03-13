@@ -25,7 +25,7 @@ package nl.lxtreme.ols.common.util;
  * Represents a size unit (SI-standard) that has a displayable representation
  * and has a scale factor.
  */
-public enum SizeUnit
+enum SizeUnit
 {
   // CONSTANTS
 

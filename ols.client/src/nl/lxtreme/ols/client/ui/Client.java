@@ -347,7 +347,7 @@ public class Client implements ManagedService, StatusListener, EventHandler
         long time = System.currentTimeMillis() - startTime.longValue();
 
         setStatus( "Acquisition from {2} finished at {0,date,medium} {0,time,medium}, and took {1}.", new Date(),
-            UnitOfTime.format( time / 1.0e3 ), device );
+            Unit.Time.format( time / 1.0e3 ), device );
       }
       else if ( STATUS_FAILED.equals( status ) )
       {
@@ -381,7 +381,7 @@ public class Client implements ManagedService, StatusListener, EventHandler
         getSignalDiagramController().updateAnnotations();
 
         setStatus( "Tool {2} finished at {0,date,medium} {0,time,medium}, and took {1}.", new Date(),
-            UnitOfTime.format( time / 1.0e3 ), tool );
+            Unit.Time.format( time / 1.0e3 ), tool );
       }
       else if ( TOOL_STATUS_FAILED.equals( status ) )
       {
