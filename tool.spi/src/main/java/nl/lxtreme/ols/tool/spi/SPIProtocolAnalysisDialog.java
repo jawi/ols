@@ -793,8 +793,8 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
       {
         final SPIData ds = decodedData.get( i );
 
-        final String startTime = UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
-        final String endTime = UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
+        final String startTime = Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
+        final String endTime = Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
         final String mosiDataValue = ds.isMosiData() ? Integer.toString( ds.getDataValue() ) : null;
         final String misoDataValue = ds.isMisoData() ? Integer.toString( ds.getDataValue() ) : null;
 
@@ -917,7 +917,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( event );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -933,7 +933,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( sampleIdx ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aDataSet.getTime( sampleIdx ) ) );
 
               int mosiValue = ds.isMosiData() ? ds.getDataValue() : 0;
               int misoValue = ds.isMisoData() ? ds.getDataValue() : 0;

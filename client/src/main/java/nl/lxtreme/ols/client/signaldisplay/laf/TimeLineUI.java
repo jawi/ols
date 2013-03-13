@@ -481,12 +481,12 @@ public class TimeLineUI extends ComponentUI
    */
   private String displayTime( final double aTime, final double aTimeScale, final int aPrecision )
   {
-    final UnitOfTime timeScale = UnitOfTime.toUnit( aTimeScale );
-    final UnitOfTime time = UnitOfTime.toUnit( aTime );
+    final Unit.Time timeScale = Unit.Time.toUnit( aTimeScale );
+    final Unit.Time time = Unit.Time.toUnit( aTime );
 
     // determine the magnitude of difference...
     int mag = 0;
-    UnitOfTime ptr = timeScale;
+    Unit.Time ptr = timeScale;
     while ( ( ptr != null ) && ( ptr != time ) )
     {
       ptr = ptr.predecessor();
@@ -558,7 +558,7 @@ public class TimeLineUI extends ComponentUI
   {
     if ( aModel.hasTimingData() )
     {
-      final UnitOfTime time = UnitOfTime.toUnit( aTime );
+      final Unit.Time time = Unit.Time.toUnit( aTime );
       return time.formatHumanReadable( aTime );
     }
 

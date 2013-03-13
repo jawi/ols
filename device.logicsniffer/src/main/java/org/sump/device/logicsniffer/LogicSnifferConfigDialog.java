@@ -62,15 +62,9 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   /**
    * Renders a binary size.
    */
-  static final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
+  final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
   {
     private static final long serialVersionUID = 1L;
-    private final LogicSnifferConfigDialog parent;
-
-    public BinarySizeComboBoxRenderer( LogicSnifferConfigDialog dialog )
-    {
-      this.parent = dialog;
-    }
 
     @Override
     public Component getListCellRendererComponent( final JList aList, final Object aValue, final int aIndex,
@@ -79,33 +73,21 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        double size = ( ( Integer )aValue ).doubleValue();
+        double size = ( ( Integer )value ).doubleValue();
 
-        final double US_PER_MS = 1000.0;
-        final double MS_PER_S = 1000.0;
-        final double US_PER_S = US_PER_MS * MS_PER_S;
-        String timeStr = "";
-        int chGroups = parent.getEnabledChannelGroups();
-
-        if ( chGroups > 0 )
+        int enabledGroups = getEnabledChannelGroups();
+        if ( enabledGroups > 0 )
         {
-          int sampleRate = parent.getSelectedSampleRate();
-          double timeSpace = US_PER_S * size / ( sampleRate * chGroups );
+          int sampleRate = getSelectedSampleRate();
+          double time = ( enabledGroups != 0 ) ? size / ( sampleRate * enabledGroups ) : 0.0;
 
-          if ( timeSpace >= US_PER_S )
-          {
-            timeStr = String.format( " (%.2fs)", timeSpace / US_PER_S );
-          }
-          else if ( timeSpace >= US_PER_MS )
-          {
-            timeStr = String.format( " (%.2fms)", timeSpace / US_PER_MS );
-          }
-          else
-          {
-            timeStr = String.format( " (%.2fus)", timeSpace );
-          }
+          value = String.format( "<html>%s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%s)</span></html>",
+              Unit.SizeSI.format( size ), Unit.Time.format( time ) );
         }
-        value = SizeUnit.format( size ) + timeStr;
+        else
+        {
+          value = String.format( "%s", Unit.SizeSI.format( size ) );
+        }
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -125,7 +107,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = FrequencyUnit.format( ( ( Integer )value ).doubleValue() );
+        value = Unit.Frequency.format( ( ( Integer )value ).doubleValue() );
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
@@ -1280,7 +1262,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     }
 
     this.sizeSelect = new JComboBox();
-    this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer( this ) );
+    this.sizeSelect.setRenderer( new BinarySizeComboBoxRenderer() );
     this.sizeSelect.addActionListener( fieldUpdater );
 
     this.maxSampleSize = new JCheckBox( "Automatic (maximum)" );

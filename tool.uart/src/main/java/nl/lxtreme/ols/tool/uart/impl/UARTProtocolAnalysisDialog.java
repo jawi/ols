@@ -656,8 +656,8 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
       {
         final UARTData ds = decodedData.get( i );
 
-        final String startTime = UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
-        final String endTime = UnitOfTime.format( aDataSet.getTime( ds.getEndSampleIndex() ) );
+        final String startTime = Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) );
+        final String endTime = Unit.Time.format( aDataSet.getTime( ds.getEndSampleIndex() ) );
 
         String eventType = null;
         String rxdEvent = null;
@@ -822,7 +822,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
               tr = aParent.addChild( TR ).addAttribute( "style", "background-color: " + bgColor + ";" );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( rxEventData );
               tr.addChild( TD );
               tr.addChild( TD );
@@ -866,7 +866,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
-              tr.addChild( TD ).addContent( UnitOfTime.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
+              tr.addChild( TD ).addContent( Unit.Time.format( aDataSet.getTime( ds.getStartSampleIndex() ) ) );
               tr.addChild( TD ).addContent( rxDataHex );
               tr.addChild( TD ).addContent( rxDataBin );
               tr.addChild( TD ).addContent( rxDataDec );
