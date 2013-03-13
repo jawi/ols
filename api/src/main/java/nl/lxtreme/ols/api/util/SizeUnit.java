@@ -25,7 +25,7 @@ package nl.lxtreme.ols.api.util;
  * Represents a size unit (SI-standard) that has a displayable representation
  * and has a scale factor.
  */
-public enum SizeUnit
+enum SizeUnit
 {
   // CONSTANTS
 
@@ -125,7 +125,7 @@ public enum SizeUnit
     }
 
     final Double size = Double.valueOf( aSize / getFactor() );
-    final String format = String.format( "%%.%df%%s", Integer.valueOf( aScale ) );
+    final String format = String.format( "%%.%df\u00a0%%s", Integer.valueOf( aScale ) );
     return String.format( format, size, getDisplayName() );
   }
 

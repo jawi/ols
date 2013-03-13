@@ -24,7 +24,7 @@ package nl.lxtreme.ols.api.util;
 /**
  * Represents a unit of time that can be displayed has a scale factor.
  */
-public enum UnitOfTime
+enum UnitOfTime
 {
   // CONSTANTS
 
@@ -128,7 +128,7 @@ public enum UnitOfTime
     }
 
     final Double time = Double.valueOf( aTime / getFactor() );
-    final String format = String.format( "%%.%df%%s", Integer.valueOf( aScale ) );
+    final String format = String.format( "%%.%df\u00a0%%s", Integer.valueOf( aScale ) );
     return String.format( format, time, getDisplayName() );
   }
 
@@ -156,7 +156,7 @@ public enum UnitOfTime
     String formattedTime = String.format( "%.9f", time );
     formattedTime = formattedTime.replaceAll( "(\\d)0+$", "$1" );
 
-    return String.format( "%s%s", formattedTime, getDisplayName() );
+    return String.format( "%s\u00a0%s", formattedTime, getDisplayName() );
   }
 
   /**

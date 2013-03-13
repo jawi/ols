@@ -25,7 +25,7 @@ package nl.lxtreme.ols.api.util;
  * Represents a frequency unit that has a displayable representation and a scale
  * factor to convert it from/to Hertz.
  */
-public enum FrequencyUnit
+enum FrequencyUnit
 {
   // CONSTANTS
 
@@ -128,7 +128,7 @@ public enum FrequencyUnit
     }
 
     final Double frequency = Double.valueOf( aFrequency / getFactor() );
-    final String format = String.format( "%%.%df%%s", Integer.valueOf( aScale ) );
+    final String format = String.format( "%%.%df\u00a0%%s", Integer.valueOf( aScale ) );
     return String.format( format, frequency, getDisplayName() );
   }
 

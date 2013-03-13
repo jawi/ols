@@ -16,44 +16,29 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.api.util;
 
 
-import java.util.*;
-
-import nl.lxtreme.ols.api.util.Unit.SizeSI;
-
-import org.junit.*;
+import static org.junit.Assert.*;
 
 
 /**
- * Test cases for {@link SizeSI}.
+ * Base class for testing {@link Unit}-related classes.
  */
-public class SizeUnitTest extends UnitTestBase
+public abstract class UnitTestBase
 {
   // METHODS
 
   /**
-   * Forces the use of English locales for this test.
+   * @param expectedValue
+   * @param expectedDisplayName
+   * @param actual
    */
-  @Before
-  public void setUp()
+  protected void assertUnitEquals( String expectedValue, String expectedDisplayName, String actual )
   {
-    Locale.setDefault( Locale.US );
-  }
-
-  /**
-   * Test method for
-   * {@link nl.lxtreme.ols.api.util.SizeUnit#format(double, int)}.
-   */
-  @Test
-  public void testFormatAutoScaleOk()
-  {
-    assertUnitEquals( "0.00", "B", SizeSI.format( 0 ) );
-    assertUnitEquals( "10.00", "kB", SizeSI.format( 10240 ) );
-    assertUnitEquals( "10.00", "MB", SizeSI.format( 10240 * 1024 ) );
-    assertUnitEquals( "-10.00", "MB", SizeSI.format( -10240 * 1024 ) );
+    String expected = Unit.format( expectedValue, expectedDisplayName );
+    assertEquals( expected, actual );
   }
 }
