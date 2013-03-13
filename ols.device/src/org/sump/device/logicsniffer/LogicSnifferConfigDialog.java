@@ -61,7 +61,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   /**
    * Renders a binary size.
    */
-  static final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
+  final class BinarySizeComboBoxRenderer extends BasicComboBoxRenderer
   {
     private static final long serialVersionUID = 1L;
 
@@ -72,7 +72,21 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       Object value = aValue;
       if ( value instanceof Integer )
       {
-        value = SizeUnit.format( ( ( Integer )aValue ).doubleValue() );
+        double size = ( ( Integer )value ).doubleValue();
+
+        int enabledGroups = getEnabledChannelGroups();
+        if ( enabledGroups > 0 )
+        {
+          int sampleRate = getSelectedSampleRate();
+          double time = ( enabledGroups != 0 ) ? size / ( sampleRate * enabledGroups ) : 0.0;
+
+          value = String.format( "<html>%s&nbsp;&nbsp;<span style='color:gray;font-size:0.85em;'>(%s)</span></html>",
+              SizeUnit.format( size ), UnitOfTime.format( time ) );
+        }
+        else
+        {
+          value = String.format( "%s", SizeUnit.format( size ) );
+        }
       }
       return super.getListCellRendererComponent( aList, value, aIndex, aIsSelected, aCellHasFocus );
     }
