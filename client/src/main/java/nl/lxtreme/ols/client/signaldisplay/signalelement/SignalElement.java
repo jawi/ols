@@ -86,7 +86,7 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
     this.yPosition = aSignalElement.yPosition;
     this.signalHeight = aSignalElement.signalHeight;
     this.alignment = aSignalElement.alignment;
-    
+
     setEnabled( aSignalElement.isEnabled() );
     setLabel( aSignalElement.getLabel() );
   }
@@ -685,7 +685,18 @@ public final class SignalElement implements Comparable<SignalElement>, IUIElemen
    */
   private String getDefaultName()
   {
-    int index = this.channel != null ? this.channel.getIndex() : this.group.getIndex();
-    return String.format( "%s-%d", this.group.getName(), Integer.valueOf( index + 1 ) );
+    int index = 0;
+    String name = "";
+    if ( this.channel != null )
+    {
+      index = this.channel.getIndex();
+      name = this.group.getName();
+    }
+    else if ( this.group != null )
+    {
+      index = this.group.getIndex();
+      name = this.group.getName();
+    }
+    return String.format( "%s-%d", name, Integer.valueOf( index + 1 ) );
   }
 }

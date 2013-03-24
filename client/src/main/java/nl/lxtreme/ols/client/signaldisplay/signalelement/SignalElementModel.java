@@ -63,7 +63,7 @@ class SignalElementModel
     {
       ElementGroup newGroup = new ElementGroup( oldGroup );
       this.groups.add( newGroup );
-      
+
       this.elements.addAll( newGroup.getElements() );
     }
   }
@@ -404,27 +404,28 @@ class SignalElementModel
   }
 
   /**
-   * Removes the group with the given name.
+   * Removes a given group.
    * 
-   * @param aName
-   *          the name of the group to remove, cannot be <code>null</code> or
-   *          empty.
+   * @param aGroup
+   *          the group to remove, cannot be <code>null</code> or empty.
    * @throws IllegalArgumentException
-   *           in case the given name was <code>null</code> or empty.
+   *           in case the given group was <code>null</code>.
    */
-  protected void removeGroup( final String aName )
+  protected void removeGroup( final ElementGroup aGroup )
   {
-    if ( ( aName == null ) || aName.trim().isEmpty() )
+    if ( aGroup == null )
     {
-      throw new IllegalArgumentException( "Name cannot be null or empty!" );
+      throw new IllegalArgumentException( "Group cannot be null!" );
     }
 
     synchronized ( this.groups )
     {
-      ElementGroup group = getGroupByName( aName );
-      if ( group != null )
+      if ( this.groups.remove( aGroup ) )
       {
-        this.groups.remove( group );
+        for ( SignalElement element : aGroup.getElements() )
+        {
+          aGroup.removeElement( element );
+        }
       }
     }
   }
