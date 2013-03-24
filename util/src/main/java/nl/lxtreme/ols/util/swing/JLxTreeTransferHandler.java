@@ -30,6 +30,9 @@ import javax.swing.tree.*;
 
 /**
  * Provides a custom {@link TransferHandler} for use in a {@link JTree}.
+ * <p>
+ * Based on: &lt;http://www.coderanch.com/t/346509/GUI/java/JTree-drag-drop-tree-Java&gt;.
+ * </p>
  */
 public class JLxTreeTransferHandler extends TransferHandler
 {
