@@ -79,6 +79,11 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   /** The device's native clockspeed, in Hertz. */
   public static final String DEVICE_CLOCKSPEED = "device.clockspeed";
   /**
+   * The clockspeed used in the divider calculation, in Hertz. Defaults to
+   * 100MHz as most devices appear to use this.
+   */
+  public static final String DEVICE_DIVIDER_CLOCKSPEED = "device.dividerClockspeed";
+  /**
    * Whether or not double-data-rate is supported by the device (also known as
    * the "demux"-mode).
    */
@@ -149,7 +154,7 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
       DEVICE_FEATURE_TRIGGERS, DEVICE_TRIGGER_STAGES, DEVICE_TRIGGER_COMPLEX, DEVICE_CHANNEL_COUNT,
       DEVICE_CHANNEL_GROUPS, DEVICE_CAPTURESIZE_BOUND, DEVICE_CHANNEL_NUMBERING_SCHEMES, DEVICE_OPEN_PORT_DELAY,
       DEVICE_METADATA_KEYS, DEVICE_SAMPLE_REVERSE_ORDER, DEVICE_OPEN_PORT_DTR, DEVICE_RECEIVE_TIMEOUT,
-      FELIX_FILEINSTALL_FILENAME } );
+      FELIX_FILEINSTALL_FILENAME, DEVICE_DIVIDER_CLOCKSPEED } );
   private static final List<String> IGNORED_KEYS = Arrays.asList( new String[] { FELIX_SERVICE_PID,
       FELIX_SERVICE_FACTORY_PID } );
 
@@ -350,6 +355,17 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   {
     final String rawValue = this.properties.get( DEVICE_METADATA_KEYS );
     return StringUtils.tokenizeQuotedStrings( rawValue, ", " );
+  }
+
+  /**
+   * Returns the clockspeed used in the divider calculation.
+   * 
+   * @return a clockspeed, in Hertz (Hz), defaults to 100MHz.
+   */
+  public int getDividerClockspeed()
+  {
+    final String value = this.properties.get( DEVICE_DIVIDER_CLOCKSPEED );
+    return Integer.parseInt( value );
   }
 
   /**

@@ -417,6 +417,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     properties.put( DeviceProfile.DEVICE_CHANNEL_GROUPS, "4" );
     properties.put( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
     properties.put( DeviceProfile.DEVICE_CLOCKSPEED, "100000000" );
+    properties.put( DeviceProfile.DEVICE_DIVIDER_CLOCKSPEED, "100000000" );
     properties.put( DeviceProfile.DEVICE_DESCRIPTION, aType.concat( " Device Profile" ) );
     properties.put( DeviceProfile.DEVICE_FEATURE_NOISEFILTER, "true" );
     properties.put( DeviceProfile.DEVICE_FEATURE_RLE, "true" );

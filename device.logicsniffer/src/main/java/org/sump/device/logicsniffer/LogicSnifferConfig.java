@@ -140,7 +140,7 @@ public final class LogicSnifferConfig
     int result = SumpProtocolConstants.CLOCK;
     if ( this.deviceProfile != null )
     {
-      result = Math.min( result, this.deviceProfile.getClockspeed() );
+      result = this.deviceProfile.getClockspeed();
     }
     return result;
   }
@@ -172,13 +172,27 @@ public final class LogicSnifferConfig
    */
   public int getDivider()
   {
-    // double clock = getClockspeed();
-    double clock = SumpProtocolConstants.CLOCK;
+    double clock = getDividerClockspeed();
     if ( isDoubleDataRateEnabled() )
     {
       clock *= 2.0;
     }
     return ( int )Math.max( 0.0, ( ( clock / this.sampleRate ) - 1.0 ) );
+  }
+
+  /**
+   * Returns the clockspeed used in the divider calculation.
+   * 
+   * @return a clockspeed, in Hertz (Hz), defaults to 100MHz.
+   */
+  public int getDividerClockspeed()
+  {
+    int result = SumpProtocolConstants.CLOCK;
+    if ( this.deviceProfile != null )
+    {
+      result = this.deviceProfile.getDividerClockspeed();
+    }
+    return result;
   }
 
   /**

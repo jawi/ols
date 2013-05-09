@@ -475,6 +475,7 @@ public class DeviceProfileTest
     properties.put( DeviceProfile.DEVICE_CHANNEL_GROUPS, "1" );
     properties.put( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
     properties.put( DeviceProfile.DEVICE_CLOCKSPEED, "1000000" );
+    properties.put( DeviceProfile.DEVICE_DIVIDER_CLOCKSPEED, "1000000" );
     properties.put( DeviceProfile.DEVICE_DESCRIPTION, "Mocked Device Profile" );
     properties.put( DeviceProfile.DEVICE_FEATURE_NOISEFILTER, "false" );
     properties.put( DeviceProfile.DEVICE_FEATURE_RLE, "false" );
