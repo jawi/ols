@@ -131,31 +131,72 @@ public class CapturedData implements AcquisitionResult
   /**
    * Constructs CapturedData based on the given compressed sampling data.
    * 
-   * @param values
+   * @param aValues
    *          32bit values as read from device
-   * @param timestamps
+   * @param aTimestamps
    *          timstamps in number of samples since sample start
-   * @param triggerPosition
+   * @param aTriggerPosition
    *          position of trigger as time value
-   * @param rate
+   * @param aRate
    *          sampling rate (may be set to <code>NOT_AVAILABLE</code>)
-   * @param channels
+   * @param aChannels
    *          number of used channels
-   * @param enabledChannels
+   * @param aEnabledChannels
    *          bit mask identifying used channels
-   * @param absLen
+   * @param aAbsLen
    *          absolute number of samples
    */
-  public CapturedData( final int[] values, final long[] timestamps, final long triggerPosition, final int rate,
-      final int channels, final int enabledChannels, final long absLen )
+  public CapturedData( final int[] aValues, final long[] aTimestamps, final long aTriggerPosition, final int aRate,
+      final int aChannels, final int aEnabledChannels, final long aAbsLen )
   {
-    this.values = values;
-    this.timestamps = timestamps;
-    this.triggerPosition = triggerPosition;
-    this.rate = rate;
-    this.channels = channels;
-    this.enabledChannels = enabledChannels;
-    this.absoluteLength = absLen;
+    if ( aValues.length > 0 )
+    {
+      // 1: calculate the number of unique transitions...
+      int count = 1;
+
+      int oldValue = aValues[0];
+      for ( int i = 1; i < aValues.length; i++ )
+      {
+        if ( aValues[i] != oldValue )
+        {
+          count++;
+        }
+        oldValue = aValues[i];
+      }
+
+      // 2: copy *only* the unique transitions...
+      this.values = new int[count + 1];
+      this.timestamps = new long[count + 1];
+
+      this.values[0] = aValues[0];
+      this.timestamps[0] = aTimestamps[0];
+
+      oldValue = aValues[0];
+      for ( int i = 1, j = 1; i < aValues.length; i++ )
+      {
+        if ( aValues[i] != oldValue )
+        {
+          this.values[j] = aValues[i];
+          this.timestamps[j] = aTimestamps[i];
+          j++;
+        }
+        oldValue = aValues[i];
+      }
+
+      this.values[count] = aValues[aValues.length - 1];
+      this.timestamps[count] = aTimestamps[aTimestamps.length - 1];
+    }
+    else
+    {
+      this.values = new int[0];
+      this.timestamps = new long[0];
+    }
+
+    this.triggerPosition = aTriggerPosition;
+    this.rate = aRate;
+    this.channels = aChannels;
+    this.enabledChannels = aEnabledChannels;
+    this.absoluteLength = aAbsLen;
   }
 
   /**
@@ -179,18 +220,57 @@ public class CapturedData implements AcquisitionResult
   public CapturedData( final List<Integer> aValues, final List<Long> aTimestamps, final long aTriggerPosition,
       final int aRate, final int aChannels, final int aEnabledChannels, final long aAbsoluteLength )
   {
-    this.values = new int[aValues.size()];
-    this.timestamps = new long[aTimestamps.size()];
-
-    if ( this.values.length != this.timestamps.length )
+    if ( aValues.size() != aTimestamps.size() )
     {
       throw new IllegalArgumentException( "Values and timestamps size mismatch!" );
     }
 
-    for ( int i = 0, size = aValues.size(); i < size; i++ )
+    if ( !aValues.isEmpty() )
     {
-      this.values[i] = aValues.get( i ).intValue();
-      this.timestamps[i] = aTimestamps.get( i ).longValue();
+      final int size = aValues.size();
+
+      // 1: calculate the number of unique transitions...
+      int count = 1;
+
+      Integer oldValue = aValues.get( 0 );
+      for ( int i = 1; i < size; i++ )
+      {
+        Integer value = aValues.get( i );
+        if ( value.compareTo( oldValue ) != 0 )
+        {
+          count++;
+        }
+        oldValue = value;
+      }
+
+      // 2: copy *only* the unique transitions...
+      this.values = new int[count + 1];
+      this.timestamps = new long[count + 1];
+
+      this.values[0] = aValues.get( 0 ).intValue();
+      this.timestamps[0] = aTimestamps.get( 0 ).longValue();
+
+      oldValue = aValues.get( 0 );
+      for ( int i = 1, j = 1; i < size; i++ )
+      {
+        Integer value = aValues.get( i );
+        Long timestamp = aTimestamps.get( i );
+        if ( value.compareTo( oldValue ) != 0 )
+        {
+          this.values[j] = value.intValue();
+          this.timestamps[j] = timestamp.longValue();
+          j++;
+        }
+        oldValue = value;
+      }
+
+      this.values[count] = aValues.get( size - 1 ).intValue();
+      this.timestamps[count] = aTimestamps.get( size - 1 ).longValue();
+    }
+    else
+    {
+      this.values = new int[0];
+      this.timestamps = new long[0];
     }
 
     this.triggerPosition = aTriggerPosition;
