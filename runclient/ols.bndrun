@@ -99,3 +99,4 @@
 	ols.client.ui;version=latest,\
 	purejavacomm;version=0.0.9,\
 	runclient;version=latest
+-runvm: -Xmx1024m
