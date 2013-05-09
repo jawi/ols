@@ -839,7 +839,14 @@ public final class AcquisitionDataBuilder
 
       int sampleCount = this.sampleData.size();
 
-      values = new int[sampleCount + 1];
+      // Issue #167: make sure the absolute length is *always* present...
+      boolean addExtraSample = ( this.lastSeenTimestamp != absLength ) || ( sampleCount < 2 );
+      if ( addExtraSample )
+      {
+        sampleCount++;
+      }
+
+      values = new int[sampleCount];
       timestamps = new long[values.length];
 
       Sample sample = this.sampleData.get( 0 );
@@ -862,14 +869,18 @@ public final class AcquisitionDataBuilder
       }
 
       // Issue #167: make sure the absolute length is *always* present...
-      values[sampleCount] = values[sampleCount - 1];
-      timestamps[sampleCount] = absLength;
+      if ( addExtraSample )
+      {
+        values[sampleCount - 1] = values[sampleCount - 1];
+        timestamps[sampleCount - 1] = absLength;
+      }
     }
     else
     {
       // Empty set.
       values = new int[] { 0 };
       timestamps = new long[] { 0L };
+      absLength = 0L;
     }
 
     return new AcquisitionDataImpl( values, timestamps, this.triggerPosition, this.sampleRate, this.channelCount,

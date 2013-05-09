@@ -103,7 +103,7 @@ public class AcquisitionDataBuilderTest extends TestCase
     AcquisitionData data = this.builder.build();
     assertNotNull( data );
 
-    assertEquals( 1L, data.getAbsoluteLength() );
+    assertEquals( 0L, data.getAbsoluteLength() );
     assertEquals( 3L, data.getTriggerPosition() );
     assertEquals( 2, data.getSampleRate() );
     assertEquals( 1, data.getChannelCount() );
@@ -127,13 +127,36 @@ public class AcquisitionDataBuilderTest extends TestCase
     AcquisitionData data = this.builder.build();
     assertNotNull( data );
 
-    assertEquals( 3L, data.getAbsoluteLength() );
+    assertEquals( 2L, data.getAbsoluteLength() );
     assertEquals( 1L, data.getTriggerPosition() );
     assertEquals( 1, data.getSampleRate() );
     assertEquals( 1, data.getChannelCount() );
 
     assertEquals( 3, data.getValues().length );
     assertEquals( 3, data.getTimestamps().length );
+  }
+
+  /**
+   * Test that building with a single sample works, but causes actually two
+   * samples to be returned.
+   */
+  public void testBuildWithSingleSampleOk()
+  {
+    this.builder.setChannelCount( 1 );
+    this.builder.setSampleRate( 1 );
+    this.builder.setTriggerPosition( 1L );
+    this.builder.addSample( 0L, 1 );
+
+    AcquisitionData data = this.builder.build();
+    assertNotNull( data );
+
+    assertEquals( 0L, data.getAbsoluteLength() );
+    assertEquals( 1L, data.getTriggerPosition() );
+    assertEquals( 1, data.getSampleRate() );
+    assertEquals( 1, data.getChannelCount() );
+
+    assertEquals( 2, data.getValues().length );
+    assertEquals( 2, data.getTimestamps().length );
   }
 
   /**
