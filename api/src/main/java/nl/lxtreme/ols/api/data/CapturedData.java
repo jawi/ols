@@ -149,6 +149,22 @@ public class CapturedData implements AcquisitionResult
   public CapturedData( final int[] aValues, final long[] aTimestamps, final long aTriggerPosition, final int aRate,
       final int aChannels, final int aEnabledChannels, final long aAbsLen )
   {
+    if ( aValues.length != aTimestamps.length )
+    {
+      throw new IllegalArgumentException( "Values and timestamps size mismatch!" );
+    }
+
+    // Ensure we've got an absolute length available...
+    long absLength;
+    if ( aAbsLen < 0L )
+    {
+      absLength = aTimestamps[aTimestamps.length - 1];
+    }
+    else
+    {
+      absLength = Math.max( aAbsLen, aTimestamps[aTimestamps.length - 1] );
+    }
+
     if ( aValues.length > 0 )
     {
       // 1: calculate the number of unique transitions...
@@ -183,8 +199,9 @@ public class CapturedData implements AcquisitionResult
         oldValue = aValues[i];
       }
 
+      // Issue #167: make sure the absolute length is *always* present...
       this.values[count] = aValues[aValues.length - 1];
-      this.timestamps[count] = aTimestamps[aTimestamps.length - 1];
+      this.timestamps[count] = absLength;
     }
     else
     {
@@ -223,6 +240,17 @@ public class CapturedData implements AcquisitionResult
     if ( aValues.size() != aTimestamps.size() )
     {
       throw new IllegalArgumentException( "Values and timestamps size mismatch!" );
+    }
+
+    // Ensure we've got an absolute length available...
+    long absLength;
+    if ( aAbsoluteLength < 0L )
+    {
+      absLength = aTimestamps.get( aTimestamps.size() - 1 ).longValue();
+    }
+    else
+    {
+      absLength = Math.max( aAbsoluteLength, aTimestamps.get( aTimestamps.size() - 1 ).longValue() );
     }
 
     if ( !aValues.isEmpty() )
@@ -264,8 +292,9 @@ public class CapturedData implements AcquisitionResult
         oldValue = value;
       }
 
+      // Issue #167: make sure the absolute length is *always* present...
       this.values[count] = aValues.get( size - 1 ).intValue();
-      this.timestamps[count] = aTimestamps.get( size - 1 ).longValue();
+      this.timestamps[count] = absLength;
     }
     else
     {
