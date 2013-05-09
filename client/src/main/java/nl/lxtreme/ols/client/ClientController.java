@@ -1628,6 +1628,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( RemoveAnnotationsAction.ID ).setEnabled( dataAvailable );
 
         getAction( SetMeasurementModeAction.ID ).setEnabled( dataAvailable );
+        getAction( ShowManagerViewAction.ID ).setEnabled( dataAvailable );
 
         // Update the tools...
         final IManagedAction[] toolActions = getActionsByType( RunToolAction.class );

@@ -91,6 +91,7 @@ public final class ActionManagerFactory
     aActionManager.add( new RemoveAnnotationsAction( aController ) ).setEnabled( false );
     aActionManager.add( new SetMeasurementModeAction( signalDiagramController ) ).setEnabled( false );
 
+    aActionManager.add( new ShowManagerViewAction( aController ) );
     aActionManager.add( new ShowPreferencesDialogAction( aController ) );
 
     aActionManager.add( new HelpAboutAction( aController ) );

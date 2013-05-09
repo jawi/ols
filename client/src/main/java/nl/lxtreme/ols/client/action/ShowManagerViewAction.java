@@ -18,28 +18,32 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.signaldisplay.signalelement;
+package nl.lxtreme.ols.client.action;
 
 
-import java.awt.Window;
-import java.awt.event.ActionEvent;
+import java.awt.*;
+import java.awt.event.*;
 
-import javax.swing.AbstractAction;
-
-import nl.lxtreme.ols.client.signaldisplay.SignalDiagramController;
-import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
  * Provides an Swing-action for opening the {@link SignalElementManagerView}
  * dialog.
  */
-public class ShowManagerViewAction extends AbstractAction
+public class ShowManagerViewAction extends BaseAction
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
+
+  public static final String ID = "ShowManagerViewAction";
+
+  private static final String NAME = "Configure signal groups";
+  private static final String DESC = "Add or edit signal groups.";
 
   // VARIABLES
 
@@ -52,24 +56,26 @@ public class ShowManagerViewAction extends AbstractAction
    * Creates a new {@link ShowManagerViewAction} instance.
    * 
    * @param aController
-   *          the signal diagram controller, cannot be <code>null</code>.
+   *          the client controller to use, cannot be <code>null</code>.
    */
-  public ShowManagerViewAction( SignalDiagramController aController )
+  public ShowManagerViewAction( ClientController aController )
   {
-    this( aController, aController.getSignalDiagramModel() );
+    super( ID, aController, NAME, DESC );
+    this.controller = aController.getSignalDiagramController();
+    this.elementManager = this.controller.getSignalDiagramModel().getSignalElementManager();
   }
 
   /**
    * Creates a new {@link ShowManagerViewAction} instance.
    * 
-   * @param aModel
-   *          the signal diagram model, cannot be <code>null</code>.
+   * @param aController
+   *          the signal diagram controller to use, cannot be <code>null</code>.
    */
-  public ShowManagerViewAction( SignalDiagramController aController, SignalDiagramModel aModel )
+  public ShowManagerViewAction( SignalDiagramController aController )
   {
-    super( "Configure signal groups" );
+    super( ID, null, NAME, DESC );
     this.controller = aController;
-    this.elementManager = aModel.getSignalElementManager();
+    this.elementManager = this.controller.getSignalDiagramModel().getSignalElementManager();
   }
 
   // METHODS
@@ -82,13 +88,9 @@ public class ShowManagerViewAction extends AbstractAction
   {
     final Window parent = SwingComponentUtils.getOwningWindow( aEvent );
 
-    SignalElementModel model = this.elementManager.createSignalElementModelCopy();
-
-    SignalElementManagerView view = new SignalElementManagerView( parent, model );
+    SignalElementManagerView view = new SignalElementManagerView( parent, this.elementManager );
     if ( view.showDialog() )
     {
-      this.elementManager.setSignalElementModel( model );
-      
       this.controller.revalidateAll();
     }
   }

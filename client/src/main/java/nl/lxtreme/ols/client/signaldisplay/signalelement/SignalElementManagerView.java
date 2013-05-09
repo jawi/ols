@@ -303,6 +303,7 @@ public class SignalElementManagerView extends JDialog implements StatusAwareClos
 
   // VARIABLES
 
+  private final SignalElementManager elementManager;
   private final SignalElementModel model;
 
   private volatile boolean dialogResult;
@@ -324,11 +325,12 @@ public class SignalElementManagerView extends JDialog implements StatusAwareClos
    * @param aElementManager
    *          the signal element manager to use, cannot be <code>null</code>.
    */
-  public SignalElementManagerView( final Window aParent, final SignalElementModel aModel )
+  public SignalElementManagerView( final Window aParent, final SignalElementManager aElementManager )
   {
     super( aParent, "Signal Group Management", ModalityType.APPLICATION_MODAL );
 
-    this.model = aModel;
+    this.elementManager = aElementManager;
+    this.model = this.elementManager.createSignalElementModelCopy();
 
     initDialog();
     buildDialog();
@@ -361,6 +363,13 @@ public class SignalElementManagerView extends JDialog implements StatusAwareClos
   {
     this.dialogResult = false;
     setVisible( true ); // blocks...
+
+    if ( this.dialogResult )
+    {
+      // User confirmed changes, so update the model of the element manager...
+      this.elementManager.setSignalElementModel( this.model );
+    }
+
     return this.dialogResult;
   }
 

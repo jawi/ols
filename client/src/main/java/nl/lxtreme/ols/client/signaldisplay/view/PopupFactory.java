@@ -28,7 +28,7 @@ import javax.swing.JPopupMenu;
 
 import nl.lxtreme.ols.api.Ols;
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.client.action.DeleteAllCursorsAction;
+import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.IActionManager;
 import nl.lxtreme.ols.client.signaldisplay.MeasurementInfo;
 import nl.lxtreme.ols.client.signaldisplay.SignalDiagramController;
