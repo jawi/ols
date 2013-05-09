@@ -211,8 +211,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( 0, 1, 3 );
-    this.dataSet.assertValues( 0, 1, 3 );
+    this.dataSet.assertTimeStamps( 0, 1, 3, 9 );
+    this.dataSet.assertValues( 0, 1, 3, 3 );
     this.dataSet.assertAbsoluteLength( 9 );
   }
 
@@ -267,8 +267,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( 0 );
-    this.dataSet.assertValues( Integer.MIN_VALUE );
+    this.dataSet.assertTimeStamps( 0, 0 );
+    this.dataSet.assertValues( Integer.MIN_VALUE, Integer.MIN_VALUE );
   }
 
   /**
@@ -298,8 +298,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( 0 );
-    this.dataSet.assertValues( Integer.MAX_VALUE );
+    this.dataSet.assertTimeStamps( 0, 0 );
+    this.dataSet.assertValues( Integer.MAX_VALUE, Integer.MAX_VALUE );
   }
 
   /**
@@ -313,8 +313,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( 0 );
-    this.dataSet.assertValues( Integer.MAX_VALUE );
+    this.dataSet.assertTimeStamps( 0, 0 );
+    this.dataSet.assertValues( Integer.MAX_VALUE, Integer.MAX_VALUE );
   }
 
   /**
@@ -329,8 +329,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( Long.MAX_VALUE );
-    this.dataSet.assertValues( 0 );
+    this.dataSet.assertTimeStamps( Long.MAX_VALUE, Long.MAX_VALUE );
+    this.dataSet.assertValues( 0, 0 );
   }
 
   /**
@@ -344,8 +344,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( Long.MAX_VALUE );
-    this.dataSet.assertValues( 0 );
+    this.dataSet.assertTimeStamps( Long.MAX_VALUE, Long.MAX_VALUE );
+    this.dataSet.assertValues( 0, 0 );
   }
 
   /**
@@ -359,8 +359,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( 0 );
-    this.dataSet.assertValues( 0 );
+    this.dataSet.assertTimeStamps( 0, 0 );
+    this.dataSet.assertValues( 0, 0 );
   }
 
   /**
@@ -375,8 +375,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( 0 );
-    this.dataSet.assertValues( 0 );
+    this.dataSet.assertTimeStamps( 0, 0 );
+    this.dataSet.assertValues( 0, 0 );
   }
 
   /**
@@ -390,8 +390,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( 0 );
-    this.dataSet.assertValues( 0 );
+    this.dataSet.assertTimeStamps( 0, 0 );
+    this.dataSet.assertValues( 0, 0 );
   }
 
   /**
@@ -406,8 +406,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( 0 );
-    this.dataSet.assertValues( 0 );
+    this.dataSet.assertTimeStamps( 0, 0 );
+    this.dataSet.assertValues( 0, 0 );
   }
 
   /**
@@ -421,8 +421,8 @@ public class OlsDataHelperTest
     final StringReader reader = new StringReader( snippet );
     OlsDataHelper.read( this.dataSet, reader );
 
-    this.dataSet.assertTimeStamps( 0 );
-    this.dataSet.assertValues( 0 );
+    this.dataSet.assertTimeStamps( 0, 0 );
+    this.dataSet.assertValues( 0, 0 );
   }
 
   /**

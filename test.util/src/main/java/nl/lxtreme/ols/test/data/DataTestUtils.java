@@ -363,7 +363,7 @@ public final class DataTestUtils
       @Override
       public long getAbsoluteLength()
       {
-        return 8L;
+        return 4L;
       }
 
       @Override

@@ -302,7 +302,7 @@ public class LogicSnifferRleTimingComponentTest
 
     long expectedTimeStamp = 0;
 
-    for ( int i = 0; i < ( this.sampleCount / 2 ); i++ )
+    for ( int i = 0; i < ( this.sampleCount / 2 ) - 1; i++ )
     {
       final boolean sampleLevel = ( ( ( i + 0 ) % 2 ) != 0 );
 

@@ -170,7 +170,7 @@ public final class RleDecoder implements SampleProcessor
     this.callback.addValue( lastSample, time );
 
     // Take the last seen time value as "absolete" length of this trace...
-    this.callback.ready( time + 1, rleTrigPos - 1 );
+    this.callback.ready( time, rleTrigPos - 1 );
   }
 
   /**

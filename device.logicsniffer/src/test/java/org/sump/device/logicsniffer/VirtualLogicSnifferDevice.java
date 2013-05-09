@@ -346,7 +346,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
       final byte value = ( byte )( aRleMode ? 0x7F : 0xFF );
       Arrays.fill( sample, value );
 
-      for ( int i = 0; i <= aSampleCount; i++ )
+      for ( int i = 0; i < aSampleCount; i++ )
       {
         aOs.write( sample );
       }
@@ -461,8 +461,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
     final long[] actualTimestamps = aResult.getTimestamps();
     Assert.assertArrayEquals( "Timestamps not as expected?!", expectedTimestamps, actualTimestamps );
 
-    // assertEquals( "Absolute length not equal?!", aExpectedLength - 1,
-    // aResult.getAbsoluteLength() );
+    assertEquals( "Absolute length not equal?!", aExpectedLength, aResult.getAbsoluteLength() );
   }
 
   /**

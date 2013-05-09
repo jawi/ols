@@ -171,6 +171,7 @@ public class CapturedData implements AcquisitionResult
       int count = 1;
 
       int oldValue = aValues[0];
+      long lastTimestamp = aTimestamps[0];
       for ( int i = 1; i < aValues.length; i++ )
       {
         if ( aValues[i] != oldValue )
@@ -178,11 +179,19 @@ public class CapturedData implements AcquisitionResult
           count++;
         }
         oldValue = aValues[i];
+        lastTimestamp = aTimestamps[i];
+      }
+
+      // Issue #167: make sure the absolute length is *always* present...
+      boolean addExtraSample = ( lastTimestamp != absLength ) || count < 2;
+      if ( addExtraSample )
+      {
+        count++;
       }
 
       // 2: copy *only* the unique transitions...
-      this.values = new int[count + 1];
-      this.timestamps = new long[count + 1];
+      this.values = new int[count];
+      this.timestamps = new long[count];
 
       this.values[0] = aValues[0];
       this.timestamps[0] = aTimestamps[0];
@@ -200,8 +209,11 @@ public class CapturedData implements AcquisitionResult
       }
 
       // Issue #167: make sure the absolute length is *always* present...
-      this.values[count] = aValues[aValues.length - 1];
-      this.timestamps[count] = absLength;
+      if ( addExtraSample )
+      {
+        this.values[count - 1] = aValues[aValues.length - 1];
+        this.timestamps[count - 1] = absLength;
+      }
     }
     else
     {
@@ -261,6 +273,7 @@ public class CapturedData implements AcquisitionResult
       int count = 1;
 
       Integer oldValue = aValues.get( 0 );
+      Long lastTimestamp = aTimestamps.get( 0 );
       for ( int i = 1; i < size; i++ )
       {
         Integer value = aValues.get( i );
@@ -269,11 +282,19 @@ public class CapturedData implements AcquisitionResult
           count++;
         }
         oldValue = value;
+        lastTimestamp = aTimestamps.get( i );
+      }
+
+      // Issue #167: make sure the absolute length is *always* present...
+      boolean addExtraSample = ( lastTimestamp.longValue() != absLength ) || count < 2;
+      if ( addExtraSample )
+      {
+        count++;
       }
 
       // 2: copy *only* the unique transitions...
-      this.values = new int[count + 1];
-      this.timestamps = new long[count + 1];
+      this.values = new int[count];
+      this.timestamps = new long[count];
 
       this.values[0] = aValues.get( 0 ).intValue();
       this.timestamps[0] = aTimestamps.get( 0 ).longValue();
@@ -293,8 +314,11 @@ public class CapturedData implements AcquisitionResult
       }
 
       // Issue #167: make sure the absolute length is *always* present...
-      this.values[count] = aValues.get( size - 1 ).intValue();
-      this.timestamps[count] = absLength;
+      if ( addExtraSample )
+      {
+        this.values[count - 1] = aValues.get( size - 1 ).intValue();
+        this.timestamps[count - 1] = absLength;
+      }
     }
     else
     {

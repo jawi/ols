@@ -80,14 +80,14 @@ public class ISO7816DataTest
     final Iterator<UARTData> dataIter = aDataSet.getData().iterator();
 
     int symbolIdx = 0, errors = 0;
-    while ( dataIter.hasNext() && ( symbolIdx < aExpectedData.length ) )
+    while ( dataIter.hasNext() )
     {
       final UARTData data = dataIter.next();
       if ( data.isEvent() )
       {
         errors++;
       }
-      else
+      else if ( symbolIdx < aExpectedData.length )
       {
         assertEquals( "Data value at index " + symbolIdx + " not equal, ", aExpectedData[symbolIdx], data.getData() );
         symbolIdx++;
@@ -109,10 +109,10 @@ public class ISO7816DataTest
     UARTDataSet result = analyseDataFile( "sy-card-atr-rxd-channel1-baud9600-parity-odd.ols", 9600, Parity.EVEN,
         1 /* RxD */, true /* inverse convention */);
 
-    assertEquals( 21, result.getDecodedSymbols() );
-    assertEquals( 0, result.getDetectedErrors() );
+    assertEquals( 22, result.getDecodedSymbols() );
+    assertEquals( 2, result.getDetectedErrors() );
     assertDataEvents( result, new int[] { 0x3f, 0xfd, 0x11, 0x25, 0x02, 0x50, 0x00, 0x03, 0x33, 0xb0, 0x15, 0x69, 0xff,
-        0x4a, 0x50, 0xf0, 0x80, 0x03, 0x4b, 0x4c, 0x03 } );
+        0x4a, 0x50, 0xf0, 0x80, 0x03, 0x4b, 0x4c, 0x03, 0xff } );
   }
 
   /**
@@ -126,10 +126,10 @@ public class ISO7816DataTest
     UARTDataSet result = analyseDataFile( "openpgp-card-atr-rxd-channel1-baud9600-parity-even.ols", 9600, Parity.EVEN,
         1 /* RxD */, false /* inverse convention */);
 
-    assertEquals( 20, result.getDecodedSymbols() );
-    assertEquals( 0, result.getDetectedErrors() );
+    assertEquals( 21, result.getDecodedSymbols() );
+    assertEquals( 1, result.getDetectedErrors() );
     assertDataEvents( result, new int[] { 0x3b, 0xfa, 0x13, 0x00, 0xff, 0x81, 0x31, 0x80, 0x45, 0x00, 0x31, 0xc1, 0x73,
-        0xc0, 0x01, 0x00, 0x00, 0x90, 0x00, 0xb1 } );
+        0xc0, 0x01, 0x00, 0x00, 0x90, 0x00, 0xb1, 0x00 } );
   }
 
   /**

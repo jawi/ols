@@ -87,11 +87,11 @@ public class UARTAnalyserWorkerDataFilesTest
   {
     return Arrays.asList( new Object[][] { //
         // { filename, error count, symbol count, baudrate, (rxd, txd) }
-            { "uart_8bit_1.ols", 0, 33, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, //
-            { "uart_8bit_2.ols", 0, 6, -1, 9600, Parity.NONE, new int[] { 2, -1 } }, //
-            { "uart_8bit_3.ols", 50, 418, -1, 9600, Parity.NONE, new int[] { 1, 0 } }, //
-            { "uart_8bit_4_38400bps.ols", 0, 22, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, //
-            { "uart_8bit_5_115200bps.ols", 0, 306, 115200, 115200, Parity.NONE, new int[] { 0, -1 } }, //
+            { "uart_8bit_1.ols", 0, 33, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, // 0
+            { "uart_8bit_2.ols", 0, 6, -1, 9600, Parity.NONE, new int[] { 2, -1 } }, // 1
+            { "uart_8bit_3.ols", 51, 419, -1, 9600, Parity.NONE, new int[] { 1, 0 } }, // 2
+            { "uart_8bit_4_38400bps.ols", 0, 22, -1, 38400, Parity.NONE, new int[] { 0, -1 } }, // 3
+            { "uart_8bit_5_115200bps.ols", 0, 306, 115200, 115200, Parity.NONE, new int[] { 0, -1 } }, // 4
         } );
   }
 
