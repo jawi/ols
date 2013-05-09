@@ -632,6 +632,20 @@ public final class AcquisitionDataBuilder
     }
 
     /**
+     * Performs a comparison on the value only.
+     * 
+     * @param aSample
+     *          the sample to compare the value of, cannot be <code>null</code>.
+     * @return 0 if the values matched, -1 if this value is less then the given
+     *         sample value, or 1 if this value is more than the given sample
+     *         value.
+     */
+    public int compareValueTo( final Sample aSample )
+    {
+      return ( this.value - aSample.value );
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -666,10 +680,11 @@ public final class AcquisitionDataBuilder
 
   // VARIABLES
 
+  private long lastSeenTimestamp;
   private long absoluteLength;
   private int channelCount;
   private int enabledChannelMask;
-  private final SortedSet<Sample> sampleData;
+  private final List<Sample> sampleData;
   private final Cursor[] cursors;
   private int sampleRate;
   private long triggerPosition;
@@ -682,9 +697,10 @@ public final class AcquisitionDataBuilder
    */
   public AcquisitionDataBuilder()
   {
-    this.sampleData = new TreeSet<Sample>();
+    this.sampleData = new ArrayList<Sample>();
     this.cursors = new Cursor[Ols.MAX_CURSORS];
     this.absoluteLength = NOT_AVAILABLE;
+    this.lastSeenTimestamp = NOT_AVAILABLE;
     this.channelCount = 0;
     this.enabledChannelMask = 0;
     this.triggerPosition = NOT_AVAILABLE;
@@ -710,8 +726,9 @@ public final class AcquisitionDataBuilder
    */
   public AcquisitionDataBuilder( final AcquisitionData aData, final boolean aIncludeSamples )
   {
-    this.sampleData = new TreeSet<Sample>();
+    this.sampleData = new ArrayList<Sample>();
     this.cursors = new Cursor[Ols.MAX_CURSORS];
+    this.lastSeenTimestamp = NOT_AVAILABLE;
     this.absoluteLength = aData.getAbsoluteLength();
     this.channelCount = aData.getChannelCount();
     this.enabledChannelMask = aData.getEnabledChannels();
@@ -757,7 +774,27 @@ public final class AcquisitionDataBuilder
     {
       throw new IllegalArgumentException( "Timestamp cannot be negative!" );
     }
-    this.sampleData.add( new Sample( aTimestamp, aValue ) );
+
+    Sample sample = new Sample( aTimestamp, aValue );
+    // Keep track of the last seen timestamp, for determining the absolute
+    // length (in case it is not defined)...
+    this.lastSeenTimestamp = aTimestamp;
+
+    // Peek to the latest available sample...
+    if ( this.sampleData.isEmpty() )
+    {
+      this.sampleData.add( sample );
+    }
+    else
+    {
+      // Try to add only unique samples...
+      Sample lastSample = this.sampleData.get( this.sampleData.size() - 1 );
+      if ( lastSample.compareValueTo( sample ) != 0 )
+      {
+        this.sampleData.add( sample );
+      }
+    }
+
     return this;
   }
 
@@ -784,39 +821,36 @@ public final class AcquisitionDataBuilder
     int[] values;
     long[] timestamps;
 
+    // Ensure we've got an absolute length available...
+    long absLength;
+    if ( this.absoluteLength == NOT_AVAILABLE )
+    {
+      absLength = this.lastSeenTimestamp;
+    }
+    else
+    {
+      absLength = Math.max( this.absoluteLength, this.lastSeenTimestamp );
+    }
+
     if ( !this.sampleData.isEmpty() )
     {
-      int sampleCount = 1;
+      // Just to be sure...
+      Collections.sort( this.sampleData );
 
-      Sample sample;
-      List<Sample> sampleData = new ArrayList<Sample>( this.sampleData );
+      int sampleCount = this.sampleData.size();
 
-      // Pass 1: count number of unique samples...
-      int oldValue = sampleData.get( 0 ).value;
-      for ( int i = 1; i < sampleData.size(); i++ )
-      {
-        sample = sampleData.get( i );
-        int value = sample.value;
-        if ( oldValue != value )
-        {
-          sampleCount++;
-          oldValue = value;
-        }
-      }
-
-      // Pass 2: create data structures...
-      values = new int[sampleCount];
+      values = new int[sampleCount + 1];
       timestamps = new long[values.length];
 
-      sample = sampleData.get( 0 );
-      oldValue = sample.value;
+      Sample sample = this.sampleData.get( 0 );
+      int oldValue = sample.value;
 
       values[0] = oldValue;
       timestamps[0] = sample.timestamp;
 
-      for ( int i = 1, j = 1; i < sampleData.size(); i++ )
+      for ( int i = 1, j = 1; i < this.sampleData.size(); i++ )
       {
-        sample = sampleData.get( i );
+        sample = this.sampleData.get( i );
         int value = sample.value;
         if ( oldValue != value )
         {
@@ -826,6 +860,10 @@ public final class AcquisitionDataBuilder
         }
         oldValue = value;
       }
+
+      // Issue #167: make sure the absolute length is *always* present...
+      values[sampleCount] = values[sampleCount - 1];
+      timestamps[sampleCount] = absLength;
     }
     else
     {
@@ -833,10 +871,6 @@ public final class AcquisitionDataBuilder
       values = new int[] { 0 };
       timestamps = new long[] { 0L };
     }
-
-    // Ensure we've got an absolute length available...
-    long absLength = ( this.absoluteLength == NOT_AVAILABLE ) ? timestamps[timestamps.length - 1] + 1L
-        : this.absoluteLength;
 
     return new AcquisitionDataImpl( values, timestamps, this.triggerPosition, this.sampleRate, this.channelCount,
         this.enabledChannelMask, absLength, this.cursors, this.cursorsVisible );
