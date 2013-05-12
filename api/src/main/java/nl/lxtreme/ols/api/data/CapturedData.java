@@ -225,7 +225,7 @@ public class CapturedData implements AcquisitionResult
     this.rate = aRate;
     this.channels = aChannels;
     this.enabledChannels = aEnabledChannels;
-    this.absoluteLength = aAbsLen;
+    this.absoluteLength = absLength;
   }
 
   /**
