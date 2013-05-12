@@ -30,7 +30,6 @@ import java.util.regex.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -187,10 +186,11 @@ public final class OlsDataHelper
     {
       throw new IOException( "Data file is corrupt?! Channel count is not provided!" );
     }
-    // Make sure the enabled channels are defined...
+    // Make sure the enabled channels are defined; if not defined, all channels
+    // are enabled...
     if ( enabledChannels == null )
     {
-      enabledChannels = NumberUtils.getBitMask( channels );
+      enabledChannels = -1; // = 0xffffffff
     }
 
     int[] values = new int[size];
