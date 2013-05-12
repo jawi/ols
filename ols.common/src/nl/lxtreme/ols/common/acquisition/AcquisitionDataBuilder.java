@@ -80,13 +80,17 @@ public final class AcquisitionDataBuilder
       this.cursorsVisible = aCursorsVisible;
 
       List<Channel> _channels = new ArrayList<Channel>( this.channelCount );
+      int _channelCount = 0;
 
-      for ( int i = 0; i < Ols.MAX_CHANNELS; i++ )
+      // The enabledChannels only tells us _which_ channels are to be enabled,
+      // but we still need to keep track of how many channels we have...
+      for ( int i = 0; ( _channelCount < this.channelCount ) && ( i < Ols.MAX_CHANNELS ); i++ )
       {
         final int mask = ( 1 << i );
         if ( ( this.enabledChannels & mask ) != 0 )
         {
           _channels.add( new ChannelImpl( i, true /* enabled */) );
+          _channelCount++;
         }
       }
 
@@ -701,10 +705,10 @@ public final class AcquisitionDataBuilder
     this.cursors = new Cursor[Ols.MAX_CURSORS];
     this.absoluteLength = NOT_AVAILABLE;
     this.lastSeenTimestamp = NOT_AVAILABLE;
-    this.channelCount = 0;
-    this.enabledChannelMask = 0;
+    this.enabledChannelMask = NOT_AVAILABLE;
     this.triggerPosition = NOT_AVAILABLE;
     this.sampleRate = NOT_AVAILABLE; // state values
+    this.channelCount = 0;
     this.cursorsVisible = true; // by default
 
     for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
