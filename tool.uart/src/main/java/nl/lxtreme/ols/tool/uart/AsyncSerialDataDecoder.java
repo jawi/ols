@@ -425,18 +425,16 @@ public class AsyncSerialDataDecoder
     while ( ( endOfDecode - time ) > frameSize )
     {
       /*
-       * find first falling edge this is the start of the startbit. If the
-       * signal is inverted, find the first rising edge.
+       * find first falling edge this is the start of the startbit.
        */
-      time = findStartBit( aChannelIndex, isInverted() ? Edge.RISING : Edge.FALLING, time, endOfDecode );
+      time = findStartBit( aChannelIndex, Edge.FALLING, time, endOfDecode );
       if ( time < 0 )
       {
         // No more start bits; stop the decoding process...
         break;
       }
 
-      // Sampling is done in the middle of each bit the start bit must be low.
-      // If the signal is inverted, the startbit must be high.
+      // Sampling is done in the middle of each bit
       time += bitCenter;
       if ( !isSpace( time, mask ) && ( this.callback != null ) )
       {
@@ -622,10 +620,6 @@ public class AsyncSerialDataDecoder
     int k = findSampleIndex( timestamps, aTimeValue );
 
     int value = ( ( k == 0 ) ? values[0] : values[k - 1] );
-    if ( isInverted() )
-    {
-      value = ~value;
-    }
 
     return value & aMask;
   }
@@ -643,7 +637,7 @@ public class AsyncSerialDataDecoder
    */
   protected final boolean isMark( final long aTimestamp, final int aMask )
   {
-    return isExpectedLevel( aTimestamp, aMask, isInverted() ? 0x00 : aMask );
+    return isExpectedLevel( aTimestamp, aMask, aMask);
   }
 
   /**
@@ -659,7 +653,7 @@ public class AsyncSerialDataDecoder
    */
   protected final boolean isSpace( final long aTimestamp, final int aMask )
   {
-    return isExpectedLevel( aTimestamp, aMask, isInverted() ? aMask : 0x00 );
+    return isExpectedLevel( aTimestamp, aMask, 0x00 );
   }
 
   /**
