@@ -701,11 +701,12 @@ public class AsyncSerialDataDecoder
   }
 
   /**
-   * Find first falling edge this is the start of the start bit. If the signal
-   * is inverted, find the first rising edge.
+   * Find first edge of the given type.
    * 
    * @param aChannelIndex
    *          the index of the channel to find the start bit on;
+   * @param aEdge
+   *          the type of edge to look for;
    * @param aStartOfDecode
    *          the timestamp to start searching;
    * @param aEndOfDecode
