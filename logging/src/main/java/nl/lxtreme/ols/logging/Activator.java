@@ -21,35 +21,41 @@
 package nl.lxtreme.ols.logging;
 
 
+import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.service.log.*;
 
 
 /**
- * 
+ * Bundle activator.
  */
-public class Activator implements BundleActivator
+public class Activator extends DependencyActivatorBase
 {
-  // VARIABLES
-
-  private JdkLogForwarder jdkLogForwarder;
-
-  // METHODS
-
   /**
-   * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+   * {@inheritDoc}
    */
-  public void start( final BundleContext aContext ) throws Exception
+  @Override
+  public void init( BundleContext aContext, DependencyManager aManager ) throws Exception
   {
-    this.jdkLogForwarder = new JdkLogForwarder( aContext );
-    this.jdkLogForwarder.start();
+    aManager.add( createComponent() //
+        .setInterface( LogService.class.getName(), null ) //
+        .setImplementation( ConsoleLogger.class ) //
+        );
+
+    aManager.add( createComponent() //
+        .setImplementation( LogHandler.class ) //
+        .add( createServiceDependency() //
+            .setService( LogService.class ) //
+            .setRequired( false ) ) //
+        );
   }
 
   /**
-   * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+   * {@inheritDoc}
    */
-  public void stop( final BundleContext aContext ) throws Exception
+  @Override
+  public void destroy( BundleContext aContext, DependencyManager aManager ) throws Exception
   {
-    this.jdkLogForwarder.stop();
-    this.jdkLogForwarder = null;
+    // Nop
   }
 }
