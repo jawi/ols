@@ -485,7 +485,7 @@ public class AsyncSerialDataDecoder
    * 
    * @param aChannelIndex
    *          the channel index to decode, >= 0;
-   * @return the number of decoded symbols, >= 0.
+   * @return the bit length used in decoding, in number of samples, >= 0;
    */
   public int decodeDataLine( final int aChannelIndex )
   {
@@ -588,7 +588,7 @@ public class AsyncSerialDataDecoder
 
     setProgress( 100 );
 
-    return symbolCount;
+    return bitLength;
   }
 
   /**

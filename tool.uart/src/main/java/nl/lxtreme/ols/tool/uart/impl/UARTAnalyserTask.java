@@ -446,9 +446,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     }
     else
     {
-      // We know the avg. bitlength, so we can use it for calculating the
-      // baudrate...
-      aDataSet.setSampledBitLength( bitLength );
+      // Set nominal baud rate
       aDataSet.setBaudRate( baudrateAnalyzer.getBaudRate() );
 
       if ( LOG.isLoggable( Level.FINE ) )
@@ -491,7 +489,11 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
           addSymbolAnnotation( aChannelIndex, aSymbol, aStartTime, aEndTime );
         }
       } );
-      decoder.decodeDataLine( aChannelIndex );
+
+      final int sampledBitLength = decoder.decodeDataLine( aChannelIndex );
+      // Set the actual bit length used, so UARTDataSet can calculate
+      // the actual baud rate used.
+      aDataSet.setSampledBitLength( sampledBitLength );
     }
   }
 
