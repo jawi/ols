@@ -106,6 +106,15 @@ public class AsyncSerialDataDecoder
   }
 
   /**
+   * Denotes bit order used to transmit bits over a serial line.
+   */
+  public static enum BitOrder
+  {
+    LSB_FIRST, // This is the most common variant
+    MSB_FIRST;
+  }
+
+  /**
    * Denotes the configuration used to decode the serial data.
    */
   public static class SerialConfiguration
@@ -117,7 +126,7 @@ public class AsyncSerialDataDecoder
     private final StopBits stopBits;
     private final Parity parity;
     private final boolean inverted;
-    private final boolean msbFirst;
+    private final BitOrder bitOrder;
 
     // CONSTRUCTORS
 
@@ -127,7 +136,7 @@ public class AsyncSerialDataDecoder
      */
     public SerialConfiguration()
     {
-      this( 9600, 8, StopBits.ONE, Parity.NONE, false /* inverted */, false /* msbFirst */);
+      this( 9600, 8, StopBits.ONE, Parity.NONE, false /* inverted */, BitOrder.LSB_FIRST );
     }
 
     /**
@@ -145,20 +154,18 @@ public class AsyncSerialDataDecoder
      * @param aInverted
      *          <code>true</code> if the entire signal is inverted,
      *          <code>false</code> if it is normal;
-     * @param aMsbFirst
-     *          <code>true</code> if the most-significant bit comes first in a
-     *          symbol, <code>false</code> if the least-significant bit comes
-     *          first in a symbol (= default for most UART encodings).
+     * @param aBitOrder
+     *          what bit order is used.
      */
     public SerialConfiguration( final int aBaudRate, final int aDataBits, final StopBits aStopBits,
-        final Parity aParity, final boolean aInverted, final boolean aMsbFirst )
+        final Parity aParity, final boolean aInverted, final BitOrder aBitOrder )
     {
       this.baudRate = aBaudRate;
       this.dataBits = aDataBits;
       this.stopBits = aStopBits;
       this.parity = aParity;
       this.inverted = aInverted;
-      this.msbFirst = aMsbFirst;
+      this.bitOrder = aBitOrder;
     }
 
     // METHODS
@@ -242,14 +249,12 @@ public class AsyncSerialDataDecoder
     }
 
     /**
-     * Returns whether the most-significant bit is sent first, or last.
+     * Returns the current value of bitOrder.
      * 
-     * @return <code>true</code> if the most-significant bit is sent first,
-     *         <code>false</code> if it is sent last.
      */
-    public boolean isMostSignificantBitFirst()
+    public BitOrder getBitOrder()
     {
-      return this.msbFirst;
+      return this.bitOrder;
     }
   }
 
@@ -579,7 +584,7 @@ public class AsyncSerialDataDecoder
 
       // If the most significant bit is first, we need to swap bit-order, as we
       // normally represent the bits with the least significant bit first...
-      if ( this.configuration.isMostSignificantBitFirst() )
+      if ( this.configuration.getBitOrder() == BitOrder.MSB_FIRST )
       {
         symbol = reverseBits( symbol, bitCount );
       }

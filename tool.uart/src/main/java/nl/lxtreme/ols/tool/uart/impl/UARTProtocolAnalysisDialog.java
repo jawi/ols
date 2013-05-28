@@ -42,6 +42,7 @@ import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.tool.uart.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -133,6 +134,36 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
   }
 
+  /**
+   * Provides a combobox renderer for {@link BitOrder} values.
+   */
+  static final class UARTBitOrderItemRenderer extends EnumItemRenderer<BitOrder>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final BitOrder aValue )
+    {
+      String text = super.getDisplayValue( aValue );
+      if ( BitOrder.LSB_FIRST.equals( aValue ) )
+      {
+        text = "LSB first";
+      }
+      else if ( BitOrder.MSB_FIRST.equals( aValue ) )
+      {
+        text = "MSB first";
+      }
+      return text;
+    }
+  }
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -153,7 +184,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   private JComboBox bits;
   private JComboBox stop;
   private JCheckBox inv;
-  private JCheckBox inverse;
+  private JComboBox bitOrder;
   private JCheckBox autoDetectBaudRate;
   private JComboBox baudrate;
   private JEditorPane outText;
@@ -225,7 +256,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
     this.stop.setSelectedIndex( aSettings.getInt( "stop", this.stop.getSelectedIndex() ) );
     this.inv.setSelected( aSettings.getBoolean( "inverted", this.inv.isSelected() ) );
-    this.inverse.setSelected( aSettings.getBoolean( "inverse", this.inverse.isSelected() ) );
+    this.bitOrder.setSelectedIndex( aSettings.getInt( "bit-order", this.bitOrder.getSelectedIndex() ) );
     this.baudrate.setSelectedItem( Integer.valueOf( aSettings.getInt( "baudrate", 9600 ) ) );
     this.autoDetectBaudRate.setSelected( aSettings.getBoolean( "auto-baudrate", this.autoDetectBaudRate.isSelected() ) );
   }
@@ -264,7 +295,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     aSettings.putInt( "bits", this.bits.getSelectedIndex() );
     aSettings.putInt( "stop", this.stop.getSelectedIndex() );
     aSettings.putBoolean( "inverted", this.inv.isSelected() );
-    aSettings.putBoolean( "inverse", this.inverse.isSelected() );
+    aSettings.putInt( "bit-order", this.bitOrder.getSelectedIndex() );
     aSettings.putInt( "baudrate", ( ( Integer )this.baudrate.getSelectedItem() ).intValue() );
     aSettings.putBoolean( "auto-baudrate", this.autoDetectBaudRate.isSelected() );
   }
@@ -343,7 +374,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
 
     // Other properties...
     toolTask.setInverted( this.inv.isSelected() );
-    toolTask.setInversed( this.inverse.isSelected() );
+    toolTask.setBitOrder( ( BitOrder )this.bitOrder.getSelectedItem() );
     toolTask.setParity( ( Parity )this.parity.getSelectedItem() );
     toolTask.setStopBits( ( StopBits )this.stop.getSelectedItem() );
     toolTask.setBitCount( NumberUtils.smartParseInt( ( String )this.bits.getSelectedItem(), 8 ) );
@@ -370,7 +401,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.bits.setEnabled( aEnable );
     this.stop.setEnabled( aEnable );
     this.inv.setEnabled( aEnable );
-    this.inverse.setEnabled( aEnable );
+    this.bitOrder.setEnabled( aEnable );
 
     this.closeAction.setEnabled( aEnable );
     this.exportAction.setEnabled( aEnable );
@@ -561,10 +592,11 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     settings.add( createRightAlignedLabel( "Invert?" ) );
     settings.add( this.inv );
 
-    this.inverse = new JCheckBox();
-    this.inverse.setSelected( false );
-    settings.add( createRightAlignedLabel( "Inverse bit-order?" ) );
-    settings.add( this.inverse );
+    settings.add( createRightAlignedLabel( "Bit order" ) );
+    this.bitOrder = new JComboBox( BitOrder.values() );
+    this.bitOrder.setSelectedIndex( 0 );
+    this.bitOrder.setRenderer( new UARTBitOrderItemRenderer() );
+    settings.add( this.bitOrder );
 
     SpringLayoutUtils.makeEditorGrid( settings, 10, 4 );
 
