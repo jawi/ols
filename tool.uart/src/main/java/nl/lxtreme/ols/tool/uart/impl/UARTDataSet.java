@@ -229,7 +229,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
       // to each other; ignore the given bit length otherwise, as it clobbers
       // our earlier results...
       final int diff = Math.abs( aBitLength - this.bitLength );
-      if ( ( diff >= 0 ) && ( diff < 50 ) )
+      if ( ( diff < 50 ) )
       {
         this.bitLength = ( int )( ( aBitLength + this.bitLength ) / 2.0 );
       }
