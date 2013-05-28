@@ -472,7 +472,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
         }
       } );
 
-      final int sampledBitLength = decoder.decodeDataLine( aChannelIndex );
+      final double sampledBitLength = decoder.decodeDataLine( aChannelIndex );
       // Set the actual bit length used, so UARTDataSet can calculate
       // the actual baud rate used.
       aDataSet.setSampledBitLength( sampledBitLength );

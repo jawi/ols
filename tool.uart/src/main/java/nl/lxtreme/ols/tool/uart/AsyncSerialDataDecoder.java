@@ -174,15 +174,15 @@ public class AsyncSerialDataDecoder
     }
 
     /**
-     * Calculates the center for a single bit.
+     * Calculates the length for a single bit.
      * 
      * @param aSampleRate
      *          the sample rate to use, in Hertz, > 0.
-     * @return a bit center.
+     * @return bit length, in number of samples.
      */
-    public int getBitLength( final int aSampleRate )
+    public double getBitLength( final int aSampleRate )
     {
-      return ( aSampleRate / this.baudRate );
+      return ( ( ( double )aSampleRate ) / this.baudRate );
     }
 
     /**
@@ -201,14 +201,14 @@ public class AsyncSerialDataDecoder
      * 
      * @param aSampleRate
      *          the sample rate to use, in Hertz, > 0.
-     * @return a frame size, in bits per second.
+     * @return a frame size, in number of samples
      */
     public int getFrameSize( final int aSampleRate )
     {
-      final int bitLength = getBitLength( aSampleRate );
+      final double bitLength = getBitLength( aSampleRate );
       final int stopCount = ( int )Math.ceil( this.stopBits.getValue() );
       final int parityCount = this.parity.isNone() ? 0 : 1;
-      return ( ( this.dataBits + stopCount + parityCount ) * bitLength );
+      return ( int )( ( this.dataBits + stopCount + parityCount ) * bitLength );
     }
 
     /**
@@ -326,9 +326,9 @@ public class AsyncSerialDataDecoder
   {
     // VARIABLES
 
-    private long time;
+    private double time;
     private int mask;
-    private int bitLength;
+    private double bitLength;
 
     // CONSTRUCTORS
 
@@ -346,7 +346,7 @@ public class AsyncSerialDataDecoder
      * inverting settings).
      */
     public BitLevel level() {
-      final long halfTime = ( this.time + ( this.bitLength / 2 ) );
+      final long halfTime = ( long )( this.time + ( this.bitLength / 2 ) );
       final int level = AsyncSerialDataDecoder.this.getDataValue( halfTime, this.mask );
       return ( level == 0 ? BitLevel.LOW : BitLevel.HIGH );
     }
@@ -384,7 +384,7 @@ public class AsyncSerialDataDecoder
      * The sample time of the start of the current bit.
      */
     public long time() {
-      return this.time;
+      return ( long )( this.time );
     }
   }
 
@@ -487,10 +487,10 @@ public class AsyncSerialDataDecoder
    *          the channel index to decode, >= 0;
    * @return the bit length used in decoding, in number of samples, >= 0;
    */
-  public int decodeDataLine( final int aChannelIndex )
+  public double decodeDataLine( final int aChannelIndex )
   {
     final int frameSize = this.configuration.getFrameSize( this.dataSet.getSampleRate() );
-    final int bitLength = this.configuration.getBitLength( this.dataSet.getSampleRate() );
+    final double bitLength = this.configuration.getBitLength( this.dataSet.getSampleRate() );
     final int bitCount = this.configuration.getDataBits();
 
     final StopBits stopBits = this.configuration.getStopBits();
@@ -571,7 +571,7 @@ public class AsyncSerialDataDecoder
       }
 
       // Find start bit after the stop bit
-      start = findStartBit( aChannelIndex, Edge.FALLING, ( extractor.time() + ( bitLength / 2 ) ), endOfDecode );
+      start = findStartBit( aChannelIndex, Edge.FALLING, (long)( extractor.time() + ( bitLength / 2 ) ), endOfDecode );
 
       // Check length of stopbit
       final long endOfStopbit = extractor.time() + ( long )( stopBits.getValue() * bitLength );
