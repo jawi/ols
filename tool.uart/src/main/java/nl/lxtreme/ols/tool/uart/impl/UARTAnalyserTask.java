@@ -188,28 +188,6 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
-   * Returns whether the entire signal is inversed.
-   * 
-   * @return <code>true</code> if the signal is to be considered inversed,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isInversed()
-  {
-    return this.inversed;
-  }
-
-  /**
-   * Returns whether the entire signal is inverted.
-   * 
-   * @return <code>true</code> if the signal is to be considered inverted,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isInverted()
-  {
-    return this.inverted;
-  }
-
-  /**
    * Sets baudRate to the given value.
    * 
    * @param aBaudRate
