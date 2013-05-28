@@ -35,6 +35,7 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.ErrorType;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialConfiguration;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialDecoderCallback;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
@@ -69,6 +70,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   private int riIndex;
   private int dsrIndex;
   private int dtrIndex;
+  private BitLevel idleLevel;
   private BitEncoding bitEncoding;
   private BitOrder bitOrder;
   private StopBits stopBits;
@@ -261,6 +263,14 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
+   * @param aIdleLevel
+   */
+  public void setIdleLevel( final BitLevel aIdleLevel )
+  {
+    this.idleLevel = aIdleLevel;
+  }
+
+  /**
    * @param aParity
    */
   public void setParity( final Parity aParity )
@@ -418,7 +428,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     {
 
       SerialConfiguration config = new SerialConfiguration( baudRate, this.bitCount,
-          this.stopBits, this.parity, this.bitEncoding, this.bitOrder );
+          this.stopBits, this.parity, this.bitEncoding, this.bitOrder, this.idleLevel );
 
       AsyncSerialDataDecoder decoder = new AsyncSerialDataDecoder( config, this.context );
       decoder.setProgressListener( this.progressListener );

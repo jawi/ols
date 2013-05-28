@@ -44,6 +44,7 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -195,6 +196,36 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
   }
 
+  /**
+   * Provides a combobox renderer for {@link BitLevel} values.
+   */
+  static final class UARTIdleLevelItemRenderer extends EnumItemRenderer<BitLevel>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final BitLevel aValue )
+    {
+      String text = super.getDisplayValue( aValue );
+      if ( BitLevel.HIGH.equals( aValue ) )
+      {
+        text = "High (start = L, stop = H)";
+      }
+      else if ( BitLevel.LOW.equals( aValue ) )
+      {
+        text = "Low (start = H, stop = L)";
+      }
+      return text;
+    }
+  }
+
 
   // CONSTANTS
 
@@ -217,6 +248,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   private JComboBox stop;
   private JComboBox bitEncoding;
   private JComboBox bitOrder;
+  private JComboBox idleLevel;
   private JCheckBox autoDetectBaudRate;
   private JComboBox baudrate;
   private JEditorPane outText;
@@ -287,6 +319,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.parity.setSelectedIndex( aSettings.getInt( "parity", this.parity.getSelectedIndex() ) );
     this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
     this.stop.setSelectedIndex( aSettings.getInt( "stop", this.stop.getSelectedIndex() ) );
+    this.idleLevel.setSelectedIndex( aSettings.getInt( "idle-state", this.idleLevel.getSelectedIndex() ) );
     this.bitEncoding.setSelectedIndex( aSettings.getInt( "bit-encoding", this.bitEncoding.getSelectedIndex() ) );
     this.bitOrder.setSelectedIndex( aSettings.getInt( "bit-order", this.bitOrder.getSelectedIndex() ) );
     this.baudrate.setSelectedItem( Integer.valueOf( aSettings.getInt( "baudrate", 9600 ) ) );
@@ -326,6 +359,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     aSettings.putInt( "parity", this.parity.getSelectedIndex() );
     aSettings.putInt( "bits", this.bits.getSelectedIndex() );
     aSettings.putInt( "stop", this.stop.getSelectedIndex() );
+    aSettings.putInt( "idle-state", this.idleLevel.getSelectedIndex() );
     aSettings.putInt( "bit-encoding", this.bitEncoding.getSelectedIndex() );
     aSettings.putInt( "bit-order", this.bitOrder.getSelectedIndex() );
     aSettings.putInt( "baudrate", ( ( Integer )this.baudrate.getSelectedItem() ).intValue() );
@@ -405,6 +439,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
 
     // Other properties...
+    toolTask.setIdleLevel( ( BitLevel )this.idleLevel.getSelectedItem() );
     toolTask.setBitEncoding( ( BitEncoding )this.bitEncoding.getSelectedItem() );
     toolTask.setBitOrder( ( BitOrder )this.bitOrder.getSelectedItem() );
     toolTask.setParity( ( Parity )this.parity.getSelectedItem() );
@@ -432,6 +467,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.parity.setEnabled( aEnable );
     this.bits.setEnabled( aEnable );
     this.stop.setEnabled( aEnable );
+    this.idleLevel.setEnabled( aEnable );
     this.bitEncoding.setEnabled( aEnable );
     this.bitOrder.setEnabled( aEnable );
 
@@ -618,6 +654,12 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.stop.setSelectedIndex( 0 );
     this.stop.setRenderer( new UARTStopBitsItemRenderer() );
     settings.add( this.stop );
+
+    settings.add( createRightAlignedLabel( "Idle level" ) );
+    this.idleLevel = new JComboBox( BitLevel.values() );
+    this.idleLevel.setSelectedIndex( 0 );
+    this.idleLevel.setRenderer( new UARTIdleLevelItemRenderer() );
+    settings.add( this.idleLevel );
 
     settings.add( createRightAlignedLabel( "Bit encoding" ) );
     this.bitEncoding = new JComboBox( BitEncoding.values() );
