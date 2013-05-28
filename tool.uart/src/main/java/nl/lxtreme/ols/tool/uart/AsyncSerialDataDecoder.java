@@ -309,6 +309,15 @@ public class AsyncSerialDataDecoder
     HIGH,
     LOW,
   }
+  /**
+   * Mark means a "1", space means a "0" (regardless of which is high
+   * and which is low).
+   */
+  public static enum BitValue {
+    SPACE,
+    MARK;
+  }
+
 
   /**
    * Helper class that can chop up a datastream into bits.
@@ -340,6 +349,21 @@ public class AsyncSerialDataDecoder
       final long halfTime = ( this.time + ( this.bitLength / 2 ) );
       final int level = AsyncSerialDataDecoder.this.getDataValue( halfTime, this.mask );
       return ( level == 0 ? BitLevel.LOW : BitLevel.HIGH );
+    }
+
+    /**
+     * The value of the current bit (this is its meaning depending on
+     * inverting settings, regardless of voltage levels).
+     */
+    public BitValue value() {
+      if ( AsyncSerialDataDecoder.this.isInverted() )
+      {
+        return ( this.level() == BitLevel.HIGH ? BitValue.SPACE : BitValue.MARK );
+      }
+      else
+      {
+        return ( this.level() == BitLevel.HIGH ? BitValue.MARK : BitValue.SPACE );
+      }
     }
 
     /**
@@ -497,18 +521,24 @@ public class AsyncSerialDataDecoder
       final long startTime = extractor.time();
 
       int symbol = 0;
+      int marks = 0;
       for ( int bitIdx = 0; bitIdx < bitCount; bitIdx++ )
       {
-        if ( extractor.level() == BitLevel.HIGH )
+        if ( extractor.value() == BitValue.MARK )
         {
           symbol |= ( 1 << bitIdx );
+          marks++;
         }
         extractor.next();
       }
       final long endTime = extractor.time() - 1;
 
-      // Post-process the data...
-      symbol = decodeSymbol( symbol, bitCount );
+      // If the most significant bit is first, we need to swap bit-order, as we
+      // normally represent the bits with the least significant bit first...
+      if ( this.configuration.isMostSignificantBitFirst() )
+      {
+        symbol = reverseBits( symbol, bitCount );
+      }
 
       // fully decoded a single symbol...
       symbolCount++;
@@ -520,20 +550,14 @@ public class AsyncSerialDataDecoder
       // Sample parity bit (if available/desired).
       if ( parity.isOdd() || parity.isEven() )
       {
-        final int actualBitCount = Integer.bitCount( symbol );
-        // determine which parity bit we should expect...
-        final BitLevel expectedValue;
-        if ( parity.isOdd() )
+        if ( extractor.value() == BitValue.MARK )
         {
-          expectedValue = ( actualBitCount % 2 ) == 0 ? BitLevel.HIGH : BitLevel.LOW;
-        }
-        else
-        /* if ( parity.isEven() ) */
-        {
-          expectedValue = ( actualBitCount % 2 ) == 1 ? BitLevel.HIGH : BitLevel.LOW;
+          marks++;
         }
 
-        if ( ( extractor.level() != expectedValue ) && ( this.callback != null ) )
+        // Even parity means total number of marks (including the parity
+        // bit) should be even, odd means they should be odd.
+        if ( ( parity.isOdd() && ( marks % 2 == 0 ) ) || ( parity.isEven() && ( marks % 2 == 1) ) )
         {
           this.callback.onError( aChannelIndex, ErrorType.PARITY, extractor.time() );
         }
@@ -684,35 +708,6 @@ public class AsyncSerialDataDecoder
     {
       this.progressListener.setProgress( aProgress );
     }
-  }
-
-  /**
-   * Decodes the symbol conform the settings of this decoder, for example
-   * whether or not the entire symbol is inverted, or which bit-order it should
-   * have.
-   * 
-   * @param aSymbol
-   *          the original symbol to decode;
-   * @param aBitCount
-   *          the number of bits in the symbol.
-   * @return the decoded symbol, could be equal to the original one.
-   */
-  private int decodeSymbol( int aSymbol, final int aBitCount )
-  {
-    // Issue #85: invert & reverse the bit order...
-    if ( isInverted() )
-    {
-      aSymbol = ~aSymbol & getBitMask( aBitCount );
-    }
-
-    // If the most significant bit is first, we need to swap bit-order, as we
-    // normally represent the bits with the least significant bit first...
-    if ( this.configuration.isMostSignificantBitFirst() )
-    {
-      aSymbol = reverseBits( aSymbol, aBitCount );
-    }
-
-    return aSymbol;
   }
 
   /**
