@@ -123,7 +123,7 @@ public class AsyncSerialDataDecoder
 
     /**
      * Creates a new {@link SerialConfiguration} instance, defaulting to 8N1,
-     * 9600 baud, no inversion of the signal and most-significant bit first.
+     * 9600 baud, no inversion of the signal and least-significant bit first.
      */
     public SerialConfiguration()
     {
