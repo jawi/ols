@@ -352,27 +352,6 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
-   * Factory method for creating the baud rate analyzer for the given
-   * acquisition results & bit mask.
-   * 
-   * @param aData
-   *          the acquisition results to use;
-   * @param aMask
-   *          the bit mask of the data to use.
-   * @return a {@link BaudRateAnalyzer} instance, never <code>null</code>.
-   */
-  private BaudRateAnalyzer createBaudRateAnalyzer( final AcquisitionResult aData, final int aMask )
-  {
-    if ( this.baudRate == AUTO_DETECT_BAUDRATE )
-    {
-      // Auto detect the baud rate...
-      return new BaudRateAnalyzer( aData.getSampleRate(), aData.getValues(), aData.getTimestamps(), aMask );
-    }
-    // Use a fixed baud rate...
-    return new BaudRateAnalyzer( aData.getSampleRate(), this.baudRate );
-  }
-
-  /**
    * Decodes a control line.
    * 
    * @param aDataSet
@@ -432,30 +411,33 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   {
     final AcquisitionResult data = this.context.getData();
 
-    final int mask = ( 1 << aChannelIndex );
-    final BaudRateAnalyzer baudrateAnalyzer = createBaudRateAnalyzer( data, mask );
+    final int baudRate;
 
-    final int bitLength = baudrateAnalyzer.getBestBitLength();
+    if ( this.baudRate == AUTO_DETECT_BAUDRATE )
+    {
+      // Auto detect the baud rate...
+      final int mask = ( 1 << aChannelIndex );
+      final BaudRateAnalyzer baudRateAnalyzer = new BaudRateAnalyzer( data.getSampleRate(), data.getValues(), data.getTimestamps(), mask );
+      baudRate = baudRateAnalyzer.getBaudRateExact();
+      // Set nominal (normalized) baud rate
+      aDataSet.setBaudRate( baudRateAnalyzer.getBaudRate() );
+    } else {
+      baudRate = this.baudRate;
+      // Set nominal baud rate
+      aDataSet.setBaudRate( baudRate );
+    }
 
-    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( bitLength ) );
+    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( baudRate ) );
 
-    if ( bitLength <= 0 )
+    if ( baudRate <= 0 )
     {
       LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",
           aChannelIndex == this.rxdIndex ? UARTDataSet.UART_RXD : UARTDataSet.UART_TXD );
     }
     else
     {
-      // Set nominal baud rate
-      aDataSet.setBaudRate( baudrateAnalyzer.getBaudRate() );
 
-      if ( LOG.isLoggable( Level.FINE ) )
-      {
-        LOG.fine( "Samplerate: " + data.getSampleRate() + ", bitlength: " + bitLength + ", baudrate = "
-            + aDataSet.getBaudRate() );
-      }
-
-      SerialConfiguration config = new SerialConfiguration( baudrateAnalyzer.getBaudRateExact(), this.bitCount,
+      SerialConfiguration config = new SerialConfiguration( baudRate, this.bitCount,
           this.stopBits, this.parity, this.inverted, this.inversed );
 
       AsyncSerialDataDecoder decoder = new AsyncSerialDataDecoder( config, this.context );
