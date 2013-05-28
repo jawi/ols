@@ -115,6 +115,15 @@ public class AsyncSerialDataDecoder
   }
 
   /**
+   * Denotes bit order used to transmit bits over a serial line.
+   */
+  public static enum BitEncoding
+  {
+    HIGH_IS_MARK, // This is the most common variant, high = 1, low = 0
+    HIGH_IS_SPACE; // high = 0, low = 1
+  }
+
+  /**
    * Denotes the configuration used to decode the serial data.
    */
   public static class SerialConfiguration
@@ -125,7 +134,7 @@ public class AsyncSerialDataDecoder
     private final int baudRate;
     private final StopBits stopBits;
     private final Parity parity;
-    private final boolean inverted;
+    private final BitEncoding bitEncoding;
     private final BitOrder bitOrder;
 
     // CONSTRUCTORS
@@ -136,7 +145,7 @@ public class AsyncSerialDataDecoder
      */
     public SerialConfiguration()
     {
-      this( 9600, 8, StopBits.ONE, Parity.NONE, false /* inverted */, BitOrder.LSB_FIRST );
+      this( 9600, 8, StopBits.ONE, Parity.NONE, BitEncoding.HIGH_IS_MARK, BitOrder.LSB_FIRST );
     }
 
     /**
@@ -151,20 +160,19 @@ public class AsyncSerialDataDecoder
      *          the number of stop bits;
      * @param aParity
      *          what form of parity is used;
-     * @param aInverted
-     *          <code>true</code> if the entire signal is inverted,
-     *          <code>false</code> if it is normal;
+     * @param aBitEncoding
+     *          what bit encoding is used;
      * @param aBitOrder
      *          what bit order is used.
      */
     public SerialConfiguration( final int aBaudRate, final int aDataBits, final StopBits aStopBits,
-        final Parity aParity, final boolean aInverted, final BitOrder aBitOrder )
+        final Parity aParity, final BitEncoding aBitEncoding, final BitOrder aBitOrder )
     {
       this.baudRate = aBaudRate;
       this.dataBits = aDataBits;
       this.stopBits = aStopBits;
       this.parity = aParity;
-      this.inverted = aInverted;
+      this.bitEncoding = aBitEncoding;
       this.bitOrder = aBitOrder;
     }
 
@@ -239,13 +247,12 @@ public class AsyncSerialDataDecoder
     }
 
     /**
-     * Returns the current value of inverted.
+     * Returns the current value of bitEncoding.
      * 
-     * @return the inverted
      */
-    public boolean isInverted()
+    public BitEncoding getBitEncoding()
     {
-      return this.inverted;
+      return this.bitEncoding;
     }
 
     /**
@@ -358,7 +365,7 @@ public class AsyncSerialDataDecoder
 
     /**
      * The level of the current bit (always the raw level, regardless of
-     * inverting settings).
+     * bit encoding settings).
      */
     public BitLevel level() {
       final long halfTime = ( long )( this.time + ( this.bitLength / 2 ) );
@@ -368,10 +375,10 @@ public class AsyncSerialDataDecoder
 
     /**
      * The value of the current bit (this is its meaning depending on
-     * inverting settings, regardless of voltage levels).
+     * the bit encoding, regardless of voltage levels).
      */
     public BitValue value() {
-      if ( AsyncSerialDataDecoder.this.isInverted() )
+      if ( AsyncSerialDataDecoder.this.configuration.getBitEncoding() == BitEncoding.HIGH_IS_SPACE )
       {
         return ( this.level() == BitLevel.HIGH ? BitValue.SPACE : BitValue.MARK );
       }
@@ -763,16 +770,5 @@ public class AsyncSerialDataDecoder
     {
       this.progressListener.setProgress( aProgress );
     }
-  }
-
-  /**
-   * Returns whether the entire signal is inverted.
-   * 
-   * @return <code>true</code> if the signal is to be considered inverted,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isInverted()
-  {
-    return this.configuration.isInverted();
   }
 }

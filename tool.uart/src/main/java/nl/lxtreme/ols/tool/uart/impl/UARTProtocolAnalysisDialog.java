@@ -43,6 +43,7 @@ import nl.lxtreme.ols.tool.uart.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
@@ -164,6 +165,37 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
   }
 
+  /**
+   * Provides a combobox renderer for {@link BitEncoding} values.
+   */
+  static final class UARTBitEncodingItemRenderer extends EnumItemRenderer<BitEncoding>
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // METHODS
+
+    /**
+     * @see nl.lxtreme.ols.client.diagram.settings.GeneralSettingsDialog.EnumItemRenderer#getDisplayValue(java.lang.Enum)
+     */
+    @Override
+    protected String getDisplayValue( final BitEncoding aValue )
+    {
+      String text = super.getDisplayValue( aValue );
+      if ( BitEncoding.HIGH_IS_MARK.equals( aValue ) )
+      {
+        text = "High is mark (1)";
+      }
+      else if ( BitEncoding.HIGH_IS_SPACE.equals( aValue ) )
+      {
+        text = "High is space (0)";
+      }
+      return text;
+    }
+  }
+
+
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -183,7 +215,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
   private JComboBox parity;
   private JComboBox bits;
   private JComboBox stop;
-  private JCheckBox inv;
+  private JComboBox bitEncoding;
   private JComboBox bitOrder;
   private JCheckBox autoDetectBaudRate;
   private JComboBox baudrate;
@@ -255,7 +287,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.parity.setSelectedIndex( aSettings.getInt( "parity", this.parity.getSelectedIndex() ) );
     this.bits.setSelectedIndex( aSettings.getInt( "bits", this.bits.getSelectedIndex() ) );
     this.stop.setSelectedIndex( aSettings.getInt( "stop", this.stop.getSelectedIndex() ) );
-    this.inv.setSelected( aSettings.getBoolean( "inverted", this.inv.isSelected() ) );
+    this.bitEncoding.setSelectedIndex( aSettings.getInt( "bit-encoding", this.bitEncoding.getSelectedIndex() ) );
     this.bitOrder.setSelectedIndex( aSettings.getInt( "bit-order", this.bitOrder.getSelectedIndex() ) );
     this.baudrate.setSelectedItem( Integer.valueOf( aSettings.getInt( "baudrate", 9600 ) ) );
     this.autoDetectBaudRate.setSelected( aSettings.getBoolean( "auto-baudrate", this.autoDetectBaudRate.isSelected() ) );
@@ -294,7 +326,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     aSettings.putInt( "parity", this.parity.getSelectedIndex() );
     aSettings.putInt( "bits", this.bits.getSelectedIndex() );
     aSettings.putInt( "stop", this.stop.getSelectedIndex() );
-    aSettings.putBoolean( "inverted", this.inv.isSelected() );
+    aSettings.putInt( "bit-encoding", this.bitEncoding.getSelectedIndex() );
     aSettings.putInt( "bit-order", this.bitOrder.getSelectedIndex() );
     aSettings.putInt( "baudrate", ( ( Integer )this.baudrate.getSelectedItem() ).intValue() );
     aSettings.putBoolean( "auto-baudrate", this.autoDetectBaudRate.isSelected() );
@@ -373,7 +405,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
 
     // Other properties...
-    toolTask.setInverted( this.inv.isSelected() );
+    toolTask.setBitEncoding( ( BitEncoding )this.bitEncoding.getSelectedItem() );
     toolTask.setBitOrder( ( BitOrder )this.bitOrder.getSelectedItem() );
     toolTask.setParity( ( Parity )this.parity.getSelectedItem() );
     toolTask.setStopBits( ( StopBits )this.stop.getSelectedItem() );
@@ -400,7 +432,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.parity.setEnabled( aEnable );
     this.bits.setEnabled( aEnable );
     this.stop.setEnabled( aEnable );
-    this.inv.setEnabled( aEnable );
+    this.bitEncoding.setEnabled( aEnable );
     this.bitOrder.setEnabled( aEnable );
 
     this.closeAction.setEnabled( aEnable );
@@ -587,10 +619,11 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     this.stop.setRenderer( new UARTStopBitsItemRenderer() );
     settings.add( this.stop );
 
-    this.inv = new JCheckBox();
-    this.inv.setSelected( false );
-    settings.add( createRightAlignedLabel( "Invert?" ) );
-    settings.add( this.inv );
+    settings.add( createRightAlignedLabel( "Bit encoding" ) );
+    this.bitEncoding = new JComboBox( BitEncoding.values() );
+    this.bitEncoding.setSelectedIndex( 0 );
+    this.bitEncoding.setRenderer( new UARTBitEncodingItemRenderer() );
+    settings.add( this.bitEncoding );
 
     settings.add( createRightAlignedLabel( "Bit order" ) );
     this.bitOrder = new JComboBox( BitOrder.values() );

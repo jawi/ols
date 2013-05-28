@@ -31,6 +31,7 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialConfiguration;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialDecoderCallback;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
 
 
 /**
@@ -112,7 +113,7 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
     this.annotationListener.onAnnotation( new ChannelLabelAnnotation( this.dataLine, DMX512_DATA_LABEL ) );
 
     final SerialConfiguration config = new SerialConfiguration( BAUDRATE, DATABITS, STOPBITS, PARITY,
-        false /* inverted */, BitOrder.MSB_FIRST);
+        BitEncoding.HIGH_IS_MARK, BitOrder.MSB_FIRST);
 
     final DMX512SerialDataDecoder decoder = new DMX512SerialDataDecoder( config, this.context );
     decoder.setProgressListener( this.progressListener );
