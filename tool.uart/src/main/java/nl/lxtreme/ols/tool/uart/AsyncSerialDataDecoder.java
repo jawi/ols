@@ -417,22 +417,13 @@ public class AsyncSerialDataDecoder
     final long startOfDecode = timestamps[this.context.getStartSampleIndex()];
     final long endOfDecode = timestamps[this.context.getEndSampleIndex()];
 
-    long time = startOfDecode;
-
     setProgress( 0 );
 
+    long start = findStartBit( aChannelIndex, Edge.FALLING, startOfDecode, endOfDecode );
     int symbolCount = 0;
-    while ( ( endOfDecode - time ) > frameSize )
+    while ( ( start >= 0 ) && ( ( endOfDecode - start ) > frameSize ) )
     {
-      /*
-       * find first falling edge this is the start of the startbit.
-       */
-      time = findStartBit( aChannelIndex, Edge.FALLING, time, endOfDecode );
-      if ( time < 0 )
-      {
-        // No more start bits; stop the decoding process...
-        break;
-      }
+      long time = start;
 
       // Sampling is done in the middle of each bit
       time += bitCenter;
@@ -496,19 +487,26 @@ public class AsyncSerialDataDecoder
       // Sample stopbit(s)
       time += bitLength; // = middle of first stop bit...
 
-      double stopBitCount = stopBits.getValue();
-      while ( stopBitCount > 0.0 )
+      // Check value of stopbit
+      if ( !isMark( time, mask ) && ( this.callback != null ) )
       {
-        if ( !isMark( time, mask ) && ( this.callback != null ) )
-        {
-          this.callback.onError( aChannelIndex, ErrorType.FRAME, time );
-        }
-        stopBitCount -= ( ( stopBitCount > 1.0 ) ? 1.0 : stopBitCount );
-
-        time += stopBitCount * bitLength;
+        this.callback.onError( aChannelIndex, ErrorType.FRAME, time );
       }
 
-      setProgress( getPercentage( time, startOfDecode, endOfDecode ) );
+      // Find start bit after the stop bit
+      start = findStartBit( aChannelIndex, Edge.FALLING, time, endOfDecode );
+
+      // Check length of stopbit
+      final long endOfStopbit = time + ( long )( stopBits.getValue() * bitLength );
+      if ( start >= 0 && ( endOfStopbit > start ) && ( this.callback != null ) )
+      {
+        this.callback.onError( aChannelIndex, ErrorType.FRAME, time );
+      }
+
+      if ( start >= 0 )
+      {
+        setProgress( getPercentage( start, startOfDecode, endOfDecode ) );
+      }
     }
 
     setProgress( 100 );
