@@ -88,7 +88,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
    */
   public int getBaudRateExact()
   {
-    return this.baudRateExact;
+    return this.getSampleRate() / this.bitLength;
   }
 
   /**
@@ -186,17 +186,6 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   public void setBaudRate( final int aBaudRate )
   {
     this.baudRate = aBaudRate;
-  }
-
-  /**
-   * Sets the baudRateExact.
-   * 
-   * @param aBaudRateExact
-   *          the baudRateExact to set
-   */
-  public void setBaudRateExact( final int aBaudRateExact )
-  {
-    this.baudRateExact = aBaudRateExact;
   }
 
   /**

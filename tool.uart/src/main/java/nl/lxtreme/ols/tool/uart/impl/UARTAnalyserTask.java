@@ -449,8 +449,6 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
       // We know the avg. bitlength, so we can use it for calculating the
       // baudrate...
       aDataSet.setSampledBitLength( bitLength );
-
-      aDataSet.setBaudRateExact( baudrateAnalyzer.getBaudRateExact() );
       aDataSet.setBaudRate( baudrateAnalyzer.getBaudRate() );
 
       if ( LOG.isLoggable( Level.FINE ) )
