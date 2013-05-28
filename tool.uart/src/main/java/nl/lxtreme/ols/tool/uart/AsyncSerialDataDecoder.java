@@ -330,6 +330,14 @@ public class AsyncSerialDataDecoder
     private int mask;
     private int channelIndex;
     private double bitLength;
+    /** The number of samples that we've seen between two confirmed edges */
+    private double confirmedSamples;
+    /** The number of bits that we've seen between two confirmed edges */
+    private long confirmedBits;
+    /** The timestamp of the last edge we've seen */
+    private double lastEdge;
+    /** The number of bits we've processed since the last edge */
+    private int bitsSinceEdge;
 
     // CONSTRUCTORS
 
@@ -373,6 +381,7 @@ public class AsyncSerialDataDecoder
      */
     public void next() {
       this.time += this.bitLength;
+      this.bitsSinceEdge++;
       final long start = ( long )( this.time - this.bitLength * 0.25 - 1);
       final long end = ( long )( this.time + this.bitLength * 0.25 + 1);
 
@@ -382,6 +391,13 @@ public class AsyncSerialDataDecoder
       {
         // Found an edge, skip to that timestamp instead.
         this.time = edge;
+
+        // Add the bits since the last edge to the average
+        this.confirmedSamples += ( this.time - this.lastEdge );
+        this.confirmedBits += this.bitsSinceEdge;
+        // And reset the last edge
+        this.lastEdge = this.time;
+        this.bitsSinceEdge = 0;
       }
     }
 
@@ -390,6 +406,11 @@ public class AsyncSerialDataDecoder
      */
     public void jumpTo( long time ) {
       this.time = time;
+      /**
+       * Assume we're jumping here because our caller found an edge.
+       */
+      this.lastEdge = time;
+      this.bitsSinceEdge = 0;
     }
 
     /**
@@ -397,6 +418,17 @@ public class AsyncSerialDataDecoder
      */
     public long time() {
       return ( long )( this.time );
+    }
+
+    /**
+     * The average bit length for sequences of bits found between two
+     * edges (e.g., the ones of which we can be fairly certain of their
+     * length, unlike for example trailing MARK bits, which blend into
+     * the stop bits and any idle time after the byte).
+     */
+    public double averageBitLength()
+    {
+      return ( this.confirmedSamples /  this.confirmedBits );
     }
   }
 
@@ -600,7 +632,7 @@ public class AsyncSerialDataDecoder
 
     setProgress( 100 );
 
-    return bitLength;
+    return extractor.averageBitLength();
   }
 
   /**
