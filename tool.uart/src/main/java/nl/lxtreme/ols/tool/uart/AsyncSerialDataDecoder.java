@@ -328,6 +328,7 @@ public class AsyncSerialDataDecoder
 
     private double time;
     private int mask;
+    private int channelIndex;
     private double bitLength;
 
     // CONSTRUCTORS
@@ -335,6 +336,7 @@ public class AsyncSerialDataDecoder
     public DataBitExtractor( final int aChannelIndex )
     {
       this.time = 0;
+      this.channelIndex = aChannelIndex;
       this.mask = ( 1 << aChannelIndex );
       this.bitLength = AsyncSerialDataDecoder.this.configuration.getBitLength( AsyncSerialDataDecoder.this.dataSet.getSampleRate() );
     }
@@ -371,6 +373,16 @@ public class AsyncSerialDataDecoder
      */
     public void next() {
       this.time += this.bitLength;
+      final long start = ( long )( this.time - this.bitLength * 0.25 - 1);
+      final long end = ( long )( this.time + this.bitLength * 0.25 + 1);
+
+      // Find an edge in the area where we would expect one
+      final long edge = AsyncSerialDataDecoder.this.findEdge(this.channelIndex, Edge.NONE, start, end);
+      if ( edge >= 0 )
+      {
+        // Found an edge, skip to that timestamp instead.
+        this.time = edge;
+      }
     }
 
     /**
@@ -621,7 +633,7 @@ public class AsyncSerialDataDecoder
    * @param aChannelIndex
    *          the index of the channel to find the start bit on;
    * @param aSampleEdge
-   *          the edge to find, cannot be <code>null</code>
+   *          the edge to find, Edge.NONE for any edge;
    * @param aStartOfDecode
    *          the timestamp to start searching;
    * @param aEndOfDecode
@@ -640,7 +652,12 @@ public class AsyncSerialDataDecoder
       final int bitValue = getDataValue( timeCursor, mask );
 
       Edge edge = Edge.toEdge( oldBitValue, bitValue );
-      if ( aSampleEdge == edge )
+      if ( aSampleEdge.isNone() && !edge.isNone() )
+      {
+        /* No edge given, so any edge will do */
+        result = timeCursor;
+      }
+      else if ( !aSampleEdge.isNone() && ( aSampleEdge == edge ) )
       {
         result = timeCursor;
       }
