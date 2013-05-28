@@ -303,6 +303,69 @@ public class AsyncSerialDataDecoder
   }
 
   /**
+   * High voltage vs low voltage.
+   */
+  public static enum BitLevel {
+    HIGH,
+    LOW,
+  }
+
+  /**
+   * Helper class that can chop up a datastream into bits.
+   */
+  private class DataBitExtractor
+  {
+    // VARIABLES
+
+    private long time;
+    private int mask;
+    private int bitLength;
+
+    // CONSTRUCTORS
+
+    public DataBitExtractor( final int aChannelIndex )
+    {
+      this.time = 0;
+      this.mask = ( 1 << aChannelIndex );
+      this.bitLength = AsyncSerialDataDecoder.this.configuration.getBitLength( AsyncSerialDataDecoder.this.dataSet.getSampleRate() );
+    }
+
+    // METHODS
+
+    /**
+     * The level of the current bit (always the raw level, regardless of
+     * inverting settings).
+     */
+    public BitLevel level() {
+      final long halfTime = ( this.time + ( this.bitLength / 2 ) );
+      final int level = AsyncSerialDataDecoder.this.getDataValue( halfTime, this.mask );
+      return ( level == 0 ? BitLevel.LOW : BitLevel.HIGH );
+    }
+
+    /**
+     * Skip over the current bit to the next one.
+     */
+    public void next() {
+      this.time += this.bitLength;
+    }
+
+    /**
+     * Jump to the bit starting at the given time (sample number).
+     */
+    public void jumpTo( long time ) {
+      this.time = time;
+    }
+
+    /**
+     * The sample time of the start of the current bit.
+     */
+    public long time() {
+      return this.time;
+    }
+  }
+
+
+  /**
    * Denotes the number of stop bits, as used in serial protocols to indicate an
    * end-of-frame.
    */
@@ -409,47 +472,40 @@ public class AsyncSerialDataDecoder
     final StopBits stopBits = this.configuration.getStopBits();
     final Parity parity = this.configuration.getParity();
 
-    final int bitCenter = bitLength / 2;
-    final int mask = ( 1 << aChannelIndex );
-
     final long[] timestamps = this.dataSet.getTimestamps();
 
     final long startOfDecode = timestamps[this.context.getStartSampleIndex()];
     final long endOfDecode = timestamps[this.context.getEndSampleIndex()];
 
+    DataBitExtractor extractor = new DataBitExtractor( aChannelIndex );
     setProgress( 0 );
 
     long start = findStartBit( aChannelIndex, Edge.FALLING, startOfDecode, endOfDecode );
     int symbolCount = 0;
     while ( ( start >= 0 ) && ( ( endOfDecode - start ) > frameSize ) )
     {
-      long time = start;
+      extractor.jumpTo(start);
 
-      // Sampling is done in the middle of each bit
-      time += bitCenter;
-      if ( !isSpace( time, mask ) && ( this.callback != null ) )
+      if ( ( extractor.level() != BitLevel.LOW ) && ( this.callback != null ) )
       {
         // this is not a start bit !
-        this.callback.onError( aChannelIndex, ErrorType.START, time );
+        this.callback.onError( aChannelIndex, ErrorType.START, extractor.time() );
       }
+      extractor.next();
 
-      // Keep track of where the symbol originally started; note that we're
-      // shifting time from the bit-*center* onwards, so we need to add only
-      // half a bit to the time to get the starting timestamp of the symbol...
-      final long startTime = time + bitCenter;
-      // The end time of a symbol can be calculated easily from the start
-      // timestamp...
-      final long endTime = ( startTime + ( bitCount * bitLength ) ) - 1;
+      // Keep track of where the symbol originally started;
+      final long startTime = extractor.time();
 
       int symbol = 0;
       for ( int bitIdx = 0; bitIdx < bitCount; bitIdx++ )
       {
-        time += bitLength;
-        if ( isMark( time, mask ) )
+        if ( extractor.level() == BitLevel.HIGH )
         {
           symbol |= ( 1 << bitIdx );
         }
+        extractor.next();
       }
+      final long endTime = extractor.time() - 1;
 
       // Post-process the data...
       symbol = decodeSymbol( symbol, bitCount );
@@ -466,41 +522,38 @@ public class AsyncSerialDataDecoder
       {
         final int actualBitCount = Integer.bitCount( symbol );
         // determine which parity bit we should expect...
-        final int expectedValue;
+        final BitLevel expectedValue;
         if ( parity.isOdd() )
         {
-          expectedValue = ( actualBitCount % 2 ) == 0 ? mask : 0;
+          expectedValue = ( actualBitCount % 2 ) == 0 ? BitLevel.HIGH : BitLevel.LOW;
         }
         else
         /* if ( parity.isEven() ) */
         {
-          expectedValue = ( actualBitCount % 2 ) == 1 ? mask : 0;
+          expectedValue = ( actualBitCount % 2 ) == 1 ? BitLevel.HIGH : BitLevel.LOW;
         }
 
-        time += bitLength; // = middle of the parity bit...
-        if ( !isExpectedLevel( time, mask, expectedValue ) && ( this.callback != null ) )
+        if ( ( extractor.level() != expectedValue ) && ( this.callback != null ) )
         {
-          this.callback.onError( aChannelIndex, ErrorType.PARITY, time );
+          this.callback.onError( aChannelIndex, ErrorType.PARITY, extractor.time() );
         }
+        extractor.next();
       }
 
-      // Sample stopbit(s)
-      time += bitLength; // = middle of first stop bit...
-
       // Check value of stopbit
-      if ( !isMark( time, mask ) && ( this.callback != null ) )
+      if ( ( extractor.level() != BitLevel.HIGH ) && ( this.callback != null ) )
       {
-        this.callback.onError( aChannelIndex, ErrorType.FRAME, time );
+        this.callback.onError( aChannelIndex, ErrorType.FRAME, extractor.time() );
       }
 
       // Find start bit after the stop bit
-      start = findStartBit( aChannelIndex, Edge.FALLING, time, endOfDecode );
+      start = findStartBit( aChannelIndex, Edge.FALLING, ( extractor.time() + ( bitLength / 2 ) ), endOfDecode );
 
       // Check length of stopbit
-      final long endOfStopbit = time + ( long )( stopBits.getValue() * bitLength );
+      final long endOfStopbit = extractor.time() + ( long )( stopBits.getValue() * bitLength );
       if ( start >= 0 && ( endOfStopbit > start ) && ( this.callback != null ) )
       {
-        this.callback.onError( aChannelIndex, ErrorType.FRAME, time );
+        this.callback.onError( aChannelIndex, ErrorType.FRAME, extractor.time() );
       }
 
       if ( start >= 0 )
@@ -623,38 +676,6 @@ public class AsyncSerialDataDecoder
   }
 
   /**
-   * Returns whether the (data-)value at the given timestamp is at a 'mark'
-   * (active high, or -when inverted- active low).
-   * 
-   * @param aTimestamp
-   *          the timestamp to sample the data at;
-   * @param aMask
-   *          the mask of the bit-value.
-   * @return <code>true</code> if the bit-value is at the expected value,
-   *         <code>false</code> otherwise.
-   */
-  protected final boolean isMark( final long aTimestamp, final int aMask )
-  {
-    return isExpectedLevel( aTimestamp, aMask, aMask);
-  }
-
-  /**
-   * Returns whether the (data-)value at the given timestamp is at a 'space'
-   * (active low, or -when inverted- active high).
-   * 
-   * @param aTimestamp
-   *          the timestamp to sample the data at;
-   * @param aMask
-   *          the mask of the bit-value.
-   * @return <code>true</code> if the bit-value is at the expected value,
-   *         <code>false</code> otherwise.
-   */
-  protected final boolean isSpace( final long aTimestamp, final int aMask )
-  {
-    return isExpectedLevel( aTimestamp, aMask, 0x00 );
-  }
-
-  /**
    * @param aProgress
    */
   protected final void setProgress( final int aProgress )
@@ -692,28 +713,6 @@ public class AsyncSerialDataDecoder
     }
 
     return aSymbol;
-  }
-
-  /**
-   * Returns whether the bit-value (denoted by the given mask) is the given
-   * expected mask.
-   * <p>
-   * In case the signal is inverted, this method will inverse the check.
-   * </p>
-   * 
-   * @param aTimestamp
-   *          the timestamp to sample the data at;
-   * @param aMask
-   *          the bit-value mask;
-   * @param aExpectedMask
-   *          the expected bit-value mask.
-   * @return <code>true</code> if the given bit-value meets the expected mask,
-   *         <code>false</code> otherwise.
-   * @see #isInverted()
-   */
-  private boolean isExpectedLevel( final long aTimestamp, final int aMask, final int aExpectedMask )
-  {
-    return getDataValue( aTimestamp, aMask ) == aExpectedMask;
   }
 
   /**
