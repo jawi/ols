@@ -34,6 +34,9 @@ import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialDecoderCallback;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
 import nl.lxtreme.ols.tool.uart.impl.*;
 
 import org.junit.*;
@@ -159,8 +162,17 @@ public class ISO7816DataTest
     worker.setBaudRate( aBaudRate );
     worker.setRxdIndex( aRxDChannel );
     worker.setTxdIndex( -1 );
-    worker.setInversed( aInverseConvention );
-    worker.setInverted( aInverseConvention );
+    if ( aInverseConvention )
+    {
+      worker.setBitOrder( BitOrder.MSB_FIRST );
+      worker.setBitEncoding ( BitEncoding.HIGH_IS_SPACE );
+    }
+    else
+    {
+      worker.setBitOrder( BitOrder.LSB_FIRST );
+      worker.setBitEncoding( BitEncoding.HIGH_IS_MARK );
+    }
+    worker.setIdleLevel( BitLevel.HIGH );
 
     UARTDataSet result = worker.call();
     assertNotNull( result );
