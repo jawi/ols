@@ -177,9 +177,9 @@ public class CapturedData implements AcquisitionResult
         if ( aValues[i] != oldValue )
         {
           count++;
+          lastTimestamp = aTimestamps[i];
         }
         oldValue = aValues[i];
-        lastTimestamp = aTimestamps[i];
       }
 
       // Issue #167: make sure the absolute length is *always* present...
@@ -280,9 +280,9 @@ public class CapturedData implements AcquisitionResult
         if ( value.compareTo( oldValue ) != 0 )
         {
           count++;
+          lastTimestamp = aTimestamps.get( i );
         }
         oldValue = value;
-        lastTimestamp = aTimestamps.get( i );
       }
 
       // Issue #167: make sure the absolute length is *always* present...
