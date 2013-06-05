@@ -347,6 +347,8 @@ public class EditSignalElementPropertiesAction extends AbstractAction
 
       setContentPane( contentPane );
 
+      getRootPane().setDefaultButton( okButton );
+
       pack();
     }
   }
