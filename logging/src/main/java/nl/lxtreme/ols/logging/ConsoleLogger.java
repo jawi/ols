@@ -20,10 +20,10 @@
  */
 package nl.lxtreme.ols.logging;
 
+import static nl.lxtreme.ols.logging.Activator.*;
 
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
+import org.osgi.framework.*;
+import org.osgi.service.log.*;
 
 
 /**
@@ -34,17 +34,6 @@ import org.osgi.service.log.LogService;
 public class ConsoleLogger implements LogService
 {
   private static String[] LEVEL = { "", "ERROR", "WARN ", "INFO ", "DEBUG" };
-
-  /**
-   * Returns whether or not we're running in debug mode.
-   * 
-   * @return <code>true</code> if debug mode is enabled, <code>false</code>
-   *         otherwise.
-   */
-  private static boolean isDebugMode()
-  {
-    return Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.logToConsole", "false" ) );
-  }
 
   public void log( int level, String message )
   {
@@ -63,7 +52,7 @@ public class ConsoleLogger implements LogService
 
   public void log( ServiceReference reference, int level, String message, Throwable throwable )
   {
-    if ( !isDebugMode() )
+    if ( !isDebugMode() || level > getOsgiLogLevel() )
     {
       return;
     }

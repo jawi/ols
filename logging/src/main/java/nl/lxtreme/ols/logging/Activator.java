@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.logging;
 
 
+import java.util.logging.*;
+
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
 import org.osgi.service.log.*;
@@ -31,6 +33,92 @@ import org.osgi.service.log.*;
  */
 public class Activator extends DependencyActivatorBase
 {
+  // CONSTANTS
+
+  private static final String PROPERTY_LOG_LEVEL = "nl.lxtreme.ols.logLevel";
+  private static final String PROPERTY_LOG_TO_CONSOLE = "nl.lxtreme.ols.logToConsole";
+  private static final String PROPERTY_FILTER_JDKUI_LOGS = "nl.lxtreme.ols.filterJdkUiLogs";
+
+  // METHODS
+
+  /**
+   * Returns the default log level to use in JUL.
+   * 
+   * @return a log level, never <code>null</code>.
+   */
+  public static Level getJavaLogLevel()
+  {
+    int level = getOsgiLogLevel();
+
+    switch ( level )
+    {
+      case 0:
+        return Level.OFF;
+      case LogService.LOG_ERROR:
+        return Level.SEVERE;
+      case LogService.LOG_WARNING:
+        return Level.WARNING;
+      case LogService.LOG_INFO:
+        return Level.INFO;
+      case LogService.LOG_DEBUG:
+        return Level.FINE;
+      case 5:
+        return Level.FINER;
+      default:
+        return Level.FINEST;
+    }
+  }
+
+  /**
+   * Returns the default log level to use in OSGi LogService.
+   * 
+   * @return a log level, never <code>null</code>.
+   */
+  public static int getOsgiLogLevel()
+  {
+    int level = 3; // = INFO
+    try
+    {
+      level = Integer.getInteger( PROPERTY_LOG_LEVEL, level ).intValue();
+    }
+    catch ( NumberFormatException exception )
+    {
+      // Ignore...
+    }
+    return level;
+  }
+
+  /**
+   * Returns whether or not we're running in debug mode.
+   * 
+   * @return <code>true</code> if debug mode is enabled, <code>false</code>
+   *         otherwise.
+   */
+  public static boolean isDebugMode()
+  {
+    return Boolean.parseBoolean( System.getProperty( PROPERTY_LOG_TO_CONSOLE, "false" ) );
+  }
+
+  /**
+   * Returns whether or not we should filter out the UI-logs from the JDK.
+   * 
+   * @return <code>true</code> if UI-logs should be filtered, <code>false</code>
+   *         otherwise.
+   */
+  public static boolean isFilterJdkUILogs()
+  {
+    return Boolean.parseBoolean( System.getProperty( PROPERTY_FILTER_JDKUI_LOGS, "true" ) );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void destroy( BundleContext aContext, DependencyManager aManager ) throws Exception
+  {
+    // Nop
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -48,14 +136,5 @@ public class Activator extends DependencyActivatorBase
             .setService( LogService.class ) //
             .setRequired( false ) ) //
         );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void destroy( BundleContext aContext, DependencyManager aManager ) throws Exception
-  {
-    // Nop
   }
 }

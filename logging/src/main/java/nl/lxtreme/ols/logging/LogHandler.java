@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.logging;
 
 
+import static nl.lxtreme.ols.logging.Activator.*;
+
 import java.text.*;
 import java.util.*;
 import java.util.logging.*;
@@ -38,6 +40,7 @@ public class LogHandler extends Handler
 
   // Injected by Felix DM...
   private volatile LogService logService;
+  private volatile Level originalLevel;
 
   private final List<Handler> originalRootHandlers;
 
@@ -77,7 +80,7 @@ public class LogHandler extends Handler
   @Override
   public void publish( final LogRecord aRecord )
   {
-    if ( aRecord.getLevel() == Level.OFF )
+    if ( aRecord.getLevel() == Level.OFF || isBannedLogger( aRecord ) )
     {
       return;
     }
@@ -90,7 +93,7 @@ public class LogHandler extends Handler
     }
 
     Throwable thrownException = aRecord.getThrown();
-    this.logService.log( mapLevel( aRecord.getLevel() ), message, thrownException );
+    this.logService.log( mapLevel( aRecord.getLevel() ), aRecord.getLoggerName() + " " + message, thrownException );
   }
 
   /**
@@ -99,8 +102,11 @@ public class LogHandler extends Handler
   public void start() throws Exception
   {
     LogManager logManager = LogManager.getLogManager();
+    Logger logger = logManager.getLogger( "" );
 
-    replaceLogHandlers( logManager.getLogger( "" ), this.originalRootHandlers );
+    originalLevel = logger.getLevel();
+
+    replaceLogHandlers( logger, this.originalRootHandlers );
   }
 
   /**
@@ -109,8 +115,27 @@ public class LogHandler extends Handler
   public void stop() throws Exception
   {
     LogManager logManager = LogManager.getLogManager();
+    Logger logger = logManager.getLogger( "" );
 
-    restoreLogHandler( logManager.getLogger( "" ), this.originalRootHandlers );
+    restoreLogHandler( logger, this.originalRootHandlers );
+  }
+
+  /**
+   * Tests whether the given log record comes from a "banned" logger.
+   * 
+   * @param aRecord
+   * @return
+   * @see Activator#isFilterJdkUILogs()
+   */
+  private boolean isBannedLogger( LogRecord aRecord )
+  {
+    String name = aRecord.getLoggerName();
+    if ( name == null || !isFilterJdkUILogs() )
+    {
+      return false;
+    }
+
+    return name.startsWith( "java.awt." ) || name.startsWith( "sun.awt." ) || name.startsWith( "javax.swing." );
   }
 
   /**
@@ -156,6 +181,7 @@ public class LogHandler extends Handler
       aHandlerList.add( h );
     }
 
+    aLogger.setLevel( getJavaLogLevel() );
     aLogger.addHandler( this );
   }
 
@@ -174,6 +200,7 @@ public class LogHandler extends Handler
     }
 
     aLogger.removeHandler( this );
+    aLogger.setLevel( originalLevel );
 
     for ( Handler h : aHandlerList )
     {
