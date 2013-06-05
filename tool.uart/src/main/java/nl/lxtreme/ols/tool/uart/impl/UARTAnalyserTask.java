@@ -33,6 +33,9 @@ import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.uart.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.ErrorType;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
+import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialConfiguration;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.SerialDecoderCallback;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
@@ -67,8 +70,9 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   private int riIndex;
   private int dsrIndex;
   private int dtrIndex;
-  private boolean inverted;
-  private boolean inversed;
+  private BitLevel idleLevel;
+  private BitEncoding bitEncoding;
+  private BitOrder bitOrder;
   private StopBits stopBits;
   private Parity parity;
   private int bitCount;
@@ -188,28 +192,6 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
-   * Returns whether the entire signal is inversed.
-   * 
-   * @return <code>true</code> if the signal is to be considered inversed,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isInversed()
-  {
-    return this.inversed;
-  }
-
-  /**
-   * Returns whether the entire signal is inverted.
-   * 
-   * @return <code>true</code> if the signal is to be considered inverted,
-   *         <code>false</code> otherwise.
-   */
-  public boolean isInverted()
-  {
-    return this.inverted;
-  }
-
-  /**
    * Sets baudRate to the given value.
    * 
    * @param aBaudRate
@@ -265,19 +247,27 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
-   * @param aInversed
+   * @param aBitOrder
    */
-  public void setInversed( final boolean aInversed )
+  public void setBitOrder( final BitOrder aBitOrder )
   {
-    this.inversed = aInversed;
+    this.bitOrder = aBitOrder;
   }
 
   /**
-   * @param aInverted
+   * @param aBitEncoding
    */
-  public void setInverted( final boolean aInverted )
+  public void setBitEncoding( final BitEncoding aBitEncoding )
   {
-    this.inverted = aInverted;
+    this.bitEncoding = aBitEncoding;
+  }
+
+  /**
+   * @param aIdleLevel
+   */
+  public void setIdleLevel( final BitLevel aIdleLevel )
+  {
+    this.idleLevel = aIdleLevel;
   }
 
   /**
@@ -352,27 +342,6 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
-   * Factory method for creating the baud rate analyzer for the given
-   * acquisition results & bit mask.
-   * 
-   * @param aData
-   *          the acquisition results to use;
-   * @param aMask
-   *          the bit mask of the data to use.
-   * @return a {@link BaudRateAnalyzer} instance, never <code>null</code>.
-   */
-  private BaudRateAnalyzer createBaudRateAnalyzer( final AcquisitionResult aData, final int aMask )
-  {
-    if ( this.baudRate == AUTO_DETECT_BAUDRATE )
-    {
-      // Auto detect the baud rate...
-      return new BaudRateAnalyzer( aData.getSampleRate(), aData.getValues(), aData.getTimestamps(), aMask );
-    }
-    // Use a fixed baud rate...
-    return new BaudRateAnalyzer( aData.getSampleRate(), this.baudRate );
-  }
-
-  /**
    * Decodes a control line.
    * 
    * @param aDataSet
@@ -432,35 +401,34 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   {
     final AcquisitionResult data = this.context.getData();
 
-    final int mask = ( 1 << aChannelIndex );
-    final BaudRateAnalyzer baudrateAnalyzer = createBaudRateAnalyzer( data, mask );
+    final int baudRate;
 
-    final int bitLength = baudrateAnalyzer.getBestBitLength();
+    if ( this.baudRate == AUTO_DETECT_BAUDRATE )
+    {
+      // Auto detect the baud rate...
+      final int mask = ( 1 << aChannelIndex );
+      final BaudRateAnalyzer baudRateAnalyzer = new BaudRateAnalyzer( data.getSampleRate(), data.getValues(), data.getTimestamps(), mask );
+      baudRate = baudRateAnalyzer.getBaudRateExact();
+      // Set nominal (normalized) baud rate
+      aDataSet.setBaudRate( baudRateAnalyzer.getBaudRate() );
+    } else {
+      baudRate = this.baudRate;
+      // Set nominal baud rate
+      aDataSet.setBaudRate( baudRate );
+    }
 
-    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( bitLength ) );
+    LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( baudRate ) );
 
-    if ( bitLength <= 0 )
+    if ( baudRate <= 0 )
     {
       LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",
           aChannelIndex == this.rxdIndex ? UARTDataSet.UART_RXD : UARTDataSet.UART_TXD );
     }
     else
     {
-      // We know the avg. bitlength, so we can use it for calculating the
-      // baudrate...
-      aDataSet.setSampledBitLength( bitLength );
 
-      aDataSet.setBaudRateExact( baudrateAnalyzer.getBaudRateExact() );
-      aDataSet.setBaudRate( baudrateAnalyzer.getBaudRate() );
-
-      if ( LOG.isLoggable( Level.FINE ) )
-      {
-        LOG.fine( "Samplerate: " + data.getSampleRate() + ", bitlength: " + bitLength + ", baudrate = "
-            + aDataSet.getBaudRate() );
-      }
-
-      SerialConfiguration config = new SerialConfiguration( baudrateAnalyzer.getBaudRateExact(), this.bitCount,
-          this.stopBits, this.parity, this.inverted, this.inversed );
+      SerialConfiguration config = new SerialConfiguration( baudRate, this.bitCount,
+          this.stopBits, this.parity, this.bitEncoding, this.bitOrder, this.idleLevel );
 
       AsyncSerialDataDecoder decoder = new AsyncSerialDataDecoder( config, this.context );
       decoder.setProgressListener( this.progressListener );
@@ -493,7 +461,11 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
           addSymbolAnnotation( aChannelIndex, aSymbol, aStartTime, aEndTime );
         }
       } );
-      decoder.decodeDataLine( aChannelIndex );
+
+      final double sampledBitLength = decoder.decodeDataLine( aChannelIndex );
+      // Set the actual bit length used, so UARTDataSet can calculate
+      // the actual baud rate used.
+      aDataSet.setSampledBitLength( sampledBitLength );
     }
   }
 
