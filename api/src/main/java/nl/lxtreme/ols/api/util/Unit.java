@@ -22,7 +22,7 @@ package nl.lxtreme.ols.api.util;
 
 
 import java.awt.*;
-import java.awt.image.*;
+import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -484,12 +484,14 @@ public final class Unit
 
   // CONSTANTS
 
+  /** Plain space. */
+  private static final char SPACE = ' ';
   /** Non-breaking space (wide). */
-  private static final Character NB = Character.valueOf( '\u00a0' );
+  private static final char NB = '\u00a0';
   /** Thin space. */
-  private static final Character THIN = Character.valueOf( '\u2009' );
+  private static final char THIN = '\u2009';
   /** Non-breaking thin space. */
-  private static final Character NB_THIN = Character.valueOf( '\u202f' );
+  private static final char NB_THIN = '\u202f';
 
   /** The separator to use between a value and a unit. */
   private static final Character SEPARATOR;
@@ -499,59 +501,47 @@ public final class Unit
    */
   static
   {
-    boolean debug = Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+    Logger logger = Logger.getLogger( Unit.class.getName() );
 
+    char sep;
     if ( GraphicsEnvironment.isHeadless() )
     {
       // Cannot determine the optimal result, use a sensible default...
-      if ( debug )
-      {
-        System.out.println( "Using NB (headless fallback)..." );
-      }
-      SEPARATOR = NB;
+      logger.fine( "Using SPACE (headless fallback)..." );
+
+      sep = SPACE;
     }
     else
     {
-      BufferedImage img = new BufferedImage( 1, 1, BufferedImage.TYPE_INT_ARGB );
-      Graphics canvas = img.getGraphics();
+      Font font = UIManager.getFont( "Label.font" );
 
-      try
+      if ( font.canDisplay( NB_THIN ) )
       {
-        Font font = UIManager.getFont( "Label.font" );
-        FontMetrics fm = canvas.getFontMetrics( font );
+        logger.fine( "Using NB_THIN..." );
 
-        if ( SwingUtilities.computeStringWidth( fm, NB_THIN.toString() ) != 0 )
-        {
-          if ( debug )
-          {
-            System.out.println( "Using NB_THIN..." );
-          }
-          SEPARATOR = NB_THIN;
-        }
-        else if ( SwingUtilities.computeStringWidth( fm, THIN.toString() ) != 0 )
-        {
-          if ( debug )
-          {
-            System.out.println( "Using THIN..." );
-          }
-          SEPARATOR = THIN;
-        }
-        else
-        {
-          if ( debug )
-          {
-            System.out.println( "Using NB..." );
-          }
-          SEPARATOR = NB;
-        }
+        sep = NB_THIN;
       }
-      finally
+      else if ( font.canDisplay( THIN ) )
       {
-        canvas.dispose();
-        canvas = null;
-        img = null;
+        logger.fine( "Using THIN..." );
+
+        sep = THIN;
+      }
+      else if ( font.canDisplay( NB ) )
+      {
+        logger.fine( "Using NB..." );
+
+        sep = NB;
+      }
+      else
+      {
+        logger.fine( "Using SPACE (fallback)..." );
+
+        sep = SPACE;
       }
     }
+    
+    SEPARATOR = Character.valueOf( sep );
   }
 
   // METHODS
