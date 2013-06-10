@@ -490,8 +490,8 @@ public final class Unit
   private static final char NB = '\u00a0';
   /** Thin space. */
   private static final char THIN = '\u2009';
-  /** Non-breaking thin space. */
-  private static final char NB_THIN = '\u202f';
+  /** Hair space. */
+  private static final char HAIR = '\u200a';
 
   /** The separator to use between a value and a unit. */
   private static final Character SEPARATOR;
@@ -515,11 +515,11 @@ public final class Unit
     {
       Font font = UIManager.getFont( "Label.font" );
 
-      if ( font.canDisplay( NB_THIN ) )
+      if ( font.canDisplay( HAIR ) )
       {
-        logger.fine( "Using NB_THIN..." );
+        logger.fine( "Using HAIR..." );
 
-        sep = NB_THIN;
+        sep = HAIR;
       }
       else if ( font.canDisplay( THIN ) )
       {
