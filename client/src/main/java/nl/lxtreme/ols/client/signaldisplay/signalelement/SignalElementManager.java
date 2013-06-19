@@ -153,30 +153,100 @@ public final class SignalElementManager implements IDataModelChangeListener
   @Override
   public void dataModelChanged( final DataSet aCapturedData )
   {
+    SignalElementModel oldModel = getSignalElementModel();
     SignalElementModel newModel = new SignalElementModel();
 
     final Channel[] newChannelList = aCapturedData.getChannels();
 
-    // Reset channel groups so they align with the given data model...
-    final int groupCount = Math.max( 1, ( int )Math.ceil( newChannelList.length / ( double )Ols.CHANNELS_PER_BLOCK ) );
-    final int channelsPerGroup = ( int )Math.ceil( newChannelList.length / ( double )groupCount );
-
-    for ( int g = 0; g < groupCount; g++ )
+    if ( oldModel == null || oldModel.getGroups().isEmpty() )
     {
-      final ElementGroup group = newModel.addGroup( "Group " + ( g + 1 ) );
+      // Reset channel groups so they align with the given data model...
+      final int groupCount = Math.max( 1, ( int )Math.ceil( newChannelList.length / ( double )Ols.CHANNELS_PER_BLOCK ) );
+      final int channelsPerGroup = ( int )Math.ceil( newChannelList.length / ( double )groupCount );
 
-      for ( int c = 0; c < channelsPerGroup; c++ )
+      for ( int g = 0; g < groupCount; g++ )
       {
-        final int channelIdx = ( g * channelsPerGroup ) + c;
-        if ( newChannelList[channelIdx] == null )
+        final ElementGroup group = newModel.addGroup( "Group " + ( g + 1 ) );
+
+        for ( int c = 0; c < channelsPerGroup; c++ )
         {
-          continue;
+          final int channelIdx = ( g * channelsPerGroup ) + c;
+          if ( newChannelList[channelIdx] == null )
+          {
+            continue;
+          }
+          newModel.addSignalElement( group, createDigitalSignalElement( newChannelList[channelIdx], group ) );
         }
-        newModel.addSignalElement( group, createDigitalSignalElement( newChannelList[channelIdx], group ) );
+
+        newModel.addSignalElement( group, createGroupSummaryElement( group ) );
+        newModel.addSignalElement( group, createAnalogScopeElement( group ) );
+      }
+    }
+    else
+    {
+      // Copy the structure of the existing model using the new channel data...
+      Set<Integer> seenChannelIdxs = new HashSet<Integer>();
+      ElementGroup newGroup = null;
+      for ( ElementGroup oldGroup : oldModel.getGroups() )
+      {
+        newGroup = newModel.addGroup( oldGroup.getName() );
+
+        for ( SignalElement oldElement : oldGroup.getElements() )
+        {
+          SignalElement element;
+          if ( oldElement.isDigitalSignal() )
+          {
+            int channelIdx = oldElement.getChannel().getIndex();
+            if ( channelIdx >= newChannelList.length )
+            {
+              // Not in the new data...
+              continue;
+            }
+
+            Channel newChannel = newChannelList[channelIdx];
+            seenChannelIdxs.add( Integer.valueOf( channelIdx ) );
+
+            element = createDigitalSignalElement( newChannel, newGroup );
+            element.setSignalAlignment( oldElement.getSignalAlignment() );
+            element.setSignalHeight( oldElement.getSignalHeight() );
+          }
+          else if ( oldElement.isAnalogSignal() )
+          {
+            element = createAnalogScopeElement( newGroup );
+          }
+          else if ( oldElement.isGroupSummary() )
+          {
+            element = createGroupSummaryElement( newGroup );
+          }
+          else
+          {
+            throw new RuntimeException( "Unknown/unhandled signal element: " + oldElement );
+          }
+
+          element.setColor( oldElement.getColor() );
+          element.setEnabled( oldElement.isEnabled() );
+          element.setHeight( oldElement.getHeight() );
+          element.setLabel( oldElement.getLabel() );
+
+          newModel.addSignalElement( newGroup, element );
+        }
       }
 
-      newModel.addSignalElement( group, createGroupSummaryElement( group ) );
-      newModel.addSignalElement( group, createAnalogScopeElement( group ) );
+      if ( newGroup == null )
+      {
+        // Odd case, old model didn't have any groups?!
+        newGroup = newModel.addGroup( "Group 1" );
+      }
+
+      // Handle all left-over channels...
+      for ( Channel channel : newChannelList )
+      {
+        Integer channelIdx = Integer.valueOf( channel.getIndex() );
+        if ( !seenChannelIdxs.contains( channelIdx ) )
+        {
+          newModel.addSignalElement( newGroup, createDigitalSignalElement( channel, newGroup ) );
+        }
+      }
     }
 
     setSignalElementModel( newModel );
