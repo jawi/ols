@@ -180,13 +180,17 @@ public class DeviceProfileManager implements ManagedServiceFactory
   @SuppressWarnings( "rawtypes" )
   public void updated( final String aPid, final Dictionary aProperties ) throws ConfigurationException
   {
-    DeviceProfile profile = this.profiles.get( aPid );
-    if ( profile == null )
+    try
     {
-      profile = new DeviceProfile();
-      this.profiles.putIfAbsent( aPid, profile );
+      DeviceProfile profile = new DeviceProfile();
+      profile.setProperties( aProperties );
+      
+      this.profiles.put( aPid, profile );
     }
-    profile.setProperties( aProperties );
+    catch ( IllegalArgumentException exception )
+    {
+      throw new ConfigurationException( null, "Invalid or missing configuration!", exception );
+    }
   }
 
   /**
