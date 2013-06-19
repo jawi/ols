@@ -493,7 +493,8 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
     boolean autoCenterOnTrigger = UIManager.getBoolean( UIManagerKeys.AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE );
     final AcquisitionResult capturedData = aDataSet.getCapturedData();
 
-    if ( autoCenterOnTrigger && capturedData.hasTriggerData() )
+    // Issue #181
+    if ( autoCenterOnTrigger && ( capturedData != null ) && capturedData.hasTriggerData() )
     {
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
@@ -545,7 +546,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
       return;
     }
 
-    SignalElement signalElement = (SignalElement) element;
+    SignalElement signalElement = ( SignalElement )element;
     int oldIndex = model.getSelectedChannelIndex();
     int newIndex = -1;
 
