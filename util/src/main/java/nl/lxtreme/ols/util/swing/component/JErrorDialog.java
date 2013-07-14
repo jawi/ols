@@ -332,7 +332,7 @@ public class JErrorDialog extends JDialog implements Closeable
      */
     private File writeIncidentReport( final IncidentInfo aIncident )
     {
-      String reportName = String.format( "ols-report-%x.txt", System.nanoTime() );
+      String reportName = String.format( "ols-report-%x.txt", Long.valueOf( System.nanoTime() ) );
       String homeDir = System.getProperty( "user.home" );
 
       File report = new File( homeDir, reportName );

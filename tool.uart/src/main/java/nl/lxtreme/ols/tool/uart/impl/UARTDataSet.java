@@ -52,7 +52,6 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   private double bitLength;
   private int detectedErrors;
 
-  private int baudRateExact;
   private int baudRate;
 
   // CONSTRUCTORS

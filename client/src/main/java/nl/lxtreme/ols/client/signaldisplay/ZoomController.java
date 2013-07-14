@@ -132,7 +132,8 @@ public final class ZoomController
     @Override
     public String toString()
     {
-      return String.format( "ZoomEvent: (Action = %s, ZF = %f, Rect = %s)", this.action, getFactor(), this.visibleRect );
+      return String.format( "ZoomEvent: (Action = %s, ZF = %f, Rect = %s)", this.action, Double.valueOf( getFactor() ),
+          this.visibleRect );
     }
   }
 

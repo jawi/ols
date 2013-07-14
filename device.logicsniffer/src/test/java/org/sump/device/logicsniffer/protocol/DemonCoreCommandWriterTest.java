@@ -47,23 +47,4 @@ public class DemonCoreCommandWriterTest
     // );
     // }
   }
-
-  /**
-   * @param aMask
-   * @return
-   */
-  private int test( final int aMask )
-  {
-    int bitcount = 0;
-    int bitmask = 1;
-    for ( int i = 0; i < 32; i++, bitmask <<= 1 )
-    {
-      if ( ( aMask & bitmask ) != 0 )
-      {
-        bitcount++;
-      }
-    }
-    return bitcount;
-  }
-
 }

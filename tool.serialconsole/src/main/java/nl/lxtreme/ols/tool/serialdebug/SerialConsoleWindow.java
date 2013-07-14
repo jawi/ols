@@ -557,14 +557,13 @@ public class SerialConsoleWindow extends JFrame implements Closeable
             Integer[] buf = new Integer[is.available()];
             for ( int i = 0; i < buf.length; i++ )
             {
-              buf[i] = is.read();
+              buf[i] = Integer.valueOf( is.read() );
             }
 
             terminalFrontend.writeCharacters( buf );
           }
           catch ( IOException e )
           {
-            // TODO Auto-generated catch block
             e.printStackTrace();
           }
         }

@@ -154,19 +154,24 @@ public final class BaudRateAnalyzer
     final Integer highestRanked = this.statData.getHighestRanked();
     long sum = 0, count = 0;
 
-    if (highestRanked != null) {
+    if ( highestRanked != null )
+    {
+      double min = highestRanked.doubleValue() * 0.75;
+      double max = highestRanked.doubleValue() * 1.25;
+
       for ( final Integer length : this.statData.values() )
       {
-        if (highestRanked * 0.75 < length && length < highestRanked * 1.25)
+        double bitlength = length.doubleValue();
+        if ( min < bitlength && bitlength < max )
         {
-          final long rank = this.statData.getCount(length);
-          sum += length * rank;
+          final long rank = this.statData.getCount( length );
+          sum += bitlength * rank;
           count += rank;
         }
       }
     }
 
     // Return the average of all bit lengths near the most frequent one
-    return ( highestRanked == null ) ? -1 : ( ( (double ) sum ) / count );
+    return ( highestRanked == null ) ? -1 : ( ( ( double )sum ) / count );
   }
 }

@@ -167,8 +167,7 @@ public class AsyncSerialDataDecoder
      *          what bit order is used.
      */
     public SerialConfiguration( final int aBaudRate, final int aDataBits, final StopBits aStopBits,
-        final Parity aParity, final BitEncoding aBitEncoding, final BitOrder aBitOrder,
-        final BitLevel aIdleLevel )
+        final Parity aParity, final BitEncoding aBitEncoding, final BitOrder aBitOrder, final BitLevel aIdleLevel )
     {
       this.baudRate = aBaudRate;
       this.dataBits = aDataBits;
@@ -251,7 +250,6 @@ public class AsyncSerialDataDecoder
 
     /**
      * Returns the current value of bitEncoding.
-     * 
      */
     public BitEncoding getBitEncoding()
     {
@@ -260,7 +258,6 @@ public class AsyncSerialDataDecoder
 
     /**
      * Returns the current value of bitOrder.
-     * 
      */
     public BitOrder getBitOrder()
     {
@@ -269,7 +266,6 @@ public class AsyncSerialDataDecoder
 
     /**
      * Returns the current value of idleLevel.
-     * 
      */
     public BitLevel getIdleLevel()
     {
@@ -329,9 +325,9 @@ public class AsyncSerialDataDecoder
   /**
    * High voltage vs low voltage.
    */
-  public static enum BitLevel {
-    HIGH,
-    LOW;
+  public static enum BitLevel
+  {
+    HIGH, LOW;
 
     public BitLevel invert()
     {
@@ -344,15 +340,14 @@ public class AsyncSerialDataDecoder
     }
   }
 
-  /** 
-   * Mark means a "1", space means a "0" (regardless of which is high
-   * and which is low).
+  /**
+   * Mark means a "1", space means a "0" (regardless of which is high and which
+   * is low).
    */
-  public static enum BitValue {
-    SPACE,
-    MARK;
+  public static enum BitValue
+  {
+    SPACE, MARK;
   }
-
 
   /**
    * Helper class that can chop up a datastream into bits.
@@ -381,47 +376,51 @@ public class AsyncSerialDataDecoder
       this.time = 0;
       this.channelIndex = aChannelIndex;
       this.mask = ( 1 << aChannelIndex );
-      this.bitLength = AsyncSerialDataDecoder.this.configuration.getBitLength( AsyncSerialDataDecoder.this.dataSet.getSampleRate() );
+      this.bitLength = AsyncSerialDataDecoder.this.configuration.getBitLength( AsyncSerialDataDecoder.this.dataSet
+          .getSampleRate() );
     }
 
     // METHODS
 
     /**
-     * The level of the current bit (always the raw level, regardless of
-     * bit encoding settings).
+     * The level of the current bit (always the raw level, regardless of bit
+     * encoding settings).
      */
-    public BitLevel level() {
+    public BitLevel level()
+    {
       final long halfTime = ( long )( this.time + ( this.bitLength / 2 ) );
       final int level = AsyncSerialDataDecoder.this.getDataValue( halfTime, this.mask );
       return ( level == 0 ? BitLevel.LOW : BitLevel.HIGH );
     }
 
     /**
-     * The value of the current bit (this is its meaning depending on
-     * the bit encoding, regardless of voltage levels).
+     * The value of the current bit (this is its meaning depending on the bit
+     * encoding, regardless of voltage levels).
      */
-    public BitValue value() {
+    public BitValue value()
+    {
       if ( AsyncSerialDataDecoder.this.configuration.getBitEncoding() == BitEncoding.HIGH_IS_SPACE )
       {
-        return ( this.level() == BitLevel.HIGH ? BitValue.SPACE : BitValue.MARK );
+        return ( level() == BitLevel.HIGH ? BitValue.SPACE : BitValue.MARK );
       }
       else
       {
-        return ( this.level() == BitLevel.HIGH ? BitValue.MARK : BitValue.SPACE );
+        return ( level() == BitLevel.HIGH ? BitValue.MARK : BitValue.SPACE );
       }
     }
 
     /**
      * Skip over the current bit to the next one.
      */
-    public void next() {
+    public void next()
+    {
       this.time += this.bitLength;
       this.bitsSinceEdge++;
-      final long start = ( long )( this.time - this.bitLength * 0.25 - 1);
-      final long end = ( long )( this.time + this.bitLength * 0.25 + 1);
+      final long start = ( long )( this.time - this.bitLength * 0.25 - 1 );
+      final long end = ( long )( this.time + this.bitLength * 0.25 + 1 );
 
       // Find an edge in the area where we would expect one
-      final long edge = AsyncSerialDataDecoder.this.findEdge(this.channelIndex, Edge.NONE, start, end);
+      final long edge = AsyncSerialDataDecoder.this.findEdge( this.channelIndex, Edge.NONE, start, end );
       if ( edge >= 0 )
       {
         // Found an edge, skip to that timestamp instead.
@@ -439,7 +438,8 @@ public class AsyncSerialDataDecoder
     /**
      * Jump to the bit starting at the given time (sample number).
      */
-    public void jumpTo( long time ) {
+    public void jumpTo( long time )
+    {
       this.time = time;
       /**
        * Assume we're jumping here because our caller found an edge.
@@ -451,22 +451,22 @@ public class AsyncSerialDataDecoder
     /**
      * The sample time of the start of the current bit.
      */
-    public long time() {
+    public long time()
+    {
       return ( long )( this.time );
     }
 
     /**
-     * The average bit length for sequences of bits found between two
-     * edges (e.g., the ones of which we can be fairly certain of their
-     * length, unlike for example trailing MARK bits, which blend into
-     * the stop bits and any idle time after the byte).
+     * The average bit length for sequences of bits found between two edges
+     * (e.g., the ones of which we can be fairly certain of their length, unlike
+     * for example trailing MARK bits, which blend into the stop bits and any
+     * idle time after the byte).
      */
     public double averageBitLength()
     {
-      return ( this.confirmedSamples /  this.confirmedBits );
+      return ( this.confirmedSamples / this.confirmedBits );
     }
   }
-
 
   /**
    * Denotes the number of stop bits, as used in serial protocols to indicate an
@@ -585,10 +585,9 @@ public class AsyncSerialDataDecoder
     setProgress( 0 );
 
     long start = findStartBit( aChannelIndex, idleLevel.nextEdge(), startOfDecode, endOfDecode );
-    int symbolCount = 0;
     while ( ( start >= 0 ) && ( ( endOfDecode - start ) > frameSize ) )
     {
-      extractor.jumpTo(start);
+      extractor.jumpTo( start );
 
       if ( ( extractor.level() != idleLevel.invert() ) && ( this.callback != null ) )
       {
@@ -621,7 +620,6 @@ public class AsyncSerialDataDecoder
       }
 
       // fully decoded a single symbol...
-      symbolCount++;
       if ( this.callback != null )
       {
         this.callback.onSymbol( aChannelIndex, symbol, startTime, endTime );
@@ -637,10 +635,11 @@ public class AsyncSerialDataDecoder
 
         // Even parity means total number of marks (including the parity
         // bit) should be even, odd means they should be odd.
-        if ( ( parity.isOdd() && ( marks % 2 == 0 ) ) || ( parity.isEven() && ( marks % 2 == 1) ) )
+        if ( ( parity.isOdd() && ( marks % 2 == 0 ) ) || ( parity.isEven() && ( marks % 2 == 1 ) ) )
         {
           this.callback.onError( aChannelIndex, ErrorType.PARITY, extractor.time() );
         }
+
         extractor.next();
       }
 
@@ -651,7 +650,8 @@ public class AsyncSerialDataDecoder
       }
 
       // Find start bit after the stop bit
-      start = findStartBit( aChannelIndex, idleLevel.nextEdge(), (long)( extractor.time() + (  bitLength / 2 ) ), endOfDecode );
+      start = findStartBit( aChannelIndex, idleLevel.nextEdge(), ( long )( extractor.time() + ( bitLength / 2 ) ),
+          endOfDecode );
 
       // Check length of stopbit
       final long endOfStopbit = extractor.time() + ( long )( stopBits.getValue() * bitLength );
