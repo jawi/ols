@@ -399,7 +399,7 @@ public class ElementGroup implements IUIElement
   @Override
   public String getLabel()
   {
-    return null; // XXX
+    return getName();
   }
   
   /**
@@ -582,7 +582,7 @@ public class ElementGroup implements IUIElement
   @Override
   public void setLabel( String aLabel )
   {
-    // TODO Auto-generated method stub
+    setName( aLabel );
   }
 
   /**

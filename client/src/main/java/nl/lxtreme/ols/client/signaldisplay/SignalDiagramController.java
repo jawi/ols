@@ -555,29 +555,37 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
       // Update the selected channel index...
       newIndex = signalElement.getChannel().getIndex();
     }
-
     if ( oldIndex != newIndex )
     {
       model.setSelectedChannelIndex( newIndex );
+    }
 
-      ChannelLabelsView channelLabelsView = getChannelLabelsView();
-      if ( channelLabelsView != null )
+    ChannelLabelsView channelLabelsView = getChannelLabelsView();
+    if ( channelLabelsView != null )
+    {
+      Rectangle rect;
+      int width = channelLabelsView.getWidth();
+
+      // Repaint the affected areas
+      if ( signalElement != null )
       {
-        int width = channelLabelsView.getWidth();
+        rect = new Rectangle( 0, signalElement.getYposition(), width, signalElement.getHeight() );
+        channelLabelsView.repaint( rect );
 
-        // Repaint the affected areas
-        if ( signalElement != null )
-        {
-          Rectangle rect1 = new Rectangle( 0, signalElement.getYposition(), width, signalElement.getHeight() );
-          channelLabelsView.repaint( rect1 );
-        }
+        ElementGroup signalGroup = signalElement.getGroup();
+        rect = new Rectangle( 0, signalGroup.getYposition(), width, signalGroup.getHeight() );
+        channelLabelsView.repaint( rect );
+      }
 
-        SignalElement currentElement = model.getSignalElementManager().getDigitalSignalByChannelIndex( oldIndex );
-        if ( currentElement != null )
-        {
-          Rectangle rect2 = new Rectangle( 0, currentElement.getYposition(), width, currentElement.getHeight() );
-          channelLabelsView.repaint( rect2 );
-        }
+      SignalElement currentElement = model.getSignalElementManager().getDigitalSignalByChannelIndex( oldIndex );
+      if ( currentElement != null )
+      {
+        rect = new Rectangle( 0, currentElement.getYposition(), width, currentElement.getHeight() );
+        channelLabelsView.repaint( rect );
+
+        ElementGroup currentGroup = currentElement.getGroup();
+        rect = new Rectangle( 0, currentGroup.getYposition(), width, currentGroup.getHeight() );
+        channelLabelsView.repaint( rect );
       }
     }
   }

@@ -107,7 +107,9 @@ public interface UIManagerKeys
   /** The font used for the channel label texts. */
   String CHANNELLABELS_LABEL_FONT = "ols.channellabels.label.font";
   /** The foreground color used to display the channel label texts. */
-  String CHANNELLABELS_LABEL_FOREGROUND_COLOR = "ols.channellabels.label.foreground.color";
+  String CHANNELLABELS_SIGNALLABEL_FOREGROUND_COLOR = "ols.channellabels.label.foreground.color";
+  /** The foreground color used to display the channel label texts. */
+  String CHANNELLABELS_GROUPLABEL_FOREGROUND_COLOR = "ols.channellabels.grouplabel.foreground.color";
   /** The first gradient color used as background for the channel labels. */
   String CHANNELLABELS_LABEL_GRADIENT_COLOR1 = "ols.channellabels.label.gradient.1.color";
   /** The second gradient color used as background for the channel labels. */

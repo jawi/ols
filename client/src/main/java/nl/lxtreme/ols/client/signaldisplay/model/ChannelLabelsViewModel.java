@@ -162,6 +162,21 @@ public class ChannelLabelsViewModel extends AbstractViewModel
   }
 
   /**
+   * Returns the foreground color for the labels themselves.
+   * 
+   * @return a color, never <code>null</code>.
+   */
+  public Color getGroupLabelForegroundColor()
+  {
+    Color color = UIManager.getColor( CHANNELLABELS_GROUPLABEL_FOREGROUND_COLOR );
+    if ( color == null )
+    {
+      color = Color.WHITE;
+    }
+    return color;
+  }
+
+  /**
    * Returns the gutter width.
    * 
    * @return a width, in pixels.
@@ -223,21 +238,6 @@ public class ChannelLabelsViewModel extends AbstractViewModel
       font = UIManager.getFont( "Label.font" );
     }
     return font;
-  }
-
-  /**
-   * Returns the foreground color for the labels themselves.
-   * 
-   * @return a color, never <code>null</code>.
-   */
-  public Color getLabelForegroundColor()
-  {
-    Color color = UIManager.getColor( CHANNELLABELS_LABEL_FOREGROUND_COLOR );
-    if ( color == null )
-    {
-      color = Color.WHITE;
-    }
-    return color;
   }
 
   /**
@@ -328,6 +328,21 @@ public class ChannelLabelsViewModel extends AbstractViewModel
     minWidth = Math.max( minWidth, getMinimalWidth() );
 
     return minWidth;
+  }
+
+  /**
+   * Returns the foreground color for the labels themselves.
+   * 
+   * @return a color, never <code>null</code>.
+   */
+  public Color getSignalLabelForegroundColor()
+  {
+    Color color = UIManager.getColor( CHANNELLABELS_SIGNALLABEL_FOREGROUND_COLOR );
+    if ( color == null )
+    {
+      color = Color.WHITE;
+    }
+    return color;
   }
 
   /**

@@ -110,10 +110,14 @@ public class ChannelLabelsUI extends ComponentUI
 
       for ( IUIElement element : elements )
       {
-        if ( !( element instanceof ElementGroup ) )
+        if ( element instanceof ElementGroup )
         {
-          paintBackground( canvas, model, element, compWidth );
-          paintLabel( canvas, model, element, compWidth );
+          paintGroupLabel( canvas, model, ( ElementGroup )element, compWidth );
+        }
+        else if ( element instanceof SignalElement )
+        {
+          paintBackground( canvas, model, ( SignalElement )element, compWidth );
+          paintSignalLabel( canvas, model, ( SignalElement )element, compWidth );
         }
 
         canvas.translate( 0, element.getHeight() + spacingY );
@@ -189,7 +193,7 @@ public class ChannelLabelsUI extends ComponentUI
    *          the width of the background, in pixels.
    */
   private void paintBackground( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel,
-      final IUIElement aElement, final int aWidth )
+      final SignalElement aElement, final int aWidth )
   {
     final int arcWidth = aModel.getArcWidth();
 
@@ -229,40 +233,34 @@ public class ChannelLabelsUI extends ComponentUI
    * @param aWidth
    *          the width of the channel label, in pixels.
    */
-  private void paintLabel( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel, final IUIElement aElement,
-      final int aWidth )
+  private void paintSignalLabel( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel,
+      final SignalElement aElement, final int aWidth )
   {
     String label = aElement.getLabel();
     int aHeight = aElement.getHeight();
+    boolean highlight = false;
+    Color labelColor = aModel.getSignalLabelForegroundColor();
 
     String index = "";
-    if ( aElement instanceof SignalElement )
+    if ( aElement.isDigitalSignal() && aModel.isShowChannelIndex() )
     {
-      SignalElement signalElement = ( SignalElement )aElement;
-      if ( signalElement.isDigitalSignal() && aModel.isShowChannelIndex() )
-      {
-        index = Integer.toString( signalElement.getChannel().getIndex() );
-      }
+      index = Integer.toString( aElement.getChannel().getIndex() );
     }
+    highlight = isSelectedElement( aElement, aModel );
 
-    boolean labelDefined = !"".equals( label.trim() );
-    boolean indexDefined = !"".equals( index.trim() );
-
-    Font labelFont = aModel.getLabelFont();
-    FontMetrics labelFm = aCanvas.getFontMetrics( labelFont );
-
-    Font indexFont = aModel.getIndexFont();
-    FontMetrics indexFm = aCanvas.getFontMetrics( indexFont );
+    boolean labelDefined = label != null && !"".equals( label.trim() );
+    boolean indexDefined = index != null && !"".equals( index.trim() );
 
     int padding = aModel.getHorizontalPadding();
-
-    Rectangle2D labelBounds = labelFm.getStringBounds( label, aCanvas );
-    Rectangle2D indexBounds = indexFm.getStringBounds( index, aCanvas );
-
     final double middle = ( aHeight / 2.0 );
 
     if ( labelDefined )
     {
+      Font labelFont = aModel.getLabelFont();
+      FontMetrics labelFm = aCanvas.getFontMetrics( labelFont );
+
+      Rectangle2D labelBounds = labelFm.getStringBounds( label, aCanvas );
+
       final int labelXpos = ( int )( aWidth - labelBounds.getWidth() - padding );
       final int labelYpos;
       if ( !indexDefined )
@@ -274,8 +272,7 @@ public class ChannelLabelsUI extends ComponentUI
         labelYpos = ( int )( middle - labelFm.getDescent() );
       }
 
-      Color labelColor = aModel.getLabelForegroundColor();
-      if ( isSelectedElement( aElement, aModel ) )
+      if ( highlight )
       {
         labelColor = ColorUtils.getHighlightColor( labelColor, 2.0f );
       }
@@ -286,6 +283,11 @@ public class ChannelLabelsUI extends ComponentUI
 
     if ( indexDefined )
     {
+      Font indexFont = aModel.getIndexFont();
+      FontMetrics indexFm = aCanvas.getFontMetrics( indexFont );
+
+      Rectangle2D indexBounds = indexFm.getStringBounds( index, aCanvas );
+
       final int indexXpos = ( int )( aWidth - indexBounds.getWidth() - padding );
       final int indexYpos;
       if ( !labelDefined )
@@ -299,6 +301,49 @@ public class ChannelLabelsUI extends ComponentUI
 
       aCanvas.setFont( indexFont );
       drawLabel( aCanvas, aModel, index, aModel.getIndexForegroundColor(), indexXpos, indexYpos );
+    }
+  }
+
+  /**
+   * @param aCanvas
+   *          the canvas to paint on, cannot be <code>null</code>;
+   * @param aModel
+   *          the model to use, cannot be <code>null</code>;
+   * @param aElement
+   *          the signal element to display the label + annotation for, cannot
+   *          be <code>null</code>.
+   * @param aWidth
+   *          the width of the channel label, in pixels.
+   */
+  private void paintGroupLabel( final Graphics2D aCanvas, final ChannelLabelsViewModel aModel,
+      final ElementGroup aElement, final int aWidth )
+  {
+    String label = aElement.getLabel();
+    int aHeight = aElement.getHeight();
+
+    Color labelColor = aModel.getGroupLabelForegroundColor();
+    boolean highlight = aElement.getDigitalSignalByChannelIndex( aModel.getSelectedChannelIndex() ) != null;
+    boolean labelDefined = label != null && !"".equals( label.trim() );
+
+    int padding = aModel.getHorizontalPadding();
+
+    if ( labelDefined )
+    {
+      Font labelFont = aModel.getLabelFont();
+      FontMetrics labelFm = aCanvas.getFontMetrics( labelFont );
+
+      Rectangle2D labelBounds = labelFm.getStringBounds( label, aCanvas );
+
+      final int labelXpos = padding;
+      final int labelYpos = ( int )( aHeight - labelBounds.getMaxY() );
+
+      if ( highlight )
+      {
+        labelColor = ColorUtils.getHighlightColor( labelColor, 2.0f );
+      }
+
+      aCanvas.setFont( labelFont );
+      drawLabel( aCanvas, aModel, label, labelColor, labelXpos, labelYpos );
     }
   }
 }
