@@ -30,11 +30,11 @@
 			<artifactId>org.apache.felix.configadmin</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.dependencymanager</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.dependencymanager</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.jgoodies</groupId>
 			<artifactId>looks</artifactId>
@@ -67,11 +67,11 @@
 			<artifactId>client</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-        <dependency>
-            <groupId>nl.lxtreme.ols.client</groupId>
-            <artifactId>client.project</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.client</groupId>
+			<artifactId>client.project</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>logging</artifactId>
@@ -82,11 +82,11 @@
 			<artifactId>service.acquisition</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-        <dependency>
-            <groupId>nl.lxtreme.ols</groupId>
-            <artifactId>service.io</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>service.io</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>service.taskexecution</artifactId>
@@ -97,11 +97,11 @@
 			<artifactId>lib.mydoggy</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-        <dependency>
-            <groupId>nl.lxtreme.ols</groupId>
-            <artifactId>util</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols</groupId>
+			<artifactId>util</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols</groupId>
 			<artifactId>test.util</artifactId>
@@ -177,11 +177,11 @@
 			<artifactId>serialconsole</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-        <dependency>
-            <groupId>nl.lxtreme.ols.tool</groupId>
-            <artifactId>linedecoder</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+		<dependency>
+			<groupId>nl.lxtreme.ols.tool</groupId>
+			<artifactId>linedecoder</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<dependency>
 			<groupId>nl.lxtreme.ols.export</groupId>
 			<artifactId>image</artifactId>
@@ -246,26 +246,6 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<configuration>
-							<descriptors>
-								<descriptor>${basedir}/src/main/assembly/api-assembly.xml</descriptor>
-								<descriptor>${basedir}/src/main/assembly/assembly.xml</descriptor>
-							</descriptors>
-							<appendAssemblyId>true</appendAssemblyId>
-							<finalName>ols-${ols.version}</finalName>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
@@ -295,4 +275,66 @@
 			</resource>
 		</resources>
 	</build>
+	<profiles>
+		<profile>
+			<id>windowsPlatform</id>
+			<activation>
+				<os>
+					<family>windows</family>
+				</os>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>make-assembly</id>
+								<phase>package</phase>
+								<goals>
+									<goal>single</goal>
+								</goals>
+								<configuration>
+									<descriptors>
+										<descriptor>${basedir}/src/main/assembly/assemblyWin.xml</descriptor>
+									</descriptors>
+									<appendAssemblyId>true</appendAssemblyId>
+									<finalName>ols-${ols.version}</finalName>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>make-assembly</id>
+								<phase>package</phase>
+								<goals>
+									<goal>single</goal>
+								</goals>
+								<configuration>
+									<descriptors>
+										<descriptor>${basedir}/src/main/assembly/api-assembly.xml</descriptor>
+										<descriptor>${basedir}/src/main/assembly/assembly.xml</descriptor>
+									</descriptors>
+									<appendAssemblyId>true</appendAssemblyId>
+									<finalName>ols-${ols.version}</finalName>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
