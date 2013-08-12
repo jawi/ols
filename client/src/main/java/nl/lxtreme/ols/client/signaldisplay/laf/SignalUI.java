@@ -262,89 +262,87 @@ public class SignalUI extends ComponentUI
 
     for ( IUIElement element : aSignalElements )
     {
-      if ( element instanceof ElementGroup )
+      if ( element instanceof SignalElement )
       {
-        continue;
-      }
-
-      SignalElement signalElement = ( SignalElement )element;
-      if ( signalElement.isDigitalSignal() )
-      {
-        // Tell Swing how we would like to render ourselves...
-        aCanvas.setRenderingHints( createSignalRenderingHints( aModel.isRenderAnnotationAntiAliased() ) );
-
-        aCanvas.setColor( signalElement.getColor() );
-
-        if ( signalElement.isEnabled() )
+        SignalElement signalElement = ( SignalElement )element;
+        if ( signalElement.isDigitalSignal() )
         {
-          final AnnotationsHelper helper = new AnnotationsHelper( signalElement );
+          // Tell Swing how we would like to render ourselves...
+          aCanvas.setRenderingHints( createSignalRenderingHints( aModel.isRenderAnnotationAntiAliased() ) );
 
-          aCanvas.setFont( aModel.getAnnotationFont() );
+          aCanvas.setColor( signalElement.getColor() );
 
-          final FontMetrics fm = aCanvas.getFontMetrics();
-          final int fontHeight = fm.getHeight();
-
-          for ( DataAnnotation<?> ann : helper.getAnnotations( DataAnnotation.class, startTimestamp, endTimestamp ) )
+          if ( signalElement.isEnabled() )
           {
-            final long annStartTime = ann.getStartTimestamp();
-            final long annEndTime = ann.getEndTimestamp();
+            final AnnotationsHelper helper = new AnnotationsHelper( signalElement );
 
-            int x1 = ( int )( annStartTime * zoomFactor );
-            int x2 = ( int )( annEndTime * zoomFactor );
-            int y1 = signalElement.getOffset( aModel.getAnnotationAlignment() );
-            int y2 = y1 + signalElement.getSignalHeight();
-            int midY = y1 + ( ( y2 - y1 ) / 2 );
+            aCanvas.setFont( aModel.getAnnotationFont() );
 
-            final String annText = ann.getAnnotation().toString();
+            final FontMetrics fm = aCanvas.getFontMetrics();
+            final int fontHeight = fm.getHeight();
 
-            final int annotationWidth = ( x2 - x1 ) + 2;
-
-            final Composite oldComposite = aCanvas.getComposite();
-            final Stroke oldStroke = aCanvas.getStroke();
-
-            aCanvas.setComposite( alphaComposite );
-
-            // Fade out the signal itself...
-            aCanvas.setColor( aModel.getBackgroundColor() );
-            if ( annotationRenderStyle )
+            for ( DataAnnotation<?> ann : helper.getAnnotations( DataAnnotation.class, startTimestamp, endTimestamp ) )
             {
-              aCanvas.fillRect( x1, y1 + 0, annotationWidth, ( y2 - y1 ) + 1 );
-            }
-            else
-            {
-              aCanvas.fillRect( x1, y1 + 1, annotationWidth, ( y2 - y1 ) - 1 );
-            }
+              final long annStartTime = ann.getStartTimestamp();
+              final long annEndTime = ann.getEndTimestamp();
 
-            aCanvas.setComposite( oldComposite );
+              int x1 = ( int )( annStartTime * zoomFactor );
+              int x2 = ( int )( annEndTime * zoomFactor );
+              int y1 = signalElement.getOffset( aModel.getAnnotationAlignment() );
+              int y2 = y1 + signalElement.getSignalHeight();
+              int midY = y1 + ( ( y2 - y1 ) / 2 );
 
-            // Draw the thick white boundaries...
-            aCanvas.setColor( aModel.getAnnotationColor() );
-            aCanvas.setStroke( stroke );
-            aCanvas.drawLine( x1, y1 + 2, x1, y2 - 2 );
-            aCanvas.drawLine( x2, y1 + 2, x2, y2 - 2 );
+              final String annText = ann.getAnnotation().toString();
 
-            aCanvas.setStroke( oldStroke );
+              final int annotationWidth = ( x2 - x1 ) + 2;
 
-            final int textWidth = fm.stringWidth( annText );
-            final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
+              final Composite oldComposite = aCanvas.getComposite();
+              final Stroke oldStroke = aCanvas.getStroke();
 
-            if ( textXoffset > 0 )
-            {
-              int x3 = ( x1 + textXoffset );
-              if ( annotationRenderStyle && ( ( x3 - 4 ) > 0 ) )
+              aCanvas.setComposite( alphaComposite );
+
+              // Fade out the signal itself...
+              aCanvas.setColor( aModel.getBackgroundColor() );
+              if ( annotationRenderStyle )
               {
-                aCanvas.drawLine( x1, midY, x3 - 4, midY );
-                aCanvas.drawLine( x3 + textWidth + 8, midY, x2, midY );
+                aCanvas.fillRect( x1, y1 + 0, annotationWidth, ( y2 - y1 ) + 1 );
+              }
+              else
+              {
+                aCanvas.fillRect( x1, y1 + 1, annotationWidth, ( y2 - y1 ) - 1 );
               }
 
-              aCanvas.drawString( annText, x1 + textXoffset, y1 + fontHeight );
+              aCanvas.setComposite( oldComposite );
+
+              // Draw the thick white boundaries...
+              aCanvas.setColor( aModel.getAnnotationColor() );
+              aCanvas.setStroke( stroke );
+              aCanvas.drawLine( x1, y1 + 2, x1, y2 - 2 );
+              aCanvas.drawLine( x2, y1 + 2, x2, y2 - 2 );
+
+              aCanvas.setStroke( oldStroke );
+
+              final int textWidth = fm.stringWidth( annText );
+              final int textXoffset = ( int )( ( annotationWidth - textWidth ) / 2.0 );
+
+              if ( textXoffset > 0 )
+              {
+                int x3 = ( x1 + textXoffset );
+                if ( annotationRenderStyle && ( ( x3 - 4 ) > 0 ) )
+                {
+                  aCanvas.drawLine( x1, midY, x3 - 4, midY );
+                  aCanvas.drawLine( x3 + textWidth + 8, midY, x2, midY );
+                }
+
+                aCanvas.drawString( annText, x1 + textXoffset, y1 + fontHeight );
+              }
             }
           }
         }
       }
 
       // Advance to the next channel...
-      aCanvas.translate( 0, signalElement.getHeight() + aModel.getSignalElementSpacing() );
+      aCanvas.translate( 0, element.getHeight() + aModel.getSignalElementSpacing() );
     }
   }
 
