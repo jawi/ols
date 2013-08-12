@@ -2,6 +2,21 @@ OpenBench LogicSniffer Client ChangeLog
 =======================================
 J.W. Janssen, <j.w.janssen@lxtreme.nl>
 
+Release 0.9.7:
+- Added support for creating "busses"/channel groups;
+- added option to auto-center capture on trigger moment;
+- added support for Logic Pirate (thanks to M.Gritsch) & Arduino Generic Logic
+  Analyzer devices (thanks to A.Gillham);
+- allow capture rates beyond 100MHz to be used;
+- updated the serial console plugin to enable VT220 emulation;
+- fixed crashes when running OLS client on recent 3.x Linux kernels;
+- fixed several issues when installing the OLS client under "Program Files"
+  in Windows 7;
+- fixed startup scripts for Linux/Solaris and Windows;
+- fixed issues #27, #96, #104, #118, #121, #123, #125, #126, #128, #129, #131,
+  #132, #133, #136, #140, #141, #143, #144, #147, #148, #149, #150, #151, 
+  #152, #158, #159, #160, #161, #167, #173, #179, #180, #181, #187;
+- as usual, small improvements and cleanups.
 
 Release 0.9.6.1:
 - Fixed issue #120, serial problems on recent Linux kernels.
