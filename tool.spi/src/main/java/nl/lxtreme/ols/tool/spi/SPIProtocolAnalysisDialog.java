@@ -206,6 +206,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
   private JEditorPane outText;
   private JCheckBox reportCS;
   private JCheckBox honourCS;
+  private JCheckBox invertCS;
 
   private RestorableAction runAnalysisAction;
   private Action exportAction;
@@ -441,6 +442,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     toolTask.setProtocol( ( SPIFIMode )this.spifiMode.getSelectedItem() );
     toolTask.setReportCS( this.reportCS.isSelected() );
     toolTask.setHonourCS( this.honourCS.isSelected() );
+    toolTask.setInvertCS( this.invertCS.isSelected() );
     toolTask.setOrder( ( BitOrder )this.order.getSelectedItem() );
     toolTask.setSPIMode( ( SPIMode )this.mode.getSelectedItem() );
 
@@ -712,6 +714,12 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     this.honourCS.setToolTipText( "Whether or not to use /CS in analysis results?" );
     this.honourCS.setSelected( false );
     settings.add( this.honourCS );
+
+    settings.add( createRightAlignedLabel( "Invert CS?" ) );
+    this.invertCS = new JCheckBox();
+    this.invertCS.setToolTipText( "Whether CS is default high (= unchecked) or default low (= checked)." );
+    this.invertCS.setSelected( false );
+    settings.add( this.invertCS );
 
     SpringLayoutUtils.makeEditorGrid( settings, 10, 4 );
 

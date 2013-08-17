@@ -62,6 +62,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   private BitOrder bitOrder;
   private boolean reportCS;
   private boolean honourCS;
+  private boolean invertCS;
   private int mosiIdx;
   private int misoIdx;
   private int io2Idx;
@@ -87,6 +88,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     this.misoIdx = -1;
     this.mosiIdx = -1;
     this.protocol = SPIFIMode.STANDARD;
+    this.invertCS = false; // high-to-low
   }
 
   // METHODS
@@ -200,6 +202,18 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   public void setHonourCS( final boolean aHonourCS )
   {
     this.honourCS = aHonourCS;
+  }
+
+  /**
+   * Sets whether CS is default high, or default low.
+   * 
+   * @param aInvertCS
+   *          <code>true</code> if CS is default low, <code>false</code> if CS
+   *          is default high.
+   */
+  public void setInvertCS( final boolean aInvertCS )
+  {
+    this.invertCS = aInvertCS;
   }
 
   /**
@@ -358,13 +372,13 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
       {
         reportCsLow( aDataSet, idx );
 
-        slaveSelected = true;
+        slaveSelected = !this.invertCS;
       }
       else if ( slaveSelectEdge.isRising() )
       {
         reportCsHigh( aDataSet, idx );
 
-        slaveSelected = false;
+        slaveSelected = this.invertCS;
         // it could be that we're waiting until a next clock cycle comes along;
         // however, the /CS signal might be going up before that cycle actually
         // comes...
@@ -709,7 +723,9 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     for ( int i = aStartIndex + 1; i < aEndIndex; i++ )
     {
       final int csValue = values[i] & csMask;
-      if ( oldCsValue > csValue )
+      Edge edge = Edge.toEdge( oldCsValue, csValue );
+      
+      if ( this.invertCS && edge.isRising() || !this.invertCS && edge.isFalling() )
       {
         // found first falling edge; start decoding from here...
         if ( LOG.isLoggable( Level.FINE ) )
