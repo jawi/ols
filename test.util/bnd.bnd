@@ -1,0 +1,8 @@
+-buildpath: osgi.core;version=4.2.0,\
+	osgi.cmpn;version=4.2.0,\
+	api;version=latest,\
+	util;version=latest,\
+	org.mockito.mockito-all;version=1.9.0
+Export-Package: nl.lxtreme.ols.test,\
+	nl.lxtreme.ols.test.data,\
+	nl.lxtreme.ols.test.data.project

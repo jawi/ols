@@ -1,0 +1,8 @@
+-buildpath: osgi.core;version=4.2.0,\
+	osgi.cmpn;version=4.2.0.200908310645,\
+	org.apache.felix.dependencymanager;version=3.1.0,\
+	api;version=latest,\
+	util;version=latest,\
+	org.mockito.mockito-all;version=1.9.0
+Private-Package: nl.lxtreme.ols.task.execution
+Bundle-Activator: nl.lxtreme.ols.task.execution.Activator

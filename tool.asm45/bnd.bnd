@@ -1,0 +1,14 @@
+-buildpath: \
+	osgi.core;version=4.2.0,\
+	osgi.cmpn;version=4.2.0,\
+	org.mockito.mockito-all;version=1.9.0,\
+	test.util;version=latest,\
+	api;version=latest,\
+	util;version=latest,\
+	tool.base;version=latest
+Bundle-Name: An HP9845 assembler decoder tool for the OLS client.
+Bundle-Copyright: Ansgar Kueckes (C) 2011-2013
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+Private-Package: nl.lxtreme.ols.tool.asm45
+OLS-Tool: 1.0
+OLS-ToolClass: nl.lxtreme.ols.tool.asm45.Asm45Analyser

@@ -1,0 +1,15 @@
+Test-Cases: ${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
+-runbundles: org.mockito.mockito-all
+Private-Package: nl.lxtreme.ols.io.serial.test
+-runee: JavaSE-1.6
+-runvm: -ea
+-runfw: org.apache.felix.framework
+-buildpath: osgi.core;version='[4.2,5)',\
+	osgi.cmpn,\
+	junit.osgi,\
+	org.mockito.mockito-all,\
+	api;version=latest,\
+	service.io;version=latest,\
+	rxtx;version=0.0.17,\
+	util;version=latest
+-runsystempackages: sun.reflect

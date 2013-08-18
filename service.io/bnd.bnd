@@ -1,0 +1,14 @@
+-buildpath: osgi.core;version=4.2.0,\
+	osgi.cmpn;version=4.2.0.200908310645,\
+	org.apache.felix.dependencymanager;version=3.1.0,\
+	org.mockito.mockito-all;version=1.9.0,\
+	api;version=latest,\
+	util;version=latest,\
+	rxtx;version=0.0.17
+Private-Package: \
+	nl.lxtreme.ols.io,\
+	nl.lxtreme.ols.io.serial,\
+	nl.lxtreme.ols.io.socket
+Export-Package: \
+	javax.microedition.io
+Bundle-Activator: nl.lxtreme.ols.io.Activator

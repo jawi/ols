@@ -1,0 +1,6 @@
+-buildpath: osgi.core;version=4.2.0,\
+	osgi.cmpn;version=4.2.0.200908310645,\
+	org.apache.felix.dependencymanager;version=3.1.0,\
+	api;version=latest
+Private-Package: nl.lxtreme.ols.acquisition
+Bundle-Activator: nl.lxtreme.ols.acquisition.Activator

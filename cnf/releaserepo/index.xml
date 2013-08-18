@@ -1,0 +1,417 @@
+<?xml version='1.0' encoding='utf-8'?>
+<repository increment='1376832057033' name='Release' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='lib.mydoggy'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='b24d82aff1e20a76dcbef447f0771ff837af0b7584e9192d2475ce53a53ac4f0'/>
+      <attribute name='url' value='lib.mydoggy/lib.mydoggy-1.5.0.jar'/>
+      <attribute name='size' type='Long' value='941123'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.common'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.common.context'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.common.element'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.common.object'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.event'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.actions'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.cleaner'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.common.context'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.descriptors'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.persistence'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.persistence.xml'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.persistence.xml.merge'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.support'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.animation'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.cmp'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.cmp.border'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.cmp.event'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.cmp.multisplit'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.content'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.content.action'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.drag'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.icons'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.images'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.look'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.messages'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.translucent'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.transparency'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.noos.xing.mydoggy.plaf.ui.util'/>
+      <attribute name='version' type='Version' value='1.5.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='info.clearthought.layout'/>
+      <attribute name='version' type='Version' value='20050920.0.0'/>
+      <attribute name='bundle-symbolic-name' value='lib.mydoggy'/>
+      <attribute name='bundle-version' type='Version' value='1.5.0.r1389'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.accessibility)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.imageio)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.swing)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.swing.border)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.swing.event)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.swing.plaf)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.swing.plaf.basic)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.swing.plaf.metal)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.xml.parsers)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.w3c.dom)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.xml.sax)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.xml.sax.helpers)'/>
+    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='rxtx'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='8ae4b44a46f317ca4e50b815d2819e103c74f25c3b3c26764dda1f3e2c935d35'/>
+      <attribute name='url' value='rxtx/rxtx-0.0.17.jar'/>
+      <attribute name='size' type='Long' value='882036'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.darwin'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.linux-amd64'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.linux-i386'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.ptr'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.sunos-amd64'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.sunos-sparc'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.sunos-sparcv9'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.sunos-x86'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.w32ce-arm'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.win32'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.win32-amd64'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='com.sun.jna.win32-x86'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.freebsd'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.linux'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.macosx'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.solaris'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.testsuite'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.windows'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='jtermios.windows.testsuite'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='purejavacomm'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='purejavacomm.example'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='purejavacomm.testsuite'/>
+      <attribute name='version' type='Version' value='0.0.17'/>
+      <attribute name='bundle-symbolic-name' value='rxtx'/>
+      <attribute name='bundle-version' type='Version' value='0.0.17'/>
+    </capability>
+  </resource>
+</repository>

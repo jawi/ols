@@ -1,0 +1,8 @@
+-buildpath: org.apache.felix.dependencymanager;version=3.1.0,\
+	osgi.core;version=4.2.0,\
+	osgi.cmpn;version=4.2.0
+Private-Package: nl.lxtreme.ols.logging
+Bundle-Activator: nl.lxtreme.ols.logging.Activator
+Bundle-Name: Provides a logger redirector.
+Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html

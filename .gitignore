@@ -5,6 +5,9 @@ eclipse/run/
 **/.project
 **/.classpath
 **/.settings/
+**/generated/
+**/bin/
+**/bin_test/
 **/*.iml
 **/*.ipr
 **/*.iws
