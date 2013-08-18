@@ -288,6 +288,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
     this.spifiMode.setSelectedIndex( aSettings.getInt( "protocol", this.spifiMode.getSelectedIndex() ) );
     this.reportCS.setSelected( aSettings.getBoolean( "reportCS", this.reportCS.isSelected() ) );
     this.honourCS.setSelected( aSettings.getBoolean( "honourCS", this.honourCS.isSelected() ) );
+    this.invertCS.setSelected( aSettings.getBoolean( "invertCS", this.invertCS.isSelected() ) );
 
     // Issue #114: avoid setting illegal values...
     setComboBoxIndex( this.sck, aSettings, "sck" );
@@ -340,6 +341,7 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
   {
     aSettings.putBoolean( "reportCS", this.reportCS.isSelected() );
     aSettings.putBoolean( "honourCS", this.honourCS.isSelected() );
+    aSettings.putBoolean( "invertCS", this.invertCS.isSelected() );
     aSettings.putInt( "protocol", this.spifiMode.getSelectedIndex() );
     aSettings.putInt( "sck", this.sck.getSelectedIndex() );
     aSettings.putInt( "miso", this.miso.getSelectedIndex() );
