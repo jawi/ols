@@ -1,5 +1,4 @@
--runrequires: \
-	osgi.identity;filter:='(osgi.identity=org.apache.felix.dependencymanager)',\
+-runrequires: osgi.identity;filter:='(osgi.identity=org.apache.felix.dependencymanager)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.dependencymanager.shell)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.gogo.command)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.gogo.runtime)',\
@@ -12,6 +11,7 @@
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.log)',\
 	osgi.identity;filter:='(&(osgi.identity=mydoggy-osgi)(version>=1.5.0))',\
 	osgi.identity;filter:='(&(osgi.identity=jvt220)(version>=1.1.1))',\
+	osgi.identity;filter:='(&(osgi.identity=purejavacomm)(version>=0.0.17))',\
 	osgi.identity;filter:='(osgi.identity=logging)',\
 	osgi.identity;filter:='(osgi.identity=api)',\
 	osgi.identity;filter:='(osgi.identity=util)',\
@@ -33,7 +33,10 @@
 	osgi.identity;filter:='(osgi.identity=tool.serialconsole)',\
 	osgi.identity;filter:='(osgi.identity=tool.spi)',\
 	osgi.identity;filter:='(osgi.identity=tool.state)',\
-	osgi.identity;filter:='(osgi.identity=tool.uart)'
+	osgi.identity;filter:='(osgi.identity=tool.uart)',\
+	osgi.identity;filter:='(osgi.identity=export.csv)',\
+	osgi.identity;filter:='(osgi.identity=export.image)',\
+	osgi.identity;filter:='(osgi.identity=export.vcd)'
 -runfw: org.apache.felix.framework;version='[4.2,5.0)'
 -runee: JavaSE-1.6
 -runbundles: \
@@ -50,14 +53,15 @@
 	org.apache.felix.prefs;version='[1.0.4,1.0.5)',\
 	mydoggy-osgi;version='[1.5.0,1.5.1)',\
 	jvt220;version='[1.1.1,1.1.2)',\
+	purejavacomm;version='[0.0.17,0.0.18)',\
 	logging;version=latest,\
 	api;version=latest,\
+	util;version=latest,\
 	client;version=latest,\
 	client.project;version=latest,\
 	device.generic;version=latest,\
 	device.logicsniffer;version=latest,\
 	device.test;version=latest,\
-	rxtx;version='[0.0.17,0.0.18)',\
 	service.acquisition;version=latest,\
 	service.io;version=latest,\
 	service.taskexecution;version=latest,\
@@ -72,10 +76,12 @@
 	tool.spi;version=latest,\
 	tool.state;version=latest,\
 	tool.uart;version=latest,\
-	util;version=latest
+	export.csv;version=latest,\
+	export.image;version=latest,\
+	export.vcd;version=latest
 -runproperties: \
     felix.fileinstall.dir=./conf,\
-    felix.fileinstall.log.level=9,\
+    felix.fileinstall.log.level=1,\
     felix.fileinstall.noInitialDelay=true,\
 	org.apache.felix.log.storeDebug=true,\
     org.apache.felix.log.maxSize=-1
