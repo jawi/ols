@@ -112,14 +112,14 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
       String[] names = getMenuItemNames();
       if ( names.length == 0 )
       {
-        for ( int i = 0, size = menu.getItemCount(); i < size; i++ )
+        for ( int i = menu.getItemCount() - 1; i > 0; i-- )
         {
           final JMenuItem item = menu.getItem( i );
-          if ( item instanceof AbstractButton )
+          if ( item != null )
           {
             this.group.remove( item );
+            menu.remove( item );
           }
-          menu.remove( item );
         }
 
         JMenuItem noDevicesItem = new JMenuItem( getNoItemsName() );

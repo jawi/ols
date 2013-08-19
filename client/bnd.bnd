@@ -5,11 +5,12 @@
 	util;version=latest,\
 	test.util;version=latest,\
 	org.mockito.mockito-all;version=1.9.0,\
-	lib.mydoggy;version=1.5.0
+	mydoggy-osgi;version=1.5.0
 Bundle-Name: The (main) user interface for the OLS client.
 Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
 Bundle-Activator: nl.lxtreme.ols.client.Activator
+Import-Package: !nl.lxtreme.ols.test.*, !org.junit.*, !org.mockito.*, *
 Private-Package: nl.lxtreme.ols.client,\
 	nl.lxtreme.ols.client.about,\
 	nl.lxtreme.ols.client.action,\

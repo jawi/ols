@@ -10,6 +10,7 @@ OLS-DeviceClass: org.sump.device.logicsniffer.LogicSnifferDevice
 	api;version=latest,\
 	util;version=latest,\
 	rxtx;version=0.0.17
+Import-Package: !nl.lxtreme.ols.test.*, !org.junit.*, !org.mockito.*, *
 Private-Package: org.sump.device.logicsniffer,\
 	org.sump.device.logicsniffer.profile,\
 	org.sump.device.logicsniffer.protocol,\

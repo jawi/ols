@@ -3,6 +3,7 @@
 Bundle-Name: A testing device driver for the OLS client
 Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+Import-Package: !nl.lxtreme.ols.test.*, !org.junit.*, !org.mockito.*, *
 Private-Package: nl.lxtreme.ols.device.test
 OLS-Device: 1.0
 OLS-DeviceClass: nl.lxtreme.ols.device.test.TestDevice
