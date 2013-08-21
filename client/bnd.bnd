@@ -10,7 +10,7 @@ Bundle-Name: The (main) user interface for the OLS client.
 Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
 Bundle-Activator: nl.lxtreme.ols.client.Activator
-Import-Package: !nl.lxtreme.ols.test.*, !org.junit.*, !org.mockito.*, *
+
 Private-Package: nl.lxtreme.ols.client,\
 	nl.lxtreme.ols.client.about,\
 	nl.lxtreme.ols.client.action,\

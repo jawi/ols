@@ -4,7 +4,7 @@
 	api;version=latest
 Private-Package: nl.lxtreme.ols.util.internal
 Bundle-Activator: nl.lxtreme.ols.util.internal.Activator
-Import-Package: !nl.lxtreme.ols.test.*, !org.junit.*, !org.mockito.*, *
+
 Export-Package: nl.lxtreme.ols.util,\
 	nl.lxtreme.ols.util.analysis,\
 	nl.lxtreme.ols.util.export,\

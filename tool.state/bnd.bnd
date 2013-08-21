@@ -9,7 +9,7 @@
 Bundle-Name: A state decoder tool for the OLS client.
 Bundle-Copyright: Michael Poppitz (sump.org), J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
-Import-Package: !nl.lxtreme.ols.test.*, !org.junit.*, !org.mockito.*, *
+
 Private-Package: nl.lxtreme.ols.tool.state
 OLS-Tool: 1.0
 OLS-ToolClass: nl.lxtreme.ols.tool.state.StateAnalyser

@@ -5,7 +5,7 @@
 	api;version=latest,\
 	util;version=latest,\
 	rxtx;version=0.0.17
-Import-Package: !nl.lxtreme.ols.test.*, !org.junit.*, !org.mockito.*, org.osgi.service.io;version="[1.0,2.0)", *
+
 Private-Package: \
 	nl.lxtreme.ols.io,\
 	nl.lxtreme.ols.io.serial,\

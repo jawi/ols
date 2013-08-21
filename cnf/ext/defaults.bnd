@@ -20,8 +20,8 @@ project.name: ${p}
 # Java Compiler Options
 java:         java
 javac:        javac
-javac.source: 1.5
-javac.target: 1.5
+javac.source: 1.6
+javac.target: 1.6
 javac.debug:  on
 
 # Bnd Options

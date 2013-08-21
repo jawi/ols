@@ -2,6 +2,6 @@
 	osgi.cmpn;version=4.2.0.200908310645,\
 	org.apache.felix.dependencymanager;version=3.1.0,\
 	api;version=latest
-Import-Package: !nl.lxtreme.ols.test.*, !org.junit.*, !org.mockito.*, *
+
 Private-Package: nl.lxtreme.ols.acquisition
 Bundle-Activator: nl.lxtreme.ols.acquisition.Activator
