@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="project" default="build">
+	<import file="../cnf/build.xml" />
+
+	<target name="prepareRelease">
+		<property name="release.dir" value="${target}/release" />
+
+		<path id="bndCP">
+			<fileset dir="../cnf/plugins/biz.aQute.bnd">
+				<include name="biz.aQute.bnd-2.2.0.jar" />
+			</fileset>
+		</path>
+
+		<taskdef name="createDist" classname="aQute.bnd.ant.RunconfigToDistributionTask" classpathref="bndCP" />
+
+		<delete dir="${release.dir}" />
+		<createDist rootDir="../" allowSnapshots="true" bndFile="local.bndrun" outputdir="${release.dir}" />
+	</target>
+</project>
