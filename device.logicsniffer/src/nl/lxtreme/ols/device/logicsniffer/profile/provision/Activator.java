@@ -15,51 +15,42 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
- * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package org.sump.device.logicsniffer;
+package nl.lxtreme.ols.device.logicsniffer.profile.provision;
 
-
-import java.util.*;
-
-import nl.lxtreme.ols.device.logicsniffer.profile.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
-import org.osgi.framework.Constants;
 import org.osgi.service.cm.*;
+import org.osgi.service.log.*;
 
 
 /**
- * Provides a bundle-activator for the LogicSniffer device.
+ * Provides a bundle activator.
  */
 public class Activator extends DependencyActivatorBase
 {
-  // METHODS
-
   /**
    * {@inheritDoc}
    */
   @Override
-  public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
+  public void destroy( BundleContext aContext, DependencyManager aManager ) throws Exception
   {
-    // NO-op
+    // Nop
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void init( final BundleContext aContext, final DependencyManager aManager ) throws Exception
+  public void init( BundleContext aContext, DependencyManager aManager ) throws Exception
   {
-    Dictionary<String, String> props = new Hashtable<String, String>();
-    props.put( Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
-
-    aManager.add( //
-        createComponent() //
-            .setInterface( ManagedServiceFactory.class.getName(), props ) //
-            .setImplementation( new DeviceProfileManager() ) //
-        );
+    aManager.add( createComponent()
+        .setImplementation( ProfileProvisioner.class )
+        .add( createServiceDependency().setService( ConfigurationAdmin.class ).setRequired( true ) )
+        .add( createServiceDependency().setService( LogService.class ).setRequired( false ) )
+    );
   }
 }

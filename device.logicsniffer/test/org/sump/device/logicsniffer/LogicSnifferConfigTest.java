@@ -22,9 +22,9 @@ package org.sump.device.logicsniffer;
 
 
 import static org.junit.Assert.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 
 import org.junit.*;
-import org.sump.device.logicsniffer.profile.*;
 
 
 /**

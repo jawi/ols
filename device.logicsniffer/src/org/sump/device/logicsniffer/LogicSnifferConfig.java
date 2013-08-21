@@ -22,9 +22,9 @@ package org.sump.device.logicsniffer;
 
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
-import org.sump.device.logicsniffer.profile.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 import org.sump.device.logicsniffer.protocol.*;
 
 

@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package org.sump.device.logicsniffer.profile;
+package nl.lxtreme.ols.device.logicsniffer.profile;
 
 
 import java.util.*;

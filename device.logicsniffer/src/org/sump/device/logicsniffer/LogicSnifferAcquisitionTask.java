@@ -31,9 +31,9 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.util.*;
 
-import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.protocol.*;
 import org.sump.device.logicsniffer.sampleprocessor.*;
 

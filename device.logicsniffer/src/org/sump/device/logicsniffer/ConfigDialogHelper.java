@@ -26,10 +26,9 @@ import java.util.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.TriggerType;
 import nl.lxtreme.ols.util.*;
-
-import org.sump.device.logicsniffer.profile.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
 
 
 /**

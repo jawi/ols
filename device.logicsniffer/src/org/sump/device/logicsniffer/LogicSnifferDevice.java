@@ -29,14 +29,13 @@ import javax.microedition.io.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
-import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.osgi.service.io.*;
-import org.sump.device.logicsniffer.profile.*;
 
 
 /**
@@ -195,7 +194,7 @@ public class LogicSnifferDevice implements Device
    */
   protected void init( final Component aComponent )
   {
-    final String pmFilter = String.format( "(%s=%s)", Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
+    final String pmFilter = String.format( "(%s=%s)", org.osgi.framework.Constants.SERVICE_PID, DeviceProfileManager.SERVICE_PID );
 
     aComponent //
         .add( this.dependencyManager.createServiceDependency() //

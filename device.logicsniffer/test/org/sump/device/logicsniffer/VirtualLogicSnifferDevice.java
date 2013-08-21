@@ -21,6 +21,7 @@
 package org.sump.device.logicsniffer;
 
 
+import static nl.lxtreme.ols.device.logicsniffer.profile.Constants.*;
 import static org.junit.Assert.*;
 
 import java.io.*;
@@ -31,10 +32,10 @@ import javax.microedition.io.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
-import org.sump.device.logicsniffer.profile.*;
 import org.sump.device.logicsniffer.protocol.*;
 
 
@@ -410,31 +411,30 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
       throws org.osgi.service.cm.ConfigurationException
   {
     Properties properties = new Properties();
-    properties.put( DeviceProfile.DEVICE_CAPTURECLOCK, "INTERNAL" );
-    properties.put( DeviceProfile.DEVICE_CAPTURESIZE_BOUND, "false" );
-    properties.put( DeviceProfile.DEVICE_CAPTURESIZES, "4096,2048,1024,512,256,128,64,32,16" );
-    properties.put( DeviceProfile.DEVICE_CHANNEL_COUNT, "32" );
-    properties.put( DeviceProfile.DEVICE_CHANNEL_GROUPS, "4" );
-    properties.put( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
-    properties.put( DeviceProfile.DEVICE_CLOCKSPEED, "100000000" );
-    properties.put( DeviceProfile.DEVICE_DIVIDER_CLOCKSPEED, "100000000" );
-    properties.put( DeviceProfile.DEVICE_DESCRIPTION, aType.concat( " Device Profile" ) );
-    properties.put( DeviceProfile.DEVICE_FEATURE_NOISEFILTER, "true" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_RLE, "true" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_TEST_MODE, "true" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_TRIGGERS, "true" );
-    properties.put( DeviceProfile.DEVICE_INTERFACE, "SERIAL" );
-    properties.put( DeviceProfile.DEVICE_METADATA_KEYS, aMetadataKeys );
-    properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "0" );
-    properties.put( DeviceProfile.DEVICE_OPEN_PORT_DTR, "false" );
-    properties.put( DeviceProfile.DEVICE_RECEIVE_TIMEOUT, "12" );
-    properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "true" );
-    properties.put( DeviceProfile.DEVICE_SAMPLERATES, "1000000" );
-    properties.put( DeviceProfile.DEVICE_SUPPORTS_DDR, "true" );
-    properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );
-    properties.put( DeviceProfile.DEVICE_TRIGGER_STAGES, "4" );
-    properties.put( DeviceProfile.DEVICE_TYPE, aType );
-    properties.put( DeviceProfile.FELIX_FILEINSTALL_FILENAME, "" );
+    properties.put( DEVICE_CAPTURECLOCK, "INTERNAL" );
+    properties.put( DEVICE_CAPTURESIZE_BOUND, "false" );
+    properties.put( DEVICE_CAPTURESIZES, "4096,2048,1024,512,256,128,64,32,16" );
+    properties.put( DEVICE_CHANNEL_COUNT, "32" );
+    properties.put( DEVICE_CHANNEL_GROUPS, "4" );
+    properties.put( DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
+    properties.put( DEVICE_CLOCKSPEED, "100000000" );
+    properties.put( DEVICE_DIVIDER_CLOCKSPEED, "100000000" );
+    properties.put( DEVICE_DESCRIPTION, aType.concat( " Device Profile" ) );
+    properties.put( DEVICE_FEATURE_NOISEFILTER, "true" );
+    properties.put( DEVICE_FEATURE_RLE, "true" );
+    properties.put( DEVICE_FEATURE_TEST_MODE, "true" );
+    properties.put( DEVICE_FEATURE_TRIGGERS, "true" );
+    properties.put( DEVICE_INTERFACE, "SERIAL" );
+    properties.put( DEVICE_METADATA_KEYS, aMetadataKeys );
+    properties.put( DEVICE_OPEN_PORT_DELAY, "0" );
+    properties.put( DEVICE_OPEN_PORT_DTR, "false" );
+    properties.put( DEVICE_RECEIVE_TIMEOUT, "12" );
+    properties.put( DEVICE_SAMPLE_REVERSE_ORDER, "true" );
+    properties.put( DEVICE_SAMPLERATES, "1000000" );
+    properties.put( DEVICE_SUPPORTS_DDR, "true" );
+    properties.put( DEVICE_TRIGGER_COMPLEX, "true" );
+    properties.put( DEVICE_TRIGGER_STAGES, "4" );
+    properties.put( DEVICE_TYPE, aType );
     // Update the properties of a 'virtual' PID...
     getDeviceProfileManager().updated( "PID-" + aType, properties );
 

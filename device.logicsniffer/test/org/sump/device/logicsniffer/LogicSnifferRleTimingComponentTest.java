@@ -27,6 +27,8 @@ import java.io.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
@@ -35,8 +37,6 @@ import org.junit.runners.*;
 import org.junit.runners.Parameterized.Parameters;
 import org.osgi.service.cm.*;
 import org.sump.device.logicsniffer.VirtualLogicSnifferDevice.SampleProvider;
-import org.sump.device.logicsniffer.profile.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
 
 
 /**

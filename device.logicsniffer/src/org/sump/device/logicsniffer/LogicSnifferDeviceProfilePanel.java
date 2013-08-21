@@ -33,9 +33,8 @@ import javax.swing.plaf.basic.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.devices.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.util.swing.*;
-
-import org.sump.device.logicsniffer.profile.*;
 
 
 /**

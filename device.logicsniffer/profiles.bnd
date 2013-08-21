@@ -1,0 +1,3 @@
+-includeresource: profiles=profiles
+Private-Package: nl.lxtreme.ols.device.logicsniffer.profile.provision
+Bundle-Activator: nl.lxtreme.ols.device.logicsniffer.profile.provision.Activator

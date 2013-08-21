@@ -18,18 +18,19 @@
  * 
  * Copyright (C) 2010-2011 J.W. Janssen, www.lxtreme.nl
  */
-package org.sump.device.logicsniffer.profile;
+package nl.lxtreme.ols.device.logicsniffer.profile;
 
-
+import static nl.lxtreme.ols.device.logicsniffer.profile.Constants.*;
 import static org.junit.Assert.*;
 
 import java.io.*;
 import java.util.*;
 
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.DeviceInterface;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
+
 import org.junit.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
-import org.sump.device.logicsniffer.profile.DeviceProfile.DeviceInterface;
-import org.sump.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
 
 
 /**
@@ -89,7 +90,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetCaptureClockFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_CAPTURECLOCK, "test" );
+    mutateProperty( DEVICE_CAPTURECLOCK, "test" );
     this.profile.getCaptureClock();
   }
 
@@ -108,7 +109,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetCaptureSizesFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_CAPTURESIZES, "test" );
+    mutateProperty( DEVICE_CAPTURESIZES, "test" );
     this.profile.getCaptureSizes();
   }
 
@@ -128,7 +129,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetChannelCountFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_CHANNEL_COUNT, "test" );
+    mutateProperty( DEVICE_CHANNEL_COUNT, "test" );
     this.profile.getChannelCount();
   }
 
@@ -147,7 +148,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetChannelGroupCountFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_CHANNEL_GROUPS, "test" );
+    mutateProperty( DEVICE_CHANNEL_GROUPS, "test" );
     this.profile.getChannelGroupCount();
   }
 
@@ -166,7 +167,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetChannelNumberingSchemesFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "test" );
+    mutateProperty( DEVICE_CHANNEL_NUMBERING_SCHEMES, "test" );
     this.profile.getChannelNumberingSchemes();
   }
 
@@ -185,7 +186,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetClockspeedFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_CLOCKSPEED, "test" );
+    mutateProperty( DEVICE_CLOCKSPEED, "test" );
     this.profile.getClockspeed();
   }
 
@@ -222,7 +223,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetIntegerFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_INTERFACE, "test" );
+    mutateProperty( DEVICE_INTERFACE, "test" );
     this.profile.getInterface();
   }
 
@@ -256,7 +257,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetOpenPortDelayFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "test" );
+    mutateProperty( DEVICE_OPEN_PORT_DELAY, "test" );
     this.profile.getOpenPortDelay();
   }
 
@@ -275,7 +276,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetSampleRatesFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_SAMPLERATES, "test" );
+    mutateProperty( DEVICE_SAMPLERATES, "test" );
     this.profile.getSampleRates();
   }
 
@@ -295,7 +296,7 @@ public class DeviceProfileTest
   @Test( expected = IllegalArgumentException.class )
   public void testGetTriggerStagesFail()
   {
-    mutateProperty( DeviceProfile.DEVICE_TRIGGER_STAGES, "test" );
+    mutateProperty( DEVICE_TRIGGER_STAGES, "test" );
     this.profile.getTriggerStages();
   }
 
@@ -444,7 +445,7 @@ public class DeviceProfileTest
   public void testSetIncompletePropertiesFail()
   {
     final Properties props = getMockedProperties();
-    props.remove( DeviceProfile.DEVICE_CAPTURECLOCK );
+    props.remove( DEVICE_CAPTURECLOCK );
     new DeviceProfile().setProperties( props );
   }
 
@@ -458,7 +459,7 @@ public class DeviceProfileTest
   @Test
   public void testUnicodeEscapedValueOk()
   {
-    mutateProperty( DeviceProfile.DEVICE_DESCRIPTION, "Test \u2039\u00a2 description" );
+    mutateProperty( DEVICE_DESCRIPTION, "Test \u2039\u00a2 description" );
     assertEquals( "Test \u2039\u00a2 description", this.profile.getDescription() );
   }
 
@@ -468,31 +469,30 @@ public class DeviceProfileTest
   private Properties getMockedProperties()
   {
     Properties properties = new Properties();
-    properties.put( DeviceProfile.DEVICE_CAPTURECLOCK, "INTERNAL" );
-    properties.put( DeviceProfile.DEVICE_CAPTURESIZE_BOUND, "true" );
-    properties.put( DeviceProfile.DEVICE_CAPTURESIZES, "2048, 3072, 4096, 6144, 12288, 24576" );
-    properties.put( DeviceProfile.DEVICE_CHANNEL_COUNT, "4" );
-    properties.put( DeviceProfile.DEVICE_CHANNEL_GROUPS, "1" );
-    properties.put( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
-    properties.put( DeviceProfile.DEVICE_CLOCKSPEED, "1000000" );
-    properties.put( DeviceProfile.DEVICE_DIVIDER_CLOCKSPEED, "1000000" );
-    properties.put( DeviceProfile.DEVICE_DESCRIPTION, "Mocked Device Profile" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_NOISEFILTER, "false" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_RLE, "false" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_TEST_MODE, "true" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_TRIGGERS, "false" );
-    properties.put( DeviceProfile.DEVICE_INTERFACE, "SERIAL" );
-    properties.put( DeviceProfile.DEVICE_METADATA_KEYS, "a,b,\"a b c\"" );
-    properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "10" );
-    properties.put( DeviceProfile.DEVICE_OPEN_PORT_DTR, "true" );
-    properties.put( DeviceProfile.DEVICE_RECEIVE_TIMEOUT, "12" );
-    properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "false" );
-    properties.put( DeviceProfile.DEVICE_SAMPLERATES, "5,6,7" );
-    properties.put( DeviceProfile.DEVICE_SUPPORTS_DDR, "true" );
-    properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );
-    properties.put( DeviceProfile.DEVICE_TRIGGER_STAGES, "0" );
-    properties.put( DeviceProfile.DEVICE_TYPE, "MOCK" );
-    properties.put( DeviceProfile.FELIX_FILEINSTALL_FILENAME, "" );
+    properties.put( DEVICE_CAPTURECLOCK, "INTERNAL" );
+    properties.put( DEVICE_CAPTURESIZE_BOUND, "true" );
+    properties.put( DEVICE_CAPTURESIZES, "2048, 3072, 4096, 6144, 12288, 24576" );
+    properties.put( DEVICE_CHANNEL_COUNT, "4" );
+    properties.put( DEVICE_CHANNEL_GROUPS, "1" );
+    properties.put( DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
+    properties.put( DEVICE_CLOCKSPEED, "1000000" );
+    properties.put( DEVICE_DIVIDER_CLOCKSPEED, "1000000" );
+    properties.put( DEVICE_DESCRIPTION, "Mocked Device Profile" );
+    properties.put( DEVICE_FEATURE_NOISEFILTER, "false" );
+    properties.put( DEVICE_FEATURE_RLE, "false" );
+    properties.put( DEVICE_FEATURE_TEST_MODE, "true" );
+    properties.put( DEVICE_FEATURE_TRIGGERS, "false" );
+    properties.put( DEVICE_INTERFACE, "SERIAL" );
+    properties.put( DEVICE_METADATA_KEYS, "a,b,\"a b c\"" );
+    properties.put( DEVICE_OPEN_PORT_DELAY, "10" );
+    properties.put( DEVICE_OPEN_PORT_DTR, "true" );
+    properties.put( DEVICE_RECEIVE_TIMEOUT, "12" );
+    properties.put( DEVICE_SAMPLE_REVERSE_ORDER, "false" );
+    properties.put( DEVICE_SAMPLERATES, "5,6,7" );
+    properties.put( DEVICE_SUPPORTS_DDR, "true" );
+    properties.put( DEVICE_TRIGGER_COMPLEX, "true" );
+    properties.put( DEVICE_TRIGGER_STAGES, "0" );
+    properties.put( DEVICE_TYPE, "MOCK" );
     return properties;
   }
 

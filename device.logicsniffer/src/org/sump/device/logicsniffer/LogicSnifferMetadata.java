@@ -24,8 +24,7 @@ package org.sump.device.logicsniffer;
 import java.util.*;
 
 import nl.lxtreme.ols.api.devices.*;
-
-import org.sump.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 
 
 /**

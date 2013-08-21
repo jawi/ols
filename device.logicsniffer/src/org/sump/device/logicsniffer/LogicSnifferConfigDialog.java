@@ -36,17 +36,17 @@ import javax.swing.plaf.basic.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.util.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.DeviceInterface;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.TriggerType;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.NumberUtils.UnitDefinition;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
 
-import org.sump.device.logicsniffer.profile.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.CaptureClockSource;
-import org.sump.device.logicsniffer.profile.DeviceProfile.DeviceInterface;
-import org.sump.device.logicsniffer.profile.DeviceProfile.NumberingScheme;
-import org.sump.device.logicsniffer.profile.DeviceProfile.TriggerType;
 import org.sump.device.logicsniffer.protocol.*;
 
 import purejavacomm.*;

@@ -1,0 +1,11 @@
+Bundle-Name: A OLS-device driver for the OLS client.
+Bundle-Copyright: Michael Poppitz (sump.org), J.W. Janssen (lxtreme.nl) (C) 2010-2013
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+OLS-Device: 1.0
+OLS-DeviceClass: org.sump.device.logicsniffer.LogicSnifferDevice
+*
+Private-Package: org.sump.device.logicsniffer,\
+	nl.lxtreme.ols.device.logicsniffer.profile,\
+	org.sump.device.logicsniffer.protocol,\
+	org.sump.device.logicsniffer.sampleprocessor
+Bundle-Activator: org.sump.device.logicsniffer.Activator

@@ -27,11 +27,11 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
-import org.sump.device.logicsniffer.profile.*;
-import org.sump.device.logicsniffer.protocol.*;
-
 import nl.lxtreme.ols.api.task.*;
+import nl.lxtreme.ols.device.logicsniffer.profile.*;
 import nl.lxtreme.ols.util.*;
+
+import org.sump.device.logicsniffer.protocol.*;
 
 
 /**

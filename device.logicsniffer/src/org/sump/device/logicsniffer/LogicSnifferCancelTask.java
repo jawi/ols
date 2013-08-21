@@ -26,9 +26,9 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
-import org.sump.device.logicsniffer.protocol.*;
-
 import nl.lxtreme.ols.api.devices.*;
+
+import org.sump.device.logicsniffer.protocol.*;
 
 
 /**

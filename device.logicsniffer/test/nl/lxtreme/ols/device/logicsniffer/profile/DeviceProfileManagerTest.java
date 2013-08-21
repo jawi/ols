@@ -18,9 +18,9 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package org.sump.device.logicsniffer.profile;
+package nl.lxtreme.ols.device.logicsniffer.profile;
 
-
+import static nl.lxtreme.ols.device.logicsniffer.profile.Constants.*;
 import static org.junit.Assert.*;
 
 import java.util.*;
@@ -90,32 +90,30 @@ public class DeviceProfileManagerTest
   private Properties getMockedProperties( final String aType, final String aMetadataKeys )
   {
     Properties properties = new Properties();
-    properties.put( DeviceProfile.DEVICE_CAPTURECLOCK, "INTERNAL" );
-    properties.put( DeviceProfile.DEVICE_CAPTURESIZE_BOUND, "false" );
-    properties.put( DeviceProfile.DEVICE_CAPTURESIZES, "1,2,3,4" );
-    properties.put( DeviceProfile.DEVICE_CHANNEL_COUNT, "4" );
-    properties.put( DeviceProfile.DEVICE_CHANNEL_GROUPS, "1" );
-    properties.put( DeviceProfile.DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
-    properties.put( DeviceProfile.DEVICE_CLOCKSPEED, "1000000" );
-    properties.put( DeviceProfile.DEVICE_DIVIDER_CLOCKSPEED, "1000000" );
-    properties.put( DeviceProfile.DEVICE_DESCRIPTION, "Mocked Device Profile" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_NOISEFILTER, "false" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_RLE, "false" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_TEST_MODE, "true" );
-    properties.put( DeviceProfile.DEVICE_FEATURE_TRIGGERS, "false" );
-    properties.put( DeviceProfile.DEVICE_INTERFACE, "SERIAL" );
-    properties.put( DeviceProfile.DEVICE_METADATA_KEYS, aMetadataKeys );
-    properties.put( DeviceProfile.DEVICE_OPEN_PORT_DELAY, "10" );
-    properties.put( DeviceProfile.DEVICE_OPEN_PORT_DTR, "true" );
-    properties.put( DeviceProfile.DEVICE_RECEIVE_TIMEOUT, "12" );
-    properties.put( DeviceProfile.DEVICE_SAMPLE_REVERSE_ORDER, "false" );
-    properties.put( DeviceProfile.DEVICE_SAMPLERATES, "5,6,7" );
-    properties.put( DeviceProfile.DEVICE_SUPPORTS_DDR, "true" );
-    properties.put( DeviceProfile.DEVICE_TRIGGER_COMPLEX, "true" );
-    properties.put( DeviceProfile.DEVICE_TRIGGER_STAGES, "0" );
-    properties.put( DeviceProfile.DEVICE_TYPE, aType );
-    properties.put( DeviceProfile.FELIX_FILEINSTALL_FILENAME, "" );
+    properties.put( DEVICE_CAPTURECLOCK, "INTERNAL" );
+    properties.put( DEVICE_CAPTURESIZE_BOUND, "false" );
+    properties.put( DEVICE_CAPTURESIZES, "1,2,3,4" );
+    properties.put( DEVICE_CHANNEL_COUNT, "4" );
+    properties.put( DEVICE_CHANNEL_GROUPS, "1" );
+    properties.put( DEVICE_CHANNEL_NUMBERING_SCHEMES, "DEFAULT" );
+    properties.put( DEVICE_CLOCKSPEED, "1000000" );
+    properties.put( DEVICE_DIVIDER_CLOCKSPEED, "1000000" );
+    properties.put( DEVICE_DESCRIPTION, "Mocked Device Profile" );
+    properties.put( DEVICE_FEATURE_NOISEFILTER, "false" );
+    properties.put( DEVICE_FEATURE_RLE, "false" );
+    properties.put( DEVICE_FEATURE_TEST_MODE, "true" );
+    properties.put( DEVICE_FEATURE_TRIGGERS, "false" );
+    properties.put( DEVICE_INTERFACE, "SERIAL" );
+    properties.put( DEVICE_METADATA_KEYS, aMetadataKeys );
+    properties.put( DEVICE_OPEN_PORT_DELAY, "10" );
+    properties.put( DEVICE_OPEN_PORT_DTR, "true" );
+    properties.put( DEVICE_RECEIVE_TIMEOUT, "12" );
+    properties.put( DEVICE_SAMPLE_REVERSE_ORDER, "false" );
+    properties.put( DEVICE_SAMPLERATES, "5,6,7" );
+    properties.put( DEVICE_SUPPORTS_DDR, "true" );
+    properties.put( DEVICE_TRIGGER_COMPLEX, "true" );
+    properties.put( DEVICE_TRIGGER_STAGES, "0" );
+    properties.put( DEVICE_TYPE, aType );
     return properties;
   }
-
 }

@@ -24,10 +24,10 @@ package org.sump.device.logicsniffer.protocol;
 import java.io.*;
 import java.util.logging.*;
 
+import nl.lxtreme.ols.device.logicsniffer.profile.DeviceProfile.*;
 import nl.lxtreme.ols.util.*;
 
 import org.sump.device.logicsniffer.*;
-import org.sump.device.logicsniffer.profile.DeviceProfile.*;
 
 
 /**
