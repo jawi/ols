@@ -21,34 +21,15 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import static nl.lxtreme.ols.tool.jtag.JTAGState.CAPTURE_DR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.CAPTURE_IR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.EXIT1_DR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.EXIT1_IR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.EXIT2_DR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.EXIT2_IR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.PAUSE_DR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.PAUSE_IR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.RUN_TEST_IDLE;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.SELECT_DR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.SELECT_IR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.SHIFT_DR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.SHIFT_IR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.TEST_LOGIC_RESET;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.UPDATE_DR;
-import static nl.lxtreme.ols.tool.jtag.JTAGState.UPDATE_IR;
+import static nl.lxtreme.ols.tool.jtag.JTAGState.*;
 
-import java.math.BigInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.math.*;
+import java.util.logging.*;
 
-import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
-import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
-import nl.lxtreme.ols.api.tools.ToolContext;
-import nl.lxtreme.ols.api.tools.ToolProgressListener;
-import nl.lxtreme.ols.api.tools.ToolTask;
-import nl.lxtreme.ols.tool.base.annotation.ChannelLabelAnnotation;
-import nl.lxtreme.ols.tool.base.annotation.SampleDataAnnotation;
+import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.tool.api.*;
+import nl.lxtreme.ols.tool.base.annotation.*;
 
 
 /**

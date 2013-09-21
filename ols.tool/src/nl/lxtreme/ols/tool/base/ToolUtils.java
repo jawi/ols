@@ -24,9 +24,10 @@ package nl.lxtreme.ols.tool.base;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+
 import javax.swing.*;
 
-import nl.lxtreme.ols.tool.base.ExportAware.*;
+import nl.lxtreme.ols.tool.base.ExportAware.ExportFormat;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction;

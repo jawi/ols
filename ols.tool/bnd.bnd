@@ -7,5 +7,4 @@
 	api;version=latest,\
 	util;version=latest,\
 	rxtx;version=0.0.17,\
-	jvt220-1.1.1.jar;version=file,\
-	test.util;version=latest
+	jvt220-1.1.1.jar;version=file

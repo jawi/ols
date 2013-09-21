@@ -18,9 +18,10 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.acquisition;
+package nl.lxtreme.ols.acquisition.impl;
 
 
+import nl.lxtreme.ols.acquisition.DataAcquisitionService;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.task.*;

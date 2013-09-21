@@ -31,9 +31,9 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.Configurable;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.task.*;
-import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
 

@@ -24,8 +24,8 @@ package nl.lxtreme.ols.client.action;
 import java.awt.*;
 import java.awt.event.*;
 
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.*;
+import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.*;
 
 

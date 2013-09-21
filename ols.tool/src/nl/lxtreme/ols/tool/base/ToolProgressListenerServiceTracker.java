@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.base;
 
 
-import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.osgi.*;
 
 import org.osgi.framework.*;

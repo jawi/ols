@@ -21,60 +21,25 @@
 package nl.lxtreme.ols.tool.serialdebug;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Enumeration;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.util.*;
 import java.util.List;
-import java.util.TooManyListenersException;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SpringLayout;
+import javax.swing.*;
 
-import nl.lxtreme.jvt220.terminal.ITerminal;
-import nl.lxtreme.jvt220.terminal.ITerminalFrontend;
-import nl.lxtreme.jvt220.terminal.swing.SwingFrontend;
-import nl.lxtreme.jvt220.terminal.vt220.AbstractTerminal;
-import nl.lxtreme.jvt220.terminal.vt220.VT220Terminal;
-import nl.lxtreme.ols.tool.base.ToolUtils;
-import nl.lxtreme.ols.util.HostUtils;
-import nl.lxtreme.ols.util.NumberUtils;
-import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
+import nl.lxtreme.jvt220.terminal.*;
+import nl.lxtreme.jvt220.terminal.swing.*;
+import nl.lxtreme.jvt220.terminal.vt220.*;
+import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
-import nl.lxtreme.ols.util.swing.component.JErrorDialog;
-import nl.lxtreme.ols.util.swing.component.JLazyComboBox;
-import purejavacomm.CommPortIdentifier;
-import purejavacomm.NoSuchPortException;
-import purejavacomm.PortInUseException;
-import purejavacomm.SerialPort;
-import purejavacomm.SerialPortEvent;
-import purejavacomm.SerialPortEventListener;
-import purejavacomm.UnsupportedCommOperationException;
+import nl.lxtreme.ols.util.swing.component.*;
+import purejavacomm.*;
 
 
 /**

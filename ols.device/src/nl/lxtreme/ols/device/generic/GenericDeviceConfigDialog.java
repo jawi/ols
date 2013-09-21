@@ -21,21 +21,18 @@
 package nl.lxtreme.ols.device.generic;
 
 
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
+
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.Configurable;
-import nl.lxtreme.ols.api.UserSettings;
-import nl.lxtreme.ols.util.NumberUtils;
-import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
-import nl.lxtreme.ols.util.swing.StandardActionFactory;
+import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
-import nl.lxtreme.ols.util.swing.validation.JComponentInputVerifier;
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
+import nl.lxtreme.ols.util.swing.validation.*;
 
 
 /**

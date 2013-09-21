@@ -31,22 +31,22 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.data.annotation.Annotation;
-import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
-import nl.lxtreme.ols.api.data.export.*;
+import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.api.devices.*;
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.device.api.*;
+import nl.lxtreme.ols.export.api.*;
+import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;

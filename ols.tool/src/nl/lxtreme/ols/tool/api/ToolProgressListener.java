@@ -18,18 +18,18 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.tools;
+package nl.lxtreme.ols.tool.api;
 
 
 /**
- * Provides a category for pluggable tools.
+ * Can be used to listen to the progress of the invocation of a tool.
  */
-public enum ToolCategory
+public interface ToolProgressListener
 {
-  /** Denotes a tool that processes and decodes acquisition data. */
-  DECODER,
-  /** Denotes a tool that measures something on acquisition data. */
-  MEASURE,
-  /** For tools that neither decode nor measure something. */
-  OTHER;
+  // METHODS
+
+  /**
+   * @param aPercentage
+   */
+  void setProgress( int aPercentage );
 }

@@ -18,19 +18,18 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.devices;
-
-
-import nl.lxtreme.ols.api.task.*;
+package nl.lxtreme.ols.tool.api;
 
 
 /**
- * Denotes a task that talk to by calling {@link #call()} on it. The
- * implementation of that method should cause the device to stop acquiring data,
- * if possible. If the device already finished its acquisition task, this task
- * should not lead to unpredictable results.
+ * Provides a category for pluggable tools.
  */
-public interface CancelTask extends Task<Void>
+public enum ToolCategory
 {
-  // No additional methods
+  /** Denotes a tool that processes and decodes acquisition data. */
+  DECODER,
+  /** Denotes a tool that measures something on acquisition data. */
+  MEASURE,
+  /** For tools that neither decode nor measure something. */
+  OTHER;
 }

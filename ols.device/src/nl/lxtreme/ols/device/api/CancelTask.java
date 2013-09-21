@@ -18,17 +18,19 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.tools;
+package nl.lxtreme.ols.device.api;
 
 
 import nl.lxtreme.ols.api.task.*;
 
 
 /**
- * Denotes a task that is performed by a tool, such as decoding data from
- * acquired data.
+ * Denotes a task that talk to by calling {@link #call()} on it. The
+ * implementation of that method should cause the device to stop acquiring data,
+ * if possible. If the device already finished its acquisition task, this task
+ * should not lead to unpredictable results.
  */
-public interface ToolTask<RESULT_TYPE> extends Task<RESULT_TYPE>
+public interface CancelTask extends Task<Void>
 {
   // No additional methods
 }

@@ -21,10 +21,10 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import java.math.BigInteger;
+import java.math.*;
 
-import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
-import nl.lxtreme.ols.api.data.BaseDataSet;
+import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.api.data.*;
 
 
 /**

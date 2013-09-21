@@ -22,13 +22,13 @@ package nl.lxtreme.ols.test.data;
 
 
 import static org.junit.Assert.*;
+
 import java.io.*;
 import java.net.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.test.data.project.*;
 import nl.lxtreme.ols.util.*;
 
@@ -218,116 +218,6 @@ public final class DataTestUtils
         .getBitMask( aChannelCount ), timestamps[aDataSize - 1] + 1L ) );
 
     return project;
-  }
-
-  /**
-   * Creates a (mocked) tool context starting at the given sample index and
-   * ending at the last available sample index.
-   * 
-   * @return a mocked tool context, never <code>null</code>.
-   */
-  public static ToolContext createToolContext( final AcquisitionResult aContainer )
-  {
-    final int startSampleIdx = Math.max( 0, aContainer.getSampleIndex( aContainer.getTriggerPosition() ) - 1 );
-    final int lastSampleIdx = aContainer.getValues().length - 1;
-    return createToolContext( aContainer, startSampleIdx, lastSampleIdx );
-  }
-
-  /**
-   * Creates a (mocked) tool context starting at the given sample index and
-   * ending at the last available sample index.
-   * 
-   * @param aStartSampleIdx
-   *          the starting sample index of the returned tool context;
-   * @return a mocked tool context, never <code>null</code>.
-   */
-  public static ToolContext createToolContext( final AcquisitionResult aContainer, final int aStartSampleIdx )
-  {
-    final int lastSampleIdx = aContainer.getValues().length - 1;
-    return createToolContext( aContainer, aStartSampleIdx, lastSampleIdx );
-  }
-
-  /**
-   * Creates a (mocked) tool context starting and ending at the given sample
-   * indexes.
-   * 
-   * @param aStartSampleIdx
-   *          the starting sample index of the returned tool context;
-   * @param aLastSampleIdx
-   *          the ending sample index of the returned tool context.
-   * @return a mocked tool context, never <code>null</code>.
-   */
-  public static ToolContext createToolContext( final AcquisitionResult aData, final int aStartSampleIdx,
-      final int aLastSampleIdx )
-  {
-    final Integer first = Integer.valueOf( Math.max( 0, aStartSampleIdx ) );
-    final Integer last = Integer.valueOf( Math.min( aLastSampleIdx, aData.getValues().length - 1 ) );
-    final Integer size = Integer.valueOf( last.intValue() - first.intValue() );
-
-    // Do NOT use Mockito#mock for this; it appears to slow things down *really*
-    // much...
-    return new ToolContext()
-    {
-      @Override
-      public int getChannels()
-      {
-        return aData.getChannels();
-      }
-
-      @Override
-      public Cursor getCursor( final int aSelectedIndex )
-      {
-        return new StubCursor( aSelectedIndex );
-      }
-
-      @Override
-      public AcquisitionResult getData()
-      {
-        return aData;
-      }
-
-      @Override
-      public int getEnabledChannels()
-      {
-        return aData.getEnabledChannels();
-      }
-
-      @Override
-      public int getEndSampleIndex()
-      {
-        return last.intValue();
-      }
-
-      @Override
-      public int getLength()
-      {
-        return size.intValue();
-      }
-
-      @Override
-      public int getStartSampleIndex()
-      {
-        return first.intValue();
-      }
-    };
-  }
-
-  /**
-   * Creates a (mocked) tool context starting and ending at the given sample
-   * indexes.
-   * 
-   * @param aStartSampleIdx
-   *          the starting sample index of the returned tool context;
-   * @param aLastSampleIdx
-   *          the ending sample index of the returned tool context.
-   * @return a mocked tool context, never <code>null</code>.
-   */
-  public static ToolContext createToolContext( final AcquisitionResult aData, final long aStartTimestamp,
-      final long aLastTimestamp )
-  {
-    int startIdx = aData.getSampleIndex( aStartTimestamp );
-    int endIdx = aData.getSampleIndex( aLastTimestamp );
-    return createToolContext( aData, startIdx, endIdx );
   }
 
   /**

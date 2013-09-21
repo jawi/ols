@@ -25,17 +25,17 @@ import java.awt.*;
 
 import javax.swing.*;
 
-import org.osgi.framework.*;
-
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.util.osgi.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
+
+import org.osgi.framework.*;
 
 
 /**

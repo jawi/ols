@@ -18,7 +18,7 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.acquisition;
+package nl.lxtreme.ols.acquisition.impl;
 
 
 import java.io.*;
@@ -26,11 +26,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.acquisition.AcquisitionResultStatus.ResultStatus;
-import nl.lxtreme.ols.api.devices.*;
 import nl.lxtreme.ols.api.task.*;
+import nl.lxtreme.ols.device.api.*;
 
 
 /**

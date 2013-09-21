@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.data.export;
+package nl.lxtreme.ols.export.api;
 
 
 import java.io.*;

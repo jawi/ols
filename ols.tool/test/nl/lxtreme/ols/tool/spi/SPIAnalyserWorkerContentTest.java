@@ -27,10 +27,9 @@ import java.net.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
-import nl.lxtreme.ols.api.tools.*;
-import nl.lxtreme.ols.test.*;
-import nl.lxtreme.ols.test.data.*;
+import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.tool.*;
+import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.NumberUtils.BitOrder;
 
 import org.junit.*;

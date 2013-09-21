@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.tools;
+package nl.lxtreme.ols.tool.api;
 
 
 import java.awt.*;

@@ -28,8 +28,9 @@ import static org.mockito.Mockito.*;
 import java.io.*;
 import java.util.concurrent.*;
 
+import javax.tools.*;
+
 import nl.lxtreme.ols.api.task.*;
-import nl.lxtreme.ols.api.tools.*;
 
 import org.junit.*;
 import org.mockito.*;

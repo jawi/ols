@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.linedecoder;
 
 
-import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.tool.api.*;
 
 
 /**

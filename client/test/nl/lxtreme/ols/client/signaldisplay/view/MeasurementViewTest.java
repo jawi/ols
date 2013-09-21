@@ -27,9 +27,7 @@ import java.net.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.client.signaldisplay.view.MeasurementView.PulseCountInfo;
-import nl.lxtreme.ols.test.*;
 import nl.lxtreme.ols.test.data.*;
 
 import org.junit.*;
@@ -102,12 +100,11 @@ public class MeasurementViewTest
     URL resource = ResourceUtils.getResource( getClass(), this.resourceName );
     AcquisitionResult container = DataTestUtils.getCapturedData( resource );
 
-    ToolContext toolContext = DataTestUtils.createToolContext( container );
-
+    int start = 0;
+    int end = container.getValues().length;
     int channel = 0;
 
-    MeasurementView.SignalMeasurer worker = new MeasurementView.SignalMeasurer( container, channel,
-        toolContext.getStartSampleIndex(), toolContext.getEndSampleIndex() );
+    MeasurementView.SignalMeasurer worker = new MeasurementView.SignalMeasurer( container, channel, start, end );
 
     this.result = worker.run();
     assertNotNull( this.result );

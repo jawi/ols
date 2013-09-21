@@ -21,11 +21,10 @@
 package nl.lxtreme.ols.task.execution;
 
 
-import org.osgi.framework.*;
-
 import nl.lxtreme.ols.api.task.*;
-import nl.lxtreme.ols.api.tools.*;
 import nl.lxtreme.ols.util.osgi.*;
+
+import org.osgi.framework.*;
 
 
 /**

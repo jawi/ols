@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.test;
+package nl.lxtreme.ols.client.signaldisplay.view;
 
 
 import java.io.*;

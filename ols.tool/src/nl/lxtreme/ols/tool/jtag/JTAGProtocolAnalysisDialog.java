@@ -21,60 +21,33 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.DIV;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.H1;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.HR;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TABLE;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TBODY;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TD;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TH;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.THEAD;
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.TR;
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.createRightAlignedLabel;
+import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
-import java.awt.Window;
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.text.DateFormat;
-import java.util.Date;
+import java.awt.*;
+import java.io.*;
+import java.math.*;
+import java.text.*;
+import java.util.*;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
-import javax.swing.Action;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JEditorPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SpringLayout;
+import javax.swing.*;
 
-import nl.lxtreme.ols.api.UserSettings;
-import nl.lxtreme.ols.api.tools.ToolContext;
-import nl.lxtreme.ols.api.tools.ToolTask;
-import nl.lxtreme.ols.api.util.Unit;
-import nl.lxtreme.ols.tool.base.BaseToolDialog;
-import nl.lxtreme.ols.tool.base.ExportAware;
-import nl.lxtreme.ols.tool.base.ToolUtils;
+import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.api.util.*;
+import nl.lxtreme.ols.tool.api.*;
+import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
-import nl.lxtreme.ols.util.ExportUtils;
+import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
 import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
 import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
-import nl.lxtreme.ols.util.HostUtils;
-import nl.lxtreme.ols.util.swing.SpringLayoutUtils;
-import nl.lxtreme.ols.util.swing.SwingComponentUtils;
+import nl.lxtreme.ols.util.swing.*;
 
-import org.osgi.framework.BundleContext;
+import org.osgi.framework.*;
 
 
 /**

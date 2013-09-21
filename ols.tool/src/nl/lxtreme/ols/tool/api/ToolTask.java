@@ -18,18 +18,17 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.api.tools;
+package nl.lxtreme.ols.tool.api;
+
+
+import nl.lxtreme.ols.api.task.*;
 
 
 /**
- * Can be used to listen to the progress of the invocation of a tool.
+ * Denotes a task that is performed by a tool, such as decoding data from
+ * acquired data.
  */
-public interface ToolProgressListener
+public interface ToolTask<RESULT_TYPE> extends Task<RESULT_TYPE>
 {
-  // METHODS
-
-  /**
-   * @param aPercentage
-   */
-  void setProgress( int aPercentage );
+  // No additional methods
 }

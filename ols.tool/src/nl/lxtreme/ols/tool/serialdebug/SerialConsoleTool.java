@@ -21,20 +21,16 @@
 package nl.lxtreme.ols.tool.serialdebug;
 
 
-import java.awt.Window;
+import java.awt.*;
 
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
-import nl.lxtreme.ols.api.tools.Tool;
-import nl.lxtreme.ols.api.tools.ToolCategory;
-import nl.lxtreme.ols.api.tools.ToolContext;
-import nl.lxtreme.ols.api.tools.ToolProgressListener;
-import nl.lxtreme.ols.api.tools.ToolTask;
+import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.tool.api.*;
 
+import org.apache.felix.dm.*;
 import org.apache.felix.dm.Component;
-import org.apache.felix.dm.DependencyManager;
-import org.osgi.service.log.LogService;
+import org.osgi.service.log.*;
 
 
 /**

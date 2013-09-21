@@ -23,8 +23,9 @@ package nl.lxtreme.ols.tool.uart.impl;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
-import nl.lxtreme.ols.api.tools.*;
+import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.tool.api.*;
+
 import org.osgi.framework.*;
 
 

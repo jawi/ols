@@ -18,13 +18,16 @@
 	osgi.identity;filter:='(osgi.identity=client.ui)',\
 	osgi.identity;filter:='(osgi.identity=client.config)',\
 	osgi.identity;filter:='(osgi.identity=client.project)',\
-	osgi.identity;filter:='(osgi.identity=service.acquisition)',\
+	osgi.identity;filter:='(osgi.identity=service.acquisition.api)',\
+	osgi.identity;filter:='(osgi.identity=service.acquisition.impl)',\
 	osgi.identity;filter:='(osgi.identity=service.io)',\
 	osgi.identity;filter:='(osgi.identity=service.taskexecution)',\
+	osgi.identity;filter:='(osgi.identity=ols.device.api)',\
+	osgi.identity;filter:='(osgi.identity=ols.device.demo)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.generic)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.sump.core)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.sump.profile)',\
-	osgi.identity;filter:='(osgi.identity=ols.device.demo)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.1wire)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.asm45)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.dmx512)',\
@@ -35,6 +38,7 @@
 	osgi.identity;filter:='(osgi.identity=ols.tool.spi)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.state)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.uart)',\
+	osgi.identity;filter:='(osgi.identity=ols.export.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.csv)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.image)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.vcd)'
@@ -60,13 +64,16 @@
 	client.ui;version=latest,\
 	client.config;version=latest,\
 	client.project;version=latest,\
+	ols.device.api;version=latest,\
 	ols.device.demo;version=latest,\
 	ols.device.generic;version=latest,\
 	ols.device.sump.core;version=latest,\
 	ols.device.sump.profile;version=latest,\
-	service.acquisition;version=latest,\
+	service.acquisition.api;version=latest,\
+	service.acquisition.impl;version=latest,\
 	service.io;version=latest,\
 	service.taskexecution;version=latest,\
+	ols.tool.api;version=latest,\
 	ols.tool.1wire;version=latest,\
 	ols.tool.asm45;version=latest,\
 	ols.tool.dmx512;version=latest,\
@@ -77,6 +84,7 @@
 	ols.tool.spi;version=latest,\
 	ols.tool.state;version=latest,\
 	ols.tool.uart;version=latest,\
+	ols.export.api;version=latest,\
 	ols.export.csv;version=latest,\
 	ols.export.image;version=latest,\
 	ols.export.vcd;version=latest
