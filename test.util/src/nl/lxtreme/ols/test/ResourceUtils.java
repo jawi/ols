@@ -77,11 +77,12 @@ public final class ResourceUtils
   public static URL getResource( final Class<?> aClass, final String aBaseDir, final String aName )
   {
     String name = aName;
-    if (!"".equals(aBaseDir.trim())) {
+    if ( !"".equals( aBaseDir.trim() ) )
+    {
       name = aBaseDir + File.separator + aName;
     }
-    
-    final URL resource = aClass.getClassLoader().getResource( name );
+
+    final URL resource = aClass.getResource( name );
     if ( resource == null )
     {
       throw new RuntimeException( "Resource not found: " + aName );
