@@ -25,17 +25,16 @@
 	osgi.identity;filter:='(osgi.identity=ols.device.sump.core)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.sump.profile)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.demo)',\
-	osgi.identity;filter:='(osgi.identity=tool.1wire)',\
-	osgi.identity;filter:='(osgi.identity=tool.asm45)',\
-	osgi.identity;filter:='(osgi.identity=tool.base)',\
-	osgi.identity;filter:='(osgi.identity=tool.dmx512)',\
-	osgi.identity;filter:='(osgi.identity=tool.i2c)',\
-	osgi.identity;filter:='(osgi.identity=tool.jtag)',\
-	osgi.identity;filter:='(osgi.identity=tool.linedecoder)',\
-	osgi.identity;filter:='(osgi.identity=tool.serialconsole)',\
-	osgi.identity;filter:='(osgi.identity=tool.spi)',\
-	osgi.identity;filter:='(osgi.identity=tool.state)',\
-	osgi.identity;filter:='(osgi.identity=tool.uart)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.1wire)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.asm45)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.dmx512)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.i2c)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.jtag)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.linedecoder)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.serialconsole)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.spi)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.state)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.uart)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.csv)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.image)',\
 	osgi.identity;filter:='(osgi.identity=ols.export.vcd)'
@@ -69,17 +68,16 @@
 	service.acquisition;version=latest,\
 	service.io;version=latest,\
 	service.taskexecution;version=latest,\
-	tool.1wire;version=latest,\
-	tool.asm45;version=latest,\
-	tool.base;version=latest,\
-	tool.dmx512;version=latest,\
-	tool.i2c;version=latest,\
-	tool.jtag;version=latest,\
-	tool.linedecoder;version=latest,\
-	tool.serialconsole;version=latest,\
-	tool.spi;version=latest,\
-	tool.state;version=latest,\
-	tool.uart;version=latest,\
+	ols.tool.1wire;version=latest,\
+	ols.tool.asm45;version=latest,\
+	ols.tool.dmx512;version=latest,\
+	ols.tool.i2c;version=latest,\
+	ols.tool.jtag;version=latest,\
+	ols.tool.linedecoder;version=latest,\
+	ols.tool.serialconsole;version=latest,\
+	ols.tool.spi;version=latest,\
+	ols.tool.state;version=latest,\
+	ols.tool.uart;version=latest,\
 	ols.export.csv;version=latest,\
 	ols.export.image;version=latest,\
 	ols.export.vcd;version=latest

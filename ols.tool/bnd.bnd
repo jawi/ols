@@ -1,0 +1,11 @@
+-sub: *.bnd
+-buildpath: \
+	osgi.core;version=4.2.0,\
+	osgi.cmpn;version=4.2.0,\
+	org.mockito.mockito-all;version=1.9.0,\
+	org.apache.felix.dependencymanager;version=3.1.0,\
+	api;version=latest,\
+	util;version=latest,\
+	rxtx;version=0.0.17,\
+	jvt220-1.1.1.jar;version=file,\
+	test.util;version=latest

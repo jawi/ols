@@ -1,0 +1,7 @@
+Bundle-Name: OLS I2C decoder
+Bundle-Description: A I2C decoder tool for the OLS client.
+Bundle-Copyright: Michael Poppitz (sump.org), J.W. Janssen (lxtreme.nl) (C) 2010-2013
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+Private-Package: nl.lxtreme.ols.tool.base.*, nl.lxtreme.ols.tool.i2c
+OLS-Tool: 1.0
+OLS-ToolClass: nl.lxtreme.ols.tool.i2c.I2CAnalyser

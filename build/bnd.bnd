@@ -5,21 +5,11 @@
 	client.project,\
 	ols.device,\
 	ols.export,\
+	ols.tool,\
 	logging,\
 	purejavacomm,\
 	service.acquisition,\
 	service.io,\
 	service.taskexecution,\
-	tool.1wire,\
-	tool.asm45,\
-	tool.base,\
-	tool.dmx512,\
-	tool.i2c,\
-	tool.jtag,\
-	tool.linedecoder,\
-	tool.serialconsole,\
-	tool.spi,\
-	tool.state,\
-	tool.uart,\
 	util,\
 	runner

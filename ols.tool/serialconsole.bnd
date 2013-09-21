@@ -1,0 +1,7 @@
+Bundle-Name: OLS serial console
+Bundle-Description: An interactive serial console for the OLS client.
+Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+Private-Package: nl.lxtreme.ols.tool.base.*, nl.lxtreme.ols.tool.serialdebug
+OLS-Tool: 1.0
+OLS-ToolClass: nl.lxtreme.ols.tool.serialdebug.SerialConsoleTool

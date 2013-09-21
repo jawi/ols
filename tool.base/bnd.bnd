@@ -1,7 +1,0 @@
--buildpath: \
-	osgi.core;version=4.2.0,\
-	osgi.cmpn;version=4.2.0,\
-	api;version=latest,\
-	util;version=latest
-Export-Package: nl.lxtreme.ols.tool.base,\
-	nl.lxtreme.ols.tool.base.annotation
