@@ -1,12 +1,7 @@
--buildpath: osgi.core;version=4.2.0,\
-	osgi.cmpn;version=4.2.0.200908310645,\
-	org.mockito.mockito-all;version=1.9.0,\
-	api;version=latest,\
-	test.util;version=latest
-Bundle-Name: A CSV exporter for the OLS client.
+Bundle-Name: OLS CSV exporter
+Bundle-Description: A CSV exporter for the OLS client.
 Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
-
 Private-Package: nl.lxtreme.ols.export.csv
 OLS-Exporter: 1.0
 OLS-ExporterClass: nl.lxtreme.ols.export.csv.CsvExporter

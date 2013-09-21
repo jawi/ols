@@ -1,0 +1,7 @@
+-sub: *.bnd
+-buildpath: \
+	osgi.core;version=4.2.0,\
+	osgi.cmpn;version=4.2.0,\
+	org.mockito.mockito-all;version=1.9.0,\
+	api;version=latest,\
+	test.util;version=latest

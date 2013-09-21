@@ -36,9 +36,9 @@
 	osgi.identity;filter:='(osgi.identity=tool.spi)',\
 	osgi.identity;filter:='(osgi.identity=tool.state)',\
 	osgi.identity;filter:='(osgi.identity=tool.uart)',\
-	osgi.identity;filter:='(osgi.identity=export.csv)',\
-	osgi.identity;filter:='(osgi.identity=export.image)',\
-	osgi.identity;filter:='(osgi.identity=export.vcd)'
+	osgi.identity;filter:='(osgi.identity=ols.export.csv)',\
+	osgi.identity;filter:='(osgi.identity=ols.export.image)',\
+	osgi.identity;filter:='(osgi.identity=ols.export.vcd)'
 -runfw: org.apache.felix.framework;version='[4.2,5.0)'
 -runee: JavaSE-1.6
 -runbundles: \
@@ -80,9 +80,9 @@
 	tool.spi;version=latest,\
 	tool.state;version=latest,\
 	tool.uart;version=latest,\
-	export.csv;version=latest,\
-	export.image;version=latest,\
-	export.vcd;version=latest
+	ols.export.csv;version=latest,\
+	ols.export.image;version=latest,\
+	ols.export.vcd;version=latest
 -runproperties: \
     felix.fileinstall.dir=./conf,\
     felix.fileinstall.log.level=1,\

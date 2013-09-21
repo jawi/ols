@@ -3,12 +3,8 @@
 	api,\
 	client,\
 	client.project,\
-	device.generic,\
-	device.logicsniffer,\
-	device.demo,\
-	export.csv,\
-	export.image,\
-	export.vcd,\
+	ols.device,\
+	ols.export,\
 	logging,\
 	purejavacomm,\
 	service.acquisition,\
