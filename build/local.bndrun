@@ -21,10 +21,10 @@
 	osgi.identity;filter:='(osgi.identity=service.acquisition)',\
 	osgi.identity;filter:='(osgi.identity=service.io)',\
 	osgi.identity;filter:='(osgi.identity=service.taskexecution)',\
-	osgi.identity;filter:='(osgi.identity=device.generic)',\
-	osgi.identity;filter:='(osgi.identity=device.logicsniffer.core)',\
-	osgi.identity;filter:='(osgi.identity=device.logicsniffer.profiles)',\
-	osgi.identity;filter:='(osgi.identity=device.demo)',\
+	osgi.identity;filter:='(osgi.identity=ols.device.generic)',\
+	osgi.identity;filter:='(osgi.identity=ols.device.sump.core)',\
+	osgi.identity;filter:='(osgi.identity=ols.device.sump.profile)',\
+	osgi.identity;filter:='(osgi.identity=ols.device.demo)',\
 	osgi.identity;filter:='(osgi.identity=tool.1wire)',\
 	osgi.identity;filter:='(osgi.identity=tool.asm45)',\
 	osgi.identity;filter:='(osgi.identity=tool.base)',\
@@ -62,10 +62,10 @@
 	client.ui;version=latest,\
 	client.config;version=latest,\
 	client.project;version=latest,\
-	device.generic;version=latest,\
-	device.logicsniffer.core;version=latest,\
-	device.logicsniffer.profiles;version=latest,\
-	device.demo;version=latest,\
+	ols.device.demo;version=latest,\
+	ols.device.generic;version=latest,\
+	ols.device.sump.core;version=latest,\
+	ols.device.sump.profile;version=latest,\
 	service.acquisition;version=latest,\
 	service.io;version=latest,\
 	service.taskexecution;version=latest,\
