@@ -15,13 +15,15 @@
 	osgi.identity;filter:='(osgi.identity=logging)',\
 	osgi.identity;filter:='(osgi.identity=api)',\
 	osgi.identity;filter:='(osgi.identity=util)',\
-	osgi.identity;filter:='(osgi.identity=client)',\
+	osgi.identity;filter:='(osgi.identity=client.ui)',\
+	osgi.identity;filter:='(osgi.identity=client.config)',\
 	osgi.identity;filter:='(osgi.identity=client.project)',\
 	osgi.identity;filter:='(osgi.identity=service.acquisition)',\
 	osgi.identity;filter:='(osgi.identity=service.io)',\
 	osgi.identity;filter:='(osgi.identity=service.taskexecution)',\
 	osgi.identity;filter:='(osgi.identity=device.generic)',\
-	osgi.identity;filter:='(osgi.identity=device.logicsniffer)',\
+	osgi.identity;filter:='(osgi.identity=device.logicsniffer.core)',\
+	osgi.identity;filter:='(osgi.identity=device.logicsniffer.profiles)',\
 	osgi.identity;filter:='(osgi.identity=device.demo)',\
 	osgi.identity;filter:='(osgi.identity=tool.1wire)',\
 	osgi.identity;filter:='(osgi.identity=tool.asm45)',\
@@ -57,10 +59,12 @@
 	logging;version=latest,\
 	api;version=latest,\
 	util;version=latest,\
-	client;version=latest,\
+	client.ui;version=latest,\
+	client.config;version=latest,\
 	client.project;version=latest,\
 	device.generic;version=latest,\
-	device.logicsniffer;version=latest,\
+	device.logicsniffer.core;version=latest,\
+	device.logicsniffer.profiles;version=latest,\
 	device.demo;version=latest,\
 	service.acquisition;version=latest,\
 	service.io;version=latest,\

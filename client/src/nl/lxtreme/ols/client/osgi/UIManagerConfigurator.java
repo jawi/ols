@@ -118,12 +118,11 @@ public class UIManagerConfigurator implements ManagedService
    * @param aProperties
    * @throws ConfigurationException
    */
-  @SuppressWarnings( "rawtypes" )
-  private void applyOlsSpecificKeys( final Dictionary aProperties ) throws ConfigurationException
+  private void applyOlsSpecificKeys( final Dictionary<?, ?> aProperties ) throws ConfigurationException
   {
     final Properties config = new Properties();
 
-    final Enumeration keys = aProperties.keys();
+    final Enumeration<?> keys = aProperties.keys();
     while ( keys.hasMoreElements() )
     {
       String key = ( String )keys.nextElement();
@@ -134,7 +133,7 @@ public class UIManagerConfigurator implements ManagedService
 
       try
       {
-        Object value = parseAsValue( key, aProperties.get( key ) );
+        Object value = parseAsValue( aProperties, key );
         if ( value != null )
         {
           config.put( key, value );
@@ -168,12 +167,18 @@ public class UIManagerConfigurator implements ManagedService
    * @param aObject
    * @return
    */
-  private Object parseAsValue( final String aKey, final Object aObject )
+  private Object parseAsValue( final Dictionary<?, ?> aConfig, final String aKey )
   {
-    String value = aObject.toString().trim();
+    String value = ( ( String )aConfig.get( aKey ) ).trim();
     if ( "".equals( value ) )
     {
       return null;
+    }
+
+    if ( value.startsWith( "${" ) && value.endsWith( "}" ) )
+    {
+      String lookup = value.substring( 2, value.length() - 1 );
+      return parseAsValue( aConfig, lookup );
     }
 
     if ( aKey.endsWith( BOOLEAN_SUFFIX ) )

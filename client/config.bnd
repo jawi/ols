@@ -1,0 +1,3 @@
+Private-Package: nl.lxtreme.ols.client.provision
+Bundle-Activator: nl.lxtreme.ols.client.provision.Activator
+-includeresource: resources=resources

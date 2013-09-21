@@ -6,23 +6,4 @@
 	test.util;version=latest,\
 	org.mockito.mockito-all;version=1.9.0,\
 	mydoggy-osgi;version=1.5.0
-Bundle-Name: The (main) user interface for the OLS client.
-Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
-Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
-Bundle-Activator: nl.lxtreme.ols.client.Activator
-
-Private-Package: nl.lxtreme.ols.client,\
-	nl.lxtreme.ols.client.about,\
-	nl.lxtreme.ols.client.action,\
-	nl.lxtreme.ols.client.actionmanager,\
-	nl.lxtreme.ols.client.icons,\
-	nl.lxtreme.ols.client.osgi,\
-	nl.lxtreme.ols.client.signaldisplay,\
-	nl.lxtreme.ols.client.signaldisplay.action,\
-	nl.lxtreme.ols.client.signaldisplay.dnd,\
-	nl.lxtreme.ols.client.signaldisplay.laf,\
-	nl.lxtreme.ols.client.signaldisplay.model,\
-	nl.lxtreme.ols.client.signaldisplay.signalelement,\
-	nl.lxtreme.ols.client.signaldisplay.util,\
-	nl.lxtreme.ols.client.signaldisplay.view,\
-	nl.lxtreme.ols.client.signaldisplay.view.renderer
+-sub: *.bnd
