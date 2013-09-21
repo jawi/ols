@@ -66,7 +66,6 @@ public final class OlsDataHelper
 
     // assume 'new' file format is in use, don't support uncompressed ones...
     boolean compressed = true;
-    boolean cursorsEnabled = false;
 
     final BufferedReader br = new BufferedReader( aReader );
 
@@ -112,7 +111,7 @@ public final class OlsDataHelper
         }
         else if ( "CursorEnabled".equals( instrKey ) )
         {
-          cursorsEnabled = Boolean.parseBoolean( instrValue );
+          // not used...
         }
         else if ( "Compressed".equals( instrKey ) )
         {
@@ -124,28 +123,15 @@ public final class OlsDataHelper
         }
         else if ( "CursorA".equals( instrKey ) )
         {
-          final long value = safeParseLong( instrValue );
-          if ( value > Long.MIN_VALUE )
-          {
-            // aDataSet.getCursor( 0 ).setTimestamp( value );
-          }
+          // not used.
         }
         else if ( "CursorB".equals( instrKey ) )
         {
-          final long value = safeParseLong( instrValue );
-          if ( value > Long.MIN_VALUE )
-          {
-            // aDataSet.getCursor( 1 ).setTimestamp( value );
-          }
+          // not used.
         }
         else if ( instrKey.startsWith( "Cursor" ) )
         {
-          final int idx = safeParseInt( instrKey.substring( 6 ) );
-          final long pos = Long.parseLong( instrValue );
-          if ( pos > Long.MIN_VALUE )
-          {
-            // aDataSet.getCursor( idx ).setTimestamp( pos );
-          }
+          // not used.
         }
       }
     }

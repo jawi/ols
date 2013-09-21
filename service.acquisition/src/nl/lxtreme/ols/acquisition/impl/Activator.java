@@ -21,8 +21,7 @@
 package nl.lxtreme.ols.acquisition.impl;
 
 
-import nl.lxtreme.ols.acquisition.DataAcquisitionService;
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.task.*;
 

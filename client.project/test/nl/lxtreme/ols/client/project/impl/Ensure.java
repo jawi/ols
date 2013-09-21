@@ -21,7 +21,7 @@ package nl.lxtreme.ols.client.project.impl;
 
 import java.io.*;
 
-import junit.framework.*;
+import org.junit.*;
 
 
 /**
