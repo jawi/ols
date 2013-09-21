@@ -1,0 +1,11 @@
+Bundle-Name: OLS SUMP device
+Bundle-Description: A SUMP/OLS-device for the OLS client.
+Bundle-Copyright: Michael Poppitz (sump.org), J.W. Janssen (lxtreme.nl) (C) 2010-2013
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+Bundle-Activator: nl.lxtreme.ols.device.sump.Activator
+Private-Package: nl.lxtreme.ols.device.sump,\
+	nl.lxtreme.ols.device.sump.profile,\
+	nl.lxtreme.ols.device.sump.protocol,\
+	nl.lxtreme.ols.device.sump.sampleprocessor
+OLS-Device: 1.0
+OLS-DeviceClass: nl.lxtreme.ols.device.sump.LogicSnifferDevice
