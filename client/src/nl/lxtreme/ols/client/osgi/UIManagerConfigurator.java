@@ -28,7 +28,7 @@ import java.util.regex.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.service.cm.*;
 

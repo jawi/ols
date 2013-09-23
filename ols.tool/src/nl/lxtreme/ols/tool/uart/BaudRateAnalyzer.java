@@ -20,8 +20,7 @@
  */
 package nl.lxtreme.ols.tool.uart;
 
-
-import nl.lxtreme.ols.util.analysis.*;
+import nl.lxtreme.ols.tool.base.*;
 
 
 /**

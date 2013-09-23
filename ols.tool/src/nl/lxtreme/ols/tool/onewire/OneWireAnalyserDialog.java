@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.onewire;
 
 
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -36,12 +36,11 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.MacroResolver;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
-import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
@@ -173,12 +172,8 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        // This should not happen for the no-file exports!
-        throw new RuntimeException( exception );
-      }
+      // This should not happen for the no-file exports!
+      throw new RuntimeException( exception );
     }
   }
 
@@ -450,8 +445,8 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
               tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
-              tr.addChild( TD ).addContent( "0x" + StringUtils.integerToHexString( value, 2 ) );
-              tr.addChild( TD ).addContent( "0b" + StringUtils.integerToBinString( value, 8 ) );
+              tr.addChild( TD ).addContent( NumberUtils.integerToHexString( value, 2 ) );
+              tr.addChild( TD ).addContent( NumberUtils.integerToBinString( value, 8 ) );
               tr.addChild( TD ).addContent( String.valueOf( value ) );
               tr.addChild( TD ).addContent( String.valueOf( ( char )value ) );
             }

@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -38,13 +38,12 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ExportUtils.CsvExporter;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.MacroResolver;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
-import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
@@ -182,12 +181,8 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        // Should not happen in this situation!
-        throw new RuntimeException( exception );
-      }
+      // Should not happen in this situation!
+      throw new RuntimeException( exception );
     }
   }
 
@@ -430,7 +425,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
             i++;
           }
         }
-        
+
         if ( ( tdiData == null ) && data.isTdiData() )
         {
           tdiData = ( BigInteger )data.getDataValue();
@@ -441,7 +436,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
           tdiData = null;
           tdoData = ( BigInteger )data.getDataValue();
         }
-        
+
         final String tdiDataValue = tdiData != null ? "0x" + tdiData.toString( 16 ) : null;
         final String tdoDataValue = tdoData != null ? "0x" + tdoData.toString( 16 ) : null;
 
@@ -452,11 +447,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
-      }
+      LOG.log( Level.WARNING, "CSV export failed!", exception );
     }
   }
 
@@ -474,11 +465,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
+      LOG.log( Level.WARNING, "HTML export failed!", exception );
     }
   }
 
@@ -547,7 +534,7 @@ public final class JTAGProtocolAnalysisDialog extends BaseToolDialog<JTAGDataSet
                   i++;
                 }
               }
-              
+
               if ( ( tdiData == null ) && data.isTdiData() )
               {
                 tdiData = ( BigInteger )data.getDataValue();

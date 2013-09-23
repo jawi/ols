@@ -21,8 +21,6 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
-import static nl.lxtreme.ols.util.NumberUtils.*;
-
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
@@ -89,15 +87,15 @@ final class OlsDataHelper
 
         if ( "Size".equals( instrKey ) )
         {
-          size = safeParseInt( instrValue );
+          size = Integer.parseInt( instrValue );
         }
         else if ( "Rate".equals( instrKey ) )
         {
-          rate = safeParseInt( instrValue );
+          rate = Integer.parseInt( instrValue );
         }
         else if ( "Channels".equals( instrKey ) )
         {
-          channels = safeParseInt( instrValue );
+          channels = Integer.parseInt( instrValue );
         }
         else if ( "TriggerPosition".equals( instrKey ) )
         {
@@ -105,7 +103,7 @@ final class OlsDataHelper
         }
         else if ( "EnabledChannels".equals( instrKey ) )
         {
-          enabledChannels = safeParseInt( instrValue );
+          enabledChannels = Integer.parseInt( instrValue );
         }
         else if ( "CursorEnabled".equals( instrKey ) )
         {

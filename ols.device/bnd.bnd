@@ -5,6 +5,6 @@
 	org.apache.felix.dependencymanager;version=3.1.0,\
 	service.io;version=latest,\
 	api;version=latest,\
-	util;version=latest,\
 	rxtx;version=0.0.17,\
+	lib.swing;version=latest,\
 	junit.osgi;version=4.11.0

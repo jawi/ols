@@ -30,7 +30,6 @@ import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.device.sump.VirtualLogicSnifferDevice.SampleProvider;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;
-import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
 import org.junit.runner.*;
@@ -76,8 +75,8 @@ public class LogicSnifferRleTimingComponentTest
       this.sampleHighValue = ( int )( baseValue & aMask );
       this.sampleLowValue = ( ( this.sampleHighValue >> 1 ) & aMask );
 
-      this.packedHighValue = NumberUtils.packBytes( this.sampleHighValue );
-      this.packedLowValue = NumberUtils.packBytes( this.sampleLowValue );
+      this.packedHighValue = TestUtils.packBytes( this.sampleHighValue );
+      this.packedLowValue = TestUtils.packBytes( this.sampleLowValue );
     }
 
     // METHODS

@@ -34,7 +34,6 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
-import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
 
@@ -578,8 +577,8 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
       @Override
       public void close() throws IOException
       {
-        HostUtils.closeResource( this.is );
-        HostUtils.closeResource( this.os );
+        TestUtils.closeSilently( this.is );
+        TestUtils.closeSilently( this.os );
       }
 
       @Override

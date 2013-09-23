@@ -26,7 +26,6 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -322,7 +321,7 @@ public class UserSettingsImpl implements UserSettings
       return aDefaultValue;
     }
 
-    return ColorUtils.parseColor( value );
+    return parseColor( value );
   }
 
   /**
@@ -360,7 +359,7 @@ public class UserSettingsImpl implements UserSettings
     {
       throw new IllegalArgumentException( "Color cannot be null! Use delete() method to delete a key-value pair!" );
     }
-    final String hexString = ColorUtils.toHexString( aValue );
+    final String hexString = toHexString( aValue );
     this.properties.put( aName, hexString );
   }
 
@@ -381,5 +380,38 @@ public class UserSettingsImpl implements UserSettings
       throw new IllegalArgumentException( "Enum cannot be null! Use delete() method to delete a key-value pair!" );
     }
     this.properties.put( aName, aValue.name() );
+  }
+
+  private Color parseColor( final String aColor )
+  {
+    if ( aColor == null )
+    {
+      throw new IllegalArgumentException( "Color cannot be null!" );
+    }
+
+    String color = aColor.trim();
+    if ( color.startsWith( "#" ) )
+    {
+      color = color.substring( 1 );
+    }
+
+    try
+    {
+      final int colorValue = Integer.parseInt( color, 16 );
+      return new Color( ( colorValue >> 16 ) & 0xFF, ( colorValue >> 8 ) & 0xFF, colorValue & 0xFF );
+    }
+    catch ( NumberFormatException exception )
+    {
+      throw new IllegalArgumentException( "Given string does NOT represent a valid color!" );
+    }
+  }
+
+  private String toHexString( final Color aColor )
+  {
+    final StringBuilder sb = new StringBuilder();
+    sb.append( String.format( "%02x", Integer.valueOf( aColor.getRed() ) ) );
+    sb.append( String.format( "%02x", Integer.valueOf( aColor.getGreen() ) ) );
+    sb.append( String.format( "%02x", Integer.valueOf( aColor.getBlue() ) ) );
+    return sb.toString();
   }
 }

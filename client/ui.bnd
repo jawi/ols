@@ -3,6 +3,7 @@ Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
 Bundle-Activator: nl.lxtreme.ols.client.Activator
 Private-Package: nl.lxtreme.ols.client,\
+	nl.lxtreme.ols.client.appcallback,\
 	nl.lxtreme.ols.client.about,\
 	nl.lxtreme.ols.client.action,\
 	nl.lxtreme.ols.client.actionmanager,\

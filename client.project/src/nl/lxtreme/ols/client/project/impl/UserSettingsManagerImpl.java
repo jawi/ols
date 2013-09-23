@@ -8,11 +8,10 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.*;
 
-import org.osgi.service.log.*;
-
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.util.*;
+
+import org.osgi.service.log.*;
 
 
 /**
@@ -88,8 +87,8 @@ public final class UserSettingsManagerImpl implements UserSettingsManager
     }
     finally
     {
-      HostUtils.closeResource( zipIS );
-      HostUtils.closeResource( is );
+      closeSilently( zipIS );
+      closeSilently( is );
     }
   }
 
@@ -152,7 +151,7 @@ public final class UserSettingsManagerImpl implements UserSettingsManager
     }
     finally
     {
-      HostUtils.closeResource( os );
+      closeSilently( os );
     }
   }
 
@@ -165,5 +164,20 @@ public final class UserSettingsManagerImpl implements UserSettingsManager
   public void setLog( final LogService aLog )
   {
     this.log = aLog;
+  }
+
+  private void closeSilently( final Closeable aCloseable )
+  {
+    try
+    {
+      if ( aCloseable != null )
+      {
+        aCloseable.close();
+      }
+    }
+    catch ( IOException e )
+    {
+      // Ignore...
+    }
   }
 }

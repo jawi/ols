@@ -30,7 +30,6 @@ import javax.swing.filechooser.*;
 import javax.swing.filechooser.FileFilter;
 
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -99,12 +98,8 @@ public class OpenProjectAction extends BaseAction
       }
       catch ( IOException exception )
       {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.WARNING, "Loading OLS project failed!", exception );
-          JErrorDialog.showDialog( parent, "Loading the project data failed!", exception );
-        }
+        LOG.log( Level.WARNING, "Loading OLS project failed!", exception );
+        JErrorDialog.showDialog( parent, "Loading the project data failed!", exception );
       }
     }
   }

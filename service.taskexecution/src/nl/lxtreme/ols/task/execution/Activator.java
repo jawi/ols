@@ -36,7 +36,6 @@ public class Activator implements BundleActivator
   // VARIABLES
 
   private TaskStatusListenerHelper taskStatusListenerHelper;
-
   private BackgroundTaskExecutionService toolExecutionService;
 
   // METHODS

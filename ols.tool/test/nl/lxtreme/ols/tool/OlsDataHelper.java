@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool;
 
 
-import static nl.lxtreme.ols.util.NumberUtils.*;
+import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.io.*;
 import java.util.*;
@@ -29,7 +29,6 @@ import java.util.regex.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -167,7 +166,7 @@ public final class OlsDataHelper
     // Make sure the enabled channels are defined...
     if ( enabledChannels == null )
     {
-      enabledChannels = NumberUtils.getBitMask( channels );
+      enabledChannels = getBitMask( channels );
     }
 
     int[] values = new int[size];

@@ -34,7 +34,6 @@ import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
 import nl.lxtreme.ols.device.sump.sampleprocessor.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -211,15 +210,15 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
       catch ( final IOException exception )
       {
         // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
+        if ( !handleInterruptedException( exception ) )
         {
           LOG.log( Level.WARNING, "Detaching failed!", exception );
         }
       }
       finally
       {
-        HostUtils.closeResource( this.outputStream );
-        HostUtils.closeResource( this.inputStream );
+        closeSilently( this.outputStream );
+        closeSilently( this.inputStream );
 
         try
         {
@@ -305,10 +304,25 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
       LOG.log( Level.FINE, "Detailed stack trace:", exception );
 
       // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
+      if ( !handleInterruptedException( exception ) )
       {
         throw new IOException( "Failed to open connection! Possible reason: " + exception.getMessage() );
       }
+    }
+  }
+
+  private void closeSilently( Closeable aClosable )
+  {
+    try
+    {
+      if ( aClosable != null )
+      {
+        aClosable.close();
+      }
+    }
+    catch ( IOException exception )
+    {
+      // Ignore...
     }
   }
 
@@ -378,7 +392,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
         id = -1;
 
         // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
+        if ( !handleInterruptedException( exception ) )
         {
           LOG.log( Level.INFO, "I/O exception!", exception );
         }
@@ -396,14 +410,26 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     }
   }
 
+  private boolean handleInterruptedException( Exception aException )
+  {
+    if ( aException instanceof InterruptedIOException )
+    {
+      Thread.currentThread().interrupt();
+      return true;
+    }
+    return false;
+  }
+
   /**
    * Reads all (or as many as possible) samples from the OLS device.
    * 
    * @param aEnabledGroupCount
-   *          the number of enabled groups (denotes the number of bytes for one sample);
+   *          the number of enabled groups (denotes the number of bytes for one
+   *          sample);
    * @param aSampleCount
    *          the number of samples to read.
-   * @return the read samples, normalized to match the layout of the enabled groups.
+   * @return the read samples, normalized to match the layout of the enabled
+   *         groups.
    * @throws IOException
    *           in case of I/O problems;
    * @throws InterruptedException
@@ -437,7 +463,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     catch ( IOException exception )
     {
       // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
+      if ( !handleInterruptedException( exception ) )
       {
         throw exception;
       }
@@ -449,15 +475,15 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
 
       this.acquisitionProgressListener.acquisitionInProgress( 100 );
     }
-    
+
     if ( Thread.currentThread().isInterrupted() )
     {
       // We're interrupted while read samples, do not proceed...
       throw new InterruptedException();
     }
-    
+
     final int groupCount = this.config.getGroupCount();
-    
+
     // Normalize the raw data into the sample data, as expected...
     int[] samples = new int[aSampleCount];
     for ( int i = samples.length - 1, j = 0; i >= 0; i-- )
@@ -475,7 +501,13 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     // revert it now, before processing them further...
     if ( this.config.isSamplesInReverseOrder() )
     {
-      HostUtils.reverse( samples );
+      for ( int left = 0, right = samples.length - 1; left < right; left++, right-- )
+      {
+        // exchange the first and last
+        int temp = samples[left];
+        samples[left] = samples[right];
+        samples[right] = temp;
+      }
     }
 
     return samples;

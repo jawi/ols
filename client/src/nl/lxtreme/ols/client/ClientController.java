@@ -42,12 +42,12 @@ import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.appcallback.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.api.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -287,7 +287,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   private volatile ProjectManager projectManager;
   private volatile DataAcquisitionService dataAcquisitionService;
   private volatile MainFrame mainFrame;
-  private volatile HostProperties hostProperties;
   private volatile UIColorSchemeManager colorSchemeManager;
 
   private volatile long acquisitionStartTime;
@@ -505,12 +504,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     catch ( final IOException exception )
     {
       setStatusOnEDT( "I/O problem: " + exception.getMessage() );
-
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        exception.printStackTrace();
-      }
     }
     finally
     {
@@ -545,12 +538,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     catch ( final IOException exception )
     {
       setStatusOnEDT( "I/O problem: " + exception.getMessage() );
-
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        exception.printStackTrace();
-      }
 
       return false;
     }
@@ -668,7 +655,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     finally
     {
-      HostUtils.closeResource( writer );
+      try
+      {
+        if ( writer != null )
+        {
+          writer.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
 
       updateActionsOnEDT();
     }
@@ -775,16 +772,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       return new String[0];
     }
     return exporter.getFilenameExtentions();
-  }
-
-  /**
-   * Returns the current host properties.
-   * 
-   * @return the host properties, can be <code>null</code>.
-   */
-  public HostProperties getHostProperties()
-  {
-    return this.hostProperties;
   }
 
   /**
@@ -989,7 +976,18 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     finally
     {
-      HostUtils.closeResource( reader );
+      try
+      {
+        if ( reader != null )
+        {
+          reader.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
+
       updateActionsOnEDT();
     }
   }
@@ -1019,7 +1017,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     finally
     {
-      HostUtils.closeResource( fis );
+      try
+      {
+        if ( fis != null )
+        {
+          fis.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
       updateActionsOnEDT();
     }
   }
@@ -1167,11 +1175,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     catch ( final IOException exception )
     {
       setStatusOnEDT( "I/O problem: " + exception.getMessage() );
-
-      exception.printStackTrace();
-
-      // Make sure to handle IO-interrupted exceptions properly!
-      HostUtils.handleInterruptedException( exception );
     }
     finally
     {
@@ -1199,7 +1202,19 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     finally
     {
-      HostUtils.closeResource( writer );
+      try
+      {
+        if ( writer != null )
+        {
+          writer.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
+
+      updateActionsOnEDT();
     }
   }
 
@@ -1230,7 +1245,19 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     finally
     {
-      HostUtils.closeResource( out );
+      try
+      {
+        if ( out != null )
+        {
+          out.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
+
+      updateActionsOnEDT();
     }
   }
 
@@ -1323,9 +1350,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public final void start()
   {
-    final HostProperties hostProperties = getHostProperties();
-
-    initOSSpecifics( hostProperties.getShortName(), hostProperties.getVersion() );
+    initOSSpecifics( Ols.SHORT_NAME, "0.0.0" ); // XXX
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
@@ -1347,8 +1372,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         ClientController.this.signalDiagramController.addCursorChangeListener( new CursorActionListener() );
         updateDefaultSettings();
 
-        mf.setTitle( hostProperties.getFullName() );
-        mf.setStatus( "{0} v{1} ready ...", hostProperties.getShortName(), hostProperties.getVersion() );
+        mf.setTitle( Ols.FULL_NAME );
+        mf.setStatus( "{0} v{1} ready ...", Ols.SHORT_NAME, "0.0.0" ); // XXX
         mf.setVisible( true );
 
         LOG.info( "Client started ..." );
@@ -1842,10 +1867,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     System.setProperty( "nl.lxtreme.ols.client.version", aVersion );
 
     // Use the defined email address...
-    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS,
-        this.hostProperties.getReportIncidentAddress() );
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, "info+v" +aVersion + "@lxtreme.nl" ); // XXX
 
-    if ( this.hostProperties.isDebugMode() )
+    if ( Activator.isDebugMode() )
     {
       // Install a custom repaint manager that detects whether Swing
       // components are created outside the EDT; if so, it will yield a
@@ -1853,8 +1877,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       ThreadViolationDetectionRepaintManager.install();
     }
 
-    final HostInfo hostInfo = HostUtils.getHostInfo();
-    if ( hostInfo.isMacOS() )
+    final String osName = System.getProperty( "os.name" ).toLowerCase();
+    if ( ( "mac os x".equals( osName ) || "darwin".equals( osName ) ) )
     {
       // Moves the main menu bar to the screen menu bar location...
       System.setProperty( "apple.laf.useScreenMenuBar", "true" );
@@ -1877,15 +1901,15 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       UIManager.put( "OptionPane.windowBindings", //
           new Object[] { SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ), "close", "ESCAPE", "close" } );
     }
-    else if ( hostInfo.isUnix() )
-    {
-      UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
-      setLookAndFeel( "com.jgoodies.looks.plastic.Plastic3DLookAndFeel" );
-    }
-    else if ( hostInfo.isWindows() )
+    else if ( osName.indexOf( "win" ) >= 0 )
     {
       UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
       setLookAndFeel( "com.jgoodies.looks.plastic.PlasticXPLookAndFeel" );
+    }
+    else
+    {
+      UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
+      setLookAndFeel( "com.jgoodies.looks.plastic.Plastic3DLookAndFeel" );
     }
   }
 
@@ -1922,12 +1946,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     catch ( Exception exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        System.err.println( "Failed to set look and feel to: " + aLookAndFeelClassName );
-        setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
-      }
+      System.err.println( "Failed to set look and feel to: " + aLookAndFeelClassName );
+      setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
     }
   }
 }

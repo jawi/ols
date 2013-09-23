@@ -27,7 +27,6 @@ import java.io.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -72,7 +71,7 @@ public class SaveDataFileAction extends BaseAction
     final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenDataFileAction.OLS_FILEFILTER );
     if ( file != null )
     {
-      final File actualFile = HostUtils.setFileExtension( file, OpenDataFileAction.OLS_FILE_EXTENSION );
+      final File actualFile = FileUtils.setFileExtension( file, OpenDataFileAction.OLS_FILE_EXTENSION );
 
       LOG.log( Level.INFO, "Saving capture data to file {0}", actualFile );
 
@@ -82,12 +81,8 @@ public class SaveDataFileAction extends BaseAction
       }
       catch ( IOException exception )
       {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.WARNING, "Saving capture data failed!", exception );
-          JErrorDialog.showDialog( owner, "Saving the capture data failed!", exception );
-        }
+        LOG.log( Level.WARNING, "Saving capture data failed!", exception );
+        JErrorDialog.showDialog( owner, "Saving the capture data failed!", exception );
       }
     }
   }

@@ -23,7 +23,6 @@ package nl.lxtreme.ols.client.project;
 
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.project.impl.*;
-import nl.lxtreme.ols.util.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
@@ -67,10 +66,6 @@ public class Activator extends DependencyActivatorBase
         createComponent() //
             .setInterface( ProjectManager.class.getName(), null ) //
             .setImplementation( new ProjectManagerImpl() ) //
-            .add( createServiceDependency() //
-                .setService( HostProperties.class ) //
-                .setRequired( true ) //
-            ) //
             .add( createServiceDependency() //
                 .setService( LogService.class ) //
                 .setRequired( false ) //

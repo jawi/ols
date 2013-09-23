@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.uart;
 
 
-import static nl.lxtreme.ols.util.NumberUtils.*;
+import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.util.*;
 

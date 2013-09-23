@@ -30,7 +30,6 @@ import javax.swing.*;
 import javax.swing.filechooser.*;
 
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -110,7 +109,7 @@ public class ExportAction extends BaseAction
 
     if ( exportFileName != null )
     {
-      final File actualFile = HostUtils.setFileExtension( exportFileName, preferredExtension );
+      final File actualFile = FileUtils.setFileExtension( exportFileName, preferredExtension );
       if ( LOG.isLoggable( Level.INFO ) )
       {
         LOG.info( "Exporting capture data to file: " + actualFile );
@@ -122,12 +121,8 @@ public class ExportAction extends BaseAction
       }
       catch ( IOException exception )
       {
-        // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
-        {
-          LOG.log( Level.WARNING, "Export with '" + this.exporterName + "' failed!", exception );
-          JErrorDialog.showDialog( owner, "Export capture data failed!", exception );
-        }
+        LOG.log( Level.WARNING, "Export with '" + this.exporterName + "' failed!", exception );
+        JErrorDialog.showDialog( owner, "Export capture data failed!", exception );
       }
     }
   }

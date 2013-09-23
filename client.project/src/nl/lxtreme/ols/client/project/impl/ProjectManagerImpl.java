@@ -29,7 +29,6 @@ import java.util.zip.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -46,8 +45,6 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   private static final String FILENAME_CAPTURE_RESULTS = "data.ols";
 
   // VARIABLES
-
-  private volatile HostProperties hostProperties;
 
   private final PropertyChangeSupport propertyChangeSupport;
 
@@ -171,7 +168,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     }
     finally
     {
-      HostUtils.closeResource( zipIS );
+      closeSilently( zipIS );
     }
   }
 
@@ -207,7 +204,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     final BufferedOutputStream os = new BufferedOutputStream( aOutput );
     final ZipOutputStream zipOS = new ZipOutputStream( os );
 
-    zipOS.setComment( this.hostProperties.getFullName().concat( " project file" ) );
+    zipOS.setComment( Ols.FULL_NAME.concat( " project file" ) );
 
     try
     {
@@ -224,20 +221,9 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     }
     finally
     {
-      HostUtils.closeResource( zipOS );
-      HostUtils.closeResource( os );
+      closeSilently( zipOS );
+      closeSilently( os );
     }
-  }
-
-  /**
-   * Sets hostProperties to the given value.
-   * 
-   * @param aHostProperties
-   *          the hostProperties to set.
-   */
-  public void setHostProperties( final HostProperties aHostProperties )
-  {
-    this.hostProperties = aHostProperties;
   }
 
   /**
@@ -439,7 +425,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     try
     {
       out.println( name );
-      out.println( this.hostProperties.getVersion() );
+      out.println( "0.0.0" ); // XXX
       out.println( System.currentTimeMillis() );
     }
     finally
@@ -492,6 +478,21 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     finally
     {
       aZipOS.flush();
+    }
+  }
+
+  private void closeSilently( final Closeable aCloseable )
+  {
+    try
+    {
+      if ( aCloseable != null )
+      {
+        aCloseable.close();
+      }
+    }
+    catch ( IOException e )
+    {
+      // Ignore...
     }
   }
 

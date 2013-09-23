@@ -21,10 +21,12 @@
 package nl.lxtreme.ols.client.osgi;
 
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 
-import nl.lxtreme.ols.util.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.service.cm.*;
 
@@ -148,15 +150,26 @@ public class UIColorSchemeManager implements ManagedServiceFactory
         continue;
       }
 
-      Object value = aDictionary.get( key );
       if ( key.endsWith( ".color" ) )
       {
-        value = ColorUtils.parseColor( value.toString() );
+        properties.put( key, parseColor( aDictionary, key ) );
       }
-
-      properties.put( key, value );
+      else
+      {
+        properties.put( key, aDictionary.get( key ) );
+      }
     }
 
     return properties;
+  }
+
+  private Color parseColor( Dictionary aDictionary, String key )
+  {
+    String value = aDictionary.get( key ).toString().trim();
+    if ( value.startsWith( "${" ) && value.endsWith( "}" ) )
+    {
+      return parseColor( aDictionary, value.substring( 2, value.length() - 1 ) );
+    }
+    return ColorUtils.parseColor( value );
   }
 }

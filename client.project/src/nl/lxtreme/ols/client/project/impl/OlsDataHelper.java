@@ -21,11 +21,8 @@
 package nl.lxtreme.ols.client.project.impl;
 
 
-import static nl.lxtreme.ols.util.NumberUtils.*;
-
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
 import java.util.regex.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
@@ -38,8 +35,6 @@ import nl.lxtreme.ols.api.data.*;
 final class OlsDataHelper
 {
   // CONSTANTS
-
-  private static final Logger LOG = Logger.getLogger( OlsDataHelper.class.getName() );
 
   /** The regular expression used to parse an (OLS-datafile) instruction. */
   private static final Pattern OLS_INSTRUCTION_PATTERN = Pattern.compile( "^;([^:]+):\\s+([^\r\n]+)$" );
@@ -73,10 +68,6 @@ final class OlsDataHelper
     DataSetImpl tempDataSet = new DataSetImpl();
 
     final BufferedReader br = new BufferedReader( aReader );
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      LOG.info( "Parsing OLS captured data from stream..." );
-    }
 
     final List<String[]> dataValues = new ArrayList<String[]>();
 
@@ -100,15 +91,15 @@ final class OlsDataHelper
 
         if ( "Size".equals( instrKey ) )
         {
-          size = safeParseInt( instrValue );
+          size = Integer.valueOf( instrValue );
         }
         else if ( "Rate".equals( instrKey ) )
         {
-          rate = safeParseInt( instrValue );
+          rate = Integer.valueOf( instrValue );
         }
         else if ( "Channels".equals( instrKey ) )
         {
-          channels = safeParseInt( instrValue );
+          channels = Integer.valueOf( instrValue );
         }
         else if ( "TriggerPosition".equals( instrKey ) )
         {
@@ -116,7 +107,7 @@ final class OlsDataHelper
         }
         else if ( "EnabledChannels".equals( instrKey ) )
         {
-          enabledChannels = safeParseInt( instrValue );
+          enabledChannels = Integer.valueOf( instrValue );
         }
         else if ( "CursorEnabled".equals( instrKey ) )
         {
@@ -132,7 +123,7 @@ final class OlsDataHelper
         }
         else if ( "CursorA".equals( instrKey ) )
         {
-          final long value = safeParseLong( instrValue );
+          final long value = Long.parseLong( instrValue );
           if ( value > Long.MIN_VALUE )
           {
             tempDataSet.getCursor( 0 ).setTimestamp( value );
@@ -140,7 +131,7 @@ final class OlsDataHelper
         }
         else if ( "CursorB".equals( instrKey ) )
         {
-          final long value = safeParseLong( instrValue );
+          final long value = Long.parseLong( instrValue );
           if ( value > Long.MIN_VALUE )
           {
             tempDataSet.getCursor( 1 ).setTimestamp( value );
@@ -148,7 +139,7 @@ final class OlsDataHelper
         }
         else if ( instrKey.startsWith( "Cursor" ) )
         {
-          final int idx = safeParseInt( instrKey.substring( 6 ) );
+          final int idx = Integer.parseInt( instrKey.substring( 6 ) );
           final long pos = Long.parseLong( instrValue );
           if ( pos > Long.MIN_VALUE )
           {
@@ -209,6 +200,11 @@ final class OlsDataHelper
     catch ( final NumberFormatException exception )
     {
       throw new IOException( "Invalid data encountered.", exception );
+    }
+    //
+    if ( absLen < 0 )
+    {
+      absLen = timestamps[size - 1];
     }
 
     // Finally set the captured data, and notify all event listeners...

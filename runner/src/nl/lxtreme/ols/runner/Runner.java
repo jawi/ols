@@ -26,8 +26,6 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.logging.Logger;
 
-import nl.lxtreme.ols.util.*;
-
 import org.apache.felix.framework.*;
 import org.apache.felix.framework.util.*;
 import org.osgi.framework.*;
@@ -95,7 +93,7 @@ public final class Runner
       this.framework = new Felix( config );
       this.framework.init();
 
-//      AutoProcessor.process( config, this.framework.getBundleContext() );
+      // AutoProcessor.process( config, this.framework.getBundleContext() );
 
       this.framework.start();
 
@@ -108,12 +106,8 @@ public final class Runner
     }
     catch ( Exception exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.SEVERE, "Failed to start OSGi framework! Possible reason: " + exception.getMessage() );
-        LOG.log( Level.FINE, "Details: ", exception );
-      }
+      LOG.log( Level.SEVERE, "Failed to start OSGi framework! Possible reason: " + exception.getMessage() );
+      LOG.log( Level.FINE, "Details: ", exception );
 
       throw exception;
     }

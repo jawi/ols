@@ -29,7 +29,6 @@ import java.net.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
 
@@ -268,7 +267,17 @@ public final class DataTestUtils
     }
     finally
     {
-      HostUtils.closeResource( is );
+      try
+      {
+        if ( is != null )
+        {
+          is.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
     }
   }
 }

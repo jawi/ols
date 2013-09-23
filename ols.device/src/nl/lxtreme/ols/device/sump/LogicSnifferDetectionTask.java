@@ -30,7 +30,6 @@ import javax.microedition.io.*;
 import nl.lxtreme.ols.api.task.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -131,8 +130,8 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
         writeCmdReset( outputStream );
       }
 
-      HostUtils.closeResource( inputStream );
-      HostUtils.closeResource( outputStream );
+      closeSilently( inputStream );
+      closeSilently( outputStream );
 
       try
       {
@@ -280,7 +279,11 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
         result = -1;
 
         // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
+        if ( exception instanceof InterruptedIOException )
+        {
+          Thread.currentThread().interrupt();
+        }
+        else
         {
           throw exception;
         }
@@ -349,5 +352,20 @@ public class LogicSnifferDetectionTask implements Task<LogicSnifferMetadata>, Su
     Arrays.fill( resetSequence, ( byte )CMD_RESET );
     aOutputStream.write( resetSequence );
     aOutputStream.flush();
+  }
+
+  private void closeSilently( Closeable aClosable )
+  {
+    try
+    {
+      if ( aClosable != null )
+      {
+        aClosable.close();
+      }
+    }
+    catch ( IOException exception )
+    {
+      // Ignore...
+    }
   }
 }

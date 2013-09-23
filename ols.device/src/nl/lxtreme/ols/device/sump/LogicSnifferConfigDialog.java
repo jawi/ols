@@ -42,8 +42,6 @@ import nl.lxtreme.ols.device.sump.profile.DeviceProfile.DeviceInterface;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.NumberingScheme;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.TriggerType;
 import nl.lxtreme.ols.device.sump.protocol.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.NumberUtils.UnitDefinition;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -453,7 +451,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
           }
         }
         final int level = this.triggerLevel[stage].getSelectedIndex();
-        final int delay = NumberUtils.smartParseInt( this.triggerDelay[stage].getText() );
+        final int delay = smartParseInt( this.triggerDelay[stage].getText(), 0 );
 
         final boolean parallelTriggerStage = this.triggerMode[stage].getSelectedIndex() == 0;
         final int channel = this.triggerChannel[stage].getSelectedIndex();
@@ -495,6 +493,12 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     return config;
   }
 
+  private int smartParseInt( String aText, int aDefault )
+  {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
   /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
@@ -514,7 +518,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     final String preferredPortRate = aSettings.get( "portRate", null );
     if ( ( preferredPortRate != null ) && !"null".equals( preferredPortRate ) )
     {
-      int value = NumberUtils.safeParseInt( preferredPortRate, -1 );
+      int value = smartParseInt( preferredPortRate, -1 );
       if ( ( value >= 0 ) && ( value < BAUDRATES.length ) )
       {
         // Regard this as an index...
@@ -606,7 +610,7 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   {
     aSettings.putInt( "connType", this.connTypeSelect.getSelectedIndex() );
     aSettings.put( "remAddress", this.remAddress.getText() );
-    aSettings.putInt( "remPort", NumberUtils.smartParseInt( this.remPort.getText() ) );
+    aSettings.putInt( "remPort", smartParseInt( this.remPort.getText(), 0 ) );
     aSettings.put( "port", String.valueOf( this.portSelect.getSelectedItem() ) );
     aSettings.put( "portRate", String.valueOf( this.portRateSelect.getSelectedItem() ) );
     aSettings.putInt( "source", this.sourceSelect.getSelectedIndex() );
@@ -1174,8 +1178,8 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
    */
   private int getSelectedSampleRate()
   {
-    final String value = getComboBoxText( this.speedSelect );
-    return NumberUtils.smartParseInt( value, UnitDefinition.SI, SumpProtocolConstants.CLOCK );
+    Integer speed = ( Integer )this.speedSelect.getSelectedItem();
+    return speed.intValue();
   }
 
   /**

@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.i2c;
 
 
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -39,13 +39,12 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ExportUtils.CsvExporter;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.MacroResolver;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
-import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
@@ -274,12 +273,8 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        // This should not happen for the no-file exports!
-        throw new RuntimeException( exception );
-      }
+      // This should not happen for the no-file exports!
+      throw new RuntimeException( exception );
     }
   }
 
@@ -565,11 +560,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
-      }
+      LOG.log( Level.WARNING, "CSV export failed!", exception );
     }
   }
 
@@ -587,11 +578,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
+      LOG.log( Level.WARNING, "HTML export failed!", exception );
     }
   }
 
@@ -678,8 +665,8 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
               tr = aParent.addChild( TR );
               tr.addChild( TD ).addContent( String.valueOf( i ) );
               tr.addChild( TD ).addContent( Unit.Time.format( aAnalysisResult.getTime( data.getStartSampleIndex() ) ) );
-              tr.addChild( TD ).addContent( "0x" + StringUtils.integerToHexString( value, 2 ) );
-              tr.addChild( TD ).addContent( "0b" + StringUtils.integerToBinString( value, 8 ) );
+              tr.addChild( TD ).addContent( NumberUtils.integerToHexString( value, 2 ) );
+              tr.addChild( TD ).addContent( NumberUtils.integerToBinString( value, 8 ) );
               tr.addChild( TD ).addContent( String.valueOf( value ) );
               tr.addChild( TD ).addContent( String.valueOf( ( char )value ) );
             }

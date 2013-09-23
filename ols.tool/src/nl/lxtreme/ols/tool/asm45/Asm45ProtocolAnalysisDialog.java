@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.asm45;
 
 
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -36,13 +36,12 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ExportUtils.CsvExporter;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.MacroResolver;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
-import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -208,12 +207,8 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        // This should not happen for the no-file exports!
-        throw new RuntimeException( exception );
-      }
+      // This should not happen for the no-file exports!
+      throw new RuntimeException( exception );
     }
   }
 
@@ -573,8 +568,8 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
       {
         final Asm45Data ds = dataSet.get( i );
         exporter.addRow( Integer.valueOf( i ), Integer.valueOf( ds.getClocks() ),
-            StringUtils.integerToHexString( ds.getBlock(), 2 ), StringUtils.integerToHexString( ds.getAddress(), 4 ),
-            StringUtils.integerToHexString( ds.getValue(), 4 ), ds.getBusGrant() ? "X" : "-", ds.getType(),
+            NumberUtils.integerToHexString( ds.getBlock(), 2 ), NumberUtils.integerToHexString( ds.getAddress(), 4 ),
+            NumberUtils.integerToHexString( ds.getValue(), 4 ), ds.getBusGrant() ? "X" : "-", ds.getType(),
             ds.getEvent() );
       }
 
@@ -582,11 +577,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
-      }
+      LOG.log( Level.WARNING, "CSV export failed!", exception );
     }
   }
 
@@ -604,11 +595,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
+      LOG.log( Level.WARNING, "HTML export failed!", exception );
     }
   }
 
@@ -707,9 +694,9 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
                 .addAttribute( "style", "background-color: " + bgColor + "; text-align: center;" );
             tr.addChild( TD ).addContent( String.valueOf( index ) );
             tr.addChild( TD ).addContent( String.valueOf( data.getClocks() ) );
-            tr.addChild( TD ).addContent( StringUtils.integerToHexString( data.getBlock(), 2 ) );
-            tr.addChild( TD ).addContent( StringUtils.integerToHexString( data.getAddress(), 4 ) );
-            tr.addChild( TD ).addContent( StringUtils.integerToHexString( data.getValue(), 4 ) );
+            tr.addChild( TD ).addContent( NumberUtils.integerToHexString( data.getBlock(), 2 ) );
+            tr.addChild( TD ).addContent( NumberUtils.integerToHexString( data.getAddress(), 4 ) );
+            tr.addChild( TD ).addContent( NumberUtils.integerToHexString( data.getValue(), 4 ) );
             tr.addChild( TD ).addContent( data.getBusGrant() ? "X" : "-" );
             tr.addChild( TD ).addContent( data.getType() );
             tr.addChild( TD ).addAttribute( "style", "text-align: left;" ).addContent( data.getEvent() );

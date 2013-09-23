@@ -28,8 +28,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
-import nl.lxtreme.ols.util.*;
-
 
 /**
  * Provides a device profile.
@@ -68,6 +66,24 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   public static enum TriggerType
   {
     SIMPLE, COMPLEX;
+  }
+
+  /**
+   * Provides a numeric comparator, sorts in decrementing order.
+   * <p>
+   * Yes, this is quite a hacky approach, but unfortunately, it is currently the
+   * only way instead of writing 6 almost equivalent classes.
+   * </p>
+   */
+  private static class IntegerComparator implements Serializable, Comparator<Integer>
+  {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public int compare( final Integer aO1, final Integer aO2 )
+    {
+      return aO2.compareTo( aO1 );
+    }
   }
 
   // CONSTANTS
@@ -205,7 +221,7 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
     {
       result.add( Integer.valueOf( value.trim() ) );
     }
-    Collections.sort( result, NumberUtils.<Integer> createNumberComparator( false /* aSortAscending */) );
+    Collections.sort( result, new IntegerComparator() );
     return result.toArray( new Integer[result.size()] );
   }
 
@@ -398,8 +414,7 @@ public final class DeviceProfile implements Cloneable, Comparable<DeviceProfile>
   {
     final String rawValue = this.properties.get( DEVICE_SAMPLERATES );
     final String[] values = rawValue.split( ",\\s*" );
-    final SortedSet<Integer> result = new TreeSet<Integer>(
-        NumberUtils.<Integer> createNumberComparator( false /* aSortAscending */) );
+    final SortedSet<Integer> result = new TreeSet<Integer>( new IntegerComparator() );
     for ( String value : values )
     {
       result.add( Integer.valueOf( value.trim() ) );

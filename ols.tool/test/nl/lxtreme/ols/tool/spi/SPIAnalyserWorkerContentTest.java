@@ -30,7 +30,7 @@ import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.tool.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.util.NumberUtils.BitOrder;
+import nl.lxtreme.ols.tool.base.NumberUtils.BitOrder;
 
 import org.junit.*;
 import org.mockito.*;

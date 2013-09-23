@@ -28,7 +28,6 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.TriggerType;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -75,7 +74,7 @@ final class ConfigDialogHelper
     {
       return null;
     }
-    return Integer.valueOf( NumberUtils.smartParseInt( String.valueOf( value ) ) );
+    return safeParseInteger( value );
   }
 
   /**
@@ -93,7 +92,7 @@ final class ConfigDialogHelper
     {
       return null;
     }
-    return Integer.valueOf( NumberUtils.smartParseInt( value ) );
+    return safeParseInteger( value );
   }
 
   /**
@@ -219,5 +218,17 @@ final class ConfigDialogHelper
       aComboBox.setSelectedItem( TriggerType.SIMPLE );
     }
     aComboBox.setEnabled( aProfile.isTriggerSupported() );
+  }
+
+  private static Integer safeParseInteger( Object value )
+  {
+    try
+    {
+      return Integer.valueOf( String.valueOf( value ) );
+    }
+    catch ( NumberFormatException exception )
+    {
+      return null;
+    }
   }
 }

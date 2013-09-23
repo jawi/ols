@@ -34,11 +34,10 @@ import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.tool.linedecoder.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.osgi.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
+import org.osgi.util.tracker.*;
 
 
 /**
@@ -76,7 +75,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
 
   // VARIABLES
 
-  private final WhiteboardHelper<AcquisitionDataListener> acquisitionDataListenerHelper;
+  private final ServiceTracker acquisitionDataListenerHelper;
 
   private JComboBox lineDecoders;
   private JComboBox[] lines;
@@ -103,8 +102,8 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
     super( aOwner, aContext, aBundleContext, aTool );
 
     this.lines = new JComboBox[0];
-    this.acquisitionDataListenerHelper = new WhiteboardHelper<AcquisitionDataListener>( aBundleContext,
-        AcquisitionDataListener.class );
+    this.acquisitionDataListenerHelper = new ServiceTracker( aBundleContext, AcquisitionDataListener.class.getName(),
+        null );
 
     initDialog();
 
@@ -171,18 +170,14 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
   @Override
   protected void onToolEnded( final AcquisitionResult aResult )
   {
-    this.acquisitionDataListenerHelper.accept( new WhiteboardHelper.Visitor<AcquisitionDataListener>()
+    Object[] services = this.acquisitionDataListenerHelper.getServices();
+    if ( services != null )
     {
-      @Override
-      public void visit( final AcquisitionDataListener aService )
+      for ( Object service : services )
       {
-        if ( aResult != null )
-        {
-          aService.acquisitionComplete( aResult );
-        }
+        ( ( AcquisitionDataListener )service ).acquisitionComplete( aResult );
       }
-    } );
-
+    }
     this.closeAction.setEnabled( true );
     this.runAnalysisAction.restore();
 

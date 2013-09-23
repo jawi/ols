@@ -20,8 +20,6 @@
 package nl.lxtreme.ols.client.project.impl;
 
 
-import static nl.lxtreme.ols.util.ColorUtils.*;
-
 import java.awt.*;
 import java.beans.*;
 
@@ -85,7 +83,7 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
     this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.index = aIndex;
-    this.color = parseColor( "7bf9dd" ).brighter();
+    this.color = Color.WHITE;
   }
 
   /**
@@ -348,6 +346,6 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
   @Override
   public String toString()
   {
-    return this.index + ": " + this.label;
+    return this.index + ": " + this.label + " (" + isDefined() + ")";
   }
 }

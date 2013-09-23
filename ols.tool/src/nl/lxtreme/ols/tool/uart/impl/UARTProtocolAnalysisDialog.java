@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.uart.impl;
 
 
-import static nl.lxtreme.ols.util.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -38,6 +38,11 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.ExportUtils.CsvExporter;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.Element;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.MacroResolver;
+import nl.lxtreme.ols.tool.base.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.tool.base.ToolUtils.RestorableAction;
 import nl.lxtreme.ols.tool.uart.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
@@ -45,12 +50,6 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitLevel;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitOrder;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.Parity;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.ExportUtils.CsvExporter;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.Element;
-import nl.lxtreme.ols.util.ExportUtils.HtmlExporter.MacroResolver;
-import nl.lxtreme.ols.util.ExportUtils.HtmlFileExporter;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -226,7 +225,6 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
   }
 
-
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
@@ -391,12 +389,8 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        // Should not happen in this situation!
-        throw new RuntimeException( exception );
-      }
+      // Should not happen in this situation!
+      throw new RuntimeException( exception );
     }
   }
 
@@ -806,11 +800,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "CSV export failed!", exception );
-      }
+      LOG.log( Level.WARNING, "CSV export failed!", exception );
     }
   }
 
@@ -828,11 +818,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
     }
     catch ( final IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "HTML export failed!", exception );
-      }
+      LOG.log( Level.WARNING, "HTML export failed!", exception );
     }
   }
 
@@ -949,8 +935,8 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
               {
                 final int rxData = ds.getData();
 
-                rxDataHex = "0x" + StringUtils.integerToHexString( rxData, ( bitCount / 4 ) + bitAdder );
-                rxDataBin = "0b" + StringUtils.integerToBinString( rxData, bitCount );
+                rxDataHex = NumberUtils.integerToHexString( rxData, ( bitCount / 4 ) + bitAdder );
+                rxDataBin = NumberUtils.integerToBinString( rxData, bitCount );
                 rxDataDec = String.valueOf( rxData );
                 if ( isPrintableCharacter( rxData ) )
                 {
@@ -962,8 +948,8 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
               {
                 final int txData = ds.getData();
 
-                txDataHex = "0x" + StringUtils.integerToHexString( txData, ( bitCount / 4 ) + bitAdder );
-                txDataBin = "0b" + StringUtils.integerToBinString( txData, bitCount );
+                txDataHex = NumberUtils.integerToHexString( txData, ( bitCount / 4 ) + bitAdder );
+                txDataBin = NumberUtils.integerToBinString( txData, bitCount );
                 txDataDec = String.valueOf( txData );
                 if ( isPrintableCharacter( txData ) )
                 {

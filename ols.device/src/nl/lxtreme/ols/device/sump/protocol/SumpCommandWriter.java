@@ -26,7 +26,6 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.device.sump.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -124,7 +123,7 @@ public class SumpCommandWriter implements SumpProtocolConstants, Closeable
    */
   private static int determineRleMode()
   {
-    return NumberUtils.smartParseInt( System.getProperty( "nl.lxtreme.ols.rle.mode" ), 1 );
+    return Integer.getInteger( "nl.lxtreme.ols.rle.mode", 1 ).intValue();
   }
 
   /**

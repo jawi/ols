@@ -35,7 +35,6 @@ import nl.lxtreme.jvt220.terminal.*;
 import nl.lxtreme.jvt220.terminal.swing.*;
 import nl.lxtreme.jvt220.terminal.vt220.*;
 import nl.lxtreme.ols.tool.base.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -163,8 +162,8 @@ public class SerialConsoleWindow extends JFrame implements Closeable
 
       if ( this.serialPort != null )
       {
-        HostUtils.closeResource( this.serialInput );
-        HostUtils.closeResource( this.serialOutput );
+        this.serialInput.close();
+        this.serialOutput.close();
 
         this.serialPort.close();
       }

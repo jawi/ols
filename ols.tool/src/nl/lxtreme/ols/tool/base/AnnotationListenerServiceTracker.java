@@ -21,10 +21,12 @@
 package nl.lxtreme.ols.tool.base;
 
 
+import java.util.*;
+
 import nl.lxtreme.ols.api.data.annotation.*;
-import nl.lxtreme.ols.util.osgi.*;
 
 import org.osgi.framework.*;
+import org.osgi.util.tracker.*;
 
 
 /**
@@ -34,7 +36,7 @@ public class AnnotationListenerServiceTracker implements AnnotationListener
 {
   // VARIABLES
 
-  private final WhiteboardHelper<AnnotationListener> annotationListenerHelper;
+  private final ServiceTracker annotationListenerHelper;
 
   // CONSTRUCTORS
 
@@ -43,7 +45,7 @@ public class AnnotationListenerServiceTracker implements AnnotationListener
    */
   public AnnotationListenerServiceTracker( final BundleContext aContext )
   {
-    this.annotationListenerHelper = new WhiteboardHelper<AnnotationListener>( aContext, AnnotationListener.class );
+    this.annotationListenerHelper = new ServiceTracker( aContext, AnnotationListener.class.getName(), null );
   }
 
   // METHODS
@@ -54,14 +56,10 @@ public class AnnotationListenerServiceTracker implements AnnotationListener
   @Override
   public void clearAnnotations()
   {
-    this.annotationListenerHelper.accept( new WhiteboardHelper.Visitor<AnnotationListener>()
+    for ( Object service : getAnnotationListeners() )
     {
-      @Override
-      public void visit( final AnnotationListener aService )
-      {
-        aService.clearAnnotations();
-      }
-    } );
+      ( ( AnnotationListener )service ).clearAnnotations();
+    }
   }
 
   /**
@@ -70,14 +68,10 @@ public class AnnotationListenerServiceTracker implements AnnotationListener
   @Override
   public void clearAnnotations( final int aChannelIdx )
   {
-    this.annotationListenerHelper.accept( new WhiteboardHelper.Visitor<AnnotationListener>()
+    for ( Object service : getAnnotationListeners() )
     {
-      @Override
-      public void visit( final AnnotationListener aService )
-      {
-        aService.clearAnnotations( aChannelIdx );
-      }
-    } );
+      ( ( AnnotationListener )service ).clearAnnotations( aChannelIdx );
+    }
   }
 
   /**
@@ -101,14 +95,10 @@ public class AnnotationListenerServiceTracker implements AnnotationListener
   @Override
   public void onAnnotation( final Annotation<?> aAnnotation )
   {
-    this.annotationListenerHelper.accept( new WhiteboardHelper.Visitor<AnnotationListener>()
+    for ( Object service : getAnnotationListeners() )
     {
-      @Override
-      public void visit( final AnnotationListener aService )
-      {
-        aService.onAnnotation( aAnnotation );
-      }
-    } );
+      ( ( AnnotationListener )service ).onAnnotation( aAnnotation );
+    }
   }
 
   /**
@@ -119,4 +109,13 @@ public class AnnotationListenerServiceTracker implements AnnotationListener
     this.annotationListenerHelper.open( true /* trackAllServices */);
   }
 
+  private AnnotationListener[] getAnnotationListeners()
+  {
+    Object[] services = this.annotationListenerHelper.getServices();
+    if ( services == null )
+    {
+      return new AnnotationListener[0];
+    }
+    return Arrays.copyOf( services, services.length, AnnotationListener[].class );
+  }
 }

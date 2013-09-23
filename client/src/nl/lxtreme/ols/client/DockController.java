@@ -31,7 +31,6 @@ import javax.swing.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.noos.xing.mydoggy.*;
@@ -240,7 +239,17 @@ public class DockController implements IMeasurementListener
     }
     finally
     {
-      HostUtils.closeResource( fis );
+      try
+      {
+        if ( fis != null )
+        {
+          fis.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
     }
   }
 
@@ -269,7 +278,17 @@ public class DockController implements IMeasurementListener
     }
     finally
     {
-      HostUtils.closeResource( fos );
+      try
+      {
+        if ( fos != null )
+        {
+          fos.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
     }
   }
 }

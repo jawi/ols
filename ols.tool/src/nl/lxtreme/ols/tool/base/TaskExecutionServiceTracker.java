@@ -24,9 +24,9 @@ package nl.lxtreme.ols.tool.base;
 import java.util.concurrent.*;
 
 import nl.lxtreme.ols.api.task.*;
-import nl.lxtreme.ols.util.osgi.*;
 
 import org.osgi.framework.*;
+import org.osgi.util.tracker.*;
 
 
 /**
@@ -36,7 +36,7 @@ public class TaskExecutionServiceTracker implements TaskExecutionService
 {
   // VARIABLES
 
-  private final WhiteboardHelper<TaskExecutionService> taskExecutionServiceHelper;
+  private final ServiceTracker taskExecutionServiceHelper;
 
   // CONSTRUCTORS
 
@@ -48,7 +48,7 @@ public class TaskExecutionServiceTracker implements TaskExecutionService
    */
   public TaskExecutionServiceTracker( final BundleContext aContext )
   {
-    this.taskExecutionServiceHelper = new WhiteboardHelper<TaskExecutionService>( aContext, TaskExecutionService.class );
+    this.taskExecutionServiceHelper = new ServiceTracker( aContext, TaskExecutionService.class.getName(), null );
   }
 
   // METHODS
@@ -74,7 +74,7 @@ public class TaskExecutionServiceTracker implements TaskExecutionService
   @Override
   public <RESULT_TYPE> Future<RESULT_TYPE> execute( final Task<RESULT_TYPE> aTask )
   {
-    final TaskExecutionService service = this.taskExecutionServiceHelper.getService();
+    final TaskExecutionService service = ( TaskExecutionService )this.taskExecutionServiceHelper.getService();
     if ( service != null )
     {
       return service.execute( aTask );

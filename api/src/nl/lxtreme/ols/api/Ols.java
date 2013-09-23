@@ -26,6 +26,11 @@ package nl.lxtreme.ols.api;
  */
 public interface Ols
 {
+  // CONSTANTS
+  
+  String SHORT_NAME = "LogicSniffer";
+  String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
+  
   // METHODS
 
   /** indicates that rate or trigger position are not available */

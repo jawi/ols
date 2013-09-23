@@ -23,7 +23,6 @@ package nl.lxtreme.ols.client.project.impl;
 
 import static nl.lxtreme.ols.client.project.impl.TestData.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 import java.io.*;
 
@@ -31,7 +30,6 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
 
@@ -53,11 +51,7 @@ public class ProjectManagerImplTest
   @Before
   public void setUp() throws Exception
   {
-    HostProperties mockProperties = mock( HostProperties.class );
-    when( mockProperties.getFullName() ).thenReturn( "OLS" );
-
     this.projectManager = new ProjectManagerImpl();
-    this.projectManager.setHostProperties( mockProperties );
   }
 
   /**
@@ -137,7 +131,15 @@ public class ProjectManagerImplTest
     final ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
     this.projectManager.loadProject( bais );
 
-    assertTrue( mockedCapturedData == this.projectManager.getCurrentProject().getDataSet().getCapturedData() );
+    AcquisitionResult actual = this.projectManager.getCurrentProject().getDataSet().getCapturedData();
+    assertEquals( mockedCapturedData.getAbsoluteLength(), actual.getAbsoluteLength() );
+    assertEquals( mockedCapturedData.getChannels(), actual.getChannels() );
+    assertEquals( mockedCapturedData.getEnabledChannels(), actual.getEnabledChannels() );
+    assertEquals( mockedCapturedData.getSampleRate(), actual.getSampleRate() );
+    assertTrue( mockedCapturedData.hasTimingData() == actual.hasTimingData() );
+    assertTrue( mockedCapturedData.hasTriggerData() == actual.hasTriggerData() );
+    assertArrayEquals( mockedCapturedData.getTimestamps(), actual.getTimestamps() );
+    assertArrayEquals( mockedCapturedData.getValues(), actual.getValues() );
   }
 
   /**

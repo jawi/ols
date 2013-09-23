@@ -29,7 +29,6 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.validation.*;
@@ -58,7 +57,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Creates a new GenericDeviceConfigDialog instance.
-   *
+   * 
    * @param aParent
    *          the parent window of this dialog, can be <code>null</code>.
    */
@@ -83,18 +82,18 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Returns the number of channels in each sample.
-   *
+   * 
    * @return the channel count, >= 0.
    */
   public int getChannelCount()
   {
-    final int result = NumberUtils.smartParseInt( this.channelCount.getText(), 8 );
+    final int result = safeParseInt( this.channelCount.getText(), 8 );
     return result;
   }
 
   /**
    * Returns the path to the device, like <tt>/dev/ttyS0</tt> or similar.
-   *
+   * 
    * @return the device path, never <code>null</code>.
    */
   public String getDevicePath()
@@ -114,34 +113,34 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Returns the number of samples to take.
-   *
+   * 
    * @return the sample depth, >= 0.
    */
   public int getSampleDepth()
   {
-    final int result = NumberUtils.smartParseInt( this.sampleDepth.getText(), 1024 );
+    final int result = safeParseInt( this.sampleDepth.getText(), 1024 );
     return result;
   }
 
   /**
    * Returns the sample rate of the generic device.
-   *
+   * 
    * @return the sample rate in Hertz (Hz).
    */
   public int getSampleRate()
   {
-    final int result = NumberUtils.smartParseInt( this.sampleRate.getText(), 1000000 );
+    final int result = safeParseInt( this.sampleRate.getText(), 1000000 );
     return result;
   }
 
   /**
    * Returns the width (in bytes) of each sample.
-   *
+   * 
    * @return the sample width, in bytes, >= 0.
    */
   public int getSampleWidth()
   {
-    final int result = NumberUtils.smartParseInt( this.sampleWidth.getText(), 1 );
+    final int result = safeParseInt( this.sampleWidth.getText(), 1 );
     return result;
   }
 
@@ -160,7 +159,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Shows this dialog on screen.
-   *
+   * 
    * @return <code>true</code> if this dialog is confirmed, <code>false</code>
    *         if it was cancelled.
    */
@@ -188,7 +187,7 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
 
   /**
    * Creates the contents of this dialog.
-   *
+   * 
    * @return a content pane, never <code>null</code>.
    */
   private JComponent createContents()
@@ -258,5 +257,17 @@ public class GenericDeviceConfigDialog extends JDialog implements Configurable, 
     final JComponent buttonPane = SwingComponentUtils.createButtonPane( okButton, closeButton );
 
     SwingComponentUtils.setupWindowContentPane( this, contents, buttonPane, okButton );
+  }
+
+  private int safeParseInt( String aText, int aDefault )
+  {
+    try
+    {
+      return Integer.parseInt( aText );
+    }
+    catch ( NumberFormatException exception )
+    {
+      return aDefault;
+    }
   }
 }

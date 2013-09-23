@@ -21,10 +21,12 @@
 package nl.lxtreme.ols.tool.base;
 
 
+import java.util.*;
+
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.util.osgi.*;
 
 import org.osgi.framework.*;
+import org.osgi.util.tracker.*;
 
 
 /**
@@ -34,7 +36,7 @@ public class ToolProgressListenerServiceTracker implements ToolProgressListener
 {
   // VARIABLES
 
-  private final WhiteboardHelper<ToolProgressListener> toolProgressListenerHelper;
+  private final ServiceTracker toolProgressListenerHelper;
 
   // CONSTRUCTORS
 
@@ -45,7 +47,7 @@ public class ToolProgressListenerServiceTracker implements ToolProgressListener
    */
   public ToolProgressListenerServiceTracker( final BundleContext aContext )
   {
-    this.toolProgressListenerHelper = new WhiteboardHelper<ToolProgressListener>( aContext, ToolProgressListener.class );
+    this.toolProgressListenerHelper = new ServiceTracker( aContext, ToolProgressListener.class.getName(), null );
   }
 
   // METHODS
@@ -79,13 +81,19 @@ public class ToolProgressListenerServiceTracker implements ToolProgressListener
   @Override
   public void setProgress( final int aPercentage )
   {
-    this.toolProgressListenerHelper.accept( new WhiteboardHelper.Visitor<ToolProgressListener>()
+    for ( ToolProgressListener service : getToolProgressListeners() )
     {
-      @Override
-      public void visit( final ToolProgressListener aService )
-      {
-        aService.setProgress( aPercentage );
-      }
-    } );
+      service.setProgress( aPercentage );
+    }
+  }
+
+  private ToolProgressListener[] getToolProgressListeners()
+  {
+    Object[] services = this.toolProgressListenerHelper.getServices();
+    if ( services == null )
+    {
+      return new ToolProgressListener[0];
+    }
+    return Arrays.copyOf( services, services.length, ToolProgressListener[].class );
   }
 }

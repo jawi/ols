@@ -31,15 +31,14 @@ import java.util.*;
 
 import javax.swing.*;
 
-import org.osgi.service.cm.*;
-
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
 import nl.lxtreme.ols.util.swing.component.*;
+
+import org.osgi.service.cm.*;
 
 
 /**

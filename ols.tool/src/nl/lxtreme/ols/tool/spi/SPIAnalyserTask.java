@@ -20,8 +20,7 @@
  */
 package nl.lxtreme.ols.tool.spi;
 
-
-import static nl.lxtreme.ols.util.NumberUtils.*;
+import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.beans.*;
 import java.util.logging.*;
@@ -30,10 +29,9 @@ import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.tool.api.*;
+import nl.lxtreme.ols.tool.base.*;
+import nl.lxtreme.ols.tool.base.NumberUtils.BitOrder;
 import nl.lxtreme.ols.tool.base.annotation.*;
-import nl.lxtreme.ols.util.*;
-import nl.lxtreme.ols.util.NumberUtils.BitOrder;
-import nl.lxtreme.ols.util.analysis.*;
 
 
 /**

@@ -27,7 +27,6 @@ import java.io.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.client.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 
@@ -119,7 +118,7 @@ public class SaveProjectAction extends BaseAction
     final File file = SwingComponentUtils.showFileSaveDialog( owner, OpenProjectAction.OLS_PROJECT_FILTER );
     if ( file != null )
     {
-      return HostUtils.setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
+      return FileUtils.setFileExtension( file, OpenProjectAction.OLS_PROJECT_EXTENSION );
     }
     return file;
   }
@@ -148,7 +147,7 @@ public class SaveProjectAction extends BaseAction
     LOG.log( Level.INFO, "Saving project data to file: {0}", aFile );
 
     // Strip any "known" file extensions from the given value...
-    final String projectName = HostUtils.stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
+    final String projectName = FileUtils.stripFileExtension( aFile, OpenDataFileAction.OLS_FILE_EXTENSION,
         OpenProjectAction.OLS_PROJECT_EXTENSION );
 
     try
@@ -157,12 +156,8 @@ public class SaveProjectAction extends BaseAction
     }
     catch ( IOException exception )
     {
-      // Make sure to handle IO-interrupted exceptions properly!
-      if ( !HostUtils.handleInterruptedException( exception ) )
-      {
-        LOG.log( Level.WARNING, "Saving OLS project failed!", exception );
-        JErrorDialog.showDialog( aOwner, "Saving the project data failed!", exception );
-      }
+      LOG.log( Level.WARNING, "Saving OLS project failed!", exception );
+      JErrorDialog.showDialog( aOwner, "Saving the project data failed!", exception );
     }
   }
 

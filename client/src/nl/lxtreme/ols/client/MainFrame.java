@@ -41,7 +41,6 @@ import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
@@ -256,11 +255,18 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     @Override
     protected JMenuItem createMenuItem( final String aName )
     {
-      int idx = NumberUtils.safeParseInt( aName );
-      if ( idx >= 0 )
+      try
       {
-        final Action action = this.controller.getAction( GotoNthCursorAction.getID( idx ) );
-        return new JMenuItem( action );
+        int idx = Integer.parseInt( aName );
+        if ( idx >= 0 )
+        {
+          final Action action = this.controller.getAction( GotoNthCursorAction.getID( idx ) );
+          return new JMenuItem( action );
+        }
+      }
+      catch ( NumberFormatException exception )
+      {
+        // Ignore...
       }
       return null;
     }
@@ -687,8 +693,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
      */
     private int getMouseWheelZoomModifier()
     {
-      final HostInfo hostInfo = HostUtils.getHostInfo();
-      if ( hostInfo.isMacOS() )
+      if ( isMacOS() )
       {
         return InputEvent.META_DOWN_MASK;
       }
@@ -814,6 +819,18 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   // METHODS
 
   /**
+   * Returns whether the current host's operating system is Mac OS X.
+   * 
+   * @return <code>true</code> if running on Mac OS X, <code>false</code>
+   *         otherwise.
+   */
+  static boolean isMacOS()
+  {
+    final String osName = System.getProperty( "os.name" );
+    return ( "Mac OS X".equalsIgnoreCase( osName ) || "Darwin".equalsIgnoreCase( osName ) );
+  }
+
+  /**
    * @see nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable#close()
    */
   @Override
@@ -918,8 +935,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public void showAboutBox()
   {
-    final HostProperties hostProperties = this.controller.getHostProperties();
-    final AboutBox aboutDialog = new AboutBox( hostProperties.getShortName(), hostProperties.getVersion() );
+    final AboutBox aboutDialog = new AboutBox( Ols.SHORT_NAME, "0.0.0" ); // XXX
     aboutDialog.showDialog();
   }
 
@@ -992,15 +1008,11 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     fileMenu.addSeparator();
     fileMenu.add( this.exportMenu );
 
-    final HostInfo hostInfo = HostUtils.getHostInfo();
-    if ( hostInfo.needsExitMenuItem() )
+    if ( !isMacOS() )
     {
       fileMenu.add( new JSeparator() );
       fileMenu.add( this.controller.getAction( ExitAction.ID ) );
-    }
 
-    if ( hostInfo.needsPreferencesMenuItem() )
-    {
       final JMenu editMenu = bar.add( new JMenu( "Edit" ) );
       editMenu.setMnemonic( 'E' );
       editMenu.add( this.controller.getAction( ShowPreferencesDialogAction.ID ) );
@@ -1051,7 +1063,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     this.toolsMenu.addSeparator();
     this.toolsMenu.addMenuListener( new ToolMenuBuilder( this.controller ) );
 
-    if ( hostInfo.isMacOS() )
+    if ( isMacOS() )
     {
       this.windowMenu = bar.add( new JMenu( "Window" ) );
       this.windowMenu.setMnemonic( 'W' );
@@ -1072,7 +1084,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     helpMenu.setMnemonic( 'H' );
     helpMenu.add( this.controller.getAction( ShowBundlesAction.ID ) );
 
-    if ( hostInfo.needsAboutMenuItem() )
+    if ( !isMacOS() )
     {
       helpMenu.addSeparator();
       helpMenu.add( this.controller.getAction( HelpAboutAction.ID ) );
@@ -1131,11 +1143,15 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   private void updateWindowDecorations( final Project aProject )
   {
-    String title = this.controller.getHostProperties().getFullName();
-    if ( ( aProject != null ) && !StringUtils.isEmpty( aProject.getName() ) )
+    String title = Ols.FULL_NAME;
+    if ( aProject != null )
     {
-      // Denote the project file in the title of the main window...
-      title = title.concat( " :: " ).concat( aProject.getName() );
+      String projectName = aProject.getName();
+      if ( projectName != null && !"".equals( projectName.trim() ) )
+      {
+        // Denote the project file in the title of the main window...
+        title = title.concat( " :: " ).concat( projectName );
+      }
     }
     setTitle( title );
 

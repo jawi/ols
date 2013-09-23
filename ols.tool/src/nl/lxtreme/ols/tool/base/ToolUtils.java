@@ -28,7 +28,6 @@ import java.io.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.tool.base.ExportAware.ExportFormat;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction;
 
@@ -97,7 +96,7 @@ public class ToolUtils
       {
         ExportFormat format = ExportFormat.CSV;
 
-        final String filenameExt = HostUtils.getFileExtension( selectedFile );
+        final String filenameExt = getFileExtension( selectedFile );
         if ( "htm".equalsIgnoreCase( filenameExt ) || "html".equalsIgnoreCase( filenameExt ) )
         {
           format = ExportFormat.HTML;
@@ -319,6 +318,36 @@ public class ToolUtils
   public static void showWarningMessage( final Window aParent, final String aMessage )
   {
     JOptionPane.showMessageDialog( aParent, aMessage, "Warning ...", JOptionPane.WARNING_MESSAGE );
+  }
+
+  /**
+   * Returns the "presumed" filename extension (like '.jpg', '.zip') from a
+   * given file.
+   * 
+   * @param aFile
+   *          the file to return the extension for, cannot be <code>null</code>.
+   * @return the file extension (always in lower case), never <code>null</code>
+   *         but can be empty if the given file has <em>no</em> file extension.
+   */
+  private static final String getFileExtension( final File aFile )
+  {
+    String ext = "";
+
+    String filename = aFile.getName();
+    int idx = filename.lastIndexOf( '.' );
+
+    if ( ( idx >= 0 ) && ( idx < ( filename.length() - 1 ) ) )
+    {
+      ext = filename.substring( idx + 1 ).toLowerCase();
+    }
+
+    // Avoid directories being detected as having a file extension...
+    if ( aFile.exists() && aFile.isDirectory() && !"".equals( ext ) )
+    {
+      ext = "";
+    }
+
+    return ext;
   }
 
 }

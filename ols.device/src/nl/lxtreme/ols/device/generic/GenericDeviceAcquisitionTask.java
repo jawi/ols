@@ -28,7 +28,6 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.device.api.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -116,7 +115,17 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
     }
     finally
     {
-      HostUtils.closeResource( this.inputStream );
+      try
+      {
+        if ( this.inputStream != null )
+        {
+          this.inputStream.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
     }
   }
 

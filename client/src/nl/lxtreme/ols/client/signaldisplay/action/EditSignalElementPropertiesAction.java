@@ -26,13 +26,14 @@ import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
+
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
 import nl.lxtreme.ols.util.swing.component.*;
 import nl.lxtreme.ols.util.swing.validation.*;
 
@@ -160,8 +161,14 @@ public class EditSignalElementPropertiesAction extends AbstractAction
      */
     public int getElementHeight()
     {
-      int defaultValue = UIManager.getInt( UIManagerKeys.CHANNEL_HEIGHT );
-      return NumberUtils.safeParseInt( this.heightEditor.getText(), defaultValue );
+      try
+      {
+        return Integer.parseInt( this.heightEditor.getText() );
+      }
+      catch ( NumberFormatException exception )
+      {
+        return UIManager.getInt( UIManagerKeys.CHANNEL_HEIGHT );
+      }
     }
 
     /**
@@ -196,8 +203,14 @@ public class EditSignalElementPropertiesAction extends AbstractAction
      */
     public int getSignalHeight()
     {
-      int defaultValue = UIManager.getInt( UIManagerKeys.DIGITAL_SIGNAL_HEIGHT );
-      return NumberUtils.safeParseInt( this.signalHeightEditor.getText(), defaultValue );
+      try
+      {
+        return Integer.parseInt( this.signalHeightEditor.getText() );
+      }
+      catch ( NumberFormatException exception )
+      {
+        return UIManager.getInt( UIManagerKeys.DIGITAL_SIGNAL_HEIGHT );
+      }
     }
 
     /**

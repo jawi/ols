@@ -25,11 +25,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.concurrent.*;
+
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.util.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;
@@ -432,7 +432,61 @@ public class UserSessionManager
    */
   private File getUserSettingsFile()
   {
-    return HostUtils.createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX, IMPLICIT_USER_SETTING_NAME_SUFFIX );
+    return createLocalDataFile( IMPLICIT_USER_SETTING_NAME_PREFIX, IMPLICIT_USER_SETTING_NAME_SUFFIX );
+  }
+
+  /**
+   * Creates an OS-specific file location to store data.
+   * 
+   * @param aName
+   *          the name of the data file, excluding the file extension, cannot be
+   *          <code>null</code> or empty;
+   * @param aExtension
+   *          the extension of the data file to use, note that this is an
+   *          <em>indication</em> an might not be used for a particular host
+   *          operating system.
+   * @return the file pointing to the OS-specific properties file location,
+   *         never <code>null</code>.
+   */
+  private File createLocalDataFile( final String aName, final String aExtension )
+  {
+    final String fileName;
+    final String extension = ( aExtension.startsWith( "." ) ? "" : "." ) + aExtension;
+    final String osName = System.getProperty( "os.name" ).toLowerCase();
+
+    String dirName;
+    if ( "mac os x".equals( osName ) || "darwin".equals( osName ) )
+    {
+      // This is the location where to store data on MacOS...
+      dirName = System.getProperty( "user.home" ) + "/Library/Preferences";
+      fileName = aName + ".Application";
+    }
+    else if ( osName.indexOf( "nix" ) >= 0 || osName.indexOf( "solaris" ) >= 0 || osName.indexOf( "sunos" ) >= 0
+        || osName.indexOf( "linux" ) >= 0 || osName.indexOf( "bsd" ) >= 0 )
+    {
+      // The home folder is the 'default' location on Unix flavors...
+      dirName = System.getProperty( "user.home" );
+      fileName = "." + aName + extension;
+    }
+    else
+    {
+      // On Windows, there's no 'single' concept where to store local
+      // application data...
+      dirName = System.getenv( "LOCALAPPDATA" );
+      if ( ( dirName == null ) || dirName.trim().isEmpty() )
+      {
+        System.getenv( "APPDATA" );
+      }
+      if ( ( dirName == null ) || dirName.trim().isEmpty() )
+      {
+        dirName = System.getProperty( "user.home" );
+      }
+
+      fileName = aName + extension;
+    }
+
+    final File propFile = new File( dirName, fileName );
+    return propFile;
   }
 
   /**

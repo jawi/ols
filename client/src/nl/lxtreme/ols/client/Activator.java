@@ -29,11 +29,11 @@ import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.api.ui.*;
+import nl.lxtreme.ols.client.appcallback.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.api.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.util.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
@@ -206,6 +206,14 @@ public class Activator extends DependencyActivatorBase
             .setRequired( false ) //
         ) );
 
+    aManager.add( createComponent() //
+        .setImplementation( ApplicationCallbackFacade.class ) //
+        .add( //
+            createServiceDependency() //
+                .setService( ApplicationCallback.class ) //
+                .setRequired( false ) ) //
+        );
+
     // All the interfaces we're registering the client controller under...
     serviceNames = new String[] { AcquisitionDataListener.class.getName(), AcquisitionProgressListener.class.getName(),
         AcquisitionStatusListener.class.getName(), AnnotationListener.class.getName(),
@@ -215,9 +223,6 @@ public class Activator extends DependencyActivatorBase
     aManager.add( createComponent() //
         .setInterface( serviceNames, null ) //
         .setImplementation( clientController ) //
-        .add( createServiceDependency() //
-            .setService( HostProperties.class ) //
-            .setRequired( true ) ) //
         .add( createServiceDependency() //
             .setService( ProjectManager.class ) //
             .setRequired( true ) //

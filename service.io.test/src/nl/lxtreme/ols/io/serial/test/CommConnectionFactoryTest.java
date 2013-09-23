@@ -26,7 +26,6 @@ import java.io.*;
 import javax.microedition.io.*;
 
 import junit.framework.*;
-import nl.lxtreme.ols.util.*;
 
 import org.osgi.framework.*;
 import org.osgi.service.io.*;
@@ -45,7 +44,7 @@ public class CommConnectionFactoryTest extends TestCase
   public void ignoreTestCreateExistingConnectionLinux() throws IOException,
       InvalidSyntaxException
   {
-    if ( !HostUtils.getHostInfo().isUnix() )
+    if ( !HostUtils.isUnix() )
     {
       return;
     }
@@ -60,7 +59,7 @@ public class CommConnectionFactoryTest extends TestCase
   public void ignoreTestCreateExistingConnectionMacOS() throws IOException,
       InvalidSyntaxException
   {
-    if ( !HostUtils.getHostInfo().isMacOS() )
+    if ( !HostUtils.isMacOS() )
     {
       return;
     }
@@ -76,7 +75,7 @@ public class CommConnectionFactoryTest extends TestCase
   public void ignoreTestCreateExistingConnectionSolaris() throws IOException,
       InvalidSyntaxException
   {
-    if ( !HostUtils.getHostInfo().isSolaris() )
+    if ( !HostUtils.isSolaris() )
     {
       return;
     }
@@ -91,7 +90,7 @@ public class CommConnectionFactoryTest extends TestCase
   public void ignoreTestCreateExistingConnectionWin32() throws IOException,
       InvalidSyntaxException
   {
-    if ( !HostUtils.getHostInfo().isWindows() )
+    if ( !HostUtils.isWindows() )
     {
       return;
     }
@@ -105,7 +104,7 @@ public class CommConnectionFactoryTest extends TestCase
    */
   public void ignoreTestCreateNonExistingConnectionLinux() throws Exception
   {
-    if ( !HostUtils.getHostInfo().isUnix() )
+    if ( !HostUtils.isUnix() )
     {
       return;
     }
@@ -119,7 +118,7 @@ public class CommConnectionFactoryTest extends TestCase
    */
   public void ignoreTestCreateNonExistingConnectionMacOS() throws Exception
   {
-    if ( !HostUtils.getHostInfo().isMacOS() )
+    if ( !HostUtils.isMacOS() )
     {
       return;
     }
@@ -133,7 +132,7 @@ public class CommConnectionFactoryTest extends TestCase
    */
   public void ignoreTestCreateNonExistingConnectionSolaris() throws Exception
   {
-    if ( !HostUtils.getHostInfo().isUnix() )
+    if ( !HostUtils.isUnix() )
     {
       return;
     }
@@ -147,7 +146,7 @@ public class CommConnectionFactoryTest extends TestCase
    */
   public void ignoreTestCreateNonExistingConnectionWin32() throws Exception
   {
-    if ( !HostUtils.getHostInfo().isWindows() )
+    if ( !HostUtils.isWindows() )
     {
       return;
     }

@@ -25,7 +25,6 @@ import java.io.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.device.sump.*;
-import nl.lxtreme.ols.util.*;
 
 
 /**
@@ -162,7 +161,11 @@ public class SumpResultReader implements Closeable, SumpProtocolConstants
         result = -1;
 
         // Make sure to handle IO-interrupted exceptions properly!
-        if ( !HostUtils.handleInterruptedException( exception ) )
+        if ( exception instanceof InterruptedIOException )
+        {
+          Thread.currentThread().interrupt();
+        }
+        else
         {
           LOG.log( Level.INFO, "I/O exception", exception );
         }

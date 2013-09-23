@@ -12,7 +12,6 @@ import java.util.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
 import org.osgi.service.log.*;
@@ -55,7 +54,7 @@ public class UserSettingsManagerTest
 
     FileOutputStream fos = new FileOutputStream( file );
     fos.write( "hello world".getBytes() );
-    HostUtils.closeResource( fos );
+    fos.close();
 
     this.userSettingsManager.loadUserSettings( file, this.project );
 

@@ -21,16 +21,18 @@
 package nl.lxtreme.ols.task.execution;
 
 
+import java.util.*;
+
 import nl.lxtreme.ols.api.task.*;
-import nl.lxtreme.ols.util.osgi.*;
 
 import org.osgi.framework.*;
+import org.osgi.util.tracker.*;
 
 
 /**
  * Whiteboard helper for all {@link ToolProgressListener}s.
  */
-public class TaskStatusListenerHelper extends WhiteboardHelper<TaskStatusListener> implements TaskStatusListener
+public class TaskStatusListenerHelper extends ServiceTracker implements TaskStatusListener
 {
   // CONSTRUCTORS
 
@@ -42,7 +44,7 @@ public class TaskStatusListenerHelper extends WhiteboardHelper<TaskStatusListene
    */
   public TaskStatusListenerHelper( final BundleContext aContext )
   {
-    super( aContext, TaskStatusListener.class );
+    super( aContext, TaskStatusListener.class.getName(), null );
   }
 
   // METHODS
@@ -53,13 +55,9 @@ public class TaskStatusListenerHelper extends WhiteboardHelper<TaskStatusListene
   @Override
   public <RESULT_TYPE> void taskEnded( final Task<RESULT_TYPE> aTask, final RESULT_TYPE aResult )
   {
-    final Object[] services = getServices();
-    if ( services != null )
+    for ( TaskStatusListener service : getTaskStatusListeners() )
     {
-      for ( Object service : services )
-      {
-        ( ( TaskStatusListener )service ).taskEnded( aTask, aResult );
-      }
+      service.taskEnded( aTask, aResult );
     }
   }
 
@@ -69,13 +67,9 @@ public class TaskStatusListenerHelper extends WhiteboardHelper<TaskStatusListene
   @Override
   public <RESULT_TYPE> void taskFailed( final Task<RESULT_TYPE> aTask, final Exception aException )
   {
-    final Object[] services = getServices();
-    if ( services != null )
+    for ( TaskStatusListener service : getTaskStatusListeners() )
     {
-      for ( Object service : services )
-      {
-        ( ( TaskStatusListener )service ).taskFailed( aTask, aException );
-      }
+      service.taskFailed( aTask, aException );
     }
   }
 
@@ -85,13 +79,19 @@ public class TaskStatusListenerHelper extends WhiteboardHelper<TaskStatusListene
   @Override
   public <RESULT_TYPE> void taskStarted( final Task<RESULT_TYPE> aTask )
   {
-    final Object[] services = getServices();
-    if ( services != null )
+    for ( TaskStatusListener service : getTaskStatusListeners() )
     {
-      for ( Object service : services )
-      {
-        ( ( TaskStatusListener )service ).taskStarted( aTask );
-      }
+      service.taskStarted( aTask );
     }
+  }
+
+  private TaskStatusListener[] getTaskStatusListeners()
+  {
+    Object[] services = getServices();
+    if ( services == null )
+    {
+      return new TaskStatusListener[0];
+    }
+    return Arrays.copyOf( services, services.length, TaskStatusListener[].class );
   }
 }
