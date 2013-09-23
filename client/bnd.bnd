@@ -8,7 +8,6 @@
 	service.acquisition.api;version=latest,\
 	api;version=latest,\
 	util;version=latest,\
-	test.util;version=latest,\
 	junit.osgi;version=4.11.0,\
 	org.mockito.mockito-all;version=1.9.0,\
 	mydoggy-osgi;version=1.5.0

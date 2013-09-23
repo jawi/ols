@@ -18,14 +18,13 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.project.impl;
+package nl.lxtreme.ols.client.signaldisplay.view;
 
 
 import static nl.lxtreme.ols.util.NumberUtils.*;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
 import java.util.regex.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
@@ -38,8 +37,6 @@ import nl.lxtreme.ols.api.data.*;
 final class OlsDataHelper
 {
   // CONSTANTS
-
-  private static final Logger LOG = Logger.getLogger( OlsDataHelper.class.getName() );
 
   /** The regular expression used to parse an (OLS-datafile) instruction. */
   private static final Pattern OLS_INSTRUCTION_PATTERN = Pattern.compile( "^;([^:]+):\\s+([^\r\n]+)$" );
@@ -59,7 +56,7 @@ final class OlsDataHelper
    *           in case of I/O problems.
    */
   @SuppressWarnings( "boxing" )
-  public static DataSetImpl read( final Reader aReader ) throws IOException
+  public static AcquisitionResult read( final Reader aReader ) throws IOException
   {
     int size = -1;
     Integer rate = null, channels = null, enabledChannels = null;
@@ -69,15 +66,7 @@ final class OlsDataHelper
     // assume 'new' file format is in use, don't support uncompressed ones...
     boolean compressed = true;
 
-    AcquisitionResult capturedData = null;
-    DataSetImpl tempDataSet = new DataSetImpl();
-
     final BufferedReader br = new BufferedReader( aReader );
-    if ( LOG.isLoggable( Level.INFO ) )
-    {
-      LOG.info( "Parsing OLS captured data from stream..." );
-    }
-
     final List<String[]> dataValues = new ArrayList<String[]>();
 
     String line;
@@ -120,7 +109,7 @@ final class OlsDataHelper
         }
         else if ( "CursorEnabled".equals( instrKey ) )
         {
-          tempDataSet.setCursorsEnabled( Boolean.parseBoolean( instrValue ) );
+          // Not used.
         }
         else if ( "Compressed".equals( instrKey ) )
         {
@@ -130,30 +119,9 @@ final class OlsDataHelper
         {
           absLen = Long.parseLong( instrValue );
         }
-        else if ( "CursorA".equals( instrKey ) )
-        {
-          final long value = safeParseLong( instrValue );
-          if ( value > Long.MIN_VALUE )
-          {
-            tempDataSet.getCursor( 0 ).setTimestamp( value );
-          }
-        }
-        else if ( "CursorB".equals( instrKey ) )
-        {
-          final long value = safeParseLong( instrValue );
-          if ( value > Long.MIN_VALUE )
-          {
-            tempDataSet.getCursor( 1 ).setTimestamp( value );
-          }
-        }
         else if ( instrKey.startsWith( "Cursor" ) )
         {
-          final int idx = safeParseInt( instrKey.substring( 6 ) );
-          final long pos = Long.parseLong( instrValue );
-          if ( pos > Long.MIN_VALUE )
-          {
-            tempDataSet.getCursor( idx ).setTimestamp( pos );
-          }
+          // Not used.
         }
       }
     }
@@ -212,107 +180,6 @@ final class OlsDataHelper
     }
 
     // Finally set the captured data, and notify all event listeners...
-    capturedData = new CapturedData( values, timestamps, triggerPos, rate, channels, enabledChannels, absLen );
-
-    return new DataSetImpl( capturedData, tempDataSet, false /* aRetainAnnotations */);
-  }
-
-  /**
-   * Writes the data to the given writer.
-   * 
-   * @param aProject
-   *          the project to write the settings for, cannot be <code>null</code>
-   *          ;
-   * @param aWriter
-   *          the writer to write the data to, cannot be <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  public static void write( final DataSet aDataSet, final Writer aWriter ) throws IOException
-  {
-    final BufferedWriter bw = new BufferedWriter( aWriter );
-
-    final AcquisitionResult capturedData = aDataSet.getCapturedData();
-
-    final Cursor[] cursors = aDataSet.getCursors();
-    final boolean cursorsEnabled = aDataSet.isCursorsEnabled();
-
-    try
-    {
-      final int[] values = capturedData.getValues();
-      final long[] timestamps = capturedData.getTimestamps();
-
-      bw.write( ";Size: " );
-      bw.write( Integer.toString( values.length ) );
-      bw.newLine();
-
-      bw.write( ";Rate: " );
-      bw.write( Integer.toString( capturedData.getSampleRate() ) );
-      bw.newLine();
-
-      bw.write( ";Channels: " );
-      bw.write( Integer.toString( capturedData.getChannels() ) );
-      bw.newLine();
-
-      bw.write( ";EnabledChannels: " );
-      bw.write( Integer.toString( capturedData.getEnabledChannels() ) );
-      bw.newLine();
-
-      if ( capturedData.hasTriggerData() )
-      {
-        bw.write( ";TriggerPosition: " );
-        bw.write( Long.toString( capturedData.getTriggerPosition() ) );
-        bw.newLine();
-      }
-
-      bw.write( ";Compressed: " );
-      bw.write( Boolean.toString( true ) );
-      bw.newLine();
-
-      bw.write( ";AbsoluteLength: " );
-      bw.write( Long.toString( capturedData.getAbsoluteLength() ) );
-      bw.newLine();
-
-      bw.write( ";CursorEnabled: " );
-      bw.write( Boolean.toString( cursorsEnabled ) );
-      bw.newLine();
-
-      for ( int i = 0; cursorsEnabled && ( i < cursors.length ); i++ )
-      {
-        if ( cursors[i].isDefined() )
-        {
-          bw.write( String.format( ";Cursor%d: ", Integer.valueOf( i ) ) );
-          bw.write( Long.toString( cursors[i].getTimestamp() ) );
-          bw.newLine();
-        }
-      }
-      for ( int i = 0; i < values.length; i++ )
-      {
-        bw.write( formatSample( values[i], timestamps[i] ) );
-        bw.newLine();
-      }
-    }
-    finally
-    {
-      bw.flush();
-    }
-  }
-
-  /**
-   * Formats the given value and timestamp into a single sample string.
-   * 
-   * @param aValue
-   *          the sample value to format;
-   * @param aTimestamp
-   *          the timestamp to format.
-   * @return the sample string, in the form of
-   *         &lt;value<sub>16</sub>&gt;@&lt;timestamp<sub>10</sub>&gt;.
-   */
-  @SuppressWarnings( "boxing" )
-  static String formatSample( final int aValue, final long aTimestamp )
-  {
-    // values can become negative (full 32-bit is used!), while timestamps never
-    // can be negative (it is a relative timestamp!)...
-    return String.format( "%08x@%d", aValue, ( aTimestamp & Long.MAX_VALUE ) );
+    return new CapturedData( values, timestamps, triggerPos, rate, channels, enabledChannels, absLen );
   }
 }

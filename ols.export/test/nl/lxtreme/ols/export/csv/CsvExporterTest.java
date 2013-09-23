@@ -30,7 +30,6 @@ import java.util.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.test.data.project.*;
 
 import org.junit.*;
 import org.junit.rules.*;
@@ -216,13 +215,21 @@ public class CsvExporterTest
       value++;
     }
 
-    CapturedData capData = new CapturedData( values, timestamps, aTriggerPos, aSampleRate, aChannelCount, mask,
-        value - 1 );
+    CapturedData capData = new CapturedData( values, timestamps, aTriggerPos, aSampleRate, //
+        aChannelCount, mask, value - 1 );
 
-    StubDataSet dataSet = new StubDataSet();
-    dataSet.setCapturedData( capData );
-    dataSet.setCursorsEnabled( false );
-    return dataSet;
+    Channel[] channels = new Channel[aChannelCount];
+    for ( int i = 0; i < channels.length; i++ )
+    {
+      channels[i] = mock( Channel.class );
+      when( channels[i].getLabel() ).thenReturn( "label" + i );
+    }
+
+    DataSet result = mock( DataSet.class );
+    when( result.getCapturedData() ).thenReturn( capData );
+    when( result.getChannels() ).thenReturn( channels );
+
+    return result;
   }
 
   /**

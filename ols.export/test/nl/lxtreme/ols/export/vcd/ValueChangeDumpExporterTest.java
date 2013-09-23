@@ -25,11 +25,11 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.*;
+import java.util.*;
 
 import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.test.data.*;
 
 import org.junit.*;
 import org.junit.rules.*;
@@ -73,15 +73,15 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExport16ChannelDataDumpOk() throws IOException
   {
-    DataSet dataSet = DataTestUtils.createStubDataSet( 16 );
+    DataSet dataSet = createStubDataSet( 16 );
 
     this.exporter.export( dataSet, this.component, this.nullOutputStream );
 
     verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
     verify( this.exporter, times( 16 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
-    verify( this.exporter, times( 2 ) ).writeVariableData( any( PrintWriter.class ), eq( 16 ), eq( 65535 ), anyInt(),
+    verify( this.exporter, times( 16 ) ).writeVariableData( any( PrintWriter.class ), eq( 16 ), eq( 65535 ), anyInt(),
         anyInt(), anyBoolean() );
-    verify( this.exporter, times( 3 ) ).writeTime( any( PrintWriter.class ), anyLong() );
+    verify( this.exporter, times( 17 ) ).writeTime( any( PrintWriter.class ), anyLong() );
   }
 
   /**
@@ -95,15 +95,15 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExport8ChannelDataDumpOk() throws IOException
   {
-    DataSet dataSet = DataTestUtils.createStubDataSet( 8 );
+    DataSet dataSet = createStubDataSet( 8 );
 
     this.exporter.export( dataSet, this.component, this.nullOutputStream );
 
     verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
     verify( this.exporter, times( 8 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
-    verify( this.exporter, times( 4 ) ).writeVariableData( any( PrintWriter.class ), eq( 8 ), eq( 255 ), anyInt(),
+    verify( this.exporter, times( 8 ) ).writeVariableData( any( PrintWriter.class ), eq( 8 ), eq( 255 ), anyInt(),
         anyInt(), anyBoolean() );
-    verify( this.exporter, times( 5 ) ).writeTime( any( PrintWriter.class ), anyLong() );
+    verify( this.exporter, times( 9 ) ).writeTime( any( PrintWriter.class ), anyLong() );
   }
 
   /**
@@ -117,7 +117,7 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExportDataDumpOk() throws IOException
   {
-    DataSet dataSet = DataTestUtils.createStubDataSet( 8 );
+    DataSet dataSet = createStubDataSet( 8 );
 
     File file = this.folder.newFile( "dump.vcd" );
     FileOutputStream fos = new FileOutputStream( file );
@@ -143,14 +143,45 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExportSingleChannelDataDumpOk() throws IOException
   {
-    DataSet dataSet = DataTestUtils.createStubDataSet( 1 );
+    DataSet dataSet = createStubDataSet( 1 );
 
     this.exporter.export( dataSet, this.component, this.nullOutputStream );
 
     verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
     verify( this.exporter, times( 1 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
-    verify( this.exporter, times( 16 ) ).writeVariableData( any( PrintWriter.class ), eq( 1 ), eq( 1 ), anyInt(),
+    verify( this.exporter, times( 1 ) ).writeVariableData( any( PrintWriter.class ), eq( 1 ), eq( 1 ), anyInt(),
         anyInt(), anyBoolean() );
-    verify( this.exporter, times( 17 ) ).writeTime( any( PrintWriter.class ), anyLong() );
+    verify( this.exporter, times( 2 ) ).writeTime( any( PrintWriter.class ), anyLong() );
+  }
+
+  private DataSet createStubDataSet( int aChannelCount )
+  {
+    int aSize = aChannelCount;
+    List<Integer> values = new ArrayList<Integer>( aSize );
+    List<Long> timestamps = new ArrayList<Long>( aSize );
+
+    int value = 0;
+    int mask = ( 1 << aChannelCount ) - 1;
+    for ( int i = 0; i < aSize; i++ )
+    {
+      values.add( Integer.valueOf( value & mask ) );
+      timestamps.add( Long.valueOf( value ) );
+      value++;
+    }
+
+    CapturedData capData = new CapturedData( values, timestamps, -1, 100, aChannelCount, mask, value - 1 );
+
+    Channel[] channels = new Channel[aChannelCount];
+    for ( int i = 0; i < channels.length; i++ )
+    {
+      channels[i] = mock( Channel.class );
+      when( channels[i].getLabel() ).thenReturn( "label" + i );
+    }
+
+    DataSet result = mock( DataSet.class );
+    when( result.getCapturedData() ).thenReturn( capData );
+    when( result.getChannels() ).thenReturn( channels );
+
+    return result;
   }
 }

@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.client.project.impl;
 
 
+import static nl.lxtreme.ols.client.project.impl.TestData.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -30,7 +31,6 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.test.data.*;
 import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
@@ -123,7 +123,7 @@ public class ProjectManagerImplTest
   @Test
   public void testSaveProjectStoresCaptureResultsOk() throws IOException
   {
-    final AcquisitionResult mockedCapturedData = DataTestUtils.getMockedCapturedData();
+    final AcquisitionResult mockedCapturedData = createTestData();
 
     final Project project = this.projectManager.getCurrentProject();
     project.setCapturedData( mockedCapturedData );
@@ -137,8 +137,7 @@ public class ProjectManagerImplTest
     final ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
     this.projectManager.loadProject( bais );
 
-    DataTestUtils.assertEquals( mockedCapturedData, this.projectManager.getCurrentProject().getDataSet()
-        .getCapturedData() );
+    assertTrue( mockedCapturedData == this.projectManager.getCurrentProject().getDataSet().getCapturedData() );
   }
 
   /**

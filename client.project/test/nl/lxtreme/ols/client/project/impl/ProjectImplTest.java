@@ -20,7 +20,7 @@
  */
 package nl.lxtreme.ols.client.project.impl;
 
-
+import static nl.lxtreme.ols.client.project.impl.TestData.*;
 import static org.junit.Assert.*;
 
 import java.beans.*;
@@ -29,7 +29,6 @@ import java.util.*;
 
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.test.data.*;
 
 import org.junit.*;
 
@@ -135,7 +134,7 @@ public class ProjectImplTest
     };
     this.project.addPropertyChangeListener( listener );
 
-    this.project.setCapturedData( DataTestUtils.getMockedCapturedData() );
+    this.project.setCapturedData( createTestData() );
     ensure.waitForStep( 1, 500 );
 
     this.project.setFilename( new File( "test" ) );
@@ -161,7 +160,7 @@ public class ProjectImplTest
   @Test
   public void testSetCapturedData()
   {
-    final AcquisitionResult data = DataTestUtils.getMockedCapturedData();
+    final AcquisitionResult data = createTestData();
     this.project.setCapturedData( data );
 
     assertSame( data, this.project.getDataSet().getCapturedData() );

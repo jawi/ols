@@ -23,12 +23,12 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 import static org.junit.Assert.*;
 
+import java.io.*;
 import java.net.*;
 import java.util.*;
 
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.client.signaldisplay.view.MeasurementView.PulseCountInfo;
-import nl.lxtreme.ols.test.data.*;
 
 import org.junit.*;
 import org.junit.runner.*;
@@ -96,7 +96,7 @@ public class MeasurementViewTest
   public void setUp() throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), this.resourceName );
-    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
+    AcquisitionResult container = OlsDataHelper.read( new InputStreamReader( resource.openStream() ) );
 
     int start = 0;
     int end = container.getValues().length;
