@@ -1,4 +1,5 @@
--runrequires: osgi.identity;filter:='(osgi.identity=org.apache.felix.dependencymanager)',\
+-runrequires: \
+	osgi.identity;filter:='(osgi.identity=org.apache.felix.dependencymanager)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.dependencymanager.shell)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.gogo.command)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.gogo.runtime)',\
@@ -91,8 +92,5 @@
 	ols.export.image;version=latest,\
 	ols.export.vcd;version=latest
 -runproperties: \
-    felix.fileinstall.dir=./conf,\
-    felix.fileinstall.log.level=1,\
-    felix.fileinstall.noInitialDelay=true,\
 	org.apache.felix.log.storeDebug=true,\
     org.apache.felix.log.maxSize=-1

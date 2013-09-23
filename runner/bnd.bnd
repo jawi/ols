@@ -1,3 +1,9 @@
--buildpath: osgi.core;version=4.2.0,\
-	osgi.cmpn;version=4.2.0.200908310645,\
-	org.apache.felix.framework;version=4.2.1
+X-Felix-Version: 4.2.1
+-buildpath: \
+	org.apache.felix.framework;version=${X-Felix-Version}
+Private-Package: \
+	nl.lxtreme.ols.runner,\
+	org.apache.felix.framework.*,\
+	org.osgi.*
+Include-Resource: \
+	@org.apache.felix.framework-${X-Felix-Version}.jar!/default.properties

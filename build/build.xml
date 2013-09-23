@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="project" default="build">
+<project name="project" default="build" basedir=".">
 	<import file="../cnf/build.xml" />
 
-	<target name="prepareRelease">
-		<property name="release.dir" value="${target}/release" />
+	<target name="init" depends="template.init">
+		<property name="release.base" value="generated/release" />
+		<property name="release.dir" value="${release.base}/plugins" />
+		<property name="release.version" value="0.0.0" />
 
 		<path id="bndCP">
 			<fileset dir="../cnf/plugins/biz.aQute.bnd">
@@ -12,8 +14,35 @@
 		</path>
 
 		<taskdef name="createDist" classname="aQute.bnd.ant.RunconfigToDistributionTask" classpathref="bndCP" />
+	</target>
 
-		<delete dir="${release.dir}" />
+	<target name="prepareRelease" depends="init">
+		<delete dir="${release.base}" quiet="true" />
+		<mkdir dir="${release.base}/bin" />
+		<mkdir dir="${release.base}/plugins" />
+
 		<createDist rootDir="../" allowSnapshots="true" bndFile="local.bndrun" outputdir="${release.dir}" />
+		<!-- the actual running + fw -->
+		<copy todir="${release.base}/bin" flatten="true">
+			<fileset dir="../runner/generated" includes="*.jar" />
+		</copy>
+		<!-- the run files -->
+		<copy todir="${release.base}" flatten="true">
+			<fileset dir="resources/run" includes="*" />
+		</copy>
+		<!-- make sure the run scripts are executable -->
+		<chmod dir="${release.base}" perm="ugo+rx" includes="**/*.sh" />
+	</target>
+
+	<target name="release" depends="prepareRelease">
+		<zip destfile="generated/ols-${release.version}-full.zip">
+			<zipfileset dir="generated/release">
+				<include name="**" />
+			</zipfileset>
+		</zip>
+
+		<tar destfile="generated/ols-${release.version}-full.tar.gz" compression="gzip">
+			<zipfileset src="generated/ols-${release.version}-full.zip" />
+		</tar>
 	</target>
 </project>
