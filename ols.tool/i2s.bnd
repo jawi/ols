@@ -1,0 +1,7 @@
+Bundle-Name: OLS I2S decoder
+Bundle-Description: A I2S decoder tool for the OLS client.
+Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2013
+Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
+Private-Package: nl.lxtreme.ols.tool.base.*, nl.lxtreme.ols.tool.i2s
+OLS-Tool: 1.0
+OLS-ToolClass: nl.lxtreme.ols.tool.i2s.I2SAnalyser

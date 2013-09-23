@@ -32,6 +32,7 @@
 	osgi.identity;filter:='(osgi.identity=ols.tool.asm45)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.dmx512)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.i2c)',\
+	osgi.identity;filter:='(osgi.identity=ols.tool.i2s)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.jtag)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.linedecoder)',\
 	osgi.identity;filter:='(osgi.identity=ols.tool.serialconsole)',\
@@ -78,6 +79,7 @@
 	ols.tool.asm45;version=latest,\
 	ols.tool.dmx512;version=latest,\
 	ols.tool.i2c;version=latest,\
+	ols.tool.i2s;version=latest,\
 	ols.tool.jtag;version=latest,\
 	ols.tool.linedecoder;version=latest,\
 	ols.tool.serialconsole;version=latest,\
