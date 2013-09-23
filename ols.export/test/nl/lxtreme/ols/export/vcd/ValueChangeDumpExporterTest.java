@@ -30,7 +30,6 @@ import javax.swing.*;
 
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.test.data.*;
-import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
 import org.junit.rules.*;
@@ -129,7 +128,7 @@ public class ValueChangeDumpExporterTest
     }
     finally
     {
-      HostUtils.closeResource( fos );
+      fos.close();
     }
   }
 

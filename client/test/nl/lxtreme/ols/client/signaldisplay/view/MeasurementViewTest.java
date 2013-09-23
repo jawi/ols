@@ -46,7 +46,6 @@ public class MeasurementViewTest
 
   private final String resourceName;
   private final double expectedFrequency;
-  private final double realFrequency;
 
   private volatile PulseCountInfo result;
 
@@ -55,11 +54,10 @@ public class MeasurementViewTest
   /**
    * Creates a new {@link MeasurementViewTest} instance.
    */
-  public MeasurementViewTest( final String aResourceName, final double aExpectedFrequency, final double aRealFrequency )
+  public MeasurementViewTest( final String aResourceName, final double aExpectedFrequency )
   {
     this.resourceName = aResourceName;
     this.expectedFrequency = aExpectedFrequency;
-    this.realFrequency = aRealFrequency;
   }
 
   // METHODS
@@ -73,21 +71,21 @@ public class MeasurementViewTest
   {
     return Arrays.asList( new Object[][] { //
         // { resource name, expected frequency (Hz) }
-            { "1.8432MHz_1.852MHz.ols", 1884352, 1843200 }, // 0
-            { "4.0MHz_4.0MHz.ols", 4014227, 4000000 }, // 1
-            { "4.7174MHz_4.762MHz.ols", 4735256, 4717400 }, // 2
-            { "4.9152MHz_5.0MHz.ols", 4925683, 4915200 }, // 3
-            { "5.12MHz_5.0MHz.ols", 5121079, 5120000 }, // 4
-            { "7.234MHz_7.143MHz.ols", 7232669, 7234000 }, // 5
-            { "7.5MHz_7.143MHz.ols", 7506775, 7500000 }, // 6
-            { "10.0MHz_10.0MHz.ols", 10004066, 10000000 }, // 7
-            { "14.31818MHz_14.286MHz.ols", 14318967, 14318180 }, // 8
-            { "16.257MHz_16.667MHz.ols", 16258414, 16257000 }, // 9
-            { "17.836MHz_16.667MHz.ols", 17838770, 17836000 }, // 10
-            { "18.0MHz_16.667MHz.ols", 18002034, 18000000 }, // 11
-            { "20.0MHz_20.0MHz.ols", 20000000, 20000000 }, // 12
-            { "24.0MHz_20.0MHz.ols", 24002966, 24000000 }, // 13
-            { "32.0MHz_33.333MHz.ols", 32001732, 32000000 }, // 14
+            { "1.8432MHz_1.852MHz.ols", 1884352 }, // 0
+            { "4.0MHz_4.0MHz.ols", 4014227 }, // 1
+            { "4.7174MHz_4.762MHz.ols", 4735256 }, // 2
+            { "4.9152MHz_5.0MHz.ols", 4925683 }, // 3
+            { "5.12MHz_5.0MHz.ols", 5121079 }, // 4
+            { "7.234MHz_7.143MHz.ols", 7232669 }, // 5
+            { "7.5MHz_7.143MHz.ols", 7506775 }, // 6
+            { "10.0MHz_10.0MHz.ols", 10004066 }, // 7
+            { "14.31818MHz_14.286MHz.ols", 14318967 }, // 8
+            { "16.257MHz_16.667MHz.ols", 16258414 }, // 9
+            { "17.836MHz_16.667MHz.ols", 17838770 }, // 10
+            { "18.0MHz_16.667MHz.ols", 18002034 }, // 11
+            { "20.0MHz_20.0MHz.ols", 20000978 }, // 12
+            { "24.0MHz_20.0MHz.ols", 24004068 }, // 13
+            { "32.0MHz_33.333MHz.ols", 32000508 }, // 14
         } );
   }
 
@@ -114,17 +112,11 @@ public class MeasurementViewTest
    * Test method for {@link ClockFrequencyMeasureTask#doInBackground()}.
    */
   @Test
-  @SuppressWarnings( "boxing" )
   public void testExpectedFrequencyOk() throws Exception
   {
     final Double freq = this.result.getFrequency();
     assertNotNull( freq );
 
     assertEquals( "Expected frequency not within boundaries!", this.expectedFrequency, freq.doubleValue(), 1.0 );
-
-    double error = Math.abs( 1.0 - ( freq.doubleValue() / this.realFrequency ) ) * 100.0;
-
-    System.out.printf( "Expected = %.3f, \tGot = %.3f,\tRelError = %f%%\n", this.expectedFrequency, freq, error );
-
   }
 }

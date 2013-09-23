@@ -13,3 +13,4 @@ Export-Package: nl.lxtreme.ols.api,\
 	nl.lxtreme.ols.api.tools,\
 	nl.lxtreme.ols.api.ui,\
 	nl.lxtreme.ols.api.util
+-buildpath: junit.osgi;version=4.11.0

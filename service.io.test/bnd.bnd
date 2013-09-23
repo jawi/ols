@@ -6,7 +6,7 @@ Private-Package: nl.lxtreme.ols.io.serial.test
 -runfw: org.apache.felix.framework
 -buildpath: osgi.core;version='[4.2,5)',\
 	osgi.cmpn,\
-	junit.osgi,\
+	junit.osgi;version=4.11.0,\
 	org.mockito.mockito-all,\
 	api;version=latest,\
 	service.io;version=latest,\

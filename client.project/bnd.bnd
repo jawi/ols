@@ -4,11 +4,11 @@
 	api;version=latest,\
 	util;version=latest,\
 	test.util;version=latest,\
+	junit.osgi;version=4.11.0,\
 	org.mockito.mockito-all;version=1.9.0
 Bundle-Activator: nl.lxtreme.ols.client.project.Activator
 Bundle-Name: A project manager for the OLS client.
 Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
-
 Private-Package: nl.lxtreme.ols.client.project,\
 	nl.lxtreme.ols.client.project.impl

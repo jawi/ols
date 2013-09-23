@@ -30,7 +30,6 @@ import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.test.data.project.*;
-import nl.lxtreme.ols.util.*;
 
 import org.junit.*;
 
@@ -214,8 +213,8 @@ public final class DataTestUtils
     aProvider.fillData( values, timestamps, aDataSize );
 
     final StubDataSet project = new StubDataSet();
-    project.setCapturedData( new CapturedData( values, timestamps, 0, aSampleRate, aChannelCount, NumberUtils
-        .getBitMask( aChannelCount ), timestamps[aDataSize - 1] + 1L ) );
+    project.setCapturedData( new CapturedData( values, timestamps, 0, aSampleRate, aChannelCount,
+        ( 1 << aChannelCount ) - 1, timestamps[aDataSize - 1] + 1L ) );
 
     return project;
   }
@@ -239,7 +238,7 @@ public final class DataTestUtils
     }
     finally
     {
-      HostUtils.closeResource( is );
+      is.close();
     }
   }
 

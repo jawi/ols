@@ -1,10 +1,10 @@
 -buildpath: osgi.core;version=4.2.0,\
 	osgi.cmpn;version=4.2.0,\
 	org.apache.felix.dependencymanager;version=3.1.0,\
-	api;version=latest
+	api;version=latest,\
+	junit.osgi;version=4.11.0
 Private-Package: nl.lxtreme.ols.util.internal
 Bundle-Activator: nl.lxtreme.ols.util.internal.Activator
-
 Export-Package: nl.lxtreme.ols.util,\
 	nl.lxtreme.ols.util.analysis,\
 	nl.lxtreme.ols.util.export,\

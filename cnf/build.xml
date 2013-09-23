@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="master" default="none">
-	
-	<import file="build-template.xml"/>
-	
+
+	<import file="build-template.xml" />
+
 	<!--
 		Use this file to provide your workspace-specific tasks. Several examples follow.
 
@@ -23,5 +23,47 @@
 			...
 		</target>
 	-->
+	<target name="compile" depends="dependencies" if="project.sourcepath">
+		<mkdir dir="${project.output}" />
+		<javac fork="yes" executable="${javac}" srcdir="${project.sourcepath}" destdir="${project.output}" classpath="${project.buildpath}" bootclasspath="${project.bootclasspath}" deprecation="true" listfiles="false" target="${javac.target}" source="${javac.source}" debug="${javac.debug}" includeAntRuntime="no" verbose="${verbose}" />
+		<copy todir="${project.output}" verbose="${verbose}" preservelastmodified="true">
+			<fileset dir="${project.sourcepath}">
+				<exclude name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="compileTests" depends="init,build" if="testDirExists">
+		<mkdir dir="bin_test" />
+		<javac fork="yes" executable="${javac}" srcdir="test" destdir="bin_test" classpath="${project.buildpath}:${project.testpath}" bootclasspath="${project.bootclasspath}" deprecation="true" listfiles="false" target="${javac.target}" source="${javac.source}" debug="${javac.debug}" includeAntRuntime="no" verbose="${verbose}" />
+		<!--
+		  The eclipse compiler copies resources but the Javac compiler does not
+		  If ${src} == ${bin} then this is not necessary, but unfortunately, now
+		  it is.
+		-->
+		<copy todir="bin_test" verbose="${verbose}" preservelastmodified="true">
+			<fileset dir="test">
+				<exclude name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="junit" depends="init,compileTests" if="testDirExists">
+		<junit showoutput="false" printsummary="true" failureproperty='stop' errorproperty='stop' haltonerror="true" haltonfailure="true" fork="false">
+			<classpath path="${project.buildpath}:bin_test/" />
+			<formatter type="xml" />
+			<batchtest todir="${target}">
+				<fileset dir="test">
+					<include name="**/*Test.java" />
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="deepjunit" depends="init" if="project.dependson">
+		<subant target="junit" inheritAll="false" buildpath="${project.dependson}" />
+	</target>
 
 </project>
