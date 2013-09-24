@@ -16,13 +16,13 @@
 	osgi.identity;filter:='(osgi.identity=lib.swing)',\
 	osgi.identity;filter:='(osgi.identity=logging)',\
 	osgi.identity;filter:='(osgi.identity=api)',\
-	osgi.identity;filter:='(osgi.identity=client.ui)',\
-	osgi.identity;filter:='(osgi.identity=client.config)',\
-	osgi.identity;filter:='(osgi.identity=client.project)',\
 	osgi.identity;filter:='(osgi.identity=service.acquisition.api)',\
 	osgi.identity;filter:='(osgi.identity=service.acquisition.impl)',\
 	osgi.identity;filter:='(osgi.identity=service.io)',\
 	osgi.identity;filter:='(osgi.identity=service.taskexecution)',\
+	osgi.identity;filter:='(osgi.identity=ols.client.ui)',\
+	osgi.identity;filter:='(osgi.identity=ols.client.config)',\
+	osgi.identity;filter:='(osgi.identity=ols.client.project)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.demo)',\
 	osgi.identity;filter:='(osgi.identity=ols.device.generic)',\
@@ -63,9 +63,9 @@
 	purejavacomm;version='[0.0.17,0.0.18)',\
 	logging;version=latest,\
 	api;version=latest,\
-	client.ui;version=latest,\
-	client.config;version=latest,\
-	client.project;version=latest,\
+	ols.client.ui;version=latest,\
+	ols.client.config;version=latest,\
+	ols.client.project;version=latest,\
 	ols.device.api;version=latest,\
 	ols.device.demo;version=latest,\
 	ols.device.generic;version=latest,\

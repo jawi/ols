@@ -5,8 +5,7 @@
 	lib.mydoggy,\
 	logging,\
 	api,\
-	client,\
-	client.project,\
+	ols.client,\
 	ols.device,\
 	ols.export,\
 	ols.tool,\
