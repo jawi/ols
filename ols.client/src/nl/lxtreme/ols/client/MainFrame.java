@@ -38,6 +38,7 @@ import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
+import nl.lxtreme.ols.client.api.*;
 import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
@@ -935,7 +936,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   public void showAboutBox()
   {
-    final AboutBox aboutDialog = new AboutBox( Ols.SHORT_NAME, "0.0.0" ); // XXX
+    String version = this.controller.getVersion();
+    AboutBox aboutDialog = new AboutBox( Constants.SHORT_NAME, version );
     aboutDialog.showDialog();
   }
 
@@ -1143,7 +1145,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   private void updateWindowDecorations( final Project aProject )
   {
-    String title = Ols.FULL_NAME;
+    String title = Constants.FULL_NAME;
     if ( aProject != null )
     {
       String projectName = aProject.getName();

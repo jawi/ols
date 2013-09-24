@@ -28,7 +28,7 @@ import nl.lxtreme.ols.acquisition.*;
 import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.api.ui.*;
+import nl.lxtreme.ols.client.api.*;
 import nl.lxtreme.ols.client.appcallback.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.device.api.*;
@@ -37,6 +37,7 @@ import nl.lxtreme.ols.tool.api.*;
 
 import org.apache.felix.dm.*;
 import org.osgi.framework.*;
+import org.osgi.framework.Constants;
 import org.osgi.service.cm.*;
 import org.osgi.service.log.*;
 import org.osgi.service.prefs.*;

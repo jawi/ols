@@ -6,11 +6,7 @@ Export-Package: nl.lxtreme.ols.api,\
 	nl.lxtreme.ols.api.acquisition,\
 	nl.lxtreme.ols.api.data,\
 	nl.lxtreme.ols.api.data.annotation,\
-	nl.lxtreme.ols.api.data.export,\
 	nl.lxtreme.ols.api.data.project,\
-	nl.lxtreme.ols.api.devices,\
 	nl.lxtreme.ols.api.task,\
-	nl.lxtreme.ols.api.tools,\
-	nl.lxtreme.ols.api.ui,\
 	nl.lxtreme.ols.api.util
 -buildpath: junit.osgi;version=4.11.0

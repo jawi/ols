@@ -15,32 +15,26 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
- * 
- * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
+ * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
+ * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.api;
+package nl.lxtreme.ols.client.api;
 
 
 /**
- * Defines some bare constants, used throughout the rest of the application.
+ * Constants used in the client.
  */
-public interface Ols
+public interface Constants
 {
-  // METHODS
+  // CONSTANTS
 
-  /** indicates that rate or trigger position are not available */
-  public final static int NOT_AVAILABLE = -1;
-
-  /** The maximum number of cursors that can be set. */
-  public static final int MAX_CURSORS = 10;
-
-  /** The maximum number of channels. */
-  public static final int MAX_CHANNELS = 32;
-
-  /** The number of channels per block. */
-  public static final int CHANNELS_PER_BLOCK = 8;
-
-  /** The maximum number of blocks. */
-  public static final int MAX_BLOCKS = MAX_CHANNELS / CHANNELS_PER_BLOCK;
+  /**
+   * Short name of the client.
+   */
+  String SHORT_NAME = "LogicSniffer";
+  /**
+   * Long name of the client.
+   */
+  String FULL_NAME = SHORT_NAME.concat( " - Logic Analyzer Client" );
 
 }

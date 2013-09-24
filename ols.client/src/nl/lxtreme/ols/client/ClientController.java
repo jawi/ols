@@ -38,10 +38,11 @@ import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.api.ui.*;
 import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.api.*;
+import nl.lxtreme.ols.client.api.Constants;
 import nl.lxtreme.ols.client.appcallback.*;
 import nl.lxtreme.ols.client.osgi.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
@@ -1350,7 +1351,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public final void start()
   {
-    initOSSpecifics( Ols.SHORT_NAME, "0.0.0" ); // XXX
+    final String version = getVersion();
+    
+    initOSSpecifics( Constants.SHORT_NAME, getVersion() );
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
     // correctly defined...
@@ -1372,8 +1375,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         ClientController.this.signalDiagramController.addCursorChangeListener( new CursorActionListener() );
         updateDefaultSettings();
 
-        mf.setTitle( Ols.FULL_NAME );
-        mf.setStatus( "{0} v{1} ready ...", Ols.SHORT_NAME, "0.0.0" ); // XXX
+        mf.setTitle( Constants.FULL_NAME );
+        mf.setStatus( "{0} v{1} ready ...", Constants.SHORT_NAME, version );
         mf.setVisible( true );
 
         LOG.info( "Client started ..." );
@@ -1422,6 +1425,24 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         LOG.info( "Client stopped ..." );
       }
     } );
+  }
+
+  /**
+   * @return the version of this client, never <code>null</code>.
+   */
+  final String getReportIncidentAddress()
+  {
+    Dictionary<?, ?> headers = this.bundleContext.getBundle().getHeaders();
+    return ( String )headers.get( "X-ClientIncidentAddress" );
+  }
+
+  /**
+   * @return the version of this client, never <code>null</code>.
+   */
+  final String getVersion()
+  {
+    Dictionary<?, ?> headers = this.bundleContext.getBundle().getHeaders();
+    return ( String )headers.get( "X-ClientVersion" );
   }
 
   /**
@@ -1867,7 +1888,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     System.setProperty( "nl.lxtreme.ols.client.version", aVersion );
 
     // Use the defined email address...
-    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, "info+v" +aVersion + "@lxtreme.nl" ); // XXX
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, "info+v" + aVersion + "@lxtreme.nl" ); // XXX
 
     if ( Activator.isDebugMode() )
     {

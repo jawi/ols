@@ -30,6 +30,8 @@ import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.project.*;
 
+import org.osgi.framework.*;
+
 
 /**
  * Provides a simple implementation of a project manager, which writes an entire
@@ -43,10 +45,14 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   private static final String FILENAME_CHANNEL_LABELS = "channel.labels";
   private static final String FILENAME_PROJECT_SETTINGS = "settings/";
   private static final String FILENAME_CAPTURE_RESULTS = "data.ols";
+  
+  private static final String FULL_NAME = nl.lxtreme.ols.client.api.Constants.FULL_NAME;
 
   // VARIABLES
 
   private final PropertyChangeSupport propertyChangeSupport;
+  // Injected by Felix DM...
+  private volatile BundleContext bundleContext;
 
   private ProjectImpl project;
 
@@ -204,7 +210,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     final BufferedOutputStream os = new BufferedOutputStream( aOutput );
     final ZipOutputStream zipOS = new ZipOutputStream( os );
 
-    zipOS.setComment( Ols.FULL_NAME.concat( " project file" ) );
+    zipOS.setComment( FULL_NAME.concat( " project file" ) );
 
     try
     {
@@ -425,7 +431,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     try
     {
       out.println( name );
-      out.println( "0.0.0" ); // XXX
+      out.println( getVersion() );
       out.println( System.currentTimeMillis() );
     }
     finally
@@ -479,6 +485,15 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     {
       aZipOS.flush();
     }
+  }
+
+  /**
+   * @return the version of this client, never <code>null</code>.
+   */
+  private String getVersion()
+  {
+    Dictionary<?, ?> headers = this.bundleContext.getBundle().getHeaders();
+    return ( String )headers.get( "X-ClientVersion" );
   }
 
   private void closeSilently( final Closeable aCloseable )

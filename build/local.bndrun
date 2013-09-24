@@ -20,6 +20,7 @@
 	osgi.identity;filter:='(osgi.identity=service.acquisition.impl)',\
 	osgi.identity;filter:='(osgi.identity=service.io)',\
 	osgi.identity;filter:='(osgi.identity=service.taskexecution)',\
+	osgi.identity;filter:='(osgi.identity=ols.client.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.ui)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.config)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.project)',\
@@ -63,6 +64,7 @@
 	purejavacomm;version='[0.0.17,0.0.18)',\
 	logging;version=latest,\
 	api;version=latest,\
+	ols.client.api;version=latest,\
 	ols.client.ui;version=latest,\
 	ols.client.config;version=latest,\
 	ols.client.project;version=latest,\

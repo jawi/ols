@@ -1,4 +1,7 @@
-Bundle-Name: The (main) user interface for the OLS client.
+-include: ../build/ols.version
+
+Bundle-Name: OLS main UI
+Bundle-Description: The (main) user interface for the OLS client.
 Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
 Bundle-Activator: nl.lxtreme.ols.client.Activator
@@ -18,3 +21,5 @@ Private-Package: nl.lxtreme.ols.client,\
 	nl.lxtreme.ols.client.signaldisplay.util,\
 	nl.lxtreme.ols.client.signaldisplay.view,\
 	nl.lxtreme.ols.client.signaldisplay.view.renderer
+X-ClientVersion = ${ols.version}
+X-ClientIncidentAddress = info+v${ols.version}@lxtreme.nl
