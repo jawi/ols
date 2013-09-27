@@ -8,6 +8,13 @@ if [ "$?" -ne "0" ]; then
 	exit 1
 fi
 
+platformOpts=
+java -Xdock:name="test" -version 1>/dev/null 2>&1
+if [ "$?" -eq "0" ]; then
+	# running on OSX
+	platformOpts="-Xdock:name=@ols.shortName@ -Dcom.apple.mrj.application.apple.menu.about.name=@ols.shortName@"
+fi
+
 # cross-platform "readlink -f" function; taken and modified (clean ups and made 
 # recursive) from <http://stackoverflow.com/questions/1055671>. 
 canonical_readlink() {
@@ -33,4 +40,4 @@ classpath="$basedir/bin/*"
 
 # give the client roughly 1gigabyte of memory 
 MEMSETTINGS=-Xmx1024m
-java -Xdock:name="@ols.shortName@" -Dcom.apple.mrj.application.apple.menu.about.name="@ols.shortName@" "$@" "$MEMSETTINGS" -Djna.nosys=true -Dnl.lxtreme.ols.bundle.dir="$plugindir" -DPlastic.defaultTheme=SkyBluer -cp "$classpath" nl.lxtreme.ols.runner.Runner
+java $platformOpts "$MEMSETTINGS" -Djna.nosys=true -Dnl.lxtreme.ols.bundle.dir="$plugindir" -DPlastic.defaultTheme=SkyBluer -cp "$classpath" -jar "$basedir/bin/runner.jar" "$@"

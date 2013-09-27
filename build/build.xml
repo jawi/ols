@@ -28,6 +28,11 @@
 		<copy todir="${release.base}/bin" flatten="true">
 			<fileset dir="../runner/generated" includes="*.jar" />
 		</copy>
+
+		<antcall target="copyAuxFiles" />
+	</target>
+
+	<target name="copyAuxFiles">
 		<!-- the run files -->
 		<filter filtersfile="ols.version" />
 		<copy todir="${release.base}" flatten="true" filtering="true">

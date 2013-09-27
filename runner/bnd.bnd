@@ -11,3 +11,4 @@ Include-Resource: \
 	@org.apache.felix.framework-${X-Felix-Version}.jar!/META-INF/DEPENDENCIES,\
 	@org.apache.felix.framework-${X-Felix-Version}.jar!/default.properties,\
 	@osgi.cmpn-4.2.0.jar!/org/osgi/service/log/*
+Main-Class: nl.lxtreme.ols.runner.Runner
