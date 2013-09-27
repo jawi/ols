@@ -45,14 +45,12 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   private static final String FILENAME_CHANNEL_LABELS = "channel.labels";
   private static final String FILENAME_PROJECT_SETTINGS = "settings/";
   private static final String FILENAME_CAPTURE_RESULTS = "data.ols";
-  
+
   private static final String FULL_NAME = nl.lxtreme.ols.client.api.Constants.FULL_NAME;
 
   // VARIABLES
 
   private final PropertyChangeSupport propertyChangeSupport;
-  // Injected by Felix DM...
-  private volatile BundleContext bundleContext;
 
   private ProjectImpl project;
 
@@ -492,8 +490,13 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
    */
   private String getVersion()
   {
-    Dictionary<?, ?> headers = this.bundleContext.getBundle().getHeaders();
-    return ( String )headers.get( "X-ClientVersion" );
+    Bundle bundle = FrameworkUtil.getBundle( getClass() );
+    if ( bundle != null )
+    {
+      Dictionary<?, ?> headers = bundle.getHeaders();
+      return ( String )headers.get( "X-ClientVersion" );
+    }
+    return "<unknown>";
   }
 
   private void closeSilently( final Closeable aCloseable )
