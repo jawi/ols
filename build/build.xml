@@ -39,6 +39,7 @@
 		<!-- the actual running + fw -->
 		<copy todir="${release.base}/bin" flatten="true">
 			<fileset dir="../runner/generated" includes="*.jar" />
+			<fileset dir="resources/lib" includes="*.jar" />
 		</copy>
 
 		<!-- the run files -->
@@ -81,7 +82,7 @@
 			<!-- put all bin/*.jar files on the class path -->
 			<jarfileset dir="${osx.releasedir-src}">
 				<include name="bin/*.jar" />
-				<exclude name="bin/looks*.jar" />
+				<exclude name="bin/jgoodies*.jar" />
 			</jarfileset>
 			<!-- put all plugins/* files *not* on the class path -->
 			<javafileset dir="${osx.releasedir-src}">
