@@ -86,3 +86,5 @@
 -runproperties: \
 	org.apache.felix.log.storeDebug=true,\
     org.apache.felix.log.maxSize=-1
+-runvm: \
+	-Xdock:name=LogicSniffer -Xmx1024m
