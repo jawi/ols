@@ -33,4 +33,4 @@ classpath="$basedir/bin/*"
 
 # give the client roughly 1gigabyte of memory 
 MEMSETTINGS=-Xmx1024m
-java "$@" "$MEMSETTINGS" -Djna.nosys=true -Dnl.lxtreme.ols.bundle.dir="$plugindir" -DPlastic.defaultTheme=SkyBluer -cp "$classpath" nl.lxtreme.ols.runner.Runner
+java -Xdock:name="@ols.shortName@" -Dcom.apple.mrj.application.apple.menu.about.name="@ols.shortName@" "$@" "$MEMSETTINGS" -Djna.nosys=true -Dnl.lxtreme.ols.bundle.dir="$plugindir" -DPlastic.defaultTheme=SkyBluer -cp "$classpath" nl.lxtreme.ols.runner.Runner

@@ -24,14 +24,14 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
 import java.beans.*;
+import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.acquisition.AcquisitionResult;
+import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.api.data.project.*;
-import nl.lxtreme.ols.client.Activator;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
@@ -51,6 +51,10 @@ import nl.lxtreme.ols.util.swing.*;
  */
 public final class SignalDiagramController implements ZoomListener, PropertyChangeListener
 {
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( SignalDiagramController.class.getName() );
+
   // VARIABLES
 
   private final DragAndDropTargetController dndTargetController;
@@ -324,10 +328,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
         JViewport timelineViewport = scrollPane.getColumnHeader();
         Component view = viewport.getView();
 
-        if ( Activator.isDebugMode() )
-        {
-          System.out.printf( "Handling %s.%n", aEvent );
-        }
+        LOG.log( Level.FINE, "Handling {0}", aEvent );
 
         view.setPreferredSize( aEvent.getDimension() );
 

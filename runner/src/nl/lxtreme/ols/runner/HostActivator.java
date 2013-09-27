@@ -22,6 +22,7 @@ package nl.lxtreme.ols.runner;
 
 
 import org.osgi.framework.*;
+import org.osgi.service.log.*;
 
 
 /**
@@ -31,23 +32,31 @@ public class HostActivator implements BundleActivator
 {
   // VARIABLES
 
-  private BundleContext context = null;
+  private final ConsoleLogger logger;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new HostActivator instance.
+   * 
+   * @param aLogToConsole
+   * @param aLogLevel
+   */
+  public HostActivator( boolean aLogToConsole, int aLogLevel )
+  {
+    this.logger = new ConsoleLogger( aLogToConsole, aLogLevel );
+  }
 
   // METHODS
 
   /**
-   * Returns the current set of deployed bundles.
+   * Returns the current value of bridge.
    * 
-   * @return an array of bundles, can never be <code>null</code>, but an empty
-   *         array is possible.
+   * @return the bridge
    */
-  public final Bundle[] getBundles()
+  public LogService getLogger()
   {
-    if ( this.context != null )
-    {
-      return this.context.getBundles();
-    }
-    return new Bundle[0];
+    return this.logger;
   }
 
   /**
@@ -56,7 +65,7 @@ public class HostActivator implements BundleActivator
   @Override
   public void start( final BundleContext aContext ) throws Exception
   {
-    this.context = aContext;
+    this.logger.start( aContext );
   }
 
   /**
@@ -65,7 +74,7 @@ public class HostActivator implements BundleActivator
   @Override
   public void stop( final BundleContext aContext ) throws Exception
   {
-    this.context = null;
+    // Nop
   }
 }
 

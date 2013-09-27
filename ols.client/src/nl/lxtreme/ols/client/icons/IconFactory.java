@@ -23,8 +23,11 @@ package nl.lxtreme.ols.client.icons;
 
 import java.awt.*;
 import java.net.*;
+import java.util.logging.*;
 
 import javax.swing.*;
+
+import org.osgi.framework.*;
 
 import nl.lxtreme.ols.util.swing.component.icon.*;
 
@@ -78,6 +81,10 @@ public final class IconFactory
     }
   }
 
+  // CONSTANTS
+
+  private static final Logger LOG = Logger.getLogger( IconFactory.class.getName() );
+
   // CONSTRUCTORS
 
   /**
@@ -102,11 +109,12 @@ public final class IconFactory
   {
     try
     {
-      final URL url = IconLocator.class.getResource( aIconName );
+      final URL url = getResource( aIconName );
       return new ImageIcon( url );
     }
     catch ( Exception exception )
     {
+      exception.printStackTrace();
       return new ImageIcon();
     }
   }
@@ -121,7 +129,7 @@ public final class IconFactory
    */
   public static Image createImage( final String aImageName )
   {
-    final URL url = IconLocator.class.getResource( aImageName );
+    final URL url = getResource( aImageName );
     return Toolkit.getDefaultToolkit().createImage( url );
   }
 
@@ -139,5 +147,23 @@ public final class IconFactory
   public static Icon createOverlayIcon( final String aIconName, final String aText )
   {
     return new CompoundTextIcon( aIconName, aText, SwingConstants.EAST );
+  }
+
+  private static URL getResource( final String aIconName )
+  {
+    URL resource;
+    Bundle bundle = FrameworkUtil.getBundle( IconLocator.class );
+    if ( bundle == null )
+    {
+      // Old-fashioned way...
+      resource = IconLocator.class.getResource( aIconName );
+      LOG.log( Level.FINE, "Get icon resource without bundle: {0} => {1}...", new Object[] { aIconName, resource } );
+    }
+    else
+    {
+      resource = bundle.getResource( "nl/lxtreme/ols/client/icons/" + aIconName );
+      LOG.log( Level.FINE, "Get icon resource with bundle: {0} => {1}...", new Object[] { aIconName, resource } );
+    }
+    return resource;
   }
 }

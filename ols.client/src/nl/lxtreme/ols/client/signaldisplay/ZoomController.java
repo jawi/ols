@@ -21,22 +21,17 @@
 package nl.lxtreme.ols.client.signaldisplay;
 
 
-import static nl.lxtreme.ols.util.swing.SwingComponentUtils.getAncestorOfClass;
+import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
-import java.awt.Dimension;
-import java.awt.Insets;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.MouseWheelEvent;
-import java.util.EventListener;
-import java.util.concurrent.atomic.AtomicReference;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.concurrent.atomic.*;
 
-import javax.swing.JComponent;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
-import javax.swing.event.EventListenerList;
+import javax.swing.*;
+import javax.swing.event.*;
 
-import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel;
+import nl.lxtreme.ols.client.signaldisplay.model.*;
 
 
 /**

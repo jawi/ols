@@ -22,11 +22,16 @@ package nl.lxtreme.ols.runner;
 
 
 import java.io.*;
+import java.net.*;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.jar.*;
 
 import org.apache.felix.framework.*;
 import org.apache.felix.framework.util.*;
 import org.osgi.framework.*;
+import org.osgi.service.log.*;
+import org.osgi.service.packageadmin.*;
 
 
 /**
@@ -35,10 +40,121 @@ import org.osgi.framework.*;
  */
 public final class Runner
 {
+  // INNER CLASSES
+
+  static class CmdLineOptions
+  {
+    // VARIABLES
+
+    final File pluginDir;
+    final File cacheDir;
+    final boolean cleanCache;
+    final boolean logToConsole;
+    final int logLevel;
+
+    // CONSTRUCTORS
+
+    public CmdLineOptions( String... aCmdLineArgs ) throws IOException
+    {
+      String _pluginDir = getPluginDir();
+      boolean _cleanCache = false;
+      boolean _logToConsole = false;
+      int _logLevel = 2;
+
+      for ( String cmdLineArg : aCmdLineArgs )
+      {
+        if ( "-clean".equals( cmdLineArg ) )
+        {
+          _cleanCache = true;
+        }
+        else if ( "-logToConsole".equals( cmdLineArg ) )
+        {
+          _logToConsole = true;
+        }
+        else if ( cmdLineArg.startsWith( "-logLevel=" ) )
+        {
+          String arg = cmdLineArg.substring( 10 );
+          _logLevel = Integer.parseInt( arg );
+        }
+        else if ( cmdLineArg.startsWith( "-pluginDir=" ) )
+        {
+          String arg = cmdLineArg.substring( 11 );
+          _pluginDir = arg;
+        }
+      }
+
+      if ( _logLevel < 0 || _logLevel > 6 )
+      {
+        throw new IllegalArgumentException( "Invalid log level, should be between 0 and 5!" );
+      }
+      if ( !new File( _pluginDir ).exists() )
+      {
+        throw new IllegalArgumentException( "Invalid plugin directory: no such directory!" );
+      }
+
+      this.pluginDir = new File( _pluginDir ).getCanonicalFile();
+      this.cacheDir = new File( _pluginDir.concat( "/../.fwcache" ) ).getCanonicalFile();
+      this.cleanCache = _cleanCache;
+      this.logToConsole = _logToConsole;
+      this.logLevel = _logLevel;
+    }
+
+    // METHODS
+
+    /**
+     * Searches for the plugins directory.
+     * <p>
+     * This method will take the system property
+     * <tt>nl.lxtreme.ols.bundle.dir</tt> into consideration.
+     * </p>
+     * 
+     * @return the fully qualified path to the directory with plugins, never
+     *         <code>null</code>.
+     * @throws IOException
+     *           in case an I/O problem occurred during determining the plugins
+     *           path.
+     */
+    private static String getPluginDir()
+    {
+      File pluginDir;
+
+      String pluginProperty = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
+      pluginDir = new File( pluginProperty );
+      if ( pluginDir.exists() && pluginDir.isDirectory() )
+      {
+        return pluginDir.getAbsolutePath();
+      }
+      else
+      {
+        pluginDir = new File( pluginDir, "plugins" );
+        if ( pluginDir.exists() && pluginDir.isDirectory() )
+        {
+          return pluginDir.getAbsolutePath();
+        }
+      }
+
+      throw new RuntimeException( "Failed to find plugins folder! Is '-Dnl.lxtreme.ols.bundle.dir' specified?" );
+    }
+  }
+
   // VARIABLES
 
+  private final CmdLineOptions options;
+
   private Felix framework;
-  private Logger logger;
+  private HostActivator hostActivator;
+
+  // CONSTRUCTORS
+
+  /**
+   * Creates a new {@link Runner} instance.
+   * 
+   * @throws IOException
+   */
+  public Runner( CmdLineOptions aOptions ) throws IOException
+  {
+    this.options = aOptions;
+  }
 
   // METHODS
 
@@ -51,153 +167,83 @@ public final class Runner
    */
   public static void main( final String[] aArgs ) throws Exception
   {
-    final String pluginDir = getPluginDir();
-    final String binaryDir = getBinaryDir();
-    final String bundleCacheDir = getBundleCacheDir();
+    String applicationName = getApplicationName();
+    System.setProperty( "com.apple.mrj.application.apple.menu.about.name", applicationName );
 
-    final Runner runner = new Runner();
-    runner.run( pluginDir, binaryDir, bundleCacheDir );
+    final Runner runner = new Runner( new CmdLineOptions( aArgs ) );
+    runner.run();
     runner.waitForStop();
   }
 
   /**
-   * Determines the binary directory.
-   * 
-   * @return the fully qualified path to the directory with 'binaries', never
-   *         <code>null</code>.
-   * @throws IOException
-   *           in case an I/O problem occurred during determining the binary
-   *           path.
+   * Bootstraps the OSGi framework and bootstraps the application.
    */
-  private static String getBinaryDir() throws IOException
-  {
-    final File pluginDir = new File( getPluginDir() );
-    return new File( pluginDir.getParentFile(), "bin" ).getCanonicalPath();
-  }
-
-  // METHODS
-
-  /**
-   * Determines the bundle cache directory.
-   * 
-   * @return the fully qualified path to the directory with 'bundle caches',
-   *         never <code>null</code>.
-   * @throws IOException
-   *           in case an I/O problem occurred during determining the cache
-   *           path.
-   */
-  private static String getBundleCacheDir() throws IOException
-  {
-    final File pluginDir = new File( getPluginDir() );
-    return new File( pluginDir.getParentFile(), "felix-cache" ).getCanonicalPath();
-  }
-
-  /**
-   * Searches for the plugins directory.
-   * <p>
-   * This method will take the system property
-   * <tt>nl.lxtreme.ols.bundle.dir</tt> into consideration.
-   * </p>
-   * 
-   * @return the fully qualified path to the directory with plugins, never
-   *         <code>null</code>.
-   * @throws IOException
-   *           in case an I/O problem occurred during determining the plugins
-   *           path.
-   */
-  private static String getPluginDir() throws IOException
-  {
-    File pluginDir;
-
-    pluginDir = new File( System.getProperty( "user.dir" ), "plugins" );
-    if ( pluginDir.exists() && pluginDir.isDirectory() )
-    {
-      return pluginDir.getCanonicalPath();
-    }
-
-    String pluginProperty = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
-    pluginDir = new File( pluginProperty );
-    if ( pluginDir.exists() && pluginDir.isDirectory() )
-    {
-      return pluginDir.getCanonicalPath();
-    }
-    else
-    {
-      pluginDir = new File( pluginDir, "plugins" );
-      if ( pluginDir.exists() && pluginDir.isDirectory() )
-      {
-        return pluginDir.getCanonicalPath();
-      }
-    }
-
-    throw new RuntimeException( "Failed to find plugins folder! Is '-Dnl.lxtreme.ols.bundle.dir' specified?" );
-  }
-
-  /**
-   * @param pluginDir
-   * @param binaryDir
-   * @param bundleCacheDir
-   * @throws Exception
-   */
-  public void run( final String pluginDir, final String binaryDir, final String bundleCacheDir ) throws Exception
+  public void run() throws Exception
   {
     try
     {
-      this.framework = new Felix( createConfig( bundleCacheDir ) );
+      this.framework = new Felix( createConfig() );
       this.framework.init();
       this.framework.start();
 
       // Issue #36: log something about where we're trying to read/store stuff,
       // makes offline debugging a bit easier...
-      logger.log( Logger.LOG_INFO, "Framework started..." );
-      logger.log( Logger.LOG_INFO, "  plugin dir: " + pluginDir );
-      logger.log( Logger.LOG_INFO, "  binary dir: " + binaryDir );
-      logger.log( Logger.LOG_INFO, "  cache dir : " + bundleCacheDir );
+      log( LogService.LOG_INFO, "Framework started..." );
+      log( LogService.LOG_INFO, "  plugin dir: " + this.options.pluginDir );
+      log( LogService.LOG_INFO, "  cache dir : " + this.options.cacheDir );
 
-      BundleContext context = this.framework.getBundleContext();
+      bootstrap( this.framework.getBundleContext() );
 
-      Map<String, Bundle> installed = getInstalledBundles( context );
-
-      List<String> plugins = getPlugins( pluginDir );
-      for ( String plugin : plugins )
-      {
-        if ( !installed.containsKey( plugin ) )
-        {
-          logger.log( Logger.LOG_DEBUG, "Installing plugin: '" + plugin + "'..." );
-
-          Bundle bundle = installBundle( context, plugin );
-          if ( bundle != null )
-          {
-            installed.put( plugin, bundle );
-          }
-        }
-      }
-
-      // Remove all installed plugins that are no longer available as plugin...
-      List<String> removed = new ArrayList<String>( installed.keySet() );
-      removed.remove( Constants.SYSTEM_BUNDLE_LOCATION );
-      removed.removeAll( plugins );
-      for ( String plugin : removed )
-      {
-        Bundle bundle = installed.remove( plugin );
-        uninstallBundle( bundle );
-      }
-
-      // Start all remaining bundles...
-      for ( Bundle bundle : installed.values() )
-      {
-        startBundle( bundle );
-      }
-
-      logger.log( Logger.LOG_INFO, "Bootstrap complete..." );
+      log( LogService.LOG_INFO, "Bootstrap complete..." );
     }
     catch ( Exception exception )
     {
-      logger.log( Logger.LOG_ERROR, "Failed to start OSGi framework! Possible reason: " + exception.getMessage(),
+      log( LogService.LOG_ERROR, "Failed to start OSGi framework! Possible reason: " + exception.getMessage(),
           exception );
 
       throw exception;
     }
+  }
+
+  /**
+   * @return the application name, never <code>null</code>.
+   */
+  private static String getApplicationName()
+  {
+    Class<Runner> clazz = Runner.class;
+
+    URL loc = clazz.getProtectionDomain().getCodeSource().getLocation();
+
+    JarInputStream jis = null;
+    try
+    {
+      jis = new JarInputStream( loc.openStream() );
+      Manifest manifest = jis.getManifest();
+      if ( manifest != null )
+      {
+        return manifest.getMainAttributes().getValue( "X-AppName" );
+      }
+    }
+    catch ( Exception exception )
+    {
+      exception.printStackTrace();
+    }
+    finally
+    {
+      try
+      {
+        if ( jis != null )
+        {
+          jis.close();
+        }
+      }
+      catch ( IOException exception )
+      {
+        // Ignore...
+      }
+    }
+    
+    return "Runner";
   }
 
   /**
@@ -207,28 +253,118 @@ public final class Runner
    */
   public void waitForStop() throws InterruptedException
   {
-    this.framework.waitForStop( 0 );
+    FrameworkEvent event = this.framework.waitForStop( 0 );
+    switch ( event.getType() )
+    {
+      case FrameworkEvent.STOPPED:
+        System.exit( 0 );
+      case FrameworkEvent.ERROR:
+      case FrameworkEvent.WARNING:
+        System.exit( 1 );
+      default:
+        System.exit( -1 );
+    }
   }
 
-  private Map<String, Object> createConfig( final String bundleCacheDir )
+  /**
+   * Bootstraps the application by installing the new/updated bundles and
+   * removing all stale bundles.
+   * 
+   * @param aContext
+   *          the OSGi bundle context to use, cannot be <code>null</code>.
+   */
+  private void bootstrap( BundleContext aContext ) throws InterruptedException
   {
-    final HostActivator hostActivator = new HostActivator();
-    final String logLevel = isDebugMode() ? "4" : "2";
+    Map<String, Bundle> installed = getInstalledBundles( aContext );
+    List<Bundle> toBeStarted = new ArrayList<Bundle>();
 
-    this.logger = new Logger();
+    List<String> available = getBundles( this.options.pluginDir );
+    for ( String bundleLocation : available )
+    {
+      Bundle bundle = installed.get( bundleLocation );
+      if ( bundle == null )
+      {
+        // New plugin...
+        bundle = installBundle( aContext, bundleLocation );
+        if ( bundle != null )
+        {
+          installed.put( bundleLocation, bundle );
+          toBeStarted.add( bundle );
+        }
+      }
+      else
+      {
+        // Plugin exists...
+        File file = new File( URI.create( bundleLocation ) );
+        if ( file.lastModified() >= bundle.getLastModified() )
+        {
+          bundle = updateBundle( bundle );
+          if ( bundle != null )
+          {
+            toBeStarted.add( bundle );
+          }
+        }
+      }
+    }
+
+    // Remove all installed plugins that are no longer available as plugin...
+    List<String> removed = new ArrayList<String>( installed.keySet() );
+    removed.remove( Constants.SYSTEM_BUNDLE_LOCATION );
+    removed.removeAll( available );
+    for ( String plugin : removed )
+    {
+      Bundle bundle = installed.remove( plugin );
+      uninstallBundle( bundle );
+    }
+
+    refreshAll( aContext );
+
+    // Start all remaining bundles...
+    for ( Bundle bundle : toBeStarted )
+    {
+      startBundle( bundle );
+    }
+  }
+
+  private Map<String, Object> createConfig()
+  {
+    this.hostActivator = new HostActivator( this.options.logToConsole, this.options.logLevel );
 
     final Map<String, Object> config = new HashMap<String, Object>();
 
-    config.put( FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, Arrays.asList( hostActivator ) );
     config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.mrj,com.apple.eawt,javax.swing,javax.media.jai" );
     // Issue #36: explicitly set the location to the bundle cache directory,
     // otherwise it is created /relatively/ to the current working directory,
     // which is problematic when you start the client with a relative path...
-    config.put( Constants.FRAMEWORK_STORAGE, bundleCacheDir );
-    config.put( FelixConstants.LOG_LOGGER_PROP, this.logger );
-    config.put( FelixConstants.LOG_LEVEL_PROP, logLevel );
+    config.put( Constants.FRAMEWORK_STORAGE, this.options.cacheDir.getPath() );
+    if ( this.options.cleanCache )
+    {
+      config.put( Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT );
+    }
+    // Felix specific configuration options...
+    config.put( FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, Arrays.asList( this.hostActivator ) );
+    config.put( FelixConstants.LOG_LEVEL_PROP, "2" );
 
     return config;
+  }
+
+  private List<String> getBundles( final File pluginDir )
+  {
+    final List<String> plugins = new ArrayList<String>();
+    pluginDir.listFiles( new FilenameFilter()
+    {
+
+      @Override
+      public boolean accept( File aDir, String aName )
+      {
+        if ( aName.endsWith( ".jar" ) )
+        {
+          plugins.add( new File( aDir, aName ).toURI().toString() );
+        }
+        return false;
+      }
+    } );
+    return plugins;
   }
 
   private Map<String, Bundle> getInstalledBundles( final BundleContext context )
@@ -241,89 +377,165 @@ public final class Runner
     return installed;
   }
 
-  private List<String> getPlugins( final String pluginDir )
-  {
-    final List<String> plugins = new ArrayList<String>();
-    new File( pluginDir ).listFiles( new FileFilter()
-    {
-      @Override
-      public boolean accept( File aFile )
-      {
-        if ( aFile.getName().endsWith( ".jar" ) )
-        {
-          plugins.add( aFile.toURI().toString() );
-        }
-        return false;
-      }
-    } );
-    return plugins;
-  }
-
   private Bundle installBundle( BundleContext context, String plugin )
   {
+    log( LogService.LOG_DEBUG, "Installing plugin: '" + plugin + "'..." );
+
     try
     {
       return context.installBundle( plugin );
     }
     catch ( BundleException exception )
     {
-      this.logger.log( Logger.LOG_WARNING, "Failed to install bundle: " + plugin + "...", exception );
+      log( LogService.LOG_WARNING, "Failed to install bundle: " + plugin + "...", exception );
       return null;
     }
   }
 
   /**
-   * Returns whether or not debugging is enabled.
-   * <p>
-   * Useful for additional checks, logging and so on.
-   * </p>
-   * 
-   * @return <code>true</code> if debug mode is enabled, <code>false</code>
-   *         otherwise.
+   * @param aBundle
+   *          the bundle to test, can be <code>null</code>.
+   * @return <code>true</code> if the given bundle is a fragment bundle,
+   *         <code>false</code> otherwise.
    */
-  private boolean isDebugMode()
+  private boolean isFragment( Bundle aBundle )
   {
-    return Boolean.getBoolean( "nl.lxtreme.ols.client.debug" );
+    if ( aBundle == null )
+    {
+      return false;
+    }
+    return aBundle.getHeaders().get( Constants.FRAGMENT_HOST ) != null;
   }
 
-  private void startBundle( Bundle bundle )
+  private void log( int aLevel, String aMessage )
   {
-    if ( ( bundle.getState() & Bundle.ACTIVE ) == 0 )
+    this.hostActivator.getLogger().log( aLevel, aMessage );
+  }
+
+  private void log( int aLevel, String aMessage, Throwable aException )
+  {
+    this.hostActivator.getLogger().log( aLevel, aMessage, aException );
+  }
+
+  @SuppressWarnings( "deprecation" )
+  private void refreshAll( BundleContext aContext ) throws InterruptedException
+  {
+    ServiceReference<?> ref = aContext.getServiceReference( PackageAdmin.class.getName() );
+    if ( ref != null )
     {
-      logger.log( Logger.LOG_DEBUG, "Starting bundle: " + bundle.getSymbolicName() + "..." );
+      PackageAdmin packageAdm = ( PackageAdmin )aContext.getService( ref );
+
+      final CountDownLatch packagesRefreshed = new CountDownLatch( 1 );
+      FrameworkListener fwListener = new FrameworkListener()
+      {
+        @Override
+        public void frameworkEvent( FrameworkEvent aEvent )
+        {
+          switch ( aEvent.getType() )
+          {
+            case FrameworkEvent.ERROR:
+            case FrameworkEvent.WAIT_TIMEDOUT:
+            case FrameworkEvent.PACKAGES_REFRESHED:
+              packagesRefreshed.countDown();
+              break;
+          }
+        }
+      };
 
       try
       {
-        bundle.start();
+        aContext.addFrameworkListener( fwListener );
+
+        packageAdm.refreshPackages( null );
+
+        if ( packagesRefreshed.await( 15, TimeUnit.SECONDS ) )
+        {
+          if ( !packageAdm.resolveBundles( null ) )
+          {
+            log( LogService.LOG_WARNING, "Not all bundles resolve correctly!" );
+          }
+        }
+        else
+        {
+          throw new RuntimeException( "Refresh packages took longer than expected!" );
+        }
       }
-      catch ( BundleException exception )
+      finally
       {
-        this.logger.log( Logger.LOG_WARNING, "Failed to start bundle: " + bundle.getSymbolicName() + "...", exception );
+        aContext.removeFrameworkListener( fwListener );
+        aContext.ungetService( ref );
       }
     }
   }
 
-  private void uninstallBundle( Bundle bundle )
+  private void startBundle( Bundle aBundle )
   {
-    logger.log( Logger.LOG_DEBUG, "Removing stale plugin: " + bundle.getSymbolicName() + "..." );
+    if ( !isFragment( aBundle ) )
+    {
+      log( LogService.LOG_DEBUG, "Starting bundle: " + aBundle.getSymbolicName() + "..." );
+
+      try
+      {
+        aBundle.start( Bundle.START_ACTIVATION_POLICY );
+      }
+      catch ( BundleException exception )
+      {
+        log( LogService.LOG_WARNING, "Failed to start bundle: " + aBundle.getSymbolicName() + "...", exception );
+      }
+    }
+  }
+
+  private void uninstallBundle( Bundle aBundle )
+  {
+    log( LogService.LOG_DEBUG, "Removing stale plugin: " + aBundle.getSymbolicName() + "..." );
 
     try
     {
-      bundle.stop();
+      aBundle.stop();
     }
     catch ( BundleException exception )
     {
-      this.logger.log( Logger.LOG_WARNING, "Failed to stop bundle: " + bundle.getSymbolicName() + "...", exception );
+      log( LogService.LOG_WARNING, "Failed to stop bundle: " + aBundle.getSymbolicName() + "...", exception );
     }
     try
     {
-      bundle.uninstall();
+      aBundle.uninstall();
     }
     catch ( BundleException exception )
     {
-      this.logger
-          .log( Logger.LOG_WARNING, "Failed to uninstall bundle: " + bundle.getSymbolicName() + "...", exception );
+      log( LogService.LOG_WARNING, "Failed to uninstall bundle: " + aBundle.getSymbolicName() + "...", exception );
     }
+  }
+
+  private Bundle updateBundle( Bundle aBundle )
+  {
+    log( LogService.LOG_DEBUG, "Updating plugin: " + aBundle.getSymbolicName() + "..." );
+
+    Bundle result = null;
+    if ( !isFragment( aBundle ) && ( aBundle.getState() & Bundle.ACTIVE ) != 0 )
+    {
+      log( LogService.LOG_DEBUG, "Stopping plugin: " + aBundle.getSymbolicName() + " for update..." );
+
+      try
+      {
+        aBundle.stop();
+      }
+      catch ( BundleException exception )
+      {
+        log( LogService.LOG_WARNING, "Failed to stop bundle: " + aBundle.getSymbolicName() + "...", exception );
+      }
+      result = aBundle;
+    }
+
+    try
+    {
+      aBundle.update();
+    }
+    catch ( BundleException exception )
+    {
+      log( LogService.LOG_WARNING, "Failed to update bundle: " + aBundle.getSymbolicName() + "...", exception );
+    }
+    return result;
   }
 }
 

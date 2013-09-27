@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="project" default="build" basedir=".">
 	<import file="../cnf/build.xml" />
+	<!-- defines the main version -->
+	<property file="ols.version" />
 
 	<target name="init" depends="template.init">
 		<property name="release.base" value="generated/release" />
 		<property name="release.dir" value="${release.base}/plugins" />
-		<property name="release.version" value="0.0.0" />
+		<property name="release.version" value="${ols.version}" />
 
 		<path id="bndCP">
 			<fileset dir="../cnf/plugins/biz.aQute.bnd">
@@ -27,7 +29,8 @@
 			<fileset dir="../runner/generated" includes="*.jar" />
 		</copy>
 		<!-- the run files -->
-		<copy todir="${release.base}" flatten="true">
+		<filter filtersfile="ols.version" />
+		<copy todir="${release.base}" flatten="true" filtering="true">
 			<fileset dir="resources/run" includes="*" />
 		</copy>
 		<!-- make sure the run scripts are executable -->

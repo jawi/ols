@@ -25,6 +25,7 @@ import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -127,6 +128,8 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       .getPredefinedCursor( java.awt.Cursor.E_RESIZE_CURSOR );
 
   private static final long serialVersionUID = 1L;
+
+  private static final Logger LOG = Logger.getLogger( SignalDiagramComponent.class.getName() );
 
   // VARIABLES
 
@@ -306,9 +309,10 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
       finally
       {
         final long endTime = System.nanoTime();
-        final long renderTime = endTime - startTime;
-        System.out.printf( "Rendering time = %s, View = %s.%n", Unit.Time.format( renderTime / 1.0e9 ),
-            getVisibleRect() );
+        final double renderTime = ( endTime - startTime ) / 1.0e9;
+
+        LOG.log( Level.FINE, "Rendering time = {0}, View = {1}.", new Object[] { Unit.Time.format( renderTime ),
+            getVisibleRect() } );
       }
     }
     else

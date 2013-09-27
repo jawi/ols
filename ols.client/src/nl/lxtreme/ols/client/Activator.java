@@ -156,7 +156,7 @@ public class Activator extends DependencyActivatorBase
       throw new RuntimeException( "Cannot start client: running headless." );
     }
 
-    final ClientController clientController = new ClientController( aContext );
+    final ClientController clientController = new ClientController();
 
     aManager.add( createBundleAdapterService( Bundle.ACTIVE, CP_BUNDLE_FILTER, true /* propagate */) //
         .setImplementation( ComponentProviderBundleAdapter.class ) );

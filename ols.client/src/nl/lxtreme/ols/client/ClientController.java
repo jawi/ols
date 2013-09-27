@@ -274,7 +274,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   // VARIABLES
 
-  private final BundleContext bundleContext;
   private final ActionManager actionManager;
   private final SignalDiagramController signalDiagramController;
 
@@ -295,19 +294,10 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   // CONSTRUCTORS
 
   /**
-   * Creates a new ClientController instance.
-   * 
-   * @param aBundleContext
-   *          the bundle context to use for interaction with the OSGi framework;
-   * @param aHost
-   *          the current host to use, cannot be <code>null</code>;
-   * @param aProjectManager
-   *          the project manager to use, cannot be <code>null</code>.
+   * Creates a new {@link ClientController} instance.
    */
-  public ClientController( final BundleContext aBundleContext )
+  public ClientController()
   {
-    this.bundleContext = aBundleContext;
-
     this.devices = new ConcurrentHashMap<String, Device>();
     this.tools = new ConcurrentHashMap<String, Tool<?>>();
     this.exporters = new ConcurrentHashMap<String, Exporter>();
@@ -607,21 +597,16 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       // Stop the framework bundle; which should stop all other bundles as
       // well; the STOP_TRANSIENT option ensures the bundle is restarted the
       // next time...
-      this.bundleContext.getBundle( 0 ).stop( Bundle.STOP_TRANSIENT );
+      Bundle thisBundle = getBundle();
+      if ( thisBundle != null )
+      {
+        BundleContext bc = thisBundle.getBundleContext();
+        bc.getBundle( 0 ).stop( Bundle.STOP_TRANSIENT );
+      }
     }
-    catch ( final IllegalStateException ex )
+    catch ( BundleException be )
     {
-      LOG.warning( "Bundle context no longer valid while shutting down client?!" );
-
-      // The bundle context is no longer valid; we're going to exit anyway, so
-      // lets ignore this exception for now...
-      System.exit( -1 );
-    }
-    catch ( final BundleException be )
-    {
-      LOG.warning( "Bundle context no longer valid while shutting down client?!" );
-
-      System.exit( -1 );
+      LOG.log( Level.WARNING, "Bundle context no longer valid while shutting down client?!", be );
     }
   }
 
@@ -1299,10 +1284,14 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void showBundlesDialog( final Window aOwner )
   {
-    final BundlesDialog dialog = new BundlesDialog( aOwner, this.bundleContext );
-    if ( dialog.showDialog() )
+    final Bundle thisBundle = getBundle();
+    if ( thisBundle != null )
     {
-      dialog.dispose();
+      final BundlesDialog dialog = new BundlesDialog( aOwner, thisBundle.getBundleContext() );
+      if ( dialog.showDialog() )
+      {
+        dialog.dispose();
+      }
     }
   }
 
@@ -1316,7 +1305,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     final PreferencesDialog dialog = new PreferencesDialog( aParent, this.colorSchemeManager );
 
-    final DependencyManager dm = new DependencyManager( this.bundleContext );
+    final Bundle thisBundle = getBundle();
+    final DependencyManager dm = new DependencyManager( thisBundle.getBundleContext() );
     final Component comp = dm.createComponent();
 
     comp.setImplementation( dialog ).add( dm.createServiceDependency() //
@@ -1352,7 +1342,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public final void start()
   {
     final String version = getVersion();
-    
+
     initOSSpecifics( Constants.SHORT_NAME, getVersion() );
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
@@ -1365,7 +1355,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         // Cause exceptions to be shown in a more user-friendly way...
         JErrorDialog.installSwingExceptionHandler();
 
-        final File dataStorage = ClientController.this.bundleContext.getDataFile( "" );
+        Bundle bundle = FrameworkUtil.getBundle( ClientController.class );
+        File dataStorage = bundle.getBundleContext().getDataFile( "" );
 
         final MainFrame mf = new MainFrame( new DockController( dataStorage, getSignalDiagramController() ),
             ClientController.this );
@@ -1415,34 +1406,31 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
             window.dispose();
           }
           // release all resources...
-          mf.close();
+          mf.internalClose();
           // Make sure the event listeners are deregistered...
           removeMainFrame( mf );
         }
 
         JErrorDialog.uninstallSwingExceptionHandler();
-
-        LOG.info( "Client stopped ..." );
       }
     } );
-  }
 
-  /**
-   * @return the version of this client, never <code>null</code>.
-   */
-  final String getReportIncidentAddress()
-  {
-    Dictionary<?, ?> headers = this.bundleContext.getBundle().getHeaders();
-    return ( String )headers.get( "X-ClientIncidentAddress" );
-  }
-
-  /**
-   * @return the version of this client, never <code>null</code>.
-   */
-  final String getVersion()
-  {
-    Dictionary<?, ?> headers = this.bundleContext.getBundle().getHeaders();
-    return ( String )headers.get( "X-ClientVersion" );
+    try
+    {
+      // Flush all pending EDT events...
+      SwingUtilities.invokeAndWait( new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          LOG.info( "Client stopped ..." );
+        }
+      } );
+    }
+    catch ( Exception exception )
+    {
+      // Ignore; hope for the best...
+    }
   }
 
   /**
@@ -1497,6 +1485,24 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       result = this.mainFrame.getJMenuBar();
     }
     return result;
+  }
+
+  /**
+   * @return the version of this client, never <code>null</code>.
+   */
+  final String getReportIncidentAddress()
+  {
+    Dictionary<?, ?> headers = getBundle().getHeaders();
+    return ( String )headers.get( "X-ClientIncidentAddress" );
+  }
+
+  /**
+   * @return the version of this client, never <code>null</code>.
+   */
+  final String getVersion()
+  {
+    Dictionary<?, ?> headers = getBundle().getHeaders();
+    return ( String )headers.get( "X-ClientVersion" );
   }
 
   /**
@@ -1828,6 +1834,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     return new DefaultToolContext( startOfDecode, endOfDecode, dataSet );
   }
 
+  private Bundle getBundle()
+  {
+    return FrameworkUtil.getBundle( getClass() );
+  }
+
   /**
    * Returns the {@link Channel} with the given index.
    * 
@@ -1888,7 +1899,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     System.setProperty( "nl.lxtreme.ols.client.version", aVersion );
 
     // Use the defined email address...
-    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, "info+v" + aVersion + "@lxtreme.nl" ); // XXX
+    System.setProperty( JErrorDialog.PROPERTY_REPORT_INCIDENT_EMAIL_ADDRESS, getReportIncidentAddress() );
 
     if ( Activator.isDebugMode() )
     {
@@ -1904,7 +1915,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       // Moves the main menu bar to the screen menu bar location...
       System.setProperty( "apple.laf.useScreenMenuBar", "true" );
       System.setProperty( "apple.awt.graphics.EnableQ2DX", "true" );
-      System.setProperty( "com.apple.mrj.application.apple.menu.about.name", aApplicationName );
       System.setProperty( "com.apple.mrj.application.growbox.intrudes", "false" );
       System.setProperty( "com.apple.mrj.application.live-resize", "false" );
       System.setProperty( "com.apple.macos.smallTabs", "true" );

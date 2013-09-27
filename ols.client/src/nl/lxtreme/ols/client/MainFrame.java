@@ -837,10 +837,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   @Override
   public void close()
   {
-    setVisible( false );
-    dispose();
-
-    this.dockController.stop();
+    internalClose();
 
     // Make sure that if this frame is closed, the entire application is
     // shutdown as well...
@@ -969,6 +966,17 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   {
     final Container viewport = this.signalDiagram.getParent();
     return ( JComponent )viewport.getParent();
+  }
+
+  /**
+   * Closes and disposes the resources of this frame.
+   */
+  void internalClose()
+  {
+    setVisible( false );
+    dispose();
+
+    this.dockController.stop();
   }
 
   /**
