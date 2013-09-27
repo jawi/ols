@@ -22,6 +22,7 @@ package nl.lxtreme.ols.client.action;
 
 
 import java.awt.event.*;
+import java.util.logging.*;
 
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -62,6 +63,8 @@ public class ExitAction extends BaseAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
+    Logger.getLogger( ExitAction.class.getName() ).fine( "Handling exit from action..." );
+
     getController().exit();
   }
 }

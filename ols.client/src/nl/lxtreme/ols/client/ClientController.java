@@ -835,6 +835,8 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public final boolean handleQuit()
   {
+    LOG.fine( "Handling quit from app.menu..." );
+
     exit();
     // On Mac OS, it appears that if we acknowledge this event, the system
     // shuts down our application for us, thereby not calling our stop/shutdown
@@ -1914,6 +1916,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       // Moves the main menu bar to the screen menu bar location...
       System.setProperty( "apple.laf.useScreenMenuBar", "true" );
+      System.setProperty( "apple.awt.textantialiasing", "true" );
       System.setProperty( "apple.awt.graphics.EnableQ2DX", "true" );
       System.setProperty( "com.apple.mrj.application.growbox.intrudes", "false" );
       System.setProperty( "com.apple.mrj.application.live-resize", "false" );
@@ -1931,6 +1934,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
       UIManager.put( "OptionPane.windowBindings", //
           new Object[] { SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ), "close", "ESCAPE", "close" } );
+      setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
     }
     else if ( osName.indexOf( "win" ) >= 0 )
     {

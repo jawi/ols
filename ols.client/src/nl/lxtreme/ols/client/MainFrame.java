@@ -837,6 +837,8 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   @Override
   public void close()
   {
+    Logger.getLogger( MainFrame.class.getName() ).fine( "Handling close from window..." );
+
     internalClose();
 
     // Make sure that if this frame is closed, the entire application is
