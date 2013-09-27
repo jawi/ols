@@ -3,7 +3,6 @@
 	purejavacomm,\
 	lib.swing,\
 	lib.mydoggy,\
-	logging,\
 	api,\
 	ols.client,\
 	ols.device,\

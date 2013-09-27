@@ -8,17 +8,29 @@
 		<property name="release.base" value="generated/release" />
 		<property name="release.dir" value="${release.base}/plugins" />
 		<property name="release.version" value="${ols.version}" />
+		<property name="osx.releasedir" value="generated/osx" />
 
-		<path id="bndCP">
-			<fileset dir="../cnf/plugins/biz.aQute.bnd">
-				<include name="biz.aQute.bnd-2.2.0.jar" />
-			</fileset>
-		</path>
+		<!-- be sure to have a proper version defined at all times! -->
+		<fail message="No release version is defined! Cannot continue..." unless="release.version" />
 
-		<taskdef name="createDist" classname="aQute.bnd.ant.RunconfigToDistributionTask" classpathref="bndCP" />
+		<taskdef name="createDist" classname="aQute.bnd.ant.RunconfigToDistributionTask" classpath="../cnf/plugins/biz.aQute.bnd/biz.aQute.bnd-2.2.0.jar" />
+		<taskdef name="jarBundler" classname="net.sourceforge.jarbundler.JarBundler" classpath="../cnf/buildrepo/net.sourceforge.jarbundler/jarbundler-2.1.0.jar" />
+
+		<condition property="isMac">
+			<and>
+				<os family="mac" />
+			</and>
+		</condition>
 	</target>
 
-	<target name="prepareRelease" depends="init">
+	<target name="clean" depends="template.clean">
+		<delete dir="${osx.releasedir}" followsymlinks="false" includeemptydirs="true" removeNotFollowedSymlinks="true" />
+		<delete dir="${osx.releasedir-tmp}" followsymlinks="false" includeemptydirs="true" removeNotFollowedSymlinks="true" />
+	</target>
+
+	<target name="package" depends="init, prepare, package-zip, package-tarball, package-dmg" description="Packages the artifacts for all supported platforms." />
+
+	<target name="prepare">
 		<delete dir="${release.base}" quiet="true" />
 		<mkdir dir="${release.base}/bin" />
 		<mkdir dir="${release.base}/plugins" />
@@ -29,10 +41,6 @@
 			<fileset dir="../runner/generated" includes="*.jar" />
 		</copy>
 
-		<antcall target="copyAuxFiles" />
-	</target>
-
-	<target name="copyAuxFiles">
 		<!-- the run files -->
 		<filter filtersfile="ols.version" />
 		<copy todir="${release.base}" flatten="true" filtering="true">
@@ -42,15 +50,89 @@
 		<chmod dir="${release.base}" perm="ugo+rx" includes="**/*.sh" />
 	</target>
 
-	<target name="release" depends="prepareRelease">
-		<zip destfile="generated/ols-${release.version}-full.zip">
+	<target name="package-zip">
+		<zip destfile="generated/ols-${release.version}-full.zip" level="9">
 			<zipfileset dir="generated/release">
 				<include name="**" />
 			</zipfileset>
 		</zip>
+	</target>
 
+	<target name="package-tarball">
 		<tar destfile="generated/ols-${release.version}-full.tar.gz" compression="gzip">
-			<zipfileset src="generated/ols-${release.version}-full.zip" />
+			<tarfileset dir="generated/release">
+				<include name="**" />
+				<exclude name="*.sh" />
+			</tarfileset>
+			<tarfileset dir="generated/release" mode="0755">
+				<include name="*.sh" />
+			</tarfileset>
 		</tar>
 	</target>
+
+	<target name="package-dmg" depends="create-app, create-dmg" />
+
+	<target name="create-app" if="isMac">
+		<mkdir dir="${osx.releasedir}" />
+
+		<property name="osx.releasedir-src" value="generated/release" />
+
+		<jarBundler dir="${osx.releasedir}" bundleid="nl.lxtreme.ols" name="${ols.shortName}" shortname="${ols.shortName}" mainclass="nl.lxtreme.ols.runner.Runner" version="${release.version}" build="1" jvmversion="1.6+" workingdirectory="$APP_PACKAGE/Contents/Resources/Java" vmoptions="-Xmx1024m" icon="resources/LogicSniffer.icns">
+			<!-- put all bin/*.jar files on the class path -->
+			<jarfileset dir="${osx.releasedir-src}">
+				<include name="bin/*.jar" />
+				<exclude name="bin/looks*.jar" />
+			</jarfileset>
+			<!-- put all plugins/* files *not* on the class path -->
+			<javafileset dir="${osx.releasedir-src}">
+				<include name="plugins/*.jar" />
+				<include name="plugins/*.cfg" />
+			</javafileset>
+		</jarBundler>
+	</target>
+
+	<target name="create-dmg" if="isMac">
+		<delete dir="generated/" includes="*.dmg" />
+
+		<mkdir dir="${osx.releasedir}/.background" />
+		<copy file="resources/background.png" todir="${osx.releasedir}/.background" />
+		<copy file="resources/Package.icns" todir="${osx.releasedir}/.VolumeIcon.icns" />
+
+		<exec executable="hdiutil">
+			<arg value="create" />
+			<arg value="-format" />
+			<arg value="UDRW" />
+			<arg value="-ov" />
+			<arg value="-scrub" />
+			<arg value="-volname" />
+			<arg value="${ols.shortName}" />
+			<arg value="-srcfolder" />
+			<arg value="${osx.releasedir}" />
+			<arg value="generated/ols-tmp.dmg" />
+		</exec>
+		<exec executable="/bin/bash">
+			<arg value="resources/app-bundle-osx.sh" />
+			<arg value="generated/ols-tmp.dmg" />
+			<arg value="${ols.shortName}" />
+		</exec>
+		<exec executable="hdiutil">
+			<arg value="convert" />
+			<arg value="generated/ols-tmp.dmg" />
+			<arg value="-format" />
+			<arg value="UDZO" />
+			<arg value="-imagekey" />
+			<arg value="zlib-level=9" />
+			<arg value="-o" />
+			<arg value="generated/ols-${release.version}-full.dmg" />
+		</exec>
+		<exec executable="hdiutil">
+			<arg value="internet-enable" />
+			<arg value="-yes" />
+			<arg value="generated/ols-${release.version}-full.dmg" />
+		</exec>
+
+		<!-- remove the temporary disk image -->
+		<delete dir="generated" includes="ols-tmp.dmg" />
+	</target>
+
 </project>

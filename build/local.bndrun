@@ -9,9 +9,9 @@
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.eventadmin)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.prefs)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.log)',\
-	osgi.identity;filter:='(&(osgi.identity=mydoggy-osgi)(version>=1.5.0))',\
 	osgi.identity;filter:='(&(osgi.identity=jvt220)(version>=1.1.1))',\
 	osgi.identity;filter:='(&(osgi.identity=purejavacomm)(version>=0.0.17))',\
+	osgi.identity;filter:='(osgi.identity=lib.mydoggy)',\
 	osgi.identity;filter:='(osgi.identity=lib.swing)',\
 	osgi.identity;filter:='(osgi.identity=logging)',\
 	osgi.identity;filter:='(osgi.identity=api)',\
@@ -51,7 +51,6 @@
 	lib.mydoggy;version=latest,\
 	lib.swing;version=latest,\
 	logging;version=latest,\
-	mydoggy-osgi;version='[1.5.0,1.5.1)',\
 	ols.client.api;version=latest,\
 	ols.client.config;version=latest,\
 	ols.client.project;version=latest,\
