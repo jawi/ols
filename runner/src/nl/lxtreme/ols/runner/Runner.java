@@ -27,6 +27,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.jar.*;
 
+import nl.lxtreme.ols.runner.MiniLogger.LogTarget;
+
 import org.apache.felix.framework.*;
 import org.apache.felix.framework.util.*;
 import org.osgi.framework.*;
@@ -49,7 +51,7 @@ public final class Runner
     final File pluginDir;
     final File cacheDir;
     final boolean cleanCache;
-    final boolean logToConsole;
+    final LogTarget logTarget;
     final int logLevel;
 
     // CONSTRUCTORS
@@ -59,6 +61,7 @@ public final class Runner
       String _pluginDir = getPluginDir();
       boolean _cleanCache = false;
       boolean _logToConsole = false;
+      boolean _logToFile = false;
       int _logLevel = 2;
 
       for ( String cmdLineArg : aCmdLineArgs )
@@ -70,6 +73,10 @@ public final class Runner
         else if ( "-logToConsole".equals( cmdLineArg ) )
         {
           _logToConsole = true;
+        }
+        else if ( "-logToFile".equals( cmdLineArg ) )
+        {
+          _logToFile = true;
         }
         else if ( cmdLineArg.startsWith( "-logLevel=" ) )
         {
@@ -87,16 +94,31 @@ public final class Runner
       {
         throw new IllegalArgumentException( "Invalid log level, should be between 0 and 5!" );
       }
-      if ( !new File( _pluginDir ).exists() )
+      if ( "".equals( _pluginDir ) || !new File( _pluginDir ).exists() )
       {
         throw new IllegalArgumentException( "Invalid plugin directory: no such directory!" );
+      }
+      if ( _logToConsole && _logToFile )
+      {
+        throw new IllegalArgumentException( "Cannot log to both console and file!" );
       }
 
       this.pluginDir = new File( _pluginDir ).getCanonicalFile();
       this.cacheDir = new File( _pluginDir.concat( "/../.fwcache" ) ).getCanonicalFile();
       this.cleanCache = _cleanCache;
-      this.logToConsole = _logToConsole;
+      this.logTarget = _logToConsole ? LogTarget.CONSOLE : _logToFile ? LogTarget.FILE : LogTarget.NONE;
       this.logLevel = _logLevel;
+
+      if ( Boolean.getBoolean( "nl.lxtreme.ols.client.debug" ) )
+      {
+        PrintStream fos = new PrintStream( "runner.log" );
+        fos.printf( "Got the following arguments: %s.%n", Arrays.toString( aCmdLineArgs ) );
+        fos.printf( "\tpluginDir = %s.%n", this.pluginDir );
+        fos.printf( "\tcacheDir  = %s.%n", this.cacheDir );
+        fos.printf( "\tlogLevel  = %d.%n", Integer.valueOf( this.logLevel ) );
+        fos.printf( "\tlogTarget = %s.%n", this.logTarget );
+        fos.close();
+      }
     }
 
     // METHODS
@@ -108,32 +130,27 @@ public final class Runner
      * <tt>nl.lxtreme.ols.bundle.dir</tt> into consideration.
      * </p>
      * 
-     * @return the fully qualified path to the directory with plugins, never
-     *         <code>null</code>.
-     * @throws IOException
-     *           in case an I/O problem occurred during determining the plugins
-     *           path.
+     * @return the fully qualified path to the directory with plugins, can be
+     *         <code>null</code> in case it could not be determined.
      */
     private static String getPluginDir()
     {
+      String defaultDir = "./plugins";
       File pluginDir;
 
-      String pluginProperty = System.getProperty( "nl.lxtreme.ols.bundle.dir", "./plugins" );
-      pluginDir = new File( pluginProperty );
+      pluginDir = new File( System.getProperty( "nl.lxtreme.ols.bundle.dir", defaultDir ) );
       if ( pluginDir.exists() && pluginDir.isDirectory() )
       {
         return pluginDir.getAbsolutePath();
       }
-      else
+
+      pluginDir = new File( defaultDir );
+      if ( pluginDir.exists() && pluginDir.isDirectory() )
       {
-        pluginDir = new File( pluginDir, "plugins" );
-        if ( pluginDir.exists() && pluginDir.isDirectory() )
-        {
-          return pluginDir.getAbsolutePath();
-        }
+        return pluginDir.getAbsolutePath();
       }
 
-      throw new RuntimeException( "Failed to find plugins folder! Is '-Dnl.lxtreme.ols.bundle.dir' specified?" );
+      return null;
     }
   }
 
@@ -242,7 +259,7 @@ public final class Runner
         // Ignore...
       }
     }
-    
+
     return "Runner";
   }
 
@@ -328,7 +345,7 @@ public final class Runner
 
   private Map<String, Object> createConfig()
   {
-    this.hostActivator = new HostActivator( this.options.logToConsole, this.options.logLevel );
+    this.hostActivator = new HostActivator( this.options.logTarget, this.options.logLevel );
 
     final Map<String, Object> config = new HashMap<String, Object>();
 

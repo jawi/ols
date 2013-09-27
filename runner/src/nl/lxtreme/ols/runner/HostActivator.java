@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.runner;
 
 
+import nl.lxtreme.ols.runner.MiniLogger.LogTarget;
+
 import org.osgi.framework.*;
 import org.osgi.service.log.*;
 
@@ -32,19 +34,21 @@ public class HostActivator implements BundleActivator
 {
   // VARIABLES
 
-  private final ConsoleLogger logger;
+  private MiniLogger logger;
+  private JULLogBridge bridge;
 
   // CONSTRUCTORS
 
   /**
    * Creates a new HostActivator instance.
    * 
-   * @param aLogToConsole
+   * @param aLogTarget
    * @param aLogLevel
    */
-  public HostActivator( boolean aLogToConsole, int aLogLevel )
+  public HostActivator( LogTarget aLogTarget, int aLogLevel )
   {
-    this.logger = new ConsoleLogger( aLogToConsole, aLogLevel );
+    this.logger = new MiniLogger( aLogTarget, aLogLevel );
+    this.bridge = new JULLogBridge( this.logger );
   }
 
   // METHODS
@@ -65,6 +69,7 @@ public class HostActivator implements BundleActivator
   @Override
   public void start( final BundleContext aContext ) throws Exception
   {
+    this.bridge.start( aContext );
     this.logger.start( aContext );
   }
 
@@ -74,7 +79,7 @@ public class HostActivator implements BundleActivator
   @Override
   public void stop( final BundleContext aContext ) throws Exception
   {
-    // Nop
+    this.logger.stop( aContext );
   }
 }
 

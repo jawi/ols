@@ -30,11 +30,10 @@ import org.osgi.service.log.*;
 
 
 /**
- * An implementation of the OSGi LogService that directly outputs each log
- * message to <code>System.out</code>. It does not implement the LogReader or
- * LogListeners.
+ * A bridge for converting JUL {@link LogRecord}s to OSGi {@link LogService}
+ * events.
  */
-public class ConsoleLogger extends Handler implements LogService
+public class JULLogBridge extends Handler
 {
   // INNER TYPES
 
@@ -51,7 +50,7 @@ public class ConsoleLogger extends Handler implements LogService
       {
         aLogger.removeHandler( handler );
       }
-      aLogger.addHandler( ConsoleLogger.this );
+      aLogger.addHandler( JULLogBridge.this );
       aLogger.setLevel( Level.FINEST );
       return result;
     }
@@ -61,23 +60,16 @@ public class ConsoleLogger extends Handler implements LogService
 
   private static final String PROPERTY_FILTER_JDKUI_LOGS = "nl.lxtreme.ols.filterJdkUiLogs";
 
-  private static String[] LEVEL = { "", "ERROR", "WARN ", "INFO ", "DEBUG" };
-
   // VARIABLES
 
-  private final boolean logToConsole;
-  private final int logLevel;
+  private final LogService logService;
 
   /**
-   * Creates a new ConsoleLogger instance.
-   * 
-   * @param aLogToConsole
-   * @param aLogLevel
+   * Creates a new {@link JULLogBridge} instance.
    */
-  public ConsoleLogger( boolean aLogToConsole, int aLogLevel )
+  public JULLogBridge( LogService aLogService )
   {
-    this.logToConsole = aLogToConsole;
-    this.logLevel = aLogLevel;
+    this.logService = aLogService;
   }
 
   // METHODS
@@ -111,79 +103,13 @@ public class ConsoleLogger extends Handler implements LogService
     // Nop
   }
 
-  public void log( int level, String message )
-  {
-    log( null, level, message, null );
-  }
-
-  public void log( int level, String message, Throwable throwable )
-  {
-    log( null, level, message, throwable );
-  }
-
-  @SuppressWarnings( "rawtypes" )
-  public void log( ServiceReference reference, int level, String message )
-  {
-    log( reference, level, message, null );
-  }
-
-  @SuppressWarnings( "rawtypes" )
-  public void log( ServiceReference reference, int level, String message, Throwable throwable )
-  {
-    if ( !this.logToConsole || level > this.logLevel )
-    {
-      return;
-    }
-
-    String bundle = " [   ]";
-    String service = " ";
-    if ( reference != null )
-    {
-      bundle = String.format( " [%03d] ", Long.valueOf( reference.getBundle().getBundleId() ) );
-
-      Object objectClass = reference.getProperty( Constants.OBJECTCLASS );
-      if ( objectClass instanceof String[] )
-      {
-        StringBuffer buffer = new StringBuffer( "" );
-        String[] objClassArr = ( String[] )objectClass;
-        for ( int i = 0; i < objClassArr.length; i++ )
-        {
-          String svc = objClassArr[i];
-          if ( buffer.length() > 0 )
-          {
-            buffer.append( ';' );
-          }
-          buffer.append( svc );
-          service += buffer.toString() + ": ";
-        }
-      }
-      else
-      {
-        service += objectClass.toString() + ": ";
-      }
-    }
-
-    String msg = "[" + LEVEL[level] + "]" + bundle + service + message;
-    if ( !msg.contains( "org.slf4j.helpers" ) && !message.contains( "TRACE" ) )
-    {
-      System.out.println( msg );
-    }
-
-    if ( throwable != null )
-    {
-      throwable.printStackTrace( System.out );
-    }
-  }
-
-  // VARIABLES
-
   /**
    * {@inheritDoc}
    */
   @Override
   public void publish( final LogRecord aRecord )
   {
-    if ( isBannedLogger( aRecord ) || mapLevel( aRecord.getLevel() ) > this.logLevel )
+    if ( isBannedLogger( aRecord ) )
     {
       return;
     }
@@ -202,14 +128,14 @@ public class ConsoleLogger extends Handler implements LogService
     }
     message = String.format( "(%s) %s", loggerName, message );
 
-    log( mapLevel( aRecord.getLevel() ), message, aRecord.getThrown() );
+    this.logService.log( mapLevel( aRecord.getLevel() ), message, aRecord.getThrown() );
   }
 
   /**
-   * @param aContext
-   * @throws Exception
+   * Starts this bridge service by replacing the default JUL {@link LogManager}
+   * with our own implementation.
    */
-  final void start( BundleContext aContext ) throws Exception
+  public void start( BundleContext aContext ) throws Exception
   {
     CustomLogManager newManager = new CustomLogManager();
     LogManager oldManager;
@@ -229,12 +155,10 @@ public class ConsoleLogger extends Handler implements LogService
       Logger oldRootLogger = ( Logger )field.get( oldManager );
       field.set( newManager, oldRootLogger );
       newManager.addLogger( oldRootLogger );
-
-      // Cleanup resources of old log manager...
-      oldManager.reset();
     }
 
-    aContext.registerService( LogService.class.getName(), this, null );
+    // Cleanup resources of old log manager...
+    oldManager.reset();
   }
 
   /**
