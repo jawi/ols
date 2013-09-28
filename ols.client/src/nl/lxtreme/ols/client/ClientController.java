@@ -1938,12 +1938,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     else if ( osName.indexOf( "win" ) >= 0 )
     {
       UIManager.put( "Application.useSystemFontSettings", Boolean.TRUE );
-      setLookAndFeel( "com.jgoodies.looks.plastic.PlasticXPLookAndFeel" );
+      setLookAndFeel();
     }
     else
     {
       UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
-      setLookAndFeel( "com.jgoodies.looks.plastic.Plastic3DLookAndFeel" );
+      setLookAndFeel();
     }
   }
 
@@ -1966,22 +1966,23 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   }
 
   /**
-   * @param aLookAndFeelClass
+   * Sets the default L&F, assuming <tt>-Dswing.defaultlaf=...</tt> is defined.
    */
-  private void setLookAndFeel( final String aLookAndFeelClassName )
+  private void setLookAndFeel()
   {
     final UIDefaults defaults = UIManager.getLookAndFeelDefaults();
     // to make sure we always use system class loader
     defaults.put( "ClassLoader", Activator.class.getClassLoader() );
 
+    String lafName = System.getProperty( "swing.defaultlaf", UIManager.getSystemLookAndFeelClassName() );
+
     try
     {
-      UIManager.setLookAndFeel( aLookAndFeelClassName );
+      UIManager.setLookAndFeel( lafName );
     }
     catch ( Exception exception )
     {
-      LOG.log( Level.WARNING, "Failed to set look and feel to: " + aLookAndFeelClassName, exception );
-      setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
+      LOG.log( Level.WARNING, "Failed to set look and feel to: " + lafName, exception );
     }
   }
 }
