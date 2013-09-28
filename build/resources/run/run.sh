@@ -13,6 +13,9 @@ java -Xdock:name="test" -version 1>/dev/null 2>&1
 if [ "$?" -eq "0" ]; then
 	# running on OSX
 	platformOpts="-Xdock:name=@ols.shortName@ -Dcom.apple.mrj.application.apple.menu.about.name=@ols.shortName@"
+else
+	# running on other platforms
+	platformOpts="-DPlastic.defaultTheme=SkyBluer -Dswing.defaultlaf=com.jgoodies.looks.plastic.Plastic3DLookAndFeel"
 fi
 
 # cross-platform "readlink -f" function; taken and modified (clean ups and made 
@@ -39,5 +42,8 @@ plugindir="$basedir/plugins/"
 classpath="$basedir/bin/*"
 
 # give the client roughly 1gigabyte of memory 
-MEMSETTINGS=-Xmx1024m
-java $platformOpts "$MEMSETTINGS" -Djna.nosys=true -Dnl.lxtreme.ols.bundle.dir="$plugindir" -DPlastic.defaultTheme=SkyBluer -cp "$classpath" -jar "$basedir/bin/runner.jar" "$@"
+memsettings=-Xmx1024m
+
+java $platformOpts $memsettings -Djna.nosys=true -cp "$classpath" nl.lxtreme.ols.runner.Runner -pluginDir="$plugindir" "$@"
+
+###EOF###

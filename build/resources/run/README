@@ -1,12 +1,12 @@
 OpenBench LogicSniffer Client
-=============================
+#############################
 J.W. Janssen, <j.w.janssen@lxtreme.nl>
 
 
 About
------
+=====
 This is the client software for the OpenBench LogicSniffer (short name: OLS) 
-written by Jan Willem Janssen.
+written by Jan Willem Janssen with the help of many others.
 
 Based on the original SUMP code base, this project aims at making the client
 more user-friendly, better to extend (dynamically) and better user experience.
@@ -16,7 +16,7 @@ Sniffer, see [1] and [2].
 
 
 Supported devices
------------------
+=================
 The current OLS client supports the following hardware:
 
  - Open-Bench Logic Sniffer;
@@ -33,7 +33,7 @@ be created. For more information on this, see [3].
 
 
 Prerequisites 
--------------
+=============
 In order to run the OLS client, you need at least:
 
  - a support operating system. Current supported are:
@@ -47,7 +47,7 @@ In order to run the OLS client, you need at least:
 
 
 Installation
-------------
+============
 Installing the OLS client is a matter of unpacking the distribution archive, 
 and placing the resulting directory (with its contents) to a suitable 
 location. One thing to note is that the installation location needs to be 
@@ -56,14 +56,27 @@ files are to be created.
 
 
 Running
--------
+=======
 Running the OLS client is done by simply running either the 'run.bat' or 
 'run.sh' scripts located in the base directory of the installation. For Mac
 OSX, double clicking the application is sufficient. 
 
+Arguments
+---------
+As of version 0.9.8, the OLS client accepts the following arguments:
+
+  -logToConsole  writes all log statements to the standard console;
+  -logToFile     writes all log statements to a log-file (ols.log) in the
+                 current working directory;
+  -logLevel=N    sets the verbosity of log messages to N, where N=1 means
+                 only errors are logged, and N=6 means all log statements;
+  -pluginDir=P   sets the location where all plugins can be found to the
+                 directory represented by P;
+  -clean         cleans the cache used by the client. 
+
 
 Questions, suggestions and ideas
---------------------------------
+================================
 If you have any questions, problems, bugs, suggestions and/or ideas about the
 OLS client, you can either mail me, or use the forums on [6] to post them. Be
 sure to also check out the FAQ on [5] to see whether your question might 
@@ -71,7 +84,7 @@ already be answered.
 
 
 License
--------
+=======
 The OLS client itself is released under GPLv2, see the LICENSE file for the 
 complete license. The OLS client software makes use of the OSGi specification,
 which is licensed under "OSGi Specification License, Version 1.0" [7], Apache 
@@ -80,18 +93,13 @@ licensed under "BSD open source license" [9].
 
 
 External links
---------------
+==============
 [1] <http://ols.lxtreme.nl>, the home page of the OLS client;
-[2] <http://dangerousprototypes.com/open-logic-sniffer>, the home page of the
-    OLS hardware;
-[3] <https://github.com/jawi/ols/wiki/OLS-Device-Profiles>, explains how the
-    OLS client can be extended for other devices;
-[4] <http://www.oracle.com/technetwork/java/index.html>, the home page where
-    Java 6 and later can be downloaded;
-[5] <http://ols.lxtreme.nl/#FAQ>, provides some answers to frequently asked
-    questions;
-[6] <http://dangerousprototypes.com/forum/viewforum.php?f=23>, the forum for
-    the OLS hardware, with a subforum for the OLS client;
+[2] <http://dangerousprototypes.com/open-logic-sniffer>, the home page of the OLS hardware;
+[3] <https://github.com/jawi/ols/wiki/OLS-Device-Profiles>, explains how the OLS client can be extended for other devices;
+[4] <http://www.oracle.com/technetwork/java/index.html>, the home page where Java 6 and later can be downloaded;
+[5] <http://ols.lxtreme.nl/#FAQ>, provides some answers to frequently asked questions;
+[6] <http://dangerousprototypes.com/forum/viewforum.php?f=23>, the forum for the OLS hardware, with a subforum for the OLS client;
 [7] <http://www.osgi.org/Main/OSGiSpecificationLicense>;
 [8] <http://www.apache.org/licenses/LICENSE-2.0>;
 [9] <http://www.opensource.org/licenses/bsd-license.html>;
