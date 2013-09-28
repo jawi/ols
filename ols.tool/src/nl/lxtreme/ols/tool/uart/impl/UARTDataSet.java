@@ -23,8 +23,8 @@ package nl.lxtreme.ols.tool.uart.impl;
 
 import java.util.logging.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.ErrorType;
 
 
@@ -231,7 +231,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.BaseDataSet#sort()
+   * @see nl.lxtreme.ols.tool.base.BaseDataSet#sort()
    */
   @Override
   public void sort()

@@ -23,8 +23,8 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.common.*;
 
 
 /**

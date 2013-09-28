@@ -23,7 +23,7 @@ package nl.lxtreme.ols.tool.i2s;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.osgi.framework.*;

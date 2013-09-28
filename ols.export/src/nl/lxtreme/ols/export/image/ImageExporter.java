@@ -29,7 +29,7 @@ import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.export.api.*;
 
 

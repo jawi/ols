@@ -21,8 +21,7 @@
 package nl.lxtreme.ols.tool.dmx512;
 
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;

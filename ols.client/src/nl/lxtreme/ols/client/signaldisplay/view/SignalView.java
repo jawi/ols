@@ -23,13 +23,13 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 import java.awt.*;
 import java.awt.event.*;
 
-import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 
 
 /**

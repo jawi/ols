@@ -21,8 +21,7 @@
 package nl.lxtreme.ols.tool.api;
 
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

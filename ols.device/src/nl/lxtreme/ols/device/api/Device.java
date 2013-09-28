@@ -23,7 +23,7 @@ package nl.lxtreme.ols.device.api;
 
 import java.io.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

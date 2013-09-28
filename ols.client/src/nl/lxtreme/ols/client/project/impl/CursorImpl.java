@@ -19,11 +19,12 @@
  */
 package nl.lxtreme.ols.client.project.impl;
 
-
 import java.awt.*;
 import java.beans.*;
 
-import nl.lxtreme.ols.api.data.Cursor;
+import nl.lxtreme.ols.common.acquisition.Cursor;
+
+
 
 
 /**

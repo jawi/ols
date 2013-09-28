@@ -25,8 +25,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.linedecoder.*;
 import nl.lxtreme.ols.tool.linedecoder.impl.decoders.*;

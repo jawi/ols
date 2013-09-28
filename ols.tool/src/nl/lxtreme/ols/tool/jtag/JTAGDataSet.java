@@ -23,8 +23,8 @@ package nl.lxtreme.ols.tool.jtag;
 
 import java.math.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.tool.base.*;
 
 
 /**
@@ -80,7 +80,7 @@ public final class JTAGDataSet extends BaseDataSet<JTAGData>
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.BaseDataSet#sort()
+   * @see nl.lxtreme.ols.tool.base.BaseDataSet#sort()
    */
   @Override
   public void sort()

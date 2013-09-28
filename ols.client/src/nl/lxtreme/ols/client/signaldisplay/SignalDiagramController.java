@@ -28,12 +28,9 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomListener;
 import nl.lxtreme.ols.client.signaldisplay.dnd.*;
@@ -43,6 +40,8 @@ import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 
 

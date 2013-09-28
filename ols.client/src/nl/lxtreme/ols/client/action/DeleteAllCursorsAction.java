@@ -24,10 +24,10 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.util.swing.*;
 
 

@@ -23,7 +23,7 @@ package nl.lxtreme.ols.device.sump;
 
 import java.util.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;
 import nl.lxtreme.ols.device.sump.protocol.*;

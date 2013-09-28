@@ -28,8 +28,7 @@ import java.util.concurrent.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.util.swing.*;
 
 import org.apache.felix.dm.*;

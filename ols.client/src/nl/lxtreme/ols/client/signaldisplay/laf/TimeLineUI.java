@@ -30,11 +30,11 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

@@ -25,7 +25,7 @@ import java.awt.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 import org.apache.felix.dm.*;

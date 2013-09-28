@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.dmx512;
 
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.ErrorType;
 
 

@@ -23,9 +23,8 @@ package nl.lxtreme.ols.client.signaldisplay.util;
 
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.annotation.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

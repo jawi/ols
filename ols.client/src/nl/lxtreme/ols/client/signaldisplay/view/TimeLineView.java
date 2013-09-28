@@ -21,14 +21,15 @@ package nl.lxtreme.ols.client.signaldisplay.view;
 
 
 import static nl.lxtreme.ols.client.signaldisplay.view.SignalView.*;
+
 import java.awt.*;
 import java.awt.event.*;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 
 
 /**

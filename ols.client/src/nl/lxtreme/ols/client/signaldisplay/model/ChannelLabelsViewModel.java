@@ -21,18 +21,19 @@ package nl.lxtreme.ols.client.signaldisplay.model;
 
 
 import static nl.lxtreme.ols.client.signaldisplay.laf.UIManagerKeys.*;
+
 import java.awt.*;
-import java.awt.image.BufferedImage;
+import java.awt.image.*;
 import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

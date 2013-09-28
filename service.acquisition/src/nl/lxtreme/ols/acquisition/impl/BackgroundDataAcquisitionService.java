@@ -27,8 +27,8 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.acquisition.*;
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.acquisition.AcquisitionResultStatus.ResultStatus;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.AcquisitionResultStatus.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.task.execution.*;
 

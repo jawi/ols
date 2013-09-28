@@ -10,8 +10,8 @@ import static org.mockito.Mockito.*;
 import java.io.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.project.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.junit.*;
 import org.osgi.service.log.*;

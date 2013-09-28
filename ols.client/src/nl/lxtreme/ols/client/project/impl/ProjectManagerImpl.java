@@ -26,9 +26,9 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.project.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.osgi.framework.*;
 
@@ -69,7 +69,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   // METHODS
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.ProjectManager#addPropertyChangeListener(java.beans.PropertyChangeListener)
+   * @see nl.lxtreme.ols.client.project.ProjectManager#addPropertyChangeListener(java.beans.PropertyChangeListener)
    */
   public void addPropertyChangeListener( final PropertyChangeListener aListener )
   {
@@ -77,7 +77,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.ProjectManager#createNewProject()
+   * @see nl.lxtreme.ols.client.project.ProjectManager#createNewProject()
    */
   public Project createNewProject()
   {
@@ -86,7 +86,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.ProjectManager#createTemporaryProject()
+   * @see nl.lxtreme.ols.client.project.ProjectManager#createTemporaryProject()
    */
   public Project createTemporaryProject()
   {
@@ -94,7 +94,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.ProjectManager#getCurrentProject()
+   * @see nl.lxtreme.ols.client.project.ProjectManager#getCurrentProject()
    */
   @Override
   public Project getCurrentProject()
@@ -103,7 +103,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.ProjectManager#loadProject(java.io.InputStream)
+   * @see nl.lxtreme.ols.client.project.ProjectManager#loadProject(java.io.InputStream)
    */
   @Override
   public void loadProject( final InputStream aInput ) throws IOException
@@ -187,7 +187,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.ProjectManager#removePropertyChangeListener(java.beans.PropertyChangeListener)
+   * @see nl.lxtreme.ols.client.project.ProjectManager#removePropertyChangeListener(java.beans.PropertyChangeListener)
    */
   public void removePropertyChangeListener( final PropertyChangeListener aListener )
   {
@@ -195,7 +195,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.ProjectManager#saveProject(java.io.OutputStream)
+   * @see nl.lxtreme.ols.client.project.ProjectManager#saveProject(java.io.OutputStream)
    */
   @Override
   public void saveProject( final OutputStream aOutput ) throws IOException

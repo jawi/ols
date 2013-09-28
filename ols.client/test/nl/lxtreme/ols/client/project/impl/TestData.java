@@ -23,7 +23,7 @@ package nl.lxtreme.ols.client.project.impl;
 
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

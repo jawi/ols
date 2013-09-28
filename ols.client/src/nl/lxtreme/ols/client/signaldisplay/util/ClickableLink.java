@@ -23,6 +23,7 @@ package nl.lxtreme.ols.client.signaldisplay.util;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 
 

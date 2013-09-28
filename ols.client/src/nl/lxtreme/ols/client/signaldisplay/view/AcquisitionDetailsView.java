@@ -27,12 +27,11 @@ import java.text.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomEvent;
 import nl.lxtreme.ols.client.signaldisplay.ZoomController.ZoomListener;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.util.swing.*;
 
 

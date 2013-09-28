@@ -26,10 +26,9 @@ import static org.junit.Assert.*;
 
 import java.io.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.project.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.junit.*;
 

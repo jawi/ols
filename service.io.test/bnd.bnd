@@ -8,7 +8,6 @@ Private-Package: nl.lxtreme.ols.io.serial.test
 	osgi.cmpn,\
 	junit.osgi;version=4.11.0,\
 	org.mockito.mockito-all,\
-	api;version=latest,\
 	service.io;version=latest,\
 	rxtx;version=0.0.17
 -runsystempackages: sun.reflect

@@ -31,7 +31,6 @@ import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.plaf.basic.*;
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.util.swing.*;

@@ -33,15 +33,15 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.about.*;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.api.*;
 import nl.lxtreme.ols.client.icons.*;
+import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;

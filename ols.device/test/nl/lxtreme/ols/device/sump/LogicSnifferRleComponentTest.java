@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 import java.io.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.sump.VirtualLogicSnifferDevice.SampleProvider;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;

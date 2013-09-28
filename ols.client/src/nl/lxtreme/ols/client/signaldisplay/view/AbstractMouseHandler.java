@@ -28,12 +28,12 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.view.renderer.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 
 

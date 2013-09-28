@@ -31,16 +31,15 @@ import java.util.List;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.action.*;
 import nl.lxtreme.ols.client.actionmanager.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
-import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.*;
+import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.LabelStyle;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.component.*;
 

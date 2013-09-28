@@ -26,12 +26,13 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.action.EditSignalElementPropertiesAction.JColorEditor;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.DialogStatus;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.StatusAwareCloseableDialog;
 
 
 /**

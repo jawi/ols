@@ -4,7 +4,7 @@ Bundle-Name: OLS project manager
 Bundle-Description: A project manager for the OLS client.
 Bundle-Copyright: J.W. Janssen (lxtreme.nl) (C) 2010-2013
 Bundle-License: GPLv2;link=http://www.gnu.org/licenses/gpl-2.0.html
-Bundle-Activator: nl.lxtreme.ols.client.project.Activator
-Private-Package: nl.lxtreme.ols.client.project,\
-	nl.lxtreme.ols.client.project.impl
+Bundle-Activator: nl.lxtreme.ols.client.project.impl.Activator
+Private-Package: nl.lxtreme.ols.client.project.impl
+Export-Package: nl.lxtreme.ols.client.project
 X-ClientVersion = ${ols.version}

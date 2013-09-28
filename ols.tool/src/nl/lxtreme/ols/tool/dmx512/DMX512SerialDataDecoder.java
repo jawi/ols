@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.dmx512;
 
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.uart.*;
 

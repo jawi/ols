@@ -23,17 +23,17 @@ package nl.lxtreme.ols.tool.base;
 
 import java.awt.*;
 import java.awt.Dialog.ModalExclusionType;
+import java.awt.Cursor;
 import java.util.concurrent.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.Configurable;
-import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.task.execution.*;
 import nl.lxtreme.ols.tool.api.*;
-import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.*;
+import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
+import nl.lxtreme.ols.util.swing.Configurable;
 
 import org.osgi.framework.*;
 

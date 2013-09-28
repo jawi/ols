@@ -1,0 +1,3 @@
+-buildpath: junit.osgi;version=4.11.0
+Export-Package: nl.lxtreme.ols.common,\
+	nl.lxtreme.ols.common.acquisition

@@ -2,7 +2,7 @@
 	osgi.core;version=4.2.0,\
 	osgi.cmpn;version=4.2.0.200908310645,\
 	org.apache.felix.dependencymanager;version=3.1.0,\
+	ols.common;version=latest,\
 	ols.device.api;version=latest,\
-	service.taskexecution.api;version=latest,\
-	api;version=latest
+	service.taskexecution.api;version=latest
 -sub: *.bnd

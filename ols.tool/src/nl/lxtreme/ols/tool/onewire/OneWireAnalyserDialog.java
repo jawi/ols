@@ -32,8 +32,7 @@ import java.util.List;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.util.*;
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter;

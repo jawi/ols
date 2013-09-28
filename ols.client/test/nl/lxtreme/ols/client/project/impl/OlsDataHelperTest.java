@@ -27,9 +27,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.project.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 import org.junit.*;
 

@@ -23,12 +23,9 @@ package nl.lxtreme.ols.client.project.impl;
 
 import java.beans.*;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

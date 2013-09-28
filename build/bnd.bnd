@@ -3,7 +3,7 @@
 	purejavacomm,\
 	lib.swing,\
 	lib.mydoggy,\
-	api,\
+	ols.common,\
 	ols.client,\
 	ols.device,\
 	ols.export,\

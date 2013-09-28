@@ -20,21 +20,21 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
+import static nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.*;
 import static nl.lxtreme.ols.util.swing.SpringLayoutUtils.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
-import static nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.*;
 
 import java.awt.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.util.*;
 import nl.lxtreme.ols.client.signaldisplay.util.ClickableLink.LinkListener;
 import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.LabelStyle;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 
 

@@ -21,27 +21,19 @@
 package nl.lxtreme.ols.client.signaldisplay.view;
 
 
-import java.awt.Point;
+import java.awt.*;
 
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JPopupMenu;
+import javax.swing.*;
 
-import nl.lxtreme.ols.api.Ols;
-import nl.lxtreme.ols.api.data.Cursor;
 import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.actionmanager.IActionManager;
-import nl.lxtreme.ols.client.signaldisplay.MeasurementInfo;
-import nl.lxtreme.ols.client.signaldisplay.SignalDiagramController;
-import nl.lxtreme.ols.client.signaldisplay.action.DeleteCursorAction;
-import nl.lxtreme.ols.client.signaldisplay.action.EditCursorPropertiesAction;
-import nl.lxtreme.ols.client.signaldisplay.action.EditSignalElementPropertiesAction;
-import nl.lxtreme.ols.client.signaldisplay.action.RemoveChannelAnnotations;
-import nl.lxtreme.ols.client.signaldisplay.action.SetCursorAction;
-import nl.lxtreme.ols.client.signaldisplay.action.SetSignalElementVisibilityAction;
-import nl.lxtreme.ols.client.signaldisplay.action.SetSignalGroupVisibilityAction;
-import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel;
+import nl.lxtreme.ols.client.actionmanager.*;
+import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.action.*;
+import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 
 
 /**

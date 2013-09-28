@@ -33,7 +33,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ExportUtils.CsvExporter;

@@ -21,8 +21,8 @@
 package nl.lxtreme.ols.tool.asm45;
 
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.tool.base.*;
 
 
 /**

@@ -25,12 +25,13 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import nl.lxtreme.ols.api.data.Cursor;
-import nl.lxtreme.ols.api.data.annotation.*;
-import nl.lxtreme.ols.client.action.SmartJumpAction.*;
+import nl.lxtreme.ols.client.action.SmartJumpAction.JumpDirection;
+import nl.lxtreme.ols.client.action.SmartJumpAction.JumpType;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.Cursor;
 
 
 /**
@@ -81,7 +82,8 @@ public final class SmartJumpHelper
   {
     Rectangle viewSize = getSignalDiagram().getSignalView().getVisibleRect();
 
-    SignalElement signalElement = getSignalDiagramModel().getSignalElementManager().getDigitalSignalByChannelIndex( aChannelIndex );
+    SignalElement signalElement = getSignalDiagramModel().getSignalElementManager().getDigitalSignalByChannelIndex(
+        aChannelIndex );
     if ( signalElement != null )
     {
       Point refPoint = new Point( ( int )Math.round( viewSize.getCenterX() ), signalElement.getYposition() );

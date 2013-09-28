@@ -28,10 +28,9 @@ import java.util.concurrent.atomic.*;
 
 import javax.swing.event.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.data.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.ISignalElementChangeListener.ElementMoveEvent;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

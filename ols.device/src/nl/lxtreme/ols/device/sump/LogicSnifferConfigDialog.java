@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.device.sump;
 
 
-import static nl.lxtreme.ols.api.Ols.*;
+import static nl.lxtreme.ols.common.acquisition.Ols.*;
 import static nl.lxtreme.ols.device.sump.ConfigDialogHelper.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
@@ -34,8 +34,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.util.*;
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.CaptureClockSource;
 import nl.lxtreme.ols.device.sump.profile.DeviceProfile.DeviceInterface;

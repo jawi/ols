@@ -5,8 +5,9 @@
 	org.mockito.mockito-all;version=1.9.0,\
 	junit.osgi;version=4.11.0,\
 	org.apache.felix.dependencymanager;version=3.1.0,\
+	ols.common;version=latest,\
+	ols.device.api;version=latest,\
 	service.taskexecution.api;version=latest,\
-	api;version=latest,\
 	rxtx;version=0.0.17,\
 	lib.swing;version=latest,\
 	jvt220-1.1.1.jar;version=file

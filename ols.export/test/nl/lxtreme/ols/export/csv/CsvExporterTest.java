@@ -29,7 +29,7 @@ import java.util.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 import org.junit.*;
 import org.junit.rules.*;

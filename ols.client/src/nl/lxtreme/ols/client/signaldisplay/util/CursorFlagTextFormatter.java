@@ -21,9 +21,9 @@
 package nl.lxtreme.ols.client.signaldisplay.util;
 
 
-import nl.lxtreme.ols.api.data.*;
-import nl.lxtreme.ols.api.util.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
+import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

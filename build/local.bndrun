@@ -9,12 +9,12 @@
 	osgi.identity;filter:='(&(osgi.identity=purejavacomm)(version>=0.0.17))',\
 	osgi.identity;filter:='(osgi.identity=lib.mydoggy)',\
 	osgi.identity;filter:='(osgi.identity=lib.swing)',\
-	osgi.identity;filter:='(osgi.identity=api)',\
 	osgi.identity;filter:='(osgi.identity=service.acquisition.api)',\
 	osgi.identity;filter:='(osgi.identity=service.acquisition.impl)',\
 	osgi.identity;filter:='(osgi.identity=service.taskexecution.api)',\
 	osgi.identity;filter:='(osgi.identity=service.taskexecution.impl)',\
 	osgi.identity;filter:='(osgi.identity=service.io)',\
+	osgi.identity;filter:='(osgi.identity=ols.common)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.api)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.ui)',\
 	osgi.identity;filter:='(osgi.identity=ols.client.config)',\
@@ -42,7 +42,7 @@
 	osgi.identity;filter:='(osgi.identity=ols.export.vcd)'
 -runfw: org.apache.felix.framework;version='[4.2,5.0)'
 -runee: JavaSE-1.6
--runbundles: api;version=latest,\
+-runbundles: ols.common;version=latest,\
 	jvt220;version='[1.1.1,1.1.2)',\
 	lib.mydoggy;version=latest,\
 	lib.swing;version=latest,\

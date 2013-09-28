@@ -25,7 +25,7 @@ import java.io.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

@@ -27,7 +27,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
-import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.*;
+import nl.lxtreme.ols.client.signaldisplay.model.SignalDiagramModel.SignalAlignment;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 
 

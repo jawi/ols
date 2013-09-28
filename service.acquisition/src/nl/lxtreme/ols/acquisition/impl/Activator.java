@@ -22,7 +22,7 @@ package nl.lxtreme.ols.acquisition.impl;
 
 
 import nl.lxtreme.ols.acquisition.*;
-import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.task.execution.*;
 
 import org.apache.felix.dm.*;

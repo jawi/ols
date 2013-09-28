@@ -27,8 +27,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
 import nl.lxtreme.ols.client.signaldisplay.view.MeasurementView.PulseCountInfo;
+import nl.lxtreme.ols.common.acquisition.*;
 
 import org.junit.*;
 import org.junit.runner.*;

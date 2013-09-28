@@ -25,12 +25,11 @@ import java.awt.*;
 import java.util.*;
 
 import nl.lxtreme.ols.acquisition.*;
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.annotation.*;
-import nl.lxtreme.ols.api.data.project.*;
 import nl.lxtreme.ols.client.api.*;
 import nl.lxtreme.ols.client.appcallback.*;
 import nl.lxtreme.ols.client.osgi.*;
+import nl.lxtreme.ols.client.project.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.api.*;
 import nl.lxtreme.ols.export.api.*;
 import nl.lxtreme.ols.tool.api.*;

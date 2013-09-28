@@ -21,11 +21,11 @@
 package nl.lxtreme.ols.client.actionmanager;
 
 
-import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.client.*;
 import nl.lxtreme.ols.client.action.*;
-import nl.lxtreme.ols.client.action.SmartJumpAction.*;
+import nl.lxtreme.ols.client.action.SmartJumpAction.JumpDirection;
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

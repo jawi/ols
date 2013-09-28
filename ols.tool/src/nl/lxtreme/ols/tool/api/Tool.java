@@ -23,7 +23,7 @@ package nl.lxtreme.ols.tool.api;
 
 import java.awt.*;
 
-import nl.lxtreme.ols.api.data.annotation.AnnotationListener;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

@@ -25,7 +25,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.Map.Entry;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**

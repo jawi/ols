@@ -23,8 +23,7 @@ package nl.lxtreme.ols.tool.linedecoder.impl;
 
 import java.util.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.linedecoder.*;
 

@@ -28,9 +28,9 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.project.*;
+import nl.lxtreme.ols.client.project.*;
+import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.util.swing.*;
 
 
 /**
@@ -92,7 +92,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getFilename()
+   * @see nl.lxtreme.ols.client.project.Project#getFilename()
    */
   @Override
   public File getFilename()
@@ -101,7 +101,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getLastModified()
+   * @see nl.lxtreme.ols.client.project.Project#getLastModified()
    */
   @Override
   public Date getLastModified()
@@ -110,7 +110,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getName()
+   * @see nl.lxtreme.ols.client.project.Project#getName()
    */
   @Override
   public String getName()
@@ -119,7 +119,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getSettings(java.lang.String)
+   * @see nl.lxtreme.ols.client.project.Project#getSettings(java.lang.String)
    */
   @Override
   public UserSettings getSettings( final String aName )
@@ -134,7 +134,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#getSourceVersion()
+   * @see nl.lxtreme.ols.client.project.Project#getSourceVersion()
    */
   @Override
   public String getSourceVersion()
@@ -143,7 +143,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#isChanged()
+   * @see nl.lxtreme.ols.client.project.Project#isChanged()
    */
   @Override
   public boolean isChanged()
@@ -202,7 +202,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setChanged(boolean)
+   * @see nl.lxtreme.ols.client.project.Project#setChanged(boolean)
    */
   @Override
   public void setChanged( final boolean aChanged )
@@ -214,7 +214,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setFilename(java.io.File)
+   * @see nl.lxtreme.ols.client.project.Project#setFilename(java.io.File)
    */
   @Override
   public void setFilename( final File aFilename )
@@ -230,7 +230,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setLastModified(java.util.Date)
+   * @see nl.lxtreme.ols.client.project.Project#setLastModified(java.util.Date)
    */
   @Override
   public void setLastModified( final Date aLastModified )
@@ -245,7 +245,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setName(java.lang.String)
+   * @see nl.lxtreme.ols.client.project.Project#setName(java.lang.String)
    */
   @Override
   public void setName( final String aName )
@@ -260,7 +260,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setSettings(nl.lxtreme.ols.api.UserSettings)
+   * @see nl.lxtreme.ols.client.project.Project#setSettings(nl.lxtreme.ols.api.UserSettings)
    */
   @Override
   public void setSettings( final UserSettings aSettings )
@@ -280,7 +280,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setSourceVersion(java.lang.String)
+   * @see nl.lxtreme.ols.client.project.Project#setSourceVersion(java.lang.String)
    */
   @Override
   public void setSourceVersion( final String aSourceVersion )
@@ -295,7 +295,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#visit(nl.lxtreme.ols.api.data.project.ProjectVisitor)
+   * @see nl.lxtreme.ols.client.project.Project#visit(nl.lxtreme.ols.client.project.ProjectVisitor)
    */
   @Override
   public void visit( final ProjectVisitor aVisitor )

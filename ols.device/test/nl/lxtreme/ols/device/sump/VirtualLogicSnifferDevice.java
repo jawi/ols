@@ -30,8 +30,7 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
 

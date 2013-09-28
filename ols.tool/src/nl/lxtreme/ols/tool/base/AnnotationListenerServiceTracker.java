@@ -23,7 +23,7 @@ package nl.lxtreme.ols.tool.base;
 
 import java.util.*;
 
-import nl.lxtreme.ols.api.data.annotation.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 import org.osgi.framework.*;
 import org.osgi.util.tracker.*;

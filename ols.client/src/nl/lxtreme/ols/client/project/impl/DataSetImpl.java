@@ -24,9 +24,7 @@ package nl.lxtreme.ols.client.project.impl;
 import java.beans.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.*;
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
@@ -171,7 +169,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.project.Project#setCursorsEnabled(boolean)
+   * @see nl.lxtreme.ols.client.project.Project#setCursorsEnabled(boolean)
    */
   @Override
   public void setCursorsEnabled( final boolean aEnabled )

@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.tool.base.*;
 
 
 /**

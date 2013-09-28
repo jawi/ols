@@ -25,8 +25,7 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 
-import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.data.*;
+import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

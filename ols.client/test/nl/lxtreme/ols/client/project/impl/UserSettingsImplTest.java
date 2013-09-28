@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 import java.awt.*;
 import java.util.*;
 
-import nl.lxtreme.ols.api.*;
+import nl.lxtreme.ols.util.swing.*;
 
 import org.junit.*;
 
