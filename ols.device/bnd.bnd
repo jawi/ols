@@ -4,6 +4,7 @@
 	osgi.cmpn;version=4.2.0,\
 	org.apache.felix.dependencymanager;version=3.1.0,\
 	service.io;version=latest,\
+	service.taskexecution.api;version=latest,\
 	api;version=latest,\
 	rxtx;version=0.0.17,\
 	lib.swing;version=latest,\

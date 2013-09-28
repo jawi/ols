@@ -30,7 +30,7 @@ import javax.swing.*;
 import nl.lxtreme.ols.api.*;
 import nl.lxtreme.ols.api.Configurable;
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.task.*;
+import nl.lxtreme.ols.task.execution.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.*;

@@ -27,9 +27,9 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
-import nl.lxtreme.ols.api.task.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
+import nl.lxtreme.ols.task.execution.*;
 
 
 /**

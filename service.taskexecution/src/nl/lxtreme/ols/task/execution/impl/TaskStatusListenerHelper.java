@@ -18,12 +18,12 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.task.execution;
+package nl.lxtreme.ols.task.execution.impl;
 
 
 import java.util.*;
 
-import nl.lxtreme.ols.api.task.*;
+import nl.lxtreme.ols.task.execution.*;
 
 import org.osgi.framework.*;
 import org.osgi.util.tracker.*;

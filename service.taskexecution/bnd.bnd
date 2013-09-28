@@ -4,5 +4,4 @@
 	api;version=latest,\
 	org.mockito.mockito-all;version=1.9.0,\
 	junit.osgi;version=4.11.0
-Private-Package: nl.lxtreme.ols.task.execution
-Bundle-Activator: nl.lxtreme.ols.task.execution.Activator
+-sub: *.bnd

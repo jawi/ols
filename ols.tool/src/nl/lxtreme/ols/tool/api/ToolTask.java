@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.tool.api;
 
 
-import nl.lxtreme.ols.api.task.*;
+import nl.lxtreme.ols.task.execution.*;
 
 
 /**

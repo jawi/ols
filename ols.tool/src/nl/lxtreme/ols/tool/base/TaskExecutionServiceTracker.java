@@ -23,7 +23,7 @@ package nl.lxtreme.ols.tool.base;
 
 import java.util.concurrent.*;
 
-import nl.lxtreme.ols.api.task.*;
+import nl.lxtreme.ols.task.execution.*;
 
 import org.osgi.framework.*;
 import org.osgi.util.tracker.*;

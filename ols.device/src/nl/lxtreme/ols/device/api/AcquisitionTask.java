@@ -22,7 +22,7 @@ package nl.lxtreme.ols.device.api;
 
 
 import nl.lxtreme.ols.api.acquisition.*;
-import nl.lxtreme.ols.api.task.*;
+import nl.lxtreme.ols.task.execution.*;
 
 
 /**
