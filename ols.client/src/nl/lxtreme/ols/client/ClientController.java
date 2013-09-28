@@ -1934,7 +1934,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
       UIManager.put( "OptionPane.windowBindings", //
           new Object[] { SwingComponentUtils.createMenuKeyMask( KeyEvent.VK_W ), "close", "ESCAPE", "close" } );
-      setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
     }
     else if ( osName.indexOf( "win" ) >= 0 )
     {
@@ -1981,7 +1980,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     }
     catch ( Exception exception )
     {
-      System.err.println( "Failed to set look and feel to: " + aLookAndFeelClassName );
+      LOG.log( Level.WARNING, "Failed to set look and feel to: " + aLookAndFeelClassName, exception );
       setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
     }
   }
