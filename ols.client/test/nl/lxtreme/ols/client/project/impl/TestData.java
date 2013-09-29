@@ -21,8 +21,6 @@
 package nl.lxtreme.ols.client.project.impl;
 
 
-import java.util.*;
-
 import nl.lxtreme.ols.common.acquisition.*;
 
 
@@ -33,26 +31,23 @@ class TestData
 {
   // METHODS
 
-  public static CapturedData createTestData()
+  public static AcquisitionData createTestData()
   {
-    int size = 10;
-    int channelCount = 8;
-    long triggerPos = -1L;
-    int sampleRate = 100;
+    int channels = 8;
+    int mask = ( 1 << channels ) - 1;
 
-    List<Integer> values = new ArrayList<Integer>( size );
-    List<Long> timestamps = new ArrayList<Long>( size );
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setEnabledChannelMask( mask );
+    builder.setChannelCount( channels );
+    builder.setSampleRate( 100 );
 
     int value = 0;
-    int mask = ( 1 << channelCount ) - 1;
-    for ( int i = 0; i < size; i++ )
+    for ( int i = 0; i < 10; i++ )
     {
-      values.add( Integer.valueOf( value & mask ) );
-      timestamps.add( Long.valueOf( value ) );
+      builder.addSample( value, value & mask );
       value++;
     }
 
-    return new CapturedData( values, timestamps, triggerPos, sampleRate, //
-        channelCount, mask, value - 1 );
+    return builder.build();
   }
 }

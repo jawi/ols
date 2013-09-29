@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client.project.impl;
 import java.beans.*;
 import java.util.*;
 
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
 
@@ -35,7 +36,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
   // VARIABLES
 
   private final PropertyChangeSupport propertyChangeSupport;
-  private final AcquisitionResult capturedData;
+  private final AcquisitionData capturedData;
   private final Cursor[] cursors;
 
   private final Channel[] channels;
@@ -51,13 +52,13 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
    * @param aOld
    *          the old data set to template.
    */
-  public DataSetImpl( final AcquisitionResult aCapturedData, final DataSet aOld, final boolean aRetainAnnotations )
+  public DataSetImpl( final AcquisitionData aCapturedData, final DataSet aOld, final boolean aRetainAnnotations )
   {
     this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.capturedData = aCapturedData;
     this.cursorsEnabled = aOld.isCursorsEnabled();
-    this.channels = createChannels( aCapturedData.getChannels(), aCapturedData.getEnabledChannels(),
+    this.channels = createChannels( aCapturedData.getChannelCount(), aCapturedData.getEnabledChannels(),
         aRetainAnnotations, aOld.getChannels() );
     this.cursors = createCursors( Ols.MAX_CURSORS, aOld.getCursors() );
   }
@@ -92,7 +93,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionResult getCapturedData()
+  public AcquisitionData getCapturedData()
   {
     return this.capturedData;
   }
@@ -217,7 +218,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
   private Channel[] createChannels( final int aCount, final int aMask, final boolean aRetainAnnotations,
       final Channel... aInitialValues )
   {
-    final int chCount = ( this.capturedData == null ) ? aCount : this.capturedData.getChannels();
+    final int chCount = ( this.capturedData == null ) ? aCount : this.capturedData.getChannelCount();
 
     Channel[] result = new Channel[aCount];
     for ( int i = 0, j = 0; ( j < aCount ) && ( i < Ols.MAX_CHANNELS ); i++ )

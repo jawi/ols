@@ -114,7 +114,7 @@ public interface Project
    * @param aData
    *          the captured data, can be <code>null</code>.
    */
-  void setCapturedData( final AcquisitionResult aData );
+  void setCapturedData( final AcquisitionData aData );
 
   /**
    * Marks this project as "changed".

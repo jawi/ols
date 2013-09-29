@@ -108,7 +108,7 @@ public final class DataTestUtils
    * @param aTested
    *          the acquisition result to test.
    */
-  public static void assertEquals( final AcquisitionResult aExpected, final AcquisitionResult aTested )
+  public static void assertEquals( final AcquisitionData aExpected, final AcquisitionData aTested )
   {
     assertEquals( "Captured data not equal!", aExpected, aTested );
   }
@@ -124,14 +124,14 @@ public final class DataTestUtils
    *          the acquisition result to test.
    */
   @SuppressWarnings( "boxing" )
-  public static void assertEquals( final String aMessage, final AcquisitionResult aExpected,
-      final AcquisitionResult aTested )
+  public static void assertEquals( final String aMessage, final AcquisitionData aExpected,
+      final AcquisitionData aTested )
   {
     assertNotNull( aExpected );
     assertNotNull( aTested );
 
     Assert.assertEquals( aMessage, aExpected.getAbsoluteLength(), aTested.getAbsoluteLength() );
-    Assert.assertEquals( aMessage, aExpected.getChannels(), aTested.getChannels() );
+    Assert.assertEquals( aMessage, aExpected.getChannelCount(), aTested.getChannelCount() );
     Assert.assertEquals( aMessage, aExpected.getEnabledChannels(), aTested.getEnabledChannels() );
     Assert.assertEquals( aMessage, aExpected.getSampleRate(), aTested.getSampleRate() );
     Assert.assertEquals( aMessage, aExpected.hasTimingData(), aTested.hasTimingData() );
@@ -146,7 +146,7 @@ public final class DataTestUtils
    * 
    * @return a mocked tool context, never <code>null</code>.
    */
-  public static ToolContext createToolContext( final AcquisitionResult aContainer )
+  public static ToolContext createToolContext( final AcquisitionData aContainer )
   {
     final int startSampleIdx = Math.max( 0, aContainer.getSampleIndex( aContainer.getTriggerPosition() ) - 1 );
     final int lastSampleIdx = aContainer.getValues().length - 1;
@@ -161,7 +161,7 @@ public final class DataTestUtils
    *          the starting sample index of the returned tool context;
    * @return a mocked tool context, never <code>null</code>.
    */
-  public static ToolContext createToolContext( final AcquisitionResult aContainer, final int aStartSampleIdx )
+  public static ToolContext createToolContext( final AcquisitionData aContainer, final int aStartSampleIdx )
   {
     final int lastSampleIdx = aContainer.getValues().length - 1;
     return createToolContext( aContainer, aStartSampleIdx, lastSampleIdx );
@@ -177,7 +177,7 @@ public final class DataTestUtils
    *          the ending sample index of the returned tool context.
    * @return a mocked tool context, never <code>null</code>.
    */
-  public static ToolContext createToolContext( final AcquisitionResult aData, final int aStartSampleIdx,
+  public static ToolContext createToolContext( final AcquisitionData aData, final int aStartSampleIdx,
       final int aLastSampleIdx )
   {
     final Integer first = Integer.valueOf( Math.max( 0, aStartSampleIdx ) );
@@ -191,7 +191,7 @@ public final class DataTestUtils
       @Override
       public int getChannels()
       {
-        return aData.getChannels();
+        return aData.getChannelCount();
       }
 
       @Override
@@ -201,7 +201,7 @@ public final class DataTestUtils
       }
 
       @Override
-      public AcquisitionResult getData()
+      public AcquisitionData getData()
       {
         return aData;
       }
@@ -242,7 +242,7 @@ public final class DataTestUtils
    *          the ending sample index of the returned tool context.
    * @return a mocked tool context, never <code>null</code>.
    */
-  public static ToolContext createToolContext( final AcquisitionResult aData, final long aStartTimestamp,
+  public static ToolContext createToolContext( final AcquisitionData aData, final long aStartTimestamp,
       final long aLastTimestamp )
   {
     int startIdx = aData.getSampleIndex( aStartTimestamp );
@@ -257,7 +257,7 @@ public final class DataTestUtils
    *          the resource URL of the resource to get as datafile.
    * @return the data container with the given resource as captured data.
    */
-  public static AcquisitionResult getCapturedData( final URL aResource ) throws IOException
+  public static AcquisitionData getCapturedData( final URL aResource ) throws IOException
   {
     InputStream is = aResource.openStream();
     try

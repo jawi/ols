@@ -32,7 +32,7 @@ import nl.lxtreme.ols.client.signaldisplay.action.*;
 import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.SignalElement.SignalElementType;
-import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 
 

@@ -23,6 +23,8 @@ package nl.lxtreme.ols.common.acquisition;
 
 import java.util.*;
 
+import nl.lxtreme.ols.common.*;
+
 
 /**
  * CapturedData encapsulates the data obtained by the analyzer during a single
@@ -34,7 +36,8 @@ import java.util.*;
  * @author Michael "Mr. Sump" Poppitz
  * @author J.W. Janssen
  */
-public class CapturedData implements AcquisitionResult
+@Deprecated
+public class CapturedData implements AcquisitionData
 {
   // VARIABLES
 
@@ -405,12 +408,52 @@ public class CapturedData implements AcquisitionResult
   }
 
   /**
-   * @see nl.lxtreme.ols.api.data.CapturedData#getChannels()
+   * @see nl.lxtreme.ols.api.data.CapturedData#getChannelCount()
    */
   @Override
-  public final int getChannels()
+  public final int getChannelCount()
   {
     return this.channels;
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Cursor[] getCursors()
+  {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Channel[] getChannels()
+  {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isCursorsVisible()
+  {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void setCursorsVisible( boolean aVisible )
+  {
+    // TODO Auto-generated method stub
+    
   }
 
   /**

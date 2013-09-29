@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.project.impl;
+package nl.lxtreme.ols.common.acquisition;
 
 
 import static org.junit.Assert.*;
@@ -26,9 +26,6 @@ import static org.junit.Assert.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-
-import nl.lxtreme.ols.client.project.*;
-import nl.lxtreme.ols.common.acquisition.*;
 
 import org.junit.*;
 
@@ -40,7 +37,7 @@ public class OlsDataHelperTest
 {
   // CONSTANTS
 
-  private static final String MINIMAL_HEADER = ";Rate: 1\n;Channels: 8\n";
+  private static final String MINIMAL_HEADER = ";Rate: 1\n;Channels: 32\n";
 
   // VARIABLES
 
@@ -108,7 +105,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";Cursor2: 1234\n;Cursor8: 2345\n" + "0@3000";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertCursorUnset( dataSet, 0 );
     assertCursorUnset( dataSet, 1 );
@@ -130,7 +127,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";Size: 3\n0@0\n1@1\n3@3";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 1, 3 );
     assertValues( dataSet, 0, 1, 3 );
@@ -145,7 +142,7 @@ public class OlsDataHelperTest
   {
     final String snippet = ";Rate: 1\n0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0 );
     assertValues( dataSet, 0 );
@@ -159,7 +156,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER;
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0 );
     assertValues( dataSet, 0 );
@@ -173,7 +170,7 @@ public class OlsDataHelperTest
   {
     final String snippet = ";Channels: 1\n0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0 );
     assertValues( dataSet, 0 );
@@ -187,7 +184,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";Size: 2\n0@0\n1@1\n3@3";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0 );
     assertValues( dataSet, 0 );
@@ -201,7 +198,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";Size: 3\n;AbsoluteLength: 9\n0@0\n1@1\n3@3";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 1, 3, 9 );
     assertValues( dataSet, 0, 1, 3, 3 );
@@ -216,7 +213,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";Size: 3\n;AbsoluteLength: 2\n0@0\n1@1\n3@3";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 1, 3 );
     assertValues( dataSet, 0, 1, 3 );
@@ -234,9 +231,9 @@ public class OlsDataHelperTest
       final FileReader reader = new FileReader( dataFile );
       try
       {
-        DataSet dataSet = OlsDataHelper.read( reader );
+        AcquisitionData data = OlsDataHelper.read( reader );
 
-        assertNotNull( "Failed to read: " + dataFile.getName(), dataSet.getCapturedData() );
+        assertNotNull( "Failed to read: " + dataFile.getName(), data );
       }
       finally
       {
@@ -253,7 +250,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + Integer.toHexString( Integer.MIN_VALUE ) + "@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 0 );
     assertValues( dataSet, Integer.MIN_VALUE, Integer.MIN_VALUE );
@@ -267,7 +264,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + "0@" + Long.MIN_VALUE;
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0 );
     assertValues( dataSet, 0 );
@@ -282,7 +279,7 @@ public class OlsDataHelperTest
     final String snippet = MINIMAL_HEADER + ";Size: 1\n" + //
         Integer.toHexString( Integer.MAX_VALUE ) + "@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 0 );
     assertValues( dataSet, Integer.MAX_VALUE, Integer.MAX_VALUE );
@@ -296,7 +293,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + Integer.toHexString( Integer.MAX_VALUE ) + "@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 0 );
     assertValues( dataSet, Integer.MAX_VALUE, Integer.MAX_VALUE );
@@ -311,7 +308,7 @@ public class OlsDataHelperTest
     final String snippet = MINIMAL_HEADER + ";Size: 1\n" + //
         "0@" + Long.MAX_VALUE;
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, Long.MAX_VALUE, Long.MAX_VALUE );
     assertValues( dataSet, 0, 0 );
@@ -325,7 +322,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + "0@" + Long.MAX_VALUE;
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, Long.MAX_VALUE, Long.MAX_VALUE );
     assertValues( dataSet, 0, 0 );
@@ -339,7 +336,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + "0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 0 );
     assertValues( dataSet, 0, 0 );
@@ -354,7 +351,7 @@ public class OlsDataHelperTest
     final String snippet = MINIMAL_HEADER + ";Size: 1\n" + //
         "0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 0 );
     assertValues( dataSet, 0, 0 );
@@ -368,7 +365,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + "0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 0 );
     assertValues( dataSet, 0, 0 );
@@ -383,7 +380,7 @@ public class OlsDataHelperTest
     final String snippet = MINIMAL_HEADER + ";Size: 1\n" + //
         "0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 0 );
     assertValues( dataSet, 0, 0 );
@@ -397,7 +394,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + "0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 0 );
     assertValues( dataSet, 0, 0 );
@@ -412,7 +409,7 @@ public class OlsDataHelperTest
     // Issue #80: MSB data isn't correctly read back from stored data...
     final String snippet = MINIMAL_HEADER + "80000000@0\n00000000@1\n80000000@2\n";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertTimeStamps( dataSet, 0, 1, 2 );
     assertValues( dataSet, 0x80000000, 0x0, 0x80000000 );
@@ -426,7 +423,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";EnabledChannels: " + 0xFF000000 + "\n" + "0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertChannelGroupDisabled( dataSet, 0 );
     assertChannelGroupDisabled( dataSet, 1 );
@@ -442,7 +439,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";CursorA: " + Long.MIN_VALUE + "\n" + "0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertCursorUnset( dataSet, 0 );
   }
@@ -455,7 +452,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";EnabledChannels: " + 0x00FF0000 + "\n" + "0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertChannelGroupDisabled( dataSet, 0 );
     assertChannelGroupDisabled( dataSet, 1 );
@@ -471,7 +468,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";Cursor9: " + Long.MIN_VALUE + "\n" + "0@0";
 
-    DataSet dataSet = readOlsData( snippet );
+    AcquisitionData dataSet = readOlsData( snippet );
 
     assertCursorUnset( dataSet, 9 );
   }
@@ -482,16 +479,16 @@ public class OlsDataHelperTest
   @Test
   public void testSimpleWriteOk() throws Exception
   {
-    DataSetImpl dataSet = new DataSetImpl( new CapturedData( new int[] { 1 }, new long[] { 2L }, -1, 100, 2, 2, 1 ),
-        new DataSetImpl(), false );
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder().addSample( 2L, 1 ).setSampleRate( 100 )
+        .setChannelCount( 2 ).setEnabledChannelMask( 3 );
 
     final StringWriter writer = new StringWriter();
-    OlsDataHelper.write( dataSet, writer );
+    OlsDataHelper.write( writer, builder.build() );
 
     final String snippet = writer.toString();
     assertTrue( snippet.contains( ";Rate: 100" ) );
     assertTrue( snippet.contains( ";Channels: 2" ) );
-    assertTrue( snippet.contains( ";EnabledChannels: 2" ) );
+    assertTrue( snippet.contains( ";EnabledChannels: 3" ) );
     assertTrue( snippet.contains( "1@2" ) );
   }
 
@@ -501,11 +498,11 @@ public class OlsDataHelperTest
   @Test
   public void testWriteInvalidSampleValueOk() throws Exception
   {
-    DataSetImpl dataSet = new DataSetImpl( new CapturedData( new int[] { -1 }, new long[] { 1L }, -1, 100, 2, 2, 1 ),
-        new DataSetImpl(), false );
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder().addSample( 1L, -1 ).setSampleRate( 100 )
+        .setChannelCount( 2 ).setEnabledChannelMask( 3 );
 
     final StringWriter writer = new StringWriter();
-    OlsDataHelper.write( dataSet, writer );
+    OlsDataHelper.write( writer, builder.build() );
 
     final String snippet = writer.toString();
     assertTrue( snippet.contains( "ffffffff@1" ) );
@@ -517,11 +514,11 @@ public class OlsDataHelperTest
   @Test
   public void testWriteInvalidTimestampOk() throws Exception
   {
-    DataSetImpl dataSet = new DataSetImpl( new CapturedData( new int[] { 1 }, new long[] { -1L }, -1, 100, 2, 2, 1 ),
-        new DataSetImpl(), false );
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder().addSample( Long.MAX_VALUE, 1 ).setSampleRate( 100 )
+        .setChannelCount( 2 ).setEnabledChannelMask( 3 );
 
     final StringWriter writer = new StringWriter();
-    OlsDataHelper.write( dataSet, writer );
+    OlsDataHelper.write( writer, builder.build() );
 
     final String snippet = writer.toString();
     assertTrue( snippet.contains( "1@" + Long.MAX_VALUE ) );
@@ -534,11 +531,11 @@ public class OlsDataHelperTest
   public void testWriteMSBDataOk() throws Exception
   {
     // Issue #80: MSB data isn't correctly written to stored data...
-    DataSetImpl dataSet = new DataSetImpl( new CapturedData( new int[] { 0x80000000, 0x0, 0x80000000 }, new long[] {
-        0L, 1L, 2L }, -1, 100, 2, 2, 1 ), new DataSetImpl(), false );
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder().addSample( 0L, 0x80000000 ).addSample( 1L, 0x0 )
+        .addSample( 2L, 0x80000000 ).setSampleRate( 100 ).setChannelCount( 2 ).setEnabledChannelMask( -1 );
 
     final StringWriter writer = new StringWriter();
-    OlsDataHelper.write( dataSet, writer );
+    OlsDataHelper.write( writer, builder.build() );
 
     final String snippet = writer.toString();
     assertTrue( snippet.contains( "80000000@0" ) );
@@ -546,65 +543,50 @@ public class OlsDataHelperTest
     assertTrue( snippet.contains( "80000000@2" ) );
   }
 
-  private void assertAbsoluteLength( DataSet aDataSet, final long aAbsLength )
+  private void assertAbsoluteLength( AcquisitionData aData, final long aAbsLength )
   {
-    AcquisitionResult data = aDataSet.getCapturedData();
-    assertNotNull( data );
-
-    final long absLength = data.getAbsoluteLength();
+    final long absLength = aData.getAbsoluteLength();
     assertEquals( aAbsLength, absLength );
   }
 
-  private void assertChannelGroupDisabled( DataSet aDataSet, final int aGroupIdx )
+  private void assertChannelGroupDisabled( AcquisitionData aData, final int aGroupIdx )
   {
-    AcquisitionResult data = aDataSet.getCapturedData();
-    assertNotNull( data );
-
-    assertTrue( ( data.getEnabledChannels() & ( 0xFFL << ( aGroupIdx * 8 ) ) ) == 0 );
+    assertTrue( ( aData.getEnabledChannels() & ( 0xFFL << ( aGroupIdx * 8 ) ) ) == 0 );
   }
 
-  private void assertChannelGroupEnabled( DataSet aDataSet, final int aGroupIdx )
+  private void assertChannelGroupEnabled( AcquisitionData aData, final int aGroupIdx )
   {
-    AcquisitionResult data = aDataSet.getCapturedData();
-    assertNotNull( data );
-
-    assertTrue( ( data.getEnabledChannels() & ( 0xFFL << ( aGroupIdx * 8 ) ) ) != 0 );
+    assertTrue( ( aData.getEnabledChannels() & ( 0xFFL << ( aGroupIdx * 8 ) ) ) != 0 );
   }
 
-  private void assertCursorSet( DataSet aDataSet, final int aCursorIdx, final long aCursorValue )
+  private void assertCursorSet( AcquisitionData aData, final int aCursorIdx, final long aCursorValue )
   {
-    Cursor[] cursors = aDataSet.getCursors();
+    Cursor[] cursors = aData.getCursors();
     assertNotNull( cursors );
     assertTrue( cursors.length > aCursorIdx );
     assertTrue( cursors[aCursorIdx].toString(), cursors[aCursorIdx].isDefined() );
     assertEquals( cursors[aCursorIdx].toString(), aCursorValue, cursors[aCursorIdx].getTimestamp() );
   }
 
-  private void assertCursorUnset( DataSet aDataSet, final int aCursorIdx )
+  private void assertCursorUnset( AcquisitionData aData, final int aCursorIdx )
   {
-    Cursor[] cursors = aDataSet.getCursors();
+    Cursor[] cursors = aData.getCursors();
     assertNotNull( cursors );
     assertTrue( cursors.length > aCursorIdx );
     assertFalse( cursors[aCursorIdx].toString(), cursors[aCursorIdx].isDefined() );
   }
 
-  private void assertTimeStamps( DataSet aDataSet, final long... aTimestamps )
+  private void assertTimeStamps( AcquisitionData aData, final long... aTimestamps )
   {
-    AcquisitionResult data = aDataSet.getCapturedData();
-    assertNotNull( data );
-
-    assertArrayEquals( aTimestamps, data.getTimestamps() );
+    assertArrayEquals( aTimestamps, aData.getTimestamps() );
   }
 
-  private void assertValues( DataSet aDataSet, final int... aValues )
+  private void assertValues( AcquisitionData aData, final int... aValues )
   {
-    AcquisitionResult data = aDataSet.getCapturedData();
-    assertNotNull( data );
-
-    assertArrayEquals( aValues, data.getValues() );
+    assertArrayEquals( aValues, aData.getValues() );
   }
 
-  private DataSet readOlsData( final String text ) throws IOException
+  private AcquisitionData readOlsData( final String text ) throws IOException
   {
     return OlsDataHelper.read( new StringReader( text ) );
   }

@@ -30,6 +30,7 @@ import java.util.logging.*;
 
 import javax.microedition.io.*;
 
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.device.sump.profile.*;
 import nl.lxtreme.ols.device.sump.protocol.*;
@@ -444,7 +445,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
    * @param aExpectedValue
    * @throws IOException
    */
-  public void assertConstantDataStream( final AcquisitionResult aResult, final int aExpectedValue,
+  public void assertConstantDataStream( final AcquisitionData aResult, final int aExpectedValue,
       final long aExpectedLength ) throws IOException
   {
     final int[] expectedValues = new int[2];

@@ -60,7 +60,7 @@ public class TestAcquisitionTask implements AcquisitionTask
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionResult call() throws Exception
+  public AcquisitionData call() throws Exception
   {
     final String dataFunction = this.configDialog.getDataFunction();
     final int dataLength = this.configDialog.getDataLength();

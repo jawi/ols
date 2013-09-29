@@ -43,7 +43,7 @@ public final class Asm45DataSet extends BaseDataSet<Asm45Data>
   /**
    * 
    */
-  public Asm45DataSet( final int aStartSampleIdx, final int aStopSampleIdx, final AcquisitionResult aData )
+  public Asm45DataSet( final int aStartSampleIdx, final int aStopSampleIdx, final AcquisitionData aData )
   {
     super( aStartSampleIdx, aStopSampleIdx, aData );
 

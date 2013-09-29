@@ -109,7 +109,7 @@ public class I2SAnalyserTaskDataFilesTest
   private I2SDataSet analyseDataFile( final String aResourceName ) throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
-    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
+    AcquisitionData container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container, 0, Integer.MAX_VALUE );
 
     ToolProgressListener progressListener = Mockito.mock( ToolProgressListener.class );

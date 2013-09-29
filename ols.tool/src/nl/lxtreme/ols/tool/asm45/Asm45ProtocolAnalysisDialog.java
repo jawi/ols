@@ -33,7 +33,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.*;
 import nl.lxtreme.ols.tool.base.ExportUtils.CsvExporter;
@@ -386,7 +386,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getData().getChannels();
+    final int channelCount = getData().getChannelCount();
 
     final JPanel panel = new JPanel( new SpringLayout() );
 

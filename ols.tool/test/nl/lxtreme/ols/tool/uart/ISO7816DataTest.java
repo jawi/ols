@@ -101,7 +101,7 @@ public class ISO7816DataTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder#decodeDataLine(AcquisitionResult, int, SerialDecoderCallback)}
+   * {@link nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder#decodeDataLine(AcquisitionData, int, SerialDecoderCallback)}
    * .
    */
   @Test
@@ -118,7 +118,7 @@ public class ISO7816DataTest
 
   /**
    * Test method for
-   * {@link nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder#decodeDataLine(AcquisitionResult, int, SerialDecoderCallback)}
+   * {@link nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder#decodeDataLine(AcquisitionData, int, SerialDecoderCallback)}
    * .
    */
   @Test
@@ -147,7 +147,7 @@ public class ISO7816DataTest
       final int aRxDChannel, final boolean aInverseConvention ) throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
-    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
+    AcquisitionData container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );

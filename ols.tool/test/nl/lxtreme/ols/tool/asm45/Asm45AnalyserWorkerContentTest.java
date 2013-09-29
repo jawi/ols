@@ -201,7 +201,7 @@ public class Asm45AnalyserWorkerContentTest
       final int aLineSYNCIndex ) throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
-    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
+    AcquisitionData container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener toolProgressListener = Mockito.mock( ToolProgressListener.class );

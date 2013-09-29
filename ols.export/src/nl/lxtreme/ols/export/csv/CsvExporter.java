@@ -68,7 +68,7 @@ public class CsvExporter implements Exporter
 
       final Channel[] channels = aDataSet.getChannels();
 
-      final AcquisitionResult capturedData = aDataSet.getCapturedData();
+      final AcquisitionData capturedData = aDataSet.getCapturedData();
       final int sampleRate = capturedData.getSampleRate();
       final int[] values = capturedData.getValues();
       final long[] timestamps = capturedData.getTimestamps();
@@ -132,7 +132,7 @@ public class CsvExporter implements Exporter
   {
     final Channel[] channels = aDataSet.getChannels();
 
-    final AcquisitionResult capturedData = aDataSet.getCapturedData();
+    final AcquisitionData capturedData = aDataSet.getCapturedData();
     final long triggerPos = capturedData.getTriggerPosition();
     final int sampleRate = capturedData.getSampleRate();
 

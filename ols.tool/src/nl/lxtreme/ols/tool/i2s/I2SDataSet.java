@@ -44,7 +44,7 @@ public final class I2SDataSet extends BaseDataSet<I2SData>
   /**
    * 
    */
-  public I2SDataSet( final int aStartSampleIdx, final int aStopSampleIdx, final AcquisitionResult aData )
+  public I2SDataSet( final int aStartSampleIdx, final int aStopSampleIdx, final AcquisitionData aData )
   {
     super( aStartSampleIdx, aStopSampleIdx, aData );
 

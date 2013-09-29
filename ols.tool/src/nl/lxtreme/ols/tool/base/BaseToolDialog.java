@@ -299,7 +299,7 @@ public abstract class BaseToolDialog<RESULT_TYPE> extends JFrame implements Tool
    * 
    * @return the acquisition data, never <code>null</code>.
    */
-  protected final AcquisitionResult getData()
+  protected final AcquisitionData getData()
   {
     return this.context.getData();
   }

@@ -61,10 +61,10 @@ public class ManchesterLineDecoder implements LineDecoder
    */
   @SuppressWarnings( "boxing" )
   @Override
-  public AcquisitionResult decode( final LineDecoderToolContext aContext, final AnnotationListener aAnnotationListener,
+  public AcquisitionData decode( final LineDecoderToolContext aContext, final AnnotationListener aAnnotationListener,
       final ToolProgressListener aListener ) throws Exception
   {
-    final AcquisitionResult inputData = aContext.getData();
+    final AcquisitionData inputData = aContext.getData();
 
     final int[] values = inputData.getValues();
     final long[] timestamps = inputData.getTimestamps();
@@ -253,25 +253,20 @@ public class ManchesterLineDecoder implements LineDecoder
       newSamples.put( time, sampleValue );
     }
 
-    List<Integer> newValues = new ArrayList<Integer>();
-    List<Long> newTimestamps = new ArrayList<Long>();
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder( inputData, false /* includeSamples */ );
+    builder.setTriggerPosition( firstSignalEdge );
 
     for ( Map.Entry<Long, Integer> entry : newSamples.entrySet() )
     {
-      newValues.add( entry.getValue() );
-      newTimestamps.add( entry.getKey() );
+      builder.addSample( entry.getKey(), entry.getValue() );
     }
 
     for ( int i = endIdx; i < values.length; i++ )
     {
-      newValues.add( values[i] );
-      newTimestamps.add( timestamps[i] );
+      builder.addSample( timestamps[i], values[i] );
     }
 
-    long absoluteLength = newTimestamps.get( newTimestamps.size() - 1 );
-
-    return new CapturedData( newValues, newTimestamps, firstSignalEdge, inputData.getSampleRate(),
-        inputData.getChannels(), inputData.getEnabledChannels(), absoluteLength );
+    return builder.build();
   }
 
   /**
@@ -302,7 +297,7 @@ public class ManchesterLineDecoder implements LineDecoder
    */
   protected final int getDataValue( final LineDecoderToolContext aContext, final long aTimeValue )
   {
-    final AcquisitionResult inputData = aContext.getData();
+    final AcquisitionData inputData = aContext.getData();
     final int[] values = inputData.getValues();
     final long[] timestamps = inputData.getTimestamps();
 

@@ -278,7 +278,7 @@ public class LogicSnifferRleTimingComponentTest
   @Test( /* timeout = 10000 */)
   public void testRleOk() throws Exception
   {
-    final AcquisitionResult result = this.device.call();
+    final AcquisitionData result = this.device.call();
 
     verifyDecodedRleData( result );
   }
@@ -287,7 +287,7 @@ public class LogicSnifferRleTimingComponentTest
    * @param aValues
    * @param aTimestamps
    */
-  private void verifyDecodedRleData( final AcquisitionResult aResult )
+  private void verifyDecodedRleData( final AcquisitionData aResult )
   {
     assertNotNull( aResult );
 

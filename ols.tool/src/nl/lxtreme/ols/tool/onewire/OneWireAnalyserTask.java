@@ -79,7 +79,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
   @Override
   public OneWireDataSet call() throws Exception
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
     final int[] values = data.getValues();
 
     int sampleIdx;
@@ -153,7 +153,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
    *          the decoded data set to add the decoding results to, cannot be
    *          <code>null</code>.
    */
-  private void decodeData( final AcquisitionResult aData, final OneWireDataSet aDataSet )
+  private void decodeData( final AcquisitionData aData, final OneWireDataSet aDataSet )
   {
     final long[] timestamps = aData.getTimestamps();
 
@@ -274,7 +274,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
    *          the bit-value mask to apply for finding the start bit.
    * @return the time at which the start bit was found, -1 if it is not found.
    */
-  private long findEdge( final AcquisitionResult aData, final long aStartOfDecode, final long aEndOfDecode,
+  private long findEdge( final AcquisitionData aData, final long aStartOfDecode, final long aEndOfDecode,
       final Edge aEdge )
   {
     long result = -1;
@@ -304,7 +304,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
    * @return the data value of the sample index right before the given time
    *         value.
    */
-  private int getDataValue( final AcquisitionResult aData, final long aTimeValue )
+  private int getDataValue( final AcquisitionData aData, final long aTimeValue )
   {
     final int[] values = aData.getValues();
     final long[] timestamps = aData.getTimestamps();
@@ -341,7 +341,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
    */
   private void reportBusError( final OneWireDataSet aDataSet, final long aStartTimestamp )
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     final int startSampleIdx = Math.max( data.getSampleIndex( aStartTimestamp ), 0 );
     aDataSet.reportBusError( this.owLineIndex, startSampleIdx );
@@ -360,7 +360,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
   private void reportData( final OneWireDataSet aDataSet, final long aStartTimestamp, final long aEndTimestamp,
       final int aByteValue )
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
     final int startSampleIdx = Math.max( data.getSampleIndex( aStartTimestamp ), 0 );
     final int endSampleIdx = Math.min( data.getSampleIndex( aEndTimestamp ) - 1, data.getTimestamps().length - 1 );
 
@@ -381,7 +381,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
   private void reportReset( final OneWireDataSet aDataSet, final long aStartTimestamp, final long aEndTimestamp,
       final boolean aSlaveIsPresent )
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
     final int startSampleIdx = Math.max( data.getSampleIndex( aStartTimestamp ), 0 );
     final int endSampleIdx = Math.min( data.getSampleIndex( aEndTimestamp ) - 1, data.getTimestamps().length - 1 );
 

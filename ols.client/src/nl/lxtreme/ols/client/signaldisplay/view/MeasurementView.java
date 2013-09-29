@@ -214,7 +214,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
   {
     // VARIABLES
 
-    private final AcquisitionResult result;
+    private final AcquisitionData result;
     private final int mask;
     private final long startTimestamp;
     private final long endTimestamp;
@@ -224,7 +224,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     /**
      * Creates a new {@link SignalMeasurer} instance.
      */
-    public SignalMeasurer( final AcquisitionResult aResult, final int aIndex, final long aStartTimestamp,
+    public SignalMeasurer( final AcquisitionData aResult, final int aIndex, final long aStartTimestamp,
         final long aEndTimestamp )
     {
       this.result = aResult;

@@ -114,7 +114,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   @Override
   public I2CDataSet call() throws Exception
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     final int[] values = data.getValues();
     final long[] timestamps = data.getTimestamps();
@@ -443,7 +443,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
    * @return the (new) starting sample index at which the START condition
    *         occurred.
    */
-  private int autodetectDataAndClock( final AcquisitionResult aData, final int aStartOfDecode, final int aEndOfDecode )
+  private int autodetectDataAndClock( final AcquisitionData aData, final int aStartOfDecode, final int aEndOfDecode )
   {
     final int dataMask = this.lineAmask | this.lineBmask;
 

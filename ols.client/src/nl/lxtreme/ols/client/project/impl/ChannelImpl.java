@@ -25,6 +25,7 @@ import java.beans.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
 

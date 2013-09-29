@@ -39,7 +39,7 @@ import org.osgi.framework.*;
  * Provides a line decoder tool, that is able to decode several line encodings,
  * such as Manchester encoding.
  */
-public class LineDecoderTool implements Tool<AcquisitionResult>
+public class LineDecoderTool implements Tool<AcquisitionData>
 {
   // VARIABLES
 

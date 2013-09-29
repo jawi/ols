@@ -116,7 +116,7 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
 
     if ( ( aDataSet != null ) && ( aDataSet.getCapturedData() != null ) )
     {
-      final AcquisitionResult model = aDataSet.getCapturedData();
+      final AcquisitionData model = aDataSet.getCapturedData();
 
       if ( model.hasTimingData() )
       {

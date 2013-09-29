@@ -349,14 +349,14 @@ public class SignalDiagramModel
       return 0L;
     }
 
-    final AcquisitionResult capturedData = getCapturedData();
+    final AcquisitionData capturedData = getCapturedData();
     return capturedData.getAbsoluteLength();
   }
 
   /**
    * @return
    */
-  public AcquisitionResult getCapturedData()
+  public AcquisitionData getCapturedData()
   {
     if ( this.dataSet == null )
     {
@@ -486,7 +486,7 @@ public class SignalDiagramModel
    */
   public int getSampleRate()
   {
-    final AcquisitionResult capturedData = getCapturedData();
+    final AcquisitionData capturedData = getCapturedData();
     if ( capturedData == null )
     {
       return -1;
@@ -499,12 +499,12 @@ public class SignalDiagramModel
    */
   public int getSampleWidth()
   {
-    final AcquisitionResult capturedData = getCapturedData();
+    final AcquisitionData capturedData = getCapturedData();
     if ( capturedData == null )
     {
       return 0;
     }
-    return capturedData.getChannels();
+    return capturedData.getChannelCount();
   }
 
   /**
@@ -772,7 +772,7 @@ public class SignalDiagramModel
    */
   public int getTimestampIndex( final long aValue )
   {
-    final AcquisitionResult capturedData = getCapturedData();
+    final AcquisitionData capturedData = getCapturedData();
     if ( capturedData == null )
     {
       return 0;
@@ -785,7 +785,7 @@ public class SignalDiagramModel
    */
   public long[] getTimestamps()
   {
-    final AcquisitionResult capturedData = getCapturedData();
+    final AcquisitionData capturedData = getCapturedData();
     if ( capturedData == null )
     {
       return new long[0];
@@ -801,7 +801,7 @@ public class SignalDiagramModel
    */
   public Long getTriggerPosition()
   {
-    AcquisitionResult capturedData = getCapturedData();
+    AcquisitionData capturedData = getCapturedData();
     if ( ( capturedData == null ) || !capturedData.hasTriggerData() )
     {
       return null;
@@ -814,7 +814,7 @@ public class SignalDiagramModel
    */
   public int[] getValues()
   {
-    final AcquisitionResult capturedData = getCapturedData();
+    final AcquisitionData capturedData = getCapturedData();
     if ( capturedData == null )
     {
       return new int[0];
@@ -928,7 +928,7 @@ public class SignalDiagramModel
    */
   public boolean hasTimingData()
   {
-    AcquisitionResult captureData = getCapturedData();
+    AcquisitionData captureData = getCapturedData();
     return ( captureData != null ) && captureData.hasTimingData();
   }
 

@@ -32,5 +32,5 @@ public interface AcquisitionDataProvider
    * @return an array of acquisition results, never <code>null</code>. If no
    *         acquisition results are available, an empty array is returned.
    */
-  AcquisitionResult[] getAcquiredData();
+  AcquisitionData[] getAcquiredData();
 }

@@ -58,7 +58,7 @@ public class DMX512DataSet extends BaseDataSet<DMX512Data>
    * @param aEndOfDecodeIdx
    * @param aData
    */
-  public DMX512DataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final AcquisitionResult aData )
+  public DMX512DataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final AcquisitionData aData )
   {
     super( aStartOfDecodeIdx, aEndOfDecodeIdx, aData );
   }

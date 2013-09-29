@@ -160,7 +160,7 @@ public class ProjectImplTest
   @Test
   public void testSetCapturedData()
   {
-    final AcquisitionResult data = createTestData();
+    final AcquisitionData data = createTestData();
     this.project.setCapturedData( data );
 
     assertSame( data, this.project.getDataSet().getCapturedData() );

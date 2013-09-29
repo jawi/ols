@@ -491,7 +491,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
 
     // optionally center the view on the trigger moment...
     boolean autoCenterOnTrigger = UIManager.getBoolean( UIManagerKeys.AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE );
-    final AcquisitionResult capturedData = aDataSet.getCapturedData();
+    final AcquisitionData capturedData = aDataSet.getCapturedData();
 
     // Issue #181
     if ( autoCenterOnTrigger && ( capturedData != null ) && capturedData.hasTriggerData() )

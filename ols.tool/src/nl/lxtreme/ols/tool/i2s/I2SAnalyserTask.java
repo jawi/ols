@@ -70,7 +70,7 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
   @Override
   public I2SDataSet call() throws Exception
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     int startOfDecode = this.context.getStartSampleIndex();
     int endOfDecode = this.context.getEndSampleIndex();
@@ -178,7 +178,7 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
   /**
    * @return
    */
-  private int findFirstWordSelect( final AcquisitionResult aData )
+  private int findFirstWordSelect( final AcquisitionData aData )
   {
     int idx = this.context.getStartSampleIndex();
     int end = this.context.getEndSampleIndex();

@@ -137,7 +137,7 @@ public class SPIAnalyserWorkerDataFilesTest
   private SPIDataSet analyseDataFile( final String aResourceName ) throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
-    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
+    AcquisitionData container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );

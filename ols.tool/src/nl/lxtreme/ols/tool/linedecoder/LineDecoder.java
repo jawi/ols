@@ -51,7 +51,7 @@ public interface LineDecoder
    * @param aListener
    * @throws Exception
    */
-  AcquisitionResult decode( LineDecoderToolContext aContext, AnnotationListener aAnnotationListener,
+  AcquisitionData decode( LineDecoderToolContext aContext, AnnotationListener aAnnotationListener,
       ToolProgressListener aListener ) throws Exception;
 
   /**

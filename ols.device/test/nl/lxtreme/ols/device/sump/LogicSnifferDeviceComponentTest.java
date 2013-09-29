@@ -162,7 +162,7 @@ public class LogicSnifferDeviceComponentTest
     final boolean isGroup4disabled = ( ( this.enabledChannelsMask & 0xFF000000 ) == 0 )
         || ( ddrMode && isGroup2disabled );
 
-    final AcquisitionResult result = this.device.call();
+    final AcquisitionData result = this.device.call();
 
     this.device.assertFlagState( SumpCommandWriter.FLAG_DEMUX, ddrMode );
     this.device.assertFlagState( SumpCommandWriter.FLAG_GROUP1_DISABLED, isGroup1disabled );

@@ -239,12 +239,12 @@ public class LogicSnifferRleComponentTest
 
             { 8, 0x000000FF, true, null }, // 15
             { 8, 0x0000FF00, true, null }, // 16
-            { 8, 0x00FF0000, true, AssertionError.class }, // 17
-            { 8, 0xFF000000, true, AssertionError.class }, // 18
+            { 8, 0x00FF0000, true, IllegalArgumentException.class }, // 17
+            { 8, 0xFF000000, true, IllegalArgumentException.class }, // 18
 
             { 16, 0x0000FFFF, true, null }, // 19
             { 16, 0x00FFFF00, true, AssertionError.class }, // 20
-            { 16, 0xFFFF0000, true, AssertionError.class }, // 21
+            { 16, 0xFFFF0000, true, IllegalArgumentException.class }, // 21
             { 16, 0x00FF00FF, true, AssertionError.class }, // 22
             { 16, 0xFF00FF00, true, AssertionError.class }, // 23
             { 16, 0xFF0000FF, true, AssertionError.class }, // 24
@@ -295,7 +295,7 @@ public class LogicSnifferRleComponentTest
   {
     try
     {
-      final AcquisitionResult result = this.device.call();
+      final AcquisitionData result = this.device.call();
 
       verifyDecodedRleData( result );
 
@@ -304,7 +304,7 @@ public class LogicSnifferRleComponentTest
         fail( "Exception expected!" );
       }
     }
-    catch ( Error exception )
+    catch ( Throwable exception )
     {
       if ( this.exceptionClass != null )
       {
@@ -317,7 +317,7 @@ public class LogicSnifferRleComponentTest
    * @param aValues
    * @param aTimestamps
    */
-  private void verifyDecodedRleData( final AcquisitionResult aResult )
+  private void verifyDecodedRleData( final AcquisitionData aResult )
   {
     assertNotNull( aResult );
 

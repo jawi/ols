@@ -394,7 +394,7 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getData().getChannels();
+    final int channelCount = getData().getChannelCount();
 
     this.busSetSCL = new JLabel( "<autodetect>" );
     this.busSetSDA = new JLabel( "<autodetect>" );

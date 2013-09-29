@@ -105,7 +105,7 @@ public class SPIAnalyserWorkerContentTest
       final BitOrder aBitOrder, final boolean aHonourCS, final int... aChannels ) throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
-    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
+    AcquisitionData container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container, 0, container.getValues().length - 1 );
 
     ToolProgressListener tpl = Mockito.mock( ToolProgressListener.class );

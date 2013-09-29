@@ -88,7 +88,7 @@ public class LineDecoderToolContextImpl implements LineDecoderToolContext
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionResult getData()
+  public AcquisitionData getData()
   {
     return this.toolContext.getData();
   }

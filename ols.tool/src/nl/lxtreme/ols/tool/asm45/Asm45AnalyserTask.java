@@ -251,7 +251,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
   @Override
   public Asm45DataSet call() throws Exception
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     final int[] values = data.getValues();
 

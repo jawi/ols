@@ -560,7 +560,7 @@ public final class UARTProtocolAnalysisDialog extends BaseToolDialog<UARTDataSet
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getData().getChannels();
+    final int channelCount = getData().getChannelCount();
 
     final Integer[] baudrates = new Integer[AsyncSerialDataDecoder.COMMON_BAUDRATES.length];
     for ( int i = 0; i < baudrates.length; i++ )

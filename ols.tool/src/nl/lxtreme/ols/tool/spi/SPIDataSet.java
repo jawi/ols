@@ -44,7 +44,7 @@ public final class SPIDataSet extends BaseDataSet<SPIData>
   /**
    * Creates a new SPIDataSet instance.
    */
-  public SPIDataSet( final int aStartOfDecode, final int aEndOfDecode, final AcquisitionResult aData )
+  public SPIDataSet( final int aStartOfDecode, final int aEndOfDecode, final AcquisitionData aData )
   {
     super( aStartOfDecode, aEndOfDecode, aData );
   }

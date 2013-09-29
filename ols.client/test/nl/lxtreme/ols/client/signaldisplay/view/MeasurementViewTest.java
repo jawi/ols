@@ -96,7 +96,7 @@ public class MeasurementViewTest
   public void setUp() throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), this.resourceName );
-    AcquisitionResult container = OlsDataHelper.read( new InputStreamReader( resource.openStream() ) );
+    AcquisitionData container = OlsDataHelper.read( new InputStreamReader( resource.openStream() ) );
 
     int start = 0;
     int end = container.getValues().length;

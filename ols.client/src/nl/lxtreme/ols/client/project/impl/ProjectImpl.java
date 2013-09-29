@@ -172,7 +172,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   @Override
   public final void readData( final Reader aReader ) throws IOException
   {
-    setDataSet( OlsDataHelper.read( aReader ) );
+    setDataSet( new DataSetImpl( OlsDataHelper.read( aReader ), new DataSetImpl(), false /* aRetainAnnotations */) );
   }
 
   /**
@@ -190,7 +190,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
    * {@inheritDoc}
    */
   @Override
-  public void setCapturedData( final AcquisitionResult aCapturedData )
+  public void setCapturedData( final AcquisitionData aCapturedData )
   {
     final DataSetImpl old = this.dataSet;
     final boolean retainAnnotations = UIManager.getBoolean( "ols.retain.annotations.boolean" );
@@ -320,7 +320,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   @Override
   public void writeData( final Writer aWriter ) throws IOException
   {
-    OlsDataHelper.write( this.dataSet, aWriter );
+    OlsDataHelper.write( aWriter, this.dataSet.getCapturedData() );
   }
 
   /**

@@ -59,7 +59,7 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
   /**
    * Creates a new UARTDataSet instance.
    */
-  public UARTDataSet( final int aStartSampleIdx, final int aEndSampleIdx, final AcquisitionResult aData )
+  public UARTDataSet( final int aStartSampleIdx, final int aEndSampleIdx, final AcquisitionData aData )
   {
     super( aStartSampleIdx, aEndSampleIdx, aData );
 

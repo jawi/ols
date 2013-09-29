@@ -116,7 +116,7 @@ public class ProjectManagerImplTest
   @Test
   public void testSaveProjectStoresCaptureResultsOk() throws IOException
   {
-    final AcquisitionResult mockedCapturedData = createTestData();
+    final AcquisitionData mockedCapturedData = createTestData();
 
     final Project project = this.projectManager.getCurrentProject();
     project.setCapturedData( mockedCapturedData );
@@ -130,9 +130,9 @@ public class ProjectManagerImplTest
     final ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
     this.projectManager.loadProject( bais );
 
-    AcquisitionResult actual = this.projectManager.getCurrentProject().getDataSet().getCapturedData();
+    AcquisitionData actual = this.projectManager.getCurrentProject().getDataSet().getCapturedData();
     assertEquals( mockedCapturedData.getAbsoluteLength(), actual.getAbsoluteLength() );
-    assertEquals( mockedCapturedData.getChannels(), actual.getChannels() );
+    assertEquals( mockedCapturedData.getChannelCount(), actual.getChannelCount() );
     assertEquals( mockedCapturedData.getEnabledChannels(), actual.getEnabledChannels() );
     assertEquals( mockedCapturedData.getSampleRate(), actual.getSampleRate() );
     assertTrue( mockedCapturedData.hasTimingData() == actual.hasTimingData() );

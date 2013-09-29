@@ -42,7 +42,7 @@ import org.osgi.util.tracker.*;
 /**
  * Denotes the configuration dialog for the line decoder tool.
  */
-public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
+public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionData>
 {
   // INNER TYPES
 
@@ -96,7 +96,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
    * @param aTool
    */
   public LineDecoderToolDialog( final Window aOwner, final ToolContext aContext, final BundleContext aBundleContext,
-      final Tool<AcquisitionResult> aTool )
+      final Tool<AcquisitionData> aTool )
   {
     super( aOwner, aContext, aBundleContext, aTool );
 
@@ -167,7 +167,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
    * {@inheritDoc}
    */
   @Override
-  protected void onToolEnded( final AcquisitionResult aResult )
+  protected void onToolEnded( final AcquisitionData aResult )
   {
     Object[] services = this.acquisitionDataListenerHelper.getServices();
     if ( services != null )
@@ -197,7 +197,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
    * {@inheritDoc}
    */
   @Override
-  protected void prepareToolTask( final ToolTask<AcquisitionResult> aToolTask )
+  protected void prepareToolTask( final ToolTask<AcquisitionData> aToolTask )
   {
     int[] channels = new int[this.lines.length];
     for ( int i = 0; i < channels.length; i++ )
@@ -246,7 +246,7 @@ public class LineDecoderToolDialog extends BaseToolDialog<AcquisitionResult>
       aPanel.add( this.clockSpeed );
     }
 
-    final int channelCount = getData().getChannels();
+    final int channelCount = getData().getChannelCount();
 
     final String[] lines = aLineDecoder.getLineNames();
     this.lines = new JComboBox[lines.length];

@@ -35,6 +35,6 @@ public interface AcquisitionDataListener
    * @param aData
    *          the captured data, never <code>null</code>.
    */
-  public void acquisitionComplete( final AcquisitionResult aData );
+  public void acquisitionComplete( final AcquisitionData aData );
 
 }

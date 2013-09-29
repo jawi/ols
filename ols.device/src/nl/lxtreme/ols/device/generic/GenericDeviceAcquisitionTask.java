@@ -68,17 +68,20 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionResult call() throws IOException
+  public AcquisitionData call() throws IOException
   {
     final int width = this.deviceConfig.getSampleWidth();
     final int depth = this.deviceConfig.getSampleDepth();
     final int rate = this.deviceConfig.getSampleRate();
     final int channels = this.deviceConfig.getChannelCount();
+    final int enabledChannels = ( 1 << channels ) - 1;
 
     final int count = depth * width;
 
-    final int[] values = new int[count];
-    final long[] timestamps = new long[count];
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setEnabledChannelMask( enabledChannels );
+    builder.setChannelCount( channels );
+    builder.setSampleRate( rate );
 
     this.inputStream = new FileInputStream( this.deviceConfig.getDevicePath() );
 
@@ -94,17 +97,13 @@ public final class GenericDeviceAcquisitionTask implements AcquisitionTask
           LOG.log( Level.FINE, "Read: 0x{0}", Integer.toHexString( sample ) );
         }
 
-        values[idx] = sample;
-        timestamps[idx] = idx;
+        builder.addSample( idx, sample );
 
         // Update the progress...
         this.progressListener.acquisitionInProgress( ( int )( ( idx++ * 100.0 ) / count ) );
       }
 
-      final long absLength = timestamps[idx - 1];
-      final int enabledChannels = ( 1 << channels ) - 1;
-
-      return new CapturedData( values, timestamps, Ols.NOT_AVAILABLE, rate, channels, enabledChannels, absLength );
+      return builder.build();
     }
     catch ( IOException exception )
     {

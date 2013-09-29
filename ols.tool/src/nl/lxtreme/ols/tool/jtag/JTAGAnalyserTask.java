@@ -167,7 +167,7 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
    */
   private void clockDataOnEdge( final JTAGDataSet aDataSet, final int aSlaveSelectedIdx )
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     final int[] values = data.getValues();
     final long[] timestamps = data.getTimestamps();

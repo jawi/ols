@@ -34,7 +34,6 @@ import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.util.CursorFlagTextFormatter.LabelStyle;
 import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.common.*;
-import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**

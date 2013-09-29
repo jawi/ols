@@ -32,7 +32,7 @@ import org.osgi.framework.*;
 /**
  * Provides a state analysis tool (??? not sure what it does though ???).
  */
-public class StateAnalyser implements Tool<AcquisitionResult>
+public class StateAnalyser implements Tool<AcquisitionData>
 {
   // VARIABLES
 

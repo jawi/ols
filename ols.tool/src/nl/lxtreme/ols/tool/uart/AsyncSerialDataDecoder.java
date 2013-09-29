@@ -512,7 +512,7 @@ public class AsyncSerialDataDecoder
   // VARIABLES
 
   protected final SerialConfiguration configuration;
-  protected final AcquisitionResult dataSet;
+  protected final AcquisitionData dataSet;
   protected final ToolContext context;
 
   private SerialDecoderCallback callback;

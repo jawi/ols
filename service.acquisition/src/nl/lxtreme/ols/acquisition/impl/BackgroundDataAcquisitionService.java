@@ -51,7 +51,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
 
   private volatile TaskExecutionService taskExecutionService;
   private volatile Future<?> acquisitionFutureTask;
-  private volatile Task<AcquisitionResult> acquisitionTask;
+  private volatile Task<AcquisitionData> acquisitionTask;
 
   // CONSTRUCTORS
 
@@ -84,10 +84,10 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
 
     // Wrap the actual acquisition task in order to get a kind of "auto"
     // closable behavior...
-    this.acquisitionTask = new Task<AcquisitionResult>()
+    this.acquisitionTask = new Task<AcquisitionData>()
     {
       @Override
-      public AcquisitionResult call() throws Exception
+      public AcquisitionData call() throws Exception
       {
         try
         {
@@ -247,7 +247,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
       this.acquisitionTask = null;
       this.acquisitionFutureTask = null;
 
-      final AcquisitionResult result = ( AcquisitionResult )aResult;
+      final AcquisitionData result = ( AcquisitionData )aResult;
       fireAcquisitionCompleteEvent( result );
 
       final AcquisitionResultStatus status = new AcquisitionResultStatus( ResultStatus.NORMAL );
@@ -290,7 +290,7 @@ public class BackgroundDataAcquisitionService implements DataAcquisitionService,
   /**
    * @param result
    */
-  void fireAcquisitionCompleteEvent( final AcquisitionResult result )
+  void fireAcquisitionCompleteEvent( final AcquisitionData result )
   {
     final Iterator<AcquisitionDataListener> dataListenerIter = this.acquisitionDataListeners.iterator();
     while ( dataListenerIter.hasNext() )

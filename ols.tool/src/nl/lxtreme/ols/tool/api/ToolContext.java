@@ -53,7 +53,7 @@ public interface ToolContext
    * 
    * @return the data to be analyzed, never <code>null</code>.
    */
-  AcquisitionResult getData();
+  AcquisitionData getData();
 
   /**
    * Returns a bitmask of enabled channels in the sample data.

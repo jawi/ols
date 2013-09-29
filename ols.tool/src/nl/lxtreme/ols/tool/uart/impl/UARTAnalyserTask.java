@@ -108,7 +108,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   @Override
   public UARTDataSet call() throws Exception
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     /*
      * Start decode from trigger or if no trigger is available from the first
@@ -351,7 +351,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    */
   private void decodeControl( final UARTDataSet aDataSet, final int aChannelIndex, final String aName )
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     if ( LOG.isLoggable( Level.FINE ) )
     {
@@ -397,7 +397,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
    */
   private void decodeData( final UARTDataSet aDataSet, final int aChannelIndex, final int aEventType )
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     final int baudRate;
 

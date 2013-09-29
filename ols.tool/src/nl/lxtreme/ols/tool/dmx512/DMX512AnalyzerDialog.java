@@ -299,7 +299,7 @@ public final class DMX512AnalyzerDialog extends BaseToolDialog<DMX512DataSet> im
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getData().getChannels();
+    final int channelCount = getData().getChannelCount();
 
     final JPanel settings = new JPanel( new SpringLayout() );
 

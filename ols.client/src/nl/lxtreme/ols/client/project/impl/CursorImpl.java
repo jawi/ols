@@ -30,7 +30,7 @@ import nl.lxtreme.ols.common.acquisition.Cursor;
 /**
  * Denotes a cursor with a timestamp, label and index.
  */
-public class CursorImpl implements Comparable<CursorImpl>, Cursor
+public class CursorImpl implements Cursor
 {
   // CONSTANTS
 
@@ -174,9 +174,9 @@ public class CursorImpl implements Comparable<CursorImpl>, Cursor
    * {@inheritDoc}
    */
   @Override
-  public int compareTo( final CursorImpl aOtherCursor )
+  public int compareTo( final Cursor aOtherCursor )
   {
-    return this.index - aOtherCursor.index;
+    return this.index - aOtherCursor.getIndex();
   }
 
   /**

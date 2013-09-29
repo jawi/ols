@@ -90,7 +90,7 @@ public class I2CAnalyserWorkerContentTest
       throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
-    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
+    AcquisitionData container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener progressListener = Mockito.mock( ToolProgressListener.class );

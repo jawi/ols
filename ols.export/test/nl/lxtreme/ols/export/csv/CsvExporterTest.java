@@ -25,7 +25,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.io.*;
-import java.util.*;
 
 import javax.swing.*;
 
@@ -203,20 +202,20 @@ public class CsvExporterTest
   private DataSet createTestDataSet( final int aChannelCount, final int aSize, final int aSampleRate,
       final long aTriggerPos )
   {
-    List<Integer> values = new ArrayList<Integer>( aSize );
-    List<Long> timestamps = new ArrayList<Long>( aSize );
+    int mask = ( 1 << aChannelCount ) - 1;
+    
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( aChannelCount );
+    builder.setEnabledChannelMask( mask );
+    builder.setSampleRate( aSampleRate );
+    builder.setTriggerPosition( aTriggerPos );
 
     int value = 0;
-    int mask = ( 1 << aChannelCount ) - 1;
     for ( int i = 0; i < aSize; i++ )
     {
-      values.add( Integer.valueOf( value & mask ) );
-      timestamps.add( Long.valueOf( value ) );
+      builder.addSample( value, value & mask );
       value++;
     }
-
-    CapturedData capData = new CapturedData( values, timestamps, aTriggerPos, aSampleRate, //
-        aChannelCount, mask, value - 1 );
 
     Channel[] channels = new Channel[aChannelCount];
     for ( int i = 0; i < channels.length; i++ )
@@ -226,7 +225,7 @@ public class CsvExporterTest
     }
 
     DataSet result = mock( DataSet.class );
-    when( result.getCapturedData() ).thenReturn( capData );
+    when( result.getCapturedData() ).thenReturn( builder.build() );
     when( result.getChannels() ).thenReturn( channels );
 
     return result;

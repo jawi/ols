@@ -296,7 +296,7 @@ public final class I2SProtocolAnalysisDialog extends BaseToolDialog<I2SDataSet> 
    */
   private JPanel createSettingsPane()
   {
-    final int channelCount = getData().getChannels();
+    final int channelCount = getData().getChannelCount();
 
     final JPanel panel = new JPanel( new SpringLayout() );
 

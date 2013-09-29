@@ -36,14 +36,14 @@ public interface DataSet
    * 
    * @return a captured data, can be <code>null</code>.
    */
-  public AcquisitionResult getCapturedData();
+  public AcquisitionData getCapturedData();
 
   /**
    * Returns a single channel.
    * 
    * @param aIndex
    *          the channel index, >= 0 && <
-   *          {@link AcquisitionResult#getChannels()}.
+   *          {@link AcquisitionData#getChannelCount()}.
    * @return an array of channels, never <code>null</code>.
    */
   public Channel getChannel( int aIndex );

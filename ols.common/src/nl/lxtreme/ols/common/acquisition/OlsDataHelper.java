@@ -18,16 +18,12 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.tool;
+package nl.lxtreme.ols.common.acquisition;
 
-
-import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
-
-import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
@@ -35,8 +31,6 @@ import nl.lxtreme.ols.common.acquisition.*;
  */
 public final class OlsDataHelper
 {
-  // INNER TYPES
-
   // CONSTANTS
 
   /** The regular expression used to parse an (OLS-datafile) instruction. */
@@ -47,26 +41,27 @@ public final class OlsDataHelper
   // METHODS
 
   /**
-   * Reads the data from a given reader.
+   * Reads the text-based acquisition data from a given reader.
    * 
    * @param aReader
    *          the reader to read the data from, cannot be <code>null</code>.
+   * @return the parsed acquisition data, never <code>null</code>.
    * @throws IOException
    *           in case of I/O problems.
    */
   @SuppressWarnings( "boxing" )
-  public static AcquisitionResult read( final Reader aReader ) throws IOException
+  public static AcquisitionData read( final Reader aReader ) throws IOException
   {
-    int size = -1;
-    Integer rate = null, channels = null, enabledChannels = null;
-    long triggerPos = -1L;
-    long absLen = -1L;
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
 
     // assume 'new' file format is in use, don't support uncompressed ones...
     boolean compressed = true;
+    int size = -1;
+
+    Integer sampleRate = null;
+    Integer channelCount = null;
 
     final BufferedReader br = new BufferedReader( aReader );
-
     final List<String[]> dataValues = new ArrayList<String[]>();
 
     String line;
@@ -89,27 +84,29 @@ public final class OlsDataHelper
 
         if ( "Size".equals( instrKey ) )
         {
-          size = safeParseInt( instrValue );
+          size = Integer.parseInt( instrValue );
         }
         else if ( "Rate".equals( instrKey ) )
         {
-          rate = safeParseInt( instrValue );
+          sampleRate = Integer.decode( instrValue );
+          builder.setSampleRate( sampleRate.intValue() );
         }
         else if ( "Channels".equals( instrKey ) )
         {
-          channels = safeParseInt( instrValue );
+          channelCount = Integer.decode( instrValue );
+          builder.setChannelCount( channelCount.intValue() );
         }
         else if ( "TriggerPosition".equals( instrKey ) )
         {
-          triggerPos = Long.parseLong( instrValue );
+          builder.setTriggerPosition( Long.parseLong( instrValue ) );
         }
         else if ( "EnabledChannels".equals( instrKey ) )
         {
-          enabledChannels = safeParseInt( instrValue );
+          builder.setEnabledChannelMask( Integer.parseInt( instrValue ) );
         }
         else if ( "CursorEnabled".equals( instrKey ) )
         {
-          // not used...
+          builder.setCursorsVisible( Boolean.parseBoolean( instrValue ) );
         }
         else if ( "Compressed".equals( instrKey ) )
         {
@@ -117,19 +114,31 @@ public final class OlsDataHelper
         }
         else if ( "AbsoluteLength".equals( instrKey ) )
         {
-          absLen = Long.parseLong( instrValue );
-        }
-        else if ( "CursorA".equals( instrKey ) )
-        {
-          // not used.
-        }
-        else if ( "CursorB".equals( instrKey ) )
-        {
-          // not used.
+          builder.setAbsoluteLength( Long.parseLong( instrValue ) );
         }
         else if ( instrKey.startsWith( "Cursor" ) )
         {
-          // not used.
+          String idxValue = instrKey.substring( 6 );
+          final long value = Long.parseLong( instrValue );
+
+          int idx;
+          if ( "A".equalsIgnoreCase( idxValue ) )
+          {
+            idx = 0;
+          }
+          else if ( "B".equalsIgnoreCase( idxValue ) )
+          {
+            idx = 1;
+          }
+          else
+          {
+            idx = Integer.parseInt( idxValue );
+          }
+
+          if ( value > Long.MIN_VALUE )
+          {
+            builder.setCursorTimestamp( idx, value );
+          }
         }
       }
     }
@@ -154,22 +163,14 @@ public final class OlsDataHelper
     {
       throw new IOException( "Data file is corrupt?! Data size does not match sample count!" );
     }
-    if ( rate == null )
+    if ( sampleRate == null )
     {
       throw new IOException( "Data file is corrupt?! Sample rate is not provided!" );
     }
-    if ( ( channels == null ) || ( channels <= 0 ) || ( channels > 32 ) )
+    if ( ( channelCount == null ) || ( channelCount <= 0 ) || ( channelCount > 32 ) )
     {
       throw new IOException( "Data file is corrupt?! Channel count is not provided!" );
     }
-    // Make sure the enabled channels are defined...
-    if ( enabledChannels == null )
-    {
-      enabledChannels = getBitMask( channels );
-    }
-
-    int[] values = new int[size];
-    long[] timestamps = new long[size];
 
     try
     {
@@ -177,8 +178,10 @@ public final class OlsDataHelper
       {
         final String[] dataPair = dataValues.get( i );
 
-        values[i] = ( int )Long.parseLong( dataPair[0], 16 );
-        timestamps[i] = Long.parseLong( dataPair[1], 10 ) & Long.MAX_VALUE;
+        long timestamp = Long.parseLong( dataPair[1], 10 ) & Long.MAX_VALUE;
+        int value = ( int )Long.parseLong( dataPair[0], 16 );
+
+        builder.addSample( timestamp, value );
       }
     }
     catch ( final NumberFormatException exception )
@@ -186,13 +189,87 @@ public final class OlsDataHelper
       throw new IOException( "Invalid data encountered.", exception );
     }
 
-    // Allow the absolute length to be undefined, in which case the last
-    // time stamp is used (+ some margin to be able to see the last
-    // sample)...
-    long absoluteLength = Math.max( absLen, timestamps[size - 1] );
-
     // Finally set the captured data, and notify all event listeners...
-    return new CapturedData( values, timestamps, triggerPos, rate, channels, enabledChannels, absoluteLength );
+    return builder.build();
+  }
+
+  /**
+   * Writes the given acquisition data in a text-based format to the given
+   * writer.
+   * 
+   * @param aWriter
+   *          the writer to write the data to, cannot be <code>null</code>;
+   * @param aData
+   *          the acquisition data to write, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems.
+   */
+  public static void write( final Writer aWriter, final AcquisitionData aData ) throws IOException
+  {
+    final BufferedWriter bw = new BufferedWriter( aWriter );
+
+    final Cursor[] cursors = aData.getCursors();
+    final boolean cursorsEnabled = aData.isCursorsVisible();
+
+    try
+    {
+      final int[] values = aData.getValues();
+      final long[] timestamps = aData.getTimestamps();
+
+      bw.write( ";Size: " );
+      bw.write( Integer.toString( values.length ) );
+      bw.newLine();
+
+      bw.write( ";Rate: " );
+      bw.write( Integer.toString( aData.getSampleRate() ) );
+      bw.newLine();
+
+      bw.write( ";Channels: " );
+      bw.write( Integer.toString( aData.getChannelCount() ) );
+      bw.newLine();
+
+      bw.write( ";EnabledChannels: " );
+      bw.write( Integer.toString( aData.getEnabledChannels() ) );
+      bw.newLine();
+
+      if ( aData.hasTriggerData() )
+      {
+        bw.write( ";TriggerPosition: " );
+        bw.write( Long.toString( aData.getTriggerPosition() ) );
+        bw.newLine();
+      }
+
+      bw.write( ";Compressed: " );
+      bw.write( Boolean.toString( true ) );
+      bw.newLine();
+
+      bw.write( ";AbsoluteLength: " );
+      bw.write( Long.toString( aData.getAbsoluteLength() ) );
+      bw.newLine();
+
+      bw.write( ";CursorEnabled: " );
+      bw.write( Boolean.toString( cursorsEnabled ) );
+      bw.newLine();
+
+      for ( int i = 0; cursorsEnabled && ( i < cursors.length ); i++ )
+      {
+        if ( cursors[i].isDefined() )
+        {
+          bw.write( String.format( ";Cursor%d: ", Integer.valueOf( i ) ) );
+          bw.write( Long.toString( cursors[i].getTimestamp() ) );
+          bw.newLine();
+        }
+      }
+      for ( int i = 0; i < values.length; i++ )
+      {
+        bw.write( formatSample( values[i], timestamps[i] ) );
+        bw.newLine();
+      }
+    }
+    finally
+    {
+      bw.flush();
+    }
   }
 
   /**

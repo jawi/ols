@@ -324,7 +324,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    */
   private void clockDataOnEdge( final SPIDataSet aDataSet, final SPIMode aMode, final int aSlaveSelectedIdx )
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     final int[] values = data.getValues();
 
@@ -519,7 +519,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    */
   private SPIMode detectSPIMode( final int aStartIndex, final int aEndIndex )
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
     final Frequency<Integer> valueStats = new Frequency<Integer>();
 
     final int[] values = data.getValues();
@@ -705,7 +705,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    */
   private int searchSlaveSelected( final int aStartIndex, final int aEndIndex )
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
     final int[] values = data.getValues();
 
     final int csMask = 1 << this.csIdx;

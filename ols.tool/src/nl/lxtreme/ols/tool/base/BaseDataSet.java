@@ -57,7 +57,7 @@ public class BaseDataSet<DATA extends BaseData<DATA>>
    * @param aData
    *          the actual acquisition results used in this data set.
    */
-  public BaseDataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final AcquisitionResult aData )
+  public BaseDataSet( final int aStartOfDecodeIdx, final int aEndOfDecodeIdx, final AcquisitionData aData )
   {
     this.data = new ArrayList<DATA>();
 

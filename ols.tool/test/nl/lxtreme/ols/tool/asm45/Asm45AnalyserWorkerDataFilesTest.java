@@ -140,7 +140,7 @@ public class Asm45AnalyserWorkerDataFilesTest
   private Asm45DataSet analyseDataFile( final String aResourceName ) throws Exception
   {
     URL resource = ResourceUtils.getResource( getClass(), aResourceName );
-    AcquisitionResult container = DataTestUtils.getCapturedData( resource );
+    AcquisitionData container = DataTestUtils.getCapturedData( resource );
     ToolContext toolContext = DataTestUtils.createToolContext( container );
 
     ToolProgressListener toolProgressListener = Mockito.mock( ToolProgressListener.class );

@@ -54,7 +54,7 @@ public class ValueChangeDumpExporter implements Exporter
     final PrintWriter writer = new PrintWriter( aStream );
     try
     {
-      final AcquisitionResult capturedData = aDataSet.getCapturedData();
+      final AcquisitionData capturedData = aDataSet.getCapturedData();
 
       final double timescale = getTimebase( capturedData.getSampleRate() );
 
@@ -91,11 +91,11 @@ public class ValueChangeDumpExporter implements Exporter
    * @param aCapturedData
    * @param aTimebase
    */
-  protected void writeDataDump( final PrintWriter aWriter, final AcquisitionResult aCapturedData, final double aTimebase )
+  protected void writeDataDump( final PrintWriter aWriter, final AcquisitionData aCapturedData, final double aTimebase )
   {
     final int[] values = aCapturedData.getValues();
     final long[] timestamps = aCapturedData.getTimestamps();
-    final int channelCount = aCapturedData.getChannels();
+    final int channelCount = aCapturedData.getChannelCount();
     final int channelMask = aCapturedData.getEnabledChannels();
 
     int oldValue = -1;
@@ -201,7 +201,7 @@ public class ValueChangeDumpExporter implements Exporter
    */
   protected void writeVariableDefinitions( final PrintWriter aWriter, final DataSet aDataSet )
   {
-    final AcquisitionResult capturedData = aDataSet.getCapturedData();
+    final AcquisitionData capturedData = aDataSet.getCapturedData();
 
     final int channelMask = capturedData.getEnabledChannels();
     final Channel[] channelLabels = aDataSet.getChannels();
@@ -229,9 +229,9 @@ public class ValueChangeDumpExporter implements Exporter
    */
   protected void writeVariableDump( final PrintWriter aWriter, final DataSet aDataSet )
   {
-    final AcquisitionResult capturedData = aDataSet.getCapturedData();
+    final AcquisitionData capturedData = aDataSet.getCapturedData();
 
-    final int channelCount = capturedData.getChannels();
+    final int channelCount = capturedData.getChannelCount();
     final int channelMask = capturedData.getEnabledChannels();
 
     writeOpenDeclaration( aWriter, "dumpvars" );

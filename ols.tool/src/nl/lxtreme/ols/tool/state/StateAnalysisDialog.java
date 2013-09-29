@@ -39,7 +39,7 @@ import org.osgi.util.tracker.*;
 /**
  * @author jawi
  */
-public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionResult>
+public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionData>
 {
   // INNER TYPES
 
@@ -166,7 +166,7 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionResult>
    * {@inheritDoc}
    */
   @Override
-  protected void onToolEnded( final AcquisitionResult aResult )
+  protected void onToolEnded( final AcquisitionData aResult )
   {
     Object[] services = this.acquisitionDataListenerHelper.getServices();
     if ( services != null )
@@ -193,7 +193,7 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionResult>
    * {@inheritDoc}
    */
   @Override
-  protected void prepareToolTask( final ToolTask<AcquisitionResult> aToolTask )
+  protected void prepareToolTask( final ToolTask<AcquisitionData> aToolTask )
   {
     final StateAnalysisTask toolTask = ( StateAnalysisTask )aToolTask;
 
@@ -223,7 +223,7 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionResult>
    */
   private JPanel createContentPane()
   {
-    final int channelCount = getData().getChannels();
+    final int channelCount = getData().getChannelCount();
 
     this.channelSelect = SwingComponentUtils.createChannelSelector( channelCount, 0 );
 

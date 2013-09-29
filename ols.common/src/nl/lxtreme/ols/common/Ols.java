@@ -18,7 +18,7 @@
  * 
  * Copyright (C) 2010-2011 - J.W. Janssen, http://www.lxtreme.nl
  */
-package nl.lxtreme.ols.common.acquisition;
+package nl.lxtreme.ols.common;
 
 
 /**

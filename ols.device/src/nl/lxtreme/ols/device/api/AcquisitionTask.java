@@ -29,9 +29,9 @@ import nl.lxtreme.ols.task.execution.*;
  * Denotes an acquisition task that we can talk to by calling {@link #call()} on
  * it. The implementation of that method should do all necessary tasks to
  * acquire data from the device and return that data in the form of an
- * {@link AcquisitionResult} object.
+ * {@link AcquisitionData} object.
  */
-public interface AcquisitionTask extends Task<AcquisitionResult>
+public interface AcquisitionTask extends Task<AcquisitionData>
 {
   // No additional methods
 }

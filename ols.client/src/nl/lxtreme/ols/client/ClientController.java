@@ -188,7 +188,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public int getChannels()
     {
-      return getData().getChannels();
+      return getData().getChannelCount();
     }
 
     /**
@@ -204,7 +204,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
      * {@inheritDoc}
      */
     @Override
-    public AcquisitionResult getData()
+    public AcquisitionData getData()
     {
       return this.dataSet.getCapturedData();
     }
@@ -323,7 +323,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * {@inheritDoc}
    */
   @Override
-  public void acquisitionComplete( final AcquisitionResult aData )
+  public void acquisitionComplete( final AcquisitionData aData )
   {
     try
     {
@@ -797,7 +797,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void gotoTriggerPosition()
   {
-    final AcquisitionResult capturedData = getCurrentDataSet().getCapturedData();
+    final AcquisitionData capturedData = getCurrentDataSet().getCapturedData();
     if ( ( capturedData != null ) && capturedData.hasTriggerData() )
     {
       final long position = capturedData.getTriggerPosition();
@@ -1798,7 +1798,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     int endOfDecode = -1;
 
     final DataSet dataSet = getCurrentDataSet();
-    final AcquisitionResult capturedData = dataSet.getCapturedData();
+    final AcquisitionData capturedData = dataSet.getCapturedData();
 
     if ( capturedData != null )
     {

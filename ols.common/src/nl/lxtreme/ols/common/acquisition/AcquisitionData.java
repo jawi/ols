@@ -24,7 +24,7 @@ package nl.lxtreme.ols.common.acquisition;
 /**
  * Denotes a concrete result of a single acquisition.
  */
-public interface AcquisitionResult
+public interface AcquisitionData
 {
   // METHODS
 
@@ -35,14 +35,28 @@ public interface AcquisitionResult
    * 
    * @return the absolute length, >= 0.
    */
-  public abstract long getAbsoluteLength();
+  long getAbsoluteLength();
 
   /**
    * Returns the number of channels in the sample data.
    * 
    * @return the channel count, >= 0.
    */
-  public abstract int getChannels();
+  int getChannelCount();
+
+  /**
+   * Returns the channel information.
+   * 
+   * @return an array with channels, never <code>null</code>.
+   */
+  Channel[] getChannels();
+
+  /**
+   * Returns the cursor information.
+   * 
+   * @return an array with cursors, never <code>null</code>.
+   */
+  Cursor[] getCursors();
 
   /**
    * Returns a bitmask of enabled channels in the sample data.
@@ -50,7 +64,7 @@ public interface AcquisitionResult
    * @return a bitmask of enabled channels, for example, 0xFF for the first 8
    *         channels.
    */
-  public abstract int getEnabledChannels();
+  int getEnabledChannels();
 
   /**
    * Returns the sample index from the given absolute time value.
@@ -59,14 +73,14 @@ public interface AcquisitionResult
    *          the (absolute) time value to convert to a sample index.
    * @return the sample number <em>before</b> the selected absolute time.
    */
-  public abstract int getSampleIndex( final long aTimeValue );
+  int getSampleIndex( final long aTimeValue );
 
   /**
    * Returns the sample rate in which this data was captured.
    * 
    * @return a sample rate in hertz (Hz).
    */
-  public abstract int getSampleRate();
+  int getSampleRate();
 
   /**
    * Returns the time stamps of the individual samples.
@@ -83,14 +97,14 @@ public interface AcquisitionResult
    * @return the time stamps, as array of long values.
    * @see #getValues()
    */
-  public abstract long[] getTimestamps();
+  long[] getTimestamps();
 
   /**
    * Returns the trigger position, as (absolute) time-value.
    * 
    * @return a value representing the trigger position in time.
    */
-  public abstract long getTriggerPosition();
+  long getTriggerPosition();
 
   /**
    * Returns the actual sample values.
@@ -102,20 +116,32 @@ public interface AcquisitionResult
    * @return the sample values, as array of integers.
    * @see #getTimestamps()
    */
-  public abstract int[] getValues();
+  int[] getValues();
 
   /**
    * Returns wether or not the object contains timing data
    * 
    * @return <code>true</code> when timing data is available
    */
-  public abstract boolean hasTimingData();
+  boolean hasTimingData();
 
   /**
    * Returns whether or not the object contains trigger data
    * 
    * @return <code>true</code> when trigger data is available
    */
-  public abstract boolean hasTriggerData();
+  boolean hasTriggerData();
 
+  /**
+   * @return <code>true</code> if the cursors are to be used, <code>false</code>
+   *         otherwise.
+   */
+  boolean isCursorsVisible();
+
+  /**
+   * @param aVisible
+   *          <code>true</code> if cursors are to be made visible,
+   *          <code>false</code> otherwise.
+   */
+  void setCursorsVisible( final boolean aVisible );
 }

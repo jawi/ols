@@ -57,10 +57,10 @@ public class NonReturnToZeroDecoder implements LineDecoder
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionResult decode( final LineDecoderToolContext aContext, final AnnotationListener aAnnotationListener,
+  public AcquisitionData decode( final LineDecoderToolContext aContext, final AnnotationListener aAnnotationListener,
       final ToolProgressListener aListener ) throws Exception
   {
-    final AcquisitionResult inputData = aContext.getData();
+    final AcquisitionData inputData = aContext.getData();
 
     final int[] values = inputData.getValues();
     final long[] timestamps = inputData.getTimestamps();

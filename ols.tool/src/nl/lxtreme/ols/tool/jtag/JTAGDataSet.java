@@ -45,7 +45,7 @@ public final class JTAGDataSet extends BaseDataSet<JTAGData>
   /**
    * Creates a new JTAGDataSet instance.
    */
-  public JTAGDataSet( final int aStartOfDecode, final int aEndOfDecode, final AcquisitionResult aData )
+  public JTAGDataSet( final int aStartOfDecode, final int aEndOfDecode, final AcquisitionData aData )
   {
     super( aStartOfDecode, aEndOfDecode, aData );
   }

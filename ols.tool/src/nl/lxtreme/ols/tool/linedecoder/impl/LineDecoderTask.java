@@ -31,7 +31,7 @@ import nl.lxtreme.ols.tool.linedecoder.*;
 /**
  * Represents the work-horse of the line decoding routine.
  */
-public class LineDecoderTask implements ToolTask<AcquisitionResult>
+public class LineDecoderTask implements ToolTask<AcquisitionData>
 {
   // VARIABLES
 
@@ -73,7 +73,7 @@ public class LineDecoderTask implements ToolTask<AcquisitionResult>
    * {@inheritDoc}
    */
   @Override
-  public AcquisitionResult call() throws Exception
+  public AcquisitionData call() throws Exception
   {
     final LineDecoderToolContextImpl decoderContext = new LineDecoderToolContextImpl( this.context, this.lines,
         this.inverted, this.recoverClock, this.clockSpeed );

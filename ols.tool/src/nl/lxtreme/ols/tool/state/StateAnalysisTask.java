@@ -23,14 +23,15 @@ package nl.lxtreme.ols.tool.state;
 
 import java.util.logging.*;
 
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
 
 /**
- * 
+ * TODO revise this implementation...
  */
-public class StateAnalysisTask implements ToolTask<AcquisitionResult>
+public class StateAnalysisTask implements ToolTask<AcquisitionData>
 {
   // CONSTANTS
 
@@ -62,9 +63,9 @@ public class StateAnalysisTask implements ToolTask<AcquisitionResult>
    * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
-  public CapturedData call() throws Exception
+  public AcquisitionData call() throws Exception
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
 
     // obtain data from captured data
     final int[] values = data.getValues();
@@ -92,30 +93,29 @@ public class StateAnalysisTask implements ToolTask<AcquisitionResult>
       throw new IllegalStateException( "No state changes found!" );
     }
 
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder( data, false /* includeSamples */);
+    builder.setSampleRate( Ols.NOT_AVAILABLE );
+
     // convert captured data
     last = values[0] & maskValue;
     int pos = 0;
-    int newTrigger = -1;
 
-    final int[] newValues = new int[size];
     for ( int i = 0; i < values.length; i++ )
     {
       final int current = ( values[i] & maskValue ) >> this.number;
       if ( ( last == this.level ) && ( current != this.level ) )
       {
-        newValues[pos++] = values[i - 1];
+        builder.addSample( pos, values[i - 1] & ~maskValue );
+        pos++;
       }
       if ( triggerPosition == i )
       {
-        newTrigger = pos;
+        builder.setTriggerPosition( pos );
       }
       last = current;
     }
 
-    final CapturedData newCapturedData = new CapturedData( newValues, newTrigger, Ols.NOT_AVAILABLE,
-        data.getChannels(), data.getEnabledChannels() );
-
-    return newCapturedData;
+    return builder.build();
   }
 
   /**

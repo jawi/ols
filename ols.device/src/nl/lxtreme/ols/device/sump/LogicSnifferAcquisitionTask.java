@@ -22,7 +22,6 @@ package nl.lxtreme.ols.device.sump;
 
 
 import java.io.*;
-import java.util.*;
 import java.util.logging.*;
 
 import javax.microedition.io.*;
@@ -84,7 +83,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
    *           called before trigger match
    */
   @Override
-  public AcquisitionResult call() throws IOException, InterruptedException
+  public AcquisitionData call() throws IOException, InterruptedException
   {
     LOG.info( "Starting capture ..." );
 
@@ -122,29 +121,27 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
       LOG.log( Level.FINE, "{0} samples read. Starting post processing...", Integer.valueOf( sampleCount ) );
     }
 
-    final List<Integer> values = new ArrayList<Integer>();
-    final List<Long> timestamps = new ArrayList<Long>();
-
-    // collect additional information for CapturedData; we use arrays here,
-    // as their values are to be filled from anonymous inner classes...
-    final long[] absoluteLength = { 0L };
-    final long[] triggerPos = { Ols.NOT_AVAILABLE };
-    final int rate = this.config.getSampleRate();
+    final AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setSampleRate( this.config.getSampleRate() );
+    // Issue #98: use the *enabled* channel count, not the total channel
+    // count...
+    builder.setChannelCount( this.config.getEnabledChannelsCount() );
+    builder.setEnabledChannelMask( this.config.getEnabledChannelsMask() );
 
     final SampleProcessorCallback callback = new SampleProcessorCallback()
     {
       public void addValue( final int aSampleValue, final long aTimestamp )
       {
-        values.add( Integer.valueOf( aSampleValue ) );
-        timestamps.add( Long.valueOf( aTimestamp ) );
+        builder.addSample( aTimestamp, aSampleValue );
       }
 
       public void ready( final long aAbsoluteLength, final long aTriggerPosition )
       {
-        absoluteLength[0] = aAbsoluteLength;
+        builder.setAbsoluteLength( aAbsoluteLength );
+
         if ( LogicSnifferAcquisitionTask.this.config.isTriggerEnabled() )
         {
-          triggerPos[0] = aTriggerPosition;
+          builder.setTriggerPosition( aTriggerPosition );
         }
       }
     };
@@ -154,10 +151,7 @@ public class LogicSnifferAcquisitionTask implements SumpProtocolConstants, Acqui
     // Close the connection...
     close();
 
-    // Issue #98: use the *enabled* channel count, not the total channel
-    // count...
-    return new CapturedData( values, timestamps, triggerPos[0], rate, this.config.getEnabledChannelsCount(),
-        this.config.getEnabledChannelsMask(), absoluteLength[0] );
+    return builder.build();
   }
 
   /**

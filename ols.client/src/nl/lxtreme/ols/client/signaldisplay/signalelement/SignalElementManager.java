@@ -30,6 +30,7 @@ import javax.swing.event.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.ISignalElementChangeListener.ElementMoveEvent;
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 
 

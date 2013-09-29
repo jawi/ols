@@ -80,7 +80,7 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
   @Override
   public DMX512DataSet call() throws Exception
   {
-    final AcquisitionResult data = this.context.getData();
+    final AcquisitionData data = this.context.getData();
     final int[] values = data.getValues();
 
     int startOfDecode = this.context.getStartSampleIndex();

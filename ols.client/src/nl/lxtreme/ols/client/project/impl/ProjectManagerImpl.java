@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.zip.*;
 
 import nl.lxtreme.ols.client.project.*;
+import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.util.swing.*;
 

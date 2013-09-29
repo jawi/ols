@@ -288,7 +288,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
    */
   private JComponent createSettingsPane()
   {
-    final int channelCount = getData().getChannels();
+    final int channelCount = getData().getChannelCount();
 
     final String modes[] = new String[] { "Standard", "Overdrive" };
 
