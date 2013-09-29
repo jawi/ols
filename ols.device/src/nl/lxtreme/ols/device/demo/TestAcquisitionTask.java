@@ -66,73 +66,64 @@ public class TestAcquisitionTask implements AcquisitionTask
     final int dataLength = this.configDialog.getDataLength();
     final int channels = this.configDialog.getChannels();
 
-    final int[] data;
-    int rate = 1000000000;
-    int trigger = -1;
-    int enabledChannels = ( int )( ( 1L << channels ) - 1 );
-
-    final double max = ( ( ( 1L << Math.min( 16, channels ) ) - 1L ) & 0xFFFFFFFFL );
-    final double half = ( max / 2.0 );
-    final double factor = ( ( 2.0 * Math.PI ) / max );
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setSampleRate( 1000000000 );
+    builder.setChannelCount( channels );
 
     if ( DATA_FUNCTIONS[6].equals( dataFunction ) )
     {
       final I2CGenerator generator = new I2CGenerator();
       generator.writeBitStream( "Hello World, this is a sample I2C bit stream!" );
-      data = generator.getData();
-      rate = generator.getRate();
-      trigger = generator.getTrigger();
+      generator.generate( builder );
     }
     else if ( DATA_FUNCTIONS[7].equals( dataFunction ) )
     {
       final OneWireGenerator generator = new OneWireGenerator( true /* aStandard */);
       generator.writeBitStream( "Hello World, this is a sample 1-wire bit stream!" );
-      data = generator.getData();
-      rate = generator.getRate();
-      trigger = generator.getTrigger();
+      generator.generate( builder );
     }
     else if ( DATA_FUNCTIONS[8].equals( dataFunction ) )
     {
       final ManchesterEncoder encoder = new ManchesterEncoder();
-      encoder.writeData( "Hello World!" );
-      data = encoder.getData();
-      rate = encoder.getRate();
-      trigger = encoder.getTrigger();
+      encoder.writeData( "Hello World of Manchester encoded data!" );
+      encoder.generate( builder );
     }
     else
     {
       final Random rnd = new Random();
 
-      boolean state = false;
+      final double max = ( ( ( 1L << Math.min( 16, channels ) ) - 1L ) & 0xFFFFFFFFL );
+      final double half = ( max / 2.0 );
+      final double factor = ( ( 2.0 * Math.PI ) / max );
 
-      data = new int[dataLength];
-      for ( int i = 0; i < data.length; i++ )
+      boolean state = false;
+      for ( int i = 0; i < dataLength; i++ )
       {
         if ( DATA_FUNCTIONS[0].equals( dataFunction ) )
         {
           final int v = ( i / 8 ) & 0xff;
-          data[i] = ( 255 - v ) | ( v << 8 ) | ( ( 255 - v ) << 16 ) | ( v << 24 );
+          builder.addSample( i, ( 255 - v ) | ( v << 8 ) | ( ( 255 - v ) << 16 ) | ( v << 24 ) );
         }
         else if ( DATA_FUNCTIONS[1].equals( dataFunction ) )
         {
-          data[i] = 0x00;
+          builder.addSample( i, 0x00 );
         }
         else if ( DATA_FUNCTIONS[2].equals( dataFunction ) )
         {
-          data[i] = ( int )( half + ( half * Math.sin( i * factor ) ) );
-          rate = -1;
+          builder.addSample( i, ( int )( half + ( half * Math.sin( i * factor ) ) ) );
+          builder.clearSampleRate();
         }
         else if ( DATA_FUNCTIONS[3].equals( dataFunction ) )
         {
-          data[i] = ( ( i % 2 ) == 0 ) ? 0x55 : 0xAA;
+          builder.addSample( i, ( ( i % 2 ) == 0 ) ? 0x55 : 0xAA );
         }
         else if ( DATA_FUNCTIONS[4].equals( dataFunction ) )
         {
-          data[i] = ( ( i % 4 ) == 0 ) ? 0x55 : 0xAA;
+          builder.addSample( i, ( ( i % 4 ) == 0 ) ? 0x55 : 0xAA ); 
         }
         else if ( DATA_FUNCTIONS[5].equals( dataFunction ) )
         {
-          data[i] = rnd.nextInt();
+          builder.addSample( i, rnd.nextInt() );
         }
         else if ( DATA_FUNCTIONS[9].equals( dataFunction ) )
         {
@@ -140,16 +131,16 @@ public class TestAcquisitionTask implements AcquisitionTask
           {
             state = !state;
           }
-          data[i] = state ? 0x00 : 0x8000;
-          enabledChannels = 0x0000FF00;
+          builder.addSample( i, state ? 0x00 : 0x8000 );
+          builder.setEnabledChannelMask( 0x0000FF00 );
         }
 
-        this.progressListener.acquisitionInProgress( ( int )( ( i * 100.0 ) / data.length ) );
+        this.progressListener.acquisitionInProgress( ( int )( ( i * 100.0 ) / dataLength ) );
       }
 
-      trigger = ( int )( data.length * 0.25 );
+      builder.setTriggerPosition( ( int )( dataLength * 0.25 ) );
     }
 
-    return new CapturedData( data, trigger, rate, channels, enabledChannels );
+    return builder.build();
   }
 }

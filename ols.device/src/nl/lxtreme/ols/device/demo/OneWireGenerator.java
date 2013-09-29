@@ -23,6 +23,8 @@ package nl.lxtreme.ols.device.demo;
 
 import java.util.*;
 
+import nl.lxtreme.ols.common.acquisition.*;
+
 
 /**
  * Provides a 1-Wire protocol data generator.
@@ -31,7 +33,7 @@ import java.util.*;
  * "1-Wire Communication Through Software" of Maxim (May 30, 2002).
  * </p>
  */
-final class OneWireGenerator
+final class OneWireGenerator implements IDataGenerator
 {
   // CONSTANTS
 
@@ -97,39 +99,18 @@ final class OneWireGenerator
   // METHODS
 
   /**
-   * Returns the sample data with the encoded 1-wire data.
-   * 
-   * @return a array of sample data, never <code>null</code>.
+   * {@inheritDoc}
    */
-  public int[] getData()
+  @Override
+  public void generate( final AcquisitionDataBuilder aBuilder )
   {
-    final int size = this.data.size();
-    final int[] result = new int[size];
-    for ( int i = 0; i < size; i++ )
+    aBuilder.setSampleRate( this.sampleRate );
+    aBuilder.setTriggerPosition( this.trigger );
+
+    for ( int i = 0; i < this.data.size(); i++ )
     {
-      result[i] = this.data.get( i ).intValue();
+      aBuilder.addSample( i, this.data.get( i ).intValue() );
     }
-    return result;
-  }
-
-  /**
-   * Returns the sample rate of this data generator.
-   * 
-   * @return a sample rate, defaults to 4 MHz.
-   */
-  public int getRate()
-  {
-    return this.sampleRate;
-  }
-
-  /**
-   * Returns the trigger offset.
-   * 
-   * @return the trigger offset, never <code>null</code>.
-   */
-  public int getTrigger()
-  {
-    return this.trigger;
   }
 
   /**

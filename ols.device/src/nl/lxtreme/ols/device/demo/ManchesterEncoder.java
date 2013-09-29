@@ -23,11 +23,13 @@ package nl.lxtreme.ols.device.demo;
 
 import java.util.*;
 
+import nl.lxtreme.ols.common.acquisition.*;
+
 
 /**
  * Represents a Manchester line-encoder.
  */
-final class ManchesterEncoder
+final class ManchesterEncoder implements IDataGenerator
 {
   // CONSTANTS
 
@@ -70,33 +72,18 @@ final class ManchesterEncoder
   // METHODS
 
   /**
-   * @return the encoded data as array, never <code>null</code>.
+   * {@inheritDoc}
    */
-  public int[] getData()
+  @Override
+  public void generate( final AcquisitionDataBuilder aBuilder )
   {
-    final int size = this.data.size();
-    final int[] result = new int[size];
-    for ( int i = 0; i < size; i++ )
+    aBuilder.setSampleRate( this.sampleRate );
+    aBuilder.setTriggerPosition( this.trigger );
+
+    for ( int i = 0; i < this.data.size(); i++ )
     {
-      result[i] = this.data.get( i ).intValue();
+      aBuilder.addSample( i, this.data.get( i ).intValue() );
     }
-    return result;
-  }
-
-  /**
-   * @return the sample rate, in Hertz.
-   */
-  public int getRate()
-  {
-    return this.sampleRate;
-  }
-
-  /**
-   * @return the trigger position, as sample index.
-   */
-  public int getTrigger()
-  {
-    return this.trigger;
   }
 
   /**

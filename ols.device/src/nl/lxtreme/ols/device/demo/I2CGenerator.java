@@ -23,11 +23,13 @@ package nl.lxtreme.ols.device.demo;
 
 import java.util.*;
 
+import nl.lxtreme.ols.common.acquisition.*;
+
 
 /**
- * 
+ * Provides a data generator that outputs I2C-data.
  */
-final class I2CGenerator
+final class I2CGenerator implements IDataGenerator
 {
   // CONSTANTS
 
@@ -64,43 +66,25 @@ final class I2CGenerator
   // METHODS
 
   /**
-   * @return
+   * {@inheritDoc}
    */
-  public int[] getData()
+  @Override
+  public void generate( final AcquisitionDataBuilder aBuilder )
   {
-    final int size = this.data.size();
-    final int[] result = new int[size];
-    for ( int i = 0; i < size; i++ )
+    aBuilder.setSampleRate( this.sampleRate );
+    aBuilder.setTriggerPosition( this.trigger );
+
+    for ( int i = 0; i < this.data.size(); i++ )
     {
-      result[i] = this.data.get( i ).intValue();
+      aBuilder.addSample( i, this.data.get( i ).intValue() );
     }
-    return result;
   }
 
   /**
-   * @return
-   */
-  public int getRate()
-  {
-    return this.sampleRate;
-  }
-
-  /**
-   * Returns the trigger offset of the generated signal.
+   * Writes a given string as bit-stream to the contained data array.
    * 
-   * @return a trigger offset.
-   */
-  public int getTrigger()
-  {
-    return this.trigger;
-  }
-
-  /**
-   * Writes a given string as bit-stream to the given data array.
-   * 
-   * @param aData
    * @param aString
-   * @return the I2C clock speed.
+   *          the string to write, cannot be <code>null</code>.
    */
   public void writeBitStream( final String aString )
   {
@@ -249,7 +233,6 @@ final class I2CGenerator
 
     this.idx = this.data.size() - 1;
   }
-
 }
 
 /* EOF */
