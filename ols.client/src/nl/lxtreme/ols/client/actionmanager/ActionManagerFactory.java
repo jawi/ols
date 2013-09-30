@@ -79,7 +79,7 @@ public final class ActionManagerFactory
     aActionManager.add( new SmartJumpAction( JumpDirection.RIGHT, aController ) ).setEnabled( false );
 
     aActionManager.add( new GotoTriggerAction( aController ) ).setEnabled( false );
-    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
+    for ( int c = 0; c < OlsConstants.MAX_CURSORS; c++ )
     {
       aActionManager.add( new GotoNthCursorAction( signalDiagramController, c ) ).setEnabled( false );
     }

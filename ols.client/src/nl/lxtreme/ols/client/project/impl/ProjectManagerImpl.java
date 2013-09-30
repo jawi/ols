@@ -265,7 +265,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
 
     String label = null;
     int idx = 0;
-    while ( ( ( label = reader.readLine() ) != null ) && ( idx < Ols.MAX_CHANNELS ) )
+    while ( ( ( label = reader.readLine() ) != null ) && ( idx < OlsConstants.MAX_CHANNELS ) )
     {
       result.add( label );
     }

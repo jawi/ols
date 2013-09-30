@@ -1122,7 +1122,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     toolbar.addSeparator();
 
     toolbar.add( this.controller.getAction( GotoTriggerAction.ID ) );
-    for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
+    for ( int c = 0; c < OlsConstants.MAX_CURSORS; c++ )
     {
       toolbar.add( this.controller.getAction( GotoNthCursorAction.getID( c ) ) );
     }

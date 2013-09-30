@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.device.sump;
 
 
-import static nl.lxtreme.ols.common.Ols.*;
+import static nl.lxtreme.ols.common.OlsConstants.*;
 import static nl.lxtreme.ols.device.sump.ConfigDialogHelper.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 

@@ -270,7 +270,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
   {
     boolean result = super.validateToolSettings();
 
-    if ( result && ( getContext().getChannels() != Ols.MAX_CHANNELS ) )
+    if ( result && ( getContext().getChannels() != OlsConstants.MAX_CHANNELS ) )
     {
       JErrorDialog.showDialog( getOwner(), "Cannot start analysis!", "Not enough channels!",
           "For the Asm45 decoder, you need to have 32 channels enabled." );

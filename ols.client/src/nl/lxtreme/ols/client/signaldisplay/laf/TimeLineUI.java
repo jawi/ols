@@ -584,7 +584,7 @@ public class TimeLineUI extends ComponentUI
 
     // Phase 1: determine the boundaries of each defined cursor that should be
     // shown in the current clip boundaries...
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    for ( int i = 0; i < OlsConstants.MAX_CURSORS; i++ )
     {
       // TODO persist the cursor labels between paints so we can perform smart
       // redraws...

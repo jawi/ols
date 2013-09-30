@@ -21,7 +21,7 @@
 package nl.lxtreme.ols.common.acquisition;
 
 
-import static nl.lxtreme.ols.common.Ols.*;
+import static nl.lxtreme.ols.common.OlsConstants.*;
 
 import java.awt.*;
 import java.util.*;
@@ -78,7 +78,7 @@ public final class AcquisitionDataBuilder
       this.enabledChannels = aEnabledChannels;
       this.absoluteLength = aAbsoluteLength;
 
-      this.cursors = Arrays.copyOf( aCursors, Ols.MAX_CURSORS );
+      this.cursors = Arrays.copyOf( aCursors, OlsConstants.MAX_CURSORS );
       this.cursorsVisible = aCursorsVisible;
 
       List<Channel> _channels = new ArrayList<Channel>( this.channelCount );
@@ -86,7 +86,7 @@ public final class AcquisitionDataBuilder
 
       // The enabledChannels only tells us _which_ channels are to be enabled,
       // but we still need to keep track of how many channels we have...
-      for ( int i = 0; ( _channelCount < this.channelCount ) && ( i < Ols.MAX_CHANNELS ); i++ )
+      for ( int i = 0; ( _channelCount < this.channelCount ) && ( i < OlsConstants.MAX_CHANNELS ); i++ )
       {
         final int mask = ( 1 << i );
         if ( ( this.enabledChannels & mask ) != 0 )
@@ -787,7 +787,7 @@ public final class AcquisitionDataBuilder
   public AcquisitionDataBuilder()
   {
     this.sampleData = new ArrayList<Sample>();
-    this.cursors = new Cursor[Ols.MAX_CURSORS];
+    this.cursors = new Cursor[OlsConstants.MAX_CURSORS];
     this.absoluteLength = NOT_AVAILABLE;
     this.lastSeenTimestamp = NOT_AVAILABLE;
     this.enabledChannelMask = NOT_AVAILABLE;
@@ -796,7 +796,7 @@ public final class AcquisitionDataBuilder
     this.channelCount = 0;
     this.cursorsVisible = true; // by default
 
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    for ( int i = 0; i < OlsConstants.MAX_CURSORS; i++ )
     {
       this.cursors[i] = new CursorImpl( i );
     }
@@ -816,7 +816,7 @@ public final class AcquisitionDataBuilder
   public AcquisitionDataBuilder( final AcquisitionData aData, final boolean aIncludeSamples )
   {
     this.sampleData = new ArrayList<Sample>();
-    this.cursors = new Cursor[Ols.MAX_CURSORS];
+    this.cursors = new Cursor[OlsConstants.MAX_CURSORS];
     this.lastSeenTimestamp = NOT_AVAILABLE;
     this.absoluteLength = aData.getAbsoluteLength();
     this.channelCount = aData.getChannelCount();
@@ -1046,7 +1046,7 @@ public final class AcquisitionDataBuilder
    * Sets the label for a particular cursor.
    * 
    * @param aIndex
-   *          the index of the cursor to set, >= 0 && < {@value Ols#MAX_CURSORS}
+   *          the index of the cursor to set, >= 0 && < {@value OlsConstants#MAX_CURSORS}
    *          ;
    * @param aLabel
    *          the label of the cursor to set.
@@ -1055,7 +1055,7 @@ public final class AcquisitionDataBuilder
    */
   public AcquisitionDataBuilder setCursorLabel( final int aIndex, final String aLabel )
   {
-    if ( ( aIndex < 0 ) || ( aIndex >= Ols.MAX_CURSORS ) )
+    if ( ( aIndex < 0 ) || ( aIndex >= OlsConstants.MAX_CURSORS ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }
@@ -1079,7 +1079,7 @@ public final class AcquisitionDataBuilder
    * Sets the timestamp for a particular cursor.
    * 
    * @param aIndex
-   *          the index of the cursor to set, >= 0 && < {@value Ols#MAX_CURSORS}
+   *          the index of the cursor to set, >= 0 && < {@value OlsConstants#MAX_CURSORS}
    *          ;
    * @param aTimestamp
    *          the timestamp of the cursor to set.
@@ -1088,7 +1088,7 @@ public final class AcquisitionDataBuilder
    */
   public AcquisitionDataBuilder setCursorTimestamp( final int aIndex, final long aTimestamp )
   {
-    if ( ( aIndex < 0 ) || ( aIndex >= Ols.MAX_CURSORS ) )
+    if ( ( aIndex < 0 ) || ( aIndex >= OlsConstants.MAX_CURSORS ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
     }

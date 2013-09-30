@@ -67,7 +67,7 @@ public class DeleteAllCursorsAction extends AbstractAction implements IManagedAc
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    for ( int i = 0; i < OlsConstants.MAX_CURSORS; i++ )
     {
       this.controller.removeCursor( i );
     }

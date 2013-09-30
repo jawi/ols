@@ -112,7 +112,7 @@ final class PopupFactory
     else
     {
       // Not hovering above existing cursor, show add menu...
-      for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+      for ( int i = 0; i < OlsConstants.MAX_CURSORS; i++ )
       {
         final SetCursorAction action = new SetCursorAction( this.controller, i );
         aMenu.add( new JCheckBoxMenuItem( action ) );

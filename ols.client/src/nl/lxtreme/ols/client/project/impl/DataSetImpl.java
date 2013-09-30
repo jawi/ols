@@ -60,7 +60,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
     this.cursorsEnabled = aOld.isCursorsEnabled();
     this.channels = createChannels( aCapturedData.getChannelCount(), aCapturedData.getEnabledChannels(),
         aRetainAnnotations, aOld.getChannels() );
-    this.cursors = createCursors( Ols.MAX_CURSORS, aOld.getCursors() );
+    this.cursors = createCursors( OlsConstants.MAX_CURSORS, aOld.getCursors() );
   }
 
   /**
@@ -71,8 +71,8 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
     this.propertyChangeSupport = new PropertyChangeSupport( this );
 
     this.capturedData = null;
-    this.cursors = createCursors( Ols.MAX_CURSORS );
-    this.channels = createChannels( Ols.MAX_CHANNELS, 0xFFFFFFFF, false /* aRetainAnnotations */);
+    this.cursors = createCursors( OlsConstants.MAX_CURSORS );
+    this.channels = createChannels( OlsConstants.MAX_CHANNELS, 0xFFFFFFFF, false /* aRetainAnnotations */);
     this.cursorsEnabled = true;
   }
 
@@ -221,7 +221,7 @@ public class DataSetImpl implements PropertyChangeListener, DataSet, ProjectProp
     final int chCount = ( this.capturedData == null ) ? aCount : this.capturedData.getChannelCount();
 
     Channel[] result = new Channel[aCount];
-    for ( int i = 0, j = 0; ( j < aCount ) && ( i < Ols.MAX_CHANNELS ); i++ )
+    for ( int i = 0, j = 0; ( j < aCount ) && ( i < OlsConstants.MAX_CHANNELS ); i++ )
     {
       final int mask = ( 1 << i );
       // Issue #99: demultiplex the channels to the right group...

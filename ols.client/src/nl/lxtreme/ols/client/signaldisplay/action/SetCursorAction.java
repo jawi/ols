@@ -57,7 +57,7 @@ public class SetCursorAction extends AbstractAction
     this.controller = aController;
     this.cursorIdx = aCursorIdx;
 
-    int keyStroke = KeyEvent.VK_0 + ( ( aCursorIdx + 1 ) % Ols.MAX_CURSORS );
+    int keyStroke = KeyEvent.VK_0 + ( ( aCursorIdx + 1 ) % OlsConstants.MAX_CURSORS );
     putValue( ACCELERATOR_KEY, SwingComponentUtils.createKeyMask( keyStroke ) );
 
     putValue( Action.SELECTED_KEY, Boolean.valueOf( this.controller.isCursorDefined( aCursorIdx ) ) );

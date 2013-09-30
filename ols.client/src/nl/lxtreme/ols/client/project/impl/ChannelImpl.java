@@ -36,7 +36,7 @@ public final class ChannelImpl implements Channel
 {
   // CONSTANTS
 
-  private static final int MAX_CHANNELS = Ols.MAX_CHANNELS;
+  private static final int MAX_CHANNELS = OlsConstants.MAX_CHANNELS;
 
   // VARIABLES
 

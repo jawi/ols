@@ -74,7 +74,7 @@ public class GotoNthCursorAction extends AbstractAction implements IManagedActio
     putValue( SHORT_DESCRIPTION, "Go to the " + getOrdinalNumber( aIndex + 1 ) + " cursor in the diagram" );
     putValue( Action.LARGE_ICON_KEY, createOverlayIcon( IconLocator.ICON_GOTO_CURSOR, cursorStr ) );
 
-    int keyStroke = KeyEvent.VK_0 + ( ( aIndex + 1 ) % Ols.MAX_CURSORS );
+    int keyStroke = KeyEvent.VK_0 + ( ( aIndex + 1 ) % OlsConstants.MAX_CURSORS );
     if ( keyStroke != KeyEvent.VK_0 )
     {
       // Avoid overwriting CTRL/CMD + 0 as accelerator...
@@ -92,14 +92,14 @@ public class GotoNthCursorAction extends AbstractAction implements IManagedActio
    * 
    * @param aCursorIdx
    *          the cursor index to get the action-ID for, >= 0 && <
-   *          {@value Ols#MAX_CURSORS}.
+   *          {@value OlsConstants#MAX_CURSORS}.
    * @return the action ID for the action, never <code>null</code>.
    */
   public static String getID( final int aCursorIdx )
   {
-    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= Ols.MAX_CURSORS ) )
+    if ( ( aCursorIdx < 0 ) || ( aCursorIdx >= OlsConstants.MAX_CURSORS ) )
     {
-      throw new IllegalArgumentException( "Invalid cursor index, should be between 0 and " + Ols.MAX_CURSORS );
+      throw new IllegalArgumentException( "Invalid cursor index, should be between 0 and " + OlsConstants.MAX_CURSORS );
     }
     return ID_PREFIX + aCursorIdx;
   }

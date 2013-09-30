@@ -24,7 +24,7 @@ package nl.lxtreme.ols.common;
 /**
  * Defines some bare constants, used throughout the rest of the application.
  */
-public interface Ols
+public interface OlsConstants
 {
   // METHODS
 

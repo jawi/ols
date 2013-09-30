@@ -361,7 +361,7 @@ public class SignalUI extends ComponentUI
     // Tell Swing how we would like to render ourselves...
     aCanvas.setRenderingHints( createCursorRenderingHints() );
 
-    for ( int i = 0; i < Ols.MAX_CURSORS; i++ )
+    for ( int i = 0; i < OlsConstants.MAX_CURSORS; i++ )
     {
       int cursorXpos = aModel.getCursorScreenCoordinate( i );
 

@@ -185,9 +185,9 @@ final class ConfigDialogHelper
       final JCheckBox[] triggerValues = aTriggerValues[i];
 
       assert triggerMasks.length == triggerValues.length;
-      assert triggerMasks.length == Ols.MAX_CHANNELS;
+      assert triggerMasks.length == OlsConstants.MAX_CHANNELS;
 
-      for ( int j = 0; j < Ols.MAX_CHANNELS; j++ )
+      for ( int j = 0; j < OlsConstants.MAX_CHANNELS; j++ )
       {
         final boolean triggerEnabled = stageEnabled && ( j < maxChannels );
         updateCheckBoxState( triggerMasks[j], triggerEnabled );

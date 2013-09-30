@@ -666,7 +666,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * Provides direct access to the cursor with the given index.
    * 
    * @param aCursorIdx
-   *          the index of the cursor, >= 0 && < {@link Ols#MAX_CURSORS}.
+   *          the index of the cursor, >= 0 && < {@link OlsConstants#MAX_CURSORS}.
    * @return a cursor, never <code>null</code>.
    */
   public final Cursor getCursor( final int aCursorIdx )
@@ -1659,7 +1659,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         getAction( SmartJumpAction.getJumpRightID() ).setEnabled( dataAvailable );
 
         boolean anyCursorSet = false;
-        for ( int c = 0; c < Ols.MAX_CURSORS; c++ )
+        for ( int c = 0; c < OlsConstants.MAX_CURSORS; c++ )
         {
           final boolean cursorPositionSet = isCursorSet( c );
           anyCursorSet |= cursorPositionSet;

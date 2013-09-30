@@ -256,7 +256,7 @@ public final class LogicSnifferConfig
    */
   public int getGroupCount()
   {
-    int cnt = Math.max( MIN_CHANNEL_GROUPS, getChannelCount() / Ols.CHANNELS_PER_BLOCK );
+    int cnt = Math.max( MIN_CHANNEL_GROUPS, getChannelCount() / OlsConstants.CHANNELS_PER_BLOCK );
     if ( isDoubleDataRateEnabled() )
     {
       // In case the demux is enabled, only a maximum of two channel groups is
@@ -503,7 +503,7 @@ public final class LogicSnifferConfig
    */
   public boolean isGroupEnabled( final int aGroupNr )
   {
-    if ( ( aGroupNr < 0 ) || ( aGroupNr >= Ols.MAX_BLOCKS ) )
+    if ( ( aGroupNr < 0 ) || ( aGroupNr >= OlsConstants.MAX_BLOCKS ) )
     {
       throw new IllegalArgumentException( "Invalid channel group: " + aGroupNr + "!" );
     }

@@ -192,7 +192,7 @@ public class VirtualLogicSnifferDevice extends LogicSnifferAcquisitionTask
               this.ddrMode = ( ( parameterValue & SumpCommandWriter.FLAG_DEMUX ) != 0 );
               this.rleMode = ( ( parameterValue & SumpCommandWriter.FLAG_RLE ) != 0 );
               this.enabledGroups = ( ( parameterValue & 0x3C ) >> 2 );
-              this.sampleWidth = Ols.MAX_BLOCKS - Integer.bitCount( this.enabledGroups );
+              this.sampleWidth = OlsConstants.MAX_BLOCKS - Integer.bitCount( this.enabledGroups );
               if ( this.ddrMode )
               {
                 this.sampleWidth >>= 1;

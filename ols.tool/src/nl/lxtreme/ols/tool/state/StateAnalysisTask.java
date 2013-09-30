@@ -94,7 +94,7 @@ public class StateAnalysisTask implements ToolTask<AcquisitionData>
     }
 
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder( data, false /* includeSamples */);
-    builder.setSampleRate( Ols.NOT_AVAILABLE );
+    builder.setSampleRate( OlsConstants.NOT_AVAILABLE );
 
     // convert captured data
     last = values[0] & maskValue;

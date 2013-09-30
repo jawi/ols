@@ -161,7 +161,7 @@ public final class SignalElementManager implements IDataModelChangeListener
     if ( oldModel == null || oldModel.getGroups().isEmpty() )
     {
       // Reset channel groups so they align with the given data model...
-      final int groupCount = Math.max( 1, ( int )Math.ceil( newChannelList.length / ( double )Ols.CHANNELS_PER_BLOCK ) );
+      final int groupCount = Math.max( 1, ( int )Math.ceil( newChannelList.length / ( double )OlsConstants.CHANNELS_PER_BLOCK ) );
       final int channelsPerGroup = ( int )Math.ceil( newChannelList.length / ( double )groupCount );
 
       for ( int g = 0; g < groupCount; g++ )
@@ -343,7 +343,7 @@ public final class SignalElementManager implements IDataModelChangeListener
     {
       throw new IllegalArgumentException( "New group cannot be null!" );
     }
-    if ( ( aNewIndex < 0 ) || ( aNewIndex > Ols.MAX_CHANNELS ) )
+    if ( ( aNewIndex < 0 ) || ( aNewIndex > OlsConstants.MAX_CHANNELS ) )
     {
       throw new IllegalArgumentException( "Invalid new index: " + aNewIndex + "!" );
     }
