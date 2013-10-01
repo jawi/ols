@@ -139,7 +139,7 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
    * {@inheritDoc}
    */
   @Override
-  public void dataModelChanged( final DataSet aDataSet )
+  public void dataModelChanged( final AcquisitionData aData )
   {
     updateViewText();
   }

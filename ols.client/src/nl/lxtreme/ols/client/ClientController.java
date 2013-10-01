@@ -20,6 +20,7 @@
  */
 package nl.lxtreme.ols.client;
 
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -159,7 +160,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     // VARIABLES
 
-    private final DataSet dataSet;
+    private final AcquisitionData data;
     private final int startSampleIdx;
     private final int endSampleIdx;
 
@@ -175,11 +176,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
      * @param aData
      *          the acquisition result.
      */
-    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final DataSet aDataSet )
+    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final AcquisitionData aData )
     {
       this.startSampleIdx = aStartSampleIdx;
       this.endSampleIdx = aEndSampleIdx;
-      this.dataSet = aDataSet;
+      this.data = aData;
     }
 
     /**
@@ -197,7 +198,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public Cursor getCursor( final int aIndex )
     {
-      return this.dataSet.getCursor( aIndex );
+      Cursor[] cursors = this.data.getCursors();
+      if ( aIndex < 0 || aIndex >= cursors.length )
+      {
+        throw new IllegalArgumentException( "Invalid cursor index!" );
+      }
+      return cursors[aIndex];
     }
 
     /**
@@ -206,7 +212,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public AcquisitionData getData()
     {
-      return this.dataSet.getCapturedData();
+      return this.data;
     }
 
     /**
@@ -540,7 +546,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   @Override
   public void clearAnnotations()
   {
-    for ( Channel channel : getCurrentDataSet().getChannels() )
+    for ( Channel channel : getCurrentData().getChannels() )
     {
       channel.clearAnnotations();
     }
@@ -631,7 +637,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       writer = new FileOutputStream( aExportFile );
 
       final Exporter exporter = getExporter( aExporterName );
-      exporter.export( getCurrentDataSet(), this.mainFrame.getDiagramScrollPane(), writer );
+      exporter.export( getCurrentData(), this.mainFrame.getDiagramScrollPane(), writer );
 
       setStatusOnEDT( "Export to {0} succesful ...", aExporterName );
     }
@@ -666,17 +672,23 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * Provides direct access to the cursor with the given index.
    * 
    * @param aCursorIdx
-   *          the index of the cursor, >= 0 && < {@link OlsConstants#MAX_CURSORS}.
+   *          the index of the cursor, >= 0 && <
+   *          {@link OlsConstants#MAX_CURSORS}.
    * @return a cursor, never <code>null</code>.
    */
   public final Cursor getCursor( final int aCursorIdx )
   {
-    final DataSet currentDataSet = getCurrentDataSet();
+    final AcquisitionData currentDataSet = getCurrentData();
     if ( currentDataSet == null )
     {
       return null;
     }
-    return currentDataSet.getCursor( aCursorIdx );
+    Cursor[] cursors = currentDataSet.getCursors();
+    if ( aCursorIdx < 0 || aCursorIdx >= cursors.length )
+    {
+      throw new IllegalArgumentException( "Invalid cursor index!" );
+    }
+    return cursors[aCursorIdx];
   }
 
   /**
@@ -797,7 +809,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void gotoTriggerPosition()
   {
-    final AcquisitionData capturedData = getCurrentDataSet().getCapturedData();
+    final AcquisitionData capturedData = getCurrentData();
     if ( ( capturedData != null ) && capturedData.hasTriggerData() )
     {
       final long position = capturedData.getTriggerPosition();
@@ -849,8 +861,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public boolean hasCapturedData()
   {
-    final DataSet currentDataSet = getCurrentDataSet();
-    return ( currentDataSet != null ) && ( currentDataSet.getCapturedData() != null );
+    return ( getCurrentData() != null );
   }
 
   /**
@@ -950,11 +961,13 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void openDataFile( final File aFile ) throws IOException
   {
-    final FileReader reader = new FileReader( aFile );
+    FileInputStream fis = null;
 
     try
     {
-      getCurrentProject().readData( reader );
+      fis = new FileInputStream( aFile );
+
+      this.projectManager.loadDataFile( fis );
 
       setStatusOnEDT( "Capture data loaded from {0} ...", aFile.getName() );
     }
@@ -962,9 +975,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       try
       {
-        if ( reader != null )
+        if ( fis != null )
         {
-          reader.close();
+          fis.close();
         }
       }
       catch ( IOException exception )
@@ -1177,10 +1190,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   public void saveDataFile( final File aFile ) throws IOException
   {
-    final FileWriter writer = new FileWriter( aFile );
+    FileOutputStream fos = null;
     try
     {
-      getCurrentProject().writeData( writer );
+      fos = new FileOutputStream( aFile );
+
+      this.projectManager.saveDataFile( fos );
 
       setStatusOnEDT( "Capture data saved to {0} ...", aFile.getName() );
     }
@@ -1188,9 +1203,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     {
       try
       {
-        if ( writer != null )
+        if ( fos != null )
         {
-          writer.close();
+          fos.close();
         }
       }
       catch ( IOException exception )
@@ -1436,7 +1451,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * 
    * @return the current data set, never <code>null</code>.
    */
-  final DataSet getCurrentDataSet()
+  final AcquisitionData getCurrentData()
   {
     final Project currentProject = getCurrentProject();
     if ( currentProject == null )
@@ -1743,12 +1758,12 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   protected boolean hasTriggerData()
   {
-    final DataSet currentDataSet = getCurrentDataSet();
-    if ( ( currentDataSet == null ) || ( currentDataSet.getCapturedData() == null ) )
+    final AcquisitionData currentDataSet = getCurrentData();
+    if ( currentDataSet == null )
     {
       return false;
     }
-    return currentDataSet.getCapturedData().hasTriggerData();
+    return currentDataSet.hasTriggerData();
   }
 
   /**
@@ -1797,22 +1812,23 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     int startOfDecode = -1;
     int endOfDecode = -1;
 
-    final DataSet dataSet = getCurrentDataSet();
-    final AcquisitionData capturedData = dataSet.getCapturedData();
+    final AcquisitionData capturedData = getCurrentData();
 
     if ( capturedData != null )
     {
+      Cursor[] cursors = capturedData.getCursors();
+
       final int dataLength = capturedData.getValues().length;
       if ( areCursorsEnabled() )
       {
-        if ( isCursorSet( 0 ) )
+        if ( cursors.length > 1 && cursors[0].isDefined() )
         {
-          final Cursor cursor1 = dataSet.getCursor( 0 );
+          final Cursor cursor1 = cursors[0];
           startOfDecode = capturedData.getSampleIndex( cursor1.getTimestamp() ) - 1;
         }
-        if ( isCursorSet( 1 ) )
+        if ( cursors.length > 2 && cursors[1].isDefined() )
         {
-          final Cursor cursor2 = dataSet.getCursor( 1 );
+          final Cursor cursor2 = cursors[1];
           endOfDecode = capturedData.getSampleIndex( cursor2.getTimestamp() ) + 1;
         }
       }
@@ -1829,7 +1845,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       }
     }
 
-    return new DefaultToolContext( startOfDecode, endOfDecode, dataSet );
+    return new DefaultToolContext( startOfDecode, endOfDecode, capturedData );
   }
 
   private Bundle getBundle()
@@ -1846,12 +1862,17 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    */
   private Channel getChannel( final int aChannelIdx )
   {
-    final DataSet currentDataSet = getCurrentDataSet();
+    final AcquisitionData currentDataSet = getCurrentData();
     if ( currentDataSet == null )
     {
       return null;
     }
-    return currentDataSet.getChannel( aChannelIdx );
+    Channel[] channels = currentDataSet.getChannels();
+    if ( aChannelIdx < 0 || aChannelIdx >= channels.length )
+    {
+      throw new IllegalArgumentException( "Invalid channel index!" );
+    }
+    return channels[aChannelIdx];
   }
 
   /**

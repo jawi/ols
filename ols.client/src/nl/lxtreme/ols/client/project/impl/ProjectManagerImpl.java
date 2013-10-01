@@ -104,6 +104,22 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void loadDataFile( InputStream aInput ) throws IOException
+  {
+    if ( aInput == null )
+    {
+      throw new IllegalArgumentException( "Input stream cannot be null!" );
+    }
+
+    AcquisitionData data = OlsDataHelper.read( new InputStreamReader( aInput ) );
+
+    getCurrentProject().setCapturedData( data );
+  }
+
+  /**
    * @see nl.lxtreme.ols.client.project.ProjectManager#loadProject(java.io.InputStream)
    */
   @Override
@@ -116,12 +132,11 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
 
     final BufferedInputStream in = new BufferedInputStream( aInput );
     final ZipInputStream zipIS = new ZipInputStream( in );
+    final AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
 
     final ProjectImpl newProject = new ProjectImpl();
     // Make sure listeners retrieve the proper events...
     copyPropertyChangeListeners( this.project, newProject );
-
-    List<String> labels = null;
 
     try
     {
@@ -137,12 +152,12 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
         }
         else if ( FILENAME_CHANNEL_LABELS.equals( name ) )
         {
-          labels = loadChannelLabels( zipIS );
+          loadChannelLabels( builder, zipIS );
           entriesSeen = true;
         }
         else if ( FILENAME_CAPTURE_RESULTS.equals( name ) )
         {
-          loadCapturedResults( newProject, zipIS );
+          loadCapturedResults( builder, zipIS );
           entriesSeen = true;
         }
         else if ( name.startsWith( FILENAME_PROJECT_SETTINGS ) )
@@ -160,10 +175,8 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
         throw new IOException( "Invalid project file!" );
       }
 
-      // Merge the channel labels with the channel-data in the project's data
-      // set; this is not the nicest way of doing this, but we otherwise have to
-      // break our project file-format, which is not done at the moment...
-      newProject.getDataSet().mergeChannelLabels( labels );
+      // Create the actual acquisition data...
+      newProject.setCapturedData( builder.build() );
 
       // Mark the project as no longer changed...
       newProject.setChanged( false );
@@ -193,6 +206,20 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   public void removePropertyChangeListener( final PropertyChangeListener aListener )
   {
     this.propertyChangeSupport.removePropertyChangeListener( aListener );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void saveDataFile( OutputStream aOutput ) throws IOException
+  {
+    if ( aOutput == null )
+    {
+      throw new IllegalArgumentException( "Output stream cannot be null!" );
+    }
+
+    OlsDataHelper.write( new OutputStreamWriter( aOutput ), getCurrentProject().getDataSet() );
   }
 
   /**
@@ -234,43 +261,41 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
   /**
    * Reads the capture results from the given ZIP-input stream.
    * 
-   * @param aProject
+   * @param aBuilder
    *          the project to read the capture results for;
    * @param aZipIS
    *          the ZIP input stream to read the capture results from.
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void loadCapturedResults( final Project aProject, final ZipInputStream aZipIS ) throws IOException
+  protected void loadCapturedResults( final AcquisitionDataBuilder aBuilder, final ZipInputStream aZipIS )
+      throws IOException
   {
-    aProject.readData( new InputStreamReader( aZipIS ) );
+    OlsDataHelper.read( new InputStreamReader( aZipIS ), aBuilder );
   }
 
   /**
    * Reads the project channel labels from the given ZIP-input stream.
    * 
-   * @param aProject
+   * @param aBuilder
    *          the project to read the channel labels for;
    * @param aZipIS
    *          the ZIP input stream to read the channel labels from.
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected List<String> loadChannelLabels( final ZipInputStream aZipIS ) throws IOException
+  protected void loadChannelLabels( final AcquisitionDataBuilder aBuilder, final ZipInputStream aZipIS )
+      throws IOException
   {
     final InputStreamReader isReader = new InputStreamReader( aZipIS );
     final BufferedReader reader = new BufferedReader( isReader );
-
-    List<String> result = new ArrayList<String>();
 
     String label = null;
     int idx = 0;
     while ( ( ( label = reader.readLine() ) != null ) && ( idx < OlsConstants.MAX_CHANNELS ) )
     {
-      result.add( label );
+      aBuilder.setChannelLabel( idx++, label );
     }
-
-    return result;
   }
 
   /**
@@ -349,8 +374,8 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
    */
   protected void storeCapturedResults( final Project aProject, final ZipOutputStream aZipOS ) throws IOException
   {
-    final DataSet dataSet = aProject.getDataSet();
-    if ( dataSet.getCapturedData() == null )
+    final AcquisitionData data = aProject.getDataSet();
+    if ( data == null )
     {
       return;
     }
@@ -358,7 +383,7 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
     final ZipEntry zipEntry = new ZipEntry( FILENAME_CAPTURE_RESULTS );
     aZipOS.putNextEntry( zipEntry );
 
-    aProject.writeData( new OutputStreamWriter( aZipOS ) );
+    OlsDataHelper.write( new OutputStreamWriter( aZipOS ), data );
   }
 
   /**
@@ -368,16 +393,16 @@ public class ProjectManagerImpl implements PropertyChangeListener, ProjectManage
    * nothing.
    * </p>
    * 
-   * @param aDataSet
+   * @param aData
    *          the project to write the channel labels for;
    * @param aZipOS
    *          the ZIP output stream to write the channel labels to.
    * @throws IOException
    *           in case of I/O problems.
    */
-  protected void storeChannelLabels( final DataSet aDataSet, final ZipOutputStream aZipOS ) throws IOException
+  protected void storeChannelLabels( final AcquisitionData aData, final ZipOutputStream aZipOS ) throws IOException
   {
-    final Channel[] channels = aDataSet.getChannels();
+    final Channel[] channels = aData.getChannels();
 
     final ZipEntry zipEntry = new ZipEntry( FILENAME_CHANNEL_LABELS );
     aZipOS.putNextEntry( zipEntry );

@@ -23,6 +23,8 @@ package nl.lxtreme.ols.common;
 
 import static org.junit.Assert.*;
 
+import org.junit.*;
+
 
 /**
  * Base class for testing {@link Unit}-related classes.
@@ -30,6 +32,13 @@ import static org.junit.Assert.*;
 public abstract class UnitTestBase
 {
   // METHODS
+
+  @BeforeClass
+  public static void setUpTestCase()
+  {
+    // Avoid AWT/Swing classes to be loaded...
+    Unit.SEPARATOR = Character.valueOf( ' ' );
+  }
 
   /**
    * @param expectedValue

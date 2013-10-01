@@ -41,7 +41,7 @@ public interface Project
    * 
    * @return a data set, can be <code>null</code> if there is no data yet.
    */
-  DataSet getDataSet();
+  AcquisitionData getDataSet();
 
   /**
    * Returns the path to the project file.
@@ -91,22 +91,6 @@ public interface Project
    *         otherwise.
    */
   boolean isChanged();
-
-  /**
-   * Allows data to be read from a given reader, any current data in this
-   * project will be overwritten!
-   * <p>
-   * The format expected by this method is the
-   * "<a href="https://github.com/jawi/
-   * ols/wiki/OLS-data-file-format">OLS data-file format</a>".
-   * </p>
-   * 
-   * @param aReader
-   *          the reader to read from, cannot be <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
-   */
-  void readData( Reader aReader ) throws IOException;
 
   /**
    * Sets the captured data of this project.
@@ -174,16 +158,4 @@ public interface Project
    *          the visitor callback to use, cannot be <code>null</code>.
    */
   void visit( final ProjectVisitor aVisitor );
-
-  /**
-   * Allows the current data to be written to a given writer. The format in
-   * which the data will be written is the OLS data-file format.
-   * 
-   * @param aWriter
-   *          the writer to write to, cannot be <code>null</code>.
-   * @throws IOException
-   *           in case of I/O problems.
-   * @see #readData(Reader)
-   */
-  void writeData( Writer aWriter ) throws IOException;
 }

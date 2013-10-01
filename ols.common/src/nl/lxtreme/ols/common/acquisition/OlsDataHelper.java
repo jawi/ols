@@ -22,7 +22,6 @@ package nl.lxtreme.ols.common.acquisition;
 
 
 import java.io.*;
-import java.util.*;
 import java.util.regex.*;
 
 
@@ -49,148 +48,154 @@ public final class OlsDataHelper
    * @throws IOException
    *           in case of I/O problems.
    */
-  @SuppressWarnings( "boxing" )
-  public static AcquisitionData read( final Reader aReader ) throws IOException
+  public static AcquisitionData read( Reader aReader ) throws IOException
   {
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    try
+    {
+      read( aReader, builder );
+    }
+    finally
+    {
+      if ( aReader != null )
+      {
+        aReader.close();
+      }
+    }
 
-    // assume 'new' file format is in use, don't support uncompressed ones...
-    boolean compressed = true;
-    int size = -1;
+    return builder.build();
+  }
 
+  /**
+   * Reads the text-based acquisition data from a given reader.
+   * 
+   * @param aReader
+   *          the reader to read the data from, cannot be <code>null</code>;
+   * @param aBuilder
+   *          the {@link AcquisitionDataBuilder} to use to build the
+   *          {@link AcquisitionData}, cannot be <code>null</code>.
+   * @return the parsed acquisition data, never <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems or invalid/inconsistent acquisition data.
+   */
+  public static void read( Reader aReader, AcquisitionDataBuilder aBuilder ) throws IOException
+  {
     Integer sampleRate = null;
     Integer channelCount = null;
+    BufferedReader br = new BufferedReader( aReader );
 
-    final BufferedReader br = new BufferedReader( aReader );
-    final List<String[]> dataValues = new ArrayList<String[]>();
+    int expectedSamples = -1;
+    int readSamples = 0;
 
-    String line;
-    while ( ( line = br.readLine() ) != null )
+    try
     {
-      // Determine whether the line is an instruction, or data...
-      final Matcher instructionMatcher = OLS_INSTRUCTION_PATTERN.matcher( line );
-      final Matcher dataMatcher = OLS_DATA_PATTERN.matcher( line );
-
-      if ( dataMatcher.matches() )
+      String line;
+      while ( ( line = br.readLine() ) != null )
       {
-        final String[] dataPair = new String[] { dataMatcher.group( 1 ), dataMatcher.group( 2 ) };
-        dataValues.add( dataPair );
+        // Determine whether the line is an instruction, or data...
+        Matcher instructionMatcher = OLS_INSTRUCTION_PATTERN.matcher( line );
+        Matcher dataMatcher = OLS_DATA_PATTERN.matcher( line );
+
+        if ( dataMatcher.matches() )
+        {
+          int value = ( int )Long.parseLong( dataMatcher.group( 1 ), 16 );
+          long timestamp = Long.parseLong( dataMatcher.group( 2 ), 10 ) & Long.MAX_VALUE;
+
+          aBuilder.addSample( timestamp, value );
+          readSamples++;
+        }
+        else if ( instructionMatcher.matches() )
+        {
+          // Ok; found an instruction...
+          final String instrKey = instructionMatcher.group( 1 );
+          final String instrValue = instructionMatcher.group( 2 );
+
+          if ( "Size".equals( instrKey ) )
+          {
+            // No longer used/needed as of 0.9.4...
+            expectedSamples = Integer.parseInt( instrValue );
+          }
+          else if ( "Rate".equals( instrKey ) )
+          {
+            sampleRate = Integer.decode( instrValue );
+            aBuilder.setSampleRate( sampleRate.intValue() );
+          }
+          else if ( "Channels".equals( instrKey ) )
+          {
+            channelCount = Integer.decode( instrValue );
+            aBuilder.setChannelCount( channelCount.intValue() );
+          }
+          else if ( "TriggerPosition".equals( instrKey ) )
+          {
+            aBuilder.setTriggerPosition( Long.parseLong( instrValue ) );
+          }
+          else if ( "EnabledChannels".equals( instrKey ) )
+          {
+            aBuilder.setEnabledChannelMask( Integer.parseInt( instrValue ) );
+          }
+          else if ( "CursorEnabled".equals( instrKey ) )
+          {
+            aBuilder.setCursorsVisible( Boolean.parseBoolean( instrValue ) );
+          }
+          else if ( "Compressed".equals( instrKey ) )
+          {
+            if ( !Boolean.parseBoolean( instrValue ) )
+            {
+              throw new IOException( "Uncompressed data file found! Please send this file to the OLS developers!" );
+            }
+          }
+          else if ( "AbsoluteLength".equals( instrKey ) )
+          {
+            aBuilder.setAbsoluteLength( Long.parseLong( instrValue ) );
+          }
+          else if ( instrKey.startsWith( "Cursor" ) )
+          {
+            String idxValue = instrKey.substring( 6 );
+            final long value = Long.parseLong( instrValue );
+
+            int idx;
+            if ( "A".equalsIgnoreCase( idxValue ) )
+            {
+              idx = 0;
+            }
+            else if ( "B".equalsIgnoreCase( idxValue ) )
+            {
+              idx = 1;
+            }
+            else
+            {
+              idx = Integer.parseInt( idxValue );
+            }
+
+            if ( value > Long.MIN_VALUE )
+            {
+              aBuilder.setCursorTimestamp( idx, value );
+            }
+          }
+        }
       }
-      else if ( instructionMatcher.matches() )
-      {
-        // Ok; found an instruction...
-        final String instrKey = instructionMatcher.group( 1 );
-        final String instrValue = instructionMatcher.group( 2 );
-
-        if ( "Size".equals( instrKey ) )
-        {
-          size = Integer.parseInt( instrValue );
-        }
-        else if ( "Rate".equals( instrKey ) )
-        {
-          sampleRate = Integer.decode( instrValue );
-          builder.setSampleRate( sampleRate.intValue() );
-        }
-        else if ( "Channels".equals( instrKey ) )
-        {
-          channelCount = Integer.decode( instrValue );
-          builder.setChannelCount( channelCount.intValue() );
-        }
-        else if ( "TriggerPosition".equals( instrKey ) )
-        {
-          builder.setTriggerPosition( Long.parseLong( instrValue ) );
-        }
-        else if ( "EnabledChannels".equals( instrKey ) )
-        {
-          builder.setEnabledChannelMask( Integer.parseInt( instrValue ) );
-        }
-        else if ( "CursorEnabled".equals( instrKey ) )
-        {
-          builder.setCursorsVisible( Boolean.parseBoolean( instrValue ) );
-        }
-        else if ( "Compressed".equals( instrKey ) )
-        {
-          compressed = Boolean.parseBoolean( instrValue );
-        }
-        else if ( "AbsoluteLength".equals( instrKey ) )
-        {
-          builder.setAbsoluteLength( Long.parseLong( instrValue ) );
-        }
-        else if ( instrKey.startsWith( "Cursor" ) )
-        {
-          String idxValue = instrKey.substring( 6 );
-          final long value = Long.parseLong( instrValue );
-
-          int idx;
-          if ( "A".equalsIgnoreCase( idxValue ) )
-          {
-            idx = 0;
-          }
-          else if ( "B".equalsIgnoreCase( idxValue ) )
-          {
-            idx = 1;
-          }
-          else
-          {
-            idx = Integer.parseInt( idxValue );
-          }
-
-          if ( value > Long.MIN_VALUE )
-          {
-            builder.setCursorTimestamp( idx, value );
-          }
-        }
-      }
+    }
+    catch ( NumberFormatException exception )
+    {
+      throw new IOException( "Invalid data encountered!", exception );
     }
 
-    // Perform some sanity checks, make it not possible to import invalid
-    // data...
-    if ( dataValues.isEmpty() )
-    {
-      throw new IOException( "Data file does not contain any sample data!" );
-    }
-    if ( !compressed )
-    {
-      throw new IOException( "Uncompressed data file found! Please send this file to the OLS developers!" );
-    }
-    // In case the size is not provided (as of 0.9.4 no longer mandatory),
-    // take the length of the data values as size indicator...
-    if ( size < 0 )
-    {
-      size = dataValues.size();
-    }
-    if ( size != dataValues.size() )
-    {
-      throw new IOException( "Data file is corrupt?! Data size does not match sample count!" );
-    }
     if ( sampleRate == null )
     {
       throw new IOException( "Data file is corrupt?! Sample rate is not provided!" );
     }
-    if ( ( channelCount == null ) || ( channelCount <= 0 ) || ( channelCount > 32 ) )
+    if ( channelCount == null )
     {
       throw new IOException( "Data file is corrupt?! Channel count is not provided!" );
     }
-
-    try
+    if ( readSamples == 0 )
     {
-      for ( int i = 0; i < size; i++ )
-      {
-        final String[] dataPair = dataValues.get( i );
-
-        long timestamp = Long.parseLong( dataPair[1], 10 ) & Long.MAX_VALUE;
-        int value = ( int )Long.parseLong( dataPair[0], 16 );
-
-        builder.addSample( timestamp, value );
-      }
+      throw new IOException( "Data file is corrupt?! No data found!" );
     }
-    catch ( final NumberFormatException exception )
+    if ( expectedSamples >= 0 && ( expectedSamples != readSamples ) )
     {
-      throw new IOException( "Invalid data encountered.", exception );
+      throw new IOException( "Data file is corrupt?! Data size does not match sample count!" );
     }
-
-    // Finally set the captured data, and notify all event listeners...
-    return builder.build();
   }
 
   /**
@@ -209,7 +214,7 @@ public final class OlsDataHelper
     final BufferedWriter bw = new BufferedWriter( aWriter );
 
     final Cursor[] cursors = aData.getCursors();
-    final boolean cursorsEnabled = aData.isCursorsVisible();
+    final boolean cursorsEnabled = aData.areCursorsVisible();
 
     try
     {

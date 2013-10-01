@@ -22,16 +22,21 @@ package nl.lxtreme.ols.common.acquisition;
 
 
 /**
- * Denotes a concrete result of a single acquisition.
+ * Denotes the data of a single acquisition.
  */
 public interface AcquisitionData
 {
   // METHODS
 
   /**
+   * @return <code>true</code> if the cursors are to be used, <code>false</code>
+   *         otherwise.
+   */
+  boolean areCursorsVisible();
+
+  /**
    * Returns the absolute length of the captured data, or, in other words, the
-   * largest available timestamp plus some padding to make the last sample
-   * visible.
+   * largest available timestamp.
    * 
    * @return the absolute length, >= 0.
    */
@@ -45,7 +50,14 @@ public interface AcquisitionData
   int getChannelCount();
 
   /**
-   * Returns the channel information.
+   * Returns the information of all channel groups.
+   * 
+   * @return an array with channel group information, never <code>null</code>.
+   */
+  ChannelGroup[] getChannelGroups();
+
+  /**
+   * Returns the information of <em>all</em> channels.
    * 
    * @return an array with channels, never <code>null</code>.
    */
@@ -102,7 +114,8 @@ public interface AcquisitionData
   /**
    * Returns the trigger position, as (absolute) time-value.
    * 
-   * @return a value representing the trigger position in time.
+   * @return a value representing the trigger position in time, can be
+   *         <tt>-1L</tt> in case no trigger position is known.
    */
   long getTriggerPosition();
 
@@ -121,27 +134,24 @@ public interface AcquisitionData
   /**
    * Returns wether or not the object contains timing data
    * 
-   * @return <code>true</code> when timing data is available
+   * @return <code>true</code> when timing data is available, i.e., when the
+   *         values returned by #getTimestamps() denote actual time information,
+   *         instead of state information.
    */
   boolean hasTimingData();
 
   /**
    * Returns whether or not the object contains trigger data
    * 
-   * @return <code>true</code> when trigger data is available
+   * @return <code>true</code> when trigger data is available,
+   *         <code>false</code> otherwise.
    */
   boolean hasTriggerData();
-
-  /**
-   * @return <code>true</code> if the cursors are to be used, <code>false</code>
-   *         otherwise.
-   */
-  boolean isCursorsVisible();
 
   /**
    * @param aVisible
    *          <code>true</code> if cursors are to be made visible,
    *          <code>false</code> otherwise.
    */
-  void setCursorsVisible( final boolean aVisible );
+  void setCursorsVisible( boolean aVisible );
 }

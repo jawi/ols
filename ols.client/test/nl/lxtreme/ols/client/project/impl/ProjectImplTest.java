@@ -20,6 +20,7 @@
  */
 package nl.lxtreme.ols.client.project.impl;
 
+
 import static nl.lxtreme.ols.client.project.impl.TestData.*;
 import static org.junit.Assert.*;
 
@@ -134,7 +135,7 @@ public class ProjectImplTest
     };
     this.project.addPropertyChangeListener( listener );
 
-    this.project.setCapturedData( createTestData() );
+    this.project.setCapturedData( createTestData( 8 ) );
     ensure.waitForStep( 1, 500 );
 
     this.project.setFilename( new File( "test" ) );
@@ -160,10 +161,10 @@ public class ProjectImplTest
   @Test
   public void testSetCapturedData()
   {
-    final AcquisitionData data = createTestData();
+    final AcquisitionData data = createTestData( 8 );
     this.project.setCapturedData( data );
 
-    assertSame( data, this.project.getDataSet().getCapturedData() );
+    assertSame( data, this.project.getDataSet() );
     assertTrue( this.project.isChanged() );
   }
 
@@ -173,9 +174,12 @@ public class ProjectImplTest
   @Test
   public void testSetCursorsEnabled()
   {
-    this.project.getDataSet().setCursorsEnabled( false );
+    final AcquisitionData data = createTestData( 8 );
+    this.project.setCapturedData( data );
 
-    assertFalse( this.project.getDataSet().isCursorsEnabled() );
+    this.project.getDataSet().setCursorsVisible( false );
+
+    assertFalse( this.project.getDataSet().areCursorsVisible() );
     assertTrue( this.project.isChanged() );
   }
 

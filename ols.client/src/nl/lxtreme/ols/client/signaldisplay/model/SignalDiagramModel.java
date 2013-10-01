@@ -64,7 +64,7 @@ public class SignalDiagramModel
 
   private volatile int mode;
   private volatile int selectedChannelIndex;
-  private volatile DataSet dataSet;
+  private volatile AcquisitionData data;
 
   private final ZoomController zoomController;
   private final SignalElementManager channelGroupManager;
@@ -358,11 +358,7 @@ public class SignalDiagramModel
    */
   public AcquisitionData getCapturedData()
   {
-    if ( this.dataSet == null )
-    {
-      return null;
-    }
-    return this.dataSet.getCapturedData();
+    return this.data;
   }
 
   /**
@@ -370,7 +366,7 @@ public class SignalDiagramModel
    */
   public Cursor getCursor( final int aCursorIdx )
   {
-    final Cursor[] cursors = this.dataSet.getCursors();
+    final Cursor[] cursors = this.data.getCursors();
     if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
@@ -389,7 +385,7 @@ public class SignalDiagramModel
 
     if ( hasData() )
     {
-      for ( Cursor c : this.dataSet.getCursors() )
+      for ( Cursor c : this.data.getCursors() )
       {
         if ( c.isDefined() )
         {
@@ -917,7 +913,7 @@ public class SignalDiagramModel
    */
   public final boolean hasData()
   {
-    return ( this.dataSet != null ) && ( getCapturedData() != null );
+    return ( this.data != null );
   }
 
   /**
@@ -946,7 +942,7 @@ public class SignalDiagramModel
    */
   public boolean isCursorDefined( final int aCursorIdx )
   {
-    Cursor[] cursors = this.dataSet.getCursors();
+    Cursor[] cursors = this.data.getCursors();
     if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
@@ -962,7 +958,7 @@ public class SignalDiagramModel
    */
   public boolean isCursorMode()
   {
-    return ( this.dataSet != null ) && this.dataSet.isCursorsEnabled();
+    return ( this.data != null ) && this.data.areCursorsVisible();
   }
 
   /**
@@ -1041,7 +1037,7 @@ public class SignalDiagramModel
    */
   public void removeCursor( final int aCursorIdx )
   {
-    Cursor[] cursors = this.dataSet.getCursors();
+    Cursor[] cursors = this.data.getCursors();
     if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
@@ -1114,7 +1110,7 @@ public class SignalDiagramModel
    */
   public void setCursor( final int aCursorIdx, final long aTimestamp )
   {
-    Cursor[] cursors = this.dataSet.getCursors();
+    Cursor[] cursors = this.data.getCursors();
     if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
@@ -1140,7 +1136,7 @@ public class SignalDiagramModel
    */
   public void setCursorColor( final int aCursorIdx, final Color aColor )
   {
-    Cursor[] cursors = this.dataSet.getCursors();
+    Cursor[] cursors = this.data.getCursors();
     if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
@@ -1166,7 +1162,7 @@ public class SignalDiagramModel
    */
   public void setCursorLabel( final int aCursorIdx, final String aLabel )
   {
-    Cursor[] cursors = this.dataSet.getCursors();
+    Cursor[] cursors = this.data.getCursors();
     if ( ( aCursorIdx < 0 ) || ( aCursorIdx > cursors.length ) )
     {
       throw new IllegalArgumentException( "Invalid cursor index!" );
@@ -1190,7 +1186,7 @@ public class SignalDiagramModel
    */
   public void setCursorMode( final boolean aCursorMode )
   {
-    this.dataSet.setCursorsEnabled( aCursorMode );
+    this.data.setCursorsVisible( aCursorMode );
 
     ICursorChangeListener[] listeners = this.eventListeners.getListeners( ICursorChangeListener.class );
     for ( ICursorChangeListener listener : listeners )
@@ -1212,19 +1208,19 @@ public class SignalDiagramModel
    * @param aDataSet
    *          the dataModel to set, cannot be <code>null</code>.
    */
-  public void setDataModel( final DataSet aDataSet )
+  public void setDataModel( final AcquisitionData aData )
   {
-    if ( aDataSet == null )
+    if ( aData == null )
     {
-      throw new IllegalArgumentException( "Parameter DataSet cannot be null!" );
+      throw new IllegalArgumentException( "Parameter data cannot be null!" );
     }
 
-    this.dataSet = aDataSet;
+    this.data = aData;
 
     final IDataModelChangeListener[] listeners = this.eventListeners.getListeners( IDataModelChangeListener.class );
     for ( IDataModelChangeListener listener : listeners )
     {
-      listener.dataModelChanged( aDataSet );
+      listener.dataModelChanged( aData );
     }
   }
 

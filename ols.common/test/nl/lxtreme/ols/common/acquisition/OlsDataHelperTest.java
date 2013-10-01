@@ -170,10 +170,7 @@ public class OlsDataHelperTest
   {
     final String snippet = ";Channels: 1\n0@0";
 
-    AcquisitionData dataSet = readOlsData( snippet );
-
-    assertTimeStamps( dataSet, 0 );
-    assertValues( dataSet, 0 );
+    readOlsData( snippet );
   }
 
   /**
@@ -184,10 +181,7 @@ public class OlsDataHelperTest
   {
     final String snippet = MINIMAL_HEADER + ";Size: 2\n0@0\n1@1\n3@3";
 
-    AcquisitionData dataSet = readOlsData( snippet );
-
-    assertTimeStamps( dataSet, 0 );
-    assertValues( dataSet, 0 );
+    readOlsData( snippet );
   }
 
   /**
@@ -228,6 +222,7 @@ public class OlsDataHelperTest
   {
     for ( File dataFile : this.dataFiles )
     {
+      System.out.printf( "Reading %s...%n", dataFile.getName() );
       final FileReader reader = new FileReader( dataFile );
       try
       {

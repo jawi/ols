@@ -18,32 +18,42 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.client.project.impl;
-
-
-import nl.lxtreme.ols.common.acquisition.*;
+package nl.lxtreme.ols.common.acquisition;
 
 
 /**
- * Some testing utilities.
+ * Denotes a group of channels.
  */
-class TestData
+public interface ChannelGroup extends Comparable<ChannelGroup>
 {
   // METHODS
 
-  public static AcquisitionData createTestData( int aChannelCount )
-  {
-    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
-    builder.setChannelCount( aChannelCount );
-    builder.setSampleRate( 100 );
+  /**
+   * Returns the channels present in this channel group.
+   * 
+   * @return an array with {@link Channel}s, never <code>null</code>.
+   */
+  Channel[] getChannels();
 
-    int value = 0;
-    for ( int i = 0; i < 10; i++ )
-    {
-      builder.addSample( value, value );
-      value++;
-    }
+  /**
+   * The logical index of this channel group.
+   * 
+   * @return an index, >= 0.
+   */
+  int getIndex();
 
-    return builder.build();
-  }
+  /**
+   * The name of this channel group.
+   * 
+   * @return a name, never <code>null</code>.
+   */
+  String getName();
+
+  /**
+   * Sets the name of this channel group.
+   * 
+   * @param aName
+   *          the name of this channel group, cannot be <code>null</code>.
+   */
+  void setName( String aName );
 }

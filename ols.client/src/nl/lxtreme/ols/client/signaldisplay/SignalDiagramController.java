@@ -360,8 +360,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
     }
     else if ( "capturedData".equals( name ) )
     {
-      DataSet dataSet = ( DataSet )aEvent.getNewValue();
-      setDataModel( dataSet );
+      setDataModel( ( AcquisitionData )aEvent.getNewValue() );
 
       // Make sure the view is updated accordingly...
       getZoomController().restoreZoomLevel();
@@ -482,25 +481,23 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    * @param aDataSet
    *          the data set to set, cannot be <code>null</code>.
    */
-  public void setDataModel( final DataSet aDataSet )
+  public void setDataModel( final AcquisitionData aData )
   {
-    getSignalDiagramModel().setDataModel( aDataSet );
+    getSignalDiagramModel().setDataModel( aData );
 
     // will update the view and show the signals...
     revalidateAll();
 
     // optionally center the view on the trigger moment...
     boolean autoCenterOnTrigger = UIManager.getBoolean( UIManagerKeys.AUTO_CENTER_TO_TRIGGER_AFTER_CAPTURE );
-    final AcquisitionData capturedData = aDataSet.getCapturedData();
-
     // Issue #181
-    if ( autoCenterOnTrigger && ( capturedData != null ) && capturedData.hasTriggerData() )
+    if ( autoCenterOnTrigger && ( aData != null ) && aData.hasTriggerData() )
     {
       SwingComponentUtils.invokeOnEDT( new Runnable()
       {
         public void run()
         {
-          scrollToTimestamp( capturedData.getTriggerPosition() );
+          scrollToTimestamp( aData.getTriggerPosition() );
         }
       } );
     }

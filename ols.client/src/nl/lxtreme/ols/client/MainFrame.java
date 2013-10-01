@@ -278,7 +278,7 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
     @Override
     protected String[] getMenuItemNames()
     {
-      final Cursor[] cursors = this.controller.getCurrentDataSet().getCursors();
+      final Cursor[] cursors = this.controller.getCurrentData().getCursors();
       final List<String> result = new ArrayList<String>();
       for ( Cursor cursor : cursors )
       {

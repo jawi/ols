@@ -37,14 +37,14 @@ public interface ProjectManager
    * @param aListener
    *          a property change listener, cannot be <code>null</code>.
    */
-  public void addPropertyChangeListener( final PropertyChangeListener aListener );
+  void addPropertyChangeListener( PropertyChangeListener aListener );
 
   /**
    * Creates a new project.
    * 
    * @return a new project, managed by this manager.
    */
-  public Project createNewProject();
+  Project createNewProject();
 
   /**
    * Creates a temporary project, useful for loading data files.
@@ -53,14 +53,14 @@ public interface ProjectManager
    * @deprecated do not use, no replacement.
    */
   @Deprecated
-  public Project createTemporaryProject();
+  Project createTemporaryProject();
 
   /**
    * Returns the current project.
    * 
    * @return a project, never <code>null</code>.
    */
-  public Project getCurrentProject();
+  Project getCurrentProject();
 
   /**
    * Loads a project from the given input stream.
@@ -70,7 +70,17 @@ public interface ProjectManager
    * @throws IOException
    *           in case of I/O problems during the read of the project.
    */
-  public void loadProject( final InputStream aInput ) throws IOException;
+  void loadDataFile( InputStream aInput ) throws IOException;
+
+  /**
+   * Loads a project from the given input stream.
+   * 
+   * @param aInput
+   *          the input to read the project from, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems during the read of the project.
+   */
+  void loadProject( InputStream aInput ) throws IOException;
 
   /**
    * Removes the given listener from the list of property change listeners.
@@ -78,7 +88,17 @@ public interface ProjectManager
    * @param aListener
    *          a property change listener, cannot be <code>null</code>.
    */
-  public void removePropertyChangeListener( final PropertyChangeListener aListener );
+  void removePropertyChangeListener( PropertyChangeListener aListener );
+
+  /**
+   * Stores the current acquisition data to the given output stream.
+   * 
+   * @param aOutput
+   *          the output to write the data to, cannot be <code>null</code>.
+   * @throws IOException
+   *           in case of I/O problems during writing of the project.
+   */
+  void saveDataFile( OutputStream aOutput ) throws IOException;
 
   /**
    * Stores a project to the given output stream.
@@ -88,5 +108,5 @@ public interface ProjectManager
    * @throws IOException
    *           in case of I/O problems during writing of the project.
    */
-  public void saveProject( final OutputStream aOutput ) throws IOException;
+  void saveProject( OutputStream aOutput ) throws IOException;
 }

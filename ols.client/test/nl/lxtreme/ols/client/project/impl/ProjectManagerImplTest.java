@@ -116,7 +116,7 @@ public class ProjectManagerImplTest
   @Test
   public void testSaveProjectStoresCaptureResultsOk() throws IOException
   {
-    final AcquisitionData mockedCapturedData = createTestData();
+    final AcquisitionData mockedCapturedData = createTestData( 8 );
 
     final Project project = this.projectManager.getCurrentProject();
     project.setCapturedData( mockedCapturedData );
@@ -130,7 +130,7 @@ public class ProjectManagerImplTest
     final ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
     this.projectManager.loadProject( bais );
 
-    AcquisitionData actual = this.projectManager.getCurrentProject().getDataSet().getCapturedData();
+    AcquisitionData actual = this.projectManager.getCurrentProject().getDataSet();
     assertEquals( mockedCapturedData.getAbsoluteLength(), actual.getAbsoluteLength() );
     assertEquals( mockedCapturedData.getChannelCount(), actual.getChannelCount() );
     assertEquals( mockedCapturedData.getEnabledChannels(), actual.getEnabledChannels() );
@@ -155,10 +155,12 @@ public class ProjectManagerImplTest
     };
 
     final Project project = this.projectManager.getCurrentProject();
-    final DataSet dataSet = project.getDataSet();
+    project.setCapturedData( createTestData( 32 ) );
+    
+    final AcquisitionData dataSet = project.getDataSet();
     for ( int i = 0; i < labels.length; i++ )
     {
-      dataSet.getChannel( i ).setLabel( labels[i] );
+      dataSet.getChannels()[i].setLabel( labels[i] );
     }
 
     final ByteArrayOutputStream baos = new ByteArrayOutputStream( 1024 );
@@ -170,11 +172,11 @@ public class ProjectManagerImplTest
     final ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
     this.projectManager.loadProject( bais );
 
-    final DataSet loadedDataSet = this.projectManager.getCurrentProject().getDataSet();
+    final AcquisitionData loadedDataSet = this.projectManager.getCurrentProject().getDataSet();
 
     for ( int i = 0; i < labels.length; i++ )
     {
-      assertEquals( labels[i], loadedDataSet.getChannel( i ).getLabel() );
+      assertEquals( labels[i], loadedDataSet.getChannels()[i].getLabel() );
     }
   }
 
@@ -189,6 +191,7 @@ public class ProjectManagerImplTest
 
     final Project project = this.projectManager.getCurrentProject();
     project.setName( name );
+    project.setCapturedData( createTestData( 8 ) );
 
     final ByteArrayOutputStream baos = new ByteArrayOutputStream( 1024 );
     this.projectManager.saveProject( baos ); // should succeed...
@@ -212,6 +215,8 @@ public class ProjectManagerImplTest
     String settingsName = "testProject";
 
     final Project project = this.projectManager.getCurrentProject();
+    project.setCapturedData( createTestData( 8 ) );
+    
     final UserSettings settings = project.getSettings( settingsName );
     settings.put( "key", "value" );
 

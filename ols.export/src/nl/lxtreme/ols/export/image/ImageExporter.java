@@ -51,8 +51,7 @@ public class ImageExporter implements Exporter
    * {@inheritDoc}
    */
   @Override
-  public void export( final DataSet aDataSet, final JComponent aComponent, final OutputStream aStream )
-      throws IOException
+  public void export( AcquisitionData aData, JComponent aComponent, OutputStream aStream ) throws IOException
   {
     final Dimension dims = getExportSize( aComponent );
 

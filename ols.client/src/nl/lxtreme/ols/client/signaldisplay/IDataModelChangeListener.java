@@ -35,9 +35,8 @@ public interface IDataModelChangeListener extends EventListener
   /**
    * Called when the acquisition is finished and the captured data is available.
    * 
-   * @param aDataSet
-   *          the changed data set, containing the captured data, never
-   *          <code>null</code>.
+   * @param aData
+   *          the new captured data, never <code>null</code>.
    */
-  void dataModelChanged( DataSet aDataSet );
+  void dataModelChanged( AcquisitionData aData );
 }

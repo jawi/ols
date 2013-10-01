@@ -108,20 +108,18 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
    * {@inheritDoc}
    */
   @Override
-  public void dataModelChanged( final DataSet aDataSet )
+  public void dataModelChanged( final AcquisitionData aData )
   {
     final String srText;
     final String scText;
     final String twText;
 
-    if ( ( aDataSet != null ) && ( aDataSet.getCapturedData() != null ) )
+    if ( aData != null )
     {
-      final AcquisitionData model = aDataSet.getCapturedData();
-
-      if ( model.hasTimingData() )
+      if ( aData.hasTimingData() )
       {
-        final double sr = model.getSampleRate();
-        final double tw = model.getAbsoluteLength() / sr;
+        final double sr = aData.getSampleRate();
+        final double tw = aData.getAbsoluteLength() / sr;
 
         srText = formatFrequency( Double.valueOf( sr ) );
         twText = formatTime( Double.valueOf( tw ) );
@@ -132,7 +130,7 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
         twText = "n/a";
       }
 
-      scText = new DecimalFormat().format( model.getValues().length );
+      scText = new DecimalFormat().format( aData.getValues().length );
 
     }
     else

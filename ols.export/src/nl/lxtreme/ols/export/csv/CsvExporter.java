@@ -56,23 +56,20 @@ public class CsvExporter implements Exporter
    * {@inheritDoc}
    */
   @Override
-  public void export( final DataSet aDataSet, final JComponent aComponent, final OutputStream aStream )
-      throws IOException
+  public void export( AcquisitionData aData, JComponent aComponent, OutputStream aStream ) throws IOException
   {
     final PrintStream stream = new PrintStream( aStream );
 
     try
     {
       // Write header row...
-      writeHeaderRow( stream, createHeaderRowValues( aDataSet ) );
+      writeHeaderRow( stream, createHeaderRowValues( aData ) );
 
-      final Channel[] channels = aDataSet.getChannels();
-
-      final AcquisitionData capturedData = aDataSet.getCapturedData();
-      final int sampleRate = capturedData.getSampleRate();
-      final int[] values = capturedData.getValues();
-      final long[] timestamps = capturedData.getTimestamps();
-      final long triggerPos = capturedData.getTriggerPosition();
+      final Channel[] channels = aData.getChannels();
+      final int sampleRate = aData.getSampleRate();
+      final int[] values = aData.getValues();
+      final long[] timestamps = aData.getTimestamps();
+      final long triggerPos = aData.getTriggerPosition();
 
       // Write data...
       for ( int i = 0; i < values.length; i++ )
@@ -125,16 +122,14 @@ public class CsvExporter implements Exporter
   }
 
   /**
-   * @param aDataSet
+   * @param aData
    * @return
    */
-  private String[] createHeaderRowValues( final DataSet aDataSet )
+  private String[] createHeaderRowValues( final AcquisitionData aData )
   {
-    final Channel[] channels = aDataSet.getChannels();
-
-    final AcquisitionData capturedData = aDataSet.getCapturedData();
-    final long triggerPos = capturedData.getTriggerPosition();
-    final int sampleRate = capturedData.getSampleRate();
+    final Channel[] channels = aData.getChannels();
+    final long triggerPos = aData.getTriggerPosition();
+    final int sampleRate = aData.getSampleRate();
 
     List<String> result = new ArrayList<String>();
     if ( sampleRate > 0 )

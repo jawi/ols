@@ -197,7 +197,7 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
    * {@inheritDoc}
    */
   @Override
-  public void dataModelChanged( final DataSet aDataSet )
+  public void dataModelChanged( final AcquisitionData aData )
   {
     repaint( 50L );
   }

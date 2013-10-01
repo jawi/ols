@@ -48,19 +48,16 @@ public class ValueChangeDumpExporter implements Exporter
    * {@inheritDoc}
    */
   @Override
-  public void export( final DataSet aDataSet, final JComponent aComponent, final OutputStream aStream )
-      throws IOException
+  public void export( AcquisitionData aDataSet, JComponent aComponent, OutputStream aStream ) throws IOException
   {
     final PrintWriter writer = new PrintWriter( aStream );
     try
     {
-      final AcquisitionData capturedData = aDataSet.getCapturedData();
-
-      final double timescale = getTimebase( capturedData.getSampleRate() );
+      final double timescale = getTimebase( aDataSet.getSampleRate() );
 
       writePreamble( writer, aDataSet, timescale );
       writeVariableDump( writer, aDataSet );
-      writeDataDump( writer, capturedData, timescale );
+      writeDataDump( writer, aDataSet, timescale );
     }
     finally
     {
@@ -88,15 +85,15 @@ public class ValueChangeDumpExporter implements Exporter
 
   /**
    * @param aWriter
-   * @param aCapturedData
+   * @param aData
    * @param aTimebase
    */
-  protected void writeDataDump( final PrintWriter aWriter, final AcquisitionData aCapturedData, final double aTimebase )
+  protected void writeDataDump( final PrintWriter aWriter, final AcquisitionData aData, final double aTimebase )
   {
-    final int[] values = aCapturedData.getValues();
-    final long[] timestamps = aCapturedData.getTimestamps();
-    final int channelCount = aCapturedData.getChannelCount();
-    final int channelMask = aCapturedData.getEnabledChannels();
+    final int[] values = aData.getValues();
+    final long[] timestamps = aData.getTimestamps();
+    final int channelCount = aData.getChannelCount();
+    final int channelMask = aData.getEnabledChannels();
 
     int oldValue = -1;
     for ( int i = 0, size = values.length; i < size; i++ )
@@ -104,7 +101,7 @@ public class ValueChangeDumpExporter implements Exporter
       final int value = values[i];
       final long timestamp = timestamps[i];
 
-      final int time = ( int )( timestamp / ( aCapturedData.getSampleRate() * aTimebase ) );
+      final int time = ( int )( timestamp / ( aData.getSampleRate() * aTimebase ) );
 
       if ( ( i == 0 ) || ( oldValue != value ) )
       {
@@ -115,7 +112,7 @@ public class ValueChangeDumpExporter implements Exporter
       oldValue = value;
     }
 
-    final int time = ( int )( aCapturedData.getAbsoluteLength() / ( aCapturedData.getSampleRate() * aTimebase ) );
+    final int time = ( int )( aData.getAbsoluteLength() / ( aData.getSampleRate() * aTimebase ) );
     writeTime( aWriter, time );
   }
 
@@ -124,14 +121,14 @@ public class ValueChangeDumpExporter implements Exporter
    * @param aContainer
    * @param aTimescale
    */
-  protected void writePreamble( final PrintWriter aWriter, final DataSet aDataSet, final double aTimescale )
+  protected void writePreamble( final PrintWriter aWriter, final AcquisitionData aData, final double aTimescale )
   {
     writeDeclaration( aWriter, "comment", ID );
     writeDate( aWriter );
     writeDeclaration( aWriter, "version", VERSION );
     writeTimescale( aWriter, aTimescale );
     writeDeclaration( aWriter, "scope", "module logic" );
-    writeVariableDefinitions( aWriter, aDataSet );
+    writeVariableDefinitions( aWriter, aData );
     writeDeclaration( aWriter, "upscope" );
     writeDeclaration( aWriter, "enddefinitions" );
   }
@@ -199,12 +196,10 @@ public class ValueChangeDumpExporter implements Exporter
    *          the data container to take the channel information from, cannot be
    *          <code>null</code>.
    */
-  protected void writeVariableDefinitions( final PrintWriter aWriter, final DataSet aDataSet )
+  protected void writeVariableDefinitions( final PrintWriter aWriter, final AcquisitionData aData )
   {
-    final AcquisitionData capturedData = aDataSet.getCapturedData();
-
-    final int channelMask = capturedData.getEnabledChannels();
-    final Channel[] channelLabels = aDataSet.getChannels();
+    final int channelMask = aData.getEnabledChannels();
+    final Channel[] channelLabels = aData.getChannels();
 
     for ( int i = 0; i < channelLabels.length; i++ )
     {
@@ -227,12 +222,10 @@ public class ValueChangeDumpExporter implements Exporter
    * @param aWriter
    * @param aContainer
    */
-  protected void writeVariableDump( final PrintWriter aWriter, final DataSet aDataSet )
+  protected void writeVariableDump( final PrintWriter aWriter, final AcquisitionData aData )
   {
-    final AcquisitionData capturedData = aDataSet.getCapturedData();
-
-    final int channelCount = capturedData.getChannelCount();
-    final int channelMask = capturedData.getEnabledChannels();
+    final int channelCount = aData.getChannelCount();
+    final int channelMask = aData.getEnabledChannels();
 
     writeOpenDeclaration( aWriter, "dumpvars" );
 

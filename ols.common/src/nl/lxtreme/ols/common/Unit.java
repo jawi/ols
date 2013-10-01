@@ -494,13 +494,42 @@ public final class Unit
   private static final char HAIR = '\u200a';
 
   /** The separator to use between a value and a unit. */
-  private static final Character SEPARATOR;
+  static volatile Character SEPARATOR = null;
+
+  // METHODS
+
+  /**
+   * Formats a given value with a given scale and adding a given unit.
+   */
+  static String format( double aValue, int aScale, String aUnit )
+  {
+    if ( Double.isNaN( aValue ) || Double.isInfinite( aValue ) )
+    {
+      return "-";
+    }
+
+    String formatSpec = String.format( "%%.%df%c%%s", Integer.valueOf( aScale ), getSeparator() );
+    return String.format( formatSpec, Double.valueOf( aValue ), aUnit );
+  }
+
+  /**
+   * Formats a given value with a given value and adding a given unit.
+   */
+  static String format( String aValue, String aUnit )
+  {
+    return String.format( "%s%c%s", aValue, getSeparator(), aUnit );
+  }
 
   /**
    * Calculate the "optimal" separator to use for separating a value and a unit.
    */
-  static
+  private static Character getSeparator()
   {
+    if ( SEPARATOR != null )
+    {
+      return SEPARATOR;
+    }
+
     Logger logger = Logger.getLogger( Unit.class.getName() );
 
     char sep;
@@ -540,31 +569,8 @@ public final class Unit
         sep = SPACE;
       }
     }
-    
+
     SEPARATOR = Character.valueOf( sep );
-  }
-
-  // METHODS
-
-  /**
-   * Formats a given value with a given scale and adding a given unit.
-   */
-  static String format( double aValue, int aScale, String aUnit )
-  {
-    if ( Double.isNaN( aValue ) || Double.isInfinite( aValue ) )
-    {
-      return "-";
-    }
-
-    String formatSpec = String.format( "%%.%df%c%%s", Integer.valueOf( aScale ), SEPARATOR );
-    return String.format( formatSpec, Double.valueOf( aValue ), aUnit );
-  }
-
-  /**
-   * Formats a given value with a given value and adding a given unit.
-   */
-  static String format( String aValue, String aUnit )
-  {
-    return String.format( "%s%c%s", aValue, SEPARATOR, aUnit );
+    return SEPARATOR;
   }
 }

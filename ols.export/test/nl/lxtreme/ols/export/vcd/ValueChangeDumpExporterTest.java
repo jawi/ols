@@ -72,11 +72,11 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExport16ChannelDataDumpOk() throws IOException
   {
-    DataSet dataSet = createStubDataSet( 16 );
+    AcquisitionData data = createStubDataSet( 16 );
 
-    this.exporter.export( dataSet, this.component, this.nullOutputStream );
+    this.exporter.export( data, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( data ) );
     verify( this.exporter, times( 16 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
     verify( this.exporter, times( 16 ) ).writeVariableData( any( PrintWriter.class ), eq( 16 ), eq( 65535 ), anyInt(),
         anyInt(), anyBoolean() );
@@ -94,11 +94,11 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExport8ChannelDataDumpOk() throws IOException
   {
-    DataSet dataSet = createStubDataSet( 8 );
+    AcquisitionData data = createStubDataSet( 8 );
 
-    this.exporter.export( dataSet, this.component, this.nullOutputStream );
+    this.exporter.export( data, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( data ) );
     verify( this.exporter, times( 8 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
     verify( this.exporter, times( 8 ) ).writeVariableData( any( PrintWriter.class ), eq( 8 ), eq( 255 ), anyInt(),
         anyInt(), anyBoolean() );
@@ -116,14 +116,14 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExportDataDumpOk() throws IOException
   {
-    DataSet dataSet = createStubDataSet( 8 );
+    AcquisitionData data = createStubDataSet( 8 );
 
     File file = this.folder.newFile( "dump.vcd" );
     FileOutputStream fos = new FileOutputStream( file );
 
     try
     {
-      this.exporter.export( dataSet, this.component, fos );
+      this.exporter.export( data, this.component, fos );
     }
     finally
     {
@@ -142,22 +142,22 @@ public class ValueChangeDumpExporterTest
   @Test
   public void testExportSingleChannelDataDumpOk() throws IOException
   {
-    DataSet dataSet = createStubDataSet( 1 );
+    AcquisitionData data = createStubDataSet( 1 );
 
-    this.exporter.export( dataSet, this.component, this.nullOutputStream );
+    this.exporter.export( data, this.component, this.nullOutputStream );
 
-    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( dataSet ) );
+    verify( this.exporter ).writeVariableDump( any( PrintWriter.class ), eq( data ) );
     verify( this.exporter, times( 1 ) ).writeSingleVariableDefinition( any( PrintWriter.class ), anyInt() );
     verify( this.exporter, times( 1 ) ).writeVariableData( any( PrintWriter.class ), eq( 1 ), eq( 1 ), anyInt(),
         anyInt(), anyBoolean() );
     verify( this.exporter, times( 2 ) ).writeTime( any( PrintWriter.class ), anyLong() );
   }
 
-  private DataSet createStubDataSet( int aChannelCount )
+  private AcquisitionData createStubDataSet( int aChannelCount )
   {
     int aSize = aChannelCount;
     int mask = ( 1 << aChannelCount ) - 1;
-    
+
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
     builder.setChannelCount( aChannelCount );
     builder.setEnabledChannelMask( mask );
@@ -170,17 +170,6 @@ public class ValueChangeDumpExporterTest
       value++;
     }
 
-    Channel[] channels = new Channel[aChannelCount];
-    for ( int i = 0; i < channels.length; i++ )
-    {
-      channels[i] = mock( Channel.class );
-      when( channels[i].getLabel() ).thenReturn( "label" + i );
-    }
-
-    DataSet result = mock( DataSet.class );
-    when( result.getCapturedData() ).thenReturn( builder.build() );
-    when( result.getChannels() ).thenReturn( channels );
-
-    return result;
+    return builder.build();
   }
 }

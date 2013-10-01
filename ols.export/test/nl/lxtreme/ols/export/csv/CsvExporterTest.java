@@ -84,9 +84,9 @@ public class CsvExporterTest
     final int sampleRate = -1;
     final long triggerPos = -1;
 
-    final DataSet dataSet = createTestDataSet( channelCount, dataSize, sampleRate, triggerPos );
+    final AcquisitionData data = createTestData( channelCount, dataSize, sampleRate, triggerPos );
 
-    this.exporter.export( dataSet, this.component, this.outputStream );
+    this.exporter.export( data, this.component, this.outputStream );
 
     String[] results = getCsvData();
     assertNotNull( results );
@@ -112,9 +112,9 @@ public class CsvExporterTest
     final int sampleRate = -1;
     final long triggerPos = 10;
 
-    final DataSet dataSet = createTestDataSet( channelCount, dataSize, sampleRate, triggerPos );
+    final AcquisitionData data = createTestData( channelCount, dataSize, sampleRate, triggerPos );
 
-    this.exporter.export( dataSet, this.component, this.outputStream );
+    this.exporter.export( data, this.component, this.outputStream );
 
     String[] results = getCsvData();
     assertNotNull( results );
@@ -140,9 +140,9 @@ public class CsvExporterTest
     final int sampleRate = SAMPLE_RATE;
     final long triggerPos = 10;
 
-    final DataSet dataSet = createTestDataSet( channelCount, dataSize, sampleRate, triggerPos );
+    final AcquisitionData data = createTestData( channelCount, dataSize, sampleRate, triggerPos );
 
-    this.exporter.export( dataSet, this.component, this.outputStream );
+    this.exporter.export( data, this.component, this.outputStream );
 
     String[] results = getCsvData();
     assertNotNull( results );
@@ -168,9 +168,9 @@ public class CsvExporterTest
     final int sampleRate = SAMPLE_RATE;
     final long triggerPos = -1;
 
-    final DataSet dataSet = createTestDataSet( channelCount, dataSize, sampleRate, triggerPos );
+    final AcquisitionData data = createTestData( channelCount, dataSize, sampleRate, triggerPos );
 
-    this.exporter.export( dataSet, this.component, this.outputStream );
+    this.exporter.export( data, this.component, this.outputStream );
 
     String[] results = getCsvData();
     assertNotNull( results );
@@ -199,11 +199,10 @@ public class CsvExporterTest
    * @param aChannelCount
    * @return
    */
-  private DataSet createTestDataSet( final int aChannelCount, final int aSize, final int aSampleRate,
-      final long aTriggerPos )
+  private AcquisitionData createTestData( int aChannelCount, int aSize, int aSampleRate, long aTriggerPos )
   {
     int mask = ( 1 << aChannelCount ) - 1;
-    
+
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
     builder.setChannelCount( aChannelCount );
     builder.setEnabledChannelMask( mask );
@@ -217,18 +216,7 @@ public class CsvExporterTest
       value++;
     }
 
-    Channel[] channels = new Channel[aChannelCount];
-    for ( int i = 0; i < channels.length; i++ )
-    {
-      channels[i] = mock( Channel.class );
-      when( channels[i].getLabel() ).thenReturn( "label" + i );
-    }
-
-    DataSet result = mock( DataSet.class );
-    when( result.getCapturedData() ).thenReturn( builder.build() );
-    when( result.getChannels() ).thenReturn( channels );
-
-    return result;
+    return builder.build();
   }
 
   /**

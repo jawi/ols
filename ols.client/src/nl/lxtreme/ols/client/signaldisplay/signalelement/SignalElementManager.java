@@ -151,102 +151,32 @@ public final class SignalElementManager implements IDataModelChangeListener
    * {@inheritDoc}
    */
   @Override
-  public void dataModelChanged( final DataSet aCapturedData )
+  public void dataModelChanged( final AcquisitionData aData )
   {
     SignalElementModel oldModel = getSignalElementModel();
     SignalElementModel newModel = new SignalElementModel();
 
-    final Channel[] newChannelList = aCapturedData.getChannels();
-
-    if ( oldModel == null || oldModel.getGroups().isEmpty() )
+    for ( ChannelGroup cg : aData.getChannelGroups() )
     {
-      // Reset channel groups so they align with the given data model...
-      final int groupCount = Math.max( 1, ( int )Math.ceil( newChannelList.length / ( double )OlsConstants.CHANNELS_PER_BLOCK ) );
-      final int channelsPerGroup = ( int )Math.ceil( newChannelList.length / ( double )groupCount );
+      String groupName = cg.getName();
 
-      for ( int g = 0; g < groupCount; g++ )
+      ElementGroup newGroup = newModel.addGroup( groupName );
+      applyProperties( newGroup, oldModel );
+
+      for ( Channel c : cg.getChannels() )
       {
-        final ElementGroup group = newModel.addGroup( "Group " + ( g + 1 ) );
-
-        for ( int c = 0; c < channelsPerGroup; c++ )
-        {
-          final int channelIdx = ( g * channelsPerGroup ) + c;
-          if ( newChannelList[channelIdx] == null )
-          {
-            continue;
-          }
-          newModel.addSignalElement( group, createDigitalSignalElement( newChannelList[channelIdx], group ) );
-        }
-
-        newModel.addSignalElement( group, createGroupSummaryElement( group ) );
-        newModel.addSignalElement( group, createAnalogScopeElement( group ) );
-      }
-    }
-    else
-    {
-      // Copy the structure of the existing model using the new channel data...
-      Set<Integer> seenChannelIdxs = new HashSet<Integer>();
-      ElementGroup newGroup = null;
-      for ( ElementGroup oldGroup : oldModel.getGroups() )
-      {
-        newGroup = newModel.addGroup( oldGroup.getName() );
-
-        for ( SignalElement oldElement : oldGroup.getElements() )
-        {
-          SignalElement element;
-          if ( oldElement.isDigitalSignal() )
-          {
-            int channelIdx = oldElement.getChannel().getIndex();
-            if ( channelIdx >= newChannelList.length )
-            {
-              // Not in the new data...
-              continue;
-            }
-
-            Channel newChannel = newChannelList[channelIdx];
-            seenChannelIdxs.add( Integer.valueOf( channelIdx ) );
-
-            element = createDigitalSignalElement( newChannel, newGroup );
-            element.setSignalAlignment( oldElement.getSignalAlignment() );
-            element.setSignalHeight( oldElement.getSignalHeight() );
-          }
-          else if ( oldElement.isAnalogSignal() )
-          {
-            element = createAnalogScopeElement( newGroup );
-          }
-          else if ( oldElement.isGroupSummary() )
-          {
-            element = createGroupSummaryElement( newGroup );
-          }
-          else
-          {
-            throw new RuntimeException( "Unknown/unhandled signal element: " + oldElement );
-          }
-
-          element.setColor( oldElement.getColor() );
-          element.setEnabled( oldElement.isEnabled() );
-          element.setHeight( oldElement.getHeight() );
-          element.setLabel( oldElement.getLabel() );
-
-          newModel.addSignalElement( newGroup, element );
-        }
+        SignalElement newElement = createDigitalSignalElement( c, newGroup );
+        applyProperties( newElement, oldModel );
+        newModel.addSignalElement( newGroup, newElement );
       }
 
-      if ( newGroup == null )
-      {
-        // Odd case, old model didn't have any groups?!
-        newGroup = newModel.addGroup( "Group 1" );
-      }
+      SignalElement newGroupSummary = createGroupSummaryElement( newGroup );
+      applyProperties( newGroupSummary, oldModel );
+      newModel.addSignalElement( newGroup, newGroupSummary );
 
-      // Handle all left-over channels...
-      for ( Channel channel : newChannelList )
-      {
-        Integer channelIdx = Integer.valueOf( channel.getIndex() );
-        if ( !seenChannelIdxs.contains( channelIdx ) )
-        {
-          newModel.addSignalElement( newGroup, createDigitalSignalElement( channel, newGroup ) );
-        }
-      }
+      SignalElement newAnalogScope = createAnalogScopeElement( newGroup );
+      applyProperties( newAnalogScope, oldModel );
+      newModel.addSignalElement( newGroup, newAnalogScope );
     }
 
     setSignalElementModel( newModel );
@@ -434,5 +364,70 @@ public final class SignalElementManager implements IDataModelChangeListener
     while ( !this.modelRef.compareAndSet( oldModel, aModel ) );
 
     fireGroupStructureChangeEvent( aModel.getAssignedElements() );
+  }
+
+  private void applyProperties( ElementGroup aGroup, SignalElementModel aOldModel )
+  {
+    if ( aOldModel == null )
+    {
+      // Use defaults...
+      return;
+    }
+    ElementGroup oldGroup = aOldModel.getGroupByName( aGroup.getName() );
+    if ( oldGroup == null )
+    {
+      // Use defaults...
+      return;
+    }
+
+    aGroup.setAnalogSignalLabel( oldGroup.getAnalogSignalLabel() );
+    aGroup.setColor( oldGroup.getColor() );
+    aGroup.setGroupSummaryLabel( oldGroup.getGroupSummaryLabel() );
+    aGroup.setHeight( oldGroup.getHeight() );
+    aGroup.setLabel( oldGroup.getLabel() );
+    aGroup.setShowAnalogSignal( oldGroup.isShowAnalogSignal() );
+    aGroup.setShowDigitalSignals( oldGroup.isShowDigitalSignals() );
+    aGroup.setShowGroupSummary( oldGroup.isShowGroupSummary() );
+    aGroup.setVisible( oldGroup.isVisible() );
+  }
+
+  private void applyProperties( SignalElement aNewElement, SignalElementModel aOldModel )
+  {
+    if ( aOldModel == null )
+    {
+      // Use defaults...
+      return;
+    }
+    ElementGroup oldGroup = aOldModel.getGroupByName( aNewElement.getGroup().getName() );
+    if ( oldGroup == null )
+    {
+      // Use defaults...
+      return;
+    }
+
+    boolean isDigitalSignal = aNewElement.getType() == SignalElementType.DIGITAL_SIGNAL;
+    for ( SignalElement oldElement : oldGroup.getElements() )
+    {
+      if ( oldElement.getType() == aNewElement.getType() )
+      {
+        if ( isDigitalSignal && oldElement.getChannel().getIndex() != aNewElement.getChannel().getIndex() )
+        {
+          continue;
+        }
+
+        aNewElement.setColor( oldElement.getColor() );
+        aNewElement.setEnabled( oldElement.isEnabled() );
+        aNewElement.setHeight( oldElement.getHeight() );
+        aNewElement.setLabel( oldElement.getLabel() );
+
+        if ( isDigitalSignal )
+        {
+          aNewElement.setSignalAlignment( oldElement.getSignalAlignment() );
+          aNewElement.setSignalHeight( oldElement.getSignalHeight() );
+        }
+
+        break;
+      }
+    }
   }
 }

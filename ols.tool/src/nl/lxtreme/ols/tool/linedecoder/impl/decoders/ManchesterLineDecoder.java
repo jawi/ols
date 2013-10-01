@@ -25,6 +25,7 @@ import java.util.*;
 
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.base.annotation.*;
 import nl.lxtreme.ols.tool.linedecoder.*;
@@ -253,7 +254,8 @@ public class ManchesterLineDecoder implements LineDecoder
       newSamples.put( time, sampleValue );
     }
 
-    AcquisitionDataBuilder builder = new AcquisitionDataBuilder( inputData, false /* includeSamples */ );
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.applyTemplate( inputData, IncludeSamples.NO, IncludeAnnotations.YES );
     builder.setTriggerPosition( firstSignalEdge );
 
     for ( Map.Entry<Long, Integer> entry : newSamples.entrySet() )

@@ -26,8 +26,6 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
-import javax.swing.*;
-
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.util.swing.*;
@@ -47,7 +45,7 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   private final PropertyChangeSupport propertyChangeSupport;
   private final Map<String, UserSettings> settings;
 
-  private DataSetImpl dataSet;
+  private AcquisitionData data;
   private String name;
   private boolean changed;
   private Date lastModified;
@@ -63,9 +61,6 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   {
     this.propertyChangeSupport = new PropertyChangeSupport( this );
     this.settings = new HashMap<String, UserSettings>();
-
-    setDataSet( new DataSetImpl() );
-
     this.changed = false;
   }
 
@@ -86,9 +81,9 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
    * {@inheritDoc}
    */
   @Override
-  public DataSetImpl getDataSet()
+  public AcquisitionData getDataSet()
   {
-    return this.dataSet;
+    return this.data;
   }
 
   /**
@@ -167,15 +162,6 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public final void readData( final Reader aReader ) throws IOException
-  {
-    setDataSet( new DataSetImpl( OlsDataHelper.read( aReader ), new DataSetImpl(), false /* aRetainAnnotations */) );
-  }
-
-  /**
    * Removes the given listener from the list of property change listeners.
    * 
    * @param aListener
@@ -190,15 +176,16 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
    * {@inheritDoc}
    */
   @Override
-  public void setCapturedData( final AcquisitionData aCapturedData )
+  public void setCapturedData( final AcquisitionData aData )
   {
-    final DataSetImpl old = this.dataSet;
-    final boolean retainAnnotations = UIManager.getBoolean( "ols.retain.annotations.boolean" );
+    final AcquisitionData old = this.data;
 
-    setDataSet( new DataSetImpl( aCapturedData, old, retainAnnotations ) );
+    this.data = aData;
 
     // Mark this project as modified...
     setChanged( true );
+
+    this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA, old, this.data );
   }
 
   /**
@@ -315,15 +302,6 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void writeData( final Writer aWriter ) throws IOException
-  {
-    OlsDataHelper.write( aWriter, this.dataSet.getCapturedData() );
-  }
-
-  /**
    * Returns the current set of property change listeners.
    * 
    * @return an array of property change listeners, never <code>null</code>.
@@ -331,31 +309,5 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   final PropertyChangeListener[] getPropertyChangeListeners()
   {
     return this.propertyChangeSupport.getPropertyChangeListeners();
-  }
-
-  /**
-   * Sets the data set in a single shot.
-   * 
-   * @param aDataSet
-   *          the data set to set, cannot be <code>null</code>.
-   */
-  final void setDataSet( final DataSetImpl aDataSet )
-  {
-    if ( aDataSet == null )
-    {
-      throw new IllegalArgumentException();
-    }
-    if ( this.dataSet != null )
-    {
-      this.dataSet.removePropertyChangeListener( this );
-    }
-
-    final DataSetImpl old = this.dataSet;
-
-    this.dataSet = aDataSet;
-
-    this.dataSet.addPropertyChangeListener( this );
-
-    this.propertyChangeSupport.firePropertyChange( PROPERTY_CAPTURED_DATA, old, this.dataSet );
   }
 }

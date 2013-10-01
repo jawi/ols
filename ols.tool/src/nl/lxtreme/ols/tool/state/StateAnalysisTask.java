@@ -25,6 +25,7 @@ import java.util.logging.*;
 
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.*;
 import nl.lxtreme.ols.tool.api.*;
 
 
@@ -93,8 +94,8 @@ public class StateAnalysisTask implements ToolTask<AcquisitionData>
       throw new IllegalStateException( "No state changes found!" );
     }
 
-    AcquisitionDataBuilder builder = new AcquisitionDataBuilder( data, false /* includeSamples */);
-    builder.setSampleRate( OlsConstants.NOT_AVAILABLE );
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder().applyTemplate( data, IncludeSamples.NO,
+        IncludeAnnotations.NO ).setSampleRate( OlsConstants.NOT_AVAILABLE );
 
     // convert captured data
     last = values[0] & maskValue;
