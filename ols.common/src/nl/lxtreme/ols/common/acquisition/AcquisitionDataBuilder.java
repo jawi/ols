@@ -402,6 +402,49 @@ public final class AcquisitionDataBuilder
   }
 
   /**
+   * Container for keeping channel group-related information together.
+   */
+  static final class ChannelGroupInfo
+  {
+    // VARIABLES
+
+    String name;
+    final List<Integer> channelIndices;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link ChannelGroupInfo} instance.
+     */
+    public ChannelGroupInfo( String aName )
+    {
+      this.channelIndices = new ArrayList<Integer>();
+      this.name = aName;
+    }
+
+    // METHODS
+
+    void addChannelIndex( int aChannelIdx )
+    {
+      this.channelIndices.add( Integer.valueOf( aChannelIdx ) );
+    }
+
+    boolean containsChannel( int aChannelIdx )
+    {
+      return this.channelIndices.contains( Integer.valueOf( aChannelIdx ) );
+    }
+
+    void copyChannelIndices( ChannelGroup aChannelGroup )
+    {
+      this.channelIndices.clear();
+      for ( Channel c : aChannelGroup.getChannels() )
+      {
+        this.channelIndices.add( Integer.valueOf( c.getIndex() ) );
+      }
+    }
+  }
+
+  /**
    * Provides a default implementation of {@link Channel}.
    */
   static final class ChannelImpl implements Channel
@@ -467,6 +510,14 @@ public final class AcquisitionDataBuilder
         {
           setLabel( aAnnotation.toString() );
         }
+      }
+    }
+
+    public void addAnnotations( List<Annotation<?>> aAnnotations )
+    {
+      for ( Annotation<?> ann : aAnnotations )
+      {
+        addAnnotation( ann );
       }
     }
 
@@ -606,6 +657,35 @@ public final class AcquisitionDataBuilder
       {
         this.label = aName.trim();
       }
+    }
+  }
+
+  /**
+   * Container for keeping channel-related information together.
+   */
+  static final class ChannelInfo
+  {
+    // VARIABLES
+
+    String label;
+    final List<Annotation<?>> annotations;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new {@link ChannelInfo} instance.
+     */
+    public ChannelInfo( String aName )
+    {
+      this.annotations = new ArrayList<Annotation<?>>();
+      this.label = aName;
+    }
+
+    // METHODS
+
+    void copyAnnotations( Channel aChannel )
+    {
+      this.annotations.addAll( aChannel.getAnnotations() );
     }
   }
 
@@ -921,9 +1001,8 @@ public final class AcquisitionDataBuilder
   private int channelCount;
   private int enabledChannelMask;
   private final List<Sample> sampleData;
-  private final Map<Integer, String> channelNames;
-  private final Map<Integer, String> channelGroupNames;
-  private final Map<Integer, List<Integer>> channelGroupIndices;
+  private final Map<Integer, ChannelInfo> channelDefs;
+  private final Map<Integer, ChannelGroupInfo> channelGroupDefs;
   private final Cursor[] cursors;
   private int sampleRate;
   private long triggerPosition;
@@ -937,9 +1016,8 @@ public final class AcquisitionDataBuilder
   public AcquisitionDataBuilder()
   {
     this.sampleData = new ArrayList<Sample>();
-    this.channelNames = new HashMap<Integer, String>();
-    this.channelGroupNames = new HashMap<Integer, String>();
-    this.channelGroupIndices = new HashMap<Integer, List<Integer>>();
+    this.channelDefs = new HashMap<Integer, ChannelInfo>();
+    this.channelGroupDefs = new HashMap<Integer, ChannelGroupInfo>();
     this.cursors = new Cursor[OlsConstants.MAX_CURSORS];
     this.absoluteLength = NOT_AVAILABLE;
     this.lastSeenTimestamp = NOT_AVAILABLE;
@@ -971,12 +1049,11 @@ public final class AcquisitionDataBuilder
   public AcquisitionDataBuilder addChannelGroup( final int aIndex, final String aName )
   {
     Integer idx = Integer.valueOf( aIndex );
-    if ( this.channelGroupNames.containsKey( idx ) )
+    if ( this.channelGroupDefs.containsKey( idx ) )
     {
       throw new IllegalArgumentException( "Channel group with index " + aIndex + " already defined!" );
     }
-    this.channelGroupNames.put( idx, aName );
-    this.channelGroupIndices.put( idx, new ArrayList<Integer>() );
+    this.channelGroupDefs.put( idx, new ChannelGroupInfo( aName ) );
     return this;
   }
 
@@ -993,21 +1070,21 @@ public final class AcquisitionDataBuilder
    */
   public AcquisitionDataBuilder addChannelToGroup( final int aChannelIndex, final int aGroupIndex )
   {
-    Integer groupIdx = Integer.valueOf( aGroupIndex );
-    List<Integer> channels = this.channelGroupIndices.get( groupIdx );
-    if ( channels == null )
+    for ( ChannelGroupInfo _cgDef : this.channelGroupDefs.values() )
     {
-      throw new IllegalArgumentException( "No such channel group defined with index #" + aGroupIndex );
-    }
-    Integer channelIdx = Integer.valueOf( aChannelIndex );
-    for ( List<Integer> channelIndices : this.channelGroupIndices.values() )
-    {
-      if ( channelIndices.contains( channelIdx ) )
+      if ( _cgDef.containsChannel( aChannelIndex ) )
       {
         throw new IllegalArgumentException( "Channel already contained in group!" );
       }
     }
-    channels.add( channelIdx );
+
+    ChannelGroupInfo channelGroupDef = this.channelGroupDefs.get( Integer.valueOf( aGroupIndex ) );
+    if ( channelGroupDef == null )
+    {
+      throw new IllegalArgumentException( "No such channel group defined with index #" + aGroupIndex );
+    }
+
+    channelGroupDef.addChannelIndex( aChannelIndex );
     return this;
   }
 
@@ -1079,29 +1156,37 @@ public final class AcquisitionDataBuilder
       this.cursors[i] = new CursorImpl( _cursors[i] );
     }
 
-    this.channelNames.clear();
-    this.channelGroupNames.clear();
-    this.channelGroupIndices.clear();
-
     // Copy channel names...
     for ( Channel c : aData.getChannels() )
     {
-      this.channelNames.put( Integer.valueOf( c.getIndex() ), c.getLabel() );
+      Integer chIdx = Integer.valueOf( c.getIndex() );
+
+      ChannelInfo channelDef = this.channelDefs.get( chIdx );
+      if ( channelDef == null )
+      {
+        channelDef = new ChannelInfo( c.getLabel() );
+        this.channelDefs.put( chIdx, channelDef );
+      }
+
+      if ( aIncludeAnnotations == IncludeAnnotations.YES )
+      {
+        channelDef.copyAnnotations( c );
+      }
     }
 
     // Copy channel groups...
     for ( ChannelGroup cg : aData.getChannelGroups() )
     {
       Integer cgIndex = Integer.valueOf( cg.getIndex() );
-      this.channelGroupNames.put( cgIndex, cg.getName() );
 
-      List<Integer> channelIndices = new ArrayList<Integer>();
-      this.channelGroupIndices.put( cgIndex, channelIndices );
-
-      for ( Channel c : cg.getChannels() )
+      ChannelGroupInfo cgDef = this.channelGroupDefs.get( cgIndex );
+      if ( cgDef == null )
       {
-        channelIndices.add( Integer.valueOf( c.getIndex() ) );
+        cgDef = new ChannelGroupInfo( cg.getName() );
+        this.channelGroupDefs.put( cgIndex, cgDef );
       }
+
+      cgDef.copyChannelIndices( cg );
     }
 
     if ( aIncludeSamples == IncludeSamples.YES )
@@ -1114,8 +1199,6 @@ public final class AcquisitionDataBuilder
         addSample( timestamps[i], values[i] );
       }
     }
-
-    // TODO add support for retaining annotations!
 
     return this;
   }
@@ -1294,7 +1377,17 @@ public final class AcquisitionDataBuilder
     {
       throw new IllegalArgumentException( "Invalid channel index!" );
     }
-    this.channelNames.put( Integer.valueOf( aIndex ), aLabel );
+
+    ChannelInfo chDef = this.channelDefs.get( Integer.valueOf( aIndex ) );
+    if ( chDef == null )
+    {
+      chDef = new ChannelInfo( aLabel );
+      this.channelDefs.put( Integer.valueOf( aIndex ), chDef );
+    }
+    else
+    {
+      chDef.label = aLabel;
+    }
     return this;
   }
 
@@ -1412,16 +1505,17 @@ public final class AcquisitionDataBuilder
     // Use defaults for the situation when no channel groups are defined...
     ensureChannelGroupsAreDefined( aChannelIndex );
 
-    int cgSize = this.channelGroupNames.size();
+    int cgSize = this.channelGroupDefs.size();
     List<ChannelGroup> channelGroups = new ArrayList<ChannelGroup>( cgSize );
     List<Channel> allChannels = new ArrayList<Channel>( aChannelIndex.values() );
 
-    for ( Entry<Integer, String> entry : this.channelGroupNames.entrySet() )
+    for ( Entry<Integer, ChannelGroupInfo> entry : this.channelGroupDefs.entrySet() )
     {
       int groupIdx = entry.getKey().intValue();
+      ChannelGroupInfo groupDef = entry.getValue();
 
       int chIdx = 0;
-      List<Integer> channelIndices = this.channelGroupIndices.get( entry.getKey() );
+      List<Integer> channelIndices = groupDef.channelIndices;
       Channel[] channelRefs = new Channel[channelIndices.size()];
       for ( Integer channelIdx : channelIndices )
       {
@@ -1434,7 +1528,7 @@ public final class AcquisitionDataBuilder
         allChannels.remove( channel );
       }
 
-      channelGroups.add( new ChannelGroupImpl( groupIdx, entry.getValue(), channelRefs ) );
+      channelGroups.add( new ChannelGroupImpl( groupIdx, groupDef.name, channelRefs ) );
     }
 
     if ( !allChannels.isEmpty() )
@@ -1470,10 +1564,14 @@ public final class AcquisitionDataBuilder
       if ( ( this.enabledChannelMask & mask ) != 0 )
       {
         Integer idx = Integer.valueOf( i );
-        String label = this.channelNames.get( idx );
-
         ChannelImpl channelImpl = new ChannelImpl( i, true /* enabled */);
-        channelImpl.setLabel( label );
+
+        ChannelInfo chDef = this.channelDefs.get( idx );
+        if ( chDef != null )
+        {
+          channelImpl.setLabel( chDef.label );
+          channelImpl.addAnnotations( chDef.annotations );
+        }
 
         chIndex.put( idx, channelImpl );
         _channelCount++;
@@ -1487,7 +1585,7 @@ public final class AcquisitionDataBuilder
    */
   private void ensureChannelGroupsAreDefined( LinkedHashMap<Integer, Channel> aChannelIndex )
   {
-    if ( this.channelGroupNames.isEmpty() )
+    if ( this.channelGroupDefs.isEmpty() )
     {
       List<Channel> channels = new ArrayList<Channel>( aChannelIndex.values() );
 
@@ -1495,18 +1593,16 @@ public final class AcquisitionDataBuilder
       for ( int g = 0, groupOffset = 0; g < groupCount; g++, groupOffset += OlsConstants.CHANNELS_PER_BLOCK )
       {
         Integer groupIdx = Integer.valueOf( g );
-
-        this.channelGroupNames.put( groupIdx, String.format( "Group %d", groupIdx ) );
+        ChannelGroupInfo cgDef = new ChannelGroupInfo( String.format( "Group %d", groupIdx ) );
 
         int from = groupOffset;
         int to = Math.min( this.channelCount, groupOffset + OlsConstants.CHANNELS_PER_BLOCK );
-        List<Integer> groupChannels = new ArrayList<Integer>();
         for ( Channel ch : channels.subList( from, to ) )
         {
-          groupChannels.add( Integer.valueOf( ch.getIndex() ) );
+          cgDef.channelIndices.add( Integer.valueOf( ch.getIndex() ) );
         }
 
-        this.channelGroupIndices.put( groupIdx, groupChannels );
+        this.channelGroupDefs.put( groupIdx, cgDef );
       }
     }
   }

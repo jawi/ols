@@ -26,8 +26,11 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
+import javax.swing.*;
+
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.*;
 import nl.lxtreme.ols.util.swing.*;
 
 
@@ -180,7 +183,18 @@ public final class ProjectImpl implements Project, ProjectProperties, PropertyCh
   {
     final AcquisitionData old = this.data;
 
-    this.data = aData;
+    if ( old != null && UIManager.getBoolean( "ols.retain.annotations.boolean" ) )
+    {
+      AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+      builder.applyTemplate( old, IncludeSamples.NO, IncludeAnnotations.YES );
+      builder.applyTemplate( aData, IncludeSamples.YES, IncludeAnnotations.NO );
+
+      this.data = builder.build();
+    }
+    else
+    {
+      this.data = aData;
+    }
 
     // Mark this project as modified...
     setChanged( true );
