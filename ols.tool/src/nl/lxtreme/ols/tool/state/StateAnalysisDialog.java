@@ -198,15 +198,7 @@ public final class StateAnalysisDialog extends BaseToolDialog<AcquisitionData>
     final StateAnalysisTask toolTask = ( StateAnalysisTask )aToolTask;
 
     toolTask.setNumber( this.channelSelect.getSelectedIndex() );
-
-    if ( Edge.RISING == this.edgeSelect.getSelectedItem() )
-    {
-      toolTask.setLevel( 0 );
-    }
-    else
-    {
-      toolTask.setLevel( 1 );
-    }
+    toolTask.setSampleEdge( ( Edge )this.edgeSelect.getSelectedItem() );
   }
 
   /**

@@ -21,29 +21,22 @@
 package nl.lxtreme.ols.tool.state;
 
 
-import java.util.logging.*;
-
-import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.*;
-import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.*;
 import nl.lxtreme.ols.tool.api.*;
 
 
 /**
- * TODO revise this implementation...
+ * Converts acquisition data with timing information to state data, taking one
+ * channel as clock.
  */
 public class StateAnalysisTask implements ToolTask<AcquisitionData>
 {
-  // CONSTANTS
-
-  private static final Logger LOG = Logger.getLogger( StateAnalysisTask.class.getName() );
-
   // VARIABLES
 
   private final ToolContext context;
 
-  private int number;
-  private int level;
+  private int clockLine;
+  private Edge sampleEdge;
 
   // CONSTRUCTORS
 
@@ -58,61 +51,56 @@ public class StateAnalysisTask implements ToolTask<AcquisitionData>
   // METHODS
 
   /**
-   * Convert captured data from timing data to state data using the given
+   * Converts acquisition data from timing data to state data using the given
    * channel as clock.
-   * 
-   * @see javax.swing.SwingWorker#doInBackground()
    */
   @Override
   public AcquisitionData call() throws Exception
   {
-    final AcquisitionData data = this.context.getData();
+    AcquisitionData data = this.context.getData();
+
+    if ( !data.hasTimingData() )
+    {
+      throw new IllegalStateException( "Cannot convert state data to state data!" );
+    }
 
     // obtain data from captured data
-    final int[] values = data.getValues();
-    final long triggerPosition = data.getTriggerPosition();
+    int[] values = data.getValues();
+    long triggerPosition = data.getTriggerPosition();
 
-    final int maskValue = 1 << this.number;
+    int clockMask = 1 << this.clockLine;
+    int dataMask = ~clockMask;
 
-    int size = 0;
-    int last = ( values[0] & maskValue ) >> this.number;
+    // one line is the clock, which is no longer necessary to show (it is always
+    // zero)
+    int newChannelCount = data.getChannelCount() - 1;
+    // mask out the clock line...
+    int newEnabledChannels = ( int )( ( ( 1L << data.getChannelCount() ) - 1L ) ) & dataMask;
 
-    // calculate new sample array size
-    for ( final int value : values )
-    {
-      final int current = ( value & maskValue ) >> this.number;
-      if ( ( last == this.level ) && ( current != this.level ) )
-      {
-        size++;
-      }
-      last = current;
-    }
-
-    if ( size <= 0 )
-    {
-      LOG.log( Level.WARNING, "No state changes found in data; aborting analysis..." );
-      throw new IllegalStateException( "No state changes found!" );
-    }
-
-    AcquisitionDataBuilder builder = new AcquisitionDataBuilder().applyTemplate( data, IncludeSamples.NO,
-        IncludeAnnotations.NO ).setSampleRate( OlsConstants.NOT_AVAILABLE );
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( newChannelCount );
+    builder.setEnabledChannelMask( newEnabledChannels );
 
     // convert captured data
-    last = values[0] & maskValue;
+    int last = values[0] & clockMask;
     int pos = 0;
 
     for ( int i = 0; i < values.length; i++ )
     {
-      final int current = ( values[i] & maskValue ) >> this.number;
-      if ( ( last == this.level ) && ( current != this.level ) )
+      int current = values[i] & clockMask;
+      Edge edge = Edge.toEdge( last, current );
+
+      if ( edge == this.sampleEdge )
       {
-        builder.addSample( pos, values[i - 1] & ~maskValue );
+        builder.addSample( pos, values[i - 1] & dataMask );
         pos++;
       }
+
       if ( triggerPosition == i )
       {
-        builder.setTriggerPosition( pos );
+        builder.setTriggerPosition( Math.max( 0, pos - 1 ) );
       }
+
       last = current;
     }
 
@@ -120,24 +108,20 @@ public class StateAnalysisTask implements ToolTask<AcquisitionData>
   }
 
   /**
-   * Sets the level to the given value.
-   * 
-   * @param aLevel
+   * @param aEdge
    *          the level to set, cannot be <code>null</code>.
    */
-  public void setLevel( final int aLevel )
+  public void setSampleEdge( final Edge aEdge )
   {
-    this.level = aLevel;
+    this.sampleEdge = aEdge;
   }
 
   /**
-   * Sets the number to the given value.
-   * 
-   * @param aNumber
-   *          the number to set, cannot be <code>null</code>.
+   * @param aClockLine
+   *          the channel number of the clock, >= 0.
    */
-  public void setNumber( final int aNumber )
+  public void setNumber( final int aClockLine )
   {
-    this.number = aNumber;
+    this.clockLine = aClockLine;
   }
 }
