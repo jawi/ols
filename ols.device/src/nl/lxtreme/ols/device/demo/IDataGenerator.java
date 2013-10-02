@@ -29,6 +29,13 @@ import nl.lxtreme.ols.common.acquisition.*;
  */
 public interface IDataGenerator
 {
+  // CONSTANTS
+  
+  int SR_1MHZ = 1000000;
+  int SR_4MHZ = 4 * SR_1MHZ;
+  int SR_10MHZ = 10 * SR_1MHZ;
+  int SR_1GHZ = 1000 * SR_1MHZ;
+  
   // METHODS
 
   /**

@@ -48,6 +48,7 @@ final class OddEvenGenerator implements IDataGenerator
       AcquisitionProgressListener aProgressListener )
   {
     aBuilder.setChannelCount( 8 );
+    aBuilder.setSampleRate( SR_1GHZ );
     aBuilder.setEnabledChannelMask( 0xFF00 );
     aBuilder.setTriggerPosition( ( int )( aSampleCount * 0.25 ) );
 

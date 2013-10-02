@@ -51,6 +51,8 @@ final class RandomDataGenerator implements IDataGenerator
     Random rnd = new Random();
     
     int mask = ( int )( ( 1L << aChannelCount ) - 1L );
+    
+    aBuilder.setSampleRate( SR_1GHZ );
     aBuilder.setChannelCount( aChannelCount );
     aBuilder.setEnabledChannelMask( mask );
 

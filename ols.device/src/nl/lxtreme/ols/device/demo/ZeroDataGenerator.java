@@ -48,6 +48,7 @@ final class ZeroDataGenerator implements IDataGenerator
       AcquisitionProgressListener aProgressListener )
   {
     aBuilder.setChannelCount( aChannelCount );
+    aBuilder.setSampleRate( SR_1MHZ );
     aBuilder.setTriggerPosition( ( int )( aSampleCount * 0.25 ) );
 
     for ( int i = 0; i < aSampleCount; i++ )

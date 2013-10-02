@@ -71,7 +71,7 @@ final class OneWireGenerator implements IDataGenerator
   {
     this.data = new ArrayList<Integer>();
 
-    this.busSpeed = 1000000; // 1 MHz
+    this.busSpeed = SR_1MHZ; // 1 MHz
     this.sampleRate = this.busSpeed * 8; // 8 MHz
 
     this.tickSize = ( int )( Math.rint( this.sampleRate / ( double )this.busSpeed ) );

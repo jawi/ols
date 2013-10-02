@@ -42,7 +42,8 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
   private static final long serialVersionUID = 1L;
 
   static final Integer[] CHANNELS = new Integer[] { 1, 4, 8, 16, 32 };
-  static final Integer[] DATA_LENGTH = new Integer[] { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072 };
+  static final Integer[] DATA_LENGTH = new Integer[] { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072, 262144,
+      524288, 1048576, 2097152, 4194304, 8388608, 16777216 };
   static final Map<String, IDataGenerator> GENERATORS = new LinkedHashMap<String, IDataGenerator>();
 
   static

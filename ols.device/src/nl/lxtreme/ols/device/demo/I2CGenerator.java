@@ -57,8 +57,8 @@ final class I2CGenerator implements IDataGenerator
   {
     this.data = new ArrayList<Integer>();
 
-    this.busSpeed = 1000000; // 1 MHz
-    this.sampleRate = 4000000; // 4 MHz
+    this.busSpeed = SR_1MHZ;
+    this.sampleRate = SR_4MHZ;
 
     this.tickSize = ( int )( Math.rint( this.sampleRate / ( double )this.busSpeed ) );
   }

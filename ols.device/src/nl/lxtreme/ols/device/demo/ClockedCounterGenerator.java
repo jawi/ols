@@ -25,14 +25,11 @@ import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
- * Provides a data generator that outputs state-data.
+ * Provides a data generator that outputs state-data, with a clock on the last
+ * channel.
  */
 final class ClockedCounterGenerator implements IDataGenerator
 {
-  // CONSTANTS
-
-  private static final int CLOCK = 0x01;
-
   // CONSTRUCTORS
 
   /**
@@ -62,23 +59,37 @@ final class ClockedCounterGenerator implements IDataGenerator
   {
     int channelCount = Math.max( 4, aChannelCount );
 
+    int counterSize = channelCount - 1;
+    int counterMax = ( 1 << counterSize ) - 1;
+    int clockMask = ( 1 << counterSize );
+
     aBuilder.setChannelCount( channelCount );
-    aBuilder.setSampleRate( 10000000 ); // 10 MHz
+    aBuilder.setSampleRate( SR_10MHZ );
     aBuilder.setTriggerPosition( 0 );
 
-    int value = 0, x = 0;
+    // Make a single group with all channels...
+    aBuilder.addChannelGroup( 0, "Demo counter" );
+    for ( int i = 0; i < aChannelCount; i++ )
+    {
+      aBuilder.addChannelToGroup( i, 0 );
+    }
+
+    int value = 0, counter = 0, dir = -1;
     for ( int i = 0; i < aSampleCount; i++ )
     {
-      if ( ( i % ( channelCount - 1 ) ) == 0 )
+      if ( ( value & clockMask ) == 0 )
       {
-        if ( ( value & CLOCK ) == 0 )
+        value = clockMask | counter;
+
+        if ( counter == 0 || counter == counterMax )
         {
-          value = CLOCK | ( x++ << 1 );
+          dir = ( dir > 0 ) ? -1 : +1;
         }
-        else
-        {
-          value = ( x << 1 );
-        }
+        counter += dir;
+      }
+      else
+      {
+        value = counter;
       }
 
       aBuilder.addSample( i, value );

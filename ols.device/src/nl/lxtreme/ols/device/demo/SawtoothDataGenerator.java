@@ -47,13 +47,23 @@ final class SawtoothDataGenerator implements IDataGenerator
   public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
       AcquisitionProgressListener aProgressListener )
   {
-    aBuilder.setChannelCount( 32 );
+    int maxValue = ( 1 << aChannelCount );
+
+    aBuilder.setChannelCount( aChannelCount );
+    aBuilder.setSampleRate( SR_10MHZ );
     aBuilder.setTriggerPosition( ( int )( aSampleCount * 0.25 ) );
+
+    // Make a single group with all channels...
+    aBuilder.addChannelGroup( 0, "Demo counter" );
+    for ( int i = 0; i < aChannelCount; i++ )
+    {
+      aBuilder.addChannelToGroup( i, 0 );
+    }
 
     for ( int i = 0; i < aSampleCount; i++ )
     {
-      final int v = ( i / 8 ) & 0xff;
-      aBuilder.addSample( i, ( 255 - v ) | ( v << 8 ) | ( ( 255 - v ) << 16 ) | ( v << 24 ) );
+      final int v = maxValue - ( i % maxValue );
+      aBuilder.addSample( i, v );
 
       aProgressListener.acquisitionInProgress( i * 100 / aSampleCount );
     }

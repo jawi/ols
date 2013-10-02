@@ -50,7 +50,15 @@ final class SineDataGenerator implements IDataGenerator
     int channelCount = Math.min( 16, aChannelCount );
 
     aBuilder.setChannelCount( aChannelCount );
+    aBuilder.setSampleRate( SR_10MHZ );
     aBuilder.setTriggerPosition( ( int )( aSampleCount * 0.25 ) );
+
+    // Make a single group with all channels...
+    aBuilder.addChannelGroup( 0, "Demo counter" );
+    for ( int i = 0; i < aChannelCount; i++ )
+    {
+      aBuilder.addChannelToGroup( i, 0 );
+    }
 
     final double max = ( ( ( 1L << channelCount ) - 1L ) & 0xFFFFFFFFL );
     final double half = ( max / 2.0 );
