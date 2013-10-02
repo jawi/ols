@@ -23,6 +23,7 @@ package nl.lxtreme.ols.common.acquisition;
 
 import static org.junit.Assert.*;
 import nl.lxtreme.ols.common.*;
+import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.*;
 
 import org.junit.*;
 
@@ -167,6 +168,55 @@ public class AcquisitionDataBuilderTest
     assertChannelGroups( channelGroups,
         new int[][] { { 3, 1, 0, 2 }, { 4, 6, 5, 7 }, { 8, 9, 10, 11, 12, 13, 14, 15 } } );
     assertEquals( 3, channelGroups.length );
+  }
+
+  /**
+   * Tests creating of {@link AcquisitionData} with 16 channels.
+   */
+  @Test
+  public void testApplyTemplateOk()
+  {
+    AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    builder.setChannelCount( 8 );
+    builder.setSampleRate( 1 );
+    builder.addChannelGroup( 0, "Group A" );
+    builder.addChannelToGroup( 3, 0 );
+    builder.addChannelToGroup( 1, 0 );
+    builder.addChannelToGroup( 0, 0 );
+    builder.addChannelToGroup( 2, 0 );
+    builder.addChannelGroup( 1, "Group B" );
+    builder.addChannelToGroup( 4, 1 );
+    builder.addChannelToGroup( 6, 1 );
+    builder.addChannelToGroup( 5, 1 );
+    builder.addChannelToGroup( 7, 1 );
+
+    AcquisitionData data = builder.build();
+    assertNotNull( data );
+
+    Channel[] channels = data.getChannels();
+    assertEquals( 8, channels.length );
+    assertChannels( channels );
+
+    ChannelGroup[] channelGroups = data.getChannelGroups();
+    assertChannelGroups( channelGroups, new int[][] { { 3, 1, 0, 2 }, { 4, 6, 5, 7 } } );
+    assertEquals( 2, channelGroups.length );
+
+    builder = new AcquisitionDataBuilder();
+    builder.applyTemplate( data, IncludeSamples.NO, IncludeAnnotations.NO );
+    // cut out the MSB completely...
+    builder.setChannelCount( 7 );
+    builder.setEnabledChannelMask( 0x7F );
+    
+    AcquisitionData otherData = builder.build();
+    assertNotNull( otherData );
+
+    channels = otherData.getChannels();
+    assertEquals( 7, channels.length );
+    assertChannels( channels );
+
+    channelGroups = otherData.getChannelGroups();
+    assertChannelGroups( channelGroups, new int[][] { { 3, 1, 0, 2 }, { 4, 6, 5 } } );
+    assertEquals( 2, channelGroups.length );
   }
 
   /**

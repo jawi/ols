@@ -296,11 +296,11 @@ public final class AcquisitionDataBuilder
     /**
      * Creates a new {@link ChannelGroupImpl} instance.
      */
-    public ChannelGroupImpl( int aIndex, String aName, Channel... aChannels )
+    public ChannelGroupImpl( int aIndex, String aName, List<Channel> aChannels )
     {
       this.index = aIndex;
       this.name = aName;
-      this.channels = new ArrayList<Channel>( Arrays.asList( aChannels ) );
+      this.channels = new ArrayList<Channel>( aChannels );
     }
 
     // METHODS
@@ -1295,6 +1295,17 @@ public final class AcquisitionDataBuilder
   }
 
   /**
+   * Clears the absolute length in this builder.
+   * 
+   * @return this builder.
+   */
+  public AcquisitionDataBuilder clearAbsoluteLength()
+  {
+    this.absoluteLength = NOT_AVAILABLE;
+    return this;
+  }
+
+  /**
    * Clears all sample rate information in this builder, effectively marking the
    * sample data as state-values instead of time-based values.
    * 
@@ -1514,17 +1525,17 @@ public final class AcquisitionDataBuilder
       int groupIdx = entry.getKey().intValue();
       ChannelGroupInfo groupDef = entry.getValue();
 
-      int chIdx = 0;
       List<Integer> channelIndices = groupDef.channelIndices;
-      Channel[] channelRefs = new Channel[channelIndices.size()];
+      List<Channel> channelRefs = new ArrayList<Channel>( channelIndices.size() );
       for ( Integer channelIdx : channelIndices )
       {
         Channel channel = aChannelIndex.get( channelIdx );
         if ( channel == null )
         {
-          throw new IllegalArgumentException( "Undefined channel #" + channelIdx );
+          // probably masked out...
+          continue;
         }
-        channelRefs[chIdx++] = channel;
+        channelRefs.add( channel );
         allChannels.remove( channel );
       }
 
@@ -1537,14 +1548,7 @@ public final class AcquisitionDataBuilder
       Integer groupIdx = Integer.valueOf( channelGroups.size() );
       String name = String.format( "Group %d", groupIdx );
 
-      Channel[] channelRefs = new Channel[allChannels.size()];
-      int chIdx = 0;
-      for ( Channel channel : allChannels )
-      {
-        channelRefs[chIdx++] = channel;
-      }
-
-      channelGroups.add( new ChannelGroupImpl( groupIdx.intValue(), name, channelRefs ) );
+      channelGroups.add( new ChannelGroupImpl( groupIdx.intValue(), name, allChannels ) );
     }
 
     return channelGroups;
