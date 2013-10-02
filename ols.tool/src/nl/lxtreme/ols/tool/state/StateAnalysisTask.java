@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.state;
 
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.acquisition.AcquisitionDataBuilder.*;
 import nl.lxtreme.ols.tool.api.*;
 
 
@@ -78,6 +79,11 @@ public class StateAnalysisTask implements ToolTask<AcquisitionData>
     int newEnabledChannels = ( int )( ( ( 1L << data.getChannelCount() ) - 1L ) ) & dataMask;
 
     AcquisitionDataBuilder builder = new AcquisitionDataBuilder();
+    // Take over the groups
+    builder.applyTemplate( data, IncludeSamples.NO, IncludeAnnotations.NO );
+    builder.clearAbsoluteLength();
+    builder.clearSampleRate();
+    builder.clearTrigger();
     builder.setChannelCount( newChannelCount );
     builder.setEnabledChannelMask( newEnabledChannels );
 
