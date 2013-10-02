@@ -492,12 +492,6 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
     return config;
   }
 
-  private int smartParseInt( String aText, int aDefault )
-  {
-    // TODO Auto-generated method stub
-    return 0;
-  }
-
   /**
    * @see nl.lxtreme.ols.api.Configurable#readPreferences(org.osgi.service.prefs.Preferences)
    */
@@ -1468,21 +1462,21 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
   }
 
   /**
-   * @return <code>true</code> if a serial connection is to be established,
-   *         <code>false</code> otherwise.
-   */
-  private boolean isSerialConnection()
-  {
-    return DeviceInterface.SERIAL.equals( this.connTypeSelect.getSelectedItem() );
-  }
-
-  /**
    * @return <code>true</code> if a network connection is to be established,
    *         <code>false</code> otherwise.
    */
   private boolean isNetworkConnection()
   {
     return DeviceInterface.NETWORK.equals( this.connTypeSelect.getSelectedItem() );
+  }
+
+  /**
+   * @return <code>true</code> if a serial connection is to be established,
+   *         <code>false</code> otherwise.
+   */
+  private boolean isSerialConnection()
+  {
+    return DeviceInterface.SERIAL.equals( this.connTypeSelect.getSelectedItem() );
   }
 
   /**
@@ -1539,6 +1533,18 @@ public final class LogicSnifferConfigDialog extends JDialog implements Configura
       this.applyHexMaskButton[stage].setEnabled( stageEnabled );
       this.applyHexValueButton[stage].setEnabled( stageEnabled );
       this.invertHexValue[stage].setEnabled( stageEnabled );
+    }
+  }
+
+  private int smartParseInt( String aText, int aDefault )
+  {
+    try
+    {
+      return Integer.parseInt( aText );
+    }
+    catch ( NumberFormatException exception )
+    {
+      return aDefault;
     }
   }
 

@@ -23,6 +23,7 @@ package nl.lxtreme.ols.device.demo;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 
 import javax.swing.*;
 
@@ -34,16 +35,35 @@ import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
  * @author jawi
  */
 @SuppressWarnings( "boxing" )
-public class TestDeviceDialog extends JDialog implements Configurable, Closeable
+public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
 {
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  static final String[] DATA_FUNCTIONS = new String[] { "Sawtooth", "All zeros", "Sine", "odd-even", "0x55-0xAA",
-      "Random", "I2C sample", "1-Wire sample", "Manchester encoded", "0x80-0x00" };
   static final Integer[] CHANNELS = new Integer[] { 1, 4, 8, 16, 32 };
   static final Integer[] DATA_LENGTH = new Integer[] { 16, 256, 1024, 4096, 8192, 16384, 32768, 65536, 131072 };
+  static final Map<String, IDataGenerator> GENERATORS = new LinkedHashMap<String, IDataGenerator>();
+
+  static
+  {
+    final Class<?>[] generators = { SawtoothDataGenerator.class, ZeroDataGenerator.class, SineDataGenerator.class,
+        OddEvenGenerator.class, RandomDataGenerator.class, I2CGenerator.class, OneWireGenerator.class,
+        ManchesterEncoder.class, ClockedCounterGenerator.class, StateDataGenerator.class };
+
+    for ( Class<?> generator : generators )
+    {
+      try
+      {
+        IDataGenerator inst = ( IDataGenerator )generator.newInstance();
+        GENERATORS.put( inst.getName(), inst );
+      }
+      catch ( Exception exception )
+      {
+        exception.printStackTrace();
+      }
+    }
+  }
 
   // VARIABLES
 
@@ -61,7 +81,7 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   /**
    *
    */
-  public TestDeviceDialog( final Window aParent )
+  public DemoDeviceDialog( final Window aParent )
   {
     super( aParent, "Test capture settings", ModalityType.DOCUMENT_MODAL );
 
@@ -93,9 +113,9 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
   /**
    * @return the dataFunction
    */
-  public String getDataFunction()
+  public IDataGenerator getDataGenerator()
   {
-    return this.dataFunction;
+    return GENERATORS.get( this.dataFunction );
   }
 
   /**
@@ -163,7 +183,9 @@ public class TestDeviceDialog extends JDialog implements Configurable, Closeable
    */
   private JPanel createContents()
   {
-    this.dataFunctionCombo = new JComboBox( DATA_FUNCTIONS );
+    Object[] generatorNames = GENERATORS.keySet().toArray();
+
+    this.dataFunctionCombo = new JComboBox( generatorNames );
     this.channelsCombo = new JComboBox( CHANNELS );
     this.dataLengthCombo = new JComboBox( DATA_LENGTH );
 

@@ -35,7 +35,7 @@ public class DemoDevice implements Device
 {
   // VARIABLES
 
-  private TestDeviceDialog configDialog;
+  private DemoDeviceDialog configDialog;
   private boolean setup = false;
 
   // CONSTRUCTORS
@@ -66,7 +66,7 @@ public class DemoDevice implements Device
   public AcquisitionTask createAcquisitionTask( final AcquisitionProgressListener aProgressListener )
       throws IOException
   {
-    return new TestAcquisitionTask( this.configDialog, aProgressListener );
+    return new DemoAcquisitionTask( this.configDialog, aProgressListener );
   }
 
   /**
@@ -112,7 +112,7 @@ public class DemoDevice implements Device
     // if no valid dialog exists, create one
     if ( this.configDialog == null )
     {
-      this.configDialog = new TestDeviceDialog( aOwner );
+      this.configDialog = new DemoDeviceDialog( aOwner );
     }
 
     return ( this.setup = this.configDialog.showDialog() );

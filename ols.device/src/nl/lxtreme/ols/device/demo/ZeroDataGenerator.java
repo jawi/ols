@@ -16,7 +16,7 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
- * Copyright (C) 2010-2012 J.W. Janssen, www.lxtreme.nl
+ * Copyright (C) 2010-2013 J.W. Janssen, www.lxtreme.nl
  */
 package nl.lxtreme.ols.device.demo;
 
@@ -25,32 +25,36 @@ import nl.lxtreme.ols.common.acquisition.*;
 
 
 /**
- * Provides a common interface for all custom data generators.
+ * Provides a zero-data generator.
  */
-public interface IDataGenerator
+final class ZeroDataGenerator implements IDataGenerator
 {
   // METHODS
 
   /**
-   * @return a display name for this data generator, never <code>null</code>.
+   * {@inheritDoc}
    */
-  String getName();
+  @Override
+  public String getName()
+  {
+    return "All zeros";
+  }
 
   /**
-   * Generates the data and adds it to the given {@link AcquisitionDataBuilder}.
-   * 
-   * @param aChannelCount
-   *          the number of channels to generate data for;
-   * @param aSampleCount
-   *          the number of samples to generate;
-   * @param aBuilder
-   *          the builder to add the generated data to, cannot be
-   *          <code>null</code>.
-   * @param aProgressListener
-   *          the progress listener to report the progress to, cannot be
-   *          <code>null</code>.
+   * {@inheritDoc}
    */
-  void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
-      AcquisitionProgressListener aProgressListener );
+  @Override
+  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
+      AcquisitionProgressListener aProgressListener )
+  {
+    aBuilder.setChannelCount( aChannelCount );
+    aBuilder.setTriggerPosition( ( int )( aSampleCount * 0.25 ) );
 
+    for ( int i = 0; i < aSampleCount; i++ )
+    {
+      aBuilder.addSample( i, 0 );
+
+      aProgressListener.acquisitionInProgress( i * 100 / aSampleCount );
+    }
+  }
 }

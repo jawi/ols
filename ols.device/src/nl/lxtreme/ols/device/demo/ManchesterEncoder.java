@@ -75,14 +75,30 @@ final class ManchesterEncoder implements IDataGenerator
    * {@inheritDoc}
    */
   @Override
-  public void generate( final AcquisitionDataBuilder aBuilder )
+  public String getName()
   {
+    return "Manchester encoded data";
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void generate( int aChannelCount, int aSampleCount, AcquisitionDataBuilder aBuilder,
+      AcquisitionProgressListener aProgressListener )
+  {
+    writeData( "Hello World of Manchester encoded data!" );
+
+    aBuilder.setChannelCount( aChannelCount );
     aBuilder.setSampleRate( this.sampleRate );
     aBuilder.setTriggerPosition( this.trigger );
 
-    for ( int i = 0; i < this.data.size(); i++ )
+    int size = this.data.size();
+    for ( int i = 0; i < size; i++ )
     {
       aBuilder.addSample( i, this.data.get( i ).intValue() );
+
+      aProgressListener.acquisitionInProgress( i * 100 / size );
     }
   }
 
