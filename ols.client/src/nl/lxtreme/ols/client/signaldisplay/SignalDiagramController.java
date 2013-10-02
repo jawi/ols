@@ -179,10 +179,10 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
-   * Returns the signal element type that is underneat the given coordinate.
+   * Returns the signal element type that is underneath the given coordinate.
    * 
    * @param aPoint
-   *          the coordinate to determine what signal element is underneat, may
+   *          the coordinate to determine what signal element is underneath, may
    *          be <code>null</code>.
    * @return <code>null</code> if no coordinate is given, or no signal element
    *         type could be determined. Otherwise, the signal element type.

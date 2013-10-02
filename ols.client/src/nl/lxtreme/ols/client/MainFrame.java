@@ -24,6 +24,7 @@ package nl.lxtreme.ols.client;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
+import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
@@ -40,17 +41,23 @@ import nl.lxtreme.ols.client.icons.*;
 import nl.lxtreme.ols.client.project.*;
 import nl.lxtreme.ols.client.signaldisplay.*;
 import nl.lxtreme.ols.client.signaldisplay.laf.*;
+import nl.lxtreme.ols.client.signaldisplay.view.*;
 import nl.lxtreme.ols.common.*;
 import nl.lxtreme.ols.common.acquisition.Cursor;
 import nl.lxtreme.ols.util.swing.*;
 import nl.lxtreme.ols.util.swing.StandardActionFactory.CloseAction.Closeable;
 import nl.lxtreme.ols.util.swing.component.*;
 
+import com.jidesoft.docking.*;
+import com.jidesoft.docking.DockingManager.TabbedPaneCustomizer;
+import com.jidesoft.docking.event.*;
+import com.jidesoft.swing.*;
+
 
 /**
  * Denotes the main UI.
  */
-public final class MainFrame extends JFrame implements Closeable, PropertyChangeListener, Configurable
+public final class MainFrame extends DefaultDockableHolder implements Closeable, PropertyChangeListener, Configurable
 {
   // INNER TYPES
 
@@ -753,12 +760,20 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
   private static final String PERSISTENT_MENU_ITEM_KEY = "persistentMenuItem";
 
+  public static final String TW_ACQUISITION = AcquisitionDetailsView.ID;
+  public static final String TW_MEASURE = MeasurementView.ID;
+  public static final String TW_CURSORS = CursorDetailsView.ID;
+
   // VARIABLES
 
   private final SignalDiagramComponent signalDiagram;
   private final JTextStatusBar status;
   private final ClientController controller;
-  private final DockController dockController;
+  private final File dataStorage;
+
+  private AcquisitionDetailsView captureDetails;
+  private CursorDetailsView cursorDetails;
+  private MeasurementView measurementDetails;
 
   private JMenu deviceMenu;
   private JMenu toolsMenu;
@@ -773,15 +788,15 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
   /**
    * Creates a new MainFrame instance.
    * 
-   * @param aDockController
-   *          the dock controller to use, cannot be <code>null</code>;
-   * @param aClientController
+   * @param aDataStorage
+   *          the storage area to use, cannot be <code>null</code>;
+   * @param aController
    *          the client controller to use, cannot be <code>null</code>.
    */
-  public MainFrame( final DockController aDockController, final ClientController aClientController )
+  public MainFrame( File aDataStorage, final ClientController aController )
   {
-    this.controller = aClientController;
-    this.dockController = aDockController;
+    this.dataStorage = aDataStorage;
+    this.controller = aController;
 
     // Let the host platform determine where this diagram should be displayed;
     // gives it more or less a native feel...
@@ -800,24 +815,110 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
 
     final JToolBar tools = createMenuBars();
 
-    // Create a scrollpane for the diagram...
-    this.dockController.setMainContent( new ZoomCapableScrollPane( signalDiagramController ) );
+    DockingManager dm = getDockingManager();
+    dm.setAutoDocking( true );
+    dm.setUseGlassPaneEnabled( true );
+    dm.setDockedFramesResizable( true );
+    dm.setEasyTabDock( true );
+    dm.setFloatingContainerType( DockingManager.FLOATING_CONTAINER_TYPE_WINDOW );
+    dm.setGroupAllowedOnSidePane( true );
+    dm.setHidable( false );
+    dm.setInitSplitPriority( DockingManager.SPLIT_WEST_SOUTH_EAST_NORTH );
+    dm.setLayoutDirectory( aDataStorage.getAbsolutePath() );
+    dm.setOutlineMode( DockingManager.HW_OUTLINE_MODE );
+    dm.setShowContextMenu( true );
+    dm.setShowGripper( false );
+    dm.setShowWorkspace( true );
+    dm.setSidebarRollover( true );
+    dm.setUsePref( false );
 
-    final JPanel contentPane = new JPanel( new BorderLayout() );
+    dm.addDockableFrameListener( new DockableFrameAdapter()
+    {
+      @Override
+      public void dockableFrameFloating( final DockableFrameEvent aEvent )
+      {
+        // Show title bar for each floating dockable frame; this way, it can be
+        // identified properly, and provides access to the context menu...
+        aEvent.getDockableFrame().setShowTitleBar( true );
+      }
+
+      @Override
+      public void dockableFrameDocked( final DockableFrameEvent aEvent )
+      {
+        // Hide the title bar for docked framed...
+        aEvent.getDockableFrame().setShowTitleBar( false );
+      }
+    } );
+
+    dm.setTabbedPaneCustomizer( new TabbedPaneCustomizer()
+    {
+      @Override
+      public void customize( final JideTabbedPane tabbedPane )
+      {
+        tabbedPane.setShowIconsOnTab( false );
+        tabbedPane.setShowCloseButton( false );
+        tabbedPane.setUseDefaultShowIconsOnTab( false );
+        tabbedPane.setUseDefaultShowCloseButtonOnTab( false );
+      }
+    } );
+
+    // Start the layout of the docking frames...
+    dm.loadLayoutData();
+
+    this.cursorDetails = CursorDetailsView.create( signalDiagramController );
+    registerToolWindow( this.cursorDetails );
+
+    this.captureDetails = AcquisitionDetailsView.create( signalDiagramController );
+    registerToolWindow( this.captureDetails );
+
+    this.measurementDetails = MeasurementView.create( signalDiagramController );
+    registerToolWindow( this.measurementDetails );
+
+    // this.annotationOverview = AnnotationOverview.create( aController );
+    // registerToolWindow( this.annotationOverview );
+
+    Workspace workspace = dm.getWorkspace();
+    workspace.add( new ZoomCapableScrollPane( signalDiagramController ) );
+
+    dm.resetToDefault();
+
+    Container contentPane = getContentPane();
     contentPane.add( tools, BorderLayout.PAGE_START );
-    contentPane.add( this.dockController.get(), BorderLayout.CENTER );
+    contentPane.add( dm.getMainContainer(), BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
 
-    setContentPane( contentPane );
+    // Finalize the layout of the docking frames...
+    File dataFile = new File( aDataStorage, "dock.settings" );
+    if ( ( aDataStorage != null ) && dataFile.exists() )
+    {
+      dm.loadLayoutDataFromFile( dataFile.getAbsolutePath() );
+    }
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
-
-    // Start the actual dock controller...
-    this.dockController.start();
   }
 
   // METHODS
+
+  /**
+   * @param aToolWindow
+   */
+  public final void registerToolWindow( final IToolWindow aToolWindow )
+  {
+    boolean defaultVisible = UIManager.getBoolean( UIManagerKeys.SHOW_TOOL_WINDOWS_DEFAULT );
+
+    DockableFrame frame = new DockableFrame( aToolWindow.getName() );
+    frame.getContentPane().add( ( Component )aToolWindow );
+    frame.setDefaultEscapeAction( DockableFrame.ESCAPE_ACTION_DO_NOTING );
+    frame.setVisible( defaultVisible );
+    frame.getDockableAction().setEnabled( false );
+
+    DockContext context = frame.getContext();
+    context.setInitMode( DockContext.STATE_FRAMEDOCKED );
+    context.setInitSide( DockContext.DOCK_SIDE_EAST );
+
+    getDockingManager().addFrame( frame );
+  }
 
   /**
    * Returns whether the current host's operating system is Mac OS X.
@@ -975,10 +1076,15 @@ public final class MainFrame extends JFrame implements Closeable, PropertyChange
    */
   void internalClose()
   {
+    File dataFile = new File( this.dataStorage, "dock.settings" );
+    DockingManager dockingManager = getDockingManager();
+    if ( dockingManager != null )
+    {
+      dockingManager.saveLayoutDataToFile( dataFile.getAbsolutePath() );
+    }
+
     setVisible( false );
     dispose();
-
-    this.dockController.stop();
   }
 
   /**

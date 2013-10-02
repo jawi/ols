@@ -41,6 +41,8 @@ import org.osgi.service.cm.*;
 import org.osgi.service.log.*;
 import org.osgi.service.prefs.*;
 
+import com.jidesoft.utils.*;
+
 
 /**
  * Provides the client bundle activator, which is responsible for starting the
@@ -140,7 +142,8 @@ public class Activator extends DependencyActivatorBase
   @Override
   public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
-    // Nothing...
+    // Ensure the license is released...
+//    Lm.clearLicense();
   }
 
   /**
@@ -154,6 +157,9 @@ public class Activator extends DependencyActivatorBase
     {
       throw new RuntimeException( "Cannot start client: running headless." );
     }
+
+    // Verify the license for JIDE-docking; thanks to JIDE Software for providing a free license...
+    Lm.verifyLicense( "Jan Willem Janssen", "OLS client", "zGiivJPzfPBGyRP5g.0P7xl8:pdUEzR2" );
 
     final ClientController clientController = new ClientController();
 

@@ -145,7 +145,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
    * @param aController
    *          the controller to use, cannot be <code>null</code>.
    */
-  SignalDiagramComponent( final SignalDiagramController aController )
+  public SignalDiagramComponent( final SignalDiagramController aController )
   {
     super( new BorderLayout() );
 

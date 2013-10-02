@@ -54,6 +54,8 @@ import org.apache.felix.dm.Component;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 
+import com.jidesoft.plaf.*;
+
 
 /**
  * Denotes a front-end controller for the client.
@@ -1355,7 +1357,6 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   public final void start()
   {
     final String version = getVersion();
-
     initOSSpecifics( Constants.SHORT_NAME, getVersion() );
 
     // Make sure we're running on the EDT to ensure the Swing threading model is
@@ -1371,8 +1372,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
         Bundle bundle = FrameworkUtil.getBundle( ClientController.class );
         File dataStorage = bundle.getBundleContext().getDataFile( "" );
 
-        final MainFrame mf = new MainFrame( new DockController( dataStorage, getSignalDiagramController() ),
-            ClientController.this );
+        final MainFrame mf = new MainFrame( dataStorage, ClientController.this );
         setMainFrame( mf );
 
         // ensure that all changes to cursors are reflected in the UI...
@@ -1962,6 +1962,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       UIManager.put( "Application.useSystemFontSettings", Boolean.FALSE );
       setLookAndFeel();
     }
+
+    // Install the JIDE-specific extensions...
+    LookAndFeelFactory.installJideExtension();
   }
 
   /**

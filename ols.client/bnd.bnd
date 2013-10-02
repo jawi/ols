@@ -2,13 +2,13 @@
 	osgi.core;version=4.2.0,\
 	osgi.cmpn;version=4.2.0,\
 	org.apache.felix.dependencymanager;version=3.1.0,\
+	lib.swing;version=latest,\
+	com.jidesoft.docking;version=3.5.8,\
 	ols.common;version=latest,\
 	ols.device.api;version=latest,\
 	ols.export.api;version=latest,\
 	ols.tool.api;version=latest,\
 	service.acquisition.api;version=latest,\
-	lib.swing;version=latest,\
 	junit.osgi;version=4.11.0,\
-	org.mockito.mockito-all;version=1.9.0,\
-	mydoggy-osgi;version=1.5.0
+	org.mockito.mockito-all;version=1.9.0
 -sub: *.bnd

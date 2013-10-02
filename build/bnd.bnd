@@ -2,7 +2,6 @@
 -dependson: \
 	purejavacomm,\
 	lib.swing,\
-	lib.mydoggy,\
 	ols.common,\
 	ols.client,\
 	ols.device,\

@@ -349,6 +349,7 @@ public final class Runner
 
     final Map<String, Object> config = new HashMap<String, Object>();
 
+    config.put( Constants.FRAMEWORK_BOOTDELEGATION, "com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*" );
     config.put( Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.apple.mrj,com.apple.eawt,javax.swing,javax.media.jai" );
     // Issue #36: explicitly set the location to the bundle cache directory,
     // otherwise it is created /relatively/ to the current working directory,
