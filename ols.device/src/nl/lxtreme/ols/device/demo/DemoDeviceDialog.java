@@ -50,7 +50,7 @@ public class DemoDeviceDialog extends JDialog implements Configurable, Closeable
   {
     final Class<?>[] generators = { SawtoothDataGenerator.class, ZeroDataGenerator.class, SineDataGenerator.class,
         OddEvenGenerator.class, RandomDataGenerator.class, I2CGenerator.class, OneWireGenerator.class,
-        ManchesterEncoder.class, ClockedCounterGenerator.class, StateDataGenerator.class };
+        ManchesterEncoder.class, ClockedCounterGenerator.class, StateDataGenerator.class, BurstGenerator.class };
 
     for ( Class<?> generator : generators )
     {
