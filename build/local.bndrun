@@ -89,4 +89,4 @@
     org.apache.felix.log.maxSize=-1,\
     org.osgi.framework.bootdelegation="com.yourkit.*,com.sun.*,sun.*,apple.*,com.apple.*"
 -runvm: \
-	-Xdock:name=LogicSniffer -Xmx1024m
+	-Xdock:name=LogicSniffer -Xmx2048m -Dnl.lxtreme.ols.client.debug=true
