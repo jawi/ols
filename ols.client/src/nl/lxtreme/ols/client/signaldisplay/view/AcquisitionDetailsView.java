@@ -248,8 +248,6 @@ public class AcquisitionDetailsView extends AbstractViewLayer implements IToolWi
 
     JPanel panel = new JPanel( new SpringLayout() );
 
-    SpringLayoutUtils.addSeparator( panel, "Acquisition details" );
-
     // ROW 1
     panel.add( SwingComponentUtils.createRightAlignedLabel( "Sample count:" ) );
     panel.add( this.sampleCount );

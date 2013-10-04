@@ -133,7 +133,7 @@ public class Activator extends DependencyActivatorBase
    */
   public static boolean isDebugMode()
   {
-    return Boolean.parseBoolean( System.getProperty( "nl.lxtreme.ols.client.debug", "false" ) );
+    return Boolean.getBoolean( "nl.lxtreme.ols.client.debug" );
   }
 
   /**
@@ -143,7 +143,7 @@ public class Activator extends DependencyActivatorBase
   public void destroy( final BundleContext aContext, final DependencyManager aManager ) throws Exception
   {
     // Ensure the license is released...
-//    Lm.clearLicense();
+    // Lm.clearLicense();
   }
 
   /**
@@ -158,7 +158,8 @@ public class Activator extends DependencyActivatorBase
       throw new RuntimeException( "Cannot start client: running headless." );
     }
 
-    // Verify the license for JIDE-docking; thanks to JIDE Software for providing a free license...
+    // Verify the license for JIDE-docking; thanks to JIDE Software for
+    // providing a free license...
     Lm.verifyLicense( "Jan Willem Janssen", "OLS client", "zGiivJPzfPBGyRP5g.0P7xl8:pdUEzR2" );
 
     final ClientController clientController = new ClientController();

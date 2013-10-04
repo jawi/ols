@@ -157,7 +157,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
     add( this.signalView, BorderLayout.CENTER );
 
-    setOpaque( false );
+    setOpaque( true );
     // Enable synthetic drag events (even when mouse is outside window)...
     setAutoscrolls( true );
     // We can receive the focus...
@@ -313,6 +313,7 @@ public class SignalDiagramComponent extends JPanel implements Scrollable
 
         LOG.log( Level.FINE, "Rendering time = {0}, View = {1}.", new Object[] { Unit.Time.format( renderTime ),
             getVisibleRect() } );
+        System.out.printf( "Rendering time = %s, View = %s.%n", Unit.Time.format( renderTime ), getVisibleRect() );
       }
     }
     else

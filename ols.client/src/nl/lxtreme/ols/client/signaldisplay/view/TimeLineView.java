@@ -111,6 +111,8 @@ public class TimeLineView extends AbstractViewLayer implements ICursorChangeList
 
     this.mouseHandler = new MouseHandler( aController );
 
+    setOpaque( true );
+
     updateUI();
   }
 

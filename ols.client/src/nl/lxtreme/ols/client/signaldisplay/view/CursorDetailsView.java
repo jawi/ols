@@ -216,8 +216,6 @@ public class CursorDetailsView extends AbstractViewLayer implements IToolWindow,
       {
         final JPanel panel = new JPanel( new SpringLayout() );
 
-        addSeparator( panel, "Cursors" );
-
         for ( Cursor cursor : cursors )
         {
           String label = "" + ( cursor.getIndex() + 1 );

@@ -440,6 +440,8 @@ public class ChannelLabelsView extends AbstractViewLayer
 
     this.mouseHandler = new ChannelLabelMouseHandler( aController );
 
+    setOpaque( true );
+
     updateUI();
   }
 

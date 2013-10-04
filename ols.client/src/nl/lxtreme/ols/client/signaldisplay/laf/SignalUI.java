@@ -42,7 +42,7 @@ public class SignalUI extends ComponentUI
   // CONSTANTS
 
   /** The maximum number of points in a polyline. */
-  private static final int POINT_COUNT = 1000000;
+  private static final int POINT_COUNT = 50000;
   /**
    * The number of samples that are shown in a single view upon which is decided
    * to draw the group summary and scope a bit sloppy.
@@ -55,8 +55,8 @@ public class SignalUI extends ComponentUI
   private volatile MeasurementInfo measurementInfo;
   private volatile Rectangle measurementRect;
 
-  private static final int[] x = new int[2 * POINT_COUNT];
-  private static final int[] y = new int[2 * POINT_COUNT];
+  private final int[] x = new int[2 * POINT_COUNT];
+  private final int[] y = new int[2 * POINT_COUNT];
 
   // METHODS
 
@@ -488,44 +488,56 @@ public class SignalUI extends ComponentUI
           // Forced zero'd channel is *very* easy to draw...
           aCanvas.drawLine( clip.x, signalHeight, clip.x + clip.width, signalHeight );
         }
+
         else
         {
           // "Normal" data set; draw as accurate as possible...
           final int mask = signalElement.getMask();
 
           // Make sure we always start with time 0...
-          long timestamp = timestamps[startIdx];
+          long prevTimestamp = timestamps[startIdx];
           int prevSampleValue = ( values[startIdx] & mask );
 
-          int xValue = ( int )( zoomFactor * timestamp );
-          int yValue = ( prevSampleValue == 0 ? signalHeight : 0 );
-
-          x[0] = xValue;
-          y[0] = yValue;
+          x[0] = ( int )( zoomFactor * prevTimestamp );
+          y[0] = ( prevSampleValue == 0 ? signalHeight : 0 );
           int p = 1;
 
-          for ( int sampleIdx = startIdx + 1; ( p < POINT_COUNT ) && ( sampleIdx <= endIdx ); sampleIdx++ )
+          for ( int sampleIdx = startIdx + 1; sampleIdx <= endIdx; sampleIdx++ )
           {
-            timestamp = timestamps[sampleIdx];
             int sampleValue = ( values[sampleIdx] & mask );
-
-            xValue = ( int )( zoomFactor * timestamp );
-
             if ( prevSampleValue != sampleValue )
             {
+              long timestamp = timestamps[sampleIdx];
+
+              int xValue = ( int )( zoomFactor * timestamp );
+
               x[p] = xValue;
               y[p] = ( prevSampleValue == 0 ? signalHeight : 0 );
               p++;
+
+              x[p] = xValue;
+              y[p] = ( sampleValue == 0 ? signalHeight : 0 );
+              p++;
+
+              prevSampleValue = sampleValue;
+              prevTimestamp = timestamp;
             }
 
-            x[p] = xValue;
-            y[p] = ( sampleValue == 0 ? signalHeight : 0 );
-            p++;
-
-            prevSampleValue = sampleValue;
+            if ( p >= ( x.length - 2 ) )
+            {
+              aCanvas.drawPolyline( x, y, p );
+              p = 0;
+            }
           }
 
-          aCanvas.drawPolyline( x, y, p );
+          if ( p > 0 )
+          {
+            x[p] = ( int )( zoomFactor * timestamps[endIdx] );
+            y[p] = ( values[endIdx] & mask ) == 0 ? signalHeight : 0;
+            p++;
+
+            aCanvas.drawPolyline( x, y, p );
+          }
 
           lastP = ( int )( ( p * 0.1 ) + ( lastP * 0.9 ) );
         }

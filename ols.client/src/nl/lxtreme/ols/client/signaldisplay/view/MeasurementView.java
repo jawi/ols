@@ -910,8 +910,6 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
     JPanel panel = new JPanel( new SpringLayout() );
 
     // ROW 0 -- HEADER
-    SpringLayoutUtils.addSeparator( panel, "Measurement" );
-
     panel.add( createRightAlignedLabel( "Enabled" ) );
     panel.add( this.enableMeasurementMode );
 

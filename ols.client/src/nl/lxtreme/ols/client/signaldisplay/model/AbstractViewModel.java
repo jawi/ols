@@ -72,7 +72,8 @@ public abstract class AbstractViewModel
   public Color getCursorColor( final int aCursorIndex )
   {
     final Cursor cursor = getSignalDiagramModel().getCursor( aCursorIndex );
-    return cursor.getColor();
+    Color color = cursor.getColor();
+    return color == null ? Color.WHITE : color;
   }
 
   /**

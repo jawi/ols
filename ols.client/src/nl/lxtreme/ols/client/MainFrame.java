@@ -50,7 +50,6 @@ import nl.lxtreme.ols.util.swing.component.*;
 
 import com.jidesoft.docking.*;
 import com.jidesoft.docking.DockingManager.TabbedPaneCustomizer;
-import com.jidesoft.docking.event.*;
 import com.jidesoft.swing.*;
 
 
@@ -547,9 +546,10 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
       final List<String> titles = new ArrayList<String>();
       for ( Window window : windows )
       {
-        if ( window.isDisplayable() )
+        String title = FocusWindowAction.getTitle( window );
+        if ( window.isDisplayable() && title != null && !"".equals( title.trim() ) )
         {
-          titles.add( FocusWindowAction.getTitle( window ) );
+          titles.add( title );
         }
       }
       return titles.toArray( new String[titles.size()] );
@@ -819,51 +819,52 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
     dm.setAutoDocking( true );
     dm.setUseGlassPaneEnabled( true );
     dm.setDockedFramesResizable( true );
+    dm.setFloatingFramesResizable( true );
+
     dm.setEasyTabDock( true );
-    dm.setFloatingContainerType( DockingManager.FLOATING_CONTAINER_TYPE_WINDOW );
+    dm.setFloatingContainerType( DockingManager.FLOATING_CONTAINER_TYPE_DIALOG );
+    dm.setInitSplitPriority( DockingManager.SPLIT_WEST_SOUTH_EAST_NORTH );
+    dm.setDoubleClickAction( DockingManager.DOUBLE_CLICK_TO_AUTOHIDE );
+    dm.setOutlineMode( DockingManager.HW_OUTLINE_MODE );
+
     dm.setGroupAllowedOnSidePane( true );
     dm.setHidable( false );
-    dm.setInitSplitPriority( DockingManager.SPLIT_WEST_SOUTH_EAST_NORTH );
-    dm.setLayoutDirectory( aDataStorage.getAbsolutePath() );
-    dm.setOutlineMode( DockingManager.HW_OUTLINE_MODE );
     dm.setShowContextMenu( true );
     dm.setShowGripper( false );
     dm.setShowWorkspace( true );
+    dm.setShowTitleOnOutline( false );
+    dm.setShowTitleBar( true );
+    dm.setShowDividerGripper( true );
     dm.setSidebarRollover( true );
     dm.setUsePref( false );
-
-    dm.addDockableFrameListener( new DockableFrameAdapter()
-    {
-      @Override
-      public void dockableFrameFloating( final DockableFrameEvent aEvent )
-      {
-        // Show title bar for each floating dockable frame; this way, it can be
-        // identified properly, and provides access to the context menu...
-        aEvent.getDockableFrame().setShowTitleBar( true );
-      }
-
-      @Override
-      public void dockableFrameDocked( final DockableFrameEvent aEvent )
-      {
-        // Hide the title bar for docked framed...
-        aEvent.getDockableFrame().setShowTitleBar( false );
-      }
-    } );
 
     dm.setTabbedPaneCustomizer( new TabbedPaneCustomizer()
     {
       @Override
-      public void customize( final JideTabbedPane tabbedPane )
+      public void customize( final JideTabbedPane aTabbedPane )
       {
-        tabbedPane.setShowIconsOnTab( false );
-        tabbedPane.setShowCloseButton( false );
-        tabbedPane.setUseDefaultShowIconsOnTab( false );
-        tabbedPane.setUseDefaultShowCloseButtonOnTab( false );
+        aTabbedPane.setShowIconsOnTab( false );
+        aTabbedPane.setShowCloseButtonOnTab( false );
+        aTabbedPane.setUseDefaultShowIconsOnTab( false );
+        aTabbedPane.setUseDefaultShowCloseButtonOnTab( false );
       }
     } );
 
-    // Start the layout of the docking frames...
-    dm.loadLayoutData();
+    dm.resetToDefault();
+
+    dm.setLayoutDirectory( aDataStorage.getAbsolutePath() );
+
+    // Finalize the layout of the docking frames...
+    File dataFile = new File( aDataStorage, "dock.settings" );
+    if ( ( aDataStorage != null ) && dataFile.exists() )
+    {
+      dm.loadLayoutDataFromFile( dataFile.getAbsolutePath() );
+    }
+    else
+    {
+      // Start the layout of the docking frames...
+      dm.loadLayoutData();
+    }
 
     this.cursorDetails = CursorDetailsView.create( signalDiagramController );
     registerToolWindow( this.cursorDetails );
@@ -880,22 +881,35 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
     Workspace workspace = dm.getWorkspace();
     workspace.add( new ZoomCapableScrollPane( signalDiagramController ) );
 
-    dm.resetToDefault();
-
     Container contentPane = getContentPane();
     contentPane.add( tools, BorderLayout.PAGE_START );
     contentPane.add( dm.getMainContainer(), BorderLayout.CENTER );
     contentPane.add( this.status, BorderLayout.PAGE_END );
 
-    // Finalize the layout of the docking frames...
-    File dataFile = new File( aDataStorage, "dock.settings" );
-    if ( ( aDataStorage != null ) && dataFile.exists() )
-    {
-      dm.loadLayoutDataFromFile( dataFile.getAbsolutePath() );
-    }
-
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
+
+    RepaintManager.setCurrentManager( new RepaintManager()
+    {
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      public void addDirtyRegion( JComponent aC, int aX, int aY, int aW, int aH )
+      {
+        // if ( aC instanceof ZoomCapableScrollPane )
+        // {
+        // return;
+        // }
+        // Class<? extends JComponent> type = aC.getClass();
+        // if ( type.getName().startsWith( "nl.lxtreme.ols" ) )
+        // {
+        // System.out.println( "Add dirty region for " + type.getSimpleName() +
+        // " [" + aX + ", " + aY + ", " + aW + ", " + aH + "]" );
+        // }
+        super.addDirtyRegion( aC, aX, aY, aW, aH );
+      }
+    } );
   }
 
   // METHODS
@@ -1181,18 +1195,25 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
     this.toolsMenu.addSeparator();
     this.toolsMenu.addMenuListener( new ToolMenuBuilder( this.controller ) );
 
+    this.windowMenu = bar.add( new JMenu( "Window" ) );
+    this.windowMenu.setMnemonic( 'W' );
+
+    // Add two items that remain constant for the remainder of the lifetime of
+    // this client...
+    this.windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) ) //
+        .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+    this.windowMenu.add( new JMenuItem( new MinimizeWindowAction() ) ) //
+        .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+
+    this.windowMenu.addSeparator();
+
+    JMenu viewMenu = bar.add( new JMenu( "Show View" ) );
+    viewMenu.putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
+
+    this.windowMenu.add( viewMenu );
+
     if ( isMacOS() )
     {
-      this.windowMenu = bar.add( new JMenu( "Window" ) );
-      this.windowMenu.setMnemonic( 'W' );
-
-      // Add two items that remain constant for the remainder of the lifetime of
-      // this client...
-      this.windowMenu.add( new JMenuItem( StandardActionFactory.createCloseAction() ) ) //
-          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
-      this.windowMenu.add( new JMenuItem( new MinimizeWindowAction() ) ) //
-          .putClientProperty( PERSISTENT_MENU_ITEM_KEY, Boolean.TRUE );
-
       this.windowMenu.addSeparator();
 
       this.windowMenu.addMenuListener( new WindowMenuBuilder( this.controller ) );

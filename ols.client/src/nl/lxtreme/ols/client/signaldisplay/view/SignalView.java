@@ -173,6 +173,8 @@ public class SignalView extends AbstractViewLayer implements IMeasurementListene
 
     this.mouseHandler = new MouseHandler( aController );
 
+    setOpaque( true );
+
     updateUI();
   }
 
