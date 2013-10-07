@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.spi;
 
 
 import static nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.tool.spi.SPIAnalyserTask.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -892,13 +893,13 @@ public final class SPIProtocolAnalysisDialog extends BaseToolDialog<SPIDataSet> 
               String bgColor;
 
               // this is an event
-              if ( SPIDataSet.SPI_CS_LOW.equals( ds.getEventName() ) )
+              if ( SPI_CS_LOW.equals( ds.getEventName() ) )
               {
                 // start condition
                 event = ds.getEventName();
                 bgColor = "#c0ffc0";
               }
-              else if ( SPIDataSet.SPI_CS_HIGH.equals( ds.getEventName() ) )
+              else if ( SPI_CS_HIGH.equals( ds.getEventName() ) )
               {
                 // stop condition
                 event = ds.getEventName();

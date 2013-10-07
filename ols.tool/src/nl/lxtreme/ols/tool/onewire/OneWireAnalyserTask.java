@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.onewire;
 
 
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.util.logging.*;
@@ -36,6 +37,16 @@ import nl.lxtreme.ols.tool.api.*;
 public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
 {
   // CONSTANTS
+
+  /** Denotes a bus-reset event. */
+  static final String EVENT_RESET = "RESET";
+  /** Denotes a bus-error event. */
+  static final String EVENT_BUS_ERROR = "BUS-ERROR";
+  /**
+   * Denotes a property whose (boolean) value indicated whether or not a slave
+   * was present.
+   */
+  static final String KEY_SLAVE_PRESENT = "Slave present";
 
   private static final String OW_1_WIRE = "1-Wire";
 
@@ -232,7 +243,10 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
         else
         {
           // Unknown symbol; report it as bus error and restart our byte...
-          reportBusError( aDataSet, byteStartTime );
+          time = ( long )( fallingEdge + ( this.owTiming.getBitFrameLength() / timingCorrection ) );
+
+          reportBusError( aDataSet, byteStartTime, time );
+
           byteValue = 0;
           bitCount = 8;
           time = fallingEdge;
@@ -244,6 +258,7 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
         {
           // Report the complete byte value...
           reportData( aDataSet, byteStartTime, time, byteValue );
+          
           byteValue = 0;
           bitCount = 8;
         }
@@ -337,14 +352,15 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
    * @param aType
    * @param aTimestamp
    */
-  private void reportBusError( final OneWireDataSet aDataSet, final long aStartTimestamp )
+  private void reportBusError( final OneWireDataSet aDataSet, final long aStartTimestamp, final long aEndTimestamp )
   {
     final AcquisitionData data = this.context.getData();
 
     final int startSampleIdx = Math.max( data.getSampleIndex( aStartTimestamp ), 0 );
     aDataSet.reportBusError( this.owLineIndex, startSampleIdx );
 
-    this.annHelper.addErrorAnnotation( this.owLineIndex, aStartTimestamp, aStartTimestamp, OneWireDataSet.OW_BUS_ERROR );
+    this.annHelper.addErrorAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp, EVENT_BUS_ERROR, KEY_COLOR,
+        "#ff8000", KEY_DESCRIPTION, "Timing issue." );
   }
 
   /**
@@ -362,9 +378,8 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
     final int endSampleIdx = Math.min( data.getSampleIndex( aEndTimestamp ) - 1, data.getTimestamps().length - 1 );
 
     aDataSet.reportData( this.owLineIndex, startSampleIdx, endSampleIdx, aByteValue );
-
-    final String annotation = String.format( "0x%X (%c)", Integer.valueOf( aByteValue ), Integer.valueOf( aByteValue ) );
-    this.annHelper.addAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp, annotation );
+    
+    this.annHelper.addSymbolAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp, aByteValue );
   }
 
   /**
@@ -383,7 +398,9 @@ public class OneWireAnalyserTask implements ToolTask<OneWireDataSet>
 
     aDataSet.reportReset( this.owLineIndex, startSampleIdx, endSampleIdx, aSlaveIsPresent );
 
-    final String annotation = String.format( "Master reset, slave %s present", aSlaveIsPresent ? "is" : "is NOT" );
-    this.annHelper.addAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp, annotation );
+    String desc = String.format( "Bus reset, slave %s present", aSlaveIsPresent ? "is" : "is NOT" );
+
+    this.annHelper.addEventAnnotation( this.owLineIndex, aStartTimestamp, aEndTimestamp, EVENT_RESET, KEY_COLOR,
+        "#e0e0e0", KEY_DESCRIPTION, desc, KEY_SLAVE_PRESENT, Boolean.valueOf( aSlaveIsPresent ) );
   }
 }

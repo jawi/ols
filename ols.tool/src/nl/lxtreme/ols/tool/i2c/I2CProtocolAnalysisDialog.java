@@ -22,6 +22,7 @@ package nl.lxtreme.ols.tool.i2c;
 
 
 import static nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.tool.i2c.I2CAnalyserTask.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -631,15 +632,15 @@ public final class I2CProtocolAnalysisDialog extends BaseToolDialog<I2CDataSet> 
               final String event = data.getEventName();
 
               String bgColor;
-              if ( I2CDataSet.I2C_START.equals( event ) || I2CDataSet.I2C_STOP.equals( event ) )
+              if ( I2C_START.equals( event ) || I2C_STOP.equals( event ) )
               {
                 bgColor = "#e0e0e0";
               }
-              else if ( I2CDataSet.I2C_ACK.equals( event ) )
+              else if ( I2C_ACK.equals( event ) )
               {
                 bgColor = "#c0ffc0";
               }
-              else if ( I2CDataSet.I2C_NACK.equals( event ) )
+              else if ( I2C_NACK.equals( event ) )
               {
                 bgColor = "#ffc0c0";
               }

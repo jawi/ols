@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.dmx512;
 
 
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
@@ -34,12 +35,29 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 
 
 /**
- * 
+ * Provides the actual DMX512 analyzer.
  */
 public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
 {
-
   // CONSTANTS
+
+  /**
+   * The space-before-break used as preamble for the actual data frame.
+   */
+  static final String EVENT_SBB = "Start before break";
+  /**
+   * The mark-after-break used as preamble for the actual data frame.
+   */
+  static final String EVENT_MAB = "Mark after break";
+  /**
+   * Used to denote a complete DMX512 packet (a complete series of slots between
+   * two mark after breaks.
+   */
+  static final String EVENT_PACKET = "Packet";
+  /**
+   * The property key to denote the number of slots in a packet.
+   */
+  static final String KEY_SLOT_COUNT = "count";
 
   private static final String DMX512_DATA_LABEL = "DMX512 data";
 
@@ -51,7 +69,6 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
   // VARIABLES
 
   private final ToolContext context;
-  private final ToolAnnotationHelper annHelper;
   private final ToolProgressListener progressListener;
 
   private int dataLine;
@@ -65,7 +82,6 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
   {
     this.context = aContext;
     this.progressListener = aProgressListener;
-    this.annHelper = new ToolAnnotationHelper( aContext );
 
     this.dataLine = -1;
   }
@@ -80,6 +96,7 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
   {
     final AcquisitionData data = this.context.getData();
     final int[] values = data.getValues();
+    final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
     int startOfDecode = this.context.getStartSampleIndex();
     final int endOfDecode = this.context.getEndSampleIndex();
@@ -107,8 +124,8 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
 
     final DMX512DataSet dataSet = new DMX512DataSet( startOfDecode, endOfDecode, data );
 
-    this.annHelper.clearAnnotations( this.dataLine );
-    this.annHelper.addLabelAnnotation( this.dataLine, DMX512_DATA_LABEL );
+    annotationHelper.clearAnnotations( this.dataLine );
+    annotationHelper.addLabelAnnotation( this.dataLine, DMX512_DATA_LABEL );
 
     final SerialConfiguration config = new SerialConfiguration( BAUDRATE, DATABITS, STOPBITS, PARITY,
         BitEncoding.HIGH_IS_MARK, BitOrder.MSB_FIRST, BitLevel.HIGH );
@@ -117,21 +134,62 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
     decoder.setProgressListener( this.progressListener );
     decoder.setCallback( new SerialDecoderCallback()
     {
+      private Boolean inMaB = Boolean.FALSE;
+      private int symbolsBetweenMaB = 0;
+      private long startTimeMaB = 0;
+
       /**
        * {@inheritDoc}
        */
       @Override
       public void onError( final int aChannelIdx, final ErrorType aType, final long aTime )
       {
+        switch ( aType )
+        {
+          case FRAME:
+            annotationHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Frame error", KEY_COLOR, "#ff6600" );
+            break;
+
+          case PARITY:
+            annotationHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Parity error", KEY_COLOR, "#ff9900" );
+            break;
+
+          case START:
+            annotationHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Start error", KEY_COLOR, "#ffcc00" );
+            break;
+        }
+
         dataSet.reportError( aChannelIdx, aType, data.getSampleIndex( aTime ) );
       }
 
       @Override
       public void onEvent( final int aChannelIdx, final String aEvent, final long aStartTime, final long aEndTime )
       {
-        dataSet.reportEvent( aChannelIdx, aEvent, data.getSampleIndex( aStartTime ), data.getSampleIndex( aEndTime ) );
+        annotationHelper.addEventAnnotation( aChannelIdx, aStartTime, aEndTime, aEvent );
 
-        addEventAnnotation( aChannelIdx, aEvent, aStartTime, aEndTime );
+        if ( EVENT_MAB.equals( aEvent ) )
+        {
+          if ( Boolean.FALSE.equals( this.inMaB ) )
+          {
+            this.startTimeMaB = aStartTime;
+            this.inMaB = Boolean.TRUE;
+          }
+          else if ( Boolean.TRUE.equals( this.inMaB ) )
+          {
+            // Emit an additional annotation to denote the slot length...
+            Integer slotCount = Integer.valueOf( this.symbolsBetweenMaB - 1 );
+            if ( slotCount.intValue() > 0 )
+            {
+              annotationHelper.addEventAnnotation( aChannelIdx, this.startTimeMaB, aEndTime, EVENT_PACKET,
+                  KEY_SLOT_COUNT, slotCount, KEY_DESCRIPTION, String.format( "%d slots", slotCount ) );
+            }
+
+            this.inMaB = Boolean.FALSE;
+            this.symbolsBetweenMaB = 0;
+          }
+        }
+
+        dataSet.reportEvent( aChannelIdx, aEvent, data.getSampleIndex( aStartTime ), data.getSampleIndex( aEndTime ) );
       }
 
       /**
@@ -140,42 +198,14 @@ public class DMX512AnalyzerTask implements ToolTask<DMX512DataSet>
       @Override
       public void onSymbol( final int aChannelIdx, final int aSymbol, final long aStartTime, final long aEndTime )
       {
+        if ( Boolean.TRUE.equals( this.inMaB ) )
+        {
+          this.symbolsBetweenMaB++;
+        }
+
+        annotationHelper.addSymbolAnnotation( aChannelIdx, aStartTime, aEndTime, aSymbol );
+
         dataSet.reportData( aChannelIdx, data.getSampleIndex( aStartTime ), data.getSampleIndex( aEndTime ), aSymbol );
-
-        addSymbolAnnotation( aChannelIdx, aSymbol, aStartTime, aEndTime );
-      }
-
-      /**
-       * Emits a new symbol annotation to the interested listener(s).
-       * 
-       * @param aSymbol
-       *          the symbol itself;
-       * @param aStartSampleIdx
-       *          the start sample index of the symbol;
-       * @param aEndSampleIdx
-       *          the end sample index of the symbol.
-       */
-      private void addEventAnnotation( final int aChannelIdx, final String aEvent, final long aStartTimestamp,
-          final long aEndTimestamp )
-      {
-        DMX512AnalyzerTask.this.annHelper.addAnnotation( aChannelIdx, aStartTimestamp, aEndTimestamp, aEvent );
-      }
-
-      /**
-       * Emits a new symbol annotation to the interested listener(s).
-       * 
-       * @param aSymbol
-       *          the symbol itself;
-       * @param aStartSampleIdx
-       *          the start sample index of the symbol;
-       * @param aEndSampleIdx
-       *          the end sample index of the symbol.
-       */
-      private void addSymbolAnnotation( final int aChannelIdx, final int aSymbol, final long aStartTimestamp,
-          final long aEndTimestamp )
-      {
-        DMX512AnalyzerTask.this.annHelper.addAnnotation( aChannelIdx, aStartTimestamp, aEndTimestamp,
-            String.format( "0x%1$X (%1$c)", Integer.valueOf( aSymbol ) ) );
       }
     } );
 

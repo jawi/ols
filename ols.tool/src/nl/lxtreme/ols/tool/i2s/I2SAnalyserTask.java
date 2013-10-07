@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.i2s;
 
 
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
@@ -222,11 +223,13 @@ public class I2SAnalyserTask implements ToolTask<I2SDataSet>
   private void reportData( final I2SDataSet dataSet, final long[] timestamps, Channel channel, long wordValue,
       int startIdx, int endIdx )
   {
+    String color = Channel.LEFT == channel ? "#cccccc" : "#eeeeee";
     String text = String.format( "%s data: 0x%x", channel.name(), Long.valueOf( wordValue ) );
 
     dataSet.reportData( this.dataIdx, startIdx, endIdx, channel, wordValue );
 
-    this.annHelper.addAnnotation( this.dataIdx, timestamps[startIdx], timestamps[endIdx], text );
+    this.annHelper.addAnnotation( this.dataIdx, timestamps[startIdx], timestamps[endIdx], Long.valueOf( wordValue ),
+        KEY_COLOR, color, KEY_DESCRIPTION, text );
   }
 }
 

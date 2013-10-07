@@ -20,8 +20,8 @@
  */
 package nl.lxtreme.ols.tool.onewire;
 
-
 import static nl.lxtreme.ols.tool.base.ExportUtils.HtmlExporter.*;
+import static nl.lxtreme.ols.tool.onewire.OneWireAnalyserTask.*;
 import static nl.lxtreme.ols.util.swing.SwingComponentUtils.*;
 
 import java.awt.*;
@@ -419,7 +419,7 @@ public class OneWireAnalyserDialog extends BaseToolDialog<OneWireDataSet> implem
               final String event = data.getEventName();
 
               String bgColor;
-              if ( OneWireDataSet.OW_RESET.equals( event ) )
+              if ( EVENT_RESET.equals( event ) )
               {
                 bgColor = "#e0e0e0";
               }

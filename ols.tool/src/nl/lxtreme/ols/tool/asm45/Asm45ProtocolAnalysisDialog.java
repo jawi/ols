@@ -672,7 +672,7 @@ public final class Asm45ProtocolAnalysisDialog extends BaseToolDialog<Asm45DataS
               // trigger event
               bgColor = "#ffa0ff";
             }
-            else if ( data.getType().equals( Asm45Data.TYPE_INSTRUCTION ) )
+            else if ( data.getType().equals( Asm45AnalyserTask.TYPE_INSTRUCTION ) )
             {
               // machine instruction
               bgColor = "#ffffff";

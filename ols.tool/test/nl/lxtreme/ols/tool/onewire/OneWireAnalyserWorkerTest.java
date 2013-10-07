@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.onewire;
 
 
+import static nl.lxtreme.ols.tool.onewire.OneWireAnalyserTask.*;
 import static org.junit.Assert.*;
 
 import java.net.*;
@@ -94,7 +95,7 @@ public class OneWireAnalyserWorkerTest
     int count = 0;
     for ( OneWireData data : aDataSet.getData() )
     {
-      if ( data.isEvent() && OneWireDataSet.OW_BUS_ERROR.equals( data.getEventName() ) )
+      if ( data.isEvent() && EVENT_BUS_ERROR.equals( data.getEventName() ) )
       {
         count++;
       }

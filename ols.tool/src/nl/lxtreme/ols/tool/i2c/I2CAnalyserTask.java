@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.i2c;
 
 
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.beans.*;
@@ -36,6 +37,12 @@ import nl.lxtreme.ols.tool.api.*;
 public class I2CAnalyserTask implements ToolTask<I2CDataSet>
 {
   // CONSTANTS
+
+  public static final String I2C_ACK = "ACK";
+  public static final String I2C_BUS_ERROR = "BUS-ERROR";
+  public static final String I2C_NACK = "NACK";
+  public static final String I2C_START = "START";
+  public static final String I2C_STOP = "STOP";
 
   public static final String LINE_A = "LineA";
   public static final String LINE_B = "LineB";
@@ -173,10 +180,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
     if ( this.detectSDA_SCL )
     {
       // We've just found our start condition, start the report with that...
-      reportStartCondition( i2cDataSet, startOfDecode );
-
-      this.annHelper.addAnnotation( this.sdaIdx, timestamps[startOfDecode], timestamps[startOfDecode] + 1,
-          I2CDataSet.I2C_START );
+      reportStartCondition( i2cDataSet, startOfDecode, timestamps[startOfDecode] );
 
       startCondFound = true;
     }
@@ -200,8 +204,6 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
         if ( bitCount == 0 )
         {
           // store decoded byte
-          reportData( i2cDataSet, prevIdx, idx, byteValue );
-
           final String annotation;
           if ( startCondFound )
           {
@@ -244,7 +246,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
                 Integer.valueOf( byteValue ), Integer.valueOf( byteValue ) );
           }
 
-          this.annHelper.addAnnotation( this.sdaIdx, timestamps[prevIdx], timestamps[idx], annotation );
+          reportData( i2cDataSet, prevIdx, idx, timestamps[prevIdx], timestamps[idx], byteValue, annotation );
 
           byteValue = 0;
         }
@@ -254,7 +256,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
         // SCL rises
         if ( sda != oldSDA )
         {
-          reportBusError( i2cDataSet, idx );
+          reportBusError( i2cDataSet, idx, timestamps[idx] );
         }
         else
         {
@@ -273,16 +275,12 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
             if ( sda != 0 )
             {
               // NACK
-              reportNACK( i2cDataSet, idx );
-
-              this.annHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, I2CDataSet.I2C_NACK );
+              reportNACK( i2cDataSet, idx, timestamps[idx] );
             }
             else
             {
               // ACK
-              reportACK( i2cDataSet, idx );
-
-              this.annHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, I2CDataSet.I2C_ACK );
+              reportACK( i2cDataSet, idx, timestamps[idx] );
             }
 
             // next byte
@@ -299,16 +297,14 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
         if ( ( bitCount > 0 ) && ( bitCount < ( I2C_BITCOUNT - 1 ) ) )
         {
           // bus error, no complete byte detected
-          reportBusError( i2cDataSet, idx );
+          reportIncompleteSymbol( i2cDataSet, idx, timestamps[idx], bitCount );
         }
         else
         {
           if ( sda > oldSDA )
           {
             // SDA rises, this is a stop condition
-            reportStopCondition( i2cDataSet, idx );
-
-            this.annHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, I2CDataSet.I2C_STOP );
+            reportStopCondition( i2cDataSet, idx, timestamps[idx] );
 
             slaveAddress = 0x00;
             direction = -1;
@@ -316,9 +312,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
           else
           {
             // SDA falls, this is a start condition
-            reportStartCondition( i2cDataSet, idx );
-
-            this.annHelper.addAnnotation( this.sdaIdx, timestamps[idx], timestamps[idx] + 1, I2CDataSet.I2C_START );
+            reportStartCondition( i2cDataSet, idx, timestamps[idx] );
 
             startCondFound = true;
           }
@@ -529,63 +523,92 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
   /**
    * @param aTime
    */
-  private void reportACK( final I2CDataSet aDataSet, final int aSampleIdx )
+  private void reportACK( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
   {
     if ( this.reportACK )
     {
       aDataSet.reportACK( this.sdaIdx, aSampleIdx );
+
+      this.annHelper.addEventAnnotation( this.sdaIdx, aTimestamp, aTimestamp + 1, I2C_ACK, KEY_COLOR, "#c0ffc0",
+          KEY_DESCRIPTION, "Acknowledged by slave" );
     }
   }
 
   /**
    * @param aTime
    */
-  private void reportBusError( final I2CDataSet aDataSet, final int aSampleIdx )
+  private void reportIncompleteSymbol( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp, int aBitCount )
   {
     aDataSet.reportBusError( this.sdaIdx, aSampleIdx );
+
+    this.annHelper.addErrorAnnotation( this.sdaIdx, aTimestamp, aTimestamp + 1, I2C_BUS_ERROR, KEY_COLOR, "#ff8000",
+        KEY_DESCRIPTION, "Incomplete byte read (only " + aBitCount + " bits)." );
+  }
+
+  /**
+   * @param aTime
+   */
+  private void reportBusError( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
+  {
+    aDataSet.reportBusError( this.sdaIdx, aSampleIdx );
+
+    this.annHelper.addErrorAnnotation( this.sdaIdx, aTimestamp, aTimestamp + 1, I2C_BUS_ERROR, KEY_COLOR, "#ff8000",
+        KEY_DESCRIPTION, "SDA should remain stable while SCL changes." );
   }
 
   /**
    * @param aTime
    * @param aByteValue
    */
-  private void reportData( final I2CDataSet aDataSet, final int aStartSampleIdx, final int aEndSampleIdx,
-      final int aByteValue )
+  private void reportData( I2CDataSet aDataSet, int aStartSampleIdx, int aEndSampleIdx, long aStartTime, long aEndTime,
+      int aByteValue, String aDescription )
   {
     aDataSet.reportData( this.sdaIdx, aStartSampleIdx, aEndSampleIdx, aByteValue );
+
+    annHelper.addSymbolAnnotation( this.sdaIdx, aStartTime, aEndTime, aByteValue, KEY_DESCRIPTION, aDescription );
+
   }
 
   /**
    * @param aDataSet
    * @param aTime
    */
-  private void reportNACK( final I2CDataSet aDataSet, final int aSampleIdx )
+  private void reportNACK( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
   {
     if ( this.reportNACK )
     {
       aDataSet.reportNACK( this.sdaIdx, aSampleIdx );
+
+      this.annHelper.addEventAnnotation( this.sdaIdx, aTimestamp, aTimestamp + 1, I2C_NACK, KEY_COLOR, "#ffc0c0",
+          KEY_DESCRIPTION, "Not acknowledged by slave" );
     }
   }
 
   /**
    * @param aTime
    */
-  private void reportStartCondition( final I2CDataSet aDataSet, final int aSampleIdx )
+  private void reportStartCondition( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
   {
     if ( this.reportStart )
     {
       aDataSet.reportStartCondition( this.sdaIdx, aSampleIdx );
+
+      this.annHelper.addEventAnnotation( this.sdaIdx, aTimestamp, aTimestamp + 1, I2C_START, KEY_COLOR, "#e0e0e0",
+          KEY_DESCRIPTION, "Start condition" );
     }
   }
 
   /**
    * @param aTime
    */
-  private void reportStopCondition( final I2CDataSet aDataSet, final int aSampleIdx )
+  private void reportStopCondition( I2CDataSet aDataSet, int aSampleIdx, long aTimestamp )
   {
     if ( this.reportStop )
     {
       aDataSet.reportStopCondition( this.sdaIdx, aSampleIdx );
+
+      this.annHelper.addEventAnnotation( this.sdaIdx, aTimestamp, aTimestamp + 1, I2C_STOP, KEY_COLOR, "#e0e0e0",
+          KEY_DESCRIPTION, "Stop condition" );
     }
   }
 }

@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.i2c;
 
 
+import static nl.lxtreme.ols.tool.i2c.I2CAnalyserTask.*;
 import static org.junit.Assert.*;
 
 import java.net.*;
@@ -102,7 +103,7 @@ public class I2CAnalyserWorkerDataFilesTest
     int count = 0;
     for ( I2CData data : aDataSet.getData() )
     {
-      if ( data.isEvent() && I2CDataSet.I2C_BUS_ERROR.equals( data.getEventName() ) )
+      if ( data.isEvent() && I2C_BUS_ERROR.equals( data.getEventName() ) )
       {
         count++;
       }

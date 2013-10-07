@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.jtag;
 
 
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.jtag.JTAGState.*;
 
 import java.math.*;
@@ -334,9 +335,9 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
             state = this.currentState.getDisplayText();
 
             this.annHelper.addAnnotation( this.tdiIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                String.format( "0x%x", new BigInteger( tdiData, 2 ) ) );
+                new BigInteger( tdiData, 2 ), KEY_TYPE, TYPE_SYMBOL );
             this.annHelper.addAnnotation( this.tdoIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                String.format( "0x%x", new BigInteger( tdoData, 2 ) ) );
+                new BigInteger( tdoData, 2 ), KEY_TYPE, TYPE_SYMBOL );
 
             aDataSet.reportJTAGTdiData( tdiIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdiData );
             aDataSet.reportJTAGTdoData( tdoIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdoData );
@@ -455,10 +456,10 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
             state = this.currentState.getDisplayText();
 
             this.annHelper.addAnnotation( this.tdiIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                String.format( "0x%x", new BigInteger( tdiData, 2 ) ) );
+                new BigInteger( tdiData, 2 ), KEY_TYPE, TYPE_SYMBOL );
 
             this.annHelper.addAnnotation( this.tdoIdx, timestamps[startTdiDataIdx], timestamps[endTdiDataIdx],
-                String.format( "0x%x", new BigInteger( tdoData, 2 ) ) );
+                new BigInteger( tdoData, 2 ), KEY_TYPE, TYPE_SYMBOL );
 
             aDataSet.reportJTAGTdiData( tdiIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdiData );
             aDataSet.reportJTAGTdoData( tdoIdx, startTdiDataIdx, endTdiDataIdx, currentState, tdoData );
@@ -479,7 +480,8 @@ public class JTAGAnalyserTask implements ToolTask<JTAGDataSet>
 
           if ( this.oldState != this.currentState )
           {
-            this.annHelper.addAnnotation( this.tmsIdx, timestamps[this.startIdx], timestamps[idx], state );
+            this.annHelper.addEventAnnotation( this.tmsIdx, timestamps[this.startIdx], timestamps[idx], state,
+                KEY_COLOR, "#e0e0e0" );
 
             aDataSet.reportJTAGState( this.tmsIdx, this.startIdx, idx, this.oldState );
 

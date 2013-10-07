@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.uart.impl;
 
 
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.util.logging.*;
@@ -44,6 +45,17 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
 public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 {
   // CONSTANTS
+
+  static final String UART_RXD = "RxD";
+  static final String UART_TXD = "TxD";
+  static final String UART_CTS = "CTS";
+  static final String UART_RTS = "RTS";
+  static final String UART_DCD = "DCD";
+  static final String UART_RI = "RI";
+  static final String UART_DSR = "DSR";
+  static final String UART_DTR = "DTR";
+
+  static final String KEY_EVENT_TYPE = "eventType";
 
   private static final Logger LOG = Logger.getLogger( UARTAnalyserTask.class.getName() );
 
@@ -147,37 +159,37 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     // decode RxD/TxD data lines...
     if ( this.rxdIndex >= 0 )
     {
-      prepareAndDecodeData( decodedData, this.rxdIndex, UARTData.UART_TYPE_RXDATA, UARTDataSet.UART_RXD );
+      prepareAndDecodeData( decodedData, this.rxdIndex, UARTData.UART_TYPE_RXDATA, UART_RXD );
     }
     if ( this.txdIndex >= 0 )
     {
-      prepareAndDecodeData( decodedData, this.txdIndex, UARTData.UART_TYPE_TXDATA, UARTDataSet.UART_TXD );
+      prepareAndDecodeData( decodedData, this.txdIndex, UARTData.UART_TYPE_TXDATA, UART_TXD );
     }
 
     // decode control lines...
     if ( this.ctsIndex >= 0 )
     {
-      prepareAndDecodeControl( decodedData, this.ctsIndex, UARTDataSet.UART_CTS );
+      prepareAndDecodeControl( decodedData, this.ctsIndex, UART_CTS );
     }
     if ( this.rtsIndex >= 0 )
     {
-      prepareAndDecodeControl( decodedData, this.rtsIndex, UARTDataSet.UART_RTS );
+      prepareAndDecodeControl( decodedData, this.rtsIndex, UART_RTS );
     }
     if ( this.dcdIndex >= 0 )
     {
-      prepareAndDecodeControl( decodedData, this.dcdIndex, UARTDataSet.UART_DCD );
+      prepareAndDecodeControl( decodedData, this.dcdIndex, UART_DCD );
     }
     if ( this.riIndex >= 0 )
     {
-      prepareAndDecodeControl( decodedData, this.riIndex, UARTDataSet.UART_RI );
+      prepareAndDecodeControl( decodedData, this.riIndex, UART_RI );
     }
     if ( this.dsrIndex >= 0 )
     {
-      prepareAndDecodeControl( decodedData, this.dsrIndex, UARTDataSet.UART_DSR );
+      prepareAndDecodeControl( decodedData, this.dsrIndex, UART_DSR );
     }
     if ( this.dtrIndex >= 0 )
     {
-      prepareAndDecodeControl( decodedData, this.dtrIndex, UARTDataSet.UART_DTR );
+      prepareAndDecodeControl( decodedData, this.dtrIndex, UART_DTR );
     }
 
     // sort the results by time
@@ -318,25 +330,6 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
-   * Emits a new symbol annotation to the interested listener(s).
-   * 
-   * @param aChannelIndex
-   *          the channel index on which the symbol was found;
-   * @param aSymbol
-   *          the symbol itself;
-   * @param aStartSampleIdx
-   *          the start sample index of the symbol;
-   * @param aEndSampleIdx
-   *          the end sample index of the symbol.
-   */
-  private void addSymbolAnnotation( final int aChannelIndex, final int aSymbol, final long aStartTimestamp,
-      final long aEndTimestamp )
-  {
-    this.annHelper.addAnnotation( aChannelIndex, aStartTimestamp, aEndTimestamp,
-        String.format( "0x%1$X (%1$c)", Integer.valueOf( aSymbol ) ) );
-  }
-
-  /**
    * Decodes a control line.
    * 
    * @param aDataSet
@@ -420,7 +413,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
     if ( baudRate <= 0 )
     {
       LOG.log( Level.INFO, "No (usable) {0}-data found for determining bitlength/baudrate ...",
-          aChannelIndex == this.rxdIndex ? UARTDataSet.UART_RXD : UARTDataSet.UART_TXD );
+          aChannelIndex == this.rxdIndex ? UART_RXD : UART_TXD );
     }
     else
     {
@@ -440,6 +433,24 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
               : UARTData.UART_TYPE_TXEVENT;
 
           aDataSet.reportError( aType, aChannelIdx, sampleIdx, eventType );
+
+          switch ( aType )
+          {
+            case FRAME:
+              annHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Frame error", KEY_COLOR, "#ff6600",
+                  KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
+              break;
+
+            case PARITY:
+              annHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Parity error", KEY_COLOR, "#ff9900",
+                  KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
+              break;
+
+            case START:
+              annHelper.addErrorAnnotation( aChannelIdx, aTime, aTime + 1, "Start error", KEY_COLOR, "#ffcc00",
+                  KEY_EVENT_TYPE, Integer.valueOf( aEventType ) );
+              break;
+          }
         }
 
         @Override
@@ -456,7 +467,7 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 
           aDataSet.reportData( aChannelIndex, startSampleIdx, endSampleIdx, aSymbol, aEventType );
 
-          addSymbolAnnotation( aChannelIndex, aSymbol, aStartTime, aEndTime );
+          annHelper.addSymbolAnnotation( aChannelIdx, aStartTime, aEndTime, aSymbol );
         }
       } );
 

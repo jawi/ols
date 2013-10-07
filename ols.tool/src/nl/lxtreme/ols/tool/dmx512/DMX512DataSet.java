@@ -31,17 +31,6 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.ErrorType;
  */
 public class DMX512DataSet extends BaseDataSet<DMX512Data>
 {
-  // CONSTANTS
-
-  /**
-   * The space-before-break used as preamble for the actual data frame.
-   */
-  public static final String EVENT_SBB = "Start before break";
-  /**
-   * The mark-after-break used as preamble for the actual data frame.
-   */
-  public static final String EVENT_MAB = "Mark after break";
-
   // VARIABLES
 
   private int decodedSymbols;
@@ -132,7 +121,7 @@ public class DMX512DataSet extends BaseDataSet<DMX512Data>
       final int aEndSampleIdx )
   {
     final int idx = size();
-    if ( EVENT_MAB.equals( aEvent ) )
+    if ( DMX512AnalyzerTask.EVENT_MAB.equals( aEvent ) )
     {
       if ( Boolean.FALSE.equals( this.inMaB ) )
       {

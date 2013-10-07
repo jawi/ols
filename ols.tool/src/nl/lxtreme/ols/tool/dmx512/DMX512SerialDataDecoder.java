@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.dmx512;
 
 
+import static nl.lxtreme.ols.tool.dmx512.DMX512AnalyzerTask.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.uart.*;
@@ -80,9 +81,9 @@ public class DMX512SerialDataDecoder extends AsyncSerialDataDecoder
       if ( callback != null )
       {
         // The first part is the start-before-break...
-        callback.onEvent( aChannelIdx, DMX512DataSet.EVENT_SBB, time, time2 );
+        callback.onEvent( aChannelIdx, EVENT_SBB, time, time2 );
         // The second part is the mark-after-break...
-        callback.onEvent( aChannelIdx, DMX512DataSet.EVENT_MAB, time2, time3 );
+        callback.onEvent( aChannelIdx, EVENT_MAB, time2, time3 );
       }
 
       // Continue the decoding after the MaB...

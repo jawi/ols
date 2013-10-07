@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.onewire;
 
 
+import static nl.lxtreme.ols.tool.onewire.OneWireAnalyserTask.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.base.*;
 
@@ -30,11 +31,6 @@ import nl.lxtreme.ols.tool.base.*;
  */
 public class OneWireDataSet extends BaseDataSet<OneWireData>
 {
-  // CONSTANTS
-
-  public static final String OW_RESET = "RESET";
-  public static final String OW_BUS_ERROR = "BUS-ERROR";
-
   // VARIABLES
 
   private int busErrors;
@@ -89,7 +85,7 @@ public class OneWireDataSet extends BaseDataSet<OneWireData>
   {
     final int idx = size();
     this.busErrors++;
-    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, OW_BUS_ERROR, false /* aSlavePresent */) );
+    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, EVENT_BUS_ERROR, false /* aSlavePresent */) );
   }
 
   /**
@@ -129,6 +125,6 @@ public class OneWireDataSet extends BaseDataSet<OneWireData>
       final boolean aSlaveIsPresent )
   {
     final int idx = size();
-    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, OW_RESET, aSlaveIsPresent ) );
+    addData( new OneWireData( idx, aChannelIdx, aSampleIdx, EVENT_RESET, aSlaveIsPresent ) );
   }
 }

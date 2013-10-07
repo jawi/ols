@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import static nl.lxtreme.ols.tool.spi.SPIAnalyserTask.*;
 import static org.junit.Assert.*;
 
 import java.net.*;
@@ -120,8 +121,8 @@ public class SPIAnalyserWorkerDataFilesTest
   public void testAnalyzeDataFile() throws Exception
   {
     SPIDataSet result = analyseDataFile( this.resourceName );
-    assertEventCount( result, SPIDataSet.SPI_MISO, this.expectedMisoSymbolCount );
-    assertEventCount( result, SPIDataSet.SPI_MOSI, this.expectedMosiSymbolCount );
+    assertEventCount( result, SPI_MISO, this.expectedMisoSymbolCount );
+    assertEventCount( result, SPI_MOSI, this.expectedMosiSymbolCount );
   }
 
   /**

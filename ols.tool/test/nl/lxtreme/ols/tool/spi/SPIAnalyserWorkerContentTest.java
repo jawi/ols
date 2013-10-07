@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import static nl.lxtreme.ols.tool.spi.SPIAnalyserTask.*;
 import static org.junit.Assert.*;
 
 import java.net.*;
@@ -73,9 +74,9 @@ public class SPIAnalyserWorkerContentTest
     SPIDataSet result = analyseDataFile( "spi_8bit_4.ols", 8, SPIMode.MODE_0, BitOrder.MSB_FIRST, false, -1, 1, 0, 3 );
     assertNotNull( result );
 
-    assertDataEvents( result, SPIDataSet.SPI_MOSI, 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S',
-        'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ',
-        'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S' );
+    assertDataEvents( result, SPI_MOSI, 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T',
+        'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S',
+        'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S', 'T', ' ', 'T', 'E', 'S' );
   }
 
   /**
@@ -88,7 +89,7 @@ public class SPIAnalyserWorkerContentTest
     SPIDataSet result = analyseDataFile( "spi_8bit_1.ols", 8, SPIMode.MODE_2, BitOrder.LSB_FIRST, true, -1, 1, 3, 2 );
     assertNotNull( result );
 
-    assertDataEvents( result, SPIDataSet.SPI_MOSI, 147, 0, 0, 211, 192, 1, 193, 8, 166, 177, 176 );
+    assertDataEvents( result, SPI_MOSI, 147, 0, 0, 211, 192, 1, 193, 8, 166, 177, 176 );
   }
 
   /**

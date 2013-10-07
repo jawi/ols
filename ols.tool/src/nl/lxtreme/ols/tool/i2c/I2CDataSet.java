@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.i2c;
 
 
+import static nl.lxtreme.ols.tool.i2c.I2CAnalyserTask.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.base.*;
 
@@ -30,14 +31,6 @@ import nl.lxtreme.ols.tool.base.*;
  */
 public final class I2CDataSet extends BaseDataSet<I2CData>
 {
-  // CONSTANTS
-
-  public static final String I2C_ACK = "ACK";
-  public static final String I2C_BUS_ERROR = "BUS-ERROR";
-  public static final String I2C_NACK = "NACK";
-  public static final String I2C_START = "START";
-  public static final String I2C_STOP = "STOP";
-
   // VARIABLES
 
   private int busErrors;

@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import static nl.lxtreme.ols.tool.spi.SPIAnalyserTask.*;
 import nl.lxtreme.ols.tool.base.*;
 
 
@@ -136,7 +137,7 @@ public final class SPIData extends BaseData<SPIData>
    */
   public final boolean isMisoData()
   {
-    return SPIDataSet.SPI_MISO.equals( this.dataName );
+    return SPI_MISO.equals( this.dataName );
   }
 
   /**
@@ -144,6 +145,6 @@ public final class SPIData extends BaseData<SPIData>
    */
   public final boolean isMosiData()
   {
-    return SPIDataSet.SPI_MOSI.equals( this.dataName );
+    return SPI_MOSI.equals( this.dataName );
   }
 }

@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
 import java.beans.*;
@@ -38,6 +39,15 @@ import nl.lxtreme.ols.tool.base.NumberUtils.BitOrder;
 public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 {
   // CONSTANTS
+
+  static final String SPI_CS_LOW = "CS_LOW";
+  static final String SPI_CS_HIGH = "CS_HIGH";
+  static final String SPI_MOSI = "MOSI";
+  static final String SPI_MISO = "MISO";
+  static final String SPI_SCK = "SCK";
+  static final String SPI_CS = "/CS";
+
+  static final String KEY_DATA_TYPE = "type";
 
   private static final Logger LOG = Logger.getLogger( SPIAnalyserTask.class.getName() );
 
@@ -145,7 +155,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     if ( slaveSelected >= 0 )
     {
       // now the trigger is in b, add trigger event to table
-      reportCsLow( decodedData, slaveSelected );
+      reportCsLow( decodedData, slaveSelected, this.context.getData().getTimestamps()[slaveSelected] );
     }
 
     // Perform the actual decoding of the data line(s)...
@@ -326,6 +336,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     final AcquisitionData data = this.context.getData();
 
     final int[] values = data.getValues();
+    final long[] timestamps = data.getTimestamps();
 
     final int startOfDecode = Math.max( aSlaveSelectedIdx, aDataSet.getStartOfDecode() );
     final int endOfDecode = aDataSet.getEndOfDecode();
@@ -365,13 +376,13 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
 
       if ( slaveSelectEdge.isFalling() )
       {
-        reportCsLow( aDataSet, idx );
+        reportCsLow( aDataSet, idx, timestamps[idx] );
 
         slaveSelected = !this.invertCS;
       }
       else if ( slaveSelectEdge.isRising() )
       {
-        reportCsHigh( aDataSet, idx );
+        reportCsHigh( aDataSet, idx, timestamps[idx] );
 
         slaveSelected = this.invertCS;
         // it could be that we're waiting until a next clock cycle comes along;
@@ -380,7 +391,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
         if ( bitIdx <= 0 )
         {
           // Full datagram decoded...
-          reportData( aDataSet, dataStartIdx, idx, mosivalue, misovalue );
+          reportData( aDataSet, dataStartIdx, idx, timestamps[dataStartIdx], timestamps[idx], mosivalue, misovalue );
 
           bitIdx = this.bitCount;
           misovalue = 0;
@@ -488,7 +499,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
         if ( bitIdx < 0 )
         {
           // Full datagram decoded...
-          reportData( aDataSet, dataStartIdx, idx, mosivalue, misovalue );
+          reportData( aDataSet, dataStartIdx, idx, timestamps[dataStartIdx], timestamps[idx], mosivalue, misovalue );
 
           bitIdx = this.bitCount;
           misovalue = 0;
@@ -558,13 +569,13 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
   {
     if ( this.mosiIdx >= 0 )
     {
-      String label = ( SPIFIMode.STANDARD.equals( this.protocol ) ? SPIDataSet.SPI_MOSI : "IO0" );
+      String label = ( SPIFIMode.STANDARD.equals( this.protocol ) ? SPI_MOSI : "IO0" );
       this.annHelper.clearAnnotations( this.mosiIdx );
       this.annHelper.addLabelAnnotation( this.mosiIdx, label );
     }
     if ( this.misoIdx >= 0 )
     {
-      String label = ( SPIFIMode.STANDARD.equals( this.protocol ) ? SPIDataSet.SPI_MISO : "IO1" );
+      String label = ( SPIFIMode.STANDARD.equals( this.protocol ) ? SPI_MISO : "IO1" );
       this.annHelper.clearAnnotations( this.misoIdx );
       this.annHelper.addLabelAnnotation( this.misoIdx, label );
     }
@@ -581,12 +592,12 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
     if ( this.sckIdx >= 0 )
     {
       this.annHelper.clearAnnotations( this.sckIdx );
-      this.annHelper.addLabelAnnotation( this.sckIdx, SPIDataSet.SPI_SCK );
+      this.annHelper.addLabelAnnotation( this.sckIdx, SPI_SCK );
     }
     if ( this.csIdx >= 0 )
     {
       this.annHelper.clearAnnotations( this.csIdx );
-      this.annHelper.addLabelAnnotation( this.csIdx, SPIDataSet.SPI_CS );
+      this.annHelper.addLabelAnnotation( this.csIdx, SPI_CS );
     }
   }
 
@@ -599,11 +610,13 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    * @param aIndex
    *          the sample index on which the event occurred.
    */
-  private void reportCsHigh( final SPIDataSet aDecodedData, final int aIndex )
+  private void reportCsHigh( final SPIDataSet aDecodedData, final int aIndex, final long aTimestamp )
   {
     if ( this.reportCS )
     {
       aDecodedData.reportCSHigh( this.csIdx, aIndex );
+
+      this.annHelper.addEventAnnotation( this.csIdx, aTimestamp, aTimestamp + 1, SPI_CS_HIGH, KEY_COLOR, "#e0e0e0" );
     }
   }
 
@@ -616,11 +629,13 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    * @param aIndex
    *          the sample index on which the event occurred.
    */
-  private void reportCsLow( final SPIDataSet aDecodedData, final int aIndex )
+  private void reportCsLow( final SPIDataSet aDecodedData, final int aIndex, final long aTimestamp )
   {
     if ( this.reportCS )
     {
       aDecodedData.reportCSLow( this.csIdx, aIndex );
+
+      this.annHelper.addEventAnnotation( this.csIdx, aTimestamp, aTimestamp + 1, SPI_CS_LOW, KEY_COLOR, "#c0ffc0" );
     }
   }
 
@@ -638,8 +653,8 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
    * @param aMisoValue
    *          the MISO data value.
    */
-  private void reportData( final SPIDataSet aDecodedData, final int aStartIdx, final int aEndIdx, final int aMosiValue,
-      final int aMisoValue )
+  private void reportData( SPIDataSet aDecodedData, int aStartIdx, int aEndIdx, long aStartTimestamp,
+      long aEndTimestamp, int aMosiValue, int aMisoValue )
   {
     long[] timestamps = this.context.getData().getTimestamps();
 
@@ -656,8 +671,8 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
           formatSpec = formatSpec.concat( " (%1$c)" );
         }
 
-        this.annHelper.addAnnotation( this.mosiIdx, timestamps[aStartIdx], timestamps[aEndIdx],
-            String.format( formatSpec, Integer.valueOf( mosivalue ) ) );
+        this.annHelper.addSymbolAnnotation( this.mosiIdx, timestamps[aStartIdx], timestamps[aEndIdx], mosivalue,
+            KEY_DATA_TYPE, SPI_MOSI );
 
         aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
       }
@@ -673,8 +688,8 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
           formatSpec = formatSpec.concat( " (%1$c)" );
         }
 
-        this.annHelper.addAnnotation( this.misoIdx, timestamps[aStartIdx], timestamps[aEndIdx],
-            String.format( formatSpec, Integer.valueOf( misovalue ) ) );
+        this.annHelper.addSymbolAnnotation( this.mosiIdx, timestamps[aStartIdx], timestamps[aEndIdx], misovalue,
+            KEY_DATA_TYPE, SPI_MISO );
 
         aDecodedData.reportMisoData( this.misoIdx, aStartIdx, aEndIdx, misovalue );
       }
@@ -690,8 +705,7 @@ public class SPIAnalyserTask implements ToolTask<SPIDataSet>
         formatSpec = formatSpec.concat( " (%1$c)" );
       }
 
-      this.annHelper.addAnnotation( this.mosiIdx, timestamps[aStartIdx], timestamps[aEndIdx],
-          String.format( formatSpec, Integer.valueOf( mosivalue ) ) );
+      this.annHelper.addSymbolAnnotation( this.mosiIdx, timestamps[aStartIdx], timestamps[aEndIdx], mosivalue );
 
       aDecodedData.reportMosiData( this.mosiIdx, aStartIdx, aEndIdx, mosivalue );
     }

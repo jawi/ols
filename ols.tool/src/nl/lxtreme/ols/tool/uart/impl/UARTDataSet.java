@@ -35,15 +35,6 @@ public final class UARTDataSet extends BaseDataSet<UARTData>
 {
   // CONSTANTS
 
-  public static final String UART_RXD = "RxD";
-  public static final String UART_TXD = "TxD";
-  public static final String UART_CTS = "CTS";
-  public static final String UART_RTS = "RTS";
-  public static final String UART_DCD = "DCD";
-  public static final String UART_RI = "RI";
-  public static final String UART_DSR = "DSR";
-  public static final String UART_DTR = "DTR";
-
   private static final Logger LOG = Logger.getLogger( UARTDataSet.class.getName() );
 
   // VARIABLES

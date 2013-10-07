@@ -21,7 +21,11 @@
 package nl.lxtreme.ols.tool.asm45;
 
 
+import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
+
+import java.util.*;
+
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.api.*;
 
@@ -37,9 +41,38 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
   // CONSTANTS
 
   /**
+   * 16-bit memory address within block (including MSB=upper/lower block
+   * selection)
+   */
+  static final String KEY_ADDRESS = "address";
+  /** # of clocks for event */
+  static final String KEY_CLOCKS = "clocks";
+  /** 6-bit memory block */
+  static final String KEY_BLOCK = "block";
+  /**
+   * one of "I"=instruction, "DW"=data word, "DBL"=data byte left, "DBR"=data
+   * byte right
+   */
+  static final String KEY_ASM45TYPE = "asm45type";
+  /** 16-bit data */
+  static final String KEY_IDA = "ida";
+  /** true if external bus grant/DMA active */
+  static final String KEY_BUSGRANT = "busgrant";
+
+  static final String TYPE_INSTRUCTION = "I";
+  static final String TYPE_DATA_WORD = "DW";
+  static final String TYPE_DATA_BYTE_LEFT = "DBL";
+  static final String TYPE_DATA_BYTE_RIGHT = "DBR";
+
+  static final String COLOR_DEFAULT = "#e0e0ff";
+  static final String COLOR_BUSGRANT = "#64ff64";
+  static final String COLOR_EVENT = "#ffa0ff";
+  static final String COLOR_INSTRUCTION = "#ffffff";
+
+  /**
    * HP9845 hybrid processor register symbols
    */
-  private static final String[] registers = { "A", // arithmetic accumulator A
+  private static final String[] REGISTERS = { "A", // arithmetic accumulator A
       "B", // arithmetic accumulator B
       "P", // program counter
       "R", // return stack pointer
@@ -86,7 +119,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
    * HP9845 hybrid processor instructions<br/>
    * Note: RAL n = RAR 16-n, RBL n = RBR 16-n
    */
-  private static final Asm45OpcodeTable[] hp9845Table = {
+  private static final Asm45OpcodeTable[] HP9845_TABLE = {
       // pseudo operations
       new Asm45OpcodeTable( 0xffff, 0x0000, "NOP", 0, 11 ), // = LDA A
       new Asm45OpcodeTable( 0xffff, 0xf14f, "CLA", 0, 11 ), // = SAR 16
@@ -250,8 +283,11 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
   public Asm45DataSet call() throws Exception
   {
     final AcquisitionData data = this.context.getData();
+    final ToolAnnotationHelper annotationHelper = new ToolAnnotationHelper( this.context );
 
     final int[] values = data.getValues();
+    final long[] timestamps = data.getTimestamps();
+    final long triggerPos = data.getTriggerPosition();
 
     // process the captured data and write to output
 
@@ -273,8 +309,9 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
     int address = 0; // 16-bit address within memory block
     boolean busGrant = false; // bus grant for DMA, CRT cycle steeling etc.
 
-    String type = Asm45Data.TYPE_INSTRUCTION; // type of decoded event
+    String type = TYPE_INSTRUCTION; // type of decoded event
     String event = "???"; // event description (mnemonic etc.)
+    long lastTiming = -1L;
 
     /*
      * Loop over the acquisition data
@@ -304,21 +341,21 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
           busGrant = true;
           if ( ( status & this.lineBYTEmask ) == 0 )
           {
-            type = Asm45Data.TYPE_DATA_WORD;
+            type = TYPE_DATA_WORD;
           }
           else if ( ( status & this.lineBLmask ) == 0 )
           {
-            type = Asm45Data.TYPE_DATA_BYTE_RIGHT;
+            type = TYPE_DATA_BYTE_RIGHT;
           }
           else
           {
-            type = Asm45Data.TYPE_DATA_BYTE_LEFT;
+            type = TYPE_DATA_BYTE_LEFT;
           }
           if ( ( status & this.lineWRTmask ) != 0 )
           {
             if ( address < 32 )
             {
-              event = Asm45AnalyserTask.registers[address] + String.format( "&rarr;$%04x", ida );
+              event = Asm45AnalyserTask.REGISTERS[address] + String.format( "&rarr;$%04x", ida );
             }
             else
             {
@@ -329,7 +366,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
           {
             if ( address < 32 )
             {
-              event = Asm45AnalyserTask.registers[address] + String.format( "&larr;$%04x", ida );
+              event = Asm45AnalyserTask.REGISTERS[address] + String.format( "&larr;$%04x", ida );
             }
             else
             {
@@ -343,7 +380,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
           if ( ( status & this.lineSYNCmask ) != 0 )
           {
             // instruction fetch
-            type = Asm45Data.TYPE_INSTRUCTION;
+            type = TYPE_INSTRUCTION;
             event = word2asm( address, ida );
           }
           else
@@ -351,21 +388,21 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
             // data transfer
             if ( ( status & this.lineBYTEmask ) == 0 )
             {
-              type = Asm45Data.TYPE_DATA_WORD;
+              type = TYPE_DATA_WORD;
             }
             else if ( ( status & this.lineBLmask ) == 0 )
             {
-              type = Asm45Data.TYPE_DATA_BYTE_RIGHT;
+              type = TYPE_DATA_BYTE_RIGHT;
             }
             else
             {
-              type = Asm45Data.TYPE_DATA_BYTE_LEFT;
+              type = TYPE_DATA_BYTE_LEFT;
             }
             if ( ( status & this.lineWRTmask ) != 0 )
             {
               if ( address < 32 )
               {
-                event = Asm45AnalyserTask.registers[address] + String.format( "&rarr;$%04x", ida );
+                event = Asm45AnalyserTask.REGISTERS[address] + String.format( "&rarr;$%04x", ida );
               }
               else
               {
@@ -376,7 +413,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
             {
               if ( address < 32 )
               {
-                event = Asm45AnalyserTask.registers[address] + String.format( "&larr;$%04x", ida );
+                event = Asm45AnalyserTask.REGISTERS[address] + String.format( "&larr;$%04x", ida );
               }
               else
               {
@@ -387,11 +424,36 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
         }
 
         // report the requested event
-        if ( ( ( type == Asm45Data.TYPE_INSTRUCTION ) && this.reportInst )
+        if ( ( ( type == TYPE_INSTRUCTION ) && this.reportInst )
             || ( !busGrant
-                && ( ( type == Asm45Data.TYPE_DATA_WORD ) || ( type == Asm45Data.TYPE_DATA_BYTE_LEFT ) || ( type == Asm45Data.TYPE_DATA_BYTE_RIGHT ) ) && this.reportData )
+                && ( ( type == TYPE_DATA_WORD ) || ( type == TYPE_DATA_BYTE_LEFT ) || ( type == TYPE_DATA_BYTE_RIGHT ) ) && this.reportData )
             || ( busGrant && this.reportBusGrants ) )
         {
+          boolean triggerEvent = false;
+
+          // Check whether we're decoding the instruction "near" the trigger
+          // event...
+          final long currentTiming = ( timestamps[startIdx] - triggerPos );
+          if ( ( lastTiming < 0 ) && ( currentTiming >= 0 ) )
+          {
+            triggerEvent = true;
+          }
+          lastTiming = currentTiming;
+
+          Map<String, Object> properties = new HashMap<String, Object>();
+          properties.put( KEY_COLOR, ( triggerEvent ? COLOR_EVENT : ( type == TYPE_INSTRUCTION ? COLOR_INSTRUCTION
+              : ( busGrant ? COLOR_BUSGRANT : COLOR_DEFAULT ) ) ) );
+          properties.put( KEY_TYPE, TYPE_SYMBOL );
+          properties.put( KEY_BUSGRANT, busGrant );
+          properties.put( KEY_ADDRESS, address );
+          properties.put( KEY_CLOCKS, clocks );
+          properties.put( KEY_BLOCK, block );
+          properties.put( KEY_ASM45TYPE, type );
+          properties.put( KEY_IDA, ida );
+
+          // event == decoded 9845 assembler instruction / data transfer
+          annotationHelper.addAnnotation( this.lineSMCidx, timestamps[startIdx], timestamps[idx], event, properties );
+
           reportEvent( asm45DataSet, startIdx, idx, clocks, block, address, ida, busGrant, type, event );
           clocks = 0;
         }
@@ -499,7 +561,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
     int count;
     int timing = 0;
     int i = 0;
-    Asm45OpcodeTable op = hp9845Table[0];
+    Asm45OpcodeTable op = HP9845_TABLE[0];
     String ret_string = "";
 
     /* get mnemonic */
@@ -510,7 +572,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
         break;
       }
       i++;
-      op = hp9845Table[i];
+      op = HP9845_TABLE[i];
     }
 
     /* if match, write mnemonic - else return */
@@ -555,7 +617,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
           {
             if ( operand < 32 )
             {
-              ret_string += String.format( " %s", registers[operand] );
+              ret_string += String.format( " %s", REGISTERS[operand] );
             }
             else
             {
@@ -583,7 +645,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
 
       case 2: /* 5-bit register (for EXE) */
         operand = opcode & 0x001f;
-        ret_string += String.format( " %s", registers[operand] );
+        ret_string += String.format( " %s", REGISTERS[operand] );
         if ( ( opcode & 0x8000 ) != 0 )
         {
           timing += 6;
@@ -662,7 +724,7 @@ public class Asm45AnalyserTask implements ToolTask<Asm45DataSet>
       case 7:
         /* 3-bit register with increment/decrement */
         operand = opcode & 0x7;
-        ret_string += String.format( " %s", Asm45AnalyserTask.registers[operand] );
+        ret_string += String.format( " %s", Asm45AnalyserTask.REGISTERS[operand] );
         if ( ( opcode & 0x0080 ) != 0 )
         {
           ret_string += ",D";

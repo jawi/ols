@@ -21,6 +21,7 @@
 package nl.lxtreme.ols.tool.spi;
 
 
+import static nl.lxtreme.ols.tool.spi.SPIAnalyserTask.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.tool.base.*;
 
@@ -30,15 +31,6 @@ import nl.lxtreme.ols.tool.base.*;
  */
 public final class SPIDataSet extends BaseDataSet<SPIData>
 {
-  // CONSTANTS
-
-  public static final String SPI_CS_LOW = "CS_LOW";
-  public static final String SPI_CS_HIGH = "CS_HIGH";
-  public static final String SPI_MOSI = "MOSI";
-  public static final String SPI_MISO = "MISO";
-  public static final String SPI_SCK = "SCK";
-  public static final String SPI_CS = "/CS";
-
   // CONSTRUCTORS
 
   /**

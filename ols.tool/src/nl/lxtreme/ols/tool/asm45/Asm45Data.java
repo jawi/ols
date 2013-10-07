@@ -31,13 +31,6 @@ import nl.lxtreme.ols.tool.base.*;
  */
 public final class Asm45Data extends BaseData<Asm45Data>
 {
-  // CONSTANTS
-
-  public static final String TYPE_INSTRUCTION = "I";
-  public static final String TYPE_DATA_WORD = "DW";
-  public static final String TYPE_DATA_BYTE_LEFT = "DBL";
-  public static final String TYPE_DATA_BYTE_RIGHT = "DBR";
-
   // VARIABLES
 
   /** # of clocks for event */
