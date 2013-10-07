@@ -24,9 +24,11 @@ package nl.lxtreme.ols.tool.uart.impl;
 import static nl.lxtreme.ols.common.annotation.DataAnnotation.*;
 import static nl.lxtreme.ols.tool.base.NumberUtils.*;
 
+import java.util.*;
 import java.util.logging.*;
 
 import nl.lxtreme.ols.common.acquisition.*;
+import nl.lxtreme.ols.common.annotation.*;
 import nl.lxtreme.ols.tool.api.*;
 import nl.lxtreme.ols.tool.uart.*;
 import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.BitEncoding;
@@ -44,6 +46,114 @@ import nl.lxtreme.ols.tool.uart.AsyncSerialDataDecoder.StopBits;
  */
 public class UARTAnalyserTask implements ToolTask<UARTDataSet>
 {
+  // INNER TYPES
+
+  /**
+   * Provides a custom annotation to show the baudrate information.
+   */
+  public static class BaudrateAnnotation implements DataAnnotation
+  {
+    // VARIABLES
+
+    private final int channelIdx;
+    private final Boolean data;
+    private final Map<String, Object> properties;
+
+    /**
+     * Creates a new {@link BaudrateAnnotation} instance.
+     */
+    public BaudrateAnnotation( final int aChannelIdx, final BaudRateAnalyzer aAnalyzer )
+    {
+      this.channelIdx = aChannelIdx;
+      // TODO where does the 15 come from?!
+      this.data = Boolean.valueOf( aAnalyzer.getBestBitLength() > 15 );
+      this.properties = new HashMap<String, Object>( 3 );
+      this.properties.put( "bitlength", Double.valueOf( aAnalyzer.getBestBitLength() ) );
+      this.properties.put( "baudrate", Integer.valueOf( aAnalyzer.getBaudRate() ) );
+      this.properties.put( "baudrateExact", Integer.valueOf( aAnalyzer.getBaudRateExact() ) );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int compareTo( final Annotation aOther )
+    {
+      // will cause this annotation to be one of the first ones...
+      return -1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getChannelIndex()
+    {
+      return this.channelIdx;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object getData()
+    {
+      return this.data;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getEndTimestamp()
+    {
+      return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, Object> getProperties()
+    {
+      return this.properties;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getStartTimestamp()
+    {
+      return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString()
+    {
+      StringBuilder sb = new StringBuilder();
+      int bitlength = ( ( Integer )this.properties.get( "bitlength" ) ).intValue();
+      if ( bitlength <= 0 )
+      {
+        sb.append( "Baud rate calculation failed!" );
+      }
+      else
+      {
+        sb.append( "Baudrate = " ).append( this.properties.get( "baudrate" ) );
+        sb.append( " (exact = " ).append( this.properties.get( "baudrateExact" ) ).append( ")" );
+        if ( Boolean.FALSE.equals( this.data ) )
+        {
+          sb.append( '\n' ).append( "The baudrate may be wrong, use a higher samplerate to avoid this!" );
+        }
+      }
+      sb.append( '\n' );
+      return sb.toString();
+    }
+  }
+
   // CONSTANTS
 
   static final String UART_RXD = "RxD";
@@ -218,6 +328,22 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   }
 
   /**
+   * @param aBitEncoding
+   */
+  public void setBitEncoding( final BitEncoding aBitEncoding )
+  {
+    this.bitEncoding = aBitEncoding;
+  }
+
+  /**
+   * @param aBitOrder
+   */
+  public void setBitOrder( final BitOrder aBitOrder )
+  {
+    this.bitOrder = aBitOrder;
+  }
+
+  /**
    * @param aCtsIndex
    *          the ctsMask to set
    */
@@ -251,22 +377,6 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   public void setDtrIndex( final int aDtrIndex )
   {
     this.dtrIndex = aDtrIndex;
-  }
-
-  /**
-   * @param aBitOrder
-   */
-  public void setBitOrder( final BitOrder aBitOrder )
-  {
-    this.bitOrder = aBitOrder;
-  }
-
-  /**
-   * @param aBitEncoding
-   */
-  public void setBitEncoding( final BitEncoding aBitEncoding )
-  {
-    this.bitEncoding = aBitEncoding;
   }
 
   /**
@@ -389,24 +499,25 @@ public class UARTAnalyserTask implements ToolTask<UARTDataSet>
   {
     final AcquisitionData data = this.context.getData();
 
-    final int baudRate;
-
+    final BaudRateAnalyzer baudRateAnalyzer;
     if ( this.baudRate == AUTO_DETECT_BAUDRATE )
     {
       // Auto detect the baud rate...
-      final int mask = ( 1 << aChannelIndex );
-      final BaudRateAnalyzer baudRateAnalyzer = new BaudRateAnalyzer( data.getSampleRate(), data.getValues(),
-          data.getTimestamps(), mask );
-      baudRate = baudRateAnalyzer.getBaudRateExact();
-      // Set nominal (normalized) baud rate
-      aDataSet.setBaudRate( baudRateAnalyzer.getBaudRate() );
+      baudRateAnalyzer = new BaudRateAnalyzer( data.getSampleRate(), data.getValues(), data.getTimestamps(),
+          1 << aChannelIndex );
+      // Use the exact baudrate we've calculated from the data...
+      this.baudRate = baudRateAnalyzer.getBaudRateExact();
     }
     else
     {
-      baudRate = this.baudRate;
-      // Set nominal baud rate
-      aDataSet.setBaudRate( baudRate );
+      // Set nominal baud rate...
+      baudRateAnalyzer = new BaudRateAnalyzer( data.getSampleRate(), this.baudRate );
     }
+
+    // Set nominal (normalized) baud rate
+    aDataSet.setBaudRate( baudRateAnalyzer.getBaudRate() );
+
+    this.context.addAnnotation( new BaudrateAnnotation( aChannelIndex, baudRateAnalyzer ) );
 
     LOG.log( Level.FINE, "Baudrate = {0}bps", Integer.valueOf( baudRate ) );
 

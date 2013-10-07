@@ -205,6 +205,8 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
         {
           // store decoded byte
           final String annotation;
+          String type = TYPE_SYMBOL;
+
           if ( startCondFound )
           {
             // This is the (7- or 10-bit) address part...
@@ -217,6 +219,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
               tenBitAddress = true;
 
               annotation = String.format( "Setup %s 10-bit slave", ( direction == 1 ) ? "read from" : "write to" );
+              type = TYPE_EVENT;
             }
             else
             {
@@ -238,6 +241,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
                   Integer.valueOf( byteValue ) );
 
               tenBitAddress = false;
+              type = TYPE_EVENT;
             }
           }
           else
@@ -246,7 +250,7 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
                 Integer.valueOf( byteValue ), Integer.valueOf( byteValue ) );
           }
 
-          reportData( i2cDataSet, prevIdx, idx, timestamps[prevIdx], timestamps[idx], byteValue, annotation );
+          reportData( i2cDataSet, prevIdx, idx, timestamps[prevIdx], timestamps[idx], byteValue, annotation, type );
 
           byteValue = 0;
         }
@@ -561,12 +565,12 @@ public class I2CAnalyserTask implements ToolTask<I2CDataSet>
    * @param aByteValue
    */
   private void reportData( I2CDataSet aDataSet, int aStartSampleIdx, int aEndSampleIdx, long aStartTime, long aEndTime,
-      int aByteValue, String aDescription )
+      int aByteValue, String aDescription, String aType )
   {
     aDataSet.reportData( this.sdaIdx, aStartSampleIdx, aEndSampleIdx, aByteValue );
 
-    annHelper.addSymbolAnnotation( this.sdaIdx, aStartTime, aEndTime, aByteValue, KEY_DESCRIPTION, aDescription );
-
+    this.annHelper.addAnnotation( this.sdaIdx, aStartTime, aEndTime, Integer.valueOf( aByteValue ), KEY_DESCRIPTION,
+        aDescription, KEY_TYPE, aType );
   }
 
   /**
