@@ -164,8 +164,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
   {
     // VARIABLES
 
-    private final AcquisitionData data;
-    private final AnnotationData annotationData;
+    private final SignalDiagramModel model;
     private final int startSampleIdx;
     private final int endSampleIdx;
 
@@ -181,13 +180,11 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
      * @param aData
      *          the acquisition result.
      */
-    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final AcquisitionData aData,
-        final AnnotationData aAnnotationData )
+    public DefaultToolContext( final int aStartSampleIdx, final int aEndSampleIdx, final SignalDiagramModel aModel )
     {
       this.startSampleIdx = aStartSampleIdx;
       this.endSampleIdx = aEndSampleIdx;
-      this.data = aData;
-      this.annotationData = aAnnotationData;
+      this.model = aModel;
     }
 
     /**
@@ -196,16 +193,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public void addAnnotation( Annotation aAnnotation )
     {
-      if ( aAnnotation instanceof LabelAnnotation )
-      {
-        int idx = aAnnotation.getChannelIndex();
-        Channel channel = getData().getChannels()[idx];
-        channel.setLabel( ( String )aAnnotation.getData() );
-      }
-      else
-      {
-        this.annotationData.add( aAnnotation );
-      }
+      this.model.addAnnotation( aAnnotation );
 
       scheduleRepaintEvent();
     }
@@ -216,10 +204,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public void clearAnnotations( int... aChannelIdxs )
     {
-      for ( int channelIdx : aChannelIdxs )
-      {
-        this.annotationData.clear( channelIdx );
-      }
+      this.model.clearAnnotations( aChannelIdxs );
 
       scheduleRepaintEvent();
     }
@@ -239,7 +224,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public Cursor getCursor( final int aIndex )
     {
-      Cursor[] cursors = this.data.getCursors();
+      Cursor[] cursors = getData().getCursors();
       if ( aIndex < 0 || aIndex >= cursors.length )
       {
         throw new IllegalArgumentException( "Invalid cursor index!" );
@@ -253,7 +238,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     @Override
     public AcquisitionData getData()
     {
-      return this.data;
+      return this.model.getAcquisitionData();
     }
 
     /**
@@ -611,8 +596,9 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
     // Close the main window ourselves; we should do this explicitly...
     if ( this.mainFrame != null )
     {
-      this.mainFrame.setVisible( false );
-      this.mainFrame.dispose();
+      // Do *not* call MainFrame#close() as it will call this method causing an
+      // infinite loop...
+      this.mainFrame.internalClose();
       this.mainFrame = null;
     }
 
@@ -698,7 +684,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    *          {@link OlsConstants#MAX_CURSORS}.
    * @return a cursor, never <code>null</code>.
    */
-  public final Cursor getCursor( final int aCursorIdx )
+  public Cursor getCursor( final int aCursorIdx )
   {
     final AcquisitionData currentDataSet = getCurrentData();
     if ( currentDataSet == null )
@@ -719,7 +705,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * @return the selected device, can be <code>null</code> if no device is
    *         selected.
    */
-  public final Device getDevice()
+  public Device getDevice()
   {
     if ( this.mainFrame != null )
     {
@@ -843,7 +829,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * {@inheritDoc}
    */
   @Override
-  public final boolean handleAbout()
+  public boolean handleAbout()
   {
     showAboutBox();
     return true;
@@ -853,7 +839,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * {@inheritDoc}
    */
   @Override
-  public final boolean handlePreferences()
+  public boolean handlePreferences()
   {
     showPreferencesDialog( getMainFrame() );
     return true;
@@ -863,7 +849,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * {@inheritDoc}
    */
   @Override
-  public final boolean handleQuit()
+  public boolean handleQuit()
   {
     LOG.fine( "Handling quit from app.menu..." );
 
@@ -890,7 +876,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
    * {@inheritDoc}
    */
   @Override
-  public final boolean hasPreferences()
+  public boolean hasPreferences()
   {
     return true;
   }
@@ -1853,7 +1839,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
       }
     }
 
-    return new DefaultToolContext( startOfDecode, endOfDecode, capturedData, model.getAnnotationData() );
+    return new DefaultToolContext( startOfDecode, endOfDecode, model );
   }
 
   private Bundle getBundle()

@@ -659,10 +659,20 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
     {
       final DataHolder dataHolder = getDataHolder();
       final int colCount = dataHolder.columns.length;
+      if ( colCount < 1 )
+      {
+        return null;
+      }
 
       for ( int i = Math.min( 3, colCount - 1 ); i < colCount; i++ )
       {
-        Object value = dataHolder.data[aRowIndex][i];
+        Object[] row = dataHolder.data[aRowIndex];
+        if ( row.length <= i )
+        {
+          continue;
+        }
+
+        Object value = row[i];
         if ( value instanceof DataAnnotation )
         {
           return ( DataAnnotation )value;
@@ -1353,9 +1363,8 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
   // VARIABLES
 
   private final AnnotationTableModel container;
-
+  private final ExportAnnotationsAction exportAction;
   private JLxTable table;
-  private JButton exportButton;
 
   // CONSTRUCTORS
 
@@ -1367,6 +1376,7 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
     super( ID, aController );
 
     this.container = new AnnotationTableModel( aController );
+    this.exportAction = new ExportAnnotationsAction( this );
   }
 
   // METHODS
@@ -1431,6 +1441,17 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
   }
 
   /**
+   * Returns the action responsible for exporting the contents of this overview
+   * to a file.
+   * 
+   * @return the export action, never <code>null</code>.
+   */
+  public ExportAnnotationsAction getExportAction()
+  {
+    return this.exportAction;
+  }
+
+  /**
    * Jumps to the given annotation in the current signal diagram.
    * 
    * @param aAnnotation
@@ -1467,24 +1488,21 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
           // double clicked...
           JTable source = ( JTable )aEvent.getSource();
           int rowIdx = source.getSelectedRow();
-
-          AnnotationTableModel model = ( AnnotationTableModel )source.getModel();
-
-          DataAnnotation annotation = model.getAnnotation( rowIdx );
-          if ( annotation != null )
+          if ( rowIdx >= 0 )
           {
-            jumpTo( annotation );
+            AnnotationTableModel model = ( AnnotationTableModel )source.getModel();
+
+            DataAnnotation annotation = model.getAnnotation( rowIdx );
+            if ( annotation != null )
+            {
+              jumpTo( annotation );
+            }
           }
         }
       }
     } );
 
-    this.exportButton = new JButton( new ExportAnnotationsAction( this ) );
-
-    JComponent buttonPane = SwingComponentUtils.createButtonPane( this.exportButton );
-
     add( new JScrollPane( this.table ), BorderLayout.CENTER );
-    add( buttonPane, BorderLayout.PAGE_END );
 
     // Update the structure with the current session data...
     this.container.updateStructure();
@@ -1498,6 +1516,6 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
   private void updateButtonState()
   {
     final int rowCount = this.table.getModel().getRowCount();
-    this.exportButton.setEnabled( rowCount > 0 );
+    this.exportAction.setEnabled( rowCount > 0 );
   }
 }

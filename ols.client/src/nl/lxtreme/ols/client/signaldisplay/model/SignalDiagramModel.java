@@ -196,6 +196,58 @@ public class SignalDiagramModel
   }
 
   /**
+   * {@inheritDoc}
+   */
+  public void addAnnotation( Annotation aAnnotation )
+  {
+    if ( aAnnotation instanceof LabelAnnotation )
+    {
+      int idx = aAnnotation.getChannelIndex();
+      
+      Channel channel = getAcquisitionData().getChannels()[idx];
+      channel.setLabel( ( String )aAnnotation.getData() );
+    }
+    else
+    {
+      this.annotationData.add( aAnnotation );
+    }
+
+    IAnnotationDataChangedListener[] listeners = this.eventListeners.getListeners( IAnnotationDataChangedListener.class );
+    for ( IAnnotationDataChangedListener listener : listeners )
+    {
+      listener.annotationDataChanged( this.annotationData );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void clearAnnotations( int... aChannelIdxs )
+  {
+    for ( int channelIdx : aChannelIdxs )
+    {
+      this.annotationData.clear( channelIdx );
+      
+      IAnnotationDataChangedListener[] listeners = this.eventListeners.getListeners( IAnnotationDataChangedListener.class );
+      for ( IAnnotationDataChangedListener listener : listeners )
+      {
+        listener.annotationDataCleared( Integer.valueOf( channelIdx ) );
+      }
+    }
+  }
+
+  /**
+   * Adds an annotation data-change listener.
+   * 
+   * @param aListener
+   *          the listener to add, cannot be <code>null</code>.
+   */
+  public void addAnnotationDataChangedListener( IAnnotationDataChangedListener aListener )
+  {
+    this.eventListeners.add( IAnnotationDataChangedListener.class, aListener );
+  }
+
+  /**
    * Adds a cursor change listener.
    * 
    * @param aListener
@@ -353,7 +405,7 @@ public class SignalDiagramModel
       return 0L;
     }
 
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     return capturedData.getAbsoluteLength();
   }
 
@@ -368,7 +420,7 @@ public class SignalDiagramModel
   /**
    * @return
    */
-  public AcquisitionData getCapturedData()
+  public AcquisitionData getAcquisitionData()
   {
     return this.data;
   }
@@ -494,12 +546,12 @@ public class SignalDiagramModel
    */
   public int getSampleRate()
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return -1;
     }
-    return getCapturedData().getSampleRate();
+    return getAcquisitionData().getSampleRate();
   }
 
   /**
@@ -507,7 +559,7 @@ public class SignalDiagramModel
    */
   public int getSampleWidth()
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return 0;
@@ -780,7 +832,7 @@ public class SignalDiagramModel
    */
   public int getTimestampIndex( final long aValue )
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return 0;
@@ -793,7 +845,7 @@ public class SignalDiagramModel
    */
   public long[] getTimestamps()
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return new long[0];
@@ -809,7 +861,7 @@ public class SignalDiagramModel
    */
   public Long getTriggerPosition()
   {
-    AcquisitionData capturedData = getCapturedData();
+    AcquisitionData capturedData = getAcquisitionData();
     if ( ( capturedData == null ) || !capturedData.hasTriggerData() )
     {
       return null;
@@ -822,7 +874,7 @@ public class SignalDiagramModel
    */
   public int[] getValues()
   {
-    final AcquisitionData capturedData = getCapturedData();
+    final AcquisitionData capturedData = getAcquisitionData();
     if ( capturedData == null )
     {
       return new int[0];
@@ -936,7 +988,7 @@ public class SignalDiagramModel
    */
   public boolean hasTimingData()
   {
-    AcquisitionData captureData = getCapturedData();
+    AcquisitionData captureData = getAcquisitionData();
     return ( captureData != null ) && captureData.hasTimingData();
   }
 

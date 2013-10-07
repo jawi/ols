@@ -80,6 +80,14 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   // METHODS
 
   /**
+   * @param aListener
+   */
+  public void addAnnotationDataChangedListener( IAnnotationDataChangedListener aListener )
+  {
+    getSignalDiagramModel().addAnnotationDataChangedListener( aListener );
+  }
+
+  /**
    * Adds a channel change listener.
    * 
    * @param aListener
@@ -139,7 +147,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
    * 
    * @return the actionManager
    */
-  public final IActionManager getActionManager()
+  public IActionManager getActionManager()
   {
     return this.actionManager;
   }
@@ -157,7 +165,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   /**
    * @return the dndTargetController
    */
-  public final DragAndDropTargetController getDndTargetController()
+  public DragAndDropTargetController getDndTargetController()
   {
     return this.dndTargetController;
   }
@@ -165,7 +173,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   /**
    * @return the signal diagram component, never <code>null</code>.
    */
-  public final SignalDiagramComponent getSignalDiagram()
+  public SignalDiagramComponent getSignalDiagram()
   {
     return this.signalDiagram;
   }
@@ -173,7 +181,7 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   /**
    * @return the signal diagram model, never <code>null</code>.
    */
-  public final SignalDiagramModel getSignalDiagramModel()
+  public SignalDiagramModel getSignalDiagramModel()
   {
     return this.signalDiagramModel;
   }
@@ -368,18 +376,6 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   }
 
   /**
-   * Revalidates the various components and repaints the entire component.
-   * <p>
-   * SLOW METHOD: USE WITH CARE!
-   * </p>
-   */
-  public void revalidateAll()
-  {
-    this.signalDiagram.revalidateAll();
-    this.signalDiagram.repaintAll();
-  }
-
-  /**
    * Removes a channel change listener.
    * 
    * @param aListener
@@ -445,6 +441,18 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   public void removePropertyChangeListener( final PropertyChangeListener aListener )
   {
     getSignalDiagramModel().removePropertyChangeListener( aListener );
+  }
+
+  /**
+   * Revalidates the various components and repaints the entire component.
+   * <p>
+   * SLOW METHOD: USE WITH CARE!
+   * </p>
+   */
+  public void revalidateAll()
+  {
+    this.signalDiagram.revalidateAll();
+    this.signalDiagram.repaintAll();
   }
 
   /**
@@ -655,14 +663,5 @@ public final class SignalDiagramController implements ZoomListener, PropertyChan
   private long locationToTimestamp( final Point aPoint )
   {
     return this.signalDiagram.getModel().locationToTimestamp( aPoint );
-  }
-
-  /**
-   * @param aResult
-   */
-  public void addAnnotationDataChangedListener( IAnnotationDataChangedListener aResult )
-  {
-    // TODO Auto-generated method stub
-
   }
 }

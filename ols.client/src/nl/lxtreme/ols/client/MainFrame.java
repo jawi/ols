@@ -771,7 +771,7 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
   private final ClientController controller;
   private final File dataStorage;
 
-  private AcquisitionDetailsView captureDetails;
+  private AcquisitionDetailsView acquisitionDetails;
   private CursorDetailsView cursorDetails;
   private MeasurementView measurementDetails;
   private AnnotationOverview annotationOverview;
@@ -824,7 +824,7 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
 
     dm.setEasyTabDock( true );
     dm.setFloatingContainerType( DockingManager.FLOATING_CONTAINER_TYPE_DIALOG );
-    dm.setInitSplitPriority( DockingManager.SPLIT_WEST_SOUTH_EAST_NORTH );
+    dm.setInitSplitPriority( DockingManager.SPLIT_EAST_SOUTH_WEST_NORTH );
     dm.setDoubleClickAction( DockingManager.DOUBLE_CLICK_TO_AUTOHIDE );
     dm.setOutlineMode( DockingManager.HW_OUTLINE_MODE );
 
@@ -851,9 +851,47 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
       }
     } );
 
-    dm.resetToDefault();
+    DockableFrame frame;
+
+    this.cursorDetails = CursorDetailsView.create( signalDiagramController );
+    frame = createDockableFrame( this.cursorDetails, DockContext.STATE_FRAMEDOCKED, DockContext.DOCK_SIDE_EAST );
+    frame.setInitIndex( 0 );
+    dm.addFrame( frame );
+
+    this.measurementDetails = MeasurementView.create( signalDiagramController );
+    frame = createDockableFrame( this.measurementDetails, DockContext.STATE_FRAMEDOCKED, DockContext.DOCK_SIDE_EAST );
+    frame.setInitIndex( 0 );
+    dm.addFrame( frame );
+
+    this.acquisitionDetails = AcquisitionDetailsView.create( signalDiagramController );
+    frame = createDockableFrame( this.acquisitionDetails, DockContext.STATE_FRAMEDOCKED, DockContext.DOCK_SIDE_EAST );
+    frame.setDockedHeight( 200 );
+    frame.setInitIndex( 1 );
+    dm.addFrame( frame );
+
+    this.annotationOverview = AnnotationOverview.create( signalDiagramController );
+
+    JToolBar toolBar = new JToolBar();
+    toolBar.add( new JButton( this.annotationOverview.getExportAction() ) );
+    toolBar.setFloatable( false );
+
+    frame = createDockableFrame( this.annotationOverview, DockContext.STATE_FRAMEDOCKED, DockContext.DOCK_SIDE_SOUTH );
+    frame.setTitleBarComponent( toolBar );
+    frame.setDockedHeight( 200 );
+    dm.addFrame( frame );
+
+    Workspace workspace = dm.getWorkspace();
+    workspace.setAcceptDockableFrame( false );
+    workspace.add( new ZoomCapableScrollPane( signalDiagramController ) );
+
+    Container contentPane = getContentPane();
+    contentPane.add( tools, BorderLayout.PAGE_START );
+    contentPane.add( dm.getMainContainer(), BorderLayout.CENTER );
+    contentPane.add( this.status, BorderLayout.PAGE_END );
 
     dm.setLayoutDirectory( aDataStorage.getAbsolutePath() );
+
+    dm.resetToDefault();
 
     // Finalize the layout of the docking frames...
     File dataFile = new File( aDataStorage, "dock.settings" );
@@ -864,28 +902,11 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
     else
     {
       // Start the layout of the docking frames...
-      dm.loadLayoutData();
+      dm.resetLayout();
+      dm.saveLayoutDataToFile( dataFile.getAbsolutePath() );
     }
 
-    this.cursorDetails = CursorDetailsView.create( signalDiagramController );
-    registerToolWindow( this.cursorDetails, DockContext.DOCK_SIDE_EAST );
-
-    this.captureDetails = AcquisitionDetailsView.create( signalDiagramController );
-    registerToolWindow( this.captureDetails, DockContext.DOCK_SIDE_EAST );
-
-    this.measurementDetails = MeasurementView.create( signalDiagramController );
-    registerToolWindow( this.measurementDetails, DockContext.DOCK_SIDE_EAST );
-
-    this.annotationOverview = AnnotationOverview.create( signalDiagramController );
-    registerToolWindow( this.annotationOverview, DockContext.DOCK_SIDE_SOUTH );
-
-    Workspace workspace = dm.getWorkspace();
-    workspace.add( new ZoomCapableScrollPane( signalDiagramController ) );
-
-    Container contentPane = getContentPane();
-    contentPane.add( tools, BorderLayout.PAGE_START );
-    contentPane.add( dm.getMainContainer(), BorderLayout.CENTER );
-    contentPane.add( this.status, BorderLayout.PAGE_END );
+    dm.activateWorkspace();
 
     // Support closing of this window on Windows/Linux platforms...
     addWindowListener( new MainFrameListener() );
@@ -914,26 +935,6 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
   }
 
   // METHODS
-
-  /**
-   * @param aToolWindow
-   */
-  public final void registerToolWindow( final IToolWindow aToolWindow, final int aDockSide )
-  {
-    boolean defaultVisible = UIManager.getBoolean( UIManagerKeys.SHOW_TOOL_WINDOWS_DEFAULT );
-
-    DockableFrame frame = new DockableFrame( aToolWindow.getName() );
-    frame.getContentPane().add( ( Component )aToolWindow );
-    frame.setDefaultEscapeAction( DockableFrame.ESCAPE_ACTION_DO_NOTING );
-    frame.setVisible( defaultVisible );
-    frame.getDockableAction().setEnabled( false );
-
-    DockContext context = frame.getContext();
-    context.setInitMode( DockContext.STATE_FRAMEDOCKED );
-    context.setInitSide( aDockSide );
-
-    getDockingManager().addFrame( frame );
-  }
 
   /**
    * Returns whether the current host's operating system is Mac OS X.
@@ -1111,6 +1112,33 @@ public final class MainFrame extends DefaultDockableHolder implements Closeable,
   final void setSelectedDeviceName( final String aSelectedDeviceName )
   {
     this.lastSelectedDeviceName = aSelectedDeviceName;
+  }
+
+  /**
+   * @param aToolWindow
+   */
+  private DockableFrame createDockableFrame( final IToolWindow aToolWindow, final int aDockMode, final int aDockSide )
+  {
+    boolean defaultVisible = UIManager.getBoolean( UIManagerKeys.SHOW_TOOL_WINDOWS_DEFAULT );
+
+    DockableFrame frame = new DockableFrame( aToolWindow.getName() );
+    frame.getContentPane().add( ( Component )aToolWindow );
+    frame.setTabTitle( aToolWindow.getName() );
+    frame.setSideTitle( aToolWindow.getName() );
+    frame.setFrameIcon( aToolWindow.getIcon() );
+    frame.setDefaultEscapeAction( DockableFrame.ESCAPE_ACTION_DO_NOTING );
+
+    DockContext context = frame.getContext();
+    context.setInitMode( aDockMode );
+    context.setInitPosition( true );
+    context.setInitSide( aDockSide );
+
+    if ( !defaultVisible )
+    {
+      context.setCurrentMode( DockContext.STATE_HIDDEN );
+    }
+
+    return frame;
   }
 
   /**

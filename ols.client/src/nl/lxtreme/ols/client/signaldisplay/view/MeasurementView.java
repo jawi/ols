@@ -347,7 +347,7 @@ public class MeasurementView extends AbstractViewLayer implements IToolWindow, I
         end = model.getAbsoluteLength();
       }
 
-      return new SignalMeasurer( model.getCapturedData(), this.index, start, end ).run();
+      return new SignalMeasurer( model.getAcquisitionData(), this.index, start, end ).run();
     }
 
     /**
