@@ -26,6 +26,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import nl.lxtreme.ols.client.signaldisplay.*;
+import nl.lxtreme.ols.client.signaldisplay.model.*;
 import nl.lxtreme.ols.client.signaldisplay.signalelement.*;
 import nl.lxtreme.ols.common.acquisition.*;
 import nl.lxtreme.ols.common.annotation.*;
@@ -73,8 +74,8 @@ public class RemoveChannelAnnotations extends AbstractAction
   @Override
   public void actionPerformed( final ActionEvent aEvent )
   {
-    AnnotationData annotationData = getSignalDiagram().getModel().getAnnotationData();
-    annotationData.clear( getChannel().getIndex() );
+    SignalDiagramModel model = getSignalDiagram().getModel();
+    model.clearAnnotations( getChannel().getIndex() );
 
     // Repaint the affected area...
     getSignalDiagram().repaintSignalElement( this.signalElement );

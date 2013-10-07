@@ -110,9 +110,11 @@ public class SignalDiagramModel
     if ( aAnnotation instanceof LabelAnnotation )
     {
       int idx = aAnnotation.getChannelIndex();
-      
+
       Channel channel = getAcquisitionData().getChannels()[idx];
       channel.setLabel( ( String )aAnnotation.getData() );
+
+      this.annotationData.add( aAnnotation );
     }
     else
     {
@@ -129,12 +131,26 @@ public class SignalDiagramModel
   /**
    * {@inheritDoc}
    */
+  public void clearAllAnnotations()
+  {
+    this.annotationData.clearAll();
+    
+    IAnnotationDataChangedListener[] listeners = this.eventListeners.getListeners( IAnnotationDataChangedListener.class );
+    for ( IAnnotationDataChangedListener listener : listeners )
+    {
+      listener.annotationDataCleared( null );
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public void clearAnnotations( int... aChannelIdxs )
   {
     for ( int channelIdx : aChannelIdxs )
     {
       this.annotationData.clear( channelIdx );
-      
+
       IAnnotationDataChangedListener[] listeners = this.eventListeners.getListeners( IAnnotationDataChangedListener.class );
       for ( IAnnotationDataChangedListener listener : listeners )
       {

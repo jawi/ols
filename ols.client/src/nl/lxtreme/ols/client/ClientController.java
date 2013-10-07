@@ -583,7 +583,7 @@ public final class ClientController implements ActionProvider, AcquisitionProgre
 
   public void clearAnnotations()
   {
-    getSignalDiagramController().getSignalDiagramModel().getAnnotationData().clearAll();
+    getSignalDiagramController().getSignalDiagramModel().clearAllAnnotations();
 
     scheduleRepaintEvent();
   }

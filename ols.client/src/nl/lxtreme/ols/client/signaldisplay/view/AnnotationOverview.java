@@ -243,13 +243,14 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
       super( aTableModel, ( TableColumnModel )aTableModel );
 
       setCellRendererAdapter( new AnnotationCellRenderer() );
-      setColumnSelectionAllowed( true );
-      setRowSelectionAllowed( true );
       setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
-      setAutoCreateColumnsFromModel( false );
-      setFillsViewportHeight( true );
+      setAutoResizeMode( JTable.AUTO_RESIZE_OFF );
       setIntercellSpacing( new Dimension( 2, 2 ) );
+      setAutoCreateColumnsFromModel( false );
+      setColumnSelectionAllowed( true );
       setAutoCreateRowSorter( false );
+      setFillsViewportHeight( true );
+      setRowSelectionAllowed( true );
       setShowGrid( false );
 
       setDefaultRenderer( DataAnnotation.class, new DataAnnotationCellRenderer() );
@@ -604,12 +605,15 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
       aColumns[0] = new TableColumn( 0, 50 );
       aColumns[0].setIdentifier( COL_ID );
       aColumns[0].setHeaderValue( "#" );
+      aColumns[0].setPreferredWidth( 50 );
       aColumns[1] = new TableColumn( 1, 100 );
       aColumns[1].setIdentifier( COL_START_TIME );
       aColumns[1].setHeaderValue( "Start" );
+      aColumns[1].setPreferredWidth( 100 );
       aColumns[2] = new TableColumn( 2, 100 );
       aColumns[2].setIdentifier( COL_END_TIME );
       aColumns[2].setHeaderValue( "End" );
+      aColumns[2].setPreferredWidth( 100 );
       return aColumns;
     }
 
@@ -1102,7 +1106,7 @@ public class AnnotationOverview extends AbstractToolWindow implements ExportAnno
         TableColumn column = new TableColumn( columnIdx );
         column.setIdentifier( String.format( "col-%d", Integer.valueOf( columnIdx ) ) );
         column.setHeaderValue( channelNames.get( channelIdx ) );
-        column.setWidth( 100 );
+        column.setPreferredWidth( 300 );
 
         columns[columnIdx] = column;
         columnIdx++;

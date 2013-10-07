@@ -91,10 +91,12 @@ public class AnnotationHelper
     String result = null;
 
     Object data = aAnnotation.getData();
-    Map<String, Object> props = aAnnotation.getProperties();
 
-    boolean symbol = TYPE_SYMBOL.equals( props.get( KEY_TYPE ) );
-    if ( symbol && ( data instanceof Number ) )
+    Map<String, Object> props = aAnnotation.getProperties();
+    Object desc = props.get( KEY_DESCRIPTION );
+    Object type = props.get( KEY_TYPE );
+
+    if ( TYPE_SYMBOL.equals( type ) && ( data instanceof Number ) )
     {
       if ( data instanceof Integer )
       {
@@ -108,6 +110,11 @@ public class AnnotationHelper
       {
         result = String.format( "0x%1$x", data );
       }
+    }
+
+    if ( ( TYPE_EVENT.equals( type ) || TYPE_ERROR.equals( type ) ) && ( desc != null ) )
+    {
+      result = String.valueOf( desc );
     }
 
     if ( result == null )
